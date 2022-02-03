@@ -134,11 +134,14 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
 
     global retry, reboot, android_connectivity_verified
 
+    retry_message = 'This is typically not a failure of the work item. It will be run again. '
+    reboot_message = 'This machine will reboot to heal.'
+
     if platform == "android":
         if exit_code == 85: # ADB_DEVICE_ENUMERATION_FAILURE
             # This handles issues where devices or emulators fail to start.
             # The only solution is to reboot the machine, so we request a work item retry + agent reboot when this happens
-            print('    Encountered ADB_DEVICE_ENUMERATION_FAILURE. This is typically not a failure of the work item. It will be run again. This machine will reboot to help its devices')
+            print(f'    Encountered ADB_DEVICE_ENUMERATION_FAILURE. {retry_message}{reboot_message}')
             print('    If this occurs repeatedly, please check for architectural mismatch, e.g. sending arm64_v8a APKs to an x86_64 / x86 only queue.')
 
             if not is_device and os.name != 'nt':
@@ -151,8 +154,9 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
         if exit_code == 78: # PACKAGE_INSTALLATION_FAILURE
             # This handles issues where APKs fail to install.
             # We already reboot a device inside XHarness and now request a work item retry when this happens
-            print('    Encountered PACKAGE_INSTALLATION_FAILURE. This is typically not a failure of the work item. We will try it again on another Helix agent')
+            print(f'    Encountered PACKAGE_INSTALLATION_FAILURE. {retry_message}')
             print('    If this occurs repeatedly, please check for architectural mismatch, e.g. requesting installation on arm64_v8a-only queue for x86 or x86_64 APKs.')
+            retry = True
 
             if is_device:
                 try:
@@ -160,26 +164,20 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                 except Exception as e:
                     print(f'    Failed to remove installed apps from device: {e}')
 
-            retry = True
-
-        # TODO (https://github.com/dotnet/arcade/issues/8232): Only detect network issues when it is requested by user
-        # if exit_code != 0 and not android_connectivity_verified and is_device:
-        #     # Any issue can also be caused by network connectivity problems (devices sometimes lose the WiFi connection)
-        #     # In those cases, we want a retry and we want to report this
-        #     print('    Encountered non-zero exit code. Checking network connectivity...')
-        #     android_connectivity_verified = True
-        #
-        #     exitcode, _ = call_adb(['shell', 'ping', '-i', '0.2', '-c', '3', 'www.microsoft.com'])
-        #
-        #     if exitcode != 0:
-        #         retry = True
-        #         print('    Detected network connectivity issue. This is typically not a failure of the work item. We will try it again on another Helix agent')
-        #         raise AdditionalTelemetryRequired(KUSTO_NETWORK_CONNECTIVITY_METRIC_NAME, 1)
+        if exit_code != 0 and is_device and not android_connectivity_verified:
+            # Any issue can also be caused by network connectivity problems (devices sometimes lose the WiFi connection)
+            # In those cases, we want a retry and we want to report this
+            print('    Encountered non-zero exit code. Checking network connectivity...')
+            android_connectivity_verified = True
+        
+            exitcode, _ = call_adb(['shell', 'ping', '-i', '0.2', '-c', '3', 'www.microsoft.com'])
+        
+            if exitcode != 0:
+                retry = True
+                print('    Detected network connectivity issue. This is typically not a failure of the work item. It will be run again.')
+                raise AdditionalTelemetryRequired(KUSTO_NETWORK_CONNECTIVITY_METRIC_NAME, 1)
 
     elif platform == "apple":
-        retry_message = 'This is typically not a failure of the work item. It will be run again. '
-        reboot_message = 'This machine will reboot to heal.'
-
         if is_device:
             # If we fail to find a real device, it is unexpected as device queues should have one
             # It can often be fixed with a reboot
