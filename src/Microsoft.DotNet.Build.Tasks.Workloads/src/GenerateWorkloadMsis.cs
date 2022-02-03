@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                 List<string> missingPackIds = new(workloadPacks.Select(p => $"{p.Id}"));
 
-                HashSet<(string sourcePackage, string swixPackageId, string outputPath, WorkloadPackKind kind, string[] platforms)> packsToGenerate = new();
+                List<(string sourcePackage, string swixPackageId, string outputPath, WorkloadPackKind kind, string[] platforms)> packsToGenerate = new();
 
                 foreach (WorkloadPack pack in workloadPacks)
                 {
