@@ -150,6 +150,7 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
 
             reboot = True
             retry = True
+            return
 
         if exit_code == 78: # PACKAGE_INSTALLATION_FAILURE
             # This handles issues where APKs fail to install.
@@ -164,14 +165,16 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                 except Exception as e:
                     print(f'    Failed to remove installed apps from device: {e}')
 
+            return
+
         if exit_code != 0 and is_device and not android_connectivity_verified:
             # Any issue can also be caused by network connectivity problems (devices sometimes lose the WiFi connection)
             # In those cases, we want a retry and we want to report this
             print('    Encountered non-zero exit code. Checking network connectivity...')
             android_connectivity_verified = True
-        
+
             exitcode, _ = call_adb(['shell', 'ping', '-i', '0.2', '-c', '3', 'www.microsoft.com'])
-        
+
             if exitcode != 0:
                 retry = True
                 print('    Detected network connectivity issue. This is typically not a failure of the work item. It will be run again.')
