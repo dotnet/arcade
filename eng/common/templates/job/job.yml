@@ -255,5 +255,4 @@ jobs:
       - template: /eng/common/templates/steps/generate-sbom.yml
         parameters:
           BuildDropPath : '$(Build.SourcesDirectory)/artifacts'
-          BuildComponentPath : '.packages'
 
