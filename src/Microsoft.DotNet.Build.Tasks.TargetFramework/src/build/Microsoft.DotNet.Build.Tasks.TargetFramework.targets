@@ -85,5 +85,5 @@
     </ItemGroup>
   </Target>
 
-  <Import Project="BinPlace.targets" />
+  <Import Project="BinPlace.targets" Condition="'$(EnableBinPlacing)' != 'false'" />
 </Project>
