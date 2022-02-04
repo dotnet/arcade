@@ -8,7 +8,7 @@
   </ItemDefinitionGroup>
 
   <PropertyGroup>
-    <DotNetBuildTasksTargetFrameworkAssembly Condition="'$(DotNetBuildTasksTargetFrameworkAssembly)' == '' and '$(MSBuildRuntimeType)' == 'core'">..\tools\netcoreapp3.1\Microsoft.DotNet.Build.Tasks.TargetFramework.dll</DotNetBuildTasksTargetFrameworkAssembly>
-    <DotNetBuildTasksTargetFrameworkAssembly Condition="'$(DotNetBuildTasksTargetFrameworkAssembly)' == '' and '$(MSBuildRuntimeType)' != 'core'">..\tools\net472\Microsoft.DotNet.Build.Tasks.TargetFramework.dll</DotNetBuildTasksTargetFrameworkAssembly>
+    <DotNetBuildTasksTargetFrameworkAssembly Condition="'$(MSBuildRuntimeType)' == 'core'">..\tools\netcoreapp3.1\Microsoft.DotNet.Build.Tasks.TargetFramework.dll</DotNetBuildTasksTargetFrameworkAssembly>
+    <DotNetBuildTasksTargetFrameworkAssembly Condition="'$(MSBuildRuntimeType)' != 'core'">..\tools\net472\Microsoft.DotNet.Build.Tasks.TargetFramework.dll</DotNetBuildTasksTargetFrameworkAssembly>
   </PropertyGroup>
 </Project>
