@@ -134,14 +134,14 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
 
     global retry, reboot, android_connectivity_verified
 
-    retry_message = 'This is typically not a failure of the work item. It will be run again. '
+    retry_message = 'This is typically not a failure of the work item. It will be run again.'
     reboot_message = 'This machine will reboot to heal.'
 
     if platform == "android":
         if exit_code == 85: # ADB_DEVICE_ENUMERATION_FAILURE
             # This handles issues where devices or emulators fail to start.
             # The only solution is to reboot the machine, so we request a work item retry + agent reboot when this happens
-            print(f'    Encountered ADB_DEVICE_ENUMERATION_FAILURE. {retry_message}{reboot_message}')
+            print(f'    Encountered ADB_DEVICE_ENUMERATION_FAILURE. {retry_message} {reboot_message}')
             print('    If this occurs repeatedly, please check for architectural mismatch, e.g. sending arm64_v8a APKs to an x86_64 / x86 only queue.')
 
             if not is_device and os.name != 'nt':
@@ -177,7 +177,7 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
 
             if exitcode != 0:
                 retry = True
-                print('    Detected network connectivity issue. This is typically not a failure of the work item. It will be run again.')
+                print(f'    Detected network connectivity issue. {retry_message}')
                 raise AdditionalTelemetryRequired(KUSTO_NETWORK_CONNECTIVITY_METRIC_NAME, 1)
 
     elif platform == "apple":
@@ -194,7 +194,7 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
             # If we fail to find a real device, it is unexpected as device queues should have one
             # It can often be fixed with a reboot
             if exit_code == 81: # DEVICE_NOT_FOUND
-                print(f'    Requested tethered Apple device not found. {retry_message}{reboot_message}')
+                print(f'    Requested tethered Apple device not found. {retry_message} {reboot_message}')
                 reboot = True
                 retry = True
 
@@ -210,7 +210,7 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
 
             # If we have a launch failure on simulators, we want a reboot+retry
             if exit_code == 83: # APP_LAUNCH_FAILURE
-                print(f'    Encountered APP_LAUNCH_FAILURE. {retry_message}{reboot_message}')
+                print(f'    Encountered APP_LAUNCH_FAILURE. {retry_message} {reboot_message}')
                 reboot = True
                 retry = True
 
@@ -223,21 +223,21 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
             # Simulators are known to slow down which results in installation taking several minutes
             # Retry+reboot usually resolves this
             if exit_code == 86: # APP_INSTALLATION_TIMEOUT
-                print(f'    Installation timed out. {retry_message}{reboot_message}')
+                print(f'    Installation timed out. {retry_message} {reboot_message}')
                 reboot = True
                 retry = True
 
             # Simulators are known to slow/break down and a reboot usually helps
             # This manifest by us not being able to launch the simulator
             if exit_code == 88: # SIMULATOR_FAILURE
-                print(f'    Failed to launch the simulator. {retry_message}{reboot_message}')
+                print(f'    Failed to launch the simulator. {retry_message} {reboot_message}')
                 reboot = True
                 retry = True
 
             # Simulators are known to slow/break down and a reboot usually helps
             # This manifest by us not being able to launch the simulator/start the test run in time
             if exit_code == 90: # APP_LAUNCH_TIMEOUT
-                print(f'    Failed to start the test execution in time. {retry_message}{reboot_message}')
+                print(f'    Failed to start the test execution in time. {retry_message} {reboot_message}')
                 reboot = True
                 retry = True
 
