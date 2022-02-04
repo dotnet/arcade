@@ -179,6 +179,12 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
     elif platform == "apple":
         retry_message = 'This is typically not a failure of the work item. It will be run again. '
         reboot_message = 'This machine will reboot to heal.'
+        
+        if exit_code == 82: # RETURN_CODE_NOT_SET
+            # See https://github.com/dotnet/xharness/issues/812
+            print(f'    Failed to detect app\'s exit code. {retry_message}')
+            retry = True
+            return
 
         if is_device:
             # If we fail to find a real device, it is unexpected as device queues should have one
