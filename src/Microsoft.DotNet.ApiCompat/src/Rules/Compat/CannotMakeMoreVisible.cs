@@ -3,7 +3,6 @@
 
 using Microsoft.Cci.Extensions;
 using Microsoft.Cci.Extensions.CSharp;
-using Microsoft.Cci.Writers.CSharp;
 
 namespace Microsoft.Cci.Differs.Rules
 {
@@ -16,19 +15,11 @@ namespace Microsoft.Cci.Differs.Rules
             if (impl == null || contract == null)
                 return DifferenceType.Unknown;
 
-            // If implementation is public then contract can be any visibility
-            if (impl.Visibility == TypeMemberVisibility.Public)
-                return DifferenceType.Unknown;
-
-            // If implementation is protected or protected internal then contract must be protected or protected internal as well.
-            if (impl.Visibility == TypeMemberVisibility.Family || impl.Visibility == TypeMemberVisibility.FamilyOrAssembly)
+            if (HasReducedVisibility(contract.Visibility, impl.Visibility))
             {
-                if (contract.Visibility != TypeMemberVisibility.Family && contract.Visibility != TypeMemberVisibility.FamilyOrAssembly)
-                {
-                    differences.AddIncompatibleDifference(this,
-                        $"Visibility of member '{impl.FullName()}' is '{impl.GetVisibilityName()}' in the {Implementation} but '{contract.GetVisibilityName()}' in the {Contract}.");
-                    return DifferenceType.Changed;
-                }
+                differences.AddIncompatibleDifference(this,
+                    $"Visibility of member '{impl.FullName()}' is '{impl.GetVisibilityName()}' in the {Implementation} but '{contract.GetVisibilityName()}' in the {Contract}.");
+                return DifferenceType.Changed;
             }
 
             return DifferenceType.Unknown;
@@ -39,22 +30,44 @@ namespace Microsoft.Cci.Differs.Rules
             if (impl == null || contract == null)
                 return DifferenceType.Unknown;
 
-            // If implementation is public then contract can be any visibility
-            if (impl.GetVisibility() == TypeMemberVisibility.Public)
-                return DifferenceType.Unknown;
-
-            // If implementation is protected or protected internal then contract must be protected or protected internal as well.
-            if (impl.GetVisibility() == TypeMemberVisibility.Family || impl.GetVisibility() == TypeMemberVisibility.FamilyOrAssembly)
+            if (HasReducedVisibility(contract.GetVisibility(), impl.GetVisibility()))
             {
-                if (contract.GetVisibility() != TypeMemberVisibility.Family && contract.GetVisibility() != TypeMemberVisibility.FamilyOrAssembly)
-                {
-                    differences.AddIncompatibleDifference(this,
-                        $"Visibility of type '{impl.FullName()}' is '{impl.GetVisibilityName()}' in the {Implementation} but '{contract.GetVisibilityName()}' in the {Contract}.");
-                    return DifferenceType.Changed;
-                }
+                differences.AddIncompatibleDifference(this,
+                    $"Visibility of type '{impl.FullName()}' is '{impl.GetVisibilityName()}' in the {Implementation} but '{contract.GetVisibilityName()}' in the {Contract}.");
+                return DifferenceType.Changed;
             }
 
             return DifferenceType.Unknown;
+        }
+
+        private bool HasReducedVisibility(TypeMemberVisibility contract, TypeMemberVisibility implementation)
+        {
+            if (contract == implementation)
+            {
+                return false;
+            }
+
+            switch (implementation)
+            {
+                case TypeMemberVisibility.Public:
+                    // If implementation is public then contract can be any visibility.
+                    return false;
+                case TypeMemberVisibility.FamilyOrAssembly:
+                    // protected internal is an upgrade from everything but public.
+                    return contract == TypeMemberVisibility.Public;
+                case TypeMemberVisibility.Assembly: // internal
+                case TypeMemberVisibility.Family: // protected
+                    // internal and protected are upgrades only from private or private protected.
+                    return contract != TypeMemberVisibility.Private && contract != TypeMemberVisibility.FamilyAndAssembly;
+                case TypeMemberVisibility.FamilyAndAssembly:
+                    // private protected is very restrictive; only an upgrade from private.
+                    return contract != TypeMemberVisibility.Private;
+                case TypeMemberVisibility.Private:
+                    // private in the implementation is always a downgrade.
+                    return true;
+            }
+
+            return false;
         }
     }
 }
