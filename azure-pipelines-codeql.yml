@@ -1,0 +1,47 @@
+variables:
+  - name: _TeamName
+    value: DotNetCore
+  - group: SDL_Settings
+    
+trigger: none
+
+schedules:
+  - cron: 0 12 * * 1
+    displayName: Weekly Monday CodeQL/Semmle run
+    branches:
+      include:
+      - release/6.0
+    always: true
+
+stages:
+- stage: build
+  displayName: Build
+  jobs:
+  - template: /eng/common/templates/jobs/codeql-build.yml
+    parameters:
+      jobs:
+      - job: Windows_NT_CSharp
+        timeoutInMinutes: 90
+        pool:
+          name: NetCore1ESPool-Internal
+          demands: ImageOverride -equals Build.Server.Amd64.VS2019
+
+        steps:
+        - checkout: self
+          clean: true
+
+        - template: /eng/common/templates/steps/execute-codeql.yml
+          parameters:
+            executeAllSdlToolsScript: 'eng/common/sdl/execute-all-sdl-tools.ps1'
+            buildCommands: 'eng\common\cibuild.cmd -configuration Release -prepareMachine /p:Test=false /p:Sign=false'
+            language: csharp
+            additionalParameters: '-SourceToolsList @("semmle")
+            -TsaInstanceURL $(_TsaInstanceURL)
+            -TsaProjectName $(_TsaProjectName)
+            -TsaNotificationEmail $(_TsaNotificationEmail)
+            -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
+            -TsaBugAreaPath $(_TsaBugAreaPath)
+            -TsaIterationPath $(_TsaIterationPath)
+            -TsaRepositoryName "Arcade"
+            -TsaCodebaseName "Arcade"
+            -TsaPublish $False'

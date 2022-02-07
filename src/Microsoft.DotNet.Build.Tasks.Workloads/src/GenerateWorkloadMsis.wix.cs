@@ -69,7 +69,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                 // Each pack maps to multiple packs and different MSI packages. We consider a pack
                 // to be missing when none of its dependent MSIs were found/generated.
-                IEnumerable<WorkloadPack> workloadPacks = GetWorkloadPacks();
+                IEnumerable<WorkloadPack> workloadPacks = GetWorkloadPacks(WorkloadManifests);
+
                 List<string> missingPackIds = new(workloadPacks.Select(p => $"{p.Id}"));
 
                 List<(string sourcePackage, string swixPackageId, string outputPath, WorkloadPackKind kind, string[] platforms)> packsToGenerate = new();
@@ -99,14 +100,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                         string swixPackageId = $"{pack.Id.ToString().Replace(ShortNames)}.{pack.Version}";
 
                         // Always select the pack ID for the VS MSI package, even when aliased.
-                        if (RunInParallel)
-                        {
-                            packsToGenerate.Add(new(sourcePackage, swixPackageId, OutputPath, pack.Kind, platforms));
-                        }
-                        else
-                        {
-                            msis.AddRange(Generate(sourcePackage, swixPackageId, OutputPath, pack.Kind, platforms));
-                        }
+                        packsToGenerate.Add(new(sourcePackage, swixPackageId, OutputPath, pack.Kind, platforms));
                     }
                 }
 
@@ -116,6 +110,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     {
                         msis.AddRange(Generate(p.sourcePackage, p.swixPackageId, p.outputPath, p.kind, p.platforms));
                     });
+                }
+                else
+                {
+                    foreach (var p in packsToGenerate)
+                    {
+                        msis.AddRange(Generate(p.sourcePackage, p.swixPackageId, p.outputPath, p.kind, p.platforms));
+                    }
                 }
 
                 Msis = msis.ToArray();
@@ -130,25 +131,37 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             return !Log.HasLoggedErrors;
         }
 
-        private IEnumerable<WorkloadPack> GetWorkloadPacks()
+        internal static IEnumerable<WorkloadPack> GetWorkloadPacks(ITaskItem[] workloadManifestItems)
         {
-            // We need to track duplicate packs so we only generate MSIs once. We'll key off the pack ID and version.
-            IEnumerable<WorkloadManifest> manifests = WorkloadManifests.Select(
-                w => WorkloadManifestReader.ReadWorkloadManifest(Path.GetFileNameWithoutExtension(w.ItemSpec), File.OpenRead(w.ItemSpec)));
+            // We need to track duplicate packs (same ID and version) so we only build MSIs once when processing
+            // multiple manifests. We'll manually deduplicate the packs
+            // since WorkloadPack doesn't provide an override for GetHashCode/Equals.
+            Dictionary<string, WorkloadPack> packs = new();
 
-            // We want all workloads in all manifests iff the workload has no platform or at least one
-            // platform includes Windows
-            var workloads = manifests.SelectMany(m => m.Workloads).
-                Select(w => w.Value).
-                Where(wd => wd is WorkloadDefinition).
-                Where(wd => (((WorkloadDefinition)wd).Platforms == null) || ((WorkloadDefinition)wd).Platforms.Any(p => p.StartsWith("win")));
+            foreach (ITaskItem item in workloadManifestItems)
+            {
+                var workloadManifest = WorkloadManifestReader.ReadWorkloadManifest(
+                    Path.GetFileNameWithoutExtension(item.ItemSpec), File.OpenRead(item.ItemSpec));
 
-            var packIds = workloads.Where(wd => wd is WorkloadDefinition).
-                                    Where(w => (((WorkloadDefinition)w).Packs != null)).SelectMany(w => ((WorkloadDefinition)w).Packs).Distinct();
+                foreach (var workload in workloadManifest.Workloads.Values)
+                {
+                    if ((workload is WorkloadDefinition wd) && (wd.Platforms == null || wd.Platforms.Any(p => p.StartsWith("win"))) && (wd.Packs != null))
+                    {
+                        foreach (var packId in wd.Packs)
+                        {
+                            var pack = workloadManifest.Packs[packId];
+                            string key = $"{pack.Id},{pack.Version}";
 
-            return manifests.SelectMany(m => m.Packs.Values).
-                Where(p => packIds.Contains(p.Id)).
-                Distinct();
+                            if (!packs.ContainsKey(key))
+                            {
+                                packs[key] = pack;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return packs.Values;
         }
 
         /// <summary>
