@@ -16,6 +16,7 @@ steps:
     {
       New-Item -ItemType Directory -path ${{parameters.manifestDirPath}}
     }
+    #replace all special characters with _, some builds use special characters like : in Agent.Jobname, that is not a permissible name while uploading artifacts.
     $artifact_name = "$(System.StageName)_$(Agent.JobName)_SBOM" -replace '["/:<>\\|?@*" ]', '_'
     Write-Host "##vso[task.setvariable variable=ARTIFACT_NAME]$artifact_name"
   condition: or(eq(variables['Agent.Os'], 'Windows_NT'), eq(variables['Agent.Os'], 'Darwin'))
