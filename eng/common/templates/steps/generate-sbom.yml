@@ -5,18 +5,23 @@
 
 parameters:
   BuildDropPath: ''
+  PackageVersion: ''
   PackageName: '.NET'
-  PackageVersion: '7.0'
-  ManifestDirPath: $(Build.ArtifactStagingDirectory)\sbom
+  ManifestDirPath: $(Build.ArtifactStagingDirectory)/sbom
   sbomContinueOnError: true
 
 steps:
 - powershell: |
-    if (!(Test-Path -path ${{parameters.manifestDirPath}}))
-    {
-      New-Item -ItemType Directory -path ${{parameters.manifestDirPath}}
-    }
-  displayName: Create SBOM output folder
+    ./eng/common/generate-sbom-prep.ps1 /p:${{parameters.manifestDirPath}}
+  displayName: Prep for SBOM generation in $(Agent.OS)
+  condition: or(eq(variables['Agent.Os'], 'Windows_NT'), eq(variables['Agent.Os'], 'Darwin'))
+  continueOnError: ${{parameters.sbomContinueOnError}}
+
+- script: |
+    chmod +x ./eng/common/generate-sbom-prep.sh
+    ./eng/common/generate-sbom-prep.sh ${{parameters.manifestDirPath}}
+  displayName: Prep for SBOM generation in $(Agent.OS)
+  condition: eq(variables['Agent.Os'], 'Linux')
   continueOnError: ${{parameters.sbomContinueOnError}}
 
 - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
@@ -33,5 +38,5 @@ steps:
   continueOnError: ${{parameters.sbomContinueOnError}}
   inputs:
     targetPath: '${{parameters.manifestDirPath}}'
-    artifactName: $(System.StageName)_$(Agent.JobName)_SBOM
+    artifactName: $(ARTIFACT_NAME)
 
