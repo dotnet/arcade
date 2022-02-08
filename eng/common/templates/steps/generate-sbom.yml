@@ -12,10 +12,15 @@ parameters:
 
 steps:
 - powershell: |
-    ./eng/common/generate-sbom-prep.ps1 /p:${{parameters.manifestDirPath}}
-  displayName: Prep for SBOM generation in $(Agent.OS)
+    if (!(Test-Path -path ${{parameters.manifestDirPath}}))
+    {
+      New-Item -ItemType Directory -path ${{parameters.manifestDirPath}}
+    }
+    $artifact_name = "$(System.StageName)_$(Agent.JobName)_SBOM" -replace '["/:<>\\|?@*" ]', '_'
+    Write-Host "##vso[task.setvariable variable=ARTIFACT_NAME]$artifact_name"
   condition: or(eq(variables['Agent.Os'], 'Windows_NT'), eq(variables['Agent.Os'], 'Darwin'))
   continueOnError: ${{parameters.sbomContinueOnError}}
+  displayName: Prep for SBOM generation in $(Agent.OS)
 
 - script: |
     chmod +x ./eng/common/generate-sbom-prep.sh
