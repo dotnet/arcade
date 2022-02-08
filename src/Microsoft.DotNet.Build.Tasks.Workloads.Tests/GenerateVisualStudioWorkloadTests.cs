@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
     {
         public string IntermediateBaseOutputPath = Path.Combine(AppContext.BaseDirectory, "obj");
 
-        public string TestAssetsPath = Path.Combine(AppContext.BaseDirectory, "testassets");
+        public static readonly string TestAssetsPath = Path.Combine(AppContext.BaseDirectory, "testassets");
 
         public string TestIntermediateBaseOutputPath => Path.Combine(IntermediateBaseOutputPath, Path.GetFileNameWithoutExtension(Path.GetTempFileName()));
 
