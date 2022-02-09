@@ -4,9 +4,9 @@
 # ManifestDirPath - The path of the directory where the generated manifest files will be placed
 
 parameters:
+  PackageVersion: ''
+  BuildDropPath : ''
   PackageName: '.NET'
-  PackageVersion: ${{ parameters.packageVersion }}
-  BuildDropPath : ${{ parameters.buildDropPath }}
   ManifestDirPath: $(Build.ArtifactStagingDirectory)/sbom
   sbomContinueOnError: true
 
