@@ -32,6 +32,7 @@ parameters:
   preSteps: []
   runAsPublic: false
   enableSbom: true
+  PackageVersion : 7.0.0
 
 jobs:
 - job: ${{ parameters.name }}
@@ -256,6 +257,4 @@ jobs:
         parameters:
           ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
             PackageVersion : 7.0.0
-          ${{ else }}:
-            PackageVersion : 7.0.0 #this is configurable
 
