@@ -3,9 +3,9 @@ trigger: none
 
 parameters:
   - name: GithubRepo
-    value: ''
+    default: ''
   - name: BranchToMirror
-    value: ''
+    default: ''
   
 variables:
   - group: Mirror-Credentials
