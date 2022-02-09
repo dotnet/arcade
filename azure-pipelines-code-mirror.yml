@@ -14,7 +14,7 @@ jobs:
     - job: Merge_GitHub_to_Azure_DevOps
       pool:
         name: NetCore1ESPool-Internal
-        demands: ImageOverride -equals Build.Server.Amd64.VS2019
+        demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
       variables:
       - name: WorkingDirectoryName
         value: repo-dir
