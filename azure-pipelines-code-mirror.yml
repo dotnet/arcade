@@ -83,6 +83,7 @@ jobs:
           Write-Host "##vso[task.LogIssue type=error;]git failed to push to Azure DevOps mirror"
           exit 1
         displayName: Push changes to Azure DevOps repo
+        workingDirectory: $(WorkingDirectoryName)
 
       - powershell: |         
           $commit = (git rev-parse HEAD).Substring(0, 7)
