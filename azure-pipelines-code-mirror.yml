@@ -26,8 +26,8 @@ jobs:
         value: repo-dir
       steps:
       - powershell: |
-          $gitHubRepo = ${{ parameters.GithubRepo }}
-          $branchToMirror = ${{ parameters.BranchToMirror }}
+          $gitHubRepo = "${{ parameters.GithubRepo }}"
+          $branchToMirror = "${{ parameters.BranchToMirror }}"
           $azDORepo = $gitHubRepo.Replace("/", "-");
           # Check that the parameters look correct
           if ($azDORepo -eq "" -or $branchToMirror -eq "")
