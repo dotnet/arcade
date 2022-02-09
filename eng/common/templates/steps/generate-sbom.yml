@@ -4,10 +4,10 @@
 # ManifestDirPath - The path of the directory where the generated manifest files will be placed
 
 parameters:
-  BuildDropPath: ''
   PackageVersion: ''
   PackageName: '.NET'
   ManifestDirPath: $(Build.ArtifactStagingDirectory)/sbom
+  BuildDropPath : $(Build.SourcesDirectory)/artifacts
   sbomContinueOnError: true
 
 steps:
@@ -21,12 +21,12 @@ steps:
     Write-Host "##vso[task.setvariable variable=ARTIFACT_NAME]$artifact_name"
   condition: or(eq(variables['Agent.Os'], 'Windows_NT'), eq(variables['Agent.Os'], 'Darwin'))
   continueOnError: ${{parameters.sbomContinueOnError}}
-  displayName: Prep for SBOM generation in $(Agent.OS)
+  displayName: Prep for SBOM generation in Windows/MacOS
 
 - script: |
     chmod +x ./eng/common/generate-sbom-prep.sh
     ./eng/common/generate-sbom-prep.sh ${{parameters.manifestDirPath}}
-  displayName: Prep for SBOM generation in $(Agent.OS)
+  displayName: Prep for SBOM generation in Linux
   condition: eq(variables['Agent.Os'], 'Linux')
   continueOnError: ${{parameters.sbomContinueOnError}}
 

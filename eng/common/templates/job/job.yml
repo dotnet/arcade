@@ -254,11 +254,8 @@ jobs:
     - ${{ if eq(parameters.enableSbom, 'true') }}:
       - template: /eng/common/templates/steps/generate-sbom.yml
         parameters:
-          BuildDropPath : '$(Build.SourcesDirectory)/artifacts'
           ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
             PackageVersion : 7.0.0
-          ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/release/6.0') }}:
-            PackageVersion : 6.0.0
           ${{ else }}:
             PackageVersion : 7.0.0 #this is configurable
 
