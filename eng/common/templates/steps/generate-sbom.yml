@@ -5,8 +5,8 @@
 
 parameters:
   PackageName: '.NET'
-  PackageVersion: ${{parameters.packageVersion}}
-  BuildDropPath : ${{parameters.buildDropPath}}
+  PackageVersion: ${{ parameters.packageVersion }}
+  BuildDropPath : ${{ parameters.buildDropPath }}
   ManifestDirPath: $(Build.ArtifactStagingDirectory)/sbom
   sbomContinueOnError: true
 
@@ -14,23 +14,23 @@ steps:
 - powershell: |
     ./eng/common/generate-sbom-prep.ps1 ${{parameters.manifestDirPath}}
   condition: or(eq(variables['Agent.Os'], 'Windows_NT'), eq(variables['Agent.Os'], 'Darwin'))
-  continueOnError: ${{parameters.sbomContinueOnError}}
+  continueOnError: ${{ parameters.sbomContinueOnError }}
   displayName: Prep for SBOM generation in (Non-linux)
 
 - script: |
     ./eng/common/generate-sbom-prep.sh ${{parameters.manifestDirPath}}
   displayName: Prep for SBOM generation in (Linux)
   condition: eq(variables['Agent.Os'], 'Linux')
-  continueOnError: ${{parameters.sbomContinueOnError}}
+  continueOnError: ${{ parameters.sbomContinueOnError }}
 
 - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
   displayName: 'Generate SBOM manifest'
-  continueOnError: ${{parameters.sbomContinueOnError}}
+  continueOnError: ${{ parameters.sbomContinueOnError }}
   inputs:
-      PackageName: ${{parameters.packageName}}
-      BuildDropPath: ${{parameters.buildDropPath}}
-      PackageVersion: ${{parameters.packageVersion}}
-      ManifestDirPath: ${{parameters.manifestDirPath}}
+      PackageName: ${{ parameters.packageName }}
+      BuildDropPath: ${{ parameters.buildDropPath }}
+      PackageVersion: ${{ parameters.packageVersion }}
+      ManifestDirPath: ${{ parameters.manifestDirPath }}
 
 - task: PublishPipelineArtifact@1
   displayName: Publish SBOM manifest

@@ -257,6 +257,6 @@ jobs:
     - ${{ if eq(parameters.enableSbom, 'true') }}:
       - template: /eng/common/templates/steps/generate-sbom.yml
         parameters:
-          PackageVersion : 7.0.0
-          BuildDropPath : 
+          PackageVersion : $ {{ parameters.packageVersion}}
+          BuildDropPath : ${{ parameters.buildDropPath }}
 
