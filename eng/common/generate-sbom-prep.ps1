@@ -9,6 +9,9 @@ if (!(Test-Path -path $ManifestDirPath))
   New-Item -ItemType Directory -path $ManifestDirPath
   Write-Host "Successfully created directory $ManifestDirPath"
 }
+else{
+  Write-PipelineTelemetryError -category 'Build'  "Unable to create sbom folder."
+}
 
 Write-Host "Updating artifact name"
 $artifact_name = "$env:SYSTEM_STAGENAME$env:AGENT_JOBNAME _SBOM" -replace '["/:<>\\|?@*"() ]', '_'
