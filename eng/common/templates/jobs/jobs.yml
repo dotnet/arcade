@@ -40,7 +40,7 @@ parameters:
 #Sbom related params
   enableSbom: true
   PackageVersion: 7.0.0
-  BuildDropPath:  '$(Build.SourcesDirectory)/artifacts'
+  BuildDropPath: '$(Build.SourcesDirectory)/artifacts'
   
 
 jobs:

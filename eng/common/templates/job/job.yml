@@ -32,9 +32,9 @@ parameters:
   preSteps: []
   runAsPublic: false
 #Sbom related params
-  enableSbom: ${{ parameters.enableSbom }}
-  PackageVersion: ${{ parameters.packageVersion }}
-  BuildDropPath: ${{ parameters.buildDropPath }}
+  enableSbom: ''
+  PackageVersion: ''
+  BuildDropPath: ''
 
 jobs:
 - job: ${{ parameters.name }}
