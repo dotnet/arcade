@@ -4,29 +4,22 @@
 # ManifestDirPath - The path of the directory where the generated manifest files will be placed
 
 parameters:
-  PackageVersion: ''
   PackageName: '.NET'
+  PackageVersion: ${{parameters.packageVersion}}
+  BuildDropPath : ${{parameters.buildDropPath}}
   ManifestDirPath: $(Build.ArtifactStagingDirectory)/sbom
-  BuildDropPath : $(Build.SourcesDirectory)/artifacts
   sbomContinueOnError: true
 
 steps:
 - powershell: |
-    if (!(Test-Path -path ${{parameters.manifestDirPath}}))
-    {
-      New-Item -ItemType Directory -path ${{parameters.manifestDirPath}}
-    }
-    #replace all special characters with _, some builds use special characters like : in Agent.Jobname, that is not a permissible name while uploading artifacts.
-    $artifact_name = "$(System.StageName)_$(Agent.JobName)_SBOM" -replace '["/:<>\\|?@*" ]', '_'
-    Write-Host "##vso[task.setvariable variable=ARTIFACT_NAME]$artifact_name"
+    ./eng/common/generate-sbom-prep.ps1 ${{parameters.manifestDirPath}}
   condition: or(eq(variables['Agent.Os'], 'Windows_NT'), eq(variables['Agent.Os'], 'Darwin'))
   continueOnError: ${{parameters.sbomContinueOnError}}
-  displayName: Prep for SBOM generation in Windows/MacOS
+  displayName: Prep for SBOM generation in (Non-linux)
 
 - script: |
-    chmod +x ./eng/common/generate-sbom-prep.sh
     ./eng/common/generate-sbom-prep.sh ${{parameters.manifestDirPath}}
-  displayName: Prep for SBOM generation in Linux
+  displayName: Prep for SBOM generation in (Linux)
   condition: eq(variables['Agent.Os'], 'Linux')
   continueOnError: ${{parameters.sbomContinueOnError}}
 
