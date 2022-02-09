@@ -1,6 +1,12 @@
 # Disable CI triggers, only called using Maestro
 trigger: none
 
+parameters:
+  - name: GithubRepo
+    value: ''
+  - name: BranchToMirror
+    value: ''
+  
 variables:
   - group: Mirror-Credentials
 
