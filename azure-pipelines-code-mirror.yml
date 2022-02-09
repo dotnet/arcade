@@ -20,28 +20,30 @@ jobs:
         value: repo-dir
       steps:
       - powershell: |
-          $azDORepo = $(GithubRepo).Replace("/", "-");
+          $gitHubRepo = ${{ parameters.GithubRepo }}
+          $branchToMirror = ${{ parameters.BranchToMirror }}
+          $azDORepo = $gitHubRepo.Replace("/", "-");
           # Check that the parameters look correct
-          if ($azDORepo -eq "" -or $(BranchToMirror) -eq "")
+          if ($azDORepo -eq "" -or $branchToMirror -eq "")
           {
             Write-Error "Expected valid branch and GitHub repo in the form of owner/repo"
           }
           Write-Host "##vso[task.setvariable variable=AzDORepoName]$azDORepo"
-          Write-Host "Mirroring branch '$(BranchToMirror)' from GitHub repo '$(GithubRepo)' to Azure DevOps repo '$azDORepo'."
+          Write-Host "Mirroring branch '$(branchToMirror)' from GitHub repo '$(gitHubRepo)' to Azure DevOps repo '$azDORepo'."
         displayName: Calculate Mirrored Branch Names
       - script: |
-          git clone https://dotnet-maestro-bot:$(BotAccount-dotnet-maestro-bot-PAT)@github.com/$(GithubRepo) $(WorkingDirectoryName) -b $(BranchToMirror)
+          git clone https://dotnet-maestro-bot:$(BotAccount-dotnet-maestro-bot-PAT)@github.com/${{ parameters.GithubRepo }} $(WorkingDirectoryName) -b ${{ parameters.BranchToMirror }}
         displayName: Clone GitHub repo
       - script: |
           git remote add azdo-mirror https://dn-bot:$(dn-bot-dnceng-build-rw-code-rw)@dev.azure.com/dnceng/internal/_git/$(AzDORepoName)
         displayName: Add Azure DevOps remote
         workingDirectory: $(WorkingDirectoryName)
       - script: |
-          git reset --hard origin/$(BranchToMirror)
+          git reset --hard origin/${{ parameters.BranchToMirror }}
         displayName: Hard reset local branch to GitHub branch
         workingDirectory: $(WorkingDirectoryName)
       - powershell: |
-          git push azdo-mirror $(BranchToMirror) --tags $(ExtraPushArgs)
+          git push azdo-mirror ${{ parameters.BranchToMirror }} --tags $(ExtraPushArgs)
 
           if ($LASTEXITCODE -EQ 0) {
             Write-Host "Push was successful"
