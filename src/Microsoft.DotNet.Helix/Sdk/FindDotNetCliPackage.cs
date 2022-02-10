@@ -58,8 +58,8 @@ namespace Microsoft.DotNet.Helix.Sdk
             NormalizeParameters();
             var feeds = new List<string>
             {
-                "https://dotnetcli.azureedge.net/dotnet",
-                "https://dotnetbuilds.azureedge.net/public",
+                "https://dotnetcli.blob.core.windows.net/dotnet",
+                "https://dotnetbuilds.blob.core.windows.net/public",
             };
 
             string finalDownloadUrl = null;
