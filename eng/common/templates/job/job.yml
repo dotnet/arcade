@@ -32,9 +32,9 @@ parameters:
   preSteps: []
   runAsPublic: false
 #Sbom related params
-  enableSbom: ''
-  PackageVersion: ''
-  BuildDropPath: ''
+  enableSbom: true
+  PackageVersion: 7.0.0
+  BuildDropPath: '$(Build.SourcesDirectory)/artifacts'
 
 jobs:
 - job: ${{ parameters.name }}

@@ -41,7 +41,6 @@ parameters:
   enableSbom: true
   PackageVersion: 7.0.0
   BuildDropPath: '$(Build.SourcesDirectory)/artifacts'
-  
 
 jobs:
 - ${{ each job in parameters.jobs }}:
