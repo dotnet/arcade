@@ -33,7 +33,6 @@ parameters:
 
   enableSourceIndex: false
   sourceIndexParams: {}
-  
 # Internal resources (telemetry, microbuild) can only be accessed from non-public projects,
 # and some (Microbuild) should only be applied to non-PR cases for internal builds.
   
@@ -88,7 +87,6 @@ jobs:
         - ${{ if eq(parameters.enableSourceBuild, true) }}:
           - Source_Build_Complete
         pool:
-          vmImage: 'windows-2019'
         runAsPublic: ${{ parameters.runAsPublic }}
         publishUsingPipelines: ${{ parameters.enablePublishUsingPipelines }}
         enablePublishBuildArtifacts: ${{ parameters.enablePublishBuildArtifacts }}
