@@ -14,6 +14,6 @@ else{
 }
 
 Write-Host "Updating artifact name"
-$artifact_name = "$env:SYSTEM_STAGENAME$env:AGENT_JOBNAME _SBOM" -replace '["/:<>\\|?@*"() ]', '_'
+$artifact_name = "${env:SYSTEM_STAGENAME}_${env:AGENT_JOBNAME}_SBOM" -replace '["/:<>\\|?@*"() ]', '_'
 Write-Host "Artifact name $artifact_name"
 Write-Host "##vso[task.setvariable variable=ARTIFACT_NAME]$artifact_name"
