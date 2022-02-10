@@ -120,8 +120,8 @@ while :; do
             __UbuntuRepo="http://ftp.debian.org/debian/"
             __CodeName=jessie
             ;;
-        ppc64el)
-            __BuildArch=ppc64el
+        ppc64le)
+            __BuildArch=ppc64le
             __UbuntuArch=ppc64el
             __UbuntuRepo="http://ports.ubuntu.com/ubuntu-ports/"
             __UbuntuPackages=$(echo ${__UbuntuPackages} | sed 's/ libunwind8-dev//')
