@@ -141,7 +141,6 @@ stages:
               -ci
               -restore
               -test
-              -warnAsError $false
               -projects $(Build.SourcesDirectory)\tests\UnitTests.proj
               /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.binlog
               /p:RestoreUsingNuGetTargets=false
@@ -171,7 +170,6 @@ stages:
               -ci
               -restore
               -test
-              -warnAsError $false
               -projects $(Build.SourcesDirectory)\tests\XHarness.Android.DeviceTests.proj
               /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.Device.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
@@ -202,7 +200,6 @@ stages:
               --ci
               --restore
               --test
-              --warnAsError false
               --projects $(Build.SourcesDirectory)/tests/UnitTests.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
               /p:RestoreUsingNuGetTargets=false
@@ -233,7 +230,6 @@ stages:
               -ci
               -restore
               -test
-              -warnAsError false
               -projects $(Build.SourcesDirectory)/tests/XHarness.Apple.SimulatorTests.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/XHarness.Apple.Simulator.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
@@ -264,7 +260,6 @@ stages:
               -ci
               -restore
               -test
-              -warnAsError false
               -projects $(Build.SourcesDirectory)/tests/XHarness.Apple.DeviceTests.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Apple.Device.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
@@ -295,7 +290,6 @@ stages:
               -ci
               -restore
               -test
-              -warnAsError false
               -projects $(Build.SourcesDirectory)/tests/XHarness.Android.SimulatorTests.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Android.Simulator.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
