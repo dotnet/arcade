@@ -13,6 +13,7 @@ parameters:
 steps:
 - task: PowerShell@2 
   displayName: Prep for SBOM generation in (Non-linux)
+  condition: or(eq(variables['Agent.Os'], 'Windows_NT'), eq(variables['Agent.Os'], 'Darwin'))
   inputs: 
     filePath: ./eng/common/generate-sbom-prep.ps1
     arguments: ${{parameters.manifestDirPath}}
