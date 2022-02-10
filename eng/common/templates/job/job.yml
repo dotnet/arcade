@@ -256,6 +256,6 @@ jobs:
   - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), eq(parameters.enableSbom, 'true')) }}:
     - template: /eng/common/templates/steps/generate-sbom.yml
       parameters:
-        PackageVersion : ${{ parameters.packageVersion}}
-        BuildDropPath : ${{ parameters.buildDropPath }}
+        PackageVersion: ${{ parameters.packageVersion}}
+        BuildDropPath: ${{ parameters.buildDropPath }}
 
