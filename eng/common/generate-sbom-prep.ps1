@@ -3,7 +3,7 @@ Param(
 )
 
 Write-Host "Creating dir $ManifestDirPath"
-#create directory for sbom manifest to be placed
+# create directory for sbom manifest to be placed
 if (!(Test-Path -path $ManifestDirPath))
 {
   New-Item -ItemType Directory -path $ManifestDirPath
