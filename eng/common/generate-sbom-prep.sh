@@ -11,7 +11,7 @@ else
   Write-PipelineTelemetryError -category 'Build'  "Unable to create sbom folder."
 fi
 
-artifact_name=$SYSTEM_STAGENAME$AGENT_JOBNAME"_SBOM"
+artifact_name=$SYSTEM_STAGENAME"_"$AGENT_JOBNAME"_SBOM"
 echo "Artifact name before : "$artifact_name
 #replace all special characters with _, some builds use special characters like : in Agent.Jobname, that is not a permissible name while uploading artifacts.
 safe_artifact_name="${artifact_name//["/:<>\\|?@*$" ]/_}"
