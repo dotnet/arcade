@@ -23,7 +23,7 @@ your current usage of the YAML templates that Arcade provides.
 
 ### Repositories using Arcade's job(s).yml templates
 
-If you are using Arcade from the ".NET Eng - latest" or ".NET 6 Eng", and using the provided job
+If you are using Arcade from the ".NET Eng - latest" or ".NET 6 Eng" channels, and using the provided job
 templates ([job.yml](https://github.com/dotnet/arcade/tree/main/eng/common/templates/job/job.yml),
 [jobs.yml](https://github.com/dotnet/arcade/blob/main/eng/common/templates/jobs/jobs.yml)), Your
 build legs should start attempting to generate and upload SBOMs automatically.
