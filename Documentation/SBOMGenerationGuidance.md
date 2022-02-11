@@ -70,7 +70,7 @@ Much of this template can be used as-is for most repositories, with defaults bas
 Arcade configurations. The template allows customization of behavior via the following parameters:
 
 - `PackageVersion`: Version that will be reported by the SBOM. For repositories based on Arcade's
-  main branch, this should be "7.0", and "6.0" for .NET 6 release branches. 
+  main branch, this should be "7.0.0", and "6.0.0" for .NET 6 release branches. 
 - `PackageName`: default is '.NET'. Contact @dotnet/dnceng if you think your repo should use a
   different name.
 - `ManifestDirPath`: Determines where in the build agent the SBOM will be generated to, defaults to
@@ -85,7 +85,7 @@ Arcade configurations. The template allows customization of behavior via the fol
 
 To verify that the functionality worked as expected in your repository:
 
-1. The following steps should be added to every job that is using the templates:
+1. The following steps should have been added to every job that is using the templates:
     - `Prep for SBOM generation`: Prepares the output directory for the sbom manifest and sets up
       the name of the artifact that will be uploaded.
     - `Create SBOM output folder`: Creates the directory where the sbom will be stored in the build
@@ -94,10 +94,9 @@ To verify that the functionality worked as expected in your repository:
     - `Publish generated SBOM`: Uploads the SBOM to the build's artifacts
 
 1. In the build's artifacts, you should find a new artifact for every job that added these new
-   steps. The artifacts will be named with a pattern of `<stage>_<job>_<sbom>`
+   steps. The artifacts will be named with a pattern of `<stage>_<job>_<SBOM>`
 
-<insert an example image here when the template gets checked in and we have an official arcade build
-using it>
+      ![](SbomArtifactExample.png)
 
 For each SBOM produced, you should download the `spdx2.2/manifest.spdx.json` file to make sure all the
 build output, OSS (Open Source Software) dependencies are captured in the manifest and to make sure
