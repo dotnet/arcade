@@ -23,9 +23,10 @@
       <_ProjectReferenceWithTargetFrameworks Include="@(ProjectReference->WithMetadataValue('SkipGetTargetFrameworkProperties', 'true'))" />
     </ItemGroup>
 
-    <ChooseBestP2PTargetFrameworkTask TargetFramework="$(TargetFramework)"
-                                      ProjectReferencesWithTargetFrameworks="@(_ProjectReferenceWithTargetFrameworks)"
-                                      RuntimeGraph="$(RuntimeGraph)">
+    <ChooseBestP2PTargetFrameworkTask ProjectReferencesWithTargetFrameworks="@(_ProjectReferenceWithTargetFrameworks)"
+                                      RuntimeGraph="$(RuntimeGraph)"
+                                      TargetFramework="$(TargetFramework)"
+                                      TrimIncompatibleProjectReferencesWithoutRaisingAnError="$(TrimIncompatibleProjectReferencesWithoutRaisingAnError)">
       <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="_ProjectReferenceWithBestTargetFramework" />
     </ChooseBestP2PTargetFrameworkTask>
     
