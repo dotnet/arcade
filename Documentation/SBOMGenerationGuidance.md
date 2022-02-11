@@ -120,7 +120,7 @@ readable.
   "spdxVersion": "SPDX-2.2",
       "dataLicense": "CC0-1.0",
       "SPDXID": "SPDXRef-DOCUMENT",
-      "name": ".NET 7.0",
+      "name": ".NET 7.0.0",
       "documentNamespace": "https://sbom.microsoft/1:7eRdtVpLFUKo5AoKX3Hn2A:bhGpfqyfPUCyWLMfzxuykw/286:1593108/w6ix__ZFGEGpJcSV4N1qbA",
       "creationInfo": {
           "created": "2022-02-04T21:15:00Z",
