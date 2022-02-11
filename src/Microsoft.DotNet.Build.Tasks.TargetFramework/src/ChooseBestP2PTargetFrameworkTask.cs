@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework
         [Required]
         public string TargetFramework { get; set; }
 
-        public bool TrimIncompatibleProjectReferencesWithoutRaisingAnError { get; set; }
+        public bool TrimIncompatibleProjectReferences { get; set; }
 
         [Output]
         public ITaskItem[] AnnotatedProjectReferencesWithSetTargetFramework { get; set; }
@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework
                     string bestTargetFramework = targetFrameworkResolver.GetBestSupportedTargetFramework(targetFrameworks, referringTargetFramework);
                     if (bestTargetFramework == null)
                     {
-                        if (TrimIncompatibleProjectReferencesWithoutRaisingAnError)
+                        if (TrimIncompatibleProjectReferences)
                         {
                             continue;
                         }
