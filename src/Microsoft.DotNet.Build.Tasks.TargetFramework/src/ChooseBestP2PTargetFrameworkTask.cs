@@ -3,6 +3,7 @@
 
 using Microsoft.Build.Framework;
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace Microsoft.DotNet.Build.Tasks.TargetFramework
@@ -10,30 +11,28 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework
     public class ChooseBestP2PTargetFrameworkTask : BuildTask
     {
         [Required]
-        public string TargetFramework { get; set; }
-
-        [Required]
         public ITaskItem[] ProjectReferencesWithTargetFrameworks { get; set; }
 
         [Required]
         public string RuntimeGraph { get; set; }
+
+        [Required]
+        public string TargetFramework { get; set; }
+
+        public bool TrimIncompatibleProjectReferencesWithoutRaisingAnError { get; set; }
 
         [Output]
         public ITaskItem[] AnnotatedProjectReferencesWithSetTargetFramework { get; set; }
 
         public override bool Execute()
         {
-            AnnotatedProjectReferencesWithSetTargetFramework = new ITaskItem[ProjectReferencesWithTargetFrameworks.Length];
+            var annotatedProjectReferencesWithSetTargetFramework = new List<ITaskItem>(ProjectReferencesWithTargetFrameworks.Length);
             var targetFrameworkResolver = new TargetFrameworkResolver(RuntimeGraph);
 
             for (int i = 0; i < ProjectReferencesWithTargetFrameworks.Length; i++)
             {
                 ITaskItem projectReference = ProjectReferencesWithTargetFrameworks[i];
-                string targetFrameworksValue = projectReference.GetMetadata("RawTargetFrameworks");
-                if (string.IsNullOrEmpty(targetFrameworksValue))
-                {
-                    targetFrameworksValue = projectReference.GetMetadata("TargetFrameworks");
-                }
+                string targetFrameworksValue = projectReference.GetMetadata("TargetFrameworks");
 
                 // Allow referencing projects with TargetFrameworks explicitely cleared out, i.e. Microsoft.Build.Traversal.
                 if (!string.IsNullOrWhiteSpace(targetFrameworksValue))
@@ -49,6 +48,10 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework
                     string bestTargetFramework = targetFrameworkResolver.GetBestSupportedTargetFramework(targetFrameworks, referringTargetFramework);
                     if (bestTargetFramework == null)
                     {
+                        if (TrimIncompatibleProjectReferencesWithoutRaisingAnError)
+                        {
+                            continue;
+                        }
                         Log.LogError($"Not able to find a compatible supported target framework for {referringTargetFramework} in Project {Path.GetFileName(projectReference.ItemSpec)}. The Supported Configurations are {string.Join(", ", targetFrameworks)}");
                     }
 
@@ -74,9 +77,10 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework
                     projectReference.SetMetadata("SkipGetTargetFrameworkProperties", "true");
                 }
 
-                AnnotatedProjectReferencesWithSetTargetFramework[i] = projectReference;
+                annotatedProjectReferencesWithSetTargetFramework.Add(projectReference);
             }
 
+            AnnotatedProjectReferencesWithSetTargetFramework = annotatedProjectReferencesWithSetTargetFramework.ToArray();
             return !Log.HasLoggedErrors;
         }        
     }
