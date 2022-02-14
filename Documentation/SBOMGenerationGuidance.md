@@ -99,7 +99,7 @@ To verify that the functionality worked as expected in your repository:
       ![](SbomArtifactExample.png)
 
 For each SBOM produced, you should download the `spdx2.2/manifest.spdx.json` file to make sure all the
-build output, OSS (Open Source Software) dependencies are captured in the manifest and to make sure
+build outputs, OSS (Open Source Software) dependencies are captured in the manifest and that
 the product name and version for the SBOM match expectations.
 
 It's recommended to open the manifest files with VSCode and format them so they are slightly more
@@ -112,9 +112,9 @@ readable.
 - `Dependencies`: These should be present in the `packages` collection of the manifest, and use the
   same detection mechanism as the component governance tasks. 
 
-- After the packages section, the last entry should mention the correct name and version for the
-  software that the SBOM is about. The `name` property should read as ".NET 7.0" for main branches,
-  and ".NET 6.0" for .NET 6 release branches.
+- `Package name and version`: After the packages section, the last entry should mention the correct
+  name and version for the software that the SBOM is about. The `name` property should read as ".NET
+  7.0" for main branches, and ".NET 6.0" for .NET 6 release branches.
 
   ```JSON
   "spdxVersion": "SPDX-2.2",
