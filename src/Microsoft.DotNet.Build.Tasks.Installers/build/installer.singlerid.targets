@@ -459,6 +459,9 @@
     <PropertyGroup>
       <FullLicenseText>$([System.IO.File]::ReadAllText('$(LicenseFile)').Replace('%0A', '\n').Replace('"', '\"'))</FullLicenseText>
       <LinuxInstallRoot Condition="'$(LinuxInstallRoot)' == ''">/usr/share/dotnet</LinuxInstallRoot>
+      <LinuxPackageArchitecture>$(InstallerTargetArchitecture)</LinuxPackageArchitecture>
+      <!-- Linux packaging requires 'amd64' for x64 packages -->
+      <LinuxPackageArchitecture Condition="'$(LinuxPackageArchitecture)' == 'x64'">amd64</LinuxPackageArchitecture>
     </PropertyGroup>
 
     <ItemGroup>
@@ -469,7 +472,7 @@
 
       <_LinuxPackageControlProperty Include="priority" String="standard" />
       <_LinuxPackageControlProperty Include="section" String="libs" />
-      <_LinuxPackageControlProperty Include="architecture" String="amd64" />
+      <_LinuxPackageControlProperty Include="architecture" String="$(LinuxPackageArchitecture)" />
 
       <_LinuxPackageLicenseProperty Include="type" String="MIT and ASL 2.0 and BSD" />
       <_LinuxPackageLicenseProperty Include="full_text" String="$(FullLicenseText)" />
