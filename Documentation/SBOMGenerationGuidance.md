@@ -114,7 +114,7 @@ readable.
 
 - `Package name and version`: After the packages section, the last entry should mention the correct
   name and version for the software that the SBOM is about. The `name` property should read as ".NET
-  7.0" for main branches, and ".NET 6.0" for .NET 6 release branches.
+  7.0.0" for main branches, and ".NET 6.0.0" for .NET 6 release branches.
 
   ```JSON
   "spdxVersion": "SPDX-2.2",
