@@ -48,6 +48,7 @@ stages:
       jobs:
       - job: Windows_NT
         timeoutInMinutes: 90
+        disableComponentGovernance: true
         pool:
           ${{ if eq(variables._RunAsPublic, True) }}:
             vmImage: windows-latest
