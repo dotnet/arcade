@@ -1,12 +1,6 @@
 # Disable CI triggers, only called using Maestro
 trigger: none
 
-parameters:
-  - name: GithubRepo
-    default: ''
-  - name: BranchToMirror
-    default: ''
-  
 variables:
   - group: Mirror-Credentials
 
@@ -20,78 +14,91 @@ jobs:
     - job: Merge_GitHub_to_Azure_DevOps
       pool:
         name: NetCore1ESPool-Internal
-        demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
+        demands: ImageOverride -equals Build.Server.Amd64.VS2019
       variables:
       - name: WorkingDirectoryName
         value: repo-dir
       steps:
-      - powershell: |
-          $gitHubRepo = "${{ parameters.GithubRepo }}"
-          $branchToMirror = "${{ parameters.BranchToMirror }}"
-          $azDORepo = $gitHubRepo.Replace("/", "-");
-          # Check that the parameters look correct
-          if ($azDORepo -eq "" -or $branchToMirror -eq "")
-          {
-            Write-Error "Expected valid branch and GitHub repo in the form of owner/repo"
-          }
-          Write-Host "##vso[task.setvariable variable=AzDORepoName]$azDORepo"
-          Write-Host "Mirroring branch '$(branchToMirror)' from GitHub repo '$(gitHubRepo)' to Azure DevOps repo '$azDORepo'."
+      - task: PowerShell@1
         displayName: Calculate Mirrored Branch Names
+        inputs:
+          scriptType: inlineScript
+          arguments: '$(GithubRepo) $(BranchToMirror)'
+          inlineScript: |
+            param([string]$repo, [string]$branch)
+          
+            $azDORepo = $repo.Replace("/", "-");
+            # Check that the parameters look correct
+            if ($azDORepo -eq "" -or $branch -eq "")
+            {
+              Write-Error "Expected valid branch and GitHub repo in the form of owner/repo"
+            }
+            Write-Host "##vso[task.setvariable variable=AzDORepoName]$azDORepo"
+            Write-Host "Mirroring branch '$branch' from GitHub repo '$repo' to Azure DevOps repo '$azDORepo'."
       - script: |
-          git clone https://dotnet-maestro-bot:$(BotAccount-dotnet-maestro-bot-PAT)@github.com/${{ parameters.GithubRepo }} $(WorkingDirectoryName) -b ${{ parameters.BranchToMirror }}
+          git clone https://dotnet-maestro-bot:$(BotAccount-dotnet-maestro-bot-PAT)@github.com/$(GithubRepo) $(WorkingDirectoryName) -b $(BranchToMirror)
         displayName: Clone GitHub repo
       - script: |
           git remote add azdo-mirror https://dn-bot:$(dn-bot-dnceng-build-rw-code-rw)@dev.azure.com/dnceng/internal/_git/$(AzDORepoName)
         displayName: Add Azure DevOps remote
         workingDirectory: $(WorkingDirectoryName)
       - script: |
-          git reset --hard origin/${{ parameters.BranchToMirror }}
+          git reset --hard origin/$(BranchToMirror)
         displayName: Hard reset local branch to GitHub branch
         workingDirectory: $(WorkingDirectoryName)
-      - powershell: |
-          git push azdo-mirror ${{ parameters.BranchToMirror }} --tags $(ExtraPushArgs)
+      - task: PowerShell@2
+        displayName: Push changes to Azure DevOps repo
+        inputs:
+          targetType: inline
+          workingDirectory: $(WorkingDirectoryName)
+          script: |
+            git push azdo-mirror $(BranchToMirror) --tags $(ExtraPushArgs)
 
-          if ($LASTEXITCODE -EQ 0) {
-            Write-Host "Push was successful"
-            exit
-          }
-
-          git fetch azdo-mirror
-          git fetch origin
-          $commits = (git --no-pager rev-list origin/$(BranchToMirror)..azdo-mirror/$(BranchToMirror) | Measure-Object -line).Lines
-          if ($commits -NE 0) {
-            Write-Host "##vso[task.LogIssue type=error;]Mirror repository $(AzDORepoName) has unexpected commits"
-            git --no-pager log origin/$(BranchToMirror)..azdo-mirror/$(BranchToMirror)
-            exit 1
-          }
-
-          Write-Host "##vso[task.LogIssue type=warning;]Push failed for unknown reason"
-
-          $retryattempt=0
-          while ($retryattempt -LT 3) {
-            $retryattempt+=1
-            Write-Host "Retry attempt $retryattempt of 3 in 5 seconds..."
-            Start-Sleep -Seconds 5
-
-            git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
             if ($LASTEXITCODE -EQ 0) {
-              Write-Host "Push successful"
+              Write-Host "Push was successful"
               exit
             }
-          }
 
-          Write-Host "##vso[task.LogIssue type=error;]git failed to push to Azure DevOps mirror"
-          exit 1
-        displayName: Push changes to Azure DevOps repo
-        workingDirectory: $(WorkingDirectoryName)
+            git fetch azdo-mirror
+            git fetch origin
+            $commits = (git --no-pager rev-list origin/$(BranchToMirror)..azdo-mirror/$(BranchToMirror) | Measure-Object -line).Lines
+            if ($commits -NE 0) {
+              Write-Host "##vso[task.LogIssue type=error;]Mirror repository $(AzDORepoName) has unexpected commits"
+              git --no-pager log origin/$(BranchToMirror)..azdo-mirror/$(BranchToMirror)
+              exit 1
+            }
 
-      - powershell: |         
-          $commit = (git rev-parse HEAD).Substring(0, 7)
-          $target = "$(GithubRepo) $(BranchToMirror)".Replace('/', ' ')
+            Write-Host "##vso[task.LogIssue type=warning;]Push failed for unknown reason"
 
-          Write-Host "##vso[build.updatebuildnumber]$target $commit"
-          Write-Host "##vso[build.addbuildtag]$target"
+            $retryattempt=0
+            while ($retryattempt -LT 3) {
+              $retryattempt+=1
+              Write-Host "Retry attempt $retryattempt of 3 in 5 seconds..."
+              Start-Sleep -Seconds 5
+
+              git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
+              if ($LASTEXITCODE -EQ 0) {
+                Write-Host "Push successful"
+                exit
+              }
+            }
+
+            Write-Host "##vso[task.LogIssue type=error;]git failed to push to Azure DevOps mirror"
+            exit 1
+
+      - task: PowerShell@1
         displayName: Broadcast target, branch, commit in metadata
         continueOnError: true
         condition: always()
-        workingDirectory: $(WorkingDirectoryName)
+        inputs:
+          scriptType: inlineScript
+          arguments: '$(GithubRepo) $(BranchToMirror)'
+          workingDirectory: $(WorkingDirectoryName)
+          inlineScript: |
+            param([string]$repo, [string]$branch)
+
+            $commit = (git rev-parse HEAD).Substring(0, 7)
+            $target = "$repo $branch".Replace('/', ' ')
+
+            Write-Host "##vso[build.updatebuildnumber]$target $commit"
+            Write-Host "##vso[build.addbuildtag]$target"
