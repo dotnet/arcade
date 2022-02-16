@@ -229,6 +229,9 @@ for your release builds:
   - `BuildId` : Azure DevOps Build ID for the build to be retained. Default is the build where the
     template is running.
 
+   If the retention was successful, you should see the following in the Azure DevOps build view:
+    ![](BuildRetentionExample.png)
+
 ## Troubleshooting
 
 - If the SBOM generation task fails with the message:
