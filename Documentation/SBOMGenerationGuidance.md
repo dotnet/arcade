@@ -148,7 +148,6 @@ for your release builds:
   - https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int
   - https://github.com/dotnet/aspnetcore
   - https://github.com/dotnet/command-line-api
-  - https://github.com/dotnet/command-line-api
   - https://github.com/dotnet/diagnostics
   - https://github.com/dotnet/efcore
   - https://github.com/dotnet/emsdk
@@ -161,7 +160,6 @@ for your release builds:
   - https://github.com/dotnet/msbuild
   - https://github.com/dotnet/msquic
   - https://github.com/dotnet/razor-compiler
-  - https://github.com/dotnet/roslyn
   - https://github.com/dotnet/roslyn
   - https://github.com/dotnet/roslyn-analyzers
   - https://github.com/dotnet/runtime
