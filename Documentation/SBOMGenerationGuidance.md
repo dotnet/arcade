@@ -180,9 +180,9 @@ for your release builds:
   be applied manually for any repository that isn't present in the above list. To help with this,
   Arcade provides a [PowerShell
   script](https://github.com/dotnet/arcade/blob/main/eng/common/retain-build.ps1) and [YAML
-  template](https://github.com/dotnet/arcade/blob/main/eng/common/retain-build.ps1) that can be
-  added to individual build and release pipelines. The YAML template by default will attempt to
-  retain the same build where the pipeline is running.
+  template](https://github.com/dotnet/arcade/blob/main/eng/common/templates/steps/retain-build.yml)
+  that can be added to individual build and release pipelines. The YAML template by default will
+  attempt to retain the same build where the pipeline is running.
 
   Following up from the minimal example above:
   ```YAML
