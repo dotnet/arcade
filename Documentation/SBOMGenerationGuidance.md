@@ -212,6 +212,8 @@ for your release builds:
               -configuration release
               -prepareMachine
             displayName: Windows Build / Publish
+
+          - template: eng\common\templates\steps\generate-sbom.yml
           
           - ${{if eq(parameters.retainBuild, true}}
             - template: eng\common\templates\steps\retain-build.yml
