@@ -144,37 +144,37 @@ for your release builds:
   will be applied automatically via the .NET release pipeline for the following repositories (which
   participate in the centralized release process):
 
-  - https://github.com/dotnet/installer
-  - https://github.com/dotnet/windowsdesktop
-  - https://github.com/dotnet/runtime
+  - https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage
+  - https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int
   - https://github.com/dotnet/aspnetcore
-  - https://github.com/dotnet/test-templates
-  - https://github.com/dotnet/templating
-  - https://github.com/dotnet/sdk
-  - https://github.com/dotnet/winforms
-  - https://github.com/dotnet/wpf
-  - https://github.com/dotnet/fsharp
-  - https://github.com/microsoft/vstest
-  - https://github.com/dotnet/linker
-  - https://github.com/dotnet/roslyn
-  - https://github.com/dotnet/msbuild
-  - https://github.com/nuget/nuget.client
-  - https://github.com/dotnet/emsdk
-  - https://github.com/dotnet/icu
-  - https://github.com/dotnet/msquic
-  - https://github.com/dotnet/llvm-project
+  - https://github.com/dotnet/command-line-api
+  - https://github.com/dotnet/command-line-api
+  - https://github.com/dotnet/diagnostics
   - https://github.com/dotnet/efcore
+  - https://github.com/dotnet/emsdk
+  - https://github.com/dotnet/format
+  - https://github.com/dotnet/fsharp
+  - https://github.com/dotnet/icu
+  - https://github.com/dotnet/installer
+  - https://github.com/dotnet/linker
+  - https://github.com/dotnet/llvm-project
+  - https://github.com/dotnet/msbuild
+  - https://github.com/dotnet/msquic
+  - https://github.com/dotnet/razor-compiler
+  - https://github.com/dotnet/roslyn
+  - https://github.com/dotnet/roslyn
+  - https://github.com/dotnet/roslyn-analyzers
+  - https://github.com/dotnet/runtime
+  - https://github.com/dotnet/sdk
   - https://github.com/dotnet/source-build
   - https://github.com/dotnet/source-build-reference-packages
-  - https://github.com/dotnet/command-line-api
-  - https://github.com/dotnet/format
-  - https://github.com/dotnet/razor-compiler
-  - https://github.com/dotnet/roslyn-analyzers
-  - https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int
-  - https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage
-  - https://github.com/dotnet/diagnostics
-  - https://github.com/dotnet/roslyn
-  - https://github.com/dotnet/command-line-api
+  - https://github.com/dotnet/templating
+  - https://github.com/dotnet/test-templates
+  - https://github.com/dotnet/windowsdesktop
+  - https://github.com/dotnet/winforms
+  - https://github.com/dotnet/wpf
+  - https://github.com/microsoft/vstest
+  - https://github.com/nuget/nuget.client
 
 - **For repositories that have their own release process and cadence**: Retention rules will need to
   be applied manually for any repository that isn't present in the above list. To help with this,
