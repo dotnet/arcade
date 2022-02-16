@@ -218,12 +218,16 @@ for your release builds:
   ```
   The template takes the following parameters if more configuration is required:
 
-  - `Token`: Default is the build's `(System.AccessToken)`In cases where the pipeline that retains 
+  - `Token`: Default is the build's `(System.AccessToken)`. In cases where the pipeline that retains
     the build is in a different AzDO organization than the build to be retained, this should be 
     configured to an Azure DevOps PAT with the build read + execute scopes.
-  - `AzdoOrgUri`: Azure DevOps organization URI for the build to be retained, in the `https://dev.azure.com/<organization> format. Default is the organization where the build is running. 
-  - `AzdoProject`: Azure DevOps project for the build to be retained. Defaults to the project where the current pipeline is hosted.
-  - `BuildId` : Azure DevOps Build ID for the build to be retained
+  - `AzdoOrgUri`: Azure DevOps organization URI for the build to be retained, in the
+    `https://dev.azure.com/<organization> format. Default is the organization where the build is
+    running.
+  - `AzdoProject`: Azure DevOps project for the build to be retained. Defaults to the project where
+    the current pipeline is hosted.
+  - `BuildId` : Azure DevOps Build ID for the build to be retained. Default is the build where the
+    template is running.
 
 ## Troubleshooting
 
