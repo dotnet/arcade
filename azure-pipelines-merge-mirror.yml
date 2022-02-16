@@ -9,6 +9,7 @@ jobs:
     helixRepo: dotnet/arcade
     jobs:
     - job: Merge_GitHub_to_Azure_DevOps
+      enableSBOM: false
       pool:
         vmImage: windows-2019
       variables:
