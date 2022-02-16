@@ -20,8 +20,8 @@ steps:
       arguments: >
         -AzdoOrgUri: ${{parameters.AzdoOrgUri}}
         -AzdoProject ${{parameters.AzdoProject}}
-        -token ${{coalesce(parameters.token, '$env:SYSTEM_ACCESSTOKEN') }}
-        -buildId ${{coalesce(parameters.buildId, '$env:BUILD_ID')}}
+        -Token ${{coalesce(parameters.Token, '$env:SYSTEM_ACCESSTOKEN') }}
+        -BuildId ${{coalesce(parameters.BuildId, '$env:BUILD_ID')}}
     displayName: Enable permanent build retention
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)

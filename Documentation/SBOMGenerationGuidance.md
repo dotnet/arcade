@@ -140,7 +140,7 @@ We are required to store the SBOMs for builds that are released to the public in
 artifacts so that they are available if they are requested by customers. In order to achieve this
 for your release builds:
 
-- **For repositories that produce assets released via the .NET release pipeline**: Retention rules
+- **For repositories that produce assets referenced by the .NET release pipeline**: Retention rules
   will be applied automatically via the .NET release pipeline for the following repositories (which
   participate in the centralized release process):
 
@@ -175,12 +175,15 @@ for your release builds:
   - https://github.com/nuget/nuget.client
 
 - **For repositories that have their own release process and cadence**: Retention rules will need to
-  be applied manually for any repository that isn't present in the above list. To help with this,
-  Arcade provides a [PowerShell
-  script](https://github.com/dotnet/arcade/blob/main/eng/common/retain-build.ps1) and [YAML
+  be applied manually for any repository that isn't present in the above list. Not every build
+  should be retained indefinitely, but rather whichever builds will be used to release assets to
+  customers. To help
+  with this, Arcade provides a [PowerShell
+  script](https://github.com/dotnet/arcade/blob/main/eng/common/retain-build.ps1) and a helper [YAML
   template](https://github.com/dotnet/arcade/blob/main/eng/common/templates/steps/retain-build.yml)
-  that can be added to individual build and release pipelines. The YAML template by default will
-  attempt to retain the same build where the pipeline is running.
+  that can be added together or individually to build and release pipelines. The YAML template by
+  default will attempt to retain the same build where the pipeline is running, and the script can
+  also be ran by itself by providing the required parameters.
 
   Following up from the minimal example above:
   ```YAML
