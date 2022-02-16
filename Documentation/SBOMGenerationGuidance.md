@@ -140,9 +140,9 @@ We are required to store the SBOMs for builds that are released to the public in
 artifacts so that they are available if they are requested by customers. In order to achieve this
 for your release builds:
 
-- **For repositories that produce assets referenced by the .NET release pipeline**: Retention rules
+- **For builds of repositories that produce assets referenced by the .NET release pipeline**: Retention rules
   will be applied automatically via the .NET release pipeline for the following repositories (which
-  participate in the centralized release process):
+  may appear in .NET's build drops):
 
   - https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage
   - https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int
