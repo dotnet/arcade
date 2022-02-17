@@ -9,6 +9,7 @@ jobs:
     helixRepo: dotnet/arcade
     jobs:
     - job: Merge_GitHub_to_Azure_DevOps
+      enableSBOM: false
       pool:
         name: NetCore1ESPool-Internal
         demands: ImageOverride -equals Build.Server.Amd64.VS2019
