@@ -10,7 +10,6 @@ involved in the composition of .NET needs to produce and upload an SBOM for each
 official build that produces or modifies any assets. In this initial phase, we are focusing our
 efforts to have 6.0 and 7.0 builds generate the SBOMs.
 
-
 ## Use with Arcade
 
 As an initial phase for SBOM generation, Arcade provides [a new YAML
@@ -31,7 +30,8 @@ build legs should start attempting to generate and upload SBOMs automatically.
 For most cases, this is all that a repository using the arcade templates will need to do to generate
 and upload their SBOMs. If the generation doesn't work as expected, follow the [troubleshooting
 instructions](#troubleshooting). Once you have verified the SBOMs are being generated for all of your
-jobs, you can [review your SBOMs for correctness](#reviewing-generated-sboms-for-correctness).
+jobs, you can [review your SBOMs for correctness](#reviewing-generated-sboms-for-correctness), and set up [retention rules
+for your release builds](#retention-rules-for-release-build-sboms)
 
 ### Repositories not using Arcade's job(s).yml templates
 
@@ -86,12 +86,12 @@ Arcade configurations. The template allows customization of behavior via the fol
 To verify that the functionality worked as expected in your repository:
 
 1. The following steps should have been added to every job that is using the templates:
-    - `Prep for SBOM generation`: Prepares the output directory for the sbom manifest and sets up
+    - **Prep for SBOM generation**: Prepares the output directory for the sbom manifest and sets up
       the name of the artifact that will be uploaded.
-    - `Create SBOM output folder`: Creates the directory where the sbom will be stored in the build
+    - **Create SBOM output folder**: Creates the directory where the sbom will be stored in the build
       agent.
-    - `Generate SBOM manifest`: calls the SBOM generator task to produce the SBOM.
-    - `Publish generated SBOM`: Uploads the SBOM to the build's artifacts
+    - **Generate SBOM manifest**: calls the SBOM generator task to produce the SBOM.
+    - **Publish generated SBOM**: Uploads the SBOM to the build's artifacts
 
 1. In the build's artifacts, you should find a new artifact for every job that added these new
    steps. The artifacts will be named with a pattern of `<stage>_<job>_<SBOM>`
@@ -134,6 +134,106 @@ readable.
       ]
   ```
 
+# Retention rules for release build SBOMs
+
+We are required to store the SBOMs for builds that are released to the public in that pipeline's
+artifacts so that they are available if they are requested by customers. In order to achieve this
+for your release builds:
+
+- **For builds of repositories that produce assets referenced by the .NET release pipeline**: Retention rules
+  will be applied automatically via the .NET release pipeline for the following repositories (which
+  may appear in .NET's build drops):
+
+  - https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage
+  - https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int
+  - https://github.com/dotnet/aspnetcore
+  - https://github.com/dotnet/command-line-api
+  - https://github.com/dotnet/diagnostics
+  - https://github.com/dotnet/efcore
+  - https://github.com/dotnet/emsdk
+  - https://github.com/dotnet/format
+  - https://github.com/dotnet/fsharp
+  - https://github.com/dotnet/icu
+  - https://github.com/dotnet/installer
+  - https://github.com/dotnet/linker
+  - https://github.com/dotnet/llvm-project
+  - https://github.com/dotnet/msbuild
+  - https://github.com/dotnet/msquic
+  - https://github.com/dotnet/razor-compiler
+  - https://github.com/dotnet/roslyn
+  - https://github.com/dotnet/roslyn-analyzers
+  - https://github.com/dotnet/runtime
+  - https://github.com/dotnet/sdk
+  - https://github.com/dotnet/source-build
+  - https://github.com/dotnet/source-build-reference-packages
+  - https://github.com/dotnet/templating
+  - https://github.com/dotnet/test-templates
+  - https://github.com/dotnet/windowsdesktop
+  - https://github.com/dotnet/winforms
+  - https://github.com/dotnet/wpf
+  - https://github.com/microsoft/vstest
+  - https://github.com/nuget/nuget.client
+
+- **For repositories that have their own release process and cadence**: Retention rules will need to
+  be applied manually for any repository that isn't present in the above list. Not every build
+  should be retained indefinitely, but rather whichever builds will be used to release assets to
+  customers. To help
+  with this, Arcade provides a [PowerShell
+  script](https://github.com/dotnet/arcade/blob/main/eng/common/retain-build.ps1) and a helper [YAML
+  template](https://github.com/dotnet/arcade/blob/main/eng/common/templates/steps/retain-build.yml)
+  that can be added together or individually to build and release pipelines. The YAML template by
+  default will attempt to retain the same build where the pipeline is running, and the script can
+  also be ran by itself by providing the required parameters.
+
+  Following up from the minimal example above:
+  ```YAML
+  # One stage, one job: Generate an SBOM, and retain the build forever 
+  # if a variable to do so is passed to the build
+
+  parameters:
+  - name: retainBuild
+    type: boolean
+    default: false
+
+  stages:
+
+  - stage: build
+    displayName: Build
+    jobs:
+      - job: build (Windows)
+          pool:
+            name: NetCore1ESPool-Internal
+            demands: ImageOverride -equals Build.Server.Amd64.VS2019
+
+          steps:
+          - checkout: self
+            clean: true
+
+          - script: eng\common\cibuild.cmd
+              -configuration release
+              -prepareMachine
+            displayName: Windows Build / Publish
+
+          - template: eng\common\templates\steps\generate-sbom.yml
+          
+          - ${{if eq(parameters.retainBuild, true}}
+            - template: eng\common\templates\steps\retain-build.yml
+  ```
+  The template takes the following parameters if more configuration is required:
+
+  - `Token`: Default is the build's `(System.AccessToken)`. In cases where the pipeline that retains
+    the build is in a different AzDO organization than the build to be retained, this should be 
+    configured to an Azure DevOps PAT with the build read + execute scopes.
+  - `AzdoOrgUri`: Azure DevOps organization URI for the build to be retained, in the
+    `https://dev.azure.com/<organization> format. Default is the organization where the build is
+    running.
+  - `AzdoProject`: Azure DevOps project for the build to be retained. Defaults to the project where
+    the current pipeline is hosted.
+  - `BuildId` : Azure DevOps Build ID for the build to be retained. Default is the build where the
+    template is running.
+
+   If the retention was successful, you should see the following in the Azure DevOps build view:
+    ![](BuildRetentionExample.png)
 
 ## Troubleshooting
 
