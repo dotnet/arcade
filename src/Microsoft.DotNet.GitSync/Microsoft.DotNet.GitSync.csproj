@@ -16,5 +16,7 @@
     <PackageReference Include="Microsoft.Azure.KeyVault" Version="$(MicrosoftAzureKeyVaultVersion)" />
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="$(MicrosoftIdentityModelClientsActiveDirectoryVersion)" />
     <PackageReference Include="Octokit" Version="$(OctokitVersion)" />
+    <PackageReference Include="Microsoft.Data.Services.Client" Version="$(MicrosoftDataODataVersion)" />
+    <PackageReference Include="Microsoft.Data.OData" Version="$(MicrosoftDataODataVersion)" />
   </ItemGroup>
 </Project>
