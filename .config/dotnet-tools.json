@@ -7,6 +7,12 @@
       "commands": [
         "secret-manager"
       ]
+    },
+    "microsoft.dnceng.patgeneratortool": {
+      "version": "1.1.0-beta.22102.6",
+      "commands": [
+        "pat-generator"
+      ]
     }
   }
 }
