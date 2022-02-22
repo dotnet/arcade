@@ -13,7 +13,7 @@
     <MicrosoftCciVersion>4.0.0-rc3-24214-00</MicrosoftCciVersion>
     <HandlebarsNetVersion>1.9.5</HandlebarsNetVersion>
     <LibGit2SharpVersion>0.25.2</LibGit2SharpVersion>
-    <log4netVersion>2.0.8</log4netVersion>
+    <log4netVersion>2.0.10</log4netVersion>
     <SystemNetHttpVersion>4.3.3</SystemNetHttpVersion>
     <MicrosoftAzureStorageBlobVersion>10.0.2</MicrosoftAzureStorageBlobVersion>
     <MicrosoftAzureKeyVaultVersion>3.0.0</MicrosoftAzureKeyVaultVersion>
@@ -52,7 +52,7 @@
     <SystemNumericsVectorsVersion>4.4.0</SystemNumericsVectorsVersion>
     <SystemReflectionMetadataVersion>1.4.2</SystemReflectionMetadataVersion>
     <SystemRuntimeCompilerServicesUnsafeVersion>4.5.0</SystemRuntimeCompilerServicesUnsafeVersion>
-    <SystemTextEncodingsWebVersion>4.5.0</SystemTextEncodingsWebVersion>
+    <SystemTextEncodingsWebVersion>4.5.1</SystemTextEncodingsWebVersion>
     <SystemThreadingTasksExtensionVersion>4.5.1</SystemThreadingTasksExtensionVersion>
     <SystemValueTupleVersion>4.4.0</SystemValueTupleVersion>
     <WindowsAzureStorageVersion>8.5.0</WindowsAzureStorageVersion>
@@ -64,7 +64,7 @@
     <MicrosoftDotNetSignCheckVersion>1.0.0-beta.20569.8</MicrosoftDotNetSignCheckVersion>
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
     <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
-    <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>
+    <MicrosoftAspNetCoreAllVersion>2.0.9</MicrosoftAspNetCoreAllVersion>
     <MicrosoftDotNetGitHubIssueLabelerAssetsVersion>1.4.0</MicrosoftDotNetGitHubIssueLabelerAssetsVersion>
     <MicrosoftMLVersion>1.0.0</MicrosoftMLVersion>
     <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
@@ -76,5 +76,6 @@
     <MicrosoftSourceLinkVersion>1.0.0-beta2-19554-01</MicrosoftSourceLinkVersion>
     <XliffTasksVersion>1.0.0-beta.20206.1</XliffTasksVersion>
     <MicrosoftSourceLinkVersion>1.1.0-beta-20206-02</MicrosoftSourceLinkVersion>
+    <MicrosoftDataODataVersion>5.8.4</MicrosoftDataODataVersion>
   </PropertyGroup>
 </Project>
