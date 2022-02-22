@@ -275,7 +275,9 @@ for operation in operations:
     try:
         analyze_operation(command, platform, device, is_device, target, exit_code)
     except AdditionalTelemetryRequired as e:
+        # TODO (https://github.com/dotnet/core-eng/issues/15274): Stop sending app insights telemetry
         app_insights.send_metric(e.metric_name, e.metric_value, properties=custom_dimensions)
+        send_metric(e.metric_name, e.metric_value, custom_dimensions, event_type=KUSTO_EVENT_TYPE)
     except Exception as e:
         print(f'    Failed to analyze operation: {e}')
 
