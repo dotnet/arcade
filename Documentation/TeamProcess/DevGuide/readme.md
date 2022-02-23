@@ -36,8 +36,9 @@ Let's not forget the whole point of why we're trying to write down how we think 
 This is a work-in-progress and is far from complete.  The idea is to start with the trickiest areas we think we'll encounter after Stage 6 re-opening.
 
 - [Hybrid Team Principles](hybridprinciples.md)
+- [Availability Guidelines](availability.md)
 - [General Meetings](meetings.md)
 - Criteria for when to have synchronous meetings
-- Working from home vs. at the building
 - [Hybrid Triage](hybridtriage.md)
 - Stand Ups
+- [Happy Hour](happyhour.md)
