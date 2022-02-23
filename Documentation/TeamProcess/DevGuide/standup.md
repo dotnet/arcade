@@ -1,6 +1,9 @@
 # Standup Guidelines
 
 * Standups should be both physical and Teams meetings
+* Standups occur twice a week on Tuesdays and Thursdays
+* All team members are expected to attend standup, except when there are conflicts
+* Standups can and will be preemted by meetings like all hands, Q&As, other org/division-wide meetings, and holidays.
 * The in person standup will take place in the team room, and the person running the meeting should share their screen on the television in the team room.
 * Where possible, an external mic should be used for the standup meeting so that those joining by Teams can hear everyone at the in person meeting.
 * Standup will use the [Standup View](https://github.com/orgs/dotnet/projects/86/views/10) of the .NET Core Engineering Services board.
