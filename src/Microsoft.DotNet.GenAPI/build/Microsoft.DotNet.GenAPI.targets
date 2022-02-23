@@ -6,8 +6,8 @@
     <DotNetTool Condition="'$(DotNetTool)' == ''">dotnet</DotNetTool>
 
     <GenAPITargetPath Condition="'$(GenAPITargetPath)' == ''">$(TargetDir)$(TargetName).cs</GenAPITargetPath>
-    <_GenAPIPath Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)\..\tools\netcoreapp3.1\Microsoft.DotNet.GenAPI.dll</_GenAPIPath>
-    <_GenAPIPath Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)\..\tools\net472\Microsoft.DotNet.GenAPI.exe</_GenAPIPath>
+    <_GenAPIPath Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\tools\netcoreapp3.1\Microsoft.DotNet.GenAPI.dll</_GenAPIPath>
+    <_GenAPIPath Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\tools\net472\Microsoft.DotNet.GenAPI.exe</_GenAPIPath>
 
     <_GenAPICommand Condition="'$(MSBuildRuntimeType)' == 'Core'">"$(DotNetTool)" "$(_GenAPIPath)"</_GenAPICommand>
     <_GenAPICommand Condition="'$(MSBuildRuntimeType)' != 'Core' and '$(OS)' == 'Windows_NT'">"$(_GenAPIPath)"</_GenAPICommand>
@@ -22,7 +22,8 @@
     </PrepareForRunDependsOn>
   </PropertyGroup>
 
-  <Target Name="_DontBuildProjectReferences">
+  <Target Name="_DontBuildProjectReferences"
+          Condition="'$(GenerateReferenceAssemblySource)' != 'true'">
     <PropertyGroup>
       <BuildProjectReferences>false</BuildProjectReferences>
     </PropertyGroup>
@@ -49,7 +50,7 @@
       <FileWrites Condition="'$(SkipGenAPITargetPathFileWrite)' != 'true'" Include="$(GenAPITargetPath)"/>
     </ItemGroup>
 
-    <Message Text="Generated reference assembly source code: $(GenAPITargetPath)" Importance="high" />
+    <Message Text="Generated reference assembly source code: $(GenAPITargetPath)" Importance="$([MSBuild]::ValueOrDefault('$(GenAPITargetMessageImportance)', 'high'))" />
   </Target>
 
 </Project>
