@@ -1,6 +1,6 @@
 # Standup Guidelines
 
-* Standups should be both physical and Teams meetings
+* Standups should be both in-person and Teams meetings
 * Standups occur twice a week on Tuesdays and Thursdays
 * All team members are expected to attend standup, except when there are conflicts
 * Standups can and will be preemted by meetings like all hands, Q&As, other org/division-wide meetings, and holidays.
