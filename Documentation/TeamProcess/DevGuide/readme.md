@@ -41,3 +41,4 @@ This is a work-in-progress and is far from complete.  The idea is to start with 
 - Working from home vs. at the building
 - [Hybrid Triage](hybridtriage.md)
 - Stand Ups
+- [Documentation Guidelines](documentationguidelines.md)
