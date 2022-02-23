@@ -40,5 +40,5 @@ This is a work-in-progress and is far from complete.  The idea is to start with 
 - Criteria for when to have synchronous meetings
 - Working from home vs. at the building
 - [Hybrid Triage](hybridtriage.md)
-- [Stand Ups](standups.md)
+- [Stand Ups](standup.md)
 - [Documentation Guidelines](documentationguidelines.md)
