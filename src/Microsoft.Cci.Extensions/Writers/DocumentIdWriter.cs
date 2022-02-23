@@ -28,7 +28,7 @@ namespace Microsoft.Cci.Writers
             if (_kinds != 0)
             {
                 assemblies = assemblies.OrderBy(a => a.Name.Value, StringComparer.OrdinalIgnoreCase);
-                foreach (var assembly in assemblies)
+                foreach (IAssembly assembly in assemblies)
                     Visit(assembly);
             }
         }

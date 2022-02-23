@@ -2,54 +2,65 @@
 <Project>
 
   <PropertyGroup>
-    <!-- If DotNetTool is undefined, we default to assuming 'dotnet' is on the path -->
-    <DotNetTool Condition="'$(DotNetTool)' == ''">dotnet</DotNetTool>
+    <GenAPIAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)\..\tools\netcoreapp3.1\Microsoft.DotNet.GenAPI.dll</GenAPIAssembly>
+    <GenAPIAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)\..\tools\net472\Microsoft.DotNet.GenAPI.exe</GenAPIAssembly>
 
-    <GenAPITargetPath Condition="'$(GenAPITargetPath)' == ''">$(TargetDir)$(TargetName).cs</GenAPITargetPath>
-    <_GenAPIPath Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)\..\tools\netcoreapp3.1\Microsoft.DotNet.GenAPI.dll</_GenAPIPath>
-    <_GenAPIPath Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)\..\tools\net472\Microsoft.DotNet.GenAPI.exe</_GenAPIPath>
-
-    <_GenAPICommand Condition="'$(MSBuildRuntimeType)' == 'Core'">"$(DotNetTool)" "$(_GenAPIPath)"</_GenAPICommand>
-    <_GenAPICommand Condition="'$(MSBuildRuntimeType)' != 'Core' and '$(OS)' == 'Windows_NT'">"$(_GenAPIPath)"</_GenAPICommand>
-    <_GenAPICommand Condition="'$(MSBuildRuntimeType)' != 'Core' and '$(OS)' != 'Windows_NT'">mono --runtime=v4.0.30319 "$(_GenAPIPath)"</_GenAPICommand>
-
-    <!-- Sequence ourselves last in PrepareForRun
-         This ensures the output has been copied to TargetPath, but still permits
-         us to participate in FileWrites. -->
-    <PrepareForRunDependsOn Condition="'$(GenerateReferenceAssemblySource)' == 'true'">
-      $(PrepareForRunDependsOn);
-      GenerateReferenceAssemblySource;
-    </PrepareForRunDependsOn>
+    <TargetsTriggeredByCompilation Condition="'$(GenerateReferenceAssemblySource)' == 'true'">
+      $(TargetsTriggeredByCompilation);
+      GenerateReferenceAssemblySource
+    </TargetsTriggeredByCompilation>
   </PropertyGroup>
 
-  <Target Name="_DontBuildProjectReferences">
+  <Target Name="_DontBuildProjectReferences"
+          Condition="'$(GenerateReferenceAssemblySource)' != 'true'">
     <PropertyGroup>
       <BuildProjectReferences>false</BuildProjectReferences>
     </PropertyGroup>
   </Target>
 
+  <UsingTask TaskName="Microsoft.DotNet.GenAPI.GenAPITask" AssemblyFile="$(GenAPIAssembly)" />
+
   <Target Name="GenerateReferenceAssemblySource"
-          DependsOnTargets="_DontBuildProjectReferences;ResolveAssemblyReferences"
-          Inputs="@(IntermediateAssembly)"
-          Outputs="$(GenAPITargetPath)">
+          DependsOnTargets="_DontBuildProjectReferences;ResolveAssemblyReferences">
     <ItemGroup Condition="'$(GenAPILibPath)' == ''">
       <!-- build out a list of directories where dependencies are located -->
-      <_referencePathDirectoriesWithDuplicates Include="@(ReferencePath->'%(RootDir)%(Directory)'->TrimEnd('\'))" />
-      <!-- strip metadata, removing duplicates -->
-      <_referencePathDirectories Include="%(_referencePathDirectoriesWithDuplicates.Identity)" />
+      <_referencePathDirectories Include="@(ReferencePath->'%(RootDir)%(Directory)'->Distinct())" />
     </ItemGroup>
 
-    <PropertyGroup Condition="'$(GenAPILibPath)' == ''">
-      <GenAPILibPath>@(_referencePathDirectories)</GenAPILibPath>
+    <PropertyGroup>
+      <GenAPIInputAssembly Condition="'$(GenAPIInputAssembly )' == ''">@(IntermediateAssembly)</GenAPIInputAssembly >
+      <GenAPITargetPath Condition="'$(GenAPITargetPath)' == ''">$(TargetDir)$(TargetName).cs</GenAPITargetPath>
+      <GenAPILibPath Condition="'$(GenAPILibPath)' == ''">@(_referencePathDirectories)</GenAPILibPath>
+      <GenAPIMessageVerbosity Condition="'$(GenAPIMessageVerbosity)' == '' and '$(GenerateReferenceAssemblySource)' == 'true'">low</GenAPIMessageVerbosity>
+      <GenAPIMessageVerbosity Condition="'$(GenAPIMessageVerbosity)' == '' and '$(GenerateReferenceAssemblySource)' != 'true'">high</GenAPIMessageVerbosity>
     </PropertyGroup>
 
-    <Exec Command="$(_GenAPICommand) &quot;$(IntermediateOutputPath)$(TargetName)$(TargetExt)&quot; --lib-path &quot;$(GenAPILibPath)&quot; --out &quot;$(GenAPITargetPath)&quot; $(GenAPIAdditionalParameters)" />
+    <Microsoft.DotNet.GenAPI.GenAPITask
+      Assembly="$(GenAPIInputAssembly)"
+      LibPath="$(GenAPILibPath)"
+      ApiList="$(GenAPIApiList)"
+      OutputPath="$(GenAPITargetPath)"
+      HeaderFile="$(GenAPIHeaderFile)"
+      WriterType="$(GenAPIWriterType)"
+      SyntaxWriterType="$(GenAPISyntaxWriterType)"
+      DocIdKinds="$(GenAPIDocIdKinds)"
+      ExceptionMessage="$(GenAPIExceptionMessage)"
+      GlobalPrefix="$(GenAPIGlobalPrefix)"
+      ExcludeApiList="$(GenAPIExcludeApiList)"
+      ExcludeAttributesList="$(GenAPIExcludeAttributesList)"
+      FollowTypeForwards="$(GenAPIFollowTypeForwards)"
+      ApiOnly="$(GenAPIApiOnly)"
+      All="$(GenAPIAll)"
+      RespectInternals="$(GenAPIRespectInternals)"
+      ExcludeCompilerGenerated="$(GenAPIExcludeCompilerGenerated)"
+      MemberHeadings="$(GenAPIMemberHeadings)"
+      HighlightBaseMembers="$(GenAPIHighlightBaseMembers)"
+      HighlightInterfaceMembers="$(GenAPIHighlightInterfaceMembers)"
+      AlwaysIncludeBase="$(GenAPIAlwaysIncludeBase)"
+      ExcludeMembers="$(GenAPIExcludeMembers)"
+      LangVersion="$(GenAPILangVersion)" />
 
-    <ItemGroup>
-      <FileWrites Condition="'$(SkipGenAPITargetPathFileWrite)' != 'true'" Include="$(GenAPITargetPath)"/>
-    </ItemGroup>
-
-    <Message Text="Generated reference assembly source code: $(GenAPITargetPath)" Importance="high" />
+    <Message Text="Generated reference assembly source code: $(GenAPITargetPath)" Importance="$(GenAPIMessageVerbosity)" />
   </Target>
 
 </Project>
