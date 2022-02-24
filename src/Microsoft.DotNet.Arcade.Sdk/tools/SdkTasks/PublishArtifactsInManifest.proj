@@ -92,7 +92,7 @@
 
     <PropertyGroup>
       <AkaMSTenant Condition="'$(AkaMSTenant)' == ''">ncd</AkaMSTenant>
-      <AkaMSOwners Condition="'$(AkaMSOwners)' == ''">jamshedd;leecow;rbhanda;v-susles;v-paddan</AkaMSOwners>
+      <AkaMSOwners Condition="'$(AkaMSOwners)' == ''">jamshedd;leecow;rbhanda;v-susles</AkaMSOwners>
       <AkaMSCreatedBy Condition="'$(AkaMSCreatedBy)' == ''">dn-bot</AkaMSCreatedBy>
       <AkaMSGroupOwner Condition="'$(AkaMSGroupOwner)' == ''">ddfwlink</AkaMSGroupOwner>
       <PublishSpecialClrFiles Condition="'$(PublishSpecialClrFiles)' == ''">false</PublishSpecialClrFiles>
