@@ -58,7 +58,6 @@ MakeDefaultChannel https://github.com/dotnet/runtime $RuntimeBranch $RuntimeChan
 MakeDefaultChannel https://github.com/dotnet/windowsdesktop $RuntimeBranch $RuntimeChannel
 MakeDefaultChannel https://github.com/dotnet/wpf $RuntimeBranch $RuntimeChannel
 MakeDefaultChannel https://github.com/dotnet/winforms $RuntimeBranch $RuntimeChannel
-MakeDefaultChannel https://github.com/dotnet/linker $RuntimeBranch $RuntimeChannel
 
 if ($AddInternalFlow) {
     # Because of where internal fixes tend to be, we eliminate some leaves in the graph
@@ -83,6 +82,7 @@ MakeDefaultChannel https://github.com/dotnet/sdk $SdkBranch $SdkChannel
 MakeDefaultChannel https://github.com/dotnet/roslyn-analyzers $SdkBranch $SdkChannel
 MakeDefaultChannel https://github.com/dotnet/templating $SdkBranch $SdkChannel
 MakeDefaultChannel https://github.com/dotnet/razor-compiler $SdkBranch $SdkChannel
+MakeDefaultChannel https://github.com/dotnet/linker $SdkBranch $SdkChannel
 
 if ($AddInternalFlow) {
     # Because of where internal fixes tend to be, we eliminate some leaves in the sdk graph
@@ -110,7 +110,7 @@ AddArcadeFlow https://github.com/dotnet/runtime $RuntimeBranch
 AddArcadeFlow https://github.com/dotnet/windowsdesktop $RuntimeBranch
 AddArcadeFlow https://github.com/dotnet/wpf $RuntimeBranch
 AddArcadeFlow https://github.com/dotnet/winforms $RuntimeBranch
-AddArcadeFlow https://github.com/dotnet/linker $RuntimeBranch
+AddArcadeFlow https://github.com/dotnet/linker $SdkBranch
 AddArcadeFlow https://github.com/dotnet/installer $SdkBranch
 AddArcadeFlow https://github.com/dotnet/sdk $SdkBranch
 AddArcadeFlow https://github.com/dotnet/roslyn-analyzers $SdkBranch
@@ -128,7 +128,6 @@ AddFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dot
 AddFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dotnet/winforms $RuntimeBranch EveryBuild
 AddFlow https://github.com/dotnet/winforms $RuntimeChannel https://github.com/dotnet/wpf $RuntimeBranch EveryBuild
 AddFlow https://github.com/dotnet/wpf $RuntimeChannel https://github.com/dotnet/windowsdesktop $RuntimeBranch EveryBuild
-AddFlow https://github.com/dotnet/linker $RuntimeChannel https://github.com/dotnet/runtime $RuntimeBranch EveryBuild
 
 if ($AddInternalFlow) {
     Write-Host "Adding internal runtime -> internal runtime flow"
@@ -148,7 +147,6 @@ AddFlow https://github.com/dotnet/aspnetcore $RuntimeChannel https://github.com/
 AddFlow https://github.com/dotnet/windowsdesktop $RuntimeChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
 AddFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
 AddFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dotnet/templating $SdkBranch EveryBuild
-AddFlow https://github.com/dotnet/linker $RuntimeChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
 
 if ($AddInternalFlow) {
     Write-Host "Adding internal runtime->internal sdk flow"
@@ -166,6 +164,7 @@ AddFlow https://github.com/dotnet/sdk $SdkChannel https://github.com/dotnet/inst
 AddFlow https://github.com/dotnet/roslyn-analyzers $SdkChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
 AddFlow https://github.com/dotnet/templating $SdkChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
 AddFlow https://github.com/dotnet/razor-compiler $SdkChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
+AddFlow https://github.com/dotnet/linker $SdkChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
 
 if ($AddInternalFlow) {
     Write-Host "Adding internal sdk->internal sdk flow"
