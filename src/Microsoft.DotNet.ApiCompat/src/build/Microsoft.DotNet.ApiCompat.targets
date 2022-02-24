@@ -25,13 +25,10 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(RunApiCompat)' == 'true'">
-    <_apiCompatTargetSuffix>$(TargetGroup)</_apiCompatTargetSuffix>
-    <_apiCompatTargetSuffix Condition="'$(_apiCompatTargetSuffix)' == ''">$(TargetFramework)</_apiCompatTargetSuffix>
-
-    <ApiCompatBaseline Condition="!Exists('$(ApiCompatBaseline)')">$(MSBuildProjectDirectory)\ApiCompatBaseline.$(_apiCompatTargetSuffix).txt</ApiCompatBaseline>
+    <ApiCompatBaseline Condition="!Exists('$(ApiCompatBaseline)')">$(MSBuildProjectDirectory)\ApiCompatBaseline.$(TargetFramework).txt</ApiCompatBaseline>
     <ApiCompatBaseline Condition="!Exists('$(ApiCompatBaseline)')">$(MSBuildProjectDirectory)\ApiCompatBaseline.txt</ApiCompatBaseline>
 
-    <MatchingRefApiCompatBaseline Condition="!Exists('$(MatchingRefApiCompatBaseline)')">$(MSBuildProjectDirectory)\MatchingRefApiCompatBaseline.$(_apiCompatTargetSuffix).txt</MatchingRefApiCompatBaseline>
+    <MatchingRefApiCompatBaseline Condition="!Exists('$(MatchingRefApiCompatBaseline)')">$(MSBuildProjectDirectory)\MatchingRefApiCompatBaseline.$(TargetFramework).txt</MatchingRefApiCompatBaseline>
     <MatchingRefApiCompatBaseline Condition="!Exists('$(MatchingRefApiCompatBaseline)')">$(MSBuildProjectDirectory)\MatchingRefApiCompatBaseline.txt</MatchingRefApiCompatBaseline>
 
     <TargetsTriggeredByCompilation Condition="'$(RunApiCompatForSrc)' == 'true'">$(TargetsTriggeredByCompilation);ValidateApiCompatForSrc</TargetsTriggeredByCompilation>
