@@ -11,8 +11,8 @@ If you need to find the open known issues you can filter the issues with the cus
 A known issue should be reported when you find a build error that is not caused by your changes and that is affecting or could affect more builds. 
 
 There are two types of known issues:
-- Infrastructure: An infrastructure issue is an issue that is not exclusive to your repository and that needs to be investigated by the engineering services (@dotnet/dnceng)
-- Repository: A repository issue is an issue that is happening in a particular repository and that should be investigated by the repository owners.
+- **Infrastructure**: An infrastructure issue is an issue that is not exclusive to your repository and that needs to be investigated by the engineering services (@dotnet/dnceng)
+- **Repository**: A repository issue is an issue that is happening in a particular repository and that should be investigated by the repository owners.
 
 The first step to opening a known issue is to decide which kind of issue do you want to report, after that there are two ways to report a known issue, one is via the build analysis.
 
@@ -36,6 +36,7 @@ Build: <!-- Add link to the build with the reported error. -->
 Leg Name: <!-- Add the name of the impacted leg. -->
 
 ## Error Message
+<!-- Fill for repository issues. For infrastructure issues the engineering services (@dotnet/dnceng) is going to fill it. -->
 ```json 
 { "ErrorMessage":"" } ```
 
