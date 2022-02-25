@@ -1,0 +1,17 @@
+# Requirements Prod v1.0
+- The dev experience should be "simple" (single click) and "fast" (Less than 15 minutes to create the environment).
+- Ability to config repro capability (saving data for later machine creation on failure) to repro the failure.
+- Ability to request a job to repro (automatically creates the environment).
+- Must work for Windows, Linux, Mac, and ARM (ARM machines not available).
+- Needs to work for both Jenkins and Helix.
+- The solution is for devs who work at Microsoft only.
+- Checking out a machine comes with sufficient data and access to connect and configure.
+- The machine should be delivered in a known state which can reasonably be setup to repro.
+- Prereqs are either installed, or verified to be installed.
+- Exact hash is restored (GitHub is what's initially supported).
+- Matching symbols - especially for when we find a way to NOT rebuild the product.
+- Provide method to move files onto/off-of machine.
+- Support retention policy for the snapshot/workspace data.
+- Decommision once dev indicates they are complete with repro.
+- Devs need the ability to list all environments they've asked for, including current state (e.g. if they're ready or not).
+- Be able to reasonably produce a "report" of all outstanding environments and their age and dev.
