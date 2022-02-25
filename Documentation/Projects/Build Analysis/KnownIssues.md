@@ -14,7 +14,7 @@ There are two types of known issues:
 - **Infrastructure**: An infrastructure issue is an issue that is not exclusive to your repository and that needs to be investigated by the engineering services (@dotnet/dnceng)
 - **Repository**: A repository issue is an issue that is happening in a particular repository and that should be investigated by the repository owners.
 
-The first step to opening a known issue is to decide which kind of issue do you want to report, after that there are two ways to report a known issue, one is via the build analysis.
+The first step to opening a known issue is to decide which kind of issue you want to report. After that there are two ways to report a known issue, one is via the build analysis.
 
 ### Reporting known issue manually
 1. Decide if you need to open a repository issue or infrastructure issue 
