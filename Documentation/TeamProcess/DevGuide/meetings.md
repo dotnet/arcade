@@ -4,8 +4,8 @@
 In this new hybrid world there are many challenges ahead.  This is our current attempt as a team to navigate.  We know we're wrong at least in some ways, but will bravely move forward, learn, and then adjust as appropriate.
 
 ## Definition
-To distinguish team gatherings that falls into the guidelines below from others, we should define what we mean by a meeting. 
-- A **Meeting** - for the context of our principles and guidelines below - is any gathering of the team where discussions or decisions are made that will long lived (more than a week). 
+To distinguish team gatherings that fall into the guidelines below from others, we should define what we mean by a meeting. 
+- A **Meeting** - for the context of our principles and guidelines below - is any gathering of the team where a planned discussion or decision is made that will long lived (more than a week). 
 - Team social events (such as the weekly Prague Coffee Break or the Redmond Happy Hour), Stand Up (the daily one in Prague, the twice weekly one in Redmond, and the daily FR one), and 1:1 do not meet our definition of a meeting. 
 
 ## Principles
