@@ -41,7 +41,7 @@ Leg Name: <!-- Add the name of the impacted leg. -->
 
 ```
 
-If you are opening an infrastructure issue, there is no need to fill the  "Error message section" as this is going to be handled by the engineering service.
+If you are opening an infrastructure issue, there is no need to fill the  "Error message section" as this is going to be handled by the engineering services team.
 
 If you are opening a Repository issue you need to [fill the "Error message section"](#how-to-fill-a-known-issue-error-message-section")
 
