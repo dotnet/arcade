@@ -5,7 +5,7 @@ Whenever a build has an error that matches with one of the already existing know
 This information is going to be listed at the top of the build analysis.
 
 
-If you need to find the open known issues you can filter the issues with the custom label `Known Build Error`. All the reported infrastructure issues can be found on [core-eng](https://github.com/dotnet/core-eng/issues?q=is%3Aopen+is%3Aissue+label%3A%22Known+Build+Error%22).
+If you need to find the open known issues you can filter the issues with the `Known Build Error` label . All the reported infrastructure issues can be found on [core-eng](https://github.com/dotnet/core-eng/issues?q=is%3Aopen+is%3Aissue+label%3A%22Known+Build+Error%22).
 
 ## When and how to report a known issue
 A known issue should be reported when you find a build error that is not caused by your changes and that is affecting or could affect more builds. 
