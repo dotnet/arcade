@@ -47,7 +47,7 @@ If you are opening an infrastructure issue, there is no need to fill the  "Error
 If you are opening a Repository issue you need to [fill the "Error message section"](#how-to-fill-a-known-issue-error-message-section")
 
 
-## How to fill a known issue error message section
+## How to fill out a known issue error message section
 The "ErrorMessage section" is on the next form:
 ```json 
 { "ErrorMessage":"" } 
