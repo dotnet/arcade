@@ -28,7 +28,7 @@ The first step to opening a known issue is to decide which kind of issue do you 
 ![](./Resources/KnownIssuesLinks.png?raw=true)
 1. Click on the link of the type of issue that suits better the situation. 
 
-If you are filling it manually copy paste the next template, if you are filling via the build analysis a similar template is going to be automatically addedon a new GitHub issue after clicking the link and most of this information should be already prefilled.
+If you are filing it manually, copy and paste the next template. If you are filing via the build analysis, a similar template will be automatically added on a new GitHub issue after clicking the link, and most of this information should be already prefilled.
 
 ```md 
 ## Build Information
