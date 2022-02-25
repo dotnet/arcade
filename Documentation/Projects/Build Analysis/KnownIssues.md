@@ -77,7 +77,7 @@ After selecting the message, fill the "ErrorMessage";
 ```
 
 ## How to get onboard
-The infrasctucture issues are part of dotnet/core-eng so there are not additional steps that needs to be taken care of. 
+Infrastructure issues are part of dotnet/core-eng so there are no additional steps that need to be taken care of. 
 
 For the repository issues it it's necessary to [Create a label](https://docs.github.com/en/enterprise-server@3.1/issues/using-labels-and-milestones-to-track-work/managing-labels#creating-a-label) on the repository in which you need to open the Repository issue. 
 
