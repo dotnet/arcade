@@ -53,7 +53,7 @@ The "ErrorMessage section" is on the next form:
 And the "ErrorMessage" value needs to be updated with an error message 
 that meets the following requeriments:
 1. Match at least one of the error messages of the reported build
-2. It shouldn't include any unique identifier of the message e.g., machine, path, file name, etc.
+1. It shouldn't include any unique identifier of the message e.g., machine, path, file name, etc.
 
 
     For example, for the following error:
