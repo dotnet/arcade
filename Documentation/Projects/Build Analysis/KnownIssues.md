@@ -34,14 +34,14 @@ There are two ways to report a known issue, one is via the build analysis and th
     { "ErrorMessage":"" } ```
 
     ```
-1. If you are opening a Repository issue you need to [fill the "Error message section"](#how-to-fill-a-known-issue-error-message-section"). If you are opening an infrastructure issue, this is going to be handled by the engineering services team.
+1. If you are opening a Repository issue you need to [fill the "Error message" section](#how-to-fill-a-known-issue-error-message-section"). If you are opening an infrastructure issue, this is going to be handled by the engineering services team.
 
 ### Reporting known issue via build analysis
 1. On the build analysis you will see links for the type of issue you want to open. 
 ![](./Resources/KnownIssuesLinks.png?raw=true)
 1. Click on the link of the [type of issue that suits better the situation](#decide-infrastructure-or-repository-issue).
 1. A template is going to appear for you and most of this information should be already prefilled.
-1. If you are opening a Repository issue you need to [fill the "Error message section"](#how-to-fill-a-known-issue-error-message-section"). If you are opening an infrastructure issue, this is going to be handled by the engineering services team.
+1. If you are opening a Repository issue you need to [fill the "Error message" section](#how-to-fill-a-known-issue-error-message-section"). If you are opening an infrastructure issue, this is going to be handled by the engineering services team.
 
 ## How to fill out a known issue error message section
 The "ErrorMessage section" is on the next form:
