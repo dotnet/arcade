@@ -7,10 +7,14 @@ In this new hybrid world there are many challenges ahead.  This is our current a
 - All of our meetings must be inclusive of everyone who wants to participate.
 - Meetings should be reserved for situations and discussions that are unreasonable or silly to have async.
 - Meetings are an important, necessary, and key part of belonging.
+- Social interactions are also a priority.  (not just the agenda)
+- Nobody should feel like they *only* go to meetings all day
 
 ## Guidelines
 - Every meeting is a Teams meeting.  (regardless if synchronous or async)
+- Meetings should start 10 minutes after the hour (or half hour) so that folks have breathing space in between.
 - Every meeting has recording turned on by default
+- A meeting agenda articulating what is hoped to be accomplished is highly encouraged.
 - Notes that articulate the main points discussed and conclusion are sent out after every meeting that is of general concern.  (1:1's don't count of course)
 - When folks are meeting physically together, laptops (or other devices) should be used to aid remote folks.  (see logistics note below)
 - The meeting organizer should *always* have a laptop.
