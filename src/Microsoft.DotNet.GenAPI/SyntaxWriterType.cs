@@ -3,7 +3,7 @@
 
 namespace Microsoft.DotNet.GenAPI
 {
-    enum SyntaxWriterType
+    public enum SyntaxWriterType
     {
         Text,
         Html,

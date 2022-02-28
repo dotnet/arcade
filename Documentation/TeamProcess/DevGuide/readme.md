@@ -40,5 +40,6 @@ This is a work-in-progress and is far from complete.  The idea is to start with 
 - [General Meetings](meetings.md)
 - Criteria for when to have synchronous meetings
 - [Hybrid Triage](hybridtriage.md)
-- Stand Ups
+- [Stand Ups](standup.md)
+- [Documentation Guidelines](documentationguidelines.md)
 - [Happy Hour](happyhour.md)
