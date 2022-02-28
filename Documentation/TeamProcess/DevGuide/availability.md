@@ -1,7 +1,7 @@
 # Hybrid Availability Expectations
 
 ## Introduction
-Please note that this guidance is Redmond centric as Fargo and Prague are coming up w/ their own guidelines.  
+Please note that this guidance is West Coast centric as Fargo and Prague are coming up with their own guidelines.  
 
 ## Core Hours (e.g. hours that folks must be available):
 Strictly speaking, there are no “core hours” as this goes against the spirit and intent of hybrid.  However, see next sections on meetings and first responder duties.
@@ -14,6 +14,8 @@ Meeting (remote and in person) attendance is expected from time to time.  As per
 
 ## Days in Office:
 There is no expectation that there be a set schedule for days in the office as we’re emphasizing flexibility.
+
+Optional: Add your in-office days to your Teams' status
 
 ## First Responders:
 As a team we have a commitment to respond/help our customers during a certain time frame.  Given this, it’s important that each dev is available while on FR rotation according to whatever is worked out by the FR lead.
