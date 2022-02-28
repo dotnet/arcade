@@ -21,7 +21,7 @@ Part of this epic is to take the ownership of [custom image definitions](https:/
 
 ### Implementation Details
 
-Let's start with a scenario where we need to update Visual Studio 2019 Preview version per our [schedule](https://github.com/dotnet/core-eng/wiki/VS2019-Upgrade-Schedule) which has to be done almost every week.
+Let's start with a scenario where we need to update Visual Studio 2019 Preview version per our [schedule](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/VS2019-Upgrade-Schedule) which has to be done almost every week.
 
 Currently this change requires update of same values in six [image definitions](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=/Monthly/HelixBaseImages/VS2019Preview). Specifically:
 * update artifact windows-vs-willowreleased, set parameter VSBootstrapperURL to a new value.

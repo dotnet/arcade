@@ -35,7 +35,7 @@ The mobile platforms that are in scope of this work are:
 - Ubuntu Android queues with Android emulators
 - OSX queues with Xcode and Simulators
 
-The overview of the queues and Mobile devices in Helix can be found [here (Mobile devices for .NET testing)](https://github.com/dotnet/core-eng/wiki/Mobile-devices-for-.NET-testing).
+The overview of the queues and Mobile devices in Helix can be found [here (Mobile devices for .NET testing)](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/Mobile-devices-for-.NET-testing).
 
 ## Alerts
 

@@ -5,7 +5,7 @@ We are currently working on ways to improve our testability of Arcade, including
 - Since it is known how to create mocks and work with dependency injection in C# code, please move as much logic out of MSBuild proj files and into the C# tasks (or related classes) so that it can be unit tested.
 - Use mocks and dependency injection where applicable when writing unit tests for the MSBuild tasks in C#. If the code does not have an entry point to implement the ASP.NET Core Dependency Injection framework, use the Setter Injection pattern. 
 - Implement scenario tests for MSBuild projects in [Arcade Validation](https://github.com/dotnet/arcade-validation/). Validate your changes by [running a private build](#how-to-validate-a-private-build) of Arcade in Arcade Validation. Include a link of the Arcade Validation run on your Arcade PR. 
-- Also see .NET Engineering Services' [Validation Principles and Policy](https://github.com/dotnet/core-eng/blob/master/Documentation/Validation/README.md)
+- Also see .NET Engineering Services' [Validation Principles and Policy](https://github.com/dotnet/arcade/blob/main/Documentation/Validation/README.md)
 
 ## Long-Term Solutions
 

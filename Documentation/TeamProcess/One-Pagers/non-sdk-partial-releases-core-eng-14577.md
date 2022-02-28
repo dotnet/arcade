@@ -110,7 +110,7 @@ Any code related to the staging and release pipelines. We will deploy to the pro
 
 * What are the risks when deploying?
 
-We may break the main pipeline for full releases if we do not do enough testing. With two/three different scenarios that require testing, we may need to run the full test pipeline for each of these types of releases. Instructions for validating any changes made to the pipeline can be found [here](https://github.com/dotnet/core-eng/blob/main/Documentation/Staging-Pipeline/making-and-validating-changes.md).
+We may break the main pipeline for full releases if we do not do enough testing. With two/three different scenarios that require testing, we may need to run the full test pipeline for each of these types of releases. Instructions for validating any changes made to the pipeline can be found [here](https://github.com/dotnet/arcade/blob/main/Documentation/Staging-Pipeline/making-and-validating-changes.md).
 
 ## FR Handoff
 
@@ -122,6 +122,6 @@ Changes to the staging pipeline are already documented in the Staging-Pipeline d
 
 * [Stage-DotNet](https://dev.azure.com/dnceng/internal/_build?definitionId=792)
 * [Release-DotNet-5.x](https://dev.azure.com/dnceng/internal/_build?definitionId=984)
-* [Running the Staging Pipeline](https://github.com/dotnet/core-eng/blob/main/Documentation/Staging-Pipeline/running-the-pipeline.md)
+* [Running the Staging Pipeline](https://github.com/dotnet/arcade/blob/main/Documentation/Staging-Pipeline/running-the-pipeline.md)
 * [Original Release Rings Plan](https://github.com/dotnet/arcade/blob/main/Documentation/ReleaseRingsPlan.md)
 * [releases.json](https://github.com/dotnet/core/blob/main/release-notes/6.0/releases.json)

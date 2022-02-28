@@ -1,5 +1,5 @@
 #  Documentation for Auto Retry of Failures in Helix 
-The following document shows the user documentation of the auto retry feature of test failures in helix according to the [requirements](https://github.com/dotnet/core-eng/blob/main/Documentation/Project-Docs/Auto-Retry%20Failures/Overview-Requirements.md).
+The following document shows the user documentation of the auto retry feature of test failures in helix according to the [requirements](https://github.com/dotnet/arcade/blob/main/Documentation/Project-Docs/Auto-Retry%20Failures/Overview-Requirements.md).
 
 # What is Auto Retry?
 When a Test fails in Helix, Auto Retry feature provides the ability to automatically retry the test until it passes or crosses the number of retries specified by the user and communicate to the user that the test has passed only after retrying in Mission Control.

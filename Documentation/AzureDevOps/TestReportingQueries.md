@@ -3,7 +3,7 @@
 The following is a list of default queries to use to look up information about failed tests. Feel free to change them for your own usages. 
 
 Caveats (Jan 14, 2022): 
-- Because this data is stored in an internal data source, it is unfortunately currently only available to Microsoft employees. (If you are an internal Microsoft employee, you can request access from the [.NET Engineering Services team](https://github.com/dotnet/core-eng/wiki/How-to-get-a-hold-of-Engineering-Servicing).)
+- Because this data is stored in an internal data source, it is unfortunately currently only available to Microsoft employees. (If you are an internal Microsoft employee, you can request access from the [.NET Engineering Services team](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/How-to-get-a-hold-of-Engineering-Servicing).)
 - Test data is only recently populated, thus, we only have about 2.5 weeks worth of data. 
 - There is a [known issue](https://github.com/dotnet/core-eng/issues/14708) with how we're capturing this data that is currently being worked on, thus, some of the data we have may not be complete. 
 

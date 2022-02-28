@@ -93,7 +93,7 @@ Proposed DncDevOps ownership:
         - Executor makes the final "this is ready" call; this is not to say that there won't be more clarification / addition in the future.
 
   - If vendors are to be used, a "statement of work" needs to be drafted (JasoWard on DDFUN has expertise) to ensure the most productive use of vendor resources. Process documentation needs to indicate clearly what success and failure indicators for this task are critical in making this process work.
-  - Once deemed 'ready' to operate (generally entering Phase 4 above), ownership, a brief entry stating purpose, and links to relevant work items and process documentation will be listed under https://github.com/dotnet/core-eng/wiki/DncEng-DncDevOps-Ownership
+  - Once deemed 'ready' to operate (generally entering Phase 4 above), ownership, a brief entry stating purpose, and links to relevant work items and process documentation will be listed under https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/DncEng-DncDevOps-Ownership
 
 - At a certain point, determined primarily by the personnel funding of the DncDevOps / FR teams, taking on new ownership will necessarily entail either simplifying (further automating / reducing scope), deprioritizing, or removing older tasks, as these tasks are expected to have a perpetual ongoing cost.
 

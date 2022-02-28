@@ -127,7 +127,7 @@ When the dotnet-helix-machines-ci build to be rolled out fails with `{QueueOrIma
 
 ### Validation Steps
 
-After completing manual steps: (cadence TBD, but probably weekly before rollouts), perform the following checks and make a note in https://github.com/dotnet/core-eng/wiki/Helix-Machine-Management-Operations-Notes
+After completing manual steps: (cadence TBD, but probably weekly before rollouts), perform the following checks and make a note in https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/Helix-Machine-Management-Operations-Notes
 
 Template (insert at top of wiki mentioned abov)
 ```
