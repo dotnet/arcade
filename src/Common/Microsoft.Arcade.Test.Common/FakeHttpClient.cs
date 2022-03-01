@@ -12,8 +12,7 @@ namespace Microsoft.DotNet.Arcade.Test.Common
     public static class FakeHttpClient
     {
         public static HttpClient WithResponses(params HttpResponseMessage[] responses)
-            => new HttpClient(
-                new FakeHttpMessageHandler(responses));
+            => new HttpClient(new FakeHttpMessageHandler(responses)); // lgtm [cs/httpclient-checkcertrevlist-disabled] This is used for unit tests
 
         private class FakeHttpMessageHandler : HttpMessageHandler
         {

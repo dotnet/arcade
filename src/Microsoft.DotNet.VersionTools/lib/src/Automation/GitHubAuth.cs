@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.VersionTools.Automation
             }
             AuthToken = authToken;
             User = user ?? "dotnet-bot";
-            Email = email ?? "dotnet-bot@microsoft.com";
+            Email = email ?? "dotnet-bot@microsoft.com"; // lgtm [cs/hard-coded-id] ID is correct for this tool
         }
     }
 }

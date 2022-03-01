@@ -202,7 +202,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     $"Downloading package from '{packageUrl}' " +
                     $"to check if identical to '{PackageFile}'");
 
-                using (var client = new HttpClient
+                using (var client = new HttpClient(new HttpClientHandler() { CheckCertificateRevocationList = true })
                 {
                     Timeout = TimeSpan.FromMinutes(10)
                 })

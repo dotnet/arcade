@@ -37,7 +37,11 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 
         public BlobContainerClient Container { get; set; }
 
-        private static readonly HttpClient s_httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(300) };
+        private static readonly HttpClient s_httpClient = new HttpClient(
+            new HttpClientHandler() { CheckCertificateRevocationList = true }) 
+            {
+                Timeout = TimeSpan.FromSeconds(300) 
+            };
         private static readonly BlobClientOptions s_clientOptions = new BlobClientOptions()
         {
             Transport = new HttpClientTransport(s_httpClient)
@@ -59,7 +63,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 
         public static string CalculateMD5(string filename)
         {
-            using (var md5 = MD5.Create())
+            using (var md5 = MD5.Create()) // lgtm [cs/weak-crypto] Azure Storage specifies use of MD5
             {
                 using (var stream = File.OpenRead(filename))
                 {
