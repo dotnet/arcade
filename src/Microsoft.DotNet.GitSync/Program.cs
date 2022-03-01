@@ -18,6 +18,7 @@ using Credentials = Octokit.Credentials;
 using Repository = LibGit2Sharp.Repository;
 using Microsoft.Azure.Storage;
 using Microsoft.Azure.CosmosDB.Table;
+using System.Collections.Concurrent;
 
 namespace Microsoft.DotNet.GitSync
 {
@@ -26,8 +27,8 @@ namespace Microsoft.DotNet.GitSync
         private const string TableName = "CommitHistory";
         private const string RepoTableName = "MirrorBranchRepos";
         private static CloudTable s_table;
-        private static Dictionary<(string, string), List<string>> s_repos { get; set; } = new Dictionary<(string, string), List<string>>();
-        private static Dictionary<string, HashSet<string>> s_branchRepoPairs = new Dictionary<string, HashSet<string>>();
+        private static ConcurrentDictionary<(string, string), List<string>> s_repos { get; set; } = new ConcurrentDictionary<(string, string), List<string>>();
+        private static ConcurrentDictionary<string, HashSet<string>> s_branchRepoPairs = new ConcurrentDictionary<string, HashSet<string>>();
         private ConfigFile ConfigFile { get; }
         private static Lazy<GitHubClient> _lazyClient;
         private static EmailManager s_emailManager;
@@ -556,7 +557,7 @@ namespace Microsoft.DotNet.GitSync
                 string branchName = item["Branch"].StringValue;
                 string[] targetRepos = item["ReposToMirrorInto"].StringValue.Split(';');
 
-                s_repos.Add((item.PartitionKey, branchName), targetRepos.ToList());
+                s_repos[(item.PartitionKey, branchName)] = targetRepos.ToList();
 
                 if (s_branchRepoPairs.ContainsKey(branchName))
                 {
@@ -567,7 +568,7 @@ namespace Microsoft.DotNet.GitSync
                 }
                 else
                 {
-                    s_branchRepoPairs.Add(branchName, targetRepos.ToHashSet());
+                    s_branchRepoPairs[branchName] = targetRepos.ToHashSet();
                 }
 
                 s_logger.Info($"The commits in  {item.PartitionKey} repo will be mirrored into {item["ReposToMirrorInto"].StringValue} Repos");
