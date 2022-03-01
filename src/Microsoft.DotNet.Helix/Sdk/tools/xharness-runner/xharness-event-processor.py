@@ -138,17 +138,16 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
     reboot_message = 'This machine will reboot to heal.'
 
     if platform == "android":
-        if exit_code == 85: # ADB_DEVICE_ENUMERATION_FAILURE
-            # This handles issues where devices or emulators fail to start.
-            # The only solution is to reboot the machine, so we request a work item retry + agent reboot when this happens
-            print(f'    Encountered ADB_DEVICE_ENUMERATION_FAILURE. {retry_message} {reboot_message}')
+        # TODO (https://github.com/dotnet/xharness/pull/825): 85 is old code for ADB_DEVICE_ENUMERATION_FAILURE and will be removed after it has been flown everywhere
+        if exit_code == 81 or exit_code == 85: # DEVICE_NOT_FOUND
+            # This handles issues where emulators fail to start or devices go silent.
+            print(f'    Encountered DEVICE_NOT_FOUND. {retry_message} {reboot_message}')
             print('    If this occurs repeatedly, please check for architectural mismatch, e.g. sending arm64_v8a APKs to an x86_64 / x86 only queue.')
 
-            if not is_device and os.name != 'nt':
-                # Copy emulator log
-                subprocess.call(['cp', '/tmp/*-logcat.log', output_directory])
+            # For emulators it makes sense to reboot to try to heal the emulator
+            if not is_device:
+                reboot = True
 
-            reboot = True
             retry = True
             return
 
@@ -165,6 +164,20 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                 except Exception as e:
                     print(f'    Failed to remove installed apps from device: {e}')
 
+            return
+
+        if exit_code == 91: # ADB_FAILURE
+            # This handles issues where we have problems with ADB
+            # The only solution is to reboot the machine, so we request a work item retry + agent reboot when this happens
+            print(f'    Encountered ADB_FAILURE. {retry_message} {reboot_message}')
+            print('    If this occurs repeatedly, please check for architectural mismatch, e.g. sending arm64_v8a APKs to an x86_64 / x86 only queue.')
+
+            if not is_device and os.name != 'nt':
+                # Copy emulator log
+                subprocess.call(['cp', '/tmp/*-logcat.log', output_directory])
+
+            reboot = True
+            retry = True
             return
 
         if exit_code != 0 and is_device and not android_connectivity_verified:
