@@ -56,7 +56,7 @@ There is no way to update an existing build definition to use a different servic
 
 ### Git (internal) connections
 
-See the [dotnet-bot-github-service-endpoint documentation](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.md#dotnet-bot-github-service-endpoint)
+See the [dotnet-bot-github-service-endpoint documentation](https://github.com/dotnet/arcade/blob/main/Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.md#dotnet-bot-github-service-endpoint)
 
 ## Agent queues
 

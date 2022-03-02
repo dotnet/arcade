@@ -29,7 +29,7 @@ For now, we will limit triage to core-eng and arcade issues.  Depending on how t
 ## What triage is:  (refresher)
 *	An issue is considered triaged when it’s assigned to a business priority.  (we calls these Epics)
 *	The V-Team assigned to an epic is responsible for triaging/prioritizing the issues within their Epic – which may include “kicking” issues back out for triage again – e.g. unassigning them from an epic.
-*	Our current (now dated) documentation on Epics is here:  https://github.com/dotnet/core-eng/wiki/Sprint-Planning-and-Execution for a bit more background/rationale.  Also, be sure and talk to your lead for further clarification, or you can reach out to me (Mark Wilkie) directly.
+*	Our current (now dated) documentation on Epics is here:  https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/Sprint-Planning-and-Execution for a bit more background/rationale.  Also, be sure and talk to your lead for further clarification, or you can reach out to me (Mark Wilkie) directly.
 
 ## For a bit of history, a few things I think we’ve learned:
 *	We tried async triage, and it does actually work (sorta/mostly) and would work even better with the new CLI tool.

@@ -44,7 +44,7 @@ Open a new issue for any customer support effort taking more than fifteen minute
 
 Ensure issues are labeled appropriately.
 
-These telemetry guidelines are meant to extend but not supersede operational guidelines set in [First Responder Responsibilities](https://github.com/dotnet/core-eng/wiki/%5Bint%5D-First-Responders).
+These telemetry guidelines are meant to extend but not supersede operational guidelines set in [First Responder Responsibilities](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/163/-int-First-Responders).
 
 ### Metrics
 
