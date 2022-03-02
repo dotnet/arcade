@@ -5,28 +5,19 @@ import subprocess
 import sys
 from typing import Tuple
 
-from helix.appinsights import app_insights
 from helix.public import request_reboot, request_infra_retry, send_metric, send_metrics
 
 ### This script's purpose is to parse the diagnostics.json file produced by XHarness, evaluate it and send it to AppInsights
 ### The diagnostics.json file contains information about each XHarness command executed during the job
 ### In case of events that suggest infrastructure issues, we request a retry and for some reboot the agent
 
-# Name of metrics we send to App Insights
-# TODO (https://github.com/dotnet/core-eng/issues/15274): Stop sending app insights telemetry
-OPERATION_METRIC_NAME = 'XHarnessOperation'
-DURATION_METRIC_NAME = 'XHarnessOperationDuration'
-RETRY_METRIC_NAME = 'XHarnessRetry'
-REBOOT_METRIC_NAME = 'XHarnessReboot'
-NETWORK_CONNECTIVITY_METRIC_NAME = 'XHarnessDeviceNetworkFailure'
-
-# Name of metrics we send to Kusto
-KUSTO_EVENT_TYPE = 'MobileDeviceOperation'
-KUSTO_OPERATION_METRIC_NAME = 'ExitCode'
-KUSTO_DURATION_METRIC_NAME = 'Duration'
-KUSTO_RETRY_METRIC_NAME = 'Retry'
-KUSTO_REBOOT_METRIC_NAME = 'Reboot'
-KUSTO_NETWORK_CONNECTIVITY_METRIC_NAME = 'NoInternet'
+# Name of metrics we send (to Kusto)
+EVENT_TYPE = 'MobileDeviceOperation'
+OPERATION_METRIC_NAME = 'ExitCode'
+DURATION_METRIC_NAME = 'Duration'
+RETRY_METRIC_NAME = 'Retry'
+REBOOT_METRIC_NAME = 'Reboot'
+NETWORK_CONNECTIVITY_METRIC_NAME = 'NoInternet'
 
 opts, args = getopt.gnu_getopt(sys.argv[1:], 'd:', ['diagnostics-data='])
 opt_dict = dict(opts)
@@ -191,7 +182,7 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
             if exitcode != 0:
                 retry = True
                 print(f'    Detected network connectivity issue. {retry_message}')
-                raise AdditionalTelemetryRequired(KUSTO_NETWORK_CONNECTIVITY_METRIC_NAME, 1)
+                raise AdditionalTelemetryRequired(NETWORK_CONNECTIVITY_METRIC_NAME, 1)
 
     elif platform == "apple":
         retry_message = 'This is typically not a failure of the work item. It will be run again. '
@@ -288,9 +279,7 @@ for operation in operations:
     try:
         analyze_operation(command, platform, device, is_device, target, exit_code)
     except AdditionalTelemetryRequired as e:
-        # TODO (https://github.com/dotnet/core-eng/issues/15274): Stop sending app insights telemetry
-        app_insights.send_metric(e.metric_name, e.metric_value, properties=custom_dimensions)
-        send_metric(e.metric_name, e.metric_value, custom_dimensions, event_type=KUSTO_EVENT_TYPE)
+        send_metric(e.metric_name, e.metric_value, custom_dimensions, event_type=EVENT_TYPE)
     except Exception as e:
         print(f'    Failed to analyze operation: {e}')
 
@@ -302,15 +291,11 @@ for operation in operations:
     if reboot and reboot_dimensions is None:
         reboot_dimensions = custom_dimensions
 
-    # TODO (https://github.com/dotnet/core-eng/issues/15274): Stop sending app insights telemetry
-    app_insights.send_metric(OPERATION_METRIC_NAME, exit_code, properties=custom_dimensions)
-    app_insights.send_metric(DURATION_METRIC_NAME, duration, properties=custom_dimensions)
-
     kusto_metrics = dict()
-    kusto_metrics[KUSTO_OPERATION_METRIC_NAME] = exit_code
-    kusto_metrics[KUSTO_DURATION_METRIC_NAME] = duration
+    kusto_metrics[OPERATION_METRIC_NAME] = exit_code
+    kusto_metrics[DURATION_METRIC_NAME] = duration
 
-    send_metrics(kusto_metrics, custom_dimensions, event_type=KUSTO_EVENT_TYPE)
+    send_metrics(kusto_metrics, custom_dimensions, event_type=EVENT_TYPE)
 
 # Retry / reboot is handled here
 script_dir = os.getenv('HELIX_WORKITEM_ROOT')
@@ -322,9 +307,7 @@ if os.path.exists(os.path.join(script_dir, '.reboot')):
     reboot = True
 
 if retry:
-    # TODO (https://github.com/dotnet/core-eng/issues/15274): Stop sending app insights telemetry
-    app_insights.send_metric(RETRY_METRIC_NAME, retry_exit_code, properties=retry_dimensions)
-    send_metric(KUSTO_RETRY_METRIC_NAME, retry_exit_code, retry_dimensions, event_type=KUSTO_EVENT_TYPE)
+    send_metric(RETRY_METRIC_NAME, retry_exit_code, retry_dimensions, event_type=EVENT_TYPE)
     request_infra_retry('Requesting work item retry because an infrastructure issue was detected on this machine')
 
     # TODO https://github.com/dotnet/core-eng/issues/15059
@@ -335,7 +318,5 @@ if retry:
         os.remove(test_results)
 
 if reboot:
-    # TODO (https://github.com/dotnet/core-eng/issues/15274): Stop sending app insights telemetry
-    app_insights.send_metric(REBOOT_METRIC_NAME, reboot_exit_code, properties=reboot_dimensions)
-    send_metric(KUSTO_REBOOT_METRIC_NAME, reboot_exit_code, reboot_dimensions, event_type=KUSTO_EVENT_TYPE)
+    send_metric(REBOOT_METRIC_NAME, reboot_exit_code, reboot_dimensions, event_type=EVENT_TYPE)
     request_reboot('Requesting machine reboot as an infrastructure issue was detected on this machine')
