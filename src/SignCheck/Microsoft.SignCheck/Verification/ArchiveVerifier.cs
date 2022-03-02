@@ -43,7 +43,7 @@ namespace Microsoft.SignCheck.Verification
 
                         // CAB files cannot be aliased since they're referred to from the Media table inside the MSI
                         string aliasFileName = String.Equals(extension.ToLowerInvariant(), ".cab") ? Path.GetFileName(archiveEntry.FullName) :
-                            Utils.GetHash(archiveEntry.FullName, HashAlgorithmName.SHA256.Name) + Path.GetExtension(archiveEntry.FullName);
+                            Utils.GetHash(archiveEntry.FullName, HashAlgorithmName.SHA256.Name) + Path.GetExtension(archiveEntry.FullName); // lgtm [cs/zipslip] Archive from trusted source
                         string aliasFullName = Path.Combine(tempPath, hashedPath, aliasFileName);
 
                         if (File.Exists(aliasFullName))
