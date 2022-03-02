@@ -53,7 +53,7 @@ namespace Microsoft.SignCheck.Verification
                         else
                         {
                             CreateDirectory(Path.GetDirectoryName(aliasFullName));
-                            archiveEntry.ExtractToFile(aliasFullName);
+                            archiveEntry.ExtractToFile(aliasFullName); // lgtm [cs/zipslip] Archive from trusted source
                             archiveMap[archiveEntry.FullName] = aliasFullName;
                         }
                     }
