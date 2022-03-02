@@ -4,7 +4,7 @@ labels: ["First Responder", "Detected By - Customer", "Known Build Error"]
 body:
   - type: markdown
     attributes:
-      value: Thanks for reporting an infrastructure build break to get investigated by the engineering services team.
+      value: Thanks for reporting an infrastructure build breaking issue to be investigated by the engineering services team.
   - type: input
     id: build
     attributes:
