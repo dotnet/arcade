@@ -9,19 +9,19 @@ body:
     id: build
     attributes:
       label: Build
-      description: If the issue was opened from the build analysis, this was automatically filled, feel free to update it with a link to any impacted build.
+      description: If the issue was opened from the build analysis, this was automatically fill, feel free to update it with a link to any impacted build.
     validations:
       required: true
   - type: input
     id: build-leg
     attributes:
       label: Build leg reported
-      description: If the issue was opened from the build analysis, this was automatically filled, feel free to update it with any impacted leg.
+      description: If the issue was opened from the build analysis, this was automatically fill, feel free to update it with any impacted leg.
   - type: textarea
     id: error-message
     attributes:
       label: Error message
-      description: This information is going to be filled in by the engineering services team. 
+      description: This information is going to be fill in by the engineering services team. 
       value: |
          The engineering services team will fill in the error message using [known issues guidance](https://github.com/dotnet/arcade/blob/main/Documentation/Projects/Build%20Analysis/KnownIssues.md#how-to-fill-out-a-known-issue-error-message-section).
          
