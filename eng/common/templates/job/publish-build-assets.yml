@@ -123,6 +123,11 @@ jobs:
         ArtifactName: ReleaseConfigs
 
     - ${{ if eq(parameters.publishAssetsImmediately, 'true') }}:
+      - template: /eng/common/templates/post-build/setup-maestro-vars.yml
+        parameters:
+          BARBuildId: ${{ parameters.BARBuildId }}
+          PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
+
       - task: PowerShell@2
         displayName: Publish Using Darc
         inputs:
