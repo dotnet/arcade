@@ -49,6 +49,8 @@ jobs:
     - group: AzureDevOps-Artifact-Feeds-Pats
     - name: runCodesignValidationInjection
       value: false
+    - ${{ if eq(parameters.publishAssetsImmediately, 'true') }}:
+      - template: /eng/common/templates/post-build/common-variables.yml
 
   steps:
   - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
