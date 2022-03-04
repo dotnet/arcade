@@ -94,7 +94,7 @@ Tool 'microsoft.dotnet.darc' (version '1.1.0-beta.19081.1') was successfully ins
 ```
 
 If you get a `SecurityError` saysing that `\eng\common\darc-init.ps1 cannot be loaded because running
-scripts is disabled on this system.`, you can relax your `ExecutionPolicy` for this script:
+scripts is disabled on this system` , you can relax your `ExecutionPolicy` for this script:
 ```
 powershell -ExecutionPolicy ByPass -File .\darc-init.ps1
 ```
