@@ -55,14 +55,14 @@
       <Uri>https://github.com/dotnet/linker</Uri>
       <Sha>3efd231da430baa0fd670e278f6b5c3e62834bde</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.SourceLink.GitHub" Version="1.2.0-beta-22153-02">
+    <Dependency Name="Microsoft.SourceLink.GitHub" Version="1.2.0-beta-22154-01">
       <Uri>https://github.com/dotnet/sourcelink</Uri>
-      <Sha>7d09873c84c9cd1162cbe5a0c8cf01a34793b5e7</Sha>
+      <Sha>fe31a0e99cc036ce3e3cf238847e9f74cc9de1d7</Sha>
       <SourceBuild RepoName="sourcelink" ManagedOnly="true" />
     </Dependency>
-    <Dependency Name="Microsoft.SourceLink.AzureRepos.Git" Version="1.2.0-beta-22153-02">
+    <Dependency Name="Microsoft.SourceLink.AzureRepos.Git" Version="1.2.0-beta-22154-01">
       <Uri>https://github.com/dotnet/sourcelink</Uri>
-      <Sha>7d09873c84c9cd1162cbe5a0c8cf01a34793b5e7</Sha>
+      <Sha>fe31a0e99cc036ce3e3cf238847e9f74cc9de1d7</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DiaSymReader.Pdb2Pdb" Version="1.1.0-beta2-19575-01">
       <Uri>https://github.com/dotnet/symreader-converter</Uri>
