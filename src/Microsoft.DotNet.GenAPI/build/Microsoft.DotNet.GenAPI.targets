@@ -35,7 +35,7 @@
     </ItemGroup>
 
     <PropertyGroup>
-      <GenAPIInputAssembly Condition="'$(GenAPIInputAssembly )' == ''">@(IntermediateAssembly)</GenAPIInputAssembly>
+      <GenAPIInputAssembly Condition="'$(GenAPIInputAssembly)' == ''">@(IntermediateAssembly)</GenAPIInputAssembly>
       <GenAPITargetPath Condition="'$(GenAPITargetPath)' == ''">$(TargetDir)$(TargetName).cs</GenAPITargetPath>
       <GenAPILibPath Condition="'$(GenAPILibPath)' == ''">@(_referencePathDirectories)</GenAPILibPath>
       <!-- When the GenerateReferenceAssemblySource target is invoked directly, make sure the verbosity is high
