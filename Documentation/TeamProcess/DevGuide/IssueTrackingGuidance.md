@@ -1,13 +1,12 @@
 # Adding a new issue
-- If you know which epic the issue is a part of, add the issue to the appropriate epic using the *Epics* drop down.  This corresponds to the business priority the issue contributes to. **If you don't know which epic the issue belongs to**, do not fill this out&mdash;it will be filed appropriately at triage.
-- Annotate the approximate duration (in days) by setting the *Estimate*.  The times are "not to exceed" times, not actual duration.  For example, "7" is less than one week.
+- If you know which epic the issue is a part of, add the issue to the appropriate epic using the *Epic Issue* field.  This corresponds to the business priority the issue contributes to. **If you don't know which epic the issue belongs to**, do not fill this out&mdash;it will be filed appropriately at triage.
 - Don't add it to a *Release* or *Project*.
 - Feel free to assign it.  This will be considered a recommend when it's triaged.
-- Feel free to assign a milestone if you think you might know.  This will be considered a recommend when it's triaged.
-- If the issue comes from a customer bug report, file it under the **First Responder** label and place it under the corresponding epic. If the issue is specifically blocking a customer, assign it the **Critical** label as well.
+- Feel free to assign a milestone if you think you might know.  This will be considered a recommendation when it's triaged.
+- If the issue comes from a customer bug report, file it under the **First Responder** label. If the issue is specifically blocking a customer, assign it the **Critical** label as well.
 
 # Security issues
-- If the issue has potential security impact, it should *not* be filed on GitHub. Instead, file it under [AzDO (dnceng/internal)](https://dev.azure.com/dnceng/internal/_workitems/) and make sure to triage it against SDL's [Security Bug Bar (docx)](https://aka.ms/sdlbugbar).
+- If the issue has potential security impact, it should *not* be filed on GitHub. Instead, file it under [AzDO (dnceng/internal)](https://dev.azure.com/dnceng/internal/_workitems/) and make sure to triage it against SDL's [Security Bug Bar](https://aka.ms/sdlbugbar).
 - Once filed, file a "tracking issue" on GitHub so that we can keep track if it through regular standup work. These issues should be titled something like "AzDO Issue #[Issue Number]" and contain a link to the AzDO issue.
 - All discussion of the issue should take place on AzDO or internal email, *not* on GitHub.
 
