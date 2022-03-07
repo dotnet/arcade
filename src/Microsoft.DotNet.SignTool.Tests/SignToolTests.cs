@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             {".psm1",  new List<SignInfo>{ new SignInfo("PSMCertificate") } },
             {".psc1",   new List<SignInfo>{ new SignInfo("PSCCertificate") } },
             {".dylib", new List<SignInfo>{ new SignInfo("DylibCertificate") } },
-            {".dll",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names```
+            {".dll",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             {".exe",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             {".msi",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             {".vsix",  new List<SignInfo>{ new SignInfo("VsixSHA2") } },
