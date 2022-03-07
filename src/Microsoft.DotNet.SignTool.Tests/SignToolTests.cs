@@ -31,9 +31,9 @@ namespace Microsoft.DotNet.SignTool.Tests
             {".psm1",  new List<SignInfo>{ new SignInfo("PSMCertificate") } },
             {".psc1",   new List<SignInfo>{ new SignInfo("PSCCertificate") } },
             {".dylib", new List<SignInfo>{ new SignInfo("DylibCertificate") } },
-            {".dll",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are tests
-            {".exe",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are tests
-            {".msi",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are tests
+            {".dll",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names```
+            {".exe",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
+            {".msi",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             {".vsix",  new List<SignInfo>{ new SignInfo("VsixSHA2") } },
             {".zip",  new List<SignInfo>{ SignInfo.Ignore } },
             {".nupkg",  new List<SignInfo>{ new SignInfo("NuGet") } },
@@ -52,12 +52,12 @@ namespace Microsoft.DotNet.SignTool.Tests
             { ".dylib", new List<SignInfo>{ new SignInfo("DylibCertificate", collisionPriorityId: "123") } },
             { ".dll", new List<SignInfo>
                 { 
-                    new SignInfo("Microsoft400", collisionPriorityId: "123"), // lgtm [cs/common-default-passwords] Safe, these are tests
+                    new SignInfo("Microsoft400", collisionPriorityId: "123"), // lgtm [cs/common-default-passwords] Safe, these are certificate names
                     new SignInfo("FakeOne", collisionPriorityId: "456")
                 } 
              },
-            { ".exe", new List<SignInfo>{ new SignInfo("Microsoft400", collisionPriorityId:  "123") } }, // lgtm [cs/common-default-passwords] Safe, these are tests
-            { ".msi", new List<SignInfo>{ new SignInfo("Microsoft400", collisionPriorityId:  "123") } }, // lgtm [cs/common-default-passwords] Safe, these are tests
+            { ".exe", new List<SignInfo>{ new SignInfo("Microsoft400", collisionPriorityId:  "123") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
+            { ".msi", new List<SignInfo>{ new SignInfo("Microsoft400", collisionPriorityId:  "123") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             { ".vsix", new List<SignInfo>{ new SignInfo("VsixSHA2", collisionPriorityId: "123") } },
             { ".zip", new List<SignInfo>{ SignInfo.Ignore } },
             { ".nupkg", new List<SignInfo>{ new SignInfo("NuGet", collisionPriorityId: "123") } },
@@ -96,11 +96,11 @@ namespace Microsoft.DotNet.SignTool.Tests
                 { SignToolConstants.CollisionPriorityId, "123" }
             }),
             new TaskItem(".dll", new Dictionary<string, string> {
-                { "CertificateName", "Microsoft400" }, // lgtm [cs/common-default-passwords] Safe, these are tests
+                { "CertificateName", "Microsoft400" }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
                 { SignToolConstants.CollisionPriorityId, "123" }
             }),
             new TaskItem(".exe", new Dictionary<string, string> {
-                { "CertificateName", "Microsoft400" }, // lgtm [cs/common-default-passwords] Safe, these are tests
+                { "CertificateName", "Microsoft400" }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
                 { SignToolConstants.CollisionPriorityId, "123" }
             }),
             new TaskItem(".zip", new Dictionary<string, string> {
@@ -132,7 +132,7 @@ namespace Microsoft.DotNet.SignTool.Tests
                 { SignToolConstants.CollisionPriorityId, "234" }
             }),
             new TaskItem(".dll", new Dictionary<string, string> {
-                { "CertificateName", "Microsoft400" }, // lgtm [cs/common-default-passwords] Safe, these are tests
+                { "CertificateName", "Microsoft400" }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
                 { SignToolConstants.CollisionPriorityId, "234" }
             }),
             new TaskItem(".nupkg", new Dictionary<string, string> {

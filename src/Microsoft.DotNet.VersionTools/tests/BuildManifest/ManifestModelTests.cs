@@ -185,7 +185,7 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
             models.Add(new FileSignInfoModel()
             {
                 Include = "Microsoft.DiaSymReader.dll",
-                CertificateName = "Microsoft101240624", // lgtm [cs/common-default-passwords] Safe, these are tests
+                CertificateName = "Microsoft101240624", // lgtm [cs/common-default-passwords] Safe, these are certificate names
                 TargetFramework = ".NETStandard,Version=v1.1",
                 PublicKeyToken = "31bf3856ad364e35",
             });
@@ -709,7 +709,7 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
                         new FileExtensionSignInfoModel
                         {
                             Include = ".dll",
-                            CertificateName = "Microsoft400", // lgtm [cs/common-default-passwords] Safe, these are tests
+                            CertificateName = "Microsoft400", // lgtm [cs/common-default-passwords] Safe, these are certificate names
                         },
                         new FileExtensionSignInfoModel
                         {
@@ -756,13 +756,13 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
                         {
                             Include = "StrongNameTime",
                             PublicKeyToken = "0123456789abcdef",
-                            CertificateName = "Microsoft400", // lgtm [cs/common-default-passwords] Safe, these are tests
+                            CertificateName = "Microsoft400", // lgtm [cs/common-default-passwords] Safe, these are certificate names
                         },
                         new StrongNameSignInfoModel
                         {
                             Include = "StrongButKindName",
                             PublicKeyToken = "fedcba9876543210",
-                            CertificateName = "Microsoft404", // lgtm [cs/common-default-passwords] Safe, these are tests
+                            CertificateName = "Microsoft404", // lgtm [cs/common-default-passwords] Safe, these are certificate names
                         },
                     },
                 },
