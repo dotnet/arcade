@@ -13,12 +13,9 @@ In these instances, we still want to have issues, and we still want to link them
 * When creating a new work item, create the work item as a [task](https://dev.azure.com/dnceng/internal/_workitems/create/Task)
 * Set Area to internal\Dotnet-Core-Engineering
 * Give it a meaningful title and description
-* In the Related Work section, click "+ Add link"
-    * Change the link type to GitHub Issue
-    * Add the link to the epic
-    * For the comment, type "Epic issue"
 * Update the GitHub Friendly Title and GitHub Friendly Description with information that can be shared on GitHub (in the public).
+* Add a link to the GitHub epic in the Epic Issue field.
 * After [#8567](https://github.com/dotnet/arcade/issues/8567) is complete, an issue linking your newly created Azure Boards work item will be created and added to the Projects (beta) board
-    * The epic issue field will be filled out if the GitHub link was properly added
+    * The epic issue field will be filled out if the GitHub link was supplied
     * If the GitHub Friendly Title is set, the created github issue will use it. Otherwise, will use "Azure Boards Issue #[Issue Number]".
     * If the GitHub Friendly Description is set, it will be used and a link to the Azure Boards work item will be added. Otherwise, the issue will only have a link to the Azure Boards work item.
