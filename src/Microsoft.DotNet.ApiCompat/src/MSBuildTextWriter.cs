@@ -9,6 +9,9 @@ using System.Text;
 
 namespace Microsoft.DotNet.ApiCompat
 {
+    /// <summary>
+    /// A text writer that uses MSBuild's logging infrastructure to log errors.
+    /// </summary>
     internal class MSBuildTextWriter : TextWriter
     {
         private readonly Log _log;

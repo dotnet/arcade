@@ -22,18 +22,27 @@ using Microsoft.Cci.Writers;
 
 namespace Microsoft.DotNet.ApiCompat
 {
+    /// <summary>
+    /// The core part of ApiCompat which gets invoked by the ApiCompatRunner console frontend
+    /// and the ApiCompatTask msbuild task.
+    /// </summary>
     public static class Executor
     {
-        public static int Run(bool isMSBuildTask,
+        /// <summary>
+        /// The core part of ApiCompat which accepts a given set of arguments and
+        /// performs api compatibility checks.
+        /// </summary>
+        public static int Run(bool usesMSBuildLog,
+            bool disableAssemblyResolveTraceListener,
             IEnumerable<string> contracts,
-            IEnumerable<string> implDirs,
+            IEnumerable<string> implementationDirectories,
             TextWriter output,
             string rightOperand = "implementation",
             string leftOperand = "contract",
             bool listRules = false,
             IEnumerable<string> baselineFileNames = null,
             bool validateBaseline = false,
-            bool resolveFx = false,
+            bool resolveFramework = false,
             bool skipUnifyToLibPath = false,
             IEnumerable<string> contractDependsFileNames = null,
             string contractCoreAssembly = null,
@@ -67,7 +76,7 @@ namespace Microsoft.DotNet.ApiCompat
                     if (IsOptionalRule(rule))
                         ruleName += " (optional)";
 
-                    Console.WriteLine(ruleName);
+                    output.WriteLine(ruleName);
                 }
 
                 return 0;
@@ -78,7 +87,7 @@ namespace Microsoft.DotNet.ApiCompat
                 if (DifferenceWriter.ExitCode != 0)
                     return 0;
 
-                if (output != Console.Out && !isMSBuildTask)
+                if (!disableAssemblyResolveTraceListener)
                     Trace.Listeners.Add(new TextWriterTraceListener(output) { Filter = new EventTypeFilter(SourceLevels.Error | SourceLevels.Warning) });
 
                 try
@@ -87,7 +96,7 @@ namespace Microsoft.DotNet.ApiCompat
                     NameTable sharedNameTable = new();
                     HostEnvironment contractHost = new(sharedNameTable);
                     contractHost.UnableToResolve += (sender, e) => Trace.TraceError($"Unable to resolve assembly '{e.Unresolved}' referenced by the {leftOperand} assembly '{e.Referrer}'.");
-                    contractHost.ResolveAgainstRunningFramework = resolveFx;
+                    contractHost.ResolveAgainstRunningFramework = resolveFramework;
                     contractHost.UnifyToLibPath = !skipUnifyToLibPath;
                     contractHost.AddLibPaths(contractDependsFileNames);
                     IEnumerable<IAssembly> contractAssemblies = contractHost.LoadAssemblies(contracts, contractCoreAssembly);
@@ -97,9 +106,9 @@ namespace Microsoft.DotNet.ApiCompat
 
                     HostEnvironment implHost = new(sharedNameTable);
                     implHost.UnableToResolve += (sender, e) => Trace.TraceError($"Unable to resolve assembly '{e.Unresolved}' referenced by the {rightOperand} assembly '{e.Referrer}'.");
-                    implHost.ResolveAgainstRunningFramework = resolveFx;
+                    implHost.ResolveAgainstRunningFramework = resolveFramework;
                     implHost.UnifyToLibPath = !skipUnifyToLibPath;
-                    implHost.AddLibPaths(implDirs);
+                    implHost.AddLibPaths(implementationDirectories);
                     if (warnOnMissingAssemblies)
                         implHost.LoadErrorTreatment = ErrorTreatment.TreatAsWarning;
 
@@ -127,8 +136,8 @@ namespace Microsoft.DotNet.ApiCompat
                         rightOperand,
                         excludeAttributes,
                         allowDefaultInterfaceMethods,
-                        isMSBuildTask);
-                    writer.Write(string.Join(",", implDirs), implAssemblies, string.Join(",", contracts), contractAssemblies);
+                        usesMSBuildLog);
+                    writer.Write(string.Join(",", implementationDirectories), implAssemblies, string.Join(",", contracts), contractAssemblies);
 
                     return 0;
                 }
@@ -154,7 +163,7 @@ namespace Microsoft.DotNet.ApiCompat
             string rightOperand,
             IEnumerable<string> excludeAttributes,
             bool allowDefaultInterfaceMethods,
-            bool isMSBuildTask)
+            bool usesMSBuildLog)
         {
             CompositionHost container = GetCompositionHost();
 
@@ -195,7 +204,7 @@ namespace Microsoft.DotNet.ApiCompat
                 filter = new DifferenceFilter<IncompatibleDifference>();
             }
 
-            var diffWriter = new DifferenceWriter(writer, settings, filter, isMSBuildTask);
+            var diffWriter = new DifferenceWriter(writer, settings, filter, usesMSBuildLog);
             ExportCciSettings.StaticSettings = settings.TypeComparer;
             ExportCciSettings.StaticOperands = new DifferenceOperands()
             {
@@ -253,30 +262,6 @@ namespace Microsoft.DotNet.ApiCompat
                     addFile(file);
                 }
             }
-        }
-
-        public static TextWriter GetOutput(string outFilePath = null)
-        {
-            if (string.IsNullOrWhiteSpace(outFilePath))
-                return Console.Out;
-
-            const int NumRetries = 10;
-            string exceptionMessage = null;
-            for (int retries = 0; retries < NumRetries; retries++)
-            {
-                try
-                {
-                    return new StreamWriter(File.OpenWrite(outFilePath));
-                }
-                catch (Exception e)
-                {
-                    exceptionMessage = e.Message;
-                    System.Threading.Thread.Sleep(100);
-                }
-            }
-
-            Trace.TraceError("Cannot open output file '{0}': {1}", outFilePath, exceptionMessage);
-            return Console.Out;
         }
 
         private static CompositionHost GetCompositionHost()

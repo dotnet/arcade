@@ -50,11 +50,12 @@
 
     <MakeDir Directories="$(IntermediateOutputPath)" />
     <ApiCompatTask Contracts="@(ResolvedMatchingContract)"
-                   ImplDirs="$(IntermediateOutputPath);@(_DependencyDirectories)"
+                   ImplementationDirectories="$(IntermediateOutputPath);@(_DependencyDirectories)"
                    ContractDepends="@(_ContractDependencyDirectories)"
                    ExcludeAttributes="@(ApiCompatExcludeAttributesFile)"
                    EnforceOptionalRules="$(ApiCompatEnforceOptionalRules)"
-                   BaselineFiles="@(ApiCompatBaselineFile)">
+                   BaselineFiles="@(ApiCompatBaselineFile)"
+                   IgnoreExitCode="true">
       <Output TaskParameter="ExitCode" PropertyName="ApiCompatExitCode" />
     </ApiCompatTask>
     
@@ -94,10 +95,11 @@
                    ContractDepends="@(_ContractDependencyDirectories)"
                    EnforceOptionalRules="$(ApiCompatEnforceOptionalRules)"
                    ExcludeAttributes="@(ApiCompatExcludeAttributesFile)"
-                   ImplDirs="@(_ImplementationDependencyDirectories)"
+                   ImplementationDirectories="@(_ImplementationDependencyDirectories)"
                    LeftOperand="implementation"
                    RightOperand="reference"
-                   BaselineFiles="@(MatchingRefApiCompatBaseline)">
+                   BaselineFiles="@(MatchingRefApiCompatBaseline)"
+                   IgnoreExitCode="true">
       <Output TaskParameter="ExitCode" PropertyName="MatchingRefApiCompatExitCode" />
     </ApiCompatTask>
 

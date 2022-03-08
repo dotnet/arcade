@@ -7,16 +7,18 @@ using McMaster.Extensions.CommandLineUtils;
 
 namespace Microsoft.DotNet.ApiCompat
 {
+    /// <summary>
+    /// The console app's entry point which invokes Executor.Run in Microsoft.DotNet.ApiCompat.Core.
+    /// The other entry point is an msbuild task, ApiCompatTask.
+    /// </summary>
     public class ApiCompatRunner
     {
         private readonly CommandLineApplication _app;
-        private readonly TextWriter _outStream;
+        private TextWriter _outputStream;
 
-        public ApiCompatRunner() : this(null) { }
-
-        public ApiCompatRunner(TextWriter outputStream)
+        public ApiCompatRunner(TextWriter outputStream = null)
         {
-            _outStream = outputStream;
+            _outputStream = outputStream;
             _app = CreateApp();
         }
 
@@ -29,8 +31,8 @@ namespace Microsoft.DotNet.ApiCompat
                 Name = "ApiCompat",
                 FullName = "A command line tool to verify that two sets of APIs are compatible.",
                 ResponseFileHandling = ResponseFileHandling.ParseArgsAsSpaceSeparated,
-                Out = _outStream ?? Console.Out,
-                Error = _outStream ?? Console.Error
+                Out = _outputStream ?? Console.Out,
+                Error = _outputStream ?? Console.Error
             };
             app.HelpOption("-?|-h|--help");
             app.VersionOption("-v|--version", typeof(Program).Assembly.GetName().Version.ToString());
@@ -74,41 +76,50 @@ namespace Microsoft.DotNet.ApiCompat
                 "Exclude APIs marked with a CompilerGenerated attribute.",
                 CommandOptionType.NoValue);
 
-            app.OnExecute(() => Executor.Run(isMSBuildTask: false,
-                SplitPaths(contracts.Value),
-                SplitPaths(implDirs.Value()),
-                _outStream ?? Executor.GetOutput(outFilePath.Value()),
-                rightOperand.Value(),
-                leftOperand.Value(),
-                listRules.HasValue(),
-                SplitPaths(baseline.Value()),
-                validateBaseline.HasValue(),
-                resolveFx.HasValue(),
-                skipUnifyToLibPath.HasValue(),
-                SplitPaths(contractDepends.Value()),
-                contractCoreAssembly.Value(),
-                ignoreDesignTimeFacades.HasValue(),
-                warnOnMissingAssemblies.HasValue(),
-                respectInternals.HasValue(),
-                warnOnIncorrectVersion.HasValue(),
-                enforceOptionalRules.HasValue(),
-                mdil.HasValue(),
-                excludeNonBrowsable.HasValue(),
-                excludeCompilerGenerated.HasValue(),
-                remapFile.Value(),
-                skipGroupByAssembly.HasValue(),
-                SplitPaths(excludeAttributes.Value()),
-                allowDefaultInterfaceMethods.HasValue()));
+            app.OnExecute(() =>
+            {
+                bool disableAssemblyResolveTraceListener = false;
+                // Use Console.Out if no output file path is passed in or
+                // when the file cannot be opened or created.
+                if (_outputStream == null && (string.IsNullOrWhiteSpace(outFilePath.Value()) ||
+                    !OutputHelper.TryGetOutput(outFilePath.Value(), out _outputStream)))
+                {
+                    _outputStream = Console.Out;
+                    disableAssemblyResolveTraceListener = true;
+                }
+
+                Executor.Run(usesMSBuildLog: false,
+                    disableAssemblyResolveTraceListener,
+                    SplitPaths(contracts.Value),
+                    SplitPaths(implDirs.Value()),
+                    _outputStream,
+                    rightOperand.Value(),
+                    leftOperand.Value(),
+                    listRules.HasValue(),
+                    SplitPaths(baseline.Value()),
+                    validateBaseline.HasValue(),
+                    resolveFx.HasValue(),
+                    skipUnifyToLibPath.HasValue(),
+                    SplitPaths(contractDepends.Value()),
+                    contractCoreAssembly.Value(),
+                    ignoreDesignTimeFacades.HasValue(),
+                    warnOnMissingAssemblies.HasValue(),
+                    respectInternals.HasValue(),
+                    warnOnIncorrectVersion.HasValue(),
+                    enforceOptionalRules.HasValue(),
+                    mdil.HasValue(),
+                    excludeNonBrowsable.HasValue(),
+                    excludeCompilerGenerated.HasValue(),
+                    remapFile.Value(),
+                    skipGroupByAssembly.HasValue(),
+                    SplitPaths(excludeAttributes.Value()),
+                    allowDefaultInterfaceMethods.HasValue());
+            });
 
             return app;
         }
 
-        private static string[] SplitPaths(string pathSet)
-        {
-            if (pathSet == null)
-                return new string[0];
-
-            return pathSet.Split(new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
-        }
+        private static string[] SplitPaths(string pathSet) =>
+            pathSet?.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries) ?? new string[0];
     }
 }
