@@ -762,7 +762,7 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
                         {
                             Include = "StrongButKindName",
                             PublicKeyToken = "fedcba9876543210",
-                            CertificateName = "Microsoft404",
+                            CertificateName = "Microsoft404",  // lgtm [cs/common-default-passwords] Safe, these are certificate names
                         },
                     },
                 },

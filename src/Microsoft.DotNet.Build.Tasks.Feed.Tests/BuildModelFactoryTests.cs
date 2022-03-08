@@ -497,7 +497,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     item =>
                     {
                         item.Include.Should().Be("Microsoft.DiaSymReader.dll");
-                        item.CertificateName.Should().Be("Microsoft101240624");
+                        item.CertificateName.Should().Be("Microsoft101240624"); // lgtm [cs/common-default-passwords] Safe, these are certificate names
                         item.TargetFramework.Should().Be(".NETStandard,Version=v1.1");
                         item.PublicKeyToken.Should().Be("31bf3856ad364e35");
                     },

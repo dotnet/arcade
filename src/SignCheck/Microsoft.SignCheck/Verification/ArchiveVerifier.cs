@@ -37,13 +37,13 @@ namespace Microsoft.SignCheck.Verification
                         // Generate an alias for the actual file that has the same extension. We do this to avoid path too long errors so that
                         // containers can be flattened.
                         string directoryName = Path.GetDirectoryName(archiveEntry.FullName);
-                        string hashedPath = String.IsNullOrEmpty(directoryName) ? Utils.GetHash(@".\", HashAlgorithmName.MD5.Name) :
-                            Utils.GetHash(directoryName, HashAlgorithmName.MD5.Name);
+                        string hashedPath = String.IsNullOrEmpty(directoryName) ? Utils.GetHash(@".\", HashAlgorithmName.SHA256.Name).Substring(0, 32) :
+                            Utils.GetHash(directoryName, HashAlgorithmName.SHA256.Name).Substring(0, 32);
                         string extension = Path.GetExtension(archiveEntry.FullName);
 
                         // CAB files cannot be aliased since they're referred to from the Media table inside the MSI
                         string aliasFileName = String.Equals(extension.ToLowerInvariant(), ".cab") ? Path.GetFileName(archiveEntry.FullName) :
-                            Utils.GetHash(archiveEntry.FullName, HashAlgorithmName.MD5.Name) + Path.GetExtension(archiveEntry.FullName);
+                            Utils.GetHash(archiveEntry.FullName, HashAlgorithmName.SHA256.Name) + Path.GetExtension(archiveEntry.FullName);  // lgtm [cs/zipslip] Archive from trusted source
                         string aliasFullName = Path.Combine(tempPath, hashedPath, aliasFileName);
 
                         if (File.Exists(aliasFullName))
@@ -53,7 +53,7 @@ namespace Microsoft.SignCheck.Verification
                         else
                         {
                             CreateDirectory(Path.GetDirectoryName(aliasFullName));
-                            archiveEntry.ExtractToFile(aliasFullName);
+                            archiveEntry.ExtractToFile(aliasFullName); // lgtm [cs/microsoft/zipslip] Archive from trusted source
                             archiveMap[archiveEntry.FullName] = aliasFullName;
                         }
                     }
