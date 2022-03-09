@@ -5,7 +5,7 @@ Whenever a build has an error that matches with one of the already existing know
 This information is going to be listed at the top of the build analysis.
 
 
-If you need to find the open known issues you can filter the issues with the `Known Build Error` label . All the reported infrastructure issues can be found on [core-eng](https://github.com/dotnet/core-eng/issues?q=is%3Aopen+is%3Aissue+label%3A%22Known+Build+Error%22).
+If you need to find the open known issues you can filter the issues with the `Known Build Error` label . All the reported infrastructure issues can be found on [arcade](https://github.com/dotnet/arcade/issues?q=is%3Aopen+is%3Aissue+label%3A%22Known+Build+Error%22).
 
 ## When and how to report a known issue
 A known issue should be reported when you find a build error that is not caused by your changes and that is affecting or could affect more builds. 
@@ -19,7 +19,7 @@ There are two ways to report a known issue, one is via the build analysis and th
 ### Reporting known issue manually
 1. Decide if you need to open a [repository issue or infrastructure issue](#decide-infrastructure-or-repository-issue)
 1. Open a new issue, choosing the repository in which you are opening the issue based on following rule:
-    - Infrastructure issue - core-eng
+    - Infrastructure issue - arcade
     - Repository issue - In the repo in which the issue is happening
 1. Add the label `Known Build Error`. (If the label is not available on the repository follow the instructions to [get on board](#how-to-get-onboard))
 1. Copy and paste the template
@@ -74,8 +74,8 @@ After selecting the message, fill the "ErrorMessage";
 
 ## How to get onboard
 1. This feature is tightly related to the build analysis because of that it's necessary to have the `.NET Helix` GitHub application installed in the repo in which you intend to use known issues. </br>
-To get the application installed, you can contact the [.NET Core Engineering Services team](https://github.com/dotnet/core-eng/wiki/How-to-get-a-hold-of-Engineering-Servicing)
-1. For infrastructure issues there are not additional steps because this are part of dotnet/core-eng.
+To get the application installed, you can contact the [.NET Core Engineering Services team](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/How-to-get-a-hold-of-Engineering-Servicing)
+1. For infrastructure issues there are not additional steps because this are part of dotnet/arcade.
 1. For the repository issues it's necessary to [Create a label](https://docs.github.com/en/enterprise-server@3.1/issues/using-labels-and-milestones-to-track-work/managing-labels#creating-a-label) on the repository in which you need to open the Repository issue. <br>
 The name of the label needs to be `Known Build Error`
 
@@ -83,7 +83,7 @@ The name of the label needs to be `Known Build Error`
 - **Infrastructure**: 
     - The issue is not exclusive to a repository 
     - Needs to be investigated by the engineering services (@dotnet/dnceng)
-    - It hasn't been reported on [core-eng](https://github.com/dotnet/core-eng/issues?q=is%3Aopen+is%3Aissue+label%3A%22Known+Build+Error%22)
+    - It hasn't been reported on [arcade](https://github.com/dotnet/arcade/issues?q=is%3Aopen+is%3Aissue+label%3A%22Known+Build+Error%22)
 - **Repository**: 
     - The issue is happening in a particular repository 
     - The error needs to be investigated by the repository owners.
