@@ -247,9 +247,9 @@ namespace Microsoft.DotNet.Helix.Client
             if (whenItExpires != DateTime.MaxValue) // We recognized a date from the string
             {
                 TimeSpan untilRemoved = whenItExpires.ToUniversalTime().Subtract(DateTime.UtcNow);
-                if (untilRemoved.TotalDays <= 21)
+                if (untilRemoved.TotalDays <= 10)
                 {
-                    log?.Invoke($"warning : Helix queue {queueInfo.QueueId} {(untilRemoved.TotalDays < 0 ? "was" : "is")} slated for removal on {queueInfo.EstimatedRemovalDate}. Please discontinue usage.  Contact dnceng for questions / concerns ");
+                    log?.Invoke($"warning : Helix queue {queueInfo.QueueId} {(untilRemoved.TotalDays < 0 ? "was" : "is")} set for estimated removal date of {queueInfo.EstimatedRemovalDate}. In most cases the queue will be removed permanently due to end-of-life; please contact dnceng for any questions or concerns, and we can help you decide how to proceed and discuss other options.");
                 }
             }
             else
