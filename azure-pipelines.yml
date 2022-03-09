@@ -124,6 +124,7 @@ stages:
             -prepareMachine
             -ci
             -test
+            -warnAsError $false
             -projects $(Build.SourcesDirectory)/tests/UnitTests.proj
             /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
           displayName: Run Helix Tests
@@ -136,6 +137,7 @@ stages:
             -prepareMachine
             -ci
             -test
+            -warnAsError $false
             -projects $(Build.SourcesDirectory)/tests/UnitTests.proj
             /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
             /p:HelixBaseUri=https://helix.int-dot.net/
@@ -184,6 +186,7 @@ stages:
               --prepareMachine
               --ci
               --test
+              --warnAsError false
               --projects $(Build.SourcesDirectory)/tests/UnitTests.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
             displayName: Run Helix Tests
