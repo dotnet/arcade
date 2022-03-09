@@ -238,31 +238,23 @@ namespace Microsoft.DotNet.Helix.Client
 
         private void WarnForImpendingRemoval(Action<string> log, QueueInfo queueInfo)
         {
-            bool azDoVariableDefined = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SYSTEM_TEAMPROJECT"));
             DateTime whenItExpires = DateTime.MaxValue;
 
             if (DateTime.TryParseExact(queueInfo.EstimatedRemovalDate, "yyyy-MM-dd", null, DateTimeStyles.AssumeUniversal, out DateTime dtIso))
             {
                 whenItExpires = dtIso;
             }
-            // This branch can be removed once the strings start coming in in ISO-8601 format
-            // Currently the API provides values in this format though and they are unlikely to get confused with each other.
-            else if (DateTime.TryParseExact(queueInfo.EstimatedRemovalDate, "M/d/yyyy", null, DateTimeStyles.AssumeUniversal, out DateTime dtUsa))
-            {
-                whenItExpires = dtUsa;
-            }
-
             if (whenItExpires != DateTime.MaxValue) // We recognized a date from the string
             {
                 TimeSpan untilRemoved = whenItExpires.ToUniversalTime().Subtract(DateTime.UtcNow);
-                if (untilRemoved.TotalDays <= 21)
+                if (untilRemoved.TotalDays <= 10)
                 {
-                    log?.Invoke($"{(azDoVariableDefined ? "##vso[task.logissue type=warning]" : "")}Helix queue {queueInfo.QueueId} {(untilRemoved.TotalDays < 0 ? "was" : "is")} slated for removal on {queueInfo.EstimatedRemovalDate}. Please discontinue usage.  Contact dnceng for questions / concerns ");
+                    log?.Invoke($"warning : Helix queue {queueInfo.QueueId} {(untilRemoved.TotalDays < 0 ? "was" : "is")} set for estimated removal date of {queueInfo.EstimatedRemovalDate}. In most cases the queue will be removed permanently due to end-of-life; please contact dnceng for any questions or concerns, and we can help you decide how to proceed and discuss other options.");
                 }
             }
             else
             {
-                log?.Invoke($"{(azDoVariableDefined ? "##vso[task.logissue type=warning]" : "")}Unable to parse estimated removal date '{queueInfo.EstimatedRemovalDate}' for queue '{queueInfo.QueueId}' (please contact dnceng with this information)");
+                log?.Invoke($"error : Unable to parse estimated removal date '{queueInfo.EstimatedRemovalDate}' for queue '{queueInfo.QueueId}' (please contact dnceng with this information)");
             }
         }
 
