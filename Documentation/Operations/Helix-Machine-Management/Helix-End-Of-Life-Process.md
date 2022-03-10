@@ -92,7 +92,7 @@ Helix Queues:
 | Build.DifferentOperatingSystem.KindOfImage | 03/22/2022 |
 
 Removing no-longer-supported operating systems on a regular cadence both allows us to be as secure as possible and use more of the resources we have available more for still-supported platforms.
-If you feel this removal is in error, need to extend support beyond this date, or believe a specific expiration should be extended, please email dnceng@microsoft.com with your concerns.
+If you feel this removal is in error, or believe a specific expiration should be extended, please email dnceng@microsoft.com with your concerns.
 
 ### Execution Steps
 
