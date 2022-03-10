@@ -6,7 +6,10 @@
 
 - **End of life (EOL)**: The date at which an operating system is no longer supported by its publisher. Publishers will often provide more than one timeline for this (often charging customers money for longer terms). For .NET Core's purposes, this is usally the longest possible period where security vulnerabilities will be addressed as this is what customers running .NET on these operating systems expect, as we will need to be able to continue testing the shipped product on these operating systems until the final days of their support lifecycle.
 
-- **Estimated Removal Date (ERD)**: The date that .NET Core Engineering Services intends to remove a test queue or build image. This date is meant to force conversations to be had and actions to be taken, and is not meant to indicate a customer promise of .NET Core's OS support.  The date may be before, or after the EOL date (preferably before) at DncEng's discretion. With the exception of the dotnet-helix-machines build where it can become an error once elapsed, this time is only used to inform warnings to users. Estimated removal dates thus can be arbitrarily extended (leaving history behind in Git commits) with sufficient cause, but the goal is to never have unsupported and un-patch-able operating systems managed by the team.
+- **Estimated Removal Date (ERD)**: The date that .NET Core Engineering Services intends to remove a test queue or build image. It is 
+This date is meant to force conversations to be had and actions to be taken, and is not meant to indicate a customer promise of .NET Core's OS support.  The date may be before, or after the EOL date (preferably before) at DncEng's discretion. With the exception of the dotnet-helix-machines build where it can become an error once elapsed, this time is only used to inform warnings to users. Estimated removal dates thus can be arbitrarily extended with sufficient cause (leaving history behind in Git commits of who did it and hopefully why), but the goal is to never have unsupported and un-patch-able operating systems managed by the team.
+
+- **Update Required Date (URD)**: The date that .NET Core Engineering Services will next need to take action to update an image used in Helix test machines or 1ES hosted build pool images.  This can be any date up to the estimated removal date, but not after it.  This date is designed to allow the .NET Core Engineering Services team an opportunity to update images that need no user action (for instance: Updating to a newer, non-EOL, OS version with all the same artifacts where the users don't need to have direct communication about this.) When an existing image includes version information that makes this impossible (e.g. "19H1" is in a queue name but its corresponding Windows version is EOL) the Update Required date should be set to the same value as EstimatedRemovalDate.
 
 - **Matrix of Truth**: ([Epic issue link](https://github.com/dotnet/core-eng/issues/11077)) Ongoing work to provide a single source of information for operating system test matrix and life cycle for .NET Core Engineering systems.
 
@@ -18,7 +21,7 @@
 
 #### Why does this "process" exist in the first place?
 
-Previously, removing old Helix queues and images has been a best-effort process. This has several major problems including:
+Previously, removing old Helix queues and images was a best-effort process. This has several major problems including:
 
 - It causes us to continue using images that no longer receive security patching, leading to potential attacks as well as definitely causing monitoring applications to detect these machines and cause us to react to this.
 - Helix VM and on-prem machine capacity is divided amongst whatever capacity we have.  If we keep around old Helix queues (on-prem or in Azure), this limits the ability to provide this capacity in still-supported OSes.
@@ -38,10 +41,10 @@ Without a regular process, we will be bogged down with responding to alerts for 
 - Task scope:
 
   - In scope:
-    - Monitor [dotnet-helix-machines](https://dnceng.visualstudio.com/internal/_build?definitionId=596) pipeline and respond to warnings / errors produced by EstimatedRemovalDate time elapsing by either extending this date or removing these queues.
+    - Monitor [dotnet-helix-machines](https://dnceng.visualstudio.com/internal/_build?definitionId=596) pipeline and respond to warnings / errors produced by EstimatedRemovalDate and UpdateRequiredDate times elapsing by either updating the images referenced and/or extending these dates, or removing these queues.
     - Whenever extending a date further out than the lifespan of an existing operating system, comments should be added above this (or at least in commit messages) explaining the extension.
-    - Coordinate with rollout owners to ensure that upcoming removals (any queue that has produced a warning in the dotnet-helix-machines "Validate" stage) are included in rollout status emails. 
-    - Until all values have data, periodically (monthly?) review and update the EstimatedRemovalDate of Helix queues in dotnet-helix-machines repository for accuracy and existence (eventually every OS we may deprecate should have some value for end of life). Once all Helix queues have some date (based off the next Wednesday after the OS is either end-of-life, or end-of-.NET-special-support) we may automate this by making the property mandatory.  Use .NET release PM team and the internet for deciding dates.
+    - Coordinate with rollout owners to ensure that upcoming removals and image refreshes (any queue that has produced a warning in the dotnet-helix-machines "Validate" stage) are included in rollout status emails. 
+    - On a monthly cadence, review and update the EstimatedRemovalDate / UpdateRequiredDate values of images generated by the dotnet-helix-machines repository for accuracy. Use .NET release PM team and the internet for deciding dates.
 
   - Not in scope:
     - Deciding the OSes for which we will provide images. (tracked by https://github.com/dotnet/core-eng/issues/11077)
@@ -55,7 +58,7 @@ Without a regular process, we will be bogged down with responding to alerts for 
 
 #### SME information:
 
-Descriptions of what/where the inputs to the process come from (the answer to "what do I or the automated process neeed to consider to perform this task?", and what performing the below steps correctly achieves ("what comes out the other side?")
+Descriptions of what/where the inputs to the process come from (the answer to "what do I or the automated process neeed to consider to perform this task?"), and what performing the below steps correctly achieves ("what comes out the other side?")
 
 Inputs:
 - The OS "Matrix of Truth" (future output from https://github.com/dotnet/core-eng/issues/11077).  Until this matrix exists, what we have is considered "in matrix" but we need to be removing unsupported OSes.
@@ -63,15 +66,16 @@ Inputs:
 - EstimatedRemovalDate warnings / errors from the dotnet-helix-machines-ci pipeline
 
 Outputs:
-- An issue filed for removal of EOL queues for a particular timetable
-- Removal of Helix image definition from dotnet-helix-machines repository.
+- (Where needed) Removal of Helix image definition from dotnet-helix-machines repository.
+- (Where needed) Updates of Helix base image or image references in the dotnet-helix-machines repository, or tracking issues for this work
 - Communication with the release PM team ensuring any "first time" removals of a given OS are acceptable; this team may veto this and will provide new estimated removal dates if they do
+  - Once the "Matrix of Truth" epic is complete and this is approved by the release PM team, we may consider no longer notifying them)
   - If not removing all instances of an OS at once (e.g. if removing build images while leaving test queues), mark the remaining instances of the OS with a comment indicating removal has already been approved so this step may be skipped
-- Communication blurb following the below template in weekly rollout email.  As these warnings are designed to appear 3 weeks prior to expiration, it should consistently allow the current week's rollout (or "not rolling out" mail) to indicate that users need to take action.
+- Communication blurb following the below template in weekly rollout email.  As these warnings are designed to appear in the dotnet-helix-machines official build starting 3 weeks prior to expiration, it should consistently allow the current week's rollout (or "not rolling out" mail) to indicate that users will soon need to take action.
 
 #### Example Communication
 
-The following Helix Queues and/or Build images will be removed on the Wednesday rollout following the estimated date. Please remove usage of these queues/images before this date to keep your pipelines and tests functional.
+The following Helix Queues and/or Build images will be removed on the Wednesday rollout following the estimated date. Please remove usage of these queues/images before this date to keep your pipelines and tests functional. 
 
 Helix Queues:
 
@@ -80,7 +84,7 @@ Helix Queues:
 | Some.Helix.Queue | 03/14/2022 |
 | Some.Other.Helix.Queue | 03/10/2022 |
 
-Pool provider images: (these will continue to work for some time after, but will eventually be cleaned up)
+1ES Hosted Pool Images
 
 | Image Name | Estimated removal date |
 | - | - |
@@ -88,12 +92,12 @@ Pool provider images: (these will continue to work for some time after, but will
 | Build.DifferentOperatingSystem.KindOfImage | 03/22/2022 |
 
 Removing no-longer-supported operating systems on a regular cadence both allows us to be as secure as possible and use more of the resources we have available more for still-supported platforms.
-If you feel this removal is in error, or need to extend support beyond this date, please email dnceng@microsoft.com with your concerns.
+If you feel this removal is in error, need to extend support beyond this date, or believe a specific expiration should be extended, please email dnceng@microsoft.com with your concerns.
 
 ### Execution Steps
 
 #### Fully-automatable routines:
-- EstimatedRemovalDate notifications - Part of the dotnet-helix-machines-ci pipeline.
+- EstimatedRemovalDate & UpdateRequiredDate notifications - Part of the dotnet-helix-machines-ci pipeline, these must be both in the future and estimated removal date be >= update required date or the build will fail.
 - Links:
   - Documentation: https://dnceng.visualstudio.com/internal/_git/dotnet-helix-machines?path=/definitions/readme.md
   - Pipeline: https://dnceng.visualstudio.com/internal/_build?definitionId=596
@@ -117,17 +121,23 @@ When the dotnet-helix-machines-ci build to be rolled out fails with `{QueueOrIma
 2. If the date is incorrect, consult with DncEng Operations v-team (or, use judgment) to determine a new date and extend it via pull-request to this repository
 3. If the date is valid, remove the definition via pull request to this repository.  If we have erroneously never communicated this state, you may use discretion to set a date sometime in the future to keep the current status quo, but please include a comment over the definition explaining why.
 
-- Known issues impacting the area: n/a
-- Known tech debt: n/a
+The similar warnings/errors for Update Required look like the below.  Their only real difference is that these updates only are shared with the rollout team / customers in the case where a "significant" change occurs (e.g. updating the semi-annual Windows version).
+
+`{QueueOrImageName} has update-required date: {Date}, which has elapsed.  Either extend this date in the yaml definition (add comments if relevant), or remove it from usage to proceed.`
+`{QueueOrImageName} has update-required date: {Date}, in the next three weeks. Please either update the image to newer, file an issue requesting this, or extend the date with a comment explaining why if no action is taken.`
+
+- Known issues impacting the area: We regularly have difficulty generating "novel" new images; when this occurs whoever is driving the process should extend dates (with comments why) as proactively as possible, since we'd like to minimize communication to users that implies actions are needed on their part if we know we don't have something for them to upgrade to.
+- Known tech debt: Completion of "Matrix of Truth" work (needed for unified tracking of expiration dates)
 - Troubleshooting guide per-step, ideally tested by execution by an individual unfamiliar with the feature area(s) involved: None for now, can add as users hit issues.
 
 #### Troubleshooting:
 
-- Ensure all EstimatedRemovalDate values are expressed in YYYY-MM-DD format.
+- Ensure all EstimatedRemovalDate/UpdateRequiredDate values are expressed in YYYY-MM-DD format.
+- Use DncEng team for guidance when investigating errors
 
 ### Validation Steps
 
-After completing manual steps: (cadence TBD, but probably weekly before rollouts), perform the following checks and make a note in https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/Helix-Machine-Management-Operations-Notes
+After completing manual steps: (cadence TBD, but probably weekly before rollouts), perform the following checks and make a note in https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/104/Helix-Machine-Management-Operations-Notes
 
 Template (insert at top of wiki mentioned abov)
 ```
@@ -143,7 +153,3 @@ Notes:
 - Anything interesting or unusual that happened as part of this week's check-in.
 - Issue(s) falling out of the process for this week:
 ```
-
-
-
-
