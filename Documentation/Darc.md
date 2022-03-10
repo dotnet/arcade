@@ -93,7 +93,7 @@ You can invoke the tool using the following command: darc
 Tool 'microsoft.dotnet.darc' (version '1.1.0-beta.19081.1') was successfully installed.
 ```
 
-If you get a `SecurityError` saysing that `\eng\common\darc-init.ps1 cannot be loaded because running
+If you get a `SecurityError` saying that `\eng\common\darc-init.ps1 cannot be loaded because running
 scripts is disabled on this system` , you can relax your `ExecutionPolicy` for this script:
 ```
 powershell -ExecutionPolicy ByPass -File .\darc-init.ps1
