@@ -20,7 +20,7 @@ body:
   - type: textarea
     id: error-message
     attributes:
-      label: Action requiered for the engineering services team
+      label: Action required for the engineering services team
       description: This information is going to be fill in by the engineering services team. 
       value: |
         To triage this issue:
