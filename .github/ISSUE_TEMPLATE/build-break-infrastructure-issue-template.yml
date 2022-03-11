@@ -1,5 +1,5 @@
 name: Report an infrastructure issue
-description: Report an infrastructure issue causing build breaks across multiple builds
+description: Report an infrastructure issue causing failures across multiple builds
 labels: ["First Responder"]
 body:
   - type: markdown
