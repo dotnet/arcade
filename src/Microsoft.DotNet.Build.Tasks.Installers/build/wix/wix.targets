@@ -177,6 +177,10 @@
     <Error Text="A bundle theme directory property must be specified with the BundleThemeDirectory property."
            Condition="'$(BundleThemeDirectory)' == ''" />
       
+    <PropertyGroup>
+      <WixInstallerBackgroundFile Condition="'$(WixInstallerBackgroundFile)' == ''">$(MSBuildThisFileDirectory)..\resources\dotnetbackground.png</WixInstallerBackgroundFile>
+    </PropertyGroup>
+
     <ItemGroup>
       <LocFile Include="$(BundleThemeDirectory)\theme\**\bundle.wxl" />
       <LocDirName Include="$([System.String]::new('%(LocFile.RecursiveDir)').TrimEnd('\'))" />
@@ -185,7 +189,7 @@
       <CandleVariables Include="LcidList" Value="@(LocDirName)" />
       <CandleVariables Include="BundleThmDir" Value="$(BundleThemeDirectory)" />
 
-      <CandleVariables Include="DotNetBackgroundPngFile" Value="$(MSBuildThisFileDirectory)..\resources\dotnetbackground.png" />
+      <CandleVariables Include="DotNetBackgroundPngFile" Value="$(WixInstallerBackgroundFile)" />
       <CandleVariables Include="DotNetDummyEulaFile" Value="$(MSBuildThisFileDirectory)bundle\dummyEula.rtf" />
     </ItemGroup>
 
