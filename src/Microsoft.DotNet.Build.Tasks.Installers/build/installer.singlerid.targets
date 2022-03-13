@@ -410,7 +410,9 @@
     
     <MakeDir Directories="$(_OutputPathRoot)" />
     <!-- avoid error where the root folder for the _InstallerFile does not exist: https://github.com/dotnet/arcade/issues/8603. -->
+    <MakeDir Directories="$(ArtifactsShippingPackagesDir)" Condition="!Exists($(ArtifactsShippingPackagesDir)) AND '$(IsShipping)' == 'true'" />
     <MakeDir Directories="$(ArtifactsNonShippingPackagesDir)" Condition="!Exists($(ArtifactsNonShippingPackagesDir)) AND '$(IsShipping)' == 'false'" />
+
     <MSBuild Projects="$(MSBuildProjectFullPath)"
              Targets="PublishToDisk"
              Properties="OutputPath=$(_OutputPathRoot)"
