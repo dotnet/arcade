@@ -1,5 +1,5 @@
 name: Report an infrastructure issue
-description: Report an infrastructure issue causing failures across multiple builds
+description: Report an infrastructure issue causing build failures
 labels: ["First Responder"]
 body:
   - type: markdown
@@ -9,7 +9,7 @@ body:
     id: build
     attributes:
       label: Build
-      description: Enter link to failing build, e.g. https://dev.azure.com/{organization}/{project}/_build/results?buildId={buildId} 
+      description: Enter link to at least one failing build, e.g. https://dev.azure.com/{organization}/{project}/_build/results?buildId={buildId} 
     validations:
       required: true
   - type: input
