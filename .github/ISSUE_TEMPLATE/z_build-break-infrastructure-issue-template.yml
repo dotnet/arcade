@@ -5,7 +5,7 @@ body:
   - type: markdown
     attributes:
       value: Thanks for reporting an infrastructure build breaking issue to be investigated by the engineering services team.
-  - type: input
+  - type: textarea
     id: build
     attributes:
       label: Build
