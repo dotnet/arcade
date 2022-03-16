@@ -23,7 +23,7 @@ body:
       label: Action required for the engineering services team
       description: This information is going to be filled in by the engineering services team. 
       value: |
-        To triage this issue:
+        To triage this issue (First Responder / @dotnet/dnceng):
         - [ ] Open the failing build above and investigate
         - [ ] Add a comment explaining your findings 
 
