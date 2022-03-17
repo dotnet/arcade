@@ -19,7 +19,7 @@ In this new hybrid world there are many challenges ahead.  This is our current a
 - When folks are meeting physically together, laptops (or other devices) should be used to aid remote folks.  (see logistics note below)
 - The meeting organizer should *always* have a laptop.
 - Attendees (remote and in-person) should use the "hand raise" feature to request time to speak. The meeting organizer, or her designee, should monitor and use this list.
-- The meeting organizer should monitor Teams chat for relevant meeting information.
+- The meeting organizer, or her designee, should monitor Teams chat for relevant meeting information.
 - It's probably better to schedule meetings in a conference room and/or focus room so as to not disrupt the team room.  However, there are undoubtedly times when having the meeting in the team room is appropriate.
 - Only one person should speak at a time
   - Modern conference room microphones are sensitive. Even quiet side conversations come through clearly to remote attendees. 
