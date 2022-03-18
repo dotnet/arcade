@@ -17,6 +17,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
         private static readonly Dictionary<string, string> _templateResources = new();
 
+        /// <summary>
+        /// Extracts the specified filename from the embedded template resource into the destination folder and
+        /// returns the full path of the file.
+        /// </summary>
+        /// <param name="filename">The name of the template file to extract.</param>
+        /// <param name="destinationFolder">The directory where the file will be extracted.</param>
+        /// <returns>The full path of the extracted file.</returns>
         public static string Extract(string filename, string destinationFolder)
         {
             return Extract(filename, destinationFolder, filename);
@@ -29,7 +36,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 throw new KeyNotFoundException($"No template for '{filename}' exists.");
             }
 
-            // Clean out stale files, just to be safe.
+            // Clean out stale files just to be safe.
             string destinationPath = Path.Combine(destinationFolder, destinationFilename);
             if (File.Exists(destinationPath))
             {
@@ -78,7 +85,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 { $"manifest.vsmanproj", $"{s_namespace}.SwixTempalte.manifest.vsmanproj"},
 
                 { "Icon.png", $"{s_namespace}.Misc.Icon.png"},
-                { "LICENSE.TXT", $"{s_namespace}.Misc.LICENSE.TXT"}
+                { "LICENSE.TXT", $"{s_namespace}.Misc.LICENSE.TXT"},
+                { "msi.csproj", $"{s_namespace}.Misc.msi.csproj"}
             };
         }
     }
