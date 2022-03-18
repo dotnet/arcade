@@ -160,6 +160,24 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not find a template matching the provided key: {0}..
+        /// </summary>
+        internal static string TemplateNotFound {
+            get {
+                return ResourceManager.GetString("TemplateNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not read the template resource: {0}..
+        /// </summary>
+        internal static string TemplateResourceNotFound {
+            get {
+                return ResourceManager.GetString("TemplateResourceNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unknown workload kind: {0}..
         /// </summary>
         internal static string UnknownWorkloadKind {

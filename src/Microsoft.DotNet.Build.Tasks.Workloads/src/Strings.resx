@@ -150,6 +150,12 @@
   <data name="SwixDependencyVersionRequired" xml:space="preserve">
     <value>A SWIX dependency must have a version boundary. The minimum and maximum versions cannot both be null.</value>
   </data>
+  <data name="TemplateNotFound" xml:space="preserve">
+    <value>Could not find a template matching the provided key: {0}.</value>
+  </data>
+  <data name="TemplateResourceNotFound" xml:space="preserve">
+    <value>Could not read the template resource: {0}.</value>
+  </data>
   <data name="UnknownWorkloadKind" xml:space="preserve">
     <value>Unknown workload kind: {0}.</value>
   </data>
