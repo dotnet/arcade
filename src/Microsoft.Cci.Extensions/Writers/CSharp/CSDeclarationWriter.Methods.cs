@@ -122,16 +122,15 @@ namespace Microsoft.Cci.Writers.CSharp
             {
                 IMethodImplementation methodImplementation = method.GetMethodImplementation();
                 object nullableAttributeArgument = methodImplementation.GetExplicitInterfaceMethodNullableAttributeArgument(_metadataReaderCache);
-                if (nullableAttributeArgument != null)
-                {
-                    WriteTypeName(methodImplementation.ImplementedMethod.ContainingType, noSpace: true, nullableAttributeArgument: nullableAttributeArgument);
-                    WriteSymbol(".");
-                    WriteIdentifier(methodImplementation.ImplementedMethod.Name);
-                    return;
-                }
-            }
 
-            WriteIdentifier(GetNormalizedMethodName(method.Name));
+                WriteTypeName(methodImplementation.ImplementedMethod.ContainingType, noSpace: true, nullableAttributeArgument: nullableAttributeArgument);
+                WriteSymbol(".");
+                WriteIdentifier(GetNormalizedMethodName(methodImplementation.ImplementedMethod.Name));
+            }
+            else
+            {
+                WriteIdentifier(GetNormalizedMethodName(method.Name));
+            }
         }
 
         private void WriteMethodDefinitionSignature(IMethodDefinition method)
