@@ -69,9 +69,7 @@ namespace Microsoft.Cci.Writers.CSharp
 
         private void WriteTypeName(ITypeReference type, ITypeReference containingType, IEnumerable<ICustomAttribute> attributes = null, byte? methodNullableContextValue = null)
         {
-            var useKeywords = containingType.GetTypeName() != type.GetTypeName();
-
-            WriteTypeName(type, attributes: attributes, useTypeKeywords: useKeywords, methodNullableContextValue: methodNullableContextValue);
+            WriteTypeName(type, attributes: attributes, methodNullableContextValue: methodNullableContextValue);
         }
 
         private string GetNormalizedMethodName(IName name)
