@@ -33,22 +33,24 @@ namespace Microsoft.Cci.Writers.CSharp
                 return;
             }
 
+            var writeVisibility = true;
+
             if (method.ContainingTypeDefinition.IsInterface)
             {
-                if (method.IsMethodUnsafe())
-                {
-                    WriteKeyword("unsafe");
-                }
+                writeVisibility = false;
             }
-            else
+            
+            if (method.IsExplicitInterfaceMethod() || method.IsStaticConstructor)
             {
-                if (!method.IsExplicitInterfaceMethod() && !method.IsStaticConstructor)
-                {
-                    WriteVisibility(method.Visibility);
-                }
-
-                WriteMethodModifiers(method);
+                writeVisibility = false;
             }
+
+            if (writeVisibility)
+            {
+                WriteVisibility(method.Visibility);
+            }
+
+            WriteMethodModifiers(method);
 
             WriteInterfaceMethodModifiers(method);
             WriteMethodDefinitionSignature(method);
@@ -267,7 +269,14 @@ namespace Microsoft.Cci.Writers.CSharp
 
             if (method.IsVirtual)
             {
-                if (method.IsNewSlot)
+                if (method.ContainingTypeDefinition.IsInterface)
+                {
+                    if (method.IsStatic && method.IsAbstract)
+                    {
+                        WriteKeyword("abstract");
+                    }
+                }
+                else if (method.IsNewSlot)
                 {
                     if (method.IsAbstract)
                         WriteKeyword("abstract");
