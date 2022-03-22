@@ -186,6 +186,7 @@ namespace Microsoft.DotNet.Helix.Client
             Uri jobListUri = await storageContainer.UploadTextAsync(
                 jobListJson,
                 $"job-list-{Guid.NewGuid()}.json",
+                log,
                 cancellationToken);
             // Don't log the sas, remove the query string.
             string jobListUriForLogging = jobListUri.ToString().Replace(jobListUri.Query, "");

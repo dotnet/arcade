@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 stream.Position = 0;
-                Uri zipUri = await payloadContainer.UploadFileAsync(stream, $"{Guid.NewGuid()}.zip", cancellationToken);
+                Uri zipUri = await payloadContainer.UploadFileAsync(stream, $"{Guid.NewGuid()}.zip", log, cancellationToken);
                 File.WriteAllText(alreadyUploadedFile.FullName, zipUri.AbsoluteUri);
                 return zipUri.AbsoluteUri;
             }
