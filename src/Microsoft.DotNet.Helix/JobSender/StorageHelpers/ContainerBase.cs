@@ -6,8 +6,8 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure.Storage.Blobs;
 using Azure;
+using Azure.Storage.Blobs;
 
 namespace Microsoft.DotNet.Helix.Client
 {
