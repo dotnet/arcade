@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Azure.Storage.Blobs;
 using Azure;
+
 namespace Microsoft.DotNet.Helix.Client
 {
     internal abstract class ContainerBase : IBlobContainer
