@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
@@ -133,6 +133,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// <summary>
         /// Produces an MSI and returns a task item with metadata about the MSI.
         /// </summary>
+        /// <param name="outputPath">The directory where the MSI will be generated.</param>
         /// <returns>An item representing the built MSI.</returns>
         public abstract ITaskItem Build(string outputPath);
 

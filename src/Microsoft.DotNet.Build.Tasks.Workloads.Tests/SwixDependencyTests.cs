@@ -10,20 +10,21 @@ using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 {
-    public class VisualStudioDependencyTests
+    public class SwixDependencyTests
     {
         [Theory]
         [InlineData("1.0.0", null, "[1.0.0,)")]
         [InlineData("1.0.0", "2.0.0", "[1.0.0,2.0.0)")]
         [InlineData("1.0.0", "1.0.0", "[1.0.0]")]
+        [InlineData(null, "1.2.3", "[,1.2.3)")]
         public void ItGeneratesVersionRanges(string minVersion, string maxVersion, string expectedVersionRange)
         {
             Version v1 = string.IsNullOrWhiteSpace(minVersion) ? null : new Version(minVersion);
             Version v2 = string.IsNullOrWhiteSpace(maxVersion) ? null : new Version(maxVersion);
 
-            VisualStudioDependency dep = new VisualStudioDependency("foo", v1, v2);
+            SwixDependency dep = new("foo", v1, v2);
 
-            Assert.Equal(expectedVersionRange, dep.GetVersion());
+            Assert.Equal(expectedVersionRange, dep.GetVersionRange());
         }
     }
 }

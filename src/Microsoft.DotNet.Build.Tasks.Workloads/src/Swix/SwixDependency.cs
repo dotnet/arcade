@@ -1,6 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+#nullable enable
+
 using System;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads
@@ -21,7 +23,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// <summary>
         /// The minimum dependency version.
         /// </summary>
-        public Version MinVersion
+        public Version? MinVersion
         {
             get;
         }
@@ -29,7 +31,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// <summary>
         /// The maxmimum dependency version.
         /// </summary>
-        public Version MaxVersion
+        public Version? MaxVersion
         {
             get;
         }
@@ -48,10 +50,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// Creates a dependency with a minimum and/or maximum version.
         /// </summary>
         /// <param name="id">The SWIX package ID. The ID applies to packages, components, component groups, etc.</param>
-        /// <param name="minVersion">The minimum required version, inclusive.</param>
+        /// <param name="minVersion">The minimum required version, inclusive. May be <see langword="null"/> if only an upper bound is required.</param>
         /// <param name="maxVersion">The maximum version, exclusive. May be <see langword="null"/> if only a lower bound is required.
         /// If equal to <paramref name="minVersion"/>, an exact version requirement is created, e.g. [1.2.0].</param>
-        public SwixDependency(string id, Version minVersion, Version maxVersion)
+        public SwixDependency(string id, Version? minVersion, Version? maxVersion)
         {
             if ((minVersion == null) && (maxVersion == null))
             {
@@ -74,17 +76,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// <returns></returns>
         public string GetVersionRange()
         {
-            if ((MaxVersion != null) && (MinVersion == MaxVersion))
+            if ((MinVersion != null) && (MinVersion == MaxVersion))
             {
                 return $"[{MinVersion}]";
             }
 
-            if (MaxVersion == null)
-            {
-                return $"[{MinVersion},)";
-            }
 
-            return $"[{MinVersion},{MaxVersion})";
+            return $"[{MinVersion?.ToString()},{MaxVersion?.ToString()})";
         }
     }
 }
+
+#nullable disable

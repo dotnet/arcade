@@ -56,15 +56,33 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// <summary>
         /// Creates a new instance of a <see cref="WorkloadManifestPackage"/>.
         /// </summary>
-        /// <param name="package">The workload manifest NuGet package.</param>
-        public WorkloadManifestPackage(ITaskItem package, string destinationBaseDirectory, Version msiVersion, 
-            ITaskItem[]? shortNames, TaskLoggingHelper? log = null) :
+        /// <param name="package">A task item for the workload manifest NuGet package.</param>
+        /// <param name="destinationBaseDirectory">The root directory where packages will be extracted.</param>
+        /// <param name="msiVersion">The general MSI version to use when the package does not contain metadata for the installer version.</param>
+        /// <param name="shortNames">A set of items used to shorten the names and identifiers of setup packages.</param>
+        /// <param name="log">A <see cref="TaskLoggingHelper"/> class containing task logging methods.</param>
+        /// <exception cref="Exception" />
+        public WorkloadManifestPackage(ITaskItem package, string destinationBaseDirectory, Version msiVersion,
+            ITaskItem[]? shortNames = null, TaskLoggingHelper? log = null) :
             base(package.ItemSpec, destinationBaseDirectory, shortNames, log)
         {
-            // Package specific version metadata takes precedence over the task parameter.
-            MsiVersion = !string.IsNullOrWhiteSpace(package.GetMetadata(Metadata.MsiVersion)) ? new Version(package.GetMetadata(Metadata.MsiVersion))
-                : msiVersion != null ? msiVersion : throw new Exception(string.Format(Strings.NoManifestInstallerVersion, nameof(CreateVisualStudioWorkload),
-                nameof(CreateVisualStudioWorkload.ManifestMsiVersion), nameof(CreateVisualStudioWorkload.WorkloadManifestPackageFiles), Metadata.MsiVersion));
+            if (!string.IsNullOrWhiteSpace(package.GetMetadata(Metadata.MsiVersion)))
+            {
+                // We prefer version information on the manifest package item.
+                MsiVersion = new(package.GetMetadata(Metadata.MsiVersion));
+            }
+            else if (msiVersion != null)
+            {
+                // Fall back to the version provided by the task parameter, e.g. if all manifests follow the same versioing rules.
+                MsiVersion = msiVersion;
+            }
+            else
+            {
+                // While we could use the major.minor.patch part of the package, manifests are upgradable, so we want
+                // the user to be aware of this and explicitly tell us the value.
+                throw new Exception(string.Format(Strings.NoManifestInstallerVersion, nameof(CreateVisualStudioWorkload),
+                    nameof(CreateVisualStudioWorkload.ManifestMsiVersion), nameof(CreateVisualStudioWorkload.WorkloadManifestPackageFiles), Metadata.MsiVersion));
+            }
 
             SdkFeatureBand = GetSdkFeatureBandVersion(GetSdkVersion(Id));
             ManifestId = GetManifestId(Id);

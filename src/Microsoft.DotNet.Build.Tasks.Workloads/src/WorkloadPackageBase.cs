@@ -160,6 +160,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// </summary>
         /// <param name="packagePath">The path of the NuGet package.</param>
         /// <param name="destinationBaseDirectory">The root directory where packages will be extracted.</param>
+        /// <param name="shortNames">A set of items used to shorten the names and identifiers of setup packages.</param>
         /// <param name="log">A <see cref="TaskLoggingHelper"/> class containing task logging methods.</param>
         public WorkloadPackageBase(string packagePath, string destinationBaseDirectory, ITaskItem[]? shortNames = null, TaskLoggingHelper? log = null)
         {

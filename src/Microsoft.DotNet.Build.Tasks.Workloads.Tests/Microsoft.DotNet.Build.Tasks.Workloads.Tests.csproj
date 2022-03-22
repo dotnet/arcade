@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk"> 
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
@@ -13,11 +13,20 @@
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
     <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" />
     <PackageReference Include="Microsoft.NET.Sdk.WorkloadManifestReader" Version="$(MicrosoftNetSdkWorkloadManifestReaderVersion)" />
+    <PackageReference Include="Microsoft.Deployment.DotNet.Releases" Version="$(MicrosoftDeploymentDotNetReleasesVersion)" />
     <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersion)" />
+
+    <PackageReference Include="Microsoft.Signed.Wix" Version="$(MicrosoftSignedWixVersion)" GeneratePathProperty="true"/>
+
+    <PackageReference Include="Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.200" Version="6.0.3" GeneratePathProperty="true" />
   </ItemGroup>
 
   <ItemGroup>
-      <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
+
+    <WixContent Include="$(PkgMicrosoft_Signed_Wix)\tools\**\*" />
+
+    <TestPackage Include="$(PkgMicrosoft_NET_Workload_Mono_ToolChain_Manifest-6_0_200)\*.nupkg" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,4 +34,17 @@
     <None Remove="testassets\emsdkWorkloadManifest2.json" />
     <None Remove="testassets\mauiWorkloadManifest.json" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Resources.dll" />
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Compression.dll" />
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Compression.Cab.dll" />
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.WindowsInstaller.dll" />
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.WindowsInstaller.Package.dll" />
+  </ItemGroup>
+
+  <Target Name="DeployWix" AfterTargets="Build">
+    <Copy SourceFiles="@(WixContent)" DestinationFolder="$(OutputPath)testassets\wix\" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(TestPackage)" DestinationFolder="$(OutputPath)testassets\" SkipUnchangedFiles="true" />
+  </Target>
 </Project>

@@ -88,11 +88,29 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Components cannot have a null description. Either provide a custom resource or add a description to the workload definition..
+        /// </summary>
+        internal static string ComponentDescriptionCannotBeNull {
+            get {
+                return ResourceManager.GetString("ComponentDescriptionCannotBeNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A SWIX component must have at least one dependency, Id: {0}..
         /// </summary>
         internal static string ComponentMustHaveAtLeastOneDependency {
             get {
                 return ResourceManager.GetString("ComponentMustHaveAtLeastOneDependency", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Components cannot have a null title. Either provide a custom resource or add a description to the workload definition..
+        /// </summary>
+        internal static string ComponentTitleCannotBeNull {
+            get {
+                return ResourceManager.GetString("ComponentTitleCannotBeNull", resourceCulture);
             }
         }
         

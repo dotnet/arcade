@@ -1,5 +1,7 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
+
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -34,7 +36,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         public string Category
         {
             get;
-        } = ".NET";
+        } = DefaultValues.ComponentCategory;
 
         /// <summary>
         /// Gets the set of packages and components on which this component depends.
@@ -83,7 +85,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         /// <summary>
         /// A set of items used to shorten the names and identifiers of setup packages.
         /// </summary>
-        public ITaskItem[] ShortNames
+        public ITaskItem[]? ShortNames
         {
             get;
         }
@@ -109,20 +111,20 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         /// </summary>
         /// <param name="sdkFeatureBand">The SDK feature band associated with the component.</param>
         /// <param name="name">The component ID.</param>
+        /// /// <param name="title">The component title as it appears next to checkboxes on the workload and individual component tabs.</param>
         /// <param name="description">The component description, displayed as a tooltip in the Visual Studio Installer UI.</param>
-        /// <param name="title">The component title as it appears next to checkboxes on the workload and individual component tabs.</param>
         /// <param name="version">The version of the component.</param>
         /// <param name="isUiGroup">When <see langword="true"/>, indicates that this component is a component group and
         /// will be hidden on the individual components tab.</param>
         /// <param name="category">The category associated with the component. The value acts as a grouping mechanism on
         /// the individual components tab.</param>
         /// <param name="shortNames">A set of items used to shorten the names and identifiers of setup packages.</param>
-        internal SwixComponent(ReleaseVersion sdkFeatureBand, string name, string description, string title, Version version,
-            bool isUiGroup, string category, ITaskItem[] shortNames)
+        internal SwixComponent(ReleaseVersion sdkFeatureBand, string name, string title, string description, Version version,
+            bool isUiGroup, string category, ITaskItem[]? shortNames)
         {
             Name = name;
-            Description = description;
             Title = title;
+            Description = description;
             Version = version;
             IsUiGroup = isUiGroup;
             Category = category;
@@ -136,7 +138,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         /// <param name="id">The SWIX ID of the dependency.</param>
         /// <param name="minVersion">The minimum dependency version.</param>
         /// <param name="maxVersion">The maximum dependency version.</param>
-        public void AddDependency(string id, Version minVersion = null, Version maxVersion = null)
+        public void AddDependency(string id, Version? minVersion = null, Version? maxVersion = null)
         {
             _dependencies.Add(new SwixDependency(id, minVersion, maxVersion));
         }
@@ -160,10 +162,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         /// as the title, description, and category.</param>
         /// <param name="shortNames">A set of items used to shorten the names of setup packages.</param>
         /// <returns>A SWIX component.</returns>
-        public static SwixComponent Create(ReleaseVersion sdkFeatureBand, WorkloadDefinition workload, WorkloadManifest manifest, ITaskItem[] componentResources,
-            ITaskItem[] shortNames)
+        public static SwixComponent Create(ReleaseVersion sdkFeatureBand, WorkloadDefinition workload, WorkloadManifest manifest, ITaskItem[]? componentResources,
+            ITaskItem[]? shortNames)
         {
-            ITaskItem resourceItem = componentResources?.Where(r => string.Equals(r.ItemSpec, workload.Id)).FirstOrDefault();
+            ITaskItem? resourceItem = componentResources?.Where(r => string.Equals(r.ItemSpec, workload.Id)).FirstOrDefault();
 
             // If no explicit version mapping exists for the workload, the major.minor.patch version of the manifest is used
             // for the component version in Visual Studio Installer.
@@ -173,9 +175,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
 
             // Since workloads only define a description, if no custom resources were provided, both the title and description of
             // the SWIX component will default to the workload description.
-            SwixComponent component = new(sdkFeatureBand, Utils.ToSafeId(workload.Id), resourceItem?.GetMetadata(Metadata.Title) ?? workload.Description,
-                resourceItem?.GetMetadata(Metadata.Description) ?? workload.Description, componentVersion, workload.IsAbstract,
-                resourceItem?.GetMetadata(Metadata.Category) ?? DefaultValues.ComponentCategory, shortNames);
+            SwixComponent component = new(sdkFeatureBand, Utils.ToSafeId(workload.Id), 
+                resourceItem?.GetMetadata(Metadata.Title) ?? workload.Description ?? throw new Exception(Strings.ComponentTitleCannotBeNull),
+                resourceItem?.GetMetadata(Metadata.Description) ?? workload.Description ?? throw new Exception(Strings.ComponentDescriptionCannotBeNull), 
+                componentVersion, workload.IsAbstract,
+                resourceItem?.GetMetadata(Metadata.Category) ?? DefaultValues.ComponentCategory,
+                shortNames);
 
             // If the workload extends other workloads, we add those as component dependencies before
             // processing direct pack dependencies.
@@ -186,13 +191,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
 
             // TODO: Check for missing packs
 
-            foreach (WorkloadPackId packId in workload.Packs)
+            foreach (WorkloadPackId packId in workload.Packs ?? Enumerable.Empty<WorkloadPackId>())
             {
                 // Check whether the pack dependency is aliased to non-Windows RIDs. If so, we can't add a dependency for the pack
                 // because we won't be able to create any installers.
-                if (manifest.Packs.TryGetValue(packId, out WorkloadPack pack))
+                if (manifest.Packs.TryGetValue(packId, out WorkloadPack? pack))
                 {
-                    if (pack.IsAlias && !pack.AliasTo.Keys.Any(rid => s_SupportedRids.Contains(rid)))
+                    if (pack.IsAlias && pack.AliasTo != null && !pack.AliasTo.Keys.Any(rid => s_SupportedRids.Contains(rid)))
                     {
                         continue;
                     }
@@ -205,3 +210,5 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         }
     }
 }
+
+#nullable disable

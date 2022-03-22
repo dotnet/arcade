@@ -7,12 +7,14 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Deployment.DotNet.Releases;
+using Microsoft.DotNet.Build.Tasks.Workloads.Swix;
 using Microsoft.NET.Sdk.WorkloadManifestReader;
 using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 {
-    public class VisualStudioComponentTests
+    public class SwixComponentTests : TestBase
     {
         public static readonly ITaskItem[] NoItems = Array.Empty<ITaskItem>();
 
@@ -22,15 +24,16 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public void ItAssignsDefaultValues()
         {
             WorkloadManifest manifest = Create("WorkloadManifest.json");
-            WorkloadDefinition definition = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
-            VisualStudioComponent component = VisualStudioComponent.Create(null, manifest, definition, NoItems, NoItems, NoItems, NoItems);
+            WorkloadDefinition workload = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
+            SwixComponent component = SwixComponent.Create(new ReleaseVersion("6.0.300"), workload, manifest, NoItems, NoItems);
 
-            string swixProjDirectory = RandomPath;
-            Directory.CreateDirectory(swixProjDirectory);
-            component.Generate(swixProjDirectory);
+            ComponentSwixProject project = new(component, BaseIntermediateOutputPath, BaseOutputPath);
+            string swixProj = project.Create();
 
-            string componentResSwr = File.ReadAllText(Path.Combine(swixProjDirectory, "component.res.swr"));
+            string componentSwr = File.ReadAllText(Path.Combine(Path.GetDirectoryName(swixProj), "component.swr"));
+            Assert.Contains("package name=microsoft.net.sdk.blazorwebassembly.aot", componentSwr);
 
+            string componentResSwr = File.ReadAllText(Path.Combine(Path.GetDirectoryName(swixProj), "component.res.swr"));
             Assert.Contains(@"title=""Blazor WebAssembly AOT workload""", componentResSwr);
             Assert.Contains(@"description=""Blazor WebAssembly AOT workload""", componentResSwr);
             Assert.Contains(@"category="".NET""", componentResSwr);
@@ -40,9 +43,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public void ItCanOverrideDefaultValues()
         {
             WorkloadManifest manifest = Create("WorkloadManifest.json");
-            WorkloadDefinition definition = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
+            WorkloadDefinition workload = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
 
-            ITaskItem[] resources = new ITaskItem[]
+            ITaskItem[] componentResources = new ITaskItem[]
             {
                 new TaskItem("microsoft-net-sdk-blazorwebassembly-aot", new Dictionary<string, string> {
                     { "Title", "AOT" },
@@ -51,13 +54,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
                 })
             };
 
-            VisualStudioComponent component = VisualStudioComponent.Create(null, manifest, definition, NoItems, NoItems, resources, NoItems);
+            SwixComponent component = SwixComponent.Create(new ReleaseVersion("6.0.300"), workload, manifest, componentResources, NoItems);
+            ComponentSwixProject project = new(component, BaseIntermediateOutputPath, BaseOutputPath);
+            string swixProj = project.Create();
 
-            string swixProjDirectory = RandomPath;
-            Directory.CreateDirectory(swixProjDirectory);
-            component.Generate(swixProjDirectory);
-
-            string componentResSwr = File.ReadAllText(Path.Combine(swixProjDirectory, "component.res.swr"));
+            string componentResSwr = File.ReadAllText(Path.Combine(Path.GetDirectoryName(swixProj), "component.res.swr"));
 
             Assert.Contains(@"title=""AOT""", componentResSwr);
             Assert.Contains(@"description=""A long wordy description.""", componentResSwr);
@@ -65,34 +66,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         }
 
         [Fact]
-        public void ItCreatesSafeComponentIds()
-        {
-            WorkloadManifest manifest = Create("WorkloadManifest.json");
-            WorkloadDefinition definition = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
-            VisualStudioComponent component = VisualStudioComponent.Create(null, manifest, definition, NoItems, NoItems, NoItems, NoItems);
-
-            string swixProjDirectory = RandomPath;
-            Directory.CreateDirectory(swixProjDirectory);
-            component.Generate(swixProjDirectory);
-
-            string componentSwr = File.ReadAllText(Path.Combine(swixProjDirectory, "component.swr"));
-
-            Assert.Contains(@"microsoft.net.sdk.blazorwebassembly.aot", componentSwr);
-        }
-
-        [Fact]
         public void ItCreatesComponentsWhenWorkloadsDoNotIncludePacks()
         {
             WorkloadManifest manifest = Create("mauiWorkloadManifest.json");
-            WorkloadDefinition definition = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
-            VisualStudioComponent component = VisualStudioComponent.Create(null, manifest, definition, NoItems, NoItems, NoItems, NoItems);
+            WorkloadDefinition workload = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
+            SwixComponent component = SwixComponent.Create(new ReleaseVersion("7.0.100"), workload, manifest, NoItems, NoItems);
+            ComponentSwixProject project = new(component, BaseIntermediateOutputPath, BaseOutputPath);
+            string swixProj = project.Create();
 
-            string swixProjDirectory = RandomPath;
-            Directory.CreateDirectory(swixProjDirectory);
-            component.Generate(swixProjDirectory);
-
-            string componentSwr = File.ReadAllText(Path.Combine(swixProjDirectory, "component.swr"));
-
+            string componentSwr = File.ReadAllText(Path.Combine(Path.GetDirectoryName(swixProj), "component.swr"));
             Assert.Contains(@"vs.dependency id=maui.mobile", componentSwr);
             Assert.Contains(@"vs.dependency id=maui.desktop", componentSwr);
         }

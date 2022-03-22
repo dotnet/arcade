@@ -126,8 +126,14 @@
   <data name="CannotExtractSdkVersionFromPackageId" xml:space="preserve">
     <value>Unable to extract the SDK version from the package ID: {0}.</value>
   </data>
+  <data name="ComponentDescriptionCannotBeNull" xml:space="preserve">
+    <value>Components cannot have a null description. Either provide a custom resource or add a description to the workload definition.</value>
+  </data>
   <data name="ComponentMustHaveAtLeastOneDependency" xml:space="preserve">
     <value>A SWIX component must have at least one dependency, Id: {0}.</value>
+  </data>
+  <data name="ComponentTitleCannotBeNull" xml:space="preserve">
+    <value>Components cannot have a null title. Either provide a custom resource or add a description to the workload definition.</value>
   </data>
   <data name="FailedToCompileMsi" xml:space="preserve">
     <value>Failed to compile MSI. </value>
