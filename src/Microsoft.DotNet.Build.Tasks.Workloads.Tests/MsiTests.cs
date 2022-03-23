@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
     [Collection("6.0.200 Toolchain manifest tests")]
     public class MsiTests : TestBase
     {
-        [Fact]        
+        [WindowsOnlyFact]        
         public void ItCanBuildAManifestMsi()
         {
             string PackageRootDirectory = Path.Combine(BaseIntermediateOutputPath, "pkg");

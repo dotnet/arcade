@@ -2,17 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 {
     public class SwixDependencyTests
     {
-        [Theory]
+        [WindowsOnlyTheory]
         [InlineData("1.0.0", null, "[1.0.0,)")]
         [InlineData("1.0.0", "2.0.0", "[1.0.0,2.0.0)")]
         [InlineData("1.0.0", "1.0.0", "[1.0.0]")]

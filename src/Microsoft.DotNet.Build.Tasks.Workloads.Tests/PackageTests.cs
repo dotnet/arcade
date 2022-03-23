@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
     [Collection("6.0.200 Toolchain manifest tests")]
     public class PackageTests : TestBase
     {
-        [Fact]
+        [WindowsOnlyFact]
         public void ItCanReadAManifestPackage()
         {
             string PackageRootDirectory = Path.Combine(BaseIntermediateOutputPath, "pkg");
