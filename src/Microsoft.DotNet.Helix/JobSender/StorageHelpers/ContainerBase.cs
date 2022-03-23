@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Helix.Client
                 }
                 else
                 {
-                    log?.Invoke($"warning : Upload of {pageBlob.Uri} failures with {e.ErrorCode}. The blob exists, continuing");
+                    log?.Invoke($"warning : Upload of {pageBlob.Uri} failed with {e.ErrorCode}. The blob exists, continuing");
                 }
             }
 
