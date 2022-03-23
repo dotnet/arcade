@@ -23,14 +23,8 @@
 
   <ItemGroup>
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
-
-    <Content Include="$(PkgMicrosoft_Signed_Wix)\tools\**\*" Link="wix\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
-    
-    <!-- WixContent Include="$(PkgMicrosoft_Signed_Wix)\tools\**\*" /> -->
-
-    <Content Include="$(PkgMicrosoft_NET_Workload_Mono_ToolChain_Manifest-6_0_200)\*.nupkg" CopyToOutputDirectory="PreserveNewest" />
-
-    <!-- <TestPackage Include="$(PkgMicrosoft_NET_Workload_Mono_ToolChain_Manifest-6_0_200)\*.nupkg" /> -->
+    <Content Include="$(PkgMicrosoft_Signed_Wix)\tools\**\*" Link="wix\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false"/>
+    <Content Include="$(PkgMicrosoft_NET_Workload_Mono_ToolChain_Manifest-6_0_200)\*.nupkg" CopyToOutputDirectory="PreserveNewest" Visible="false"/>
   </ItemGroup>
 
   <ItemGroup>
@@ -46,12 +40,4 @@
     <Reference Include="$(WixInstallPath)\Microsoft.Deployment.WindowsInstaller.dll" />
     <Reference Include="$(WixInstallPath)\Microsoft.Deployment.WindowsInstaller.Package.dll" />
   </ItemGroup>
-
-  <!--<Target Name="DeployTestAssets" AfterTargets="Build">
-    <Copy SourceFiles="@(WixContent)" DestinationFolder="$(OutputPath)testassets\wix\" SkipUnchangedFiles="true" />
-    <Copy SourceFiles="@(TestPackage)" DestinationFolder="$(OutputPath)testassets\" SkipUnchangedFiles="true" />
-
-    <Content Include="" />
-    <Content Include="" />
-  </Target>-->
 </Project>
