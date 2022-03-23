@@ -148,7 +148,7 @@
     <value>Unable to determine the version of the manifest installer. The {0} task should either provide  a value for the {1} parameter, or the {2} items should set the {3} metadata.</value>
   </data>
   <data name="RelativePackagePathTooLong" xml:space="preserve">
-    <value>Relative package path exceeds the maximum length ({0}): {1}. </value>
+    <value>Relative package path exceeds the maximum length ({0}): {1}.</value>
   </data>
   <data name="SwixDependencyMaxVersionLessThanMinVersion" xml:space="preserve">
     <value>The maximum version must be greater than or equal to the minimum version, or null. </value>

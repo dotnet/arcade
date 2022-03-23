@@ -151,7 +151,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Relative package path exceeds the maximum length ({0}): {1}. .
+        ///   Looks up a localized string similar to Relative package path exceeds the maximum length ({0}): {1}..
         /// </summary>
         internal static string RelativePackagePathTooLong {
             get {

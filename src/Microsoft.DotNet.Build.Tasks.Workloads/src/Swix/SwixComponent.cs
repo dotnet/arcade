@@ -162,8 +162,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         /// as the title, description, and category.</param>
         /// <param name="shortNames">A set of items used to shorten the names of setup packages.</param>
         /// <returns>A SWIX component.</returns>
-        public static SwixComponent Create(ReleaseVersion sdkFeatureBand, WorkloadDefinition workload, WorkloadManifest manifest, ITaskItem[]? componentResources,
-            ITaskItem[]? shortNames)
+        public static SwixComponent Create(ReleaseVersion sdkFeatureBand, WorkloadDefinition workload, WorkloadManifest manifest,
+            ITaskItem[]? componentResources = null, ITaskItem[]? shortNames = null)
         {
             ITaskItem? resourceItem = componentResources?.Where(r => string.Equals(r.ItemSpec, workload.Id)).FirstOrDefault();
 

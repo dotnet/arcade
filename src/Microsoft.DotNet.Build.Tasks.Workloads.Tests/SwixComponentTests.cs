@@ -16,16 +16,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 {
     public class SwixComponentTests : TestBase
     {
-        public static readonly ITaskItem[] NoItems = Array.Empty<ITaskItem>();
-
         public string RandomPath => Path.Combine(AppContext.BaseDirectory, "obj", Path.GetFileNameWithoutExtension(Path.GetTempFileName()));
 
-        [Fact]
+        [WindowsOnlyFact]
         public void ItAssignsDefaultValues()
         {
             WorkloadManifest manifest = Create("WorkloadManifest.json");
             WorkloadDefinition workload = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
-            SwixComponent component = SwixComponent.Create(new ReleaseVersion("6.0.300"), workload, manifest, NoItems, NoItems);
+            SwixComponent component = SwixComponent.Create(new ReleaseVersion("6.0.300"), workload, manifest);
 
             ComponentSwixProject project = new(component, BaseIntermediateOutputPath, BaseOutputPath);
             string swixProj = project.Create();
@@ -39,7 +37,46 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.Contains(@"category="".NET""", componentResSwr);
         }
 
-        [Fact]
+        [WindowsOnlyFact]
+        public void ItShortensComponentIds()
+        {
+            ITaskItem[] shortNames = new TaskItem[]
+            {
+                new TaskItem("Microsoft.NET.Runtime", new Dictionary<string, string> { { Metadata.Replacement, "MSFT" } })
+            };
+
+            WorkloadManifest manifest = Create("WorkloadManifest.json");
+            WorkloadDefinition workload = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
+            SwixComponent component = SwixComponent.Create(new ReleaseVersion("6.0.300"), workload, manifest, shortNames: shortNames);
+
+            ComponentSwixProject project = new(component, BaseIntermediateOutputPath, BaseOutputPath);
+            string swixProj = project.Create();
+
+            string componentSwr = File.ReadAllText(Path.Combine(Path.GetDirectoryName(swixProj), "component.swr"));
+            Assert.Contains("vs.dependency id=MSFT.MonoAOTCompiler.Task.6.0.0-preview.4.21201.1", componentSwr);
+        }
+
+        [WindowsOnlyFact]
+        public void ItIgnoresNonApplicableDepedencies()
+        {
+            WorkloadManifest manifest = Create("AbstractWorkloadsNonWindowsPacks.json");
+            WorkloadDefinition workload = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
+            SwixComponent component = SwixComponent.Create(new ReleaseVersion("6.0.300"), workload, manifest, null, null);
+
+            ComponentSwixProject project = new(component, BaseIntermediateOutputPath, BaseOutputPath);
+            string swixProj = project.Create();
+
+            string componentSwr = File.ReadAllText(Path.Combine(Path.GetDirectoryName(swixProj), "component.swr"));
+            Assert.Contains(@"package name=microsoft.net.runtime.ios", componentSwr);
+            Assert.DoesNotContain(@"vs.dependency id=Microsoft.NETCore.App.Runtime.AOT.Cross.ios-arm", componentSwr);
+            Assert.DoesNotContain(@"vs dependency id=Microsoft.NETCore.App.Runtime.AOT.Cross.ios-arm64", componentSwr);
+            Assert.DoesNotContain(@"vs dependency id=Microsoft.NETCore.App.Runtime.AOT.Cross.iossimulator-arm64", componentSwr);
+            Assert.DoesNotContain(@"vs dependency id=Microsoft.NETCore.App.Runtime.AOT.Cross.iossimulator-x64", componentSwr);
+            Assert.DoesNotContain(@"vs dependency id=Microsoft.NETCore.App.Runtime.AOT.Cross.iossimulator-x86", componentSwr);
+            Assert.Contains(@"vs.dependency id=runtimes.ios", componentSwr);
+        }
+
+        [WindowsOnlyFact]
         public void ItCanOverrideDefaultValues()
         {
             WorkloadManifest manifest = Create("WorkloadManifest.json");
@@ -54,7 +91,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
                 })
             };
 
-            SwixComponent component = SwixComponent.Create(new ReleaseVersion("6.0.300"), workload, manifest, componentResources, NoItems);
+            SwixComponent component = SwixComponent.Create(new ReleaseVersion("6.0.300"), workload, manifest, componentResources);
             ComponentSwixProject project = new(component, BaseIntermediateOutputPath, BaseOutputPath);
             string swixProj = project.Create();
 
@@ -70,7 +107,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         {
             WorkloadManifest manifest = Create("mauiWorkloadManifest.json");
             WorkloadDefinition workload = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
-            SwixComponent component = SwixComponent.Create(new ReleaseVersion("7.0.100"), workload, manifest, NoItems, NoItems);
+            SwixComponent component = SwixComponent.Create(new ReleaseVersion("7.0.100"), workload, manifest);
             ComponentSwixProject project = new(component, BaseIntermediateOutputPath, BaseOutputPath);
             string swixProj = project.Create();
 
@@ -82,7 +119,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         private static WorkloadManifest Create(string filename)
         {
             return WorkloadManifestReader.ReadWorkloadManifest(Path.GetFileNameWithoutExtension(filename),
-                File.OpenRead(Path.Combine(AppContext.BaseDirectory, "testassets", filename)));
+                File.OpenRead(Path.Combine(TestAssetsPath, filename)));
         }
     }
 }
