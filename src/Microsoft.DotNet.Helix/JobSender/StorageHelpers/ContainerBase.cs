@@ -25,7 +25,15 @@ namespace Microsoft.DotNet.Helix.Client
             }
             catch (RequestFailedException e) when (e.Status == 409)
             {
-                log?.Invoke($"warning : Upload failed because the blob already exists.");
+                if (!pageBlob.Exists())
+                {
+                    log?.Invoke($"error : Upload of {pageBlob.Uri} failed with {e.ErrorCode}, but the blob does not exist.");
+                    throw;
+                }
+                else
+                {
+                    log?.Invoke($"warning : Upload of {pageBlob.Uri} failures with {e.ErrorCode}. The blob exists, continuing");
+                }
             }
 
             return new UriBuilder(pageBlob.Uri) { Query = sasToken }.Uri;
