@@ -24,7 +24,7 @@
   <ItemGroup>
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(PkgMicrosoft_Signed_Wix)\tools\**\*" Link="wix\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false"/>
-    <Content Include="$(PkgMicrosoft_NET_Workload_Mono_ToolChain_Manifest-6_0_200)\*.nupkg" CopyToOutputDirectory="PreserveNewest" Visible="false"/>
+    <Content Include="$(PkgMicrosoft_NET_Workload_Mono_ToolChain_Manifest-6_0_200)\*.nupkg" Link="testassets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false"/>
   </ItemGroup>
 
   <ItemGroup>
