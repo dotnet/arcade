@@ -57,8 +57,3 @@ Documentation, tutorials, and guides may be found in the [Start Here](Documentat
 - [How to contribute to Arcade guide](Documentation/Policy/ArcadeContributorGuidance.md)
 
 - [Pull requests](https://github.com/dotnet/arcade/pulls): [Open](https://github.com/dotnet/arcade/pulls?q=is%3Aopen+is%3Apr)/[Closed](https://github.com/dotnet/arcade/pulls?q=is%3Apr+is%3Aclosed)
-
-- [Issues](https://github.com/dotnet/arcade/issues)
-
-### License
-
