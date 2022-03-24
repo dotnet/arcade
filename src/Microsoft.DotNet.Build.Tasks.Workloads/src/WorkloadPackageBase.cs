@@ -215,7 +215,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
             if (ExtractionMethod == PackageExtractionMethod.Copy)
             {
-                File.Copy(PackagePath, DestinationDirectory, overwrite: true);
+                File.Copy(PackagePath, Path.Combine(DestinationDirectory, Path.GetFileName(PackagePath)), overwrite: true);
                 HasBeenExtracted = true;
             }
             else if (ExtractionMethod == PackageExtractionMethod.Unzip)

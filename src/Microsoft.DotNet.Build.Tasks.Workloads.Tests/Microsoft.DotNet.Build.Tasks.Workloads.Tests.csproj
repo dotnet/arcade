@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
@@ -17,14 +17,15 @@
     <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersion)" />
 
     <PackageReference Include="Microsoft.Signed.Wix" Version="$(MicrosoftSignedWixVersion)" GeneratePathProperty="true"/>
-
     <PackageReference Include="Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.200" Version="6.0.3" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.iOS.Templates" Version="15.2.302-preview.14.122" GeneratePathProperty="true" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(PkgMicrosoft_Signed_Wix)\tools\**\*" Link="testassets\wix\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false"/>
     <Content Include="$(PkgMicrosoft_NET_Workload_Mono_ToolChain_Manifest-6_0_200)\*.nupkg" Link="testassets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false"/>
+    <Content Include="$(PkgMicrosoft_iOS_Templates)\*.nupkg" Link="testassets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false"/>
   </ItemGroup>
 
   <ItemGroup>

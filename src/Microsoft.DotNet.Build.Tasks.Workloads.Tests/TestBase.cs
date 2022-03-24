@@ -15,5 +15,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public static readonly string TestAssetsPath = Path.Combine(AppContext.BaseDirectory, "testassets");
 
         public static readonly string WixToolsetPath = Path.Combine(TestAssetsPath, "wix");
+
+        public static readonly string PackageRootDirectory = Path.Combine(BaseIntermediateOutputPath, "pkg");
     }
 }
