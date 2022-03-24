@@ -42,8 +42,3 @@ Packages are published daily to our tools feed:
 
 This feed is browsable from here:
 
-> https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet-eng
-
-### Source Code
-
-`git clone https://github.com/dotnet/arcade.git`
