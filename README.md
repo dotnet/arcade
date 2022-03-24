@@ -47,8 +47,3 @@ This feed is browsable from here:
 ### Source Code
 
 `git clone https://github.com/dotnet/arcade.git`
-
-### How to use Arcade
-
-Documentation, tutorials, and guides may be found in the [Start Here](Documentation/StartHere.md) index. 
-
