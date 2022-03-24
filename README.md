@@ -52,8 +52,3 @@ This feed is browsable from here:
 
 Documentation, tutorials, and guides may be found in the [Start Here](Documentation/StartHere.md) index. 
 
-### How to contribute
-
-- [How to contribute to Arcade guide](Documentation/Policy/ArcadeContributorGuidance.md)
-
-- [Pull requests](https://github.com/dotnet/arcade/pulls): [Open](https://github.com/dotnet/arcade/pulls?q=is%3Aopen+is%3Apr)/[Closed](https://github.com/dotnet/arcade/pulls?q=is%3Apr+is%3Aclosed)
