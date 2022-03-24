@@ -62,4 +62,3 @@ Documentation, tutorials, and guides may be found in the [Start Here](Documentat
 
 ### License
 
-.NET Core (including the Arcade repo) is licensed under the [MIT license](LICENSE.TXT). 
