@@ -1,5 +1,7 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
+
+#nullable enable
 
 using System;
 using System.IO;
@@ -20,7 +22,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             _package = package;
         }
 
-        public override ITaskItem Build(string outputPath)
+        public override ITaskItem Build(string outputPath, ITaskItem[]? iceSuppressions = null)
         {
             // Harvest the package contents before adding it to the source files we need to compile.
             string packageContentWxs = Path.Combine(WixSourceDirectory, "PackageContent.wxs");
@@ -73,7 +75,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
                 Path.Combine(outputPath, _package.ShortName + ".msi") :
                 Path.Combine(outputPath, _package.ShortName + $"-{Platform}.msi");
 
-            ITaskItem msi = Link(candle.OutputPath, msiFileName);
+            ITaskItem msi = Link(candle.OutputPath, msiFileName, iceSuppressions);
 
             return msi;
         }
@@ -94,3 +96,5 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             };
     }
 }
+
+#nullable disable

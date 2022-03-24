@@ -1,9 +1,11 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+#nullable enable
+
 using System;
 using System.IO;
-using System.Web;
+using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Workloads.Wix;
@@ -41,15 +43,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             get;
         }
 
-        /// <summary>
-        /// The root output directory where the MSI will be generated.
-        /// </summary>
-        protected string BaseOutputPath
-        {
-            get;
-            set;
-        }
-
         protected IBuildEngine BuildEngine
         {
             get;
@@ -76,26 +69,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// </summary>
         protected string Manufacturer =>
             (!string.IsNullOrWhiteSpace(Package.Authors) && (Package.Authors.IndexOf("Microsoft", StringComparison.OrdinalIgnoreCase) < 0)) ?
-            Package.Authors :
-            "Microsoft Corporation";
+            Package.Authors : 
+            DefaultValues.Manufacturer;
 
         /// <summary>
-        /// The path where the MSI will be generated.
+        /// The platform of the MSI.
         /// </summary>
-        protected string OutputPath
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// The ProductName property of the MSI, derived from the package title or ID.
-        /// </summary>
-        protected string ProductName
-        {
-            get;
-        }
-
         protected string Platform
         {
             get;
@@ -117,7 +96,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             get;
         }
 
-        public MsiBase(WorkloadPackageBase package, IBuildEngine buildEngine, string wixToolsetPath, string platform, string baseIntermediateOutputPath)
+        public MsiBase(WorkloadPackageBase package, IBuildEngine buildEngine, string wixToolsetPath, 
+            string platform, string baseIntermediateOutputPath)
         {
             BuildEngine = buildEngine;
             WixToolsetPath = wixToolsetPath;
@@ -134,8 +114,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// Produces an MSI and returns a task item with metadata about the MSI.
         /// </summary>
         /// <param name="outputPath">The directory where the MSI will be generated.</param>
+        /// <param name="iceSuppressions">A set of internal consistency evaluators to suppress or <see langword="null"/>.</param>
         /// <returns>An item representing the built MSI.</returns>
-        public abstract ITaskItem Build(string outputPath);
+        public abstract ITaskItem Build(string outputPath, ITaskItem[]? iceSuppressions);
 
         /// <summary>
         /// Gets the platform specific ProductName MSI property.  
@@ -185,11 +166,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// </summary>
         /// <param name="compilerOutputPath">The path where the output of the compiler (.wixobj files) will be generated.</param>
         /// <param name="outputFile">The full path of the MSI to create during linking.</param>
+        /// <param name="iceSuppressions">A set of internal consistency evaluators to suppress. May be <see langword="null"/>.</param>
         /// <returns>An <see cref="ITaskItem"/> for the MSI that was created.</returns>
         /// <exception cref="Exception"></exception>
-        protected ITaskItem Link(string compilerOutputPath, string outputFile)
+        protected ITaskItem Link(string compilerOutputPath, string outputFile, ITaskItem[]? iceSuppressions = null)
         {
-            return Link(compilerOutputPath, outputFile, WixExtensions.WixDependencyExtension,
+            return Link(compilerOutputPath, outputFile, iceSuppressions, WixExtensions.WixDependencyExtension,
                 WixExtensions.WixUIExtension, WixExtensions.WixUtilExtension);
         }
 
@@ -198,10 +180,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// </summary>
         /// <param name="compilerOutputPath">The path where the output of the compiler (.wixobj files) can be found.</param>
         /// <param name="outputFile">The full path of the MSI to create during linking.</param>
+        /// <param name="iceSuppressions">A set of internal consistency evaluators to suppress. May be <see langword="null"/>.</param>
         /// <param name="wixExtensions">A list of WiX extensions to include when linking the MSI.</param>
         /// <returns>An <see cref="ITaskItem"/> for the MSI that was created.</returns>
         /// <exception cref="Exception"></exception>
-        protected ITaskItem Link(string compilerOutputPath, string outputFile, params string[] wixExtensions)
+        protected ITaskItem Link(string compilerOutputPath, string outputFile, ITaskItem[]? iceSuppressions, params string[] wixExtensions)
         {
             // Link the MSI. The generated filename contains the semantic version (excluding build metadata) and platform. 
             // If the source package already contains a platform, e.g. an aliased package that has a RID, then we don't add
@@ -210,7 +193,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             {
                 OutputFile = outputFile,
                 SourceFiles = Directory.EnumerateFiles(compilerOutputPath, "*.wixobj"),
-                // SuppressIces = this.SuppressIces
+                SuppressIces = iceSuppressions == null ? null : string.Join(";", iceSuppressions.Select(i => i.ItemSpec))
             };
 
             foreach (string wixExtension in wixExtensions)
@@ -235,3 +218,5 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         }
     }
 }
+
+#nullable disable

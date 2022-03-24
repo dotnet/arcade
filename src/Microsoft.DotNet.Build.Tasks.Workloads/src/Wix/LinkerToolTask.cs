@@ -32,15 +32,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
         }
 
         /// <summary>
-        /// The platform to set when invoking the tool.
-        /// </summary>
-        public string Platform
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// The source files (.wixobj) used to link the executable.
         /// </summary>
         public IEnumerable<string> SourceFiles

@@ -13,5 +13,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// to group individual components in Visual Studio Installer.
         /// </summary>
         public static readonly string ComponentCategory = ".NET";
+
+        /// <summary>
+        /// The default value to assign to the Manufacturer property of an MSI.
+        /// </summary>
+        public static readonly string Manufacturer = "Microsoft Corporation";
     }
 }

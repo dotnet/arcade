@@ -1,6 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+#nullable enable
+
 using System;
 using System.IO;
 using Microsoft.Build.Framework;
@@ -8,6 +10,9 @@ using Microsoft.DotNet.Build.Tasks.Workloads.Wix;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
 {
+    /// <summary>
+    /// Represents a workload manifest MSI.
+    /// </summary>
     internal class WorkloadManifestMsi : MsiBase
     {
         private WorkloadManifestPackage _package;
@@ -26,7 +31,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
 
         /// <inheritdoc />
         /// <exception cref="Exception" />
-        public override ITaskItem Build(string outputPath)
+        public override ITaskItem Build(string outputPath, ITaskItem[]? iceSuppressions = null)
         {
             // Harvest the package contents before adding it to the source files we need to compile.
             string packageContentWxs = Path.Combine(WixSourceDirectory, "PackageContent.wxs");
@@ -77,9 +82,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             }
 
             ITaskItem msi = Link(candle.OutputPath, 
-                Path.Combine(outputPath, Path.GetFileNameWithoutExtension(_package.PackagePath) + $"-{Platform}.msi"));
+                Path.Combine(outputPath, Path.GetFileNameWithoutExtension(_package.PackagePath) + $"-{Platform}.msi"),
+                iceSuppressions);
                         
             return msi;
         }       
     }
 }
+
+#nullable disable

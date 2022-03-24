@@ -276,7 +276,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 // Visual Studio.
                 _ = Parallel.ForEach(manifestMsisToBuild, msi =>
                 {
-                    ITaskItem msiOutputItem = msi.Build(MsiOutputPath);
+                    ITaskItem msiOutputItem = msi.Build(MsiOutputPath, IceSuppressions);
 
                     // Create the JSON manifest for CLI based installations.
                     string msiJsonPath = MsiProperties.Create(msiOutputItem.ItemSpec);
