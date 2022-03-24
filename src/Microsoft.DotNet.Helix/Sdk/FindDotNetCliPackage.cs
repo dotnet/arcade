@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
-using Threading = System.Threading.Tasks;
+using System.Threading.Tasks;
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
+using MSBuild = Microsoft.Build.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using NuGet.Versioning;
@@ -71,15 +71,15 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private string SanitizeString(string text)
         {
-            return Regex.Replace(text, @"\?sv=[^ ]+", "");
+            return Regex.Replace(text, @"\?[^ ]+", "");
         }
 
-        private async Threading.Task FindCliPackage()
+        private async Task FindCliPackage()
         {
             NormalizeParameters();
             var feeds = new List<ITaskItem>();
-            feeds.Add(new TaskItem("https://dotnetcli.blob.core.windows.net/dotnet"));
-            feeds.Add(new TaskItem("https://dotnetbuilds.blob.core.windows.net/public"));
+            feeds.Add(new MSBuild.TaskItem("https://dotnetcli.blob.core.windows.net/dotnet"));
+            feeds.Add(new MSBuild.TaskItem("https://dotnetbuilds.blob.core.windows.net/public"));
             if (AdditionalFeeds != null)
             {
                 feeds.AddRange(AdditionalFeeds);
@@ -132,7 +132,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
         }
 
-        private async Threading.Task<string> GetDownloadUrlAsync(ITaskItem feed)
+        private async Task<string> GetDownloadUrlAsync(ITaskItem feed)
         {
             var oldVersion = Version; // ResolveVersionAsync will adjust the Version property, but we need it set back for other feeds to see the same initial Version
             try
@@ -142,12 +142,9 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 string effectiveVersion = await GetEffectiveVersion(feed, version);
                 feed.TryGetMetadata("SasToken", out string sasToken);
-                if (!string.IsNullOrEmpty(sasToken))
+                if (!string.IsNullOrEmpty(sasToken) && !sasToken.StartsWith("?"))
                 {
-                    if (!sasToken.StartsWith("?"))
-                    {
-                        sasToken = "?" + sasToken;
-                    }
+                    sasToken = "?" + sasToken;
                 }
 
                 return PackageType switch
@@ -161,7 +158,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             catch (Exception ex)
             {
                 Log.LogWarning($"Unable to resolve download link from feed {feed}; {SanitizeString(ex.Message)}");
-                Log.LogMessage($"Unable to resolve download link from feed {feed}; {SanitizeString(ex.Message)}");
                 return null;
             }
             finally
@@ -170,7 +166,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
         }
 
-        private async Threading.Task<string> GetEffectiveVersion(ITaskItem feed, string version)
+        private async Task<string> GetEffectiveVersion(ITaskItem feed, string version)
         {
             if (NuGetVersion.TryParse(version, out NuGetVersion semanticVersion))
             {
@@ -201,7 +197,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             throw new ArgumentException($"'{version}' is not a valid semantic version.");
         }
-        private async Threading.Task<string> GetMatchingProductVersionTxtContents(string baseUri, string customVersionTextFileName, string sasToken = null)
+        private async Task<string> GetMatchingProductVersionTxtContents(string baseUri, string customVersionTextFileName, string sasToken = null)
         {
             Log.LogMessage(MessageImportance.Low, $"Checking for productVersion.txt files under {baseUri}");
 
@@ -228,16 +224,14 @@ namespace Microsoft.DotNet.Helix.Sdk
             return Version;
         }
 
-        private async Threading.Task<HttpResponseMessage> GetAsyncWithRetry(string uri, string sasToken = null)
+        private async Task<HttpResponseMessage> GetAsyncWithRetry(string uri, string sasToken = null)
         {
             HttpResponseMessage response = null;
-            if (!string.IsNullOrEmpty(sasToken))
+            if (!string.IsNullOrEmpty(sasToken) && !sasToken.StartsWith("?"))
             {
-                if (!sasToken.StartsWith("?"))
-                {
-                    sasToken = "?" + sasToken;
-                }
+                sasToken = "?" + sasToken;
             }
+
             await _retry.RunAsync(async attempt =>
             {
                 try
@@ -259,14 +253,14 @@ namespace Microsoft.DotNet.Helix.Sdk
             return response;
         }
 
-        private async Threading.Task<HttpResponseMessage> HeadRequestWithRetry(string uri)
+        private async Task<HttpResponseMessage> HeadRequestWithRetry(string uri)
         {
             HttpResponseMessage response = null;
             await _retry.RunAsync(async attempt =>
             {
                 try
                 {
-                    using var req = new HttpRequestMessage(HttpMethod.Head, $"{uri}");
+                    using var req = new HttpRequestMessage(HttpMethod.Head, uri);
                     response = await _client.SendAsync(req);
                     return true;
                 }
@@ -321,7 +315,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
         }
 
-        private async Threading.Task<string> ResolveVersionAsync(ITaskItem feed)
+        private async Task<string> ResolveVersionAsync(ITaskItem feed)
         {
             string version = Version;
             if (Version == "latest")
