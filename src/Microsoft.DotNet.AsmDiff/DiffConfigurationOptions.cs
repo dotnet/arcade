@@ -21,10 +21,13 @@ namespace Microsoft.DotNet.AsmDiff
         GroupByAssembly = 0x400,
         FlattenTypes = 0x800,
         TypesOnly = 0x1000,
-        HighlightBaseMembers = 0x2000,
         AlwaysDiffMembers = 0x4000,
         IncludeAddedTypes = 0x8000,
         IncludeRemovedTypes = 0x10000,
-        StrikeRemoved = 0x20000 
+        StrikeRemoved = 0x20000,
+        HightlightMemberOverrides = 0x40000,
+        HighlightInterfaceImplementations = 0x80000,
+
+        HighlightBasesMembers = HightlightMemberOverrides | HighlightInterfaceImplementations,
     }
 }
