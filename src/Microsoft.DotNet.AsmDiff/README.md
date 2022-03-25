@@ -21,6 +21,8 @@ AsmDiff is a command line tool which may be used to check the API changes betwee
 - `-dai|--DiffAssemblyInfo` - Enables diffing of the assembly level information like version, key, etc.
 - `-adm|--AlwaysDiffMembers` - By default if an entire class is added or removed we don't show the members, setting this option forces all the members to be shown instead.
 - `-hbm|--HighlightBaseMembers` - Highlight members that are interface implementations or overrides of a base member.
+- `-hmo|--HighlightMemberOverrides` - Highlight members that are overrides of a base member.
+- `-hii|--HighlightInterfaceImplementations` - Highlight members that are explicit interface implementations.
 - `-ft|--FlattenTypes` - Will flatten types so that all members available on the type show on the type not just the implemented ones.
 - `-gba|--GroupByAssembly` - Group the differences by assembly instead of flattening the namespaces.
 - `-eat|--ExcludeAddedTypes` - Do not show types that have been added to the new set of types.

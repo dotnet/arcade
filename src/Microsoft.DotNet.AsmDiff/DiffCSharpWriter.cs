@@ -51,14 +51,16 @@ namespace Microsoft.DotNet.AsmDiff
 
         public DiffCSharpWriter(IStyleSyntaxWriter writer, MappingSettings settings)
             : this(writer, settings, null, false)
-        {          
+        {
         }
 
         public bool IncludeSpaceBetweenMemberGroups { get; set; }
 
         public bool IncludeMemberGroupHeadings { get; set; }
 
-        public bool HighlightBaseMembers { get; set; }
+        public bool HighlightMemberOverrides { get; set; }
+
+        public bool HighlightInterfaceImplementations { get; set; }
 
         public bool IncludeAssemblyProperties { get; set; }
 
@@ -237,7 +239,7 @@ namespace Microsoft.DotNet.AsmDiff
                 foreach (var comment in commentSet)
                 {
                     reviewCommentWriter.WriteReviewComment(comment.Author, comment.Text);
-                    _syntaxWriter.WriteLine();    
+                    _syntaxWriter.WriteLine();
                 }
             }
         }

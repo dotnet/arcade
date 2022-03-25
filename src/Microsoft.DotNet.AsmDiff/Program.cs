@@ -42,6 +42,10 @@ namespace Microsoft.DotNet.AsmDiff
         public bool AlwaysDiffMembers { get; set; }
         [Option("-hbm|--HighlightBaseMembers", "Highlight members that are interface implementations or overrides of a base member.", CommandOptionType.NoValue)]
         public bool HighlightBaseMembers { get; set; }
+        [Option("-hmo|--HighlightMemberOverrides", "Highlight members that are overrides of a base member.", CommandOptionType.NoValue)]
+        public bool HighlightMemberOverrides { get; set; }
+        [Option("-hii|--HighlightInterfaceImplementations", "Highlight members that are explicit interface implementations.", CommandOptionType.NoValue)]
+        public bool HighlightInterfaceImplementations { get; set; }
 
         [Option("-ft|--FlattenTypes", "Will flatten types so that all members available on the type show on the type not just the implemented ones.", CommandOptionType.NoValue)]
         public bool FlattenTypes { get; set; }
@@ -54,7 +58,7 @@ namespace Microsoft.DotNet.AsmDiff
         [Option("-iia|--IncludeInternalApis", "Include internal types and members as part of the diff.", CommandOptionType.NoValue)]
         public bool IncludeInternalApis { get; set; }
         [Option("-ipa|--IncludePrivateApis", "Include private types and members as part of the diff.", CommandOptionType.NoValue)]
-        public bool IncludePrivateApis { get; set; }        
+        public bool IncludePrivateApis { get; set; }
         
         [Option("-itc|--IncludeTableOfContents", "Include table of contents as part of the diff.", CommandOptionType.NoValue)]
         public bool IncludeTableOfContents { get; set; }
@@ -147,7 +151,18 @@ namespace Microsoft.DotNet.AsmDiff
                 result |= DiffConfigurationOptions.GroupByAssembly;
 
             if (HighlightBaseMembers)
-                result |= DiffConfigurationOptions.HighlightBaseMembers;
+            {
+                result |= DiffConfigurationOptions.HightlightMemberOverrides;
+                result |= DiffConfigurationOptions.HighlightInterfaceImplementations;
+            }
+            else
+            {
+                if (HighlightMemberOverrides)
+                    result |= DiffConfigurationOptions.HightlightMemberOverrides;
+
+                if (HighlightInterfaceImplementations)
+                    result |= DiffConfigurationOptions.HighlightInterfaceImplementations;
+            }
 
             if (DiffAssemblyInfo)
                 result |= DiffConfigurationOptions.DiffAssemblyInfo;

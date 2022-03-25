@@ -15,7 +15,8 @@ namespace Microsoft.DotNet.AsmDiff
                       DiffConfigurationOptions.IncludeUnchanged |
                       DiffConfigurationOptions.IncludeAddedTypes |
                       DiffConfigurationOptions.IncludeRemovedTypes |
-                      DiffConfigurationOptions.HighlightBaseMembers;
+                      DiffConfigurationOptions.HightlightMemberOverrides |
+                      DiffConfigurationOptions.HighlightInterfaceImplementations;
         }
 
         public DiffConfiguration(AssemblySet left, AssemblySet right, DiffConfigurationOptions options)
