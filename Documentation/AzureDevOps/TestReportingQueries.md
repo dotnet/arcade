@@ -8,11 +8,27 @@ Caveats (Jan 14, 2022):
 - There is a [known issue](https://github.com/dotnet/core-eng/issues/14708) with how we're capturing this data that is currently being worked on, thus, some of the data we have may not be complete. 
 
 ## Index
+  - [Tests That Have Changed Failure Rate in the Last Week](#tests-that-have-changed-failure-rate-in-the-last-week)
   - [Tests That Have Failed X% of the Time in the Recent Timespan](#tests-that-have-failed-x-of-the-time-in-the-recent-timespan)
   - [Mean Value for the Expected Pass Rate for Tests](#mean-value-for-the-expected-pass-rate-for-tests)
   - [Mean Value for the Expected Pass on Retry Rate for Tests](#mean-value-for-the-expected-pass-on-retry-rate-for-tests)
   - [Build Analysis Reporting](#build-analysis-reporting)
   - [Sentiment Tracker Feedback](#sentiment-tracker-feedback)
+
+## Tests That Have Changed Failure Rate in the Last Week
+
+Variables: 
+- `targetSignificance`: Target statisical likelihood that the failure change is due to a change in the last week
+- `repo`: Repository to filter on. Set to empty string to inclue all repositories. Default is `dotnet/runtime`.
+```
+let targetSignificance = 0.95;
+let repo = "dotnet/runtime";
+let dt = toscalar(AzureDevOpsTestAnalysis | summarize max(ReportDate));
+AzureDevOpsTestAnalysis
+| where ReportDate == dt and Repository == repo
+| where Significance >= targetSignificance and CurrentFailCount != 0
+| order by Significance desc
+```
 
 ## Tests That Have Failed X% of the Time in the Recent Timespan
 
