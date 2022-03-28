@@ -20,13 +20,17 @@ Caveats (Jan 14, 2022):
 Variables: 
 - `targetSignificance`: Target statisical likelihood that the failure change is due to a change in the last week
 - `repo`: Repository to filter on. Set to empty string to inclue all repositories. Default is `dotnet/runtime`.
+- `minimumHistoricalData`: Minimum number of historical data points to include to avoid new tests, (`0` includes all tests)
 ```
 let targetSignificance = 0.95;
 let repo = "dotnet/runtime";
+let minimumHistoricalData = 0;
 let dt = toscalar(AzureDevOpsTestAnalysis | summarize max(ReportDate));
 AzureDevOpsTestAnalysis
 | where ReportDate == dt and Repository == repo
 | where Significance >= targetSignificance and CurrentFailCount != 0
+| extend HistoricalTotal = HistoricalFailCount + HistoricalPassCount + HistoricalPassOnRerunCou
+| where HistoricalTotal >= minimumHistoricalData
 | order by Significance desc
 ```
 
