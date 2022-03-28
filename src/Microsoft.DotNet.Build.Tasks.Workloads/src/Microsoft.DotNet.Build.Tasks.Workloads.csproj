@@ -1,4 +1,4 @@
-﻿<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
@@ -36,7 +36,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(IncludeWiX)' == 'true'">
-    <PackageReference Include="Wix" Version="3.11.2" />
+    <PackageReference Include="Microsoft.Signed.Wix" Version="$(MicrosoftSignedWixVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(IncludeWiX)' == 'true'">
@@ -64,16 +64,31 @@
 
   <ItemGroup Condition="'$(IncludeWiX)' != 'true'">
     <Compile Remove="**\*.wix.cs" />
+    <Compile Remove="*.wix.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Misc\*.*" />
     <EmbeddedResource Include="MsiTemplate\*.wxs" />
     <EmbeddedResource Include="MsiTemplate\*.wxi" />
-    <EmbeddedResource Include="..\..\Common\wix\dotnethome_x64.wxs" Link="MsiTemplate\dotnethome_x64.wxs" />
     <EmbeddedResource Include="SwixTemplate\*.swr" />
     <EmbeddedResource Include="SwixTemplate\*.swixproj" />
-    <EmbeddedResource Include="SwixTemplate\*.vsmanproj" />
+    <EmbeddedResource Include="..\..\Common\wix\dotnethome_x64.wxs" Link="MsiTemplate\dotnethome_x64.wxs" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <Compile Update="Strings.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Strings.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Strings.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>
