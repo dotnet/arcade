@@ -11,7 +11,7 @@
     </Dependency>
     <Dependency Name="Microsoft.TemplateEngine.Tasks" Version="7.0.100-alpha.1.21601.1">
       <Uri>https://github.com/dotnet/templating</Uri>
-      <Sha />
+      <Sha>9b8b780bf233907ae5d38aaf8c8b769782322735</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
