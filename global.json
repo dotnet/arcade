@@ -5,5 +5,9 @@
   "msbuild-sdks": {
     "Microsoft.DotNet.Arcade.Sdk": "7.0.0-beta.22168.2",
     "Microsoft.DotNet.Helix.Sdk": "7.0.0-beta.22168.2"
+  },
+  "native-tools": {
+    "perl": "3.24.1.1",
+    "cmake": "3.9.1"
   }
 }
