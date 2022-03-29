@@ -85,8 +85,11 @@ try {
           $ToolVersion = $_.Value
 
           if ((Get-Command "$ToolName" -ErrorAction SilentlyContinue) -eq $null) {
-            $ToolDirectory = "C:\arcade-tools\$ToolName-$ToolVersion"
-            $BinPath = Get-Content "$ToolDirectory\binpath.txt"
+            if ($ToolVersion -eq "latest") {
+              $ToolVersion = ""
+            }
+            $ToolDirectory = (Get-ChildItem -Path "C:\arcade-tools\" -Filter "$ToolName-$ToolVersion.*" | Sort-Object -Descending)[0]
+            $BinPath = Get-Content "$($ToolDirectory.FullName)\binpath.txt"
             Write-Host "Adding $ToolName to the path ($(Convert-Path -Path $BinPath))..."
             Write-Host "##vso[task.prependpath]$(Convert-Path -Path $BinPath)"
           }
