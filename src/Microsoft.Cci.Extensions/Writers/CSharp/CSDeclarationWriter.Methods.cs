@@ -39,7 +39,7 @@ namespace Microsoft.Cci.Writers.CSharp
             {
                 writeVisibility = false;
             }
-            
+
             if (method.IsExplicitInterfaceMethod() || method.IsStaticConstructor)
             {
                 writeVisibility = false;
@@ -131,10 +131,13 @@ namespace Microsoft.Cci.Writers.CSharp
             {
                 IMethodImplementation methodImplementation = method.GetMethodImplementation();
                 object nullableAttributeArgument = methodImplementation.GetExplicitInterfaceMethodNullableAttributeArgument(_metadataReaderCache);
-
-                WriteTypeName(methodImplementation.ImplementedMethod.ContainingType, noSpace: true, nullableAttributeArgument: nullableAttributeArgument);
-                WriteSymbol(".");
-                WriteIdentifier(GetNormalizedMethodName(methodImplementation.ImplementedMethod.Name));
+                if (nullableAttributeArgument is int iNullableAttributeArgument && iNullableAttributeArgument > 0)
+                {
+                    WriteTypeName(methodImplementation.ImplementedMethod.ContainingType, noSpace: true, nullableAttributeArgument: nullableAttributeArgument);
+                    WriteSymbol(".");
+                    WriteIdentifier(methodImplementation.ImplementedMethod.Name);
+                    return;
+                }
             }
             else
             {
