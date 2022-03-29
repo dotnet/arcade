@@ -129,7 +129,7 @@ When you are not using `CustomCommands` and you point the SDK to an app bundle, 
 Otherwise, to deploy an app bundle to a real device, the app bundle needs to be signed before it is installed.
 To sign an app bundle you need to make sure that:
 
-1. The bundle needs to contain a *provisioning profile*. This is a file called **embedded.mobileprovision** that needs to be in the root of the app bundle folder (`[PATH TO BUNDLE]/embedded.mobileprovision`).
+1. The bundle contains a *provisioning profile*. This is a file called **embedded.mobileprovision** that needs to be in the root of the app bundle folder (`[PATH TO BUNDLE]/embedded.mobileprovision`).
 2. The `sign [PATH TO BUNDLE]` bash command is called. This method is available for you when using `CustomCommands`.
 
 The provisioning profile will be injected into your Helix payload as part of the job preparation and you need to copy it into the app bundle's root:
