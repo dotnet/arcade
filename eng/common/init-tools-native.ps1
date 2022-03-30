@@ -31,6 +31,10 @@ Wait time between retry attempts in seconds
 .PARAMETER GlobalJsonFile
 File path to global.json file
 
+.PARAMETER PathPromotion
+Optional switch to enable either promote native tools specified in the global.json to the path (in Azure Pipelines)
+or break the build if a native tool is not found on the path (on a local dev machine)
+
 .NOTES
 #>
 [CmdletBinding(PositionalBinding=$false)]
@@ -79,7 +83,7 @@ try {
                     Select-Object -Expand 'native-tools' -ErrorAction SilentlyContinue
   if ($NativeTools) {
     if ($PathPromotion -eq $True) {
-      if ($env:AGENT_ID) { # check to see if we're in an Azure pipelines build
+      if ($env:SYSTEM_TEAMPROJECT) { # check to see if we're in an Azure pipelines build
         $NativeTools.PSObject.Properties | ForEach-Object {
           $ToolName = $_.Name
           $ToolVersion = $_.Value
@@ -88,8 +92,22 @@ try {
             if ($ToolVersion -eq "latest") {
               $ToolVersion = ""
             }
-            $ToolDirectory = (Get-ChildItem -Path "C:\arcade-tools\" -Filter "$ToolName-$ToolVersion*" | Sort-Object -Descending)[0]
-            $BinPath = Get-Content "$($ToolDirectory.FullName)\binpath.txt"
+            $ArcadeToolsDirectory = "C:\arcade-tools"
+            if (Test-Path $ArcadeToolsDirectory -eq $False) {
+              Write-Error "Arcade tools directory '$ArcadeToolsDirectory' was not found; artifacts were not properly installed."
+              exit 1
+            }
+            $ToolDirectory = (Get-ChildItem -Path "$ArcadeToolsDirectory" -Filter "$ToolName-$ToolVersion*" | Sort-Object -Descending)[0]
+            if ([string]::IsNullOrWhiteSpace($ToolDirectory)) {
+              Write-Error "Unable to find directory for $ToolName $ToolVersion; please make sure the tool is installed on this image."
+              exit 1
+            }
+            $BinPathFile = "$($ToolDirectory.FullName)\binpath.txt"
+            if (Test-Path -Path "$BinPathFile" -eq $False) {
+              Write-Error "Unable to find binpath.txt in '$($ToolDirectory.FullName)' ($ToolName $ToolVersion); artifact is either installed incorrectly or is not a bootstrappable tool."
+              exit 1
+            }
+            $BinPath = Get-Content "$BinPathFile"
             Write-Host "Adding $ToolName to the path ($(Convert-Path -Path $BinPath))..."
             Write-Host "##vso[task.prependpath]$(Convert-Path -Path $BinPath)"
           }
