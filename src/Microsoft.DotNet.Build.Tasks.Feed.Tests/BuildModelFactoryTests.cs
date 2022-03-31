@@ -23,13 +23,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         #region Standard test values
 
         private const string _testAzdoRepoUri = "https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-buildtest";
+        private const string _normalizedTestAzdoRepoUri = "https://dev.azure.com/dnceng/internal/_git/dotnet-buildtest";
         private const string _testBuildBranch = "foobranch";
         private const string _testBuildCommit = "664996a16fa9228cfd7a55d767deb31f62a65f51";
         private const string _testAzdoBuildId = "89999999";
-        private const string _testInitialLocation = "As they say....Location Location Location!";
+        private const string _testInitialLocation = "https://dnceng.visualstudio.com/project/_apis/build/builds/id/artifacts";
+        private const string _normalizedTestInitialLocation = "https://dev.azure.com/dnceng/project/_apis/build/builds/id/artifacts";
         private static readonly string[] _defaultManifestBuildData = new string[]
         {
-            $"InitialAssetsLocation={_testInitialLocation}"
+            $"InitialAssetsLocation={_testInitialLocation}",
+            $"AzureDevOpsRepository={_testAzdoRepoUri}"
         };
 
         #endregion
@@ -165,6 +168,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     package.Attributes.Should().Contain("Id", "test-package-a");
                     package.Attributes.Should().Contain("Version", "1.0.0");
                 });
+
+            model.Identity.Attributes.Should().Contain("AzureDevOpsRepository", _normalizedTestAzdoRepoUri);
         }
 
         /// <summary>
@@ -290,7 +295,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
 
             // Check that the build model has the initial assets location
-            model.Identity.Attributes.Should().Contain(attributeName, _testInitialLocation);
+            model.Identity.Attributes.Should().Contain(attributeName, _normalizedTestInitialLocation);
         }
 
         #endregion
@@ -363,6 +368,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 new TaskItem(localPackagePath, new Dictionary<string, string>()
                 {
                     { "CertificateName", "IHasACert2" }
+                }),
+                // Added per issue: dotnet/arcade#7064
+                new TaskItem("Microsoft.DiaSymReader.dll", new Dictionary<string, string>()
+                {
+                    { "CertificateName", "MicrosoftWin8WinBlue" },
+                    { "TargetFramework", ".NETFramework,Version=v2.0" },
+                    { "PublicKeyToken", "31bf3856ad364e35" }
+                }),
+                new TaskItem("Microsoft.DiaSymReader.dll", new Dictionary<string, string>()
+                {
+                    { "CertificateName", "Microsoft101240624" }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
+                    { "TargetFramework", ".NETStandard,Version=v1.1" },
+                    { "PublicKeyToken", "31bf3856ad364e35" }
                 })
             };
 
@@ -476,6 +494,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         item.PublicKeyToken.Should().Be("abcdabcdabcdabcd");
                     });
                 modelFromFile.SigningInformation.FileSignInfo.Should().SatisfyRespectively(
+                    item =>
+                    {
+                        item.Include.Should().Be("Microsoft.DiaSymReader.dll");
+                        item.CertificateName.Should().Be("Microsoft101240624"); // lgtm [cs/common-default-passwords] Safe, these certificate names
+                        item.TargetFramework.Should().Be(".NETStandard,Version=v1.1");
+                        item.PublicKeyToken.Should().Be("31bf3856ad364e35");
+                    },
+                    item =>
+                    {
+                        item.Include.Should().Be("Microsoft.DiaSymReader.dll");
+                        item.CertificateName.Should().Be("MicrosoftWin8WinBlue");
+                        item.TargetFramework.Should().Be(".NETFramework,Version=v2.0");
+                        item.PublicKeyToken.Should().Be("31bf3856ad364e35");
+                    },
                     item =>
                     {
                         item.Include.Should().Be("test-package-a.1.0.0.nupkg");

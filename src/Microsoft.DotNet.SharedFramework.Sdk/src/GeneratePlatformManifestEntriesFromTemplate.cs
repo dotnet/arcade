@@ -1,6 +1,5 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -30,7 +29,7 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
         public override bool Execute()
         {
             List<PlatformManifestEntry> entries = new List<PlatformManifestEntry>();
-            var files = Files.ToDictionary(file => Path.GetFileName(file.ItemSpec));
+            var files = Files.ToLookup(file => Path.GetFileName(file.ItemSpec)).ToDictionary(l => l.Key, l=> l.First());
             foreach (var entryTemplate in PlatformManifestEntryTemplates)
             {
                 if (files.TryGetValue(entryTemplate.ItemSpec, out ITaskItem existingFile))

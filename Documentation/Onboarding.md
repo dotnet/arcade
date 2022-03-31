@@ -8,22 +8,26 @@
 
    Steps:
     1. Add a
-       [global.json](https://github.com/dotnet/arcade/blob/master/global.json).
+       [global.json](https://github.com/dotnet/arcade/blob/main/global.json).
     2. Add (or copy)
-       [Directory.Build.props](https://github.com/dotnet/arcade/blob/master/Directory.Build.props)
+       [Directory.Build.props](https://github.com/dotnet/arcade/blob/main/Directory.Build.props)
        and
-       [Directory.build.targets](https://github.com/dotnet/arcade/blob/master/Directory.Build.targets).
+       [Directory.build.targets](https://github.com/dotnet/arcade/blob/main/Directory.Build.targets).
     3. Copy `eng\common` from
-       [Arcade](https://github.com/dotnet/arcade/tree/master/eng/common)
+       [Arcade](https://github.com/dotnet/arcade/tree/main/eng/common)
        into repo.
     4. Add (or copy) the
-       [Versions.props](https://github.com/dotnet/arcade/blob/master/eng/Versions.props)
+       [Versions.props](https://github.com/dotnet/arcade/blob/main/eng/Versions.props)
        and
-       [Version.Details.xml](https://github.com/dotnet/arcade/blob/master/eng/Version.Details.xml)
+       [Version.Details.xml](https://github.com/dotnet/arcade/blob/main/eng/Version.Details.xml)
        files to your eng\ folder. Adjust the version prefix and prerelease label
        as necessary.
-    5. Add dotnet-core feed and any other feeds that the repository restores NuGet packages from to
-       [NuGet.config](https://github.com/dotnet/arcade/blob/master/NuGet.config).
+    5. Add the following feeds to your nuget.config:
+       * https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json
+       * https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
+       * https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json
+       
+       along with any other feeds your repo needs to restore packages from. You can see which feeds Arcade uses at: [NuGet.config](https://github.com/dotnet/arcade/blob/main/NuGet.config).
 
     **Using Arcade packages** - See [documentation](CorePackages/) for
     information on specific packages.
@@ -37,7 +41,7 @@
   DevDiv to DncEng](AzureDevOps/MovingFromDevDivToDncEng.md).
 - Onboard onto dependency flow (Darc). - See [Dependency Flow
   Onboarding](DependencyFlowOnboarding.md).
-- Use Helix for testing where possible - See [Sending Jobs to Helix](https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/SendingJobsToHelix.md)
+- Use [Helix](/Documentation/Helix.md) for testing where possible - See [Sending Jobs to Helix](https://github.com/dotnet/arcade/blob/main/Documentation/AzureDevOps/SendingJobsToHelix.md)
 
 ## Which branches should I make these changes in?
 

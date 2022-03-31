@@ -15,6 +15,25 @@
     <None Remove="$(NuGetPackageRoot)xunit.runner.visualstudio\$(XUnitRunnerVisualStudioVersion)\build\net20\..\_common\xunit.abstractions.dll" />
   </ItemGroup>
 
+  <PropertyGroup>
+    <XUnitDesktopSettingsFile Condition="'$(XUnitDesktopSettingsFile)' == ''">$(MSBuildThisFileDirectory)xunit.runner.json</XUnitDesktopSettingsFile>
+  </PropertyGroup>
+
+  <!--
+    Include settings file (xunit.runner.json) if specified.
+  -->
+  <ItemGroup>
+    <None Include="$(XUnitDesktopSettingsFile)"
+          CopyToOutputDirectory="PreserveNewest"
+          Visible="false"
+          Condition="'$(XUnitDesktopSettingsFile)' != '' and '$(TargetFrameworkIdentifier)' == '.NETFramework'" />
+
+    <None Include="$(XUnitCoreSettingsFile)"
+          CopyToOutputDirectory="PreserveNewest"
+          Visible="false"
+          Condition="'$(XUnitCoreSettingsFile)' != '' and '$(TargetFrameworkIdentifier)' == '.NETCoreApp'" />
+  </ItemGroup>
+
   <Import Project="XUnit.Runner.targets" Condition="!$(UseVSTestRunner)"/>
   <Import Project="..\VSTest.targets" Condition="$(UseVSTestRunner)"/>
 </Project>

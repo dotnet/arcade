@@ -1,0 +1,88 @@
+﻿<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks Condition="'$(DotNetBuildFromSource)' == 'true'">net6.0</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>Latest</LangVersion>
+    <IsPackable>true</IsPackable>
+    <Description>Workload pack installer generation task package</Description>
+    <PackageTags>Arcade Build Tool Installer Workloads</PackageTags>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <NoWarn>$(NoWarn);NU5127</NoWarn>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+    <RootNamespace>Microsoft.DotNet.Build.Tasks.Workloads</RootNamespace>
+
+    <!--
+      Only include WiX-powered features when running a non-from-source build. (For example, the
+      Microsoft build used to build .NET for Windows.)
+
+      This removes a dependency on prebuilt WiX binaries. The purpose of WiX is to produce Windows
+      installers, and source-build doesn't run on Windows, so excluding WiX while building in
+      source-build mode to remove the prebuilt dependency has no impact to available .NET features.
+    -->
+    <IncludeWiX Condition="'$(DotNetBuildFromSource)' != 'true'">true</IncludeWiX>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" />
+    <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersion)" />
+    <PackageReference Include="Microsoft.NET.Sdk.WorkloadManifestReader" Version="$(MicrosoftNetSdkWorkloadManifestReaderVersion)" />
+    <PackageReference Include="System.Text.Json" Version="$(SystemTextJsonVersion)" Condition="'$(TargetFramework)' == 'net472'" />
+    <PackageReference Include="Microsoft.Deployment.DotNet.Releases" Version="$(MicrosoftDeploymentDotNetReleasesVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IncludeWiX)' == 'true'">
+    <PackageReference Include="Wix" Version="3.11.2" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IncludeWiX)' == 'true'">
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Resources.dll" />
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Compression.dll" />
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Compression.Cab.dll" />
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.WindowsInstaller.dll" />
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.WindowsInstaller.Package.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.DotNet.Build.Tasks.Workloads.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="build/**/*.*" Pack="true">
+      <PackagePath>build</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="obj\**" />
+    <EmbeddedResource Remove="obj\**" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(IncludeWiX)' != 'true'">
+    <Compile Remove="**\*.wix.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Misc\*.*" />
+    <EmbeddedResource Include="MsiTemplate\*.wxs" />
+    <EmbeddedResource Include="MsiTemplate\*.wxi" />
+    <EmbeddedResource Include="..\..\Common\wix\dotnethome_x64.wxs" Link="MsiTemplate\dotnethome_x64.wxs" />
+    <EmbeddedResource Include="SwixTemplate\*.swr" />
+    <EmbeddedResource Include="SwixTemplate\*.swixproj" />
+    <EmbeddedResource Include="SwixTemplate\*.vsmanproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Common\Internal\BuildTask.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+
+  <Import Project="$(RepoRoot)eng\BuildTask.targets" />
+</Project>

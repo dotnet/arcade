@@ -1,17 +1,17 @@
 # Arcade Validation
 
-We need to make sure changes done in the Arcade SDK as well as in the [core packages](https://github.com/dotnet/arcade/tree/master/Documentation/CorePackages) 
-don't break any of the consuming repos or Arcade itself. 
+We need to make sure changes done in the Arcade SDK as well as in the [core packages](https://github.com/dotnet/arcade/tree/master/Documentation/CorePackages) don't break any of the consuming repos or Arcade itself. 
 
 ## Arcade Validation Policy
 
-With the goal of being more transparent, eliminating surprises, and minimizing disruptions, we now will **only** deploy Arcade and/or machine (image) updates when the following criteria is met:
-- Each bell-weather repo (defined as runtime, aspnetcore, installer) must be building green so build problems won’t be compounded by new Arcade versions or images.
-- Arcade updates has been tested with each bell-weather repo.
-
-Exceptions:
-- Servicing continues as is today, with possible conflicts arising with images which we’ll need to deal on a case by case basis.  (this should also go away w/ future plans)
-- If an Arcade or machine queue update (includes VS) is needed to unblock any build, then obviously we’ll do that.  (but with targeted changes)
+- Each bellwether repo (defined as runtime, aspnetcore, installer) must be building green so build problems won’t be compounded by new Arcade versions or images.
+- Contributors who are changing existing code should use their best judgement to decide if additional validation against the "bellwether repos" is necessary. The following is a list of situations in which the contributor may want to run their changes against the bellwether repos: 
+  - Changes made to Signing, Publishing, or other stages outside of the build stage that would not show up in a PR build. 
+  - Changes that affect a fundamental piece of Arcade (e.g. build scripts, install scripts)
+  - Changes that affect many files (e.g. refactoring MSBuild Tasks to use a new abstract class for dependency injection support)
+  - Changes to packages that are only exercised by a specific set of repos, such as the Shared Framework SDK. 
+- If there are any known breaking changes or any breaking changes surface during the validation against the bellwether repos, those changes should be communicated per the [Breaking Change Policy](../Policy/ChangesPolicy.md).
+- Official Arcade builds from main will now be promoted automatically to `.NET Eng - Latest` channel once it has passed the official Arcade Validation pipeline. 
 
 ## The process
 
@@ -23,12 +23,18 @@ Exceptions:
 
 You can try this [locally](https://github.com/dotnet/arcade/blob/master/eng/validate-sdk.cmd).
 
+To validate against the Arcade Validation for Promotion pipeline (that includes the ability to build Arcade with the bellwether repos), follow these steps (which are similar to the steps outlined here for [How to Validate a Private Build](https://github.com/dotnet/arcade/blob/master/Documentation/Policy/TestingMSBuildGuidance.md#how-to-validate-a-private-build)):
+
+1. Run a build of your Arcade branch on the [arcade-official-ci](https://dnceng.visualstudio.com/internal/_build?definitionId=6) Azure DevOps Pipeline
+2. [Promote your build](../Darc.md#add-build-to-channel) to the "General Testing" Maestro channel. 
+3. Create a branch of [arcade-validation](https://github.com/dotnet/arcade-validation)
+4. Using darc, run `update-dependencies` ([update-dependencies documentation](../Darc.md#updating-dependencies-in-your-local-repository)) on your Arcade Validation branch to use the build of Arcade you just created in the previous steps. 
+5. Push your branch up to Azure DevOps Arcade Validation repository and run a build of your branch on the [dotnet-arcade-validation-for-promotion](https://dev.azure.com/dnceng/internal/_build?definitionId=838&_a=summary) to verify your changes. 
+6. It's not necessary to merge your Arcade Validation branch into the repo's main branch, so feel free to delete it when you're done validating your changes.
+
 ### '.NET Tools - Validation' channel
 
-Before, all Arcade's builds were "tagged" with the ".NET Tools - Latest" channel and since all the 
-repos get Arcade dependencies from this channel, any introduced bug would break consuming repos.
-
-Now, Arcade's builds go to the ".NET Tools - Validation" channel.
+Arcade's official builds go to the ".NET Tools - Validation" channel.
 
 ### [Arcade-Validation Repository](https://github.com/dotnet/arcade-validation)
 
@@ -40,12 +46,7 @@ This repository contains the scenarios where we validate the last produced versi
 2. Arcade validation [official build](https://dnceng.visualstudio.com/internal/_build?definitionId=282) 
 is triggered. This will validate the version which was just “pushed” by Arcade
 3. The following process updates are only valid for the current development branch of Arcade and will not affect release or servicing branches. 
-    1. During the Arcade validation process, we will use the latest build in the bellwether repositories (e.g. `dotnet/runtime`, `dotnet/aspnetcore`, and `dotnet/installer`) to validate Arcade against. If the latest build in the repository is failing, we will not validate against that repository. 
-    2. If any of the builds of these repositories fails, the Engineering Services team will investigate the source of the failure.
-    3. If the source of the failure is due to an infrastructure failure in Arcade (e.g. dependency flow, publishing, machine images, et cetera), the team will correct the issue and publish a new version of Arcade to validate. 
-    4. If the source of the failure is due to a toolset failure that was flowed to Arcade (e.g. Roslyn, Nuget, MSBuild, et cetera), the team will inform the repository owner of the potential breaking change. 
-    5. When the team determines that the version of Arcade can be promoted (because all the builds were successful or any breaking changes are unrelated to infrastructure), we will promote the validated version of Arcade to ".NET Eng - Latest". Any repositories subscribed to that should receive the updated version as normal. 
-    6. Missy Messa will primarily handle the promotion of Arcade (Matt Mitchell will be the back-up promoter).
+    1. During the Arcade Validation pipeline, we will verify if the latest build of the main branches of the bellwether repos (e.g. `dotnet/runtime`, `dotnet/aspnetcore`, and `dotnet/installer`) are currently failing. If any are, we will not promote Arcade per the policy above. 
 
 #### Validation Scenarios
 
@@ -53,8 +54,7 @@ The following scenarios are a part of [Arcade Validation](https://github.com/dot
 
 **Build**
 
-The code in the repo is built using the pushed in version of Arcade SDK and core packages. During this 
-phase, packaging, signing and publishing are validated automatically.
+The code in the repo is built using the pushed in version of Arcade SDK and core packages. During this phase, packaging, signing and publishing are validated automatically.
 
 **[Signing](https://github.com/dotnet/arcade-validation/tree/master/eng/validation/templates/signing)**
 
@@ -71,8 +71,6 @@ Details on how sending jobs to Helix works [here](https://github.com/dotnet/arca
 
 **Publishing to BAR**
 
-When the Build portion of the validation build completes we publish the produced package to BAR. This 
-package won't be consumed by any repo but we want to make sure changes in the SDK did not affect it.
+When the Build portion of the validation build completes we publish the produced package to BAR. This package won't be consumed by any repo but we want to make sure changes in the SDK did not affect it.
 
-While this is good enough to validate basic scenarios we still have to make sure we validate changes 
-in tier one repos. This will be done post preview 2 as specified in [this](https://github.com/dotnet/arcade/issues/111) epic.
+While this is good enough to validate basic scenarios we still have to make sure we validate changes in tier one repos. This will be done post preview 2 as specified in [this](https://github.com/dotnet/arcade/issues/111) epic.

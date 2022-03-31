@@ -1,4 +1,4 @@
-<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
@@ -17,59 +17,59 @@
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\A.1.0.0-beta-12345-01.nupkg">
-      <LogicalName>A.1.0.0-beta-12345-01.nupkg</LogicalName>
+    <EmbeddedResource Include="Resources\TestPackageA.1.0.0-beta-12345-01.nupkg">
+      <LogicalName>TestPackageA.1.0.0-beta-12345-01.nupkg</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\B.1.0.0-beta-12345-01.nupkg">
-      <LogicalName>B.1.0.0-beta-12345-01.nupkg</LogicalName>
+    <EmbeddedResource Include="Resources\TestPackageB.1.0.0-beta-12345-01.nupkg">
+      <LogicalName>TestPackageB.1.0.0-beta-12345-01.nupkg</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\C.1.0.0-beta-12345-01.nupkg">
-      <LogicalName>C.1.0.0-beta-12345-01.nupkg</LogicalName>
+    <EmbeddedResource Include="Resources\TestPackageC.1.0.0-beta-12345-01.nupkg">
+      <LogicalName>TestPackageC.1.0.0-beta-12345-01.nupkg</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\D.1.0.0-beta-12345-01.nupkg">
-      <LogicalName>D.1.0.0-beta-12345-01.nupkg</LogicalName>
+    <EmbeddedResource Include="Resources\TestPackageD.1.0.0-beta-12345-01.nupkg">
+      <LogicalName>TestPackageD.1.0.0-beta-12345-01.nupkg</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\E.1.0.0-beta.12345.1.nupkg">
-      <LogicalName>E.1.0.0-beta.12345.1.nupkg</LogicalName>
+    <EmbeddedResource Include="Resources\TestPackageE.1.0.0-beta.12345.1.nupkg">
+      <LogicalName>TestPackageE.1.0.0-beta.12345.1.nupkg</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\F.1.0.0-beta.12345.1.nupkg">
-      <LogicalName>F.1.0.0-beta.12345.1.nupkg</LogicalName>
+    <EmbeddedResource Include="Resources\TestPackageF.1.0.0-beta.12345.1.nupkg">
+      <LogicalName>TestPackageF.1.0.0-beta.12345.1.nupkg</LogicalName>
     </EmbeddedResource>    
-    <EmbeddedResource Include="Resources\A.1.0.0-beta-final.nupkg">
-      <LogicalName>A.1.0.0-beta-final.nupkg</LogicalName>
+    <EmbeddedResource Include="Resources\TestPackageA.1.0.0-beta-final.nupkg">
+      <LogicalName>TestPackageA.1.0.0-beta-final.nupkg</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\B.1.0.0-beta-final.nupkg">
-      <LogicalName>B.1.0.0-beta-final.nupkg</LogicalName>
+    <EmbeddedResource Include="Resources\TestPackageB.1.0.0-beta-final.nupkg">
+      <LogicalName>TestPackageB.1.0.0-beta-final.nupkg</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\C.1.0.0-beta-final.nupkg">
-      <LogicalName>C.1.0.0-beta-final.nupkg</LogicalName>
+    <EmbeddedResource Include="Resources\TestPackageC.1.0.0-beta-final.nupkg">
+      <LogicalName>TestPackageC.1.0.0-beta-final.nupkg</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\D.1.0.0-beta-final.nupkg">
-      <LogicalName>D.1.0.0-beta-final.nupkg</LogicalName>
+    <EmbeddedResource Include="Resources\TestPackageD.1.0.0-beta-final.nupkg">
+      <LogicalName>TestPackageD.1.0.0-beta-final.nupkg</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\E.1.0.0-beta.final.nupkg">
-      <LogicalName>E.1.0.0-beta.final.nupkg</LogicalName>
+    <EmbeddedResource Include="Resources\TestPackageE.1.0.0-beta.final.nupkg">
+      <LogicalName>TestPackageE.1.0.0-beta.final.nupkg</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\F.1.0.0-beta.final.nupkg">
-      <LogicalName>F.1.0.0-beta.final.nupkg</LogicalName>
+    <EmbeddedResource Include="Resources\TestPackageF.1.0.0-beta.final.nupkg">
+      <LogicalName>TestPackageF.1.0.0-beta.final.nupkg</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\A.1.0.0.nupkg">
-      <LogicalName>A.1.0.0.nupkg</LogicalName>
+    <EmbeddedResource Include="Resources\TestPackageA.1.0.0.nupkg">
+      <LogicalName>TestPackageA.1.0.0.nupkg</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\B.1.0.0.nupkg">
-      <LogicalName>B.1.0.0.nupkg</LogicalName>
+    <EmbeddedResource Include="Resources\TestPackageB.1.0.0.nupkg">
+      <LogicalName>TestPackageB.1.0.0.nupkg</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\C.1.0.0.nupkg">
-      <LogicalName>C.1.0.0.nupkg</LogicalName>
+    <EmbeddedResource Include="Resources\TestPackageC.1.0.0.nupkg">
+      <LogicalName>TestPackageC.1.0.0.nupkg</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\D.1.0.0.nupkg">
-      <LogicalName>D.1.0.0.nupkg</LogicalName>
+    <EmbeddedResource Include="Resources\TestPackageD.1.0.0.nupkg">
+      <LogicalName>TestPackageD.1.0.0.nupkg</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\E.1.0.0.nupkg">
-      <LogicalName>E.1.0.0.nupkg</LogicalName>
+    <EmbeddedResource Include="Resources\TestPackageE.1.0.0.nupkg">
+      <LogicalName>TestPackageE.1.0.0.nupkg</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\F.1.0.0.nupkg">
-      <LogicalName>F.1.0.0.nupkg</LogicalName>
+    <EmbeddedResource Include="Resources\TestPackageF.1.0.0.nupkg">
+      <LogicalName>TestPackageF.1.0.0.nupkg</LogicalName>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Signed.1.2.3.nupkg">
       <LogicalName>Signed.1.2.3.nupkg</LogicalName>

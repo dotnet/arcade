@@ -95,7 +95,7 @@ All of the steps are easily revert-able, so it is not a problem to go back to `m
 3. [Update the build mirroring in `subscriptions.json`](#3-update-the-build-mirroring-in-subscriptionsjson)
 4. [Create the `main` branch in the internal mirrored AzDO repository](#4-create-the-main-branch-in-the-internal-mirrored-azdo-repository)
 5. [Change the default branch to `main` for your GitHub repository](#5-change-the-default-branch-to-main-for-your-github-repository)
-6. [Search your repository for any references to the `main` branch specific to your repo](#6-search-your-repository-for-any-references-to-the-main-branch-specific-to-your-repo)
+6. [Search your repository for any references to the `master` branch specific to your repo](#6-search-your-repository-for-any-references-to-the-master-branch-specific-to-your-repo)
 7. [Use a `darc` script to migrate channels and subscriptions](#7-use-a-darc-script-to-migrate-channels-and-subscriptions)
 8. [Change the default branch for AzDO builds for pipelines](#8-change-the-default-branch-for-azdo-pipelines)
 9. [Switch the default branch of the AzDO repository to `main`](#9-switch-the-default-branch-of-the-azdo-repository-to-main)
@@ -124,7 +124,7 @@ Generate json data file describing Maestro migration, review it and disable all 
 ## 2. Add `main` triggers to YAML pipelines
 
 **Please read**
-Before you get on with this step, you should know, that once you change the default branch in your GitHub repository ([step 5](#5-change-the-default-branch-to-main-for-your-github-repository), all open PRs targeting `master` will be retargeted and all PR builds will be triggered again.
+Before you get on with this step, you should know, that once you change the default branch in your GitHub repository ([step 5](#5-change-the-default-branch-to-main-for-your-github-repository)), all open PRs targeting `master` will be retargeted and all PR builds will be triggered again.
 This can cause a large strain on the engineering systems, so please consider the amount of opened pull requests in your repository.
 Please consider - based on the heaviness of your PR build and the number of PRs - whether you want to disable the PR builds for the time being or not.
 
@@ -190,8 +190,8 @@ This will effectively disable code mirroring.
 ![AzDO mirrored](images/azdo-mirrored.png)
 
 1. Go to the [internally mirrored repository](https://dev.azure.com/dnceng/internal/_git) - repository should have the same name, only replace `/` with `-`, e.g. `dotnet/xharness` becomes `dotnet-xharness`
-2. Wait for the code-mirror build to propagate the change from the previous step to the internal mirrored repository
-    > Note: Go to the [code-mirror build](https://dev.azure.com/dnceng/internal/_build?definitionId=16&_a=summary) and filter the pipeline runs by Tags (select your repo).
+2. Wait for the code-mirror build to propagate changes made in **step 2** to the internal mirrored repository (meaning: internal repo has main triggers)
+    > Note: You can go to the [code-mirror build](https://dev.azure.com/dnceng/internal/_build?definitionId=16&_a=summary) and filter the pipeline runs by Tags (select your repo).
 3. Go to `Branches`
 4. Create a new branch called `main` off of the `master` branch
 5. Mirror policies from branch `master` to branch `main` using [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview)
@@ -226,7 +226,7 @@ Example for `dotnet/xharness`:
 
 ![Changing the default branch in GitHub](images/github-branch-rename-tool.png)
 
-## 6. Search your repository for any references to the `main` branch specific to your repo
+## 6. Search your repository for any references to the `master` branch specific to your repo
 
 Search your repository for any references to the `master` branch specific to your repo, replace them to `main` and push them to `main`.
 

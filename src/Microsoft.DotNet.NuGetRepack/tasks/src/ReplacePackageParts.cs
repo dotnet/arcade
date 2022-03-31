@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
 using System.Collections.Generic;
@@ -22,7 +23,7 @@ namespace Microsoft.DotNet.Tools
     {
         static ReplacePackageParts() => AssemblyResolution.Initialize();
 #else
-    public sealed class ReplacePackageParts : Task
+    public sealed class ReplacePackageParts : Microsoft.Build.Utilities.Task
     {
 #endif
         /// <summary>

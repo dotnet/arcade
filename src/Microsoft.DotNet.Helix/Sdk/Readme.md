@@ -1,9 +1,9 @@
 # Microsoft.DotNet.Helix.Sdk
 
-This Package provides Helix Job sending functionality from an MSBuild project file.
+This Package provides Helix Job-sending functionality from an MSBuild project file.
 
 ## Examples
-Each of the following examples require dotnet-cli >= 2.1.300 and need the following files in a directory at or above the example project's directory.
+Each of the following examples require dotnet-cli >= 3.1.x, and need the following files in a directory at or above the example project's directory.
 #### NuGet.config
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -25,6 +25,8 @@ Each of the following examples require dotnet-cli >= 2.1.300 and need the follow
 
 Versions of the package can be found by browsing the feed at https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet-eng
 
+### Developing Helix SDK
+
 The examples can all be run with `dotnet msbuild` and will require an environment variable or MSBuildProperty `HelixAccessToken` set if a queue with a value of IsInternalOnly=true (usually any not ending in '.Open') is selected for `HelixTargetQueues`. You will also need to set the following environment variables before building:
 
 ```
@@ -35,6 +37,49 @@ BUILD_REASON
 ```
 
 Also, make sure your helix project doesn't have `EnableAzurePipelinesReporter` set, or sets it to false, or building locally will fail with an error that looks like `SYSTEM_ACCESSTOKEN is not set`.
+
+Furthermore, when you need to make changes to Helix SDK, there's a way to run it locally with ease to test your changes in a tighter dev loop than having to have to wait for the full PR build.
+
+The repository contains E2E tests that utilize the Helix SDK to send test Helix jobs.
+In order to run them, one has to publish the SDK locally so that the unit tests can grab the re-built DLLs.
+
+#### Detailed steps:
+1. Make your changes
+2. Build the product
+    ```sh
+    # Linux/MacOS
+    ./build.sh
+    # Windows
+    .\Build.cmd
+    ```
+3. Publish Arcade SDK and Helix SDK
+    ```sh
+    dotnet publish -f netcoreapp3.1 src/Microsoft.DotNet.Arcade.Sdk/Microsoft.DotNet.Arcade.Sdk.csproj
+    dotnet publish -f netcoreapp3.1 src/Microsoft.DotNet.Helix/Sdk/Microsoft.DotNet.Helix.Sdk.csproj
+    ```
+4. Pick one of the test `.proj` files, set some env variables and build it  
+    Bash
+    ```sh
+    export BUILD_REASON=pr
+    export BUILD_REPOSITORY_NAME=arcade
+    export BUILD_SOURCEBRANCH=master
+    export SYSTEM_TEAMPROJECT=dnceng
+    export SYSTEM_ACCESSTOKEN=''
+
+    eng/common/build.sh -test -projects tests/XHarness.Apple.DeviceTests.proj /v:n /bl:Arcade.binlog
+    ```
+
+    PowerShell
+    ```ps1
+    $Env:BUILD_REASON = "pr"
+    $Env:BUILD_REPOSITORY_NAME = "arcade"
+    $Env:BUILD_SOURCEBRANCH = "master"
+    $Env:SYSTEM_TEAMPROJECT = "dnceng"
+    $Env:SYSTEM_ACCESSTOKEN = ""
+
+    .\eng\common\build.ps1 -configuration Debug -restore -test -projects tests\XHarness.Apple.DeviceTests.proj /p:RestoreUsingNugetTargets=false /bl:Arcade.binlog
+    ```
+5. An MSBuild log file called `Arcade.binlog` will be produced which you can inspect using the [MSBuild Structured Log Viewer](https://msbuildlog.com/). There you can see which props were set with which values, in what order the targets were executed under which conditions and so on.
 
 ### Docker Support
 Helix machines now have (where available on the machine) the ability to run work items directly inside Docker containers.  This allows work items to use operating systems that only work for Docker scenarios, as well as custom configurations of already-supported operating systems.  
@@ -104,13 +149,21 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
     <!-- The helix queue this job should run on. -->
     <HelixTargetQueue>Windows.10.Amd64.Open</HelixTargetQueue>
 
+    <!-- Whether to fail the build if any Helix queues supplied don't exist.
+         If set to false, sending to non-existent Helix Queues will only print a warning. Defaults to true. 
+         Only set this to false if losing this coverage when the target queue is deprecated is acceptable.
+         For any job waiting on runs, this will still cause failure if all queues do not exist as there must be
+         one or more runs started for waiting to not log errors.  Only set if you need it.
+    -->
+    <FailOnMissingTargetQueue>false</FailOnMissingTargetQueue>
+
     <!--
       The set of helix queues to send jobs to.
       This property is multiplexed over just like <TargetFrameworks> for C# projects.
       The project is built once per entry in this list with <HelixTargetQueue> set to the current list element value.
       Note that all payloads sent need to be able to run on all variations included.
     -->
-    <HelixTargetQueues>Ubuntu.1804.Amd64.Open;Ubuntu.1604.Amd64.Open;(Alpine.39.Amd64)Ubuntu.1604.Amd64.Open@mcr.microsoft.com/dotnet-buildtools/prereqs:alpine-3.9-helix-bfcd90a-20200123191053</HelixTargetQueues>
+    <HelixTargetQueues>Ubuntu.1804.Amd64.Open;Ubuntu.1604.Amd64.Open;(Alpine.39.Amd64)Ubuntu.1804.Amd64.Open@mcr.microsoft.com/dotnet-buildtools/prereqs:alpine-3.9-helix-bfcd90a-20200123191053</HelixTargetQueues>
 
     <!-- 'true' to download dotnet cli and add it to the path for every workitem. Default 'false' -->
     <IncludeDotNetCli>true</IncludeDotNetCli>
@@ -127,19 +180,6 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
     <FailOnTestFailure>true</FailOnTestFailure>
 
     <!--
-      'true' to enable the xunit reporter. Default 'false'
-      The xunit reporter will report test results from a test results
-      xml file found in the work item working directory.
-      The following file names are accepted:
-        testResults.xml
-        test-results.xml
-        test_results.xml
-    -->
-    <EnableXUnitReporter>false</EnableXUnitReporter>
-    <!-- Instruct the sdk to wait for test result ingestion by MC, and fail if there are any failed work items or tests. -->
-    <FailOnMissionControlTestFailure>false</FailOnMissionControlTestFailure>
-
-    <!--
       Commands that are run before each workitem's command
       semicolon-separated; use ';;' to escape a single semicolon
     -->
@@ -152,6 +192,28 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
     <HelixPostCommands>$(HelixPostCommands);echo 'One Pepperoni Pizza'</HelixPostCommands>
   </PropertyGroup>
 
+  <!--
+    Optional additional dotnet runtimes or SDKs for correlation payloads
+    PackageType (defaults to runtime)
+    Channel (defaults to Current)
+  -->
+  <ItemGroup>
+    <!-- Includes the 6.0.0-preview.4.21178.6 dotnet runtime package version from the Current channel, using the DotNetCliRuntime -->
+    <AdditionalDotNetPackage Include="6.0.0-preview.4.21178.6">
+      <!-- 'sdk', 'runtime' or 'aspnetcore-runtime' -->
+      <PackageType>runtime</PackageType>
+      <!-- 'Current' or 'LTS', determines what channel 'latest' version pulls from -->
+      <Channel>Current</Channel>
+    </AdditionalDotNetPackage>
+    <!-- Includes the 6.0.0-preview.4.21175.1 version, using the default runtime packageType, DotNetCliRuntime, and Current channel  -->
+    <AdditionalDotNetPackage Include="6.0.0-preview.4.21175.1" />
+
+    <!-- if the above package was not available from a public feed, you can specify a private feed like this -->
+    <AdditionalDotNetPackageFeed Include="https://someprivatefeed.blob.azure.com/internal">
+      <SasToken>$(SasTokenValueForSomePrivateFeed)</SasToken>
+    </AdditionalDotNetPackageFeed>
+  </ItemGroup>
+  
   <!--
     XUnit Runner
       Enabling this will create one work item for each xunit test project specified.
@@ -166,11 +228,10 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
     <!-- TargetFramework of the xunit.runner.dll to use when running the tests -->
     <XUnitRuntimeTargetFramework>netcoreapp2.0</XUnitRuntimeTargetFramework>
     <!-- PackageVersion of xunit.runner.console to use -->
-    <XUnitRunnerVersion>2.4.1</XUnitRunnerVersion>
+    <XUnitRunnerVersion>2.4.2-pre.9</XUnitRunnerVersion>
     <!-- Additional command line arguments to pass to xunit.console.exe -->
     <XUnitArguments></XUnitArguments>
   </PropertyGroup>
-
 
   <ItemGroup>
     <!--
@@ -214,42 +275,44 @@ There are times when a work item may detect that the machine being executed on i
 #### Request Infrastructure Retry
 An "infrastructure retry" is pre-existing functionality Helix Clients use in cases such as when communication to the telemetry service or Azure Service Bus fails; this allows the work item be run again in entirety, generally (but not guaranteedly) on a different machine, with the hope that the next machine will be in a better state.  Note that requesting this prevents any job using it from finishing, and as a FIFO queue the work items that get retried go to the back of the queue, so calling this API can significantly increase job execution time based off how many jobs are being handled by a given queue.      
 
-##### Sample usage:
+##### Sample usage in Python:
 
-###### In Python:
 
-```
-from helix.workitemutil import request_infra_retry
+```py
+from helix.public import request_infra_retry
 
 request_infra_retry('Optional reason string')
-
 ```
-
-###### Outside python:
-
-Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Optional reason string')"`
-
-Windows: `%HELIX_PYTHONPATH% -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Optional reason string')"`
 
 #### Request post-workitem reboot
 Helix work items explicitly rebooting the helix client machine themself will never "finish", since this will in most cases preclude sending the final event telemetry for these work items.  However, a work item may know that the machine is in a bad state where a reboot would be desirable (for instance, if the Helix agent is acting as a build machine and some leaked build process is preventing workspace cleanup). After calling this API, the work item runs to completion as normal, then after sending the usual telemetry and uploading results will perform a reboot before taking the next work item. 
 
-##### Sample usage:
+##### Sample usage in Python:
 
-###### In Python:
-
-```
-from helix.workitemutil import request_reboot
+```py
+from helix.public import request_reboot
 
 request_reboot('Optional reason string')
-
 ```
 
-###### Outside python:
+#### Send workitem metric / metrics
+Send custom metric(s) for the current workitem. The API accepts metric name(s), value(s) (float) and metric dimensions. These metrics are stored in the Kusto Metrics table.
 
-Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.workitemutil import request_reboot; request_reboot('Optional reason string')"`
+##### Sample usage in Python:
 
-Windows: `%HELIX_PYTHONPATH% -c "from helix.workitemutil import request_reboot; request_reboot('Optional reason string')"`
+```py
+from helix.public import send_metric, send_metrics
+
+send_metric('MetricName', <value>, {'Dimension1': 'value1', 'Dimension2' : 'value2', ...})
+
+send_metrics({'Metric1': <value1>, 'Metric2': <value2>,...}, {'Dimension1': 'value1', 'Dimension2' : 'value2', ...})
+```
+
+#### Sample usage from outside python:
+
+Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.public import <function>; <function>(...)"`
+
+Windows: `%HELIX_PYTHONPATH% -c "from helix.public import <function>; <function>(...)"`
 
 ### Common Helix client environment variables
 
@@ -269,3 +332,80 @@ You may assume that all the following variables are set on any given Helix clien
 - **HELIX_CURRENT_LOG** : Path to the current work item's console log (note: will typically have file handles open)
 
 
+## Test Retry
+Helix supports retrying and reporting on partial successes for tests based on repository specific configuration.
+When the configuration matches a test failure, the test assembly is reexecuted, and the results compared.
+Tests that failed partially (only in some executions) will be reported to Azure DevOps as "Passed on Rerun",
+which will include each iteration as a sub-result of the failing test.
+If a test passes or fails in all attempts, only a single report is made representing the first execution.
+
+To opt-in and configure test retries when using helix, create file in the reporitory at "eng/test-configuration.json"
+
+### test-configuration.json format
+```json
+{
+  "version" : 1,
+  "defaultOnFailure": "fail",
+  "localRerunCount" : 2,
+  "retryOnRules": [
+    {"testName": {"regex": "^System\\.Networking\\..*"}},
+    {"testAssembly": {"wildcard": "System.SomethingElse.*" }},
+    {"failureMessage": "network disconnected" },
+  ],
+  "failOnRules": [
+  ],
+  "quarantineRules": [
+  ]
+}
+```
+
+## Description
+### version
+Schema version for compatibility (curent version is 1)
+
+### defaultOnFailure
+- default: "fail"
+
+One of "fail" or "rerun"
+<dl>
+<dt>fail</dt><dd>If a test fails, the default behavior if no rules match is to fail the test immediate</dd>
+<dt>rerun</dt><dd>If a test fails, the default behavior is no rules match is to rerun the test according to the localRerun/remoteRerun counts</dd>
+</dl>
+
+## localRerunCount
+- default: 1
+
+This number indicates the number of times a test that needs to be "rerun" should be rerun on the local computer immediately.
+This is the fastest rerun option, because the payloads don't need to be redownloaded, so it always the first attempted re-execution method.
+
+In the example, with a value of "2", that means that the test will need to fail 3 times before being marks as failed (1 intial failure, and 2 rerun failures).
+
+## rules
+The three "rules" entries are lists of rules that will be used to match test to determine desired behavior. In the case of multiple rule matches:
+- if a quarantine rule matches, the test is quarantined
+- if the default behavior is "rerun" and a "fail" rule matches, the test is failed
+- if the default behavior is "fail" and a "rerun" rule matches, the test is rerun
+- default behavior is used
+
+A "rule" consists of a property, and then a rule object
+
+### Properties
+<dl>
+<dt>testName</dt><dd>The name of the test, including namespace, class name, and method name</dd>
+<dt>testAssembly</dt><dd>The name of the assembly containing the test</dd>
+<dt>failureMessage</dt><dd>The failure message logged by the test</dd>
+<dt>callstack (multiline)</dt><dd>The callstack reported by the test execution</dd>
+</dl>
+
+### Rule object
+For all rules, if a property is designated "multiline", then the rule must match a line, otherwise the entire value is used.
+
+All comparisons are case-insensitive
+#### Raw string (e.g. "rule string")
+True if the property value exactly matches the string
+#### {"contains": "value"}
+True if the property contains (case-insensitive) the value string
+#### {"wildcard": "value with * wildcard"}
+The same as a raw string, but "*" can match any number of characters, and "?" can match one character
+#### {"regex": "value with .* regex"}
+true if the property matches the regular expression

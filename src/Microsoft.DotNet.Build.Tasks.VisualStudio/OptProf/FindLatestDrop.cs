@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
     /// <summary>
     /// Find the latest drop in a JSON list of VS drops.
     /// </summary>
-    public sealed class FindLatestDrop : Task
+    public sealed class FindLatestDrop : Microsoft.Build.Utilities.Task
     {
         /// <summary>
         /// Full path to JSON file containing list of drops.
@@ -61,10 +61,13 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
 
             foreach (JObject item in drops)
             {
-                if (!DateTime.TryParse((string)item["CreatedDateUtc"], out var timestamp))
+                var timestampToken = item["CreatedDateUtc"];
+                if (timestampToken?.Type != JTokenType.Date)
                 {
                     throw new ApplicationException($"Invalid timestamp: '{item["CreatedDateUtc"]}'");
                 }
+
+                var timestamp = timestampToken.Value<DateTime>();
 
                 if (string.IsNullOrEmpty((string)item["Name"]))
                 {

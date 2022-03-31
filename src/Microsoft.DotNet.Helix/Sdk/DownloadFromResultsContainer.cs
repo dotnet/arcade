@@ -1,12 +1,11 @@
-using Microsoft.Build.Framework;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Auth;
-using Microsoft.WindowsAzure.Storage.Blob;
 using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure;
+using Azure.Storage.Blobs;
+using Microsoft.Build.Framework;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -95,13 +94,17 @@ namespace Microsoft.DotNet.Helix.Sdk
                         string destinationFile = Path.Combine(destinationDir.FullName, file);
                         Log.LogMessage(MessageImportance.Normal, $"Downloading {file} => {destinationFile}...");
 
-                        var uri = new Uri($"{ResultsContainer}{workItemName}/{file}");
-                        CloudBlob blob = string.IsNullOrEmpty(ResultsContainerReadSAS) ? new CloudBlob(uri) : new CloudBlob(uri, new StorageCredentials(ResultsContainerReadSAS));
-                        await blob.DownloadToFileAsync(destinationFile, FileMode.Create);
+                        // Currently the blob storage includes the retry iteration, however there is no good way
+                        // to get the "best" iteration number to download the files from. For now, use always iteration
+                        // 1 until helix provides an API to get result files from the "good" iteration run.
+                        // https://github.com/dotnet/core-eng/issues/13983
+                        var uri = new Uri($"{ResultsContainer}{workItemName}/1/{file}");
+                        BlobClient blob = string.IsNullOrEmpty(ResultsContainerReadSAS) ? new BlobClient(uri) : new BlobClient(uri, new AzureSasCredential(ResultsContainerReadSAS));
+                        await blob.DownloadToAsync(destinationFile);
                     }
-                    catch (StorageException e)
+                    catch (RequestFailedException rfe)
                     {
-                        Log.LogWarning($"Failed to download {workItemName}/{file} blob from results container: {e.Message}");
+                        Log.LogWarning($"Failed to download {workItemName}/1/{file} blob from results container: {rfe.Message}");
                     }
                 }
             };

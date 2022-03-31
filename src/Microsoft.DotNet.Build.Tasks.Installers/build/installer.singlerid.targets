@@ -125,6 +125,10 @@
       <InstallerPackageRelease>$([System.String]::Copy('$(InstallerPackageRelease)').Replace('-', '_'))</InstallerPackageRelease>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(GeneratePkg)' == 'true'">
+      <InstallerPackageVersion Condition="'$(IncludePreReleaseLabelInPackageVersion)' == 'true'">$(VersionPrefix)-$(VersionSuffix)</InstallerPackageVersion>
+    </PropertyGroup>
+
     <PropertyGroup>
       <_InstallerIntermediatesDir>$(IntermediateOutputPath)$(InstallerName)/$(InstallerPackageVersion)/</_InstallerIntermediatesDir>
 
@@ -140,6 +144,26 @@
       <_InstallerFile Condition="'$(_InstallerFile)' == ''">$(PackageOutputPath)$(InstallerFileNameWithoutExtension)$(InstallerExtension)</_InstallerFile>
       <ExeBundleInstallerFile>$(PackageOutputPath)$(InstallerFileNameWithoutExtension).exe</ExeBundleInstallerFile>
       <ExeBundleInstallerEngineFile>$(PackageOutputPath)$(InstallerFileNameWithoutExtension)-engine.exe</ExeBundleInstallerEngineFile>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(GenerateRpm)' == 'true'">
+      <CreateRPMForCblMariner>true</CreateRPMForCblMariner>
+      <!-- PackageTargetOS is a distro-specific version suffix, used for deps packages, including the one for CBL Mariner.
+           We do not want to create additional CBL Mariner named RPMs of those packages. -->
+      <CreateRPMForCblMariner Condition="'$(PackageTargetOS)' != ''">false</CreateRPMForCblMariner>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(CreateRPMForCblMariner)' == 'true'">
+      <!-- CBL-Mariner 1.0 -->
+      <_CblMarinerVersionSuffix>cm.1</_CblMarinerVersionSuffix>
+      <_InstallerBuildPartCblMariner>$(Version)-$(_CblMarinerVersionSuffix)-$(InstallerTargetArchitecture)</_InstallerBuildPartCblMariner>
+      <_InstallerFileNameWithoutExtensionCblMariner>$(InstallerName)-$(_InstallerBuildPartCblMariner)$(CrossArchContentsBuildPart)</_InstallerFileNameWithoutExtensionCblMariner>
+      <_InstallerFileCblMariner>$(PackageOutputPath)$(_InstallerFileNameWithoutExtensionCblMariner)$(InstallerExtension)</_InstallerFileCblMariner>
+      <!-- CBL-Mariner 2.0 -->
+      <_CblMariner2VersionSuffix>cm.2</_CblMariner2VersionSuffix>
+      <_InstallerBuildPartCblMariner2>$(Version)-$(_CblMariner2VersionSuffix)-$(InstallerTargetArchitecture)</_InstallerBuildPartCblMariner2>
+      <_InstallerFileNameWithoutExtensionCblMariner2>$(InstallerName)-$(_InstallerBuildPartCblMariner2)$(CrossArchContentsBuildPart)</_InstallerFileNameWithoutExtensionCblMariner2>
+      <_InstallerFileCblMariner2>$(PackageOutputPath)$(_InstallerFileNameWithoutExtensionCblMariner2)$(InstallerExtension)</_InstallerFileCblMariner2>
     </PropertyGroup>
   </Target>
   
@@ -303,6 +327,26 @@
           UseHardlinksIfPossible="False" />
 
     <Message Text="$(MSBuildProjectName) -> $(_InstallerFile)" Importance="high" />
+
+    <!-- CBL-Mariner 1.0 -->
+    <Copy Condition="'$(CreateRPMForCblMariner)' == 'true'"
+          SourceFiles="@(GeneratedRpmFiles)"
+          DestinationFiles="$(_InstallerFileCblMariner)"
+          OverwriteReadOnlyFiles="True"
+          SkipUnchangedFiles="False"
+          UseHardlinksIfPossible="False" />
+
+    <Message Text="$(MSBuildProjectName) -> $(_InstallerFileCblMariner)" Importance="high" />
+
+    <!-- CBL-Mariner 2.0 -->
+    <Copy Condition="'$(CreateRPMForCblMariner)' == 'true'"
+          SourceFiles="@(GeneratedRpmFiles)"
+          DestinationFiles="$(_InstallerFileCblMariner2)"
+          OverwriteReadOnlyFiles="True"
+          SkipUnchangedFiles="False"
+          UseHardlinksIfPossible="False" />
+
+    <Message Text="$(MSBuildProjectName) -> $(_InstallerFileCblMariner2)" Importance="high" />
   </Target>
 
   <Target Name="GetRpmInstallerJsonProperties"
@@ -341,11 +385,11 @@
           DependsOnTargets="_GetTargetOSArchInfo"
           Returns="@(_CrossArchMsi)">
     <MSBuild
-      Condition="'@(CrossArchMsiToBuild)' != ''"
+      Condition="'@(CrossArchMsiToBuild)' != '' and '$(InstallerTargetArchitecture)' != '$(TargetArchitecture)'"
       Projects="$(MSBuildProjectFullPath)"
       Targets="CreateWixInstaller"
       Properties="
-        InstallerTargetArchitecture=%(CrossArchMsiToBuild.Identity);
+        InstallerTargetArchitecture=$(InstallerTargetArchitecture);
         CrossArchContentsArch=$(TargetArchitecture);
         GenerateMSI=true">
       <Output TaskParameter="TargetOutputs" ItemName="_CrossArchMsi" />
@@ -365,20 +409,23 @@
     </PropertyGroup>
     
     <MakeDir Directories="$(_OutputPathRoot)" />
+    <!-- avoid error where the root folder for the _InstallerFile does not exist: https://github.com/dotnet/arcade/issues/8603. -->
+    <MakeDir Directories="$(ArtifactsShippingPackagesDir)" Condition="!Exists($(ArtifactsShippingPackagesDir)) AND '$(IsShipping)' == 'true'" />
+    <MakeDir Directories="$(ArtifactsNonShippingPackagesDir)" Condition="!Exists($(ArtifactsNonShippingPackagesDir)) AND '$(IsShipping)' == 'false'" />
 
     <MSBuild Projects="$(MSBuildProjectFullPath)"
              Targets="PublishToDisk"
              Properties="OutputPath=$(_OutputPathRoot)"
              RemoveProperties="@(_GlobalPropertiesToRemoveForPublish)"  />
     <PropertyGroup>
-      <_MacOSVersionComponent Condition="'$(IncludeVersionInMacOSComponentName)' == 'true'">.$(ProductVersion)</_MacOSVersionComponent>
-      <_MacOSComponentName Condition="'$(_MacOSComponentName)' == ''">com.microsoft.dotnet.$(MacOSComponentNamePackType)$(_MacOSVersionComponent).component.osx.x64</_MacOSComponentName>
+      <_MacOSVersionComponent Condition="'$(IncludeVersionInMacOSComponentName)' == 'true'">.$(InstallerPackageVersion)</_MacOSVersionComponent>
+      <_MacOSComponentName Condition="'$(_MacOSComponentName)' == ''">com.microsoft.dotnet.$(MacOSComponentNamePackType)$(_MacOSVersionComponent).component.osx.$(InstallerTargetArchitecture)</_MacOSComponentName>
       <_MacOSSharedInstallDir>/usr/local/share/dotnet</_MacOSSharedInstallDir>
 
       <_pkgArgs></_pkgArgs>
       <_pkgArgs>$(_pkgArgs) --root $(_OutputPathRoot)</_pkgArgs>
       <_pkgArgs>$(_pkgArgs) --identifier $(_MacOSComponentName)</_pkgArgs>
-      <_pkgArgs>$(_pkgArgs) --version $(ProductVersion)</_pkgArgs>
+      <_pkgArgs>$(_pkgArgs) --version $(InstallerPackageVersion)</_pkgArgs>
       <_pkgArgs>$(_pkgArgs) --install-location $(_MacOSSharedInstallDir)</_pkgArgs>
       <_pkgArgs Condition="'$(MacOSScriptsDirectory)' != ''">$(_pkgArgs) --scripts $(MacOSScriptsDirectory)</_pkgArgs>
       <_pkgArgs>$(_pkgArgs) $(_InstallerFile)</_pkgArgs>
@@ -431,6 +478,10 @@
   <Target Name="_GetCommonJsonProperties">
     <PropertyGroup>
       <FullLicenseText>$([System.IO.File]::ReadAllText('$(LicenseFile)').Replace('%0A', '\n').Replace('"', '\"'))</FullLicenseText>
+      <LinuxInstallRoot Condition="'$(LinuxInstallRoot)' == ''">/usr/share/dotnet</LinuxInstallRoot>
+      <LinuxPackageArchitecture>$(InstallerTargetArchitecture)</LinuxPackageArchitecture>
+      <!-- Linux packaging requires 'amd64' for x64 packages -->
+      <LinuxPackageArchitecture Condition="'$(LinuxPackageArchitecture)' == 'x64'">amd64</LinuxPackageArchitecture>
     </PropertyGroup>
 
     <ItemGroup>
@@ -441,7 +492,7 @@
 
       <_LinuxPackageControlProperty Include="priority" String="standard" />
       <_LinuxPackageControlProperty Include="section" String="libs" />
-      <_LinuxPackageControlProperty Include="architecture" String="amd64" />
+      <_LinuxPackageControlProperty Include="architecture" String="$(LinuxPackageArchitecture)" />
 
       <_LinuxPackageLicenseProperty Include="type" String="MIT and ASL 2.0 and BSD" />
       <_LinuxPackageLicenseProperty Include="full_text" String="$(FullLicenseText)" />
@@ -467,7 +518,7 @@
       <_CommonLinuxPackageProperty Include="short_description" String="$(_ShortDescription)" />
       <_CommonLinuxPackageProperty Include="maintainer_name" String=".NET Team" />
       <_CommonLinuxPackageProperty Include="maintainer_email" String="dotnetpackages@dotnetfoundation.org" />
-      <_CommonLinuxPackageProperty Include="install_root" String="/usr/share/dotnet" />
+      <_CommonLinuxPackageProperty Include="install_root" String="$(LinuxInstallRoot)" />
       <_CommonLinuxPackageProperty Include="long_description" String=".NET is a development platform that you can use to build command-line applications, microservices and modern websites. It is open source, cross-platform and is supported by Microsoft. We hope you enjoy using it! If you do, please consider joining the active community of developers that are contributing to the project on GitHub (https://github.com/dotnet/core). We happily accept issues and PRs." />
       <_CommonLinuxPackageProperty Include="homepage" String="https://github.com/dotnet/core" />
       <_CommonLinuxPackageProperty Include="copyright" String="2017 Microsoft" />

@@ -10,11 +10,11 @@ namespace Microsoft.DotNet
         internal static global::System.Resources.ResourceManager ResourceManager => s_resourceManager ?? (s_resourceManager = new global::System.Resources.ResourceManager(typeof(TestStrings)));
 
         /// <summary>The format '{noun}' has {adjective} parameters.</summary>
-        internal const string StringWithNamedArgs = nameof(StringWithNamedArgs);
+        internal const string @StringWithNamedArgs = "StringWithNamedArgs";
         /// <summary>The really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really long format st ...</summary>
-        internal const string StringWithNumberedArgs = nameof(StringWithNumberedArgs);
+        internal const string @StringWithNumberedArgs = "StringWithNumberedArgs";
         /// <summary>No arguments for this one.</summary>
-        internal const string StringWithoutArgs = nameof(StringWithoutArgs);
+        internal const string @StringWithoutArgs = "StringWithoutArgs";
 
     }
 }

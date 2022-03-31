@@ -31,7 +31,35 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         // https://pkgs.dev.azure.com/dnceng/public/_packaging/public-feed-name/nuget/v3/index.json
         // or https://pkgs.dev.azure.com/dnceng/_packaging/internal-feed-name/nuget/v3/index.json
         public static readonly string AzDoNuGetFeedPattern =
-            @"https://pkgs.dev.azure.com/(?<account>[a-zA-Z0-9]+)/(?<visibility>[a-zA-Z0-9-]+/)?_packaging/(?<feed>.+)/nuget/v3/index.json";
+            @"https://pkgs.dev.azure.com/(?<account>[a-zA-Z0-9-]+)/(?<visibility>[a-zA-Z0-9-]+/)?_packaging/(?<feed>.+)/nuget/v3/index.json";
+
+        public static readonly TargetFeedContentType[] InstallersAndSymbols = {
+            TargetFeedContentType.OSX,
+            TargetFeedContentType.Deb,
+            TargetFeedContentType.Rpm,
+            TargetFeedContentType.Node,
+            TargetFeedContentType.BinaryLayout,
+            TargetFeedContentType.Installer,
+            TargetFeedContentType.Maven,
+            TargetFeedContentType.VSIX,
+            TargetFeedContentType.Badge,
+            TargetFeedContentType.Symbols,
+            TargetFeedContentType.Other
+        };
+
+        public static readonly TargetFeedContentType[] InstallersAndChecksums = {
+            TargetFeedContentType.OSX,
+            TargetFeedContentType.Deb,
+            TargetFeedContentType.Rpm,
+            TargetFeedContentType.Node,
+            TargetFeedContentType.BinaryLayout,
+            TargetFeedContentType.Installer,
+            TargetFeedContentType.Maven,
+            TargetFeedContentType.VSIX,
+            TargetFeedContentType.Badge,
+            TargetFeedContentType.Checksum,
+            TargetFeedContentType.Other
+        };
 
         public enum BuildQuality
         {
@@ -51,61 +79,56 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             GA
         }
 
-        #region Target Channel Configs
-        private const string FeedForChecksums = "https://dotnetclichecksums.blob.core.windows.net/dotnet/index.json";
-        private const string FeedForInstallers = "https://dotnetcli.blob.core.windows.net/dotnet/index.json";
+        #region Target Channel Config Feeds
+        public const string FeedForChecksums = "https://dotnetclichecksums.blob.core.windows.net/dotnet/index.json";
+        public const string FeedForInstallers = "https://dotnetcli.blob.core.windows.net/dotnet/index.json";
 
         private const string FeedInternalForChecksums = "https://dotnetclichecksumsmsrc.blob.core.windows.net/dotnet/index.json";
-        private const string FeedInternalForInstallers = "https://dotnetclimsrc.blob.core.windows.net/dotnet/index.json";
+        public const string FeedInternalForInstallers = "https://dotnetclimsrc.blob.core.windows.net/dotnet/index.json";
+
+        public const string FeedStagingForInstallers = "https://dotnetbuilds.blob.core.windows.net/public";
+        public const string FeedStagingForChecksums = "https://dotnetbuilds.blob.core.windows.net/public-checksums";
+
+        public const string FeedStagingInternalForInstallers = "https://dotnetbuilds.blob.core.windows.net/internal";
+        public const string FeedStagingInternalForChecksums = "https://dotnetbuilds.blob.core.windows.net/internal-checksums";
 
         private const string FeedGeneralTesting = "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json";
-        private const string FeedGeneralTestingSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing-symbols/nuget/v3/index.json";
 
         private const string FeedDotNetExperimental = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-experimental/nuget/v3/index.json";
-        private const string FeedDotNetExperimentalSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-experimental-symbols/nuget/v3/index.json";
 
-        private const string FeedDotNetEngShipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json";
-        private const string FeedDotNetEngTransport = FeedDotNetEngShipping;
-        private const string FeedDotNetEngSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng-symbols/nuget/v3/index.json";
+        private const string FeedDotNetEng = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json";
 
-        private const string FeedDotNetToolsShipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json";
-        private const string FeedDotNetToolsTransport = FeedDotNetToolsShipping;
-        private const string FeedDotNetToolsSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools-symbols/nuget/v3/index.json";
+        private const string FeedDotNetTools = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json";
 
-        private const string FeedDotNetToolsInternalShipping = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal/nuget/v3/index.json";
-        private const string FeedDotNetToolsInternalTransport = FeedDotNetToolsInternalShipping;
-        private const string FeedDotNetToolsInternalSymbols = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal-symbols/nuget/v3/index.json";
+        private const string FeedDotNetToolsInternal = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal/nuget/v3/index.json";
 
         private const string FeedDotNet31Shipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1/nuget/v3/index.json";
         private const string FeedDotNet31Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-transport/nuget/v3/index.json";
-        private const string FeedDotNet31Symbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-symbols/nuget/v3/index.json";
 
         private const string FeedDotNet31InternalShipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-internal/nuget/v3/index.json";
         private const string FeedDotNet31InternalTransport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-internal-transport/nuget/v3/index.json";
-        private const string FeedDotNet31InternalSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-internal-symbols/nuget/v3/index.json";
 
-        private const string FeedDotNet31BlazorShipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-blazor/nuget/v3/index.json";
-        private const string FeedDotNet31BlazorTransport = FeedDotNet31BlazorShipping;
-        private const string FeedDotNet31BlazorSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-blazor-symbols/nuget/v3/index.json";
+        private const string FeedDotNet31Blazor = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-blazor/nuget/v3/index.json";
 
-        private const string FeedDotNet5Shipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json";
-        private const string FeedDotNet5Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5-transport/nuget/v3/index.json";
-        private const string FeedDotNet5Symbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5-symbols/nuget/v3/index.json";
+        public const string FeedDotNet5Shipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json";
+        public const string FeedDotNet5Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5-transport/nuget/v3/index.json";
 
         private const string FeedDotNet6Shipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json";
         private const string FeedDotNet6Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6-transport/nuget/v3/index.json";
-        private const string FeedDotNet6Symbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6-symbols/nuget/v3/index.json";
+
+        private const string FeedDotNet7Shipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json";
+        private const string FeedDotNet7Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7-transport/nuget/v3/index.json";
+
+        private const string FeedDotNet6InternalShipping = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal/nuget/v3/index.json";
+        private const string FeedDotNet6InternalTransport = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal-transport/nuget/v3/index.json";
 
         private const string FeedDotNet5InternalShipping = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal/nuget/v3/index.json";
         private const string FeedDotNet5InternalTransport = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal-transport/nuget/v3/index.json";
-        private const string FeedDotNet5InternalSymbols = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal-symbols/nuget/v3/index.json";
 
         private const string FeedDotNetLibrariesShipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json";
         private const string FeedDotNetLibrariesTransport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries-transport/nuget/v3/index.json";
-        private const string FeedDotNetLibrariesSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries-symbols/nuget/v3/index.json";
 
         private const string FeedGeneralTestingInternal = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/general-testing-internal/nuget/v3/index.json";
-        private const string FeedGeneralTestingInternalSymbols = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/general-testing-internal/nuget/v3/index.json";
 
         private const SymbolTargetType InternalSymbolTargets = SymbolTargetType.SymWeb;
         private const SymbolTargetType PublicAndInternalSymbolTargets = SymbolTargetType.Msdl | SymbolTargetType.SymWeb;
@@ -114,18 +137,208 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             "MergedManifest.xml"
         };
 
+        private static TargetFeedSpecification[] DotNet31Feeds =
+        {
+            (TargetFeedContentType.Package, FeedDotNet31Shipping, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNet31Transport, AssetSelection.NonShippingOnly),
+            (InstallersAndSymbols, FeedForInstallers),
+            (TargetFeedContentType.Checksum, FeedForChecksums),
+        };
+
+        private static TargetFeedSpecification[] DotNet31InternalFeeds =
+        {
+            (TargetFeedContentType.Package, FeedDotNet31InternalShipping, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNet31InternalTransport, AssetSelection.NonShippingOnly),
+            (InstallersAndSymbols, FeedInternalForInstallers),
+            (TargetFeedContentType.Checksum, FeedInternalForChecksums),
+        };
+
+        private static TargetFeedSpecification[] DotNet31BlazorFeeds =
+        {
+            (TargetFeedContentType.Package, FeedDotNet31Blazor, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNet31Blazor, AssetSelection.NonShippingOnly),
+            (InstallersAndSymbols, FeedInternalForInstallers),
+            (TargetFeedContentType.Checksum, FeedInternalForChecksums),
+        };
+
+        private static TargetFeedSpecification[] DotNet5Feeds =
+        {
+            (TargetFeedContentType.Package, FeedDotNet5Shipping, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNet5Transport, AssetSelection.NonShippingOnly),
+            (InstallersAndSymbols, FeedForInstallers),
+            (TargetFeedContentType.Checksum, FeedForChecksums),
+        };
+
+        private static TargetFeedSpecification[] DotNet5InternalFeeds =
+        {
+            (TargetFeedContentType.Package, FeedDotNet5InternalShipping, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNet5InternalTransport, AssetSelection.NonShippingOnly),
+            (InstallersAndSymbols, FeedInternalForInstallers),
+            (TargetFeedContentType.Checksum, FeedInternalForChecksums),
+        };
+
+        private static TargetFeedSpecification[] DotNet6Feeds =
+        {
+            (TargetFeedContentType.Package, FeedDotNet6Shipping, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNet6Transport, AssetSelection.NonShippingOnly),
+            (InstallersAndSymbols, FeedStagingForInstallers),
+            (TargetFeedContentType.Checksum, FeedStagingForChecksums),
+        };
+
+        private static TargetFeedSpecification[] DotNet6InternalFeeds =
+        {
+            (TargetFeedContentType.Package, FeedDotNet6InternalShipping, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNet6InternalTransport, AssetSelection.NonShippingOnly),
+            (InstallersAndSymbols, FeedStagingInternalForInstallers),
+            (TargetFeedContentType.Checksum, FeedStagingInternalForChecksums),
+        };
+
+        private static TargetFeedSpecification[] DotNet7Feeds =
+        {
+            (TargetFeedContentType.Package, FeedDotNet7Shipping, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNet7Transport, AssetSelection.NonShippingOnly),
+            (InstallersAndSymbols, FeedStagingForInstallers),
+            (TargetFeedContentType.Checksum, FeedStagingForChecksums),
+        };
+
+        private static TargetFeedSpecification[] DotNetEngFeeds =
+        {
+            (TargetFeedContentType.Package, FeedDotNetEng, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNetEng, AssetSelection.NonShippingOnly),
+            (InstallersAndSymbols, FeedStagingForInstallers),
+            (TargetFeedContentType.Checksum, FeedStagingForChecksums),
+        };
+
+        private static TargetFeedSpecification[] DotNetToolsFeeds =
+        {
+            (TargetFeedContentType.Package, FeedDotNetTools, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNetTools, AssetSelection.NonShippingOnly),
+            (InstallersAndSymbols, FeedStagingForInstallers),
+            (TargetFeedContentType.Checksum, FeedStagingForChecksums),
+        };
+
+        private static TargetFeedSpecification[] DotNetToolsInternalFeeds =
+        {
+            (TargetFeedContentType.Package, FeedDotNetToolsInternal, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNetToolsInternal, AssetSelection.NonShippingOnly),
+            (InstallersAndSymbols, FeedStagingInternalForInstallers),
+            (TargetFeedContentType.Checksum, FeedStagingInternalForChecksums),
+        };
+
+        private static TargetFeedSpecification[] DotNetExperimentalFeeds =
+        {
+            (TargetFeedContentType.Package, FeedDotNetExperimental, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNetExperimental, AssetSelection.NonShippingOnly),
+            (InstallersAndSymbols, FeedStagingForInstallers),
+            (TargetFeedContentType.Checksum, FeedStagingForChecksums),
+        };
+
+        private static TargetFeedSpecification[] GeneralTestingFeeds =
+        {
+            (TargetFeedContentType.Package, FeedGeneralTesting, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedGeneralTesting, AssetSelection.NonShippingOnly),
+            (InstallersAndSymbols, FeedStagingForInstallers),
+            (TargetFeedContentType.Checksum, FeedStagingForChecksums),
+        };
+
+        private static TargetFeedSpecification[] GeneralTestingInternalFeeds =
+        {
+            (TargetFeedContentType.Package, FeedGeneralTestingInternal, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedGeneralTestingInternal, AssetSelection.NonShippingOnly),
+            (InstallersAndSymbols, FeedStagingInternalForInstallers),
+            (TargetFeedContentType.Checksum, FeedStagingInternalForChecksums),
+        };
+        #endregion
+
+        #region Target Channel Configs
         public static readonly List<TargetChannelConfig> ChannelInfos = new List<TargetChannelConfig>() {
             // ".NET 5 Dev",
             new TargetChannelConfig(
                 131,
                 false,
                 PublishingInfraVersion.All,
-                "5.0",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                new List<string>() { "5.0" },
+                DotNet5Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 7",
+            new TargetChannelConfig(
+                2236,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 7 SDK 7.0.1xx",
+            new TargetChannelConfig(
+                2237,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0.1xx", "7.0" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 7 preview 1",
+            new TargetChannelConfig(
+                2543,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0-preview1" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 7 SDK 7.0.1xx Preview 1",
+            new TargetChannelConfig(
+                2546,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0.1xx-preview1", "7.0-preview1" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 7 preview 2",
+            new TargetChannelConfig(
+                2544,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0-preview2" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 7 SDK 7.0.1xx Preview 2",
+            new TargetChannelConfig(
+                2547,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0.1xx-preview2", "7.0-preview2" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 7 preview 3",
+            new TargetChannelConfig(
+                2545,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0-preview3" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 7 SDK 7.0.1xx Preview 3",
+            new TargetChannelConfig(
+                2548,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0.1xx-preview3", "7.0-preview3" },
+                DotNet7Feeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -134,12 +347,28 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1296,
                 false,
                 PublishingInfraVersion.All,
-                "6.0",
-                FeedDotNet6Shipping,
-                FeedDotNet6Transport,
-                FeedDotNet6Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                new List<string>() { "6.0" },
+                DotNet6Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 6 Internal",
+            new TargetChannelConfig(
+                2097,
+                true,
+                PublishingInfraVersion.All,
+                new List<string>() { "internal/6.0" },
+                DotNet6InternalFeeds,
+                InternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+                
+            // ".NET 6 MAUI",
+            new TargetChannelConfig(
+                2453,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "maui/6.0" },
+                DotNet6Feeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -148,55 +377,59 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1792,
                 false,
                 PublishingInfraVersion.All,
-                "6.0.1xx",
-                FeedDotNet6Shipping,
-                FeedDotNet6Transport,
-                FeedDotNet6Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                new List<string>() { "6.0.1xx" },
+                DotNet6Feeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
-            // ".NET 6 Preview 1",
+            // ".NET 6 SDK 6.0.1xx Internal",
             new TargetChannelConfig(
-                1670,
+                2098,
+                true,
+                PublishingInfraVersion.All,
+                new List<string>() { "internal/6.0.1xx" },
+                DotNet6InternalFeeds,
+                InternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+            
+            // ".NET 6 SDK 6.0.2xx",
+            new TargetChannelConfig(
+                2434,
                 false,
                 PublishingInfraVersion.All,
-                "6.0-preview1",
-                FeedDotNet6Shipping,
-                FeedDotNet6Transport,
-                FeedDotNet6Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                new List<string>() { "6.0.2xx" },
+                DotNet6Feeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
-            // ".NET 6 Preview 2" ,
+            // ".NET 6 SDK 6.0.2xx Internal",
             new TargetChannelConfig(
-                1752,
+                2435,
+                true,
+                PublishingInfraVersion.All,
+                new List<string>() { "internal/6.0.2xx" },
+                DotNet6InternalFeeds,
+                InternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 6 SDK 6.0.3xx",
+            new TargetChannelConfig(
+                2551,
                 false,
                 PublishingInfraVersion.All,
-                "6.0-preview2",
-                FeedDotNet6Shipping,
-                FeedDotNet6Transport,
-                FeedDotNet6Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                new List<string>() { "6.0.3xx", "6.0" },
+                DotNet6Feeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
-            // ".NET 6.0.1xx SDK Preview 2",
+            // ".NET 6 SDK 6.0.3xx Internal",
             new TargetChannelConfig(
-                1753,
-                false,
+                2552,
+                true,
                 PublishingInfraVersion.All,
-                "6.0.1xx-preview2",
-                FeedDotNet6Shipping,
-                FeedDotNet6Transport,
-                FeedDotNet6Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
-                PublicAndInternalSymbolTargets,
+                new List<string>() { "internal/6.0.3xx", "internal/6.0" },
+                DotNet6InternalFeeds,
+                InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
             // ".NET 5" (public),
@@ -204,12 +437,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1299,
                 false,
                 PublishingInfraVersion.Next,
-                akaMSChannelName: "5.0",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>() { "5.0" },
+                DotNet5Feeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -218,12 +447,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1300,
                 true,
                 PublishingInfraVersion.Next,
-                akaMSChannelName: "internal/5.0",
-                FeedDotNet5InternalShipping,
-                FeedDotNet5InternalTransport,
-                FeedDotNet5InternalSymbols,
-                FeedInternalForChecksums,
-                FeedInternalForInstallers,
+                akaMSChannelNames: new List<string>() { "internal/5.0" },
+                DotNet5InternalFeeds,
                 InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -232,12 +457,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1297,
                 false,
                 PublishingInfraVersion.Next,
-                akaMSChannelName: "5.0.1xx",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>() { "5.0.1xx" },
+                DotNet5Feeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -246,13 +467,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1298,
                 true,
                 PublishingInfraVersion.Next,
-                akaMSChannelName: "internal/5.0.1xx",
-                FeedDotNet5InternalShipping,
-                FeedDotNet5InternalTransport,
-                FeedDotNet5InternalSymbols,
-                FeedInternalForChecksums,
-                FeedInternalForInstallers,
-                PublicAndInternalSymbolTargets,
+                akaMSChannelNames: new List<string>() { "internal/5.0.1xx" },
+                DotNet5InternalFeeds,
+                InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
             // ".NET 5 SDK 5.0.2xx" (public),
@@ -260,12 +477,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1518,
                 false,
                 PublishingInfraVersion.Next,
-                akaMSChannelName: "5.0.2xx",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>() { "5.0.2xx" },
+                DotNet5Feeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -274,12 +487,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1519,
                 true,
                 PublishingInfraVersion.Next,
-                akaMSChannelName: "internal/5.0.2xx",
-                FeedDotNet5InternalShipping,
-                FeedDotNet5InternalTransport,
-                FeedDotNet5InternalSymbols,
-                FeedInternalForChecksums,
-                FeedInternalForInstallers,
+                akaMSChannelNames: new List<string>() { "internal/5.0.2xx" },
+                DotNet5InternalFeeds,
                 InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -288,12 +497,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1754,
                 false,
                 PublishingInfraVersion.Next,
-                akaMSChannelName: "5.0.3xx",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>() { "5.0.3xx" },
+                DotNet5Feeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -302,12 +507,28 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1755,
                 true,
                 PublishingInfraVersion.Next,
-                akaMSChannelName: "internal/5.0.3xx",
-                FeedDotNet5InternalShipping,
-                FeedDotNet5InternalTransport,
-                FeedDotNet5InternalSymbols,
-                FeedInternalForChecksums,
-                FeedInternalForInstallers,
+                akaMSChannelNames: new List<string>() { "internal/5.0.3xx" },
+                DotNet5InternalFeeds,
+                InternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 5 SDK 5.0.4xx" (public),
+            new TargetChannelConfig(
+                1985,
+                false,
+                PublishingInfraVersion.Next,
+                akaMSChannelNames: new List<string>() { "5.0.4xx", "5.0" },
+                DotNet5Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 5 SDK 5.0.4xx Internal" (internal),
+            new TargetChannelConfig(
+                1986,
+                true,
+                PublishingInfraVersion.Next,
+                akaMSChannelNames: new List<string>() { "internal/5.0.4xx" },
+                DotNet5InternalFeeds,
                 InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -316,12 +537,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 2,
                 false,
                 PublishingInfraVersion.All,
-                "eng",
-                FeedDotNetEngShipping,
-                FeedDotNetEngTransport,
-                FeedDotNetEngSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                new List<string>() { "eng" },
+                DotNetEngFeeds,
                 PublicAndInternalSymbolTargets,
                 flatten: false),
 
@@ -330,26 +547,28 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1495,
                 false,
                 PublishingInfraVersion.Next,
-                "eng/net5",
-                FeedDotNetEngShipping,
-                FeedDotNetEngTransport,
-                FeedDotNetEngSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                new List<string>() { "eng/net5" },
+                DotNetEngFeeds,
                 PublicAndInternalSymbolTargets,
                 flatten: false),
+
+            // ".NET 6 Eng",
+            new TargetChannelConfig(
+                2293,
+                false,
+                PublishingInfraVersion.Next,
+                new List<string>() { "eng/net6" },
+                DotNetEngFeeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
 
             // ".NET Eng - Validation",
             new TargetChannelConfig(
                 9,
                 false,
                 PublishingInfraVersion.All,
-                "eng/validation",
-                FeedDotNetEngShipping,
-                FeedDotNetEngTransport,
-                FeedDotNetEngSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                new List<string>() { "eng/validation" },
+                DotNetEngFeeds,
                 PublicAndInternalSymbolTargets,
                 flatten: false),
 
@@ -358,12 +577,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1496,
                 false,
                 PublishingInfraVersion.Next,
-                "eng/net5validation",
-                FeedDotNetEngShipping,
-                FeedDotNetEngTransport,
-                FeedDotNetEngSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                new List<string>() { "eng/net5validation" },
+                DotNetEngFeeds,
+                PublicAndInternalSymbolTargets,
+                flatten: false),
+
+            // ".NET 6 Eng - Validation",
+            new TargetChannelConfig(
+                2294,
+                false,
+                PublishingInfraVersion.Next,
+                new List<string>() { "eng/net6validation" },
+                DotNetEngFeeds,
                 PublicAndInternalSymbolTargets,
                 flatten: false),
 
@@ -372,12 +597,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 529,
                 false,
                 PublishingInfraVersion.All,
-                "generaltesting",
-                FeedGeneralTesting,
-                FeedGeneralTesting,
-                FeedGeneralTestingSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                new List<string>() { "generaltesting" },
+                GeneralTestingFeeds,
                 PublicAndInternalSymbolTargets),
 
             // "General Testing Internal",
@@ -385,12 +606,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1647,
                 true,
                 PublishingInfraVersion.All,
-                "generaltestinginternal",
-                FeedGeneralTestingInternal,
-                FeedGeneralTestingInternal,
-                FeedGeneralTestingInternalSymbols,
-                FeedInternalForChecksums,
-                FeedInternalForInstallers,
+                new List<string>() { "generaltestinginternal" },
+                GeneralTestingInternalFeeds,
                 InternalSymbolTargets),
 
             // ".NET Core Tooling Dev",
@@ -398,12 +615,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 548,
                 false,
                 PublishingInfraVersion.All,
-                akaMSChannelName: string.Empty,
-                FeedDotNetToolsShipping,
-                FeedDotNetToolsTransport,
-                FeedDotNetToolsSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>(),
+                DotNetToolsFeeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
@@ -413,12 +626,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 549,
                 false,
                 PublishingInfraVersion.All,
-                akaMSChannelName: string.Empty,
-                FeedDotNetToolsShipping,
-                FeedDotNetToolsTransport,
-                FeedDotNetToolsSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>(),
+                DotNetToolsFeeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
@@ -426,15 +635,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             // ".NET Internal Tooling",
             new TargetChannelConfig(
                 551,
-                false,
+                true,
                 PublishingInfraVersion.All,
-                akaMSChannelName: string.Empty,
-                FeedDotNetToolsInternalShipping,
-                FeedDotNetToolsInternalTransport,
-                FeedDotNetToolsInternalSymbols,
-                FeedInternalForChecksums,
-                FeedInternalForInstallers,
-                PublicAndInternalSymbolTargets,
+                akaMSChannelNames: new List<string>(),
+                DotNetToolsInternalFeeds,
+                InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
 
@@ -443,12 +648,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 562,
                 false,
                 PublishingInfraVersion.All,
-                akaMSChannelName: string.Empty,
-                FeedDotNetExperimental,
-                FeedDotNetExperimental,
-                FeedDotNetExperimentalSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>(),
+                DotNetExperimentalFeeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
@@ -458,12 +659,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 678,
                 false,
                 PublishingInfraVersion.All,
-                akaMSChannelName: string.Empty,
-                FeedDotNetEngShipping,
-                FeedDotNetEngTransport,
-                FeedDotNetEngSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>(),
+                DotNetEngFeeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
@@ -473,12 +670,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 679,
                 false,
                 PublishingInfraVersion.All,
-                akaMSChannelName: string.Empty,
-                FeedDotNetEngShipping,
-                FeedDotNetEngTransport,
-                FeedDotNetEngSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>(),
+                DotNetEngFeeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
@@ -488,12 +681,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 344,
                 false,
                 PublishingInfraVersion.All,
-                akaMSChannelName: string.Empty,
-                FeedDotNetEngShipping,
-                FeedDotNetEngTransport,
-                FeedDotNetEngSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>(),
+                DotNetEngFeeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
@@ -503,12 +692,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 390,
                 false,
                 PublishingInfraVersion.All,
-                akaMSChannelName: string.Empty,
-                FeedDotNetEngShipping,
-                FeedDotNetEngTransport,
-                FeedDotNetEngSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>(),
+                DotNetEngFeeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
@@ -518,12 +703,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 548,
                 false,
                 PublishingInfraVersion.All,
-                akaMSChannelName: string.Empty,
-                FeedDotNetToolsShipping,
-                FeedDotNetToolsTransport,
-                FeedDotNetToolsSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>(),
+                DotNetToolsFeeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
@@ -533,12 +714,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 549,
                 false,
                 PublishingInfraVersion.All,
-                akaMSChannelName: string.Empty,
-                FeedDotNetToolsShipping,
-                FeedDotNetToolsTransport,
-                FeedDotNetToolsSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>(),
+                DotNetToolsFeeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
@@ -548,12 +725,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 128,
                 false,
                 PublishingInfraVersion.All,
-                akaMSChannelName: "3.1",
-                FeedDotNet31Shipping,
-                FeedDotNet31Transport,
-                FeedDotNet31Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>() { "3.1" },
+                DotNet31Feeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -562,12 +735,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 129,
                 false,
                 PublishingInfraVersion.All,
-                akaMSChannelName: "3.1",
-                FeedDotNet31Shipping,
-                FeedDotNet31Transport,
-                FeedDotNet31Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>() { "3.1" },
+                DotNet31Feeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -576,12 +745,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 558,
                 false,
                 PublishingInfraVersion.All,
-                akaMSChannelName: "3.1.2xx",
-                FeedDotNet31Shipping,
-                FeedDotNet31Transport,
-                FeedDotNet31Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>() { "3.1.2xx" },
+                DotNet31Feeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -590,12 +755,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 560,
                 false,
                 PublishingInfraVersion.All,
-                akaMSChannelName: "3.1.1xx",
-                FeedDotNet31Shipping,
-                FeedDotNet31Transport,
-                FeedDotNet31Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>() { "3.1.1xx" },
+                DotNet31Feeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -604,12 +765,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 759,
                 false,
                 PublishingInfraVersion.All,
-                akaMSChannelName: "3.1.3xx",
-                FeedDotNet31Shipping,
-                FeedDotNet31Transport,
-                FeedDotNet31Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>() { "3.1.3xx" },
+                DotNet31Feeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -618,12 +775,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 921,
                 false,
                 PublishingInfraVersion.All,
-                akaMSChannelName: "3.1.4xx",
-                FeedDotNet31Shipping,
-                FeedDotNet31Transport,
-                FeedDotNet31Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>() { "3.1.4xx" },
+                DotNet31Feeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -632,26 +785,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 760,
                 true,
                 PublishingInfraVersion.All,
-                akaMSChannelName: "internal/3.1.3xx",
-                FeedDotNet31InternalShipping,
-                FeedDotNet31InternalTransport,
-                FeedDotNet31InternalSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>() { "internal/3.1.3xx" },
+                DotNet31InternalFeeds,
                 InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
             // ".NET Core 3.1 Internal Servicing",
             new TargetChannelConfig(
                 550,
-                false,
+                true,
                 PublishingInfraVersion.All,
-                akaMSChannelName: "internal/3.1",
-                FeedDotNet31InternalShipping,
-                FeedDotNet31InternalTransport,
-                FeedDotNet31InternalSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>() { "internal/3.1" },
+                DotNet31InternalFeeds,
                 InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -660,12 +805,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 557,
                 true,
                 PublishingInfraVersion.All,
-                akaMSChannelName: "internal/3.1.2xx",
-                FeedDotNet31InternalShipping,
-                FeedDotNet31InternalTransport,
-                FeedDotNet31InternalSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>() { "internal/3.1.2xx" },
+                DotNet31InternalFeeds,
                 InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -674,12 +815,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 559,
                 true,
                 PublishingInfraVersion.All,
-                akaMSChannelName: "internal/3.1.1xx",
-                FeedDotNet31InternalShipping,
-                FeedDotNet31InternalTransport,
-                FeedDotNet31InternalSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>() { "internal/3.1.1xx" },
+                DotNet31InternalFeeds,
                 InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -688,12 +825,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 922,
                 true,
                 PublishingInfraVersion.All,
-                akaMSChannelName: "internal/3.1.4xx",
-                FeedDotNet31InternalShipping,
-                FeedDotNet31InternalTransport,
-                FeedDotNet31InternalSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>() { "internal/3.1.4xx" },
+                DotNet31InternalFeeds,
                 InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -702,12 +835,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 531,
                 false,
                 PublishingInfraVersion.All,
-                akaMSChannelName: string.Empty,
-                FeedDotNet31BlazorShipping,
-                FeedDotNet31BlazorTransport,
-                FeedDotNet31BlazorSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>(),
+                DotNet31BlazorFeeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
@@ -716,12 +845,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1010,
                 false,
                 PublishingInfraVersion.All,
-                string.Empty,
-                FeedDotNetToolsShipping,
-                FeedDotNetToolsTransport,
-                FeedDotNetToolsSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                new List<string>(),
+                DotNetToolsFeeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
@@ -731,12 +856,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1011,
                 false,
                 PublishingInfraVersion.All,
-                string.Empty,
-                FeedDotNetToolsShipping,
-                FeedDotNetToolsTransport,
-                FeedDotNetToolsSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                new List<string>(),
+                DotNetToolsFeeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
@@ -746,12 +867,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1154,
                 false,
                 PublishingInfraVersion.All,
-                string.Empty,
-                FeedDotNetToolsShipping,
-                FeedDotNetToolsTransport,
-                FeedDotNetToolsSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                new List<string>(),
+                DotNetToolsFeeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
@@ -761,12 +878,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1473,
                 false,
                 PublishingInfraVersion.All,
-                string.Empty,
-                FeedDotNetToolsShipping,
-                FeedDotNetToolsTransport,
-                FeedDotNetToolsSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                new List<string>(),
+                DotNetToolsFeeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
@@ -776,27 +889,52 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1692,
                 false,
                 PublishingInfraVersion.All,
-                string.Empty,
-                FeedDotNetToolsShipping,
-                FeedDotNetToolsTransport,
-                FeedDotNetToolsSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                new List<string>(),
+                DotNetToolsFeeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
 
-            // "VS Master",
+            // "VS 16.11",
             new TargetChannelConfig(
-                1012,
+                1926,
                 false,
                 PublishingInfraVersion.All,
-                string.Empty,
-                FeedDotNetToolsShipping,
-                FeedDotNetToolsTransport,
-                FeedDotNetToolsSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                new List<string>(),
+                DotNetToolsFeeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
+
+            // "VS 17.0",
+            new TargetChannelConfig(
+                1853,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>(),
+                DotNetToolsFeeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
+
+            // "VS 17.1",
+            new TargetChannelConfig(
+                2346,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>(),
+                DotNetToolsFeeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
+
+            // "VS 17.2",
+            new TargetChannelConfig(
+                2542,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>(),
+                DotNetToolsFeeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
@@ -806,12 +944,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1648,
                 false,
                 PublishingInfraVersion.All,
-                akaMSChannelName: string.Empty,
-                FeedDotNetLibrariesShipping,
-                FeedDotNetLibrariesTransport,
-                FeedDotNetLibrariesSymbols,
-                FeedForChecksums,
-                FeedForInstallers,
+                akaMSChannelNames: new List<string>(),
+                new TargetFeedSpecification[]
+                {
+                    (TargetFeedContentType.Package, FeedDotNetLibrariesShipping, AssetSelection.ShippingOnly),
+                    (TargetFeedContentType.Package, FeedDotNetLibrariesTransport, AssetSelection.NonShippingOnly),
+                    (InstallersAndSymbols, FeedForInstallers),
+                    (TargetFeedContentType.Checksum, FeedForChecksums),
+                },
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),

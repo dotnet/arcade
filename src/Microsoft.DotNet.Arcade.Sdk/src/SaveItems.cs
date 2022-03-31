@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     /// This task writes msbuild Items with their metadata to a props file.
     /// Useful to statically save a status of an Item that will be used later on by just importing the generated file.
     /// </summary>
-    public class SaveItems : Task
+    public class SaveItems : Microsoft.Build.Utilities.Task
     {
         [Required]
         public string ItemName { get; set; }

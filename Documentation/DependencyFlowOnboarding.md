@@ -10,7 +10,9 @@ There's a set of steps that need to be completed so the versions of assets your 
 
 ## Prerequisites
 
-These pre-requisites are not hard requirements, but enabling dependency flow will be much simpler if you are using these processes:
+- If your repository is not part of the Dotnet GitHub organization, contact an administrator for the organization to install the dotnet-maestro app in your repository: https://github.com/apps/dotnet-maestro
+
+The following pre-requisites are not hard requirements, but enabling dependency flow will be much simpler if you are using these processes:
 
 - Internal builds produced out of https://dev.azure.com/dnceng/internal
 
@@ -102,8 +104,9 @@ Target Branch: <target branch for arcade updates, e.g. master>
 Update Frequency: everyDay
 Batchable: False
 Merge Policies:
-- Name: standard
+- Name: Standard
   Properties: {}
+Pull Request Failure Notification Tags: ''
 ```
 
 3. Save and close
@@ -199,17 +202,4 @@ To validate that created subscriptions and channels work as expected you'd need 
                      ]
    - Last Build: N/A
    ```
-2. Use the ID and query for the subscription history:
-   ```
-   darc get-subscription-history --id <id>
-   ```
-   For example:
-   ```
-   darc get-subscription-history --id d2d2e80d-8b31-4744-1959-08d6175791f6
-   10/19/2018 9:15:17 AM: (Success) - Checking merge policy for pr 'https://api.github.com/repos/dotnet/arcade-minimalci-sample/pulls/129'
-   10/19/2018 9:10:15 AM: (Success) - Checking merge policy for pr 'https://api.github.com/repos/dotnet/arcade-minimalci-sample/pulls/129'
-   10/19/2018 9:05:14 AM: (Success) - Checking merge policy for pr 'https://api.github.com/repos/dotnet/arcade-minimalci-sample/pulls/129'
-   10/19/2018 9:05:04 AM: (Success) - Updating subscription for build '146'
-   ```
-   Any failed actions will be marked as such, along with a retry command.
-3. Let @alexperovich, @jcagme or @mmitche know about the errors in the unsuccessful entry
+2. Incase of any errors contact @dnceng. 

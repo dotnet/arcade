@@ -4,7 +4,9 @@
   <?define Dotnet_ProductVersion = "$(var.BuildVersion)" ?>
   <?define Dotnet_BuildVersion = "$(var.BuildVersion)" ?>
 
+<?ifndef Manufacturer?>
   <?define Manufacturer     =   "Microsoft Corporation" ?>
+<?endif?>
   <?define ProductName      =   "$(var.ProductMoniker) ($(var.TargetArchitectureDescription))" ?>
   <?define ProductLanguage  =   "1033" ?>
   <?define ProductVersion   =   "$(var.Dotnet_ProductVersion)" ?>
@@ -23,7 +25,9 @@
     <?error Invalid Platform ($(var.Platform))?>
   <?endif?>
 
-  <?define DependencyKey   = "$(var.DependencyKeyName)_$(var.BuildVersion)_$(var.Platform)$(var.CrossArchContentsPlatformPart)"?>
+  <?ifndef DependencyKey?>
+    <?define DependencyKey = "$(var.DependencyKeyName)_$(var.BuildVersion)_$(var.Platform)$(var.CrossArchContentsPlatformPart)"?>
+  <?endif?>
   <?define DependencyKeyId = "$(var.DependencyKey)" ?>
 
 </Include>

@@ -7,16 +7,18 @@
 ###
 
 app=''
-output_directory=''
-targets=''
+target=''
 timeout=''
 launch_timeout=''
-xharness_cli_path=''
+command_timeout=20
 xcode_version=''
 app_arguments=''
 expected_exit_code=0
-command='test'
+includes_test_runner=false
+reset_simulator=false
 
+# Ignore shellcheck lint warning about unused variables (they can be used in the sourced script)
+# shellcheck disable=SC2034
 while [[ $# -gt 0 ]]; do
     opt="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
     case "$opt" in
@@ -24,24 +26,20 @@ while [[ $# -gt 0 ]]; do
         app="$2"
         shift
         ;;
-      --output-directory)
-        output_directory="$2"
-        shift
-        ;;
-      --targets)
-        targets="$2"
+      --target)
+        target="$2"
         shift
         ;;
       --timeout)
         timeout="$2"
         shift
         ;;
-      --launch-timeout)
-        launch_timeout="$2"
+      --command-timeout)
+        command_timeout="$2"
         shift
         ;;
-      --xharness-cli-path)
-        xharness_cli_path="$2"
+      --launch-timeout)
+        launch_timeout="$2"
         shift
         ;;
       --xcode-version)
@@ -56,13 +54,11 @@ while [[ $# -gt 0 ]]; do
         expected_exit_code="$2"
         shift
         ;;
-      --command)
-        command="$2"
-        shift
+      --includes-test-runner)
+        includes_test_runner=true
         ;;
-      *)
-        echo "Invalid argument: $1"
-        exit 1
+      --reset-simulator)
+        reset_simulator=true
         ;;
     esac
     shift
@@ -74,36 +70,11 @@ function die ()
     exit 1
 }
 
-if [ -z "$timeout" ]; then
-    die "Test timeout wasn't provided";
-fi
+function sign ()
+{
+    echo "Signing $1"
 
-if [ -z "$xharness_cli_path" ]; then
-    die "XHarness path wasn't provided";
-fi
-
-if [ -n "$app_arguments" ]; then
-    app_arguments="-- $app_arguments";
-fi
-
-if [ "$command" == "run" ]; then
-    app_arguments="--expected-exit-code=$expected_exit_code $app_arguments"
-elif [ -n "$launch_timeout" ]; then
-    # shellcheck disable=SC2089
-    app_arguments="--launch-timeout=$launch_timeout $app_arguments"
-fi
-
-if [ -z "$xcode_version" ]; then
-    xcode_path="$(dirname "$(dirname "$(xcode-select -p)")")"
-else
-    xcode_path="/Applications/Xcode${xcode_version/./}.app"
-fi
-
-# Signing
-if [ "$targets" == 'ios-device' ] || [ "$targets" == 'tvos-device' ]; then
-    echo "Real device target detected, application will be signed"
-
-    provisioning_profile="$app/embedded.mobileprovision"
+    provisioning_profile="$1/embedded.mobileprovision"
     if [ ! -f "$provisioning_profile" ]; then
         echo "No embedded provisioning profile found at $provisioning_profile! Failed to sign the app!"
         exit 21
@@ -134,60 +105,78 @@ if [ "$targets" == 'ios-device' ] || [ "$targets" == 'tvos-device' ]; then
     /usr/libexec/PlistBuddy -x -c 'Print :Entitlements' provision.plist > entitlements.plist
 
     # Sign the app
-    /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements entitlements.plist "$app"
-elif [[ "$targets" =~ "simulator" ]]; then
-    # Start the simulator if it is not running already
-    simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
-    open -a "$simulator_app"
+    /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements entitlements.plist "$1"
+}
+
+if [ -z "$app" ]; then
+    die "App bundle path wasn't provided";
 fi
 
-export XHARNESS_DISABLE_COLORED_OUTPUT=true
-export XHARNESS_LOG_WITH_TIMESTAMPS=true
+if [ -z "$target" ]; then
+    die "No target was provided";
+fi
 
-# We include $app_arguments non-escaped and not arrayed because it might contain several extra arguments
-# which come from outside and are appeneded behind "--" and forwarded to the iOS application from XHarness.
-# shellcheck disable=SC2086,SC2090
-dotnet exec "$xharness_cli_path" apple $command \
-    --app="$app"                                \
-    --output-directory="$output_directory"      \
-    --targets="$targets"                        \
-    --timeout="$timeout"                        \
-    --xcode="$xcode_path"                       \
-    -v                                          \
-    $app_arguments
+if [ -z "$xcode_version" ]; then
+    xcode_path="$(dirname "$(dirname "$(xcode-select -p)")")"
+else
+    xcode_path="/Applications/Xcode${xcode_version/./}.app"
+fi
 
+# First we need to revive env variables since they were erased by launchctl
+# This file already has the expressions in the `export name=value` format
+# shellcheck disable=SC1091
+. ./envvars
+
+output_directory=$HELIX_WORKITEM_UPLOAD_ROOT
+
+# Signing
+if [ "$target" == 'ios-device' ] || [ "$target" == 'tvos-device' ]; then
+    if [ -d "$app" ]; then
+        sign "$app"
+    else
+        echo 'Device target detected but app not found, skipping signing..'
+    fi
+elif [[ "$target" =~ "simulator" ]]; then
+    # Start the simulator if it is not running already
+    export SIMULATOR_APP="$xcode_path/Contents/Developer/Applications/Simulator.app"
+    open -a "$SIMULATOR_APP"
+fi
+
+# The xharness alias
+function xharness() {
+    dotnet exec "$XHARNESS_CLI_PATH" "$@"
+}
+
+function report_infrastructure_failure() {
+    echo "Infrastructural problem reported by the user, requesting retry+reboot: $1"
+
+    echo "$1" > "$HELIX_WORKITEM_ROOT/.retry"
+
+    if [[ "$2" -ne "--no-reboot" ]]; then
+        echo "$1" > "$HELIX_WORKITEM_ROOT/.reboot"
+    fi
+}
+
+# Used to grep sys logs later in case of crashes
+start_time="$(date '+%Y-%m-%d %H:%M:%S')"
+
+# Act out the actual commands (and time constrain them to create buffer for the end of this script)
+# shellcheck disable=SC1091
+source command.sh & PID=$! ; (sleep "$command_timeout" && kill $PID 2> /dev/null & ) ; wait $PID
 exit_code=$?
 
-# Kill the simulator just in case when we fail to launch the app
-# 80 - app crash
-if [ $exit_code -eq 80 ]; then
-    sudo pkill -9 -f "$simulator_app"
+# In case of issues, include the syslog (last 2 MB from the time this work item has been running)
+if [ $exit_code -ne 0 ]; then
+    sudo log show --style syslog --start "$start_time" --end "$(date '+%Y-%m-%d %H:%M:%S')" | tail -c 2097152 > "$output_directory/system.log"
 fi
 
-# If we have a launch failure AND we are on simulators, we need to signal that we want a reboot+retry
-# The script that is running this one will notice and request Helix to do it
-if [ $exit_code -eq 83 ] && [[ "$targets" =~ "simulator" ]]; then
-    exit_code=123
-fi
+echo "Removing empty log files:"
+find "$output_directory" -name "*.log" -maxdepth 1 -size 0 -print -delete
 
-# The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader
-chmod 0644 "$output_directory"/*.log
-
-if [ "$command" == 'test' ]; then
-    test_results=$(ls "$output_directory"/xunit-*.xml)
-
-    if [ ! -f "$test_results" ]; then
-        echo "Failed to find xUnit tests results in the output directory. Existing files:"
-        ls -la "$output_directory"
-
-        if [ $exit_code -eq 0 ]; then
-            exit_code=5
-        fi
-
-        exit $exit_code
-    fi
-
-    echo "Found test results in $output_directory/$test_results. Renaming to testResults.xml to prepare for Helix upload"
+# Rename test result XML so that AzDO reporter recognizes it
+test_results=$(ls "$output_directory"/xunit-*.xml)
+if [ -f "$test_results" ]; then
+    echo "Found test results in $test_results. Renaming to testResults.xml to prepare for Helix upload"
 
     # Prepare test results for Helix to pick up
     mv "$test_results" "$output_directory/testResults.xml"

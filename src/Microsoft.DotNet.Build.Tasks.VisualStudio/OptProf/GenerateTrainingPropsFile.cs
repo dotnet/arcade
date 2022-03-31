@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
     /// <summary>
     /// Generates a .props file pointing to a drops URL where IBC optimization inputs will be uploaded.
     /// </summary>
-    public sealed class GenerateTrainingPropsFile : Task
+    public sealed class GenerateTrainingPropsFile : Microsoft.Build.Utilities.Task
     {
         private const string ProductDropNamePrefix = "Products/";
 

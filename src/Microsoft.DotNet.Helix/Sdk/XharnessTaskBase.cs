@@ -1,31 +1,32 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
-using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
-using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
     /// <summary>
     /// MSBuild custom task to create HelixWorkItems for provided Android application packages.
     /// </summary>
-    public abstract class XHarnessTaskBase : BaseTask
+    public abstract class XHarnessTaskBase : MSBuildTaskBase
     {
-        private const int DefaultWorkItemTimeoutInMinutes = 20;
-        private const int DefaultTestTimeoutInMinutes = 12;
+        private static readonly TimeSpan s_defaultWorkItemTimeout = TimeSpan.FromMinutes(20);
+        private static readonly TimeSpan s_defaultTestTimeout = TimeSpan.FromMinutes(12);
+        protected static readonly TimeSpan s_telemetryBuffer = TimeSpan.FromSeconds(20); // extra time to send the XHarness telemetry
 
-        private const string TestTimeoutPropName = "TestTimeout";
-        private const string WorkItemTimeoutPropName = "WorkItemTimeout";
-        private const string ExpectedExitCodePropName = "ExpectedExitCode";
+        public class MetadataName
+        {
+            public const string TestTimeout = "TestTimeout";
+            public const string WorkItemTimeout = "WorkItemTimeout";
+            public const string ExpectedExitCode = "ExpectedExitCode";
+            public const string CustomCommands = "CustomCommands";
+        }
 
-        /// <summary>
-        /// Boolean true if this is a posix shell, false if not.
-        /// This does not need to be set by a user; it is automatically determined in Microsoft.DotNet.Helix.Sdk.MonoQueue.targets
-        /// </summary>
-        [Required]
-        public bool IsPosixShell { get; set; }
+        protected const string ScriptNamespace = "tools.xharness_runner.";
+        private const string CustomCommandsScript = "command";
+        private const string DiagnosticsScript = "xharness-event-processor.py";
 
         /// <summary>
         /// Extra arguments that will be passed to the iOS/Android/... app that is being run
@@ -48,35 +49,41 @@ namespace Microsoft.DotNet.Helix.Sdk
         ///   - WorkItemTimeout - Optional timeout for the whole Helix work item run (includes SDK and tool installation)
         ///   - ExpectedExitCode - Optional expected exit code parameter that is forwarded to XHarness
         /// </returns>
-        protected (TimeSpan TestTimeout, TimeSpan WorkItemTimeout, int ExpectedExitCode) ParseMetadata(ITaskItem xHarnessAppItem)
+        protected (TimeSpan TestTimeout, TimeSpan WorkItemTimeout, int ExpectedExitCode, string CustomCommands) ParseMetadata(ITaskItem xHarnessAppItem)
         {
+            xHarnessAppItem.TryGetMetadata(MetadataName.CustomCommands, out string customCommands);
+            if (string.IsNullOrEmpty(customCommands))
+            {
+                customCommands = null;
+            }
+
             // Optional timeout for the actual test execution in the TimeSpan format
-            TimeSpan testTimeout = TimeSpan.FromMinutes(DefaultTestTimeoutInMinutes);
-            if (xHarnessAppItem.TryGetMetadata(TestTimeoutPropName, out string testTimeoutProp))
+            TimeSpan testTimeout = s_defaultTestTimeout;
+            if (xHarnessAppItem.TryGetMetadata(MetadataName.TestTimeout, out string testTimeoutProp))
             {
                 if (!TimeSpan.TryParse(testTimeoutProp, out testTimeout) || testTimeout.Ticks < 0)
                 {
-                    Log.LogError($"Invalid value \"{testTimeoutProp}\" provided in <{TestTimeoutPropName}>");
+                    Log.LogError($"Invalid value \"{testTimeoutProp}\" provided in <{MetadataName.TestTimeout}>");
                 }
             }
 
             // Optional timeout for the whole Helix work item run (includes SDK and tool installation)
-            TimeSpan workItemTimeout = TimeSpan.FromMinutes(DefaultWorkItemTimeoutInMinutes);
-            if (xHarnessAppItem.TryGetMetadata(WorkItemTimeoutPropName, out string workItemTimeoutProp))
+            TimeSpan workItemTimeout = s_defaultWorkItemTimeout;
+            if (xHarnessAppItem.TryGetMetadata(MetadataName.WorkItemTimeout, out string workItemTimeoutProp))
             {
                 if (!TimeSpan.TryParse(workItemTimeoutProp, out workItemTimeout) || workItemTimeout.Ticks < 0)
                 {
-                    Log.LogError($"Invalid value \"{workItemTimeoutProp}\" provided in <{WorkItemTimeoutPropName}>");
+                    Log.LogError($"Invalid value \"{workItemTimeoutProp}\" provided in <{MetadataName.WorkItemTimeout}>");
                 }
             }
             else if (!string.IsNullOrEmpty(testTimeoutProp))
             {
                 // When test timeout was set and work item timeout has not,
                 // we adjust the work item timeout to give enough space for things to work
-                workItemTimeout = TimeSpan.FromMinutes(testTimeout.TotalMinutes + DefaultWorkItemTimeoutInMinutes - DefaultTestTimeoutInMinutes);
+                workItemTimeout = testTimeout + s_defaultWorkItemTimeout - s_defaultTestTimeout;
             }
 
-            if (workItemTimeout <= testTimeout)
+            if (customCommands == null && workItemTimeout <= testTimeout)
             {
                 Log.LogWarning(
                     $"Work item timeout ({workItemTimeout}) should be larger than test timeout ({testTimeout}) " +
@@ -84,36 +91,105 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             int expectedExitCode = 0;
-            if (xHarnessAppItem.TryGetMetadata(ExpectedExitCodePropName, out string expectedExitCodeProp))
+            if (xHarnessAppItem.TryGetMetadata(MetadataName.ExpectedExitCode, out string expectedExitCodeProp))
             {
                 int.TryParse(expectedExitCodeProp, out expectedExitCode);
             }
 
-            return (
-                TestTimeout: testTimeout,
-                WorkItemTimeout: workItemTimeout,
-                ExpectedExitCode: expectedExitCode);
+            return (testTimeout, workItemTimeout, expectedExitCode, customCommands);
         }
 
-        protected static async Task AddResourceFileToPayload(string payloadArchivePath, string resourceFileName, string targetFileName = null)
+        protected Build.Utilities.TaskItem CreateTaskItem(string workItemName, string payloadArchivePath, string command, TimeSpan timeout)
         {
-            using Stream fileStream = GetResourceFileContent(resourceFileName);
-            await AddToPayloadArchive(payloadArchivePath, targetFileName ?? resourceFileName, fileStream);
+            Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {payloadArchivePath}, Command: {command}");
+
+            // Leave some time at the end of the work item to send the telemetry (in case it times out)
+            timeout += s_telemetryBuffer;
+
+            return new(workItemName, new Dictionary<string, string>()
+            {
+                { "Identity", workItemName },
+                { "PayloadArchive", payloadArchivePath },
+                { "Command", command },
+                { "Timeout", timeout.ToString() },
+            });
         }
 
-        protected static async Task AddToPayloadArchive(string payloadArchivePath, string targetFilename, Stream content)
+        protected async Task<string> CreatePayloadArchive(
+            IZipArchiveManager zipArchiveManager,
+            IFileSystem fileSystem,
+            string workItemName,
+            bool isAlreadyArchived,
+            bool isPosix,
+            string pathToZip,
+            string injectedCommands,
+            string[] payloadScripts)
         {
-            using FileStream archiveStream = new FileStream(payloadArchivePath, FileMode.Open);
-            using ZipArchive archive = new ZipArchive(archiveStream, ZipArchiveMode.Update);
-            ZipArchiveEntry entry = archive.CreateEntry(targetFilename);
-            using Stream targetStream = entry.Open();
-            await content.CopyToAsync(targetStream);
+            string outputZipPath;
+            if (!isAlreadyArchived)
+            {
+                string appFolderDirectory = fileSystem.GetDirectoryName(pathToZip);
+                string fileName = $"xharness-payload-{workItemName.ToLowerInvariant()}.zip";
+                outputZipPath = fileSystem.PathCombine(appFolderDirectory, fileName);
+
+                if (fileSystem.FileExists(outputZipPath))
+                {
+                    Log.LogMessage($"Zip archive '{outputZipPath}' already exists, overwriting..");
+                    fileSystem.DeleteFile(outputZipPath);
+                }
+
+                if (fileSystem.GetAttributes(pathToZip).HasFlag(FileAttributes.Directory))
+                {
+                    zipArchiveManager.ArchiveDirectory(pathToZip, outputZipPath, true);
+                }
+                else
+                {
+                    zipArchiveManager.ArchiveFile(pathToZip, outputZipPath);
+                }
+            }
+            else
+            {
+                Log.LogMessage($"App payload '{workItemName}` has already been zipped");
+                outputZipPath = pathToZip;
+            }
+
+            Log.LogMessage($"Adding the XHarness job scripts into the payload archive");
+
+            foreach (var payloadScript in payloadScripts)
+            {
+                await zipArchiveManager.AddResourceFileToArchive<XHarnessTaskBase>(
+                    outputZipPath,
+                    ScriptNamespace + payloadScript,
+                    payloadScript);
+            }
+
+            await zipArchiveManager.AddResourceFileToArchive<XHarnessTaskBase>(
+                outputZipPath,
+                ScriptNamespace + DiagnosticsScript,
+                DiagnosticsScript);
+
+            await zipArchiveManager.AddContentToArchive(
+                outputZipPath,
+                CustomCommandsScript + (isPosix ? ".sh" : ".ps1"),
+                injectedCommands);
+
+            return outputZipPath;
         }
 
-        protected static Stream GetResourceFileContent(string resourceFileName)
+        /// <summary>
+        /// This method parses the name for the Helix work item and path of the app from the item's metadata.
+        /// The user can re-use the same .apk for 2 work items so the name of the work item will come from ItemSpec and path from metadata.
+        /// </summary>
+        public static (string WorkItemName, string AppPath) GetNameAndPath(ITaskItem item, string pathMetadataName, IFileSystem fileSystem)
         {
-            Assembly thisAssembly = typeof(XHarnessTaskBase).Assembly;
-            return thisAssembly.GetManifestResourceStream($"{thisAssembly.GetName().Name}.tools.xharness_runner.{resourceFileName}");
+            if (item.TryGetMetadata(pathMetadataName, out string appPathMetadata) && !string.IsNullOrEmpty(appPathMetadata))
+            {
+                return (item.ItemSpec, appPathMetadata);
+            }
+            else
+            {
+                return (fileSystem.GetFileNameWithoutExtension(item.ItemSpec), item.ItemSpec);
+            }
         }
     }
 }

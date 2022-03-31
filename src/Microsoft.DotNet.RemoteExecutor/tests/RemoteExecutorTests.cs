@@ -1,17 +1,25 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.DotNet.RemoteExecutor;
+using System;
 using System.Threading.Tasks;
-
 using Xunit;
-using Xunit.Abstractions;
 using Xunit.Sdk;
 
 namespace Microsoft.DotNet.RemoteExecutor.Tests
 {
     public class RemoteExecutorTests
     {
+        [Fact]
+        public void Action()
+        {
+            RemoteInvokeHandle h = RemoteExecutor.Invoke(() => { }, new RemoteInvokeOptions { RollForward = "Major" });
+            using (h)
+            {
+                Assert.Equal(RemoteExecutor.SuccessExitCode, h.ExitCode);
+            }
+        }
+
         [Fact]
         public void AsyncAction_ThrowException()
         {
@@ -27,10 +35,14 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
         [Fact]
         public void AsyncAction()
         {
-            RemoteExecutor.Invoke(async () =>
+            RemoteInvokeHandle h = RemoteExecutor.Invoke(async () =>
             {
                 await Task.Delay(1);
-            }, new RemoteInvokeOptions { RollForward = "Major" }).Dispose();
+            }, new RemoteInvokeOptions { RollForward = "Major" });
+            using (h)
+            {
+                Assert.Equal(RemoteExecutor.SuccessExitCode, h.ExitCode);
+            }
         }
 
         [Fact]
@@ -66,6 +78,73 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
                 await Task.Delay(1);
                 return RemoteExecutor.SuccessExitCode;
             }, new RemoteInvokeOptions { RollForward = "Major" }).Dispose();
+        }
+
+        [Fact]
+        public static void AsyncAction_FatalError_AV()
+        {
+            // Invocation should report as failing on AV
+            Assert.Throws<TrueException>(() =>
+                RemoteExecutor.Invoke(async () =>
+                {
+                    await Task.Delay(1);
+                    unsafe
+                    {
+                        *(int*)0x10000 = 0;
+                    }
+                }, new RemoteInvokeOptions { RollForward = "Major" }).Dispose()
+            );
+        }
+
+        [Fact]
+        public static void AsyncAction_FatalError_Runtime()
+        {
+            // Invocation should report as failing on fatal runtime error
+            Assert.Throws<TrueException>(() =>
+                RemoteExecutor.Invoke(async () =>
+                {
+                    await Task.Delay(1);
+                    System.Runtime.InteropServices.Marshal.StructureToPtr(1, new IntPtr(1), true);
+                }, new RemoteInvokeOptions { RollForward = "Major" }).Dispose()
+            );
+        }
+
+        [Fact]
+        public static unsafe void FatalError_AV()
+        {
+            // Invocation should report as failing on AV
+            Assert.Throws<TrueException>(() =>
+                RemoteExecutor.Invoke(() =>
+                {
+                    *(int*)0x10000 = 0;
+                }, new RemoteInvokeOptions { RollForward = "Major" }).Dispose()
+            );
+        }
+
+        [Fact]
+        public static void FatalError_Runtime()
+        {
+            // Invocation should report as failing on fatal runtime error
+            Assert.Throws<TrueException>(() =>
+                RemoteExecutor.Invoke(() =>
+                {
+                    System.Runtime.InteropServices.Marshal.StructureToPtr(1, new IntPtr(1), true);
+                }, new RemoteInvokeOptions { RollForward = "Major" }).Dispose()
+            );
+        }
+
+        [Fact]
+        public static void IgnoreExitCode()
+        {
+            int exitCode = 1;
+            RemoteInvokeHandle h = RemoteExecutor.Invoke(
+                s => int.Parse(s),
+                exitCode.ToString(),
+                new RemoteInvokeOptions { RollForward = "Major", CheckExitCode = false, ExpectedExitCode = 0 });
+            using(h)
+            {
+                Assert.Equal(exitCode, h.ExitCode);
+            }
         }
     }
 }

@@ -1,4 +1,5 @@
- // Copyright(c) Microsoft.All Rights Reserved.Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 namespace TestResources
 {
@@ -7,28 +8,28 @@ namespace TestResources
         public const string Version = "1.0.0";
 
         private static byte[] s_A;
-        public static byte[] A => ResourceLoader.GetOrCreateResource(ref s_A, NameA);
-        public const string NameA = nameof(A) + "." + Version + ".nupkg";
+        public static byte[] TestPackageA => ResourceLoader.GetOrCreateResource(ref s_A, NameA);
+        public const string NameA = nameof(TestPackageA) + "." + Version + ".nupkg";
 
         private static byte[] s_B;
-        public static byte[] B => ResourceLoader.GetOrCreateResource(ref s_B, NameB);
-        public const string NameB = nameof(B) + "." + Version + ".nupkg";
+        public static byte[] TestPackageB => ResourceLoader.GetOrCreateResource(ref s_B, NameB);
+        public const string NameB = nameof(TestPackageB) + "." + Version + ".nupkg";
 
         private static byte[] s_C;
-        public static byte[] C => ResourceLoader.GetOrCreateResource(ref s_C, NameC);
-        public const string NameC = nameof(C) + "." + Version + ".nupkg";
+        public static byte[] TestPackageC => ResourceLoader.GetOrCreateResource(ref s_C, NameC);
+        public const string NameC = nameof(TestPackageC) + "." + Version + ".nupkg";
 
         private static byte[] s_D;
-        public static byte[] D => ResourceLoader.GetOrCreateResource(ref s_D, NameD);
-        public const string NameD = nameof(D) + "." + Version + ".nupkg";
+        public static byte[] TestPackageD => ResourceLoader.GetOrCreateResource(ref s_D, NameD);
+        public const string NameD = nameof(TestPackageD) + "." + Version + ".nupkg";
 
         private static byte[] s_E;
-        public static byte[] E => ResourceLoader.GetOrCreateResource(ref s_E, NameE);
-        public const string NameE = nameof(E) + "." + Version + ".nupkg";
+        public static byte[] TestPackageE => ResourceLoader.GetOrCreateResource(ref s_E, NameE);
+        public const string NameE = nameof(TestPackageE) + "." + Version + ".nupkg";
 
         private static byte[] s_F;
-        public static byte[] F => ResourceLoader.GetOrCreateResource(ref s_F, NameF);
-        public const string NameF = nameof(F) + "." + Version + ".nupkg";
+        public static byte[] TestPackageF => ResourceLoader.GetOrCreateResource(ref s_F, NameF);
+        public const string NameF = nameof(TestPackageF) + "." + Version + ".nupkg";
     }
 
     public static class PreReleasePackages
@@ -37,28 +38,28 @@ namespace TestResources
         public const string SemVer2 = "1.0.0-beta.final";
 
         private static byte[] s_A;
-        public static byte[] A => ResourceLoader.GetOrCreateResource(ref s_A, NameA);
-        public const string NameA = nameof(A) + "." + SemVer1 + ".nupkg";
+        public static byte[] TestPackageA => ResourceLoader.GetOrCreateResource(ref s_A, NameA);
+        public const string NameA = nameof(TestPackageA) + "." + SemVer1 + ".nupkg";
 
         private static byte[] s_B;
-        public static byte[] B => ResourceLoader.GetOrCreateResource(ref s_B, NameB);
-        public const string NameB = nameof(B) + "." + SemVer1 + ".nupkg";
+        public static byte[] TestPackageB => ResourceLoader.GetOrCreateResource(ref s_B, NameB);
+        public const string NameB = nameof(TestPackageB) + "." + SemVer1 + ".nupkg";
 
         private static byte[] s_C;
-        public static byte[] C => ResourceLoader.GetOrCreateResource(ref s_C, NameC);
-        public const string NameC = nameof(C) + "." + SemVer1 + ".nupkg";
+        public static byte[] TestPackageC => ResourceLoader.GetOrCreateResource(ref s_C, NameC);
+        public const string NameC = nameof(TestPackageC) + "." + SemVer1 + ".nupkg";
 
         private static byte[] s_D;
-        public static byte[] D => ResourceLoader.GetOrCreateResource(ref s_D, NameD);
-        public const string NameD = nameof(D) + "." + SemVer1 + ".nupkg";
+        public static byte[] TestPackageD => ResourceLoader.GetOrCreateResource(ref s_D, NameD);
+        public const string NameD = nameof(TestPackageD) + "." + SemVer1 + ".nupkg";
 
         private static byte[] s_E;
-        public static byte[] E => ResourceLoader.GetOrCreateResource(ref s_E, NameE);
-        public const string NameE = nameof(E) + "." + SemVer2 + ".nupkg";
+        public static byte[] TestPackageE => ResourceLoader.GetOrCreateResource(ref s_E, NameE);
+        public const string NameE = nameof(TestPackageE) + "." + SemVer2 + ".nupkg";
 
         private static byte[] s_F;
-        public static byte[] F => ResourceLoader.GetOrCreateResource(ref s_F, NameF);
-        public const string NameF = nameof(F) + "." + SemVer2 + ".nupkg";
+        public static byte[] TestPackageF => ResourceLoader.GetOrCreateResource(ref s_F, NameF);
+        public const string NameF = nameof(TestPackageF) + "." + SemVer2 + ".nupkg";
     }
 
     public static class DailyBuildPackages
@@ -67,28 +68,28 @@ namespace TestResources
         public const string SemVer2 = "1.0.0-beta.12345.1";
 
         private static byte[] s_A;
-        public static byte[] A => ResourceLoader.GetOrCreateResource(ref s_A, NameA);
-        public const string NameA = nameof(A) + "." + SemVer1 + ".nupkg";
+        public static byte[] TestPackageA => ResourceLoader.GetOrCreateResource(ref s_A, NameA);
+        public const string NameA = nameof(TestPackageA) + "." + SemVer1 + ".nupkg";
 
         private static byte[] s_B;
-        public static byte[] B => ResourceLoader.GetOrCreateResource(ref s_B, NameB);
-        public const string NameB = nameof(B) + "." + SemVer1 + ".nupkg";
+        public static byte[] TestPackageB => ResourceLoader.GetOrCreateResource(ref s_B, NameB);
+        public const string NameB = nameof(TestPackageB) + "." + SemVer1 + ".nupkg";
 
         private static byte[] s_C;
-        public static byte[] C => ResourceLoader.GetOrCreateResource(ref s_C, NameC);
-        public const string NameC = nameof(C) + "." + SemVer1 + ".nupkg";
+        public static byte[] TestPackageC => ResourceLoader.GetOrCreateResource(ref s_C, NameC);
+        public const string NameC = nameof(TestPackageC) + "." + SemVer1 + ".nupkg";
 
         private static byte[] s_D;
-        public static byte[] D => ResourceLoader.GetOrCreateResource(ref s_D, NameD);
-        public const string NameD = nameof(D) + "." + SemVer1 + ".nupkg";
+        public static byte[] TestPackageD => ResourceLoader.GetOrCreateResource(ref s_D, NameD);
+        public const string NameD = nameof(TestPackageD) + "." + SemVer1 + ".nupkg";
 
         private static byte[] s_E;
-        public static byte[] E => ResourceLoader.GetOrCreateResource(ref s_E, NameE);
-        public const string NameE = nameof(E) + "." + SemVer2 + ".nupkg";
+        public static byte[] TestPackageE => ResourceLoader.GetOrCreateResource(ref s_E, NameE);
+        public const string NameE = nameof(TestPackageE) + "." + SemVer2 + ".nupkg";
 
         private static byte[] s_F;
-        public static byte[] F => ResourceLoader.GetOrCreateResource(ref s_F, NameF);
-        public const string NameF = nameof(F) + "." + SemVer2 + ".nupkg";
+        public static byte[] TestPackageF => ResourceLoader.GetOrCreateResource(ref s_F, NameF);
+        public const string NameF = nameof(TestPackageF) + "." + SemVer2 + ".nupkg";
     }
 
     public static class MiscPackages

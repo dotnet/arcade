@@ -2,17 +2,11 @@
 <Project>
 
   <PropertyGroup>
-    <_MicrosoftDotNetGenFacadesTaskDir Condition="'$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)../tools/netcoreapp3.1/</_MicrosoftDotNetGenFacadesTaskDir>
-    <_MicrosoftDotNetGenFacadesTaskDir Condition="'$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)../tools/net472/</_MicrosoftDotNetGenFacadesTaskDir>
+    <GenFacadesTargetAssemblyPath Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\tools\netcoreapp3.1\Microsoft.DotNet.GenFacades.dll</GenFacadesTargetAssemblyPath>
+    <GenFacadesTargetAssemblyPath Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\tools\net472\Microsoft.DotNet.GenFacades.dll</GenFacadesTargetAssemblyPath>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <GenFacadesTargetAssemblyPath Condition="'$(GenFacadesTargetAssemblyPath)' == ''">$(_MicrosoftDotNetGenFacadesTaskDir)Microsoft.DotNet.GenFacades.dll</GenFacadesTargetAssemblyPath>
-  </PropertyGroup>
-
-  <UsingTask TaskName="GenFacadesTask" AssemblyFile="$(GenFacadesTargetAssemblyPath)" />
-
-  <Import Condition="'$(IsPartialFacadeAssembly)' == 'true' AND '$(IsReferenceAssembly)' != 'true'" Project="Microsoft.DotNet.GenPartialFacadeSource.targets" />
-  <Import Condition="'$(IsPartialFacadeAssembly)' == 'true' AND '$(IsReferenceAssembly)' == 'true'" Project="Microsoft.DotNet.GenFacadesILRewriter.targets" />
-  <Import Project="Microsoft.DotNet.GenFacadesNotSupported.targets" />
+  <Import Project="Microsoft.DotNet.GenPartialFacadeSource.targets" Condition="'$(IsPartialFacadeAssembly)' == 'true'" />
+  <Import Project="Microsoft.DotNet.GenFacadesNotSupported.targets" Condition="'$(GeneratePlatformNotSupportedAssembly)' == 'true' or
+                                                                               '$(GeneratePlatformNotSupportedAssemblyMessage)' != ''" />
 </Project>

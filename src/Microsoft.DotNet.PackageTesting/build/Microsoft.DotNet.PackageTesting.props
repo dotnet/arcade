@@ -1,0 +1,29 @@
+<Project>
+  <PropertyGroup>
+    <DotNetPackageTestingAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\tools\net472\Microsoft.DotNet.PackageTesting.dll</DotNetPackageTestingAssembly>
+    <DotNetPackageTestingAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\tools\netcoreapp3.1\Microsoft.DotNet.PackageTesting.dll</DotNetPackageTestingAssembly>
+  </PropertyGroup>
+
+  <UsingTask TaskName="GetCompatiblePackageTargetFrameworks" AssemblyFile="$(DotNetPackageTestingAssembly)" />
+  <UsingTask TaskName="VerifyClosure" AssemblyFile="$(DotNetPackageTestingAssembly)" />
+  <UsingTask TaskName="VerifyTypes" AssemblyFile="$(DotNetPackageTestingAssembly)"/>
+
+  <ItemGroup>
+    <SupportedTestFramework Include="netcoreapp3.1" />
+    <SupportedTestFramework Include="net5.0" />
+    <SupportedTestFramework Include="net6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <SupportedTestFramework Include="netstandard2.0" />
+    <SupportedTestFramework Include="netstandard2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <SupportedTestFramework Include="net461" />
+    <SupportedTestFramework Include="net462" />
+    <SupportedTestFramework Include="net471" />
+    <SupportedTestFramework Include="net472" />
+    <SupportedTestFramework Include="net48" />
+  </ItemGroup>
+</Project>

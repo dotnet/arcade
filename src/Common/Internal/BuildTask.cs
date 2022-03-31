@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Build.Tasks
 
         internal Log Log
         {
-            get { return _log ?? (_log = new Log(new TaskLoggingHelper(this))); }
+            get { return _log ??= new Log(new TaskLoggingHelper(this)); }
         }
 
         public BuildTask()

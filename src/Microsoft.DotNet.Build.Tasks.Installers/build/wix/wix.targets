@@ -25,7 +25,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-      <WixVersion>3.14.0.4118</WixVersion>
+      <WixVersion>1.0.0-v3.14.0.5722</WixVersion>
       <WixToolsDir>$(BaseIntermediateOutputPath)WixTools.$(WixVersion)/</WixToolsDir>
       <!-- Used in WiX targets to locate files. -->
       <WixInstallPath>$(WixToolsDir)</WixInstallPath>
@@ -36,10 +36,10 @@
       <MsiArch>$(InstallerTargetArchitecture)</MsiArch>
 
       <AcquireWixProjectFile>$(MSBuildThisFileDirectory)..\acquisition\acquire-wix\acquire-wix.proj</AcquireWixProjectFile>
-      <WixDownloadFilename>wix.$(WixVersion).zip</WixDownloadFilename>
-      <WixDownloadUrl>https://dotnetcli.azureedge.net/build/wix/$(WixDownloadFilename)</WixDownloadUrl>
+      <WixDownloadFilename>Microsoft.Signed.Wix-$(WixVersion).zip</WixDownloadFilename>
+      <WixDownloadUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/windows/wix/$(WixDownloadFilename)</WixDownloadUrl>
       <WixDestinationPath>$(WixToolsDir)$(WixDownloadFilename)</WixDestinationPath>
-      <WixDownloadSentinel>$(WixToolsDir)WixDownload.$(WixVersion).sentinel</WixDownloadSentinel>
+      <WixDownloadSentinel>$(WixToolsDir)$(WixDownloadFilename).sentinel</WixDownloadSentinel>
     </PropertyGroup>
   </Target>
 
@@ -96,7 +96,12 @@
   <Target Name="_GetUpgradeCode"
           DependsOnTargets="GetWixBuildConfiguration"
           Condition="'$(UpgradeCode)' == ''">
-    <GenerateGuidFromName Name="$(_OutInstallerFile)">
+
+    <PropertyGroup>
+      <MsiUpgradeCodeSeed Condition="'$(MsiUpgradeCodeSeed)' == ''">$(_OutInstallerFile)</MsiUpgradeCodeSeed>
+    </PropertyGroup>
+
+    <GenerateGuidFromName Name="$(MsiUpgradeCodeSeed)">
       <Output TaskParameter="GeneratedGuid" PropertyName="UpgradeCode" />
     </GenerateGuidFromName>
   </Target>
@@ -108,6 +113,7 @@
       <WixExtensions Include="WixUtilExtension.dll" />
 
       <WixSrcFile Include="$(MSBuildThisFileDirectory)product/product.wxs" />
+      <WixSrcFile Include="$(MSBuildThisFileDirectory)product/dotnethome_x64.wxs" />
       <WixSrcFile Include="$(MSBuildThisFileDirectory)product/provider.wxs" />
     </ItemGroup>
   </Target>
@@ -171,6 +177,10 @@
     <Error Text="A bundle theme directory property must be specified with the BundleThemeDirectory property."
            Condition="'$(BundleThemeDirectory)' == ''" />
       
+    <PropertyGroup>
+      <WixInstallerBackgroundFile Condition="'$(WixInstallerBackgroundFile)' == ''">$(MSBuildThisFileDirectory)..\resources\dotnetbackground.png</WixInstallerBackgroundFile>
+    </PropertyGroup>
+
     <ItemGroup>
       <LocFile Include="$(BundleThemeDirectory)\theme\**\bundle.wxl" />
       <LocDirName Include="$([System.String]::new('%(LocFile.RecursiveDir)').TrimEnd('\'))" />
@@ -179,7 +189,7 @@
       <CandleVariables Include="LcidList" Value="@(LocDirName)" />
       <CandleVariables Include="BundleThmDir" Value="$(BundleThemeDirectory)" />
 
-      <CandleVariables Include="DotNetBackgroundPngFile" Value="$(MSBuildThisFileDirectory)..\resources\dotnetbackground.png" />
+      <CandleVariables Include="DotNetBackgroundPngFile" Value="$(WixInstallerBackgroundFile)" />
       <CandleVariables Include="DotNetDummyEulaFile" Value="$(MSBuildThisFileDirectory)bundle\dummyEula.rtf" />
     </ItemGroup>
 
@@ -243,7 +253,8 @@
           -cg %(ComponentGroupName) ^
           -srd ^
           -dr %(DirectoryRef) ^
-          -out %(WixSourceFile)" />
+          -out %(WixSourceFile)
+          $(AdditionalHeatArgs)" />
 
       <CandleVariables Include="InstallFiles" Value="true" />
     </ItemGroup>
@@ -289,6 +300,7 @@
       <CandleVariables Include="NugetVersion" Value="$(Version)" />
       <CandleVariables Include="TargetArchitectureDescription" Value="$(InstallerTargetArchitecture)$(CrossArchContentsBuildPart)" />
       <CandleVariables Include="UpgradeCode" Value="$(UpgradeCode)" />
+      <CandleVariables Include="MajorUpgradeSchedule" Value="$(MajorUpgradeSchedule)" Condition="'$(MajorUpgradeSchedule)' != ''" />
 
       <!-- If this is a cross-arch MSI, add target arch to the dependency key for uniqueness. -->
       <CandleVariables Include="CrossArchContentsPlatformPart" Value="$(CrossArchContentsBuildPart.Replace('-', '_'))" />
@@ -304,6 +316,7 @@
       <_wixArgs>$(_wixArgs) @(CandleVariables -> '-d%(Identity)="%(Value)"', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(WixSrcFile -> '"%(FullPath)"', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(DirectoryToHarvest -> '"%(WixSourceFile)"', ' ')</_wixArgs>
+      <_wixArgs>$(_wixArgs) $(AdditionalCandleArgs)</_wixArgs>
     </PropertyGroup>
 
     <Exec
@@ -326,6 +339,7 @@
       <_wixArgs>$(_wixArgs) @(WixExtensions -> '-ext %(Identity)', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(WixSrcFile -> '"$(WixObjDir)%(Filename).wixobj"', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(DirectoryToHarvest -> '"%(WixObjFile)"', ' ')</_wixArgs>
+      <_wixArgs>$(_wixArgs) $(AdditionalLightArgs)</_wixArgs>
       <_lightCommand>light.exe $(_wixArgs)</_lightCommand>
     </PropertyGroup>
 

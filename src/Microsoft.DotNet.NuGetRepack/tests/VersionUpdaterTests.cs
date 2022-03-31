@@ -1,4 +1,5 @@
-// Copyright (c) Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
 using System.IO;
@@ -59,10 +60,10 @@ namespace Microsoft.DotNet.Tools.Tests
             Directory.CreateDirectory(dir);
 
             string a_daily, b_daily, c_daily, d_daily;
-            File.WriteAllBytes(a_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameA), TestResources.DailyBuildPackages.A);
-            File.WriteAllBytes(b_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameB), TestResources.DailyBuildPackages.B);
-            File.WriteAllBytes(c_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameC), TestResources.DailyBuildPackages.C);
-            File.WriteAllBytes(d_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameD), TestResources.DailyBuildPackages.D);
+            File.WriteAllBytes(a_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameA), TestResources.DailyBuildPackages.TestPackageA);
+            File.WriteAllBytes(b_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameB), TestResources.DailyBuildPackages.TestPackageB);
+            File.WriteAllBytes(c_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameC), TestResources.DailyBuildPackages.TestPackageC);
+            File.WriteAllBytes(d_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameD), TestResources.DailyBuildPackages.TestPackageD);
 
             var a_pre = Path.Combine(dir, TestResources.PreReleasePackages.NameA);
             var b_pre = Path.Combine(dir, TestResources.PreReleasePackages.NameB);
@@ -77,15 +78,15 @@ namespace Microsoft.DotNet.Tools.Tests
             NuGetVersionUpdater.Run(new[] { a_daily, b_daily, c_daily, d_daily }, dir, VersionTranslation.Release, exactVersions: false);
             NuGetVersionUpdater.Run(new[] { a_daily, b_daily, c_daily, d_daily }, dir, VersionTranslation.PreRelease, exactVersions: false);
 
-            AssertPackagesEqual(TestResources.ReleasePackages.A, File.ReadAllBytes(a_rel));
-            AssertPackagesEqual(TestResources.ReleasePackages.B, File.ReadAllBytes(b_rel));
-            AssertPackagesEqual(TestResources.ReleasePackages.C, File.ReadAllBytes(c_rel));
-            AssertPackagesEqual(TestResources.ReleasePackages.D, File.ReadAllBytes(d_rel));
+            AssertPackagesEqual(TestResources.ReleasePackages.TestPackageA, File.ReadAllBytes(a_rel));
+            AssertPackagesEqual(TestResources.ReleasePackages.TestPackageB, File.ReadAllBytes(b_rel));
+            AssertPackagesEqual(TestResources.ReleasePackages.TestPackageC, File.ReadAllBytes(c_rel));
+            AssertPackagesEqual(TestResources.ReleasePackages.TestPackageD, File.ReadAllBytes(d_rel));
 
-            AssertPackagesEqual(TestResources.PreReleasePackages.A, File.ReadAllBytes(a_pre));
-            AssertPackagesEqual(TestResources.PreReleasePackages.B, File.ReadAllBytes(b_pre));
-            AssertPackagesEqual(TestResources.PreReleasePackages.C, File.ReadAllBytes(c_pre));
-            AssertPackagesEqual(TestResources.PreReleasePackages.D, File.ReadAllBytes(d_pre));
+            AssertPackagesEqual(TestResources.PreReleasePackages.TestPackageA, File.ReadAllBytes(a_pre));
+            AssertPackagesEqual(TestResources.PreReleasePackages.TestPackageB, File.ReadAllBytes(b_pre));
+            AssertPackagesEqual(TestResources.PreReleasePackages.TestPackageC, File.ReadAllBytes(c_pre));
+            AssertPackagesEqual(TestResources.PreReleasePackages.TestPackageD, File.ReadAllBytes(d_pre));
 
             Directory.Delete(dir, recursive: true);
         }
@@ -97,8 +98,8 @@ namespace Microsoft.DotNet.Tools.Tests
             Directory.CreateDirectory(dir);
 
             string e_daily, f_daily;
-            File.WriteAllBytes(e_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameE), TestResources.DailyBuildPackages.E);
-            File.WriteAllBytes(f_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameF), TestResources.DailyBuildPackages.F);
+            File.WriteAllBytes(e_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameE), TestResources.DailyBuildPackages.TestPackageE);
+            File.WriteAllBytes(f_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameF), TestResources.DailyBuildPackages.TestPackageF);
 
             var e_pre = Path.Combine(dir, TestResources.PreReleasePackages.NameE);
             var f_pre = Path.Combine(dir, TestResources.PreReleasePackages.NameF);
@@ -109,11 +110,11 @@ namespace Microsoft.DotNet.Tools.Tests
             NuGetVersionUpdater.Run(new[] { e_daily, f_daily }, dir, VersionTranslation.Release, exactVersions: true);
             NuGetVersionUpdater.Run(new[] { e_daily, f_daily }, dir, VersionTranslation.PreRelease, exactVersions: true);
 
-            AssertPackagesEqual(TestResources.ReleasePackages.E, File.ReadAllBytes(e_rel));
-            AssertPackagesEqual(TestResources.ReleasePackages.F, File.ReadAllBytes(f_rel));
+            AssertPackagesEqual(TestResources.ReleasePackages.TestPackageE, File.ReadAllBytes(e_rel));
+            AssertPackagesEqual(TestResources.ReleasePackages.TestPackageF, File.ReadAllBytes(f_rel));
 
-            AssertPackagesEqual(TestResources.PreReleasePackages.E, File.ReadAllBytes(e_pre));
-            AssertPackagesEqual(TestResources.PreReleasePackages.F, File.ReadAllBytes(f_pre));
+            AssertPackagesEqual(TestResources.PreReleasePackages.TestPackageE, File.ReadAllBytes(e_pre));
+            AssertPackagesEqual(TestResources.PreReleasePackages.TestPackageF, File.ReadAllBytes(f_pre));
 
             Directory.Delete(dir, recursive: true);
         }
@@ -125,33 +126,33 @@ namespace Microsoft.DotNet.Tools.Tests
             Directory.CreateDirectory(dir);
 
             string a_daily, b_daily, c_daily;
-            File.WriteAllBytes(a_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameA), TestResources.DailyBuildPackages.A);
-            File.WriteAllBytes(b_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameB), TestResources.DailyBuildPackages.B);
-            File.WriteAllBytes(c_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameC), TestResources.DailyBuildPackages.C);
+            File.WriteAllBytes(a_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameA), TestResources.DailyBuildPackages.TestPackageA);
+            File.WriteAllBytes(b_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameB), TestResources.DailyBuildPackages.TestPackageB);
+            File.WriteAllBytes(c_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameC), TestResources.DailyBuildPackages.TestPackageC);
 
             var e1 = Assert.Throws<InvalidOperationException>(() => NuGetVersionUpdater.Run(new[] { c_daily }, outDirectoryOpt: null, VersionTranslation.Release, exactVersions: false));
-            AssertEx.AreEqual("Package 'C' depends on a pre-release package 'B, [1.0.0-beta-12345-01]'", e1.Message);
+            AssertEx.AreEqual("Package 'TestPackageC' depends on a pre-release package 'TestPackageB, [1.0.0-beta-12345-01]'", e1.Message);
 
             var e2 = Assert.Throws<AggregateException>(() => NuGetVersionUpdater.Run(new[] { a_daily }, outDirectoryOpt: null, VersionTranslation.Release, exactVersions: false));
             AssertEx.Equal(new[]
             {
-                "System.InvalidOperationException: Package 'A' depends on a pre-release package 'B, 1.0.0-beta-12345-01'",
-                "System.InvalidOperationException: Package 'A' depends on a pre-release package 'C, (, 1.0.0-beta-12345-01]'",
-                "System.InvalidOperationException: Package 'A' depends on a pre-release package 'C, 1.0.0-beta-12345-01'"
+                "System.InvalidOperationException: Package 'TestPackageA' depends on a pre-release package 'TestPackageB, 1.0.0-beta-12345-01'",
+                "System.InvalidOperationException: Package 'TestPackageA' depends on a pre-release package 'TestPackageC, (, 1.0.0-beta-12345-01]'",
+                "System.InvalidOperationException: Package 'TestPackageA' depends on a pre-release package 'TestPackageC, 1.0.0-beta-12345-01'"
             }, e2.InnerExceptions.Select(i => i.ToString()));
 
             var e3 = Assert.Throws<AggregateException>(() => NuGetVersionUpdater.Run(new[] { a_daily, b_daily }, outDirectoryOpt: null, VersionTranslation.Release, exactVersions: false));
             AssertEx.Equal(new[]
             {
-                "System.InvalidOperationException: Package 'A' depends on a pre-release package 'C, (, 1.0.0-beta-12345-01]'",
-                "System.InvalidOperationException: Package 'A' depends on a pre-release package 'C, 1.0.0-beta-12345-01'"
+                "System.InvalidOperationException: Package 'TestPackageA' depends on a pre-release package 'TestPackageC, (, 1.0.0-beta-12345-01]'",
+                "System.InvalidOperationException: Package 'TestPackageA' depends on a pre-release package 'TestPackageC, 1.0.0-beta-12345-01'"
             }, e3.InnerExceptions.Select(i => i.ToString()));
 
             var e4 = Assert.Throws<AggregateException>(() => NuGetVersionUpdater.Run(new[] { a_daily, c_daily }, outDirectoryOpt: null, VersionTranslation.Release, exactVersions: false));
             AssertEx.Equal(new[]
             {
-                "System.InvalidOperationException: Package 'A' depends on a pre-release package 'B, 1.0.0-beta-12345-01'",
-                "System.InvalidOperationException: Package 'C' depends on a pre-release package 'B, [1.0.0-beta-12345-01]'"
+                "System.InvalidOperationException: Package 'TestPackageA' depends on a pre-release package 'TestPackageB, 1.0.0-beta-12345-01'",
+                "System.InvalidOperationException: Package 'TestPackageC' depends on a pre-release package 'TestPackageB, [1.0.0-beta-12345-01]'"
             }, e4.InnerExceptions.Select(i => i.ToString()));
 
             Directory.Delete(dir, recursive: true);
@@ -167,12 +168,12 @@ namespace Microsoft.DotNet.Tools.Tests
             string dotnet_tool;
             File.WriteAllBytes(dotnet_tool = Path.Combine(dir, TestResources.MiscPackages.NameDotnetTool), TestResources.MiscPackages.DotnetTool);
             string normal_package_b_daily;
-            File.WriteAllBytes(normal_package_b_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameB), TestResources.DailyBuildPackages.B);
+            File.WriteAllBytes(normal_package_b_daily = Path.Combine(dir, TestResources.DailyBuildPackages.NameB), TestResources.DailyBuildPackages.TestPackageB);
 
             NuGetVersionUpdater.Run(new[] { dotnet_tool, normal_package_b_daily }, outDirectoryOpt: outputDir, VersionTranslation.Release, exactVersions: false);
 
             // Only contain normal package. dotnet tool package is skipped
-            Assert.Single(Directory.EnumerateFiles(outputDir), fullPath => Path.GetFileNameWithoutExtension(fullPath) == "B.1.0.0");
+            Assert.Single(Directory.EnumerateFiles(outputDir), fullPath => Path.GetFileNameWithoutExtension(fullPath) == "TestPackageB.1.0.0");
 
             Directory.Delete(dir, recursive: true);
             Directory.Delete(outputDir, recursive: true);

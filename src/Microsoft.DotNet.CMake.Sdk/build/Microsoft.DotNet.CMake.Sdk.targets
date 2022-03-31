@@ -30,6 +30,8 @@
     <PropertyGroup>
       <_CMakeMultiConfigurationGenerator>true</_CMakeMultiConfigurationGenerator>
       <_CMakePassArchitectureToGenerator>true</_CMakePassArchitectureToGenerator>
+      <!-- We limit the VS version range for the generator since CMake only knows about specific VS versions -->
+      <VSGeneratorVersionRange Condition="'$(VSGeneratorVersionRange)' == ''">[15,18.0)</VSGeneratorVersionRange>
       <!-- Visual Studio uses the Win32 name for the x86 target architecture. -->
       <Platform Condition="'$(Platform)' == 'x86'">Win32</Platform>
     </PropertyGroup>
@@ -37,7 +39,7 @@
     <Error Condition="'$(_VSNativeCompilerComponentArchName)' == ''" Text="Unable to determine if Visual Studio has MSVC tools installed for the '$(Platform)' architecture." />
 
     <Exec
-      Command="$(VSWherePath) -latest -prerelease -products * -requires $(_VSNativeCompilerComponentName) -property installationVersion"
+      Command="$(VSWherePath) -latest -prerelease -products * -version $(VSGeneratorVersionRange) -requires $(_VSNativeCompilerComponentName) -property installationVersion"
       EchoOff="true"
       ConsoleToMsBuild="true"
       StandardOutputImportance="Low">
@@ -48,6 +50,7 @@
 
     <PropertyGroup>
       <VSGenerator Condition="$(_HighestCompatibleVSVersion.StartsWith(16.))">Visual Studio 16 2019</VSGenerator>
+      <VSGenerator Condition="$(_HighestCompatibleVSVersion.StartsWith(17.))">Visual Studio 17 2022</VSGenerator>
     </PropertyGroup>
 
     <Error Condition="'$(VSGenerator)' == ''"
@@ -67,7 +70,7 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="GetOutputPathForProjectReference" DependsOnTargets="GetRootCMakeListsDirectory;ResolveVSGenerator" Returns="$(_CMakeProjectReferenceFilesLocation)">
+  <Target Name="GetOutputPathForProjectReference" DependsOnTargets="GetRootCMakeListsDirectory;ResolveVSGenerator;IsMultiConfigurationGenerator" Returns="@(_CMakeProjectReferenceFilesLocationItem)">
     <PropertyGroup>
       <_NormalizedReferencedCMakeListsDirectory>$([System.IO.Path]::GetDirectoryName($(ReferencedCMakeLists)))</_NormalizedReferencedCMakeListsDirectory>
     </PropertyGroup>
@@ -83,6 +86,9 @@
       <_CMakeProjectReferenceFilesLocation
         Condition="'$(_CMakeMultiConfigurationGenerator)' == 'true'">$([MSBuild]::NormalizePath('$(_CMakeProjectReferenceFilesLocation)','$(Configuration)'))</_CMakeProjectReferenceFilesLocation>
     </PropertyGroup>
+    <ItemGroup>
+      <_CMakeProjectReferenceFilesLocationItem Include="$(_CMakeProjectReferenceFilesLocation)" IsMultiConfigurationGenerator="_CMakeMultiConfigurationGenerator" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_ResolveVSCompilerToolchainForNonVSGenerators"
@@ -115,8 +121,9 @@
   <Target Name="_ResolveNonMSVCCompilerToolchain" Condition="'$(CMakeCompilerToolchain)' != 'MSVC' and '$(CMakeCompilerSearchScript)' == ''">
     <Error Condition="$([MSBuild]::IsOsPlatform(Windows))" Text="This SDK does not support using non-MSVC toolchains on Windows." />
     <PropertyGroup>
+      <_NativeScriptsDir>$([MSBuild]::NormalizeDirectory('$(RepositoryEngineeringDir)', 'common', 'native'))</_NativeScriptsDir>
       <CMakeCompilerSearchScript>
-      . $([MSBuild]::MakeRelative('$(MSBuildProjectDirectory)', '$(RepositoryEngineeringDir)common/native/find-native-compiler.sh')) $(CMakeCompilerToolchain) $(CMakeCompilerMajorVersion) $(CMakeCompilerMinorVersion)
+      . &quot;$([MSBuild]::MakeRelative('$(MSBuildProjectDirectory)', '$(_NativeScriptsDir)/init-compiler.sh'))&quot; &quot;$(_NativeScriptsDir)&quot; &quot;$(Platform)&quot; &quot;$(CMakeCompilerToolchain)&quot;
       </CMakeCompilerSearchScript>
     </PropertyGroup>
   </Target>

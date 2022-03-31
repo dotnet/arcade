@@ -1,16 +1,18 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.Build.Framework;
-using Microsoft.DotNet.Build.Tasks.Feed.Model;
-using Microsoft.DotNet.Maestro.Client;
-using Microsoft.DotNet.Maestro.Client.Models;
-using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Build.Framework;
+using Microsoft.DotNet.Build.Tasks.Feed.Model;
+#if !NET472_OR_GREATER
+using Microsoft.DotNet.Maestro.Client;
+using Microsoft.DotNet.Maestro.Client.Models;
+using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -22,22 +24,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         [Required]
         public string TargetChannels { get; set; }
-
-        [Required] 
-        public string AzureDevOpsFeedsKey { get; set; }
-
-        [Required] 
-        public string AzureStorageTargetFeedKey { get; set; }
-
-        [Required] 
-        public string InstallersFeedKey { get; set; }
-
-        [Required] 
-        public string CheckSumsFeedKey { get; set; }
-
-        public string InternalInstallersFeedKey { get; set; }
-
-        public string InternalCheckSumsFeedKey { get; set; }
 
         public bool PublishInstallersAndChecksums { get; set; }
 
@@ -53,15 +39,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool AllowFeedOverrides { get; set; }
 
-        public string InstallersFeedOverride { get; set; }
+        public ITaskItem[] FeedKeys { get; set; }
+        public ITaskItem[] FeedSasUris { get; set; }
 
-        public string ChecksumsFeedOverride { get; set; }
-
-        public string ShippingFeedOverride { get; set; }
-
-        public string TransportFeedOverride { get; set; }
-
-        public string SymbolsFeedOverride { get; set; }
+        public ITaskItem[] FeedOverrides { get; set; }
 
         public override bool Execute()
         {
@@ -85,7 +66,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     if (!int.TryParse(channelIdStr, out var channelId))
                     {
-                        Log.LogError($"Value '{channelIdStr}' isn't recognized as a valid Maestro++ channel ID. To add a channel refer to https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md#how-to-add-a-new-channel-to-use-v3-publishing.");
+                        Log.LogError(
+                            $"Value '{channelIdStr}' isn't recognized as a valid Maestro++ channel ID. To add a channel refer to https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md#how-to-add-a-new-channel-to-use-v3-publishing.");
                         continue;
                     }
 
@@ -94,21 +76,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 if (Log.HasLoggedErrors)
                 {
-                    Log.LogError($"Could not parse the target channels list '{TargetChannels}'. It should be a comma separated list of integers.");
+                    Log.LogError(
+                        $"Could not parse the target channels list '{TargetChannels}'. It should be a comma separated list of integers.");
                     return false;
                 }
 
-                string temporarySymbolsLocation =
-                    Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempSymbols"));
-
-                EnsureTemporarySymbolDirectoryExists(temporarySymbolsLocation);
-
                 SplitArtifactsInCategories(BuildModel);
-                DeleteSymbolTemporaryFiles(temporarySymbolsLocation);
-
-                //Copying symbol files to temporary location is required because the symUploader API needs read/write access to the files,
-                //since we publish blobs and symbols in parallel this will cause IO exceptions.
-                CopySymbolFilesToTemporaryLocation(BuildModel, temporarySymbolsLocation);
 
                 if (Log.HasLoggedErrors)
                 {
@@ -145,33 +118,40 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     Log.LogMessage(MessageImportance.High, $"Publishing to this target channel: {targetChannelConfig}");
 
-                    string shortLinkUrl = string.IsNullOrEmpty(targetChannelConfig.AkaMSChannelName) ?
-                        $"dotnet/" : $"dotnet/{targetChannelConfig.AkaMSChannelName}/{BuildQuality}";
+                    List<string> shortLinkUrls = new List<string>();
+
+                    foreach (string akaMSChannelName in targetChannelConfig.AkaMSChannelNames)
+                    {
+                        shortLinkUrls.Add($"dotnet/{akaMSChannelName}/{BuildQuality}");
+                    }
+
+                    // If there are no channel names, default to dotnet/
+                    if (!targetChannelConfig.AkaMSChannelNames.Any())
+                    {
+                        shortLinkUrls.Add("dotnet/");
+                    }
 
                     var targetFeedsSetup = new SetupTargetFeedConfigV3(
-                        targetChannelConfig.IsInternal,
-                        BuildModel.Identity.IsStable,
-                        BuildModel.Identity.Name,
-                        BuildModel.Identity.Commit,
-                        AzureStorageTargetFeedKey,
-                        PublishInstallersAndChecksums,
-                        GetFeed(targetChannelConfig.InstallersFeed, InstallersFeedOverride),
-                        targetChannelConfig.IsInternal? InternalInstallersFeedKey : InstallersFeedKey,
-                        GetFeed(targetChannelConfig.ChecksumsFeed, ChecksumsFeedOverride),
-                        targetChannelConfig.IsInternal? InternalCheckSumsFeedKey : CheckSumsFeedKey,
-                        GetFeed(targetChannelConfig.ShippingFeed, ShippingFeedOverride),
-                        GetFeed(targetChannelConfig.TransportFeed, TransportFeedOverride),
-                        GetFeed(targetChannelConfig.SymbolsFeed, SymbolsFeedOverride),
-                        shortLinkUrl,
-                        AzureDevOpsFeedsKey,
-                        BuildEngine = this.BuildEngine,
+                        targetChannelConfig: targetChannelConfig,
+                        isInternalBuild: targetChannelConfig.IsInternal,
+                        isStableBuild: BuildModel.Identity.IsStable,
+                        repositoryName: BuildModel.Identity.Name,
+                        commitSha: BuildModel.Identity.Commit,
+                        publishInstallersAndChecksums: PublishInstallersAndChecksums,
+                        feedKeys: FeedKeys,
+                        feedSasUris: FeedSasUris,
+                        feedOverrides: AllowFeedOverrides ? FeedOverrides : Array.Empty<ITaskItem>(),
+                        latestLinkShortUrlPrefixes: shortLinkUrls,
+                        buildEngine: BuildEngine,
                         targetChannelConfig.SymbolTargetType,
-                        filesToExclude: targetChannelConfig.FilenamesToExclude);
+                        filesToExclude: targetChannelConfig.FilenamesToExclude,
+                        flatten: targetChannelConfig.Flatten,
+                        log: Log);
 
                     var targetFeedConfigs = targetFeedsSetup.Setup();
 
                     // No target feeds to publish to, very likely this is an error
-                    if (targetFeedConfigs.Count() == 0)
+                    if (!targetFeedConfigs.Any())
                     {
                         Log.LogError($"No target feeds were found to publish the assets to.");
                         return false;
@@ -198,16 +178,40 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     return false;
                 }
 
-                await Task.WhenAll(new Task[] {
-                    HandlePackagePublishingAsync(buildAssets),
-                    HandleBlobPublishingAsync(buildAssets),
-                    HandleSymbolPublishingAsync(PdbArtifactsBasePath, MsdlToken,
-                        SymWebToken, SymbolPublishingExclusionsFile, temporarySymbolsLocation, PublishSpecialClrFiles)
+                string temporarySymbolsLocation = "";
+                if (!UseStreamingPublishing)
+                {
+                    temporarySymbolsLocation =
+                        Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempSymbols"));
+
+                    EnsureTemporaryDirectoryExists(temporarySymbolsLocation);
+                    DeleteTemporaryFiles(temporarySymbolsLocation);
+
+                    // Copying symbol files to temporary location is required because the symUploader API needs read/write access to the files,
+                    // since we publish blobs and symbols in parallel this will cause IO exceptions.
+                    CopySymbolFilesToTemporaryLocation(BuildModel, temporarySymbolsLocation);
+                }
+
+                using var clientThrottle = new SemaphoreSlim(MaxClients, MaxClients);
+
+                await Task.WhenAll(new Task[]
+                {
+                    HandlePackagePublishingAsync(buildAssets, clientThrottle),
+                    HandleBlobPublishingAsync(buildAssets, clientThrottle),
+                    HandleSymbolPublishingAsync(
+                        PdbArtifactsBasePath,
+                        MsdlToken,
+                        SymWebToken,
+                        SymbolPublishingExclusionsFile,
+                        PublishSpecialClrFiles,
+                        buildAssets,
+                        clientThrottle,
+                        temporarySymbolsLocation)
                 });
 
-                DeleteSymbolTemporaryFiles(temporarySymbolsLocation);
-                DeleteSymbolTemporaryDirectory(temporarySymbolsLocation);
-                Log.LogMessage(MessageImportance.High, "Successfully deleted the temporary symbols directory.");
+                DeleteTemporaryFiles(temporarySymbolsLocation);
+                DeleteTemporaryDirectory(temporarySymbolsLocation);
+
                 await PersistPendingAssetLocationAsync(client);
             }
             catch (Exception e)
@@ -233,7 +237,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             foreach (var blobAsset in buildModel.Artifacts.Blobs)
             {
-                if (blobAsset.Id.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase))
+                if (GeneralUtils.IsSymbolPackage(blobAsset.Id))
                 {
                     var sourceFile = Path.Combine(BlobAssetsBasePath, Path.GetFileName(blobAsset.Id));
                     var destinationFile = Path.Combine(symbolTemporaryLocation, Path.GetFileName(blobAsset.Id));
@@ -244,55 +248,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        /// <summary>
-        /// Create Temporary Symbols directory if it does not exists.
-        /// </summary>
-        /// <param name="temporarySymbolsLocation"></param>
-        public void EnsureTemporarySymbolDirectoryExists(string temporarySymbolsLocation)
-        {
-            if (!Directory.Exists(temporarySymbolsLocation))
-            {
-                Directory.CreateDirectory(temporarySymbolsLocation);
-            }
-        }
-        /// <summary>
-        /// Delete the symbols files after publishing to Symbol server(s), this is part of cleanup
-        /// </summary>
-        /// <param name="temporarySymbolsLocation"></param>
-        public void DeleteSymbolTemporaryFiles(string temporarySymbolsLocation)
-        {
-            try
-            {
-                if (Directory.Exists(temporarySymbolsLocation))
-                {
-                    string[] fileEntries = Directory.GetFiles(temporarySymbolsLocation);
-                    foreach (var file in fileEntries)
-                    {
-                        File.Delete(file);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.LogWarning(ex.Message);
-            }
-        }
-
-        /// <summary>
-        /// Deletes the temporary symbol folder, this is part of clean up
-        /// </summary>
-        /// <param name="temporarySymbolLocation"></param>
-        public void DeleteSymbolTemporaryDirectory(string temporarySymbolLocation)
-        {
-            if (Directory.Exists(temporarySymbolLocation))
-            {
-                Directory.Delete(temporarySymbolLocation);
-            }
-        }
-
         public string GetFeed(string feed, string feedOverride)
         {
             return (AllowFeedOverrides && !string.IsNullOrEmpty(feedOverride)) ? feedOverride : feed;
         }
+
+        public PublishArtifactsInManifestV3(AssetPublisherFactory assetPublisherFactory = null) : base(assetPublisherFactory)
+        {
+        }
     }
 }
+#else
+public class PublishArtifactsInManifestV3 : Microsoft.Build.Utilities.Task
+{
+    public override bool Execute() => throw new NotSupportedException("PublishArtifactsInManifestV3 depends on Maestro.Client, which has discontinued support for desktop frameworks.");
+}
+#endif

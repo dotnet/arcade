@@ -23,6 +23,10 @@
       - SymWebToken                             : Token used to publish symbol blobs, dll and pdb to Symweb
       - SymbolPublishingExclusionsFile          : Files that have to be excluded from symbol publishing 
       - PdbArtifactsBasePath                    : Path to dlls and pdbs
+      - AzdoApiToken                            : Token used to call the Azure Api to download artifacts and symbols
+      - ArtifactsBasePath                       : Staging directory 
+      - UseStreamingPublishing                  : When set to true it will use Azure Api to download the artifacts and symbols using streaming,
+                                                  else all the artifacts and symbols are downloaded before publishing.
 
       Optional aka.ms link generation parameters:
         - AkaMSClientId                         : Client ID for the aka.ms AD application
@@ -30,6 +34,15 @@
         - AkaMSTenant                           : Tenant ID for aka.ms link generation. Defaults to ncd
         - AkaMSOwners                           : Semi-colon delimited list of aliases of the owners of generated links. Defaults to dn-bot
         - AkaMSCreatedBy                        : Semi-colon delimited list of aliases of the creator/updator links. Defaults to dn-bot
+        - BuildQuality                          : Build quality. Can be daily, signed, validated, preview or ga. Defaults to daily.
+
+      Optional feed override parameters:
+        - AllowFeedOverrides                    : Option to allow feed overrides if they are supplied. Defaults to false.
+        - InstallersFeedOverride                : Override for the installers feed
+        - ChecksumsFeedOverride                 : Override for the checksums feed
+        - TransportFeedOverride                 : Override for the transport feed
+        - ShippingFeedOverride                  : Override for the shipping feed
+        - SymbolsFeedOverride                   : Override for the symbols feed
 
     Parameters required by SetupTargetFeeds.proj:
       - IsInternalBuild
@@ -56,22 +69,19 @@
           - InternalInstallersTargetStaticFeedKey
           - InternalChecksumsTargetStaticFeed
           - InternalChecksumsTargetStaticFeedKey
+
+    NOTE: For symbol publishing using V3, ConvertPortablePdbsToWindowsPdbs is always set to false, because this is an expensive task so this is done in the staging pipeline post signing.
   -->
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
 
-    <!-- Default publishing infra target is 2. -->
-    <PublishingInfraVersion Condition="'$(PublishingInfraVersion)' == ''">2</PublishingInfraVersion>
+    <!-- Default publishing infra target is 3. -->
+    <PublishingInfraVersion Condition="'$(PublishingInfraVersion)' == ''">3</PublishingInfraVersion>
   </PropertyGroup>
 
-  <Import Project="SetupTargetFeeds.proj" Condition="'$(PublishingInfraVersion)' == '2'" />
-
   <Target Name="Execute">
-    <CallTarget Targets="SetupTargetFeeds" Condition="'$(PublishingInfraVersion)' == '2'">
-      <Output TaskParameter="TargetOutputs" ItemName="TargetFeedConfig"/>
-    </CallTarget>
 
     <Error Condition="'$(ManifestsBasePath)' == ''" Text="ManifestsBasePath is empty. Please provide the full path to asset manifest(s) directory." />
     <Error Condition="'$(BlobBasePath)' == '' OR '$(PackageBasePath)' == ''" Text="A valid full path to BlobBasePath and PackageBasePath is required." />
@@ -84,7 +94,7 @@
 
     <PropertyGroup>
       <AkaMSTenant Condition="'$(AkaMSTenant)' == ''">ncd</AkaMSTenant>
-      <AkaMSOwners Condition="'$(AkaMSOwners)' == ''">jamshedd;leecow;rbhanda;v-susles;v-paddan</AkaMSOwners>
+      <AkaMSOwners Condition="'$(AkaMSOwners)' == ''">jamshedd;leecow;rbhanda;v-susles</AkaMSOwners>
       <AkaMSCreatedBy Condition="'$(AkaMSCreatedBy)' == ''">dn-bot</AkaMSCreatedBy>
       <AkaMSGroupOwner Condition="'$(AkaMSGroupOwner)' == ''">ddfwlink</AkaMSGroupOwner>
       <PublishSpecialClrFiles Condition="'$(PublishSpecialClrFiles)' == ''">false</PublishSpecialClrFiles>
@@ -94,7 +104,35 @@
       <ChecksumsFeedKey>$(ChecksumsAzureAccountKey)</ChecksumsFeedKey>
       <InternalChecksumsFeedKey>$(InternalChecksumsAzureAccountKey)</InternalChecksumsFeedKey>
       <AllowFeedOverrides Condition="'$(AllowFeedOverrides)' == ''">false</AllowFeedOverrides>
+      <UseStreamingPublishing Condition="'$(UseStreamingPublishing)' == ''">false</UseStreamingPublishing>
+      <ArtifactsBasePath Condition="'$(ArtifactsBasePath)' == ''">$(BlobBasePath)</ArtifactsBasePath>
+      <NonStreamingPublishingMaxClients Condition="'$(NonStreamingPublishingMaxClients)' == ''">12</NonStreamingPublishingMaxClients>
+      <StreamingPublishingMaxClients Condition="'$(UseStreamingPublishing)' == 'true' and '$(StreamingPublishingMaxClients)' == ''">16</StreamingPublishingMaxClients>
     </PropertyGroup>
+
+    <ItemGroup>
+      <FeedKey Include="https://dotnetclichecksums.blob.core.windows.net/dotnet/index.json" Key="$(ChecksumsFeedKey)"/>
+      <FeedKey Include="https://dotnetcli.blob.core.windows.net/dotnet/index.json" Key="$(InstallersFeedKey)"/>
+      <FeedKey Include="https://dotnetclichecksumsmsrc.blob.core.windows.net/dotnet/index.json" Key="$(InternalChecksumsFeedKey)"/>
+      <FeedKey Include="https://dotnetclimsrc.blob.core.windows.net/dotnet/index.json" Key="$(InternalInstallersFeedKey)"/>
+      <FeedKey Include="https://pkgs.dev.azure.com/dnceng" Key="$(AzureDevOpsFeedsKey)"/>
+      <FeedKey Include="$(ChecksumsFeedOverride)" Key="$(ChecksumsFeedKey)" Condition="'$(ChecksumsFeedOverride)' != ''"/>
+      <FeedKey Include="$(InstallersFeedOverride)" Key="$(InstallersFeedKey)" Condition="'$(InstallersFeedOverride)' != ''"/>
+      <FeedSasUri Include="https://dotnetbuilds.blob.core.windows.net/public" Base64Uri="$(DotNetBuildsPublicUriBase64)"/>
+      <FeedSasUri Include="https://dotnetbuilds.blob.core.windows.net/public-checksums" Base64Uri="$(DotNetBuildsPublicChecksumsUriBase64)"/>
+      <FeedSasUri Include="https://dotnetbuilds.blob.core.windows.net/internal" Base64Uri="$(DotNetBuildsInternalUriBase64)"/>
+      <FeedSasUri Include="https://dotnetbuilds.blob.core.windows.net/internal-checksums" Base64Uri="$(DotNetBuildsInternalChecksumsUriBase64)"/>
+      <FeedOverride Include="https://dotnetclichecksums.blob.core.windows.net/dotnet/index.json" Replacement="$(ChecksumsFeedOverride)" Condition="'$(ChecksumsFeedOverride)' != ''"/>
+      <FeedOverride Include="https://dotnetcli.blob.core.windows.net/dotnet/index.json" Replacement="$(InstallersFeedOverride)" Condition="'$(InstallersFeedOverride)' != ''"/>
+      <FeedOverride Include="https://dotnetclichecksumsmsrc.blob.core.windows.net/dotnet/index.json" Replacement="$(ChecksumsFeedOverride)" Condition="'$(ChecksumsFeedOverride)' != ''"/>
+      <FeedOverride Include="https://dotnetclimsrc.blob.core.windows.net/dotnet/index.json" Replacement="$(InstallersFeedOverride)" Condition="'$(InstallersFeedOverride)' != ''"/>
+      <FeedOverride Include="https://dotnetbuilds.blob.core.windows.net/public-checksums" Replacement="$(ChecksumsFeedOverride)" Condition="'$(ChecksumsFeedOverride)' != ''"/>
+      <FeedOverride Include="https://dotnetbuilds.blob.core.windows.net/public" Replacement="$(InstallersFeedOverride)" Condition="'$(InstallersFeedOverride)' != ''"/>
+      <FeedOverride Include="https://dotnetbuilds.blob.core.windows.net/internal-checksums" Replacement="$(ChecksumsFeedOverride)" Condition="'$(ChecksumsFeedOverride)' != ''"/>
+      <FeedOverride Include="https://dotnetbuilds.blob.core.windows.net/internal" Replacement="$(InstallersFeedOverride)" Condition="'$(InstallersFeedOverride)' != ''"/>
+      <FeedOverride Include="transport-packages" Replacement="$(TransportFeedOverride)" Condition="'$(TransportFeedOverride)' != ''"/>
+      <FeedOverride Include="shipping-packages" Replacement="$(ShippingFeedOverride)" Condition="'$(ShippingFeedOverride)' != ''"/>
+    </ItemGroup>
 
     <Error
       Condition="'@(ManifestFiles)' == ''"
@@ -111,12 +149,6 @@
       MaestroApiEndpoint="$(MaestroApiEndpoint)"
       BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
       PublishInstallersAndChecksums="$(PublishInstallersAndChecksums)"
-      ChecksumsFeedKey="$(ChecksumsFeedKey)"
-      InstallersFeedKey="$(InstallersFeedKey)"
-      InternalChecksumsFeedKey="$(InternalChecksumsFeedKey)"
-      InternalInstallersFeedKey="$(InternalInstallersFeedKey)"
-      AzureDevOpsFeedsKey="$(AzureDevOpsFeedsKey)"
-      AzureStorageTargetFeedKey="$(AzureStorageTargetFeedPAT)"
       AssetManifestPaths="@(ManifestFiles)"
       BlobAssetsBasePath="$(BlobBasePath)"
       PackageAssetsBasePath="$(PackageBasePath)"
@@ -134,11 +166,18 @@
       PublishSpecialClrFiles="$(PublishSpecialClrFiles)"
       BuildQuality="$(BuildQuality)"
       AllowFeedOverrides="$(AllowFeedOverrides)"
-      InstallersFeedOverride="$(InstallersFeedOverride)"
-      ChecksumsFeedOverride="$(ChecksumsFeedOverride)"
-      TransportFeedOverride="$(TransportFeedOverride)"
-      ShippingFeedOverride="$(ShippingFeedOverride)"
-      SymbolsFeedOverride="$(SymbolsFeedOverride)" />
+      AzdoApiToken="$(AzdoApiToken)"
+      ArtifactsBasePath="$(ArtifactsBasePath)"
+      BuildId="$(BuildId)"
+      AzureDevOpsOrg="$(AzureDevOpsOrg)"
+      AzureProject="$(AzureProject)"
+      UseStreamingPublishing="$(UseStreamingPublishing)"
+      StreamingPublishingMaxClients="$(StreamingPublishingMaxClients)"
+      NonStreamingPublishingMaxClients="$(NonStreamingPublishingMaxClients)"
+      FeedKeys="@(FeedKey)"
+      FeedSasUris="@(FeedSasUri)"
+      FeedOverrides="@(FeedOverride)"
+      />
   </Target>
 
   <ItemGroup>

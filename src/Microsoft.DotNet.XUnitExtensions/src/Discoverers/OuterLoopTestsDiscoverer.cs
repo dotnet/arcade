@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Collections.Generic;
+using System.Linq;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
@@ -20,7 +21,12 @@ namespace Microsoft.DotNet.XUnitExtensions
         /// <returns>The trait values.</returns>
         public IEnumerable<KeyValuePair<string, string>> GetTraits(IAttributeInfo traitAttribute)
         {
-            yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.OuterLoop);
+            IEnumerable<object> ctorArgs = traitAttribute.GetConstructorArguments();
+            if (ctorArgs.Count() < 2)
+            {
+                return new[] { new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.OuterLoop) };
+            }
+            return DiscovererHelpers.EvaluateArguments(ctorArgs, XunitConstants.OuterLoop);
         }
     }
 }

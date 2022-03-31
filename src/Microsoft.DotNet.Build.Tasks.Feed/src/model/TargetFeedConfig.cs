@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.Extensions.Azure;
 
@@ -13,6 +14,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
     /// </summary>
     public class TargetFeedConfig
     {
+        /// <summary>
+        ///   Returns the TargetURL stripped of SAS token so it can be used for logging purposes.
+        /// </summary>
+        public string SafeTargetURL => new UriBuilder(TargetURL) {Query = "", Fragment = ""}.Uri.AbsoluteUri;
+
         public TargetFeedContentType ContentType { get; }
 
         public string TargetURL { get; }
@@ -46,13 +52,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         /// Not applicable to packages
         /// Generates a link the blob, stripping away any version information in the file or blob path.
         /// E.g. 
-        ///      [LatestLinkShortUrlPrefix]/aspnetcore/Runtime/dotnet-hosting-win.exe -> aspnetcore/Runtime/3.1.0-preview2.19511.6/dotnet-hosting-3.1.0-preview2.19511.6-win.exe
+        ///      [LatestLinkShortUrlPrefixes]/aspnetcore/Runtime/dotnet-hosting-win.exe -> aspnetcore/Runtime/3.1.0-preview2.19511.6/dotnet-hosting-3.1.0-preview2.19511.6-win.exe
         /// </summary>
-        public string LatestLinkShortUrlPrefix { get; }
+        public List<string> LatestLinkShortUrlPrefixes { get; }
 
         public SymbolTargetType SymbolTargetType { get; }
 
-        public List<string> FilenamesToExclude { get; }
+        public ImmutableList<string> FilenamesToExclude { get; }
 
         public bool Flatten { get; }
 
@@ -60,13 +66,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             string targetURL, 
             FeedType type, 
             string token, 
-            string latestLinkShortUrlPrefix = null, 
+            List<string> latestLinkShortUrlPrefixes = null, 
             AssetSelection assetSelection = AssetSelection.All, 
             bool isolated = false, 
             bool @internal = false, 
             bool allowOverwrite = false, 
             SymbolTargetType symbolTargetType = SymbolTargetType.None, 
-            List<string> filenamesToExclude = null,
+            IEnumerable<string> filenamesToExclude = null,
             bool flatten = true)
         {
             ContentType = contentType;
@@ -77,32 +83,42 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             Isolated = isolated;
             Internal = @internal;
             AllowOverwrite = allowOverwrite;
-            LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix ?? string.Empty;
+            LatestLinkShortUrlPrefixes = latestLinkShortUrlPrefixes ?? new List<string>();
             SymbolTargetType = symbolTargetType;
-            FilenamesToExclude = filenamesToExclude ?? new List<string>();
+            FilenamesToExclude = filenamesToExclude?.ToImmutableList() ?? ImmutableList<string>.Empty;
             Flatten = flatten;
         }
 
         public override bool Equals(object obj)
         {
-            return  
+            if (  
                 obj is TargetFeedConfig other &&
                 (ContentType == other.ContentType) &&
                 TargetURL.Equals(other.TargetURL, StringComparison.OrdinalIgnoreCase) &&
                 (Type == other.Type) &&
                 Token.Equals(other.Token) &&
-                LatestLinkShortUrlPrefix.Equals(other.LatestLinkShortUrlPrefix, StringComparison.OrdinalIgnoreCase) &&
+                LatestLinkShortUrlPrefixes.SequenceEqual(other.LatestLinkShortUrlPrefixes) &&
                 (AssetSelection == other.AssetSelection) &&
                 (Isolated == other.Isolated) &&
                 (Internal == other.Internal) &&
                 (AllowOverwrite == other.AllowOverwrite) &&
-                FilenamesToExclude.SequenceEqual(other.FilenamesToExclude) &&
-                (Flatten == other.Flatten);
+                (Flatten == other.Flatten))
+            {
+                if (FilenamesToExclude is null)
+                    return other.FilenamesToExclude is null;
+                
+                if (other.FilenamesToExclude is null)
+                    return false;
+                
+                return FilenamesToExclude.SequenceEqual(other.FilenamesToExclude);
+            }
+
+            return false;
         }
 
         public override int GetHashCode()
         {
-            return (ContentType, Type, AssetSelection, Isolated, Internal, AllowOverwrite, LatestLinkShortUrlPrefix, TargetURL, Token, Flatten, string.Join(" ", FilenamesToExclude)).GetHashCode();
+            return (ContentType, Type, AssetSelection, Isolated, Internal, AllowOverwrite, string.Join(" ", LatestLinkShortUrlPrefixes), TargetURL, Token, Flatten, string.Join(" ", FilenamesToExclude)).GetHashCode();
         }
 
         public override string ToString()
@@ -114,8 +130,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n Isolated? '{Isolated}' " +
                 $"\n Internal? '{Internal}' " +
                 $"\n AllowOverwrite? '{AllowOverwrite}' " +
-                $"\n ShortUrlPrefix: '{LatestLinkShortUrlPrefix}' " +
-                $"\n TargetURL: '{TargetURL}'" +
+                $"\n ShortUrlPrefix: \n\t{string.Join("\n\t", LatestLinkShortUrlPrefixes)}" +
+                $"\n TargetURL: '{SafeTargetURL}'" +
                 $"\n FilenamesToExclude: \n\t{string.Join("\n\t", FilenamesToExclude)}" +
                 $"\n Flatten: '{Flatten}'";
         }
@@ -154,7 +170,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
     public enum FeedType
     {
         AzDoNugetFeed,
-        AzureStorageFeed
+        AzureStorageFeed,
+        AzureStorageContainer,
     }
 
     /// <summary>

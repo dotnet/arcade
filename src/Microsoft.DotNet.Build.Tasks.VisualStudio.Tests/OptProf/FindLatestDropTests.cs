@@ -34,16 +34,16 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio.UnitTests
   }
 ]
 "));
-
         }
 
-        [Fact]
-        public void GetLatestDropName_Error()
+        [Theory]
+        [InlineData(@"[]")]
+        [InlineData(@"[ { } ]")]
+        [InlineData(@"[ { ""CreatedDateUtc"" : 1 } ]")]
+        [InlineData(@"[ { ""CreatedDateUtc"" : ""2018-11-28T14:54:59.5832452Z"" } ]")]
+        public void GetLatestDropName_Error(string json)
         {
-            Assert.Throws<ApplicationException>(() => FindLatestDrop.GetLatestDropName(@"[]"));
-            Assert.Throws<ApplicationException>(() => FindLatestDrop.GetLatestDropName(@"[ { } ]"));
-            Assert.Throws<ApplicationException>(() => FindLatestDrop.GetLatestDropName(@"[ { ""CreatedDateUtc"" : 1 } ]"));
-            Assert.Throws<ApplicationException>(() => FindLatestDrop.GetLatestDropName(@"[ { ""CreatedDateUtc"" : ""2018-11-28T14:54:59.5832452Z"" } ]"));
+            Assert.Throws<ApplicationException>(() => FindLatestDrop.GetLatestDropName(json));
         }
     }
 }

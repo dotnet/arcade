@@ -50,7 +50,6 @@
     <Authors>Microsoft</Authors>
     <Owners>microsoft,dotnetframework</Owners>
     <IconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</IconUrl>
-    <Tags></Tags>
     <RequireLicenseAcceptance Condition="'$(RequireLicenseAcceptance)' == ''">false</RequireLicenseAcceptance>
     <Serviceable Condition="'$(Serviceable)' == ''">true</Serviceable>
     <!-- we depend on NuGet v2.12 / v3.4 behavior NuGet doesn't support two different min client versions
@@ -434,7 +433,7 @@
     </HarvestPackage>
 
     <ItemGroup>
-      <SupportedFramework Include="@(_HarvestedSupportedFramework)" Exclude="@(NotSupportedOnTargetFramework)" />
+      <SupportedFramework Include="@(_HarvestedSupportedFramework)" Exclude="@(NotSupportedOnTargetFramework);@(ExcludeHarvestedSupportedFramework)" />
     </ItemGroup>
   </Target>
 
@@ -930,6 +929,10 @@
     <DefaultValidateFramework Include="netcoreapp3.0">
       <RuntimeIDs>@(NETCoreApp30RIDs)</RuntimeIDs>
     </DefaultValidateFramework>
+    <NETCoreApp31RIDs Condition="'@(NETCoreApp31RIDs)' == ''" Include="@(NETCoreApp30RIDs)" />
+    <DefaultValidateFramework Include="netcoreapp3.1">
+      <RuntimeIDs>@(NETCoreApp31RIDs)</RuntimeIDs>
+    </DefaultValidateFramework>
     <NETCoreApp50RIDs Condition="'@(NETCoreApp50RIDs)' == ''" Include="@(NETCoreApp30RIDs)" />
     <DefaultValidateFramework Include="net5.0">
       <RuntimeIDs>@(NETCoreApp50RIDs)</RuntimeIDs>
@@ -1213,17 +1216,17 @@
                     Authors="$(Authors)"
                     Owners="$(Owners)"
                     Description="$(Description)"
-                    ReleaseNotes="$(ReleaseNotes)"
+                    ReleaseNotes="$(PackageReleaseNotes)"
                     Summary="$(Summary)"
                     Language="$(Language)"
-                    ProjectUrl="$(ProjectUrl)"
+                    ProjectUrl="$(PackageProjectUrl)"
                     IconUrl="$(IconUrl)"
                     Icon="$(PackageIcon)"
                     LicenseUrl="$(LicenseUrl)"
                     PackageLicenseExpression="$(PackageLicenseExpression)"
                     Copyright="$(Copyright)"
                     RequireLicenseAcceptance="$(RequireLicenseAcceptance)"
-                    Tags="$(Tags)"
+                    Tags="$(PackageTags)"
                     DevelopmentDependency="$(DevelopmentDependency)"
                     Dependencies="@(Dependency)"
                     References="@(Reference)"

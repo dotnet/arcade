@@ -2,7 +2,7 @@ trigger:
   batch: true
   branches:
     include:
-    - master
+    - main
     - release/3.x
     - release/5.0
 
@@ -24,8 +24,8 @@ stages:
       - job: Windows_NT
         timeoutInMinutes: 90
         pool:
-          name: NetCorePublic-Pool
-          queue: BuildPool.Server.Amd64.VS2017.Arcade.Open
+          name: NetCore1ESPool-Public
+          demands: ImageOverride -equals Build.Server.Amd64.VS2019.Open
         preSteps:
         - checkout: self
           clean: true

@@ -14,18 +14,21 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Azure.Core.Pipeline;
+using System.Net.Http;
+using Microsoft.DotNet.Build.Tasks.Feed;
 
 namespace Microsoft.DotNet.Build.CloudTestTasks
 {
     public class AzureStorageUtils
     {
-        private readonly Dictionary<string, string> MimeMappings = new Dictionary<string, string>()
+        private static readonly Dictionary<string, string> MimeMappings = new Dictionary<string, string>()
         {
             {".svg", "image/svg+xml"},
             {".version", "text/plain"}
         };
 
-        private readonly Dictionary<string, string> CacheMappings = new Dictionary<string, string>()
+        private static readonly Dictionary<string, string> CacheMappings = new Dictionary<string, string>()
         {
             {".svg", "no-cache"}
         };
@@ -35,11 +38,24 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 
         public BlobContainerClient Container { get; set; }
 
+        private static readonly HttpClient s_httpClient = new HttpClient(
+            new HttpClientHandler() 
+            { 
+                CheckCertificateRevocationList = true 
+            })
+        { 
+            Timeout = TimeSpan.FromSeconds(300) 
+        };
+        private static readonly BlobClientOptions s_clientOptions = new BlobClientOptions()
+        {
+            Transport = new HttpClientTransport(s_httpClient)
+        };
+
         public AzureStorageUtils(string AccountName, string AccountKey, string ContainerName)
         {
             _credential = new StorageSharedKeyCredential(AccountName, AccountKey);
             Uri endpoint = new Uri($"https://{AccountName}.blob.core.windows.net");
-            BlobServiceClient service = new BlobServiceClient(endpoint, _credential);
+            BlobServiceClient service = new BlobServiceClient(endpoint, _credential, s_clientOptions);
             Container = service.GetBlobContainerClient(ContainerName);
         }
 
@@ -51,7 +67,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 
         public static string CalculateMD5(string filename)
         {
-            using (var md5 = MD5.Create())
+            using (var md5 = MD5.Create())  // lgtm [cs/weak-crypto] Azure Storage specifies use of MD5
             {
                 using (var stream = File.OpenRead(filename))
                 {
@@ -103,75 +119,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
         }
 
         public async Task<bool> IsFileIdenticalToBlobAsync(string localFileFullPath, string blobPath) =>
-            await IsFileIdenticalToBlobAsync(localFileFullPath, GetBlob(blobPath)).ConfigureAwait(false);
-
-        /// <summary>
-        /// Return a bool indicating whether a local file's content is the same as 
-        /// the content of a given blob. 
-        /// 
-        /// If the blob has the ContentHash property set, the comparison is performed using 
-        /// that (MD5 hash).  All recently-uploaded blobs or those uploaded by these libraries
-        /// should; some blob clients older than ~2012 may upload without the property set.
-        /// 
-        /// When the ContentHash property is unset, a byte-by-byte comparison is performed.
-        /// </summary>
-        public async Task<bool> IsFileIdenticalToBlobAsync(string localFileFullPath, BlobClient blob)
-        {
-            BlobProperties properties = await blob.GetPropertiesAsync();
-            if (properties.ContentHash != null)
-            {
-                var localMD5 = CalculateMD5(localFileFullPath);
-                var blobMD5 = Convert.ToBase64String(properties.ContentHash);
-                return blobMD5.Equals(localMD5, StringComparison.OrdinalIgnoreCase);
-            }
-            else
-            {
-                int bytesPerMegabyte = 1 * 1024 * 1024;
-                if (properties.ContentLength < bytesPerMegabyte)
-                {
-                    byte[] existingBytes = new byte[properties.ContentLength];
-                    byte[] localBytes = File.ReadAllBytes(localFileFullPath);
-
-                    using (MemoryStream stream = new MemoryStream(existingBytes, true))
-                    {
-                        await blob.DownloadToAsync(stream).ConfigureAwait(false);
-                    }
-                    return localBytes.SequenceEqual(existingBytes);
-                }
-                else
-                {
-                    using (Stream localFileStream = File.OpenRead(localFileFullPath))
-                    {
-                        byte[] localBuffer = new byte[bytesPerMegabyte];
-                        byte[] remoteBuffer = new byte[bytesPerMegabyte];
-                        int bytesLocalFile = 0;
-
-                        do
-                        {
-                            long start = localFileStream.Position;
-                            int localBytesRead = await localFileStream.ReadAsync(localBuffer, 0, bytesPerMegabyte);
-
-                            HttpRange range = new HttpRange(start, localBytesRead);
-                            BlobDownloadInfo download = await blob.DownloadAsync(range).ConfigureAwait(false);
-                            if (download.ContentLength != localBytesRead)
-                            {
-                                return false;
-                            }
-                            using (MemoryStream stream = new MemoryStream(remoteBuffer, true))
-                            {
-                                await download.Content.CopyToAsync(stream).ConfigureAwait(false);
-                            }
-                            if (!remoteBuffer.SequenceEqual(localBuffer))
-                            {
-                                return false;
-                            }
-                        }
-                        while (bytesLocalFile > 0);
-                    }
-                    return true;
-                }
-            }
-        }
+            await GetBlob(blobPath).IsFileIdenticalToBlobAsync(localFileFullPath);
 
         public async Task<string> CreateContainerAsync(PublicAccessType publicAccess)
         {
@@ -197,7 +145,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             await GetBlob(blobPath).ExistsAsync().ConfigureAwait(false);
 
 
-        private BlobHttpHeaders GetBlobHeadersByExtension(string filePath)
+        public static BlobHttpHeaders GetBlobHeadersByExtension(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
             {

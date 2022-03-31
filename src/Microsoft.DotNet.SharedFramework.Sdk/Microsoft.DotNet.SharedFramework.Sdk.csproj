@@ -1,7 +1,8 @@
-<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks Condition="'$(DotNetBuildFromSource)' == 'true'">net6.0</TargetFrameworks>
     <LangVersion>preview</LangVersion>
     <ExcludeFromSourceBuild>false</ExcludeFromSourceBuild>
 
@@ -41,8 +42,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Microsoft.DotNet.Build.Tasks.Packaging\src\VerifyClosure.cs" Link="src/Packaging/VerifyClosure.cs" />
-    <Compile Include="..\Microsoft.DotNet.Build.Tasks.Packaging\src\VerifyTypes.cs" Link="src/Packaging/VerifyTypes.cs" />
+    <Compile Include="..\Microsoft.DotNet.PackageTesting\VerifyClosure.cs" Link="src/Packaging/VerifyClosure.cs" />
+    <Compile Include="..\Microsoft.DotNet.PackageTesting\VerifyTypes.cs" Link="src/Packaging/VerifyTypes.cs" />
   </ItemGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">

@@ -19,7 +19,7 @@
     <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
     <EnableGeneratedPackageContent>false</EnableGeneratedPackageContent>
     <_GeneratedVersionFilePath>$(IntermediateOutputPath)DefaultVersions.Generated.props</_GeneratedVersionFilePath>
-    <NoWarn>3021;NU5105</NoWarn>
+    <NoWarn>3021;NU5105;SYSLIB0013</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -81,9 +81,10 @@
     <MicrosoftNetILLinkTasksVersion>$(MicrosoftNetILLinkTasksVersion)</MicrosoftNetILLinkTasksVersion>
     <MicrosoftSourceLinkVersion>$(MicrosoftSourceLinkVersion)</MicrosoftSourceLinkVersion>
     <MicrosoftDiaSymReaderPdb2PdbVersion>$(MicrosoftDiaSymReaderPdb2PdbVersion)</MicrosoftDiaSymReaderPdb2PdbVersion>
-    <XliffTasksVersion>$(XliffTasksVersion)</XliffTasksVersion>
+    <MicrosoftDotNetXliffTasksVersion>$(MicrosoftDotNetXliffTasksVersion)</MicrosoftDotNetXliffTasksVersion>
     <MicrosoftDotNetMaestroTasksVersion>$(MicrosoftDotNetMaestroTasksVersion)</MicrosoftDotNetMaestroTasksVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion>$(MicrosoftSymbolUploaderBuildTaskVersion)</MicrosoftSymbolUploaderBuildTaskVersion>
+    <MicrosoftTemplateEngineTasksVersion>$(MicrosoftTemplateEngineTasksVersion)</MicrosoftTemplateEngineTasksVersion>
   </PropertyGroup>
 </Project>]]>
   </_SdkVersionPropsContent>

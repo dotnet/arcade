@@ -4,6 +4,7 @@
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
+#if !NET472_OR_GREATER
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
@@ -11,7 +12,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -46,7 +49,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///                                     If false, an error is thrown if an asset already exists
         ///                                     If not provided then defaults to false.
         ///                                     Azure DevOps feeds can never be overwritten.
-        /// Metadata LatestLinkShortUrlPrefix (optional): If provided, AKA ms links are generated (for artifacts blobs only)
+        /// Metadata LatestLinkShortUrlPrefixes (optional): If provided, AKA ms links are generated (for artifacts blobs only)
         ///                                               that target this short url path. The link is construct as such:
         ///                                               aka.ms/AkaShortUrlPath/BlobArtifactPath -> Target blob url
         ///                                               If specified, then AkaMSClientId, AkaMSClientSecret and AkaMSTenant must be provided.
@@ -92,11 +95,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string BuildAssetRegistryToken { get; set; }
 
         /// <summary>
-        /// Maximum number of parallel uploads for the upload tasks
-        /// </summary>
-        public int MaxClients { get; set; } = 16;
-
-        /// <summary>
         /// Directory where "nuget.exe" is installed. This will be used to publish packages.
         /// </summary>
         [Required]
@@ -110,29 +108,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool PublishInstallersAndChecksums { get; set; } = false;
 
-        public string AzureStorageTargetFeedKey { get; set; }
-
         public bool AllowFeedOverrides { get; set; }
 
-        public string ChecksumsFeedOverride { get; set; }
+        public ITaskItem[] FeedKeys { get; set; }
+        public ITaskItem[] FeedSasUris { get; set; }
 
-        public string ChecksumsFeedKey { get; set; }
-
-        public string InstallersFeedOverride { get; set; }
-
-        public string InstallersFeedKey { get; set; }
-
-        public string InternalInstallersFeedKey { get; set; }
-
-        public string InternalCheckSumsFeedKey { get; set; }
-
-        public string AzureDevOpsFeedsKey { get; set; }
-
-        public string TransportFeedOverride { get; set; }
-        
-        public string ShippingFeedOverride { get; set; }
-
-        public string SymbolsFeedOverride { get; set; }
+        public ITaskItem[] FeedOverrides { get; set; }
 
         /// <summary>
         /// Path to dll and pdb files
@@ -183,6 +164,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             get { return _buildQuality.GetDescription(); }
             set { Enum.TryParse<PublishingConstants.BuildQuality>(value, true, out _buildQuality); }
         }
+        public string AzdoApiToken {get; set;}
+
+        public string ArtifactsBasePath { get; set;}
+
+        public string BuildId { get; set; }
+
+        public string AzureProject { get; set; }
+
+        public string AzureDevOpsOrg { get; set; }
+
+        /// <summary>
+        /// If true, uses Azdo Api to download artifacts and symbols files one file at a time during publishing process.
+        /// If it is set to false, then artifacts and symbols are downloaded in PackageArtifacts and BlobArtifacts directory before publishing. 
+        /// </summary>
+        public bool UseStreamingPublishing { get; set; } = false;
+
+        public int StreamingPublishingMaxClients {get; set;}
+
+        public int NonStreamingPublishingMaxClients {get; set;}
 
         /// <summary>
         /// Just an internal flag to keep track whether we published assets via a V3 manifest or not.
@@ -306,35 +306,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         internal PublishArtifactsInManifestBase ConstructPublishingV2Task(BuildModel buildModel)
         {
-            return new PublishArtifactsInManifestV2()
-            {
-                BuildEngine = this.BuildEngine,
-                TargetFeedConfig = this.TargetFeedConfig,
-                BuildModel = buildModel,
-                BlobAssetsBasePath = this.BlobAssetsBasePath,
-                PackageAssetsBasePath = this.PackageAssetsBasePath,
-                BARBuildId = this.BARBuildId,
-                MaestroApiEndpoint = this.MaestroApiEndpoint,
-                BuildAssetRegistryToken = this.BuildAssetRegistryToken,
-                MaxClients = this.MaxClients,
-                NugetPath = this.NugetPath,
-                InternalBuild = this.InternalBuild,
-                SkipSafetyChecks = this.SkipSafetyChecks,
-                AkaMSClientId = this.AkaMSClientId,
-                AkaMSClientSecret = this.AkaMSClientSecret,
-                AkaMSCreatedBy = this.AkaMSCreatedBy,
-                AkaMSGroupOwner = this.AkaMSGroupOwner,
-                AkaMsOwners = this.AkaMsOwners,
-                AkaMSTenant = this.AkaMSTenant,
-                BuildQuality = this.BuildQuality
-            };
+            Log.LogError("V2 Publishing is no longer supported.");
+            return null;
         }
 
         internal PublishArtifactsInManifestBase ConstructPublishingV3Task(BuildModel buildModel)
         {
             PublishedV3Manifest = true;
 
-            return new PublishArtifactsInManifestV3()
+            return new PublishArtifactsInManifestV3(new AssetPublisherFactory(Log))
             {
                 BuildEngine = this.BuildEngine,
                 TargetChannels = this.TargetChannels,
@@ -344,7 +324,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 BARBuildId = this.BARBuildId,
                 MaestroApiEndpoint = this.MaestroApiEndpoint,
                 BuildAssetRegistryToken = this.BuildAssetRegistryToken,
-                MaxClients = this.MaxClients,
                 NugetPath = this.NugetPath,
                 InternalBuild = this.InternalBuild,
                 SkipSafetyChecks = this.SkipSafetyChecks,
@@ -355,25 +334,31 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AkaMsOwners = this.AkaMsOwners,
                 AkaMSTenant = this.AkaMSTenant,
                 PublishInstallersAndChecksums = this.PublishInstallersAndChecksums,
-                AzureDevOpsFeedsKey = this.AzureDevOpsFeedsKey,
-                InstallersFeedKey = this.InstallersFeedKey,
-                CheckSumsFeedKey = this.ChecksumsFeedKey,
-                InternalCheckSumsFeedKey = this.InternalCheckSumsFeedKey,
-                InternalInstallersFeedKey = this.InternalInstallersFeedKey,
-                AzureStorageTargetFeedKey = this.AzureStorageTargetFeedKey,
+                FeedKeys = this.FeedKeys,
+                FeedSasUris = this.FeedSasUris,
+                FeedOverrides = this.FeedOverrides,
+                AllowFeedOverrides = this.AllowFeedOverrides,
                 PdbArtifactsBasePath = this.PdbArtifactsBasePath,
                 SymWebToken = this.SymWebToken,
                 MsdlToken = this.MsdlToken,
                 SymbolPublishingExclusionsFile = this.SymbolPublishingExclusionsFile,
                 PublishSpecialClrFiles = this.PublishSpecialClrFiles,
                 BuildQuality = this.BuildQuality,
-                AllowFeedOverrides = this.AllowFeedOverrides,
-                InstallersFeedOverride = this.InstallersFeedOverride,
-                ChecksumsFeedOverride = this.ChecksumsFeedOverride,
-                ShippingFeedOverride = this.ShippingFeedOverride,
-                TransportFeedOverride = this.TransportFeedOverride,
-                SymbolsFeedOverride = this.SymbolsFeedOverride
+                ArtifactsBasePath =  this.ArtifactsBasePath,
+                AzdoApiToken = this.AzdoApiToken,
+                BuildId = this.BuildId,
+                AzureProject = this.AzureProject,
+                AzureDevOpsOrg = this.AzureDevOpsOrg,
+                UseStreamingPublishing = this.UseStreamingPublishing,
+                StreamingPublishingMaxClients = this.StreamingPublishingMaxClients,
+                NonStreamingPublishingMaxClients = this.NonStreamingPublishingMaxClients,
             };
         }
     }
 }
+#else
+public class PublishArtifactsInManifest : Microsoft.Build.Utilities.Task
+{
+    public override bool Execute() => throw new System.NotSupportedException("PublishArtifactsInManifest depends on Maestro.Client, which has discontinued support for desktop frameworks.");
+}
+#endif

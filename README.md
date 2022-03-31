@@ -24,15 +24,15 @@ Status of Arcade public CI builds: [![Build Status](https://dev.azure.com/dnceng
 
 |Repo Name|Current Build Status|
 |---|---|
-|Runtime|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/runtime/dotnet-runtime-official?branchName=master)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=679&branchName=master)|
-|ASPNETCore|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/aspnetcore/aspnetcore-ci-official?branchName=master)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=21&branchName=master)|
-|Installer|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/installer/DotNet%20Core%20SDK%20(Official)?branchName=master)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=286&branchName=master)|
-|Arcade Official Build|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/arcade/arcade-official-ci?branchName=master)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=6&branchName=master)| 
-|Arcade Validation|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/arcade-validation/dotnet-arcade-validation-official?branchName=master)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=282&branchName=master)|
+|Runtime|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/runtime/dotnet-runtime-official?branchName=main)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=679&branchName=main)|
+|ASPNETCore|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/aspnetcore/aspnetcore-ci-official?branchName=main)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=21&branchName=main)|
+|Installer|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/installer/DotNet%20Core%20SDK%20(Official)?branchName=main)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=286&branchName=main)|
+|Arcade Official Build|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/arcade/arcade-official-ci?branchName=main)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=6&branchName=main)| 
+|Arcade Validation|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/arcade-validation/dotnet-arcade-validation-official?branchName=main)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=282&branchName=main)|
 
 ### Status of Latest Version of Arcade Being Validated
 
-- As of August 12, 2020, this section will no longer be updated. Please see the [Arcade channel on Teams](https://teams.microsoft.com/l/channel/19%3a1dad2081c8634f34915d88dce6220265%40thread.skype/Arcade?groupId=4d73664c-9f2f-450d-82a5-c2f02756606d&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47) for this information, or reach out to Missy Messa if you miss reading the status update here. 
+- Please see the [Arcade channel on Teams](https://teams.microsoft.com/l/channel/19%3a1dad2081c8634f34915d88dce6220265%40thread.skype/Arcade?groupId=4d73664c-9f2f-450d-82a5-c2f02756606d&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47) for the latest status regarding Arcade promotions. 
 
 ## Getting Started
 

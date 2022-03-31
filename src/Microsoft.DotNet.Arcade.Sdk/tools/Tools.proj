@@ -16,9 +16,13 @@
     Configure NuGet Restore to use NuGet.config file in the repository root.
     We could drop a custom NuGet.config to the containing directory but it's simpler
     if we use the same config for all restore operations.
+    NuGet.Config, NuGet.config, and nuget.config are all allowed casings according to NuGet:
+    https://github.com/NuGet/NuGet.Client/blob/b83566ec2369c4e9fd07e6f95d734dfe370a1e66/src/NuGet.Core/NuGet.Configuration/Settings/Settings.cs#L34-L36
   -->
   <PropertyGroup>
-    <RestoreConfigFile>$(RepoRoot)NuGet.config</RestoreConfigFile>
+    <RestoreConfigFile Condition="Exists('$(RepoRoot)NuGet.config')">$(RepoRoot)NuGet.config</RestoreConfigFile>
+    <RestoreConfigFile Condition="Exists('$(RepoRoot)NuGet.Config')">$(RepoRoot)NuGet.Config</RestoreConfigFile>
+    <RestoreConfigFile Condition="Exists('$(RepoRoot)nuget.config')">$(RepoRoot)nuget.config</RestoreConfigFile>
   </PropertyGroup>
 
   <Import Project="$(_NuGetRestoreTargets)" />
@@ -29,7 +33,7 @@
     <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)"  IsImplicitlyDefined="true" />
     <PackageReference Include="MicroBuild.Core.Sentinel" Version="1.0.0" IsImplicitlyDefined="true" />
     <PackageReference Include="vswhere" Version="$(VSWhereVersion)" IsImplicitlyDefined="true" />
-    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" Condition="'$(Publish)' == 'true'" IsImplicitlyDefined="true" />
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.DotNet.NuGetRepack.Tasks" Version="$(MicrosoftDotnetNuGetRepackTasksVersion)" Condition="'$(UsingToolNuGetRepack)' == 'true'" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.DotNet.SignTool" Version="$(MicrosoftDotNetSignToolVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.SymbolUploader.Build.Task" Version="$(MicrosoftSymbolUploaderBuildTaskVersion)" Condition="'$(PublishToSymbolServer)' == 'true'" IsImplicitlyDefined="true" />

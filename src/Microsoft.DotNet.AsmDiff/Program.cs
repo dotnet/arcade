@@ -5,6 +5,7 @@ using McMaster.Extensions.CommandLineUtils;
 using System;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 namespace Microsoft.DotNet.AsmDiff
 {
@@ -14,6 +15,11 @@ namespace Microsoft.DotNet.AsmDiff
         public string OldSet { get; set; }
         [Option("-ns|--NewSet", "Provide path to an assembly or directory for an assembly set to gather the new set of types. If this parameter is not provided the API's for the oldset will be printed instead of the diff.", CommandOptionType.SingleValue)]
         public string NewSet { get; set; }
+
+        [Option("-nsn|--NewSetName", "Provide a name for the new set in output. If this parameter is not provided the file or directory name will be used.", CommandOptionType.SingleValue)]
+        public string NewSetName { get; set; }
+        [Option("-osn|--OldSetName", "Provide a name for the old set in output. If this parameter is not provided the file or directory name will be used.", CommandOptionType.SingleValue)]
+        public string OldSetName { get; set; }
 
         [Option("-u|--Unchanged", "Include members, types, and namespaces that are unchanged.", CommandOptionType.NoValue)]
         public bool Unchanged { get; set; }
@@ -63,6 +69,9 @@ namespace Microsoft.DotNet.AsmDiff
         [Option("-o|--OutFile", "Output file path. Default is the console.", CommandOptionType.SingleValue)]
         public string OutFile { get; set; }
 
+        [Option("-l|--Language", "Provide a languagetag for localized content. If this parameter is not provided the environments default language will be used. Currently language specific content is only available in Markdown Writer.", CommandOptionType.SingleValue)]
+        public string Language { get; set; }
+
         public void OnExecute()
         {         
             if (string.IsNullOrEmpty(NewSet))
@@ -79,12 +88,19 @@ namespace Microsoft.DotNet.AsmDiff
                 Added = Removed = Changed = true;
             }
 
+            if (!string.IsNullOrEmpty(Language))
+            {
+                var cultureInfo = System.Globalization.CultureInfo.GetCultureInfo(Language);
+                Thread.CurrentThread.CurrentCulture = cultureInfo;
+                Thread.CurrentThread.CurrentUICulture = cultureInfo;
+            }
+
             DiffConfigurationOptions options = GetDiffOptions();
             DiffFormat diffFormat = GetDiffFormat();
-            
-            AssemblySet oldAssemblies = AssemblySet.FromPaths(OldSet);
-            AssemblySet newAssemblies = AssemblySet.FromPaths(NewSet);
-            
+
+            AssemblySet oldAssemblies = AssemblySet.FromPaths(OldSetName, OldSet);
+            AssemblySet newAssemblies = AssemblySet.FromPaths(NewSetName, NewSet);
+
             DiffConfiguration diffConfiguration = new DiffConfiguration(oldAssemblies, newAssemblies, options);
 
             if (diffFormat == DiffFormat.Md)

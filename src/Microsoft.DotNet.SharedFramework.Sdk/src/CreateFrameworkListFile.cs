@@ -1,6 +1,5 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks;
@@ -88,12 +87,13 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                     FileVersion = FileUtilities.GetFileVersion(item.ItemSpec),
                     IsNative = item.GetMetadata("IsNative") == "true",
                     IsSymbolFile = item.GetMetadata("IsSymbolFile") == "true",
+                    IsPgoData = item.GetMetadata("IsPgoData") == "true",
                     IsResourceFile = item.ItemSpec
                         .EndsWith(".resources.dll", StringComparison.OrdinalIgnoreCase)
                 })
                 .Where(f =>
                     !f.IsSymbolFile &&
-                    (f.Filename.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || f.IsNative))
+                    (f.Filename.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || f.IsNative || f.IsPgoData))
                 // Remove duplicate files this task is given.
                 .GroupBy(f => f.Item.ItemSpec)
                 .Select(g => g.First())
@@ -111,6 +111,10 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                 {
                     type = "Resources";
                 }
+                else if (f.IsPgoData)
+                {
+                    type = "PgoData";
+                }
 
                 string path = Path.Combine(f.TargetPath, f.Filename).Replace('\\', '/');
 
@@ -126,10 +130,40 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                     }
                 }
 
+                string analyzerLanguage = null;
+
+                if (path.StartsWith("analyzers/"))
+                {
+                    type = "Analyzer";
+
+                    if (path.EndsWith(".resources.dll"))
+                    {
+                        // omit analyzer resources
+                        continue;
+                    }
+
+                    var pathParts = path.Split('/');
+
+                    if (pathParts.Length < 3 || !pathParts[1].Equals("dotnet", StringComparison.Ordinal) || pathParts.Length > 4)
+                    {
+                        Log.LogError($"Unexpected analyzer path format {path}.  Expected  'analyzers/dotnet(/language)/analyzer.dll");
+                    }
+
+                    if (pathParts.Length > 3)
+                    {
+                        analyzerLanguage = pathParts[2];
+                    }
+                }
+
                 var element = new XElement(
                     "File",
                     new XAttribute("Type", type),
                     new XAttribute("Path", path));
+
+                if (analyzerLanguage != null)
+                {
+                    element.Add(new XAttribute("Language", analyzerLanguage));
+                }
 
                 if (f.IsResourceFile)
                 {
@@ -137,7 +171,12 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                         new XAttribute("Culture", Path.GetFileName(Path.GetDirectoryName(path))));
                 }
 
-                if (f.AssemblyName != null)
+                if (f.IsPgoData)
+                {
+                    // Pgo data is never carried with single file images
+                    element.Add(new XAttribute("DropFromSingleFile", "true"));
+                }
+                else if (f.AssemblyName != null)
                 {
                     byte[] publicKeyToken = f.AssemblyName.GetPublicKeyToken();
                     string publicKeyTokenHex;
@@ -148,7 +187,7 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                         StringBuilder publicKeyTokenBuilder = new StringBuilder(len * 2);
                         for (int i = 0; i < len; i++)
                         {
-                            publicKeyTokenBuilder.Append(publicKeyToken[i].ToString("x", CultureInfo.InvariantCulture));
+                            publicKeyTokenBuilder.Append(publicKeyToken[i].ToString("x2", CultureInfo.InvariantCulture));
                         }
                         publicKeyTokenHex = publicKeyTokenBuilder.ToString();
                     }

@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             Type t = null;
             MethodInfo mi = null;
             object instance = null;
-            int exitCode = 0;
+            int exitCode = RemoteExecutor.SuccessExitCode;
             try
             {
                 // Create the test class if necessary

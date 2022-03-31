@@ -97,5 +97,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.src
                     await PushNugetPackageAsync(feed, httpClient, localPackagePath, package.Id, package.Version.ToString(), feedAccount, feedVisibility, feedName);
                 });
         }
+
+        public PublishSignedAssets() : base()
+        {
+        }
     }
 }

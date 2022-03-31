@@ -8,7 +8,7 @@ namespace Microsoft.SignCheck.Verification
 {
     public class LzmaVerifier : FileVerifier
     {
-        public LzmaVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options) : base(log, exclusions, options, fileExtension: "lzma")
+        public LzmaVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options) : base(log, exclusions, options, fileExtension: ".lzma")
         {
 
         }

@@ -1,10 +1,11 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 {
@@ -30,32 +31,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         /// <summary>
         /// The name that should be used for creating Aka.ms links for this channel.
         /// </summary>
-        public string AkaMSChannelName { get; }
+        public List<string> AkaMSChannelNames { get; }
 
-        /// <summary>
-        /// The URL (including the index.json suffix) of the *shipping* feed to be used for this channel.
-        /// </summary>
-        public string ShippingFeed { get; }
-
-        /// <summary>
-        /// The URL (including the index.json suffix) of the *transport* feed to be used for this channel.
-        /// </summary>
-        public string TransportFeed { get; }
-
-        /// <summary>
-        /// The URL (including the index.json suffix) of the *symbols* feed to be used for this channel.
-        /// </summary>
-        public string SymbolsFeed { get; }
-
-        /// <summary>
-        /// The URL (including the index.json suffix) where *checksums* should be published to.
-        /// </summary>
-        public string ChecksumsFeed { get; }
-
-        /// <summary>
-        /// The URL (including the index.json suffix) where *installers* should be published to.
-        /// </summary>
-        public string InstallersFeed { get; }
+        public ImmutableList<TargetFeedSpecification> TargetFeeds { get; }
 
         /// <summary>
         /// Should publish to Msdl
@@ -64,7 +42,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public bool IsInternal { get; }
 
-        public List<string> FilenamesToExclude { get; }
+        public ImmutableList<string> FilenamesToExclude { get; }
 
         public bool Flatten { get; }
 
@@ -72,12 +50,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             int id,
             bool isInternal,
             PublishingInfraVersion publishingInfraVersion,
-            string akaMSChannelName,
-            string shippingFeed,
-            string transportFeed,
-            string symbolsFeed,
-            string checksumsFeed,
-            string installersFeed,
+            List<string> akaMSChannelNames,
+            IEnumerable<TargetFeedSpecification> targetFeeds,
             SymbolTargetType symbolTargetType,
             List<string> filenamesToExclude = null,
             bool flatten = true)
@@ -85,14 +59,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             Id = id;
             IsInternal = isInternal;
             PublishingInfraVersion = publishingInfraVersion;
-            AkaMSChannelName = akaMSChannelName;
-            ShippingFeed = shippingFeed;
-            TransportFeed = transportFeed;
-            SymbolsFeed = symbolsFeed;
-            ChecksumsFeed = checksumsFeed;
-            InstallersFeed = installersFeed;
+            AkaMSChannelNames = akaMSChannelNames ?? new List<string>();
+            TargetFeeds = targetFeeds.ToImmutableList();
             SymbolTargetType = symbolTargetType;
-            FilenamesToExclude = filenamesToExclude ?? new List<string>();
+            FilenamesToExclude = filenamesToExclude?.ToImmutableList() ?? ImmutableList<string>.Empty;
             Flatten = flatten;
         }
 
@@ -101,12 +71,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             return
                 $"\n Channel ID: '{Id}' " +
                 $"\n Infra-version: '{PublishingInfraVersion}' " +
-                $"\n AkaMSChannelName: '{AkaMSChannelName}' " +
-                $"\n Shipping-feed: '{ShippingFeed}' " +
-                $"\n Transport-feed: '{TransportFeed}' " +
-                $"\n Symbols-feed: '{SymbolsFeed}' " +
-                $"\n Installers-feed: '{InstallersFeed}' " +
-                $"\n Checksums-feed: '{ChecksumsFeed}' " +
+                $"\n AkaMSChannelName: \n\t{string.Join("\n\t", AkaMSChannelNames)} " +
+                "\n Target Feeds:" +
+                $"\n  {string.Join("\n  ", TargetFeeds.Select(f => $"{string.Join(", ", f.ContentTypes)} -> {f.FeedUrl}"))}" +
                 $"\n SymbolTargetType: '{SymbolTargetType}' " +
                 $"\n IsInternal: '{IsInternal}'" +
                 $"\n FilenamesToExclude: \n\t{string.Join("\n\t", FilenamesToExclude)}" +
@@ -118,12 +85,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             if (other is TargetChannelConfig config &&
                 PublishingInfraVersion == config.PublishingInfraVersion &&
                 Id == config.Id &&
-                String.Equals(AkaMSChannelName, config.AkaMSChannelName, StringComparison.OrdinalIgnoreCase) &&
-                String.Equals(ShippingFeed, config.ShippingFeed, StringComparison.OrdinalIgnoreCase) &&
-                String.Equals(TransportFeed, config.TransportFeed, StringComparison.OrdinalIgnoreCase) &&
-                String.Equals(SymbolsFeed, config.SymbolsFeed, StringComparison.OrdinalIgnoreCase) &&
-                String.Equals(ChecksumsFeed, config.ChecksumsFeed, StringComparison.OrdinalIgnoreCase) &&
-                String.Equals(InstallersFeed, config.InstallersFeed, StringComparison.OrdinalIgnoreCase) &&
+                AkaMSChannelNames.SequenceEqual(config.AkaMSChannelNames) &&
+                TargetFeeds.Count == config.TargetFeeds.Count &&
+                TargetFeeds.Zip(config.TargetFeeds, (l, r) => l.Equals(r)).All(b => b) &&
                 IsInternal == config.IsInternal &&
                 Flatten == config.Flatten)
             {
@@ -141,18 +105,89 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public override int GetHashCode()
         {
-            return (PublishingInfraVersion, 
-                Id, 
-                IsInternal,
-                AkaMSChannelName, 
-                ShippingFeed, 
-                TransportFeed, 
-                SymbolsFeed, 
-                ChecksumsFeed, 
-                InstallersFeed,
-                SymbolTargetType,
-                Flatten,
-                string.Join(" ", FilenamesToExclude)).GetHashCode();
+            var hash = new HashCode();
+            hash.Add(PublishingInfraVersion);
+            hash.Add(Id);
+            hash.Add(IsInternal);
+            foreach(var akaMSChannelName in AkaMSChannelNames)
+            {
+                hash.Add(akaMSChannelName);
+            }
+            foreach (var feedSpec in TargetFeeds)
+            {
+                hash.Add(feedSpec);
+            }
+            hash.Add(SymbolTargetType);
+            hash.Add(Flatten);
+            foreach (string fileName in FilenamesToExclude)
+            {
+                hash.Add(fileName);
+            }
+
+            return hash.ToHashCode();
+        }
+    }
+
+    public struct TargetFeedSpecification
+    {
+        public ImmutableList<TargetFeedContentType> ContentTypes { get; }
+        public string FeedUrl { get; }
+        public AssetSelection Assets { get; }
+
+        public static implicit operator TargetFeedSpecification((TargetFeedContentType[] types, string feed) tuple)
+        {
+            return new TargetFeedSpecification(tuple.types, tuple.feed, AssetSelection.All);
+        }
+
+        public static implicit operator TargetFeedSpecification((TargetFeedContentType[] types, string feed, AssetSelection assets) tuple)
+        {
+            return new TargetFeedSpecification(tuple.types, tuple.feed, tuple.assets);
+        }
+
+        public static implicit operator TargetFeedSpecification((TargetFeedContentType type, string feed) tuple)
+        {
+            return new TargetFeedSpecification(ImmutableList.Create(tuple.type), tuple.feed, AssetSelection.All);
+        }
+
+        public static implicit operator TargetFeedSpecification((TargetFeedContentType type, string feed, AssetSelection assets) tuple)
+        {
+            return new TargetFeedSpecification(ImmutableList.Create(tuple.type), tuple.feed, tuple.assets);
+        }
+
+        public TargetFeedSpecification(IEnumerable<TargetFeedContentType> contentTypes, string feedUrl, AssetSelection assets)
+        {
+            // A feed targeted for content type 'Package' may not have asset selection 'All'.
+            // During TargetFeedConfig creation, the default feed spec for shipping packages will be ignored and replaced with
+            // a separate target feed config.
+
+            if (assets == AssetSelection.All && contentTypes.Contains(TargetFeedContentType.Package))
+            {
+                throw new ArgumentException($"Target feed specification for {feedUrl} must have a separated asset selection 'ShippingOnly' and 'NonShippingOnly packages");
+            }
+
+            ContentTypes = contentTypes.ToImmutableList();
+            FeedUrl = feedUrl;
+            Assets = assets;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is TargetFeedSpecification other && Equals(other);
+        }
+
+        public bool Equals(TargetFeedSpecification other) => ContentTypes.Count == other.ContentTypes.Count &&
+                                                             ContentTypes.Zip(other.ContentTypes, (l, r) => l.Equals(r)).All(b => b) &&
+                                                             FeedUrl == other.FeedUrl;
+
+        public override int GetHashCode()
+        {
+            var hash = new HashCode();
+            foreach (var t in ContentTypes)
+            {
+                hash.Add(t);
+            }
+            hash.Add(FeedUrl);
+            return hash.ToHashCode();
         }
     }
 }

@@ -8,6 +8,7 @@
       EnableNgenOptimization             Set to true to enable NGEN optimization (partial or full).
       EnableNgenOptimizationLogDetails   Set to true to enable NGEN method logging output
       ApplyNgenOptimization              Set to 'partial' or 'full' in a project to embed partial/full NGEN optimization data to the built binary.
+      IgnoreIbcMergeErrors               Set to true to ignore certain errors encountered while running ibcmerge, those problematic IBC files will be ignored.
 
     Items:  
       OptimizeAssembly                   Set of assemblies to apply Partial NGEN optimization data to.
@@ -117,6 +118,8 @@
     <PropertyGroup>
       <_PartialNgenArg/>
       <_PartialNgenArg Condition="'$(ApplyNgenOptimization)' == 'partial'">-partialNGEN</_PartialNgenArg>
+      <_IgnoreMvidMismatchArg/>
+      <_IgnoreMvidMismatchArg Condition="'$(IgnoreIbcMergeErrors)' == 'true'">-ignoremvidmismatch</_IgnoreMvidMismatchArg>
     </PropertyGroup>
 
     <ItemGroup>
@@ -127,7 +130,7 @@
         <!--
           -delete to delete data previously embedded in the binary. 
         -->
-        <IbcMergeArgs>-q -f $(_PartialNgenArg) -minify -delete -mo "%(_AssemblyWithRawIbcData.PreviousAssemblyCopyPath)" "$([MSBuild]::ValueOrDefault('%(_AssemblyWithRawIbcData.IbcFiles)', '').Replace(';', '" "'))"</IbcMergeArgs>
+        <IbcMergeArgs>-q -f $(_PartialNgenArg) $(_IgnoreMvidMismatchArg) -minify -delete -mo "%(_AssemblyWithRawIbcData.PreviousAssemblyCopyPath)" "$([MSBuild]::ValueOrDefault('%(_AssemblyWithRawIbcData.IbcFiles)', '').Replace(';', '" "'))"</IbcMergeArgs>
       </_IbcMergeInvocation>
 
       <_IbcMergeInvocation Include="%(_AssemblyWithRawIbcData.AssemblyFileName) [MergePreviousToCurrent]">

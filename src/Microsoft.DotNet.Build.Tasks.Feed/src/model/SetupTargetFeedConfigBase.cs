@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         protected string AzureDevOpsStaticShippingFeed { get; set; }
         protected string AzureDevOpsStaticTransportFeed { get; set; }
         protected string AzureDevOpsStaticSymbolsFeed { get; set; }
-        protected string LatestLinkShortUrlPrefix { get; set; }
+        protected List<string> LatestLinkShortUrlPrefixes { get; set; }
         protected string AzureDevOpsFeedsKey { get; set; }
 
         protected SetupTargetFeedConfigBase(bool isInternalBuild,
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string azureDevOpsStaticShippingFeed,
             string azureDevOpsStaticTransportFeed,
             string azureDevOpsStaticSymbolsFeed,
-            string latestLinkShortUrlPrefix,
+            List<string> latestLinkShortUrlPrefixes,
             string azureDevOpsFeedsKey)
         {
             IsInternalBuild = isInternalBuild;
@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             AzureDevOpsStaticShippingFeed = azureDevOpsStaticShippingFeed;
             AzureDevOpsStaticTransportFeed = azureDevOpsStaticTransportFeed;
             AzureDevOpsStaticSymbolsFeed = azureDevOpsStaticSymbolsFeed;
-            LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix;
+            LatestLinkShortUrlPrefixes = latestLinkShortUrlPrefixes;
             AzureDevOpsFeedsKey = azureDevOpsFeedsKey;
         }
         public abstract List<TargetFeedConfig> Setup();

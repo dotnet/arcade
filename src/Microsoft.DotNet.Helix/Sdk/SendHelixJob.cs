@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -14,6 +15,28 @@ namespace Microsoft.DotNet.Helix.Sdk
 {
     public class SendHelixJob : HelixTask
     {
+        public static class MetadataNames
+        {
+            public const string Identity = "Identity";
+            public const string Value = "Value";
+
+            // HelixWorkItem
+            public const string PayloadDirectory = "PayloadDirectory";
+            public const string PayloadArchive = "PayloadArchive";
+            public const string PayloadUri = "PayloadUri";
+            public const string Timeout = "Timeout";
+            public const string Command = "Command";
+            public const string PreCommands = "PreCommands";
+            public const string PostCommands = "PostCommands";
+
+            // Correlation payload
+            public const string FullPath = "FullPath";
+            public const string Uri = "Uri";
+            public const string Destination = "Destination";
+            public const string IncludeDirectoryName = "IncludeDirectoryName";
+            public const string AsArchive = "AsArchive";
+        }
+
         /// <summary>
         ///   The 'type' value reported to Helix
         /// </summary>
@@ -208,7 +231,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                         def = AddProperty(def, helixProperty);
                     }
                 }
-                
+
                 def = AddBuildVariableProperty(def, "CollectionUri", "System.CollectionUri");
                 def = AddBuildVariableProperty(def, "Project", "System.TeamProject");
                 def = AddBuildVariableProperty(def, "BuildNumber", "Build.BuildNumber");
@@ -216,13 +239,14 @@ namespace Microsoft.DotNet.Helix.Sdk
                 def = AddBuildVariableProperty(def, "DefinitionName", "Build.DefinitionName");
                 def = AddBuildVariableProperty(def, "DefinitionId", "System.DefinitionId");
                 def = AddBuildVariableProperty(def, "Reason", "Build.Reason");
-                var variablesToCopy = new []
+                var variablesToCopy = new[]
                 {
                     "System.JobId",
                     "System.JobName",
                     "System.JobAttempt",
                     "System.PhaseName",
                     "System.PhaseAttempt",
+                    "System.PullRequest.TargetBranch",
                     "System.StageName",
                     "System.StageAttempt",
                 };
@@ -238,9 +262,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
 
                 Log.LogMessage(MessageImportance.High, $"Sending Job to {TargetQueue}...");
-
                 cancellationToken.ThrowIfCancellationRequested();
-                ISentJob job = await def.SendAsync(msg => Log.LogMessage(msg), cancellationToken);
+                // LogMessageFromText will take any string formatted as a canonical error or warning and convert the type of log to this
+                ISentJob job = await def.SendAsync(msg => Log.LogMessageFromText(msg, MessageImportance.High), cancellationToken);
                 JobCorrelationId = job.CorrelationId;
                 JobCancellationToken = job.HelixCancellationToken;
                 ResultsContainerUri = job.ResultsContainerUri;
@@ -273,12 +297,12 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private IJobDefinition AddProperty(IJobDefinition def, ITaskItem property)
         {
-            if (!property.GetRequiredMetadata(Log, "Identity", out string key))
+            if (!property.GetRequiredMetadata(Log, MetadataNames.Identity, out string key))
             {
                 return def;
             }
 
-            if (!property.GetRequiredMetadata(Log, "Value", out string value))
+            if (!property.GetRequiredMetadata(Log, MetadataNames.Value, out string value))
             {
                 return def;
             }
@@ -290,12 +314,12 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private IJobDefinition AddWorkItem(IJobDefinition def, ITaskItem workItem)
         {
-            if (!workItem.GetRequiredMetadata(Log, "Identity", out string name))
+            if (!workItem.GetRequiredMetadata(Log, MetadataNames.Identity, out string name))
             {
                 return def;
             }
 
-            if(name.Contains('%'))
+            if (name.Contains('%'))
             {
                 Log.LogWarning($"Work Item named '{name}' contains encoded characters which is not recommended.");
             }
@@ -309,7 +333,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             name = cleanedName;
 
-            if (!workItem.GetRequiredMetadata(Log, "Command", out string command))
+            if (!workItem.GetRequiredMetadata(Log, MetadataNames.Command, out string command))
             {
                 return def;
             }
@@ -338,9 +362,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
             }
 
-            string payloadDirectory = workItem.GetMetadata("PayloadDirectory");
-            string payloadArchive = workItem.GetMetadata("PayloadArchive");
-            string payloadUri = workItem.GetMetadata("PayloadUri");
+            string payloadDirectory = workItem.GetMetadata(MetadataNames.PayloadDirectory);
+            string payloadArchive = workItem.GetMetadata(MetadataNames.PayloadArchive);
+            string payloadUri = workItem.GetMetadata(MetadataNames.PayloadUri);
             IWorkItemDefinition wi;
             if (!string.IsNullOrEmpty(payloadUri))
             {
@@ -364,7 +388,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
 
-            string timeoutString = workItem.GetMetadata("Timeout");
+            string timeoutString = workItem.GetMetadata(MetadataNames.Timeout);
             if (!string.IsNullOrEmpty(timeoutString))
             {
                 if (TimeSpan.TryParse(timeoutString, CultureInfo.InvariantCulture, out TimeSpan timeout))
@@ -395,7 +419,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
             }
 
-            if (workItem.TryGetMetadata("PreCommands", out string workItemPreCommandsString))
+            if (workItem.TryGetMetadata(MetadataNames.PreCommands, out string workItemPreCommandsString))
             {
                 foreach (string command in SplitCommands(workItemPreCommandsString))
                 {
@@ -411,7 +435,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             // this way we can exit the process honoring that exit code, needed for retry.
             yield return IsPosixShell ? $"export {exitCodeVariableName}=$?" : $"set {exitCodeVariableName}=%ERRORLEVEL%";
 
-            if (workItem.TryGetMetadata("PostCommands", out string workItemPostCommandsString))
+            if (workItem.TryGetMetadata(MetadataNames.PostCommands, out string workItemPostCommandsString))
             {
                 foreach (string command in SplitCommands(workItemPostCommandsString))
                 {
@@ -478,9 +502,9 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private IJobDefinition AddCorrelationPayload(IJobDefinition def, ITaskItem correlationPayload)
         {
-            string path = correlationPayload.GetMetadata("FullPath");
-            string uri = correlationPayload.GetMetadata("Uri");
-            string destination = correlationPayload.GetMetadata("Destination") ?? "";
+            string path = correlationPayload.GetMetadata(MetadataNames.FullPath);
+            string uri = correlationPayload.GetMetadata(MetadataNames.Uri);
+            string destination = correlationPayload.GetMetadata(MetadataNames.Destination) ?? "";
 
             if (!string.IsNullOrEmpty(uri))
             {
@@ -498,17 +522,44 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             if (Directory.Exists(path))
             {
-                string includeDirectoryNameStr = correlationPayload.GetMetadata("IncludeDirectoryName");
-                bool.TryParse(includeDirectoryNameStr, out bool includeDirectoryName);
+                string includeDirectoryNameStr = correlationPayload.GetMetadata(MetadataNames.IncludeDirectoryName);
+                if (!bool.TryParse(includeDirectoryNameStr, out bool includeDirectoryName))
+                {
+                    includeDirectoryName = false;
+                }
 
-                Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload Directory '{path}', destination '{destination}'");
+                Log.LogMessage(
+                    MessageImportance.Low,
+                    $"Adding Correlation Payload Directory '{path}', destination '{destination}'"
+                );
                 return def.WithCorrelationPayloadDirectory(path, includeDirectoryName, destination);
+
             }
 
             if (File.Exists(path))
             {
-                Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload Archive '{path}', destination '{destination}'");
-                return def.WithCorrelationPayloadArchive(path, destination);
+                string asArchiveStr = correlationPayload.GetMetadata(MetadataNames.AsArchive);
+                if (!bool.TryParse(asArchiveStr, out bool asArchive))
+                {
+                    // With no other information, default to true, since that was the previous behavior
+                    // before we added the option
+                    asArchive = true;
+                }
+
+                if (asArchive)
+                {
+                    Log.LogMessage(
+                        MessageImportance.Low,
+                        $"Adding Correlation Payload Archive '{path}', destination '{destination}'"
+                    );
+                    return def.WithCorrelationPayloadArchive(path, destination);
+                }
+
+                Log.LogMessage(
+                    MessageImportance.Low,
+                    $"Adding Correlation Payload File '{path}', destination '{destination}'"
+                );
+                return def.WithCorrelationPayloadFiles(path);
             }
 
             Log.LogError(FailureCategory.Build, $"Correlation Payload '{path}' not found.");

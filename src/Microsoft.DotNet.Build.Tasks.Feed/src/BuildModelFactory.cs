@@ -8,6 +8,8 @@ using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
@@ -70,6 +72,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         private const string AssetsVirtualDir = "assets/";
+
+        private static readonly string AzureDevOpsHostPattern = @"dev\.azure\.com\";
+
+        private readonly Regex LegacyRepositoryUriPattern = new Regex(
+            @"^https://(?<account>[a-zA-Z0-9]+)\.visualstudio\.com/");
 
         /// <summary>
         /// Create a build manifest for packages, blobs, and associated signing information
@@ -149,8 +156,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     continue;
                 }
 
-                var isSymbolsPackage = artifact.ItemSpec.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase)
-                    || artifact.ItemSpec.EndsWith(".snupkg", StringComparison.OrdinalIgnoreCase);
+                var isSymbolsPackage = GeneralUtils.IsSymbolPackage(artifact.ItemSpec);
 
                 if (artifact.ItemSpec.EndsWith(".nupkg", StringComparison.OrdinalIgnoreCase) && !isSymbolsPackage)
                 {
@@ -205,6 +211,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 _log.LogError("Missing 'location' property from ManifestBuildData");
             }
+
+            NormalizeUrisInBuildData(attributes);
+
             BuildModel buildModel = new BuildModel(
                     new BuildIdentity
                     {
@@ -241,6 +250,44 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private bool ManifestBuildDataHasLocationInformation(IDictionary<string, string> attributes)
         {
             return attributes.ContainsKey("Location") || attributes.ContainsKey("InitialAssetsLocation");
+        }
+
+        private void NormalizeUrisInBuildData(IDictionary<string, string> attributes)
+        {
+            foreach(var attribute in attributes.ToList())
+            {
+                attributes[attribute.Key] = NormalizeAzureDevOpsUrl(attribute.Value);
+            }
+        }
+
+        /// <summary>
+        // If repoUri includes the user in the account we remove it from URIs like
+        // https://dnceng@dev.azure.com/dnceng/internal/_git/repo
+        // If the URL host is of the form "dnceng.visualstudio.com" like
+        // https://dnceng.visualstudio.com/internal/_git/repo we replace it to "dev.azure.com/dnceng"
+        // for consistency
+        /// </summary>
+        /// <param name="repoUri">The original url</param>
+        /// <returns>Transformed url</returns>
+        private string NormalizeAzureDevOpsUrl(string repoUri)
+        {
+            if (Uri.TryCreate(repoUri, UriKind.Absolute, out Uri parsedUri))
+            {
+                if (!string.IsNullOrEmpty(parsedUri.UserInfo))
+                {
+                    repoUri = repoUri.Replace($"{parsedUri.UserInfo}@", string.Empty);
+                }
+
+                Match m = LegacyRepositoryUriPattern.Match(repoUri);
+
+                if (m.Success)
+                {
+                    string replacementUri = $"{Regex.Unescape(AzureDevOpsHostPattern)}/{m.Groups["account"].Value}";
+                    repoUri = repoUri.Replace(parsedUri.Host, replacementUri);
+                }
+            }
+
+            return repoUri;
         }
     }
 }

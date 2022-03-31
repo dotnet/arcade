@@ -1,8 +1,8 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Microsoft.Arcade.Common
@@ -10,55 +10,16 @@ namespace Microsoft.Arcade.Common
     public static class ArgumentEscaper
     {
         /// <summary>
-        /// Undo the processing which took place to create string[] args in Main,
-        /// so that the next process will receive the same string[] args
-        /// 
-        /// See here for more info:
-        /// http://blogs.msdn.com/b/twistylittlepassagesallalike/archive/2011/04/23/everyone-quotes-arguments-the-wrong-way.aspx
+        /// Escapes and quote arguments that need it (contain a space, a quote...).
         /// </summary>
-        /// <param name="args"></param>
-        /// <returns></returns>
         public static string EscapeAndConcatenateArgArrayForProcessStart(IEnumerable<string> args)
         {
-            return string.Join(" ", EscapeArgArray(args));
+            return string.Join(" ", args.Select(EscapeArg));
         }
 
         /// <summary>
-        /// Undo the processing which took place to create string[] args in Main,
-        /// so that the next process will receive the same string[] args
+        /// Escapes and quote arguments that need it.
         /// 
-        /// See here for more info:
-        /// http://blogs.msdn.com/b/twistylittlepassagesallalike/archive/2011/04/23/everyone-quotes-arguments-the-wrong-way.aspx
-        /// </summary>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        public static string EscapeAndConcatenateArgArrayForCmdProcessStart(IEnumerable<string> args)
-        {
-            return string.Join(" ", EscapeArgArrayForCmd(args));
-        }
-
-        /// <summary>
-        /// Undo the processing which took place to create string[] args in Main,
-        /// so that the next process will receive the same string[] args
-        /// 
-        /// See here for more info:
-        /// http://blogs.msdn.com/b/twistylittlepassagesallalike/archive/2011/04/23/everyone-quotes-arguments-the-wrong-way.aspx
-        /// </summary>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        private static IEnumerable<string> EscapeArgArray(IEnumerable<string> args)
-        {
-            var escapedArgs = new List<string>();
-
-            foreach (var arg in args)
-            {
-                escapedArgs.Add(EscapeArg(arg));
-            }
-
-            return escapedArgs;
-        }
-
-        /// <summary>
         /// This prefixes every character with the '^' character to force cmd to
         /// interpret the argument string literally. An alternative option would 
         /// be to do this only for cmd metacharacters.
@@ -66,33 +27,34 @@ namespace Microsoft.Arcade.Common
         /// See here for more info:
         /// http://blogs.msdn.com/b/twistylittlepassagesallalike/archive/2011/04/23/everyone-quotes-arguments-the-wrong-way.aspx
         /// </summary>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        private static IEnumerable<string> EscapeArgArrayForCmd(IEnumerable<string> arguments)
+        public static string EscapeAndConcatenateArgArrayForCmdProcessStart(IEnumerable<string> args)
         {
-            var escapedArgs = new List<string>();
-
-            foreach (var arg in arguments)
-            {
-                escapedArgs.Add(EscapeArgForCmd(arg));
-            }
-
-            return escapedArgs;
+            return string.Join(" ", args.Select(EscapeArgForCmd));
         }
 
-        private static string EscapeArg(string arg)
+        private static string EscapeArg(string argument)
         {
             var sb = new StringBuilder();
 
-            var quoted = ShouldSurroundWithQuotes(arg);
-            if (quoted) sb.Append("\"");
-
-            for (int i = 0; i < arg.Length; ++i)
+            // Don't quote already quoted strings
+            bool quoted = IsQuoted(argument);
+            var shouldQuote = !quoted && ShouldSurroundWithQuotes(argument);
+            if (shouldQuote || quoted)
             {
+                sb.Append("\"");
+            }
+
+            for (int i = 0; i < argument.Length; ++i)
+            {
+                if (quoted && (i == 0 || i == argument.Length - 1))
+                {
+                    continue;
+                }
+
                 var backslashCount = 0;
 
                 // Consume All Backslashes
-                while (i < arg.Length && arg[i] == '\\')
+                while (i < argument.Length && argument[i] == '\\')
                 {
                     backslashCount++;
                     i++;
@@ -101,13 +63,13 @@ namespace Microsoft.Arcade.Common
                 // Escape any backslashes at the end of the arg
                 // This ensures the outside quote is interpreted as
                 // an argument delimiter
-                if (i == arg.Length)
+                if (i == argument.Length)
                 {
                     sb.Append('\\', 2 * backslashCount);
                 }
 
                 // Escape any preceding backslashes and the quote
-                else if (arg[i] == '"')
+                else if (argument[i] == '"')
                 {
                     sb.Append('\\', (2 * backslashCount) + 1);
                     sb.Append('"');
@@ -117,42 +79,34 @@ namespace Microsoft.Arcade.Common
                 else
                 {
                     sb.Append('\\', backslashCount);
-                    sb.Append(arg[i]);
+                    sb.Append(argument[i]);
                 }
             }
 
-            if (quoted) sb.Append("\"");
+            if (shouldQuote || quoted)
+            {
+                sb.Append("\"");
+            }
 
             return sb.ToString();
         }
 
-        /// <summary>
-        /// Prepare as single argument to 
-        /// roundtrip properly through cmd.
-        /// 
-        /// This prefixes every character with the '^' character to force cmd to
-        /// interpret the argument string literally. An alternative option would 
-        /// be to do this only for cmd metacharacters.
-        /// 
-        /// See here for more info:
-        /// http://blogs.msdn.com/b/twistylittlepassagesallalike/archive/2011/04/23/everyone-quotes-arguments-the-wrong-way.aspx
-        /// </summary>
-        /// <param name="args"></param>
-        /// <returns></returns>
         private static string EscapeArgForCmd(string argument)
         {
             var sb = new StringBuilder();
 
-            var quoted = ShouldSurroundWithQuotes(argument);
+            var quoted = IsQuoted(argument);
+            var shouldQuote = !quoted && ShouldSurroundWithQuotes(argument);
 
-            if (quoted) sb.Append("^\"");
+            if (shouldQuote)
+            {
+                sb.Append("^\"");
+            }
 
             foreach (var character in argument)
             {
-
                 if (character == '"')
                 {
-
                     sb.Append('^');
                     sb.Append('"');
                     sb.Append('^');
@@ -165,40 +119,24 @@ namespace Microsoft.Arcade.Common
                 }
             }
 
-            if (quoted) sb.Append("^\"");
+            if (shouldQuote)
+            {
+                sb.Append("^\"");
+            }
 
             return sb.ToString();
         }
 
-        /// <summary>
-        /// Prepare as single argument to 
-        /// roundtrip properly through cmd.
-        /// 
-        /// This prefixes every character with the '^' character to force cmd to
-        /// interpret the argument string literally. An alternative option would 
-        /// be to do this only for cmd metacharacters.
-        /// 
-        /// See here for more info:
-        /// http://blogs.msdn.com/b/twistylittlepassagesallalike/archive/2011/04/23/everyone-quotes-arguments-the-wrong-way.aspx
-        /// </summary>
-        /// <param name="args"></param>
-        /// <returns></returns>
-        internal static bool ShouldSurroundWithQuotes(string argument)
+        private static bool ShouldSurroundWithQuotes(string argument)
         {
-            // Don't quote already quoted strings
-            if (argument.StartsWith("\"", StringComparison.Ordinal) &&
-                    argument.EndsWith("\"", StringComparison.Ordinal))
-            {
-                return false;
-            }
-
             // Only quote if whitespace exists in the string
-            if (argument.Contains(" ") || argument.Contains("\t") || argument.Contains("\n"))
-            {
-                return true;
-            }
+            return argument.Contains(' ') || argument.Contains('\t') || argument.Contains('\n') || argument.Contains('"');
+        }
 
-            return true;
+
+        private static bool IsQuoted(string argument)
+        {
+            return argument.Length > 1 && (argument[0] == '\"' || argument[argument.Length - 1] == '\"');
         }
     }
 }

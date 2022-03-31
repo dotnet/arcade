@@ -17,7 +17,7 @@ using Task = Microsoft.Build.Utilities.Task;
 
 namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
 {
-    public class WritePackageUsageData : Task
+    public class WritePackageUsageData : Microsoft.Build.Utilities.Task
     {
         public string[] RestoredPackageFiles { get; set; }
         public string[] TarballPrebuiltPackageFiles { get; set; }
