@@ -34,55 +34,7 @@ def __no_results_result():
     )
 
 
-def construct_log_uri(name):
-    uri = get_env("HELIX_RESULTS_CONTAINER_URI")
-    read_sas = get_env("HELIX_RESULTS_CONTAINER_RSAS")
-
-    if read_sas[0] == '?':  # SAS tokens should not start with ? but are generally passed in this way.
-        read_sas = read_sas[1:]
-
-    return uri + '/' + name + '?' + read_sas
-
-
-def get_log_files(dir):
-    log.info("Searching '{}' for log files".format(dir))
-    for name in os.listdir(dir):
-        path = os.path.join(dir, name)
-        root, ext = os.path.splitext(path)
-        if ext == ".log":
-            print("Found log '{}'".format(path))
-            uri = construct_log_uri(name)
-            print("Uri '{}'".format(uri))
-            yield name, uri
-
-
-def construct_log_list(log_files):
-    def line(name, url):
-        return u"{}:\n  {}\n".format(name, url)
-
-    lines = [line(name, url) for name, url in log_files]
-
-    output = u"\n".join(lines)
-    log.info("Generated log list: {}".format(output))
-    return output
-
-
-total_added_logs = 0
-
-def add_logs(tr, log_list):
-    global total_added_logs
-    if tr is not None and tr.result != "Pass" and total_added_logs < 50:
-        tr.attachments.append(TestResultAttachment(
-            name=u"Logs.txt",
-            text=log_list,
-        ))
-        total_added_logs += 1
-    return tr
-
 def read_results(dirs_to_check: List[str]) -> Iterable[TestResult]:
-
-    log_files = list(get_log_files(os.path.join(get_env("HELIX_WORKITEM_ROOT"), "..")))
-    log_list = construct_log_list(log_files)
 
     found = False
 
@@ -95,10 +47,10 @@ def read_results(dirs_to_check: List[str]) -> Iterable[TestResult]:
                         file_path = os.path.join(root, file_name)
                         log.info('Found results file {} with format {}'.format(file_path, f.name))
                         found = True
-                        file_results = (add_logs(tr, log_list) for tr in f.read_results(file_path))
+                        file_results = f.read_results(file_path)
                         for result in file_results:
                             yield result
 
     if not found:
         log.warn('No results file found in any of the following formats: {}'.format(', '.join((f.name for f in all_formats))))
-        yield add_logs(__no_results_result(), log_list)
+        yield __no_results_result()
