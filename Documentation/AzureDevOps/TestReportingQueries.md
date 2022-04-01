@@ -8,11 +8,32 @@ Caveats (Jan 14, 2022):
 - There is a [known issue](https://github.com/dotnet/core-eng/issues/14708) with how we're capturing this data that is currently being worked on, thus, some of the data we have may not be complete. 
 
 ## Index
+  - [Tests That Have Changed Failure Rate in the Last Week](#tests-that-have-changed-failure-rate-in-the-last-week)
   - [Tests That Have Failed X% of the Time in the Recent Timespan](#tests-that-have-failed-x-of-the-time-in-the-recent-timespan)
   - [Mean Value for the Expected Pass Rate for Tests](#mean-value-for-the-expected-pass-rate-for-tests)
   - [Mean Value for the Expected Pass on Retry Rate for Tests](#mean-value-for-the-expected-pass-on-retry-rate-for-tests)
   - [Build Analysis Reporting](#build-analysis-reporting)
   - [Sentiment Tracker Feedback](#sentiment-tracker-feedback)
+
+## Tests That Have Changed Failure Rate in the Last Week
+
+Variables: 
+- `targetSignificance`: Target statisical likelihood that the failure change is due to a change in the last week
+- `repo`: Repository to filter on. Set to empty string to inclue all repositories. Default is `dotnet/runtime`.
+- `minimumHistoricalData`: Minimum number of historical data points to include to avoid new tests, (`0` includes all tests)
+```
+let targetSignificance = 0.95;
+let repo = "dotnet/runtime";
+let minimumHistoricalData = 0;
+let dt = toscalar(AzureDevOpsTestAnalysis | summarize max(ReportDate));
+AzureDevOpsTestAnalysis
+| where ReportDate == dt and Repository == repo
+| where Significance >= targetSignificance and CurrentFailCount != 0
+| extend HistoricalTotal = HistoricalFailCount + HistoricalPassCount + HistoricalPassOnRerunCou
+| where HistoricalTotal >= minimumHistoricalData
+| order by Significance desc
+```
+:part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA3WQzUpDQQyF94W+Q+yqRVA3LkSuUFrEXaX2BeK9aR2Yn5JktLf04c1IYaxcl3POnJN88aSgyDvSN7eLbutajC1BA3c3D/eP45E3n2mfTJl0SSPpLeeoLtDk7AYXXcjhxYkmtrhfomIpOPud2kOTmIM8nR8z05I+V3vZkOg8ou/FCZxAcgjI7kgQ8DBd20xWq6LZzIr+iY1HJ/j6ICao/6FpykyM3Y8oztbqi1gwauAC96kZOkKpWGRmivqMzi+SgcOVkZUWOiiZX7E3SdEbalVq6PqX+ooiw+oqrsmOa2Zd82+/bTp48JJI3BHDe3/J1pG037KJ30DmAQAA) to query editor
 
 ## Tests That Have Failed X% of the Time in the Recent Timespan
 
