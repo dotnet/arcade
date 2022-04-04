@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using Microsoft.Arcade.Common;
@@ -186,12 +187,22 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 _log.LogMessage($"Downloading {platform} provisioning profile to {targetFile}");
 
+                bool revocationCheck = ServicePointManager.CheckCertificateRevocationList;
                 var uri = new Uri(GetProvisioningProfileUrl(platform));
-                using var response = await _httpClient.GetAsync(uri);
-                response.EnsureSuccessStatusCode();
 
-                using var fileStream = _fileSystem.GetFileStream(targetFile, FileMode.Create, FileAccess.Write);
-                await response.Content.CopyToAsync(fileStream);
+                try
+                {
+                    ServicePointManager.CheckCertificateRevocationList = false;
+                    using var response = await _httpClient.GetAsync(uri);
+                    response.EnsureSuccessStatusCode();
+
+                    using var fileStream = _fileSystem.GetFileStream(targetFile, FileMode.Create, FileAccess.Write);
+                    await response.Content.CopyToAsync(fileStream);
+                }
+                finally
+                {
+                    ServicePointManager.CheckCertificateRevocationList = revocationCheck;
+                }
             }, _tmpDir);
 
             return targetFile;
