@@ -1,8 +1,8 @@
 <Project>
   <PropertyGroup Condition=" '$(IncludeXHarnessCli)' == 'true' ">
     <IncludeDotNetCli>true</IncludeDotNetCli>
-    <XHarnessTargetFramework Condition=" '$(XHarnessTargetFramework)' == '' ">net6.0</XHarnessTargetFramework>
-    <DotNetCliVersion>6.0.100</DotNetCliVersion>
+    <XHarnessTargetFramework Condition=" '$(XHarnessTargetFramework)' == '' ">net7.0</XHarnessTargetFramework>
+    <DotNetCliVersion>7.0.100-preview.2.22153.17</DotNetCliVersion>
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
   </PropertyGroup>
 
@@ -61,7 +61,7 @@
       <HelixPreCommands>$(HelixPreCommands);export PATH=$HELIX_CORRELATION_PAYLOAD/xharness-cli:$PATH</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
-      <HelixPreCommands>$(HelixPreCommands);export XHARNESS_CLI_PATH=$HELIX_CORRELATION_PAYLOAD/microsoft.dotnet.xharness.cli/$(_XHarnessPackageVersion)/tools/net6.0/any/Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);export XHARNESS_CLI_PATH=$HELIX_CORRELATION_PAYLOAD/microsoft.dotnet.xharness.cli/$(_XHarnessPackageVersion)/tools/net7.0/any/Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
 
       <HelixPreCommands Condition=" '$(EnableXHarnessTelemetry)' == 'true' ">$(HelixPreCommands);export XHARNESS_DIAGNOSTICS_PATH=$HELIX_WORKITEM_ROOT/diagnostics.json</HelixPreCommands>
       <HelixPostCommands Condition=" '$(EnableXHarnessTelemetry)' == 'true' ">"$HELIX_PYTHONPATH" -u "$HELIX_WORKITEM_PAYLOAD/xharness-event-processor.py";$(HelixPostCommands)</HelixPostCommands>
@@ -71,7 +71,7 @@
       <HelixPreCommands>$(HelixPreCommands);set PATH=%HELIX_CORRELATION_PAYLOAD%\xharness-cli%3B%PATH%</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
-      <HelixPreCommands>$(HelixPreCommands);set XHARNESS_CLI_PATH=%HELIX_CORRELATION_PAYLOAD%\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\tools\net6.0\any\Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);set XHARNESS_CLI_PATH=%HELIX_CORRELATION_PAYLOAD%\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\tools\net7.0\any\Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);doskey xharness="dotnet exec %XHARNESS_CLI_PATH%"</HelixPreCommands>
 
       <HelixPreCommands Condition=" '$(EnableXHarnessTelemetry)' == 'true' ">$(HelixPreCommands);set XHARNESS_DIAGNOSTICS_PATH=%HELIX_WORKITEM_ROOT%\diagnostics.json</HelixPreCommands>
