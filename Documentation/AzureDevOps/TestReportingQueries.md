@@ -29,11 +29,11 @@ let dt = toscalar(AzureDevOpsTestAnalysis | summarize max(ReportDate));
 AzureDevOpsTestAnalysis
 | where ReportDate == dt and Repository == repo
 | where Significance >= targetSignificance and CurrentFailCount != 0
-| extend HistoricalTotal = HistoricalFailCount + HistoricalPassCount + HistoricalPassOnRerunCou
+| extend HistoricalTotal = HistoricalFailCount + HistoricalPassCount + HistoricalPassOnRerunCount
 | where HistoricalTotal >= minimumHistoricalData
 | order by Significance desc
 ```
-:part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA3WQzUpDQQyF94W+Q+yqRVA3LkSuUFrEXaX2BeK9aR2Yn5JktLf04c1IYaxcl3POnJN88aSgyDvSN7eLbutajC1BA3c3D/eP45E3n2mfTJl0SSPpLeeoLtDk7AYXXcjhxYkmtrhfomIpOPud2kOTmIM8nR8z05I+V3vZkOg8ou/FCZxAcgjI7kgQ8DBd20xWq6LZzIr+iY1HJ/j6ICao/6FpykyM3Y8oztbqi1gwauAC96kZOkKpWGRmivqMzi+SgcOVkZUWOiiZX7E3SdEbalVq6PqX+ooiw+oqrsmOa2Zd82+/bTp48JJI3BHDe3/J1pG037KJ30DmAQAA) to query editor
+:part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA3WQy04CYQyF9/MUlRXERN24MGRMCMS4wyAvUGcqNPkvpO0oQ3h4O5AwYsZdc05P26+BDAxlQ/bOm8SfXGGqCEp4uHt6nBbBbaFddmFUZ0tk99Ik40ijsxk5cWziK6tl8XBYoGEXP9u1eW1Z3UAZzw6N0IK+ljtdk9osYWiVFY6gTYwofCCIuB+vfKOYT6LJZFr8kyqO8L0lIei7oSy7jZjqk6jsN7Wd2CFc+q9An8sh/G7CvBGhZC/IYZ6dGW6cyofQ3sjtnnidDYNj9kqfuf2lvqHqsLpMK/K3nszLmX8X+KWDz/ZAlpoEPtprtJq0+gHUohbl3wEAAA==) to query editor
 
 ## Tests That Have Failed X% of the Time in the Recent Timespan
 
