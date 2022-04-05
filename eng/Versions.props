@@ -64,11 +64,11 @@
     <MicrosoftDotNetSignCheckVersion>1.0.0-beta.20569.8</MicrosoftDotNetSignCheckVersion>
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
     <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
-    <MicrosoftAspNetCoreAllVersion>2.0.9</MicrosoftAspNetCoreAllVersion>
+    <MicrosoftAspNetCoreAllVersion>2.1.4</MicrosoftAspNetCoreAllVersion>
     <MicrosoftAspNetCoreAuthenticationJwtBearerVersion>2.1.30</MicrosoftAspNetCoreAuthenticationJwtBearerVersion>
     <MicrosoftDotNetGitHubIssueLabelerAssetsVersion>1.4.0</MicrosoftDotNetGitHubIssueLabelerAssetsVersion>
     <MicrosoftMLVersion>1.0.0</MicrosoftMLVersion>
-    <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
+    <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.1.0</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
     <MicrosoftDiaSymReaderConverterVersion>1.1.0-beta2-19521-03</MicrosoftDiaSymReaderConverterVersion>
     <MicrosoftDiaSymReaderPdb2PdbVersion>1.1.0-beta2-19521-03</MicrosoftDiaSymReaderPdb2PdbVersion>
     <MicrosoftDiaSymReaderNativeVersion>1.7.0</MicrosoftDiaSymReaderNativeVersion>
