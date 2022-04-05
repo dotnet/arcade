@@ -12,12 +12,11 @@ using System.Threading.Tasks;
 using LibGit2Sharp;
 using log4net;
 using log4net.Config;
+using Microsoft.Azure.Cosmos.Table;
 using Octokit;
 using Commit = LibGit2Sharp.Commit;
 using Credentials = Octokit.Credentials;
 using Repository = LibGit2Sharp.Repository;
-using Microsoft.Azure.Storage;
-using Microsoft.Azure.CosmosDB.Table;
 
 namespace Microsoft.DotNet.GitSync
 {
