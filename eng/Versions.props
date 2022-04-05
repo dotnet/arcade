@@ -65,6 +65,7 @@
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
     <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
     <MicrosoftAspNetCoreAllVersion>2.0.9</MicrosoftAspNetCoreAllVersion>
+    <MicrosoftAspNetCoreAuthenticationJwtBearerVersion>2.1.30</MicrosoftAspNetCoreAuthenticationJwtBearerVersion>
     <MicrosoftDotNetGitHubIssueLabelerAssetsVersion>1.4.0</MicrosoftDotNetGitHubIssueLabelerAssetsVersion>
     <MicrosoftMLVersion>1.0.0</MicrosoftMLVersion>
     <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
