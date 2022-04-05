@@ -59,6 +59,10 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
                 string actualNameWithoutVersions = VersionIdentifier.RemoveVersions(testAsset.Name);
                 actualNameWithoutVersions.Should().Be(expectedNameWithoutVersions, $"Line {testAsset.Line} has incorrect asset name without versions {actualNameWithoutVersions}");
             }
+
+            bool variableTest = false;
+            variableTest.Should().BeTrue();
+
         }
 
         private List<VersionIdentifierTestAsset> GetTestAssets()
