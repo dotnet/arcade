@@ -184,7 +184,7 @@
       <_SwixArgs Include="SwrFiles=$([MSBuild]::Escape($(_SwrFiles)))"/>
       <_SwixArgs Include="SwrPackageName=$(_VsixPackageId)"/>
       <_SwixArgs Include="IntermediateOutputPath=$(IntermediateOutputPath)"/>
-      <_SwixArgs Include="SwixBuildPath=$(NuGetPackageRoot)microsoft.visualstudioeng.microbuild.plugins.swixbuild\1.1.269\"/>
+      <_SwixArgs Include="SwixBuildPath=$(NuGetPackageRoot)microsoft.visualstudioeng.microbuild.plugins.swixbuild\$(MicrosoftVisualStudioEngMicroBuildPluginsSwixBuildVersion)\"/>
     </ItemGroup>
 
     <MSBuild Projects="$(MSBuildThisFileDirectory)VisualStudio.SetupPackage.swixproj" Properties="@(_SwixArgs)" Targets="Build"/>
