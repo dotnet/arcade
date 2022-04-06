@@ -38,18 +38,25 @@
   <ItemGroup>
     <_PackageStubFiles Include="$(ComponentIntermediateOutputPath)*.stub"/>
     <MergeManifest Include="@(_PackageStubFiles->'$(SetupOutputPath)%(Filename).json')"/>
+    <MergeManifest Include="@(_PackageStubFiles->'$(SetupOutputPath)%(Filename).json')">
+      <SBOMFileLocation>$(BUILD_SOURCESDIRECTORY)\artifacts\sbom\spdx_2.2\manifest.spdx.json</SBOMFileLocation>
+      <SBOMFileDestPath>$(SetupOutputPath)</SBOMFileDestPath>
+    </MergeManifest>
   </ItemGroup>
 
-  <Import Project="$(SwixBuildPath)build\MicroBuild.Plugins.*.targets" />
+  <Import Project="$(SwixBuildPath)build\Microsoft.VisualStudioEng.MicroBuild.Plugins.SwixBuild.targets" />
 
-  <Target Name="_BuildManifest" DependsOnTargets="_SetManifestBuildVersion;GenerateSetupManifest" />
-  
+  <Target Name="_BuildManifest" DependsOnTargets="_SetManifestBuildVersion;GenerateSetupManifest;AddSBOM" />
+
   <!--
     Each stub file contains VSIX version of the respective VSIX file.
     We require that all VSIXes included in a single VS insertion component have the same version.
     This version will be set to ManifestBuildVersion.
   -->
   <Target Name="_SetManifestBuildVersion">
+
+    <Error Condition="!Exists('$(BUILD_SOURCESDIRECTORY)\artifacts\sbom\spdx_2.2\manifest.spdx.json')" 
+      Text="Cannot file SBOM file, so not going to generate vs manifest!" />
 
     <ReadLinesFromFile File="%(_PackageStubFiles.Identity)">
       <Output TaskParameter="Lines" ItemName="_StubLine"/>

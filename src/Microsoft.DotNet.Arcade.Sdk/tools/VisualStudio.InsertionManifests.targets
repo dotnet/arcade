@@ -4,7 +4,28 @@
     <_StubFiles Include="$(VisualStudioSetupIntermediateOutputPath)**\*.stub"/>
     <_StubDirs Include="@(_StubFiles->'%(RecursiveDir)')"/>
   </ItemGroup>
+<!--
+  Before pack create the SBOM here
+-->
+  <Target Name ="GenerateSbomForVSInsertion"
+     BeforeTargets="AfterPack">
+    <Message Text="Generating SBOM manifest" Importance="high"/>
+    <ItemGroup>
+     <VsixFile Include="$(ArtifactsDir)VSSetup\$(Configuration)\Insertion\*.vsix"></VsixFile>
+    </ItemGroup>
+    <MakeDir Directories="$(ArtifactsDir)sbom"/>
+     <MakeDir Directories="$(ArtifactsDir)Vsix"/>
+     <MakeDir Directories="$(ArtifactsDir)Vsix\Unpacked\%(VsixFile.Filename)"/>
+     <MakeDir Directories="$(ArtifactsDir)Vsix\others"/>
+     
+     <Unzip
+      SourceFiles="@(VsixFile)"
+      DestinationFolder="$(ArtifactsDir)Vsix\Unpacked\%(VsixFile.Filename)"
+      OverwriteReadOnlyFiles="true"/>
 
+  <Exec Command = "$(DotNetTool) $(NUGET_PACKAGES)microsoft.manifesttool.crossplatform\2.1.3\Content\Microsoft.ManifestTool.dll generate -b $(ArtifactsDir)Vsix -m $(ArtifactsDir)sbom -pn VsInsertion -V Verbose"/>
+  <Message Text="Completed generating SBOM manifest." Importance="high"/>
+  </Target>
   <!---
     This target is invoked in a separate phase after all input VSIX files are signed.
     This is important since the manifest contain hashes of the VSIX files.
