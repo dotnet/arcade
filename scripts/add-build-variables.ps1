@@ -3,7 +3,7 @@
 Adds/removes variables to a pipeline or all pipelines in a project.
 
 .PARAMETER PipelineId
-Optional ID of a pipeline. If no ID is specified, all pipelines get the variable`
+Optional ID of a pipeline. If no ID is specified, all pipelines get the variable
 
 .PARAMETER AzDoPAT
 PAT with edit access to pipelines
