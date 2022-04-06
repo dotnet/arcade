@@ -8,7 +8,7 @@ This script is generally useful for setting or removing variables that have an e
 - Adding and removing opt-outs for NuGet feed analysis.
 
 .PARAMETER PipelineId
-Optional ID of a pipeline. If no ID is specified, all pipelines get the variable`
+Optional ID of a pipeline. If no ID is specified, all pipelines get the variable
 
 .PARAMETER AzDoPAT
 PAT with edit access to pipelines
