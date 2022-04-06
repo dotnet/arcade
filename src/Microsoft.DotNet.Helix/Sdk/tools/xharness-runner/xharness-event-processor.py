@@ -185,7 +185,7 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                 raise AdditionalTelemetryRequired(NETWORK_CONNECTIVITY_METRIC_NAME, 1)
 
     elif platform == "apple":
-        retry_message = 'This is typically not a failure of the work item. It will be run again. '
+        retry_message = 'This is typically not a failure of the work item. It will be run again.'
         reboot_message = 'This machine will reboot to heal.'
         
         if exit_code == 82: # RETURN_CODE_NOT_SET
@@ -195,8 +195,13 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
             return
 
         # If we have a launch failure on simulators, we want a reboot+retry
+        # We want retry only on devices (it happens quite rarely)
         if exit_code == 83: # APP_LAUNCH_FAILURE
-            print(f'    Encountered APP_LAUNCH_FAILURE. {retry_message} {reboot_message}')
+            if is_device:
+                print(f'    Encountered APP_LAUNCH_FAILURE. {retry_message}')
+            else:
+                print(f'    Encountered APP_LAUNCH_FAILURE. {retry_message} {reboot_message}')
+                reboot = True
             retry = True
             return
 
