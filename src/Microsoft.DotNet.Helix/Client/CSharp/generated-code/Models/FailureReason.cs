@@ -11,9 +11,9 @@ namespace Microsoft.DotNet.Helix.Client.Models
         }
 
         [JsonProperty("Issue")]
-        public FailureReasonPart Issue { get; set; }
+        public Models.FailureReasonPart Issue { get; set; }
 
         [JsonProperty("Owner")]
-        public FailureReasonPart Owner { get; set; }
+        public Models.FailureReasonPart Owner { get; set; }
     }
 }

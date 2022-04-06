@@ -6,12 +6,12 @@ namespace Microsoft.DotNet.Helix.Client.Models
 {
     public partial class BuildAggregationSource
     {
-        public BuildAggregationSource(IImmutableDictionary<string, AggregatedWorkItemCounts> types)
+        public BuildAggregationSource(IImmutableDictionary<string, Models.AggregatedWorkItemCounts> types)
         {
             Types = types;
         }
 
         [JsonProperty("Types")]
-        public IImmutableDictionary<string, AggregatedWorkItemCounts> Types { get; }
+        public IImmutableDictionary<string, Models.AggregatedWorkItemCounts> Types { get; }
     }
 }

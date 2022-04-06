@@ -140,6 +140,15 @@
           UseHardlinksIfPossible="False" />
 
     <Message Text="$(MSBuildProjectName) -> $(InstallerFile)" Importance="high" />
+
+    <Copy Condition="'$(CreateRPMForCblMariner)' == 'true'"
+          SourceFiles="@(GeneratedRpmFiles)"
+          DestinationFiles="$(_InstallerFileCblMariner)"
+          OverwriteReadOnlyFiles="True"
+          SkipUnchangedFiles="False"
+          UseHardlinksIfPossible="False" />
+
+    <Message Text="$(MSBuildProjectName) -> $(_InstallerFileCblMariner)" Importance="high" />
   </Target>
 
   <Target Name="GetRpmInstallerJsonProperties"

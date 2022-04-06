@@ -7,12 +7,16 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
+    <PackageReference Include="Microsoft.Data.OData" Version="$(MicrosoftDataODataVersion)" />
     <PackageReference Include="Microsoft.DotNet.Maestro.Client" Version="$(MicrosoftDotNetMaestroClientVersion)" />
     <!-- This is here so that we agree with the feed tasks project's transitive reference to NewtonSoft.Json and Azure.Core -->
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="Azure.Core" Version="1.0.2.0" />
     <PackageReference Include="DotNet.SleetLib" Version="$(DotNetSleetLibVersion)" />
     <PackageReference Include="Azure.Storage.Blobs" Version="$(AzureStorageBlobsVersion)" />
+    
+    <!-- Override the vulnerable version 4.5.0 brought in by Microsoft.DotNet.Maestro.Client -->
+    <PackageReference Include="System.Text.Encodings.Web" Version="$(SystemTextEncodingsWebVersion)" />
   </ItemGroup>
 
   <ItemGroup>

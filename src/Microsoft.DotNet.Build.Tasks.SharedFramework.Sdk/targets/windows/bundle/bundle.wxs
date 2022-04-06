@@ -43,9 +43,7 @@
       <PayloadGroupRef Id="DotnetCoreBAPayloads" />
     </BootstrapperApplicationRef>
 
-    <swid:Tag Regid="microsoft.com" InstallPath="[DOTNETHOME]" />
-
-    <Variable Name="DOTNETHOME" Type="string" Value="[$(var.Program_Files)]dotnet" bal:Overridable="no" />
+    <swid:Tag Regid="microsoft.com" InstallPath="[$(var.Program_Files)]dotnet" />
 
     <!-- Variables used solely for localization. -->
     <Variable Name="BUNDLEMONIKER" Type="string" Value="$(var.ProductMoniker) ($(var.TargetArchitectureDescription))" bal:Overridable="no" />
@@ -54,9 +52,7 @@
 
     <Chain DisableSystemRestore="yes" ParallelCache="yes">
       <?foreach chainedFile in $(var.ChainedDotNetPackageFiles)?>
-        <MsiPackage SourceFile="$(var.chainedFile)">
-          <MsiProperty Name="DOTNETHOME" Value="[DOTNETHOME]" />
-        </MsiPackage>
+        <MsiPackage SourceFile="$(var.chainedFile)" />
       <?endforeach?>
     </Chain>
   </Bundle>

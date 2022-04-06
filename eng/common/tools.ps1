@@ -103,6 +103,46 @@ function Exec-Process([string]$command, [string]$commandArgs) {
   }
 }
 
+# Take the given block, print it, print what the block probably references from the current set of
+# variables using low-effort string matching, then run the block.
+#
+# This is intended to replace the pattern of manually copy-pasting a command, wrapping it in quotes,
+# and printing it using "Write-Host". The copy-paste method is more readable in build logs, but less
+# maintainable and less reliable. It is easy to make a mistake and modify the command without
+# properly updating the "Write-Host" line, resulting in misleading build logs. The probability of
+# this mistake makes the pattern hard to trust when it shows up in build logs. Finding the bug in
+# existing source code can also be difficult, because the strings are not aligned to each other and
+# the line may be 300+ columns long.
+#
+# By removing the need to maintain two copies of the command, Exec-BlockVerbosely avoids the issues.
+#
+# In Bash (or any posix-like shell), "set -x" prints usable verbose output automatically.
+# "Set-PSDebug" appears to be similar at first glance, but unfortunately, it isn't very useful: it
+# doesn't print any info about the variables being used by the command, which is normally the
+# interesting part to diagnose.
+function Exec-BlockVerbosely([scriptblock] $block) {
+  Write-Host "--- Running script block:"
+  $blockString = $block.ToString().Trim()
+  Write-Host $blockString
+
+  Write-Host "--- List of variables that might be used:"
+  # For each variable x in the environment, check the block for a reference to x via simple "$x" or
+  # "@x" syntax. This doesn't detect other ways to reference variables ("${x}" nor "$variable:x",
+  # among others). It only catches what this function was originally written for: simple
+  # command-line commands.
+  $variableTable = Get-Variable |
+    Where-Object {
+      $blockString.Contains("`$$($_.Name)") -or $blockString.Contains("@$($_.Name)")
+    } |
+    Format-Table -AutoSize -HideTableHeaders -Wrap |
+    Out-String
+  Write-Host $variableTable.Trim()
+
+  Write-Host "--- Executing:"
+  & $block
+  Write-Host "--- Done running script block!"
+}
+
 # createSdkLocationFile parameter enables a file being generated under the toolset directory
 # which writes the sdk's location into. This is only necessary for cmd --> powershell invocations
 # as dot sourcing isn't possible.
@@ -371,7 +411,16 @@ function InitializeVisualStudioMSBuild([bool]$install, [object]$vsRequirements =
   }
 
   $msbuildVersionDir = if ([int]$vsMajorVersion -lt 16) { "$vsMajorVersion.0" } else { "Current" }
-  return $global:_MSBuildExe = Join-Path $vsInstallDir "MSBuild\$msbuildVersionDir\Bin\msbuild.exe"
+
+  $local:BinFolder = Join-Path $vsInstallDir "MSBuild\$msbuildVersionDir\Bin"
+  $local:Prefer64bit = if (Get-Member -InputObject $vsRequirements -Name 'Prefer64bit') { $vsRequirements.Prefer64bit } else { $false }
+  if ($local:Prefer64bit -and (Test-Path(Join-Path $local:BinFolder "amd64"))) {
+    $global:_MSBuildExe = Join-Path $local:BinFolder "amd64\msbuild.exe"
+  } else {
+    $global:_MSBuildExe = Join-Path $local:BinFolder "msbuild.exe"
+  }
+
+  return $global:_MSBuildExe
 }
 
 function InitializeVisualStudioEnvironmentVariables([string] $vsInstallDir, [string] $vsMajorVersion) {
@@ -527,7 +576,7 @@ function GetDefaultMSBuildEngine() {
 
 function GetNuGetPackageCachePath() {
   if ($env:NUGET_PACKAGES -eq $null) {
-    # Use local cache on CI to ensure deterministic build. 
+    # Use local cache on CI to ensure deterministic build.
     # Avoid using the http cache as workaround for https://github.com/NuGet/Home/issues/3116
     # use global cache in dev builds to avoid cost of downloading packages.
     # For directory normalization, see also: https://github.com/NuGet/Home/issues/7968
@@ -603,6 +652,17 @@ function ExitWithExitCode([int] $exitCode) {
     Stop-Processes
   }
   exit $exitCode
+}
+
+# Check if $LASTEXITCODE is a nonzero exit code (NZEC). If so, print a Azure Pipeline error for
+# diagnostics, then exit the script with the $LASTEXITCODE.
+function Exit-IfNZEC([string] $category = "General") {
+  Write-Host "Exit code $LASTEXITCODE"
+  if ($LASTEXITCODE -ne 0) {
+    $message = "Last command failed with exit code $LASTEXITCODE."
+    Write-PipelineTelemetryError -Force -Category $category -Message $message
+    ExitWithExitCode $LASTEXITCODE
+  }
 }
 
 function Stop-Processes() {

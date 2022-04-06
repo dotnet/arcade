@@ -630,7 +630,7 @@ The steps below assume the following variables to be defined:
 ### Signing plugin installation
 
 ```yml
-- task: ms-vseng.MicroBuildTasks.30666190-6959-11e5-9f96-f56098202fef.MicroBuildSigningPlugin@1
+- task: MicroBuildSigningPlugin@3
   displayName: Install Signing Plugin
   inputs:
     signType: real

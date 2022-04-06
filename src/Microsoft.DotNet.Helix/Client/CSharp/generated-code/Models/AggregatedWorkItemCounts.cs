@@ -6,7 +6,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
 {
     public partial class AggregatedWorkItemCounts
     {
-        public AggregatedWorkItemCounts(IImmutableDictionary<string, string> key, WorkItemStatusCounts data)
+        public AggregatedWorkItemCounts(IImmutableDictionary<string, string> key, Models.WorkItemStatusCounts data)
         {
             Key = key;
             Data = data;
@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public IImmutableDictionary<string, string> Key { get; set; }
 
         [JsonProperty("Data")]
-        public WorkItemStatusCounts Data { get; set; }
+        public Models.WorkItemStatusCounts Data { get; set; }
 
         [JsonIgnore]
         public bool IsValid
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
                 {
                     return false;
                 }
-                if (Data == default(WorkItemStatusCounts))
+                if (Data == default(Models.WorkItemStatusCounts))
                 {
                     return false;
                 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Text;
@@ -6,19 +7,20 @@ using System.Threading;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Core;
-using Microsoft.DotNet.Helix.Client.Models;
+
+
 
 namespace Microsoft.DotNet.Helix.Client
 {
     public partial interface IScaleSets
     {
-        Task<IImmutableList<DetailedVMScalingHistory>> GetDetailedVMScalingHistoryAsync(
+        Task<IImmutableList<Models.DetailedVMScalingHistory>> GetDetailedVMScalingHistoryAsync(
             DateTimeOffset date,
             string scaleSet = default,
             CancellationToken cancellationToken = default
         );
 
-        Task<IImmutableList<AggregatedVMScalingHistory>> GetAggregatedVMScalingHistoryAsync(
+        Task<IImmutableList<Models.AggregatedVMScalingHistory>> GetAggregatedVMScalingHistoryAsync(
             DateTimeOffset date,
             CancellationToken cancellationToken = default
         );
@@ -38,23 +40,20 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedGetDetailedVMScalingHistoryRequest(RestApiException ex);
 
-        public async Task<IImmutableList<DetailedVMScalingHistory>> GetDetailedVMScalingHistoryAsync(
+        public async Task<IImmutableList<Models.DetailedVMScalingHistory>> GetDetailedVMScalingHistoryAsync(
             DateTimeOffset date,
             string scaleSet = default,
             CancellationToken cancellationToken = default
         )
         {
-            if (date == default(DateTimeOffset))
-            {
-                throw new ArgumentNullException(nameof(date));
-            }
 
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/scalesets/detailedHistory",
+                "/api/scalesets/detailedHistory",
                 false);
 
             if (date != default(DateTimeOffset))
@@ -65,6 +64,7 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 _url.AppendQuery("scaleSet", Client.Serialize(scaleSet));
             }
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<IImmutableList<DetailedVMScalingHistory>>(_content);
+                        var _body = Client.Deserialize<IImmutableList<Models.DetailedVMScalingHistory>>(_content);
                         return _body;
                     }
                 }
@@ -105,10 +105,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedGetDetailedVMScalingHistoryRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -117,28 +119,26 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedGetAggregatedVMScalingHistoryRequest(RestApiException ex);
 
-        public async Task<IImmutableList<AggregatedVMScalingHistory>> GetAggregatedVMScalingHistoryAsync(
+        public async Task<IImmutableList<Models.AggregatedVMScalingHistory>> GetAggregatedVMScalingHistoryAsync(
             DateTimeOffset date,
             CancellationToken cancellationToken = default
         )
         {
-            if (date == default(DateTimeOffset))
-            {
-                throw new ArgumentNullException(nameof(date));
-            }
 
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/scalesets/aggregatedHistory",
+                "/api/scalesets/aggregatedHistory",
                 false);
 
             if (date != default(DateTimeOffset))
             {
                 _url.AppendQuery("date", Client.Serialize(date));
             }
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -161,7 +161,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<IImmutableList<AggregatedVMScalingHistory>>(_content);
+                        var _body = Client.Deserialize<IImmutableList<Models.AggregatedVMScalingHistory>>(_content);
                         return _body;
                     }
                 }
@@ -179,10 +179,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedGetAggregatedVMScalingHistoryRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);

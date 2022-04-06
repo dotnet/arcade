@@ -36,7 +36,7 @@
       Text="IntermediateOutputRootPath not specified" />
 
     <PropertyGroup>
-      <WixVersion>3.14.0.4118</WixVersion>
+      <WixVersion>1.0.0-v3.14.0.5722</WixVersion>
       <WixToolsDir>$(IntermediateOutputRootPath)WixTools.$(WixVersion)/</WixToolsDir>
       <!-- Used in WiX targets to locate files. -->
       <WixInstallPath>$(WixToolsDir)</WixInstallPath>
@@ -46,10 +46,10 @@
       <MsiArch>$(TargetArchitecture)</MsiArch>
 
       <AcquireWixProjectFile>$(PackagingToolsDir)acquire-wix\acquire-wix.proj</AcquireWixProjectFile>
-      <WixDownloadFilename>wix.$(WixVersion).zip</WixDownloadFilename>
-      <WixDownloadUrl>https://dotnetcli.azureedge.net/build/wix/$(WixDownloadFilename)</WixDownloadUrl>
+      <WixDownloadFilename>Microsoft.Signed.Wix-$(WixVersion).zip</WixDownloadFilename>
+      <WixDownloadUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/windows/wix/$(WixDownloadFilename)</WixDownloadUrl>
       <WixDestinationPath>$(WixToolsDir)$(WixDownloadFilename)</WixDestinationPath>
-      <WixDownloadSentinel>$(WixToolsDir)WixDownload.$(WixVersion).sentinel</WixDownloadSentinel>
+      <WixDownloadSentinel>$(WixToolsDir)$(WixDownloadFilename).sentinel</WixDownloadSentinel>
     </PropertyGroup>
   </Target>
 
@@ -80,7 +80,12 @@
   <Target Name="GetUpgradeCode"
           DependsOnTargets="GetWixBuildConfiguration"
           Condition="'$(UpgradeCode)' == ''">
-    <GenerateGuidFromName Name="$(OutInstallerFile)">
+
+    <PropertyGroup>
+      <MsiUpgradeCodeSeed Condition="'$(MsiUpgradeCodeSeed)' == ''">$(OutInstallerFile)</MsiUpgradeCodeSeed>
+    </PropertyGroup>
+
+    <GenerateGuidFromName Name="$(MsiUpgradeCodeSeed)">
       <Output TaskParameter="GeneratedGuid" PropertyName="UpgradeCode" />
     </GenerateGuidFromName>
   </Target>
@@ -92,6 +97,7 @@
       <WixExtensions Include="WixUtilExtension.dll" />
 
       <WixSrcFile Include="$(MSBuildThisFileDirectory)product/product.wxs" />
+      <WixSrcFile Include="$(MSBuildThisFileDirectory)product/dotnethome_x64.wxs" />
       <WixSrcFile Include="$(MSBuildThisFileDirectory)product/provider.wxs" />
     </ItemGroup>
   </Target>
@@ -290,6 +296,7 @@
       <CandleVariables Include="NugetVersion" Value="$(ProductVersion)" />
       <CandleVariables Include="TargetArchitectureDescription" Value="$(TargetArchitecture)$(CrossArchContentsBuildPart)" />
       <CandleVariables Include="UpgradeCode" Value="$(UpgradeCode)" />
+      <CandleVariables Include="MajorUpgradeSchedule" Value="$(MajorUpgradeSchedule)" Condition="'$(MajorUpgradeSchedule)' != ''" />
 
       <!-- If this is a cross-arch MSI, add target arch to the dependency key for uniqueness. -->
       <CandleVariables Include="CrossArchContentsPlatformPart" Value="$(CrossArchContentsBuildPart.Replace('-', '_'))" />

@@ -200,13 +200,29 @@ namespace Microsoft.DotNet.Helix.Sdk
                         def = AddProperty(def, helixProperty);
                     }
                 }
-                
+
+                def = AddBuildVariableProperty(def, "CollectionUri", "System.CollectionUri");
                 def = AddBuildVariableProperty(def, "Project", "System.TeamProject");
                 def = AddBuildVariableProperty(def, "BuildNumber", "Build.BuildNumber");
                 def = AddBuildVariableProperty(def, "BuildId", "Build.BuildId");
                 def = AddBuildVariableProperty(def, "DefinitionName", "Build.DefinitionName");
                 def = AddBuildVariableProperty(def, "DefinitionId", "System.DefinitionId");
                 def = AddBuildVariableProperty(def, "Reason", "Build.Reason");
+                var variablesToCopy = new[]
+                {
+                    "System.JobId",
+                    "System.JobName",
+                    "System.JobAttempt",
+                    "System.PhaseName",
+                    "System.PhaseAttempt",
+                    "System.PullRequest.TargetBranch",
+                    "System.StageName",
+                    "System.StageAttempt",
+                };
+                foreach (var name in variablesToCopy)
+                {
+                    def = AddBuildVariableProperty(def, name, name);
+                }
 
                 // don't send the job if we have errors
                 if (Log.HasLoggedErrors)
@@ -217,7 +233,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                 Log.LogMessage(MessageImportance.High, $"Sending Job to {TargetQueue}...");
 
                 cancellationToken.ThrowIfCancellationRequested();
-                ISentJob job = await def.SendAsync(msg => Log.LogMessage(msg), cancellationToken);
+                // LogMessageFromText will take any string formatted as a canonical error or warning and convert the type of log to this
+                ISentJob job = await def.SendAsync(msg => Log.LogMessageFromText(msg, MessageImportance.High), cancellationToken);
                 JobCorrelationId = job.CorrelationId;
                 ResultsContainerUri = job.ResultsContainerUri;
                 ResultsContainerReadSAS = job.ResultsContainerReadSAS;
