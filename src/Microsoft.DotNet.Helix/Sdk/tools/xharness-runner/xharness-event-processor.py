@@ -194,6 +194,12 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
             retry = True
             return
 
+        # If we have a launch failure on simulators, we want a reboot+retry
+        if exit_code == 83: # APP_LAUNCH_FAILURE
+            print(f'    Encountered APP_LAUNCH_FAILURE. {retry_message} {reboot_message}')
+            retry = True
+            return
+
         if is_device:
             # If we fail to find a real device, it is unexpected as device queues should have one
             # It can often be fixed with a reboot
@@ -211,12 +217,6 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
             if exit_code == 80: # APP_CRASH
                 simulator_app = os.getenv('SIMULATOR_APP')
                 subprocess.call(['sudo', 'pkill', '-9', '-f', simulator_app])
-
-            # If we have a launch failure on simulators, we want a reboot+retry
-            if exit_code == 83: # APP_LAUNCH_FAILURE
-                print(f'    Encountered APP_LAUNCH_FAILURE. {retry_message} {reboot_message}')
-                reboot = True
-                retry = True
 
             # If we fail to find a simulator and we are not targeting a specific version (e.g. `ios-simulator_13.5`),
             # it is probably an issue because Xcode should always have at least one runtime version inside
