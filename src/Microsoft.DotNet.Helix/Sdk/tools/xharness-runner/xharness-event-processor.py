@@ -185,12 +185,23 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                 raise AdditionalTelemetryRequired(NETWORK_CONNECTIVITY_METRIC_NAME, 1)
 
     elif platform == "apple":
-        retry_message = 'This is typically not a failure of the work item. It will be run again. '
+        retry_message = 'This is typically not a failure of the work item. It will be run again.'
         reboot_message = 'This machine will reboot to heal.'
         
         if exit_code == 82: # RETURN_CODE_NOT_SET
             # See https://github.com/dotnet/xharness/issues/812
             print(f'    Failed to detect app\'s exit code. {retry_message}')
+            retry = True
+            return
+
+        # If we have a launch failure on simulators, we want a reboot+retry
+        # We want retry only on devices (it happens quite rarely)
+        if exit_code == 83: # APP_LAUNCH_FAILURE
+            if is_device:
+                print(f'    Encountered APP_LAUNCH_FAILURE. {retry_message}')
+            else:
+                print(f'    Encountered APP_LAUNCH_FAILURE. {retry_message} {reboot_message}')
+                reboot = True
             retry = True
             return
 
@@ -211,12 +222,6 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
             if exit_code == 80: # APP_CRASH
                 simulator_app = os.getenv('SIMULATOR_APP')
                 subprocess.call(['sudo', 'pkill', '-9', '-f', simulator_app])
-
-            # If we have a launch failure on simulators, we want a reboot+retry
-            if exit_code == 83: # APP_LAUNCH_FAILURE
-                print(f'    Encountered APP_LAUNCH_FAILURE. {retry_message} {reboot_message}')
-                reboot = True
-                retry = True
 
             # If we fail to find a simulator and we are not targeting a specific version (e.g. `ios-simulator_13.5`),
             # it is probably an issue because Xcode should always have at least one runtime version inside
