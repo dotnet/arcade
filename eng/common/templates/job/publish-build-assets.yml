@@ -37,7 +37,7 @@ jobs:
 
   ${{ if eq(parameters.publishAssetsImmediately, 'true') }}:
     displayName: Publish Assets
-  ${{ if ne(parameters.publishAssetsImmediately, 'true') }}:
+  ${{ else }}:
     displayName: Publish to Build Asset Registry
 
   pool: ${{ parameters.pool }}

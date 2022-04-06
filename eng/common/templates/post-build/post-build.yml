@@ -104,7 +104,7 @@ stages:
           name: VSEngSS-MicroBuild2022-1ES
           demands: Cmd
         # If it's not devdiv, it's dnceng
-        ${{ if ne(variables['System.TeamProject'], 'DevDiv') }}:
+        ${{ else }}:
           name: NetCore1ESPool-Internal
           demands: ImageOverride -equals Build.Server.Amd64.VS2019
 
@@ -141,7 +141,7 @@ stages:
           name: VSEngSS-MicroBuild2022-1ES
           demands: Cmd
         # If it's not devdiv, it's dnceng
-        ${{ if ne(variables['System.TeamProject'], 'DevDiv') }}:
+        ${{ else }}:
           name: NetCore1ESPool-Internal
           demands: ImageOverride -equals Build.Server.Amd64.VS2019
       steps:
@@ -201,7 +201,7 @@ stages:
           name: VSEngSS-MicroBuild2022-1ES
           demands: Cmd
         # If it's not devdiv, it's dnceng
-        ${{ if ne(variables['System.TeamProject'], 'DevDiv') }}:
+        ${{ else }}:
           name: NetCore1ESPool-Internal
           demands: ImageOverride -equals Build.Server.Amd64.VS2019
       steps:
@@ -244,7 +244,7 @@ stages:
   - stage: publish_using_darc
     ${{ if or(eq(parameters.enableNugetValidation, 'true'), eq(parameters.enableSigningValidation, 'true'), eq(parameters.enableSourceLinkValidation, 'true'), eq(parameters.SDLValidationParameters.enable, 'true')) }}:
       dependsOn: ${{ parameters.publishDependsOn }}
-    ${{ if and(ne(parameters.enableNugetValidation, 'true'), ne(parameters.enableSigningValidation, 'true'), ne(parameters.enableSourceLinkValidation, 'true'), ne(parameters.SDLValidationParameters.enable, 'true')) }}:
+    ${{ else }}:
       dependsOn: ${{ parameters.validateDependsOn }}
     displayName: Publish using Darc
     variables:
@@ -255,13 +255,13 @@ stages:
       timeoutInMinutes: 120
       pool:
         # We don't use the collection uri here because it might vary (.visualstudio.com vs. dev.azure.com)
-          ${{ if eq(variables['System.TeamProject'], 'DevDiv') }}:
-            name: VSEngSS-MicroBuild2022-1ES
-            demands: Cmd
-          # If it's not devdiv, it's dnceng
-          ${{ if ne(variables['System.TeamProject'], 'DevDiv') }}:
-            name: NetCore1ESPool-Internal
-            demands: ImageOverride -equals Build.Server.Amd64.VS2019
+        ${{ if eq(variables['System.TeamProject'], 'DevDiv') }}:
+          name: VSEngSS-MicroBuild2022-1ES
+          demands: Cmd
+        # If it's not devdiv, it's dnceng
+        ${{ else }}:
+          name: NetCore1ESPool-Internal
+          demands: ImageOverride -equals Build.Server.Amd64.VS2019
       steps:
         - template: setup-maestro-vars.yml
           parameters:
