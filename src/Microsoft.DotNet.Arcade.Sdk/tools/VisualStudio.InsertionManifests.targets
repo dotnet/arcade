@@ -49,7 +49,7 @@
       <_Args Include="ComponentName=$(_ComponentName)"/>
       <_Args Include="SetupOutputPath=$(VisualStudioSetupInsertionPath)"/>
       <_Args Include="ComponentIntermediateOutputPath=$(VisualStudioSetupIntermediateOutputPath)$(_ComponentName)\"/>
-      <_Args Include="SwixBuildPath=$(NuGetPackageRoot)microbuild.plugins.swixbuild\$(MicroBuildPluginsSwixBuildVersion)\"/>
+      <_Args Include="SwixBuildPath=$(NuGetPackageRoot)microbuild.plugins.swixbuild\$(MicrosoftVisualStudioEngMicroBuildPluginsSwixBuildVersion)\"/>
       <_Args Include="VisualStudioDropName=$(VisualStudioDropName)" />
     </ItemGroup>
 
