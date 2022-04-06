@@ -55,6 +55,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             if (!exists)
             {
                 File.WriteAllText(target, "Test failed once");
+                exists = File.Exists(target);
             }
             
             Assert.True(exists, $"File should exist: {target}");
