@@ -2,6 +2,11 @@
 .SYNOPSIS
 Adds/removes variables to a pipeline or all pipelines in a project.
 
+.DESCRIPTION
+This script is generally useful for setting or removing variables that have an effect on pipelines. This has generally been used for:
+- Setting variables to control monitoring on internal builds.
+- Adding and removing opt-outs for NuGet feed analysis.
+
 .PARAMETER PipelineId
 Optional ID of a pipeline. If no ID is specified, all pipelines get the variable`
 
@@ -52,16 +57,16 @@ function UpdatePipeline($id, $authHeaders)
         $existingPipeline | Add-Member -MemberType NoteProperty -Name 'variables' -Value $newVariablesNode
     } else {
         $existingVariableObject = $existingPipeline.variables | Get-Member $VariableName
-        if ($existingVariableObject -eq $null -and -not $RemoveVariable) {
+        if ($RemoveVariable) {
+            Write-Host "  Removing '$VariableName' from build pipeline"
+            $existingPipeline.variables.PSObject.Properties.Remove($VariableName)
+        } elseif ($existingVariableObject -eq $null) {
             Write-Host "  Adding new variable '$VariableName' with value '$VariableValue'"
             $existingPipeline.variables | Add-Member -MemberType NoteProperty -Name $VariableName -Value @{ value = $VariableValue; allowOverride = $false }
-        } elseif ($existingVariableObject -ne $null -and -not $RemoveVariable) {
+        } else {
             Write-Host "  Updating '$VariableName' with new value '$VariableValue'"
             $existingPipeline.variables.PSObject.Properties.Remove($VariableName)
             $existingPipeline.variables | Add-Member -MemberType NoteProperty -Name $VariableName -Value @{ value = $VariableValue; allowOverride = $false }
-        } else {
-            Write-Host "  Removing '$VariableName' from build pipeline"
-            $existingPipeline.variables.PSObject.Properties.Remove($VariableName)
         }
     }
     
