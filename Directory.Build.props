@@ -14,6 +14,9 @@
       Tools and packages produced by this repository support infrastructure and are not shipping on NuGet or via any other official channel.
     -->
     <IsShipping>false</IsShipping>
+    
+    <!-- We target 2.1 in this repo, though run on a newer runtime. -->
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(DotNetBuildFromSource)' == 'true'">
