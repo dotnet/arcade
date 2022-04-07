@@ -18,6 +18,11 @@ body:
       label: Build leg reported
       description: Enter the name of the stage/job where the build failed.
   - type: textarea
+    id: pr
+    attributes:
+      label: Pull Request
+      description: Enter link to one pull request in which the issue is observed
+  - type: textarea
     id: error-message
     attributes:
       label: Action required for the engineering services team
