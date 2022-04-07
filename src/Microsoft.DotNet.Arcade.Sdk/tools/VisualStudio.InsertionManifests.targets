@@ -23,8 +23,8 @@
       DestinationFolder="$(ArtifactsDir)Vsix\Unpacked\%(VsixFile.Filename)"
       OverwriteReadOnlyFiles="true"/>
 
-  <Exec Command = "$(DotNetTool) $(NUGET_PACKAGES)microsoft.manifesttool.crossplatform\$(MicrosoftManifestToolCrossPlatformVersion)\Content\Microsoft.ManifestTool.dll generate -b $(ArtifactsDir)Vsix -m $(ArtifactsDir)sbom -pn VsInsertion -V Verbose"/>
-  <Message Text="Completed generating SBOM manifest." Importance="high"/>
+    <Exec Command = "$(DotNetTool) $(NUGET_PACKAGES)microsoft.manifesttool.crossplatform\$(MicrosoftManifestToolCrossPlatformVersion)\Content\Microsoft.ManifestTool.dll generate -b $(ArtifactsDir)Vsix -m $(ArtifactsDir)sbom -pn VsInsertion -V Verbose"/>
+    <Message Text="Completed generating SBOM manifest." Importance="high"/>
   </Target>
   <!---
     This target is invoked in a separate phase after all input VSIX files are signed.
