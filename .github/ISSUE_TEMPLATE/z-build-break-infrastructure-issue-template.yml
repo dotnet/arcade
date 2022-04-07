@@ -17,7 +17,7 @@ body:
     attributes:
       label: Build leg reported
       description: Enter the name of the stage/job where the build failed.
-  - type: textarea
+  - type: input
     id: pr
     attributes:
       label: Pull Request
