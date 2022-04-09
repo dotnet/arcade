@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.GenAPI
         
         private WriterType _writerType;
         private SyntaxWriterType _syntaxWriterType;
-        private DocIdKinds _docIdKinds;
+        private DocIdKinds _docIdKinds = Cci.Writers.DocIdKinds.All;
 
         /// <summary>
         /// Path for an specific assembly or a directory to get all assemblies.
@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.GenAPI
         public string WriterType 
         { 
             get => _writerType.ToString(); 
-            set => _writerType = (WriterType) Enum.Parse(typeof(WriterType), value, true); 
+            set => _writerType = string.IsNullOrWhiteSpace(value) ? default : (WriterType) Enum.Parse(typeof(WriterType), value, true); 
         }
 
         /// <summary>
@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.GenAPI
         public string SyntaxWriterType 
         { 
             get => _syntaxWriterType.ToString(); 
-            set => _syntaxWriterType = (SyntaxWriterType)Enum.Parse(typeof(SyntaxWriterType), value, true); 
+            set => _syntaxWriterType = string.IsNullOrWhiteSpace(value) ? default : (SyntaxWriterType)Enum.Parse(typeof(SyntaxWriterType), value, true); 
         }
 
         /// <summary>
@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.GenAPI
         public string DocIdKinds 
         { 
             get => _docIdKinds.ToString(); 
-            set => _docIdKinds = (DocIdKinds)Enum.Parse(typeof(DocIdKinds), value, true); 
+            set => _docIdKinds = string.IsNullOrWhiteSpace(value) ? Cci.Writers.DocIdKinds.All : (DocIdKinds)Enum.Parse(typeof(DocIdKinds), value, true); 
         }
 
         /// <summary>
