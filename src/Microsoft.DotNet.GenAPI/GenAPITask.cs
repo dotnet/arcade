@@ -191,7 +191,7 @@ namespace Microsoft.DotNet.GenAPI
             {
                 foreach (IAssembly assembly in assemblies)
                 {
-                    using (TextWriter output = GetOutput(GetFilename(assembly, _writerType, _syntaxWriterType)))
+                    using (TextWriter output = GetOutput(OutputPath, GetFilename(assembly, _writerType, _syntaxWriterType)))
                     using (IStyleSyntaxWriter syntaxWriter = GetSyntaxWriter(output, _writerType, _syntaxWriterType))
                     {
                         ICciWriter writer = null;
