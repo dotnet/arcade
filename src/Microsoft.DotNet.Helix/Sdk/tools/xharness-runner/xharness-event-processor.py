@@ -251,7 +251,14 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                 retry = True
 
 # The JSON should be an array of objects (one per each executed XHarness command)
-operations = json.load(open(diagnostics_file))
+try:
+    operations = json.load(open(diagnostics_file))
+except Exception as e:
+    print(f'    Failed to load the diagnostics file: {e}')
+    print('Diagnostics file contents:')
+    with open(diagnostics_file) as f:
+        print(f.read())
+    exit(1)
 
 print(f"Reporting {len(operations)} events from diagnostics file `{diagnostics_file}`")
 
