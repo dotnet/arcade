@@ -224,6 +224,8 @@ stages:
       # Sourcelink validation isn't passing for Arcade due to some regressions. This should be
       # enabled back once this issue is resolved: https://github.com/dotnet/arcade/issues/2912
       enableSourceLinkValidation: false
+      artifactsPublishingAdditionalParameters: '/p:CheckEolTargetFramework=false'
+      symbolPublishingAdditionalParameters: '/p:CheckEolTargetFramework=false'
       publishDependsOn:
       - Validate
       - ValidateSdk
