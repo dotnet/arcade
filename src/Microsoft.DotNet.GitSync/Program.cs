@@ -322,7 +322,7 @@ namespace Microsoft.DotNet.GitSync
                 var result = new NewChanges(targetRepo);
                 foreach (var commit in _listCommits)
                 {
-                    string key = commit.Properties["SourceRepo"].StringValue;
+                    string key = commit.GetString("SourceRepo");
                     if (result.changes.ContainsKey(key))
                         result.changes[key].Add(commit.RowKey);
                     else
@@ -576,13 +576,9 @@ namespace Microsoft.DotNet.GitSync
 
         private static IEnumerable<TableEntity> GetCommitsToMirror(RepositoryInfo targetRepo, string branch)
         {
-            var rangeQuery = TableClient.CreateQueryFilter
-                TableQuery.GenerateFilterConditionForBool("Mirrored", QueryComparisons.Equal, false),
-                TableOperators.And,
-                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, targetRepo.Name)));
-
-            //var commits = s_table.ExecuteQuery(rangeQuery);
-            Pageable<TableEntity> commits = s_table.Query<TableEntity>(
+            // TODO: fix query
+            string rangeQuery = TableClient.CreateQueryFilter($"Mirrored eq '' and PartitionKey eq '{targetRepo.Name}'");
+            Pageable<TableEntity> commits = s_table.Query<TableEntity>(rangeQuery);
             return commits.Where(t => t.GetString("Branch") == branch);
         }
 
@@ -593,10 +589,10 @@ namespace Microsoft.DotNet.GitSync
             if (commits.Count() == 0)
             {
                 TableEntity entity = new TableEntity(TargetRepo, sha);
-                entity.Add("Branch", EntityProperty.GeneratePropertyForString(branch));
-                entity.Add("PR", EntityProperty.GeneratePropertyForString(string.Empty));
-                entity.Add("SourceRepo", EntityProperty.GeneratePropertyForString(SourceRepo));
-                entity.Add("Mirrored", EntityProperty.GeneratePropertyForBool(false));
+                entity.Add("Branch", branch);
+                entity.Add("PR", string.Empty);
+                entity.Add("SourceRepo", SourceRepo);
+                entity.Add("Mirrored", false);
 
                 s_table.AddEntity(entity);
             }
