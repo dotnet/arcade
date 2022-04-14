@@ -218,6 +218,11 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                 print(f'    Failed to launch the simulator. {retry_message}')
                 retry = True
         else:
+            if exit_code == 78: # PACKAGE_INSTALLATION_FAILURE
+                print(f'    Encountered PACKAGE_INSTALLATION_FAILURE. This might be caused by a corrupt simulator. {retry_message} {reboot_message}')
+                retry = True
+                reboot = True
+
             # Kill the simulator when we fail to launch the app
             if exit_code == 80: # APP_CRASH
                 simulator_app = os.getenv('SIMULATOR_APP')
@@ -251,7 +256,14 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                 retry = True
 
 # The JSON should be an array of objects (one per each executed XHarness command)
-operations = json.load(open(diagnostics_file))
+try:
+    operations = json.load(open(diagnostics_file))
+except Exception as e:
+    print(f'    Failed to load the diagnostics file: {e}')
+    print('Diagnostics file contents:')
+    with open(diagnostics_file) as f:
+        print(f.read())
+    exit(1)
 
 print(f"Reporting {len(operations)} events from diagnostics file `{diagnostics_file}`")
 
