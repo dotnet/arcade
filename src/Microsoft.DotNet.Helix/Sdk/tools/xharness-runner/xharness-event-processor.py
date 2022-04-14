@@ -218,6 +218,11 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                 print(f'    Failed to launch the simulator. {retry_message}')
                 retry = True
         else:
+            if exit_code == 78: # PACKAGE_INSTALLATION_FAILURE
+                print(f'    Encountered PACKAGE_INSTALLATION_FAILURE. This might be caused by a corrupt simulator. {retry_message} {reboot_message}')
+                retry = True
+                reboot = True
+
             # Kill the simulator when we fail to launch the app
             if exit_code == 80: # APP_CRASH
                 simulator_app = os.getenv('SIMULATOR_APP')
