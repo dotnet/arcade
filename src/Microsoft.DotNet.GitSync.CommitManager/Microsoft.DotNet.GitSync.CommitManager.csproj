@@ -13,6 +13,7 @@
     <PackageReference Include="WindowsAzure.Storage" Version="$(WindowsAzureStorageVersion)" />
     <PackageReference Include="Microsoft.Data.OData" Version="$(MicrosoftDataODataVersion)" />
     <PackageReference Include="Azure.Data.Tables" Version="$(AzureDataTablesVersion)" />
+    <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="$(SystemSecurityCryptographyX509CertificatesVersion)" />
   </ItemGroup>
 
 </Project>
