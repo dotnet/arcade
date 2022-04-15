@@ -576,8 +576,7 @@ namespace Microsoft.DotNet.GitSync
 
         private static IEnumerable<TableEntity> GetCommitsToMirror(RepositoryInfo targetRepo, string branch)
         {
-            // TODO: fix query
-            string rangeQuery = TableClient.CreateQueryFilter($"Mirrored eq '' and PartitionKey eq '{targetRepo.Name}'");
+            string rangeQuery = TableClient.CreateQueryFilter($"(Mirrored eq false) and (PartitionKey eq '{targetRepo.Name}')");
             Pageable<TableEntity> commits = s_table.Query<TableEntity>(rangeQuery);
             return commits.Where(t => t.GetString("Branch") == branch);
         }
