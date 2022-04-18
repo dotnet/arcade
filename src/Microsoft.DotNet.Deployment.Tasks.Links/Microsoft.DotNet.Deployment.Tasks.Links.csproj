@@ -18,7 +18,7 @@
     <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" Publish="false" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" Publish="false" ExcludeAssets="runtime" />
     <PackageReference Include="System.Net.Http" Version="$(SystemNetHttpVersion)" />
-    <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="$(SystemSecurityCryptographyX509CertificatesVersion)" />
+    <PackageReference Include="NETStandard.Library" Version="1.6.1" />
   </ItemGroup>
 
   <!-- Just copy the .props and .target to the build folder. -->

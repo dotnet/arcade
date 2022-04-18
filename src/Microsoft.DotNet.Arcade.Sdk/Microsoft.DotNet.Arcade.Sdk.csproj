@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFrameworks>net472;$(TargetFrameworkForNETSDK)</TargetFrameworks>
     <TargetFrameworks Condition="'$(DotNetBuildFromSource)' == 'true'">$(TargetFrameworkForNETSDK)</TargetFrameworks>
-    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
     <LangVersion>preview</LangVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ExcludeFromSourceBuild>false</ExcludeFromSourceBuild>
@@ -30,7 +29,7 @@
     <PackageReference Include="System.Net.Http" Version="$(SystemNetHttpVersion)" />
     <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
     <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
-    <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="$(SystemSecurityCryptographyX509CertificatesVersion)" />
+    <PackageReference Include="NETStandard.Library" Version="1.6.1" />
   </ItemGroup>
 
   <!-- Required for compiling "InstallDotNetCore.cs" -->
@@ -41,7 +40,7 @@
     <PackageReference Include="System.Numerics.Vectors" Version="$(SystemNumericsVectorsVersion)" />
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="$(SystemRuntimeCompilerServicesUnsafeVersion)" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="$(SystemThreadingTasksExtensionVersion)" />
-    <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="$(SystemSecurityCryptographyX509CertificatesVersion)" />
+    <PackageReference Update="NETStandard.Library" Version="1.6.1" />
   </ItemGroup>
 
   <ItemGroup>

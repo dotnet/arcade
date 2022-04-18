@@ -17,6 +17,6 @@
     <PackageReference Include="Microsoft.Data.Services.Client" Version="$(MicrosoftDataServicesClientVersion)" />
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="$(MicrosoftIdentityModelClientsActiveDirectoryVersion)" />
     <PackageReference Include="Octokit" Version="$(OctokitVersion)" />
-    <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="$(SystemSecurityCryptographyX509CertificatesVersion)" />
+    <PackageReference Include="NETStandard.Library" Version="1.6.1" />
   </ItemGroup>
 </Project>
