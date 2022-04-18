@@ -241,7 +241,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     _ = Parallel.ForEach(data.FeatureBands.Keys, platform =>
                     {
                         WorkloadPackMsi msi = new(data.Package, platform, BuildEngine, WixToolsetPath, BaseIntermediateOutputPath);
-                        ITaskItem msiOutputItem = msi.Build(MsiOutputPath);
+                        ITaskItem msiOutputItem = msi.Build(MsiOutputPath, IceSuppressions);
 
                         // Create the JSON manifest for CLI based installations.
                         string msiJsonPath = MsiProperties.Create(msiOutputItem.ItemSpec);
