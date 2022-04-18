@@ -17,6 +17,7 @@
     <AzureStorageBlobsVersion>12.10.0</AzureStorageBlobsVersion>
     <AzureDataTablesVersion>12.5.0</AzureDataTablesVersion>
     <FluentAssertionsVersion>5.10.3</FluentAssertionsVersion>
+    <NETStandardLibraryVersion>1.6.1</NETStandardLibraryVersion>
     <MicrosoftApplicationInsightsVersion>2.16.0</MicrosoftApplicationInsightsVersion>
     <MicrosoftAzureKeyVaultVersion>3.0.0</MicrosoftAzureKeyVaultVersion>
     <MicrosoftAzureServicesAppAuthenticationVersion>1.3.1</MicrosoftAzureServicesAppAuthenticationVersion>
