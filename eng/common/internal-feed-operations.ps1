@@ -58,7 +58,7 @@ function SetupCredProvider {
   if (($nugetConfigPackageSources | Measure-Object).Count -gt 0 ) {
     foreach ($stableRestoreResource in $nugetConfigPackageSources) {
       $trimmedResource = ([string]$stableRestoreResource).Trim()
-      [void]$endpoints.Add(@{endpoint="$trimmedResource"; password="$AuthToken"}) 
+      [void]$endpoints.Add(@{endpoint="$trimmedResource"; password=$AuthToken}) 
     }
   }
 
