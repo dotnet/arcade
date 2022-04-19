@@ -2,8 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>net472;$(TargetFrameworkForNETSDK)</TargetFrameworks>
-    <TargetFrameworks Condition="'$(DotNetBuildFromSource)' == 'true'">$(TargetFrameworkForNETSDK)</TargetFrameworks>
-    <CopyLocalLockFileAssemblies Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp3.1'))">true</CopyLocalLockFileAssemblies>
+    <CopyLocalLockFileAssemblies Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">true</CopyLocalLockFileAssemblies>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <IsPackable>true</IsPackable>
     <Title>Configuration system for cross-targeting projects.</Title>

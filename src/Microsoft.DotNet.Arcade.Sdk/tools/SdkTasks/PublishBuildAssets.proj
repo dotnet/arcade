@@ -30,7 +30,7 @@
   <PropertyGroup>
     <_MicrosoftDotNetMaestroTasksBaseDir>$(NuGetPackageRoot)microsoft.dotnet.maestro.tasks\$(MicrosoftDotNetMaestroTasksVersion)\tools\</_MicrosoftDotNetMaestroTasksBaseDir>
     <_MicrosoftDotNetMaestroTasksDir>$(_MicrosoftDotNetMaestroTasksBaseDir)net472</_MicrosoftDotNetMaestroTasksDir>
-    <_MicrosoftDotNetMaestroTasksDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(_MicrosoftDotNetMaestroTasksBaseDir)netcoreapp3.1</_MicrosoftDotNetMaestroTasksDir>
+    <_MicrosoftDotNetMaestroTasksDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(_MicrosoftDotNetMaestroTasksBaseDir)net7.0</_MicrosoftDotNetMaestroTasksDir>
   </PropertyGroup>
   
   <UsingTask TaskName="PushMetadataToBuildAssetRegistry" AssemblyFile="$(_MicrosoftDotNetMaestroTasksDir)\Microsoft.DotNet.Maestro.Tasks.dll"/>
