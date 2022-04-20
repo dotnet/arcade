@@ -196,7 +196,7 @@ stages:
         workspace:
           clean: all
         jobs:
-        - job: XHarness_Apple_Simulator
+        - job: Apple_Simulators
           timeoutInMinutes: 90
           container: LinuxContainer
           pool:
@@ -206,7 +206,7 @@ stages:
               Build_Debug:
                 _BuildConfig: Debug
           variables:
-          - _Testing: Apple_Simulator_Tests
+          - _Testing: XHarness_Apple_Simulator_Tests
           preSteps:
           - checkout: self
             clean: true
@@ -226,7 +226,7 @@ stages:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
 
-        - job: XHarness_Apple_Device
+        - job: Apple_Devices
           timeoutInMinutes: 90
           container: LinuxContainer
           pool:
@@ -236,7 +236,7 @@ stages:
               Build_Release:
                 _BuildConfig: Release
           variables:
-          - _Testing: Apple_Device_Tests
+          - _Testing: XHarness_Apple_Device_Tests
           preSteps:
           - checkout: self
             clean: true
@@ -256,7 +256,7 @@ stages:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
 
-        - job: XHarness_Android_Simulator
+        - job: Android_Simulators
           timeoutInMinutes: 90
           container: LinuxContainer
           pool:
@@ -266,7 +266,7 @@ stages:
               Build_Release:
                 _BuildConfig: Release
           variables:
-          - _Testing: Android_Simulator_Tests
+          - _Testing: XHarness_Android_Simulator_Tests
           preSteps:
           - checkout: self
             clean: true
@@ -286,7 +286,7 @@ stages:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
 
-        - job: XHarness_Android_Device
+        - job: Android_Devices
           timeoutInMinutes: 90
           pool:
             vmimage: windows-latest
@@ -295,7 +295,7 @@ stages:
               Build_Debug:
                 _BuildConfig: Debug
           variables:
-          - _Testing: Android_Device_Tests
+          - _Testing: XHarness_Android_Device_Tests
           preSteps:
           - checkout: self
             clean: true
