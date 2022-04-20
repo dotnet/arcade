@@ -196,36 +196,7 @@ stages:
         workspace:
           clean: all
         jobs:
-        - job: Windows_NT_XHarness
-          timeoutInMinutes: 90
-          pool:
-            vmimage: windows-latest
-          strategy:
-            matrix:
-              Build_Debug:
-                _BuildConfig: Debug
-          variables:
-          - _Testing: XHarness_Android_Device
-          preSteps:
-          - checkout: self
-            clean: true
-          steps:
-          - powershell: eng\common\build.ps1
-              -configuration $(_BuildConfig) 
-              -prepareMachine
-              -ci
-              -restore
-              -test
-              -warnAsError $false
-              -projects $(Build.SourcesDirectory)\tests\XHarness.Android.DeviceTests.proj
-              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.Device.Tests.binlog
-              /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness Android Helix Testing (Windows)
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''
-
-        - job: Linux_XHarness_Apple_Simulator
+        - job: XHarness_Apple_Simulator
           timeoutInMinutes: 90
           container: LinuxContainer
           pool:
@@ -255,7 +226,7 @@ stages:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
 
-        - job: Linux_XHarness_Apple_Device
+        - job: XHarness_Apple_Device
           timeoutInMinutes: 90
           container: LinuxContainer
           pool:
@@ -285,7 +256,7 @@ stages:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
 
-        - job: Linux_XHarness
+        - job: XHarness_Android_Simulator
           timeoutInMinutes: 90
           container: LinuxContainer
           pool:
@@ -311,6 +282,35 @@ stages:
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Android.Simulator.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness Android Helix Testing (Linux)
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              HelixAccessToken: ''
+
+        - job: XHarness_Android_Device
+          timeoutInMinutes: 90
+          pool:
+            vmimage: windows-latest
+          strategy:
+            matrix:
+              Build_Debug:
+                _BuildConfig: Debug
+          variables:
+          - _Testing: XHarness_Android_Device
+          preSteps:
+          - checkout: self
+            clean: true
+          steps:
+          - powershell: eng\common\build.ps1
+              -configuration $(_BuildConfig) 
+              -prepareMachine
+              -ci
+              -restore
+              -test
+              -warnAsError $false
+              -projects $(Build.SourcesDirectory)\tests\XHarness.Android.DeviceTests.proj
+              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.Device.Tests.binlog
+              /p:RestoreUsingNuGetTargets=false
+            displayName: XHarness Android Helix Testing (Windows)
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
