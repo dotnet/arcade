@@ -206,7 +206,7 @@ stages:
               Build_Debug:
                 _BuildConfig: Debug
           variables:
-          - _Testing: XHarness_Apple_Simulator
+          - _Testing: Apple_Simulator_Tests
           preSteps:
           - checkout: self
             clean: true
@@ -236,7 +236,7 @@ stages:
               Build_Release:
                 _BuildConfig: Release
           variables:
-          - _Testing: XHarness_Apple_Device
+          - _Testing: Apple_Device_Tests
           preSteps:
           - checkout: self
             clean: true
@@ -266,7 +266,7 @@ stages:
               Build_Release:
                 _BuildConfig: Release
           variables:
-          - _Testing: XHarness_Android_Simulator
+          - _Testing: Android_Simulator_Tests
           preSteps:
           - checkout: self
             clean: true
@@ -295,7 +295,7 @@ stages:
               Build_Debug:
                 _BuildConfig: Debug
           variables:
-          - _Testing: XHarness_Android_Device
+          - _Testing: Android_Device_Tests
           preSteps:
           - checkout: self
             clean: true
