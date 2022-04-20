@@ -149,36 +149,7 @@ stages:
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
-        - job: Windows_NT_XHarness
-          timeoutInMinutes: 90
-          pool:
-            vmimage: windows-latest
-          strategy:
-            matrix:
-              Build_Release:
-                _BuildConfig: Release
-              Build_Debug:
-                _BuildConfig: Debug
-          variables:
-          - _Testing: Xharness
-          preSteps:
-          - checkout: self
-            clean: true
-          steps:
-          - powershell: eng\common\build.ps1
-              -configuration $(_BuildConfig) 
-              -prepareMachine
-              -ci
-              -restore
-              -test
-              -warnAsError $false
-              -projects $(Build.SourcesDirectory)\tests\XHarness.Android.DeviceTests.proj
-              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.Device.Tests.binlog
-              /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness Android Helix Testing (Windows)
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''
+
         - job: Linux
           timeoutInMinutes: 90
           container: LinuxContainer
@@ -210,6 +181,51 @@ stages:
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
+
+  - stage: Test_XHarness
+    displayName: Test XHarness (Helix SDK)
+    dependsOn: build
+    jobs:
+    - template: /eng/common/templates/jobs/jobs.yml
+      parameters:
+        artifacts:
+          publish:
+            logs:
+              name: Logs_Test_$(Agent.OS)_$(_BuildConfig)_$(_Testing)
+          download: true
+        workspace:
+          clean: all
+        jobs:
+
+        - job: Windows_NT_XHarness
+          timeoutInMinutes: 90
+          pool:
+            vmimage: windows-latest
+          strategy:
+            matrix:
+              Build_Debug:
+                _BuildConfig: Debug
+          variables:
+          - _Testing: XHarness_Android_Device
+          preSteps:
+          - checkout: self
+            clean: true
+          steps:
+          - powershell: eng\common\build.ps1
+              -configuration $(_BuildConfig) 
+              -prepareMachine
+              -ci
+              -restore
+              -test
+              -warnAsError $false
+              -projects $(Build.SourcesDirectory)\tests\XHarness.Android.DeviceTests.proj
+              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.Device.Tests.binlog
+              /p:RestoreUsingNuGetTargets=false
+            displayName: XHarness Android Helix Testing (Windows)
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              HelixAccessToken: ''
+
         - job: Linux_XHarness_Apple_Simulator
           timeoutInMinutes: 90
           container: LinuxContainer
@@ -219,10 +235,8 @@ stages:
             matrix:
               Build_Debug:
                 _BuildConfig: Debug
-              Build_Release:
-                _BuildConfig: Release
           variables:
-          - _Testing: Xharness_Apple_Simulator
+          - _Testing: XHarness_Apple_Simulator
           preSteps:
           - checkout: self
             clean: true
@@ -241,6 +255,7 @@ stages:
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
+
         - job: Linux_XHarness_Apple_Device
           timeoutInMinutes: 90
           container: LinuxContainer
@@ -248,12 +263,10 @@ stages:
             vmimage: ubuntu-latest
           strategy:
             matrix:
-              Build_Debug:
-                _BuildConfig: Debug
               Build_Release:
                 _BuildConfig: Release
           variables:
-          - _Testing: Xharness_Apple_Device
+          - _Testing: XHarness_Apple_Device
           preSteps:
           - checkout: self
             clean: true
@@ -272,6 +285,7 @@ stages:
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
+
         - job: Linux_XHarness
           timeoutInMinutes: 90
           container: LinuxContainer
@@ -279,12 +293,10 @@ stages:
             vmimage: ubuntu-latest
           strategy:
             matrix:
-              Build_Debug:
-                _BuildConfig: Debug
               Build_Release:
                 _BuildConfig: Release
           variables:
-          - _Testing: Xharness
+          - _Testing: XHarness_Android_Simulator
           preSteps:
           - checkout: self
             clean: true
