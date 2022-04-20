@@ -183,7 +183,7 @@ stages:
               HelixAccessToken: ''
 
   - stage: Test_XHarness
-    displayName: Test XHarness (Helix SDK)
+    displayName: Test XHarness SDK
     dependsOn: build
     jobs:
     - template: /eng/common/templates/jobs/jobs.yml
@@ -196,7 +196,6 @@ stages:
         workspace:
           clean: all
         jobs:
-
         - job: Windows_NT_XHarness
           timeoutInMinutes: 90
           pool:
