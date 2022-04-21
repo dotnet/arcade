@@ -56,11 +56,11 @@ Changes that we implement often require addition maintenance to support them lon
 ## House Keeping
 
 In order to align with Epic Content Guidance, one-pagers should be stored in a central location. 
-- The folder to store your One-Pager can be found in the [Documentation Folder](https://github.com/dotnet/core-eng/tree/main/Documentation/One-Pagers)
+- The folder to store your One-Pager can be found in the [Documentation Folder](https://github.com/dotnet/arcade/tree/main/Documentation/TeamProcess/One-Pagers)
 - The name the one-pager should contain the name of the epic and the epic issue number (for easy reference). 
   - Example: Coordinate migration from "master" to "main" in all dotnet org repos - core-eng10412.md. 
 - Use the PR process to document the discussion around the content of the one-pager.
 
-Guidance for Epics can be found at [Guidelines for Epics](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/%5BInt%5D---Guidelines-for-Epics) wiki
+Guidance for Epics can be found at [Guidelines for Epics](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/552/Guidelines-for-Epics) wiki.
 
 After all discussions have been resolved, the resulting one-pager document should be signed-off (this does not need to be a formal process) by stakeholders (e.g. v-team members, epic owners, et cetera) and then linked to the associated epic's GitHub issue for discover-ability.
