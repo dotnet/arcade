@@ -1,9 +1,5 @@
 <Project>
 
-  <!--
-    By default, build for an old TFM for wide applicability. When running source-build, target the
-    current .NET SDK framework version to avoid dependency challenges.
-  -->
   <PropertyGroup>
     <TargetFrameworkForNETSDK>net7.0</TargetFrameworkForNETSDK>
   </PropertyGroup>
