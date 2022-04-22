@@ -164,7 +164,11 @@ namespace Microsoft.DotNet.Helix.Client
             // 404 = this queue does not exist, or did and was removed.
             catch (RestApiException ex) when (ex.Response?.Status == 404)
             {
-                throw new ArgumentException($"Helix API does not contain an entry for {queueId}");
+                // Do not throw for Helix pr- queues which are not in the queue info JSON
+                if (!queueId.ToLowerInvariant().StartsWith("pr-"))
+                {
+                    throw new ArgumentException($"Helix API does not contain an entry for {queueId}");
+                }
             }
 
             IBlobContainer storageContainer = await storage.GetContainerAsync(TargetContainerName, queueId, cancellationToken);
