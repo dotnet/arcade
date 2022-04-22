@@ -37,16 +37,11 @@
 
   <ItemGroup>
     <_PackageStubFiles Include="$(ComponentIntermediateOutputPath)*.stub"/>
-    <MergeManifest Include="@(_PackageStubFiles->'$(SetupOutputPath)%(Filename).json')"/>
-    <MergeManifest Include="@(_PackageStubFiles->'$(SetupOutputPath)%(Filename).json')">
-      <SBOMFileLocation>$(BUILD_SOURCESDIRECTORY)\artifacts\sbom\spdx_2.2\manifest.spdx.json</SBOMFileLocation>
-      <SBOMFileDestPath>$(SetupOutputPath)</SBOMFileDestPath>
-    </MergeManifest>
   </ItemGroup>
 
   <Import Project="$(SwixBuildPath)build\Microsoft.VisualStudioEng.MicroBuild.Plugins.SwixBuild.targets" />
 
-  <Target Name="_BuildManifest" DependsOnTargets="_SetManifestBuildVersion;GenerateSetupManifest;AddSBOM" />
+  <Target Name="_BuildManifest" DependsOnTargets="_SetManifestBuildVersion;GenerateSetupManifest" />
 
   <!--
     Each stub file contains VSIX version of the respective VSIX file.
@@ -81,6 +76,12 @@
 
     <PropertyGroup>
       <ManifestBuildVersion>@(_VsixVersionNoDuplicates)</ManifestBuildVersion>
+      <ManifestVsixName>@(_VsixVersionNoDuplicates->'%(Name)')</ManifestVsixName>
     </PropertyGroup>
+    <ItemGroup>
+    <MergeManifest Include="$(SetupOutputPath)$(ComponentName).json">
+      <SBOMFileLocation>$(BUILD_SOURCESDIRECTORY)\artifacts\sbom\$(ManifestVsixName.Substring(0, $(ManifestVsixName.LastIndexOf('.'))))\spdx_2.2\manifest.spdx.json</SBOMFileLocation>
+      </MergeManifest>
+  </ItemGroup>
   </Target>
 </Project>
