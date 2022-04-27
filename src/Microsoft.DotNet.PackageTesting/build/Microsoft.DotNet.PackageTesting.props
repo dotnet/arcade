@@ -9,9 +9,8 @@
   <UsingTask TaskName="VerifyTypes" AssemblyFile="$(DotNetPackageTestingAssembly)"/>
 
   <ItemGroup>
-    <SupportedTestFramework Include="netcoreapp3.1" />
-    <SupportedTestFramework Include="net5.0" />
     <SupportedTestFramework Include="net6.0" />
+    <SupportedTestFramework Include="net7.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,7 +19,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <SupportedTestFramework Include="net461" />
     <SupportedTestFramework Include="net462" />
     <SupportedTestFramework Include="net471" />
     <SupportedTestFramework Include="net472" />
