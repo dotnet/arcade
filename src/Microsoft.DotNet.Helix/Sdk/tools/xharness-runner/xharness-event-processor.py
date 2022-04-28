@@ -151,7 +151,7 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                     subprocess.call(['sudo', 'rsync', '--recursive', '--include', 'stdout', '--include', 'stderr', '--filter', '-! */',
                         boot_log_location, boot_log_destination])
 
-                    # The logs are sometimes owned by root
+                    # The boot logs are owned by root, so make them readable for the Helix agent
                     subprocess.call(['sudo', 'chmod', '-R', '777', boot_log_destination])
 
             retry = True
