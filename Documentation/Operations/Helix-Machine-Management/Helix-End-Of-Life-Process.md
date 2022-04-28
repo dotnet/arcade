@@ -119,7 +119,7 @@ If you feel this removal is in error, or believe a specific expiration should be
   - Open issues in the dotnet/arcade for all actions, with the "First Responder" tag. Add to list of queues for end-of-week update.
 
 - If the main build has failed (red): 
-  - Ping DncEng First Responders Teams Channel and ask for next steps. 
+  - Ping [DncEng First Responders Teams Channel](https://teams.microsoft.com/l/channel/19%3aafba3d1545dd45d7b79f34c1821f6055%40thread.skype/First%2520Responders?groupId=4d73664c-9f2f-450d-82a5-c2f02756606d&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47) and ask for next steps. 
   - Optionally, create issue in dotnet/arcade with the "First Responders" label requesting investigation.
 
 ##### Weekly (Currently, most rollouts are on Wednesdays):
