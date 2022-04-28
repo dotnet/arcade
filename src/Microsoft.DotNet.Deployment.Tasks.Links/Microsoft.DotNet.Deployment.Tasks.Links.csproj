@@ -2,7 +2,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net7.0;net472</TargetFrameworks>
+    <TargetFrameworks>$(TargetFrameworkForNETSDK);net472</TargetFrameworks>
 
     <IsPackable>true</IsPackable>
     <Description>Aka.ms link manager</Description>

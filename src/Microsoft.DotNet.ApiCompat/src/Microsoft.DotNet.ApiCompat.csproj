@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;net7.0</TargetFrameworks>
-    <CopyLocalLockFileAssemblies Condition="'$(TargetFramework)' == 'net7.0'">true</CopyLocalLockFileAssemblies>
+    <TargetFrameworks>net472;$(TargetFrameworkForNETSDK)</TargetFrameworks>
+    <CopyLocalLockFileAssemblies Condition="'$(TargetFramework)' == '$(TargetFrameworkForNETSDK)'">true</CopyLocalLockFileAssemblies>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageType>MSBuildSdk</PackageType>
