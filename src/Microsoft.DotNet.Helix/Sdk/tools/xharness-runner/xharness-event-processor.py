@@ -142,14 +142,14 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                 if os.name != 'nt':
                     # This is where Azure stores logs from custom extension script runs
                     # More details here https://docs.microsoft.com/en-us/azure/virtual-machines/extensions/custom-script-linux#troubleshooting
-                    boot_log_file = '/var/lib/waagent/custom-script/download'
+                    boot_log_location = '/var/lib/waagent/custom-script/download'
 
-                    print(f'    Collecting emulator boot logs from {boot_log_file}..')
+                    print(f'    Collecting emulator boot logs from {boot_log_location}..')
                     boot_log_destination = output_directory + '/emulator_logs'
 
                     # Only copy stdout/stderr files (however they might be in different folders based on how Azure executed extension scripts)
                     subprocess.call(['sudo', 'rsync', '--recursive', '--include', 'stdout', '--include', 'stderr', '--filter', '-! */',
-                        '/var/lib/waagent/custom-script/download', boot_log_destination])
+                        boot_log_location, boot_log_destination])
 
                     # The logs are sometimes owned by root
                     subprocess.call(['sudo', 'chmod', '-R', '777', boot_log_destination])
