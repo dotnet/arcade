@@ -135,9 +135,16 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
             print(f'    Encountered DEVICE_NOT_FOUND. {retry_message} {reboot_message}')
             print('    If this occurs repeatedly, please check for architectural mismatch, e.g. sending arm64_v8a APKs to an x86_64 / x86 only queue.')
 
-            # For emulators it makes sense to reboot to try to heal the emulator
             if not is_device:
+                # For emulators it makes sense to reboot to try to heal the emulator
                 reboot = True
+                
+                if os.name != 'nt' and os.path.isdir('/var/lib/waagent/custom-script/download'):
+                    # We also attach logs from the emulator boot
+                    subprocess.call(['sudo', 'rsync', '--recursive', '--include', 'stdout', '--include', 'stderr', '--filter', "'-! */'",
+                        '/var/lib/waagent/custom-script/download',
+                        '$HELIX_WORKITEM_UPLOAD_ROOT/emulator_logs'])
+                    subprocess.call(['sudo', 'chmod', '-R', '777', '$HELIX_WORKITEM_UPLOAD_ROOT/emulator_logs'])
 
             retry = True
             return
