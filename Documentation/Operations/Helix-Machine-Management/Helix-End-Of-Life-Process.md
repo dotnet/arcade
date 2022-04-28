@@ -129,7 +129,7 @@ If you feel this removal is in error, or believe a specific expiration should be
   - Link to completed pipeline
   - Status of the rollout (completed normally, aborted, rolled back, etc)
   - List of any images/queues producing warnings in the pipeline (errors will stop us from running it)
-    - Open issues in the [dotnet/arcade](https://github.com/dotnet/arcade/) and list links to them under the "queues that will expire in the next 7 days" and "after the next 7 days" headings.
+    - Create new issues in [dotnet/arcade](https://github.com/dotnet/arcade/) identifying the queue and linking to the build. Include links to these issues under the "queues that will expire in the next 7 days" or "after the next 7 days" headings as appropriate.
 - When all the above is complete for a given week, you may close the issue.
 
 ##### Possible issues you may encounter:
