@@ -39,7 +39,7 @@
     <Error Condition="'$(_VSNativeCompilerComponentArchName)' == ''" Text="Unable to determine if Visual Studio has MSVC tools installed for the '$(Platform)' architecture." />
 
     <Exec
-      Command="$(VSWherePath) -latest -prerelease -products * -version $(VSGeneratorVersionRange) -requires $(_VSNativeCompilerComponentName) -property installationVersion"
+      Command="&quot;$(VSWherePath)&quot; -latest -prerelease -products * -version $(VSGeneratorVersionRange) -requires $(_VSNativeCompilerComponentName) -property installationVersion"
       EchoOff="true"
       ConsoleToMsBuild="true"
       StandardOutputImportance="Low">

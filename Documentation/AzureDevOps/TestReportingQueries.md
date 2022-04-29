@@ -3,16 +3,37 @@
 The following is a list of default queries to use to look up information about failed tests. Feel free to change them for your own usages. 
 
 Caveats (Jan 14, 2022): 
-- Because this data is stored in an internal data source, it is unfortunately currently only available to Microsoft employees. (If you are an internal Microsoft employee, you can request access from the [.NET Engineering Services team](https://github.com/dotnet/core-eng/wiki/How-to-get-a-hold-of-Engineering-Servicing).)
+- Because this data is stored in an internal data source, it is unfortunately currently only available to Microsoft employees. (If you are an internal Microsoft employee, you can request access from the [.NET Engineering Services team](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/How-to-get-a-hold-of-Engineering-Servicing).)
 - Test data is only recently populated, thus, we only have about 2.5 weeks worth of data. 
 - There is a [known issue](https://github.com/dotnet/core-eng/issues/14708) with how we're capturing this data that is currently being worked on, thus, some of the data we have may not be complete. 
 
 ## Index
+  - [Tests That Have Changed Failure Rate in the Last Week](#tests-that-have-changed-failure-rate-in-the-last-week)
   - [Tests That Have Failed X% of the Time in the Recent Timespan](#tests-that-have-failed-x-of-the-time-in-the-recent-timespan)
   - [Mean Value for the Expected Pass Rate for Tests](#mean-value-for-the-expected-pass-rate-for-tests)
   - [Mean Value for the Expected Pass on Retry Rate for Tests](#mean-value-for-the-expected-pass-on-retry-rate-for-tests)
   - [Build Analysis Reporting](#build-analysis-reporting)
   - [Sentiment Tracker Feedback](#sentiment-tracker-feedback)
+
+## Tests That Have Changed Failure Rate in the Last Week
+
+Variables: 
+- `targetSignificance`: Target statisical likelihood that the failure change is due to a change in the last week
+- `repo`: Repository to filter on. Set to empty string to inclue all repositories. Default is `dotnet/runtime`.
+- `minimumHistoricalData`: Minimum number of historical data points to include to avoid new tests, (`0` includes all tests)
+```
+let targetSignificance = 0.95;
+let repo = "dotnet/runtime";
+let minimumHistoricalData = 0;
+let dt = toscalar(AzureDevOpsTestAnalysis | summarize max(ReportDate));
+AzureDevOpsTestAnalysis
+| where ReportDate == dt and Repository == repo
+| where Significance >= targetSignificance and CurrentFailCount != 0
+| extend HistoricalTotal = HistoricalFailCount + HistoricalPassCount + HistoricalPassOnRerunCount
+| where HistoricalTotal >= minimumHistoricalData
+| order by Significance desc
+```
+:part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA3WQy04CYQyF9/MUlRXERN24MGRMCMS4wyAvUGcqNPkvpO0oQ3h4O5AwYsZdc05P26+BDAxlQ/bOm8SfXGGqCEp4uHt6nBbBbaFddmFUZ0tk99Ik40ijsxk5cWziK6tl8XBYoGEXP9u1eW1Z3UAZzw6N0IK+ljtdk9osYWiVFY6gTYwofCCIuB+vfKOYT6LJZFr8kyqO8L0lIei7oSy7jZjqk6jsN7Wd2CFc+q9An8sh/G7CvBGhZC/IYZ6dGW6cyofQ3sjtnnidDYNj9kqfuf2lvqHqsLpMK/K3nszLmX8X+KWDz/ZAlpoEPtprtJq0+gHUohbl3wEAAA==) to query editor
 
 ## Tests That Have Failed X% of the Time in the Recent Timespan
 

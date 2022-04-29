@@ -30,13 +30,13 @@ The current owner for dotnet/arcade is Mark Wilkie <mawilkie@microsoft.com>.  Th
 The most straightforward way to get things fixed is to submit a pull request.  If the PR might take some time and you want to get an early read first, filing an issue to get a discussion going, or emailing arcadewg@microsoft.com should get the insight you need.
 
 ### Filing Issues in Arcade
-All issues regarding our shared infrastructure (including Arcade, darc, Maestro/dependency flow, and Helix) should be filed in the dotnet/arcade repo.  If there's a doubt, file in Arcade.  (As an aside, the private dotnet/core-eng repo is used by the engineering services team for internal-facing work.)
+All issues regarding our shared infrastructure (including Arcade, darc, Maestro/dependency flow, and Helix) should be filed in the dotnet/arcade repo.  If there's a doubt, file in Arcade.
 
 The default Arcade issue template should be used with every issue filed.  The template is *very* simple and has low overhead.
 
 ### Triage and Backlog Management
 - New Arcade issues are triaged at least once a week.  
-- Issues which have been marked via the template as blocking or causing unreasonable pain are looked at right away via FR ([First Responders](https://github.com/dotnet/core-eng/wiki/%5Bint%5D-First-Responders))  NOTE: This wiki is not publically facing yet (sorry community).  Please reach out if you would like to understand more details.
+- Issues which have been marked via the template as blocking or causing unreasonable pain are looked at right away via FR ([First Responders](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/%5Bint%5D-First-Responders))  NOTE: This wiki is not publically facing yet (sorry community).  Please reach out if you would like to understand more details.
 - General "scrubs" happen at least once a year.
 
 

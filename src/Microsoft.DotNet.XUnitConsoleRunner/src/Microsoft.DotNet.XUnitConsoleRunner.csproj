@@ -25,6 +25,7 @@
     <PackageReference Include="xunit.runner.utility" Version="$(XUnitVersion)" />
     <PackageReference Include="xunit.abstractions" Version="$(XUnitAbstractionsVersion)" />
     <PackageReference Include="System.Net.Http" Version="$(SystemNetHttpVersion)" />
+    <PackageReference Include="NETStandard.Library" Version="$(NETStandardLibraryVersion)" />
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />

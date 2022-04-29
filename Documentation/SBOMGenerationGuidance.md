@@ -249,7 +249,7 @@ for your release builds:
 
 - For any other problems with the tasks or templates, you can reach out to the [.NET Engineering
   Services
-  team](https://github.com/dotnet/core-eng/wiki/How-to-get-a-hold-of-Engineering-Servicing).
+  team](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/How-to-get-a-hold-of-Engineering-Servicing).
 
 ## Further Reading
 

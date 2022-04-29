@@ -282,46 +282,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
-            // ".NET 7 preview 1",
-            new TargetChannelConfig(
-                2543,
-                false,
-                PublishingInfraVersion.All,
-                new List<string>() { "7.0-preview1" },
-                DotNet7Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 7 SDK 7.0.1xx Preview 1",
-            new TargetChannelConfig(
-                2546,
-                false,
-                PublishingInfraVersion.All,
-                new List<string>() { "7.0.1xx-preview1", "7.0-preview1" },
-                DotNet7Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 7 preview 2",
-            new TargetChannelConfig(
-                2544,
-                false,
-                PublishingInfraVersion.All,
-                new List<string>() { "7.0-preview2" },
-                DotNet7Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 7 SDK 7.0.1xx Preview 2",
-            new TargetChannelConfig(
-                2547,
-                false,
-                PublishingInfraVersion.All,
-                new List<string>() { "7.0.1xx-preview2", "7.0-preview2" },
-                DotNet7Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
             // ".NET 7 preview 3",
             new TargetChannelConfig(
                 2545,
@@ -342,6 +302,66 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
+            // ".NET 7 preview 4",
+            new TargetChannelConfig(
+                2698,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0-preview4" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 7 SDK 7.0.1xx Preview 4",
+            new TargetChannelConfig(
+                2701,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0.1xx-preview4", "7.0-preview4" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 7 preview 5",
+            new TargetChannelConfig(
+                2699,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0-preview5" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 7 SDK 7.0.1xx Preview 5",
+            new TargetChannelConfig(
+                2702,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0.1xx-preview5", "7.0-preview5" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 7 preview 6",
+            new TargetChannelConfig(
+                2700,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0-preview6" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 7 SDK 7.0.1xx Preview 6",
+            new TargetChannelConfig(
+                2703,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0.1xx-preview6", "7.0-preview6" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
             // ".NET 6",
             new TargetChannelConfig(
                 1296,
@@ -358,6 +378,26 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 true,
                 PublishingInfraVersion.All,
                 new List<string>() { "internal/6.0" },
+                DotNet6InternalFeeds,
+                InternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 6 Private",
+            new TargetChannelConfig(
+                2693,
+                true,
+                PublishingInfraVersion.All,
+                new List<string>() { "internal/6.0-private" },
+                DotNet6InternalFeeds,
+                InternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 6 SDK 6.0.Nxx Private",
+            new TargetChannelConfig(
+                2695,
+                true,
+                PublishingInfraVersion.All,
+                new List<string>() { "internal/6.0.Nxx-private" },
                 DotNet6InternalFeeds,
                 InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
@@ -428,6 +468,26 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 true,
                 PublishingInfraVersion.All,
                 new List<string>() { "internal/6.0.3xx", "internal/6.0" },
+                DotNet6InternalFeeds,
+                InternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 6 SDK 6.0.4xx",
+            new TargetChannelConfig(
+                2696,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "6.0.4xx" },
+                DotNet6Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 6 SDK 6.0.4xx Internal",
+            new TargetChannelConfig(
+                2697,
+                true,
+                PublishingInfraVersion.All,
+                new List<string>() { "internal/6.0.4xx" },
                 DotNet6InternalFeeds,
                 InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
@@ -931,6 +991,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             // "VS 17.2",
             new TargetChannelConfig(
                 2542,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>(),
+                DotNetToolsFeeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
+            
+            // "VS 17.3",
+            new TargetChannelConfig(
+                2692,
                 false,
                 PublishingInfraVersion.All,
                 new List<string>(),

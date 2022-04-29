@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Helix.Client
 
             using (var stream = File.OpenRead(Archive.FullName))
             {
-                Uri zipUri = await payloadContainer.UploadFileAsync(stream, $"{Archive.Name}", cancellationToken);
+                Uri zipUri = await payloadContainer.UploadFileAsync(stream, $"{Archive.Name}", log, cancellationToken);
                 File.WriteAllText(alreadyUploadedFile.FullName, zipUri.AbsoluteUri);
                 return zipUri.AbsoluteUri;
             }
