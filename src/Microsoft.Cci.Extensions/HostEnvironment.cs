@@ -248,7 +248,14 @@ namespace Microsoft.Cci.Extensions
             // Try to find the assembly which believes itself is the core assembly
             while (!assembly.AssemblyIdentity.Equals(coreIdentity))
             {
-                if (coreIdentity == null || coreIdentity == Dummy.AssemblyIdentity)
+                // CCI may not be able to identify the core assembly if no types are referenced
+                if (coreIdentity == Dummy.AssemblyIdentity)
+                {
+                    // try the first referenced assembly and walk down from there.
+                    coreIdentity = assembly.AssemblyReferences.FirstOrDefault()?.AssemblyIdentity;
+                }
+
+                if (coreIdentity == null)
                 {
                     return null;
                 }
