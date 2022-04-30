@@ -207,6 +207,12 @@ namespace Microsoft.DotNet.ApiCompat
                 ExcludeAttributes,
                 AllowDefaultInterfaceMethods);
 
+            // If the tool exited cleanly, but logged errors then assign a failing exit code (-1)
+            if (ExitCode == 0 && Log.HasLoggedErrors)
+            {
+                ExitCode = -1;
+            }
+
             return IgnoreExitCode || ExitCode == 0;
         }
     }
