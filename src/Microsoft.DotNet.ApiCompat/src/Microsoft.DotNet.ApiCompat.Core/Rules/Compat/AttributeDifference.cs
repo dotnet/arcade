@@ -78,24 +78,27 @@ namespace Microsoft.Cci.Differs.Rules
 
         public override DifferenceType Diff(IDifferences differences, ITypeDefinitionMember impl, ITypeDefinitionMember contract)
         {
-            var implMethod = impl as IMethodDefinition;
-            var contractMethod = contract as IMethodDefinition;
-            if (implMethod == null || contractMethod == null)
+            if (impl == null || contract == null)
                 return DifferenceType.Unknown;
 
-            bool changed = CheckAttributeDifferences(differences, implMethod, implMethod.Attributes, contractMethod.Attributes);
+            bool changed = CheckAttributeDifferences(differences, impl, impl.Attributes, contract.Attributes);
 
-            IParameterDefinition[] method1Params = implMethod.Parameters.ToArray();
-            IParameterDefinition[] method2Params = contractMethod.Parameters.ToArray();
-            for (int i = 0; i < implMethod.ParameterCount; i++)
-                changed |= CheckAttributeDifferences(differences, method1Params[i], method1Params[i].Attributes, method2Params[i].Attributes, member: implMethod);
-
-            if (implMethod.IsGeneric)
+            var implMethod = impl as IMethodDefinition;
+            var contractMethod = contract as IMethodDefinition;
+            if (implMethod != null && contractMethod != null)
             {
-                IGenericParameter[] method1GenParams = implMethod.GenericParameters.ToArray();
-                IGenericParameter[] method2GenParam = contractMethod.GenericParameters.ToArray();
-                for (int i = 0; i < implMethod.GenericParameterCount; i++)
-                    changed |= CheckAttributeDifferences(differences, method1GenParams[i], method1GenParams[i].Attributes, method2GenParam[i].Attributes, member: implMethod);
+                IParameterDefinition[] method1Params = implMethod.Parameters.ToArray();
+                IParameterDefinition[] method2Params = contractMethod.Parameters.ToArray();
+                for (int i = 0; i < implMethod.ParameterCount; i++)
+                    changed |= CheckAttributeDifferences(differences, method1Params[i], method1Params[i].Attributes, method2Params[i].Attributes, member: implMethod);
+
+                if (implMethod.IsGeneric)
+                {
+                    IGenericParameter[] method1GenParams = implMethod.GenericParameters.ToArray();
+                    IGenericParameter[] method2GenParam = contractMethod.GenericParameters.ToArray();
+                    for (int i = 0; i < implMethod.GenericParameterCount; i++)
+                        changed |= CheckAttributeDifferences(differences, method1GenParams[i], method1GenParams[i].Attributes, method2GenParam[i].Attributes, member: implMethod);
+                }
             }
 
             return changed ? DifferenceType.Changed : DifferenceType.Unchanged;
