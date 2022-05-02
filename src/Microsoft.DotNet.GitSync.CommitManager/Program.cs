@@ -7,10 +7,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Azure;
+using Azure.Data.Tables;
 using CommandLine;
 using log4net;
 using log4net.Config;
-using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Microsoft.DotNet.GitSync.CommitManager
 {
@@ -43,22 +44,18 @@ namespace Microsoft.DotNet.GitSync.CommitManager
             await s_table.CommitTable.CreateIfNotExistsAsync();
             await s_table.RepoTable.CreateIfNotExistsAsync();
 
-            TableQuery getAllMirrorPairs = new TableQuery()
-                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.NotEqual, null));
+            string getAllMirrorPairs = TableClient.CreateQueryFilter<TableEntity>(ent => ent.PartitionKey != null);
 
-            TableContinuationToken token = null;
-            do
+            AsyncPageable<TableEntity> queryResultsMaxPerPage = s_table.RepoTable.QueryAsync<TableEntity>(getAllMirrorPairs);
+
+            await foreach (Page<TableEntity> page in queryResultsMaxPerPage.AsPages())
             {
-                var segmentedResults = await s_table.RepoTable.ExecuteQuerySegmentedAsync(getAllMirrorPairs, token);
-                token = segmentedResults.ContinuationToken;
-                var tableRows = segmentedResults.Results;
-
-                foreach (var item in tableRows)
+                foreach (TableEntity item in page.Values)
                 {
-                    s_repos.Add((item.PartitionKey, item.Properties["Branch"].StringValue), item.Properties["ReposToMirrorInto"].StringValue.Split(';').ToList());
-                    s_logger.Info($"The commits in  {item.PartitionKey} repo will be mirrored into {item.Properties["ReposToMirrorInto"].StringValue} Repos");
+                    s_repos.Add((item.PartitionKey, item.GetString("Branch")), item.GetString("ReposToMirrorInto").Split(';').ToList());
+                    s_logger.Info($"The commits in  {item.PartitionKey} repo will be mirrored into {item.GetString("ReposToMirrorInto")} Repos");
                 }
-            } while (token != null);
+            }
         }
 
         private static async Task InsertCommitsAsync(string sourceRepoFullname, string commitList, string branch)
@@ -69,11 +66,10 @@ namespace Microsoft.DotNet.GitSync.CommitManager
                 foreach (var commitId in commitList.Split(";"))
                 {
                     CommitEntity entry = new CommitEntity(sourceRepo, repo, commitId, branch);
-                    TableOperation insertOperation = TableOperation.Insert(entry);
 
                     try
                     {
-                        await s_table.CommitTable.ExecuteAsync(insertOperation);
+                        await s_table.CommitTable.AddEntityAsync<CommitEntity>(entry);
                         s_logger.Info($"Commit {commitId} added to table to get mirrored from {sourceRepo} to {repo}");
                     }
                     catch (WindowsAzure.Storage.StorageException)

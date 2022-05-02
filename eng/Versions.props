@@ -13,6 +13,7 @@
     <LibGit2SharpVersion>0.25.2</LibGit2SharpVersion>
     <log4netVersion>2.0.10</log4netVersion>
     <SystemNetHttpVersion>4.3.4</SystemNetHttpVersion>
+    <AzureDataTablesVersion>12.5.0</AzureDataTablesVersion>
     <AzureStorageBlobsVersion>12.3.0</AzureStorageBlobsVersion>
     <FluentAssertionsVersion>5.10.3</FluentAssertionsVersion>
     <MicrosoftApplicationInsightsVersion>2.16.0</MicrosoftApplicationInsightsVersion>
@@ -69,7 +70,6 @@
     <XUnitVSRunnerVersion>2.4.1</XUnitVSRunnerVersion>
     <MicrosoftDotNetBuildTasksFeedVersion>6.0.0-beta.21620.3</MicrosoftDotNetBuildTasksFeedVersion>
     <MicrosoftDotNetSignToolVersion>6.0.0-beta.21620.3</MicrosoftDotNetSignToolVersion>
-    <MicrosoftAzureCosmosTable>1.0.7</MicrosoftAzureCosmosTable>
     <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>
     <MicrosoftDotNetGitHubIssueLabelerAssetsVersion>1.6.0</MicrosoftDotNetGitHubIssueLabelerAssetsVersion>
     <MicrosoftMLVersion>1.0.0</MicrosoftMLVersion>
