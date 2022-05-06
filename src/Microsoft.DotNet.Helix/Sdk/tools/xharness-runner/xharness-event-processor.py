@@ -129,15 +129,30 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
     reboot_message = 'This machine will reboot to heal.'
 
     if platform == "android":
-        # TODO (https://github.com/dotnet/xharness/pull/825): 85 is old code for ADB_DEVICE_ENUMERATION_FAILURE and will be removed after it has been flown everywhere
-        if exit_code == 81 or exit_code == 85: # DEVICE_NOT_FOUND
+        if exit_code == 81: # DEVICE_NOT_FOUND
             # This handles issues where emulators fail to start or devices go silent.
             print(f'    Encountered DEVICE_NOT_FOUND. {retry_message} {reboot_message}')
             print('    If this occurs repeatedly, please check for architectural mismatch, e.g. sending arm64_v8a APKs to an x86_64 / x86 only queue.')
 
-            # For emulators it makes sense to reboot to try to heal the emulator
             if not is_device:
+                # For emulators it makes sense to reboot to try to heal the emulator
                 reboot = True
+
+                # We also attach logs from the emulator boot (which might tell us why there's no emulator)
+                if os.name != 'nt':
+                    # This is where Azure stores logs from custom extension script runs
+                    # More details here https://docs.microsoft.com/en-us/azure/virtual-machines/extensions/custom-script-linux#troubleshooting
+                    boot_log_location = '/var/lib/waagent/custom-script/download'
+
+                    print(f'    Collecting emulator boot logs from {boot_log_location}..')
+                    boot_log_destination = output_directory + '/emulator_logs'
+
+                    # Only copy stdout/stderr files (however they might be in different folders based on how Azure executed extension scripts)
+                    subprocess.call(['sudo', 'rsync', '--recursive', '--include', 'stdout', '--include', 'stderr', '--filter', '-! */',
+                        boot_log_location, boot_log_destination])
+
+                    # The boot logs are owned by root, so make them readable for the Helix agent
+                    subprocess.call(['sudo', 'chmod', '-R', '777', boot_log_destination])
 
             retry = True
             return
