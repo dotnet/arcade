@@ -110,7 +110,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 case "op_CheckedSubtraction": return "operator checked -";
                 case "op_CheckedMultiply": return "operator checked *";
                 case "op_CheckedDivision": return "operator checked /";
-                case "op_CheckedExplicit": return "explicit checked operator";
+                case "op_CheckedExplicit": return "explicit operator checked";
                 default: return name.Value; // return just the name
             }
         }
@@ -178,7 +178,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 WriteTypeName(method.Type, method.ContainingType, methodNullableContextValue: nullableContextValue);
             }
 
-            Contract.Assert(!(method is IGenericMethodInstance), "Currently don't support generic method instances");
+            Contract.Assert(method is not IGenericMethodInstance, "Currently don't support generic method instances");
             if (method.IsGeneric)
                 WriteGenericParameters(method.GenericParameters);
 
