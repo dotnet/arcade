@@ -93,7 +93,7 @@ try {
               $ToolVersion = ""
             }
             $ArcadeToolsDirectory = "C:\arcade-tools"
-            if (Test-Path $ArcadeToolsDirectory -eq $False) {
+            if (-not (Test-Path $ArcadeToolsDirectory)) {
               Write-Error "Arcade tools directory '$ArcadeToolsDirectory' was not found; artifacts were not properly installed."
               exit 1
             }
@@ -103,7 +103,7 @@ try {
               exit 1
             }
             $BinPathFile = "$($ToolDirectory.FullName)\binpath.txt"
-            if (Test-Path -Path "$BinPathFile" -eq $False) {
+            if (-not (Test-Path -Path "$BinPathFile")) {
               Write-Error "Unable to find binpath.txt in '$($ToolDirectory.FullName)' ($ToolName $ToolVersion); artifact is either installed incorrectly or is not a bootstrappable tool."
               exit 1
             }
