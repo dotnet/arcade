@@ -51,9 +51,6 @@
   -->
   <Target Name="_SetManifestBuildVersion">
 
-    <Error Condition="!Exists('$(ArtifactsDir)sbom\spdx_2.2\manifest.spdx.json')" 
-      Text="Cannot find SBOM file, so not going to generate vs manifest!" />
-
     <ReadLinesFromFile File="%(_PackageStubFiles.Identity)">
       <Output TaskParameter="Lines" ItemName="_StubLine"/>
     </ReadLinesFromFile>
