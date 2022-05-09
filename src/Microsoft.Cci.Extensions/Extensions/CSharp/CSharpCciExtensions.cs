@@ -217,8 +217,13 @@ namespace Microsoft.Cci.Extensions.CSharp
 
         public static bool IsConversionOperator(this IMethodDefinition method)
         {
-            return (method.IsSpecialName &&
-                (method.Name.Value == "op_Explicit" || method.Name.Value == "op_Implicit"));
+            if (method.IsSpecialName)
+            {
+                return (method.Name.Value == "op_CheckedExplicit")
+                    || (method.Name.Value == "op_Explicit")
+                    || (method.Name.Value == "op_Implicit");
+            }
+            return false;
         }
 
         public static bool IsExplicitInterfaceMember(this ITypeDefinitionMember member)
