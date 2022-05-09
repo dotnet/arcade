@@ -29,6 +29,7 @@
     <TargetName>$(ComponentName)</TargetName>
     <OutputPath>$(SetupOutputPath)</OutputPath>
     <IntermediateOutputPath>$(ComponentIntermediateOutputPath)</IntermediateOutputPath>
+    <ArtifactsDir>$(ArtifactsDir)</ArtifactsDir>
 
     <!-- Note that the url is expected to end with ';' (%3B) -->
     <ManifestPublishUrl Condition="'$(VisualStudioDropName)' != ''">https://vsdrop.corp.microsoft.com/file/v1/$(VisualStudioDropName)%3B</ManifestPublishUrl>
@@ -50,7 +51,7 @@
   -->
   <Target Name="_SetManifestBuildVersion">
 
-    <Error Condition="!Exists('$(BUILD_SOURCESDIRECTORY)\artifacts\sbom\spdx_2.2\manifest.spdx.json')" 
+    <Error Condition="!Exists('$(ArtifactsDir)sbom\spdx_2.2\manifest.spdx.json')" 
       Text="Cannot find SBOM file, so not going to generate vs manifest!" />
 
     <ReadLinesFromFile File="%(_PackageStubFiles.Identity)">
@@ -80,7 +81,7 @@
     </PropertyGroup>
     <ItemGroup>
     <MergeManifest Include="$(SetupOutputPath)$(ComponentName).json">
-      <SBOMFileLocation>$(BUILD_SOURCESDIRECTORY)\artifacts\sbom\$(ManifestVsixName.Substring(0, $(ManifestVsixName.LastIndexOf('.'))))\spdx_2.2\manifest.spdx.json</SBOMFileLocation>
+      <SBOMFileLocation>$(ArtifactsDir)sbom\$(ManifestVsixName.Substring(0, $(ManifestVsixName.LastIndexOf('.'))))\spdx_2.2\manifest.spdx.json</SBOMFileLocation>
       </MergeManifest>
   </ItemGroup>
   </Target>

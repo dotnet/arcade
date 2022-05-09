@@ -49,6 +49,7 @@
       <_Args Include="ComponentIntermediateOutputPath=$(VisualStudioSetupIntermediateOutputPath)$(_ComponentName)\"/>
       <_Args Include="SwixBuildPath=$(NuGetPackageRoot)microsoft.visualstudioeng.microbuild.plugins.swixbuild\$(MicrosoftVisualStudioEngMicroBuildPluginsSwixBuildVersion)\"/>
       <_Args Include="VisualStudioDropName=$(VisualStudioDropName)" />
+      <_Args Include="ArtifactsDir=$(ArtifactsDir)" />
     </ItemGroup>
 
     <!--
