@@ -31,6 +31,10 @@ namespace Microsoft.DotNet.GenAPI
                 "//     the code is regenerated.\r\n" +
                 "// </auto-generated>\r\n" +
                 "//------------------------------------------------------------------------------\r\n";
+        
+        private WriterType _writerType;
+        private SyntaxWriterType _syntaxWriterType;
+        private DocIdKinds _docIdKinds = Cci.Writers.DocIdKinds.All;
 
         /// <summary>
         /// Path for an specific assembly or a directory to get all assemblies.
@@ -62,17 +66,29 @@ namespace Microsoft.DotNet.GenAPI
         /// <summary>
         /// Specify the writer type to use. Legal values: CSDecl, DocIds, TypeForwards, TypeList. Default is CSDecl.
         /// </summary>
-        public WriterType WriterType { get; set; }
+        public string WriterType 
+        { 
+            get => _writerType.ToString(); 
+            set => _writerType = string.IsNullOrWhiteSpace(value) ? default : (WriterType) Enum.Parse(typeof(WriterType), value, true); 
+        }
 
         /// <summary>
         /// Specific the syntax writer type. Only used if the writer is CSDecl. Legal values: Text, Html, Xml. Default is Text.
         /// </summary>
-        public SyntaxWriterType SyntaxWriterType { get; set; }
+        public string SyntaxWriterType 
+        { 
+            get => _syntaxWriterType.ToString(); 
+            set => _syntaxWriterType = string.IsNullOrWhiteSpace(value) ? default : (SyntaxWriterType)Enum.Parse(typeof(SyntaxWriterType), value, true); 
+        }
 
         /// <summary>
         /// Only include API of the specified kinds. Legal values: A, Assembly, Namespace, N, T, Type, Field, F, P, Property, Method, M, Event, E, All. Default is All.
         /// </summary>
-        public DocIdKinds DocIdKinds { get; set; }
+        public string DocIdKinds 
+        { 
+            get => _docIdKinds.ToString(); 
+            set => _docIdKinds = string.IsNullOrWhiteSpace(value) ? Cci.Writers.DocIdKinds.All : (DocIdKinds)Enum.Parse(typeof(DocIdKinds), value, true); 
+        }
 
         /// <summary>
         /// Method bodies should throw PlatformNotSupportedException.
@@ -168,15 +184,15 @@ namespace Microsoft.DotNet.GenAPI
                 return false;
             }
 
-            string headerText = GetHeaderText(HeaderFile, WriterType, SyntaxWriterType);
+            string headerText = GetHeaderText(HeaderFile, _writerType, _syntaxWriterType);
             bool loopPerAssembly = Directory.Exists(OutputPath);
 
             if (loopPerAssembly)
             {
                 foreach (IAssembly assembly in assemblies)
                 {
-                    using (TextWriter output = GetOutput(GetFilename(assembly, WriterType, SyntaxWriterType)))
-                    using (IStyleSyntaxWriter syntaxWriter = GetSyntaxWriter(output, WriterType, SyntaxWriterType))
+                    using (TextWriter output = GetOutput(OutputPath, GetFilename(assembly, _writerType, _syntaxWriterType)))
+                    using (IStyleSyntaxWriter syntaxWriter = GetSyntaxWriter(output, _writerType, _syntaxWriterType))
                     {
                         ICciWriter writer = null;
                         try
@@ -204,7 +220,7 @@ namespace Microsoft.DotNet.GenAPI
             else
             {
                 using (TextWriter output = GetOutput(OutputPath))
-                using (IStyleSyntaxWriter syntaxWriter = GetSyntaxWriter(output, WriterType, SyntaxWriterType))
+                using (IStyleSyntaxWriter syntaxWriter = GetSyntaxWriter(output, _writerType, _syntaxWriterType))
                 {
                     ICciWriter writer = null;
                     try
@@ -241,8 +257,8 @@ namespace Microsoft.DotNet.GenAPI
 
             string defaultHeader = string.Empty;
             // This header is for CS source only
-            if ((writerType == WriterType.CSDecl || writerType == WriterType.TypeForwards) &&
-                syntaxWriterType == SyntaxWriterType.Text)
+            if ((writerType == GenAPI.WriterType.CSDecl || writerType == GenAPI.WriterType.TypeForwards) &&
+                syntaxWriterType == GenAPI.SyntaxWriterType.Text)
             {
                 // Write default header (culture-invariant, so that the generated file will not be language-dependent)
                 defaultHeader = string.Format(CultureInfo.InvariantCulture,
@@ -271,11 +287,11 @@ namespace Microsoft.DotNet.GenAPI
             string name = assembly.Name.Value;
             return writer switch
             {
-                WriterType.DocIds or WriterType.TypeForwards => name + ".txt",
+                GenAPI.WriterType.DocIds or GenAPI.WriterType.TypeForwards => name + ".txt",
                 _ => syntax switch
                 {
-                    SyntaxWriterType.Xml => name + ".xml",
-                    SyntaxWriterType.Html => name + ".html",
+                    GenAPI.SyntaxWriterType.Xml => name + ".xml",
+                    GenAPI.SyntaxWriterType.Html => name + ".html",
                     _ => name + ".cs",
                 },
             };
@@ -330,13 +346,13 @@ namespace Microsoft.DotNet.GenAPI
 
         private static IStyleSyntaxWriter GetSyntaxWriter(TextWriter output, WriterType writer, SyntaxWriterType syntax)
         {
-            if (writer != WriterType.CSDecl && writer != WriterType.TypeList)
+            if (writer != GenAPI.WriterType.CSDecl && writer != GenAPI.WriterType.TypeList)
                 return null;
 
             return syntax switch
             {
-                SyntaxWriterType.Xml => new OpenXmlSyntaxWriter(output),
-                SyntaxWriterType.Html => new HtmlSyntaxWriter(output),
+                GenAPI.SyntaxWriterType.Xml => new OpenXmlSyntaxWriter(output),
+                GenAPI.SyntaxWriterType.Html => new HtmlSyntaxWriter(output),
                 _ => new TextSyntaxWriter(output) { SpacesInIndent = 4 },
             };
         }
@@ -354,18 +370,18 @@ namespace Microsoft.DotNet.GenAPI
                 ExcludeAttributesList,
                 FollowTypeForwards);
 
-            switch (WriterType)
+            switch (_writerType)
             {
-                case WriterType.DocIds:
-                    return new DocumentIdWriter(output, filter, DocIdKinds);
-                case WriterType.TypeForwards:
+                case GenAPI.WriterType.DocIds:
+                    return new DocumentIdWriter(output, filter, _docIdKinds);
+                case GenAPI.WriterType.TypeForwards:
                     return new TypeForwardWriter(output, filter)
                     {
                         IncludeForwardedTypes = true
                     };
-                case WriterType.TypeList:
+                case GenAPI.WriterType.TypeList:
                     return new TypeListWriter(syntaxWriter, filter);
-                case WriterType.CSDecl:
+                case GenAPI.WriterType.CSDecl:
                 default:
                     {
                         CSharpWriter writer = new(syntaxWriter, filter, ApiOnly);

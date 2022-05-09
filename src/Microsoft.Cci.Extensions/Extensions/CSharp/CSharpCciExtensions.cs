@@ -217,8 +217,13 @@ namespace Microsoft.Cci.Extensions.CSharp
 
         public static bool IsConversionOperator(this IMethodDefinition method)
         {
-            return (method.IsSpecialName &&
-                (method.Name.Value == "op_Explicit" || method.Name.Value == "op_Implicit"));
+            if (method.IsSpecialName)
+            {
+                return (method.Name.Value == "op_CheckedExplicit")
+                    || (method.Name.Value == "op_Explicit")
+                    || (method.Name.Value == "op_Implicit");
+            }
+            return false;
         }
 
         public static bool IsExplicitInterfaceMember(this ITypeDefinitionMember member)
@@ -240,7 +245,20 @@ namespace Microsoft.Cci.Extensions.CSharp
 
         public static bool IsExplicitInterfaceMethod(this IMethodDefinition method)
         {
-            return MemberHelper.GetExplicitlyOverriddenMethods(method).Any();
+            // This used to do MemberHelper.GetExplicitlyOverriddenMethods(method).Any()
+            // however, Cci reports all `static abstract interface members` as explicitly implemented
+            // as such, we'll duplicate the original loop logic and specialize the static case
+            // by checking for a name that contains `.`
+
+            foreach (IMethodImplementation explicitImplementationOverride in method.ContainingTypeDefinition.ExplicitImplementationOverrides)
+            {
+                if (method.InternedKey == explicitImplementationOverride.ImplementingMethod.InternedKey)
+                {
+                    return !method.IsStatic || method.Name.Value.Contains('.');
+                }
+            }
+
+            return false;
         }
 
         public static bool IsExplicitInterfaceProperty(this IPropertyDefinition property)
