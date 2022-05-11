@@ -1,4 +1,4 @@
-﻿# Arcade SDK
+# Arcade SDK
 
 Arcade SDK is a set of msbuild props and targets files and packages that provide common build features used across multiple repos, such as CI integration, packaging, VSIX and VS setup authoring, testing, and signing via Microbuild.
 
@@ -958,16 +958,16 @@ For example, a project that targets `AnyCPU` can opt-into running tests using bo
 
 By default, the test runner will run tests for all frameworks a test project targets. Use `TestTargetFrameworks` to reduce the set of frameworks to run against.
 
-For example, consider a project that has `<TargetFrameworks>netcoreapp2.1;net472</TargetFrameworks>`. To only run .NET Core tests run 
+For example, consider a project that has `<TargetFrameworks>netcoreapp3.1;net472</TargetFrameworks>`. To only run .NET Core tests run 
 
 ```text
-msbuild Project.UnitTests.csproj /t:Test /p:TestTargetFrameworks=netcoreapp2.1
+msbuild Project.UnitTests.csproj /t:Test /p:TestTargetFrameworks=nnetcoreapp3.1
 ```
 
 To specify multiple target frameworks on command line quote the property value like so:
 
 ```text
-msbuild Project.UnitTests.csproj /t:Test /p:TestTargetFrameworks="netcoreapp2.1;net472"
+msbuild Project.UnitTests.csproj /t:Test /p:TestTargetFrameworks="netcoreapp3.1;net472"
 ```
 
 ### `TestRuntime` (string)

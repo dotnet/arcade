@@ -25,7 +25,7 @@
   <ItemGroup>
     <PackageReference Include="microsoft.dotnet.build.tasks.feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" GeneratePathProperty="true"/>
   </ItemGroup>
-  <UsingTask TaskName="GenerateBuildManifest" AssemblyFile="$(PkgMicrosoft_DotNet_Build_Tasks_Feed)\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.Feed.dll" />
+  <UsingTask TaskName="GenerateBuildManifest" AssemblyFile="$(PkgMicrosoft_DotNet_Build_Tasks_Feed)\tools\netcoreapp3.1\Microsoft.DotNet.Build.Tasks.Feed.dll" />
 
   <Import Project="../Sign.props" />
 
