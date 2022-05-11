@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Azure;
 using Azure.Data.Tables;
 using CommandLine;
 using log4net;
