@@ -7,7 +7,12 @@
 <!--
   Before pack create the SBOM here
 -->
-  <Target Name ="GenerateSbomForVSInsertion">
+ <PropertyGroup>
+    <GenerateSbom Condition="'$(GenerateSbom)' == ''">false</GenerateSbom>
+  </PropertyGroup>
+
+  <Target Name ="GenerateSbomForVSInsertion" 
+          Condition="'$(GenerateSbom)' != 'false'">
     <Message Text="Generating SBOM manifest" Importance="high"/>
     <ItemGroup>
      <VsixFile Include="$(ArtifactsDir)VSSetup\$(Configuration)\Insertion\*.vsix"></VsixFile>
