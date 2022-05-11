@@ -108,8 +108,9 @@ try {
               exit 1
             }
             $BinPath = Get-Content "$BinPathFile"
-            Write-Host "Adding $ToolName to the path ($(Convert-Path -Path $BinPath))..."
-            Write-Host "##vso[task.prependpath]$(Convert-Path -Path $BinPath)"
+            $ToolPath = Convert-Path -Path $BinPath
+            Write-Host "Adding $ToolName to the path ($ToolPath)..."
+            Write-Host "##vso[task.prependpath]$ToolPath"
           }
         }
         exit 0
@@ -188,7 +189,7 @@ try {
     Write-Host "##vso[task.prependpath]$(Convert-Path -Path $InstallBin)"
     return $InstallBin
   }
-  else {
+  elseif (-not ($PathPromotion)) {
     Write-PipelineTelemetryError -Category 'NativeToolsBootstrap' -Message 'Native tools install directory does not exist, installation failed'
     exit 1
   }
