@@ -2,11 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.WindowsAzure.Storage.Table;
+
+using System;
+using Azure;
+using Azure.Data.Tables;
 
 namespace Microsoft.DotNet.GitSync.CommitManager
 {
-    public class CommitEntity : TableEntity
+    public class CommitEntity : ITableEntity
     {
         public CommitEntity(string sourceRepo, string targetRepo, string commitId, string branch)
         {
@@ -22,5 +25,9 @@ namespace Microsoft.DotNet.GitSync.CommitManager
         public string Branch { get; set; }
         public bool Mirrored { get; set; }
         public string PR { get; set; }
+        public string PartitionKey { get; set; }
+        public string RowKey { get; set; }
+        public DateTimeOffset? Timestamp { get; set; }
+        public ETag ETag { get; set; }
     }
 }

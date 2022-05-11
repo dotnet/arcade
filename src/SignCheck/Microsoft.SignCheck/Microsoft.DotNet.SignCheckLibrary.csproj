@@ -15,7 +15,7 @@
     <IsTool>true</IsTool>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="LZMA-SDK" Version="18.1.0" />
+    <PackageReference Include="LZMA-SDK" Version="19.0.0" />
     <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="7.10.6071" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="NuGet.Common" Version="4.7.0" />
