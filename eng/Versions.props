@@ -14,6 +14,7 @@
     <HandlebarsNetVersion>1.9.5</HandlebarsNetVersion>
     <LibGit2SharpVersion>0.25.2</LibGit2SharpVersion>
     <log4netVersion>2.0.10</log4netVersion>
+    <AzureDataTablesVersion>12.5.0</AzureDataTablesVersion>
     <SystemNetHttpVersion>4.3.3</SystemNetHttpVersion>
     <MicrosoftApplicationInsightsAspNetCoreVersion>2.7.1</MicrosoftApplicationInsightsAspNetCoreVersion>
     <MicrosoftAspNetCoreHostingVersion>2.1.1</MicrosoftAspNetCoreHostingVersion>
@@ -55,6 +56,7 @@
     <SystemNumericsVectorsVersion>4.4.0</SystemNumericsVectorsVersion>
     <SystemReflectionMetadataVersion>1.4.2</SystemReflectionMetadataVersion>
     <SystemRuntimeCompilerServicesUnsafeVersion>4.5.0</SystemRuntimeCompilerServicesUnsafeVersion>
+    <SystemSecurityCryptographyX509CertificatesVersion>4.3.0</SystemSecurityCryptographyX509CertificatesVersion>
     <SystemTextEncodingsWebVersion>4.5.1</SystemTextEncodingsWebVersion>
     <SystemThreadingTasksExtensionVersion>4.5.1</SystemThreadingTasksExtensionVersion>
     <SystemValueTupleVersion>4.4.0</SystemValueTupleVersion>
