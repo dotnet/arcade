@@ -20,6 +20,7 @@
     <EnableGeneratedPackageContent>false</EnableGeneratedPackageContent>
     <_GeneratedVersionFilePath>$(IntermediateOutputPath)DefaultVersions.Generated.props</_GeneratedVersionFilePath>
     <NoWarn>3021;NU5105</NoWarn>
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
