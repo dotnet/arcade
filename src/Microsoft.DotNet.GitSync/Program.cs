@@ -9,6 +9,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure;
+using Azure.Data.Tables;
 using LibGit2Sharp;
 using log4net;
 using log4net.Config;
@@ -16,8 +18,6 @@ using Octokit;
 using Commit = LibGit2Sharp.Commit;
 using Credentials = Octokit.Credentials;
 using Repository = LibGit2Sharp.Repository;
-using Microsoft.Azure.Storage;
-using Microsoft.Azure.CosmosDB.Table;
 
 namespace Microsoft.DotNet.GitSync
 {
@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.GitSync
     {
         private const string TableName = "CommitHistory";
         private const string RepoTableName = "MirrorBranchRepos";
-        private static CloudTable s_table;
+        private static TableClient s_table;
         private static Dictionary<(string, string), List<string>> s_repos { get; set; } = new Dictionary<(string, string), List<string>>();
         private static Dictionary<string, HashSet<string>> s_branchRepoPairs = new Dictionary<string, HashSet<string>>();
         private ConfigFile ConfigFile { get; }
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.GitSync
         private static GitHubClient Client => _lazyClient.Value;
         private static string s_mirrorSignatureUserName;
         private static readonly ILog s_logger = LogManager.GetLogger(typeof(Program));
-        private IEnumerable<DynamicTableEntity> _listCommits;
+        private IEnumerable<TableEntity> _listCommits;
 
         private Program(string[] args)
         {
@@ -302,14 +302,13 @@ namespace Microsoft.DotNet.GitSync
             ConfigFile.Save(targetRepo.Configuration);
         }
 
-        public static void UpdateEntities(IEnumerable<DynamicTableEntity> commits, string pr)
+        public static void UpdateEntities(IEnumerable<TableEntity> commits, string pr)
         {
             foreach (var c in commits)
             {
-                c.Properties["Mirrored"].BooleanValue = true;
-                c.Properties["PR"].StringValue = pr;
-                TableOperation insertOrReplaceOperation = TableOperation.InsertOrReplace(c);
-                s_table.Execute(insertOrReplaceOperation);
+                c.Add("Mirrored", true);
+                c.Add("PR", pr);
+                s_table.UpsertEntity(c);
             }
         }
 
@@ -322,7 +321,7 @@ namespace Microsoft.DotNet.GitSync
                 var result = new NewChanges(targetRepo);
                 foreach (var commit in _listCommits)
                 {
-                    string key = commit.Properties["SourceRepo"].StringValue;
+                    string key = commit.GetString("SourceRepo");
                     if (result.changes.ContainsKey(key))
                         result.changes[key].Add(commit.RowKey);
                     else
@@ -539,22 +538,19 @@ namespace Microsoft.DotNet.GitSync
 
         private static void Setup(string connectionString, string server, string destinations)
         {
-            CloudStorageAccount storageAccount = CloudStorageAccount.Parse(connectionString);
-            s_table = storageAccount.CreateCloudTableClient().GetTableReference(TableName);
+            var serviceClient = new TableServiceClient(connectionString);
+            s_table = serviceClient.GetTableClient(TableName);
             s_table.CreateIfNotExists();
             s_logger.Info("Connected with azure table Successfully");
 
-            var RepoTable = storageAccount.CreateCloudTableClient().GetTableReference(RepoTableName);
+            TableClient RepoTable = serviceClient.GetTableClient(RepoTableName);
             RepoTable.CreateIfNotExists();
 
-            TableQuery getAllMirrorPairs = new TableQuery()
-                .Where(TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.NotEqual, null));
-
-            var repos = RepoTable.ExecuteQuery(getAllMirrorPairs);
+            Pageable<TableEntity> repos = RepoTable.Query<TableEntity>(ent => ent.PartitionKey != null);
             foreach (var item in repos)
             {
-                string branchName = item["Branch"].StringValue;
-                string[] targetRepos = item["ReposToMirrorInto"].StringValue.Split(';');
+                string branchName = item.GetString("Branch");
+                string[] targetRepos = item.GetString("ReposToMirrorInto").Split(';');
 
                 s_repos.Add((item.PartitionKey, branchName), targetRepos.ToList());
 
@@ -570,44 +566,33 @@ namespace Microsoft.DotNet.GitSync
                     s_branchRepoPairs.Add(branchName, targetRepos.ToHashSet());
                 }
 
-                s_logger.Info($"The commits in  {item.PartitionKey} repo will be mirrored into {item["ReposToMirrorInto"].StringValue} Repos");
+                s_logger.Info($"The commits in  {item.PartitionKey} repo will be mirrored into {item.GetString("ReposToMirrorInto")} Repos");
             }
 
             s_emailManager = new EmailManager(server, destinations, s_logger);
             s_logger.Info("Setup Completed");
         }
 
-        private static IEnumerable<DynamicTableEntity> GetCommitsToMirror(RepositoryInfo targetRepo, string branch)
+        private static IEnumerable<TableEntity> GetCommitsToMirror(RepositoryInfo targetRepo, string branch)
         {
-            TableQuery rangeQuery = new TableQuery().Where(TableQuery.CombineFilters(
-                TableQuery.GenerateFilterConditionForBool("Mirrored", QueryComparisons.Equal, false),
-                TableOperators.And,
-                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, targetRepo.Name)));
-
-            var commits = s_table.ExecuteQuery(rangeQuery);
-            commits = commits.Where(t => t.Properties["Branch"].StringValue == branch);
-
-            return commits;
+            string rangeQuery = TableClient.CreateQueryFilter($"(Mirrored eq false) and (PartitionKey eq '{targetRepo.Name}')");
+            Pageable<TableEntity> commits = s_table.Query<TableEntity>(rangeQuery);
+            return commits.Where(t => t.GetString("Branch") == branch);
         }
 
         private void RetrieveOrInsert(string SourceRepo, string branch, string sha, string TargetRepo)
         {
-            TableQuery rangeQuery = new TableQuery().Where(TableQuery.CombineFilters(
-            TableQuery.GenerateFilterCondition("RowKey", QueryComparisons.Equal, sha),
-            TableOperators.And,
-            TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, TargetRepo)));
+            var commits = s_table.Query<TableEntity>(ent => ent.RowKey == sha && ent.PartitionKey == TargetRepo);
 
-            var commits = s_table.ExecuteQuery(rangeQuery);
             if (commits.Count() == 0)
             {
-                DynamicTableEntity entity = new DynamicTableEntity(TargetRepo, sha);
-                entity.Properties.Add("Branch", EntityProperty.GeneratePropertyForString(branch));
-                entity.Properties.Add("PR", EntityProperty.GeneratePropertyForString(string.Empty));
-                entity.Properties.Add("SourceRepo", EntityProperty.GeneratePropertyForString(SourceRepo));
-                entity.Properties.Add("Mirrored", EntityProperty.GeneratePropertyForBool(false));
+                TableEntity entity = new TableEntity(TargetRepo, sha);
+                entity.Add("Branch", branch);
+                entity.Add("PR", string.Empty);
+                entity.Add("SourceRepo", SourceRepo);
+                entity.Add("Mirrored", false);
 
-                TableOperation insertOperation = TableOperation.Insert(entity);
-                s_table.Execute(insertOperation);
+                s_table.AddEntity(entity);
             }
         }
 
