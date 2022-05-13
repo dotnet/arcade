@@ -226,6 +226,7 @@ stages:
       enableSourceLinkValidation: false
       artifactsPublishingAdditionalParameters: '/p:CheckEolTargetFramework=false'
       symbolPublishingAdditionalParameters: '/p:CheckEolTargetFramework=false'
+      signingValidationAdditionalParameters: '/p:CheckEolTargetFramework=false'
       publishDependsOn:
       - Validate
       - ValidateSdk
