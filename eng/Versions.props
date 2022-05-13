@@ -70,18 +70,18 @@
     <WindowsAzureStorageVersion>8.5.0</WindowsAzureStorageVersion>
     <XUnitVersion>2.4.2-pre.9</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>7.0.0-beta.22261.14</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftDotNetSignToolVersion>7.0.0-beta.22261.14</MicrosoftDotNetSignToolVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>7.0.0-beta.22262.8</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetSignToolVersion>7.0.0-beta.22262.8</MicrosoftDotNetSignToolVersion>
     <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>
     <MicrosoftDotNetGitHubIssueLabelerAssetsVersion>1.6.0</MicrosoftDotNetGitHubIssueLabelerAssetsVersion>
     <MicrosoftMLVersion>1.0.0</MicrosoftMLVersion>
     <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
     <MicrosoftDiaSymReaderPdb2PdbVersion>1.1.0-beta2-19575-01</MicrosoftDiaSymReaderPdb2PdbVersion>
     <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.21553.1</MicrosoftDotNetMaestroClientVersion>
-    <MicrosoftSourceLinkGitHubVersion>1.2.0-beta-22260-02</MicrosoftSourceLinkGitHubVersion>
-    <MicrosoftSourceLinkAzureReposGitVersion>1.2.0-beta-22260-02</MicrosoftSourceLinkAzureReposGitVersion>
-    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>7.0.0-beta.22261.14</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
-    <MicrosoftDotNetXliffTasksVersion>1.0.0-beta.22261.1</MicrosoftDotNetXliffTasksVersion>
+    <MicrosoftSourceLinkGitHubVersion>1.2.0-beta-22262-02</MicrosoftSourceLinkGitHubVersion>
+    <MicrosoftSourceLinkAzureReposGitVersion>1.2.0-beta-22262-02</MicrosoftSourceLinkAzureReposGitVersion>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>7.0.0-beta.22262.8</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
+    <MicrosoftDotNetXliffTasksVersion>1.0.0-beta.22262.1</MicrosoftDotNetXliffTasksVersion>
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.22076.4</MicrosoftDotNetMaestroTasksVersion>
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.22256.2</MicrosoftDotNetXHarnessCLIVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion>2.0.0-preview.1.21526.15</MicrosoftSymbolUploaderBuildTaskVersion>
