@@ -4,7 +4,6 @@
     <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
     <TargetFrameworks Condition="'$(DotNetBuildFromSource)' == 'true'">net6.0</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>Latest</LangVersion>
     <IsPackable>true</IsPackable>
     <Description>Workload pack installer generation task package</Description>
     <PackageTags>Arcade Build Tool Installer Workloads</PackageTags>
@@ -52,14 +51,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="build/**/*.*" Pack="true">
-      <PackagePath>build</PackagePath>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="obj\**" />
-    <EmbeddedResource Remove="obj\**" />
+    <None Include="build\**\*" Pack="true" PackagePath="%(Identity)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(IncludeWiX)' != 'true'">
