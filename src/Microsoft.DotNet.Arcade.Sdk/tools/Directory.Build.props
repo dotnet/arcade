@@ -2,4 +2,7 @@
 <Project>
   <!-- This is an empty Directory.Build.props file to prevent the Directory.Build.props file from the repo from being used
        if the toolset package is restored to a subdirectory in the repo -->
+  
+    <ImportDirectoryPackagesProps>false</ImportDirectoryPackagesProps>
+    <ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
 </Project>
