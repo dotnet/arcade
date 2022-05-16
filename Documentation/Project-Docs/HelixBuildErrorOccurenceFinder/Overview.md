@@ -86,7 +86,7 @@ This ranking is based on the following articles:
        ]
     } 
  
-## Proof-of-Concept
+# 👓 Proof-of-Concept
 - Console app
 - Will test out string matching on a fixed number of log files first to see the speed of parsing a single log file.
 - May also use POC to compare the performance of `String.contains` and Boyer-Moore.
