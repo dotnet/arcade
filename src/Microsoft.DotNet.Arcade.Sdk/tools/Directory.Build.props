@@ -2,6 +2,8 @@
 <Project>
   <!-- This is an empty Directory.Build.props file to prevent projects which reside
        under this directory to use any of the repository local settings. -->
-  <ImportDirectoryPackagesProps>false</ImportDirectoryPackagesProps>
-  <ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
+  <PropertyGroup>
+    <ImportDirectoryPackagesProps>false</ImportDirectoryPackagesProps>
+    <ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
+  </PropertyGroup>
 </Project>
