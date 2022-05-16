@@ -16,6 +16,7 @@
 
   <PropertyGroup>
     <ResolveNuGetPackages>false</ResolveNuGetPackages>
+    <ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
     <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
     <ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
   </PropertyGroup>
