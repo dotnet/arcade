@@ -51,15 +51,15 @@ This ranking is based on the following articles:
 
 [Boyer-Moore VS String.contains](http://www.blackbeltcoder.com/Articles/algorithms/fast-text-search-with-boyer-moore)
 
-**tldr**; Although Boyer-Moore is considered one of the fastest string-matching algorithms, C#'s `String.contains` method is faster as it uses assembly optimization. Although we might need a performance test since we will need to go line by line and load the strings from each log file if we use `String.contains` and that might take even longer.
+**TLDR;** Although Boyer-Moore is considered one of the fastest string-matching algorithms, C#'s `String.contains` method is faster as it uses assembly optimization. Although we might need a performance test since we will need to go line by line and load the strings from each log file if we use `String.contains` and that might take even longer.
 
 [String.contains VS Regex.isMatch](https://theburningmonk.com/2012/05/performance-test-string-contains-vs-string-indexof-vs-regex-ismatch/#:~:text=As%20you%20can%20see%2C%20Regex.IsMatch%20is%20by%20far,turned%20out%20to%20be%20significantly%20faster%20than%20String.IndexOf.)
 
-**tldr**; Regex matching is way slower than String methods. It's only more useful if we want to pattern match as opposed to finding a fixed string. (Actually this raises the question - do we want to pattern match?)
+**TLDR;**; Regex matching is way slower than String methods. It's only more useful if we want to pattern match as opposed to finding a fixed string. (Actually this raises the question - do we want to pattern match?)
 
-Also, [this article](https://cc.davelozinski.com/c-sharp/c-net-fastest-way-count-substring-occurrences-string) compares the speeds of different methods of counting substring occurences.
+Also, this article [Fastest Ways to Count Substring Occurences in C#](https://cc.davelozinski.com/c-sharp/c-net-fastest-way-count-substring-occurrences-string) compares the speeds of different methods of counting substring occurences.
 
-**tldr**; Using the basic counting code below was the fastest method for the following performance tests:
+**TLDR;** Using the basic counting code below was the fastest method for the following performance tests:
 > Counting the number of times 1 string occurs in 5,000, 25,000, 100,000, and 1,000,000 million strings.
 > 
 > Counting the number of times 100 strings occur in 5,000, 25,000, 100,000, and 1,000,000 million strings.
@@ -75,6 +75,12 @@ It also corroborates the article saying Regex matching is very slow for long str
     }
     
    
+## File Reading
+Since we will potentially need to be reading text from thousands of files, it's worth taking a look at fastest ways to read file input. The following article benchmarks the time it takes for different ways of reading file input. 
+
+[Fastest Ways to Read Text Files in C#] (https://cc.davelozinski.com/c-sharp/fastest-way-to-read-text-files)
+
+**TLDR;** There was no one fastest method found, but in general, reading line by line and storing each line into a string was fast, and should be sufficient for this program. We can also make it faster using parallel threads if needed (but probably not to avoid race conditions with counting). 
 
 
 ## Output
