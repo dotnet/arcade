@@ -4,7 +4,7 @@ We want to create a REST API that allows users to find the frequency of a specif
 
 # 🖥️ Implementation
 ## High-level diagram
-<img width="3007" alt="Project diagram" src="https://user-images.githubusercontent.com/37950626/168691378-a0ad1daa-269b-483d-ab78-c2aae7d267be.png">
+<img width="3007" alt="Project diagram" src="./Resources/ProjectDiagram.png">
 
 ## Logic
 1. Take and sanitize user input
