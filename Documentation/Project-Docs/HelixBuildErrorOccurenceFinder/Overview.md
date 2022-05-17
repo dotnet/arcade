@@ -59,13 +59,22 @@ This ranking is based on the following articles:
 
 Also, [this article](https://cc.davelozinski.com/c-sharp/c-net-fastest-way-count-substring-occurrences-string) compares the speeds of different methods of counting substring occurences.
 
-**tldr**; Using the basic counting code below was the fastest method even over very long strings. It also corroborates the article saying Regex matching is very slow for long strings.
+**tldr**; Using the basic counting code below was the fastest method for the following performance tests:
+> Counting the number of times 1 string occurs in 5,000, 25,000, 100,000, and 1,000,000 million strings.
+> 
+> Counting the number of times 100 strings occur in 5,000, 25,000, 100,000, and 1,000,000 million strings.
+> 
+> Counting the number of times 1,000 strings occur in 5,000, 25,000, 100,000, and 1,000,000 million strings.
+
+It also corroborates the article saying Regex matching is very slow for long strings.
 
 
     for (int y = 0; y &lt; sf.Length; y++)
     {
         c[y] += (ss[x].Length - ss[x].Replace(sf[y], String.Empty).Length) / sf[y].Length;
     }
+    
+   
 
 
 ## Output
