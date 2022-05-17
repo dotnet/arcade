@@ -18,10 +18,10 @@ We want to create a REST API that allows users to find the frequency of a specif
 ### Kusto query
     let RepoJobs = Jobs
     | where Repository == "REPO_NAME"
-    | project JobId;
+    | project JobId, Properties;
     WorkItems
     | where JobId in (RepoJobs)
-    | project JobId, JobName, Status, Started, Finished, ConsoleUri, QueueName
+    | project JobId, JobName, Status, Started, Finished, ConsoleUri, QueueName, Properties
     | where Status == "Fail"
     | where Started between (datetime(YYYY-MM-DD) .. datetime(YYYY-MM-DD))
 
