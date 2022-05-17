@@ -220,6 +220,15 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
             retry = True
             return
 
+        if exit_code == 90: # APP_LAUNCH_TIMEOUT
+            if is_device:
+                print(f'    Failed to launch the app in alloted time. {retry_message}')
+            else:
+                print(f'    Failed to launch the app in alloted time. {retry_message} {reboot_message}')
+                reboot = True
+            retry = True
+            return
+
         if is_device:
             # If we fail to find a real device, it is unexpected as device queues should have one
             # It can often be fixed with a reboot
@@ -260,13 +269,6 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
             # This manifest by us not being able to launch the simulator
             if exit_code == 88: # SIMULATOR_FAILURE
                 print(f'    Failed to launch the simulator. {retry_message} {reboot_message}')
-                reboot = True
-                retry = True
-
-            # Simulators are known to slow/break down and a reboot usually helps
-            # This manifest by us not being able to launch the simulator/start the test run in time
-            if exit_code == 90: # APP_LAUNCH_TIMEOUT
-                print(f'    Failed to start the test execution in time. {retry_message} {reboot_message}')
                 reboot = True
                 retry = True
 
