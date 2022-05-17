@@ -16,11 +16,12 @@ We want to create a REST API that allows users to find the frequency of a specif
 7. Return the results found as a JSON object. 
 
 ### Kusto query
-    Jobs
+    let RepoJobs = Jobs
     | where Repository == "REPO_NAME"
-    | project JobId, Repository, Properties
-    | join kind=inner WorkItems on JobId
-    | project JobId, JobName, Status, Started, Finished, ConsoleUri, QueueName, Repository, Properties
+    | project JobId;
+    WorkItems
+    | where JobId in (RepoJobs)
+    | project JobId, JobName, Status, Started, Finished, ConsoleUri, QueueName
     | where Status == "Fail"
     | where Started between (datetime(YYYY-MM-DD) .. datetime(YYYY-MM-DD))
 
@@ -34,7 +35,7 @@ We want to create a REST API that allows users to find the frequency of a specif
 - Constraints
     - `repository` must be an existing, public repository. Its spelling must match the repo name exactly.
     - `error_string` should probably have some kind of limit on length.
-    - The duration between `start_date` and `end_date` should have a maximum of 12 months (?). If user input exceeds this value, one possible way of handling this is to just query jobs between 12 months before the given `end_date`.
+    - The duration between `start_date` and `end_date` should have a maximum of ~~12~~ 3 months (?). If user input exceeds this value, one possible way of handling this is to just query jobs between our defined max number of months before the given `end_date` and alert the user that this was done instead of their original query.
 
 ## Dependencies
 - Kusto
@@ -42,9 +43,9 @@ We want to create a REST API that allows users to find the frequency of a specif
 
 ## String Matching
 The three possible string matching methods ranked by speed/performance are:
-1. C# `String.contains` 
+1. C# `String.contains`, `String.replace`, etc
 2. Boyer-Moore string searching algorithm
-3. Regex Class
+3. Regex
 
 This ranking is based on the following articles:
 
@@ -55,6 +56,16 @@ This ranking is based on the following articles:
 [String.contains VS Regex.isMatch](https://theburningmonk.com/2012/05/performance-test-string-contains-vs-string-indexof-vs-regex-ismatch/#:~:text=As%20you%20can%20see%2C%20Regex.IsMatch%20is%20by%20far,turned%20out%20to%20be%20significantly%20faster%20than%20String.IndexOf.)
 
 **tldr**; Regex matching is way slower than String methods. It's only more useful if we want to pattern match as opposed to finding a fixed string. (Actually this raises the question - do we want to pattern match?)
+
+Also, [this article](https://cc.davelozinski.com/c-sharp/c-net-fastest-way-count-substring-occurrences-string) compares the speeds of different methods of counting substring occurences.
+
+**tldr**; Using the basic counting code below was the fastest method even over very long strings. It also corroborates the article saying Regex matching is very slow for long strings.
+
+
+    for (int y = 0; y &lt; sf.Length; y++)
+    {
+        c[y] += (ss[x].Length - ss[x].Replace(sf[y], String.Empty).Length) / sf[y].Length;
+    }
 
 
 ## Output
