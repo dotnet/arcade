@@ -1,6 +1,6 @@
 # ✔️ Introduction
 ## Requirements
-We want to create a REST API that allows users to find the frequency of a specific error string in a repository's Helix build logs. So we want to be able to query an endpoint with a `repository`, `error_string`, `start_date`, and `end_date` to get a list of all the error occurrences of the string in the build logs matching those arguments.
+We want to create a REST API that allows users to find the frequency of a specific error string in a repository's Helix test logs. So we want to be able to query an endpoint with a `repository`, `error_string`, `start_date`, and `end_date` to get a list of all the error occurrences of the string in the build logs matching those arguments.
 
 # 🖥️ Implementation
 ## High-level diagram
