@@ -84,7 +84,7 @@ Also, [this article](https://cc.davelozinski.com/c-sharp/c-net-fastest-way-count
                 "started": "",
                 "finished": "",
                 "queue_name": "",
-                "properties" {}
+                "build_id" ""
             },
             {
                 "job_id": "",
@@ -92,7 +92,7 @@ Also, [this article](https://cc.davelozinski.com/c-sharp/c-net-fastest-way-count
                 "started": "",
                 "finished": "",
                 "queue_name": "",
-                "properties" {}
+                "build_id": ""
             },  
        ]
     } 
