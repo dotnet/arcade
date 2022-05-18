@@ -116,3 +116,37 @@ Since we will potentially need to be reading text from thousands of files, it's 
 - Console app
 - Will test out string matching on a fixed number of log files first to see the speed of parsing a single log file.
 - May also use POC to compare the performance of `String.contains` and Boyer-Moore.
+
+# 📓 Additional Notes
+This section is just temporary notes + to-dos for me (will delete it from final doc iteration)
+
+### Possible additional features
+- Include line number and character index that a string match was found
+- Allow user to pass either/or these 2 options as arguments:
+    - `repository`, `error_string`, `date_range`
+    - `build_id` list
+
+### Issues/questions to look into
+- Are we still only searching for the input string in failed builds? What about the case where a build automatically retries, then works, and is automatically marked as passed?
+- Define metrics for POC test for the speed of parsing log files (also explicitly define how you’re gonna run those tests lol)
+
+### Action items
+- [ ] Update output format to be more document oriented like the following
+       
+        {
+          "filter": {
+            "repository": "...",
+            // ... etc
+          },
+          "hits": 
+          [
+            {
+              "document_uri": "uri to document",
+              "build_id": 1234567,
+              "job_id": "helix guid"
+              "workitem_id": "helix guid"
+            },
+            // ... etc
+          ]
+        }
+
