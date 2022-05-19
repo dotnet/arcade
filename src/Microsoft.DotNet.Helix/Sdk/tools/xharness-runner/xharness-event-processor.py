@@ -172,6 +172,12 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
 
             return
 
+        if exit_code == 88: # SIMULATOR_FAILURE
+            print(f'    Emulator crashed during test execution. {retry_message} {reboot_message}')
+            reboot = True
+            retry = True
+            return
+
         if exit_code == 91: # ADB_FAILURE
             # This handles issues where we have problems with ADB
             # The only solution is to reboot the machine, so we request a work item retry + agent reboot when this happens
