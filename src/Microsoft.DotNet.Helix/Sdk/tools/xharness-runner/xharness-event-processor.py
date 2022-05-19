@@ -145,6 +145,7 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
     if exit_code == 89: # DEVICE_FAILURE
         print(f'    Failed to talk to the device')
         retry = True
+        return
 
     if exit_code == 90: # APP_LAUNCH_TIMEOUT
         print(f'    Failed to launch the app in alloted time')
@@ -247,23 +248,27 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                 print(f'    Requested tethered Apple device not found')
                 reboot = True
                 retry = True
+                return
 
         else:
             if exit_code == 78: # PACKAGE_INSTALLATION_FAILURE
                 print(f'    Encountered PACKAGE_INSTALLATION_FAILURE. This might be caused by a corrupt simulator')
                 retry = True
                 reboot = True
+                return
 
             # Kill the simulator when we fail to launch the app
             if exit_code == 80: # APP_CRASH
                 simulator_app = os.getenv('SIMULATOR_APP')
                 subprocess.call(['sudo', 'pkill', '-9', '-f', simulator_app])
+                return
 
             # If we fail to find a simulator and we are not targeting a specific version (e.g. `ios-simulator_13.5`),
             # it is probably an issue because Xcode should always have at least one runtime version inside
             if exit_code == 81 and '_' not in target: # DEVICE_NOT_FOUND
                 print(f'    No simulator runtime found')
                 retry = True
+                return
 
 # The JSON should be an array of objects (one per each executed XHarness command)
 try:
