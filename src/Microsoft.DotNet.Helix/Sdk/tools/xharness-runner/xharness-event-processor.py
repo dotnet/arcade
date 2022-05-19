@@ -125,14 +125,39 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
 
     global retry, reboot, android_connectivity_verified
 
-    retry_message = 'This is typically not a failure of the work item. It will be run again.'
-    reboot_message = 'This machine will reboot to heal.'
+    # Simulators are known to slow down which results in installation taking several minutes
+    # Retry+reboot usually resolves this
+    if exit_code == 86: # APP_INSTALLATION_TIMEOUT
+        print(f'    Installation timed out')
+        reboot = True
+        retry = True
+        return
+
+    # Simulators are known to slow/break down and a reboot usually helps
+    # This manifest by us not being able to launch the simulator
+    if exit_code == 88: # SIMULATOR_FAILURE
+        print(f'    Failed to launch the emulator')
+        reboot = True
+        retry = True
+        return
+
+    # Devices can be locked or in a corrupted state, in this case we only retry the work item
+    if exit_code == 89: # DEVICE_FAILURE
+        print(f'    Failed to talk to the device')
+        retry = True
+
+    if exit_code == 90: # APP_LAUNCH_TIMEOUT
+        print(f'    Failed to launch the app in alloted time')
+        if not is_device:
+            reboot = True
+        retry = True
+        return
 
     if platform == "android":
         if exit_code == 81: # DEVICE_NOT_FOUND
             # This handles issues where emulators fail to start or devices go silent.
-            print(f'    Encountered DEVICE_NOT_FOUND. {retry_message} {reboot_message}')
-            print('    If this occurs repeatedly, please check for architectural mismatch, e.g. sending arm64_v8a APKs to an x86_64 / x86 only queue.')
+            print(f'    Encountered DEVICE_NOT_FOUND')
+            print('    If this occurs repeatedly, please check for architectural mismatch, e.g. sending arm64_v8a APKs to an x86_64 / x86 only queue')
 
             if not is_device:
                 # For emulators it makes sense to reboot to try to heal the emulator
@@ -160,8 +185,8 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
         if exit_code == 78: # PACKAGE_INSTALLATION_FAILURE
             # This handles issues where APKs fail to install.
             # We already reboot a device inside XHarness and now request a work item retry when this happens
-            print(f'    Encountered PACKAGE_INSTALLATION_FAILURE. {retry_message}')
-            print('    If this occurs repeatedly, please check for architectural mismatch, e.g. requesting installation on arm64_v8a-only queue for x86 or x86_64 APKs.')
+            print(f'    Encountered PACKAGE_INSTALLATION_FAILURE')
+            print('    If this occurs repeatedly, please check for architectural mismatch, e.g. requesting installation on arm64_v8a-only queue for x86 or x86_64 APKs')
             retry = True
 
             if is_device:
@@ -172,17 +197,11 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
 
             return
 
-        if exit_code == 88: # SIMULATOR_FAILURE
-            print(f'    Emulator crashed during test execution. {retry_message} {reboot_message}')
-            reboot = True
-            retry = True
-            return
-
         if exit_code == 91: # ADB_FAILURE
             # This handles issues where we have problems with ADB
             # The only solution is to reboot the machine, so we request a work item retry + agent reboot when this happens
-            print(f'    Encountered ADB_FAILURE. {retry_message} {reboot_message}')
-            print('    If this occurs repeatedly, please check for architectural mismatch, e.g. sending arm64_v8a APKs to an x86_64 / x86 only queue.')
+            print(f'    Encountered ADB_FAILURE')
+            print('    If this occurs repeatedly, please check for architectural mismatch, e.g. sending arm64_v8a APKs to an x86_64 / x86 only queue')
 
             if not is_device and os.name != 'nt':
                 # Copy emulator log
@@ -202,54 +221,36 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
 
             if exitcode != 0:
                 retry = True
-                print(f'    Detected network connectivity issue. {retry_message}')
+                print(f'    Detected network connectivity issue')
                 raise AdditionalTelemetryRequired(NETWORK_CONNECTIVITY_METRIC_NAME, 1)
 
     elif platform == "apple":
-        retry_message = 'This is typically not a failure of the work item. It will be run again.'
-        reboot_message = 'This machine will reboot to heal.'
-        
+        # This code should only be retried for Apple as in Android this can mean failed tests or app crash
         if exit_code == 82: # RETURN_CODE_NOT_SET
             # See https://github.com/dotnet/xharness/issues/812
-            print(f'    Failed to detect app\'s exit code. {retry_message}')
+            print(f'    Failed to detect app\'s exit code')
             retry = True
             return
 
         # If we have a launch failure on simulators, we want a reboot+retry
         # We want retry only on devices (it happens quite rarely)
         if exit_code == 83: # APP_LAUNCH_FAILURE
-            if is_device:
-                print(f'    Encountered APP_LAUNCH_FAILURE. {retry_message}')
-            else:
-                print(f'    Encountered APP_LAUNCH_FAILURE. {retry_message} {reboot_message}')
-                reboot = True
-            retry = True
-            return
-
-        if exit_code == 90: # APP_LAUNCH_TIMEOUT
-            if is_device:
-                print(f'    Failed to launch the app in alloted time. {retry_message}')
-            else:
-                print(f'    Failed to launch the app in alloted time. {retry_message} {reboot_message}')
+            print(f'    Encountered APP_LAUNCH_FAILURE')
+            if not is_device:
                 reboot = True
             retry = True
             return
 
         if is_device:
             # If we fail to find a real device, it is unexpected as device queues should have one
-            # It can often be fixed with a reboot
             if exit_code == 81: # DEVICE_NOT_FOUND
-                print(f'    Requested tethered Apple device not found. {retry_message} {reboot_message}')
+                print(f'    Requested tethered Apple device not found')
                 reboot = True
                 retry = True
 
-            # Devices can be locked or in a corrupted state, in this case we only retry the work item
-            if exit_code == 89: # DEVICE_FAILURE
-                print(f'    Failed to launch the simulator. {retry_message}')
-                retry = True
         else:
             if exit_code == 78: # PACKAGE_INSTALLATION_FAILURE
-                print(f'    Encountered PACKAGE_INSTALLATION_FAILURE. This might be caused by a corrupt simulator. {retry_message} {reboot_message}')
+                print(f'    Encountered PACKAGE_INSTALLATION_FAILURE. This might be caused by a corrupt simulator')
                 retry = True
                 reboot = True
 
@@ -261,21 +262,7 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
             # If we fail to find a simulator and we are not targeting a specific version (e.g. `ios-simulator_13.5`),
             # it is probably an issue because Xcode should always have at least one runtime version inside
             if exit_code == 81 and '_' not in target: # DEVICE_NOT_FOUND
-                print(f'    No simulator runtime found. {retry_message}')
-                retry = True
-
-            # Simulators are known to slow down which results in installation taking several minutes
-            # Retry+reboot usually resolves this
-            if exit_code == 86: # APP_INSTALLATION_TIMEOUT
-                print(f'    Installation timed out. {retry_message} {reboot_message}')
-                reboot = True
-                retry = True
-
-            # Simulators are known to slow/break down and a reboot usually helps
-            # This manifest by us not being able to launch the simulator
-            if exit_code == 88: # SIMULATOR_FAILURE
-                print(f'    Failed to launch the simulator. {retry_message} {reboot_message}')
-                reboot = True
+                print(f'    No simulator runtime found')
                 retry = True
 
 # The JSON should be an array of objects (one per each executed XHarness command)
