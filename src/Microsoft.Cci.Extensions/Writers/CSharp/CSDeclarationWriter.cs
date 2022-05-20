@@ -17,10 +17,13 @@ namespace Microsoft.Cci.Writers.CSharp
     {
         public static readonly Version LangVersion7_0 = new Version(7, 0);
         public static readonly Version LangVersion8_0 = new Version(8, 0);
+        public static readonly Version LangVersion9_0 = new Version(9, 0);
+        public static readonly Version LangVersion10_0 = new Version(10, 0);
+        public static readonly Version LangVersion11_0 = new Version(11, 0);
 
         public static readonly Version LangVersionDefault = LangVersion7_0;
-        public static readonly Version LangVersionLatest = LangVersion8_0;
-        public static readonly Version LangVersionPreview = LangVersion8_0;
+        public static readonly Version LangVersionLatest = LangVersion10_0;
+        public static readonly Version LangVersionPreview = LangVersion11_0;
 
         private readonly SRMetadataPEReaderCache _metadataReaderCache;
         private readonly ISyntaxWriter _writer;
@@ -297,13 +300,13 @@ namespace Microsoft.Cci.Writers.CSharp
                     string name;
                     if (typeReference is INestedTypeReference nestedType && (namingOptions & NameFormattingOptions.OmitTypeArguments) != 0)
                     {
-                        name = TypeHelper.GetTypeName(nestedType.ContainingType, namingOptions & ~NameFormattingOptions.OmitTypeArguments);
+                        name = GetTypeName(nestedType.ContainingType, namingOptions & ~NameFormattingOptions.OmitTypeArguments);
                         name += ".";
-                        name += TypeHelper.GetTypeName(nestedType, namingOptions | NameFormattingOptions.OmitContainingType);
+                        name += GetTypeName(nestedType, namingOptions | NameFormattingOptions.OmitContainingType);
                     }
                     else
                     {
-                        name = TypeHelper.GetTypeName(typeReference, namingOptions);
+                        name = GetTypeName(typeReference, namingOptions);
                     }
 
                     if (CSharpCciExtensions.IsKeyword(name))
