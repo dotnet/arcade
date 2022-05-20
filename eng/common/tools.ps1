@@ -636,6 +636,7 @@ function InitializeNativeTools() {
       }
     }
     if (Test-Path variable:NativeToolsOnMachine) {
+      Write-Host "Variable NativeToolsOnMachine detected, enabling native tool path promotion..."
       $nativeArgs += @{ PathPromotion = $true }
     }
     & "$PSScriptRoot/init-tools-native.ps1" @nativeArgs
