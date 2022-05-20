@@ -635,6 +635,9 @@ function InitializeNativeTools() {
         InstallDirectory = "$ToolsDir"
       }
     }
+    if (Test-Path variable:NativeToolsOnMachine) {
+      $nativeArgs += @{ PathPromotion = $true }
+    }
     & "$PSScriptRoot/init-tools-native.ps1" @nativeArgs
   }
 }
