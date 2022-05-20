@@ -2,6 +2,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net472;$(TargetFrameworkForNETSDK)</TargetFrameworks>
+    <!--
+      We can't build Microsoft.DotNet.Build.Tasks.Workloads for net472 in source build, since it
+      depends on Microsoft.NET.Sdk.WorkloadManifestReader, and the previously source built
+      version of that package is incompatible with the net472 TFM.
+    -->
     <TargetFrameworks Condition="'$(DotNetBuildFromSource)' == 'true'">$(TargetFrameworkForNETSDK)</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>Latest</LangVersion>
