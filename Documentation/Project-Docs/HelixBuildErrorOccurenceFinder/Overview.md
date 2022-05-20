@@ -55,7 +55,7 @@ This ranking is based on the following articles:
 
 [String.contains VS Regex.isMatch](https://theburningmonk.com/2012/05/performance-test-string-contains-vs-string-indexof-vs-regex-ismatch/#:~:text=As%20you%20can%20see%2C%20Regex.IsMatch%20is%20by%20far,turned%20out%20to%20be%20significantly%20faster%20than%20String.IndexOf.)
 
-**TLDR;**; Regex matching is way slower than String methods. It's only more useful if we want to pattern match as opposed to finding a fixed string. (Actually this raises the question - do we want to pattern match?)
+**TLDR;** Regex matching is way slower than String methods. It's only more useful if we want to pattern match as opposed to finding a fixed string. (Actually this raises the question - do we want to pattern match?)
 
 Also, this article [Fastest Ways to Count Substring Occurences in C#](https://cc.davelozinski.com/c-sharp/c-net-fastest-way-count-substring-occurrences-string) compares the speeds of different methods of counting substring occurences.
 
@@ -78,39 +78,46 @@ It also corroborates the article saying Regex matching is very slow for long str
 ## File Reading
 Since we will potentially need to be reading text from thousands of files, it's worth taking a look at fastest ways to read file input. The following article benchmarks the time it takes for different ways of reading file input. 
 
-[Fastest Ways to Read Text Files in C#] (https://cc.davelozinski.com/c-sharp/fastest-way-to-read-text-files)
+[Fastest Ways to Read Text Files in C#](https://cc.davelozinski.com/c-sharp/fastest-way-to-read-text-files)
 
 **TLDR;** There was no one fastest method found, but in general, reading line by line and storing each line into a string was fast, and should be sufficient for this program. We can also make it faster using parallel threads if needed (but probably not to avoid race conditions with counting). 
 
 
 ## Output
 #### Possible JSON output:
-    {
-        "repository": "",
-        "error_string": "",
-        "start_date": "",
-        "end_date": "",
-        "num_occurrences": 00,
-        "failed_jobs: 
-        [
+        {
+          "filter": {
+            "repository": "...",
+            "error_string": "",
+            "start_date": "",
+            "end_date": "",
+            "num_hits": 00,
+          },
+          "hits": 
+          [
             {
-                "job_id": "",
-                "job_name": "",
-                "started": "",
-                "finished": "",
-                "queue_name": "",
-                "build_id" ""
+              "document_uri": "uri to document",
+              "build_id": 1234567,
+              "job_id": "helix guid"
+              "workitem_id": "helix guid",
+              "job_name": "",
+              "started": "",
+              "finished": "",
+              "queue_name": "",
             },
             {
-                "job_id": "",
-                "job_name": "",
-                "started": "",
-                "finished": "",
-                "queue_name": "",
-                "build_id": ""
-            },  
-       ]
-    } 
+              "document_uri": "uri to document",
+              "build_id": 1234567,
+              "job_id": "helix guid"
+              "workitem_id": "helix guid",
+              "job_name": "",
+              "started": "",
+              "finished": "",
+              "queue_name": "",
+            },
+            ...
+          ]
+        }
  
 # 👓 Proof-of-Concept
 - Console app
@@ -128,25 +135,7 @@ This section is just temporary notes + to-dos for me (will delete it from final 
 
 ### Issues/questions to look into
 - Are we still only searching for the input string in failed builds? What about the case where a build automatically retries, then works, and is automatically marked as passed?
-- Define metrics for POC test for the speed of parsing log files (also explicitly define how you’re gonna run those tests lol)
+
 
 ### Action items
-- [ ] Update output format to be more document oriented like the following
-       
-        {
-          "filter": {
-            "repository": "...",
-            // ... etc
-          },
-          "hits": 
-          [
-            {
-              "document_uri": "uri to document",
-              "build_id": 1234567,
-              "job_id": "helix guid"
-              "workitem_id": "helix guid"
-            },
-            // ... etc
-          ]
-        }
-
+- [ ] Define metrics for POC test for the speed of parsing log files (be more formal in how you define how you’re gonna run those tests lol)
