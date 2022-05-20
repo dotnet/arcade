@@ -287,9 +287,10 @@ if len(operations) == 0:
 print(f"Reporting {len(operations)} events from diagnostics file `{diagnostics_file}`")
 
 # Example version: 1.0.0-prerelease.22269.1+6e87004b51c89c59ac4a34536e9bc22da0124f39
+# The version comes in the brackets [version]
 # We remove the commit SHA
 _, version = call_xharness(['version'], capture_output=True)
-version = version.split("+")[0]
+version = version.split("]")[0].split("+")[0][1:]
 
 # Parse operations, analyze them and send them to Application Insights
 for operation in operations:
