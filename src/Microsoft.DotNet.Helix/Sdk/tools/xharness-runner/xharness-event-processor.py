@@ -280,7 +280,16 @@ except Exception as e:
         print(f.read())
     exit(1)
 
+if len(operations) == 0:
+    print('    No operations found in the diagnostics file')
+    exit(0)
+
 print(f"Reporting {len(operations)} events from diagnostics file `{diagnostics_file}`")
+
+# Example version: 1.0.0-prerelease.22269.1+6e87004b51c89c59ac4a34536e9bc22da0124f39
+# We remove the commit SHA
+_, version = call_xharness(['version'], capture_output=True)
+version = version.strip().split("+")[0]
 
 # Parse operations, analyze them and send them to Application Insights
 for operation in operations:
@@ -296,6 +305,7 @@ for operation in operations:
     custom_dimensions = dict()
     custom_dimensions['command'] = command
     custom_dimensions['platform'] = platform
+    custom_dimensions['version'] = version
 
     if is_device is not None:
         custom_dimensions['isDevice'] = 'true' if str(is_device).lower() == 'true' else 'false'
