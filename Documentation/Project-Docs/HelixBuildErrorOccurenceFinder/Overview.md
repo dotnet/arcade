@@ -80,7 +80,7 @@ Since we will potentially need to be reading text from thousands of files, it's 
 
 [Fastest Ways to Read Text Files in C#](https://cc.davelozinski.com/c-sharp/fastest-way-to-read-text-files)
 
-**TLDR;** There was no one fastest method found, but in general, reading line by line and storing each line into a string was fast, and should be sufficient for this program. We can also make it faster using parallel threads if needed (but probably not to avoid race conditions with counting). 
+**TLDR;** There was no one fastest method found, but in general, reading line by line and storing each line into a string was fast, and should be sufficient for this program. We can also make it faster using parallel threads if needed (but probably not to avoid race conditions). 
 
 
 ## Output
@@ -122,7 +122,7 @@ Since we will potentially need to be reading text from thousands of files, it's 
 # 👓 Proof-of-Concept
 - Console app
 - Will test out string matching on a fixed number of log files first to see the speed of parsing a single log file.
-- May also use POC to compare the performance of `String.contains` and Boyer-Moore.
+- May also use POC to compare the performance of `String.contains` and Boyer-Moore -> **Is this actually needed? It seems pretty clear from the articles that using `String.Replace` is the fastest...**
 
 # 📓 Additional Notes
 This section is just temporary notes + to-dos for me (will delete it from final doc iteration)
