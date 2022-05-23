@@ -121,7 +121,7 @@ Since we will potentially need to be reading text from thousands of files, it's 
  
 # 👓 Proof-of-Concept
 - Console app
-- Will test out string matching on a fixed number of log files first to see the speed of parsing a single log file.
+- Will test out string matching on a fixed number of log files first to see the speed on a local machine (and we also want to see the speed of actually running it on servers)
 - May also use POC to compare the performance of `String.contains` and Boyer-Moore -> **Is this actually needed? It seems pretty clear from the articles that using `String.Replace` is the fastest...**
 
 # 📓 Additional Notes
