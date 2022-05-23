@@ -205,11 +205,10 @@ namespace Microsoft.DotNet.Helix.Sdk
             "--output-directory \"$output_directory\" " +
             "--target \"$target\" " +
             "--timeout \"$timeout\" " +
+            "--launch-timeout \"$launch_timeout\" " +
             "--xcode \"$xcode_path\" " +
             "-v " +
-            (includesTestRunner
-                ? $"--launch-timeout \"$launch_timeout\" "
-                : $"--expected-exit-code $expected_exit_code ") +
+            (!includesTestRunner ? "--expected-exit-code $expected_exit_code " : string.Empty) +
             (resetSimulator ? $"--reset-simulator " : string.Empty) +
             (!string.IsNullOrEmpty(AppArguments) ? "-- " + AppArguments : string.Empty);
 
