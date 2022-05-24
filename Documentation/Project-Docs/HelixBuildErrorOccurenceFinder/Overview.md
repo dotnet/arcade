@@ -20,7 +20,7 @@ We want to create a REST API that allows users to find the frequency of a specif
     | where Repository == "REPO_NAME"
     | project JobId, Repository, Properties
     | join kind=inner WorkItems on JobId
-    | project JobId, JobName, Status, Started, Finished, ConsoleUri, QueueName, Repository, Properties
+    | project JobId, FriendlyName, Status, Started, Finished, ConsoleUri, QueueName
     | where Status == "Fail"
     | where Started between (datetime(YYYY-MM-DD) .. datetime(YYYY-MM-DD))
 
@@ -34,7 +34,7 @@ We want to create a REST API that allows users to find the frequency of a specif
 - Constraints
     - `repository` must be an existing, public repository. Its spelling must match the repo name exactly.
     - `error_string` should probably have some kind of limit on length.
-    - The duration between `start_date` and `end_date` should have a maximum of ~~12~~ 3 months (?). If user input exceeds this value, one possible way of handling this is to just query jobs between our defined max number of months before the given `end_date` and alert the user that this was done instead of their original query.
+    - The duration between `start_date` and `end_date` should have a maximum of 7 days). If user input exceeds this value, one possible way of handling this is to just query jobs between our defined max number of months before the given `end_date` and alert the user that this was done instead of their original query.
 
 ## Dependencies
 - Kusto
@@ -58,7 +58,7 @@ This ranking is based on the following articles:
 
 Also, this article [Fastest Ways to Count Substring Occurences in C#](https://cc.davelozinski.com/c-sharp/c-net-fastest-way-count-substring-occurrences-string) compares the speeds of different methods of counting substring occurences.
 
-**TLDR;** Using the basic counting code below was the fastest method for the following performance tests:
+**TLDR;** Using BCL was the fastest method for the following performance tests:
 > Counting the number of times 1 string occurs in 5,000, 25,000, 100,000, and 1,000,000 million strings.
 > 
 > Counting the number of times 100 strings occur in 5,000, 25,000, 100,000, and 1,000,000 million strings.
@@ -67,19 +67,16 @@ Also, this article [Fastest Ways to Count Substring Occurences in C#](https://cc
 
 It also corroborates the article saying Regex matching is very slow for long strings.
 
+**❕ Decision is to use `String.Contains` (BCL) for now and stick with fixed string matching. Notes were made in additional features section to possibly include pattern matching down the road.**
 
-    for (int y = 0; y &lt; sf.Length; y++)
-    {
-        c[y] += (ss[x].Length - ss[x].Replace(sf[y], String.Empty).Length) / sf[y].Length;
-    }
-    
-   
 ## File Reading
 Since we will potentially need to be reading text from thousands of files, it's worth taking a look at fastest ways to read file input. The following article benchmarks the time it takes for different ways of reading file input. 
 
 [Fastest Ways to Read Text Files in C#](https://cc.davelozinski.com/c-sharp/fastest-way-to-read-text-files)
 
-**TLDR;** There was no one fastest method found, but in general, reading line by line and storing each line into a string was fast, and should be sufficient for this program. We can also make it faster using parallel threads if needed (i.e using Tasks to read each log file concurrently)
+**TLDR;** There was no one fastest method found, but in general, reading line by line and storing each line into a string was fast, and should be sufficient for this program. We can also make it faster using parallel threads if needed.
+
+**❕ We want to read different log files async using some version of `Task.WhenAll` to read the files concurrently.**
 
 ## Output
 #### Possible JSON output:
@@ -95,20 +92,16 @@ Since we will potentially need to be reading text from thousands of files, it's 
           [
             {
               "document_uri": "uri to document",
-              "build_id": 1234567,
               "job_id": "helix guid"
-              "workitem_id": "helix guid",
-              "job_name": "",
+              "friendly_name": "",
               "started": "",
               "finished": "",
               "queue_name": "",
             },
             {
               "document_uri": "uri to document",
-              "build_id": 1234567,
               "job_id": "helix guid"
-              "workitem_id": "helix guid",
-              "job_name": "",
+              "friendly_name": "",
               "started": "",
               "finished": "",
               "queue_name": "",
@@ -125,10 +118,8 @@ The plan for now is reading log files line by line and using `String.Contains`. 
 3. Deploy the POC so that we can run it on the same data centre that the logs are stored so we can see the actual speed of the program
 
 - Will test out string matching on a fixed number of log files first to see the speed on a local machine (and we also want to see the speed of actually running it on servers)
-- May also use POC to compare the performance of `String.contains` and Boyer-Moore -> **Is this actually needed? It seems pretty clear from the articles that using `String.Replace` is the fastest...**
 
 # 📓 Additional Notes
-This section is just temporary notes + to-dos for me so I don't forget stuff from PR reviews/comments. (will delete it from final doc iteration)
 
 ### Possible additional features
 - Include line number and character index that a string match was found
@@ -136,18 +127,11 @@ This section is just temporary notes + to-dos for me so I don't forget stuff fro
     - `repository`, `error_string`, `date_range`
     - `build_id` list
 - Taking an optional parameter for context lines (e.g also return the 5 lines surrounding the hit line - think GDB)
+- Allowing pattern matching using regex (currently only allow for fixed string matching)
+- Allow user to pass token to authenticate and allow search in non-external jobs
 
-### Issues/questions to look into
-- Are we still only searching for the input string in failed builds? What about the case where a build automatically retries, then works, and is automatically marked as passed?
-- What is a profiler? (See PR comments)
-- How are we deploying the thing to run on same data centres?
-- Do we need to check authentication or are we just doing external/public repos?
+### Issues/questions to look into down the road
+- Possibly use a profiler (like VS profiler) to look more into performance
+- Eventually we want to deploy to use the same data centres as the logs in Azure
+- Look more into handling failure cases like limiting user input i.e only 1 outstanding request allowed per person also “(limiting the input sizes, like only X total days, or Y total logs to scan), returning a partial result if we run out of time, a stateful server request, where you could ask "hey, I started this query a bit ago, do you have the answer yet"... Lots of exciting options!
 
-
-### Action items
-- [ ] Define metrics for POC test for the speed of parsing log files (be more formal in how you define how you’re gonna run those tests lol) -> lines/second? 1000 lines/second
-- [ ] Update Kusto query to use the `join` method since it turns out it runs faster
-- [ ] Eventually figure out a way to handle failure cases like limiting user input i.e only 1 outstanding request allowed per person also “(limiting the input sizes, like only X total days, or Y total logs to scan), returning a partial result if we run out of time, a stateful server request, where you could ask "hey, I started this query a bit ago, do you have the answer yet"... Lots of exciting options!”
-- [ ] Update output to replace work item ID to 1. job GUID and 2. workitem friendly name
-- [ ] If we have time, use a profiler to see if changing the string matching method is worth it in terms of performance
-- [ ] Eventually run the POC on Azure, not locally to see actual/real-life speeds
