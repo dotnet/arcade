@@ -120,7 +120,12 @@ Since we will potentially need to be reading text from thousands of files, it's 
         }
  
 # 👓 Proof-of-Concept
-- Console app
+The plan for now is reading log files line by line and using `String.Contains`. We also want to use `Tasks` to parse each log file in parallel. Currently, I’m taking the following steps to implement POC:
+
+1. Write code for parsing a file using a hardcoded URI and getting in the data we want to return
+2. Replace the hardcoded URI with the actual URIs retrieved from a Kusto Query and looping through multiple URIs (and eventually the thousands that are actually returned).
+3. Deploy the POC so that we can run it on the same data centre that the logs are stored so we can see the actual speed of the program
+
 - Will test out string matching on a fixed number of log files first to see the speed on a local machine (and we also want to see the speed of actually running it on servers)
 - May also use POC to compare the performance of `String.contains` and Boyer-Moore -> **Is this actually needed? It seems pretty clear from the articles that using `String.Replace` is the fastest...**
 
@@ -132,10 +137,20 @@ This section is just temporary notes + to-dos for me (will delete it from final 
 - Allow user to pass either/or these 2 options as arguments:
     - `repository`, `error_string`, `date_range`
     - `build_id` list
+- Taking an optional parameter for context lines (e.g also return the 5 lines surrounding the hit line - think GDB)
 
 ### Issues/questions to look into
 - Are we still only searching for the input string in failed builds? What about the case where a build automatically retries, then works, and is automatically marked as passed?
+- Are we still only searching for the input string in failed builds? What about the case where a build automatically retries, then works, and is automatically marked as passed?
+- What is a profiler? (See PR comments)
+- How are we deploying the thing to run on same data centres?
+- Do we need to check authentication or are we just doing external/public repos?
 
 
 ### Action items
-- [ ] Define metrics for POC test for the speed of parsing log files (be more formal in how you define how you’re gonna run those tests lol)
+- [ ] Define metrics for POC test for the speed of parsing log files (be more formal in how you define how you’re gonna run those tests lol) -> lines/second? 1000 lines/second
+- [ ] Update Kusto query to use the `join` method since it turns out it runs faster
+- [ ] Eventually figure out a way to handle failure cases like limiting user input i.e only 1 outstanding request allowed per person also “(limiting the input sizes, like only X total days, or Y total logs to scan), returning a partial result if we run out of time, a stateful server request, where you could ask "hey, I started this query a bit ago, do you have the answer yet"... Lots of exciting options!”
+- [ ] Update output to replace work item ID to 1. job GUID and 2. workitem friendly name
+- [ ] If we have time, use a profiler to see if changing the string matching method is worth it in terms of performance
+- [ ] Eventually run the POC on Azure, not locally to see actual/real-life speeds
