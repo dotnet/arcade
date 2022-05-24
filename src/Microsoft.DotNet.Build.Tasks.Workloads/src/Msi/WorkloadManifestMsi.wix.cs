@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
     /// </summary>
     internal class WorkloadManifestMsi : MsiBase
     {
-        private WorkloadManifestPackage _package;
+        public WorkloadManifestPackage Package { get; }
 
         /// <summary>
         /// The directory reference to use when harvesting the package contents.
@@ -24,9 +24,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
 
         public WorkloadManifestMsi(WorkloadManifestPackage package, string platform, IBuildEngine buildEngine, string wixToolsetPath,
             string baseIntermediateOutputPath) : 
-            base(package, buildEngine, wixToolsetPath, platform, baseIntermediateOutputPath)
+            base(MsiMetadata.Create(package), buildEngine, wixToolsetPath, platform, baseIntermediateOutputPath)
         {
-            _package = package;
+            Package = package;
         }
 
         /// <inheritdoc />
@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         {
             // Harvest the package contents before adding it to the source files we need to compile.
             string packageContentWxs = Path.Combine(WixSourceDirectory, "PackageContent.wxs");
-            string packageDataDirectory = Path.Combine(_package.DestinationDirectory, "data");
+            string packageDataDirectory = Path.Combine(Package.DestinationDirectory, "data");
 
             HarvesterToolTask heat = new(BuildEngine, WixToolsetPath)
             {
@@ -63,18 +63,18 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             // For example, 6.0.101 and 6.0.108 will generate the same GUID for the same platform and manifest ID. 
             // The workload author will need to guarantee that the version for the MSI is higher than previous shipped versions
             // to ensure upgrades correctly trigger.
-            Guid upgradeCode = Utils.CreateUuid(UpgradeCodeNamespaceUuid, $"{_package.ManifestId};{_package.SdkFeatureBand};{Platform}");
-            string providerKeyName = $"{_package.ManifestId},{_package.SdkFeatureBand},{Platform}";
+            Guid upgradeCode = Utils.CreateUuid(UpgradeCodeNamespaceUuid, $"{Package.ManifestId};{Package.SdkFeatureBand};{Platform}");
+            string providerKeyName = $"{Package.ManifestId},{Package.SdkFeatureBand},{Platform}";
 
             // Set up additional preprocessor definitions.
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.UpgradeCode, $"{upgradeCode}");
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.DependencyProviderKeyName, $"{providerKeyName}");
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.SourceDir, $"{packageDataDirectory}");
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.SdkFeatureBandVersion, $"{_package.SdkFeatureBand}");
+            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.SdkFeatureBandVersion, $"{Package.SdkFeatureBand}");
 
             // The temporary installer in the SDK (6.0) used lower invariants of the manifest ID.
             // We have to do the same to ensure the keypath generation produces stable GUIDs.
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.ManifestId, $"{_package.ManifestId.ToLowerInvariant()}");
+            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.ManifestId, $"{Package.ManifestId.ToLowerInvariant()}");
 
             if (!candle.Execute())
             {
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             }
 
             ITaskItem msi = Link(candle.OutputPath, 
-                Path.Combine(outputPath, Path.GetFileNameWithoutExtension(_package.PackagePath) + $"-{Platform}.msi"),
+                Path.Combine(outputPath, Path.GetFileNameWithoutExtension(Package.PackagePath) + $"-{Platform}.msi"),
                 iceSuppressions);
                         
             return msi;

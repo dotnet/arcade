@@ -152,9 +152,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             {
                 // TODO: trim out duplicate manifests.
                 List<WorkloadManifestPackage> manifestPackages = new();
-                List<MsiBase> manifestMsisToBuild = new();
+                List<WorkloadManifestMsi> manifestMsisToBuild = new();
                 List<SwixComponent> swixComponents = new();
                 Dictionary<string, BuildData> buildData = new();
+                List<WorkloadPackGroupPackage> packGroupPackages = new();
 
                 // First construct sets of everything that needs to be built. This includes
                 // all the packages (manifests and workload packs) that need to be extracted along
@@ -186,6 +187,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     {
                         if ((workload is WorkloadDefinition wd) && (wd.Platforms == null || wd.Platforms.Any(platform => platform.StartsWith("win"))) && (wd.Packs != null))
                         {
+                            Dictionary<string, WorkloadPackGroupPackage> groupsByPlatform = new Dictionary<string, WorkloadPackGroupPackage>();
+
                             foreach (WorkloadPackId packId in wd.Packs)
                             {
                                 WorkloadPack pack = manifest.Packs[packId];
@@ -215,10 +218,25 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                                         }
 
                                         _ = buildData[sourcePackage].FeatureBands[platform].Add(manifestPackage.SdkFeatureBand);
+
+                                        //  Add pack to pack group package
+                                        if (!groupsByPlatform.TryGetValue(platform, out WorkloadPackGroupPackage groupPackage))
+                                        {
+                                            groupPackage = new WorkloadPackGroupPackage(platform, manifestPackage, workload.Id);
+                                            groupsByPlatform[platform] = groupPackage;
+                                        }
+                                        groupPackage.Packs.Add(buildData[sourcePackage].Package);
                                     }
 
                                 }
                             }
+
+                            foreach (var groupPackage in groupsByPlatform.Values)
+                            {
+                                packGroupPackages.Add(groupPackage);
+                            }
+
+                            //  TODO: Add WorkloadPackGroups.json to add to workload manifest MSI
 
                             // Finally, add a component for the workload in Visual Studio.
                             SwixComponent component = SwixComponent.Create(manifestPackage.SdkFeatureBand, workload, manifest,
@@ -247,7 +265,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                         string msiJsonPath = MsiProperties.Create(msiOutputItem.ItemSpec);
 
                         // Generate a .csproj to package the MSI and its manifest for CLI installs.
-                        MsiPayloadPackageProject csproj = new(msi.Package, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, Path.GetFullPath(msiJsonPath));
+                        MsiPayloadPackageProject csproj = new(data.Package, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, Path.GetFullPath(msiJsonPath));
                         msiOutputItem.SetMetadata(Metadata.PackageProject, csproj.Create());
 
                         lock (msiItems)
@@ -270,6 +288,28 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                         }
                     });
                 });
+
+                //  Parallization seems cause file access errors for heat
+                foreach (var packGroup in packGroupPackages)
+                {
+                    WorkloadPackGroupMsi msi = new(packGroup, BuildEngine, WixToolsetPath, BaseIntermediateOutputPath);
+                    ITaskItem msiOutputItem = msi.Build(MsiOutputPath, IceSuppressions);
+
+                    //  TODO: Create .csproj in order to create NuGet package wrapping this MSI
+                    //// Create the JSON manifest for CLI based installations.
+                    //string msiJsonPath = MsiProperties.Create(msiOutputItem.ItemSpec);
+
+                    //// Generate a .csproj to package the MSI and its manifest for CLI installs.
+                    //MsiPayloadPackageProject csproj = new(packGroup, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, Path.GetFullPath(msiJsonPath));
+                    //msiOutputItem.SetMetadata(Metadata.PackageProject, csproj.Create());
+
+                    lock (msiItems)
+                    {
+                        msiItems.Add(msiOutputItem);
+                    }
+
+                    //  TODO: Swix for workload pack groups
+                };
 
                 // Generate MSIs for the workload manifests along with
                 // a .csproj to package the MSI and a SWIX project for
