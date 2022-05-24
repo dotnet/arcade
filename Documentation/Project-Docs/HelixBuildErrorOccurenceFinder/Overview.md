@@ -130,7 +130,7 @@ The plan for now is reading log files line by line and using `String.Contains`. 
 - May also use POC to compare the performance of `String.contains` and Boyer-Moore -> **Is this actually needed? It seems pretty clear from the articles that using `String.Replace` is the fastest...**
 
 # 📓 Additional Notes
-This section is just temporary notes + to-dos for me (will delete it from final doc iteration)
+This section is just temporary notes + to-dos for me so I don't forget stuff from PR reviews/comments. (will delete it from final doc iteration)
 
 ### Possible additional features
 - Include line number and character index that a string match was found
@@ -140,7 +140,6 @@ This section is just temporary notes + to-dos for me (will delete it from final 
 - Taking an optional parameter for context lines (e.g also return the 5 lines surrounding the hit line - think GDB)
 
 ### Issues/questions to look into
-- Are we still only searching for the input string in failed builds? What about the case where a build automatically retries, then works, and is automatically marked as passed?
 - Are we still only searching for the input string in failed builds? What about the case where a build automatically retries, then works, and is automatically marked as passed?
 - What is a profiler? (See PR comments)
 - How are we deploying the thing to run on same data centres?
