@@ -265,7 +265,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                         string msiJsonPath = MsiProperties.Create(msiOutputItem.ItemSpec);
 
                         // Generate a .csproj to package the MSI and its manifest for CLI installs.
-                        MsiPayloadPackageProject csproj = new(data.Package, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, Path.GetFullPath(msiJsonPath));
+                        MsiPayloadPackageProject csproj = new(msi.Metadata, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, Path.GetFullPath(msiJsonPath));
                         msiOutputItem.SetMetadata(Metadata.PackageProject, csproj.Create());
 
                         lock (msiItems)
@@ -295,13 +295,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     WorkloadPackGroupMsi msi = new(packGroup, BuildEngine, WixToolsetPath, BaseIntermediateOutputPath);
                     ITaskItem msiOutputItem = msi.Build(MsiOutputPath, IceSuppressions);
 
-                    //  TODO: Create .csproj in order to create NuGet package wrapping this MSI
-                    //// Create the JSON manifest for CLI based installations.
-                    //string msiJsonPath = MsiProperties.Create(msiOutputItem.ItemSpec);
+                    // Create the JSON manifest for CLI based installations.
+                    string msiJsonPath = MsiProperties.Create(msiOutputItem.ItemSpec);
 
-                    //// Generate a .csproj to package the MSI and its manifest for CLI installs.
-                    //MsiPayloadPackageProject csproj = new(packGroup, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, Path.GetFullPath(msiJsonPath));
-                    //msiOutputItem.SetMetadata(Metadata.PackageProject, csproj.Create());
+                    // Generate a .csproj to package the MSI and its manifest for CLI installs.
+                    MsiPayloadPackageProject csproj = new(msi.Metadata, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, Path.GetFullPath(msiJsonPath));
+                    msiOutputItem.SetMetadata(Metadata.PackageProject, csproj.Create());
 
                     lock (msiItems)
                     {
@@ -332,7 +331,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     }
 
                     // Generate a .csproj to package the MSI and its manifest for CLI installs.
-                    MsiPayloadPackageProject csproj = new(msi.Package, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, Path.GetFullPath(msiJsonPath));
+                    MsiPayloadPackageProject csproj = new(msi.Metadata, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, Path.GetFullPath(msiJsonPath));
                     msiOutputItem.SetMetadata(Metadata.PackageProject, csproj.Create());
 
                     lock (msiItems)

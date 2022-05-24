@@ -32,7 +32,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         public MsiMetadata GetMsiMetadata()
         {
             return new MsiMetadata(Id, ManifestPackage.PackageVersion, ManifestPackage.MsiVersion, ManifestPackage.Authors,
-                title: WorkloadName + " packs", ManifestPackage.LicenseUrl, swixPackageId: Id);
+                ManifestPackage.Copyright,
+                description: "Workload packs for " + WorkloadName,
+                title: "Workload packs for " + WorkloadName,
+                ManifestPackage.LicenseUrl,
+                ManifestPackage.ProjectUrl,
+                swixPackageId: Id);
         }
     }
 }
