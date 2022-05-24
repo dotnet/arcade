@@ -80,8 +80,7 @@ Since we will potentially need to be reading text from thousands of files, it's 
 
 [Fastest Ways to Read Text Files in C#](https://cc.davelozinski.com/c-sharp/fastest-way-to-read-text-files)
 
-**TLDR;** There was no one fastest method found, but in general, reading line by line and storing each line into a string was fast, and should be sufficient for this program. We can also make it faster using parallel threads if needed (but probably not to avoid race conditions). 
-
+**TLDR;** There was no one fastest method found, but in general, reading line by line and storing each line into a string was fast, and should be sufficient for this program. We can also make it faster using parallel threads if needed (i.e using Tasks to read each log file concurrently)
 
 ## Output
 #### Possible JSON output:
