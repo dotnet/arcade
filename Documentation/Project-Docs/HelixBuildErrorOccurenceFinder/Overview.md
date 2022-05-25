@@ -134,4 +134,5 @@ The plan for now is reading log files line by line and using `String.Contains`. 
 - Possibly use a profiler (like VS profiler) to look more into performance
 - Eventually we want to deploy to use the same data centres as the logs in Azure
 - Look more into handling failure cases like limiting user input i.e only 1 outstanding request allowed per person also “(limiting the input sizes, like only X total days, or Y total logs to scan), returning a partial result if we run out of time, a stateful server request, where you could ask "hey, I started this query a bit ago, do you have the answer yet"... Lots of exciting options!
+- Keep in mind the constraints for date range input - for now we are using a 7 day max duration but this can be changed if it is actually faster than expected
 
