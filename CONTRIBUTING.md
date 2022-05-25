@@ -13,7 +13,7 @@ This project has adopted the [Microsoft Open Source Code of Conduct](https://ope
 For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/)
 or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
 
-See https://github.com/dotnet/arcade/blob/main/Documentation/Policy/ArcadeContributorGuidance.md for principles, expectations, and guidance around issues when contributing to this repo.
+See [Arcade Contributor Guidance](Documentation/Policy/ArcadeContributorGuidance.md) for principles, expectations, and guidance around issues when contributing to this repo.
 
 See https://github.com/dotnet/arcade/blob/main/Documentation/Overview.md for a more general overview of the repository.
 
