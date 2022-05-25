@@ -146,6 +146,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             set;
         }
 
+        /// <summary>
+        /// If true, will skip creating MSIs for workload packs if they are part of a pack group
+        /// </summary>
+        public bool SkipRedundantMsiCreation
+        {
+            get;
+            set;
+        }
+
         public override bool Execute()
         {
             try
@@ -166,9 +175,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     WorkloadManifestPackage manifestPackage = new(workloadManifestPackageFile, PackageRootDirectory, ManifestMsiVersion, ShortNames, Log);
                     manifestPackages.Add(manifestPackage);
 
+                    Dictionary<string, WorkloadManifestMsi> manifestMsisByPlatform = new();
                     foreach (string platform in SupportedPlatforms)
                     {
-                        manifestMsisToBuild.Add(new WorkloadManifestMsi(manifestPackage, platform, BuildEngine, WixToolsetPath, BaseIntermediateOutputPath));
+                        var manifestMsi = new WorkloadManifestMsi(manifestPackage, platform, BuildEngine, WixToolsetPath, BaseIntermediateOutputPath);
+                        manifestMsisToBuild.Add(manifestMsi);
+                        manifestMsisByPlatform[platform] = manifestMsi;
                     }
 
                     // 2. Process the manifest itself to determine the set of packs involved and create
@@ -228,15 +240,19 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                                         groupPackage.Packs.Add(buildData[sourcePackage].Package);
                                     }
 
+                                    if (SkipRedundantMsiCreation)
+                                    {
+                                        buildData.Remove(sourcePackage);
+                                    }
                                 }
                             }
 
                             foreach (var groupPackage in groupsByPlatform.Values)
                             {
                                 packGroupPackages.Add(groupPackage);
+                                //  Add pack group to manifest MSI so that it can be included in WorkloadPackGroups.json
+                                manifestMsisByPlatform[groupPackage.Platform].WorkloadPackGroups.Add(groupPackage);
                             }
-
-                            //  TODO: Add WorkloadPackGroups.json to add to workload manifest MSI
 
                             // Finally, add a component for the workload in Visual Studio.
                             SwixComponent component = SwixComponent.Create(manifestPackage.SdkFeatureBand, workload, manifest,
@@ -292,6 +308,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 //  Parallization seems cause file access errors for heat
                 foreach (var packGroup in packGroupPackages)
                 {
+                    foreach (var pack in packGroup.Packs)
+                    {
+                        pack.Extract();
+                    }
+
                     WorkloadPackGroupMsi msi = new(packGroup, BuildEngine, WixToolsetPath, BaseIntermediateOutputPath);
                     ITaskItem msiOutputItem = msi.Build(MsiOutputPath, IceSuppressions);
 

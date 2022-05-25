@@ -4,7 +4,10 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text.Json;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Workloads.Wix;
 
@@ -21,6 +24,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// The directory reference to use when harvesting the package contents.
         /// </summary>
         private static readonly string ManifestIdDirectory = "ManifestIdDir";
+
+        public List<WorkloadPackGroupPackage> WorkloadPackGroups { get; } = new();
 
         public WorkloadManifestMsi(WorkloadManifestPackage package, string platform, IBuildEngine buildEngine, string wixToolsetPath,
             string baseIntermediateOutputPath) : 
@@ -50,11 +55,68 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
                 throw new Exception(Strings.HeatFailedToHarvest);
             }
 
+            //  Add WorkloadPackGroups.json to add to workload manifest MSI
+            string? jsonContentWxs = null;
+            string? jsonDirectory = null;
+
+            if (WorkloadPackGroups.Any())
+            {
+                jsonContentWxs = Path.Combine(WixSourceDirectory, "JsonContent.wxs");
+
+                List<WorkloadPackGroupJson> packGroupListJson = new List<WorkloadPackGroupJson>();
+                foreach (var packGroup in WorkloadPackGroups)
+                {
+                    var json = new WorkloadPackGroupJson()
+                    {
+                        GroupPackageId = packGroup.Id,
+                        GroupPackageVersion = packGroup.GetMsiMetadata().PackageVersion.ToString()
+                    };
+                    json.Packs.AddRange(packGroup.Packs.Select(p => new WorkloadPackJson()
+                    {
+                        PackId = p.Id,
+                        PackVersion = p.PackageVersion.ToString()
+                    }));
+
+                    packGroupListJson.Add(json);
+                }
+
+                string jsonAsString = JsonSerializer.Serialize(packGroupListJson, typeof(IList<WorkloadPackGroupJson>), new JsonSerializerOptions() { WriteIndented = true });
+                jsonDirectory = Path.Combine(WixSourceDirectory, "json");
+                Directory.CreateDirectory(jsonDirectory);
+                File.WriteAllText(Path.Combine(jsonDirectory, "WorkloadPackGroups.json"), jsonAsString);
+
+                HarvesterToolTask jsonHeat = new(BuildEngine, WixToolsetPath)
+                {
+                    DirectoryReference = ManifestIdDirectory,
+                    OutputFile = jsonContentWxs,
+                    Platform = this.Platform,
+                    SourceDirectory = jsonDirectory,
+                    SourceVariableName = "JsonSourceDir",
+                    ComponentGroupName = "CG_PackGroupJson"
+                };
+
+                if (!jsonHeat.Execute())
+                {
+                    throw new Exception(Strings.HeatFailedToHarvest);
+                }
+            }
+
             CompilerToolTask candle = CreateDefaultCompiler();
             candle.AddSourceFiles(packageContentWxs,
                 EmbeddedTemplates.Extract("DependencyProvider.wxs", WixSourceDirectory),
                 EmbeddedTemplates.Extract("dotnethome_x64.wxs", WixSourceDirectory),
                 EmbeddedTemplates.Extract("ManifestProduct.wxs", WixSourceDirectory));
+
+            if (jsonContentWxs != null)
+            {
+                candle.AddSourceFiles(jsonContentWxs);
+                candle.AddPreprocessorDefinition("IncludePackGroupJson", "true");
+                candle.AddPreprocessorDefinition("JsonSourceDir", jsonDirectory);
+            }
+            else
+            {
+                candle.AddPreprocessorDefinition("IncludePackGroupJson", "false");
+            }
 
             // Only extract the include file as it's not compilable, but imported by various source files.
             EmbeddedTemplates.Extract("Variables.wxi", WixSourceDirectory);
@@ -86,7 +148,23 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
                 iceSuppressions);
                         
             return msi;
-        }       
+        }
+
+
+        class WorkloadPackGroupJson
+        {
+            public string? GroupPackageId { get; set; }
+            public string? GroupPackageVersion { get; set; }
+
+            public List<WorkloadPackJson> Packs { get; set; } = new List<WorkloadPackJson>();
+        }
+
+        class WorkloadPackJson
+        {
+            public string? PackId { get; set; }
+
+            public string? PackVersion { get; set; }
+        }
     }
 }
 
