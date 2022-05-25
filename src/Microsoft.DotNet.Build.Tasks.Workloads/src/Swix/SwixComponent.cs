@@ -158,11 +158,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         /// <param name="sdkFeatureBand">The SDK featureband associated with the workload manifest.</param>
         /// <param name="workload">The workload definition to use for the component.</param>
         /// <param name="manifest">The workload manifest to which the workload belongs.</param>
+        /// <param name="packGroupId">The ID of a workload pack group to add as a dependency instead of individual packs</param>
         /// <param name="componentResources">Additional resources that can be used to override component attributes such
         /// as the title, description, and category.</param>
         /// <param name="shortNames">A set of items used to shorten the names of setup packages.</param>
         /// <returns>A SWIX component.</returns>
         public static SwixComponent Create(ReleaseVersion sdkFeatureBand, WorkloadDefinition workload, WorkloadManifest manifest,
+            string? packGroupId,
             ITaskItem[]? componentResources = null, ITaskItem[]? shortNames = null)
         {
             ITaskItem? resourceItem = componentResources?.Where(r => string.Equals(r.ItemSpec, workload.Id)).FirstOrDefault();
@@ -191,18 +193,26 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
 
             // TODO: Check for missing packs
 
-            foreach (WorkloadPackId packId in workload.Packs ?? Enumerable.Empty<WorkloadPackId>())
+            if (packGroupId != null)
             {
-                // Check whether the pack dependency is aliased to non-Windows RIDs. If so, we can't add a dependency for the pack
-                // because we won't be able to create any installers.
-                if (manifest.Packs.TryGetValue(packId, out WorkloadPack? pack))
+                //  Add dependency to workload pack group
+                component.AddDependency(packGroupId, new NuGetVersion(manifest.Version).Version, maxVersion: null);
+            }
+            else
+            {
+                foreach (WorkloadPackId packId in workload.Packs ?? Enumerable.Empty<WorkloadPackId>())
                 {
-                    if (pack.IsAlias && pack.AliasTo != null && !pack.AliasTo.Keys.Any(rid => s_SupportedRids.Contains(rid)))
+                    // Check whether the pack dependency is aliased to non-Windows RIDs. If so, we can't add a dependency for the pack
+                    // because we won't be able to create any installers.
+                    if (manifest.Packs.TryGetValue(packId, out WorkloadPack? pack))
                     {
-                        continue;
-                    }
+                        if (pack.IsAlias && pack.AliasTo != null && !pack.AliasTo.Keys.Any(rid => s_SupportedRids.Contains(rid)))
+                        {
+                            continue;
+                        }
 
-                    component.AddDependency(manifest.Packs[packId]);
+                        component.AddDependency(manifest.Packs[packId]);
+                    }
                 }
             }
 

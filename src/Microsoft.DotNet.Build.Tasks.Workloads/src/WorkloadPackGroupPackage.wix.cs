@@ -20,13 +20,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
         public string WorkloadName { get; }
 
-        public string Id => WorkloadName + ".WorkloadPacks";
+        public string Id { get; }
 
         public WorkloadPackGroupPackage(string platform, WorkloadManifestPackage manifestPackage, string workloadName)
         {
             Platform = platform;
             ManifestPackage = manifestPackage;
             WorkloadName = workloadName;
+            Id = Utils.ToSafeId(workloadName) + ".WorkloadPacks";
         }
 
         public MsiMetadata GetMsiMetadata()

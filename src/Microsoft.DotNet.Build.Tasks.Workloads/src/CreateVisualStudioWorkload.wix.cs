@@ -146,6 +146,18 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             set;
         }
 
+        public bool CreateWorkloadPackGroups
+        {
+            get;
+            set;
+        }
+
+        public bool UseWorkloadPackGroupsForVS
+        {
+            get;
+            set;
+        }
+
         /// <summary>
         /// If true, will skip creating MSIs for workload packs if they are part of a pack group
         /// </summary>
@@ -231,15 +243,20 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                                         _ = buildData[sourcePackage].FeatureBands[platform].Add(manifestPackage.SdkFeatureBand);
 
-                                        //  Add pack to pack group package
-                                        if (!groupsByPlatform.TryGetValue(platform, out WorkloadPackGroupPackage groupPackage))
+                                        
+                                        if (CreateWorkloadPackGroups)
                                         {
-                                            groupPackage = new WorkloadPackGroupPackage(platform, manifestPackage, workload.Id);
-                                            groupsByPlatform[platform] = groupPackage;
+                                            //  Add pack to pack group package
+                                            if (!groupsByPlatform.TryGetValue(platform, out WorkloadPackGroupPackage groupPackage))
+                                            {
+                                                groupPackage = new WorkloadPackGroupPackage(platform, manifestPackage, workload.Id);
+                                                groupsByPlatform[platform] = groupPackage;
+                                            }
+                                            groupPackage.Packs.Add(buildData[sourcePackage].Package);
                                         }
-                                        groupPackage.Packs.Add(buildData[sourcePackage].Package);
                                     }
 
+                                    //  TODO: Find a better way to track this
                                     if (SkipRedundantMsiCreation)
                                     {
                                         buildData.Remove(sourcePackage);
@@ -255,7 +272,16 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                             }
 
                             // Finally, add a component for the workload in Visual Studio.
-                            SwixComponent component = SwixComponent.Create(manifestPackage.SdkFeatureBand, workload, manifest,
+
+                            string packGroupId = null;
+                            //  Swix authoring here is the same for different platforms, so just get the pack group package for x64
+                            //  This means that we shouldn't decide to have a pack group for a workload for one platform but not another
+                            if (UseWorkloadPackGroupsForVS && groupsByPlatform.TryGetValue("x64", out var packGroupPackage))
+                            {
+                                packGroupId = packGroupPackage.Id;
+                            }
+
+                            SwixComponent component = SwixComponent.Create(manifestPackage.SdkFeatureBand, workload, manifest, packGroupId,
                                 ComponentResources, ShortNames);
                             swixComponents.Add(component);
                         }
@@ -328,7 +354,19 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                         msiItems.Add(msiOutputItem);
                     }
 
-                    //  TODO: Swix for workload pack groups
+                    if (UseWorkloadPackGroupsForVS)
+                    {
+                        MsiSwixProject swixProject = new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath);
+                        string swixProj = swixProject.Create();
+
+                        ITaskItem swixProjectItem = new TaskItem(swixProj);
+                        swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{packGroup.ManifestPackage.SdkFeatureBand}");
+
+                        lock (swixProjectItems)
+                        {
+                            swixProjectItems.Add(swixProjectItem);
+                        }
+                    }
                 };
 
                 // Generate MSIs for the workload manifests along with
