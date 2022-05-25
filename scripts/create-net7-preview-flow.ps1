@@ -122,7 +122,7 @@ AddFlow https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int $RuntimeChanne
 AddBatchedFlow https://github.com/dotnet/efcore $RuntimeChannel https://github.com/dotnet/aspnetcore $RuntimeBranch EveryBuild
 AddBatchedFlow https://github.com/dotnet/emsdk $RuntimeChannel https://github.com/dotnet/aspnetcore $RuntimeBranch EveryBuild
 AddFlow https://github.com/dotnet/emsdk $RuntimeChannel https://github.com/dotnet/runtime $RuntimeBranch EveryBuild
-AddFlow https://github.com/dotnet/icu $RuntimeChannel https://github.com/dotnet/runtime "dotnet/$RuntimeBranch" EveryBuild
+AddFlow https://github.com/dotnet/icu $RuntimeChannel https://github.com/dotnet/runtime $RuntimeBranch EveryBuild
 AddBatchedFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dotnet/aspnetcore $RuntimeBranch EveryBuild
 AddFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dotnet/efcore $RuntimeBranch EveryBuild
 AddFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dotnet/winforms $RuntimeBranch EveryBuild
