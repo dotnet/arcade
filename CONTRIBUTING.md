@@ -15,5 +15,5 @@ or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any addi
 
 See [Arcade Contributor Guidance](Documentation/Policy/ArcadeContributorGuidance.md) for principles, expectations, and guidance around issues when contributing to this repo.
 
-See https://github.com/dotnet/arcade/blob/main/Documentation/Overview.md for a more general overview of the repository.
+See [the overview page](https://github.com/dotnet/arcade/blob/main/Documentation/Overview.md) for a more general overview of the repository.
 
