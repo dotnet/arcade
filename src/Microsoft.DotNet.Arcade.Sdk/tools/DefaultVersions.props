@@ -72,7 +72,6 @@
     <UsingToolIbcOptimization>false</UsingToolIbcOptimization>
     <UsingToolVisualStudioIbcTraining>false</UsingToolVisualStudioIbcTraining>
     <UsingToolSymbolUploader>false</UsingToolSymbolUploader>
-    <UsingToolNuGetRepack>false</UsingToolNuGetRepack>
   </PropertyGroup>
 
   <!--
