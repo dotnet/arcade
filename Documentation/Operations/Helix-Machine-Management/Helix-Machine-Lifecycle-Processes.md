@@ -132,6 +132,79 @@ If you feel this removal is in error, or believe a specific expiration should be
     - Create new issues in [dotnet/arcade](https://github.com/dotnet/arcade/) identifying the queue and linking to the build. Include links to these issues under the "queues that will expire in the next 7 days" or "after the next 7 days" headings as appropriate.
 - When all the above is complete for a given week, you may close the issue.
 
+##### Monthly (closest business day to the 15th):
+**Request DDFUN updates for on-premises Helix machines**
+
+We depend on our partner team DevDiv Fundamentals ("DDFUN") for machine maintenance tasks. DDFUN vendors use table "OsobInventory" in storage account 'helixscripts2' to view the machines.  We want any machine that shows up in HelixEnvironment "Production" with Partition Key not equal to "Not in Helix" to be at least reviewed for update monthly. See @MattGal or @Ilyas1974 if you believe you need to gain read access to this table. If new queues are found in the table that are not below, please make a pull request to update the list.
+
+We need to ensure and drive that the machines we are running are updated to the latest possible versions. Since we cannot rely on AzSecPack and automated reporting for these updates, we'll generate IcM tickets requesting this. For each of the three categories of operating system below (Linux, MacOS, and Windows) please create an IcM ticket [here](https://ddfunlandingpagev120210311150648.azurewebsites.net/) using the "[Other](https://portal.microsofticm.com/imp/v3/incidents/create?tmpl=E3619N)" template.
+
+After creating such an IcM for each of the three groups of machines, use [this template](https://dnceng.visualstudio.com/internal/_workitems/create/Task?templateId=5ad0c1bc-5e95-45a1-b40b-de81c12b5b4a&ownerId=3f024d6c-9884-4f38-a598-025fca9dfcd2) to link the three IcM tickets, and keep the issue open until all three are resolved.
+
+
+Suggested IcM Description:
+```
+Machines in the following queues need to be updated to their latest patch versions.
+
+<List of queues from below>
+
+- No major version updates should occur in operating systems (e.g. do not allow a Windows 10 system to update to Windows 11, or OSX 10.15 to update to 11.0/12.0)
+- For windows, Windows update should be executed until it stops prompting for changes.
+- For MacOS, use the provided UI to take system updates while remaining in the same release band.
+- Where possible (use judgment), if linux package managers have recommended updates these should be taken.
+```
+
+Linux machines (raspbian 9 iot devices should NOT get updated)
+
+- alpine.amd64.tiger.perf
+- ubuntu.1804.amd64.owl.perf
+- ubuntu.1804.amd64.tiger.perf
+- ubuntu.1804.amd64.tiger.perf.open
+- ubuntu.1804.arm64.perf
+- ubuntu.1804.armarch
+- ubuntu.1804.armarch.open
+
+MacOS Machines
+
+- osx.1015.amd64
+- osx.1015.amd64.appletv.open
+- osx.1015.amd64.iphone.open
+- osx.1015.amd64.iphone.perf
+- osx.1015.amd64.open
+- osx.1100.amd64
+- osx.1100.amd64.appletv.open
+- osx.1100.amd64.open
+- osx.1100.amd64.scouting.open
+- osx.1100.arm64
+- osx.1100.arm64.appletv.open
+- osx.1100.arm64.open
+- osx.1200.amd64.iphone.open
+- osx.1200.amd64.open
+- osx.1200.arm64
+- osx.1200.arm64.open
+
+Windows Machines
+
+- windows.10.amd64.19h1.tiger.perf
+- windows.10.amd64.19h1.tiger.perf.open
+- windows.10.amd64.20h2.owl.perf
+- windows.10.amd64.android.open
+- windows.10.amd64.galaxy.perf
+- windows.10.amd64.pixel.perf
+- windows.10.arm32
+- windows.10.arm32.iot
+- windows.10.arm32.iot.open
+- windows.10.arm32.open
+- windows.10.arm64
+- windows.10.arm64.appcompat
+- windows.10.arm64.open
+- windows.10.arm64.perf
+- windows.10.arm64.perf.surf
+- windows.10.arm64.tof
+- windows.10.arm64v8.open
+- windows.11.amd64.cet
+- windows.11.amd64.cet.open
+
 ##### Possible issues you may encounter:
 
 When the dotnet-helix-machines-ci build to be rolled out fails with `{QueueOrImageName} has estimated removal date: {c.EstimatedRemovalDate}, which has elapsed.  Either extend this date in the yaml definition or remove it from usage to proceed.`:

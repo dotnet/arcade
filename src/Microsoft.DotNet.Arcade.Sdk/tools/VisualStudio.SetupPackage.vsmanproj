@@ -16,6 +16,7 @@
 
   <PropertyGroup>
     <ResolveNuGetPackages>false</ResolveNuGetPackages>
+    <ImportDirectoryPackagesProps>false</ImportDirectoryPackagesProps>
     <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
     <ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
   </PropertyGroup>
@@ -29,6 +30,7 @@
     <TargetName>$(ComponentName)</TargetName>
     <OutputPath>$(SetupOutputPath)</OutputPath>
     <IntermediateOutputPath>$(ComponentIntermediateOutputPath)</IntermediateOutputPath>
+    <ArtifactsDir>$(ArtifactsDir)</ArtifactsDir>
 
     <!-- Note that the url is expected to end with ';' (%3B) -->
     <ManifestPublishUrl Condition="'$(VisualStudioDropName)' != ''">https://vsdrop.corp.microsoft.com/file/v1/$(VisualStudioDropName)%3B</ManifestPublishUrl>
@@ -37,13 +39,12 @@
 
   <ItemGroup>
     <_PackageStubFiles Include="$(ComponentIntermediateOutputPath)*.stub"/>
-    <MergeManifest Include="@(_PackageStubFiles->'$(SetupOutputPath)%(Filename).json')"/>
   </ItemGroup>
 
-  <Import Project="$(SwixBuildPath)build\MicroBuild.Plugins.*.targets" />
+  <Import Project="$(SwixBuildPath)build\Microsoft.VisualStudioEng.MicroBuild.Plugins.SwixBuild.targets" />
 
   <Target Name="_BuildManifest" DependsOnTargets="_SetManifestBuildVersion;GenerateSetupManifest" />
-  
+
   <!--
     Each stub file contains VSIX version of the respective VSIX file.
     We require that all VSIXes included in a single VS insertion component have the same version.
@@ -74,6 +75,12 @@
 
     <PropertyGroup>
       <ManifestBuildVersion>@(_VsixVersionNoDuplicates)</ManifestBuildVersion>
+      <ManifestVsixName>@(_VsixVersionNoDuplicates->'%(Name)')</ManifestVsixName>
     </PropertyGroup>
+    <ItemGroup>
+    <MergeManifest Include="$(SetupOutputPath)$(ComponentName).json">
+      <SBOMFileLocation>$(ArtifactsDir)sbom\$(ManifestVsixName.Substring(0, $(ManifestVsixName.LastIndexOf('.'))))\spdx_2.2\manifest.spdx.json</SBOMFileLocation>
+      </MergeManifest>
+  </ItemGroup>
   </Target>
 </Project>

@@ -53,7 +53,7 @@ MakeDefaultChannel https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int $Ru
 MakeDefaultChannel https://github.com/dotnet/aspnetcore $RuntimeBranch $RuntimeChannel
 MakeDefaultChannel https://github.com/dotnet/efcore $RuntimeBranch $RuntimeChannel
 MakeDefaultChannel https://github.com/dotnet/emsdk $RuntimeBranch $RuntimeChannel
-MakeDefaultChannel https://github.com/dotnet/icu $RuntimeBranch $RuntimeChannel
+MakeDefaultChannel https://github.com/dotnet/icu "dotnet/$RuntimeBranch" $RuntimeChannel
 MakeDefaultChannel https://github.com/dotnet/runtime $RuntimeBranch $RuntimeChannel
 MakeDefaultChannel https://github.com/dotnet/windowsdesktop $RuntimeBranch $RuntimeChannel
 MakeDefaultChannel https://github.com/dotnet/wpf $RuntimeBranch $RuntimeChannel
@@ -105,7 +105,7 @@ AddArcadeFlow https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int $Runtime
 AddArcadeFlow https://github.com/dotnet/aspnetcore $RuntimeBranch
 AddArcadeFlow https://github.com/dotnet/efcore $RuntimeBranch
 AddArcadeFlow https://github.com/dotnet/emsdk $RuntimeBranch
-AddArcadeFlow https://github.com/dotnet/icu $RuntimeBranch
+AddArcadeFlow https://github.com/dotnet/icu "dotnet/$RuntimeBranch"
 AddArcadeFlow https://github.com/dotnet/runtime $RuntimeBranch
 AddArcadeFlow https://github.com/dotnet/windowsdesktop $RuntimeBranch
 AddArcadeFlow https://github.com/dotnet/wpf $RuntimeBranch
