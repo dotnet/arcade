@@ -25,5 +25,25 @@ namespace Microsoft.DotNet.Helix.JobSender.Test
 
             Assert.Equal("http://microsoft.com/blob", uri);
         }
+
+        [Fact]
+        public void LongRunningTest()
+        {
+            Func<long, bool> isPrime = x =>
+            {
+                var result = true;
+                for (var i = 2L; i < long.MaxValue; i++)
+                {
+                    if (x % i == 0)
+                    {
+                        result = false;
+                    }
+                }
+
+                return result;
+            };
+
+            Assert.True(isPrime(7));
+        }
     }
 }
