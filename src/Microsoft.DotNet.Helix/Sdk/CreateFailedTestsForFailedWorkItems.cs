@@ -1,12 +1,9 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.AzureDevOps;
-using Microsoft.DotNet.Helix.Client.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -71,9 +68,16 @@ namespace Microsoft.DotNet.Helix.Sdk
                         }
                     }
                 });
-
-            var testResults = (JArray)testResultData["value"];
-            return (int)testResults.First()["id"];
+            
+            if (testResultData != null){
+                if ((JArray)testResultData["value"] != null)
+                {
+                    var testResults = (JArray)testResultData["value"];
+                    return (int)testResults.First()["id"];
+                }
+                return 0;
+            }
+            return 0;
         }
     }
 }
