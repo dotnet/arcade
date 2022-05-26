@@ -129,6 +129,7 @@ The plan for now is reading log files line by line and using `String.Contains`. 
 - Taking an optional parameter for context lines (e.g also return the 5 lines surrounding the hit line - think GDB)
 - Allowing pattern matching using regex (currently only allow for fixed string matching)
 - Allow user to pass token to authenticate and allow search in non-external jobs
+- Include retries in the output (`Attempt` and `LocalIteration` columns from `Files` table)
 
 ### Issues/questions to look into down the road
 - Possibly use a profiler (like VS profiler) to look more into performance
