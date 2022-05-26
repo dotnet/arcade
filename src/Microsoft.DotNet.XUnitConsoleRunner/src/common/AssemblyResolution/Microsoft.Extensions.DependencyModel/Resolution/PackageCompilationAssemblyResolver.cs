@@ -1,5 +1,5 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
 using System.Collections.Generic;
@@ -56,23 +56,8 @@ namespace Internal.Microsoft.Extensions.DependencyModel.Resolution
                return new string[] { packageDirectory };
            }
 
-           string basePath;
-           if (osPlatform == Platform.Windows)
-           {
-               basePath = environment.GetEnvironmentVariable("USERPROFILE");
-           }
-           else
-           {
-               basePath = environment.GetEnvironmentVariable("HOME");
-           }
-
-           if (string.IsNullOrEmpty(basePath))
-           {
-               return new string[] { string.Empty };
-           }
-
+           string basePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
            return new string[] { Path.Combine(basePath, ".nuget", "packages") };
-
         }
 
         public bool TryResolveAssemblyPaths(CompilationLibrary library, List<string> assemblies)
