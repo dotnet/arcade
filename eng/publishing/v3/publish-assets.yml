@@ -75,6 +75,7 @@ jobs:
           /p:AzureStorageTargetFeedPAT='$(dotnetfeed-storage-access-key-1)'
           /p:AkaMSClientId=$(akams-client-id)
           /p:AkaMSClientSecret=$(akams-client-secret)
+          /p:CheckEolTargetFramework=false
           ${{ parameters.artifactsPublishingAdditionalParameters }}
 
     - template: /eng/common/templates/steps/publish-logs.yml
