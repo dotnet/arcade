@@ -70,9 +70,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 foreach (var manifestFile in ManifestFiles)
                 {
                     WorkloadManifest manifest = WorkloadManifestReader.ReadWorkloadManifest(
-                        Path.GetFileNameWithoutExtension(manifestFile.ItemSpec),
-                        File.OpenRead(manifestFile.ItemSpec),
-                        manifestFile.ItemSpec);
+                        Path.GetFileNameWithoutExtension(manifestFile.ItemSpec), File.OpenRead(manifestFile.ItemSpec), manifestFile.ItemSpec);
 
                     foreach (var pack in manifest.Packs.Values)
                     {
