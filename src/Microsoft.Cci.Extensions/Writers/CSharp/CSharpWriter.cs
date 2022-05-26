@@ -159,7 +159,7 @@ namespace Microsoft.Cci.Writers
                 // For compile-time compat, the following rules should work for producing a reference assembly. We drop all private fields,
                 // but add back certain synthesized private fields for a value type (struct) as follows:
 
-                // 1. If there is a reference type field in the struct or within the fields' type closure,
+                // 1. If there is a ref field or reference type field in the struct or within the fields' type closure,
                 //    it should emit a reference type and a value type dummy field.
                 //    - The reference type dummy field is needed in order to inform the compiler to block
                 //      taking pointers to this struct because the GC will not track updating those references.
@@ -184,7 +184,9 @@ namespace Microsoft.Cci.Writers
                 // this blog is helpful as well http://blog.paranoidcoding.com/2016/02/15/are-private-members-api-surface.html
 
                 List<IFieldDefinition> newFields = new List<IFieldDefinition>();
-                var includedVisibleFields = fields.Where(f => _cciFilter.Include(f));
+
+                // Do not include ByRef fields as they would introduce metadata that some compiler may find troublesome (e.g., C++/CLI).
+                var includedVisibleFields = fields.Where(f => _cciFilter.Include(f) && !f.Type.IsByRef());
                 includedVisibleFields = includedVisibleFields.OrderBy(GetMemberKey, StringComparer.OrdinalIgnoreCase);
 
                 var excludedFields = fields.Except(includedVisibleFields).Where(f => !f.IsStatic);
