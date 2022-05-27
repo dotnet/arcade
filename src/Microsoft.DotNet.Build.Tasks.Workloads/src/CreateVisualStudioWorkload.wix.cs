@@ -172,6 +172,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             get;
             set;
         }
+        /// <summary>
+        /// Allow VS workload generation to proceed if any nupkgs declared in the manifest are not found on disk.
+        /// </summary>
+        public bool AllowMissingPacks
+        {
+            get;
+            set;
+        } = false;
 
         public override bool Execute()
         {
@@ -227,7 +235,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                                 {
                                     if (!File.Exists(sourcePackage))
                                     {
-                                        throw new FileNotFoundException(message: null, fileName: sourcePackage);
+                                        if (AllowMissingPacks) {
+                                            Log.LogMessage($"Pack {sourcePackage} - {string.Join(",", platforms)} could not be found, it will be skipped.");
+                                            continue;
+                                        } else {
+                                            throw new FileNotFoundException(message: null, fileName: sourcePackage);
+                                        }
                                     }
 
                                     // Create new build data and add the pack if we haven't seen it previously.
@@ -239,6 +252,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                                     foreach (string platform in platforms)
                                     {
+                                        Log.LogMessage($"Processing {sourcePackage} - {platform}...");
                                         // If we haven't seen the platform, create a new entry, then add
                                         // the current feature band. This allows us to track platform specific packs
                                         // across multiple feature bands and manifests.
