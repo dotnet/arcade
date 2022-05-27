@@ -184,9 +184,7 @@ namespace Microsoft.Cci.Writers
                 // this blog is helpful as well http://blog.paranoidcoding.com/2016/02/15/are-private-members-api-surface.html
 
                 List<IFieldDefinition> newFields = new List<IFieldDefinition>();
-
-                // Do not include ByRef fields as they would introduce metadata that some compiler may find troublesome (e.g., C++/CLI).
-                var includedVisibleFields = fields.Where(f => _cciFilter.Include(f) && !f.Type.IsByRef());
+                var includedVisibleFields = fields.Where(f => _cciFilter.Include(f));
                 includedVisibleFields = includedVisibleFields.OrderBy(GetMemberKey, StringComparer.OrdinalIgnoreCase);
 
                 var excludedFields = fields.Except(includedVisibleFields).Where(f => !f.IsStatic);
