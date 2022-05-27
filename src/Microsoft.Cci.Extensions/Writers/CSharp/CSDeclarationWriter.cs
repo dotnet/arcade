@@ -437,6 +437,11 @@ namespace Microsoft.Cci.Writers.CSharp
 
                 WriteSymbol("]");
             }
+            else if (type.IsByRef())
+            {
+                WriteSymbol("ref", addSpace: true);
+                WriteTypeNameInner(((IManagedPointerType)type).TargetType);
+            }
             else
             {
                 WriteTypeNameInner(type);
