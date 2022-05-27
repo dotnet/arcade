@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
-        /// The set of feature bands that include contain a reference to this pack.
+        /// For each platform, the set of feature bands that include contain a reference to this pack.
         /// </summary>
         public Dictionary<string, HashSet<ReleaseVersion>> FeatureBands = new();
 

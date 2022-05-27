@@ -12,32 +12,31 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
     internal class WorkloadPackGroupPackage
     {
-        public WorkloadManifestPackage ManifestPackage { get; }
-
         public List<WorkloadPackPackage> Packs { get; set; } = new();
 
-        public string Platform { get; }
+        public Dictionary<string, List<WorkloadManifestPackage>> ManifestsPerPlatform { get; } = new();
 
         public string WorkloadName { get; }
 
         public string Id { get; }
 
-        public WorkloadPackGroupPackage(string platform, WorkloadManifestPackage manifestPackage, string workloadName)
+        public WorkloadPackGroupPackage(string workloadName)
         {
-            Platform = platform;
-            ManifestPackage = manifestPackage;
             WorkloadName = workloadName;
             Id = Utils.ToSafeId(workloadName) + ".WorkloadPacks";
         }
 
         public MsiMetadata GetMsiMetadata()
         {
-            return new MsiMetadata(Id, ManifestPackage.PackageVersion, ManifestPackage.MsiVersion, ManifestPackage.Authors,
-                ManifestPackage.Copyright,
+            //  Take latest manifest from arbitrary platform to use for metadata
+            var manifestPackage = ManifestsPerPlatform.First().Value.OrderBy(m => m.Version).Last();
+
+            return new MsiMetadata(Id, manifestPackage.PackageVersion, manifestPackage.MsiVersion, manifestPackage.Authors,
+                manifestPackage.Copyright,
                 description: "Workload packs for " + WorkloadName,
                 title: "Workload packs for " + WorkloadName,
-                ManifestPackage.LicenseUrl,
-                ManifestPackage.ProjectUrl,
+                manifestPackage.LicenseUrl,
+                manifestPackage.ProjectUrl,
                 swixPackageId: Id);
         }
     }

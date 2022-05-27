@@ -18,9 +18,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
     {
         WorkloadPackGroupPackage _package;
 
-        public WorkloadPackGroupMsi(WorkloadPackGroupPackage package, IBuildEngine buildEngine, string wixToolsetPath,
+        public WorkloadPackGroupMsi(WorkloadPackGroupPackage package, string platform, IBuildEngine buildEngine, string wixToolsetPath,
             string baseIntermediatOutputPath)
-             : base(package.GetMsiMetadata(), buildEngine, wixToolsetPath, package.Platform, baseIntermediatOutputPath)
+             : base(package.GetMsiMetadata(), buildEngine, wixToolsetPath, platform, baseIntermediatOutputPath)
         {
             _package = package;
         }

@@ -167,6 +167,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             set;
         }
 
+        public bool DisableParallelPackageGroupProcessing
+        {
+            get;
+            set;
+        }
+
         public override bool Execute()
         {
             try
@@ -176,7 +182,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 List<WorkloadManifestMsi> manifestMsisToBuild = new();
                 List<SwixComponent> swixComponents = new();
                 Dictionary<string, BuildData> buildData = new();
-                List<WorkloadPackGroupPackage> packGroupPackages = new();
+                Dictionary<string, WorkloadPackGroupPackage> packGroupPackages = new();
 
                 // First construct sets of everything that needs to be built. This includes
                 // all the packages (manifests and workload packs) that need to be extracted along
@@ -212,6 +218,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                         if ((workload is WorkloadDefinition wd) && (wd.Platforms == null || wd.Platforms.Any(platform => platform.StartsWith("win"))) && (wd.Packs != null))
                         {
                             Dictionary<string, WorkloadPackGroupPackage> groupsByPlatform = new Dictionary<string, WorkloadPackGroupPackage>();
+                            Dictionary<string, List<WorkloadPackPackage>> packsInWorkloadByPlatform = new();
 
                             foreach (WorkloadPackId packId in wd.Packs)
                             {
@@ -243,17 +250,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                                         _ = buildData[sourcePackage].FeatureBands[platform].Add(manifestPackage.SdkFeatureBand);
 
-                                        
-                                        if (CreateWorkloadPackGroups)
+                                        if (!packsInWorkloadByPlatform.ContainsKey(platform))
                                         {
-                                            //  Add pack to pack group package
-                                            if (!groupsByPlatform.TryGetValue(platform, out WorkloadPackGroupPackage groupPackage))
-                                            {
-                                                groupPackage = new WorkloadPackGroupPackage(platform, manifestPackage, workload.Id);
-                                                groupsByPlatform[platform] = groupPackage;
-                                            }
-                                            groupPackage.Packs.Add(buildData[sourcePackage].Package);
+                                            packsInWorkloadByPlatform[platform] = new();
                                         }
+                                        packsInWorkloadByPlatform[platform].Add(buildData[sourcePackage].Package);
                                     }
 
                                     //  TODO: Find a better way to track this
@@ -264,14 +265,32 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                                 }
                             }
 
-                            foreach (var groupPackage in groupsByPlatform.Values)
+                            if (CreateWorkloadPackGroups)
                             {
-                                packGroupPackages.Add(groupPackage);
-                                //  Add pack group to manifest MSI so that it can be included in WorkloadPackGroups.json
-                                manifestMsisByPlatform[groupPackage.Platform].WorkloadPackGroups.Add(groupPackage);
+                                //  TODO: Support passing in data to skip creating pack groups for certain packs (possibly EMSDK, because it's large)
+                                foreach (var kvp in packsInWorkloadByPlatform)
+                                {
+                                    string platform = kvp.Key;
+
+                                    //  The key is the paths to the packages included in the pack group, sorted in alphabetical order
+                                    string uniquePackGroupKey = string.Join("\r\n", kvp.Value.Select(p => p.PackagePath).OrderBy(p => p));
+                                    if (!packGroupPackages.TryGetValue(uniquePackGroupKey, out var groupPackage))
+                                    {
+                                        groupPackage = new WorkloadPackGroupPackage(workload.Id);
+                                        groupPackage.Packs.AddRange(kvp.Value);
+                                        packGroupPackages[uniquePackGroupKey] = groupPackage;
+                                    }
+
+                                    if (!groupPackage.ManifestsPerPlatform.ContainsKey(platform))
+                                    {
+                                        groupPackage.ManifestsPerPlatform[platform] = new();
+                                    }
+                                    groupPackage.ManifestsPerPlatform[platform].Add(manifestPackage);
+
+                                    manifestMsisByPlatform[platform].WorkloadPackGroups.Add(groupPackage);
+                                }
                             }
 
-                            // Finally, add a component for the workload in Visual Studio.
 
                             string packGroupId = null;
                             //  Swix authoring here is the same for different platforms, so just get the pack group package for x64
@@ -281,6 +300,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                                 packGroupId = packGroupPackage.Id;
                             }
 
+                            // Finally, add a component for the workload in Visual Studio.
                             SwixComponent component = SwixComponent.Create(manifestPackage.SdkFeatureBand, workload, manifest, packGroupId,
                                 ComponentResources, ShortNames);
                             swixComponents.Add(component);
@@ -331,43 +351,51 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     });
                 });
 
-                //  Parallization seems cause file access errors for heat
-                foreach (var packGroup in packGroupPackages)
+
+                //  Parallel processing of pack groups was causing file access errors for heat in an earlier version of this code
+                //  So we support a flag to disable the parallelization if that starts happening again
+                PossiblyParallelForEach(!DisableParallelPackageGroupProcessing, packGroupPackages.Values, packGroup =>
                 {
                     foreach (var pack in packGroup.Packs)
                     {
                         pack.Extract();
                     }
 
-                    WorkloadPackGroupMsi msi = new(packGroup, BuildEngine, WixToolsetPath, BaseIntermediateOutputPath);
-                    ITaskItem msiOutputItem = msi.Build(MsiOutputPath, IceSuppressions);
-
-                    // Create the JSON manifest for CLI based installations.
-                    string msiJsonPath = MsiProperties.Create(msiOutputItem.ItemSpec);
-
-                    // Generate a .csproj to package the MSI and its manifest for CLI installs.
-                    MsiPayloadPackageProject csproj = new(msi.Metadata, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, Path.GetFullPath(msiJsonPath));
-                    msiOutputItem.SetMetadata(Metadata.PackageProject, csproj.Create());
-
-                    lock (msiItems)
+                    foreach (var platform in packGroup.ManifestsPerPlatform.Keys)
                     {
-                        msiItems.Add(msiOutputItem);
-                    }
+                        WorkloadPackGroupMsi msi = new(packGroup, platform, BuildEngine, WixToolsetPath, BaseIntermediateOutputPath);
+                        ITaskItem msiOutputItem = msi.Build(MsiOutputPath, IceSuppressions);
 
-                    if (UseWorkloadPackGroupsForVS)
-                    {
-                        MsiSwixProject swixProject = new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath);
-                        string swixProj = swixProject.Create();
+                        // Create the JSON manifest for CLI based installations.
+                        string msiJsonPath = MsiProperties.Create(msiOutputItem.ItemSpec);
 
-                        ITaskItem swixProjectItem = new TaskItem(swixProj);
-                        swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{packGroup.ManifestPackage.SdkFeatureBand}");
+                        // Generate a .csproj to package the MSI and its manifest for CLI installs.
+                        MsiPayloadPackageProject csproj = new(msi.Metadata, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, Path.GetFullPath(msiJsonPath));
+                        msiOutputItem.SetMetadata(Metadata.PackageProject, csproj.Create());
 
-                        lock (swixProjectItems)
+                        lock (msiItems)
                         {
-                            swixProjectItems.Add(swixProjectItem);
+                            msiItems.Add(msiOutputItem);
+                        }
+
+                        if (UseWorkloadPackGroupsForVS)
+                        {
+                            MsiSwixProject swixProject = new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath);
+                            string swixProj = swixProject.Create();
+
+                            PossiblyParallelForEach(!DisableParallelPackageGroupProcessing, packGroup.ManifestsPerPlatform[platform], manifestPackage =>
+                            {
+                                ITaskItem swixProjectItem = new TaskItem(swixProj);
+                                swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{manifestPackage.SdkFeatureBand}");
+
+                                lock (swixProjectItems)
+                                {
+                                    swixProjectItems.Add(swixProjectItem);
+                                }
+                            });
                         }
                     }
-                };
+                });
 
                 // Generate MSIs for the workload manifests along with
                 // a .csproj to package the MSI and a SWIX project for
@@ -423,6 +451,21 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             }
 
             return !Log.HasLoggedErrors;
+        }
+
+        static void PossiblyParallelForEach<T>(bool runInParallel, IEnumerable<T> source, Action<T> body)
+        {
+            if (runInParallel)
+            {
+                _ = Parallel.ForEach(source, body);
+            }
+            else
+            {
+                foreach (var item in source)
+                {
+                    body(item);
+                }
+            }
         }
     }
 }
