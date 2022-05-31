@@ -11,6 +11,8 @@ The Build Analysis check includes these details:
   - Link to test history of the specific test
   - Link to the Helix artifacts produced by a test
   - Link to the test execution details 
+- Alerting on errors that are occurring on the pull request that are related to reported Known Issues. 
+  - Links to create a new Known Issue for either a product issue or an infrastructure issue. 
 
 Each Build Analysis page also includes a "was this helpful" link. This allows you to call out specific highlights or lowlights in your experience with the check. This feedback is then used by the Dev WF team to refine the analysis.
 

@@ -1,6 +1,6 @@
 # Build Analysis
 
-The Build Analysis Check is a service to improve the GitHub Pull Request experience by highlighting build and test information most helpful to .NET developers. Its goal is to make Pull Request results more actionable.
+The Build Analysis Check makes GitHub Pull Request results more actionable. It is a service to improve the GitHub Pull Request experience by highlighting build and test information most helpful to .NET developers. 
 
 ## What does it do?
 
