@@ -68,8 +68,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                         }
                     }
                 });
-            
-            if (testResultData != null){
+
+            if (testResultData != null)
+            {
                 if ((JArray)testResultData["value"] != null)
                 {
                     var testResults = (JArray)testResultData["value"];
