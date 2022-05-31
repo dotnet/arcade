@@ -94,6 +94,19 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             componentGroupRefElement.ReplaceWith(Enumerable.Range(1, _package.Packs.Count).Select(n => new XElement(ns + "ComponentGroupRef", new XAttribute("Id", "CG_PackageContents" + n))));
             productDoc.Save(productWxsPath);
 
+            // Add registry keys for packs in the pack group.
+            string registryWxsPath = EmbeddedTemplates.Extract("Registry.wxs", WixSourceDirectory);
+            var registryDoc = XDocument.Load(registryWxsPath);
+            ns = registryDoc.Root.Name.Namespace;
+            var registryKeyElement = registryDoc.Root.Descendants(ns + "RegistryKey").Single();
+            foreach (var pack in _package.Packs)
+            {
+                registryKeyElement.Add(new XElement(ns + "RegistryKey", new XAttribute("Key", pack.Id),
+                                        new XElement(ns + "RegistryKey", new XAttribute("Key", pack.PackageVersion),
+                                        new XElement(ns + "RegistryValue", new XAttribute("Value", ""), new XAttribute("Type", "string")))));
+            }
+            registryDoc.Save(registryWxsPath);
+
             CompilerToolTask candle = CreateDefaultCompiler();
 
             candle.AddSourceFiles(packageContentWxsFiles);
@@ -103,7 +116,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
                 directoriesWxsPath,
                 EmbeddedTemplates.Extract("dotnethome_x64.wxs", WixSourceDirectory),
                 productWxsPath,
-                EmbeddedTemplates.Extract("Registry.wxs", WixSourceDirectory));
+                registryWxsPath);
 
             // Only extract the include file as it's not compilable, but imported by various source files.
             EmbeddedTemplates.Extract("Variables.wxi", WixSourceDirectory);
@@ -115,6 +128,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
 
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.UpgradeCode, $"{upgradeCode}");
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.DependencyProviderKeyName, $"{providerKeyName}");
+            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.InstallationRecordKey, $"InstalledPackGroups");
             foreach (var kvp in sourceDirectoryNamesAndValues)
             {
                 candle.AddPreprocessorDefinition(kvp.Key, kvp.Value);
