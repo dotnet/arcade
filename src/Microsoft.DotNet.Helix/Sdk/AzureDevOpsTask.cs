@@ -105,7 +105,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             {
                 return await RetryAsync(
                         async () => await function(),
-                        ex => Log.LogMessage(MessageImportance.Low, $"Azure Dev Ops Operation failed: {ex}\nRetrying..."),
+                        ex => Log.LogMessage(MessageImportance.Normal, $"Azure Dev Ops Operation failed: {ex}\nRetrying..."),
                         CancellationToken.None);
             }
             catch (HttpRequestException ex)
