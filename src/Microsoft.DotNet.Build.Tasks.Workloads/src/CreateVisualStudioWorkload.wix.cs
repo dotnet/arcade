@@ -217,7 +217,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     {
                         if ((workload is WorkloadDefinition wd) && (wd.Platforms == null || wd.Platforms.Any(platform => platform.StartsWith("win"))) && (wd.Packs != null))
                         {
-                            Dictionary<string, WorkloadPackGroupPackage> groupsByPlatform = new Dictionary<string, WorkloadPackGroupPackage>();
                             Dictionary<string, List<WorkloadPackPackage>> packsInWorkloadByPlatform = new();
 
                             foreach (WorkloadPackId packId in wd.Packs)
@@ -265,6 +264,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                                 }
                             }
 
+                            string packGroupId = null;
+
                             if (CreateWorkloadPackGroups)
                             {
                                 //  TODO: Support passing in data to skip creating pack groups for certain packs (possibly EMSDK, because it's large)
@@ -277,6 +278,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                                     if (!packGroupPackages.TryGetValue(uniquePackGroupKey, out var groupPackage))
                                     {
                                         groupPackage = new WorkloadPackGroupPackage(workload.Id);
+                                        packGroupId = groupPackage.Id;
                                         groupPackage.Packs.AddRange(kvp.Value);
                                         packGroupPackages[uniquePackGroupKey] = groupPackage;
                                     }
@@ -289,15 +291,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                                     manifestMsisByPlatform[platform].WorkloadPackGroups.Add(groupPackage);
                                 }
-                            }
-
-
-                            string packGroupId = null;
-                            //  Swix authoring here is the same for different platforms, so just get the pack group package for x64
-                            //  This means that we shouldn't decide to have a pack group for a workload for one platform but not another
-                            if (UseWorkloadPackGroupsForVS && groupsByPlatform.TryGetValue("x64", out var packGroupPackage))
-                            {
-                                packGroupId = packGroupPackage.Id;
                             }
 
                             // Finally, add a component for the workload in Visual Studio.
