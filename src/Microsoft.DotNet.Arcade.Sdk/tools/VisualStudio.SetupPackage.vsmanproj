@@ -31,6 +31,7 @@
     <OutputPath>$(SetupOutputPath)</OutputPath>
     <IntermediateOutputPath>$(ComponentIntermediateOutputPath)</IntermediateOutputPath>
     <ArtifactsDir>$(ArtifactsDir)</ArtifactsDir>
+    <GenerateSbom>$(GenerateSbom)<GenerateSbom>
 
     <!-- Note that the url is expected to end with ';' (%3B) -->
     <ManifestPublishUrl Condition="'$(VisualStudioDropName)' != ''">https://vsdrop.corp.microsoft.com/file/v1/$(VisualStudioDropName)%3B</ManifestPublishUrl>
@@ -39,6 +40,7 @@
 
   <ItemGroup>
     <_PackageStubFiles Include="$(ComponentIntermediateOutputPath)*.stub"/>
+    <MergeManifest condition="'$(GenerateSbom)' == 'false'" Include="@(_PackageStubFiles->'$(SetupOutputPath)%(Filename).json')"/>
   </ItemGroup>
 
   <Import Project="$(SwixBuildPath)build\Microsoft.VisualStudioEng.MicroBuild.Plugins.SwixBuild.targets" />
@@ -77,7 +79,7 @@
       <ManifestBuildVersion>@(_VsixVersionNoDuplicates)</ManifestBuildVersion>
       <ManifestVsixName>@(_VsixVersionNoDuplicates->'%(Name)')</ManifestVsixName>
     </PropertyGroup>
-    <ItemGroup>
+    <ItemGroup Condition= "'$(GenerateSbom)' == 'true'">
     <MergeManifest Include="$(SetupOutputPath)$(ComponentName).json">
       <SBOMFileLocation>$(ArtifactsDir)sbom\$(ManifestVsixName.Substring(0, $(ManifestVsixName.LastIndexOf('.'))))\spdx_2.2\manifest.spdx.json</SBOMFileLocation>
       </MergeManifest>
