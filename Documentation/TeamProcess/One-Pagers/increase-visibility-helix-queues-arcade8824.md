@@ -28,6 +28,42 @@ We can leverage our existing `BuildFailureAnalysis` projects to add another GitH
 
 **See [Design Mockup](IncreaseVisibilityHelixQueues/design-mockup.md) for a mockup of the design.**
 
+Our main goal is to add a new check, titled `Helix Queue Insights` that will be included directly in the PR a dev is working on.
+
+#### Subprojects
+
+This a list of all the features this one-pager is for.
+
+* Create a new check in the Github PR
+* Show the dev a list of queues (separated by on and off prem)
+* Show the top 5 queues with the highest work item wait time.
+* Create "insights" into the queues of their pipelines. Tell the dev that queues are:
+  1. **Extremely** high work item wait time. Is it likely this queue will timeout?
+  2. **Heavier** than usual wait time. This queue wait isn't normal and it will take more time for this queue.
+  3. **Lighter** than usual wait time. This test will run faster than normal! 
+* Estimated times for:
+  * Helix tests to complete
+  * How long it will take for a build machine to be obtained
+* Tracking how accurate our estimates are (from the Estimated Times feature)
+* A high level overview status of Helix
+  * Are Helix, our on-prem and off-prem queues, etc. operating normally?
+  * Red/Yellow/Green, similar to the [Azure DevOps Status](https://status.dev.azure.com/)
+
+#### Projects in Scope
+
+In the coming 10 weeks of the internship, I will limit my scope to the following projects:
+
+* Create a new check in the Github PR
+* Show the dev a list of queues (separated by on and off prem)
+* Show the top 5 queues with the highest work item wait time.
+* Create "insights" into the queues of their pipelines. Tell the dev that queues are:
+
+**Stretch goals:**
+* Estimated times for helix tests and getting an AzDO build machine
+
+
+### Technical Implementation Details
+
 1. Be notified of when a new PR is created.
    1. Our existing code can already do this. Specifically, our `AnalysisProcessor` in our `BuildResultAnalysisProcess` microservice.
    2. This needs to be changed to add a new Checkrun, as the Helix Queue Insights will be its own checkrun to avoid running into the 65k character limit.
@@ -87,7 +123,7 @@ curl -u "a:$AZDO_PAT" https://dev.azure.com/dnceng/9ee6d478-d288-47f7-aacc-f6e6d
   - *Possibly:* Matrix of truth
   - In all of these dependencies besides the Matrix of Truth, we can consume these now. 
 - Is there a goal to have this work completed by, and what is the risk of not hitting that date? (e.g. missed OKRs, increased pain-points for consumers, functionality is required for the next product release, et cetera)
-  - August 2022. There is a risk of having a half-baked feature that will require our team to finish implementing,.
+  - August 2022. I've limited my scope of features I will work on to be able to deliver complete features.
 - Does anything the new feature depend on consume a limited/throttled API resource? 
   - While not throttled, the preview pipeline API can take ~10 seconds to return.
   - While we are only planning this check run to be a snapshot when the PR is created, GitHub gets grumpy when updating a checkrun numerous times.
