@@ -6,6 +6,16 @@ Our customers are dissatisfied with information about the status of the Helix qu
 
 We currently have an awesome Grafana dashboard, but the discoverability is close to zero, and it doesn't clearly identify what is going on with the *overall* status of Helix. It does a great job of putting data into context (is this queue depth normal for this queue).
 
+The data it provides is too much for a typical dev. A dev's main concerns are:
+
+* How long will my build and tests take?
+* This queue is taking really long, is everything okay?
+* What's the overall status of Helix (outage, infrastructure issues, etc.)
+
+The dashboard doesn't answer these questions directly, but they can be *inferred* from the dashboard.
+
+We want a solution that puts this information right in front of devs.
+
 We can leverage our existing `BuildFailureAnalysis` projects to add another GitHub check that can present clear insights into the status of Helix, directly into the GitHub PR they are working on.
 
 
