@@ -1,19 +1,24 @@
 # Disable CI triggers, only called using Maestro
 trigger: none
 
+
+
 # Moves code from GitHub into internal repos
-steps:
-- task: NuGetToolInstaller@1
-  displayName: 'Install NuGet.exe'
-  
-- task: NuGetAuthenticate@1
-  
-- task: NuGetCommand@2
-  displayName: 'Restore'
-  inputs:
-    command: 'restore'
-    feedsToUse: 'select'
-    vstsFeed: 'internal/dotnet6-internal'
-    includeNuGetOrg: false
-    restoreSolution: $(Build.SourcesDirectory)\eng\common\sdl\packages.config
+- job: Linux
+  pool:
+    vmImage: 'windows-latest'
+  steps:
+  - task: NuGetToolInstaller@1
+    displayName: 'Install NuGet.exe'
+    
+  - task: NuGetAuthenticate@1
+    
+  - task: NuGetCommand@2
+    displayName: 'Restore'
+    inputs:
+      command: 'restore'
+      feedsToUse: 'config'
+      nugetConfigPath: $(Build.SourcesDirectory)\NuGet.config
+      restoreSolution: $(Build.SourcesDirectory)\eng\common\sdl\packages.config
+      verbosityRestore: detailed
     
