@@ -93,7 +93,7 @@ curl -u "a:$AZDO_PAT" https://dev.azure.com/dnceng/9ee6d478-d288-47f7-aacc-f6e6d
 
 - How are we measuring the “usefulness” to the stakeholders of the business objectives?
   - After the feature is implemented and initial rolled out, we can ask members of the CI Counsel if the feature is providing usefulness, and things we can change to make it more useful.
-  - We will also use the sentiment tracker from `Helix.Utility.UserSentiment` to gather information on whether the new information is helpful.
+  - We will also use the sentiment tracker from [`Helix.Utility.UserSentiment`](https://dev.azure.com/dnceng/internal/_git/dotnet-helix-service?path=/src/Utility/Helix.Utility.UserSentiment) to gather information on whether the new information is helpful.
 - How are we tracking the usage of this new feature?
   - The same way we track who has enabled .NET Build Analysis
   - There is currently no plan on tracking how many people have actually viewed this new checkrun.
