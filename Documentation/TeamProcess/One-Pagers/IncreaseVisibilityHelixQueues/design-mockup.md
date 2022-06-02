@@ -46,8 +46,6 @@ See our [Helix status overview dashboard]().
 
 For more in-depth information on the status of Helix, visit our [Grafana Dashboard]().
 
-![](https://raw.githubusercontent.com/dotnet/brand/main/dotnet-bot-illustrations/Website%20Illustrations/apache-spark-analytics-engine-bot-machine.svg)
-
 ## Your Queues
 
 ☁️ **dotnet/runtime** is currently configured to submit to the following Helix queues:
