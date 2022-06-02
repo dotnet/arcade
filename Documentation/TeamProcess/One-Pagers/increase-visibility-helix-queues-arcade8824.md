@@ -67,17 +67,11 @@ In the coming 10 weeks of the internship, I will limit my scope to the following
 1. Be notified of when a new PR is created.
    1. Our existing code can already do this. Specifically, our `AnalysisProcessor` in our `BuildResultAnalysisProcess` microservice.
    2. This needs to be changed to add a new Checkrun, as the Helix Queue Insights will be its own checkrun to avoid running into the 65k character limit. In addition, the Build Analysis page gets overwritten when any of the pipelines in the repo completes. We also don't want to mix build results with the status of Helix queues.
-2. Parse a repository's pipelines the determine the unique queues they use.
-   1. We can use AzDo APIs for this.
-   2. Pipelines for a project can be queried with [this REST API](https://docs.microsoft.com/en-us/rest/api/azure/devops/pipelines/pipelines/list?view=azure-devops-rest-6.0)
-      1. This returns a list of all the pipelines in the public AzDo project. We will have to iterate over the list of pipelines and determine the pipelines that belong to the project in question.
-   3. We can generate a "preview run" of a pipeline, and AzDo will spit out the final yaml of the pipeline with [this REST API](https://docs.microsoft.com/en-us/rest/api/azure/devops/pipelines/preview/preview?view=azure-devops-rest-7.1)
-      1. This API call takes ~10 seconds for `dotnet/runtime`. We should have a cache of the API call.
-      2. We can also look into using the *Matrix of Truth* to determine what projects uses what queues.
-      3. This YAML can be parsed and the Helix queues can be added to a HashSet. Example one-liner to spit out this YAML:
-```bash
-curl -u "a:$AZDO_PAT" https://dev.azure.com/dnceng/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_apis/pipelines/686/preview?api-version=7.1-preview.1 -X POST -H 'Content-Type: application/json' --data '{"previewRun": true}' | jq .finalYaml | sed 's/\\n/\n/g'
-```
+   
+2. Determine which queues the repo uses.
+   1. We will use the Matrix of Truth for this data.
+   2. Their data has a build job that Ilya mentioned at least updates once a week, and we can pull this information programmatically.
+
 3. Query the work item wait time and queue size for that pipeline's list of queues.
    1. Currently Grafana has this data, with Kusto queries that we can pull and use.
    2. We will simply pull the queries that Grafana uses them to present the data.
@@ -120,8 +114,7 @@ curl -u "a:$AZDO_PAT" https://dev.azure.com/dnceng/9ee6d478-d288-47f7-aacc-f6e6d
   - AzDo
   - Grafana
   - GitHub
-  - *Possibly:* Matrix of truth
-  - In all of these dependencies besides the Matrix of Truth, we can consume these now. 
+  - Matrix of truth
 - Is there a goal to have this work completed by, and what is the risk of not hitting that date? (e.g. missed OKRs, increased pain-points for consumers, functionality is required for the next product release, et cetera)
   - August 2022. I've limited my scope of features I will work on to be able to deliver complete features.
 - Does anything the new feature depend on consume a limited/throttled API resource? 
