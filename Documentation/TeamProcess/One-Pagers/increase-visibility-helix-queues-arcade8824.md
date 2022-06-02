@@ -66,7 +66,7 @@ In the coming 10 weeks of the internship, I will limit my scope to the following
 
 1. Be notified of when a new PR is created.
    1. Our existing code can already do this. Specifically, our `AnalysisProcessor` in our `BuildResultAnalysisProcess` microservice.
-   2. This needs to be changed to add a new Checkrun, as the Helix Queue Insights will be its own checkrun to avoid running into the 65k character limit. In addition, the Build Analysis page gets overwritten when any of the pipelines in the repo completes.
+   2. This needs to be changed to add a new Checkrun, as the Helix Queue Insights will be its own checkrun to avoid running into the 65k character limit. In addition, the Build Analysis page gets overwritten when any of the pipelines in the repo completes. We also don't want to mix build results with the status of Helix queues.
 2. Parse a repository's pipelines the determine the unique queues they use.
    1. We can use AzDo APIs for this.
    2. Pipelines for a project can be queried with [this REST API](https://docs.microsoft.com/en-us/rest/api/azure/devops/pipelines/pipelines/list?view=azure-devops-rest-6.0)
