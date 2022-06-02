@@ -70,7 +70,7 @@ In the coming 10 weeks of the internship, I will limit my scope to the following
    
 2. Determine which queues the repo uses.
    1. We will use the Matrix of Truth for this data.
-   2. Their data has a build job that Ilya mentioned at least updates once a week, and we can pull this information programmatically.
+   2. Their data has is built from a job that Ilya mentioned at least updates once a week, and we can pull this information programmatically.
 
 3. Query the work item wait time and queue size for that pipeline's list of queues.
    1. Currently Grafana has this data, with Kusto queries that we can pull and use.
