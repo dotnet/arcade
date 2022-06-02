@@ -4,7 +4,7 @@ trigger: none
 
 
 # Moves code from GitHub into internal repos
-- job: Linux
+- job:
   pool:
     vmImage: 'windows-latest'
   steps:
