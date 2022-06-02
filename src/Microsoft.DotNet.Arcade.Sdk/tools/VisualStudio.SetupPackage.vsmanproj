@@ -42,7 +42,7 @@
     <_PackageStubFiles Include="$(ComponentIntermediateOutputPath)*.stub"/>
   </ItemGroup>
 
-  <ItemGroup condition="'$(GenerateSbom)' == 'false'">
+  <ItemGroup Condition="'$(GenerateSbom)' == 'false'">
     <MergeManifest Include="@(_PackageStubFiles->'$(SetupOutputPath)%(Filename).json')"/>
   </ItemGroup>
 
