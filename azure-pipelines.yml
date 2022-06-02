@@ -9,7 +9,7 @@ steps:
 - task: NuGetAuthenticate@1
   
 - task: NuGetCommand@2
-  displayName: 'Install Guardian'
+  displayName: 'Restore'
   inputs:
     command: 'restore'
     feedsToUse: 'select'
