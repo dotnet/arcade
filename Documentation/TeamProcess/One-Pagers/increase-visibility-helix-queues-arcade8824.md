@@ -68,6 +68,7 @@ curl -u "a:$AZDO_PAT" https://dev.azure.com/dnceng/9ee6d478-d288-47f7-aacc-f6e6d
   - The design mockup and the information it provides are beneficial to our customers and will allow them to get a high level overview of relevant information about the status of Helix.
 - What are your unknowns?
   - The level of satisfaction this will bring to our customers.
+  - The accuracy of our data. Queue behavior can wildly fluctuate between outages and large test runs. Ideally we should have a system to track the accuracy of our predictions to have the data for our customers and improve our estimates.
 - What dependencies will this epic/feature(s) have?
   - Kusto
   - AzDo
