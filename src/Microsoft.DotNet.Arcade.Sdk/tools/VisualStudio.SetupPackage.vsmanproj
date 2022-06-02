@@ -31,7 +31,7 @@
     <OutputPath>$(SetupOutputPath)</OutputPath>
     <IntermediateOutputPath>$(ComponentIntermediateOutputPath)</IntermediateOutputPath>
     <ArtifactsDir>$(ArtifactsDir)</ArtifactsDir>
-    <GenerateSbom>$(GenerateSbom)<GenerateSbom>
+    <GenerateSbom>$(GenerateSbom)</GenerateSbom>
 
     <!-- Note that the url is expected to end with ';' (%3B) -->
     <ManifestPublishUrl Condition="'$(VisualStudioDropName)' != ''">https://vsdrop.corp.microsoft.com/file/v1/$(VisualStudioDropName)%3B</ManifestPublishUrl>
