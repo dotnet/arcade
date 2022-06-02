@@ -1,5 +1,7 @@
 # Pipeline Status
 
+*The list of queues is cached weekly. If your PR changes what queues your pipelines use, this information will not show the updated queues.*
+
 ## Estimated Times
 
 | Item                 | Estimated Time |
