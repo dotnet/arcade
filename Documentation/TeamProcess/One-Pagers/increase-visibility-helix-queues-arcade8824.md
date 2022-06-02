@@ -78,6 +78,7 @@ curl -u "a:$AZDO_PAT" https://dev.azure.com/dnceng/9ee6d478-d288-47f7-aacc-f6e6d
   - August 2022. There is a risk of having a half-baked feature that will require our team to finish implementing,.
 - Does anything the new feature depend on consume a limited/throttled API resource? 
   - While not throttled, the preview pipeline API can take ~10 seconds to return.
+  - While we are only planning this check run to be a snapshot when the PR is created, GitHub gets grumpy when updating a checkrun numerous times.
 - Have you estimated what maximum usage is? 
   - No, but this type of feature is already implemented, and this project will extend off that.
 - Are you utilizing any response data that allows intelligent back-off from the service?
