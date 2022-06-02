@@ -18,7 +18,7 @@ We can leverage our existing `BuildFailureAnalysis` projects to add another GitH
 
 **See [Design Mockup](IncreaseVisibilityHelixQueues/design-mockup.md) for a mockup of the design.**
 
-1. Be notified of when a new PR is merged.
+1. Be notified of when a new PR is created.
    1. Our existing code can already do this. Specifically, our `AnalysisProcessor` in our `BuildResultAnalysisProcess` microservice.
    2. This needs to be changed to add a new Checkrun, as the Helix Queue Insights will be its own checkrun to avoid running into the 65k character limit.
 2. Parse a repository's pipelines the determine the unique queues they use.
