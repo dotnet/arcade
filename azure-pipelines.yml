@@ -22,4 +22,5 @@ jobs:
       nugetConfigPath: $(Build.SourcesDirectory)\NuGet.config
       restoreSolution: $(Build.SourcesDirectory)\eng\common\sdl\packages.config
       verbosityRestore: detailed
+      restoreDirectory: $(Build.SourcesDirectory)\packages
     
