@@ -40,7 +40,10 @@
 
   <ItemGroup>
     <_PackageStubFiles Include="$(ComponentIntermediateOutputPath)*.stub"/>
-    <MergeManifest condition="'$(GenerateSbom)' == 'false'" Include="@(_PackageStubFiles->'$(SetupOutputPath)%(Filename).json')"/>
+  </ItemGroup>
+
+  <ItemGroup condition="'$(GenerateSbom)' == 'false'">
+    <MergeManifest Include="@(_PackageStubFiles->'$(SetupOutputPath)%(Filename).json')"/>
   </ItemGroup>
 
   <Import Project="$(SwixBuildPath)build\Microsoft.VisualStudioEng.MicroBuild.Plugins.SwixBuild.targets" />
