@@ -72,6 +72,7 @@ curl -u "a:$AZDO_PAT" https://dev.azure.com/dnceng/9ee6d478-d288-47f7-aacc-f6e6d
   - Kusto
   - AzDo
   - Grafana
+  - GitHub
   - *Possibly:* Matrix of truth
   - In all of these dependencies besides the Matrix of Truth, we can consume these now. 
 - Is there a goal to have this work completed by, and what is the risk of not hitting that date? (e.g. missed OKRs, increased pain-points for consumers, functionality is required for the next product release, et cetera)
