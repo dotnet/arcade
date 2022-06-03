@@ -22,12 +22,14 @@ Here's a list of the top 5 most congested queues in your pipeline:
 
 ## Queue Insights
 
-❌ The queue [`OSX.1015.Amd64.Open`]() is overloaded.
+❌ The queue [`OSX.1015.Amd64.Open`]() has a high wait time of Xhrs and Ymin.
 * **Your tests will likely timeout**.
 * Current queue count: **560** (*+57%* over moving average)
+* Current work item wait time: **5hr 28min**
 
-⚠️ Currently, [`Windows.10.Amd64.Client21H1.Open`]() is experiencing a high volume of traffic.
-* Estimated time in queue: **35m**. (*+22%*)
+⚠️ Currently, [`Windows.10.Amd64.Client21H1.Open`]() is experiencing a higher than normal work item wait time.
+* Current queue count: **560** (*+57%* over moving average)
+* Current work item wait time: **2hr 5min**. (*+22%*)
 * There are no known issues with our infrastructure.
 * ❗**There is currently a known issue with our infrastructure.** [Details.]()
 
