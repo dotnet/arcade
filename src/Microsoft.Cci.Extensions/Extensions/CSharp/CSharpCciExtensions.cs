@@ -794,6 +794,11 @@ namespace Microsoft.Cci.Extensions.CSharp
             return attributes.HasAttributeOfType("System.Runtime.CompilerServices.IsReadOnlyAttribute");
         }
 
+        public static bool HasNativeIntegerAttribute(this IEnumerable<ICustomAttribute> attributes)
+        {
+            return attributes.HasAttributeOfType("System.Runtime.CompilerServices.NativeIntegerAttribute");
+        }
+
         public static string[] GetValueTupleNames(this IEnumerable<ICustomAttribute> attributes)
         {
             string[] names = null;
