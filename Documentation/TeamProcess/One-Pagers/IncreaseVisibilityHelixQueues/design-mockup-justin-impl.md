@@ -20,32 +20,6 @@ Here's a list of the top 5 highest work item wait
 | [`Windows.11.Amd64.Client.Open`]() | **43min 2s**        | *-7%* 📉                  |
 
 
-## Queue Insights
-
-❌ The queue [`OSX.1015.Amd64.Open`]() has a high wait time of Xhrs and Ymin.
-* **Your tests will likely timeout**.
-* Current queue count: **560** (*+57%* over moving average)
-* Current work item wait time: **5hr 28min**
-
-⚠️ Currently, [`Windows.10.Amd64.Client21H1.Open`]() is experiencing a higher than normal work item wait time.
-* Current queue count: **560** (*+57%* over moving average)
-* Current work item wait time: **2hr 5min**. (*+22%*)
-* There are no known issues with our infrastructure.
-* ❗**There is currently a known issue with our infrastructure.** [Details.]()
-
-✅ [`OSX.1200.ARM64.Open`]() has unusually low traffic.
-* Estimated time in queue: **3m 4s**. (*-34%*)
-
-## .NET Engineering Services Infrastructure Status
-
-| Product        | Status |
-| -------------- | :----: |
-| Helix          |   ✅    |
-| Queues         |   ⚠️    |
-| On-Prem Queues |   ❌    |
-
-See our [Helix status overview dashboard]().
-
 ## Grafana Dashboard
 
 For more in-depth information on the status of Helix, visit our [Grafana Dashboard]().

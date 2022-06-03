@@ -26,7 +26,7 @@ We can leverage our existing `BuildFailureAnalysis` projects to add another GitH
 
 ### Implementation
 
-**See [Design Mockup](IncreaseVisibilityHelixQueues/design-mockup.md) for a mockup of the design.**
+**See [Design Mockup](IncreaseVisibilityHelixQueues/design-mockup.md) for a mockup of the overall, final design.**
 
 Our main goal is to add a new check, titled `Helix Queue Insights` that will be included directly in the PR a dev is working on.
 
@@ -48,6 +48,9 @@ This a list of all the features this one-pager is for.
 * A high level overview status of Helix
   * Are Helix, our on-prem and off-prem queues, etc. operating normally?
   * Red/Yellow/Green, similar to the [Azure DevOps Status](https://status.dev.azure.com/)
+* Draw a detailed graph of how builds and tests flow to show the user.
+  * For example, the roots are the different builds and the leafs are different Helix queues
+  * This will show the dev the overall hierarchy of their pipeline and allow them to optimize their pipeline by submitting jobs early to busy pools or reducing queues they use (thanks Stu)
 
 #### Projects in Scope
 
@@ -56,7 +59,9 @@ In the coming 10 weeks of the internship, I will limit my scope to the following
 * Create a new check in the Github PR
 * Show the dev a list of queues (separated by on and off prem)
 * Show the top 5 queues with the highest work item wait time.
-* Create "insights" into the queues of their pipelines. Tell the dev that queues are:
+* ~~Create "insights" into the queues of their pipelines. Tell the dev that queues are:~~
+
+The result I'm looking to achieve is [this mockup](IncreaseVisibilityHelixQueues/design-mockup-justin-impl.md).
 
 **Stretch goals:**
 * Estimated times for helix tests and getting an AzDO build machine
