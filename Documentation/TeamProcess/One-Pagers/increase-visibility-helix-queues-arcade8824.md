@@ -105,17 +105,17 @@ The highest severity of the statuses will be selected as the status of the queue
 
 See the [Helix Insights MA Crossovers Dashboard](https://dotnet-eng-grafana.westus2.cloudapp.azure.com/d/aOlx_y9nk/helix-insights-ma-crossovers?orgId=1&from=now-7d&to=now&var-QueueName=windows.10.amd64&viewPanel=2) for examples of these moving averages.
 
-#### Overloaded
+#### ❌ Overloaded
 
 Overloaded will be defined when:
 
 `2-hr MA > (24-hr MA * 2)`
 
-#### HighVolume
+#### ⚠️ HighVolume
 
 `(6-hr MA / 1.5) > 24-hr MA`
 
-#### Light
+#### ✅ Light
 
 `2-hr MA < (24-hr MA / 2)`
 
