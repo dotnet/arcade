@@ -96,6 +96,31 @@ In the coming 10 weeks of the internship, I will limit my scope to the following
 7. Send the checkrun to GitHub.
    1. The markdown will not be refreshed whenever the user opens the page, instead it'll be a "one-shot" when the PR is submitted.
 
+
+### Defining Queue Insight Statuses
+
+We'll define the status of the queue `Overloaded`, `HighVolume`, `Light`. These statuses will be determined by the cross-overs of the the 24-hr, 6-hr, and 2-hr moving averages of the 95th percentile of Work Item Wait Times.
+
+The highest severity of the statuses will be selected as the status of the queue. (It's possible a queue can both be `overloaded` and `high volume`, so select `overloaded`)
+
+See the [Helix Insights MA Crossovers Dashboard](https://dotnet-eng-grafana.westus2.cloudapp.azure.com/d/aOlx_y9nk/helix-insights-ma-crossovers?orgId=1&from=now-7d&to=now&var-QueueName=windows.10.amd64&viewPanel=2) for examples of these moving averages.
+
+#### Overloaded
+
+Overloaded will be defined when:
+
+`2-hr MA > (24-hr MA * 2)`
+
+#### HighVolume
+
+`(6-hr MA / 1.5) > 24-hr MA`
+
+#### Light
+
+`2-hr MA < (24-hr MA / 2)`
+
+
+
 ### Proof of Concept (POC)
 
 *In progress.* (This will be updated to a link to the PR once it's created)
