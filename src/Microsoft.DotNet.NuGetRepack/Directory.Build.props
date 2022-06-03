@@ -3,9 +3,4 @@
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory)\.., Directory.Build.props))\Directory.Build.props" />
 
-  <!-- Don't include NuGetRepack in source-build until we find a reason to use it. -->
-  <PropertyGroup>
-    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
-  </PropertyGroup>
-
 </Project>
