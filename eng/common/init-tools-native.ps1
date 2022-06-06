@@ -174,7 +174,7 @@ try {
     Write-Host "Native tools are available from" (Convert-Path -Path $InstallBin)
     Write-Host "##vso[task.prependpath]$(Convert-Path -Path $InstallBin)"
   }
-  else {
+  elseif (-not ($PathPromotion)) {
     Write-Error "Native tools install directory does not exist, installation failed"
     exit 1
   }
