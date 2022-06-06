@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             Guid upgradeCode = Utils.CreateUuid(UpgradeCodeNamespaceUuid, $"{Metadata.Id};{Platform}");
             string providerKeyName = $"{_package.Id},{Metadata.PackageVersion},{Platform}";
 
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.UpgradeCode, $"{upgradeCode}");
+            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.UpgradeCode, $"{upgradeCode:B}");
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.DependencyProviderKeyName, $"{providerKeyName}");
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.InstallationRecordKey, $"InstalledPackGroups");
             foreach (var kvp in sourceDirectoryNamesAndValues)

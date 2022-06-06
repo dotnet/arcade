@@ -155,7 +155,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.PackageId, Metadata.Id);
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.PackageVersion, $"{Metadata.PackageVersion}");
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.Platform, Platform);
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.ProductCode, $"{Guid.NewGuid()}");
+            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.ProductCode, $"{Guid.NewGuid():B}");
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.ProductName, GetProductName(Platform));
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.ProductVersion, $"{Metadata.MsiVersion}");
 
