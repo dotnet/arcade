@@ -116,6 +116,23 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.Contains(@"vs.dependency id=maui.desktop", componentSwr);
         }
 
+        [Fact]
+        public void ItCreatesDependenciesForPackGroup()
+        {
+            WorkloadManifest manifest = Create("WorkloadManifest.json");
+            WorkloadDefinition workload = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
+            var packGroupId = "microsoft.net.sdk.blazorwebassembly.aot.WorkloadPacks";
+            SwixComponent component = SwixComponent.Create(new ReleaseVersion("7.0.100"), workload, manifest, packGroupId: packGroupId);
+            ComponentSwixProject project = new(component, BaseIntermediateOutputPath, BaseOutputPath);
+            string swixProj = project.Create();
+
+            string componentSwr = File.ReadAllText(Path.Combine(Path.GetDirectoryName(swixProj), "component.swr"));
+
+            //  Should have only one dependency, use string.Split to check how many times vs.dependency occurs in swr
+            Assert.Equal(2, componentSwr.Split(new[] { "vs.dependency" }, StringSplitOptions.None).Length);
+            Assert.Contains($"vs.dependency id={packGroupId}", componentSwr);
+        }
+
         private static WorkloadManifest Create(string filename)
         {
             return WorkloadManifestReader.ReadWorkloadManifest(Path.GetFileNameWithoutExtension(filename),
