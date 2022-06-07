@@ -48,27 +48,21 @@
 
   <Import Project="$(SwixBuildPath)build\Microsoft.VisualStudioEng.MicroBuild.Plugins.SwixBuild.targets" />
 
-  <Target Name="_BuildManifest" DependsOnTargets="_SetManifestBuildVersion;GenerateSetupManifest" />
+  <Target Name="_BuildManifest" DependsOnTargets="_GetVsixFileVersions;GenerateSbomForVSInsertion;GenerateVSManifest;GenerateSetupManifest" />
 
-  <!--
-    Each stub file contains VSIX version of the respective VSIX file.
-    We require that all VSIXes included in a single VS insertion component have the same version.
-    This version will be set to ManifestBuildVersion.
-  -->
-  <Target Name="_SetManifestBuildVersion">
+  <Target Name="_GetVsixFileVersions">
 
     <ReadLinesFromFile File="%(_PackageStubFiles.Identity)">
       <Output TaskParameter="Lines" ItemName="_StubLine"/>
     </ReadLinesFromFile>
+    <ItemGroup>
+      <_VsixFileInfo Include="@(_StubLine)"
+      Name="$([MSBuild]::ValueOrDefault('%(_StubLine.Identity)', '').Split('/')[0])"
+      Version="$([MSBuild]::ValueOrDefault('%(_StubLine.Identity)', '').Split('/')[1])" />
+     </ItemGroup>
 
     <ItemGroup>
-      <_StubLineSplit Include="@(_StubLine)" 
-                      Name="$([MSBuild]::ValueOrDefault('%(_StubLine.Identity)', '').Split('/')[0])" 
-                      Version="$([MSBuild]::ValueOrDefault('%(_StubLine.Identity)', '').Split('/')[1])" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <_VsixVersion Include="%(_StubLineSplit.Version)" Name="%(_StubLineSplit.Name)" />
+      <_VsixVersion Include="%(_VsixFileInfo.Version)" Name="%(_VsixFileInfo.Name)" />
     </ItemGroup>
 
     <RemoveDuplicates Inputs="@(_VsixVersion)">
@@ -77,7 +71,31 @@
 
     <Error Text="Visual Studio component '$(ComponentName)' contains multiple VSIX files with different versions: @(_VsixVersionNoDuplicates->'%(Name) (version %(Identity))', ', ')"
            Condition="@(_VsixVersionNoDuplicates->Count()) != 1"/>
+  </Target>
 
+  <Target Name="GenerateSbomForVSInsertion"
+        Inputs="@(_VsixFileInfo->'$(VisualStudioSetupInsertionPath)\%(Name)')"
+        Outputs="@(_VsixFileInfo->'$(VisualStudioSetupIntermediateOutputPath\$(ComponentName)\%(Name)')"
+        DependsOnTargets="_GetVsixFileVersions"
+        Condition="'$(GenerateSbom)' != 'false'">
+    <Message Text="Generating SBOM manifest" Importance="high"/>
+    <MakeDir Directories="$(VisualStudioSetupIntermediateOutputPath\$(ComponentName)\Sbom"/>
+    <Unzip
+      SourceFiles="@(_VsixFileInfo->'$(VisualStudioSetupInsertionPath)\%(Name)')"
+      DestinationFolder="@(_VsixFileInfo->'$(VisualStudioSetupIntermediateOutputPath\$(ComponentName)\%(Name)')"
+      OverwriteReadOnlyFiles="true"/>
+
+    <Exec Command = "$(DotNetTool) $(NUGET_PACKAGES)microsoft.manifesttool.crossplatform\$(MicrosoftManifestToolCrossPlatformVersion)\Content\Microsoft.ManifestTool.dll generate -b @(_VsixFileInfo->'$(VisualStudioSetupIntermediateOutputPath\$(ComponentName)\%(Name)') -m $(VisualStudioSetupIntermediateOutputPath\$(ComponentName)\Sbom -pn VsInsertion -V Verbose"/>
+    <Message Text="Completed generating SBOM manifest for %(VsixFile.Filename)." Importance="high"/>
+  </Target>
+
+  <!--
+    Each stub file contains VSIX version of the respective VSIX file.
+    We require that all VSIXes included in a single VS insertion component have the same version.
+    This version will be set to ManifestBuildVersion.
+  -->
+
+  <Target Name= "GenerateVSManifest" DependsOnTargets="GenerateSbomForVSInsertion">
     <PropertyGroup>
       <ManifestBuildVersion>@(_VsixVersionNoDuplicates)</ManifestBuildVersion>
       <ManifestVsixName>@(_VsixVersionNoDuplicates->'%(Name)')</ManifestVsixName>
