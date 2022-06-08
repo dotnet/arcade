@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// </summary>
         /// <param name="pack"></param>
         /// <returns>An enumerable of tuples. Each tuple contains the full path of the NuGet package and support platforms.</returns>
-        internal static IEnumerable<(string, string[])> GetSourcePackages(string packageSource, WorkloadPack pack)
+        internal static IEnumerable<(string sourcePackage, string[] platforms)> GetSourcePackages(string packageSource, WorkloadPack pack)
         {
             if (pack.IsAlias && pack.AliasTo != null)
             {

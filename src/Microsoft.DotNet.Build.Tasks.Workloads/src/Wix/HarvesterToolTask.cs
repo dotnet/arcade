@@ -87,6 +87,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
             set;
         } = HeatSuppressions.SuppressRegistryHarvesting | HeatSuppressions.SuppressRootDirectory;
 
+        public string SourceVariableName { get; set; } = "SourceDir";
+
         /// <summary>
         /// The name of the WiX harvest too.
         /// </summary>
@@ -110,7 +112,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
             CommandLineBuilder.AppendSwitchIfNotNull("-cg ", ComponentGroupName);
 
             // Override File/@Source="SourceDir" with a preprocessor variable, $(var.SourceDir)
-            CommandLineBuilder.AppendSwitch("-var var.SourceDir");
+            CommandLineBuilder.AppendSwitch($"-var var.{SourceVariableName}");
 
             // GUID generation 
             if (GenerateGuids == GuidOptions.GenerateAtCompileTime)

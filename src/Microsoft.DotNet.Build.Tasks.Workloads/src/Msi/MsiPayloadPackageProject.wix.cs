@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             get;
         }
 
-        public MsiPayloadPackageProject(WorkloadPackageBase package, ITaskItem msi, string baseIntermediateOutputPath, string baseOutputPath, string msiJsonPath) :
+        public MsiPayloadPackageProject(MsiMetadata package, ITaskItem msi, string baseIntermediateOutputPath, string baseOutputPath, string msiJsonPath) :
             base(baseIntermediateOutputPath, baseOutputPath)
         {
             string platform = msi.GetMetadata(Metadata.Platform);

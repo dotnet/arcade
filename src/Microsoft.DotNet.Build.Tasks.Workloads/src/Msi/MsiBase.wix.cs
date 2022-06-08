@@ -9,6 +9,7 @@ using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Workloads.Wix;
+using NuGet.Versioning;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
 {
@@ -36,9 +37,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         internal static readonly Guid UpgradeCodeNamespaceUuid = Guid.Parse("C743F81B-B3B5-4E77-9F6D-474EFF3A722C");
 
         /// <summary>
-        /// The workload package used to create the MSI.
+        /// Metadata for the MSI such as package ID, version, author information, etc.
         /// </summary>
-        public WorkloadPackageBase Package
+        public MsiMetadata Metadata
         {
             get;
         }
@@ -68,8 +69,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// Gets the value to use for the manufacturer. 
         /// </summary>
         protected string Manufacturer =>
-            (!string.IsNullOrWhiteSpace(Package.Authors) && (Package.Authors.IndexOf("Microsoft", StringComparison.OrdinalIgnoreCase) < 0)) ?
-            Package.Authors : 
+            (!string.IsNullOrWhiteSpace(Metadata.Authors) && (Metadata.Authors.IndexOf("Microsoft", StringComparison.OrdinalIgnoreCase) < 0)) ?
+            Metadata.Authors : 
             DefaultValues.Manufacturer;
 
         /// <summary>
@@ -96,7 +97,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             get;
         }
 
-        public MsiBase(WorkloadPackageBase package, IBuildEngine buildEngine, string wixToolsetPath, 
+        public MsiBase(MsiMetadata metadata, IBuildEngine buildEngine, string wixToolsetPath, 
             string platform, string baseIntermediateOutputPath)
         {
             BuildEngine = buildEngine;
@@ -105,9 +106,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             BaseIntermediateOutputPath = baseIntermediateOutputPath;
 
             // Candle expects the output path to be terminated with a single '\'.
-            CompilerOutputPath = Utils.EnsureTrailingSlash(Path.Combine(baseIntermediateOutputPath, "wixobj", package.Id, $"{package.PackageVersion}", platform));
-            WixSourceDirectory = Path.Combine(baseIntermediateOutputPath, "src", "wix", package.Id, $"{package.PackageVersion}", platform);
-            Package = package;
+            CompilerOutputPath = Utils.EnsureTrailingSlash(Path.Combine(baseIntermediateOutputPath, "wixobj", metadata.Id, $"{metadata.PackageVersion}", platform));
+            WixSourceDirectory = Path.Combine(baseIntermediateOutputPath, "src", "wix", metadata.Id, $"{metadata.PackageVersion}", platform);
+            Metadata = metadata;
         }
 
         /// <summary>
@@ -124,7 +125,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// <param name="platform">The platform targeted by the MSI.</param>
         /// <returns>A string containing the product name of the MSI.</returns>
         protected string GetProductName(string platform) =>
-            (string.IsNullOrWhiteSpace(Package.Title) ? Package.Id : Package.Title) + $" ({platform})";
+            (string.IsNullOrWhiteSpace(Metadata.Title) ? Metadata.Id : Metadata.Title) + $" ({platform})";
 
         /// <summary>
         /// Generates a EULA (RTF file) that contains the license URL of the underlying NuGet package.
@@ -132,7 +133,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         protected string GenerateEula()
         {
             string eulaRtf = Path.Combine(WixSourceDirectory, "eula.rtf");
-            File.WriteAllText(eulaRtf, s_eula.Replace(__LICENSE_URL__, Package.LicenseUrl));
+            File.WriteAllText(eulaRtf, s_eula.Replace(__LICENSE_URL__, Metadata.LicenseUrl));
 
             return eulaRtf;
         }
@@ -151,12 +152,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
 
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.EulaRtf, GenerateEula());
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.Manufacturer, Manufacturer);
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.PackageId, Package.Id);
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.PackageVersion, $"{Package.PackageVersion}");
+            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.PackageId, Metadata.Id);
+            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.PackageVersion, $"{Metadata.PackageVersion}");
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.Platform, Platform);
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.ProductCode, $"{Guid.NewGuid()}");
+            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.ProductCode, $"{Guid.NewGuid():B}");
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.ProductName, GetProductName(Platform));
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.ProductVersion, $"{Package.MsiVersion}");
+            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.ProductVersion, $"{Metadata.MsiVersion}");
 
             return candle;
         }
@@ -209,10 +210,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             TaskItem msiItem = new TaskItem(light.OutputFile);
 
             // Return a task item that contains all the information about the generated MSI.            
-            msiItem.SetMetadata(Metadata.Platform, Platform);
-            msiItem.SetMetadata(Metadata.WixObj, compilerOutputPath);
-            msiItem.SetMetadata(Metadata.Version, $"{Package.MsiVersion}");
-            msiItem.SetMetadata(Metadata.SwixPackageId, Package.SwixPackageId);
+            msiItem.SetMetadata(Workloads.Metadata.Platform, Platform);
+            msiItem.SetMetadata(Workloads.Metadata.WixObj, compilerOutputPath);
+            msiItem.SetMetadata(Workloads.Metadata.Version, $"{Metadata.MsiVersion}");
+            msiItem.SetMetadata(Workloads.Metadata.SwixPackageId, Metadata.SwixPackageId);
 
             return msiItem;
         }
