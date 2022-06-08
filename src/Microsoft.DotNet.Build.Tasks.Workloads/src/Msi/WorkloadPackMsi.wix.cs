@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
 
         public WorkloadPackMsi(WorkloadPackPackage package, string platform, IBuildEngine buildEngine, string wixToolsetPath,
             string baseIntermediatOutputPath) :
-            base(package, buildEngine, wixToolsetPath, platform, baseIntermediatOutputPath)
+            base(MsiMetadata.Create(package), buildEngine, wixToolsetPath, platform, baseIntermediatOutputPath)
         {
             _package = package;
         }
@@ -60,10 +60,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             string providerKeyName = $"{_package.Id},{_package.PackageVersion},{Platform}";
 
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.InstallDir, $"{GetInstallDir(_package.Kind)}");
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.UpgradeCode, $"{upgradeCode}");
+            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.UpgradeCode, $"{upgradeCode:B}");
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.DependencyProviderKeyName, $"{providerKeyName}");
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.PackKind, $"{_package.Kind}");
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.SourceDir, $"{_package.DestinationDirectory}");
+            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.InstallationRecordKey, $"InstalledPacks");
 
             if (!candle.Execute())
             {

@@ -47,6 +47,9 @@
 
     <Feature Id="F_PackageContents">
       <ComponentGroupRef Id="CG_PackageContents"/>
+      <?if $(var.IncludePackGroupJson) = "true" ?>
+      <ComponentGroupRef Id="CG_PackGroupJson"/>
+      <?endif?>
     </Feature>
 
     <FeatureRef Id="F_DependencyProvider" />

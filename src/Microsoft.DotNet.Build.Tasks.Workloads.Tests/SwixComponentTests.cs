@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         {
             WorkloadManifest manifest = Create("WorkloadManifest.json");
             WorkloadDefinition workload = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
-            SwixComponent component = SwixComponent.Create(new ReleaseVersion("6.0.300"), workload, manifest);
+            SwixComponent component = SwixComponent.Create(new ReleaseVersion("6.0.300"), workload, manifest, packGroupId: null);
 
             ComponentSwixProject project = new(component, BaseIntermediateOutputPath, BaseOutputPath);
             string swixProj = project.Create();
@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 
             WorkloadManifest manifest = Create("WorkloadManifest.json");
             WorkloadDefinition workload = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
-            SwixComponent component = SwixComponent.Create(new ReleaseVersion("6.0.300"), workload, manifest, shortNames: shortNames);
+            SwixComponent component = SwixComponent.Create(new ReleaseVersion("6.0.300"), workload, manifest, packGroupId: null, shortNames: shortNames);
 
             ComponentSwixProject project = new(component, BaseIntermediateOutputPath, BaseOutputPath);
             string swixProj = project.Create();
@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         {
             WorkloadManifest manifest = Create("AbstractWorkloadsNonWindowsPacks.json");
             WorkloadDefinition workload = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
-            SwixComponent component = SwixComponent.Create(new ReleaseVersion("6.0.300"), workload, manifest, null, null);
+            SwixComponent component = SwixComponent.Create(new ReleaseVersion("6.0.300"), workload, manifest, packGroupId: null, null, null);
 
             ComponentSwixProject project = new(component, BaseIntermediateOutputPath, BaseOutputPath);
             string swixProj = project.Create();
@@ -91,7 +91,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
                 })
             };
 
-            SwixComponent component = SwixComponent.Create(new ReleaseVersion("6.0.300"), workload, manifest, componentResources);
+            SwixComponent component = SwixComponent.Create(new ReleaseVersion("6.0.300"), workload, manifest, packGroupId: null, componentResources);
             ComponentSwixProject project = new(component, BaseIntermediateOutputPath, BaseOutputPath);
             string swixProj = project.Create();
 
@@ -107,13 +107,30 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         {
             WorkloadManifest manifest = Create("mauiWorkloadManifest.json");
             WorkloadDefinition workload = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
-            SwixComponent component = SwixComponent.Create(new ReleaseVersion("7.0.100"), workload, manifest);
+            SwixComponent component = SwixComponent.Create(new ReleaseVersion("7.0.100"), workload, manifest, packGroupId: null);
             ComponentSwixProject project = new(component, BaseIntermediateOutputPath, BaseOutputPath);
             string swixProj = project.Create();
 
             string componentSwr = File.ReadAllText(Path.Combine(Path.GetDirectoryName(swixProj), "component.swr"));
             Assert.Contains(@"vs.dependency id=maui.mobile", componentSwr);
             Assert.Contains(@"vs.dependency id=maui.desktop", componentSwr);
+        }
+
+        [Fact]
+        public void ItCreatesDependenciesForPackGroup()
+        {
+            WorkloadManifest manifest = Create("WorkloadManifest.json");
+            WorkloadDefinition workload = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
+            var packGroupId = "microsoft.net.sdk.blazorwebassembly.aot.WorkloadPacks";
+            SwixComponent component = SwixComponent.Create(new ReleaseVersion("7.0.100"), workload, manifest, packGroupId: packGroupId);
+            ComponentSwixProject project = new(component, BaseIntermediateOutputPath, BaseOutputPath);
+            string swixProj = project.Create();
+
+            string componentSwr = File.ReadAllText(Path.Combine(Path.GetDirectoryName(swixProj), "component.swr"));
+
+            //  Should have only one dependency, use string.Split to check how many times vs.dependency occurs in swr
+            Assert.Equal(2, componentSwr.Split(new[] { "vs.dependency" }, StringSplitOptions.None).Length);
+            Assert.Contains($"vs.dependency id={packGroupId}", componentSwr);
         }
 
         private static WorkloadManifest Create(string filename)

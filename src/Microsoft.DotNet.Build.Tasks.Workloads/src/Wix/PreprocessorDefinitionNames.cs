@@ -11,6 +11,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
         public static readonly string DependencyProviderKeyName = nameof(DependencyProviderKeyName);
         public static readonly string EulaRtf = nameof(EulaRtf);
         public static readonly string InstallDir = nameof(InstallDir);
+        public static readonly string InstallationRecordKey = nameof(InstallationRecordKey);
         public static readonly string ManifestId = nameof(ManifestId);
         public static readonly string Manufacturer = nameof(Manufacturer);
         public static readonly string PackKind = nameof(PackKind);
