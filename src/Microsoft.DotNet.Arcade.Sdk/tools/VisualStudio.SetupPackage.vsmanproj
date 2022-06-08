@@ -74,18 +74,18 @@
   </Target>
 
   <Target Name="GenerateSbomForVSInsertion"
-        Inputs="@(_VsixFileInfo->'$(ComponentIntermediateOutputPath)\%(Name)')"
-        Outputs="@(_VsixFileInfo->'$(ComponentIntermediateOutputPath)\$(ComponentName)\%(Name)')"
+        Inputs="@(_VsixFileInfo->'$(ComponentIntermediateOutputPath)%(Name)')"
+        Outputs="@(_VsixFileInfo->'$(ComponentIntermediateOutputPath)$(ComponentName)\%(Name)')"
         DependsOnTargets="_GetVsixFileVersions"
         Condition="'$(GenerateSbom)' != 'false'">
     <Message Text="Generating SBOM manifest" Importance="high"/>
-    <MakeDir Directories="$(ComponentIntermediateOutputPath)\$(ComponentName)\Sbom"/>
+    <MakeDir Directories="$(ComponentIntermediateOutputPath)$(ComponentName)\Sbom;$(ComponentIntermediateOutputPath)$(ComponentName)\unpacked"/>
     <Unzip
       SourceFiles="@(_VsixFileInfo->'$(VisualStudioSetupInsertionPath)\%(Name)')"
-      DestinationFolder="@(_VsixFileInfo->'$(ComponentIntermediateOutputPath)\$(ComponentName)\%(Name)')"
+      DestinationFolder="$(ComponentIntermediateOutputPath)$(ComponentName)\unpacked"
       OverwriteReadOnlyFiles="true"/>
 
-    <Exec Command = "$(DotNetTool) $(NUGET_PACKAGES)microsoft.manifesttool.crossplatform\$(MicrosoftManifestToolCrossPlatformVersion)\Content\Microsoft.ManifestTool.dll generate -b @(_VsixFileInfo->'$(ComponentIntermediateOutputPath)\$(ComponentName)\%(Name)') -m $(ComponentIntermediateOutputPath)\$(ComponentName)\Sbom -pn VsInsertion -V Verbose"/>
+    <Exec Command = "$(DotNetTool) $(NUGET_PACKAGES)microsoft.manifesttool.crossplatform\$(MicrosoftManifestToolCrossPlatformVersion)\Content\Microsoft.ManifestTool.dll generate -b $(ComponentIntermediateOutputPath)$(ComponentName)\unpacked -m $(ComponentIntermediateOutputPath)$(ComponentName)\Sbom -pn VsInsertion -V Verbose"/>
     <Message Text="Completed generating SBOM manifest for %(VsixFile.Filename)." Importance="high"/>
   </Target>
 
