@@ -206,8 +206,7 @@ namespace Microsoft.DotNet.AsmDiff
                 }
 
                 WriteHeader(member);
-                if (style != null)
-                    style.Dispose();
+                    style?.Dispose();
 
                 _syntaxWriter.WriteLine();
                 WriteComments(member);
@@ -218,11 +217,7 @@ namespace Microsoft.DotNet.AsmDiff
 
         private static bool IsPropertyOrEventAccessor(ITypeDefinitionMember representative)
         {
-            var methodDefinition = representative as IMethodDefinition;
-            if (methodDefinition == null)
-                return false;
-
-            return methodDefinition.IsPropertyOrEventAccessor();
+            return (representative is IMethodDefinition methodDefinition) && methodDefinition.IsPropertyOrEventAccessor();
         }
 
         private void WriteHeader<T>(ElementMapping<T> element) where T : class, IDefinition
