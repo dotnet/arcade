@@ -134,7 +134,6 @@ namespace Microsoft.Cci.Writers.CSharp
 
                 WriteTypeName(methodImplementation.ImplementedMethod.ContainingType, noSpace: true, nullableAttributeArgument: nullableAttributeArgument);
                 WriteSymbol(".");
-
                 WriteIdentifier(GetNormalizedMethodName(methodImplementation.ImplementedMethod.Name));
             }
             else
