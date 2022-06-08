@@ -131,13 +131,11 @@ namespace Microsoft.Cci.Writers.CSharp
             {
                 IMethodImplementation methodImplementation = method.GetMethodImplementation();
                 object nullableAttributeArgument = methodImplementation.GetExplicitInterfaceMethodNullableAttributeArgument(_metadataReaderCache);
-                if (nullableAttributeArgument is int iNullableAttributeArgument && iNullableAttributeArgument > 0)
-                {
-                    WriteTypeName(methodImplementation.ImplementedMethod.ContainingType, noSpace: true, nullableAttributeArgument: nullableAttributeArgument);
-                    WriteSymbol(".");
-                    WriteIdentifier(methodImplementation.ImplementedMethod.Name);
-                    return;
-                }
+
+                WriteTypeName(methodImplementation.ImplementedMethod.ContainingType, noSpace: true, nullableAttributeArgument: nullableAttributeArgument);
+                WriteSymbol(".");
+
+                WriteIdentifier(GetNormalizedMethodName(methodImplementation.ImplementedMethod.Name));
             }
             else
             {
