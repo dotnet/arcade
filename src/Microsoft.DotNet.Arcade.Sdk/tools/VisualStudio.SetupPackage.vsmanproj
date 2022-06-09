@@ -81,7 +81,7 @@
     <Message Text="Generating SBOM manifest" Importance="high"/>
     <MakeDir Directories="$(ComponentIntermediateOutputPath)$(ComponentName)\Sbom;$(ComponentIntermediateOutputPath)$(ComponentName)\unpacked"/>
     <Unzip
-      SourceFiles="@(_VsixFileInfo->'$(ComponentIntermediateOutputPath)\%(Name)')"
+      SourceFiles="@(_VsixFileInfo->'$(ComponentIntermediateOutputPath)%(Name)')"
       DestinationFolder="$(ComponentIntermediateOutputPath)$(ComponentName)\unpacked"
       OverwriteReadOnlyFiles="true"/>
 
