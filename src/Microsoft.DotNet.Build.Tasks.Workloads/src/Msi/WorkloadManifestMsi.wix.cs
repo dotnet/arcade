@@ -25,7 +25,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// </summary>
         private static readonly string ManifestIdDirectory = "ManifestIdDir";
 
-        public List<WorkloadPackGroupPackage> WorkloadPackGroups { get; } = new();
+        public List<WorkloadPackGroupJson> WorkloadPackGroups { get; } = new();
+
 
         public WorkloadManifestMsi(WorkloadManifestPackage package, string platform, IBuildEngine buildEngine, string wixToolsetPath,
             string baseIntermediateOutputPath) : 
@@ -63,24 +64,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             {
                 jsonContentWxs = Path.Combine(WixSourceDirectory, "JsonContent.wxs");
 
-                List<WorkloadPackGroupJson> packGroupListJson = new List<WorkloadPackGroupJson>();
-                foreach (var packGroup in WorkloadPackGroups)
-                {
-                    var json = new WorkloadPackGroupJson()
-                    {
-                        GroupPackageId = packGroup.Id,
-                        GroupPackageVersion = packGroup.GetMsiMetadata().PackageVersion.ToString()
-                    };
-                    json.Packs.AddRange(packGroup.Packs.Select(p => new WorkloadPackJson()
-                    {
-                        PackId = p.Id,
-                        PackVersion = p.PackageVersion.ToString()
-                    }));
-
-                    packGroupListJson.Add(json);
-                }
-
-                string jsonAsString = JsonSerializer.Serialize(packGroupListJson, typeof(IList<WorkloadPackGroupJson>), new JsonSerializerOptions() { WriteIndented = true });
+                string jsonAsString = JsonSerializer.Serialize(WorkloadPackGroups, typeof(IList<WorkloadPackGroupJson>), new JsonSerializerOptions() { WriteIndented = true });
                 jsonDirectory = Path.Combine(WixSourceDirectory, "json");
                 Directory.CreateDirectory(jsonDirectory);
                 File.WriteAllText(Path.Combine(jsonDirectory, "WorkloadPackGroups.json"), jsonAsString);
@@ -151,7 +135,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         }
 
 
-        class WorkloadPackGroupJson
+        public class WorkloadPackGroupJson
         {
             public string? GroupPackageId { get; set; }
             public string? GroupPackageVersion { get; set; }
@@ -159,7 +143,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             public List<WorkloadPackJson> Packs { get; set; } = new List<WorkloadPackJson>();
         }
 
-        class WorkloadPackJson
+        public class WorkloadPackJson
         {
             public string? PackId { get; set; }
 

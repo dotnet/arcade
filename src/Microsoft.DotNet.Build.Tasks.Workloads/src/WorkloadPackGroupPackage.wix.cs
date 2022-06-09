@@ -23,7 +23,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         public WorkloadPackGroupPackage(string workloadName)
         {
             WorkloadName = workloadName;
-            Id = Utils.ToSafeId(workloadName) + ".WorkloadPacks";
+            Id = GetPackGroupID(workloadName);
+        }
+
+        public static string GetPackGroupID(string workloadName)
+        {
+            return Utils.ToSafeId(workloadName) + ".WorkloadPacks";
         }
 
         public MsiMetadata GetMsiMetadata()
