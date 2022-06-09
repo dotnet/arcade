@@ -111,6 +111,7 @@ Here is some sample output showing the 2 different response types.
 
 We can take a look at how long the program ran for different volumes of logs retrieved and parsed, as well as for different lengths of the search string.
 
+For one given repo and a one word string, we found:
 
 | Start date  | End date    | # of Occurrences | # of Files with hits     | Total time elapsed | Lines scanned/sec | Files scanned/sec | Total files scanned 
 | ----------- | ----------- |-------------- | --------------------- | ------------------ | ----------------- | ----------------- | ------------------ | 
@@ -118,6 +119,7 @@ We can take a look at how long the program ran for different volumes of logs ret
 | 2022/05/25  | 2022/06/07   | 22768           | 510                   | 00:00:35.2533931   | 41198.75        | 14.60              | 515
 | 2022/05/07  | 2022/06/07   | 124973           | 3023                   | 00:00:41.9848476   | 193610.51        | 79.95             | 3357
 
+For one given repo and a string with 6 words:
 
 | Start date  | End date    | # of Occurrences | # of Files with hits     | Total time elapsed | Lines scanned/sec | Files scanned/sec | Total files scanned 
 | ----------- | ----------- |-------------- | --------------------- | ------------------ | ----------------- | ----------------- | ------------------ | 
