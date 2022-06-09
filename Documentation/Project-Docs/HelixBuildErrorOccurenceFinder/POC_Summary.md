@@ -35,8 +35,8 @@ Here is some sample output showing the 2 different response types.
           "filter": {
             "repository": "dotnet/runtime",
             "errorString": "UseCallback_BadCertificate_ExpectedPolicyErrors",
-            "startDate": "2022-06-01T00:00:00",
-            "endDate": "2022-06-07T00:00:00"
+            "startDate": "2022-05-25T07:00:00Z",
+            "endDate": "2022-06-07T07:00:00Z"
           },
           "hits": [
             {
@@ -74,8 +74,8 @@ Here is some sample output showing the 2 different response types.
           "filter": {
             "repository": "dotnet/runtime",
             "errorString": "UseCallback_BadCertificate_ExpectedPolicyErrors",
-            "startDate": "2022-06-01T00:00:00",
-            "endDate": "2022-06-07T00:00:00"
+            "startDate": "2022-05-25T07:00:00Z",
+            "endDate": "2022-06-07T07:00:00Z"
           },
           "hits": [
             {
