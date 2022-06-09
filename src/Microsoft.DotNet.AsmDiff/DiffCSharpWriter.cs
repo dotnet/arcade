@@ -183,7 +183,7 @@ namespace Microsoft.DotNet.AsmDiff
 
         public override void Visit(IEnumerable<MemberMapping> members)
         {
-            MemberMapping mapping = members.FirstOrDefault(DiffFilter.Include);
+            MemberMapping mapping = members.FirstOrDefault(m => DiffFilter.Include(m) && !IsPropertyOrEventAccessor(m.Representative));
 
             if (mapping != null)
                 WriteMemberGroupHeader(mapping.Representative);
@@ -193,23 +193,31 @@ namespace Microsoft.DotNet.AsmDiff
 
         public override void Visit(MemberMapping member)
         {
-            IDisposable style = null;
-
-            if (this.HighlightBaseMembers)
+            if (!IsPropertyOrEventAccessor(member.Representative))
             {
-                if (member.Representative.IsInterfaceImplementation())
-                    style = _syntaxWriter.StartStyle(SyntaxStyle.InterfaceMember);
-                else if (member.Representative.IsOverride())
-                    style = _syntaxWriter.StartStyle(SyntaxStyle.InheritedMember);
+                IDisposable style = null;
+
+                if (this.HighlightBaseMembers)
+                {
+                    if (member.Representative.IsInterfaceImplementation())
+                        style = _syntaxWriter.StartStyle(SyntaxStyle.InterfaceMember);
+                    else if (member.Representative.IsOverride())
+                        style = _syntaxWriter.StartStyle(SyntaxStyle.InheritedMember);
+                }
+
+                WriteHeader(member);
+                    style?.Dispose();
+
+                _syntaxWriter.WriteLine();
+                WriteComments(member);
             }
 
-            WriteHeader(member);
-            if (style != null)
-                style.Dispose();
-
-            _syntaxWriter.WriteLine();
-            WriteComments(member);
             base.Visit(member);
+        }
+
+        private static bool IsPropertyOrEventAccessor(ITypeDefinitionMember representative)
+        {
+            return (representative is IMethodDefinition methodDefinition) && methodDefinition.IsPropertyOrEventAccessor();
         }
 
         private void WriteHeader<T>(ElementMapping<T> element) where T : class, IDefinition
