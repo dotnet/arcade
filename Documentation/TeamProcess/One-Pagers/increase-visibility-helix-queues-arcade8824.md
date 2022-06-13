@@ -44,6 +44,7 @@ This a list of all the features this one-pager is for.
 * Estimated times for:
   * Helix tests to complete
   * How long it will take for a build machine to be obtained
+  * How long it will take for the entire pipeline to complete
 * Tracking how accurate our estimates are (from the Estimated Times feature)
 * A high level overview status of Helix
   * Are Helix, our on-prem and off-prem queues, etc. operating normally?
@@ -87,10 +88,10 @@ The result I'm looking to achieve is [this mockup](IncreaseVisibilityHelixQueues
    1. This is interleaved with the previous step, but we'll need to compute the moving average using a Kusto query.
    2. Compute the percent differences between the current work item wait time and the moving average.
   
-5. *Optional*: Calculate the time to get an AzDo build machine.
-   1. We would also like to tell the customer how long it will take to obtain a build machine, but this is a complicated issue.
-   2. We'll need to compute the time it will take being stuck in queue(if you're in position > 820), and actually provisioning the VM machine.
-   3. The effort this will take puts it at a lower priority for the duration of this summer internship.
+5. Calculate the time for the entire pipeline to complete
+   1. Build Analysis currently can determine what pipelines a PR will trigger
+   2. We can compute the max time for the pipelines (which is how long the CI will take), and compute the 95th percentile over a certain time period.
+   3. This will yield the time that the CI pipelines *usually* take.
    
 6. Build a model for the Markdown template & create the markdown.
    1. We'll need to process the data from the Kusto queries into models that we can format the markdown handlebars template.
