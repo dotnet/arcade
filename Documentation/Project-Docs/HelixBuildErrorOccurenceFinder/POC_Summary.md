@@ -30,7 +30,7 @@ This command will search for all instances of the string "UseCallback_BadCertifi
 
 Here is some sample output showing the 2 different response types.
 
-#### Hits per File
+#### Hits
         {
           "filter": {
             "repository": "dotnet/runtime",
