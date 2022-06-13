@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
                 Dictionary<string, HashSet<Asset>> buildAssets = CreateBuildAssetDictionary(buildInformation);
 
-                foreach (var targetChannelId in targetChannelsIds)
+                foreach (var targetChannelId in targetChannelsIds.Distinct())
                 {
                     TargetChannelConfig targetChannelConfig = PublishingConstants.ChannelInfos
                         .Where(ci =>
@@ -165,12 +165,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         if (!FeedConfigs.TryGetValue(categoryKey, out _))
                         {
                             FeedConfigs[categoryKey] = new HashSet<TargetFeedConfig>();
-                        }
-
-                        Log.LogMessage(MessageImportance.High, $"Matching target feed configs for {categoryKey}:");
-                        foreach (var others in FeedConfigs[categoryKey])
-                        {
-                            Log.LogMessage(MessageImportance.High, $"{feedConfig}\n");
                         }
 
                         FeedConfigs[categoryKey].Add(feedConfig);
