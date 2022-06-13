@@ -129,7 +129,7 @@ Overloaded will be defined when:
 
 ### Proof of Concept (POC)
 
-*In progress.* (This will be updated to a link to the PR once it's created)
+See https://github.com/maestro-auth-test/helix-queue-insights-test/pull/11/checks?check_run_id=6801735696
 
 ### Risk
 
