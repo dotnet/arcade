@@ -91,7 +91,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public override bool Equals(object obj)
         {
-            if (  
+            if (
                 obj is TargetFeedConfig other &&
                 (ContentType == other.ContentType) &&
                 TargetURL.Equals(other.TargetURL, StringComparison.OrdinalIgnoreCase) &&
