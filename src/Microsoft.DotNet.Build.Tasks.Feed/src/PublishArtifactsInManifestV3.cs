@@ -167,7 +167,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             FeedConfigs[categoryKey] = new HashSet<TargetFeedConfig>();
                         }
 
-                        Log.LogMessage(MessageImportance.High, $"Matching target feed configs for {categoryKey}:")
+                        Log.LogMessage(MessageImportance.High, $"Matching target feed configs for {categoryKey}:");
                         foreach (var others in FeedConfigs[categoryKey])
                         {
                             Log.LogMessage(MessageImportance.High, $"{feedConfig}\n");
