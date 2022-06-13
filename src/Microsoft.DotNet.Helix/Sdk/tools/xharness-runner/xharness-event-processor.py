@@ -72,8 +72,8 @@ def call_xharness(args: list, capture_output: bool = False) -> Tuple[int, str]:
     args = ['dotnet', 'exec', xharness_cli_path] + args
 
     if capture_output:
-        process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        stdout = process.communicate()[0]
+        process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        stdout = process.communicate()[0].decode("utf-8")
         return process.returncode, stdout
     else:
         return subprocess.run(args, stdout=None, stderr=None, text=True).returncode, None
