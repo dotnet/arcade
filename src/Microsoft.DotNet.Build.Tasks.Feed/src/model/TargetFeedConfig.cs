@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             if (
                 obj is TargetFeedConfig other &&
                 (ContentType == other.ContentType) &&
-                ((TargetUrl is null && other.TargetUrl is null) || TargetUrl.Equals(other.TargetUrl, StringComparison.OrdinalIgnoreCase)) &&
+                ((TargetURL is null && other.TargetURL is null) || TargetURL.Equals(other.TargetURL, StringComparison.OrdinalIgnoreCase)) &&
                 (Type == other.Type) &&
                 ((Token is null && other.Token is null) || Token.Equals(other.Token)) &&
                 LatestLinkShortUrlPrefixes.SequenceEqual(other.LatestLinkShortUrlPrefixes) &&
