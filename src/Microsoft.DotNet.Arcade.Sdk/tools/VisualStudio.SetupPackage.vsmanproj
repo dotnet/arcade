@@ -51,6 +51,10 @@
       <Output TaskParameter="Lines" ItemName="_StubLine"/>
     </ReadLinesFromFile>
    <!--Parse the stub file to get the details of VsixId, VsixFileName and VsxiVersion-->
+   <!--Eg: _StubLine = Microsoft.FSharp.VSIX.Templates/VisualFSharpTemplates.vsix/17.0.0.2231309
+          VsixId = Microsoft.FSharp.VSIX.Templates
+          VsixFileName = VisualFSharpTemplates.vsix
+          VsixVersion = 17.0.0.2231309-->
     <ItemGroup>
       <_ParsedLine Include="@(_StubLine)"
                    VsixId="$([MSBuild]::ValueOrDefault('%(_StubLine.Identity)', '').Split('/')[0])"
@@ -79,7 +83,7 @@
       We require that all VSIXes included in a single VS insertion component have the same version.
       This version will be set to ManifestBuildVersion.
     -->
-    <Error Text="Visual Studio component '$(ComponentName)' contains multiple VSIX files with different versions: @(_VsixVersionNoDuplicates->'%(VsixFileName) (version %(Identity))', ', ')"
+    <Error Text="Cannot generate VS manifest because Visual Studio component '$(ComponentName)' contains multiple VSIX files with different versions: @(_VsixVersionNoDuplicates->'%(VsixFileName) (version %(Identity))', ', ')"
            Condition="@(_VsixVersionNoDuplicates->Count()) != 1"/>
 
     <PropertyGroup>
