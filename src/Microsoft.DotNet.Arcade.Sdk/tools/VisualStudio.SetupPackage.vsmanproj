@@ -50,13 +50,13 @@
     <ReadLinesFromFile File="%(_PackageStubFiles.Identity)">
       <Output TaskParameter="Lines" ItemName="_StubLine"/>
     </ReadLinesFromFile>
-
+   <!--Parse the stub file to get the details of VsixId, VsixFileName and VsxiVersion-->
     <ItemGroup>
       <_ParsedLine Include="@(_StubLine)"
                    VsixId="$([MSBuild]::ValueOrDefault('%(_StubLine.Identity)', '').Split('/')[0])"
                    VsixFileName="$([MSBuild]::ValueOrDefault('%(_StubLine.Identity)', '').Split('/')[1])"
                    VsixVersion="$([MSBuild]::ValueOrDefault('%(_StubLine.Identity)', '').Split('/')[2])" />
-
+    <!--Set the VSmanifest name, Vsix path, Vsix unpacking path, Directory to generate SBOM and Path to generated SBOM manifest-->
       <_VsixFileInfo Include="@(_ParsedLine->'%(VsixFileName)')">
         <ManifestJsonPath>$(SetupOutputPath)%(VsixId).json</ManifestJsonPath>
         <VsixPath>$(SetupOutputPath)%(VsixFileName)</VsixPath>
@@ -95,9 +95,9 @@
 
     <MakeDir Directories="%(_VsixFileInfo.SbomDir);%(_VsixFileInfo.UnpackDir)"/>
     <Unzip SourceFiles="%(_VsixFileInfo.VsixPath)" DestinationFolder="%(_VsixFileInfo.UnpackDir)"/>
-
+    <!-- Generate SBOM -->
     <Exec Command='"$(DotNetTool)" "$(ManifestTool)" generate -BuildDropPath "%(_VsixFileInfo.UnpackDir)" -ManifestDirPath "%(_VsixFileInfo.SbomDir)" -PackageName "%(_VsixFileInfo.VsixFileName)" -PackageVersion "%(_VsixFileInfo.VsixVersion)" -Verbosity Verbose'/>
-
+    <!-- Generate VS manifest with link to the SBOM manifest-->
     <ItemGroup>
       <MergeManifest Include="%(_VsixFileInfo.ManifestJsonPath)" SBOMFileLocation="%(_VsixFileInfo.SbomJsonPath)" />
     </ItemGroup>
