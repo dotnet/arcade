@@ -155,6 +155,9 @@ namespace Microsoft.DotNet.AsmDiff
             if (StrikeRemoved)
                 result |= DiffConfigurationOptions.StrikeRemoved;
 
+            if (DiffAttributes)
+                result |= DiffConfigurationOptions.DiffAttributes;
+
             if (ExcludeAddedTypes)
                 result &= ~DiffConfigurationOptions.IncludeAddedTypes;
 

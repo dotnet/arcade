@@ -39,7 +39,7 @@
     <MicrosoftExtensionsFileSystemGlobbingVersion>2.0.0</MicrosoftExtensionsFileSystemGlobbingVersion>
     <MicrosoftExtensionsLoggingConsoleVersion>2.1.1</MicrosoftExtensionsLoggingConsoleVersion>
     <MicrosoftNETCorePlatformsVersion>2.1.0</MicrosoftNETCorePlatformsVersion>
-    <MicrosoftNetCompilersToolsetVersion>4.2.0-4.22223.6</MicrosoftNetCompilersToolsetVersion>
+    <MicrosoftNetCompilersToolsetVersion>4.3.0-2.22307.7</MicrosoftNetCompilersToolsetVersion>
     <MicrosoftNetTestSdkVersion>16.7.1</MicrosoftNetTestSdkVersion>
     <MicrosoftNETILLinkTasksVersion>6.0.100-1.22103.2</MicrosoftNETILLinkTasksVersion>
     <MoqVersion>4.8.3</MoqVersion>
@@ -70,8 +70,8 @@
     <WindowsAzureStorageVersion>8.5.0</WindowsAzureStorageVersion>
     <XUnitVersion>2.4.2-pre.9</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>7.0.0-beta.22274.7</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftDotNetSignToolVersion>7.0.0-beta.22274.7</MicrosoftDotNetSignToolVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>7.0.0-beta.22314.8</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetSignToolVersion>7.0.0-beta.22314.8</MicrosoftDotNetSignToolVersion>
     <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>
     <MicrosoftDotNetGitHubIssueLabelerAssetsVersion>1.6.0</MicrosoftDotNetGitHubIssueLabelerAssetsVersion>
     <MicrosoftMLVersion>1.0.0</MicrosoftMLVersion>
@@ -80,14 +80,14 @@
     <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.21553.1</MicrosoftDotNetMaestroClientVersion>
     <MicrosoftSourceLinkGitHubVersion>1.2.0-beta-22271-02</MicrosoftSourceLinkGitHubVersion>
     <MicrosoftSourceLinkAzureReposGitVersion>1.2.0-beta-22271-02</MicrosoftSourceLinkAzureReposGitVersion>
-    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>7.0.0-beta.22274.7</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
-    <MicrosoftDotNetXliffTasksVersion>1.0.0-beta.22271.1</MicrosoftDotNetXliffTasksVersion>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>7.0.0-beta.22314.8</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
+    <MicrosoftDotNetXliffTasksVersion>1.0.0-beta.22315.1</MicrosoftDotNetXliffTasksVersion>
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.22076.4</MicrosoftDotNetMaestroTasksVersion>
-    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.22270.1</MicrosoftDotNetXHarnessCLIVersion>
+    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.22310.1</MicrosoftDotNetXHarnessCLIVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion>2.0.0-preview.1.21526.15</MicrosoftSymbolUploaderBuildTaskVersion>
     <MicrosoftSymbolUploaderVersion>2.0.0-preview.1.21526.15</MicrosoftSymbolUploaderVersion>
-    <MicrosoftNetSdkWorkloadManifestReaderVersion>6.0.100-rtm.21515.10</MicrosoftNetSdkWorkloadManifestReaderVersion>
-    <MicrosoftDeploymentDotNetReleasesVersion>1.0.0-preview2.6.21561.1</MicrosoftDeploymentDotNetReleasesVersion>
+    <MicrosoftNetSdkWorkloadManifestReaderVersion>7.0.100-preview.5.22273.2</MicrosoftNetSdkWorkloadManifestReaderVersion>
+    <MicrosoftDeploymentDotNetReleasesVersion>1.0.0-preview5.1.22263.1</MicrosoftDeploymentDotNetReleasesVersion>
     <!-- Used to flow Source Link version through Arcade SDK -->
     <MicrosoftSourceLinkVersion>$(MicrosoftSourceLinkGitHubVersion)</MicrosoftSourceLinkVersion>
     <MicrosoftTemplateEngineTasksVersion>7.0.100-preview.2.22075.3</MicrosoftTemplateEngineTasksVersion>

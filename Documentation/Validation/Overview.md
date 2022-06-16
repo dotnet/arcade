@@ -21,8 +21,6 @@ We need to make sure changes done in the Arcade SDK as well as in the [core pack
 2. Using darc, update the dependencies based on the packages built in #1
 3. Execute the "official build" (this will restore the packages built in #1)
 
-You can try this [locally](https://github.com/dotnet/arcade/blob/master/eng/validate-sdk.cmd).
-
 To validate against the Arcade Validation for Promotion pipeline (that includes the ability to build Arcade with the bellwether repos), follow these steps (which are similar to the steps outlined here for [How to Validate a Private Build](https://github.com/dotnet/arcade/blob/master/Documentation/Policy/TestingMSBuildGuidance.md#how-to-validate-a-private-build)):
 
 1. Run a build of your Arcade branch on the [arcade-official-ci](https://dnceng.visualstudio.com/internal/_build?definitionId=6) Azure DevOps Pipeline

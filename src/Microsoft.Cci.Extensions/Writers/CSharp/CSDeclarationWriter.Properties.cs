@@ -104,7 +104,7 @@ namespace Microsoft.Cci.Writers.CSharp
                     WriteKeyword("readonly");
             }
 
-            WriteTypeName(property.Type, attributes: property.Attributes);
+            WriteTypeName(property.Type, property.Attributes);
 
             if (property.IsExplicitInterfaceProperty() && _forCompilationIncludeGlobalprefix)
                 Write("global::");

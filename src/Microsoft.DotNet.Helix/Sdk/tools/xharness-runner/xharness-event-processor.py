@@ -72,8 +72,8 @@ def call_xharness(args: list, capture_output: bool = False) -> Tuple[int, str]:
     args = ['dotnet', 'exec', xharness_cli_path] + args
 
     if capture_output:
-        process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        stdout = process.communicate()[0]
+        process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        stdout = process.communicate()[0].decode("utf-8")
         return process.returncode, stdout
     else:
         return subprocess.run(args, stdout=None, stderr=None, text=True).returncode, None
@@ -355,9 +355,13 @@ if retry:
     # TODO https://github.com/dotnet/core-eng/issues/15059
     # We need to remove testResults.xml so that it is not uploaded since this run will be discarded
     # This is a workaround until we make AzDO reporter not upload test results
-    test_results = os.path.join(output_directory, "testResults.xml")
+    file_name = "testResults.xml"
+    test_results = os.path.join(output_directory, file_name)
     if os.path.exists(test_results):
         os.remove(test_results)
+
+    if os.path.exists(file_name):
+        os.remove(file_name)
 
 if reboot:
     send_metric(REBOOT_METRIC_NAME, reboot_exit_code, reboot_dimensions, event_type=EVENT_TYPE)
