@@ -14,6 +14,7 @@
                                       https://vsdrop.corp.microsoft.com/file/v1/$(VisualStudioDropName)
       DotNetTool                      Path to dotnet.exe.
       ManifestTool                    Path to Microsoft.ManifestTool.dll
+      GenerateSbom                    Generate Sbom
   -->
 
   <PropertyGroup>
@@ -32,6 +33,7 @@
     <TargetName>$(ComponentName)</TargetName>
     <OutputPath>$(SetupOutputPath)</OutputPath>
     <IntermediateOutputPath>$(ComponentIntermediateOutputPath)</IntermediateOutputPath>
+    <GenerateSbom>$(GenerateSbom)</GenerateSbom>
 
     <!-- Note that the url is expected to end with ';' (%3B) -->
     <ManifestPublishUrl Condition="'$(VisualStudioDropName)' != ''">https://vsdrop.corp.microsoft.com/file/v1/$(VisualStudioDropName)%3B</ManifestPublishUrl>
@@ -44,7 +46,7 @@
 
   <Import Project="$(SwixBuildPath)build\Microsoft.VisualStudioEng.MicroBuild.Plugins.SwixBuild.targets" />
 
-  <Target Name="_BuildManifest" DependsOnTargets="_GetVsixFileInfo;_GenerateSbomForVsixAndAddManifestItem;GenerateSetupManifest" />
+  <Target Name="_BuildManifest" DependsOnTargets="_GetVsixFileInfo;_GenerateSbomForVsixAndAddManifestItem;_GenerateVSManifest;GenerateSetupManifest" />
 
   <Target Name="_GetVsixFileInfo">
     <ReadLinesFromFile File="%(_PackageStubFiles.Identity)">
@@ -94,7 +96,8 @@
   <Target Name="_GenerateSbomForVsixAndAddManifestItem"
           Inputs="@(_VsixFileInfo->'%(VsixPath)')"
           Outputs="@(_VsixFileInfo->'%(SbomJsonPath)')"
-          DependsOnTargets="_GetVsixFileInfo">
+          DependsOnTargets="_GetVsixFileInfo"
+          Condition="'$(GenerateSbom)' != 'false'">
     <Message Text="Generating SBOM manifest for '%(_VsixFileInfo.Identity)'" Importance="high"/>
 
     <MakeDir Directories="%(_VsixFileInfo.SbomDir);%(_VsixFileInfo.UnpackDir)"/>
@@ -108,4 +111,16 @@
 
     <Message Text="Completed generating SBOM manifest for %(_VsixFileInfo.Identity)." Importance="high"/>
   </Target>
+
+  <Target Name="_GenerateVSManifest"
+          Inputs="@(_VsixFileInfo->'%(VsixPath)')"
+          DependsOnTargets="_GetVsixFileInfo"
+          Condition="'$(GenerateSbom)' == 'false'">
+
+  <Message Text="Generating VS manifest '%(_VsixFileInfo.Identity)'" Importance="high"/>
+  <ItemGroup>
+    <MergeManifest Include="%(_VsixFileInfo.ManifestJsonPath)" />
+  </ItemGroup>
+  </Target>
+
 </Project>
