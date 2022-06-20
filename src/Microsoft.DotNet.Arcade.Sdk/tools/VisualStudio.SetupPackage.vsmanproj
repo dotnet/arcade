@@ -14,7 +14,7 @@
                                       https://vsdrop.corp.microsoft.com/file/v1/$(VisualStudioDropName)
       DotNetTool                      Path to dotnet.exe.
       ManifestTool                    Path to Microsoft.ManifestTool.dll
-      GenerateSbom                    Generate Sbom
+      GenerateSbom                    True if an SBOM should be generated for this component.
   -->
 
   <PropertyGroup>
