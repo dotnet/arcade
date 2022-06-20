@@ -4,7 +4,10 @@
     <_StubFiles Include="$(VisualStudioSetupIntermediateOutputPath)**\*.stub"/>
     <_StubDirs Include="@(_StubFiles->'%(RecursiveDir)')"/>
   </ItemGroup>
-  
+
+  <PropertyGroup>
+    <GenerateSbom Condition="'$(GenerateSbom)' == ''">false</GenerateSbom>
+  </PropertyGroup>
   <!---
     This target is invoked in a separate phase after all input VSIX files are signed.
     This is important since the manifest contain hashes of the VSIX files.
@@ -32,6 +35,7 @@
       <_Args Include="VisualStudioDropName=$(VisualStudioDropName)" />
       <_Args Include="DotNetTool=$(DotNetTool)" />
       <_Args Include="ManifestTool=$(NUGET_PACKAGES)microsoft.manifesttool.crossplatform\$(MicrosoftManifestToolCrossPlatformVersion)\Content\Microsoft.ManifestTool.dll"/>
+      <_Args Include="GenerateSbom=$(GenerateSbom)" />
     </ItemGroup>
 
     <!--
