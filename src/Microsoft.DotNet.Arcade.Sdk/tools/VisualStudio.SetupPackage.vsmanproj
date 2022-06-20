@@ -113,8 +113,6 @@
   </Target>
 
   <Target Name="_GenerateVSManifest"
-          Inputs="@(_VsixFileInfo->'%(VsixPath)')"
-          Outputs="@(_VsixFileInfo->'%(SbomJsonPath)')"
           DependsOnTargets="_GetVsixFileInfo"
           Condition="'$(GenerateSbom)' == 'false'">
 
