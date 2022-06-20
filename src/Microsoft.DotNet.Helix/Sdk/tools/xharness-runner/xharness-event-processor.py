@@ -125,6 +125,13 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
 
     global retry, reboot, android_connectivity_verified
 
+    # Kill the simulator when we fail to launch the app
+    if exit_code == 80: # APP_CRASH
+        print(f'    Application crashed - if persist, please investigate system logs from the run')
+        retry = True
+        reboot = True
+        return
+
     # Simulators are known to slow down which results in installation taking several minutes
     # Retry+reboot usually resolves this
     if exit_code == 86: # APP_INSTALLATION_TIMEOUT
@@ -181,6 +188,12 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                     subprocess.call(['sudo', 'chmod', '-R', '777', boot_log_destination])
 
             retry = True
+            return
+
+        if exit_code == 82 and not is_device: # RETURN_CODE_NOT_SET - this happens when emulator crashes halfway through
+            print(f'    Failed to read the instrumentation result')
+            retry = True
+            reboot = True
             return
 
         if exit_code == 78: # PACKAGE_INSTALLATION_FAILURE
@@ -257,17 +270,12 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                 reboot = True
                 return
 
-            # Kill the simulator when we fail to launch the app
-            if exit_code == 80: # APP_CRASH
-                simulator_app = os.getenv('SIMULATOR_APP')
-                subprocess.call(['sudo', 'pkill', '-9', '-f', simulator_app])
-                return
-
             # If we fail to find a simulator and we are not targeting a specific version (e.g. `ios-simulator_13.5`),
             # it is probably an issue because Xcode should always have at least one runtime version inside
             if exit_code == 81 and '_' not in target: # DEVICE_NOT_FOUND
                 print(f'    No simulator runtime found')
                 retry = True
+                reboot = True
                 return
 
 # The JSON should be an array of objects (one per each executed XHarness command)
