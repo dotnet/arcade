@@ -45,8 +45,8 @@ output_directory = os.getenv('HELIX_WORKITEM_UPLOAD_ROOT')
 # Retry/reboot can be also asked for by the client (by creating .retry/.reboot files)
 retry = False
 reboot = False
-retry_dimensions = None
-reboot_dimensions = None
+retry_dimensions = dict()
+reboot_dimensions = dict()
 retry_exit_code = -1
 reboot_exit_code = -1
 android_connectivity_verified = False
@@ -166,6 +166,7 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
             # This handles issues where emulators fail to start or devices go silent.
             print(f'    Encountered DEVICE_NOT_FOUND')
             print('    If this occurs repeatedly, please check for architectural mismatch, e.g. sending arm64_v8a APKs to an x86_64 / x86 only queue')
+            retry = True
 
             if not is_device:
                 # For emulators it makes sense to reboot to try to heal the emulator
@@ -187,7 +188,6 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                     # The boot logs are owned by root, so make them readable for the Helix agent
                     subprocess.call(['sudo', 'chmod', '-R', '777', boot_log_destination])
 
-            retry = True
             return
 
         if exit_code == 82 and not is_device: # RETURN_CODE_NOT_SET - this happens when emulator crashes halfway through
