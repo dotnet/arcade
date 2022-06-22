@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             var workItem = _task.WorkItems.First();
             workItem.GetMetadata("Identity").Should().Be("System.Foo");
-            workItem.GetMetadata("Timeout").Should().Be("00:16:42");
+            workItem.GetMetadata("Timeout").Should().Be("00:17:42");
 
             var payloadArchive = workItem.GetMetadata("PayloadArchive");
             payloadArchive.Should().NotBeNullOrEmpty();
@@ -230,7 +230,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             var workItem = _task.WorkItems.First();
             workItem.GetMetadata("Identity").Should().Be("System.Foo");
-            workItem.GetMetadata("Timeout").Should().Be("00:16:42");
+            workItem.GetMetadata("Timeout").Should().Be("00:17:42");
 
             var payloadArchive = workItem.GetMetadata("PayloadArchive");
             payloadArchive.Should().NotBeNullOrEmpty();
