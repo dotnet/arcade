@@ -2,18 +2,6 @@
 
 *The list of queues is cached weekly. If your PR changes what queues your pipelines use, this information will not show the updated queues.*
 
-## Average Times
-
-| Item                    | Average Time |
-| ----------------------- | ------------ |
-| Obtain build machine    | **13m 4s**   |
-| Helix tests to complete | **30m 2s**   |
-| Pipeline to complete    | **1hr 18m**  |
-
-*These estimated times are computed from historical data and may not accurately reflect the current status of AzDo and Helix*
-
------
-
 Here's a list of the top 5 highest work item wait times:
 
 | Queue                              | Work Item Wait Time | Difference in Moving Avg |
