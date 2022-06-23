@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
-    <CopyLocalLockFileAssemblies Condition="'$(TargetFramework)' == 'netcoreapp3.1'">true</CopyLocalLockFileAssemblies>
+    <TargetFrameworks>net472;$(TargetFrameworkForNETSDK)</TargetFrameworks>
+    <CopyLocalLockFileAssemblies Condition="'$(TargetFramework)' == '$(TargetFrameworkForNETSDK)'">true</CopyLocalLockFileAssemblies>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <PackageType>MSBuildSdk</PackageType>

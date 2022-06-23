@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>$(TargetFrameworkForNETSDK)</TargetFrameworks>
     <LangVersion>Latest</LangVersion>
     <SignAssembly>false</SignAssembly>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
