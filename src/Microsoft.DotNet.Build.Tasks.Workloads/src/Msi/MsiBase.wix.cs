@@ -4,6 +4,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
@@ -96,6 +97,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         {
             get;
         }
+
+        public Dictionary<string, string> NuGetPackageFiles { get; set; } = new();
 
         public MsiBase(MsiMetadata metadata, IBuildEngine buildEngine, string wixToolsetPath, 
             string platform, string baseIntermediateOutputPath)
@@ -216,6 +219,17 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             msiItem.SetMetadata(Workloads.Metadata.SwixPackageId, Metadata.SwixPackageId);
 
             return msiItem;
+        }
+
+        protected void AddDefaultPackageFiles(ITaskItem msi)
+        {
+            NuGetPackageFiles[msi.GetMetadata(Workloads.Metadata.FullPath)] = @"\data";
+
+            // Create the JSON manifest for CLI based installations.
+            string msiJsonPath = MsiProperties.Create(msi.ItemSpec);
+            NuGetPackageFiles[Path.GetFullPath(msiJsonPath)] = "\\data\\msi.json";
+
+            NuGetPackageFiles["LICENSE.TXT"] = @"\";
         }
     }
 }

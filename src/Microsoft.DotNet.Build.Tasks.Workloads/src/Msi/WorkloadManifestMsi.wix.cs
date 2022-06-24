@@ -56,6 +56,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
                 throw new Exception(Strings.HeatFailedToHarvest);
             }
 
+            foreach (var file in Directory.GetFiles(packageDataDirectory).Select(f => Path.GetFullPath(f)))
+            {
+                NuGetPackageFiles[file] = @"\data\extractedManifest\" + Path.GetFileName(file);
+            }
+
             //  Add WorkloadPackGroups.json to add to workload manifest MSI
             string? jsonContentWxs = null;
             string? jsonDirectory = null;
@@ -67,7 +72,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
                 string jsonAsString = JsonSerializer.Serialize(WorkloadPackGroups, typeof(IList<WorkloadPackGroupJson>), new JsonSerializerOptions() { WriteIndented = true });
                 jsonDirectory = Path.Combine(WixSourceDirectory, "json");
                 Directory.CreateDirectory(jsonDirectory);
-                File.WriteAllText(Path.Combine(jsonDirectory, "WorkloadPackGroups.json"), jsonAsString);
+
+                string jsonFullPath = Path.GetFullPath(Path.Combine(jsonDirectory, "WorkloadPackGroups.json"));
+                File.WriteAllText(jsonFullPath, jsonAsString);
 
                 HarvesterToolTask jsonHeat = new(BuildEngine, WixToolsetPath)
                 {
@@ -83,6 +90,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
                 {
                     throw new Exception(Strings.HeatFailedToHarvest);
                 }
+
+                NuGetPackageFiles[jsonFullPath] = @"\data\extractedManifest\" + Path.GetFileName(jsonFullPath);
             }
 
             CompilerToolTask candle = CreateDefaultCompiler();
@@ -130,6 +139,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             ITaskItem msi = Link(candle.OutputPath, 
                 Path.Combine(outputPath, Path.GetFileNameWithoutExtension(Package.PackagePath) + $"-{Platform}.msi"),
                 iceSuppressions);
+
+            AddDefaultPackageFiles(msi);
                         
             return msi;
         }

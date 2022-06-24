@@ -361,11 +361,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                         WorkloadPackMsi msi = new(data.Package, platform, BuildEngine, WixToolsetPath, BaseIntermediateOutputPath);
                         ITaskItem msiOutputItem = msi.Build(MsiOutputPath, IceSuppressions);
 
-                        // Create the JSON manifest for CLI based installations.
-                        string msiJsonPath = MsiProperties.Create(msiOutputItem.ItemSpec);
-
                         // Generate a .csproj to package the MSI and its manifest for CLI installs.
-                        MsiPayloadPackageProject csproj = new(msi.Metadata, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, Path.GetFullPath(msiJsonPath));
+                        MsiPayloadPackageProject csproj = new(msi.Metadata, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, msi.NuGetPackageFiles);
                         msiOutputItem.SetMetadata(Metadata.PackageProject, csproj.Create());
 
                         lock (msiItems)
@@ -404,11 +401,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                         WorkloadPackGroupMsi msi = new(packGroup, platform, BuildEngine, WixToolsetPath, BaseIntermediateOutputPath);
                         ITaskItem msiOutputItem = msi.Build(MsiOutputPath, IceSuppressions);
 
-                        // Create the JSON manifest for CLI based installations.
-                        string msiJsonPath = MsiProperties.Create(msiOutputItem.ItemSpec);
-
                         // Generate a .csproj to package the MSI and its manifest for CLI installs.
-                        MsiPayloadPackageProject csproj = new(msi.Metadata, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, Path.GetFullPath(msiJsonPath));
+                        MsiPayloadPackageProject csproj = new(msi.Metadata, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, msi.NuGetPackageFiles);
                         msiOutputItem.SetMetadata(Metadata.PackageProject, csproj.Create());
 
                         lock (msiItems)
@@ -442,9 +436,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 {
                     ITaskItem msiOutputItem = msi.Build(MsiOutputPath, IceSuppressions);
 
-                    // Create the JSON manifest for CLI based installations.
-                    string msiJsonPath = MsiProperties.Create(msiOutputItem.ItemSpec);
-
                     // Generate SWIX authoring for the MSI package.
                     MsiSwixProject swixProject = new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath);
                     ITaskItem swixProjectItem = new TaskItem(swixProject.Create());
@@ -456,7 +447,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     }
 
                     // Generate a .csproj to package the MSI and its manifest for CLI installs.
-                    MsiPayloadPackageProject csproj = new(msi.Metadata, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, Path.GetFullPath(msiJsonPath));
+                    MsiPayloadPackageProject csproj = new(msi.Metadata, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, msi.NuGetPackageFiles);
                     msiOutputItem.SetMetadata(Metadata.PackageProject, csproj.Create());
 
                     lock (msiItems)
