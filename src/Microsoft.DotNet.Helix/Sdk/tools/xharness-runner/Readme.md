@@ -124,14 +124,28 @@ You can configure the execution further via MSBuild properties:
 
 #### Targeting real iOS/tvOS devices
 
-To deploy an app bundle to a real device, the app bundle needs to be signed before the deployment.
-The Helix machines, that have devices attached to them, already contain the signing certificates and a provisioning profile will be downloaded as part of the job prepartion.
+When you are not using `CustomCommands` and you point the SDK to an app bundle, signing will be taken care of for you and you can skip this section.
 
-When using the Helix SDK and targeting real devices:
-- You have to ideally supply a non-signed app bundle - the app will be signed for you on the Helix machine where your job gets executed
-- Only the basic set of app permissions are supported at the moment and we cannot re-sign an app that was already signed with a different set of permissions
+Otherwise, to deploy an app bundle to a real device, the app bundle needs to be signed before it is installed.
+To sign an app bundle you need to make sure that:
+
+1. The bundle contains a *provisioning profile*. This is a file called **embedded.mobileprovision** that needs to be in the root of the app bundle folder (`[PATH TO BUNDLE]/embedded.mobileprovision`).
+2. The `sign [PATH TO BUNDLE]` bash command is called. This method is available for you when using `CustomCommands`.
+
+The provisioning profile will be injected into your Helix payload as part of the job preparation and you need to copy it into the app bundle's root:
+- If you point the SDK to an app bundle directory, the profile will be injected in that folder automatically (in this case you don't control the payload creation).
+- If you give the SDK a custom already zipped payload (you control the payload more), the profile is:
+  - Either placed into any `.app` ending folder from the root of the zip archive (assumed app bundle),
+  - or placed in the root of the zip archive otherwise.
+
+> Take away: If you provide your own zipped payload that doesn't contain an `.app` ending directory, make sure you copy `embedded.mobileprovision` from `$HELIX_WORKITEM_ROOT` into your app bundle.
+
+Couple more notes:
+- Only the basic set of app permissions is supported at the moment (e.g. no GPS control...)
+- We cannot re-sign an app that was already signed with a different set of permissions
 - App bundle identifier has to start with `net.dot.` since we only support those application IDs at the moment (restrictions by Apple)
-- In case you don't supply the app bundle but for example build the app on the Helix agent as part of the job, use the `sign [path to app]` bash function to perform the signing. In this case, make sure the provisioning profile is part of the app bundle present at `[app]/embedded.mobileprovision`.
+- When signing succeeds, you should see something like this in the logs:  
+    `/tmp/helix/working/A74A0921/w/A5C2095E/e/System.Buffers.Tests.app: signed app bundle with Mach-O thin (arm64) [net.dot.System.Buffers.Tests]`
 
 ### Android .apk payloads
 

@@ -643,7 +643,7 @@ namespace Microsoft.DotNet.SignTool
 
                     foreach (ZipArchiveEntry entry in archive.Entries)
                     {
-                        string relativePath = entry.FullName;
+                        string relativePath = entry.FullName; // lgtm [cs/zipslip] Archive from trusted source
 
                         // `entry` might be just a pointer to a folder. We skip those.
                         if (relativePath.EndsWith("/") && entry.Name == "")

@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
         /// - Throw if there are any file extension sign information entries that conflict, meaning
         /// the same extension has different certificates.
         /// 
-        /// - Throw if certicates are empty strings or Path.GetFileExtension(info.Include) != info.Include.
+        /// - Throw if certificates are empty strings or Path.GetFileExtension(info.Include) != info.Include.
         /// </summary>
         /// <param name="fileExtensionSignInfos">File extension sign infos</param>
         /// <returns>File extension sign infos</returns>

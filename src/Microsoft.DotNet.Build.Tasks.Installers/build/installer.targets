@@ -87,7 +87,9 @@
     <PropertyGroup>
       <TargetRuntimeOS>$(InstallerRuntimeIdentifier.Substring(0, $(InstallerRuntimeIdentifier.LastIndexOf('-'))))</TargetRuntimeOS>
       <TargetArchitecture Condition="'$(TargetArchitecture)' == ''">$(InstallerRuntimeIdentifier.Substring($(InstallerRuntimeIdentifier.LastIndexOf('-'))).TrimStart('-'))</TargetArchitecture>
-      <InstallerTargetArchitecture Condition="'$(InstallerTargetArchitecture)' == ''">$(TargetArchitecture)</InstallerTargetArchitecture>
+      <_TargetArch>$(TargetArchitecture)</_TargetArch>
+      <_TargetArch Condition="'$(BuildRpmPackage)' == 'true' and '$(TargetArchitecture)' == 'arm64'">aarch64</_TargetArch>
+      <InstallerTargetArchitecture Condition="'$(InstallerTargetArchitecture)' == ''">$(_TargetArch)</InstallerTargetArchitecture>
     </PropertyGroup>
     <ItemGroup>
       <CrossArchMsiToBuild Include="@(CrossArchSdkMsiInstallerArch)" Exclude="$(TargetArchitecture)" />

@@ -22,7 +22,8 @@
     <DownloadFile
       Uri="$(WixDownloadUrl)"
       DestinationPath="$(WixDestinationPath)"
-      Overwrite="true" />
+      Overwrite="true"
+      TimeoutInSeconds="9999" />
 
     <Unzip
       SourceFiles="$(WixDestinationPath)"

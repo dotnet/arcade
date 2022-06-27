@@ -164,7 +164,11 @@ namespace Microsoft.DotNet.Helix.Client
             // 404 = this queue does not exist, or did and was removed.
             catch (RestApiException ex) when (ex.Response?.Status == 404)
             {
-                throw new ArgumentException($"Helix API does not contain an entry for {queueId}");
+                // Do not throw for Helix pr- queues which are not in the queue info JSON
+                if (!queueId.ToLowerInvariant().StartsWith("pr-"))
+                {
+                    throw new ArgumentException($"Helix API does not contain an entry for {queueId}");
+                }
             }
 
             IBlobContainer storageContainer = await storage.GetContainerAsync(TargetContainerName, queueId, cancellationToken);
@@ -186,6 +190,7 @@ namespace Microsoft.DotNet.Helix.Client
             Uri jobListUri = await storageContainer.UploadTextAsync(
                 jobListJson,
                 $"job-list-{Guid.NewGuid()}.json",
+                log,
                 cancellationToken);
             // Don't log the sas, remove the query string.
             string jobListUriForLogging = jobListUri.ToString().Replace(jobListUri.Query, "");
@@ -247,9 +252,9 @@ namespace Microsoft.DotNet.Helix.Client
             if (whenItExpires != DateTime.MaxValue) // We recognized a date from the string
             {
                 TimeSpan untilRemoved = whenItExpires.ToUniversalTime().Subtract(DateTime.UtcNow);
-                if (untilRemoved.TotalDays <= 21)
+                if (untilRemoved.TotalDays <= 10)
                 {
-                    log?.Invoke($"warning : Helix queue {queueInfo.QueueId} {(untilRemoved.TotalDays < 0 ? "was" : "is")} slated for removal on {queueInfo.EstimatedRemovalDate}. Please discontinue usage.  Contact dnceng for questions / concerns ");
+                    log?.Invoke($"warning : Helix queue {queueInfo.QueueId} {(untilRemoved.TotalDays < 0 ? "was" : "is")} set for estimated removal date of {queueInfo.EstimatedRemovalDate}. In most cases the queue will be removed permanently due to end-of-life; please contact dnceng for any questions or concerns, and we can help you decide how to proceed and discuss other options.");
                 }
             }
             else

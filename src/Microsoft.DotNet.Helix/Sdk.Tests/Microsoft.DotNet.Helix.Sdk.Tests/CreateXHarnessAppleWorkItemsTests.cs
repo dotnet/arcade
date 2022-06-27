@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             var workItem = _task.WorkItems.First();
             workItem.GetMetadata("Identity").Should().Be("System.Foo");
-            workItem.GetMetadata("Timeout").Should().Be("00:16:02");
+            workItem.GetMetadata("Timeout").Should().Be("00:17:42");
 
             var payloadArchive = workItem.GetMetadata("PayloadArchive");
             payloadArchive.Should().NotBeNullOrEmpty();
@@ -135,7 +135,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             _fileSystem.RemovedFiles.Should().Contain(payloadArchive);
 
             var command = workItem.GetMetadata("Command");
-            command.Should().Contain("--launch-timeout \"00:03:00\"");
+            command.Should().Contain("--launch-timeout \"00:06:00\"");
         }
 
         [Fact]
@@ -205,7 +205,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             command = workItem2.GetMetadata("Command");
             command.Should().Contain("--target \"ios-simulator-64_13.6\"");
-            command.Should().Contain("--launch-timeout \"00:03:00\"");
+            command.Should().Contain("--launch-timeout \"00:06:00\"");
         }
 
         [Fact]
@@ -230,7 +230,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             var workItem = _task.WorkItems.First();
             workItem.GetMetadata("Identity").Should().Be("System.Foo");
-            workItem.GetMetadata("Timeout").Should().Be("00:16:02");
+            workItem.GetMetadata("Timeout").Should().Be("00:17:42");
 
             var payloadArchive = workItem.GetMetadata("PayloadArchive");
             payloadArchive.Should().NotBeNullOrEmpty();

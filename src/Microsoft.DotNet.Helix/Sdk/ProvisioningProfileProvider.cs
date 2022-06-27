@@ -8,6 +8,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Utilities;
 using Microsoft.Extensions.DependencyInjection;
@@ -52,6 +53,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         private readonly IFileSystem _fileSystem;
         private readonly IZipArchiveManager _zipArchiveManager;
         private readonly HttpClient _httpClient;
+        private readonly IRetryHandler _retryHandler;
         private readonly string? _profileUrlTemplate;
         private readonly string? _tmpDir;
         private readonly Dictionary<ApplePlatform, string> _downloadedProfiles = new();
@@ -62,6 +64,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             IFileSystem fileSystem,
             IZipArchiveManager zipArchiveManager,
             HttpClient httpClient,
+            IRetryHandler retryHandler,
             string? profileUrlTemplate,
             string? tmpDir)
         {
@@ -70,6 +73,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
             _zipArchiveManager = zipArchiveManager ?? throw new ArgumentNullException(nameof(zipArchiveManager));
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            _retryHandler = retryHandler;
             _profileUrlTemplate = profileUrlTemplate;
             _tmpDir = tmpDir;
         }
@@ -187,11 +191,32 @@ namespace Microsoft.DotNet.Helix.Sdk
                 _log.LogMessage($"Downloading {platform} provisioning profile to {targetFile}");
 
                 var uri = new Uri(GetProvisioningProfileUrl(platform));
-                using var response = await _httpClient.GetAsync(uri);
-                response.EnsureSuccessStatusCode();
+                HttpResponseMessage? response = null;
 
-                using var fileStream = _fileSystem.GetFileStream(targetFile, FileMode.Create, FileAccess.Write);
-                await response.Content.CopyToAsync(fileStream);
+                await _retryHandler.RunAsync(async _ =>
+                {
+                    try
+                    {
+                        response = await _httpClient.GetAsync(uri);
+                        return response.IsSuccessStatusCode;
+                    }
+                    catch (Exception e)
+                    {
+                        _log.LogMessage("Failed to download provisioning profile: {error}", e);
+                        return false;
+                    }
+                });
+
+                if (response is null)
+                {
+                    throw new Exception("Failed to download provisioning profile. More details can be found with higher verbosity or in the binlog");
+                }
+
+                using (response)
+                using (var fileStream = _fileSystem.GetFileStream(targetFile, FileMode.Create, FileAccess.Write))
+                {
+                    await response.Content.CopyToAsync(fileStream);
+                }
             }, _tmpDir);
 
             return targetFile;
@@ -212,6 +237,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             collection.TryAddTransient<IHelpers, Arcade.Common.Helpers>();
             collection.TryAddTransient<IFileSystem, FileSystem>();
             collection.TryAddTransient<IZipArchiveManager, ZipArchiveManager>();
+            collection.TryAddTransient<IRetryHandler, ExponentialRetry>();
             collection.TryAddSingleton(_ => new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }));
             collection.TryAddSingleton<IProvisioningProfileProvider>(serviceProvider =>
             {
@@ -221,6 +247,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     serviceProvider.GetRequiredService<IFileSystem>(),
                     serviceProvider.GetRequiredService<IZipArchiveManager>(),
                     serviceProvider.GetRequiredService<HttpClient>(),
+                    serviceProvider.GetRequiredService<IRetryHandler>(),
                     provisioningProfileUrlTemplate,
                     tmpDir);
             });

@@ -105,19 +105,19 @@ namespace Microsoft.Cci.Extensions
             var name = methodDefinition.GetNameWithoutExplicitType();
             if (name.StartsWith("get_"))
             {
-                return AccessorType.EventAdder;
+                return AccessorType.PropertyGetter;
             }
             else if (name.StartsWith("set_"))
             {
-                return AccessorType.PropertyGetter;
+                return AccessorType.PropertySetter;
             }
             else if (name.StartsWith("add_"))
             {
-                return AccessorType.EventRemover;
+                return AccessorType.EventAdder;
             }
             else if (name.StartsWith("remove_"))
             {
-                return AccessorType.PropertySetter;
+                return AccessorType.EventRemover;
             }
 
             return AccessorType.None;

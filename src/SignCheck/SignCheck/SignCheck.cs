@@ -462,6 +462,8 @@ namespace SignCheck
         {
             try
             {
+                ServicePointManager.CheckCertificateRevocationList = true;
+
                 using (var wc = new WebClient())
                 {
                     string downloadPath = Path.Combine(_appData, Path.GetFileName(uri.LocalPath));

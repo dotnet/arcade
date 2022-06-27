@@ -2,14 +2,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;net472</TargetFrameworks>
+    <TargetFrameworks>$(TargetFrameworkForNETSDK);net472</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
 
     <Description>This package provides support for publishing assets to a NuGet protocol based feed.</Description>
     <DevelopmentDependency>true</DevelopmentDependency>
     <PackageType>MSBuildSdk</PackageType>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
-    <_ExcludeNuGetAssembliesTargetFramework>netcoreapp3.1</_ExcludeNuGetAssembliesTargetFramework>
+    <_ExcludeNuGetAssembliesTargetFramework>$(TargetFrameworkForNETSDK)</_ExcludeNuGetAssembliesTargetFramework>
   </PropertyGroup>
 
   <ItemGroup>

@@ -4,6 +4,7 @@
     <RepoRoot>$([System.IO.Path]::GetFullPath('$(RepoRoot)/'))</RepoRoot>
   </PropertyGroup>
 
+  <Import Project="../Directory.Build.props" />
   <Import Project="../RepoLayout.props"/>
   <Import Project="Versions.props"/>
 </Project>

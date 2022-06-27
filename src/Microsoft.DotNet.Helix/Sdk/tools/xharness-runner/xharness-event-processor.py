@@ -5,28 +5,19 @@ import subprocess
 import sys
 from typing import Tuple
 
-from helix.appinsights import app_insights
 from helix.public import request_reboot, request_infra_retry, send_metric, send_metrics
 
 ### This script's purpose is to parse the diagnostics.json file produced by XHarness, evaluate it and send it to AppInsights
 ### The diagnostics.json file contains information about each XHarness command executed during the job
 ### In case of events that suggest infrastructure issues, we request a retry and for some reboot the agent
 
-# Name of metrics we send to App Insights
-# TODO (https://github.com/dotnet/core-eng/issues/15274): Stop sending app insights telemetry
-OPERATION_METRIC_NAME = 'XHarnessOperation'
-DURATION_METRIC_NAME = 'XHarnessOperationDuration'
-RETRY_METRIC_NAME = 'XHarnessRetry'
-REBOOT_METRIC_NAME = 'XHarnessReboot'
-NETWORK_CONNECTIVITY_METRIC_NAME = 'XHarnessDeviceNetworkFailure'
-
-# Name of metrics we send to Kusto
-KUSTO_EVENT_TYPE = 'MobileDeviceOperation'
-KUSTO_OPERATION_METRIC_NAME = 'ExitCode'
-KUSTO_DURATION_METRIC_NAME = 'Duration'
-KUSTO_RETRY_METRIC_NAME = 'Retry'
-KUSTO_REBOOT_METRIC_NAME = 'Reboot'
-KUSTO_NETWORK_CONNECTIVITY_METRIC_NAME = 'NoInternet'
+# Name of metrics we send (to Kusto)
+EVENT_TYPE = 'MobileDeviceOperation'
+OPERATION_METRIC_NAME = 'ExitCode'
+DURATION_METRIC_NAME = 'Duration'
+RETRY_METRIC_NAME = 'Retry'
+REBOOT_METRIC_NAME = 'Reboot'
+NETWORK_CONNECTIVITY_METRIC_NAME = 'NoInternet'
 
 opts, args = getopt.gnu_getopt(sys.argv[1:], 'd:', ['diagnostics-data='])
 opt_dict = dict(opts)
@@ -54,8 +45,8 @@ output_directory = os.getenv('HELIX_WORKITEM_UPLOAD_ROOT')
 # Retry/reboot can be also asked for by the client (by creating .retry/.reboot files)
 retry = False
 reboot = False
-retry_dimensions = None
-reboot_dimensions = None
+retry_dimensions = dict()
+reboot_dimensions = dict()
 retry_exit_code = -1
 reboot_exit_code = -1
 android_connectivity_verified = False
@@ -81,8 +72,8 @@ def call_xharness(args: list, capture_output: bool = False) -> Tuple[int, str]:
     args = ['dotnet', 'exec', xharness_cli_path] + args
 
     if capture_output:
-        process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        stdout = process.communicate()[0]
+        process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        stdout = process.communicate()[0].decode("utf-8")
         return process.returncode, stdout
     else:
         return subprocess.run(args, stdout=None, stderr=None, text=True).returncode, None
@@ -134,29 +125,82 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
 
     global retry, reboot, android_connectivity_verified
 
-    retry_message = 'This is typically not a failure of the work item. It will be run again.'
-    reboot_message = 'This machine will reboot to heal.'
+    # Kill the simulator when we fail to launch the app
+    if exit_code == 80: # APP_CRASH
+        print(f'    Application crashed - if persist, please investigate system logs from the run')
+        retry = True
+        reboot = True
+        return
+
+    # Simulators are known to slow down which results in installation taking several minutes
+    # Retry+reboot usually resolves this
+    if exit_code == 86: # APP_INSTALLATION_TIMEOUT
+        print(f'    Installation timed out')
+        reboot = True
+        retry = True
+        return
+
+    # Simulators are known to slow/break down and a reboot usually helps
+    # This manifest by us not being able to launch the simulator
+    if exit_code == 88: # SIMULATOR_FAILURE
+        print(f'    Failed to launch the emulator')
+        reboot = True
+        retry = True
+        return
+
+    # Devices can be locked or in a corrupted state, in this case we only retry the work item
+    if exit_code == 89: # DEVICE_FAILURE
+        print(f'    Failed to talk to the device')
+        retry = True
+        return
+
+    if exit_code == 90: # APP_LAUNCH_TIMEOUT
+        print(f'    Failed to launch the app in alloted time')
+        if not is_device:
+            reboot = True
+        retry = True
+        return
 
     if platform == "android":
-        if exit_code == 85: # ADB_DEVICE_ENUMERATION_FAILURE
-            # This handles issues where devices or emulators fail to start.
-            # The only solution is to reboot the machine, so we request a work item retry + agent reboot when this happens
-            print(f'    Encountered ADB_DEVICE_ENUMERATION_FAILURE. {retry_message} {reboot_message}')
-            print('    If this occurs repeatedly, please check for architectural mismatch, e.g. sending arm64_v8a APKs to an x86_64 / x86 only queue.')
-
-            if not is_device and os.name != 'nt':
-                # Copy emulator log
-                subprocess.call(['cp', '/tmp/*-logcat.log', output_directory])
-
-            reboot = True
+        if exit_code == 81: # DEVICE_NOT_FOUND
+            # This handles issues where emulators fail to start or devices go silent.
+            print(f'    Encountered DEVICE_NOT_FOUND')
+            print('    If this occurs repeatedly, please check for architectural mismatch, e.g. sending arm64_v8a APKs to an x86_64 / x86 only queue')
             retry = True
+
+            if not is_device:
+                # For emulators it makes sense to reboot to try to heal the emulator
+                reboot = True
+
+                # We also attach logs from the emulator boot (which might tell us why there's no emulator)
+                if os.name != 'nt':
+                    # This is where Azure stores logs from custom extension script runs
+                    # More details here https://docs.microsoft.com/en-us/azure/virtual-machines/extensions/custom-script-linux#troubleshooting
+                    boot_log_location = '/var/lib/waagent/custom-script/download'
+
+                    print(f'    Collecting emulator boot logs from {boot_log_location}..')
+                    boot_log_destination = output_directory + '/emulator_logs'
+
+                    # Only copy stdout/stderr files (however they might be in different folders based on how Azure executed extension scripts)
+                    subprocess.call(['sudo', 'rsync', '--recursive', '--include', 'stdout', '--include', 'stderr', '--filter', '-! */',
+                        boot_log_location, boot_log_destination])
+
+                    # The boot logs are owned by root, so make them readable for the Helix agent
+                    subprocess.call(['sudo', 'chmod', '-R', '777', boot_log_destination])
+
+            return
+
+        if exit_code == 82 and not is_device: # RETURN_CODE_NOT_SET - this happens when emulator crashes halfway through
+            print(f'    Failed to read the instrumentation result')
+            retry = True
+            reboot = True
             return
 
         if exit_code == 78: # PACKAGE_INSTALLATION_FAILURE
             # This handles issues where APKs fail to install.
             # We already reboot a device inside XHarness and now request a work item retry when this happens
-            print(f'    Encountered PACKAGE_INSTALLATION_FAILURE. {retry_message}')
-            print('    If this occurs repeatedly, please check for architectural mismatch, e.g. requesting installation on arm64_v8a-only queue for x86 or x86_64 APKs.')
+            print(f'    Encountered PACKAGE_INSTALLATION_FAILURE')
+            print('    If this occurs repeatedly, please check for architectural mismatch, e.g. requesting installation on arm64_v8a-only queue for x86 or x86_64 APKs')
             retry = True
 
             if is_device:
@@ -165,6 +209,20 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                 except Exception as e:
                     print(f'    Failed to remove installed apps from device: {e}')
 
+            return
+
+        if exit_code == 91: # ADB_FAILURE
+            # This handles issues where we have problems with ADB
+            # The only solution is to reboot the machine, so we request a work item retry + agent reboot when this happens
+            print(f'    Encountered ADB_FAILURE')
+            print('    If this occurs repeatedly, please check for architectural mismatch, e.g. sending arm64_v8a APKs to an x86_64 / x86 only queue')
+
+            if not is_device and os.name != 'nt':
+                # Copy emulator log
+                subprocess.call(['cp', '/tmp/*-logcat.log', output_directory])
+
+            reboot = True
+            retry = True
             return
 
         if exit_code != 0 and is_device and not android_connectivity_verified:
@@ -177,74 +235,69 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
 
             if exitcode != 0:
                 retry = True
-                print(f'    Detected network connectivity issue. {retry_message}')
-                raise AdditionalTelemetryRequired(KUSTO_NETWORK_CONNECTIVITY_METRIC_NAME, 1)
+                print(f'    Detected network connectivity issue')
+                raise AdditionalTelemetryRequired(NETWORK_CONNECTIVITY_METRIC_NAME, 1)
 
     elif platform == "apple":
-        retry_message = 'This is typically not a failure of the work item. It will be run again. '
-        reboot_message = 'This machine will reboot to heal.'
-        
+        # This code should only be retried for Apple as in Android this can mean failed tests or app crash
         if exit_code == 82: # RETURN_CODE_NOT_SET
             # See https://github.com/dotnet/xharness/issues/812
-            print(f'    Failed to detect app\'s exit code. {retry_message}')
+            print(f'    Failed to detect app\'s exit code')
+            retry = True
+            return
+
+        # If we have a launch failure on simulators, we want a reboot+retry
+        # We want retry only on devices (it happens quite rarely)
+        if exit_code == 83: # APP_LAUNCH_FAILURE
+            print(f'    Encountered APP_LAUNCH_FAILURE')
+            if not is_device:
+                reboot = True
             retry = True
             return
 
         if is_device:
             # If we fail to find a real device, it is unexpected as device queues should have one
-            # It can often be fixed with a reboot
             if exit_code == 81: # DEVICE_NOT_FOUND
-                print(f'    Requested tethered Apple device not found. {retry_message} {reboot_message}')
+                print(f'    Requested tethered Apple device not found')
                 reboot = True
                 retry = True
+                return
 
-            # Devices can be locked or in a corrupted state, in this case we only retry the work item
-            if exit_code == 89: # DEVICE_FAILURE
-                print(f'    Failed to launch the simulator. {retry_message}')
-                retry = True
         else:
-            # Kill the simulator when we fail to launch the app
-            if exit_code == 80: # APP_CRASH
-                simulator_app = os.getenv('SIMULATOR_APP')
-                subprocess.call(['sudo', 'pkill', '-9', '-f', simulator_app])
-
-            # If we have a launch failure on simulators, we want a reboot+retry
-            if exit_code == 83: # APP_LAUNCH_FAILURE
-                print(f'    Encountered APP_LAUNCH_FAILURE. {retry_message} {reboot_message}')
-                reboot = True
+            if exit_code == 78: # PACKAGE_INSTALLATION_FAILURE
+                print(f'    Encountered PACKAGE_INSTALLATION_FAILURE. This might be caused by a corrupt simulator')
                 retry = True
+                reboot = True
+                return
 
             # If we fail to find a simulator and we are not targeting a specific version (e.g. `ios-simulator_13.5`),
             # it is probably an issue because Xcode should always have at least one runtime version inside
             if exit_code == 81 and '_' not in target: # DEVICE_NOT_FOUND
-                print(f'    No simulator runtime found. {retry_message}')
+                print(f'    No simulator runtime found')
                 retry = True
-
-            # Simulators are known to slow down which results in installation taking several minutes
-            # Retry+reboot usually resolves this
-            if exit_code == 86: # APP_INSTALLATION_TIMEOUT
-                print(f'    Installation timed out. {retry_message} {reboot_message}')
                 reboot = True
-                retry = True
-
-            # Simulators are known to slow/break down and a reboot usually helps
-            # This manifest by us not being able to launch the simulator
-            if exit_code == 88: # SIMULATOR_FAILURE
-                print(f'    Failed to launch the simulator. {retry_message} {reboot_message}')
-                reboot = True
-                retry = True
-
-            # Simulators are known to slow/break down and a reboot usually helps
-            # This manifest by us not being able to launch the simulator/start the test run in time
-            if exit_code == 90: # APP_LAUNCH_TIMEOUT
-                print(f'    Failed to start the test execution in time. {retry_message} {reboot_message}')
-                reboot = True
-                retry = True
+                return
 
 # The JSON should be an array of objects (one per each executed XHarness command)
-operations = json.load(open(diagnostics_file))
+try:
+    operations = json.load(open(diagnostics_file))
+except Exception as e:
+    print(f'    Failed to load the diagnostics file: {e}')
+    print('Diagnostics file contents:')
+    with open(diagnostics_file) as f:
+        print(f.read())
+    exit(1)
+
+if len(operations) == 0:
+    print('    No operations found in the diagnostics file')
+    exit(0)
 
 print(f"Reporting {len(operations)} events from diagnostics file `{diagnostics_file}`")
+
+# Example version: 1.0.0-prerelease.22269.1+6e87004b51c89c59ac4a34536e9bc22da0124f39
+# We remove the commit SHA
+_, version = call_xharness(['version'], capture_output=True)
+version = version.strip().split("+")[0]
 
 # Parse operations, analyze them and send them to Application Insights
 for operation in operations:
@@ -260,6 +313,7 @@ for operation in operations:
     custom_dimensions = dict()
     custom_dimensions['command'] = command
     custom_dimensions['platform'] = platform
+    custom_dimensions['version'] = version
 
     if is_device is not None:
         custom_dimensions['isDevice'] = 'true' if str(is_device).lower() == 'true' else 'false'
@@ -275,7 +329,7 @@ for operation in operations:
     try:
         analyze_operation(command, platform, device, is_device, target, exit_code)
     except AdditionalTelemetryRequired as e:
-        app_insights.send_metric(e.metric_name, e.metric_value, properties=custom_dimensions)
+        send_metric(e.metric_name, e.metric_value, custom_dimensions, event_type=EVENT_TYPE)
     except Exception as e:
         print(f'    Failed to analyze operation: {e}')
 
@@ -287,15 +341,11 @@ for operation in operations:
     if reboot and reboot_dimensions is None:
         reboot_dimensions = custom_dimensions
 
-    # TODO (https://github.com/dotnet/core-eng/issues/15274): Stop sending app insights telemetry
-    app_insights.send_metric(OPERATION_METRIC_NAME, exit_code, properties=custom_dimensions)
-    app_insights.send_metric(DURATION_METRIC_NAME, duration, properties=custom_dimensions)
-
     kusto_metrics = dict()
-    kusto_metrics[KUSTO_OPERATION_METRIC_NAME] = exit_code
-    kusto_metrics[KUSTO_DURATION_METRIC_NAME] = duration
+    kusto_metrics[OPERATION_METRIC_NAME] = exit_code
+    kusto_metrics[DURATION_METRIC_NAME] = duration
 
-    send_metrics(kusto_metrics, custom_dimensions, event_type=KUSTO_EVENT_TYPE)
+    send_metrics(kusto_metrics, custom_dimensions, event_type=EVENT_TYPE)
 
 # Retry / reboot is handled here
 script_dir = os.getenv('HELIX_WORKITEM_ROOT')
@@ -307,20 +357,20 @@ if os.path.exists(os.path.join(script_dir, '.reboot')):
     reboot = True
 
 if retry:
-    # TODO (https://github.com/dotnet/core-eng/issues/15274): Stop sending app insights telemetry
-    app_insights.send_metric(RETRY_METRIC_NAME, retry_exit_code, properties=retry_dimensions)
-    send_metric(KUSTO_RETRY_METRIC_NAME, retry_exit_code, retry_dimensions, event_type=KUSTO_EVENT_TYPE)
+    send_metric(RETRY_METRIC_NAME, retry_exit_code, retry_dimensions, event_type=EVENT_TYPE)
     request_infra_retry('Requesting work item retry because an infrastructure issue was detected on this machine')
 
     # TODO https://github.com/dotnet/core-eng/issues/15059
     # We need to remove testResults.xml so that it is not uploaded since this run will be discarded
     # This is a workaround until we make AzDO reporter not upload test results
-    test_results = os.path.join(output_directory, "testResults.xml")
+    file_name = "testResults.xml"
+    test_results = os.path.join(output_directory, file_name)
     if os.path.exists(test_results):
         os.remove(test_results)
 
+    if os.path.exists(file_name):
+        os.remove(file_name)
+
 if reboot:
-    # TODO (https://github.com/dotnet/core-eng/issues/15274): Stop sending app insights telemetry
-    app_insights.send_metric(REBOOT_METRIC_NAME, reboot_exit_code, properties=reboot_dimensions)
-    send_metric(KUSTO_REBOOT_METRIC_NAME, reboot_exit_code, reboot_dimensions, event_type=KUSTO_EVENT_TYPE)
+    send_metric(REBOOT_METRIC_NAME, reboot_exit_code, reboot_dimensions, event_type=EVENT_TYPE)
     request_reboot('Requesting machine reboot as an infrastructure issue was detected on this machine')

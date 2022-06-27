@@ -207,6 +207,11 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
     </AdditionalDotNetPackage>
     <!-- Includes the 6.0.0-preview.4.21175.1 version, using the default runtime packageType, DotNetCliRuntime, and Current channel  -->
     <AdditionalDotNetPackage Include="6.0.0-preview.4.21175.1" />
+
+    <!-- if the above package was not available from a public feed, you can specify a private feed like this -->
+    <AdditionalDotNetPackageFeed Include="https://someprivatefeed.blob.azure.com/internal">
+      <SasToken>$(SasTokenValueForSomePrivateFeed)</SasToken>
+    </AdditionalDotNetPackageFeed>
   </ItemGroup>
   
   <!--

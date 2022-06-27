@@ -109,3 +109,18 @@ secrets:
     type: base64-encoder
     parameters:
       secret: dotnetbuilds-public-container-checksum-uri
+
+
+  dotnetbuilds-account-read-sas-token:
+    type: azure-storage-account-sas-token
+    parameters:
+      connectionString:
+        name: dotnetbuilds-connection-string
+        location: dotnetbuildskeys
+      permissions: rl
+      service: blob
+
+  dotnetbuilds-account-read-sas-token-base64:
+    type: base64-encoder
+    parameters:
+      secret: dotnetbuilds-account-read-sas-token

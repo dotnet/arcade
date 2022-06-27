@@ -15,6 +15,10 @@ namespace AttributeDifference
         public T GenericMethodWithAttribute<[DefaultValue("T")] T>() => default(T);
         [Foo]
         public void MethodWithAttribute() { }
+        [Foo]
+        public string PropertyWithAttribute { get; set; }
+        [Foo]
+        public event System.EventHandler EventWithAttribute { add { } remove { } }
     }
 
     public class AttributeDifferenceGenericCLass<[DefaultValue("TOne")] TOne, [DefaultValue("TTwo")] TTwo>

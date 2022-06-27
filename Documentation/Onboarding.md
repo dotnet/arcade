@@ -22,8 +22,12 @@
        [Version.Details.xml](https://github.com/dotnet/arcade/blob/main/eng/Version.Details.xml)
        files to your eng\ folder. Adjust the version prefix and prerelease label
        as necessary.
-    5. Add dotnet-core feed and any other feeds that the repository restores NuGet packages from to
-       [NuGet.config](https://github.com/dotnet/arcade/blob/main/NuGet.config).
+    5. Add the following feeds to your nuget.config:
+       * https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json
+       * https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
+       * https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json
+       
+       along with any other feeds your repo needs to restore packages from. You can see which feeds Arcade uses at: [NuGet.config](https://github.com/dotnet/arcade/blob/main/NuGet.config).
 
     **Using Arcade packages** - See [documentation](CorePackages/) for
     information on specific packages.

@@ -138,18 +138,21 @@ namespace Microsoft.DotNet.AsmDiff
                     diff = DifferenceType.Unchanged;
             }
 
-            if (diff == DifferenceType.Added)
+            switch (diff)
             {
-                WriteDiff(writer, "+", indent, suffix, api.Right);
-            }
-            else if (diff == DifferenceType.Changed || diff == DifferenceType.Removed)
-            {
-                WriteDiff(writer, "-", indent, suffix, api.Left);
-                WriteDiff(writer, "+", indent, suffix, api.Right);
-            }
-            else
-            {
-                WriteDiff(writer, " ", indent, suffix, api.Definition);
+                case DifferenceType.Added:
+                    WriteDiff(writer, "+", indent, suffix, api.Right);
+                    break;
+                case DifferenceType.Removed:
+                    WriteDiff(writer, "-", indent, suffix, api.Left);
+                    break;
+                case DifferenceType.Changed:
+                    WriteDiff(writer, "-", indent, suffix, api.Left);
+                    WriteDiff(writer, "+", indent, suffix, api.Right);
+                    break;
+                default:
+                    WriteDiff(writer, " ", indent, suffix, api.Definition);
+                    break;
             }
 
             if (hasChildren)

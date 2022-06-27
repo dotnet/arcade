@@ -12,7 +12,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <AssemblyMetadata Include="NotSupported" Value="True" />
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadata">
+      <_Parameter1>NotSupported</_Parameter1>
+      <_Parameter2>True</_Parameter2>
+    </AssemblyAttribute>
   </ItemGroup>
 
   <ItemGroup Condition="'$(GeneratePlatformNotSupportedAssemblyMessage)' != ''">

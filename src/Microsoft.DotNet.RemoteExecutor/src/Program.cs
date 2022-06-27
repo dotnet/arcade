@@ -95,6 +95,10 @@ namespace Microsoft.DotNet.RemoteExecutor
             }
             finally
             {
+                // We have seen cases where current directory holds a handle to a directory
+                // for a period after RemoteExecutor exits, preventing that directory being
+                // deleted. Tidy up by resetting it to the temp path.
+                Directory.SetCurrentDirectory(Path.GetTempPath());
                 (instance as IDisposable)?.Dispose();
             }
 

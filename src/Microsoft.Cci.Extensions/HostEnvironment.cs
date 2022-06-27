@@ -244,18 +244,33 @@ namespace Microsoft.Cci.Extensions
         private AssemblyIdentity ResolveCoreAssemblyIdentity(IAssembly assembly)
         {
             AssemblyIdentity coreIdentity = assembly.CoreAssemblySymbolicIdentity;
+            HashSet<AssemblyIdentity> consideredIdentities = new HashSet<AssemblyIdentity>();
 
             // Try to find the assembly which believes itself is the core assembly
             while (!assembly.AssemblyIdentity.Equals(coreIdentity))
             {
-                if (coreIdentity == null || coreIdentity == Dummy.AssemblyIdentity)
+                // CCI may not be able to identify the core assembly if no types are referenced
+                if (coreIdentity == Dummy.AssemblyIdentity)
+                {
+                    // try the first referenced assembly we haven't already checked and walk down from there.
+                    coreIdentity = assembly.AssemblyReferences
+                        .Select(ar => ar.AssemblyIdentity)
+                        .FirstOrDefault(ai => !consideredIdentities.Contains(ai));
+                }
+
+                // if we couldn't find a new identity to try, or we've already tried this identity, give up
+                if (coreIdentity == null || consideredIdentities.Contains(coreIdentity))
                 {
                     return null;
                 }
 
+                // track all considered identities, this will prevent us from entering a cycle
+                consideredIdentities.Add(coreIdentity);
+
+                // unify to the version of the identify found in our paths
                 coreIdentity = ProbeLibPaths(coreIdentity);
 
-                // push down until we can find an assembly that is the core assembly
+                // load it to see which assembly it believes to be the core
                 assembly = LoadAssembly(coreIdentity);
 
                 if (assembly == null || assembly == Dummy.Assembly)

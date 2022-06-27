@@ -159,7 +159,7 @@ namespace Microsoft.Cci.Writers
                 // For compile-time compat, the following rules should work for producing a reference assembly. We drop all private fields,
                 // but add back certain synthesized private fields for a value type (struct) as follows:
 
-                // 1. If there is a reference type field in the struct or within the fields' type closure,
+                // 1. If there is a ref field or reference type field in the struct or within the fields' type closure,
                 //    it should emit a reference type and a value type dummy field.
                 //    - The reference type dummy field is needed in order to inform the compiler to block
                 //      taking pointers to this struct because the GC will not track updating those references.

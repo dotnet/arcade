@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     {
         public static string CalculateMD5(string filename)
         {
-            using var md5 = MD5.Create();
+            using var md5 = MD5.Create(); // lgtm [cs/weak-crypto] Azure Storage specifies use of MD5
             using var stream = File.OpenRead(filename);
             byte[] hash = md5.ComputeHash(stream);
             return Convert.ToBase64String(hash);

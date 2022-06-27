@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.GenAPI
 
         public void WriteAssemblies(IEnumerable<IAssembly> assemblies)
         {
-            foreach (var assembly in assemblies)
+            foreach (IAssembly assembly in assemblies)
                 Visit(assembly);
         }
 

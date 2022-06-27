@@ -141,7 +141,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             foreach (ITaskItem item in workloadManifestItems)
             {
                 var workloadManifest = WorkloadManifestReader.ReadWorkloadManifest(
-                    Path.GetFileNameWithoutExtension(item.ItemSpec), File.OpenRead(item.ItemSpec));
+                    Path.GetFileNameWithoutExtension(item.ItemSpec), File.OpenRead(item.ItemSpec), item.ItemSpec);
 
                 foreach (var workload in workloadManifest.Workloads.Values)
                 {

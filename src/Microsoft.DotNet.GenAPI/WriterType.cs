@@ -3,7 +3,7 @@
 
 namespace Microsoft.DotNet.GenAPI
 {
-    enum WriterType
+    public enum WriterType
     {
         CSDecl,
         DocIds,

@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         // We have a more aggressive timeout towards simulators which tend to slow down until installation takes 20 minutes and the machine needs a reboot
         // For this reason, it's better to be aggressive and detect a slower machine sooner
-        private static readonly TimeSpan s_defaultSimulatorLaunchTimeout = TimeSpan.FromMinutes(3);
+        private static readonly TimeSpan s_defaultSimulatorLaunchTimeout = TimeSpan.FromMinutes(6);
         private static readonly TimeSpan s_defaultDeviceLaunchTimeout = TimeSpan.FromMinutes(5);
 
         /// <summary>
@@ -205,11 +205,10 @@ namespace Microsoft.DotNet.Helix.Sdk
             "--output-directory \"$output_directory\" " +
             "--target \"$target\" " +
             "--timeout \"$timeout\" " +
+            "--launch-timeout \"$launch_timeout\" " +
             "--xcode \"$xcode_path\" " +
             "-v " +
-            (includesTestRunner
-                ? $"--launch-timeout \"$launch_timeout\" "
-                : $"--expected-exit-code $expected_exit_code ") +
+            (!includesTestRunner ? "--expected-exit-code $expected_exit_code " : string.Empty) +
             (resetSimulator ? $"--reset-simulator " : string.Empty) +
             (!string.IsNullOrEmpty(AppArguments) ? "-- " + AppArguments : string.Empty);
 

@@ -356,7 +356,7 @@ namespace Microsoft.DotNet.SignTool
         {
             if (wixToolsPath == null)
             {
-                log.LogError("WixToolsPath must be defined to run WiX tooling. Wixpacks are used to produce signed msi's during post-build signing. If this repostiory is using in-build signing, remove '*.wixpack.zip' from ItemsToSign.");
+                log.LogError("WixToolsPath must be defined to run WiX tooling. Wixpacks are used to produce signed msi's during post-build signing. If this repository is using in-build signing, remove '*.wixpack.zip' from ItemsToSign.");
                 return false;
             }
 
