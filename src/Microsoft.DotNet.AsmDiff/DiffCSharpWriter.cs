@@ -199,11 +199,11 @@ namespace Microsoft.DotNet.AsmDiff
             {
                 IDisposable style = null;
 
-                if (this.HighlightBaseMembers)
+                if (HighlightMemberOverrides || HighlightInterfaceImplementations)
                 {
-                    if (member.Representative.IsInterfaceImplementation())
+                    if (HighlightInterfaceImplementations && member.Representative.IsInterfaceImplementation())
                         style = _syntaxWriter.StartStyle(SyntaxStyle.InterfaceMember);
-                    else if (member.Representative.IsOverride())
+                    else if (HighlightMemberOverrides && member.Representative.IsOverride())
                         style = _syntaxWriter.StartStyle(SyntaxStyle.InheritedMember);
                 }
 
