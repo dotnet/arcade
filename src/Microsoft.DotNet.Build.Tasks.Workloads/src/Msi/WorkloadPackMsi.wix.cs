@@ -78,6 +78,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
 
             ITaskItem msi = Link(candle.OutputPath, msiFileName, iceSuppressions);
 
+            AddDefaultPackageFiles(msi);
+
             return msi;
         }
 

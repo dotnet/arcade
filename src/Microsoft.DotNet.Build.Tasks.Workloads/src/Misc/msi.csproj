@@ -24,9 +24,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="__MSI__" Pack="true" PackagePath="\data" />
-    <None Include="__MSI_JSON__" Pack="true" PackagePath="\data\msi.json" />
-    <None Include="__LICENSE_FILENAME__" Pack="true" PackagePath="\" />
   </ItemGroup>
 
   <Target Name="AddPackageIcon"
