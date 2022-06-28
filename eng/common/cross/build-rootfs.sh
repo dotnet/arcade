@@ -5,7 +5,7 @@ set -e
 usage()
 {
     echo "Usage: $0 [BuildArch] [CodeName] [lldbx.y] [llvmx[.y]] [--skipunmount] --rootfsdir <directory>]"
-    echo "BuildArch can be: arm(default), armel, arm64, x86"
+    echo "BuildArch can be: arm(default), armel, arm64, x86, x64"
     echo "CodeName - optional, Code name for Linux, can be: xenial(default), zesty, bionic, alpine, alpine3.13 or alpine3.14. If BuildArch is armel, LinuxCodeName is jessie(default) or tizen."
     echo "                              for FreeBSD can be: freebsd12, freebsd13"
     echo "                              for illumos can be: illumos."
@@ -21,6 +21,7 @@ __CrossDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 __InitialDir=$PWD
 __BuildArch=arm
 __AlpineArch=armv7
+__FreeBSDArch=arm
 __QEMUArch=arm
 __UbuntuArch=armhf
 __UbuntuRepo="http://ports.ubuntu.com/"
@@ -115,6 +116,7 @@ while :; do
             __UbuntuArch=arm64
             __AlpineArch=aarch64
             __QEMUArch=aarch64
+            __FreeBSDArch=arm64
             ;;
         armel)
             __BuildArch=armel
@@ -139,6 +141,12 @@ while :; do
             __UbuntuPackages=$(echo ${__UbuntuPackages} | sed 's/ libomp-dev//')
             __UbuntuPackages=$(echo ${__UbuntuPackages} | sed 's/ libomp5//')
             unset __LLDB_Package
+            ;;
+        x64)
+            __BuildArch=x64
+            __UbuntuArch=amd64
+            __FreeBSDArch=amd64
+            __UbuntuRepo=
             ;;
         x86)
             __BuildArch=x86
@@ -228,14 +236,12 @@ while :; do
             ;;
         freebsd12)
             __CodeName=freebsd
-            __BuildArch=x64
             __SkipUnmount=1
             ;;
         freebsd13)
             __CodeName=freebsd
             __FreeBSDBase="13.0-RELEASE"
             __FreeBSDABI="13"
-            __BuildArch=x64
             __SkipUnmount=1
             ;;
         illumos)
@@ -312,8 +318,8 @@ if [[ "$__CodeName" == "alpine" ]]; then
 elif [[ "$__CodeName" == "freebsd" ]]; then
     mkdir -p $__RootfsDir/usr/local/etc
     JOBS="$(getconf _NPROCESSORS_ONLN)"
-    wget -O - https://download.freebsd.org/ftp/releases/amd64/${__FreeBSDBase}/base.txz | tar -C $__RootfsDir -Jxf - ./lib ./usr/lib ./usr/libdata ./usr/include ./usr/share/keys ./etc ./bin/freebsd-version
-    echo "ABI = \"FreeBSD:${__FreeBSDABI}:amd64\"; FINGERPRINTS = \"${__RootfsDir}/usr/share/keys\"; REPOS_DIR = [\"${__RootfsDir}/etc/pkg\"]; REPO_AUTOUPDATE = NO; RUN_SCRIPTS = NO;" > ${__RootfsDir}/usr/local/etc/pkg.conf
+    wget -O - https://download.freebsd.org/ftp/releases/${__FreeBSDArch}/${__FreeBSDBase}/base.txz | tar -C $__RootfsDir -Jxf - ./lib ./usr/lib ./usr/libdata ./usr/include ./usr/share/keys ./etc ./bin/freebsd-version
+    echo "ABI = \"FreeBSD:${__FreeBSDABI}:${__FreeBSDArch}\"; FINGERPRINTS = \"${__RootfsDir}/usr/share/keys\"; REPOS_DIR = [\"${__RootfsDir}/etc/pkg\"]; REPO_AUTOUPDATE = NO; RUN_SCRIPTS = NO;" > ${__RootfsDir}/usr/local/etc/pkg.conf
     echo "FreeBSD: { url: "pkg+http://pkg.FreeBSD.org/\${ABI}/quarterly", mirror_type: \"srv\", signature_type: \"fingerprints\", fingerprints: \"${__RootfsDir}/usr/share/keys/pkg\", enabled: yes }" > ${__RootfsDir}/etc/pkg/FreeBSD.conf
     mkdir -p $__RootfsDir/tmp
     # get and build package manager
