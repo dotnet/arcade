@@ -24,7 +24,7 @@
     <Content Include="Resources\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(PkgWix)\tools\**">
+    <Content Include="$(PkgMicrosoft_Signed_Wix)\tools\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <Link>tools\wix\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Content>
