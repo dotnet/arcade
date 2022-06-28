@@ -11,6 +11,7 @@ using Microsoft.Deployment.DotNet.Releases;
 using Microsoft.DotNet.Build.Tasks.Workloads.Msi;
 using Microsoft.DotNet.Build.Tasks.Workloads.Swix;
 using Microsoft.NET.Sdk.WorkloadManifestReader;
+using static Microsoft.DotNet.Build.Tasks.Workloads.Msi.WorkloadManifestMsi;
 using Parallel = System.Threading.Tasks.Parallel;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads
@@ -173,6 +174,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             set;
         }
 
+        /// <summary>
+        /// Allow VS workload generation to proceed if any nupkgs declared in the manifest are not found on disk.
+        /// </summary>
+        public bool AllowMissingPacks
+        {
+            get;
+            set;
+        } = false;
+
         public override bool Execute()
         {
             try
@@ -213,21 +223,54 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     //    ensuring that the pack and MSI is only generated once.
                     WorkloadManifest manifest = manifestPackage.GetManifest();
 
+                    List<WorkloadPackGroupJson> packGroupJsonList = new();
+
                     foreach (WorkloadDefinition workload in manifest.Workloads.Values)
                     {
                         if ((workload is WorkloadDefinition wd) && (wd.Platforms == null || wd.Platforms.Any(platform => platform.StartsWith("win"))) && (wd.Packs != null))
                         {
                             Dictionary<string, List<WorkloadPackPackage>> packsInWorkloadByPlatform = new();
 
+                            string packGroupId = null;
+                            WorkloadPackGroupJson packGroupJson = null;
+                            if (CreateWorkloadPackGroups)
+                            {
+                                packGroupId = WorkloadPackGroupPackage.GetPackGroupID(workload.Id);
+                                packGroupJson = new WorkloadPackGroupJson()
+                                {
+                                    GroupPackageId = packGroupId,
+                                    GroupPackageVersion = manifestPackage.PackageVersion.ToString()
+                                };
+                                packGroupJsonList.Add(packGroupJson);
+                            }
+                            
+
                             foreach (WorkloadPackId packId in wd.Packs)
                             {
                                 WorkloadPack pack = manifest.Packs[packId];
+
+                                if (CreateWorkloadPackGroups)
+                                {
+                                    packGroupJson.Packs.Add(new WorkloadPackJson()
+                                    {
+                                        PackId = pack.Id,
+                                        PackVersion = pack.Version
+                                    });
+                                }
 
                                 foreach ((string sourcePackage, string[] platforms) in WorkloadPackPackage.GetSourcePackages(PackageSource, pack))
                                 {
                                     if (!File.Exists(sourcePackage))
                                     {
-                                        throw new FileNotFoundException(message: null, fileName: sourcePackage);
+                                        if (AllowMissingPacks)
+                                        {
+                                            Log.LogMessage($"Pack {sourcePackage} - {string.Join(",", platforms)} could not be found, it will be skipped.");
+                                            continue;
+                                        }
+                                        else
+                                        {
+                                            throw new FileNotFoundException(message: "NuGet package not found", fileName: sourcePackage);
+                                        }
                                     }
 
                                     // Create new build data and add the pack if we haven't seen it previously.
@@ -264,7 +307,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                                 }
                             }
 
-                            string packGroupId = null;
+                            
 
                             if (CreateWorkloadPackGroups)
                             {
@@ -278,7 +321,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                                     if (!packGroupPackages.TryGetValue(uniquePackGroupKey, out var groupPackage))
                                     {
                                         groupPackage = new WorkloadPackGroupPackage(workload.Id);
-                                        packGroupId = groupPackage.Id;
                                         groupPackage.Packs.AddRange(kvp.Value);
                                         packGroupPackages[uniquePackGroupKey] = groupPackage;
                                     }
@@ -288,8 +330,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                                         groupPackage.ManifestsPerPlatform[platform] = new();
                                     }
                                     groupPackage.ManifestsPerPlatform[platform].Add(manifestPackage);
+                                }
 
-                                    manifestMsisByPlatform[platform].WorkloadPackGroups.Add(groupPackage);
+                                foreach (var manifestMsi in manifestMsisByPlatform.Values)
+                                {
+                                    manifestMsi.WorkloadPackGroups.AddRange(packGroupJsonList);
                                 }
                             }
 
@@ -316,11 +361,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                         WorkloadPackMsi msi = new(data.Package, platform, BuildEngine, WixToolsetPath, BaseIntermediateOutputPath);
                         ITaskItem msiOutputItem = msi.Build(MsiOutputPath, IceSuppressions);
 
-                        // Create the JSON manifest for CLI based installations.
-                        string msiJsonPath = MsiProperties.Create(msiOutputItem.ItemSpec);
-
                         // Generate a .csproj to package the MSI and its manifest for CLI installs.
-                        MsiPayloadPackageProject csproj = new(msi.Metadata, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, Path.GetFullPath(msiJsonPath));
+                        MsiPayloadPackageProject csproj = new(msi.Metadata, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, msi.NuGetPackageFiles);
                         msiOutputItem.SetMetadata(Metadata.PackageProject, csproj.Create());
 
                         lock (msiItems)
@@ -359,11 +401,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                         WorkloadPackGroupMsi msi = new(packGroup, platform, BuildEngine, WixToolsetPath, BaseIntermediateOutputPath);
                         ITaskItem msiOutputItem = msi.Build(MsiOutputPath, IceSuppressions);
 
-                        // Create the JSON manifest for CLI based installations.
-                        string msiJsonPath = MsiProperties.Create(msiOutputItem.ItemSpec);
-
                         // Generate a .csproj to package the MSI and its manifest for CLI installs.
-                        MsiPayloadPackageProject csproj = new(msi.Metadata, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, Path.GetFullPath(msiJsonPath));
+                        MsiPayloadPackageProject csproj = new(msi.Metadata, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, msi.NuGetPackageFiles);
                         msiOutputItem.SetMetadata(Metadata.PackageProject, csproj.Create());
 
                         lock (msiItems)
@@ -397,9 +436,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 {
                     ITaskItem msiOutputItem = msi.Build(MsiOutputPath, IceSuppressions);
 
-                    // Create the JSON manifest for CLI based installations.
-                    string msiJsonPath = MsiProperties.Create(msiOutputItem.ItemSpec);
-
                     // Generate SWIX authoring for the MSI package.
                     MsiSwixProject swixProject = new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath);
                     ITaskItem swixProjectItem = new TaskItem(swixProject.Create());
@@ -411,7 +447,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     }
 
                     // Generate a .csproj to package the MSI and its manifest for CLI installs.
-                    MsiPayloadPackageProject csproj = new(msi.Metadata, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, Path.GetFullPath(msiJsonPath));
+                    MsiPayloadPackageProject csproj = new(msi.Metadata, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, msi.NuGetPackageFiles);
                     msiOutputItem.SetMetadata(Metadata.PackageProject, csproj.Create());
 
                     lock (msiItems)
