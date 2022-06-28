@@ -22,6 +22,7 @@ __InitialDir=$PWD
 __BuildArch=arm
 __AlpineArch=armv7
 __FreeBSDArch=arm
+__FreeBSDMachineArch=armv7
 __QEMUArch=arm
 __UbuntuArch=armhf
 __UbuntuRepo="http://ports.ubuntu.com/"
@@ -117,6 +118,7 @@ while :; do
             __AlpineArch=aarch64
             __QEMUArch=aarch64
             __FreeBSDArch=arm64
+            __FreeBSDMachineArch=aarch64
             ;;
         armel)
             __BuildArch=armel
@@ -146,6 +148,7 @@ while :; do
             __BuildArch=x64
             __UbuntuArch=amd64
             __FreeBSDArch=amd64
+            __FreeBSDMachineArch=amd64
             __UbuntuRepo=
             ;;
         x86)
@@ -318,8 +321,8 @@ if [[ "$__CodeName" == "alpine" ]]; then
 elif [[ "$__CodeName" == "freebsd" ]]; then
     mkdir -p $__RootfsDir/usr/local/etc
     JOBS="$(getconf _NPROCESSORS_ONLN)"
-    wget -O - https://download.freebsd.org/ftp/releases/${__FreeBSDArch}/${__FreeBSDBase}/base.txz | tar -C $__RootfsDir -Jxf - ./lib ./usr/lib ./usr/libdata ./usr/include ./usr/share/keys ./etc ./bin/freebsd-version
-    echo "ABI = \"FreeBSD:${__FreeBSDABI}:${__FreeBSDArch}\"; FINGERPRINTS = \"${__RootfsDir}/usr/share/keys\"; REPOS_DIR = [\"${__RootfsDir}/etc/pkg\"]; REPO_AUTOUPDATE = NO; RUN_SCRIPTS = NO;" > ${__RootfsDir}/usr/local/etc/pkg.conf
+    wget -O - https://download.freebsd.org/ftp/releases/${__FreeBSDArch}/${__FreeBSDMachineArch}/${__FreeBSDBase}/base.txz | tar -C $__RootfsDir -Jxf - ./lib ./usr/lib ./usr/libdata ./usr/include ./usr/share/keys ./etc ./bin/freebsd-version
+    echo "ABI = \"FreeBSD:${__FreeBSDABI}:${__FreeBSDMachineArch}\"; FINGERPRINTS = \"${__RootfsDir}/usr/share/keys\"; REPOS_DIR = [\"${__RootfsDir}/etc/pkg\"]; REPO_AUTOUPDATE = NO; RUN_SCRIPTS = NO;" > ${__RootfsDir}/usr/local/etc/pkg.conf
     echo "FreeBSD: { url: "pkg+http://pkg.FreeBSD.org/\${ABI}/quarterly", mirror_type: \"srv\", signature_type: \"fingerprints\", fingerprints: \"${__RootfsDir}/usr/share/keys/pkg\", enabled: yes }" > ${__RootfsDir}/etc/pkg/FreeBSD.conf
     mkdir -p $__RootfsDir/tmp
     # get and build package manager
