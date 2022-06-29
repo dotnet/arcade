@@ -46,13 +46,11 @@ if ($ev) {
     Write-Output "User command timed out after $command_timeout seconds!"
 
     Write-Output "Removing installed apps after unsuccessful run"
-    $adb_path = & dotnet exec $Env:XHARNESS_CLI_PATH android state --adb
-    $packages = & $adb_path shell pm list packages net.dot
+    $packages = dotnet exec $Env:XHARNESS_CLI_PATH android adb -- shell pm list packages net.dot
     $split_packages = $packages.split(':')
     For ($i = 1; $i -lt $split_packages.Length; $i += 2) {
         Write-Output "    Uninstalling $($split_packages[$i])"
-        $output = & $adb_path uninstall $split_packages[$i]
-        Write-Output "        $output"
+        dotnet exec $Env:XHARNESS_CLI_PATH android adb -- uninstall $split_packages[$i]
     }
 
     exit -3
