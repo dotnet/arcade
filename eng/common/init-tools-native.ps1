@@ -112,7 +112,7 @@ try {
             $ToolPath = Convert-Path -Path $BinPath
             Write-Host "Adding $ToolName to the path ($ToolPath)..."
             Write-Host "##vso[task.prependpath]$ToolPath"
-            $InstalledTools += @{ $ToolName = $ToolDirectory }
+            $InstalledTools += @{ $ToolName = $ToolDirectory.FullName }
           }
         }
         return $InstalledTools
