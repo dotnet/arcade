@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(VisualStudioInsertionComponent)' != ''">
-    <PackageReference Include="MicroBuild.Plugins.SwixBuild" Version="$(MicroBuildPluginsSwixBuildVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Plugins.SwixBuild" Version="$(MicrosoftVisualStudioEngMicroBuildPluginsSwixBuildVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(IsVsixProject)' == 'true' or '$(GeneratePkgDefFile)' == 'true'">
