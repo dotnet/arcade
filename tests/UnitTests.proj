@@ -16,6 +16,7 @@
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
 
     <EnableXUnitReporter>true</EnableXUnitReporter>
+    <FailOnMissingTargetQueue>false</FailOnMissingTargetQueue>
   </PropertyGroup>
 
   <ItemGroup>
@@ -58,7 +59,6 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
-    <HelixTargetQueue Include="Debian.9.Amd64"/>
     <HelixTargetQueue Include="RedHat.7.Amd64"/>
     <HelixTargetQueue Include="Windows.10.Amd64"/>
   </ItemGroup>
@@ -70,7 +70,6 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="Debian.9.Amd64.Open"/>
     <HelixTargetQueue Include="RedHat.7.Amd64.Open"/>
     <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
   </ItemGroup>
