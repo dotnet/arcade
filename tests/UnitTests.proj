@@ -8,12 +8,14 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <HelixType>test/product/</HelixType>
 
     <IncludeDotNetCli>true</IncludeDotNetCli>
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
 
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
+    <FailOnMissingTargetQueue>false</FailOnMissingTargetQueue>
   </PropertyGroup>
 
   <ItemGroup>
@@ -50,7 +52,6 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
-    <HelixTargetQueue Include="Debian.9.Amd64"/>
     <HelixTargetQueue Include="RedHat.7.Amd64"/>
     <HelixTargetQueue Include="Windows.10.Amd64"/>
   </ItemGroup>
@@ -62,7 +63,6 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="Debian.9.Amd64.Open"/>
     <HelixTargetQueue Include="RedHat.7.Amd64.Open"/>
     <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
   </ItemGroup>
