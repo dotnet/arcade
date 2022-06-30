@@ -23,6 +23,7 @@ __BuildArch=arm
 __AlpineArch=armv7
 __FreeBSDArch=arm
 __FreeBSDMachineArch=armv7
+__IllumosArch=arm7
 __QEMUArch=arm
 __UbuntuArch=armhf
 __UbuntuRepo="http://ports.ubuntu.com/"
@@ -149,6 +150,7 @@ while :; do
             __UbuntuArch=amd64
             __FreeBSDArch=amd64
             __FreeBSDMachineArch=amd64
+            __illumosArch=x86_64
             __UbuntuRepo=
             ;;
         x86)
@@ -216,11 +218,6 @@ while :; do
             __LLDB_Package="liblldb-6.0-dev"
             ;;
         tizen)
-            if [ "$__BuildArch" != "arm" ] && [ "$__BuildArch" != "armel" ] && [ "$__BuildArch" != "arm64" ] && [ "$__BuildArch" != "x86" ] ; then
-                echo "Tizen is available only for arm, armel, arm64 and x86."
-                usage;
-                exit 1;
-            fi
             __CodeName=
             __UbuntuRepo=
             __Tizen=tizen
@@ -249,7 +246,6 @@ while :; do
             ;;
         illumos)
             __CodeName=illumos
-            __BuildArch=x64
             __SkipUnmount=1
             ;;
         --skipunmount)
@@ -344,7 +340,7 @@ elif [[ "$__CodeName" == "illumos" ]]; then
     echo "Building binutils. Please wait.."
     wget -O - https://ftp.gnu.org/gnu/binutils/binutils-2.33.1.tar.bz2 | tar -xjf -
     mkdir build-binutils && cd build-binutils
-    ../binutils-2.33.1/configure --prefix="$__RootfsDir" --target="x86_64-sun-solaris2.10" --program-prefix="x86_64-illumos-" --with-sysroot="$__RootfsDir"
+    ../binutils-2.33.1/configure --prefix="$__RootfsDir" --target="${__illumosArch}-sun-solaris2.10" --program-prefix="${__illumosArch}-illumos-" --with-sysroot="$__RootfsDir"
     make -j "$JOBS" && make install && cd ..
     echo "Building gcc. Please wait.."
     wget -O - https://ftp.gnu.org/gnu/gcc/gcc-8.4.0/gcc-8.4.0.tar.xz | tar -xJf -
@@ -354,7 +350,7 @@ elif [[ "$__CodeName" == "illumos" ]]; then
     CFLAGS_FOR_TARGET="-fPIC"
     export CFLAGS CXXFLAGS CXXFLAGS_FOR_TARGET CFLAGS_FOR_TARGET
     mkdir build-gcc && cd build-gcc
-    ../gcc-8.4.0/configure --prefix="$__RootfsDir" --target="x86_64-sun-solaris2.10" --program-prefix="x86_64-illumos-" --with-sysroot="$__RootfsDir" --with-gnu-as       \
+    ../gcc-8.4.0/configure --prefix="$__RootfsDir" --target="${__illumosArch}-sun-solaris2.10" --program-prefix="${__illumosArch}-illumos-" --with-sysroot="$__RootfsDir" --with-gnu-as       \
         --with-gnu-ld --disable-nls --disable-libgomp --disable-libquadmath --disable-libssp --disable-libvtv --disable-libcilkrts --disable-libada --disable-libsanitizer \
         --disable-libquadmath-support --disable-shared --enable-tls
     make -j "$JOBS" && make install && cd ..
@@ -362,7 +358,7 @@ elif [[ "$__CodeName" == "illumos" ]]; then
     if [[ "$__UseMirror" == 1 ]]; then
         BaseUrl=http://pkgsrc.smartos.skylime.net
     fi
-    BaseUrl="$BaseUrl"/packages/SmartOS/2020Q1/x86_64/All
+    BaseUrl="$BaseUrl"/packages/SmartOS/2020Q1/${__illumosArch}/All
     echo "Downloading dependencies."
     read -ra array <<<"$__IllumosPackages"
     for package in "${array[@]}"; do
