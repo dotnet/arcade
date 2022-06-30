@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
     <HelixType>test/product/</HelixType>
 
     <IncludeDotNetCli>true</IncludeDotNetCli>
