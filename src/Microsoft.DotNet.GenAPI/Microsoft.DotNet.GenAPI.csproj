@@ -8,6 +8,7 @@
     <PackageDescription>An msbuild task to generate code for the API surface of an assembly.</PackageDescription>
     <NoWarn>$(NoWarn);0436</NoWarn>
     <RollForward>Major</RollForward>
+    <NoWarn>$(NoWarn);NU1701</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

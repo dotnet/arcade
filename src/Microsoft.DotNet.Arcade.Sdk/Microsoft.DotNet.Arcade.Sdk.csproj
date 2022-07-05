@@ -18,7 +18,7 @@
     <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
     <EnableGeneratedPackageContent>false</EnableGeneratedPackageContent>
     <_GeneratedVersionFilePath>$(IntermediateOutputPath)DefaultVersions.Generated.props</_GeneratedVersionFilePath>
-    <NoWarn>3021;NU5105;SYSLIB0013</NoWarn>
+    <NoWarn>$(NoWarn);3021;NU5105;SYSLIB0013</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,7 +28,6 @@
     <PackageReference Include="System.Net.Http" />
     <PackageReference Include="System.Collections.Immutable" />
     <PackageReference Include="System.Reflection.Metadata" />
-    <PackageReference Include="NETStandard.Library" />
   </ItemGroup>
 
   <!-- Required for compiling "InstallDotNetCore.cs" -->

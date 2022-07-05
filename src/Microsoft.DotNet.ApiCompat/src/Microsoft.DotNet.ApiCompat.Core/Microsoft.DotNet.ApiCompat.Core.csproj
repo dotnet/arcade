@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net472;$(TargetFrameworkForNETSDK)</TargetFrameworks>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <NoWarn>$(NoWarn);NU1701</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

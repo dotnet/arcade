@@ -11,6 +11,5 @@
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="Octokit" />
     <PackageReference Include="System.Net.Http" />
-    <PackageReference Include="NETStandard.Library" />
   </ItemGroup>
 </Project>

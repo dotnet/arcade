@@ -1,33 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
-<!--  <Import Condition="'$(MicrosoftDotNetMaestroClientVersion)' == ''" Project="$(MSBuildThisFileDirectory)\eng\Versions.props" />-->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+    <!-- arcade uses mutliple feeds, so we need to supress this warning -->
+    <NoWarn>$(NoWarn);NU1507</NoWarn>
+  </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Microsoft.DotNet.Maestro.Client" Version="$(MicrosoftDotNetMaestroClientVersion)" />    
     <PackageVersion Include="Azure.Core" Version="$(AzureCoreVersion)" />
     <PackageVersion Include="Azure.Data.Tables" Version="$(AzureDataTablesVersion)" />
     <PackageVersion Include="Azure.Storage.Blobs" Version="$(AzureStorageBlobsVersion)" />
     <PackageVersion Include="CommandLineParser" Version="$(CommandLineParserVersion)" />
-    <PackageVersion Include="coverlet.collector" Version="1.0.1" />
     <PackageVersion Include="CredentialManagement" Version="$(CredentialManagementVersion)" />
     <PackageVersion Include="DotNet.SleetLib" Version="$(DotNetSleetLibVersion)" />
     <PackageVersion Include="Drop.App" Version="$(DropAppVersion)" />
     <PackageVersion Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
     <PackageVersion Include="Handlebars.Net" Version="$(HandlebarsNetVersion)" />
     <PackageVersion Include="JetBrains.Annotations" Version="2018.2.1" />
-    <PackageVersion Include="LibGit2Sharp" Version="$(LibGit2SharpVersion)" />
-    <PackageVersion Include="log4net" Version="$(log4netVersion)" />
     <PackageVersion Include="LZMA-SDK" Version="19.0.0" />
+    <PackageVersion Include="LibGit2Sharp" Version="$(LibGit2SharpVersion)" />
     <PackageVersion Include="McMaster.Extensions.CommandLineUtils" Version="$(McMasterExtensionsCommandLineUtils)" />
     <PackageVersion Include="Microsoft.ApplicationInsights" Version="$(MicrosoftApplicationInsightsVersion)" />
     <PackageVersion Include="Microsoft.Azure.KeyVault" Version="$(MicrosoftAzureKeyVaultVersion)" />
-    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.0" />
+    <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
     <PackageVersion Include="Microsoft.Bcl.HashCode" Version="1.1.1"/>
     <PackageVersion Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
     <PackageVersion Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" />
     <PackageVersion Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
     <PackageVersion Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
     <PackageVersion Include="Microsoft.Cci" Version="4.0.0-rc3-24214-00" />
-    <PackageVersion Include="Microsoft.CodeAnalysis" Version="2.8.2" />
+    <PackageVersion Include="Microsoft.CodeAnalysis" Version="$(MicrosoftCodeAnalysisCSharpVersion)" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCSharpVersion)" />
     <PackageVersion Include="Microsoft.Composition" Version="1.0.30" />
     <PackageVersion Include="Microsoft.Data.OData" Version="$(MicrosoftDataODataVersion)" />
@@ -41,7 +43,7 @@
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsDependencyInjectionVersion)" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(MicrosoftExtensionsDependencyInjectionAbstractionsVersion)" />
     <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="$(MicrosoftExtensionsDependencyModelVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.Logging" Version="1.0.2" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="2.1.1" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionsLoggingConsoleVersion)" />
     <PackageVersion Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="$(MicrosoftIdentityModelClientsActiveDirectoryVersion)" />
     <PackageVersion Include="Microsoft.ManifestTool.CrossPlatform" Version="$(MicrosoftManifestToolCrossPlatformVersion)" />
@@ -56,10 +58,9 @@
     <PackageVersion Include="Microsoft.VisualStudioEng.MicroBuild.Plugins.SwixBuild" Version="$(MicrosoftVisualStudioEngMicroBuildPluginsSwixBuildVersion)" />
     <PackageVersion Include="Mono.Options" Version="$(MonoOptionsVersion)" />
     <PackageVersion Include="Moq" Version="$(MoqVersion)" />
-    <PackageVersion Include="NETStandard.Library" Version="$(NETStandardLibraryVersion)" />
-    <PackageVersion Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />" />
+    <PackageVersion Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageVersion Include="NuGet.Commands" Version="$(NuGetVersion)" />
-    <PackageVersion Include="NuGet.Common" Version="4.7.0" />
+    <PackageVersion Include="NuGet.Common" Version="$(NuGetVersion)" />
     <PackageVersion Include="NuGet.Frameworks" Version="$(NuGetVersion)" />
     <PackageVersion Include="NuGet.Packaging" Version="$(NuGetVersion)" />
     <PackageVersion Include="NuGet.Packaging.Core" Version="$(NuGetVersion)" />
@@ -86,12 +87,14 @@
     <PackageVersion Include="System.Threading.Tasks.Extensions" Version="$(SystemThreadingTasksExtensionVersion)" />
     <PackageVersion Include="System.ValueTuple" Version="$(SystemValueTupleVersion)" />
     <PackageVersion Include="WindowsAzure.Storage" Version="$(WindowsAzureStorageVersion)" />
+    <PackageVersion Include="Xunit.SkippableFact" Version="1.4.13" />
+    <PackageVersion Include="coverlet.collector" Version="1.0.1" />
+    <PackageVersion Include="log4net" Version="$(log4netVersion)" />
     <PackageVersion Include="xunit.abstractions" Version="$(XUnitAbstractionsVersion)" />
     <PackageVersion Include="xunit.assert" Version="$(XUnitVersion)" />
     <PackageVersion Include="xunit.extensibility.core" Version="$(XUnitVersion)" />
     <PackageVersion Include="xunit.extensibility.execution" Version="$(XUnitVersion)" />
     <PackageVersion Include="xunit.runner.reporters" Version="$(XUnitVersion)" />
     <PackageVersion Include="xunit.runner.utility" Version="$(XUnitVersion)" />
-    <PackageVersion Include="Xunit.SkippableFact" Version="1.4.13" />
   </ItemGroup>
 </Project>

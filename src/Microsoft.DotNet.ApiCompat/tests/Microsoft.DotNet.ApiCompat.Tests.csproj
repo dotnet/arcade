@@ -4,6 +4,7 @@
     <TargetFrameworks>$(TargetFrameworkForNETSDK);net472</TargetFrameworks>
     <LangVersion>Latest</LangVersion>
     <SignAssembly>false</SignAssembly>
+    <NoWarn>$(NoWarn);NU1701</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

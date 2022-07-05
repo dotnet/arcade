@@ -15,6 +15,5 @@
     <PackageReference Include="Microsoft.Azure.KeyVault" />
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" />
     <PackageReference Include="Octokit" />
-    <PackageReference Include="NETStandard.Library" />
   </ItemGroup>
 </Project>

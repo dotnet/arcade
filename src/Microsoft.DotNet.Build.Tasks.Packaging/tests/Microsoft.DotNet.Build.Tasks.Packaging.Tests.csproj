@@ -3,7 +3,9 @@
     <TargetFrameworks>$(TargetFrameworkForNETSDK);net472</TargetFrameworks>
     <LangVersion>Latest</LangVersion>
     <SignAssembly>false</SignAssembly>
-    <NoWarn>xUnit2013</NoWarn>
+    <NoWarn>$(NoWarn);xUnit2013</NoWarn>
+    <!-- This project does weird stuff with packages/versions, ignore the cetral version warning -->
+    <NoWarn>$(NoWarn);NU1008</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="packageIndex.json" CopyToOutputDirectory="Always"/>
@@ -26,11 +28,11 @@
   <!-- test packages - these packages aren't needed for compilation but are copied
                        to the output and used for testing. -->
   <ItemGroup>
-    <TestPackage Include="System.Collections.Immutable" Version="1.5.0" />
-    <TestPackage Include="Microsoft.Win32.Registry" Version="4.3.0" />
-    <TestPackage Include="System.Runtime" Version="4.3.0" />
-    <TestPackage Include="runtime.any.System.Runtime" Version="4.3.0" />
-    <TestPackage Include="runtime.aot.System.Runtime" Version="4.3.0" />
+    <TestPackage Include="System.Collections.Immutable" VersionOverride="1.7.1" />
+    <TestPackage Include="Microsoft.Win32.Registry" VersionOverride="4.3.0" />
+    <TestPackage Include="System.Runtime" VersionOverride="4.3.0" />
+    <TestPackage Include="runtime.any.System.Runtime" VersionOverride="4.3.0" />
+    <TestPackage Include="runtime.aot.System.Runtime" VersionOverride="4.3.0" />
 
     <PackageReference Include="@(TestPackage)" />
   </ItemGroup>
@@ -48,9 +50,9 @@
     </PropertyGroup>
     <ItemGroup>
       <TestPackage>
-        <Folder Condition="Exists('$(_candidatePackageFolder)\%(Identity)\%(Version)')">$(_candidatePackageFolder)\%(Identity)\%(Version)</Folder>
+        <Folder Condition="Exists('$(_candidatePackageFolder)\%(Identity)\%(VersionOverride)')">$(_candidatePackageFolder)\%(Identity)\%(VersionOverride)</Folder>
         <!-- NuGet will restore to lower case folder and linux is case sensitive -->
-        <Folder Condition="Exists('$(_candidatePackageFolder)\$([System.String]::new(&quot;%(Identity)\%(Version)&quot;).ToLower())')">$(_candidatePackageFolder)\$([System.String]::new(&quot;%(Identity)\%(Version)&quot;).ToLower())</Folder>
+        <Folder Condition="Exists('$(_candidatePackageFolder)\$([System.String]::new(&quot;%(Identity)\%(VersionOverride)&quot;).ToLower())')">$(_candidatePackageFolder)\$([System.String]::new(&quot;%(Identity)\%(VersionOverride)&quot;).ToLower())</Folder>
       </TestPackage>
     </ItemGroup>
   </Target>
@@ -60,9 +62,9 @@
           DependsOnTargets="FindTestPackages"
           AfterTargets="ResolveReferences">
      <Error Condition="'%(TestPackage.Folder)'==''"
-            Text="Could not locate package '%(TestPackage.Identity)\%(TestPackage.Version)' under any of '$(NuGetPackageFolders)'" />
+            Text="Could not locate package '%(TestPackage.Identity)\%(TestPackage.VersionOverride)' under any of '$(NuGetPackageFolders)'" />
      <ItemGroup>
-       <TestPackageContent Include="%(TestPackage.Folder)\**\*" LinkBase="packages\%(TestPackage.Identity)\%(TestPackage.Version)\" />
+       <TestPackageContent Include="%(TestPackage.Folder)\**\*" LinkBase="packages\%(TestPackage.Identity)\%(TestPackage.VersionOverride)\" />
        <Content Include="@(TestPackageContent)" Link="%(TestPackageContent.LinkBase)%(RecursiveDir)%(FileName)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
      </ItemGroup>
   </Target>

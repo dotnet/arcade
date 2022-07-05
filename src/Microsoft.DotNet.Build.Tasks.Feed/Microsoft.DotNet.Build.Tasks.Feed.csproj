@@ -24,7 +24,7 @@
     <!-- Maestro.Client stopped supporting .NET 4.7.2 long ago. 
          This functionality should eventually be moved into an arcade-services package, 
          but for users consuming other functionality we'll still support 4.7.2 by ifdefing it out. -->
-    <PackageReference Condition="'$(TargetFramework)' != 'net472'" Include="Microsoft.DotNet.Maestro.Client" Version="$(MicrosoftDotNetMaestroClientVersion)" />    
+    <PackageReference Condition="'$(TargetFramework)' != 'net472'" Include="Microsoft.DotNet.Maestro.Client" />    
 
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />

@@ -18,11 +18,11 @@
     <PackageReference Include="LZMA-SDK" />
     <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" />
     <PackageReference Include="Newtonsoft.Json" />
-    <PackageReference Include="NuGet.Common" />
-    <PackageReference Include="NuGet.Frameworks" />
-    <PackageReference Include="NuGet.Packaging" />
-    <PackageReference Include="NuGet.Packaging.Core" />
-    <PackageReference Include="NuGet.Versioning" />
+    <PackageReference Include="NuGet.Common" VersionOverride="4.7.0" />
+    <PackageReference Include="NuGet.Frameworks" VersionOverride="4.7.0" />
+    <PackageReference Include="NuGet.Packaging" VersionOverride="4.7.0" />
+    <PackageReference Include="NuGet.Packaging.Core" VersionOverride="4.7.0" />
+    <PackageReference Include="NuGet.Versioning" VersionOverride="4.7.0" />
     <PackageReference Include="System.IO.Packaging" />
     <PackageReference Include="Microsoft.Signed.Wix" />
   </ItemGroup>

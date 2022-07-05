@@ -13,7 +13,6 @@
     <PackageReference Include="WindowsAzure.Storage" />
     <PackageReference Include="Microsoft.Data.OData" />
     <PackageReference Include="Azure.Data.Tables" />
-    <PackageReference Include="NETStandard.Library" />
   </ItemGroup>
 
 </Project>
