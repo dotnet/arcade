@@ -91,12 +91,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public override bool Equals(object obj)
         {
-            if (  
+            if (
                 obj is TargetFeedConfig other &&
                 (ContentType == other.ContentType) &&
-                TargetURL.Equals(other.TargetURL, StringComparison.OrdinalIgnoreCase) &&
+                ((TargetURL is null && other.TargetURL is null) || TargetURL.Equals(other.TargetURL, StringComparison.OrdinalIgnoreCase)) &&
                 (Type == other.Type) &&
-                Token.Equals(other.Token) &&
+                ((Token is null && other.Token is null) || Token.Equals(other.Token)) &&
                 LatestLinkShortUrlPrefixes.SequenceEqual(other.LatestLinkShortUrlPrefixes) &&
                 (AssetSelection == other.AssetSelection) &&
                 (Isolated == other.Isolated) &&

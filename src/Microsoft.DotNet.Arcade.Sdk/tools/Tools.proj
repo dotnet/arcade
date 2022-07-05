@@ -27,14 +27,18 @@
 
   <Import Project="$(_NuGetRestoreTargets)" />
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.NuGetRepack.Tasks" Version="$(MicrosoftDotnetNuGetRepackTasksVersion)" Condition="'$(UsingToolNuGetRepack)' == 'true'" IsImplicitlyDefined="true" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
     <!-- Copy of 'sn.exe' in form of NuGet package. -->
     <PackageReference Include="sn" Version="$(SNVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)"  IsImplicitlyDefined="true" />
     <PackageReference Include="MicroBuild.Core.Sentinel" Version="1.0.0" IsImplicitlyDefined="true" />
     <PackageReference Include="vswhere" Version="$(VSWhereVersion)" IsImplicitlyDefined="true" />
+    <PackageReference Include="Microsoft.Signed.Wix" Version="$(MicrosoftSignedWixVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" IsImplicitlyDefined="true" />
-    <PackageReference Include="Microsoft.DotNet.NuGetRepack.Tasks" Version="$(MicrosoftDotnetNuGetRepackTasksVersion)" Condition="'$(UsingToolNuGetRepack)' == 'true'" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.DotNet.SignTool" Version="$(MicrosoftDotNetSignToolVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.SymbolUploader.Build.Task" Version="$(MicrosoftSymbolUploaderBuildTaskVersion)" Condition="'$(PublishToSymbolServer)' == 'true'" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.VisualStudio" Version="$(MicrosoftDotNetBuildTasksVisualStudioVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" IsImplicitlyDefined="true" />
