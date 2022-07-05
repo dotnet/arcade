@@ -10,8 +10,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Tasks.Core" />
-    <PackageReference Include="Microsoft.Build" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Publish="false" />
+    <PackageReference Include="Microsoft.Build" Publish="false" />
     <!--
       Microsoft.DotNet.Arcade.Sdk uses "NuGetVersioningVersion" for its NuGet library dependency.
       Other libraries in dotnet/arcade that depend on NuGet libraries use "NuGetVersion".

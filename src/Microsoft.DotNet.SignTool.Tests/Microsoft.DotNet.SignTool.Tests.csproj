@@ -11,7 +11,7 @@
     <PackageReference Include="System.IO.Packaging" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" />
     <PackageReference Include="Microsoft.Build.Framework" />
-    <PackageReference Include="Microsoft.Signed.Wix" />
+    <PackageReference Include="Microsoft.Signed.Wix" GeneratePathProperty="true" />
     <PackageReference Include="Xunit.SkippableFact" />
     <PackageReference Include="NuGet.Packaging.Core" />
     <PackageReference Include="System.Collections.Immutable" />

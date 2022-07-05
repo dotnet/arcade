@@ -17,7 +17,7 @@
     <PackageReference Include="System.Collections.Immutable" />
     <PackageReference Include="System.Text.Encodings.Web" />
 
-    <PackageReference Include="Microsoft.DotNet.SwaggerGenerator.MSBuild" />
+    <PackageReference Include="Microsoft.DotNet.SwaggerGenerator.MSBuild" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

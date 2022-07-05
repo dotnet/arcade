@@ -54,7 +54,7 @@
     <PackageReference Include="Microsoft.Build" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" />
     <!--Need to reference version 2.8.2 of CodeAnalysis so that we don't have downgrade issues with System.Reflection.Metadata version-->
-    <PackageReference Include="Microsoft.CodeAnalysis" />
+    <PackageReference Include="Microsoft.CodeAnalysis" Condition="'$(DotNetBuildFromSource)' != 'true'" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="NuGet.Commands" />
     <PackageReference Include="NuGet.Packaging" />

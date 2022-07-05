@@ -10,9 +10,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" />
-    <PackageReference Include="System.Net.Http" />
+    <PackageReference Include="Microsoft.Build"/>
+    <PackageReference Include="Microsoft.Build.Tasks.Core"/>
+    <PackageReference Include="System.Net.Http"/>
     <ProjectReference Include="..\Microsoft.DotNet.SwaggerGenerator.CodeGenerator\Microsoft.DotNet.SwaggerGenerator.CodeGenerator.csproj" />
   </ItemGroup>
 

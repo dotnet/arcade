@@ -33,7 +33,7 @@
 
   <!-- Required for compiling "InstallDotNetCore.cs" -->
   <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
-    <PackageReference Include="System.Text.Json" />
+    <PackageReference Include="System.Text.Json" PrivateAssets="All" />
     <PackageReference Include="System.Buffers" />
     <PackageReference Include="System.Memory" />
     <PackageReference Include="System.Numerics.Vectors" />

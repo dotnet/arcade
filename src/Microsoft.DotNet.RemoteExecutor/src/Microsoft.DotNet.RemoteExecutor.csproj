@@ -15,7 +15,7 @@
   <ItemGroup>
     <PackageReference Include="xunit.assert" />
     <PackageReference Include="Microsoft.Diagnostics.Runtime" />
-    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" />
+    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Condition="'$(TargetFramework)' == 'net461'" />
   </ItemGroup>
 
   <ItemGroup>

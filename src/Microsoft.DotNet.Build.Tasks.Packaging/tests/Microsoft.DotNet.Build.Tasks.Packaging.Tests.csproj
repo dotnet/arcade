@@ -13,8 +13,8 @@
     <ProjectReference Include="..\src\Microsoft.DotNet.Build.Tasks.Packaging.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" />
+    <PackageReference Include="Microsoft.Build"/>
+    <PackageReference Include="Microsoft.Build.Tasks.Core"/>
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="NuGet.Commands" />
     <PackageReference Include="NuGet.Packaging" />

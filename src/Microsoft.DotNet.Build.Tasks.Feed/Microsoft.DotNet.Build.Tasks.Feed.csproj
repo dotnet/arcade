@@ -33,7 +33,7 @@
     <PackageReference Include="System.Text.Encodings.Web" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <PackageReference Include="Microsoft.Bcl.HashCode" />
+    <PackageReference Include="Microsoft.Bcl.HashCode"/>
   </ItemGroup>
 
   <ItemGroup>

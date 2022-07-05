@@ -22,7 +22,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommandLineParser" />
+    <PackageReference Include="CommandLineParser" PrivateAssets="All" Publish="true" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" />
   </ItemGroup>
 

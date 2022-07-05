@@ -9,7 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="Handlebars.Net" />
-    <PackageReference Include="JetBrains.Annotations" />
+    <PackageReference Include="JetBrains.Annotations" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Extensions.Logging" />
     <PackageReference Include="System.Collections.Immutable" />
     <PackageReference Include="System.Memory" />
