@@ -14,11 +14,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
-    <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersion)" />
-    <PackageReference Include="NuGet.Packaging.Core" Version="$(NuGetVersion)" />
-    <PackageReference Include="NuGet.Versioning" Version="$(NuGetVersion)" />
-    <PackageReference Include="System.Diagnostics.TraceSource" Version="$(SystemDiagnosticsTraceSourceVersion)" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="NuGet.Packaging" />
+    <PackageReference Include="NuGet.Packaging.Core" />
+    <PackageReference Include="NuGet.Versioning" />
+    <PackageReference Include="System.Diagnostics.TraceSource" />
   </ItemGroup>
 
 </Project>

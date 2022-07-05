@@ -12,12 +12,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NuGet.Versioning" Version="$(NuGetVersion)" />
-    <PackageReference Include="System.IO.Compression" Version="$(SystemIOCompressionVersion)" />
-    <PackageReference Include="System.IO.Packaging" Version="$(SystemIOPackagingVersion)" />
-    <PackageReference Include="System.ValueTuple" Version="$(SystemValueTupleVersion)" />
-    <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
+    <PackageReference Include="NuGet.Versioning" />
+    <PackageReference Include="System.IO.Compression" />
+    <PackageReference Include="System.IO.Packaging" />
+    <PackageReference Include="System.ValueTuple" />
+    <PackageReference Include="Microsoft.Build" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" />
   </ItemGroup>
   
   <ItemGroup>

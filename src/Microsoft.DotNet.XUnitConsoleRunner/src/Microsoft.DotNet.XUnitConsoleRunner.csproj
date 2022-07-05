@@ -21,11 +21,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="xunit.runner.reporters" Version="$(XUnitVersion)" />
-    <PackageReference Include="xunit.runner.utility" Version="$(XUnitVersion)" />
-    <PackageReference Include="xunit.abstractions" Version="$(XUnitAbstractionsVersion)" />
-    <PackageReference Include="System.Net.Http" Version="$(SystemNetHttpVersion)" />
-    <PackageReference Include="NETStandard.Library" Version="$(NETStandardLibraryVersion)" />
+    <PackageReference Include="xunit.runner.reporters" />
+    <PackageReference Include="xunit.runner.utility" />
+    <PackageReference Include="xunit.abstractions" />
+    <PackageReference Include="System.Net.Http" />
+    <PackageReference Include="NETStandard.Library" />
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />

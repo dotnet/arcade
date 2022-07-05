@@ -6,9 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
-    <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="4.0.0" />
-    <PackageReference Include="System.Diagnostics.TraceSource" Version="4.0.0" />
+    <PackageReference Include="System.Diagnostics.Contracts" />
+    <PackageReference Include="System.Diagnostics.TextWriterTraceListener" />
+    <PackageReference Include="System.Diagnostics.TraceSource" />
   </ItemGroup>
 
   <ItemGroup>

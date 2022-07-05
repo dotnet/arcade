@@ -19,9 +19,9 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="$(McMasterExtensionsCommandLineUtils)" />
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" />
     <!-- Arcade only makes shipping assemblies localizable by default, we'd like to localize this tool without treating it as "shipping". -->
-    <PackageReference Include="Microsoft.DotNet.XliffTasks" Version="$(MicrosoftDotNetXliffTasksVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.DotNet.XliffTasks" />
   </ItemGroup>
 
   <ItemGroup>

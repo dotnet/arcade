@@ -24,12 +24,12 @@
          so they don't flow to the tests output directory and we need them there in order to be able to run. -->
     <ProjectReference Include="..\..\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj" />
     <ProjectReference Include="..\src\Microsoft.DotNet.ApiCompat.Core\Microsoft.DotNet.ApiCompat.Core.csproj" />
-    <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
-    <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="4.0.0" />
-    <PackageReference Include="System.Diagnostics.TraceSource" Version="4.0.0" />
-    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="$(McMasterExtensionsCommandLineUtils)" />
-    <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
+    <PackageReference Include="System.Diagnostics.Contracts" />
+    <PackageReference Include="System.Diagnostics.TextWriterTraceListener" />
+    <PackageReference Include="System.Diagnostics.TraceSource" />
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" />
+    <PackageReference Include="Microsoft.Build" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" />
   </ItemGroup>
 
   <ItemGroup>

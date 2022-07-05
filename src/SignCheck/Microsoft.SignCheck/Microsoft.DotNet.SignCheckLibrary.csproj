@@ -15,16 +15,16 @@
     <IsTool>true</IsTool>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="LZMA-SDK" Version="19.0.0" />
-    <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="7.10.6071" />
-    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
-    <PackageReference Include="NuGet.Common" Version="4.7.0" />
-    <PackageReference Include="NuGet.Frameworks" Version="4.7.0" />
-    <PackageReference Include="NuGet.Packaging" Version="4.7.0" />
-    <PackageReference Include="NuGet.Packaging.Core" Version="4.7.0" />
-    <PackageReference Include="NuGet.Versioning" Version="4.7.0" />
-    <PackageReference Include="System.IO.Packaging" Version="4.5.0" />
-    <PackageReference Include="Microsoft.Signed.Wix" Version="$(MicrosoftSignedWixVersion)" />
+    <PackageReference Include="LZMA-SDK" />
+    <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="NuGet.Common" />
+    <PackageReference Include="NuGet.Frameworks" />
+    <PackageReference Include="NuGet.Packaging" />
+    <PackageReference Include="NuGet.Packaging.Core" />
+    <PackageReference Include="NuGet.Versioning" />
+    <PackageReference Include="System.IO.Packaging" />
+    <PackageReference Include="Microsoft.Signed.Wix" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Resources.dll" />
