@@ -20,8 +20,12 @@ This table contains the raw data that we collect for test results. Keep in mind 
 Notable fields in this table include: 
 
 **QueueName**: The OS queue the test ran on. Useful when needing to track down a configuration a test ran on. 
+
 **Branch**: Name of the code branch the test ran from.
+
 **Outcome**: Contains values of `Failed`, `PassedOnRerun`, and `NotExecuted`.
+
+**RunCompleted**: The datetime value of when this test run completed. 
 
 ### AzureDevOpsTestsHourly
 
@@ -32,9 +36,14 @@ Because this table is an aggregate, you'll notice that some of the fields, such 
 Notable fields in this table include:
 
 **Branch**: Name of the code branch the test ran from. 
+
 **PassCount**: How many times the test passed on the first try in the last hour.
+
 **FailCount**: How many times the test failed in the last hour. 
+
 **PassOnRetryCount**: How many times the test passed after a retry in the last hour. 
+
+**ReportDate**: The latest datetime value of data that was aggregated in this row. 
 
 ### AzureDevOpsTestsSummary
 
@@ -44,10 +53,21 @@ Daily, we aggregate the hourly values into this table. It contains nearly the sa
 
 This table contains the results of running the AzureDevOpsTestSummary results through [Chi-Squared Distribution](https://en.wikipedia.org/wiki/Chi-squared_distribution) in order to get a statistical analysis of the failures. 
 
+Categories used when performing the chi-squared distribution: 
+- Status
+    - Passing = Passed test + Passed on Rerun (since these also "passed" once) 
+    - Failed = Failing test + Passed on Rerun (since these also "failed" once)
+- Time
+    - Historical = Test results between 30 and 7 days ago
+    - Current = Test results between 7 and 1 days ago. 
+
 Notable fields in this table include:
 
-**Significance**: The closer this value is to 1, the more likely something changed recently to cause this test to start failing. 
-**SplitDate**: The date of the first day of the week of data aggregated. 
+**ReportDate**: The latest datetime value of data that was used in the statistical analysis of the data in this row. 
+
+**Significance**: The closer this value is to 1, the more likely something changed recently to cause this test to start failing. This value also indicates the difference between "Current" and "Historical"
+
+**SplitDate**: The date of the first day of the week of data aggregated. This date also represents the difference between the "Current" and "Historical" columns. 
 
 ## How do we collect the data? 
 
