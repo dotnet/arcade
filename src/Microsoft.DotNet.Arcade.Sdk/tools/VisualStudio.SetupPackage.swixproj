@@ -33,5 +33,5 @@
     <Package Include="$(SwrFiles)" />
   </ItemGroup>
 
-  <Import Project="$(SwixBuildPath)build\MicroBuild.Plugins.*.targets" />
+  <Import Project="$(SwixBuildPath)build\Microsoft.VisualStudioEng.MicroBuild.Plugins.SwixBuild.targets" />
 </Project>

@@ -102,8 +102,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             string apkName = Path.GetFileName(apkPath);
-            if (isAlreadyArchived)
-            {
+            if (isAlreadyArchived) {
                 apkName = apkName.Replace(".zip", ".apk");
             }
 

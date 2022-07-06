@@ -119,7 +119,15 @@ fi
 if [ -z "$xcode_version" ]; then
     xcode_path="$(dirname "$(dirname "$(xcode-select -p)")")"
 else
-    xcode_path="/Applications/Xcode${xcode_version/./}.app"
+    xcode_path="/Applications/Xcode_${xcode_version}.app"
+
+    if [ ! -d "$xcode_path" ]; then
+      xcode_path="/Applications/Xcode${xcode_version/./}.app"
+    fi
+fi
+
+if [ ! -d "$xcode_path" ]; then
+    echo "WARNING - Xcode not found at $xcode_path"
 fi
 
 # First we need to revive env variables since they were erased by launchctl
@@ -167,7 +175,7 @@ exit_code=$?
 
 # In case of issues, include the syslog (last 2 MB from the time this work item has been running)
 if [ $exit_code -ne 0 ]; then
-    sudo log show --style syslog --start "$start_time" --end "$(date '+%Y-%m-%d %H:%M:%S')" | tail -c 2097152 > "$output_directory/system.log"
+    sudo log show --style syslog --start "$start_time" --end "$(date '+%Y-%m-%d %H:%M:%S')" | tail -c 2097152 > "$output_directory/macos.system.log"
 fi
 
 echo "Removing empty log files:"

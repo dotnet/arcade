@@ -63,6 +63,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
             }
         }
 
+        public void AddSourceFiles(IEnumerable<string> sourceFiles)
+        {
+            _sourceFiles.AddRange(sourceFiles);
+        }
+
         /// <inheritdoc />
         protected override string GenerateCommandLineCommands()
         {
