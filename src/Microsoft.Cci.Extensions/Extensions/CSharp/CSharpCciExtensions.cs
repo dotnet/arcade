@@ -155,8 +155,7 @@ namespace Microsoft.Cci.Extensions.CSharp
                 if (resolvedType.IsReferenceType)
                     return true;
 
-                // ByReference<T> is a special type understood by runtime to hold a ref T.
-                if (resolvedType.AreGenericTypeEquivalent(ByReferenceFullName))
+                if (resolvedType.IsByRef())
                     return true;
 
                 foreach (var field in resolvedType.Fields.Where(f => !f.IsStatic))
@@ -189,7 +188,7 @@ namespace Microsoft.Cci.Extensions.CSharp
                 if (typeToCheck.TypeCode != PrimitiveTypeCode.NotPrimitive && typeToCheck.TypeCode != PrimitiveTypeCode.Invalid)
                     return true;
 
-                if (resolvedType is Dummy || resolvedType.IsReferenceType || resolvedType.AreGenericTypeEquivalent(ByReferenceFullName))
+                if (resolvedType is Dummy || resolvedType.IsReferenceType || resolvedType.IsByRef())
                 {
                     if (node == 0)
                     {
@@ -392,6 +391,13 @@ namespace Microsoft.Cci.Extensions.CSharp
         public static bool IsUnsafeType(this ITypeReference type)
         {
             return type.TypeCode == PrimitiveTypeCode.Pointer;
+        }
+
+        public static bool IsByRef(this ITypeReference type)
+        {
+            // ByReference<T> is a special type understood by runtime to hold a ref T.
+            // ByReference<T> was removed in .NET 7 since support for ref T in C# 11 was introduced.
+            return type.TypeCode == PrimitiveTypeCode.Reference || type.AreGenericTypeEquivalent(ByReferenceFullName);
         }
 
         public static bool IsMethodUnsafe(this IMethodDefinition method)
@@ -792,6 +798,11 @@ namespace Microsoft.Cci.Extensions.CSharp
         public static bool HasIsReadOnlyAttribute(this IEnumerable<ICustomAttribute> attributes)
         {
             return attributes.HasAttributeOfType("System.Runtime.CompilerServices.IsReadOnlyAttribute");
+        }
+
+        public static bool HasNativeIntegerAttribute(this IEnumerable<ICustomAttribute> attributes)
+        {
+            return attributes.HasAttributeOfType("System.Runtime.CompilerServices.NativeIntegerAttribute");
         }
 
         public static string[] GetValueTupleNames(this IEnumerable<ICustomAttribute> attributes)

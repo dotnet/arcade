@@ -45,8 +45,8 @@ output_directory = os.getenv('HELIX_WORKITEM_UPLOAD_ROOT')
 # Retry/reboot can be also asked for by the client (by creating .retry/.reboot files)
 retry = False
 reboot = False
-retry_dimensions = None
-reboot_dimensions = None
+retry_dimensions = dict()
+reboot_dimensions = dict()
 retry_exit_code = -1
 reboot_exit_code = -1
 android_connectivity_verified = False
@@ -72,8 +72,8 @@ def call_xharness(args: list, capture_output: bool = False) -> Tuple[int, str]:
     args = ['dotnet', 'exec', xharness_cli_path] + args
 
     if capture_output:
-        process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        stdout = process.communicate()[0]
+        process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        stdout = process.communicate()[0].decode("utf-8")
         return process.returncode, stdout
     else:
         return subprocess.run(args, stdout=None, stderr=None, text=True).returncode, None
@@ -125,6 +125,13 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
 
     global retry, reboot, android_connectivity_verified
 
+    # Kill the simulator when we fail to launch the app
+    if exit_code == 80: # APP_CRASH
+        print(f'    Application crashed - if persist, please investigate system logs from the run')
+        retry = True
+        reboot = True
+        return
+
     # Simulators are known to slow down which results in installation taking several minutes
     # Retry+reboot usually resolves this
     if exit_code == 86: # APP_INSTALLATION_TIMEOUT
@@ -159,6 +166,7 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
             # This handles issues where emulators fail to start or devices go silent.
             print(f'    Encountered DEVICE_NOT_FOUND')
             print('    If this occurs repeatedly, please check for architectural mismatch, e.g. sending arm64_v8a APKs to an x86_64 / x86 only queue')
+            retry = True
 
             if not is_device:
                 # For emulators it makes sense to reboot to try to heal the emulator
@@ -180,7 +188,12 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                     # The boot logs are owned by root, so make them readable for the Helix agent
                     subprocess.call(['sudo', 'chmod', '-R', '777', boot_log_destination])
 
+            return
+
+        if exit_code == 82 and not is_device: # RETURN_CODE_NOT_SET - this happens when emulator crashes halfway through
+            print(f'    Failed to read the instrumentation result')
             retry = True
+            reboot = True
             return
 
         if exit_code == 78: # PACKAGE_INSTALLATION_FAILURE
@@ -257,17 +270,12 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                 reboot = True
                 return
 
-            # Kill the simulator when we fail to launch the app
-            if exit_code == 80: # APP_CRASH
-                simulator_app = os.getenv('SIMULATOR_APP')
-                subprocess.call(['sudo', 'pkill', '-9', '-f', simulator_app])
-                return
-
             # If we fail to find a simulator and we are not targeting a specific version (e.g. `ios-simulator_13.5`),
             # it is probably an issue because Xcode should always have at least one runtime version inside
             if exit_code == 81 and '_' not in target: # DEVICE_NOT_FOUND
                 print(f'    No simulator runtime found')
                 retry = True
+                reboot = True
                 return
 
 # The JSON should be an array of objects (one per each executed XHarness command)
@@ -355,9 +363,13 @@ if retry:
     # TODO https://github.com/dotnet/core-eng/issues/15059
     # We need to remove testResults.xml so that it is not uploaded since this run will be discarded
     # This is a workaround until we make AzDO reporter not upload test results
-    test_results = os.path.join(output_directory, "testResults.xml")
+    file_name = "testResults.xml"
+    test_results = os.path.join(output_directory, file_name)
     if os.path.exists(test_results):
         os.remove(test_results)
+
+    if os.path.exists(file_name):
+        os.remove(file_name)
 
 if reboot:
     send_metric(REBOOT_METRIC_NAME, reboot_exit_code, reboot_dimensions, event_type=EVENT_TYPE)

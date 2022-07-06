@@ -12,6 +12,9 @@
                                       "Products/$(System.TeamProject)/$(Build.Repository.Name)/$(Build.SourceBranchName)/$(Build.BuildNumber)"
                                       The manifest will be published with URI
                                       https://vsdrop.corp.microsoft.com/file/v1/$(VisualStudioDropName)
+      DotNetTool                      Path to dotnet.exe.
+      ManifestTool                    Path to Microsoft.ManifestTool.dll
+      GenerateSbom                    True if an SBOM should be generated for this component.
   -->
 
   <PropertyGroup>
@@ -30,7 +33,7 @@
     <TargetName>$(ComponentName)</TargetName>
     <OutputPath>$(SetupOutputPath)</OutputPath>
     <IntermediateOutputPath>$(ComponentIntermediateOutputPath)</IntermediateOutputPath>
-    <ArtifactsDir>$(ArtifactsDir)</ArtifactsDir>
+    <GenerateSbom>$(GenerateSbom)</GenerateSbom>
 
     <!-- Note that the url is expected to end with ';' (%3B) -->
     <ManifestPublishUrl Condition="'$(VisualStudioDropName)' != ''">https://vsdrop.corp.microsoft.com/file/v1/$(VisualStudioDropName)%3B</ManifestPublishUrl>
@@ -43,44 +46,81 @@
 
   <Import Project="$(SwixBuildPath)build\Microsoft.VisualStudioEng.MicroBuild.Plugins.SwixBuild.targets" />
 
-  <Target Name="_BuildManifest" DependsOnTargets="_SetManifestBuildVersion;GenerateSetupManifest" />
+  <Target Name="_BuildManifest" DependsOnTargets="_GetVsixFileInfo;_GenerateSbomForVsixAndAddManifestItem;_GenerateVSManifest;GenerateSetupManifest" />
 
-  <!--
-    Each stub file contains VSIX version of the respective VSIX file.
-    We require that all VSIXes included in a single VS insertion component have the same version.
-    This version will be set to ManifestBuildVersion.
-  -->
-  <Target Name="_SetManifestBuildVersion">
-
+  <Target Name="_GetVsixFileInfo">
     <ReadLinesFromFile File="%(_PackageStubFiles.Identity)">
       <Output TaskParameter="Lines" ItemName="_StubLine"/>
     </ReadLinesFromFile>
-
+   <!--Parse the stub file to get the details of VsixId, VsixFileName and VsxiVersion-->
+   <!--Eg: _StubLine = Microsoft.FSharp.VSIX.Templates/VisualFSharpTemplates.vsix/17.0.0.2231309
+          VsixId = Microsoft.FSharp.VSIX.Templates
+          VsixFileName = VisualFSharpTemplates.vsix
+          VsixVersion = 17.0.0.2231309-->
     <ItemGroup>
-      <_StubLineSplit Include="@(_StubLine)" 
-                      Name="$([MSBuild]::ValueOrDefault('%(_StubLine.Identity)', '').Split('/')[0])" 
-                      Version="$([MSBuild]::ValueOrDefault('%(_StubLine.Identity)', '').Split('/')[1])" />
+      <_ParsedLine Include="@(_StubLine)"
+                   VsixId="$([MSBuild]::ValueOrDefault('%(_StubLine.Identity)', '').Split('/')[0])"
+                   VsixFileName="$([MSBuild]::ValueOrDefault('%(_StubLine.Identity)', '').Split('/')[1])"
+                   VsixVersion="$([MSBuild]::ValueOrDefault('%(_StubLine.Identity)', '').Split('/')[2])" />
+    <!--Set the VSmanifest name, Vsix path, Vsix unpacking path, Directory to generate SBOM and Path to generated SBOM manifest-->
+      <_VsixFileInfo Include="@(_ParsedLine->'%(VsixFileName)')">
+        <ManifestJsonPath>$(SetupOutputPath)%(VsixId).json</ManifestJsonPath>
+        <VsixPath>$(SetupOutputPath)%(VsixFileName)</VsixPath>
+        <UnpackDir>$(ComponentIntermediateOutputPath)%(VsixFileName)\unpack</UnpackDir>
+        <SbomDir>$(ComponentIntermediateOutputPath)%(VsixFileName)\sbom</SbomDir>
+        <SbomJsonPath>$(ComponentIntermediateOutputPath)%(VsixFileName)\sbom\spdx_2.2\manifest.spdx.json</SbomJsonPath>
+      </_VsixFileInfo>
     </ItemGroup>
 
     <ItemGroup>
-      <_VsixVersion Include="%(_StubLineSplit.Version)" Name="%(_StubLineSplit.Name)" />
+      <_VsixVersion Include="%(_VsixFileInfo.VsixVersion)" VsixFileName="%(_VsixFileInfo.Identity)" />
     </ItemGroup>
 
     <RemoveDuplicates Inputs="@(_VsixVersion)">
       <Output TaskParameter="Filtered" ItemName="_VsixVersionNoDuplicates"/>
     </RemoveDuplicates>
 
-    <Error Text="Visual Studio component '$(ComponentName)' contains multiple VSIX files with different versions: @(_VsixVersionNoDuplicates->'%(Name) (version %(Identity))', ', ')"
+    <!--
+      Each stub file contains VSIX version of the respective VSIX file.
+      We require that all VSIXes included in a single VS insertion component have the same version.
+      This version will be set to ManifestBuildVersion.
+    -->
+    <Error Text="Cannot generate VS manifest because Visual Studio component '$(ComponentName)' contains multiple VSIX files with different versions: @(_VsixVersionNoDuplicates->'%(VsixFileName) (version %(Identity))', ', ')"
            Condition="@(_VsixVersionNoDuplicates->Count()) != 1"/>
 
     <PropertyGroup>
       <ManifestBuildVersion>@(_VsixVersionNoDuplicates)</ManifestBuildVersion>
-      <ManifestVsixName>@(_VsixVersionNoDuplicates->'%(Name)')</ManifestVsixName>
     </PropertyGroup>
+  </Target>
+
+  <Target Name="_GenerateSbomForVsixAndAddManifestItem"
+          Inputs="@(_VsixFileInfo->'%(VsixPath)')"
+          Outputs="@(_VsixFileInfo->'%(SbomJsonPath)')"
+          DependsOnTargets="_GetVsixFileInfo"
+          Condition="'$(GenerateSbom)' != 'false'">
+    <Message Text="Generating SBOM manifest for '%(_VsixFileInfo.Identity)'" Importance="high"/>
+
+    <MakeDir Directories="%(_VsixFileInfo.SbomDir);%(_VsixFileInfo.UnpackDir)"/>
+    <Copy SourceFiles="%(_VsixFileInfo.VsixPath)" DestinationFolder="%(_VsixFileInfo.UnpackDir)" Condition = "'%(_VsixFileInfo.Extension)' == '.exe'" />
+    <Unzip SourceFiles="%(_VsixFileInfo.VsixPath)" DestinationFolder="%(_VsixFileInfo.UnpackDir)" Condition = "'%(_VsixFileInfo.Extension)' != '.exe'"/>
+    <!-- Generate SBOM -->
+    <Exec Command='"$(DotNetTool)" "$(ManifestTool)" generate -BuildDropPath "%(_VsixFileInfo.UnpackDir)" -ManifestDirPath "%(_VsixFileInfo.SbomDir)" -PackageName "%(_VsixFileInfo.VsixFileName)" -PackageVersion "%(_VsixFileInfo.VsixVersion)" -Verbosity Verbose'/>
+    <!-- Generate VS manifest with link to the SBOM manifest-->
     <ItemGroup>
-    <MergeManifest Include="$(SetupOutputPath)$(ComponentName).json">
-      <SBOMFileLocation>$(ArtifactsDir)sbom\$(ManifestVsixName.Substring(0, $(ManifestVsixName.LastIndexOf('.'))))\spdx_2.2\manifest.spdx.json</SBOMFileLocation>
-      </MergeManifest>
+      <MergeManifest Include="%(_VsixFileInfo.ManifestJsonPath)" SBOMFileLocation="%(_VsixFileInfo.SbomJsonPath)" />
+    </ItemGroup>
+
+    <Message Text="Completed generating SBOM manifest for %(_VsixFileInfo.Identity)." Importance="high"/>
+  </Target>
+
+  <Target Name="_GenerateVSManifest"
+          DependsOnTargets="_GetVsixFileInfo"
+          Condition="'$(GenerateSbom)' == 'false'">
+
+  <Message Text="Generating VS manifest '%(_VsixFileInfo.Identity)'" Importance="high"/>
+  <ItemGroup>
+    <MergeManifest Include="%(_VsixFileInfo.ManifestJsonPath)" />
   </ItemGroup>
   </Target>
+
 </Project>

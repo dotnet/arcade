@@ -1,8 +1,13 @@
 ﻿<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
-    <TargetFrameworks Condition="'$(DotNetBuildFromSource)' == 'true'">net6.0</TargetFrameworks>
+    <TargetFrameworks>net472;$(TargetFrameworkForNETSDK)</TargetFrameworks>
+    <!--
+      We can't build Microsoft.DotNet.Build.Tasks.Workloads for net472 in source build, since it
+      depends on Microsoft.NET.Sdk.WorkloadManifestReader, and the previously source built
+      version of that package is incompatible with the net472 TFM.
+    -->
+    <TargetFrameworks Condition="'$(DotNetBuildFromSource)' == 'true'">$(TargetFrameworkForNETSDK)</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsPackable>true</IsPackable>
     <Description>Workload pack installer generation task package</Description>
@@ -35,7 +40,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(IncludeWiX)' == 'true'">
-    <PackageReference Include="Wix" Version="3.11.2" />
+    <PackageReference Include="Microsoft.Signed.Wix" Version="$(MicrosoftSignedWixVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(IncludeWiX)' == 'true'">

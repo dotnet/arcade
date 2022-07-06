@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Helix.Sdk
     {
         private static readonly TimeSpan s_defaultWorkItemTimeout = TimeSpan.FromMinutes(20);
         private static readonly TimeSpan s_defaultTestTimeout = TimeSpan.FromMinutes(12);
-        protected static readonly TimeSpan s_telemetryBuffer = TimeSpan.FromSeconds(60); // extra time to send the XHarness telemetry
+        private static readonly TimeSpan s_telemetryBuffer = TimeSpan.FromMinutes(2); // extra time to send the XHarness telemetry
 
         public class MetadataName
         {

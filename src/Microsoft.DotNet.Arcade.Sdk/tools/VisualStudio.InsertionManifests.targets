@@ -4,30 +4,10 @@
     <_StubFiles Include="$(VisualStudioSetupIntermediateOutputPath)**\*.stub"/>
     <_StubDirs Include="@(_StubFiles->'%(RecursiveDir)')"/>
   </ItemGroup>
-<!--
-  Before pack create the SBOM here
--->
- <PropertyGroup>
+
+  <PropertyGroup>
     <GenerateSbom Condition="'$(GenerateSbom)' == ''">false</GenerateSbom>
   </PropertyGroup>
-
-  <Target Name ="GenerateSbomForVSInsertion" 
-          Condition="'$(GenerateSbom)' != 'false'">
-    <Message Text="Generating SBOM manifest" Importance="high"/>
-    <ItemGroup>
-     <VsixFile Include="$(ArtifactsDir)VSSetup\$(Configuration)\Insertion\*.vsix"></VsixFile>
-     <VsixFile Include="$(ArtifactsDir)VSSetup\$(Configuration)\Insertion\*.exe"></VsixFile>
-    </ItemGroup>
-     <MakeDir Directories="$(ArtifactsDir)sbom;$(ArtifactsDir)sbom\%(VsixFile.Filename);$(ArtifactsDir)Vsix;$(ArtifactsDir)Vsix\Unpacked\%(VsixFile.Filename)"/>
-     
-     <Unzip
-      SourceFiles="@(VsixFile)"
-      DestinationFolder="$(ArtifactsDir)Vsix\Unpacked\%(VsixFile.Filename)"
-      OverwriteReadOnlyFiles="true"/>
-
-    <Exec Command = "$(DotNetTool) $(NUGET_PACKAGES)microsoft.manifesttool.crossplatform\$(MicrosoftManifestToolCrossPlatformVersion)\Content\Microsoft.ManifestTool.dll generate -b $(ArtifactsDir)Vsix\Unpacked\%(VsixFile.Filename) -m $(ArtifactsDir)sbom\%(VsixFile.Filename) -pn VsInsertion -V Verbose"/>
-    <Message Text="Completed generating SBOM manifest for %(VsixFile.Filename)." Importance="high"/>
-  </Target>
   <!---
     This target is invoked in a separate phase after all input VSIX files are signed.
     This is important since the manifest contain hashes of the VSIX files.
@@ -35,8 +15,7 @@
   <Target Name="GenerateVisualStudioInsertionManifests"
           BeforeTargets="AfterPack"
           Outputs="%(_StubDirs.Identity)"
-          Condition="'@(_StubDirs)' != ''"
-          DependsOnTargets="GenerateSbomForVSInsertion">
+          Condition="'@(_StubDirs)' != ''">
     <PropertyGroup>
       <_ComponentDir>%(_StubDirs.Identity)</_ComponentDir>
       <_ComponentName>$(_ComponentDir.TrimEnd('\'))</_ComponentName>
@@ -54,7 +33,9 @@
       <_Args Include="ComponentIntermediateOutputPath=$(VisualStudioSetupIntermediateOutputPath)$(_ComponentName)\"/>
       <_Args Include="SwixBuildPath=$(NuGetPackageRoot)microsoft.visualstudioeng.microbuild.plugins.swixbuild\$(MicrosoftVisualStudioEngMicroBuildPluginsSwixBuildVersion)\"/>
       <_Args Include="VisualStudioDropName=$(VisualStudioDropName)" />
-      <_Args Include="ArtifactsDir=$(ArtifactsDir)" />
+      <_Args Include="DotNetTool=$(DotNetTool)" />
+      <_Args Include="ManifestTool=$(NUGET_PACKAGES)microsoft.manifesttool.crossplatform\$(MicrosoftManifestToolCrossPlatformVersion)\Content\Microsoft.ManifestTool.dll"/>
+      <_Args Include="GenerateSbom=$(GenerateSbom)" />
     </ItemGroup>
 
     <!--
