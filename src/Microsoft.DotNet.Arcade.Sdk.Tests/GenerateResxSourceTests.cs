@@ -71,5 +71,12 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
         {
             Assert.Equal(expectedIdentifier, GenerateResxSource.GetIdentifierFromResourceName(name));
         }
+
+        [Fact]
+        public void EvilTestWithOutput()
+        {
+            _output.WriteLine("Stuff");
+            Assert.Equal("A", "B");
+        }
     }
 }
