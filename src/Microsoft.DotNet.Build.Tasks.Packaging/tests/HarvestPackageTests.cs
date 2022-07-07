@@ -91,7 +91,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
                 HarvestAssets = true,
                 IncludeAllPaths = true,
                 PackageId = "System.Collections.Immutable",
-                PackageVersion = "1.5.0",
+                PackageVersion = "1.7.1",
                 RuntimeFile = "runtime.json"
             };
 
