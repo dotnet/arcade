@@ -12,7 +12,7 @@ This document only applies to Windows machines as Linux machines already come wi
     a template such as `jobs.yml` in YAML.
 2.  Modify your `global.json`'s `native-tools` section to change the version of your tools to one of the following values:
     - `latest` (e.g. `"cmake": "latest"`) &ndash; Grabs the latest version of the tool on the machine; this should be what you use in the majority of cases
-    - Major version (e.g. `"cmake": "3"`) &ndash; Grabs the latest minor & patch version of a particular major version on the machine; this is useful for artifacts you want to pin to a specific major version
+    - Major version (e.g. `"cmake": "3"`) &ndash; Grabs the latest minor & patch version of a particular major version on the machine; this is useful for    artifacts you want to pin to a specific major version
     - Minor version (e.g. `"python": "3.10"`) &ndash; Grabs the latest patch version of a particular minor version on the machine; this is useful for artifacts you want to pin to a specific minor version (such as Python)
 3.  Adjust any usage of the artifacts on the machines in your scripts. The artifacts you specify in your `global.json` are promoted to the path,
     so in general simply calling `cmake` will work. However, if you need the specific locations of tools, `InitializeNativeTools` will return those to
