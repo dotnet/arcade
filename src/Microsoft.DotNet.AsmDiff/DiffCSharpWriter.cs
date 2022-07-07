@@ -58,6 +58,16 @@ namespace Microsoft.DotNet.AsmDiff
 
         public bool IncludeMemberGroupHeadings { get; set; }
 
+        public bool HighlightBaseMembers
+        {
+            get => HighlightMemberOverrides && HighlightInterfaceImplementations;
+            set
+            {
+                HighlightMemberOverrides = true;
+                HighlightInterfaceImplementations = true;
+            }
+        }
+
         public bool HighlightMemberOverrides { get; set; }
 
         public bool HighlightInterfaceImplementations { get; set; }

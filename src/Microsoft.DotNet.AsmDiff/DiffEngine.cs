@@ -60,8 +60,8 @@ namespace Microsoft.DotNet.AsmDiff
                     return new DiffCSharpWriter(writer, mappingSettings, diffComments, includeAttributes)
                     {
                         IncludeAssemblyProperties = configuration.IsOptionSet(DiffConfigurationOptions.DiffAssemblyInfo),
-                        HighlightMemberOverrides = configuration.IsOptionSet(DiffConfigurationOptions.HightlightMemberOverrides) || configuration.IsOptionSet(DiffConfigurationOptions.HighlightBasesMembers),
-                        HighlightInterfaceImplementations = configuration.IsOptionSet(DiffConfigurationOptions.HighlightInterfaceImplementations) || configuration.IsOptionSet(DiffConfigurationOptions.HighlightBasesMembers),
+                        HighlightMemberOverrides = configuration.IsOptionSet(DiffConfigurationOptions.HightlightMemberOverrides) || configuration.IsOptionSet(DiffConfigurationOptions.HighlightBaseMembers),
+                        HighlightInterfaceImplementations = configuration.IsOptionSet(DiffConfigurationOptions.HighlightInterfaceImplementations) || configuration.IsOptionSet(DiffConfigurationOptions.HighlightBaseMembers),
                     };
                 case DiffFormat.WordXml:
                 case DiffFormat.Text:
@@ -69,8 +69,8 @@ namespace Microsoft.DotNet.AsmDiff
                     return new DiffCSharpWriter(writer, mappingSettings, diffComments, includeAttributes)
                     {
                         IncludeAssemblyProperties = configuration.IsOptionSet(DiffConfigurationOptions.DiffAssemblyInfo),
-                        HighlightMemberOverrides = configuration.IsOptionSet(DiffConfigurationOptions.HightlightMemberOverrides) || configuration.IsOptionSet(DiffConfigurationOptions.HighlightBasesMembers),
-                        HighlightInterfaceImplementations = configuration.IsOptionSet(DiffConfigurationOptions.HighlightInterfaceImplementations) || configuration.IsOptionSet(DiffConfigurationOptions.HighlightBasesMembers),
+                        HighlightMemberOverrides = configuration.IsOptionSet(DiffConfigurationOptions.HightlightMemberOverrides) || configuration.IsOptionSet(DiffConfigurationOptions.HighlightBaseMembers),
+                        HighlightInterfaceImplementations = configuration.IsOptionSet(DiffConfigurationOptions.HighlightInterfaceImplementations) || configuration.IsOptionSet(DiffConfigurationOptions.HighlightBaseMembers),
                     };
                 default:
                     throw new ArgumentOutOfRangeException("format");
@@ -166,8 +166,8 @@ namespace Microsoft.DotNet.AsmDiff
             var writer = new ApiRecordingCSharpDiffWriter(diffRecorder, mappingSettings, includeAttributes)
             {
                 IncludeAssemblyProperties = configuration.IsOptionSet(DiffConfigurationOptions.DiffAssemblyInfo),
-                HighlightMemberOverrides = configuration.IsOptionSet(DiffConfigurationOptions.HightlightMemberOverrides) || configuration.IsOptionSet(DiffConfigurationOptions.HighlightBasesMembers),
-                HighlightInterfaceImplementations = configuration.IsOptionSet(DiffConfigurationOptions.HighlightInterfaceImplementations) || configuration.IsOptionSet(DiffConfigurationOptions.HighlightBasesMembers),
+                HighlightMemberOverrides = configuration.IsOptionSet(DiffConfigurationOptions.HightlightMemberOverrides) || configuration.IsOptionSet(DiffConfigurationOptions.HighlightBaseMembers),
+                HighlightInterfaceImplementations = configuration.IsOptionSet(DiffConfigurationOptions.HighlightInterfaceImplementations) || configuration.IsOptionSet(DiffConfigurationOptions.HighlightBaseMembers),
             };
 
             WriteDiff(configuration, writer);

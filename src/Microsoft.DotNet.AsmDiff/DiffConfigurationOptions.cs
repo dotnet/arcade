@@ -28,6 +28,6 @@ namespace Microsoft.DotNet.AsmDiff
         HightlightMemberOverrides = 0x40000,
         HighlightInterfaceImplementations = 0x80000,
 
-        HighlightBasesMembers = HightlightMemberOverrides | HighlightInterfaceImplementations,
+        HighlightBaseMembers = HightlightMemberOverrides | HighlightInterfaceImplementations,
     }
 }
