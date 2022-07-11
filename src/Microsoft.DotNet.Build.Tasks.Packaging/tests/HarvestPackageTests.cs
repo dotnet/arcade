@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.ErrorsLogged.Should().Be(0);
             _log.WarningsLogged.Should().Be(0);
-            task.HarvestedFiles.Should().HaveCount(8);
+            task.HarvestedFiles.Should().HaveCount(10);
             var ns10asset = task.HarvestedFiles.FirstOrDefault(f => f.GetMetadata("TargetFramework") == "netstandard1.0");
             ns10asset.Should().NotBeNull();
             ns10asset.GetMetadata("AssemblyVersion").Should().Be("1.2.3.0");
