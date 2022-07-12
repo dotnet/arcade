@@ -16,7 +16,7 @@ Thanks to our data, we have tons of historical data that can enable us to make p
 
 *[Here is a jupyter notebook](https://ml.azure.com/fileexplorerAzNB?wsid=/subscriptions/a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1/resourcegroups/t-jperez/workspaces/HelixMLTest&tid=72f988bf-86f1-41af-91ab-2d7cd011db47&activeFilePath=Users/t-jperez/pipeline-machine-learning-arcade8824.ipynb) with the detailed statistics and data science that supports the following claims.*
 
-By plotting a histogram of pipeline durations for specific pipelines, I've determined that they seem to follow distrubtions that we can model. For instance, here is the `roslyn-CI` pipeline, with a dweibull distribution fitted.
+By plotting a histogram of pipeline durations for specific pipelines, I've determed that they seem to follow distrubtions that we can model. For instance, here is the `roslyn-CI` pipeline, with a dweibull distribution fitted.
 
 <img src="./PipelineMachineLearning/roslyn-CI.svg" width="600" height="600">
 
@@ -48,11 +48,65 @@ We backtested the model by training on all previous data before a point, and the
 
 ### Implementation
 
-We will implement this as an Azure function. There will be two Azure Functions, an HTTP trigger to obtain the list of confidence intervals for a given set of pipelines, and another function on a timer trigger to retrain the model weekly.
+A unique distrubution for each pipeline requires a training for each pipeline, and this functionality would more than likely require an Azure Function.
 
-The Azure Function will be written in Python. Unfortunately, we cannot use ML.NET (or Infer.NET) since ML.NET does not allow us to fit probability density functions, and Infer.NET has this capability, but we cannot measure the accuracy of the fit to pick the best distribution.
+Instead, we can use [Chebyshev's inequality](https://en.wikipedia.org/wiki/Chebyshev's_inequality), because we have the mean and variance defined for each pipeline.  Using ${\displaystyle k={\sqrt {2}}}$ shows that the probability that values lie outside the interval ${\displaystyle (\mu -{\sqrt {2}}\sigma ,\mu +{\sqrt {2}}\sigma )}$ does not exceed ${\displaystyle {\frac {1}{2}}}$. At the time of writing, here is a list of the ranges we'd give customers who have Build Analysis enabled:
 
-Queue Insights will query the function for predictions, and show them inside the existing checkrun.
+
+| Definition                                         | Mean         | ConfidenceInterval |
+| -------------------------------------------------- | ------------ | ------------------ |
+| \dotnet\arcade\arcade-ci                           | 45m 14s      | ± 10m 41s          |
+| \dotnet\arcade-services\dotnet-arcade-services     | 25m 8s       | ± 5m 26s           |
+| \dotnet\arcade-validation\arcade-validation-ci     | 13m 24s      | ± 6m 17s           |
+| \dotnet\aspnetcore\aspnetcore-ci                   | 1hr 32m 8s   | ± 27m 56s          |
+| \dotnet\aspnetcore\aspnetcore-components-e2e       | 33m 58s      | ± 3m 11s           |
+| \dotnet\aspnetcore\aspnetcore-quarantined-pr       | 1hr 4m 4s    | ± 17m 7s           |
+| \dotnet\installer\installer                        | 57m 22s      | ± 36m 3s           |
+| \dotnet\performance\performance-ci                 | 47m 41s      | ± 22m 7s           |
+| \dotnet\roslyn\roslyn-CI                           | 1hr 10m 41s  | ± 19m 22s          |
+| \dotnet\roslyn\roslyn-integration-CI               | 1hr 22m 24s  | ± 12m 23s          |
+| \dotnet\roslyn\roslyn-integration-corehost         | 1hr 22m 56s  | ± 11m 2s           |
+| \dotnet\runtime\dotnet-linker-tests                | 59m 55s      | ± 13m 55s          |
+| \dotnet\runtime\runtime                            | 2hrs 10m 52s | ± 1hr 21m 38s      |
+| \dotnet\runtime\runtime-coreclr outerloop          | 4hrs 20m 24s | ± 57m 37s          |
+| \dotnet\runtime\runtime-coreclr superpmi-asmdiffs  | 1hr 20m 26s  | ± 14m 10s          |
+| \dotnet\runtime\runtime-coreclr superpmi-diffs     | 1hr 53m 35s  | ± 19m 24s          |
+| \dotnet\runtime\runtime-coreclr superpmi-replay    | 1hr 38m 15s  | ± 17m 26s          |
+| \dotnet\runtime\runtime-dev-innerloop              | 1hr 21m 38s  | ± 8m 16s           |
+| \dotnet\runtime\runtime-extra-platforms            | 2hrs 23m     | ± 52m 44s          |
+| \dotnet\runtime\runtime-libraries enterprise-linux | 41m 48s      | ± 7m 57s           |
+| \dotnet\runtime-assets\runtime-assets              | 2m 5s        | ± 35s              |
+| \dotnet\sdk\dotnet-sdk-public-ci                   | 59m 1s       | ± 16m 15s          |
+
+We can use a Kusto Query like so and show this information in Queue Insights. (Here, I use Definition name for clarity, but I will use the DefinitionId in production)
+
+```
+TimelineBuilds
+| where Project == "public"
+| where Reason == "pullRequest"
+| where TargetBranch == "main"
+| where Result == "succeeded"
+| extend PipelineDuration = datetime_diff('second', FinishTime, StartTime) * 1s
+| project-keep Definition, PipelineDuration
+| join kind=inner (
+    TimelineBuilds
+    | where Project == "public"
+    | where Reason == "pullRequest"
+    | where TargetBranch == "main"
+    | where Result == "succeeded"
+    | project Definition, PipelineDuration = datetime_diff('second', FinishTime, StartTime) * 1s
+    | summarize
+        Bottom5 = percentile(PipelineDuration, 5),
+        Top95 = percentile(PipelineDuration, 95),
+        Count = count()
+        by Definition
+    | where Count >= 30)
+    on Definition
+| where PipelineDuration between (Bottom5..Top95)
+| summarize Mean = avg(PipelineDuration), ConfidenceInterval = sqrt(2) * totimespan(stdevp(PipelineDuration)) by Definition
+```
+
+*Thanks to Nikki ([@mathaholic](https://github.com/mathaholic)) for her help with this data analysis, and her idea to use Chebyshev’s Theorem!*
 
 ### Caveats
 
