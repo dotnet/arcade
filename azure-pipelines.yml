@@ -166,7 +166,7 @@ stages:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
         - job: Linux
-          timeoutInMinutes: 90
+          timeoutInMinutes: 180
           container: LinuxContainer
           pool:
             vmimage: ubuntu-latest
