@@ -7,9 +7,8 @@ namespace Xunit
 {
     internal static class StaticReflectionConstants
     {
-        internal const DynamicallyAccessedMemberTypes ConditionalMemberKinds = DynamicallyAccessedMemberTypes.PublicFields |
-            DynamicallyAccessedMemberTypes.PublicMethods |
-            DynamicallyAccessedMemberTypes.PublicProperties;
+        // ConditionalTestDiscoverer looks at all fields/methods/properties, recursively.
+        internal const DynamicallyAccessedMemberTypes ConditionalMemberKinds = DynamicallyAccessedMemberTypes.All;
     }
 }
 
