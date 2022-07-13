@@ -22,6 +22,7 @@ namespace Microsoft.Cci.Writers
         private readonly bool _apiOnly;
         private readonly ICciFilter _cciFilter;
         private bool _firstMemberGroup;
+        private bool _includeOnlyConditionalTypeListTypes;
 
         public CSharpWriter(ISyntaxWriter writer, ICciFilter filter, bool apiOnly, bool writeAssemblyAttributes = false)
             : base(filter)
@@ -47,6 +48,12 @@ namespace Microsoft.Cci.Writers
         public bool HighlightInterfaceMembers { get; set; }
 
         public bool PutBraceOnNewLine { get; set; }
+
+        public ICciFilter ConditionalTypeListFilter { get; set; }
+
+        public string ConditionalTypeListSymbol { get; set; }
+
+        public bool ConditionalTypeListWrapOtherTypes { get; set; }
 
         public bool IncludeGlobalPrefixForCompilation
         {
@@ -87,7 +94,35 @@ namespace Microsoft.Cci.Writers
                 _declarationWriter.WriteDeclaration(assembly);
             }
 
-            base.Visit(assembly);
+            var namespaces = assembly.GetAllNamespaces();
+            if (ConditionalTypeListFilter == null)
+            {
+                Visit(namespaces);
+            }
+            else
+            {
+                if (ConditionalTypeListWrapOtherTypes)
+                {
+                    _syntaxWriter.Write($"#if {ConditionalTypeListSymbol}");
+                    _syntaxWriter.WriteLine();
+                }
+
+                // first pass
+                Visit(namespaces);
+
+                _syntaxWriter.Write(ConditionalTypeListWrapOtherTypes ? $"#endif // {ConditionalTypeListSymbol}" : $"#if {ConditionalTypeListSymbol}");
+                _syntaxWriter.WriteLine();
+
+                // second pass
+                _includeOnlyConditionalTypeListTypes = true;
+                Visit(namespaces.Where(ConditionalTypeListFilter.Include));
+
+                if (!ConditionalTypeListWrapOtherTypes)
+                {
+                    _syntaxWriter.Write($"#endif // {ConditionalTypeListSymbol}");
+                    _syntaxWriter.WriteLine();
+                }
+            }
         }
 
         public override void Visit(INamespaceDefinition ns)
@@ -102,7 +137,15 @@ namespace Microsoft.Cci.Writers
 
                 using (_syntaxWriter.StartBraceBlock(PutBraceOnNewLine))
                 {
-                    base.Visit(ns);
+                    var types = ns.GetTypes(this.IncludeForwardedTypes);
+                    if (ConditionalTypeListFilter != null)
+                    {
+                        // in the first pass we want all types *except* the ones in ConditionalTypeListFilter
+                        // in the second pass we want *only* the types in ConditionalTypeListFilter
+                        types = types.Where(t => ConditionalTypeListFilter.Include(t) == _includeOnlyConditionalTypeListTypes);
+                    }
+
+                    Visit(types);
                 }
             }
 

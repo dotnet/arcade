@@ -156,12 +156,29 @@ namespace Microsoft.DotNet.GenAPI
         public bool AlwaysIncludeBase { get; set; }
 
         /// <summary>
+        /// [CSDecl] Specify a namespace+type list in the DocId format of types that should be wrapped inside an #if <see cref="ConditionalTypeListSymbol"/> (depending on <see cref="ConditionalTypeListWrapOtherTypes"/>).
+        /// </summary>
+        public string ConditionalTypeList { get; set; }
+
+        /// <summary>
+        /// [CSDecl] Symbol that will be used in the #if for <see cref="ConditionalTypeList"/>.
+        /// </summary>
+        public string ConditionalTypeListSymbol { get; set; }
+
+        /// <summary>
+        /// [CSDecl] If true, wraps the types _not_ mentioned in <see cref="ConditionalTypeListSymbol"/> with <see cref="ConditionalTypeListSymbol"/>.
+        /// If false, every type in the list will be wrapped.
+        /// Defaults to false.
+        /// </summary>
+        public bool ConditionalTypeListWrapOtherTypes { get; set; }
+
+        /// <summary>
         /// Exclude members when return value or parameter types are excluded.
         /// </summary>
         public bool ExcludeMembers { get; set; }
 
         /// <summary>
-        /// Language Version to target.
+        /// [CSDecl] Language Version to target.
         /// </summary>
         public string LangVersion { get; set; }
 
@@ -333,7 +350,7 @@ namespace Microsoft.DotNet.GenAPI
 
             if (!string.IsNullOrWhiteSpace(excludeApiList))
             {
-                includeFilter = new IntersectionFilter(includeFilter, new DocIdExcludeListFilter(excludeApiList, excludeMembers));
+                includeFilter = new IntersectionFilter(includeFilter, new DocIdExcludeListFilter(excludeApiList, excludeMembers) { IncludeForwardedTypes = includeForwardedTypes });
             }
 
             if (!string.IsNullOrWhiteSpace(excludeAttributesList))
@@ -394,6 +411,12 @@ namespace Microsoft.DotNet.GenAPI
                         writer.AlwaysIncludeBase = AlwaysIncludeBase;
                         writer.LangVersion = GetLangVersion(LangVersion);
                         writer.IncludeForwardedTypes = FollowTypeForwards;
+                        if (!string.IsNullOrWhiteSpace(ConditionalTypeList))
+                        {
+                            writer.ConditionalTypeListFilter = new DocIdIncludeListFilter(ConditionalTypeList) { IncludeForwardedTypes = FollowTypeForwards };
+                            writer.ConditionalTypeListSymbol = ConditionalTypeListSymbol;
+                            writer.ConditionalTypeListWrapOtherTypes = ConditionalTypeListWrapOtherTypes;
+                        }
                         return writer;
                     }
             }
