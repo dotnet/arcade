@@ -4,10 +4,8 @@ The following is a list of default queries to use to look up information about f
 
 Click [here](TestReportingData.md) to learn more about the data we're collecting. 
 
-Caveats (Jan 14, 2022): 
+Caveats (updated July 14, 2022): 
 - Because this data is stored in an internal data source, it is unfortunately currently only available to Microsoft employees. (If you are an internal Microsoft employee, you can request access from the [.NET Engineering Services team](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/How-to-get-a-hold-of-Engineering-Servicing).)
-- Test data is only recently populated, thus, we only have about 2.5 weeks worth of data. 
-- There is a [known issue](https://github.com/dotnet/core-eng/issues/14708) with how we're capturing this data that is currently being worked on, thus, some of the data we have may not be complete. 
 
 ## Index
   - [Tests That Have Changed Failure Rate in the Last Week](#tests-that-have-changed-failure-rate-in-the-last-week)
@@ -121,6 +119,34 @@ subtable
 ```
 
 :part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA51Uy24TQRC8+ytakSKthYkThQOK5UiBgLgEI5MfaHt64yGzM6t52N6IA7/B7/ElqZkljmPlgPDJ24+q6ureHY9pLtFrCcReqBG2kaKjZBfGLe+JraLWy1oQZlokbRTV3jVUszba3pFKkuufHqOEOEIdQFbSFcwQtTGkrdJLjnot5GrAb0Akihay4rV2fkSD8Tj3eKmdlxFthKygANjRM5Ss3AadUSx0ZBZqOQTI3qwQ8nszaBu9U2kp6oQ+bS/oqi9fMdJ0dnp6XDrJc5ReqbOm62HA3+vIDV7e+mTRBFKP1jxiAj7M8B0FvaWcHlFwpOOfX78DybaVZZ5qzQa2YJAdiA70/vzk/PiEBkZgTqApnb1TE3r1Bwm3upHQsu2xSpOX1qHtSLloJY7ZL1nJ0WSvadZG7SybCwpS1ihNG6EV5mA3uqbOJcrOAyskAxVll4z9ZPCgo8s2FraQFpEXRsB49YC5r2U9a8MtnAnfU9Ow7wY/s2twZI5eH69hKF1Oie9cFcOwnI6u66qXDd1Ho1JZWLoceX46zOSeHuEbdjWz+Ua7jy5B+SWdgjgUCfoBV5IawS6dnyJWHZYPR6TEuqYkP2ODJfrmlTIOszqPMG14Wz1PNKRFRx/y3V9Lra3OBn/lBqeTrej/Xfk7iLDxC4fVpJjHe5Ebbv/XwxeDQsc+0TNtmAyelrWDK0P/9co4d59aqg5EDXH4LxBR2nr3Ayf8rwPj+m/wxdhzc54drKJTLkFOtVvOkPBWPUWLuCE8P1zDdFcPNhfZzJPtE6UFAp1XeBlhxSu8k0dFwXcxzQQAAA==) to query editor
+
+## Search Failed Test Results as with Runfo
+
+The `AzureDevOpsTests` table collects the details of failed test results, making it searchable as one would with [searching for tests with Runfo](https://runfo.azurewebsites.net/search/tests/#test). Here's a query to get you started: 
+
+Variables: 
+
+```
+// NOTE: The following query uses equals operators. You may need to alter the query if you wish to use "contains" or "has" instead for any of the search values.
+let started = 7d;                    // Timespan value to find test results after. 
+let definition = "aspnetcore-ci";    // Optional: The name of the build definition, leave as empty string for all build definitions.
+let reason = "BatchedCI";            // Optional: The Azure DevOps build reason value (e.g. PullRequest, BatchedCI, et cetera)
+let targetBranch = "main";           // Optional: The name of the target branch the test is ran against.
+let name = "";                       // Optional: The name of the test
+let jobName = "";                    // Optional: The name of the job
+let message = "";                    // Optional: Error message to search for
+let workItemName = "";               // Optional: Work item name
+AzureDevOpsTests
+| where iff(definition == "", BuildDefinitionName == BuildDefinitionName, BuildDefinitionName == definition)
+| where iff(reason == "", BuildReason == BuildReason, BuildReason == reason)
+| where iff(targetBranch == "", Branch == Branch, Branch == targetBranch)
+| where iff(name == "", TestName == TestName, TestName == name)
+| where iff(message == "", Message == Message, Message == message)
+| where iff(workItemName == "", WorkItemName == WorkItemName, WorkItemName == workItemName)
+| where RunCompleted <= ago(started)
+```
+
+:part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA42UTY/aMBCG70j8h1FOINFwrFTKYb8Oe+hSIaRVj0MyIW4dO2s7oFT98R3HCZsElpaTPZ555uMdslzCy2b39AV2OUGmpdQnoQ7wVpGpobJkgd4qlBZ0SQadNjaGH7qCAmtQRCk4DSgdGXAMCGEig5pdTsLm/pkpECVaORTKRqANRDnygW+OMOWsBlDVoLOGYQlNksMRZUU2nk4kObAOjeNka/icruDKb7mEnSjIlqhCpE+cCcX1kXVgyFbSWcCMK40hQFNiB+GEVsyN0JaKXKINfUpEtGqhm9K/owzzUVhQV+a+EjLtMRYgCY8EyBMrSldzzcZPsulOygv/rjVDaEMF9+iSnNKH52g1am1Yxd3vyhA80nFT2hbbQkLnM4oPMXyvpNyydtz+As7oBXDKhHgKOA/5ebIHcvcGFQ+dqyhYpUEBN6cQomEfwhuLn7ewwBbAg5fctZ02cZwhuqrgPzMxN3B+6v3LTdRNDkcHDG+LxcP/Yp6MYSG7GF6udk1Z3oA7afPr2VHxYWkD3Ct7g2D3prbppNE0SLrjRu108gdOObHOIstm/U31aBbUy/54Noek62vmD33fofNhtm4je5m2Z1PvevEWAke04X61zPMtnPqWvv8IpdrKPcJPqeukOw+t3nsEOEseGN/er+1xYGu9R4yhzgH0OrL175evfUIPvq3Ugy5K3iX+0H1d859Hz9rv3vwvGtpprKYFAAA=) to query editor
 
 ## Build Analysis Reporting
 

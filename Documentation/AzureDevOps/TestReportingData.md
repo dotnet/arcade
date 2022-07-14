@@ -31,7 +31,7 @@ Notable fields in this table include:
 
 Due to the amount of data that we need to process, we start with hourly aggregations of test results. The data collected on this table is for all failed tests in the last 90 days that we are tracking, so it may occur that we have a row for a test that has not ran in the last hour, but has failed in the last 90 days. 
 
-Because this table is an aggregate, you'll notice that some of the fields, such as `QueueName` are not available going forward. 
+Because this table is an aggregate, you'll notice that some of the fields, such as `QueueName` and `BuildReason` are not available going forward, as they are aggregated. (This means the aggregates will contain all pass/fail results of the test regardless of which configuration it ran against or if it occurred during a CI build or Pull Request)
 
 Notable fields in this table include:
 
