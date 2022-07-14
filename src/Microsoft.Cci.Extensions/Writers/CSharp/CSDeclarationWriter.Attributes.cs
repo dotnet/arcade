@@ -376,15 +376,18 @@ namespace Microsoft.Cci.Writers.CSharp
 
             switch (typeName)
             {
-                case "System.Runtime.CompilerServices.FixedBufferAttribute": return true;
+                case "System.Diagnostics.CodeAnalysis.SetsRequiredMembersAttribute": return true;
                 case "System.ParamArrayAttribute": return true;
-                case "System.Reflection.DefaultMemberAttribute": return true;
-                case "System.Reflection.AssemblyKeyFileAttribute": return true;
                 case "System.Reflection.AssemblyDelaySignAttribute": return true;
-                case "System.Runtime.CompilerServices.ExtensionAttribute": return true;
+                case "System.Reflection.AssemblyKeyFileAttribute": return true;
+                case "System.Reflection.DefaultMemberAttribute": return true;
+                case "System.Runtime.CompilerServices.CompilerFeatureRequiredAttribute": return true;
                 case "System.Runtime.CompilerServices.DynamicAttribute": return true;
+                case "System.Runtime.CompilerServices.ExtensionAttribute": return true;
+                case "System.Runtime.CompilerServices.FixedBufferAttribute": return true;
                 case "System.Runtime.CompilerServices.IsByRefLikeAttribute": return true;
                 case "System.Runtime.CompilerServices.IsReadOnlyAttribute": return true;
+                case "System.Runtime.CompilerServices.RequiredMemberAttribute": return true;
                 case "System.Runtime.CompilerServices.TupleElementNamesAttribute": return true;
                 case "System.ObsoleteAttribute":
                     {
