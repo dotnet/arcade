@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.GenFacades
 {
-    public class GenPartialFacadeSource : BuildTask
+    public class GenPartialFacadeSource : RoslynBuildTask
     {
         [Required]
         public ITaskItem[] ReferencePaths { get; set; }
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.GenFacades
         [Required]
         public string OutputSourcePath { get; set; }
         
-        public override bool Execute()
+        public override bool ExecuteCore()
         {
             bool result = true;
             try

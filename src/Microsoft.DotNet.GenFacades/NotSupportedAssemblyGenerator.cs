@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.GenFacades
     /// <summary>
     /// The class generates an NotSupportedAssembly from the reference sources.
     /// </summary>
-    public class NotSupportedAssemblyGenerator : BuildTask
+    public class NotSupportedAssemblyGenerator : RoslynBuildTask
     {
         [Required]
         public ITaskItem[] SourceFiles { get; set; }
@@ -25,9 +25,10 @@ namespace Microsoft.DotNet.GenFacades
         public string Message { get; set; }
 
         public string LangVersion { get; set; }
+
         public string ApiExclusionListPath { get; set; }
 
-        public override bool Execute()
+        public override bool ExecuteCore()
         {
             if (SourceFiles == null || SourceFiles.Length == 0)
             {
