@@ -24,6 +24,7 @@ namespace Microsoft.DotNet.GenFacades
         [Required]
         public string Message { get; set; }
 
+        public string LangVersion { get; set; }
         public string ApiExclusionListPath { get; set; }
 
         public override bool Execute()
@@ -68,7 +69,13 @@ namespace Microsoft.DotNet.GenFacades
 
             try
             {
-                syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(sourceFile));
+                LanguageVersion languageVersion = LanguageVersion.Default;
+                if (!String.IsNullOrEmpty(LangVersion) && !LanguageVersionFacts.TryParse(LangVersion, out languageVersion))
+                {
+                    Log.LogError($"Invalid LangVersion value '{LangVersion}'");
+                    return;
+                }
+                syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(sourceFile), new CSharpParseOptions(languageVersion));
             }
             catch(Exception ex)
             {

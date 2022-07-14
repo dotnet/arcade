@@ -30,6 +30,7 @@
       ReferenceAssembly="$(ReferenceAssembly)"
       CompileFiles="@(Compile)"
       DefineConstants="$(DefineConstants)"
+      LangVersion="$(LangVersion)"
       IgnoreMissingTypes="$(GenFacadesIgnoreMissingTypes)"
       IgnoreMissingTypesList="@(GenFacadesIgnoreMissingType)"
       OmitTypes="@(GenFacadesOmitType)"

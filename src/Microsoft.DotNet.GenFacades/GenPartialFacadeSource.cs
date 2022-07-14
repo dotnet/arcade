@@ -21,6 +21,8 @@ namespace Microsoft.DotNet.GenFacades
 
         public string DefineConstants { get; set; }
 
+        public string LangVersion { get; set; }
+
         public bool IgnoreMissingTypes { get; set; }
 
         public string[] IgnoreMissingTypesList { get; set; }
@@ -42,6 +44,7 @@ namespace Microsoft.DotNet.GenFacades
                     ReferenceAssembly,
                     CompileFiles?.Select(item => item.ItemSpec).ToArray(),
                     DefineConstants,
+                    LangVersion,
                     OutputSourcePath,
                     Log,
                     IgnoreMissingTypes,

@@ -55,6 +55,7 @@
 
     <NotSupportedAssemblyGenerator
       SourceFiles="@(GenFacadeNotSupportedCompileInput)"
+      LangVersion="$(LangVersion)"
       Message="$(GeneratePlatformNotSupportedAssemblyMessage)"
       ApiExclusionListPath="$(ApiExclusionListPath)" />
 
