@@ -396,7 +396,8 @@ namespace Microsoft.Cci.Writers.CSharp
                         if (arg?.Value is string)
                         {
                             string argValue = (string)arg.Value;
-                            if (argValue == "Types with embedded references are not supported in this version of your compiler.")
+                            if (argValue == "Types with embedded references are not supported in this version of your compiler." ||
+                                argValue == "Constructors of types with required members are not supported in this version of your compiler.")
                             {
                                 return true;
                             }
