@@ -14,6 +14,8 @@ using Microsoft.Cci.Filters;
 using Microsoft.Cci.Writers.CSharp;
 using Microsoft.Cci.Writers.Syntax;
 using SRMetadataReader = System.Reflection.Metadata.MetadataReader;
+using SRMGenericParameter = System.Reflection.Metadata.GenericParameter;
+using SRMCustomAttribute = System.Reflection.Metadata.CustomAttribute;
 
 namespace Microsoft.Cci.Extensions.CSharp
 {
@@ -853,7 +855,7 @@ namespace Microsoft.Cci.Extensions.CSharp
         // Basically an interface implementation can't have attributes applied directly in IL so they're added into the custom attribute table in metadata,
         // CCI doesn't expose APIs to read that metadata and we don't have a way to map those attributes, since we have a type reference rather than the reference
         // to the interfaceimpl.
-        public static object GetInterfaceImplementationAttributeConstructorArgument(this ITypeReference interfaceImplementation, uint typeDefinitionToken, string assemblyPath, SRMetadataPEReaderCache metadataReaderCache, Func<SRMetadataReader, CustomAttribute, (bool, object)> argumentResolver)
+        public static object GetInterfaceImplementationAttributeConstructorArgument(this ITypeReference interfaceImplementation, uint typeDefinitionToken, string assemblyPath, SRMetadataPEReaderCache metadataReaderCache, Func<SRMetadataReader, SRMCustomAttribute, (bool, object)> argumentResolver)
         {
             if (metadataReaderCache != null)
             {
@@ -877,14 +879,14 @@ namespace Microsoft.Cci.Extensions.CSharp
         // Basically a generic constraint can't have attributes applied directly in IL so they're added into the custom attribute table in metadata via
         // the generic constraint table, CCI doesn't expose APIs to read that metadata and we don't have a way to map those attributes directly without using
         // System.Reflection.Metadata
-        public static object GetGenericParameterConstraintConstructorArgument(this IGenericParameter parameter, int constraintIndex, string assemblyPath, SRMetadataPEReaderCache metadataReaderCache, Func<SRMetadataReader, CustomAttribute, (bool, object)> argumentResolver)
+        public static object GetGenericParameterConstraintConstructorArgument(this IGenericParameter parameter, int constraintIndex, string assemblyPath, SRMetadataPEReaderCache metadataReaderCache, Func<SRMetadataReader, SRMCustomAttribute, (bool, object)> argumentResolver)
         {
             if (metadataReaderCache != null)
             {
                 SRMetadataReader metadataReader = metadataReaderCache.GetMetadataReader(assemblyPath);
                 uint token = ((IMetadataObjectWithToken)parameter).TokenValue;
                 int rowId = GetRowId(token);
-                GenericParameter genericParameter = metadataReader.GetGenericParameter(MetadataTokens.GenericParameterHandle(rowId));
+                SRMGenericParameter genericParameter = metadataReader.GetGenericParameter(MetadataTokens.GenericParameterHandle(rowId));
                 GenericParameterConstraint constraint = metadataReader.GetGenericParameterConstraint(genericParameter.GetConstraints()[constraintIndex]);
                 return GetCustomAttributeArgument(metadataReader, constraint.GetCustomAttributes(), argumentResolver);
             }
@@ -892,11 +894,11 @@ namespace Microsoft.Cci.Extensions.CSharp
             return null;
         }
 
-        private static object GetCustomAttributeArgument(SRMetadataReader metadataReader, CustomAttributeHandleCollection customAttributeHandles, Func<SRMetadataReader, CustomAttribute, (bool, object)> argumentResolver)
+        private static object GetCustomAttributeArgument(SRMetadataReader metadataReader, CustomAttributeHandleCollection customAttributeHandles, Func<SRMetadataReader, SRMCustomAttribute, (bool, object)> argumentResolver)
         {
             foreach (CustomAttributeHandle customAttributeHandle in customAttributeHandles)
             {
-                CustomAttribute customAttribute = metadataReader.GetCustomAttribute(customAttributeHandle);
+                SRMCustomAttribute customAttribute = metadataReader.GetCustomAttribute(customAttributeHandle);
                 (bool success, object value) result = argumentResolver(metadataReader, customAttribute);
                 if (result.success)
                 {
@@ -928,14 +930,14 @@ namespace Microsoft.Cci.Extensions.CSharp
                     TypeDefinition td = reader.GetTypeDefinition((TypeDefinitionHandle)handle);
                     return !td.Namespace.IsNil && td.Namespace.Equals(@namespace, reader) && td.Name.Equals(name, reader);
                 case HandleKind.TypeReference:
-                    TypeReference tr = reader.GetTypeReference((TypeReferenceHandle)handle);
+                    System.Reflection.Metadata.TypeReference tr = reader.GetTypeReference((TypeReferenceHandle)handle);
                     return tr.ResolutionScope.Kind != HandleKind.TypeReference && !tr.Namespace.IsNil && tr.Namespace.Equals(@namespace, reader) && tr.Name.Equals(name, reader);
                 default:
                     return false;
             }
         }
 
-        private static bool CustomAttributeTypeMatchesNameAndNamespace(this CustomAttribute attribute, ReadOnlySpan<byte> @namespace, ReadOnlySpan<byte> name, SRMetadataReader reader)
+        private static bool CustomAttributeTypeMatchesNameAndNamespace(this SRMCustomAttribute attribute, ReadOnlySpan<byte> @namespace, ReadOnlySpan<byte> name, SRMetadataReader reader)
         {
             EntityHandle ctorHandle = attribute.Constructor;
             switch (ctorHandle.Kind)
@@ -953,7 +955,7 @@ namespace Microsoft.Cci.Extensions.CSharp
         private static readonly CustomAttributeTypeProvider s_CustomAttributeTypeProvider = new CustomAttributeTypeProvider();
 
         // Delegate to parse nullable attribute argument retrieved using System.Reflection.Metadata
-        internal static readonly Func<SRMetadataReader, CustomAttribute, (bool, object)> NullableConstructorArgumentParser = (reader, attribute) =>
+        internal static readonly Func<SRMetadataReader, SRMCustomAttribute, (bool, object)> NullableConstructorArgumentParser = (reader, attribute) =>
         {
             if (attribute.CustomAttributeTypeMatchesNameAndNamespace(RosSystemRuntimeCompilerServicesNamespace, RosNullableAttributeName, reader))
             {
