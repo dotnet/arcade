@@ -12,10 +12,15 @@ Caveats (updated July 14, 2022):
   - [Tests That Have Failed X% of the Time in the Recent Timespan](#tests-that-have-failed-x-of-the-time-in-the-recent-timespan)
   - [Mean Value for the Expected Pass Rate for Tests](#mean-value-for-the-expected-pass-rate-for-tests)
   - [Mean Value for the Expected Pass on Retry Rate for Tests](#mean-value-for-the-expected-pass-on-retry-rate-for-tests)
+  - [Search Failed Test Results as with Runfo](#search-failed-test-results-as-with-runfo)
+  - [Search Timeline as with Runfo](#search-timeline-as-with-runfo)
   - [Build Analysis Reporting](#build-analysis-reporting)
   - [Sentiment Tracker Feedback](#sentiment-tracker-feedback)
 
 ## Tests That Have Changed Failure Rate in the Last Week
+
+<details>
+  <summary>Expand for query</summary>
 
 Variables: 
 - `targetSignificance`: Target statisical likelihood that the failure change is due to a change in the last week
@@ -33,11 +38,16 @@ AzureDevOpsTestAnalysis
 | where HistoricalTotal >= minimumHistoricalData
 | order by Significance desc
 ```
+</details>
+
 :part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA3WQy04CYQyF9/MUlRXERN24MGRMCMS4wyAvUGcqNPkvpO0oQ3h4O5AwYsZdc05P26+BDAxlQ/bOm8SfXGGqCEp4uHt6nBbBbaFddmFUZ0tk99Ik40ijsxk5cWziK6tl8XBYoGEXP9u1eW1Z3UAZzw6N0IK+ljtdk9osYWiVFY6gTYwofCCIuB+vfKOYT6LJZFr8kyqO8L0lIei7oSy7jZjqk6jsN7Wd2CFc+q9An8sh/G7CvBGhZC/IYZ6dGW6cyofQ3sjtnnidDYNj9kqfuf2lvqHqsLpMK/K3nszLmX8X+KWDz/ZAlpoEPtprtJq0+gHUohbl3wEAAA==) to query editor
 
 ## Tests That Have Failed X% of the Time in the Recent Timespan
 
 This query will return a list of tests that have failed a certain percentage in the recent provided timespan. The default example in this query provides a list of tests in the dotnet/runtime repo that have failed 10% of the time in the last 7 days. 
+
+<details>
+  <summary>Expand for query</summary>
 
 Variables: 
 - `ts`: [Kusto timespan format](https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan). Default is `7d`.
@@ -61,6 +71,7 @@ subtable
 | lookup (argumentHashMap) on ArgumentHash
 | project BuildDefinitionName, TestName, Arguments, FailRate=(todouble(numerator) / todouble(denom)), FailCount=numerator, TotalRunCount=denom;
 ```
+</details>
 
 :part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA51SzW7bMAy+5ymInGzUaNrTgHkukC4YdtkypHkBpqZjbbJkSFRTF3v4UTLitGkOxXwwbIr8/kRNDOyhgk91CRefxQK2qiPfo4En1IFmWmYc9Vam5rVlQ7xwwbA0zctpZt2zsgb1Z/CRwgJ1PQ/g2SmzB9XAYAMc0EQoH7RoaJztALVO2F6xdYp8ImtQ6eBo20pra3UtxDfXt+VJ4MqGnaZRHtRkLEcSbgm0PZAX/viKMOCQKcpxxMGZBE/PjzrUtNQHHPw3aYrDFbALVCb4e2s1obmGh9FKPEmWxsER/WiDW2RAR2Il4iVWAUxMPuwYo9IKli/iaEVP695vZdw/hK5DN8z+wqElmd5ICI5XUe1dBbi3Gfsc0NSSXZON8Uv+8yJ1priGWDn9nZ/EmVzwfWJSLwQmdCR5WFdJLYvOv1q5yLxIGXap+gu9T9Wr6fwq1tZmQ+yG4wD6dRPFVh0+ZyftOewGuA9K1ytqlFFxJ35iRwVE0+PX0u1Fh+Hv6NsyxYSvKj+w/9+03ngVHa+JTrS+nB2vZYJL9uEOblLgGds6LVg2BZYvplrqzfPI+25Pj9d1acOKD+J+gdsibVz0o639E3rIzhLKwZo39qS1d/Y3PfJH0/cFRGGbeIeXhMECzqWNE2kDqqlRsC2j3gQzHqTe8h/Tt/8tZwQAAA==) to query editor
 
@@ -69,6 +80,9 @@ subtable
 This query will return a list of tests and the mean value for the expected pass rate based on historical data. (Comparably, an inverse to [Tests That Have Failed X% of the Time in the Recent Timespan](#tests-that-have-failed-x-of-the-time-in-the-recent-timespan))
 
 Calculate the expected value (E[_Y_]) for how often a test is likely to pass on its initial run (retries not included) based on its historical data (e.g. monthly, weekly, daily aggregates). Ex: A test is known to fail once out of every seven runs. Its expected value (E[_Y_]) is determined to be 85.7%, meaning, we expect this test to succeed 85.7% of the time.
+
+<details>
+  <summary>Expand for query</summary>
 
 Variables: 
 - `ts`: [Kusto timespan format](https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan). Default is `7d`.
@@ -91,12 +105,16 @@ subtable
 | project BuildDefinitionName, TestName, Arguments, MeanPassRate=(todouble(numerator) / todouble(denom)), PassCount=numerator, TotalRunCount=denom
 | order by MeanPassRate;
 ```
+</details>
 
 :part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA51U3WvbMBB/L/R/OAoDm5lkexgdzVJIP8b20GWkZTDGHi7xOdEiS0Y6NXXpH7+T3DhpycNYXqxI9/u4n84eDuH6oaEFUwk/UAeCyjr4jt7DDJnO4BL1ImhZAq8IaFt7n2qz618/f+cJsrIbsBWTAQQmz6A8aLUm3QJbaCKhNaDYgzKKFWpwwUDmiJ0iD8YKwix0KKnM4fhoOIQ5ehF6Bq2UZ+vUQnAlMkJGg+UAamt4pdsCNkTr+CxRiSAul46W4tnnA2nvDCa9pbWxGxMdVVIp5AsCG1icA92Ta8HLw0RrfgBfRTc5Ody1sJXE5Gpl5Ego5wQfPwxO3xRQExplltHXM1jSk/rkQip9WCxIQKk8isdsWdU0EEFNUuNhDKflCA7+xNKdFPsGTWepAzlqrMBOSsuGeChNRMqTUQ+aNqysQX0mbSYfVDcsPcsVmCWoClobYIMmUvmgxUTlbA2odeL2Kl4B+U6NHtJtTfQGWx8HJnKMgV2gUVK7sFZLDgO47cTiSRLtgF0YWyFeIQM6ErHIlwZGCDspH+aMc01CP3kMjq7oftr4O8H721DX6NrjoyfYrEjwMzHq+CoO7PlYJsFm7HNAU0p/VdZFJBmdFKkytdTGnd2/1ycRk0cBn7TUI4EJNTmUgrHsZbH5Sytp5zKAZGz9cvftZxm1bhX3pmYmM99uAeinVXQ7rvEh25nPYd7CRVC6vKIqvTHWfMOaCohtd6uJW4oPw1/Qr0ZdUri3dYPNfwf2sl2xsq+1U/Yiu72cHWPKAM7hXR/7oVkpIGNb2iDQrM8zH/Z7iSXP4RO8L9LsJFPa2nVoIHvVaB6/E/seY23j7J/46v1jjL6AG5nXaC9++saH7MEQXhssoL/pcV8o/JZRz4LpDlJt9GRdSS4Gui81+gtMm5LlhgUAAA==) to query editor
 
 ## Mean Value for the Expected Pass on Retry Rate for Tests
 
 Retries are meant to unblock and prevent a build from failing due to failing test, but they are still indicative of unwanted behavior, therefore, we need to track how often a test passes when retries are introduced. Ex: A test has a 100% pass rate, but only when the test re-runs after a failure every six runs, so it’s expected value for re-runs is 83.3%.
+
+<details>
+  <summary>Expand for query</summary>
 
 Variables: 
 - `ts`: [Kusto timespan format](https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan). Default is `14d`.
@@ -117,6 +135,7 @@ subtable
 | project BuildDefinitionName, TestName, Arguments, MeanPassOnRetryRate=(todouble(numerator) / todouble(denom)), PassOnRetryCount=numerator, TotalRunCount=denom
 | order by MeanPassOnRetryRate;
 ```
+</details>
 
 :part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA51Uy24TQRC8+ytakSKthYkThQOK5UiBgLgEI5MfaHt64yGzM6t52N6IA7/B7/ElqZkljmPlgPDJ24+q6ureHY9pLtFrCcReqBG2kaKjZBfGLe+JraLWy1oQZlokbRTV3jVUszba3pFKkuufHqOEOEIdQFbSFcwQtTGkrdJLjnot5GrAb0Akihay4rV2fkSD8Tj3eKmdlxFthKygANjRM5Ss3AadUSx0ZBZqOQTI3qwQ8nszaBu9U2kp6oQ+bS/oqi9fMdJ0dnp6XDrJc5ReqbOm62HA3+vIDV7e+mTRBFKP1jxiAj7M8B0FvaWcHlFwpOOfX78DybaVZZ5qzQa2YJAdiA70/vzk/PiEBkZgTqApnb1TE3r1Bwm3upHQsu2xSpOX1qHtSLloJY7ZL1nJ0WSvadZG7SybCwpS1ihNG6EV5mA3uqbOJcrOAyskAxVll4z9ZPCgo8s2FraQFpEXRsB49YC5r2U9a8MtnAnfU9Ow7wY/s2twZI5eH69hKF1Oie9cFcOwnI6u66qXDd1Ho1JZWLoceX46zOSeHuEbdjWz+Ua7jy5B+SWdgjgUCfoBV5IawS6dnyJWHZYPR6TEuqYkP2ODJfrmlTIOszqPMG14Wz1PNKRFRx/y3V9Lra3OBn/lBqeTrej/Xfk7iLDxC4fVpJjHe5Ebbv/XwxeDQsc+0TNtmAyelrWDK0P/9co4d59aqg5EDXH4LxBR2nr3Ayf8rwPj+m/wxdhzc54drKJTLkFOtVvOkPBWPUWLuCE8P1zDdFcPNhfZzJPtE6UFAp1XeBlhxSu8k0dFwXcxzQQAAA==) to query editor
 
@@ -124,7 +143,18 @@ subtable
 
 The `AzureDevOpsTests` table collects the details of failed test results, making it searchable as one would with [searching for tests with Runfo](https://runfo.azurewebsites.net/search/tests/#test). Here's a query to get you started: 
 
+<details>
+  <summary>Expand for query</summary>
+
 Variables: 
+- `started`: [Kusto timespan format](https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan). How many days ago to query.
+- `defintion`: Build definition name
+- `reason`: The Azure DevOps build reason
+- `targetBranch`: Name of the target branch
+- `name`: Test name
+- `jobName`: Job name
+- `message`: Error message
+- `workItemName`: Work item name
 
 ```
 // NOTE: The following query uses equals operators. You may need to alter the query if you wish to use "contains" or "has" instead for any of the search values.
@@ -145,8 +175,56 @@ AzureDevOpsTests
 | where iff(workItemName == "", WorkItemName == WorkItemName, WorkItemName == workItemName)
 | where RunCompleted <= ago(started)
 ```
+</details>
 
 :part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA42UTY/aMBCG70j8h1FOINFwrFTKYb8Oe+hSIaRVj0MyIW4dO2s7oFT98R3HCZsElpaTPZ555uMdslzCy2b39AV2OUGmpdQnoQ7wVpGpobJkgd4qlBZ0SQadNjaGH7qCAmtQRCk4DSgdGXAMCGEig5pdTsLm/pkpECVaORTKRqANRDnygW+OMOWsBlDVoLOGYQlNksMRZUU2nk4kObAOjeNka/icruDKb7mEnSjIlqhCpE+cCcX1kXVgyFbSWcCMK40hQFNiB+GEVsyN0JaKXKINfUpEtGqhm9K/owzzUVhQV+a+EjLtMRYgCY8EyBMrSldzzcZPsulOygv/rjVDaEMF9+iSnNKH52g1am1Yxd3vyhA80nFT2hbbQkLnM4oPMXyvpNyydtz+As7oBXDKhHgKOA/5ebIHcvcGFQ+dqyhYpUEBN6cQomEfwhuLn7ewwBbAg5fctZ02cZwhuqrgPzMxN3B+6v3LTdRNDkcHDG+LxcP/Yp6MYSG7GF6udk1Z3oA7afPr2VHxYWkD3Ct7g2D3prbppNE0SLrjRu108gdOObHOIstm/U31aBbUy/54Noek62vmD33fofNhtm4je5m2Z1PvevEWAke04X61zPMtnPqWvv8IpdrKPcJPqeukOw+t3nsEOEseGN/er+1xYGu9R4yhzgH0OrL175evfUIPvq3Ugy5K3iX+0H1d859Hz9rv3vwvGtpprKYFAAA=) to query editor
+
+## Search Timeline as with Runfo
+
+The `TimelineIssues` and `TimelineBuilds` tables can be used to [search timeline issues as you would with Runfo](https://runfo.azurewebsites.net/search/tests/#timeline). Here's a query to get you started. 
+
+<details>
+  <summary>Expand for query</summary>
+
+Variables: 
+- `started`: [Kusto timespan format](https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan). How many days ago to query.
+- `definition`: Build definition name
+- `reason`: The Azure DevOps build reason
+- `result`: State of the build
+- `targetBranch`: Name of the target branch
+- `message`: Error message
+- `type`: Warning or Error?
+- `jobName`: Job name
+- `taskName`: Task name
+
+```
+// NOTE: The following query uses equals operators. You may need to alter the query if you wish to use "contains" or "has" instead for any of the search values.
+let started = 7d;                                  // Timespan value to find test results after. 
+let definition = "\\dotnet\\roslyn\\roslyn-CI";    // Optional: The name of the build definition, leave as empty string for all build definitions.
+let reason = "";                                   // Optional: The Azure DevOps build reason value (e.g. pullRequest, batchedCI, manual, individualCI)
+let result = "";                                   // Optional: The state of the build (e.g. succeeded, failed, canceled, and partiallysucceeded)
+let targetBranch = "main";                         // Optional: The name of the target branch the test is ran against.
+let message = "";                                  // Optional: Error message to search for
+let type = "";                                     // Optional: warning or error
+let jobName = "Build_Windows_Release";             // Optional: Issues associated with jobs with this name
+let taskName = "";                                 // Optional: Issues associated with tasks with this task name
+TimelineIssues
+| where iff(message == "", Message == Message, Message == message)
+| where iff(type == "", Type == Type, Type == type)
+| join kind=inner TimelineBuilds on BuildId
+| where iff(definition == "", Definition == Definition, Definition == definition)
+| where iff(reason == "", Reason == Reason, Reason == reason)
+| where iff(result == "", Result == Result, Result == result)
+| where iff(targetBranch == "", TargetBranch == TargetBranch, TargetBranch == targetBranch)
+| where StartTime <= ago(started)
+| join kind=inner TimelineRecords on BuildId
+| where iff(taskName == "", TaskName == TaskName, TaskName == taskName)
+| where iff(jobName == "", Name == Name, Name == jobName)
+| order by StartTime
+```
+</details>
+
+:part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA51VwW7bMAy9F+g/EDm1QJYcB6zrYU17yGEtkAUYBgQoGJuO1SqSK8kJPOzjR1lSYjtAFiwXkzL5+PhIOdMpPL8sn77AsiQotJR6L9QGPmoyDdSWLNBHjdKCrsig08ZO4JeuYYsNKKIcnAaUjgw4BghpooCGQ/bClv41o8Ao08qhUHYE2sCoRDbYc4Q5VzWAqgFdtBiW0GQl7FDWZCfXV5IcWIfGcbF7+JzfwT9/0yksxZZshSrgeBqFUMyWrANDtpbOAhbMewKhRE4cIJzQiquMVqtcO0VutTLaykal56fZfHQXS7xUPhpl0E7hllIL61rIvIM4Bkm4I0BWc1u5hvsxXuW2cylP4lPbhtAGPqMLuj7l9O13bQgeafdS2VgkQgZVbmiymUBVS7ngKbM0Y1ijy0rKZ/Mxj1jx5Mc8p1zsRM72bH6biHkF/58Yz9MN1ApcbJ1lvFWUj6FAIf0zQ5VRayEPsOJFEKxZc4iMlHhDNuQeDEeXntiWt+0MubPzC1iwDmDtid8bYYFPADd+kV2cEa+ZxQ1dqkWv7pMxvAEJgXc07j7vRWyqqS5GHoLv0Si/ZFyBfJ2A+KbXz75TBn3wur/+5PHqvX1dsMZoaVCphzi3lpeEt9jqTKC/j3vhSg9pg+VKlsgLmUZi31OxCzq4pJaH7Bbzfqzob7wUikLm9dUf2JfE6y+K4uYwJM9kDN+PbjR7ZzH6to8RZhEAltH2z6PnI9qkNy0UvLOw90Ip/jQmaq3i/ClV0FrzvF+h+wkKdR57J4+dD0r/zTFzQDp9QQLc4uAFq3sSIk/Swz1P6ckLVvckRA4l693JKN3grOufvu0idMB/+P8Dryp8vef7qG/iH8RZ9ReUaXNG/uO6JqZHP9n905QxaPtwxwJOskN+8mJQm8q0mOe6Ofb1F+3nr82XBwAA) to query editor
 
 ## Build Analysis Reporting
 
