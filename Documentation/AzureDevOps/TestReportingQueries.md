@@ -167,17 +167,17 @@ let jobName = "";                    // Optional: The name of the job
 let message = "";                    // Optional: Error message to search for
 let workItemName = "";               // Optional: Work item name
 AzureDevOpsTests
+| where RunCompleted >= ago(started)
 | where iff(definition == "", BuildDefinitionName == BuildDefinitionName, BuildDefinitionName == definition)
 | where iff(reason == "", BuildReason == BuildReason, BuildReason == reason)
 | where iff(targetBranch == "", Branch == Branch, Branch == targetBranch)
 | where iff(name == "", TestName == TestName, TestName == name)
 | where iff(message == "", Message == Message, Message == message)
 | where iff(workItemName == "", WorkItemName == WorkItemName, WorkItemName == workItemName)
-| where RunCompleted <= ago(started)
 ```
 </details>
 
-:part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA42UTY/aMBCG70j8h1FOINFwrFTKYb8Oe+hSIaRVj0MyIW4dO2s7oFT98R3HCZsElpaTPZ555uMdslzCy2b39AV2OUGmpdQnoQ7wVpGpobJkgd4qlBZ0SQadNjaGH7qCAmtQRCk4DSgdGXAMCGEig5pdTsLm/pkpECVaORTKRqANRDnygW+OMOWsBlDVoLOGYQlNksMRZUU2nk4kObAOjeNka/icruDKb7mEnSjIlqhCpE+cCcX1kXVgyFbSWcCMK40hQFNiB+GEVsyN0JaKXKINfUpEtGqhm9K/owzzUVhQV+a+EjLtMRYgCY8EyBMrSldzzcZPsulOygv/rjVDaEMF9+iSnNKH52g1am1Yxd3vyhA80nFT2hbbQkLnM4oPMXyvpNyydtz+As7oBXDKhHgKOA/5ebIHcvcGFQ+dqyhYpUEBN6cQomEfwhuLn7ewwBbAg5fctZ02cZwhuqrgPzMxN3B+6v3LTdRNDkcHDG+LxcP/Yp6MYSG7GF6udk1Z3oA7afPr2VHxYWkD3Ct7g2D3prbppNE0SLrjRu108gdOObHOIstm/U31aBbUy/54Noek62vmD33fofNhtm4je5m2Z1PvevEWAke04X61zPMtnPqWvv8IpdrKPcJPqeukOw+t3nsEOEseGN/er+1xYGu9R4yhzgH0OrL175evfUIPvq3Ugy5K3iX+0H1d859Hz9rv3vwvGtpprKYFAAA=) to query editor
+:part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA42TTY/aMBCG70j8h1FOINFwrFREpf067KFLhZBWPQ7JhHjr2FnbAVH1x3ccJ5AElm5O9njmmXc+Mp/Dy2rz9A02OUGmpdQHoXbwXpE5QmXJAr1XKC3okgw6bWwMv3QFBR5BEaXgNKB0ZMAxIISJDI7schA2989MgSjRyqFQNgJtIMqRD3xzhClnNYDqCDqrGZbQJDnsUVZk4/FIkgPr0DhOtoSv6QKufPM5bERBtkQVIn3iTCjWR9aBIVtJZwEzVhpDgKbEDsIJrZgboS0VuUQb+pKIaNFAV6V/Rxn6o7CgVua2EjLtMGYgCfcEyB0rSndkzcZ3sq5Oygv/tjRDaIOCe3RJTunDc7QYlNZXcfenMgSPtF+VtsE2kFD5hOJdDD8rKdc8Oy5/Bif0DDhlQtwFnIb83NkduXuDipvOKgqeUk/AzS6EaNiG8Nri+y0ssAVw50fumkrrOM4QXZ3gfzMxN3De9PblJuomh6MDhrfF4u6zmCdjeJBtDC9Xs6Y83oA7aPP72VHxobQe7pW9QbB7rW08qmcaRrrhQu149BcOOfGc15V60EXJKXj/vy+5p3rS/A7Ts5fIskl3n70AHrtfjseTOUhbXjN/6HuGDrK1e9vJtD6ZOteLtxA4oPW3sGGebuHUtXT9ByjVKPcI38u2kvbct3rvAeC0GIHx43xtjj1b4z1g9LchgF4Htu798rVLmP4DReRgBqYFAAA=) to query editor
 
 ## Search Timeline as with Runfo
 
@@ -212,11 +212,11 @@ TimelineIssues
 | where iff(message == "", Message == Message, Message == message)
 | where iff(type == "", Type == Type, Type == type)
 | join kind=inner TimelineBuilds on BuildId
+| where StartTime >= ago(started)
 | where iff(definition == "", Definition == Definition, Definition == definition)
 | where iff(reason == "", Reason == Reason, Reason == reason)
 | where iff(result == "", Result == Result, Result == result)
 | where iff(targetBranch == "", TargetBranch == TargetBranch, TargetBranch == targetBranch)
-| where StartTime <= ago(started)
 | join kind=inner TimelineRecords on BuildId
 | where iff(taskName == "", TaskName == TaskName, TaskName == taskName)
 | where iff(jobName == "", Name == Name, Name == jobName)
@@ -224,7 +224,7 @@ TimelineIssues
 ```
 </details>
 
-:part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA51VwW7bMAy9F+g/EDm1QJYcB6zrYU17yGEtkAUYBgQoGJuO1SqSK8kJPOzjR1lSYjtAFiwXkzL5+PhIOdMpPL8sn77AsiQotJR6L9QGPmoyDdSWLNBHjdKCrsig08ZO4JeuYYsNKKIcnAaUjgw4BghpooCGQ/bClv41o8Ao08qhUHYE2sCoRDbYc4Q5VzWAqgFdtBiW0GQl7FDWZCfXV5IcWIfGcbF7+JzfwT9/0yksxZZshSrgeBqFUMyWrANDtpbOAhbMewKhRE4cIJzQiquMVqtcO0VutTLaykal56fZfHQXS7xUPhpl0E7hllIL61rIvIM4Bkm4I0BWc1u5hvsxXuW2cylP4lPbhtAGPqMLuj7l9O13bQgeafdS2VgkQgZVbmiymUBVS7ngKbM0Y1ijy0rKZ/Mxj1jx5Mc8p1zsRM72bH6biHkF/58Yz9MN1ApcbJ1lvFWUj6FAIf0zQ5VRayEPsOJFEKxZc4iMlHhDNuQeDEeXntiWt+0MubPzC1iwDmDtid8bYYFPADd+kV2cEa+ZxQ1dqkWv7pMxvAEJgXc07j7vRWyqqS5GHoLv0Si/ZFyBfJ2A+KbXz75TBn3wur/+5PHqvX1dsMZoaVCphzi3lpeEt9jqTKC/j3vhSg9pg+VKlsgLmUZi31OxCzq4pJaH7Bbzfqzob7wUikLm9dUf2JfE6y+K4uYwJM9kDN+PbjR7ZzH6to8RZhEAltH2z6PnI9qkNy0UvLOw90Ip/jQmaq3i/ClV0FrzvF+h+wkKdR57J4+dD0r/zTFzQDp9QQLc4uAFq3sSIk/Swz1P6ckLVvckRA4l693JKN3grOufvu0idMB/+P8Dryp8vef7qG/iH8RZ9ReUaXNG/uO6JqZHP9n905QxaPtwxwJOskN+8mJQm8q0mOe6Ofb1F+3nr82XBwAA) to query editor
+:part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA51UTW/bMAy9F+h/IHJqgSw5DljRAf065LAWyAIMAwIUjE3HahXJleQEHvbjR1lSYjtYFswXkzL5+PhIazqF55fF0xdYlASFllLvhFrDR02mgdqSBfqoUVrQFRl02tgJ/NQ1bLABRZSD04DSkQHHACFNFNBwyE7Y0n9mFBhlWjkUyo5AGxiVyAZ7jjDnqgZQNaCLFsMSmqyELcqa7OTyQpID69A4LnYLn/Mb+OczncJCbMhWqAKOp1EIxWzJOjBka+ksYMG8JxBK5MQBwgmtuMpoucy1U+SWS6OtbFR6f3qYjW5iiZfKR6MM2incUGphVQuZdxDHIAm3BMhqbirXcD/Gq9x2LuVRfGrbENrAZ3RG18ec7n7VhuCRti+VjUUiZFDliibrCVS1lHOeMkszhhW6rKT8YTbmESue/JjnlIutyNl+mF0nYl7B/yfG83QDtQIXW2cZbxXlYyhQSP/OUGXUWsgDrHgRBGvW7CMjJd6QNbl7w9GlJ7bhbTtB7uT8AhasAlh74vdGWOATwLVfZBdnxGtmcU3natGr+2QMb0BC4B2Nu897EZtqqrORh+A7NMovGVcgXycgvunVs++UQe+97q8/eLx6Z1/nrDFaGlTqIc6s5SXhLbY6E+j/x51wpYe0wXIlS+SFTCOx76nYGR2cU8tDdot5P1b0f7wUikLm5cVv2JXE6y+K4mo/JM9kDN8ObjR7ZzH6uo8RZhEAFtH274PnI9qkNy0UvLOwt0IpvhoTtVZxvkoVtNYsP1T47m84Hwdfb3nD9FW88gYkurdUoPLYO3ns3Dn9L4fMAWS6ZALcfO8Fq3sSIo/Sw1WQ0pMXrO5JiByq2vtto7qDs65//LWLcFL9OWXa/EX+QCWta6Jx8JPdP00Zg572/1jASXbIT14MalOZFvNcNYct+AMQETlOlwcAAA==) to query editor
 
 ## Build Analysis Reporting
 
