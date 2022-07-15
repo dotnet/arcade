@@ -41,13 +41,13 @@ namespace Microsoft.Cci.Extensions.CSharp
             (byte)'S', (byte)'e', (byte)'r', (byte)'v', (byte)'i', (byte)'c', (byte)'e', (byte)'s'
         };
 
-        public static string GetCSharpDeclaration(this IDefinition definition, bool includeAttributes = false)
+        public static string GetCSharpDeclaration(this IDefinition definition, ICciFilter filter)
         {
             using (var stringWriter = new StringWriter())
             {
                 using (var syntaxWriter = new TextSyntaxWriter(stringWriter))
                 {
-                    var writer = new CSDeclarationWriter(syntaxWriter, new AttributesFilter(includeAttributes), false, true);
+                    var writer = new CSDeclarationWriter(syntaxWriter, filter, false, true);
 
                     var nsp = definition as INamespaceDefinition;
                     var typeDefinition = definition as ITypeDefinition;

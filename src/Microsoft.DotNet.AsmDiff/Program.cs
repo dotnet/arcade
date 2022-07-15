@@ -110,7 +110,8 @@ namespace Microsoft.DotNet.AsmDiff
             if (diffFormat == DiffFormat.Md)
             {
                 DiffDocument diffDocument = DiffEngine.BuildDiffDocument(diffConfiguration);
-                var markdownDiffExporter = new MarkdownDiffExporter(diffDocument, OutFile, IncludeTableOfContents, CreateFilePerNamespace);
+                bool includeAttributes = diffConfiguration.IsOptionSet(DiffConfigurationOptions.DiffAttributes);
+                var markdownDiffExporter = new MarkdownDiffExporter(diffDocument, OutFile, IncludeTableOfContents, CreateFilePerNamespace, includeAttributes);
                 markdownDiffExporter.Export();
             }
             else

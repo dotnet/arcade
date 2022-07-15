@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.Cci.Extensions.CSharp;
+using Microsoft.Cci.Filters;
 
 namespace Microsoft.DotNet.AsmDiff
 {
@@ -17,13 +18,15 @@ namespace Microsoft.DotNet.AsmDiff
         private readonly string _path;
         private readonly bool _includeTableOfContents;
         private readonly bool _createFilePerNamespace;
+        private readonly MarkdownDiffExporterAttributesFilter _attributesFilter;
 
-        public MarkdownDiffExporter(DiffDocument diffDocument, string path, bool includeTableOfContents, bool createFilePerNamespace)
+        public MarkdownDiffExporter(DiffDocument diffDocument, string path, bool includeTableOfContents, bool createFilePerNamespace, bool includeAttributes)
         {
             _diffDocument = diffDocument;
             _path = path;
             _includeTableOfContents = includeTableOfContents;
             _createFilePerNamespace = createFilePerNamespace;
+            _attributesFilter = new MarkdownDiffExporterAttributesFilter(includeAttributes);
         }
 
         public void Export()
@@ -111,14 +114,14 @@ namespace Microsoft.DotNet.AsmDiff
             writer.WriteLine();
         }
 
-        private static void WriteDiff(StreamWriter writer, DiffApiDefinition topLevelApi)
+        private void WriteDiff(StreamWriter writer, DiffApiDefinition topLevelApi)
         {
             writer.WriteLine("``` diff");
             WriteDiff(writer, topLevelApi, 0);
             writer.WriteLine("```");
         }
 
-        private static void WriteDiff(StreamWriter writer, DiffApiDefinition api, int level)
+        private void WriteDiff(StreamWriter writer, DiffApiDefinition api, int level)
         {
             bool hasChildren = api.Children.Any();
 
@@ -131,8 +134,8 @@ namespace Microsoft.DotNet.AsmDiff
                 // Let's see whether the syntax actually changed. For some cases the syntax might not
                 // diff, for example, when attribute declarations have changed.
 
-                string left = api.Left.GetCSharpDeclaration();
-                string right = api.Right.GetCSharpDeclaration();
+                string left = api.Left.GetCSharpDeclaration(_attributesFilter);
+                string right = api.Right.GetCSharpDeclaration(_attributesFilter);
 
                 if (string.Equals(left, right, StringComparison.OrdinalIgnoreCase))
                     diff = DifferenceType.Unchanged;
@@ -174,7 +177,7 @@ namespace Microsoft.DotNet.AsmDiff
             }
         }
 
-        private static void WriteDiff(TextWriter writer, string marker, string indent, string suffix, IDefinition api)
+        private void WriteDiff(TextWriter writer, string marker, string indent, string suffix, IDefinition api)
         {
             IEnumerable<string> lines = GetCSharpDecalarationLines(api);
             bool isFirst = true;
@@ -194,9 +197,9 @@ namespace Microsoft.DotNet.AsmDiff
             writer.WriteLine(suffix);
         }
 
-        private static IEnumerable<string> GetCSharpDecalarationLines(IDefinition api)
+        private IEnumerable<string> GetCSharpDecalarationLines(IDefinition api)
         {
-            string text = api.GetCSharpDeclaration();
+            string text = api.GetCSharpDeclaration(_attributesFilter);
             using (var reader = new StringReader(text))
             {
                 string line;
@@ -223,6 +226,34 @@ namespace Microsoft.DotNet.AsmDiff
         private static string GetAnchorName(string name)
         {
             return name.Replace(".", "").ToLower();
+        }
+    }
+
+    internal sealed class MarkdownDiffExporterAttributesFilter : ICciFilter
+    {
+        private readonly bool _includeAttributes;
+        private readonly string[] _skippableAttributes = new[]
+        {
+            "System.AttributeUsageAttribute",
+            "System.Runtime.CompilerServices.CompilerGeneratedAttribute",
+            "System.Runtime.CompilerServices.NullableAttribute",
+            "System.Runtime.CompilerServices.NullableContextAttribute"
+        };
+
+        internal MarkdownDiffExporterAttributesFilter(bool includeAttributes) => _includeAttributes = includeAttributes;
+
+        public bool Include(INamespaceDefinition ns) => true;
+        public bool Include(ITypeDefinition type) => true;
+        public bool Include(ITypeDefinitionMember member) => true;
+        public bool Include(ICustomAttribute attribute)
+        {
+            if (!_includeAttributes)
+            {
+                return false;
+            }
+
+            string name = attribute.Type.ToString();
+            return !_skippableAttributes.Contains(name);
         }
     }
 }
