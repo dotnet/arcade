@@ -55,6 +55,7 @@
                    ExcludeAttributes="@(ApiCompatExcludeAttributesFile)"
                    EnforceOptionalRules="$(ApiCompatEnforceOptionalRules)"
                    BaselineFiles="@(ApiCompatBaselineFile)"
+                   ValidateBaseline="$(ApiCompatValidateBaseline)"
                    IgnoreExitCode="true">
       <Output TaskParameter="ExitCode" PropertyName="ApiCompatExitCode" />
     </ApiCompatTask>
@@ -99,6 +100,7 @@
                    LeftOperand="implementation"
                    RightOperand="reference"
                    BaselineFiles="@(MatchingRefApiCompatBaseline)"
+                   ValidateBaseline="$(ApiCompatValidateBaseline)"
                    IgnoreExitCode="true">
       <Output TaskParameter="ExitCode" PropertyName="MatchingRefApiCompatExitCode" />
     </ApiCompatTask>
@@ -107,7 +109,7 @@
     <Touch Condition="'$(MatchingRefApiCompatExitCode)' != '0'" Files="$(IntermediateOutputPath)$(_ApiCompatSemaphoreFile)" AlwaysCreate="true">
       <Output TaskParameter="TouchedFiles" ItemName="FileWrites" />
     </Touch>
-    <Error Condition="'$(MatchingRefApiCompatExitCode)' != '0'" Text="MatchingRefApiCompat failed - The reference assembly doesn't match all the APIs in the implementation for '$(TargetPath)'. To address either fix errors in the reference assembly (referenced as implementation in compat errors for this reverse compat check), add the issues to the baseline file '$(MatchingRefApiCompatBaseline)' or disable this check by setting RunMatchingRefApiCompat=false in this project." />
+    <Error Condition="'$(MatchingRefApiCompatExitCode)' != '0'" Text="MatchingRefApiCompat failed - The reference assembly doesn't match all the APIs in the implementation for '$(TargetPath)'. To address either fix errors in the reference assembly (referenced as implementation in compat errors for this reverse compat check), add the issues to the baseline file '@(MatchingRefApiCompatBaseline)' or disable this check by setting RunMatchingRefApiCompat=false in this project." />
   </Target>
 
 </Project>
