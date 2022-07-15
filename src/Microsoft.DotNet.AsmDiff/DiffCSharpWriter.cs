@@ -31,11 +31,6 @@ namespace Microsoft.DotNet.AsmDiff
         private bool _firstMemberGroup = false;
         private readonly IEnumerable<DiffComment> _diffComments;
 
-        public DiffCSharpWriter(IStyleSyntaxWriter writer, MappingSettings settings, IEnumerable<DiffComment> diffComments)
-            : this(writer, settings, diffComments, includePseudoCustomAttributes:false)
-        {
-        }
-
         public DiffCSharpWriter(IStyleSyntaxWriter writer, MappingSettings settings, IEnumerable<DiffComment> diffComments, bool includePseudoCustomAttributes)
             : base (settings)
         {
