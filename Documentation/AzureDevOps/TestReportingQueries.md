@@ -149,7 +149,7 @@ The `AzureDevOpsTests` table collects the details of failed test results, making
 Variables: 
 - `started`: [Kusto timespan format](https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan). How many days ago to query.
 - `defintion`: Build definition name
-- `reason`: The Azure DevOps build reason
+- `reason`: The Azure DevOps build reason: `Schedule`, `IndividualCI`, `PullRequest`, `Manual`, and `BatchedCI`
 - `targetBranch`: Name of the target branch
 - `name`: Test name
 - `jobName`: Job name
@@ -189,7 +189,7 @@ The `TimelineIssues` and `TimelineBuilds` tables can be used to [search timeline
 Variables: 
 - `started`: [Kusto timespan format](https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan). How many days ago to query.
 - `definition`: Build definition name
-- `reason`: The Azure DevOps build reason
+- `reason`: The Azure DevOps build reason: `manual`, `schedule`, `individualCI`, `batchedCI`, and `pullRequest`
 - `result`: State of the build
 - `targetBranch`: Name of the target branch
 - `message`: Error message
