@@ -235,6 +235,15 @@ namespace Microsoft.DotNet.AsmDiff
         private readonly string[] _skippableAttributes = new[]
         {
             "System.AttributeUsageAttribute",
+            "System.ComponentModel.DefaultEventAttribute",
+            "System.ComponentModel.DefaultPropertyAttribute",
+            "System.ComponentModel.DesignerAttribute",
+            "System.ComponentModel.DesignTimeVisibleAttribute",
+            "System.ComponentModel.EditorAttribute",
+            "System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute",
+            "System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute",
+            "System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute",
+            "System.Runtime.CompilerServices.AsyncStateMachineAttribute",
             "System.Runtime.CompilerServices.CompilerGeneratedAttribute",
             "System.Runtime.CompilerServices.NullableAttribute",
             "System.Runtime.CompilerServices.NullableContextAttribute"
@@ -247,13 +256,13 @@ namespace Microsoft.DotNet.AsmDiff
         public bool Include(ITypeDefinitionMember member) => true;
         public bool Include(ICustomAttribute attribute)
         {
-            if (!_includeAttributes)
+            if (!_includeAttributes || attribute == null || attribute.Type == null)
             {
                 return false;
             }
 
             string name = attribute.Type.ToString();
-            return !_skippableAttributes.Contains(name);
+            return name != null && !_skippableAttributes.Contains(name);
         }
     }
 }
