@@ -91,19 +91,19 @@ namespace Microsoft.DotNet.AsmDiff
                 {
                     string fileName = GetFileNameForNamespace(topLevelApi.Name);
                     using (var nestedWriter = new StreamWriter(fileName))
-                        WriteDiffForNamespace(nestedWriter, topLevelApi, isStandalone: true);
+                        WriteDiffForNamespace(nestedWriter, topLevelApi);
                 }
             }
             else
             {
                 foreach (DiffApiDefinition topLevelApi in _diffDocument.ApiDefinitions)
                 {
-                    WriteDiffForNamespace(writer, topLevelApi, isStandalone: false);
+                    WriteDiffForNamespace(writer, topLevelApi);
                 }
             }
         }
 
-        private void WriteDiffForNamespace(StreamWriter writer, DiffApiDefinition topLevelApi, bool isStandalone)
+        private void WriteDiffForNamespace(StreamWriter writer, DiffApiDefinition topLevelApi)
         {
             string heading = _createFilePerNamespace ? "#" : "##";
             writer.WriteLine(heading + " " + topLevelApi.Name);
