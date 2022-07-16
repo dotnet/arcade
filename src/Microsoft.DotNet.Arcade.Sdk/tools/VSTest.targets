@@ -4,6 +4,7 @@
           Outputs="%(TestToRun.ResultsStdOutPath)">
     <PropertyGroup>
       <_TestEnvironment>%(TestToRun.EnvironmentDisplay)</_TestEnvironment>
+      <_TestEnvVars>%(TestToRun.EnvVars)</_TestEnvVars>
       <_TestAssembly>%(TestToRun.Identity)</_TestAssembly>
       <_TestRuntime>%(TestToRun.TestRuntime)</_TestRuntime>
       <_TestTimeout>%(TestToRun.TestTimeout)</_TestTimeout>
