@@ -1,76 +1,34 @@
 parameters:
-  # Whether the SDL validation job should execute or not
-  - name: enable
-    type: boolean
-    default: false
-
-  # to override values for parameters.
-  - name: overrideParameters
-    type: string
-    default: ''
-  
-  # parameters that need user specific values eg: '-SourceToolsList @("abc","def") -ArtifactToolsList @("ghi","jkl")'
-  - name: additionalParameters
-    type: string
-    default: ''
-  
+  enable: 'false'                                             # Whether the SDL validation job should execute or not
+  overrideParameters: ''                                       # Optional: to override values for parameters.
+  additionalParameters: ''                                     # Optional: parameters that need user specific values eg: '-SourceToolsList @("abc","def") -ArtifactToolsList @("ghi","jkl")'
   # Optional: if specified, restore and use this version of Guardian instead of the default.
-  - name: overrideGuardianVersion
-    type: string
-    default: ''
-
+  overrideGuardianVersion: ''
   # Optional: if true, publish the '.gdn' folder as a pipeline artifact. This can help with in-depth
   # diagnosis of problems with specific tool configurations.
-  - name: publishGuardianDirectoryToPipeline
-    type: boolean
-    default: false
-
+  publishGuardianDirectoryToPipeline: false
   # The script to run to execute all SDL tools. Use this if you want to use a script to define SDL
   # parameters rather than relying on YAML. It may be better to use a local script, because you can
   # reproduce results locally without piecing together a command based on the YAML.
-  - name: executeAllSdlToolsScript
-    type: string
-    default: 'eng/common/sdl/execute-all-sdl-tools.ps1'
-  
+  executeAllSdlToolsScript: 'eng/common/sdl/execute-all-sdl-tools.ps1'
   # There is some sort of bug (has been reported) in Azure DevOps where if this parameter is named
   # 'continueOnError', the parameter value is not correctly picked up.
   # This can also be remedied by the caller (post-build.yml) if it does not use a nested parameter
-  
-  # optional: determines whether to continue the build if the step errors;
-  - name: sdlContinueOnError
-    type: boolean
-    default: false
-  
+  sdlContinueOnError: false                                    # optional: determines whether to continue the build if the step errors;
   # optional: determines if build artifacts should be downloaded.
-  - name: downloadArtifacts
-    type: boolean
-    default: true
-  
+  downloadArtifacts: true
   # optional: determines if this job should search the directory of downloaded artifacts for
   # 'tar.gz' and 'zip' archive files and extract them before running SDL validation tasks.
-  - name: extractArchiveArtifacts
-    type: boolean
-    default: false
-  
-  # optional: dependencies of the job
-  - name: dependsOn
-    type: string
-    default: ''
-  
-  # Optional: patterns supplied to DownloadBuildArtifacts
-  # Usage:
-  #  artifactNames:
-  #    - 'BlobArtifacts'
-  #    - 'Artifacts_Windows_NT_Release'
-  - name: artifactNames
-    type: object
-    default: ''
-  
+  extractArchiveArtifacts: false
+  dependsOn: ''                                                # Optional: dependencies of the job
+  artifactNames: ''                                            # Optional: patterns supplied to DownloadBuildArtifacts
+                                                               # Usage:
+                                                               #  artifactNames:
+                                                               #    - 'BlobArtifacts'
+                                                               #    - 'Artifacts_Windows_NT_Release'
   # Optional: download a list of pipeline artifacts. 'downloadArtifacts' controls build artifacts,
   # not pipeline artifacts, so doesn't affect the use of this parameter.
-  - name: pipelineArtifactNames
-    type: object
-    default: []
+  pipelineArtifactNames: []
 
 jobs:
 - job: Run_SDL
