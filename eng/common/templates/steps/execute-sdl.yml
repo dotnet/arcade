@@ -1,32 +1,11 @@
 parameters:
-  - name: overrideGuardianVersion
-    type: string
-    default: ''
-
-  - name: executeAllSdlToolsScript
-    type: string
-    default: ''
-  
-  - name: overrideParameters
-    type: string
-    default: ''
-
-  - name: additionalParameters
-    type: string
-    default: ''
-
-  - name: publishGuardianDirectoryToPipeline
-    type: boolean
-    default: false
-
-  - name: sdlContinueOnError
-    displayName: Continue running even on failure?
-    type: boolean
-    default: false
-    
-  - name: condition
-    type: string
-    default: ''
+  overrideGuardianVersion: ''
+  executeAllSdlToolsScript: ''
+  overrideParameters: ''
+  additionalParameters: ''
+  publishGuardianDirectoryToPipeline: false
+  sdlContinueOnError: false
+  condition: ''
 
 steps:
 
