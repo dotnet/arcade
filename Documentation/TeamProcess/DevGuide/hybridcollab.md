@@ -8,7 +8,7 @@ Given this, we agree to **designate one day a week where everyone in Redmond agr
 
 **Agreement Specifics:**
 - We will each do our reasonable best to be present each Thursday from 11am to 2pm for the express purpose of interacting with others, collaborating, chatting, and otherwise connecting - often informally - with our co-workers. 
-- No coding is expected during this time.  (of course, it's already to code...)
+- No coding is expected during this time.  (of course, it's alright to code too...)
 - When on First Responder, taking care of our customers takes priority.
 - It is understood that some are remote, and we should continue to be intentionally inclusive for those as well wherever and however possible.
 
