@@ -63,7 +63,7 @@ parameters:
   #    - 'BlobArtifacts'
   #    - 'Artifacts_Windows_NT_Release'
   - name: artifactNames
-    type: string
+    type: object
     default: ''
   
   # Optional: download a list of pipeline artifacts. 'downloadArtifacts' controls build artifacts,
