@@ -23,7 +23,7 @@ Caveats (updated July 14, 2022):
   <summary>Expand for query</summary>
 
 Variables: 
-- `targetSignificance`: Target statisical likelihood that the failure change is due to a change in the last week
+- `targetSignificance`: Target statistical likelihood that the failure change is due to a change in the last week
 - `repo`: Repository to filter on. Set to empty string to inclue all repositories. Default is `dotnet/runtime`.
 - `minimumHistoricalData`: Minimum number of historical data points to include to avoid new tests, (`0` includes all tests)
 ```
@@ -62,7 +62,7 @@ let failureThreshold = 0.1;       // Double value denoting the lowest test fail 
 let excludeAlwaysFailing = true;  // Boolean. Set to true to exclude test results that are always failing
 let subtable = AzureDevOpsTestsSummary
 | where ReportDate >= ago(ts) and iff(repo == "", Repository == Repository, Repository == repo)
-| summarize numerator=sum(FailCount), denom=sum(PassCount+FailCount+PassOnRetryCount), asOfDate=max(ReportDate) by BuildDefinitionName, TestName, ArgumentHash;
+| summarize numerator=sum(FailCount), denom=sum(PassCount) + sum(FailCount) + sum(PassOnRetryCount), asOfDate=max(ReportDate) by BuildDefinitionName, TestName, ArgumentHash;
 let argumentHashMap = AzureDevOpsTestsSummary
 | where ReportDate >= ago(ts)
 | summarize by ArgumentHash, Arguments;
@@ -73,7 +73,7 @@ subtable
 ```
 </details>
 
-:part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA51SzW7bMAy+5ymInGzUaNrTgHkukC4YdtkypHkBpqZjbbJkSFRTF3v4UTLitGkOxXwwbIr8/kRNDOyhgk91CRefxQK2qiPfo4En1IFmWmYc9Vam5rVlQ7xwwbA0zctpZt2zsgb1Z/CRwgJ1PQ/g2SmzB9XAYAMc0EQoH7RoaJztALVO2F6xdYp8ImtQ6eBo20pra3UtxDfXt+VJ4MqGnaZRHtRkLEcSbgm0PZAX/viKMOCQKcpxxMGZBE/PjzrUtNQHHPw3aYrDFbALVCb4e2s1obmGh9FKPEmWxsER/WiDW2RAR2Il4iVWAUxMPuwYo9IKli/iaEVP695vZdw/hK5DN8z+wqElmd5ICI5XUe1dBbi3Gfsc0NSSXZON8Uv+8yJ1priGWDn9nZ/EmVzwfWJSLwQmdCR5WFdJLYvOv1q5yLxIGXap+gu9T9Wr6fwq1tZmQ+yG4wD6dRPFVh0+ZyftOewGuA9K1ytqlFFxJ35iRwVE0+PX0u1Fh+Hv6NsyxYSvKj+w/9+03ngVHa+JTrS+nB2vZYJL9uEOblLgGds6LVg2BZYvplrqzfPI+25Pj9d1acOKD+J+gdsibVz0o639E3rIzhLKwZo39qS1d/Y3PfJH0/cFRGGbeIeXhMECzqWNE2kDqqlRsC2j3gQzHqTe8h/Tt/8tZwQAAA==) to query editor
+:part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA51SzW7bMAy+F+g7EDnZmNG0pwFzXSBdMOyyZUjzAkpNx25lyZCopi728COlJWmyHIrlECQUvx9+pEYC8lDB57qEs5/pFFZdj35QBl6UDnh5oRnkcLAMm9SWDNLUBUPcNSn3oMVAnTVKfwEvGhawH2gET64zG+gaGG2ArTJC5YNmE42zPSitI7fvyLoOfVJrVKeDw1XLva3VNStfX92UB4tzG9Yak0Go0VgSFWoRtN2iZwPyJTTgFKH4cUjBmcSPr4861DjTWzX6b9wl6ArIBSwj/721GpW5goc0jLzEoRIw0e8GoVYRKIc8jPBFWSZMUj6sSYnXCmZvPNMcXxaDXzHeP4S+V268vPgN2xYZv+QgHM3F8F0FamMz8jkoU3N+TZZWwDuYFLEzRjZK5fDv9EUwuQj4qNW9IZjQI2diXcW1TIb/anmbeRFz7GP1l/I+VeETHLf9LUjHwiyR3LiDK79oxHvVq9fsMEoO6xHuQ6frOTad6eRMfqoeC5AQ0q+Z27ArQ9+Vb8uUm3pX+qGG/47veHi28l7roOxZdreqA2NMBO7gOi4hI1vHu8v2GebTfS325rlI/3O+uxWeu7vig7y3cFPEO4wjaWufwwDZSUw5WHM0ofQOzj7hI310Cb4AsbaUVZ6zBlM4NZcQ8RCqfSNzW1J6GUx6iL3lH0YDDByCBAAA) to query editor
 
 ## Mean Value for the Expected Pass Rate for Tests
 
@@ -157,27 +157,26 @@ Variables:
 - `workItemName`: Work item name
 
 ```
-// NOTE: The following query uses equals operators. You may need to alter the query if you wish to use "contains" or "has" instead for any of the search values.
 let started = 7d;                    // Timespan value to find test results after. 
 let definition = "aspnetcore-ci";    // Optional: The name of the build definition, leave as empty string for all build definitions.
 let reason = "BatchedCI";            // Optional: The Azure DevOps build reason value (e.g. PullRequest, BatchedCI, et cetera)
 let targetBranch = "main";           // Optional: The name of the target branch the test is ran against.
 let name = "";                       // Optional: The name of the test
 let jobName = "";                    // Optional: The name of the job
-let message = "";                    // Optional: Error message to search for
+let message = "AggregateException";  // Optional: Error message to search for
 let workItemName = "";               // Optional: Work item name
 AzureDevOpsTests
 | where RunCompleted >= ago(started)
-| where iff(definition == "", BuildDefinitionName == BuildDefinitionName, BuildDefinitionName == definition)
-| where iff(reason == "", BuildReason == BuildReason, BuildReason == reason)
-| where iff(targetBranch == "", Branch == Branch, Branch == targetBranch)
-| where iff(name == "", TestName == TestName, TestName == name)
-| where iff(message == "", Message == Message, Message == message)
-| where iff(workItemName == "", WorkItemName == WorkItemName, WorkItemName == workItemName)
+| where isempty(definition) or BuildDefinitionName has definition
+| where isempty(reason) or BuildReason has reason
+| where isempty(targetBranch) or Branch has targetBranch
+| where isempty(name) or TestName has name
+| where isempty(message) or Message has message
+| where isempty(workItemName) or WorkItemName has workItemName
 ```
 </details>
 
-:part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA42TTY/aMBCG70j8h1FOINFwrFREpf067KFLhZBWPQ7JhHjr2FnbAVH1x3ccJ5AElm5O9njmmXc+Mp/Dy2rz9A02OUGmpdQHoXbwXpE5QmXJAr1XKC3okgw6bWwMv3QFBR5BEaXgNKB0ZMAxIISJDI7schA2989MgSjRyqFQNgJtIMqRD3xzhClnNYDqCDqrGZbQJDnsUVZk4/FIkgPr0DhOtoSv6QKufPM5bERBtkQVIn3iTCjWR9aBIVtJZwEzVhpDgKbEDsIJrZgboS0VuUQb+pKIaNFAV6V/Rxn6o7CgVua2EjLtMGYgCfcEyB0rSndkzcZ3sq5Oygv/tjRDaIOCe3RJTunDc7QYlNZXcfenMgSPtF+VtsE2kFD5hOJdDD8rKdc8Oy5/Bif0DDhlQtwFnIb83NkduXuDipvOKgqeUk/AzS6EaNiG8Nri+y0ssAVw50fumkrrOM4QXZ3gfzMxN3De9PblJuomh6MDhrfF4u6zmCdjeJBtDC9Xs6Y83oA7aPP72VHxobQe7pW9QbB7rW08qmcaRrrhQu149BcOOfGc15V60EXJKXj/vy+5p3rS/A7Ts5fIskl3n70AHrtfjseTOUhbXjN/6HuGDrK1e9vJtD6ZOteLtxA4oPW3sGGebuHUtXT9ByjVKPcI38u2kvbct3rvAeC0GIHx43xtjj1b4z1g9LchgF4Htu798rVLmP4DReRgBqYFAAA=) to query editor
+:part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA4VTTU/rMBC8V+p/WPXUSqUckah4EgUOHPhQVYnzNtkmBscO9qZ86P34t7bz2pRA6Slaz8zO7k41MXhGx5TDBZzlc/jmd3oKK1WRr9HAFnVDwBY2yuTA5Bkc+UazB9wwuRkMB1pEcxKAYmWN6I7Q14Y4s45OMjWat6IPdXhHfQ6rksBgRWA3wPK9bpTOOxpT0IRbAvRAVc0f4tkpU8DGOkCte3g/Sy4coU8OFshZSfnV7Wj+ZbRDF5efjSO4pu1D7VvZViRNPqZZMYPHRuslvTYy/hR20lOQlhnJFnCS+stmC+KFQ5OVwUWFyhwYOLqFxIZ1osdK2LfyIBXAQsQ8t5NGnnQYfXvBXzuJbtJ5tuv7o1JHdYSdZCQtHosoc1kUjgpkunnPKDKD8IHMjXNyyP8cCZcndDKynDfJvVn3cstU/WjtQO5J0KAEHr0NB/Gm6aQrGdQPB3/hrSS587IxV7aqpYXk/8+F7NSO27/DZI9SPoZuvM/XBMTvIqTjeleL3kpJ6B7Wl0hZ2tOXKVuBlp76lG6GEjHlIXC6b31mmD4ywtQ7e2knX7Ht8iP8rj1EQLf1PqF7ksh66t4oULuIf4oms49oBAAA) to query editor
 
 ## Search Timeline as with Runfo
 
@@ -198,33 +197,32 @@ Variables:
 - `taskName`: Task name
 
 ```
-// NOTE: The following query uses equals operators. You may need to alter the query if you wish to use "contains" or "has" instead for any of the search values.
 let started = 7d;                                  // Timespan value to find test results after. 
 let definition = "\\dotnet\\roslyn\\roslyn-CI";    // Optional: The name of the build definition, leave as empty string for all build definitions.
 let reason = "";                                   // Optional: The Azure DevOps build reason value (e.g. pullRequest, batchedCI, manual, individualCI)
 let result = "";                                   // Optional: The state of the build (e.g. succeeded, failed, canceled, and partiallysucceeded)
 let targetBranch = "main";                         // Optional: The name of the target branch the test is ran against.
-let message = "";                                  // Optional: Error message to search for
+let message = "timeout";                           // Optional: Error message to search for
 let type = "";                                     // Optional: warning or error
 let jobName = "Build_Windows_Release";             // Optional: Issues associated with jobs with this name
 let taskName = "";                                 // Optional: Issues associated with tasks with this task name
 TimelineIssues
-| where iff(message == "", Message == Message, Message == message)
-| where iff(type == "", Type == Type, Type == type)
+| where isempty(message) or Message has message
+| where isempty(type) or Type has type
 | join kind=inner TimelineBuilds on BuildId
 | where StartTime >= ago(started)
-| where iff(definition == "", Definition == Definition, Definition == definition)
-| where iff(reason == "", Reason == Reason, Reason == reason)
-| where iff(result == "", Result == Result, Result == result)
-| where iff(targetBranch == "", TargetBranch == TargetBranch, TargetBranch == targetBranch)
+| where isempty(definition) or Definition has definition
+| where isempty(reason) or Reason has reason
+| where isempty(result) or Result == result
+| where isempty(targetBranch) or TargetBranch has targetBranch
 | join kind=inner TimelineRecords on BuildId
-| where iff(taskName == "", TaskName == TaskName, TaskName == taskName)
-| where iff(jobName == "", Name == Name, Name == jobName)
+| where isempty(taskName) or TaskName has taskName
+| where isempty(jobName) or Name has jobName
 | order by StartTime
 ```
 </details>
 
-:part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA51UTW/bMAy9F+h/IHJqgSw5DljRAf065LAWyAIMAwIUjE3HahXJleQEHvbjR1lSYjtYFswXkzL5+PhIazqF55fF0xdYlASFllLvhFrDR02mgdqSBfqoUVrQFRl02tgJ/NQ1bLABRZSD04DSkQHHACFNFNBwyE7Y0n9mFBhlWjkUyo5AGxiVyAZ7jjDnqgZQNaCLFsMSmqyELcqa7OTyQpID69A4LnYLn/Mb+OczncJCbMhWqAKOp1EIxWzJOjBka+ksYMG8JxBK5MQBwgmtuMpoucy1U+SWS6OtbFR6f3qYjW5iiZfKR6MM2incUGphVQuZdxDHIAm3BMhqbirXcD/Gq9x2LuVRfGrbENrAZ3RG18ec7n7VhuCRti+VjUUiZFDliibrCVS1lHOeMkszhhW6rKT8YTbmESue/JjnlIutyNl+mF0nYl7B/yfG83QDtQIXW2cZbxXlYyhQSP/OUGXUWsgDrHgRBGvW7CMjJd6QNbl7w9GlJ7bhbTtB7uT8AhasAlh74vdGWOATwLVfZBdnxGtmcU3natGr+2QMb0BC4B2Nu897EZtqqrORh+A7NMovGVcgXycgvunVs++UQe+97q8/eLx6Z1/nrDFaGlTqIc6s5SXhLbY6E+j/x51wpYe0wXIlS+SFTCOx76nYGR2cU8tDdot5P1b0f7wUikLm5cVv2JXE6y+K4mo/JM9kDN8ObjR7ZzH6uo8RZhEAFtH274PnI9qkNy0UvLOwt0IpvhoTtVZxvkoVtNYsP1T47m84Hwdfb3nD9FW88gYkurdUoPLYO3ns3Dn9L4fMAWS6ZALcfO8Fq3sSIo/Sw1WQ0pMXrO5JiByq2vtto7qDs65//LWLcFL9OWXa/EX+QCWta6Jx8JPdP00Zg572/1jASXbIT14MalOZFvNcNYct+AMQETlOlwcAAA==) to query editor
+:part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA51UwW7aQBC9R8o/jDiBRMmxUiMqJaQHDm0kitQLUrTYA95k2XV31iCqfnxnvOvYwSlF5eL1MPPe7Js3NhiAgvIBc5jCx/wW/vm7uYGl3iGVysJemQohONhom0NACuCRKhMI1Cagn8D1lWGKHDlBB+0sswxWq9wFi2G18o7M0TbPD7P54DZRPJaSrcwnWBYIVu0Q3AYCn9eVNnkHcQwG1R5BEeCuDEe+j9d2CxvnQRnTy6dJ7MmjotjP4IJb93u6+1V5hAfcP5aUSBJkVGWIk+0EysqYBf6sWJoxrFXICsxn8zHslK2UGQPrpvc65/NsPmoaEwX/vzGeZzhRK/ZCVZYh5piPYaO0kWembIb1SfEASzaCZs2Or5mpJXbIFsO95+xCGtspbc80d3Z+EQvWEayOiG80AUdAbRmaQpoR24zUFoUysOdcFc5K8ob3i/fsgAaBPUqoPDOyL9KljiVerPIJ+EF5KyZjBhSeiPjs1t/kpgx6L7o//eDxugM9LVhjRXjC9AZxTsQmYReTy7SSfTzoUAgkxVMoWCIRshkJvTRkF9zgEi6B7JLJe2KUjTfaYqy8vvoNhwLZ/prqnRsmmUciyNckecEbmeL9AhG/zl7KFCRVIpL37LSFFxZuqq1FDw11rSgB71d9muct6Hf5gkkefJ6yg9wwfdJGfd72O1CzP7QfJumh/bdfGZe7rlrEPZeKGH0vW5Y4Zcd9nqbNfkeMznpFUbr7VovTCZwTaYGZ839RqWWLzklMyUaRJb70a5Kz65LX9BSUbCblLtbHdhR/AH9S5UBaBgAA) to query editor
 
 ## Build Analysis Reporting
 
