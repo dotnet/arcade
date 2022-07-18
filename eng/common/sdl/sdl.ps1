@@ -26,5 +26,11 @@ function Install-Gdn {
     }
 
     $gdnCliPath = Get-ChildItem -Filter guardian.cmd -Recurse -Path $Path
+
+    if (!$gdnCliPath)
+    {
+        Write-PipelineTelemetryError -Category 'Sdl' -Message 'Failure installing Guardian'
+    }
+
     return $gdnCliPath.FullName
 }
