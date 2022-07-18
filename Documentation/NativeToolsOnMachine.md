@@ -21,6 +21,8 @@ This document only applies to Windows machines as Linux machines already come wi
     $nativeToolsLocs = InitializeNativeTools
     $cmakeLoc = $nativeToolsLocs["cmake"]
     ```
+4.  Switch the image you're using from a `build.*` image to the equivalent `windows.*` image (the full list of which can be found on [helix.dot.net](https://helix.dot.net/#1ESHostedPoolImagesWestUS-rg-Internal-Windows)).
+    For example, if you were previously using build.windows.amd64.vs2022, switch to windows.amd64.vs2022.
 
 Once you've executed these steps, you'll be using the native tools installed on the machines.
 
