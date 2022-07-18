@@ -8,11 +8,13 @@ usage()
     echo "BuildArch can be: arm(default), arm64, armel, armv6, ppc64le, riscv64, s390x, x64, x86"
     echo "CodeName - optional, Code name for Linux, can be: xenial(default), zesty, bionic, alpine, alpine3.13 or alpine3.14. If BuildArch is armel, LinuxCodeName is jessie(default) or tizen."
     echo "                              for FreeBSD can be: freebsd12, freebsd13"
-    echo "                              for illumos can be: illumos."
+    echo "                              for illumos can be: illumos"
+    echo "                                for Haiku can be: haiku."
     echo "lldbx.y - optional, LLDB version, can be: lldb3.9(default), lldb4.0, lldb5.0, lldb6.0 no-lldb. Ignored for alpine and FreeBSD"
     echo "llvmx[.y] - optional, LLVM version for LLVM related packages."
     echo "--skipunmount - optional, will skip the unmount of rootfs folder."
     echo "--use-mirror - optional, use mirror URL to fetch resources, when available."
+    echo "--jobs N - optional, restrict to N jobs."
     exit 1
 }
 
@@ -263,6 +265,11 @@ while :; do
             __CodeName=illumos
             __SkipUnmount=1
             ;;
+        haiku)
+            __CodeName=haiku
+            __BuildArch=x64
+            __SkipUnmount=1
+            ;;
         --skipunmount)
             __SkipUnmount=1
             ;;
@@ -272,6 +279,10 @@ while :; do
             ;;
         --use-mirror)
             __UseMirror=1
+            ;;
+        --use-jobs)
+            shift
+            MAXJOBS=$1
             ;;
         *)
             __UnprocessedBuildArgs="$__UnprocessedBuildArgs $1"
@@ -386,6 +397,55 @@ elif [[ "$__CodeName" == "illumos" ]]; then
     wget -P "$__RootfsDir"/usr/include/net https://raw.githubusercontent.com/illumos/illumos-gate/master/usr/src/uts/common/io/bpf/net/dlt.h
     wget -P "$__RootfsDir"/usr/include/netpacket https://raw.githubusercontent.com/illumos/illumos-gate/master/usr/src/uts/common/inet/sockmods/netpacket/packet.h
     wget -P "$__RootfsDir"/usr/include/sys https://raw.githubusercontent.com/illumos/illumos-gate/master/usr/src/uts/common/sys/sdt.h
+elif [[ "$__CodeName" == "haiku" ]]; then
+    JOBS=${MAXJOBS:="$(getconf _NPROCESSORS_ONLN)"}
+
+    echo "Building Haiku sysroot for x86_64"
+    mkdir -p "$__RootfsDir/tmp"
+    cd "$__RootfsDir/tmp"
+    git clone --depth=1 https://review.haiku-os.org/haiku
+    git clone --depth=1 https://github.com/haiku/buildtools
+
+    # Fetch some unmerged patches
+    cd "$__RootfsDir/tmp/haiku"
+    ## Add development build profile (slimmer than nightly)
+    git fetch origin refs/changes/64/4164/1 && git -c commit.gpgsign=false cherry-pick FETCH_HEAD
+
+    # Build jam
+    cd "$__RootfsDir/tmp/buildtools/jam"
+    make
+
+    # Configure cross tools
+    echo "Building cross-compiler"
+    mkdir -p "$__RootfsDir/generated"
+    cd "$__RootfsDir/generated"
+    "$__RootfsDir/tmp/haiku/configure" -j"$JOBS" --sysroot "$__RootfsDir" --cross-tools-source "$__RootfsDir/tmp/buildtools" --build-cross-tools x86_64
+
+    # Build Haiku packages
+    echo "Building Haiku"
+    echo 'HAIKU_BUILD_PROFILE = "development-raw" ;' > UserProfileConfig
+    "$__RootfsDir/tmp/buildtools/jam/jam0" -j"$JOBS" -q '<build>package' '<repository>Haiku'
+
+    # Setup the sysroot
+    echo "Setting up sysroot and extracting needed packages"
+    mkdir -p "$__RootfsDir/boot/system"
+    for file in "$__RootfsDir/generated/objects/haiku/x86_64/packaging/packages/"*.hpkg; do
+        "$__RootfsDir/generated/objects/linux/x86_64/release/tools/package/package" extract -C "$__RootfsDir/boot/system" "$file"
+    done
+    for file in "$__RootfsDir/generated/download/"*.hpkg; do
+        "$__RootfsDir/generated/objects/linux/x86_64/release/tools/package/package" extract -C "$__RootfsDir/boot/system" "$file"
+    done
+
+    # Cleaning up temporary files
+    echo "Cleaning up temporary files"
+    rm -rf "$__RootfsDir/tmp"
+    for name in "$__RootfsDir/generated/"*; do
+        if [[ "$name" =~ "cross-tools-" ]]; then
+            : # Keep the cross-compiler
+        else
+            rm -rf "$name"
+        fi
+    done
 elif [[ -n "$__CodeName" ]]; then
     qemu-debootstrap $__Keyring --arch "$__UbuntuArch" "$__CodeName" "$__RootfsDir" "$__UbuntuRepo"
     cp "$__CrossDir/$__BuildArch/sources.list.$__CodeName" "$__RootfsDir/etc/apt/sources.list"
