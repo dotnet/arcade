@@ -114,7 +114,7 @@ There are some issues with this model. First, some distributions, like `dotnet/r
 
 In addition, there is the issue of AzDo, Helix, or builds being on the floor, and we still give customers an estimate, blissfully unaware of any infrastructure errors. In the Juptyer notebook, I dive into an anomaly detection model, based on Helix work item wait times trying to predict this, but the model only improves accuracy by $0.3\%$.
 
-#### Possible Remdiations
+#### Possible Solutions
 
 For pipelines like runtime's, where the distribution is multimodal, we will hide the estimated time and instead inform the user that their pipeline cannot be predicted as it is too variable. This will also handle the case where the range of a CI pipeline exceeds the estimated time (*e.g.* `1min ± 5min`)
 
