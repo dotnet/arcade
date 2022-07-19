@@ -81,6 +81,17 @@ __IllumosPackages+=" mit-krb5-1.16.2nb4"
 __IllumosPackages+=" openssl-1.1.1e"
 __IllumosPackages+=" zlib-1.2.11"
 
+__HaikuPackages="gmp"
+__HaikuPackages+=" gmp_devel"
+__HaikuPackages+=" krb5"
+__HaikuPackages+=" krb5_devel"
+__HaikuPackages+=" libiconv"
+__HaikuPackages+=" libiconv_devel"
+__HaikuPackages+=" llvm12_libunwind"
+__HaikuPackages+=" llvm12_libunwind_devel"
+__HaikuPackages+=" mpfr"
+__HaikuPackages+=" mpfr_devel"
+
 # ML.NET dependencies
 __UbuntuPackages+=" libomp5"
 __UbuntuPackages+=" libomp-dev"
@@ -425,6 +436,20 @@ elif [[ "$__CodeName" == "haiku" ]]; then
     echo "Building Haiku"
     echo 'HAIKU_BUILD_PROFILE = "development-raw" ;' > UserProfileConfig
     "$__RootfsDir/tmp/buildtools/jam/jam0" -j"$JOBS" -q '<build>package' '<repository>Haiku'
+
+    BaseUrl="https://depot.haiku-os.org/__api/v2/pkg/get-pkg"
+
+    # Download additional packages
+    echo "Downloading additional required packages"
+    read -ra array <<<"$__HaikuPackages"
+    for package in "${array[@]}"; do
+        echo "Downloading $package..."
+        # API documented here: https://github.com/haiku/haikudepotserver/blob/master/haikudepotserver-api2/src/main/resources/api2/pkg.yaml#L60
+        # The schema here: https://github.com/haiku/haikudepotserver/blob/master/haikudepotserver-api2/src/main/resources/api2/pkg.yaml#L598
+        hpkgDownloadUrl="$(wget -qO- --post-data='{"name":"'"$package"'","repositorySourceCode":"haikuports_x86_64","versionType":"LATEST","naturalLanguageCode":"en"}' \
+            --header='Content-Type:application/json' "$BaseUrl" | jq -r '.result.versions[].hpkgDownloadURL')"
+        wget -P "$__RootfsDir/generated/download" "$hpkgDownloadUrl"
+    done
 
     # Setup the sysroot
     echo "Setting up sysroot and extracting needed packages"
