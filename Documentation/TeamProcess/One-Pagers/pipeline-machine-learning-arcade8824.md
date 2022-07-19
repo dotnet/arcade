@@ -1,6 +1,6 @@
 # Predicting Pipeline Durations
 
-Our customers would love to know how long their CI pipeline takes. Ideally, we would want to build a model that can account for the current state of Helix, the workitems they send, the congestion of AzDo, etc. to get a decent accurate. Unfortunately, this is a highly complex model that is quite difficult to build (but theoretically possible).
+Our customers would love to know how long their CI pipeline takes. Ideally, we would want to build a model that can account for the current state of Helix, the work items they send, the congestion of AzDo, etc. to get a decent accurate. Unfortunately, this is a highly complex model that is quite difficult to build (but theoretically possible).
 
 Instead, we can build a model to give us a range of estimates, based on the past durations of their pipelines.
 
@@ -16,7 +16,7 @@ Thanks to our data, we have tons of historical data that can enable us to make p
 
 *[Here is a jupyter notebook](https://ml.azure.com/fileexplorerAzNB?wsid=/subscriptions/a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1/resourcegroups/t-jperez/workspaces/HelixMLTest&tid=72f988bf-86f1-41af-91ab-2d7cd011db47&activeFilePath=Users/t-jperez/pipeline-machine-learning-arcade8824.ipynb) with the detailed statistics and data science that supports the following claims.*
 
-By plotting a histogram of pipeline durations for specific pipelines, I've determed that they seem to follow distrubtions that we can model. For instance, here is the `roslyn-CI` pipeline, with a dweibull distribution fitted.
+By plotting a histogram of pipeline durations for specific pipelines, I've determined that they seem to follow distributions that we can model. For instance, here is the `roslyn-CI` pipeline, with a dweibull distribution fitted.
 
 <img src="./PipelineMachineLearning/roslyn-CI.svg" width="600" height="600">
 
@@ -24,7 +24,7 @@ With this distribution, we can compute the 95% confidence interval, which for th
 
 `1:11:27 +- 0:27:57`
 
-We can vary the confidence interval, and thus the accuracy of our predictions, for a smaller range. From testing on all pipelines that have Build Analysis enabled, here are the detailed statistics for the *ranges* of predicitons we give, in seconds. This data is backtested, meaning that at the time the range was computed, the model only had the data available previously.
+We can vary the confidence interval, and thus the accuracy of our predictions, for a smaller range. From testing on all pipelines that have Build Analysis enabled, here are the detailed statistics for the *ranges* of predictions we give, in seconds. This data is back-tested, meaning that at the time the range was computed, the model only had the data available previously.
 
 ```
 count     534.000000
@@ -40,7 +40,7 @@ dtype: object
 
 ### Model Accuracy
 
-With a target of $95\%$ accurate, the backtesting concluded that we had a true accuracy of $93.3\%$. 
+With a target of $95\%$ accurate, the back-testing concluded that we had a true accuracy of $93.3\%$. 
 
 We backtested the model by training on all previous data before a point, and then testing on 1 week ahead, on data the model has not seen before. Here is a graph of the accuracy over time.
 
@@ -48,35 +48,35 @@ We backtested the model by training on all previous data before a point, and the
 
 ### Implementation
 
-A unique distrubution for each pipeline requires a training for each pipeline, and this functionality would more than likely require an Azure Function.
+A unique distribution for each pipeline requires a training for each pipeline, and this functionality would more than likely require an Azure Function. The added burden of maintenance and engineering machinery makes this too cumbersome.
 
 Instead, we can use [Chebyshev's inequality](https://en.wikipedia.org/wiki/Chebyshev's_inequality), because we have the mean and variance defined for each pipeline.  Using ${\displaystyle k={\sqrt {2}}}$ shows that the probability that values lie outside the interval ${\displaystyle (\mu -{\sqrt {2}}\sigma ,\mu +{\sqrt {2}}\sigma )}$ does not exceed ${\displaystyle {\frac {1}{2}}}$. At the time of writing, here is a list of the ranges we'd give customers who have Build Analysis enabled:
 
 
-| Definition                                         | Mean         | ConfidenceInterval |
-| -------------------------------------------------- | ------------ | ------------------ |
-| \dotnet\arcade\arcade-ci                           | 45m 14s      | ± 10m 41s          |
-| \dotnet\arcade-services\dotnet-arcade-services     | 25m 8s       | ± 5m 26s           |
-| \dotnet\arcade-validation\arcade-validation-ci     | 13m 24s      | ± 6m 17s           |
-| \dotnet\aspnetcore\aspnetcore-ci                   | 1hr 32m 8s   | ± 27m 56s          |
-| \dotnet\aspnetcore\aspnetcore-components-e2e       | 33m 58s      | ± 3m 11s           |
-| \dotnet\aspnetcore\aspnetcore-quarantined-pr       | 1hr 4m 4s    | ± 17m 7s           |
-| \dotnet\installer\installer                        | 57m 22s      | ± 36m 3s           |
-| \dotnet\performance\performance-ci                 | 47m 41s      | ± 22m 7s           |
-| \dotnet\roslyn\roslyn-CI                           | 1hr 10m 41s  | ± 19m 22s          |
-| \dotnet\roslyn\roslyn-integration-CI               | 1hr 22m 24s  | ± 12m 23s          |
-| \dotnet\roslyn\roslyn-integration-corehost         | 1hr 22m 56s  | ± 11m 2s           |
-| \dotnet\runtime\dotnet-linker-tests                | 59m 55s      | ± 13m 55s          |
-| \dotnet\runtime\runtime                            | 2hrs 10m 52s | ± 1hr 21m 38s      |
-| \dotnet\runtime\runtime-coreclr outerloop          | 4hrs 20m 24s | ± 57m 37s          |
-| \dotnet\runtime\runtime-coreclr superpmi-asmdiffs  | 1hr 20m 26s  | ± 14m 10s          |
-| \dotnet\runtime\runtime-coreclr superpmi-diffs     | 1hr 53m 35s  | ± 19m 24s          |
-| \dotnet\runtime\runtime-coreclr superpmi-replay    | 1hr 38m 15s  | ± 17m 26s          |
-| \dotnet\runtime\runtime-dev-innerloop              | 1hr 21m 38s  | ± 8m 16s           |
-| \dotnet\runtime\runtime-extra-platforms            | 2hrs 23m     | ± 52m 44s          |
-| \dotnet\runtime\runtime-libraries enterprise-linux | 41m 48s      | ± 7m 57s           |
-| \dotnet\runtime-assets\runtime-assets              | 2m 5s        | ± 35s              |
-| \dotnet\sdk\dotnet-sdk-public-ci                   | 59m 1s       | ± 16m 15s          |
+| Definition                                         | Mean         | Confidence Interval |
+| -------------------------------------------------- | ------------ | ------------------- |
+| \dotnet\arcade\arcade-ci                           | 45m 14s      | ± 10m 41s           |
+| \dotnet\arcade-services\dotnet-arcade-services     | 25m 8s       | ± 5m 26s            |
+| \dotnet\arcade-validation\arcade-validation-ci     | 13m 24s      | ± 6m 17s            |
+| \dotnet\aspnetcore\aspnetcore-ci                   | 1hr 32m 8s   | ± 27m 56s           |
+| \dotnet\aspnetcore\aspnetcore-components-e2e       | 33m 58s      | ± 3m 11s            |
+| \dotnet\aspnetcore\aspnetcore-quarantined-pr       | 1hr 4m 4s    | ± 17m 7s            |
+| \dotnet\installer\installer                        | 57m 22s      | ± 36m 3s            |
+| \dotnet\performance\performance-ci                 | 47m 41s      | ± 22m 7s            |
+| \dotnet\roslyn\roslyn-CI                           | 1hr 10m 41s  | ± 19m 22s           |
+| \dotnet\roslyn\roslyn-integration-CI               | 1hr 22m 24s  | ± 12m 23s           |
+| \dotnet\roslyn\roslyn-integration-corehost         | 1hr 22m 56s  | ± 11m 2s            |
+| \dotnet\runtime\dotnet-linker-tests                | 59m 55s      | ± 13m 55s           |
+| \dotnet\runtime\runtime                            | 2hrs 10m 52s | ± 1hr 21m 38s       |
+| \dotnet\runtime\runtime-coreclr outerloop          | 4hrs 20m 24s | ± 57m 37s           |
+| \dotnet\runtime\runtime-coreclr superpmi-asmdiffs  | 1hr 20m 26s  | ± 14m 10s           |
+| \dotnet\runtime\runtime-coreclr superpmi-diffs     | 1hr 53m 35s  | ± 19m 24s           |
+| \dotnet\runtime\runtime-coreclr superpmi-replay    | 1hr 38m 15s  | ± 17m 26s           |
+| \dotnet\runtime\runtime-dev-innerloop              | 1hr 21m 38s  | ± 8m 16s            |
+| \dotnet\runtime\runtime-extra-platforms            | 2hrs 23m     | ± 52m 44s           |
+| \dotnet\runtime\runtime-libraries enterprise-linux | 41m 48s      | ± 7m 57s            |
+| \dotnet\runtime-assets\runtime-assets              | 2m 5s        | ± 35s               |
+| \dotnet\sdk\dotnet-sdk-public-ci                   | 59m 1s       | ± 16m 15s           |
 
 We can use a Kusto Query like so and show this information in Queue Insights. (Here, I use Definition name for clarity, but I will use the DefinitionId in production)
 
@@ -112,7 +112,18 @@ TimelineBuilds
 
 There are some issues with this model. First, some distributions, like `dotnet/runtime`'s pipeline have a multimodal distribution. This means we cannot accurately predict their pipeline duration. In this case, their distribution is multimodal because their first step, `Evaluate Paths` evaluates the changes in a given PR, and runs or skips different steps of their pipeline.
 
-In addition, there is the issue of AzDo, Helix, or builds being on the floor, and we still give customers an estimate, blisfully unaware of any infrastructure errors. In the Juptyer notebook, I dive into an anomaly detection model, based on Helix work item wait times trying to predict this, but the model only improves accuracy by $0.3\%$.
+In addition, there is the issue of AzDo, Helix, or builds being on the floor, and we still give customers an estimate, blissfully unaware of any infrastructure errors. In the Juptyer notebook, I dive into an anomaly detection model, based on Helix work item wait times trying to predict this, but the model only improves accuracy by $0.3\%$.
+
+#### Possible Remdiations
+
+For pipelines like runtime's, where the distribution is multimodal, we will hide the estimated time and instead inform the user that their pipeline cannot be predicted as it is too variable. This will also handle the case where the range of a CI pipeline exceeds the estimated time (*e.g.* `1min ± 5min`)
+
+For Helix and/or AzDo being on the floor, we don't have any infrastructure that can globally monitor all the possible infrastructure and tell us if anything is down.
+
+1. Query [Grafana's Alert API](https://grafana.com/docs/grafana/latest/developers/http_api/alerting_provisioning/#route-get-alert-rule) and check a handful of Alerts that would impact a PR. We don't want to check if there is *any* alert on prod, as some alerts like Build Analysis don't affect the CI pipeline.
+2. Run a "health check pipeline" that sends jobs to Helix queues periodically to ensure that pipelines are running normally. This incurs the cost of using our resources that other devs could be using, but it gives the most accurate health of the overall infrastructure.
+
+If this check fails, then we'll hide the prediction.
 
 ## Risk
 
@@ -124,17 +135,16 @@ In addition, there is the issue of AzDo, Helix, or builds being on the floor, an
   * See above, how do we decompose multimodal distributions and become notified when services are down?
 * What dependencies will this epic/feature(s) have?
   * `TimelineBuilds`
-  * Python machine learning libraries (python, skikit-learn, distfit, pandas..)
-  * Azure Functions
+  * Kusto
 * Are the dependencies currently in a state that the functionality in the epic can consume them now, or will they need to be updated?
   * We can consume them now.
 * Is there a goal to have this work completed by, and what is the risk of not hitting that date? (e.g. missed OKRs, increased pain-points for consumers, functionality is required for the next product release, et cetera)
   * Aug 12, the end of the internship.
 * Does anything the new feature depend on consume a limited/throttled API resource?
-  * No. Kusto will be queried once a week to retrain the models.
+  * No.
 * Have you estimated what maximum usage is?
   * No, but it wil be the same as the Queue Insights project.
 * Are you utilizing any response data that allows intelligent back-off from the service?
   * We only query Kusto, so there is no need for back-off.
 * What is the plan for getting more capacity if the feature both must exist and needs more capacity than available?
-  * Azure Functions should auto-scale our function if our ML endpoint is being queried hard.
+  * This feature wont require any additional capacity.
