@@ -38,7 +38,7 @@ steps:
 
 - ${{ if eq(parameters.overrideParameters, '') }}:
   - powershell: ${{ parameters.executeAllSdlToolsScript }}
-      -GuardianPackageName Microsoft.Guardian.Cli.$(GuardianVersion)
+      -GuardianCliLocation $(GuardianCliLocation)
       -NugetPackageDirectory $(Build.SourcesDirectory)\.packages
       -AzureDevOpsAccessToken $(dn-bot-dotnet-build-rw-code-rw)
       ${{ parameters.additionalParameters }}
