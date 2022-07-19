@@ -55,7 +55,7 @@ parameters:
   # optional: dependencies of the job
   - name: dependsOn
     type: object
-    default: []
+    default: 
   
   # Optional: patterns supplied to DownloadBuildArtifacts
   # Usage:
