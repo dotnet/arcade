@@ -14,6 +14,6 @@ The intent of this document is to help the team learn and group by sharing best 
 
 ## First Responder/Operations Work 
 
-- The Operations v-team - including our vendor resource - is responible for triaging any internal work that come in from S360 and other internal notifications (i.e. emails from security, policy notifications from PM, etc). Any work that they determine as meeting the First Responder bar will be tagged for FR and be addressed by that virtual team. 
+- The Operations v-team - including our vendor resource - is responsible for triaging any internal work that come in from S360 and other internal notifications (i.e. emails from security, policy notifications from PM, etc). Any work that they determine as meeting the First Responder bar will be tagged for FR and be addressed by that virtual team. 
 - Current First Responder responsibilities, best practices and how to documentation can be found at our [Team Wiki](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/889/Home)
 
