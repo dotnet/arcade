@@ -18,12 +18,13 @@ function Install-Gdn {
     $ci = $true
     . $PSScriptRoot\..\tools.ps1
 
+    $argumentList = @("install", "Microsoft.Guardian.Cli", "-Version $Version", "-Source https://securitytools.pkgs.visualstudio.com/_packaging/Guardian/nuget/v3/index.json", "-OutputDirectory $Path", "-NonInteractive", "-NoCache")
+
     if ($Version) {
-        Start-Process nuget -Verbose -ArgumentList "install", "Microsoft.Guardian.Cli", "-Version $Version", "-Source https://securitytools.pkgs.visualstudio.com/_packaging/Guardian/nuget/v3/index.json", "-OutputDirectory $Path", "-NonInteractive", "-NoCache" -NoNewWindow -Wait
+        $argumentList += "-Version $Version"
     }
-    else {
-        Start-Process nuget -Verbose -ArgumentList "install", "Microsoft.Guardian.Cli", "-Source https://securitytools.pkgs.visualstudio.com/_packaging/Guardian/nuget/v3/index.json", "-OutputDirectory $Path", "-NonInteractive", "-NoCache" -NoNewWindow -Wait
-    }
+    
+    Start-Process nuget -Verbose -ArgumentList $argumentList -NoNewWindow -Wait
 
     $gdnCliPath = Get-ChildItem -Filter guardian.cmd -Recurse -Path $Path
 
