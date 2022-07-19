@@ -2,7 +2,7 @@
 
 The intent of this document is to help the team learn and grow by sharing best practices that we have found. 
 
-## Keeping Our Repo Healthy and Ready for Roll Out
+## Keeping Our Repos Healthy and Ready for Roll Out
 -	Anyone who checks in a change still needs to monitor the next main run, in any repo.  
     -	PR validation is not the same as deployment to the staging environment and there will always be problems missed by PR validation unless we deploy an entire environment for every PR, which is not currently possible. 
     -	Eventually we will have our vendor monitoring this - [Helix Machine Lifecycle Daily Process](https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/952/Helix-Machine-Lifecycle-Processes?anchor=daily%3A) - but everyone on the team should still make sure we are able roll out at any time.
