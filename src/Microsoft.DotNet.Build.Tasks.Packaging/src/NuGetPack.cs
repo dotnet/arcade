@@ -97,6 +97,14 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             set;
         }
 
+        // Library package excludes.
+        // If set, only these excludes are used. Defaults and AdditionalLibPackageExcludes are not used.
+        public ITaskItem[] LibPackageExcludes
+        {
+            get;
+            set;
+        }
+
         public ITaskItem[] AdditionalLibPackageExcludes
         {
             get;
@@ -261,7 +269,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                         SymbolPackageExcludes);
 
                     // Symbol packages are only valid if they contain both symbols and sources.
-                    Dictionary<string, bool> pathHasMatches = LibPackageExcludes.ToDictionary(
+                    Dictionary<string, bool> pathHasMatches = EffectiveLibPackageExcludes.ToDictionary(
                         path => path,
                         path => PathResolver.GetMatches(builder.Files, file => file.Path, new[] { path }).Any());
 
@@ -282,7 +290,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                     PathResolver.FilterPackageFiles(
                         builder.Files,
                         file => file.Path,
-                        LibPackageExcludes);
+                        EffectiveLibPackageExcludes);
                 }
 
                 var directory = Path.GetDirectoryName(nupkgPath);
@@ -354,12 +362,13 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             return manifest;
         }
 
-        private IEnumerable<string> LibPackageExcludes
+        private IEnumerable<string> EffectiveLibPackageExcludes
         {
             get
             {
-                return _libPackageExcludes
-                    .Concat(AdditionalLibPackageExcludes?.Select(item => item.ItemSpec) ?? Enumerable.Empty<string>());
+                return LibPackageExcludes == null
+                    ? _libPackageExcludes.Concat(AdditionalLibPackageExcludes?.Select(item => item.ItemSpec) ?? Enumerable.Empty<string>())
+                    : LibPackageExcludes.Select(item => item.ItemSpec);
             }
         }
 

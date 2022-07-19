@@ -113,11 +113,11 @@
              Text="$(MSBuildProjectName) -> $(NuSpecPath)"
              Importance="high" />
 
-    <Message Condition="'$(ShouldCreatePackage)' != 'true' AND '$(ShouldGenerateNuSpec)' != 'true'" 
+    <Message Condition="'$(ShouldCreatePackage)' != 'true' AND '$(ShouldGenerateNuSpec)' != 'true'"
              Text="$(MSBuildProjectName) -> Skipping for this platform."
              Importance="high" />
   </Target>
-  
+
   <Target Name="Pack"
           DependsOnTargets="Build" />
 
@@ -251,7 +251,7 @@
 
     <ItemGroup>
       <_FilesToPackage Remove="@(_FilesToPackage)" Condition="'$(ExcludeReferenceAssets)' == 'true' AND '%(_FilesToPackage.IsReferenceAsset)' == 'true'" />
-      
+
       <!-- Some packages support legacy portable profiles where dependencies are provided by targeting pack -->
       <_FilesToPackage Condition="'%(_FilesToPackage.HarvestDependencies)' == '' AND !$([System.String]::Copy('%(_FilesToPackage.TargetFramework)').StartsWith('portable-'))">
         <!-- Only harvest files from ref/lib/runtimes dir-->
@@ -335,7 +335,7 @@
       <!-- PkgProj includes all Content, and None only when Pack=True-->
       <_additionalFiles Include="@(Content)" />
       <_additionalFiles Include="@(None)" Condition="'%(None.Pack)' == 'true'" />
-      
+
       <File Include="@(_additionalFiles)" Condition="'%(_additionalFiles.PackagePath)' != ''" TargetPath="%(_additionalFiles.PackagePath)" />
       <File Include="@(_additionalFiles)" Condition="'%(_additionalFiles.PackagePath)' == '' AND '%(_additionalFiles.Link)' != ''" TargetPath="%(_additionalFiles.Link)" />
       <File Include="@(_additionalFiles)" Condition="'%(_additionalFiles.PackagePath)' == '' AND '%(_additionalFiles.Link)' == ''" TargetPath="%(_additionalFiles.RelativeDir)" />
@@ -467,7 +467,7 @@
 
   <!--Target that will add the specified source files into the package.
       In order for this target to run, define SourcePackageFiles item by including
-      all source files that need to be packaged into it. Each source file must have the 
+      all source files that need to be packaged into it. Each source file must have the
       PackagePath metadata defined, which is the location of where the source file will
       end up in the package-->
   <Target Name="AddSourceToFilesToPackage" BeforeTargets="GetFiles"
@@ -1189,7 +1189,7 @@
       <RepositoryCommit Condition="'$(RepositoryCommit)' == ''">$(SourceRevisionId)</RepositoryCommit>
     </PropertyGroup>
   </Target>
-  
+
   <Target Name="GenerateNuSpec"
           DependsOnTargets="GetPackageDependencies;GetPackageFiles;GetPackageMetadata;GenerateRuntimeDependencies;EnsureEmptyPackage;_InitializeNuspecRepositoryInformationProperties">
 
@@ -1265,6 +1265,7 @@
                CreatePackedPackage="$(CreatePackedPackage)"
                IncludeSymbolsInPackage="$(IncludeSymbolsInPackage)"
                SymbolPackageOutputDirectory="$(SymbolPackageOutputPath)"
+               LibPackageExcludes="@(LibPackageExcludes)"
                AdditionalLibPackageExcludes="@(AdditionalLibPackageExcludes)"
                AdditionalSymbolPackageExcludes="@(AdditionalSymbolPackageExcludes)"
                PackedPackageNamePrefix="$(PackedPackageNamePrefix)"
@@ -1312,11 +1313,11 @@
     <!-- Set FrameworkListsFolder to the path to a set of directories containing framework lists, where the subdirectory name is the TFM.  These lists will determine what is inbox on that framework. -->
     <!-- Set FrameowrkLayout to folder identity with 'TargetFramework' metadata to consider files within that folder inbox on that framework.-->
     <!-- Set UpdateStablePackageInfo to true in order to go through all the package index and update the stable version information for all the packages in the index.-->
-    
+
     <ItemGroup>
       <PackageFolders Include="$(PackageFolders)" />
     </ItemGroup>
-      
+
     <UpdatePackageIndex PackageIndexFile="$(PackageIndexFile)"
                         PackageIds="@(PackageIds)"
                         PackageFolders="@(PackageFolders)"
