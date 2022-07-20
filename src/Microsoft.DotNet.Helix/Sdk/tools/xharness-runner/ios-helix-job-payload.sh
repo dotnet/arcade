@@ -94,8 +94,9 @@ fi
 
 set +e
 
+xcode_path="$(dirname "$(dirname "$(xcode-select -p)")")"
+
 # Restart the simulator to make sure it is tied to the right user session
-xcode_path="/Applications/Xcode${xcode_version/./}.app"
 simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
 sudo pkill -9 -f "$simulator_app"
 open -a "$simulator_app"
