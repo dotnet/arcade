@@ -7,6 +7,9 @@ The intent of this document is to help the team learn and grow by sharing best p
     -	PR validation is not the same as deployment to the staging environment and there will always be problems missed by PR validation unless we deploy an entire environment for every PR, which is not currently possible. 
     -	Eventually we will have our vendor monitoring this - [Helix Machine Lifecycle Daily Process](https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/952/Helix-Machine-Lifecycle-Processes?anchor=daily%3A) - but everyone on the team should still make sure we are able roll out at any time.
     -	It’s a good principle to ask people to look at the next main run, it’s an even better one to not allow oneself to be broken for days at a time unnecessarily.
+- Verify deployment and close issues you placed in the "waiting for rollout" column on our Project Board
+   - This is especially true for anything associated with grafana alerts. We may miss new alerts as they are concantinated to an existing issue.
+   - It is not the responsiblity of the individuals performing deployments to verify your issue is complete and closed out.
 -	The autoscaler is quite different from everything else in dotnet-helix-machines
     - It is the only service within this repo and it causes us to duplicate any efforts involving Service Fabric changes
     - The is an item in our [backlog](https://github.com/dotnet/arcade/issues/10018) into the main Service Fabric cluster
