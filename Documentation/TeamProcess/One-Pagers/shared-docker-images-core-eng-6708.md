@@ -8,6 +8,7 @@ Docker images are increasingly used in the builds and testing of .NET. The image
 - Updating docker image publishing so that we can publish a "latest" tag for product repos to settle on
 - Create a strategy for EOLing old images
 - Solidify policy for servicing docker images
+- Migrate the referenced base images to be based on MAR-approved images. See [here](https://eng.ms/docs/more/containers-secure-supply-chain/approved-images) for additional information.
 
 ## Stakeholders
 
