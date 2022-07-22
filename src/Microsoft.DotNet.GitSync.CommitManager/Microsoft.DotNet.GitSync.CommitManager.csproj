@@ -14,6 +14,9 @@
     <PackageReference Include="Microsoft.Data.OData" Version="$(MicrosoftDataODataVersion)" />
     <PackageReference Include="Azure.Data.Tables" Version="$(AzureDataTablesVersion)" />
     <PackageReference Include="NETStandard.Library" Version="$(NETStandardLibraryVersion)" />
+
+    <!-- This is here so that we agree with the project's transitive references to NewtonSoft.Json -->
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
   </ItemGroup>
 
 </Project>

@@ -7,6 +7,8 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\src\Microsoft.DotNet.RemoteExecutor.csproj" />
+    <!-- This is here so that we agree with the project's transitive references to NewtonSoft.Json -->
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
   </ItemGroup>
  
 </Project>
