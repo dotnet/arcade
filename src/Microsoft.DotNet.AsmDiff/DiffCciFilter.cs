@@ -10,6 +10,32 @@ namespace Microsoft.DotNet.AsmDiff
 {
     internal sealed class DiffCciFilter : ICciFilter
     {
+        private readonly string[] _skippableAttributes = new[]
+        {
+            "System.AttributeUsageAttribute",
+            "System.ComponentModel.DefaultEventAttribute",
+            "System.ComponentModel.DefaultPropertyAttribute",
+            "System.ComponentModel.DesignerAttribute",
+            "System.ComponentModel.DesignerCategoryAttribute",
+            "System.ComponentModel.DesignerSerializationVisibilityAttribute",
+            "System.ComponentModel.DesignTimeVisibleAttribute",
+            "System.ComponentModel.EditorAttribute",
+            "System.ComponentModel.EditorBrowsableAttribute",
+            "System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute",
+            "System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute",
+            "System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute",
+            "System.Diagnostics.DebuggerDisplayAttribute",
+            "System.Diagnostics.DebuggerHiddenAttribute",
+            "System.Diagnostics.DebuggerStepThroughAttribute",
+            "System.Runtime.CompilerServices.AsyncStateMachineAttribute",
+            "System.Runtime.CompilerServices.CompilerFeatureRequiredAttribute",
+            "System.Runtime.CompilerServices.CompilerGeneratedAttribute",
+            "System.Runtie.CompilerServices.InterpolatedStringHandlerAttribute",
+            "System.Runtime.CompilerServices.NullableAttribute",
+            "System.Runtime.CompilerServices.NullableContextAttribute",
+            "System.Runtime.InteropServices.StructLayoutAttribute",
+        };
+
         public DiffCciFilter(bool includeAttributes = false, bool includeInternals = false, bool includePrivates = false, bool includeGenerated = false)
         {
             IncludeAttributes = includeAttributes;
@@ -27,10 +53,16 @@ namespace Microsoft.DotNet.AsmDiff
                 return false;
 
             if (attribute.Type == null)
-                return true;
+                return false;
 
             var resolvedType = attribute.Type.ResolvedType;
-            return resolvedType is Dummy || Include(resolvedType);
+            string name = resolvedType.ToString();
+            bool isNull = name != null;
+            bool contains = _skippableAttributes.Contains(name);
+            bool dummy = resolvedType is Dummy;
+            bool include = Include(resolvedType);
+            bool result = isNull && !contains && (dummy || include);
+            return result;
         }
 
         public bool Include(INamespaceDefinition ns)
@@ -129,9 +161,9 @@ namespace Microsoft.DotNet.AsmDiff
         }
 
         public bool IncludeAttributes { get; set; }
-        
+
         public bool IncludeInternals { get; set; }
-        
+
         public bool IncludePrivates { get; set; }
 
         public bool IncludeGenerated { get; set; }

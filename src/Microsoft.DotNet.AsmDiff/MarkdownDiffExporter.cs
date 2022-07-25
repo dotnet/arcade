@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.AsmDiff
         private readonly string _path;
         private readonly bool _includeTableOfContents;
         private readonly bool _createFilePerNamespace;
-        private readonly MarkdownDiffExporterAttributesFilter _attributesFilter;
+        private readonly ICciFilter _attributesFilter;
 
         public MarkdownDiffExporter(DiffDocument diffDocument, string path, bool includeTableOfContents, bool createFilePerNamespace, bool includeAttributes)
         {
@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.AsmDiff
             _path = path;
             _includeTableOfContents = includeTableOfContents;
             _createFilePerNamespace = createFilePerNamespace;
-            _attributesFilter = new MarkdownDiffExporterAttributesFilter(includeAttributes);
+            _attributesFilter = new DiffCciFilter(includeAttributes);
         }
 
         public void Export()
@@ -229,40 +229,25 @@ namespace Microsoft.DotNet.AsmDiff
         }
     }
 
-    internal sealed class MarkdownDiffExporterAttributesFilter : ICciFilter
-    {
-        private readonly bool _includeAttributes;
-        private readonly string[] _skippableAttributes = new[]
-        {
-            "System.AttributeUsageAttribute",
-            "System.ComponentModel.DefaultEventAttribute",
-            "System.ComponentModel.DefaultPropertyAttribute",
-            "System.ComponentModel.DesignerAttribute",
-            "System.ComponentModel.DesignTimeVisibleAttribute",
-            "System.ComponentModel.EditorAttribute",
-            "System.Diagnostics.CodeAnalysis.RequiresUnreferencedCodeAttribute",
-            "System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembersAttribute",
-            "System.Diagnostics.CodeAnalysis.UnconditionalSuppressMessageAttribute",
-            "System.Runtime.CompilerServices.AsyncStateMachineAttribute",
-            "System.Runtime.CompilerServices.CompilerGeneratedAttribute",
-            "System.Runtime.CompilerServices.NullableAttribute",
-            "System.Runtime.CompilerServices.NullableContextAttribute"
-        };
+    //internal sealed class MarkdownDiffExporterAttributesFilter : ICciFilter
+    //{
+    //    private readonly bool _includeAttributes;
+        
 
-        internal MarkdownDiffExporterAttributesFilter(bool includeAttributes) => _includeAttributes = includeAttributes;
+    //    internal MarkdownDiffExporterAttributesFilter(bool includeAttributes) => _includeAttributes = includeAttributes;
 
-        public bool Include(INamespaceDefinition ns) => true;
-        public bool Include(ITypeDefinition type) => true;
-        public bool Include(ITypeDefinitionMember member) => true;
-        public bool Include(ICustomAttribute attribute)
-        {
-            if (!_includeAttributes || attribute == null || attribute.Type == null)
-            {
-                return false;
-            }
+    //    public bool Include(INamespaceDefinition ns) => true;
+    //    public bool Include(ITypeDefinition type) => true;
+    //    public bool Include(ITypeDefinitionMember member) => true;
+    //    public bool Include(ICustomAttribute attribute)
+    //    {
+    //        if (!_includeAttributes || attribute == null || attribute.Type == null)
+    //        {
+    //            return false;
+    //        }
 
-            string name = attribute.Type.ToString();
-            return name != null && !_skippableAttributes.Contains(name);
-        }
-    }
+    //        string name = attribute.Type.ToString();
+    //        return name != null && !_skippableAttributes.Contains(name);
+    //    }
+    //}
 }
