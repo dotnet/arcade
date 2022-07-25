@@ -4,6 +4,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,10 +13,17 @@ namespace Microsoft.DotNet.GenFacades
 {
     internal class TypeParser
     {
-        public static HashSet<string> GetAllPublicTypes(IEnumerable<string> files, IEnumerable<string> constants)
+        public static HashSet<string> GetAllPublicTypes(IEnumerable<string> files, IEnumerable<string> constants, string langVersion)
         {
             HashSet<string> types = new HashSet<string>();
-            var syntaxTreeCollection = GetSourceTrees(files, constants);
+
+            LanguageVersion languageVersion = LanguageVersion.Default;
+            if (!string.IsNullOrEmpty(langVersion) && !LanguageVersionFacts.TryParse(langVersion, out languageVersion))
+            {
+                throw new ArgumentException($"Invalid C# language version value '{langVersion}'", nameof(langVersion));
+            }
+
+            var syntaxTreeCollection = GetSourceTrees(files, constants, languageVersion);
 
             foreach (var tree in syntaxTreeCollection)
             {
@@ -122,9 +130,9 @@ namespace Microsoft.DotNet.GenFacades
             return namespaceSyntax.Name.ToFullString().Trim();
         }
 
-        private static IEnumerable<SyntaxTree> GetSourceTrees(IEnumerable<string> sourceFiles, IEnumerable<string> constants)
+        private static IEnumerable<SyntaxTree> GetSourceTrees(IEnumerable<string> sourceFiles, IEnumerable<string> constants, LanguageVersion languageVersion)
         {
-            CSharpParseOptions options = new CSharpParseOptions().WithPreprocessorSymbols(constants);
+            CSharpParseOptions options = new CSharpParseOptions(languageVersion: languageVersion, preprocessorSymbols: constants);
             List<SyntaxTree> result = new List<SyntaxTree>();
             foreach (string sourceFile in sourceFiles)
             {

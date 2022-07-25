@@ -6,6 +6,9 @@
 
   <Import Project="Sign.props" />
 
+  <!-- Import the wix props to get the install path -->
+  <Import Project="$(NuGetPackageRoot)microsoft.signed.wix\$(MicrosoftSignedWixVersion)\build\Microsoft.Signed.Wix.props" />
+
   <!-- Update sign infos that were using Microsoft400 to use the .NET-specific cert if UseDotNetCertificate is present.
        This will update any use, even if explicitly specified.
        NOTE: This is outside the target on purpose, as Update will not correctly evaluate in the target. See
@@ -15,7 +18,7 @@
     <StrongNameSignInfo Update="@(StrongNameSignInfo->WithMetadataValue('CertificateName','Microsoft400'))" CertificateName="$(DotNetCertificateName)" />
     <FileSignInfo Update="@(FileSignInfo->WithMetadataValue('CertificateName','Microsoft400'))" CertificateName="$(DotNetCertificateName)" />
   </ItemGroup>
-    
+
   <Target Name="Sign">
     <Error Text="The value of DotNetSignType is invalid: '$(DotNetSignType)'"
            Condition="'$(DotNetSignType)' != 'real' and '$(DotNetSignType)' != 'test' and '$(DotNetSignType)' != ''" />
@@ -61,6 +64,7 @@
         LogDir="$(ArtifactsLogDir)"
         MSBuildPath="$(_DesktopMSBuildPath)"
         SNBinaryPath="$(NuGetPackageRoot)sn\$(SNVersion)\sn.exe"
-        MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"/>
+        MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"
+        WixToolsPath="$(WixInstallPath)"/>
   </Target>
 </Project>

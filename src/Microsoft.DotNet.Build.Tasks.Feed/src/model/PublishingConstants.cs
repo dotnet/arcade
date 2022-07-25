@@ -1039,6 +1039,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
+            
+            // "VS 17.4",
+            new TargetChannelConfig(
+                2914,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>(),
+                DotNetToolsFeeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
 
             // ".NET Libraries",
             new TargetChannelConfig(

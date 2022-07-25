@@ -8,7 +8,7 @@
     <GenFacadesReferencePathItemName Condition="'$(GenFacadesReferencePathItemName)' == ''">ReferencePath</GenFacadesReferencePathItemName>
     <!-- Tell ResolveMatchingContract to run and resolve contract to project reference -->
     <ResolveMatchingContract>true</ResolveMatchingContract>
-    <GeneratePartialFacadeSourceDependsOn>$(GeneratePartialFacadeSourceDependsOn);ResolveMatchingContract</GeneratePartialFacadeSourceDependsOn>
+    <GeneratePartialFacadeSourceDependsOn>$(GeneratePartialFacadeSourceDependsOn);ResolveMatchingContract;_GetRoslynAssembliesPath</GeneratePartialFacadeSourceDependsOn>
     <CoreCompileDependsOn Condition="'$(DesignTimeBuild)' != 'true'">$(CoreCompileDependsOn);GeneratePartialFacadeSource</CoreCompileDependsOn>
     <!-- Support zero version seeds by rewriting the output of the compiler. -->
     <TargetsTriggeredByCompilation Condition="'$(DesignTimeBuild)' != 'true' and '$(GenFacadesForceZeroVersionSeeds)' == 'true'">
@@ -30,11 +30,13 @@
       ReferenceAssembly="$(ReferenceAssembly)"
       CompileFiles="@(Compile)"
       DefineConstants="$(DefineConstants)"
+      LangVersion="$(LangVersion)"
       IgnoreMissingTypes="$(GenFacadesIgnoreMissingTypes)"
       IgnoreMissingTypesList="@(GenFacadesIgnoreMissingType)"
       OmitTypes="@(GenFacadesOmitType)"
       OutputSourcePath="$(OutputSourcePath)"
-      SeedTypePreferences="@(SeedTypePreference)" />
+      SeedTypePreferences="@(SeedTypePreference)"
+      RoslynAssembliesPath="$(RoslynAssembliesPath)" />
 
     <ItemGroup Condition="Exists('$(OutputSourcePath)')">
       <Compile Include="$(OutputSourcePath)" />

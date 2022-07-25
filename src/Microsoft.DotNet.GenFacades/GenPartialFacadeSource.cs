@@ -9,7 +9,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.GenFacades
 {
-    public class GenPartialFacadeSource : BuildTask
+    public class GenPartialFacadeSource : RoslynBuildTask
     {
         [Required]
         public ITaskItem[] ReferencePaths { get; set; }
@@ -20,6 +20,8 @@ namespace Microsoft.DotNet.GenFacades
         public ITaskItem[] CompileFiles { get; set; }
 
         public string DefineConstants { get; set; }
+
+        public string LangVersion { get; set; }
 
         public bool IgnoreMissingTypes { get; set; }
 
@@ -32,7 +34,7 @@ namespace Microsoft.DotNet.GenFacades
         [Required]
         public string OutputSourcePath { get; set; }
         
-        public override bool Execute()
+        public override bool ExecuteCore()
         {
             bool result = true;
             try
@@ -42,6 +44,7 @@ namespace Microsoft.DotNet.GenFacades
                     ReferenceAssembly,
                     CompileFiles?.Select(item => item.ItemSpec).ToArray(),
                     DefineConstants,
+                    LangVersion,
                     OutputSourcePath,
                     Log,
                     IgnoreMissingTypes,

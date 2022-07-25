@@ -38,7 +38,8 @@ body:
 
          ```json
          {
-            "ErrorMessage" : ""
+            "ErrorMessage" : "",
+            "BuildRetry": false
          }
          ```
   - type: textarea

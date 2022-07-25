@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.GenFacades
             string contractAssembly,
             string[] compileFiles,
             string defineConstants,
+            string langVersion,
             string outputSourcePath,
             ILog logger,
             bool ignoreMissingTypes = false,
@@ -52,7 +53,7 @@ namespace Microsoft.DotNet.GenFacades
                 referenceTypes = referenceTypes.Where(type => !OmitTypes.Contains(type));
 
             var sourceGenerator = new SourceGenerator(referenceTypes, seedTypes, seedTypePreferences, outputSourcePath, ignoreMissingTypesList, logger);
-            return sourceGenerator.GenerateSource(compileFiles, ParseDefineConstants(defineConstants), ignoreMissingTypes);
+            return sourceGenerator.GenerateSource(compileFiles, ParseDefineConstants(defineConstants), langVersion, ignoreMissingTypes);
         }
 
         private static IEnumerable<string> ParseDefineConstants(string defineConstants)

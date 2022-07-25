@@ -119,7 +119,15 @@ fi
 if [ -z "$xcode_version" ]; then
     xcode_path="$(dirname "$(dirname "$(xcode-select -p)")")"
 else
-    xcode_path="/Applications/Xcode${xcode_version/./}.app"
+    xcode_path="/Applications/Xcode_${xcode_version}.app"
+
+    if [ ! -d "$xcode_path" ]; then
+      xcode_path="/Applications/Xcode${xcode_version/./}.app"
+    fi
+fi
+
+if [ ! -d "$xcode_path" ]; then
+    echo "WARNING - Xcode not found at $xcode_path"
 fi
 
 # First we need to revive env variables since they were erased by launchctl

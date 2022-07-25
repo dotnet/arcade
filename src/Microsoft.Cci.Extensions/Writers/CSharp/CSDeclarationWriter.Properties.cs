@@ -74,6 +74,11 @@ namespace Microsoft.Cci.Writers.CSharp
                 WriteVisibility(property.Visibility);
             }
 
+            if (property.Attributes.HasRequiredMemberAttribute())
+            {
+                WriteKeyword("required");
+            }
+
             // Getter and Setter modifiers should be the same
             WriteMethodModifiers(accessor);
 

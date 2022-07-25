@@ -23,7 +23,7 @@ There are two ways to report a known issue, one is via the build analysis and th
     - Repository issue - In the repo in which the issue is happening
 1. Add the label `Known Build Error`. (If the label is not available on the repository follow the instructions to [get on board](#how-to-get-onboard))
 1. Copy and paste the template
-    ```md 
+    ````md 
     ## Build Information
     Build: <!-- Add link to the build with the reported error. -->
     Leg Name: <!-- Add the name of the impacted leg. -->
@@ -31,10 +31,13 @@ There are two ways to report a known issue, one is via the build analysis and th
     ## Error Message
     <!-- Fill for repository issues. For infrastructure issues the engineering services (@dotnet/dnceng) is going to fill it. -->
     ```json 
-    { "ErrorMessage":"" } ```
-
+    { "ErrorMessage":"",
+      "BuildRetry": false
+    } 
     ```
+    ````
 1. If you are opening a Repository issue you need to [fill the "Error message" section](#how-to-fill-a-known-issue-error-message-section"). If you are opening an infrastructure issue, this is going to be handled by the engineering services team.
+1. If the issue reported on the "ErrorMessage" section can be solved by retrying the build you can consider setting the ["Build Retry" configuration](###build-retry-functionality-in-known-issues) to ``true``
 
 ### Reporting known issue via build analysis
 1. On the build analysis you will see links for the type of issue you want to open. 
@@ -42,6 +45,7 @@ There are two ways to report a known issue, one is via the build analysis and th
 1. Click on the link of the [type of issue that suits better the situation](#decide-infrastructure-or-repository-issue).
 1. A template is going to appear for you and most of this information should be already prefilled.
 1. If you are opening a Repository issue you need to [fill the "Error message" section](#how-to-fill-a-known-issue-error-message-section"). If you are opening an infrastructure issue, this is going to be handled by the engineering services team.
+1. If the issue reported on the "ErrorMessage" section can be solved by retrying the build you can consider setting the ["Build Retry" configuration](###build-retry-functionality-in-known-issues) to ``true``
 
 ## How to fill out a known issue error message section
 The "ErrorMessage section" is on the next form:
@@ -71,6 +75,27 @@ After selecting the message, fill the "ErrorMessage";
     "ErrorMessage":"(NETCORE_ENGINEERING_TELEMETRY=Restore) Failed to retrieve information" 
 }
 ```
+
+### Build retry functionality in known issues
+The build retry setting can be set to 'true' when the build failure on 'ErrorMessage' could be solved by retrying the build.
+
+The following is a good example of the use of "BuilRetry" as the only way to fix this error is by retrying the build 
+```json 
+{ 
+    "ErrorMessage":"The agent did not connect within the alloted time",
+    "BuildRetry": true
+} 
+```
+
+The build retry functionality retries a build that, in its first attempt, had a failure that matched the known issue 'ErrorMessage' and has the 'BuildRetry' set to true. 
+
+In the example stated above if a build fails with the error "The agent did not connect within the alloted time" on its first attempt this is going to be retried.
+
+Please note that this has some limitations, meaning if the failure occurred on an attempt different from the first, the build will not be retried. 
+
+The limitation has been placed by design because of two reasons:
+1. If a build has been retried on more occasions the underlying reason could be something different. 
+1. Many builds are analyzed and retrying them on multiple occasions can become expensive and problematic. 
 
 ## How to get onboard
 1. This feature is tightly related to the build analysis because of that it's necessary to have the `.NET Helix` GitHub application installed in the repo in which you intend to use known issues. </br>

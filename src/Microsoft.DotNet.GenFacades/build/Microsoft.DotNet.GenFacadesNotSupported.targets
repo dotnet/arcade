@@ -47,7 +47,7 @@
   </Target>
 
   <Target Name="AddGenFacadeNotSupportedCompileItem"
-          DependsOnTargets="_GetGenFacadeNotSupportedCompileInputs"
+          DependsOnTargets="_GetGenFacadeNotSupportedCompileInputs;_GetRoslynAssembliesPath"
           AfterTargets="ResolveProjectReferences"
           Condition="'$(GeneratePlatformNotSupportedAssemblyMessage)' != ''"
           Inputs="@(GenFacadeNotSupportedCompileInput)"
@@ -55,8 +55,10 @@
 
     <NotSupportedAssemblyGenerator
       SourceFiles="@(GenFacadeNotSupportedCompileInput)"
+      LangVersion="$(LangVersion)"
       Message="$(GeneratePlatformNotSupportedAssemblyMessage)"
-      ApiExclusionListPath="$(ApiExclusionListPath)" />
+      ApiExclusionListPath="$(ApiExclusionListPath)"
+      RoslynAssembliesPath="$(RoslynAssembliesPath)" />
 
     <ItemGroup>
       <Compile Include="@(GenFacadeNotSupportedCompileInput->'%(OutputPath)')" />

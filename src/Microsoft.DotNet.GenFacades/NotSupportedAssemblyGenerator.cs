@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.GenFacades
     /// <summary>
     /// The class generates an NotSupportedAssembly from the reference sources.
     /// </summary>
-    public class NotSupportedAssemblyGenerator : BuildTask
+    public class NotSupportedAssemblyGenerator : RoslynBuildTask
     {
         [Required]
         public ITaskItem[] SourceFiles { get; set; }
@@ -24,9 +24,11 @@ namespace Microsoft.DotNet.GenFacades
         [Required]
         public string Message { get; set; }
 
+        public string LangVersion { get; set; }
+
         public string ApiExclusionListPath { get; set; }
 
-        public override bool Execute()
+        public override bool ExecuteCore()
         {
             if (SourceFiles == null || SourceFiles.Length == 0)
             {
@@ -68,7 +70,13 @@ namespace Microsoft.DotNet.GenFacades
 
             try
             {
-                syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(sourceFile));
+                LanguageVersion languageVersion = LanguageVersion.Default;
+                if (!String.IsNullOrEmpty(LangVersion) && !LanguageVersionFacts.TryParse(LangVersion, out languageVersion))
+                {
+                    Log.LogError($"Invalid LangVersion value '{LangVersion}'");
+                    return;
+                }
+                syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(sourceFile), new CSharpParseOptions(languageVersion));
             }
             catch(Exception ex)
             {
