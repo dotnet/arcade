@@ -31,6 +31,9 @@
     <PackageReference Include="Microsoft.SymbolUploader" Version="$(MicrosoftSymbolUploaderVersion)" />
     <!-- Override the vulnerable version brought in by Microsoft.DotNet.Maestro.Client -->
     <PackageReference Include="System.Text.Encodings.Web" Version="$(SystemTextEncodingsWebVersion)" />
+
+    <!-- This is here so that we agree with the project's transitive references to NewtonSoft.Json -->
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
     <PackageReference Include="Microsoft.Bcl.HashCode" Version="1.1.1"/>
