@@ -73,7 +73,7 @@
         Redirect std output of the runner.
         Note that xUnit outputs failure info to both STDOUT (stack trace, message) and STDERR (failed test name) 
       -->
-      <_TestRunnerCommand Condition="'$(TestCaptureOutput)' != 'false'">$(_TestRunnerCommand) > "%(TestToRun.ResultsStdOutPath)" 2>&amp;1</_TestRunnerCommand>
+      <_TestRunnerCommand Condition="'$(TestCaptureOutput)' != 'false'">$(_TestRunnerCommand) >> "%(TestToRun.ResultsStdOutPath)" 2>&amp;1</_TestRunnerCommand>
     </PropertyGroup>
 
     <ItemGroup>
@@ -86,17 +86,16 @@
     <Delete Files="@(_OutputFiles)" />
 
     <Message Text="Running tests: $(_TestAssembly) [$(_TestEnvironment)]" Importance="high"/>
-    <Exec Command='$(_TestRunnerCommand)' LogStandardErrorAsError="false" WorkingDirectory="$(_TargetDir)" IgnoreExitCode="true">
-      <Output TaskParameter="ExitCode" PropertyName="_TestErrorCode" />
-    </Exec>
 
     <!--
       Add command line to the log.
     -->
-    <WriteLinesToFile File="%(TestToRun.ResultsStdOutPath)" 
-                      Overwrite="false" 
-                      Lines=";=== COMMAND LINE ===;$(_TestRunnerCommand)"
-                      Condition="'$(TestCaptureOutput)' != 'false'" />
+    <Exec Command="echo === COMMAND LINE === > %(TestToRun.ResultsStdOutPath)
+                   echo $(_TestRunnerCommand) >> %(TestToRun.ResultsStdOutPath)" />
+
+    <Exec Command='$(_TestRunnerCommand)' LogStandardErrorAsError="false" WorkingDirectory="$(_TargetDir)" IgnoreExitCode="true">
+      <Output TaskParameter="ExitCode" PropertyName="_TestErrorCode" />
+    </Exec>
 
     <!--
       Report test status.
