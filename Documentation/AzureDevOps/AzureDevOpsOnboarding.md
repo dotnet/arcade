@@ -76,8 +76,8 @@ To use an Azure Pool provider, you need to specify both the name of the pool pro
 
 ### dnceng/public pools:
 
-- NetCore1ESPool-Public : "regular" public builds for public CI
-- NetCore1ESPool-Svc-Public : Public CI for release branches of .NET products
+- NetCore-Public-Int : "regular" public builds for public CI
+- NetCore-Svc-Public-Int : Public CI for release branches of .NET products
 
 For a 'live' list of available images for a given pool provider, see https://helix.dot.net/#1esPools
 

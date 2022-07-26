@@ -24,7 +24,7 @@ stages:
       - job: Windows_NT
         timeoutInMinutes: 90
         pool:
-          name: NetCore1ESPool-Public
+          name: NetCore-Public-Int
           demands: ImageOverride -equals Build.Server.Amd64.VS2019.Open
         preSteps:
         - checkout: self
