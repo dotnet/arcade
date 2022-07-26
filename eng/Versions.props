@@ -40,7 +40,7 @@
     <MicrosoftExtensionsLoggingConsoleVersion>2.1.1</MicrosoftExtensionsLoggingConsoleVersion>
     <MicrosoftNETCorePlatformsVersion>2.1.0</MicrosoftNETCorePlatformsVersion>
     <MicrosoftNetCompilersToolsetVersion>4.3.0-3.22371.17</MicrosoftNetCompilersToolsetVersion>
-    <MicrosoftNetTestSdkVersion>16.7.1</MicrosoftNetTestSdkVersion>
+    <MicrosoftNetTestSdkVersion>17.4.0-preview-20220707-01</MicrosoftNetTestSdkVersion>
     <MicrosoftNETILLinkTasksVersion>6.0.100-1.22103.2</MicrosoftNETILLinkTasksVersion>
     <MicrosoftSignedWixVersion>1.0.0-v3.14.0.5722</MicrosoftSignedWixVersion>
     <MoqVersion>4.8.3</MoqVersion>
@@ -49,7 +49,7 @@
     <NewtonsoftJsonVersion>13.0.1</NewtonsoftJsonVersion>
     <SystemTextJsonVersion>4.7.0</SystemTextJsonVersion>
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
-    <NuGetVersion>5.6.0-preview.2.6489</NuGetVersion>
+    <NuGetVersion>6.2.1</NuGetVersion>
     <OctokitVersion>0.32.0</OctokitVersion>
     <DotNetSleetLibVersion>2.2.143</DotNetSleetLibVersion>
     <SwashbuckleAspNetCoreSwaggerVersion>3.0.0</SwashbuckleAspNetCoreSwaggerVersion>
