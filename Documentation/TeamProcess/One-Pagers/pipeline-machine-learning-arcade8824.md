@@ -118,12 +118,7 @@ In addition, there is the issue of AzDo, Helix, or builds being on the floor, an
 
 For pipelines like runtime's, where the distribution is multimodal, we will hide the estimated time and instead inform the user that their pipeline cannot be predicted as it is too variable. This will also handle the case where the range of a CI pipeline exceeds the estimated time (*e.g.* `1min ± 5min`)
 
-For Helix and/or AzDo being on the floor, we don't have any infrastructure that can globally monitor all the possible infrastructure and tell us if anything is down.
-
-1. Query [Grafana's Alert API](https://grafana.com/docs/grafana/latest/developers/http_api/alerting_provisioning/#route-get-alert-rule) and check a handful of Alerts that would impact a PR. We don't want to check if there is *any* alert on prod, as some alerts like Build Analysis don't affect the CI pipeline.
-2. Run a "health check pipeline" that sends jobs to Helix queues periodically to ensure that pipelines are running normally. This incurs the cost of using our resources that other devs could be using, but it gives the most accurate health of the overall infrastructure.
-
-If this check fails, then we'll hide the prediction.
+For Helix and/or AzDo being on the floor, we will rely on our Known Issues infrastructure, and simply hide the checks when there are any critical infrastructure issues.
 
 ## Risk
 
