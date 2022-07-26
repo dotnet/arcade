@@ -126,7 +126,7 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
     global retry, reboot, android_connectivity_verified
 
     # Apps crashing can be infra failures, retry except on Apple devices where retries can be costly due to small queue size
-    if exit_code == 80 and (platform != "apple" or not is_device): # APP_CRASH
+    if exit_code == 80 and not (platform == "apple" and is_device): # APP_CRASH
         print(f'    Application crashed - if persist, please investigate system logs from the run')
         retry = True
         reboot = True
