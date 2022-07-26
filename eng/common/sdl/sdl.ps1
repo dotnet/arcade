@@ -18,7 +18,7 @@ function Install-Gdn {
     $ci = $true
     . $PSScriptRoot\..\tools.ps1
 
-    $argumentList = @("install", "Microsoft.Guardian.Cli", "-Version $Version", "-Source https://securitytools.pkgs.visualstudio.com/_packaging/Guardian/nuget/v3/index.json", "-OutputDirectory $Path", "-NonInteractive", "-NoCache")
+    $argumentList = @("install", "Microsoft.Guardian.Cli", "-Source https://securitytools.pkgs.visualstudio.com/_packaging/Guardian/nuget/v3/index.json", "-OutputDirectory $Path", "-NonInteractive", "-NoCache")
 
     if ($Version) {
         $argumentList += "-Version $Version"
