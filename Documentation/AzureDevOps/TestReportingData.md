@@ -6,7 +6,13 @@ The data that we collect is only a subset of tests that run and not every test t
 
 ## How do we collect the data? 
 
-Only tests that are ran through Helix have their results captured to be added to the test reporting tables. This means that tests that run in pipelines not utilized by pull requests (e.g. CI pipelines) will have their data collected as well. And as long as our PAT has access to the Azure DevOps project the test runs in, we can collect results from tests that run there. 
+The test results data we collect come from tests that run through Helix. The results are then captured in the Kusto tables noted below. 
+
+Example ccenarios for captured test result data: 
+- Tests that run during a pull request build.
+- Tests that run during a rolling CI build. 
+
+As long as our PAT has access to the Azure DevOps project the test runs in, we can collect results from tests that run in that Azure DevOps project. 
 
 ## Where is the data? 
 
