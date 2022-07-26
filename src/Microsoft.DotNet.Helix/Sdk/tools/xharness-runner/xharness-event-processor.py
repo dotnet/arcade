@@ -125,9 +125,8 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
 
     global retry, reboot, android_connectivity_verified
 
-    # Kill the simulator when we fail to launch the app
     # Apps crashing can be infra failures apart form Apple devices where retries can be costly
-    if exit_code == 80 and platform != "apple" and is_device: # APP_CRASH
+    if exit_code == 80 and (platform != "apple" or not is_device): # APP_CRASH
         print(f'    Application crashed - if persist, please investigate system logs from the run')
         retry = True
         reboot = True
