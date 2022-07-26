@@ -460,9 +460,7 @@ namespace Microsoft.DotNet.SignTool
                     return new FileSignInfo(file, signInfo.WithIsAlreadySigned(isAlreadySigned), wixContentFilePath: wixContentFilePath);
                 }
 
-                // TODO: implement this check for native PE files as well:
-                // extract copyright from native resource (.rsrc section) 
-                if (signInfo.ShouldSign && peInfo != null && peInfo.IsManaged)
+                if (signInfo.ShouldSign && peInfo != null)
                 {
                     bool isMicrosoftLibrary = IsMicrosoftLibrary(peInfo.Copyright);
                     bool isMicrosoftCertificate = !IsThirdPartyCertificate(signInfo.Certificate);
@@ -526,17 +524,30 @@ namespace Microsoft.DotNet.SignTool
 
             if (!isManaged)
             {
-                return new PEInfo(isManaged);
+                return new PEInfo(isManaged, GetNativeLegalCopyright(fullPath));
             }
 
             bool isCrossgened = ContentUtil.IsCrossgened(fullPath);
             string publicKeyToken = ContentUtil.GetPublicKeyToken(fullPath);
 
-            GetTargetFrameworkAndCopyright(fullPath, out string targetFramework, out string copyright);
+            GetManagedTargetFrameworkAndCopyright(fullPath, out string targetFramework, out string copyright);
             return new PEInfo(isManaged, isCrossgened, copyright, publicKeyToken, targetFramework);
         }
 
-        private static void GetTargetFrameworkAndCopyright(string filePath, out string targetFramework, out string copyright)
+        /// <summary>
+        /// Retrieves the copyright info from the file version info resource structure.
+        /// This is used as a backup method, in cases of non-managed binaries as well as managed
+        /// binaries in some cases (crossgen)
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        private static string GetNativeLegalCopyright(string filePath)
+        {
+            var fileVersionInfo = FileVersionInfo.GetVersionInfo(filePath);
+            return fileVersionInfo.LegalCopyright;
+        }
+
+        private static void GetManagedTargetFrameworkAndCopyright(string filePath, out string targetFramework, out string copyright)
         {
             targetFramework = string.Empty;
             copyright = string.Empty;
@@ -562,6 +573,12 @@ namespace Microsoft.DotNet.SignTool
                         }
                     }
                 }
+            }
+
+            // If there is no copyright available, it's possible this was a r2r binary. Get the native info instead.
+            if (string.IsNullOrEmpty(copyright))
+            {
+                copyright = GetNativeLegalCopyright(filePath);
             }
         }
 
