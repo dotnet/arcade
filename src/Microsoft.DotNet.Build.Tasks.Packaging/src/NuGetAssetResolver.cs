@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         {
             RuntimeGraph runtimeGraph = null;
 
-            if (!String.IsNullOrEmpty(runtimeFile))
+            if (!string.IsNullOrEmpty(runtimeFile))
             {
                 runtimeGraph = JsonRuntimeFormat.ReadRuntimeGraph(runtimeFile);
             }
