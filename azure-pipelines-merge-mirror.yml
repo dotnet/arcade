@@ -15,7 +15,7 @@ jobs:
       enableSBOM: false
       pool:
         name: NetCore1ESPool-Internal
-        demands: ImageOverride -equals Build.Server.Amd64.VS2019
+        demands: ImageOverride -equals windows.vs2019.amd64
       variables:
       - name: WorkingDirectoryName
         value: repo-dir
