@@ -512,7 +512,7 @@ namespace Microsoft.DotNet.SignTool
         /// Copyright used for binary assets (assemblies and packages) built by Microsoft must be Microsoft copyright.
         /// </summary>
         private static bool IsMicrosoftLibrary(string copyright)
-            => copyright.Contains("Microsoft");
+            => copyright != null && copyright.Contains("Microsoft");
 
         private static bool IsThirdPartyCertificate(string name)
             => name.Equals("3PartyDual", StringComparison.OrdinalIgnoreCase) ||
@@ -544,7 +544,8 @@ namespace Microsoft.DotNet.SignTool
         private static string GetNativeLegalCopyright(string filePath)
         {
             var fileVersionInfo = FileVersionInfo.GetVersionInfo(filePath);
-            return fileVersionInfo.LegalCopyright;
+            // Native assets have a space rather than an empty string if there is not a legal copyright available.
+            return fileVersionInfo.LegalCopyright?.Trim();
         }
 
         private static void GetManagedTargetFrameworkAndCopyright(string filePath, out string targetFramework, out string copyright)
