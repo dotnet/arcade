@@ -11,6 +11,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageReference Include="xunit.extensibility.core" Version="$(XUnitVersion)" />
     <PackageReference Include="xunit.extensibility.execution" Version="$(XUnitVersion)" />
   </ItemGroup>
