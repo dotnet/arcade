@@ -285,7 +285,7 @@ if [[ -z "$__RootfsDir" ]]; then
 fi
 
 if [[ -d "$__RootfsDir" ]]; then
-    if [[ "$__SkipUnmount" == 0 ]]; then
+    if [[ "$__SkipUnmount" == "0" ]]; then
         umount "$__RootfsDir"/* || true
     fi
     rm -rf "$__RootfsDir"
@@ -314,7 +314,7 @@ elif [[ "$__CodeName" == "freebsd" ]]; then
     JOBS="$(getconf _NPROCESSORS_ONLN)"
     wget -O - "https://download.freebsd.org/ftp/releases/${__FreeBSDArch}/${__FreeBSDMachineArch}/${__FreeBSDBase}/base.txz" | tar -C "$__RootfsDir" -Jxf - ./lib ./usr/lib ./usr/libdata ./usr/include ./usr/share/keys ./etc ./bin/freebsd-version
     echo "ABI = \"FreeBSD:${__FreeBSDABI}:${__FreeBSDMachineArch}\"; FINGERPRINTS = \"${__RootfsDir}/usr/share/keys\"; REPOS_DIR = [\"${__RootfsDir}/etc/pkg\"]; REPO_AUTOUPDATE = NO; RUN_SCRIPTS = NO;" > "${__RootfsDir}"/usr/local/etc/pkg.conf
-    echo "FreeBSD: { url: pkg+http://pkg.FreeBSD.org/\${ABI}/quarterly, mirror_type: \"srv\", signature_type: \"fingerprints\", fingerprints: \"${__RootfsDir}/usr/share/keys/pkg\", enabled: yes }" > "${__RootfsDir}"/etc/pkg/FreeBSD.conf
+    echo "FreeBSD: { url: \"pkg+http://pkg.FreeBSD.org/\${ABI}/quarterly\", mirror_type: \"srv\", signature_type: \"fingerprints\", fingerprints: \"${__RootfsDir}/usr/share/keys/pkg\", enabled: yes }" > "${__RootfsDir}"/etc/pkg/FreeBSD.conf
     mkdir -p "$__RootfsDir"/tmp
     # get and build package manager
     wget -O - "https://github.com/freebsd/pkg/archive/${__FreeBSDPkg}.tar.gz" | tar -C "$__RootfsDir"/tmp -zxf -
@@ -382,7 +382,7 @@ elif [[ -n "$__CodeName" ]]; then
     chroot "$__RootfsDir" symlinks -cr /usr
     chroot "$__RootfsDir" apt-get clean
 
-    if [[ "$__SkipUnmount" == 0 ]]; then
+    if [[ "$__SkipUnmount" == "0" ]]; then
         umount "$__RootfsDir"/* || true
     fi
 
