@@ -56,10 +56,10 @@ stages:
           # Will eventually change this to two BYOC pools.
           ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCore1ESPool-Svc-Public
-            demands: ImageOverride -equals Build.Windows.10.Amd64.VS2019.Open
+            demands: ImageOverride -equals windows.vs2019.amd64.open
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
             name: NetCore1ESPool-Svc-Internal
-            demands: ImageOverride -equals Build.Windows.10.Amd64.VS2019
+            demands: ImageOverride -equals windows.vs2019.amd64
         variables:
         - _Script: eng\common\cibuild.cmd
         - _ValidateSdkArgs: ''
