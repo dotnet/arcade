@@ -156,21 +156,10 @@ namespace Microsoft.DotNet.GenAPI
         public bool AlwaysIncludeBase { get; set; }
 
         /// <summary>
-        /// [CSDecl] Specify a namespace+type list in the DocId format of types that should be wrapped inside an #if <see cref="ConditionalTypeListSymbol"/> (depending on <see cref="ConditionalTypeListWrapOtherTypes"/>).
+        /// [CSDecl] Specify one or more namespace+type list(s) in the DocId format of types that should be wrapped inside an #if with the symbol specified in the <c>Symbol</c> metadata item.
+        /// If the <c>WrapOtherTypes</c> metadata item is set to true, wraps the types _not_ mentioned in the list with the <c>Symbol</c>, otherwise every type in the list will be wrapped.
         /// </summary>
-        public string ConditionalTypeList { get; set; }
-
-        /// <summary>
-        /// [CSDecl] Symbol that will be used in the #if for <see cref="ConditionalTypeList"/>.
-        /// </summary>
-        public string ConditionalTypeListSymbol { get; set; }
-
-        /// <summary>
-        /// [CSDecl] If true, wraps the types _not_ mentioned in <see cref="ConditionalTypeListSymbol"/> with <see cref="ConditionalTypeListSymbol"/>.
-        /// If false, every type in the list will be wrapped.
-        /// Defaults to false.
-        /// </summary>
-        public bool ConditionalTypeListWrapOtherTypes { get; set; }
+        public ITaskItem[] ConditionalTypeLists { get; set; }
 
         /// <summary>
         /// Exclude members when return value or parameter types are excluded.
@@ -411,11 +400,16 @@ namespace Microsoft.DotNet.GenAPI
                         writer.AlwaysIncludeBase = AlwaysIncludeBase;
                         writer.LangVersion = GetLangVersion(LangVersion);
                         writer.IncludeForwardedTypes = FollowTypeForwards;
-                        if (!string.IsNullOrWhiteSpace(ConditionalTypeList))
+
+                        if (ConditionalTypeLists != null)
                         {
-                            writer.ConditionalTypeListFilter = new DocIdIncludeListFilter(ConditionalTypeList) { IncludeForwardedTypes = FollowTypeForwards };
-                            writer.ConditionalTypeListSymbol = ConditionalTypeListSymbol;
-                            writer.ConditionalTypeListWrapOtherTypes = ConditionalTypeListWrapOtherTypes;
+                            writer.ConditionalTypeLists = ConditionalTypeLists.Select(c =>
+                                new CSharpWriter.ConditionalTypeList
+                                {
+                                    Symbol = c.GetMetadata("Symbol"),
+                                    Filter = new DocIdIncludeListFilter(c.ItemSpec) { IncludeForwardedTypes = FollowTypeForwards },
+                                    WrapOtherTypes = bool.TryParse(c.GetMetadata("WrapOtherTypes"), out var wrap) ? wrap : false
+                                });
                         }
                         return writer;
                     }

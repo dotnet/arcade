@@ -22,7 +22,7 @@ namespace Microsoft.Cci.Writers
         private readonly bool _apiOnly;
         private readonly ICciFilter _cciFilter;
         private bool _firstMemberGroup;
-        private bool _includeOnlyConditionalTypeListTypes;
+        private ICciFilter _currentTypeListFilter;
 
         public CSharpWriter(ISyntaxWriter writer, ICciFilter filter, bool apiOnly, bool writeAssemblyAttributes = false)
             : base(filter)
@@ -33,6 +33,13 @@ namespace Microsoft.Cci.Writers
             _cciFilter = filter;
             _declarationWriter = new CSDeclarationWriter(_syntaxWriter, filter, !apiOnly);
             _writeAssemblyAttributes = writeAssemblyAttributes;
+        }
+
+        public class ConditionalTypeList
+        {
+            public ICciFilter Filter { get; set; }
+            public string Symbol { get; set; }
+            public bool WrapOtherTypes { get; set; }
         }
 
         public ISyntaxWriter SyntaxWriter { get { return _syntaxWriter; } }
@@ -49,11 +56,7 @@ namespace Microsoft.Cci.Writers
 
         public bool PutBraceOnNewLine { get; set; }
 
-        public ICciFilter ConditionalTypeListFilter { get; set; }
-
-        public string ConditionalTypeListSymbol { get; set; }
-
-        public bool ConditionalTypeListWrapOtherTypes { get; set; }
+        public IEnumerable<ConditionalTypeList> ConditionalTypeLists { get; set; }
 
         public bool IncludeGlobalPrefixForCompilation
         {
@@ -95,32 +98,47 @@ namespace Microsoft.Cci.Writers
             }
 
             var namespaces = assembly.GetAllNamespaces();
-            if (ConditionalTypeListFilter == null)
+            if (ConditionalTypeLists == null)
             {
                 Visit(namespaces);
             }
             else
             {
-                if (ConditionalTypeListWrapOtherTypes)
+                // WrapOtherTypes only makes sense for a single list
+                var wrapOtherTypesList = ConditionalTypeLists.SingleOrDefault(c => c.WrapOtherTypes);
+                if (wrapOtherTypesList != null)
                 {
-                    _syntaxWriter.Write($"#if {ConditionalTypeListSymbol}");
+                    _syntaxWriter.Write($"#if {wrapOtherTypesList.Symbol}");
                     _syntaxWriter.WriteLine();
                 }
 
-                // first pass
+                // first pass, visit types *not* mentioned in ConditionalTypeLists
+                _currentTypeListFilter = null;
                 Visit(namespaces);
 
-                _syntaxWriter.Write(ConditionalTypeListWrapOtherTypes ? $"#endif // {ConditionalTypeListSymbol}" : $"#if {ConditionalTypeListSymbol}");
-                _syntaxWriter.WriteLine();
-
-                // second pass
-                _includeOnlyConditionalTypeListTypes = true;
-                Visit(namespaces.Where(ConditionalTypeListFilter.Include));
-
-                if (!ConditionalTypeListWrapOtherTypes)
+                if (wrapOtherTypesList != null)
                 {
-                    _syntaxWriter.Write($"#endif // {ConditionalTypeListSymbol}");
+                    _syntaxWriter.Write($"#endif // {wrapOtherTypesList.Symbol}");
                     _syntaxWriter.WriteLine();
+                }
+
+                // second pass, visit types mentioned in the type list(s)
+                foreach (var typeList in ConditionalTypeLists)
+                {
+                    _currentTypeListFilter = typeList.Filter;
+                    if (wrapOtherTypesList == null)
+                    {
+                        _syntaxWriter.Write($"#if {typeList.Symbol}");
+                        _syntaxWriter.WriteLine();
+                    }
+
+                    Visit(namespaces.Where(_currentTypeListFilter.Include));
+
+                    if (wrapOtherTypesList == null)
+                    {
+                        _syntaxWriter.Write($"#endif // {typeList.Symbol}");
+                        _syntaxWriter.WriteLine();
+                    }
                 }
             }
         }
@@ -138,11 +156,12 @@ namespace Microsoft.Cci.Writers
                 using (_syntaxWriter.StartBraceBlock(PutBraceOnNewLine))
                 {
                     var types = ns.GetTypes(this.IncludeForwardedTypes);
-                    if (ConditionalTypeListFilter != null)
+                    if (ConditionalTypeLists != null)
                     {
-                        // in the first pass we want all types *except* the ones in ConditionalTypeListFilter
-                        // in the second pass we want *only* the types in ConditionalTypeListFilter
-                        types = types.Where(t => ConditionalTypeListFilter.Include(t) == _includeOnlyConditionalTypeListTypes);
+                        // in the first pass we want all types *except* the ones in ConditionalTypeLists filters
+                        // in the second pass we want *only* the types in ConditionalTypeLists filters
+                        var firstPass = _currentTypeListFilter == null;
+                        types = types.Where(t => ConditionalTypeLists.Any(c => c.Filter.Include(t) == !firstPass));
                     }
 
                     Visit(types);
