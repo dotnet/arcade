@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageReference Include="NuGet.Frameworks" Version="$(NuGetVersion)" />
     <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersion)" />
     <!-- Remove when targeting >= net5.0. -->

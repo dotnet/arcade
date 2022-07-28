@@ -13,6 +13,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" Publish="false" />
     <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" Publish="false" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <!--
       Microsoft.DotNet.Arcade.Sdk uses "NuGetVersioningVersion" for its NuGet library dependency.
       Other libraries in dotnet/arcade that depend on NuGet libraries use "NuGetVersion".

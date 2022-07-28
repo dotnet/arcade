@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\src\Microsoft.DotNet.XUnitExtensions.csproj" />
   </ItemGroup>
 
