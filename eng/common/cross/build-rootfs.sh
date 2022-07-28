@@ -405,7 +405,7 @@ elif [[ -n "$__CodeName" ]]; then
         popd
     fi
 elif [[ "$__Tizen" == "tizen" ]]; then
-    ROOTFS_DIR="$__RootfsDir $__CrossDir/$__BuildArch/tizen-build-rootfs.sh"
+    ROOTFS_DIR="$__RootfsDir" "$__CrossDir/$__BuildArch/tizen-build-rootfs.sh"
 else
     echo "Unsupported target platform."
     usage;
