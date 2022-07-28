@@ -25,7 +25,7 @@ Caveats (updated July 14, 2022):
 Variables: 
 - `targetSignificance`: Target statistical likelihood that the failure change is due to a change in the last week. (The closer to 1 this value is, the more likely the test changed.)
 - `repo`: Repository to filter on. Set to empty string to inclue all repositories. Default is `dotnet/runtime`.
-- `minimumHistoricalData`: Minimum number of historical data points (e.g. how many times the test ran historically) to include to avoid new tests, (`0` includes all tests)
+- `minimumHistoricalData`: Minimum number of historical data points (e.g. how many times the test has run) to include to avoid new tests, (`0` includes all tests)
 ```
 let targetSignificance = 0.95;
 let repo = "dotnet/runtime";
