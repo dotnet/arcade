@@ -111,10 +111,9 @@ while :; do
             __UbuntuRepo="http://raspbian.raspberrypi.org/raspbian/"
             __CodeName=buster
             __LLDB_Package="liblldb-6.0-dev"
-            __Keyring="--keyring /usr/share/keyrings/raspbian-archive-keyring.gpg"
 
-            if [[ ! -e "/usr/share/keyrings/raspbian-archive-keyring.gpg" ]]; then
-                __Keyring=
+            if [[ -e "/usr/share/keyrings/raspbian-archive-keyring.gpg" ]]; then
+                __Keyring="--keyring /usr/share/keyrings/raspbian-archive-keyring.gpg"
             fi
             ;;
         arm64)
