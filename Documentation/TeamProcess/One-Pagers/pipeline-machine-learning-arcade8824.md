@@ -4,7 +4,7 @@ Our customers would love to know how long their CI pipeline takes. Ideally, we w
 
 Instead, we can build a model to give us a range of estimates, based on the past durations of their pipelines.
 
-Thanks to our data, we have tons of historical data that can enable us to make predictions and generate confidence intervals on the length of CI pipelines.
+We have tons of historical data that can enable us to make predictions and generate confidence intervals on the length of CI pipelines.
 
 ## Stakeholders
 
@@ -18,7 +18,7 @@ Thanks to our data, we have tons of historical data that can enable us to make p
 
 By plotting a histogram of pipeline durations for specific pipelines, I've determined that they seem to follow distributions that we can model. For instance, here is the `roslyn-CI` pipeline, with a dweibull distribution fitted.
 
-<img src="./PipelineMachineLearning/roslyn-CI.svg" width="600" height="600">
+<img src="./IncreaseVisibilityHelixQueues/roslyn-CI.svg" width="600" height="600">
 
 With this distribution, we can compute the 95% confidence interval, which for this pipeline, is:
 
@@ -44,7 +44,13 @@ With a target of $95\%$ accurate, the back-testing concluded that we had a true 
 
 We backtested the model by training on all previous data before a point, and then testing on 1 week ahead, on data the model has not seen before. Here is a graph of the accuracy over time.
 
-<img src="./PipelineMachineLearning/back-tested-accuracy-vs-time.svg" width="600" height="600">
+<img src="./IncreaseVisibilityHelixQueues/back-tested-accuracy-vs-time.svg" width="600" height="600">
+
+The dashed red line shows the target, 95% accurate predictions. Our predictions hold accurate, at worst dipping to just below $89\%$, and hovering between $90\%\textup{--}95\%$.
+
+This data is an aggregation of accuracy vs time for all repos with Build Analysis. When evaluating the accuracy, the data point in question was not used to fit the distribution, preventing a look-ahead bias. Accuracy is defined as:
+
+$\frac{\text{points in predicted range}}{\text{total points}}$
 
 ### Implementation
 
@@ -110,13 +116,16 @@ TimelineBuilds
 
 ### Caveats
 
+#### Multimodal Distributions
+
 There are some issues with this model. First, some distributions, like `dotnet/runtime`'s pipeline have a multimodal distribution. This means we cannot accurately predict their pipeline duration. In this case, their distribution is multimodal because their first step, `Evaluate Paths` evaluates the changes in a given PR, and runs or skips different steps of their pipeline.
+
+We will hide the estimated time and instead inform the user that their pipeline cannot be predicted as it is too variable. This will also handle the case where the range of a CI pipeline exceeds the estimated time (*e.g.* `1min ± 5min`)
+
+#### Infrastructure Outages
 
 In addition, there is the issue of AzDo, Helix, or builds being on the floor, and we still give customers an estimate, blissfully unaware of any infrastructure errors. In the Juptyer notebook, I dive into an anomaly detection model, based on Helix work item wait times trying to predict this, but the model only improves accuracy by $0.3\%$.
 
-#### Possible Solutions
-
-For pipelines like runtime's, where the distribution is multimodal, we will hide the estimated time and instead inform the user that their pipeline cannot be predicted as it is too variable. This will also handle the case where the range of a CI pipeline exceeds the estimated time (*e.g.* `1min ± 5min`)
 
 For Helix and/or AzDo being on the floor, we will rely on our Known Issues infrastructure, and simply hide the checks when there are any critical infrastructure issues.
 
