@@ -46,7 +46,7 @@ We backtested the model by training on all previous data before a point, and the
 
 <img src="./IncreaseVisibilityHelixQueues/back-tested-accuracy-vs-time.svg" width="600" height="600">
 
-The dashed red line shows the target, 95% accurate predictions. Our predictions hold accurate, at worst dipping to just below $89\%$, and hovering between $90\%\textup{--}95\%$.
+The dashed red line shows the target, 95% accurate predictions. Our predictions hold accurate, at worst dipping to just below $89\%$, and hovering between $90\%\text{--}95\%$.
 
 This data is an aggregation of accuracy vs time for all repos with Build Analysis. When evaluating the accuracy, the data point in question was not used to fit the distribution, preventing a look-ahead bias. Accuracy is defined as:
 
