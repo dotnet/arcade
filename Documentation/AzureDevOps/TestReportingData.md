@@ -8,7 +8,7 @@ The data that we collect is only a subset of tests that run and not every test t
 
 The test results data we collect come from tests that run through Helix. The results are then captured in the Kusto tables noted below. 
 
-Example ccenarios for captured test result data: 
+Example scenarios for captured test result data: 
 - Tests that run during a pull request build.
 - Tests that run during a rolling CI build. 
 
