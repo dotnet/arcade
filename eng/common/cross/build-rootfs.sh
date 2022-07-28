@@ -113,7 +113,7 @@ while :; do
             __LLDB_Package="liblldb-6.0-dev"
             __Keyring="--keyring /usr/share/keyrings/raspbian-archive-keyring.gpg"
 
-            if [[ ! -e "$__Keyring" ]]; then
+            if [[ ! -e “ /usr/share/keyrings/raspbian-archive-keyring.gpg" ]]; then
                 __Keyring=
             fi
             ;;
