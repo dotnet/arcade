@@ -112,6 +112,10 @@ while :; do
             __CodeName=buster
             __LLDB_Package="liblldb-6.0-dev"
             __Keyring="--keyring /usr/share/keyrings/raspbian-archive-keyring.gpg"
+
+            if [[ ! -e "$__Keyring" ]]; then
+                __Keyring=
+            fi
             ;;
         arm64)
             __BuildArch=arm64
