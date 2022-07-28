@@ -160,7 +160,7 @@ Variables:
 let started = 7d;                    // Timespan value to find test results after. 
 let definition = "aspnetcore-ci";    // Optional: The name of the build definition, leave as empty string for all build definitions.
 let reason = "BatchedCI";            // Optional: The Azure DevOps build reason value (e.g. PullRequest, BatchedCI, et cetera)
-let targetBranch = "main";           // Optional: The name of the target branch the test is ran against.
+let targetBranch = "main";           // Optional: The name of the target branch the test ran against.
 let name = "";                       // Optional: The name of the test
 let jobName = "";                    // Optional: The name of the job
 let message = "AggregateException";  // Optional: Error message to search for
