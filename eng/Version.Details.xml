@@ -55,12 +55,12 @@
       <Uri>https://github.com/dotnet/linker</Uri>
       <Sha>3efd231da430baa0fd670e278f6b5c3e62834bde</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.SourceLink.GitHub" Version="1.2.0-beta-22376-02">
+    <Dependency Name="Microsoft.SourceLink.GitHub" Version="1.2.0-beta-22377-01">
       <Uri>https://github.com/dotnet/sourcelink</Uri>
       <Sha>9c6ff1b069b51bcc762c73504d0a3732c0390ff2</Sha>
       <SourceBuild RepoName="sourcelink" ManagedOnly="true" />
     </Dependency>
-    <Dependency Name="Microsoft.SourceLink.AzureRepos.Git" Version="1.2.0-beta-22376-02">
+    <Dependency Name="Microsoft.SourceLink.AzureRepos.Git" Version="1.2.0-beta-22377-01">
       <Uri>https://github.com/dotnet/sourcelink</Uri>
       <Sha>9c6ff1b069b51bcc762c73504d0a3732c0390ff2</Sha>
     </Dependency>
