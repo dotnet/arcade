@@ -61,7 +61,7 @@ jobs:
                 Write-Error "Expected valid branch and GitHub repo in the form of owner/repo"
               }
               
-              $targetBranch = "internal/$branch"
+              $targetBranch = "$branch-MSRC"
               Write-Host "##vso[task.setvariable variable=AzDORepoNameName]$azDORepo"
               Write-Host "##vso[task.setvariable variable=TargetBranchName]$targetBranch"
               Write-Host "Merging branch '$branch' in GitHub repo '$repo' to $targetBranch in Azure DevOps repo '$azDORepo'."
