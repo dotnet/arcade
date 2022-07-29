@@ -16,13 +16,13 @@ We want to create a REST API that allows users to find the frequency of a specif
 7. Return the results found as a JSON object. 
 
 ### Kusto query
-    Jobs
-    | where Repository == "REPO_NAME"
-    | project JobId, Repository, Properties
-    | join kind=inner WorkItems on JobId
-    | project JobId, FriendlyName, Status, Started, Finished, ConsoleUri, QueueName
-    | where Status == "Fail"
-    | where Started between (datetime(YYYY-MM-DD) .. datetime(YYYY-MM-DD))
+    Jobs 
+    | where Repository == REPO_NAME 
+    | project JobId, IsExternal 
+    | join kind = inner WorkItems on JobId 
+    | project JobId, FriendlyName, Status, Started, Finished, ConsoleUri, QueueName, Attempt, IsExternal 
+    | where Status == 'Fail' 
+    | where Started between(START_DATE .. END_DATE) | where IsExternal == 1";
 
 ## Input
 - Arguments
