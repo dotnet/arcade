@@ -119,6 +119,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         private const string FeedDotNet7Shipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json";
         private const string FeedDotNet7Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7-transport/nuget/v3/index.json";
 
+        private const string FeedDotNet7InternalShipping = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet7-internal/nuget/v3/index.json";
+        private const string FeedDotNet7InternalTransport = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet7-internal-transport/nuget/v3/index.json";
+
         private const string FeedDotNet6InternalShipping = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal/nuget/v3/index.json";
         private const string FeedDotNet6InternalTransport = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal-transport/nuget/v3/index.json";
 
@@ -199,6 +202,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             (TargetFeedContentType.Package, FeedDotNet7Transport, AssetSelection.NonShippingOnly),
             (InstallersAndSymbols, FeedStagingForInstallers),
             (TargetFeedContentType.Checksum, FeedStagingForChecksums),
+        };
+
+        private static TargetFeedSpecification[] DotNet7InternalFeeds =
+        {
+            (TargetFeedContentType.Package, FeedDotNet7InternalShipping, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNet7InternalTransport, AssetSelection.NonShippingOnly),
+            (InstallersAndSymbols, FeedStagingInternalForInstallers),
+            (TargetFeedContentType.Checksum, FeedStagingInternalForChecksums),
         };
 
         private static TargetFeedSpecification[] DotNetEngFeeds =
@@ -282,44 +293,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
-            // ".NET 7 preview 5",
+            // ".NET 7 Internal",
             new TargetChannelConfig(
-                2699,
-                false,
+                3035,
+                true,
                 PublishingInfraVersion.All,
-                new List<string>() { "7.0-preview5" },
-                DotNet7Feeds,
-                PublicAndInternalSymbolTargets,
+                new List<string>() { "internal/7.0" },
+                DotNet7InternalFeeds,
+                InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
-            // ".NET 7 SDK 7.0.1xx Preview 5",
+            // ".NET 7 SDK 7.0.1xx Internal",
             new TargetChannelConfig(
-                2702,
-                false,
+                3038,
+                true,
                 PublishingInfraVersion.All,
-                new List<string>() { "7.0.1xx-preview5", "7.0-preview5" },
-                DotNet7Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 7 Preview 6",
-            new TargetChannelConfig(
-                2700,
-                false,
-                PublishingInfraVersion.All,
-                new List<string>() { "7.0-preview6" },
-                DotNet7Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 7 SDK 7.0.1xx Preview 6",
-            new TargetChannelConfig(
-                2703,
-                false,
-                PublishingInfraVersion.All,
-                new List<string>() { "7.0.1xx-preview6", "7.0-preview6" },
-                DotNet7Feeds,
-                PublicAndInternalSymbolTargets,
+                new List<string>() { "internal/7.0.1xx", "internal/7.0" },
+                DotNet7InternalFeeds,
+                InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
             // ".NET 7 Preview 7",
@@ -342,44 +333,44 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
-            // ".NET 7 RC 1",
+            // ".NET 7 RC 1 Internal",
             new TargetChannelConfig(
-                2844,
-                false,
+                3033,
+                true,
                 PublishingInfraVersion.All,
-                new List<string>() { "7.0-rc1" },
-                DotNet7Feeds,
-                PublicAndInternalSymbolTargets,
+                new List<string>() { "internal/7.0-rc1" },
+                DotNet7InternalFeeds,
+                InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
-            // ".NET 7 SDK 7.0.1xx RC 1",
+            // ".NET 7 SDK 7.0.1xx RC 1 Internal",
             new TargetChannelConfig(
-                2841,
-                false,
+                3036,
+                true,
                 PublishingInfraVersion.All,
-                new List<string>() { "7.0.1xx-rc1", "7.0-rc1" },
-                DotNet7Feeds,
-                PublicAndInternalSymbolTargets,
+                new List<string>() { "internal/7.0.1xx-rc1", "internal/7.0-rc1" },
+                DotNet7InternalFeeds,
+                InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
-            // ".NET 7 RC 2",
+            // ".NET 7 RC 2 Internal",
             new TargetChannelConfig(
-                2845,
-                false,
+                3034,
+                true,
                 PublishingInfraVersion.All,
-                new List<string>() { "7.0-rc2" },
-                DotNet7Feeds,
-                PublicAndInternalSymbolTargets,
+                new List<string>() { "internal/7.0-rc2" },
+                DotNet7InternalFeeds,
+                InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
-            // ".NET 7 SDK 7.0.1xx RC 2",
+            // ".NET 7 SDK 7.0.1xx RC 2 Internal",
             new TargetChannelConfig(
-                2842,
-                false,
+                3037,
+                true,
                 PublishingInfraVersion.All,
-                new List<string>() { "7.0.1xx-rc2", "7.0-rc2" },
-                DotNet7Feeds,
-                PublicAndInternalSymbolTargets,
+                new List<string>() { "internal/7.0.1xx-rc2", "internal/7.0-rc2" },
+                DotNet7InternalFeeds,
+                InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
             // ".NET 6",
