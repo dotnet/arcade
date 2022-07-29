@@ -77,7 +77,7 @@ __FreeBSDPackages+=" terminfo-db"
 __IllumosPackages="icu-64.2nb2"
 __IllumosPackages+=" mit-krb5-1.16.2nb4"
 __IllumosPackages+=" openssl-1.1.1e"
-__IllumosPackages+=" zlib-1.2.11"
+__IllumosPackages+=" zlib-1.2.12"
 
 # ML.NET dependencies
 __UbuntuPackages+=" libomp5"
