@@ -157,9 +157,14 @@ namespace Microsoft.DotNet.GenAPI
 
         /// <summary>
         /// [CSDecl] Specify one or more namespace+type list(s) in the DocId format of types that should be wrapped inside an #if with the symbol specified in the <c>Symbol</c> metadata item.
-        /// If the <c>WrapOtherTypes</c> metadata item is set to true, wraps the types _not_ mentioned in the list with the <c>Symbol</c>, otherwise every type in the list will be wrapped.
+        /// If the <c>Symbol</c> metadata item is empty the types won't be wrapped but will still be output after all other types, this can be used in combination with <see cref="DefaultCondition" /> to wrap all other types.
         /// </summary>
         public ITaskItem[] ConditionalTypeLists { get; set; }
+
+        /// <summary>
+        /// [CSDecl] #if condition to apply to all types not included in <see cref="ConditionalTypeLists" />.
+        /// </summary>
+        public string DefaultCondition { get; set; }
 
         /// <summary>
         /// Exclude members when return value or parameter types are excluded.
@@ -400,15 +405,14 @@ namespace Microsoft.DotNet.GenAPI
                         writer.AlwaysIncludeBase = AlwaysIncludeBase;
                         writer.LangVersion = GetLangVersion(LangVersion);
                         writer.IncludeForwardedTypes = FollowTypeForwards;
-
+                        writer.DefaultCondition = DefaultCondition;
                         if (ConditionalTypeLists != null)
                         {
                             writer.ConditionalTypeLists = ConditionalTypeLists.Select(c =>
                                 new CSharpWriter.ConditionalTypeList
                                 {
                                     Symbol = c.GetMetadata("Symbol"),
-                                    Filter = new DocIdIncludeListFilter(c.ItemSpec) { IncludeForwardedTypes = FollowTypeForwards },
-                                    WrapOtherTypes = bool.TryParse(c.GetMetadata("WrapOtherTypes"), out var wrap) ? wrap : false
+                                    Filter = new DocIdIncludeListFilter(c.ItemSpec) { IncludeForwardedTypes = FollowTypeForwards }
                                 });
                         }
                         return writer;

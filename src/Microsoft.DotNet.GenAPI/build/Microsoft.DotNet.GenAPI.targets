@@ -50,6 +50,7 @@
       LibPath="$(GenAPILibPath)"
       ApiList="$(GenAPIApiList)"
       ConditionalTypeLists="@(GenAPIConditionalTypeLists)"
+      DefaultCondition="$(GenAPIDefaultCondition)"
       OutputPath="$(GenAPITargetPath)"
       HeaderFile="$(GenAPIHeaderFile)"
       WriterType="$(GenAPIWriterType)"

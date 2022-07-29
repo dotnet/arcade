@@ -39,7 +39,6 @@ namespace Microsoft.Cci.Writers
         {
             public ICciFilter Filter { get; set; }
             public string Symbol { get; set; }
-            public bool WrapOtherTypes { get; set; }
         }
 
         public ISyntaxWriter SyntaxWriter { get { return _syntaxWriter; } }
@@ -57,6 +56,8 @@ namespace Microsoft.Cci.Writers
         public bool PutBraceOnNewLine { get; set; }
 
         public IEnumerable<ConditionalTypeList> ConditionalTypeLists { get; set; }
+
+        public string DefaultCondition { get; set; }
 
         public bool IncludeGlobalPrefixForCompilation
         {
@@ -98,48 +99,21 @@ namespace Microsoft.Cci.Writers
             }
 
             var namespaces = assembly.GetAllNamespaces();
-            if (ConditionalTypeLists == null)
+            _currentTypeListFilter = null;
+
+            // first pass, visit types *not* mentioned in ConditionalTypeLists
+            WriteConditionStart(DefaultCondition);
+            Visit(namespaces);
+            WriteConditionEnd(DefaultCondition);
+
+            // second pass, visit types mentioned in ConditionalTypeLists
+            foreach (var typeList in ConditionalTypeLists ?? Enumerable.Empty<ConditionalTypeList>())
             {
-                Visit(namespaces);
-            }
-            else
-            {
-                // WrapOtherTypes only makes sense for a single list
-                var wrapOtherTypesList = ConditionalTypeLists.SingleOrDefault(c => c.WrapOtherTypes);
-                if (wrapOtherTypesList != null)
-                {
-                    _syntaxWriter.Write($"#if {wrapOtherTypesList.Symbol}");
-                    _syntaxWriter.WriteLine();
-                }
+                _currentTypeListFilter = typeList.Filter;
 
-                // first pass, visit types *not* mentioned in ConditionalTypeLists
-                _currentTypeListFilter = null;
-                Visit(namespaces);
-
-                if (wrapOtherTypesList != null)
-                {
-                    _syntaxWriter.Write($"#endif // {wrapOtherTypesList.Symbol}");
-                    _syntaxWriter.WriteLine();
-                }
-
-                // second pass, visit types mentioned in the type list(s)
-                foreach (var typeList in ConditionalTypeLists)
-                {
-                    _currentTypeListFilter = typeList.Filter;
-                    if (wrapOtherTypesList == null)
-                    {
-                        _syntaxWriter.Write($"#if {typeList.Symbol}");
-                        _syntaxWriter.WriteLine();
-                    }
-
-                    Visit(namespaces.Where(_currentTypeListFilter.Include));
-
-                    if (wrapOtherTypesList == null)
-                    {
-                        _syntaxWriter.Write($"#endif // {typeList.Symbol}");
-                        _syntaxWriter.WriteLine();
-                    }
-                }
+                WriteConditionStart(typeList.Symbol);
+                Visit(namespaces.Where(_currentTypeListFilter.Include));
+                WriteConditionEnd(typeList.Symbol);
             }
         }
 
@@ -355,6 +329,24 @@ namespace Microsoft.Cci.Writers
                         _syntaxWriter.WriteLine();
                     }
                 }
+            }
+        }
+
+        private void WriteConditionStart(string condition)
+        {
+            if (!string.IsNullOrEmpty(condition))
+            {
+                _syntaxWriter.Write($"#if {condition}");
+                _syntaxWriter.WriteLine();
+            }
+        }
+
+        private void WriteConditionEnd(string condition)
+        {
+            if (!string.IsNullOrEmpty(condition))
+            {
+                _syntaxWriter.Write($"#endif // {condition}");
+                _syntaxWriter.WriteLine();
             }
         }
 
