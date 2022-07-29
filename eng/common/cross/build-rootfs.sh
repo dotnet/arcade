@@ -348,7 +348,7 @@ if [[ "$__CodeName" == "alpine" ]]; then
     rm -r "$__ApkToolsDir"
 elif [[ "$__CodeName" == "freebsd" ]]; then
     mkdir -p "$__RootfsDir"/usr/local/etc
-    JOBS="$(getconf _NPROCESSORS_ONLN)"
+    JOBS=${MAXJOBS:="$(getconf _NPROCESSORS_ONLN)"}
     wget -O - "https://download.freebsd.org/ftp/releases/${__FreeBSDArch}/${__FreeBSDMachineArch}/${__FreeBSDBase}/base.txz" | tar -C "$__RootfsDir" -Jxf - ./lib ./usr/lib ./usr/libdata ./usr/include ./usr/share/keys ./etc ./bin/freebsd-version
     echo "ABI = \"FreeBSD:${__FreeBSDABI}:${__FreeBSDMachineArch}\"; FINGERPRINTS = \"${__RootfsDir}/usr/share/keys\"; REPOS_DIR = [\"${__RootfsDir}/etc/pkg\"]; REPO_AUTOUPDATE = NO; RUN_SCRIPTS = NO;" > "${__RootfsDir}"/usr/local/etc/pkg.conf
     echo "FreeBSD: { url: \"pkg+http://pkg.FreeBSD.org/\${ABI}/quarterly\", mirror_type: \"srv\", signature_type: \"fingerprints\", fingerprints: \"${__RootfsDir}/usr/share/keys/pkg\", enabled: yes }" > "${__RootfsDir}"/etc/pkg/FreeBSD.conf
@@ -366,7 +366,7 @@ elif [[ "$__CodeName" == "freebsd" ]]; then
 elif [[ "$__CodeName" == "illumos" ]]; then
     mkdir "$__RootfsDir/tmp"
     pushd "$__RootfsDir/tmp"
-    JOBS="$(getconf _NPROCESSORS_ONLN)"
+    JOBS=${MAXJOBS:="$(getconf _NPROCESSORS_ONLN)"}
     echo "Downloading sysroot."
     wget -O - https://github.com/illumos/sysroot/releases/download/20181213-de6af22ae73b-v1/illumos-sysroot-i386-20181213-de6af22ae73b-v1.tar.gz | tar -C "$__RootfsDir" -xzf -
     echo "Building binutils. Please wait.."
