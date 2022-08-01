@@ -28,10 +28,12 @@ namespace Microsoft.Cci.Filters
             _excludeMembers = excludeMembers;
         }
 
+        public bool IncludeForwardedTypes { get; set; }
+
         public bool Include(INamespaceDefinition ns)
         {
             // Only include non-empty namespaces
-            if (!ns.GetTypes().Any(Include))
+            if (!ns.GetTypes(IncludeForwardedTypes).Any(Include))
                 return false;
 
             string namespaceId = ns.DocId();
