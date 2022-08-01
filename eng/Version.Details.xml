@@ -43,9 +43,9 @@
       <Uri>https://github.com/dotnet/arcade-services</Uri>
       <Sha>a5f3ed9d5f560555ff6d26b286acdcfbb7ce3b14</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="1.0.0-prerelease.22372.1">
+    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="1.0.0-prerelease.22375.5">
       <Uri>https://github.com/dotnet/xharness</Uri>
-      <Sha>956a8c4e78eaf7039c950c1cde5d5c390047b610</Sha>
+      <Sha>d43453b9981bfd8705025250caff58d18e2abc7e</Sha>
     </Dependency>
     <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="4.3.0-3.22371.17">
       <Uri>https://github.com/dotnet/roslyn</Uri>
@@ -55,14 +55,14 @@
       <Uri>https://github.com/dotnet/linker</Uri>
       <Sha>3efd231da430baa0fd670e278f6b5c3e62834bde</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.SourceLink.GitHub" Version="1.2.0-beta-22380-02">
+    <Dependency Name="Microsoft.SourceLink.GitHub" Version="1.2.0-beta-22381-02">
       <Uri>https://github.com/dotnet/sourcelink</Uri>
-      <Sha>5fe4332e8014b3ac349e549d7c95fe84b2d81d52</Sha>
+      <Sha>4829a281abead121354181fc35207225452f6329</Sha>
       <SourceBuild RepoName="sourcelink" ManagedOnly="true" />
     </Dependency>
-    <Dependency Name="Microsoft.SourceLink.AzureRepos.Git" Version="1.2.0-beta-22380-02">
+    <Dependency Name="Microsoft.SourceLink.AzureRepos.Git" Version="1.2.0-beta-22381-02">
       <Uri>https://github.com/dotnet/sourcelink</Uri>
-      <Sha>5fe4332e8014b3ac349e549d7c95fe84b2d81d52</Sha>
+      <Sha>4829a281abead121354181fc35207225452f6329</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DiaSymReader.Pdb2Pdb" Version="1.1.0-beta2-19575-01">
       <Uri>https://github.com/dotnet/symreader-converter</Uri>
