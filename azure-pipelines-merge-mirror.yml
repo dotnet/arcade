@@ -14,38 +14,70 @@ jobs:
     - job: Merge_GitHub_to_Azure_DevOps
       enableSBOM: false
       pool:
-        name: NetCore1ESPool-Internal
-        demands: ImageOverride -equals Build.Server.Amd64.VS2019
+        ${{ if eq(variables['System.TeamProject'], 'DevDiv') }}:
+          name: VSEngSS-MicroBuild2022-1ES
+          demands: Cmd
+        # If it's not devdiv, it's dnceng
+        ${{ if ne(variables['System.TeamProject'], 'DevDiv') }}:
+          name: NetCore1ESPool-Internal
+          demands: ImageOverride -equals windows.vs2019.amd64
       variables:
       - name: WorkingDirectoryName
         value: repo-dir
       steps:
-      - task: PowerShell@1
-        displayName: Calculate Merge Branch Names
-        inputs:
-          scriptType: inlineScript
-          arguments: '$(GithubRepo) $(BranchToMirror)'
-          inlineScript: |
-            param([string]$repo, [string]$branch)
-          
-            $azDORepo = $repo.Replace("/", "-");
-            # Check that the parameters look correct
-            if ($azDORepo -eq "" -or $branch -eq "")
-            {
-              Write-Error "Expected valid branch and GitHub repo in the form of owner/repo"
-            }
+      - ${{ if ne(variables['System.TeamProject'], 'DevDiv') }}:
+        - task: PowerShell@1
+          displayName: Calculate Merge Branch Names (DncEng)
+          inputs:
+            scriptType: inlineScript
+            arguments: '$(GithubRepo) $(BranchToMirror)'
+            inlineScript: |
+              param([string]$repo, [string]$branch)
             
-            $targetBranch = "internal/$branch"
-            Write-Host "##vso[task.setvariable variable=AzDORepoNameName]$azDORepo"
-            Write-Host "##vso[task.setvariable variable=TargetBranchName]$targetBranch"
-            Write-Host "Merging branch '$branch' in GitHub repo '$repo' to $targetBranch in Azure DevOps repo '$azDORepo'."
+              $azDORepo = $repo.Replace("/", "-");
+              # Check that the parameters look correct
+              if ($azDORepo -eq "" -or $branch -eq "")
+              {
+                Write-Error "Expected valid branch and GitHub repo in the form of owner/repo"
+              }
+              
+              $targetBranch = "internal/$branch"
+              Write-Host "##vso[task.setvariable variable=AzDORepoNameName]$azDORepo"
+              Write-Host "##vso[task.setvariable variable=TargetBranchName]$targetBranch"
+              Write-Host "Merging branch '$branch' in GitHub repo '$repo' to $targetBranch in Azure DevOps repo '$azDORepo'."
+      - ${{ if eq(variables['System.TeamProject'], 'DevDiv') }}:
+        - task: PowerShell@1
+          displayName: Calculate Merge Branch Names (DevDiv)
+          inputs:
+            scriptType: inlineScript
+            arguments: '$(GithubRepo) $(BranchToMirror)'
+            inlineScript: |
+              param([string]$repo, [string]$branch)
+            
+              $azDORepo = $repo.Replace("/", "-") + "-Trusted";
+              # Check that the parameters look correct
+              if ($azDORepo -eq "" -or $branch -eq "")
+              {
+                Write-Error "Expected valid branch and GitHub repo in the form of owner/repo"
+              }
+              
+              $targetBranch = "$branch-MSRC"
+              Write-Host "##vso[task.setvariable variable=AzDORepoNameName]$azDORepo"
+              Write-Host "##vso[task.setvariable variable=TargetBranchName]$targetBranch"
+              Write-Host "Merging branch '$branch' in GitHub repo '$repo' to $targetBranch in Azure DevOps repo '$azDORepo'."
       - script: |
           git clone https://dotnet-maestro-bot:$(BotAccount-dotnet-maestro-bot-PAT)@github.com/$(GithubRepo) $(WorkingDirectoryName) -b $(BranchToMirror)
         displayName: Clone GitHub repo
-      - script: |
-          git remote add azdo-mirror https://dn-bot:$(dn-bot-dnceng-build-rw-code-rw)@dev.azure.com/dnceng/internal/_git/$(AzDORepoNameName)
-        displayName: Add Azure DevOps remote
-        workingDirectory: $(WorkingDirectoryName)
+      - ${{ if ne(variables['System.TeamProject'], 'DevDiv') }}:
+        - script: |
+            git remote add azdo-mirror https://dn-bot:$(dn-bot-dnceng-build-rw-code-rw)@dev.azure.com/dnceng/internal/_git/$(AzDORepoNameName)
+          displayName: Add Azure DevOps remote (DncEng)
+          workingDirectory: $(WorkingDirectoryName)
+      - ${{ if eq(variables['System.TeamProject'], 'DevDiv') }}:
+        - script: |
+            git remote add azdo-mirror https://dn-bot:$(dn-bot-devdiv-build-rw-code-rw)@dev.azure.com/devdiv/devdiv/_git/$(AzDORepoNameName)
+          displayName: Add Azure DevOps remote (DevDiv)
+          workingDirectory: $(WorkingDirectoryName)
       - script: |
           git fetch azdo-mirror
         displayName: Fetch AzDO repo

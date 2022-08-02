@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         {
             RuntimeGraph runtimeGraph = null;
 
-            if (!String.IsNullOrEmpty(runtimeFile))
+            if (!string.IsNullOrEmpty(runtimeFile))
             {
                 runtimeGraph = JsonRuntimeFormat.ReadRuntimeGraph(runtimeFile);
             }
@@ -270,6 +270,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             return resolvedAssets;
         }
 
+        [Obsolete]
         public IReadOnlyDictionary<string, IEnumerable<ContentItemGroup>> GetAllRuntimeItems()
         {
             Dictionary<string, IEnumerable<ContentItemGroup>> resolvedAssets = new Dictionary<string, IEnumerable<ContentItemGroup>>();

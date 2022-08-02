@@ -53,7 +53,7 @@ stages:
             vmImage: windows-latest
           ${{ if eq(variables._RunAsInternal, True) }}:
             name: NetCore1ESPool-Internal
-            demands: ImageOverride -equals Build.Server.Amd64.VS2019
+            demands: ImageOverride -equals windows.vs2019.amd64
         strategy:
           matrix:
             Build_Release:
@@ -341,6 +341,7 @@ stages:
       # This is to enable SDL runs part of Post-Build Validation Stage
       SDLValidationParameters:
         enable: true
+        publishGdn: true
         continueOnError: false
         params: ' -SourceToolsList @("policheck","credscan")
         -TsaInstanceURL $(_TsaInstanceURL)

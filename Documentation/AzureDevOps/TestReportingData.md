@@ -1,5 +1,19 @@
 # Working with Test Reporting Data
 
+## What is the data? 
+
+The data that we collect is only a subset of tests that run and not every test that runs. **We've chosen to collect results of tests that have failed in the last 90 days**. We assume that tests that are always passing or have continued to pass after 90 days are no longer interesting to look at, and thus, their results are no longer collected. 
+
+## How do we collect the data? 
+
+The test results data we collect come from tests that run through Helix. The results are then captured in the Kusto tables noted below. 
+
+Example scenarios for captured test result data: 
+- Tests that run during a pull request build.
+- Tests that run during a rolling CI build. 
+
+As long as our PAT has access to the Azure DevOps project the test runs in, we can collect results from tests that run in that Azure DevOps project. 
+
 ## Where is the data? 
 
 Kusto's `Engsrvprod/engineeringdata` cluster contains the following tables: 
@@ -8,10 +22,6 @@ Kusto's `Engsrvprod/engineeringdata` cluster contains the following tables:
 - AzureDevOpsTestsHourly
 - AzureDevOpsTestsSummary
 - AzureDevOpsTestAnalysis
-
-## What is the data? 
-
-The data that we collect is only a subset of tests that run and not every test that runs. **We've chosen to collect results of tests that have failed in the last 90 days**. We assume that tests that are always passing or have continued to pass after 90 days are no longer interesting to look at, and thus, their results are no longer collected. 
 
 ### AzureDevOpsTests
 
@@ -31,7 +41,7 @@ Notable fields in this table include:
 
 Due to the amount of data that we need to process, we start with hourly aggregations of test results. The data collected on this table is for all failed tests in the last 90 days that we are tracking, so it may occur that we have a row for a test that has not ran in the last hour, but has failed in the last 90 days. 
 
-Because this table is an aggregate, you'll notice that some of the fields, such as `QueueName` are not available going forward. 
+Because this table is an aggregate, you'll notice that some of the fields, such as `QueueName` and `BuildReason` are not available, as they are aggregated. (This means the aggregates will contain all pass/fail results of the test regardless of which configuration it ran against or if it occurred during a CI build or Pull Request)
 
 Notable fields in this table include:
 
@@ -68,7 +78,3 @@ Notable fields in this table include:
 **Significance**: The closer this value is to 1, the more likely something changed recently to cause this test to start failing. This value also indicates the difference between "Current" and "Historical"
 
 **SplitDate**: The date of the first day of the week of data aggregated. This date also represents the difference between the "Current" and "Historical" columns. 
-
-## How do we collect the data? 
-
-Only tests that are ran through Helix have their results captured to be added to the test reporting tables. This means that tests that run in pipelines not utilized by pull requests (e.g. CI pipelines) will have their data collected as well. And as long as our PAT has access to the Azure DevOps project the test runs in, we can collect results from tests that run there. 

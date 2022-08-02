@@ -25,7 +25,7 @@ stages:
         timeoutInMinutes: 90
         pool:
           name: NetCore1ESPool-Internal
-          demands: ImageOverride -equals Build.Server.Amd64.VS2019
+          demands: ImageOverride -equals windows.vs2019.amd64
 
         steps:
         - checkout: self
@@ -36,6 +36,7 @@ stages:
             executeAllSdlToolsScript: 'eng/common/sdl/execute-all-sdl-tools.ps1'
             buildCommands: 'eng\common\cibuild.cmd -configuration Release -prepareMachine /p:Test=false /p:Sign=false'
             language: csharp
+            publishGuardianDirectoryToPipeline: true
             additionalParameters: '-SourceToolsList @("semmle")
             -TsaInstanceURL $(_TsaInstanceURL)
             -TsaProjectName $(_TsaProjectName)
