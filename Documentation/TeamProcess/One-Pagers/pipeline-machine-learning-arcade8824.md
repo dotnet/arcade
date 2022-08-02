@@ -40,13 +40,13 @@ dtype: object
 
 ### Model Accuracy
 
-With a target of $95\%$ accurate, the back-testing concluded that we had a true accuracy of $93.3\%$. 
+With a target of 95% accurate, the back-testing concluded that we had a true accuracy of 93.3%. 
 
 We backtested the model by training on all previous data before a point, and then testing on 1 week ahead, on data the model has not seen before. Here is a graph of the accuracy over time.
 
 <img src="./IncreaseVisibilityHelixQueues/back-tested-accuracy-vs-time.svg" width="600" height="600">
 
-The dashed red line shows the target, 95% accurate predictions. Our predictions hold accurate, at worst dipping to just below $89\%$, and hovering between $90\%$ and $95\%$.
+The dashed red line shows the target, 95% accurate predictions. Our predictions hold accurate, at worst dipping to just below 89%, and hovering between 90% and 95%.
 
 This data is an aggregation of accuracy vs time for all repos with Build Analysis. When evaluating the accuracy, the data point in question was not used to fit the distribution, preventing a look-ahead bias. Accuracy is defined as:
 
@@ -124,7 +124,7 @@ We will hide the estimated time and instead inform the user that their pipeline 
 
 #### Infrastructure Outages
 
-In addition, there is the issue of AzDo, Helix, or builds being on the floor, and we still give customers an estimate, blissfully unaware of any infrastructure errors. In the Juptyer notebook, I dive into an anomaly detection model, based on Helix work item wait times trying to predict this, but the model only improves accuracy by $0.3\%$.
+In addition, there is the issue of AzDo, Helix, or builds being on the floor, and we still give customers an estimate, blissfully unaware of any infrastructure errors. In the Juptyer notebook, I dive into an anomaly detection model, based on Helix work item wait times trying to predict this, but the model only improves accuracy by 0.3%.
 
 
 For Helix and/or AzDo being on the floor, we will rely on our Known Issues infrastructure, and simply hide the checks when there are any critical infrastructure issues.
