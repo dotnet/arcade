@@ -23,6 +23,7 @@
     <!--Since Microsoft.DotNet.ApiCompat is packaged as a BuildTask tool, all it's dependencies are marked as private
     so they don't flow to the tests output directory and we need them there in order to be able to run-->
     <ProjectReference Include="..\..\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
     <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="4.0.0" />
     <PackageReference Include="System.Diagnostics.TraceSource" Version="4.0.0" />
