@@ -375,7 +375,7 @@ elif [[ "$__CodeName" == "illumos" ]]; then
     read -ra array <<<"$__IllumosPackages"
     for package in "${array[@]}"; do
         echo "Installing '$package'"
-        package="$(grep ">$package" All | head -1 | sed -En 's/.*href="(.*)\.tgz".*/\1/p')"
+        package="$(grep ">$package-[0-9]" All | sed -En 's/.*href="(.*)\.tgz".*/\1/p')"
         echo "Resolved name '$package'"
         wget "$BaseUrl"/"$package".tgz
         ar -x "$package".tgz
