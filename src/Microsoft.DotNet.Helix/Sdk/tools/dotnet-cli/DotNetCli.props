@@ -35,14 +35,14 @@
         <DotNetCliRuntime>win-x64</DotNetCliRuntime>
       </PropertyGroup>
     </When>
-    <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('osx'))">
-      <PropertyGroup>
-        <DotNetCliRuntime>osx-x64</DotNetCliRuntime>
-      </PropertyGroup>
-    </When>
     <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('osx')) AND $(HelixTargetQueue.ToLowerInvariant().Contains('arm64'))">
       <PropertyGroup>
         <DotNetCliRuntime>osx-arm64</DotNetCliRuntime>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('osx'))">
+      <PropertyGroup>
+        <DotNetCliRuntime>osx-x64</DotNetCliRuntime>
       </PropertyGroup>
     </When>
     <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('alpine')) AND $(HelixTargetQueue.ToLowerInvariant().Contains('arm64'))">
