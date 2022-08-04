@@ -466,13 +466,25 @@ namespace Microsoft.DotNet.SignTool
                     bool isMicrosoftCertificate = !IsThirdPartyCertificate(signInfo.Certificate);
                     if (isMicrosoftLibrary != isMicrosoftCertificate)
                     {
+                        string warning;
                         if (isMicrosoftLibrary)
                         {
-                            LogWarning(SigningToolErrorCode.SIGN001, $"Signing Microsoft library '{file.FullPath}' with 3rd party certificate '{signInfo.Certificate}'. The library is considered Microsoft library due to its copyright: '{peInfo.Copyright}'.");
+                            warning = $"Signing Microsoft library '{file.FullPath}' with 3rd party certificate '{signInfo.Certificate}'. The library is considered Microsoft library due to its copyright: '{peInfo.Copyright}'.";
                         }
                         else
                         {
-                            LogWarning(SigningToolErrorCode.SIGN001, $"Signing 3rd party library '{file.FullPath}' with Microsoft certificate '{signInfo.Certificate}'. The library is considered 3rd party library due to its copyright: '{peInfo.Copyright}'.");
+                            warning = $"Signing 3rd party library '{file.FullPath}' with Microsoft certificate '{signInfo.Certificate}'. The library is considered 3rd party library due to its copyright: '{peInfo.Copyright}'.";
+                        }
+
+                        // https://github.com/dotnet/arcade/issues/10293
+                        // Turn the else into a warning (and hoist into the if above) after issue is complete.
+                        if (peInfo.IsManaged)
+                        {
+                            LogWarning(SigningToolErrorCode.SIGN001, warning);
+                        }
+                        else
+                        {
+                            _log.LogMessage(MessageImportance.High, $"SIGN001: {warning}");
                         }
                     }
                 }
