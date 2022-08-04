@@ -414,8 +414,9 @@ elif [[ "$__CodeName" == "haiku" ]]; then
     echo "Building Haiku sysroot for x86_64"
     mkdir -p "$__RootfsDir/tmp"
     cd "$__RootfsDir/tmp"
-    git clone --depth=1 https://review.haiku-os.org/haiku
-    git clone --depth=1 https://github.com/haiku/buildtools
+    git clone -b hrev56235  https://review.haiku-os.org/haiku
+    git clone -b btrev43195 https://review.haiku-os.org/buildtools
+    cd "$__RootfsDir/tmp/buildtools" && git checkout 7487388f5110021d400b9f3b88e1a7f310dc066d
 
     # Fetch some unmerged patches
     cd "$__RootfsDir/tmp/haiku"
