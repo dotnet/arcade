@@ -447,7 +447,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             Reenable after https://github.com/dotnet/arcade/issues/10293,
             expectedWarnings: new[]
             {
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
             }*/);
         }
 
@@ -557,11 +557,11 @@ $@"
             expectedWarnings: new[]
             {
                 // Reenable after https://github.com/dotnet/arcade/issues/10293
-                // $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "3", "lib/net461/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "5", "lib/netcoreapp2.0/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "6", "lib/netcoreapp2.1/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "7", "lib/netstandard2.0/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''."
+                // $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "3", "lib/net461/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "5", "lib/netcoreapp2.0/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "6", "lib/netcoreapp2.1/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "7", "lib/netstandard2.0/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''."
             });
         }
 
@@ -603,8 +603,8 @@ $@"
             expectedWarnings: new[]
             {
                 // Reenable after https://github.com/dotnet/arcade/issues/10293
-                // $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}' with Microsoft certificate 'OverriddenCertificate1'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "4", "lib/netcoreapp2.0/ContainerOne.dll")}' with Microsoft certificate 'ArcadeCertTest'. The library is considered 3rd party library due to its copyright: ''."
+                // $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}' with Microsoft certificate 'OverriddenCertificate1'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "4", "lib/netcoreapp2.0/ContainerOne.dll")}' with Microsoft certificate 'ArcadeCertTest'. The library is considered 3rd party library due to its copyright: ''."
             });
         }
 
@@ -752,7 +752,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "CoreLibCr
             },
             expectedWarnings: new[]
             {
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "EmptyPKT.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "EmptyPKT.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
             });
         }
 
@@ -793,7 +793,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "CoreLibCr
             expectedWarnings: new[]
             {
                 
-                // $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "4", "MsiBootstrapper.exe")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: 'Copyright (c). All rights reserved.'."
+                // $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "4", "MsiBootstrapper.exe")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: 'Copyright (c). All rights reserved.'."
             }*/);
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
@@ -851,7 +851,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "PackageWi
             Reenable after https://github.com/dotnet/arcade/issues/10293,
             expectedWarnings: new[]
             {
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
             }*/);
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
@@ -936,7 +936,7 @@ $@"
             Reenable after https://github.com/dotnet/arcade/issues/10293,
             expectedWarnings: new[]
             {
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
             }*/);
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
@@ -1011,8 +1011,8 @@ $@"
             Reenable after https://github.com/dotnet/arcade/issues/10293,
             expectedWarnings: new[]
             {
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
             }*/);
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
@@ -1063,8 +1063,8 @@ $@"
             Reenable after https://github.com/dotnet/arcade/issues/10293,
             expectedWarnings: new[]
             {
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
             }*/);
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
@@ -1116,8 +1116,8 @@ $@"
             Reenable after https://github.com/dotnet/arcade/issues/10293,
             expectedWarnings: new[]
             {
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
             }*/);
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
@@ -1235,7 +1235,7 @@ $@"
             Reenable after https://github.com/dotnet/arcade/issues/10293,
             expectedWarnings: new[]
             {
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "MsiBootstrapper.exe")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: 'Copyright (c). All rights reserved.'."
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "MsiBootstrapper.exe")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: 'Copyright (c). All rights reserved.'."
             }*/);
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
@@ -1793,8 +1793,8 @@ $@"
             },
             expectedWarnings: new[]
             {
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "Simple1.exe")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "1", "Simple2.exe")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "Simple1.exe")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "1", "Simple2.exe")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
             });
         }
         /// <summary>
@@ -1968,7 +1968,7 @@ $@"
             Reenable after https://github.com/dotnet/arcade/issues/10293,
             expectedWarnings: new[]
             {
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
             }*/);
         }
 
@@ -2002,8 +2002,8 @@ $@"
             Reenable after https://github.com/dotnet/arcade/issues/10293,
             expectedWarnings: new[]
             {
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "4", "MidNativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "4", "MidNativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
             }*/);
         }
 
@@ -2108,11 +2108,11 @@ $@"
             },
             expectedWarnings: new[]
             {
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "EmptyPKT.dll")}' with Microsoft certificate 'DLLCertificate'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "9", "lib/net461/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate3'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "10", "lib/netstandard2.0/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate4'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "16", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate5'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "23", "Simple.dll")}' with Microsoft certificate 'DLLCertificate2'. The library is considered 3rd party library due to its copyright: ''."
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "EmptyPKT.dll")}' with Microsoft certificate 'DLLCertificate'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "9", "lib/net461/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate3'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "10", "lib/netstandard2.0/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate4'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "16", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate5'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "23", "Simple.dll")}' with Microsoft certificate 'DLLCertificate2'. The library is considered 3rd party library due to its copyright: ''."
             });
         }
 

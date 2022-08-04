@@ -467,12 +467,15 @@ namespace Microsoft.DotNet.SignTool
                     if (isMicrosoftLibrary != isMicrosoftCertificate)
                     {
                         string warning;
+                        SigningToolErrorCode code;
                         if (isMicrosoftLibrary)
                         {
+                            code = SigningToolErrorCode.SIGN001;
                             warning = $"Signing Microsoft library '{file.FullPath}' with 3rd party certificate '{signInfo.Certificate}'. The library is considered Microsoft library due to its copyright: '{peInfo.Copyright}'.";
                         }
                         else
                         {
+                            code = SigningToolErrorCode.SIGN004;
                             warning = $"Signing 3rd party library '{file.FullPath}' with Microsoft certificate '{signInfo.Certificate}'. The library is considered 3rd party library due to its copyright: '{peInfo.Copyright}'.";
                         }
 
@@ -480,11 +483,11 @@ namespace Microsoft.DotNet.SignTool
                         // Turn the else into a warning (and hoist into the if above) after issue is complete.
                         if (peInfo.IsManaged)
                         {
-                            LogWarning(SigningToolErrorCode.SIGN001, warning);
+                            LogWarning(code, warning);
                         }
                         else
                         {
-                            _log.LogMessage(MessageImportance.High, $"SIGN001: {warning}");
+                            _log.LogMessage(MessageImportance.High, $"{code.ToString()}: {warning}");
                         }
                     }
                 }
