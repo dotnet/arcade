@@ -55,12 +55,12 @@
       <Uri>https://github.com/dotnet/linker</Uri>
       <Sha>3efd231da430baa0fd670e278f6b5c3e62834bde</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.SourceLink.GitHub" Version="1.2.0-beta-22403-02">
+    <Dependency Name="Microsoft.SourceLink.GitHub" Version="1.2.0-beta-22404-01">
       <Uri>https://github.com/dotnet/sourcelink</Uri>
       <Sha>c2b16fa517c66a3fd78d9286e93123ea739a5609</Sha>
       <SourceBuild RepoName="sourcelink" ManagedOnly="true" />
     </Dependency>
-    <Dependency Name="Microsoft.SourceLink.AzureRepos.Git" Version="1.2.0-beta-22403-02">
+    <Dependency Name="Microsoft.SourceLink.AzureRepos.Git" Version="1.2.0-beta-22404-01">
       <Uri>https://github.com/dotnet/sourcelink</Uri>
       <Sha>c2b16fa517c66a3fd78d9286e93123ea739a5609</Sha>
     </Dependency>
@@ -72,9 +72,9 @@
       <Uri>https://github.com/dotnet/symreader-converter</Uri>
       <Sha>c5ba7c88f92e2dde156c324a8c8edc04d9fa4fe0</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="1.0.0-beta.22402.1">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="1.0.0-beta.22404.1">
       <Uri>https://github.com/dotnet/xliff-tasks</Uri>
-      <Sha>79e7c5e16cf6a872335db1107973f506a9de9db4</Sha>
+      <Sha>eb60feba8e35109537c4059bf5131ea0d7ed24f3</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
