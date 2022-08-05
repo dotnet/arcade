@@ -13,8 +13,8 @@
     <LibGit2SharpVersion>0.25.2</LibGit2SharpVersion>
     <log4netVersion>2.0.10</log4netVersion>
     <SystemNetHttpVersion>4.3.4</SystemNetHttpVersion>
-    <AzureCoreVersion>1.19.0</AzureCoreVersion>
-    <AzureStorageBlobsVersion>12.10.0</AzureStorageBlobsVersion>
+    <AzureCoreVersion>1.25.0</AzureCoreVersion>
+    <AzureStorageBlobsVersion>12.13.0</AzureStorageBlobsVersion>
     <AzureDataTablesVersion>12.5.0</AzureDataTablesVersion>
     <FluentAssertionsVersion>5.10.3</FluentAssertionsVersion>
     <NETStandardLibraryVersion>1.6.1</NETStandardLibraryVersion>
