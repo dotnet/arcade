@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                 }
                                 else
                                 {
-                                    var proj = Project.FromFile(VersionsPropsPath, new Build.Definition.ProjectOptions());
+                                    var proj = Project.FromFile(VersionsPropsPath, new Build.Definition.ProjectOptions() { ProjectCollection = new ProjectCollection() });
                                     properties = proj.AllEvaluatedProperties.ToLookup(p => p.Name, StringComparer.OrdinalIgnoreCase);
                                 }
                             }
