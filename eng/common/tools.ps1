@@ -373,7 +373,7 @@ function InitializeVisualStudioMSBuild([bool]$install, [object]$vsRequirements =
       $vsRequirements = $GlobalJson.tools.vs
     }
     else {
-      $vsRequirements = ConvertFrom-Json "{ `"version`": `"$vsMinVersionReqdStr`" }"
+      $vsRequirements = New-Object PSObject -Property @{ version = $vsMinVersionReqdStr }
     }
   }
   $vsMinVersionStr = if ($vsRequirements.version) { $vsRequirements.version } else { $vsMinVersionReqdStr }
