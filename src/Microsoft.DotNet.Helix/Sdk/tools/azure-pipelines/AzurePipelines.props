@@ -2,6 +2,7 @@
   <PropertyGroup>
     <AzurePipelinesAvailable Condition="'$(SYSTEM_ACCESSTOKEN)' != ''">true</AzurePipelinesAvailable>
     <AzurePipelinesAvailable Condition="'$(AzurePipelinesAvailable)' != 'true'">false</AzurePipelinesAvailable>
+    <ServerlessMode Condition="'$(ServerlessMode)' != 'true'">false</ServerlessMode>
   </PropertyGroup>
 
   <!-- We default the azure pipelines reporter to ON if we are running inside Azure Pipelines -->
@@ -22,7 +23,8 @@
 
   <PropertyGroup Condition="$(ImportAzurePipelinesTargets)">
     <_HelixMonoQueueTargets>$(_HelixMonoQueueTargets);$(MSBuildThisFileDirectory)AzurePipelines.MonoQueue.targets</_HelixMonoQueueTargets>
-    <_HelixMultiQueueTargets>$(_HelixMultiQueueTargets);$(MSBuildThisFileDirectory)AzurePipelines.MultiQueue.targets</_HelixMultiQueueTargets>
+    <_HelixMultiQueueTargets Condition="!$(ServerlessMode)">$(_HelixMultiQueueTargets);$(MSBuildThisFileDirectory)AzurePipelines.MultiQueue.targets</_HelixMultiQueueTargets>
+    <_HelixMultiQueueTargets Condition="$(ServerlessMode)">$(_HelixMultiQueueTargets);$(MSBuildThisFileDirectory)AzurePipelines.Serverless.MultiQueue.targets</_HelixMultiQueueTargets>
   </PropertyGroup>
 
   <Target Name="ValidateAzurePipelinesConfiguration"

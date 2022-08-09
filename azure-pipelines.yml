@@ -96,7 +96,29 @@ stages:
 - ${{ if eq(variables._RunAsPublic, True) }}:
   - stage: Test
     dependsOn: build
+    variables:
+      System.Debug: true
     jobs:
+    - job: Helix_Wait
+      displayName: Wait for Helix Jobs
+      timeoutInMinutes: 360
+      dependsOn:
+      - Windows_NT
+      - Linux
+      pool: server
+      variables:
+      - name: HelixJobInformation
+        value: $[ convertToJson(dependencies) ]
+      steps:
+      - task: InvokeRESTAPI@1
+        inputs:
+          connectionType: 'connectedServiceName'
+          serviceConnection: 'Agentless Job Test'
+          waitForCompletion: 'true'
+          method: 'POST'
+          urlSuffix: 'api/wait-for-helix'
+          body: $(HelixJobInformation)
+
     - template: /eng/common/templates/jobs/jobs.yml
       parameters:
         artifacts:
@@ -145,10 +167,12 @@ stages:
               -projects $(Build.SourcesDirectory)\tests\UnitTests.proj
               /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.binlog
               /p:RestoreUsingNuGetTargets=false
+              /p:ServerlessMode=true
             displayName: Run Helix Tests
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
+
 
         - job: Linux
           timeoutInMinutes: 90
@@ -177,6 +201,7 @@ stages:
               --projects $(Build.SourcesDirectory)/tests/UnitTests.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
               /p:RestoreUsingNuGetTargets=false
+              /p:ServerlessMode=true
             displayName: Run Helix Tests
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
