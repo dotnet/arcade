@@ -95,7 +95,7 @@ $locJson = @{
             CloneLanguageSet = "WiX_CloneLanguages"
             LocItems = @(
                 $wxlFiles | ForEach-Object {
-                    $outputPath = "$($_.Directory.Parent.FullName | Resolve-Path -Relative)\"
+                    $outputPath = "$($_.Directory.FullName | Resolve-Path -Relative)\"
                     $continue = $true
                     foreach ($exclusion in $exclusions.Exclusions) {
                         if ($outputPath.Contains($exclusion))
