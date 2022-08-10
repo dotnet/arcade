@@ -33,6 +33,8 @@ $jsonTemplateFiles | ForEach-Object {
 
 $jsonWinformsTemplateFiles = Get-ChildItem -Recurse -Path "$SourcesDirectory" | Where-Object { $_.FullName -Match "en\\strings\.json" } # current winforms pattern
 
+$wxlFiles = Get-ChildItem -Recurse -Path "$SourcesDirectory" | Where-Object { $_.FullName -Match "\\.+\.wxl" -And -Not( $_.Directory.Name -Match "\d{4}" ) }
+
 $xlfFiles = @()
 
 $allXlfFiles = Get-ChildItem -Recurse -Path "$SourcesDirectory\*\*.xlf"
@@ -77,13 +79,38 @@ $locJson = @{
                                 CopyOption = "LangIDOnPath"
                                 OutputPath = "$($_.Directory.Parent.FullName | Resolve-Path -Relative)\"
                             }
-                        }
-                        else {
+                        } else {
                             return @{
                                 SourceFile = $sourceFile
                                 CopyOption = "LangIDOnName"
                                 OutputPath = $outputPath
                             }
+                        }
+                    }
+                }
+            )
+        },
+        @{
+            LanguageSet = $LanguageSet
+            CloneLanguageSet = "WiX_CloneLanguages"
+            LocItems = @(
+                $wxlFiles | ForEach-Object {
+                    $outputPath = "$($_.Directory.Parent.FullName | Resolve-Path -Relative)\"
+                    $continue = $true
+                    foreach ($exclusion in $exclusions.Exclusions) {
+                        if ($outputPath.Contains($exclusion))
+                        {
+                            $continue = $false
+                        }
+                    }
+                    $sourceFile = ($_.FullName | Resolve-Path -Relative)
+                    if ($continue)
+                    {
+                        return @{
+                            SourceFile = $sourceFile
+                            CopyOption = "LangIDOnPath"
+                            OutputPath = $outputPath
+                            LssFiles = @( "wxl_loc.lss" )
                         }
                     }
                 }
