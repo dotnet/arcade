@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.SwaggerGenerator
         ///   A 'word' is the next logical piece of a variable/property/parameter name
         /// </remarks>
         /// <returns>The 'word'</returns>
-        private static ReadOnlySpan<char> GetNextWord(ReadOnlySpan<char> value, ref int pos)
+        private static ReadOnlySpan<char> GetNextWord(ReadOnlySpan<char> value, scoped ref int pos)
         {
             int? wordStart = null;
             for (int idx = pos; idx < value.Length; idx++)

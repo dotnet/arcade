@@ -22,7 +22,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         public static string GetHash(string value, string hashName)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(value);
+#pragma warning disable SYSLIB0045 // Cryptographic factory methods accepting an algorithm name are obsolete. Use the parameterless Create factory method on the algorithm type instead.
             HashAlgorithm ha = HashAlgorithm.Create(hashName);
+#pragma warning restore SYSLIB0045
             byte[] hash = ha.ComputeHash(bytes);
 
             var sb = new StringBuilder();
