@@ -185,7 +185,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
             PackageFileName = Path.GetFileNameWithoutExtension(packagePath);
             ShortName = PackageFileName.Replace(shortNames);
-            SwixPackageId = Id.Replace(shortNames);
+            SwixPackageId = $"{Id.Replace(shortNames)}.{Identity.Version}";
             Log = log;
         }
 

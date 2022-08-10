@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// <summary>
         /// The version to assign to workload manifest installers.
         /// </summary>
-        public Version ManifestMsiVersion
+        public string ManifestMsiVersion
         {
             get;
             set;
@@ -162,7 +162,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 foreach (ITaskItem workloadManifestPackageFile in WorkloadManifestPackageFiles)
                 {
                     // 1. Process the manifest package and create a set of installers.
-                    WorkloadManifestPackage manifestPackage = new(workloadManifestPackageFile, PackageRootDirectory, ManifestMsiVersion, ShortNames, Log);
+                    WorkloadManifestPackage manifestPackage = new(workloadManifestPackageFile, PackageRootDirectory, new Version(ManifestMsiVersion), ShortNames, Log);
                     manifestPackages.Add(manifestPackage);
 
                     foreach (string platform in SupportedPlatforms)
