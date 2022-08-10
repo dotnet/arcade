@@ -24,7 +24,6 @@ Whenever you're setting up a new alert in Grafana make sure that:
   - If the alert fires repeatedly (uses one of the notification channels with periodic reminders), include this information in the alert's description too.  
     Example:  
     ![image](https://user-images.githubusercontent.com/7013027/169300812-574c0ee7-ecc9-4e25-b163-4e5b64d43cd0.png)
-- If you encounter an alert missing this information or 
 
 
 ## Recommended content of guides to alerts
