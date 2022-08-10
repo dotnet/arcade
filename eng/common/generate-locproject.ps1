@@ -91,7 +91,7 @@ $locJson = @{
             )
         },
         @{
-            LanguageSet = $LanguageSet
+            LanguageSet = "cs-CZ;de-DE;es-ES;fr-FR;it-IT;ja-JP;ko-KR;pl-PL;pt-BR;ru-RU;tr-TR;zh-CN;zh-TW"
             CloneLanguageSet = "WiX_CloneLanguages"
             LocItems = @(
                 $wxlFiles | ForEach-Object {
