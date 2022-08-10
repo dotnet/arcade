@@ -45,7 +45,7 @@ namespace Microsoft.Cci.Extensions.CSharp
             {
                 using (var syntaxWriter = new TextSyntaxWriter(stringWriter))
                 {
-                    var writer = new CSDeclarationWriter(syntaxWriter, new AttributesFilter(includeAttributes), false, true);
+                    var writer = new CSDeclarationWriter(syntaxWriter, new AttributesFilter(true), false, true);
 
                     var nsp = definition as INamespaceDefinition;
                     var typeDefinition = definition as ITypeDefinition;
