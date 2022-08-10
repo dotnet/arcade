@@ -33,7 +33,7 @@ $jsonTemplateFiles | ForEach-Object {
 
 $jsonWinformsTemplateFiles = Get-ChildItem -Recurse -Path "$SourcesDirectory" | Where-Object { $_.FullName -Match "en\\strings\.json" } # current winforms pattern
 
-$wxlFiles = Get-ChildItem -Recurse -Path "$SourcesDirectory" | Where-Object { $_.FullName -Match "\\.+\.wxl" -And -Not( $_.Directory.Name -Match "\d{4}" ) }
+$wxlFiles = Get-ChildItem -Recurse -Path "$SourcesDirectory" | Where-Object { $_.FullName -Match "\\.+\.wxl" -And -Not( $_.Directory.Name -Match "\d{4}" ) } # localized files live in four digit lang ID directories; this excludes them
 
 $xlfFiles = @()
 
