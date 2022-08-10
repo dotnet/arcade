@@ -122,6 +122,7 @@
 
       <ReleaseBrandSuffix>$(PreReleaseVersionLabel.Substring(0,1).ToUpperInvariant())</ReleaseBrandSuffix>
       <ReleaseBrandSuffix>$(ReleaseBrandSuffix)$(PreReleaseVersionLabel.Substring(1))</ReleaseBrandSuffix>
+      <ReleaseBrandSuffix Condition="'$(PreReleaseVersionLabel.ToUpperInvariant())' == 'RC'">RC</ReleaseBrandSuffix>
       <ReleaseBrandSuffix>$(ReleaseBrandSuffix) $(PreReleaseVersionIteration)</ReleaseBrandSuffix>
     </PropertyGroup>
 
