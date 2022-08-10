@@ -91,8 +91,8 @@ $locJson = @{
             )
         },
         @{
-            LanguageSet = "cs-CZ;de-DE;es-ES;fr-FR;it-IT;ja-JP;ko-KR;pl-PL;pt-BR;ru-RU;tr-TR;zh-CN;zh-TW"
             CloneLanguageSet = "WiX_CloneLanguages"
+            LssFiles = @( "wxl_loc.lss" )
             LocItems = @(
                 $wxlFiles | ForEach-Object {
                     $outputPath = "$($_.Directory.FullName | Resolve-Path -Relative)\"
@@ -110,7 +110,7 @@ $locJson = @{
                             SourceFile = $sourceFile
                             CopyOption = "LangIDOnPath"
                             OutputPath = $outputPath
-                            LssFiles = @( "wxl_loc.lss" )
+                            Languages = "cs-CZ;de-DE;es-ES;fr-FR;it-IT;ja-JP;ko-KR;pl-PL;pt-BR;ru-RU;tr-TR;zh-CN;zh-TW"
                         }
                     }
                 }
