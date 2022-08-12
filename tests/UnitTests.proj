@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <HelixBaseUri>https://helix.int-dot.net</HelixBaseUri>
     <HelixType>test/product/</HelixType>
 
     <IncludeDotNetCli>true</IncludeDotNetCli>
