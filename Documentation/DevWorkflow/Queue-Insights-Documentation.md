@@ -8,7 +8,7 @@ It's important to note that Queue Insights data is specific to the context of th
 
 The information shown in Queue Insights is cached, updating daily, and consists of information over the past 30 days. Any queue or build machine used by your repo against a specific target branch will be shown for 30 days.
 
-This means that if your repo stops using a given Helix queue for instance, Queue Insights will show that queue for 30 days before it no longer appears in the check.
+This means that if your repo stops using a given Helix queue, Queue Insights will show that queue for 30 days before it no longer appears in the check.
 
 ## Pipeline Predictions
 
