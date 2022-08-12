@@ -136,7 +136,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         private static WorkloadManifest Create(string filename)
         {
             return WorkloadManifestReader.ReadWorkloadManifest(Path.GetFileNameWithoutExtension(filename),
-                File.OpenRead(Path.Combine(TestAssetsPath, filename)));
+                File.OpenRead(Path.Combine(TestAssetsPath, filename)), filename);
         }
     }
 }

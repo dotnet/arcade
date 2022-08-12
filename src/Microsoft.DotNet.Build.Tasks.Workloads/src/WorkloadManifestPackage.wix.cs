@@ -118,7 +118,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         {
             string workloadManifestFile = GetManifestFile();
 
-            return WorkloadManifestReader.ReadWorkloadManifest(Path.GetFileNameWithoutExtension(workloadManifestFile), File.OpenRead(workloadManifestFile));
+            return WorkloadManifestReader.ReadWorkloadManifest(Path.GetFileNameWithoutExtension(workloadManifestFile), File.OpenRead(workloadManifestFile), workloadManifestFile);
         }
 
         /// <summary>
