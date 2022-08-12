@@ -6,6 +6,14 @@ Queue Insights is a GitHub check designed to show developers the current status 
 
 It's important to note that Queue Insights data is specific to the context of the PR. 
 
+## Was this helpful?
+
+At the bottom of every Queue Insights check is a line of text stating *"Was this helpful? :thumbsup: :thumbsdown:"*. Selecting either thumbs up/down will direct you to our feedback page.
+
+This feedback page **captures context** about where you clicked this button. We are able to see which PR this happened on, the time, etc. to help us diagnose and understand the event that caused your feedback.
+
+If you decide to not remain anonymous, and leave your GitHub username, **We will follow-up with your feedback**. In addition, negative feedback creates a GitHub issue in dotnet/arcade that we will track.
+
 ## Information Age
 
 The information shown in Queue Insights is cached, updating daily, and consists of information over the past 30 days. Any queue or build machine used by your repo against a specific target branch will be shown for 30 days.
@@ -68,11 +76,3 @@ This list are queues that are hosted in a data center managed by DDFUN. These qu
 # Build Pools
 
 This section shows you what build pools are used, separated by 1ES Hosted and Microsoft Hosted. There are hyperlinks here to direct you to documentation about packages and software installed by default on these build machines.
-
-# Was this helpful?
-
-At the bottom of every Queue Insights check is a line of text stating *"Was this helpful? :thumbsup: :thumbsdown:"*. Selecting either thumbs up/down will direct you to our feedback page.
-
-This feedback page **captures context** about where you clicked this button. We are able to see which PR this happened on, the time, etc. to help us diagnose and understand the event that caused your feedback.
-
-If you decide to not remain anonymous, and leave your GitHub username, **We will follow-up with your feedback**. In addition, negative feedback creates a GitHub issue in dotnet/arcade that we will track.
