@@ -1,5 +1,7 @@
 # Queue Insights Documentation
 
+Please contact the [.NET Engineering Services Team](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/890/How-to-get-a-hold-of-Engineering-Servicing) with any questions about this service.
+
 Queue Insights is a GitHub check designed to show developers the current status of Helix, and information about what infrastructure a PR uses.
 
 It's important to note that Queue Insights data is specific to the context of the PR. 
