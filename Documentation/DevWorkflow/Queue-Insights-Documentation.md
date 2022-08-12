@@ -14,7 +14,7 @@ This means that if your repo stops using a given Helix queue, Queue Insights wil
 
 Here, we show the lower, expected, and higher estimated times for a pipeline the PR uses to complete, not including time spent in queue waiting for a build machine.
 
-You may interpret this data as this pipeline should take between the lower and upper bound, and commonly finishing around the estimated time.
+You should interpret this data as this pipeline should finish around the *expected* time but may finish as quick as the *lower* time or take as long as the *higher* time.
 
 This data is calculated from our build telemetry, and you may visit our [one-pager](../TeamProcess/One-Pagers/pipeline-machine-learning-arcade8824.md) for how it works.
  
