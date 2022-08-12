@@ -55,11 +55,11 @@ Each queue mentioned in the Queue Insights check is hyperlinked, and will direct
 
 In this section, we show you a list of queues that this PR will use. **This is filtered by the queues the PR uses, not the overall repository.**. This is further separated by two factors, *on-premises* queues and *Azure queues*.
 
-## :cloud: Helix Queues (Queues hosted in Azure)
+## :cloud: Azure-Hosted Queues
 
-This list shows queues that are supported by Azure VMs. This means that the queue is supported by an Azure Virtual Machine Scale Set, meaning that we have the capacity to scale the work items the queue can process up and down depending on our budget and work items queued.
+This list shows queues that are supported by Azure VMs. This means that the queue is powered by an Azure Virtual Machine Scale Set, meaning that we have the capacity to scale the work items the queue can process up and down depending on our budget and work items queued.
 
-## :office: Off-Prem Queues
+## :office: Off-Prem (build lab) Queues
 
 This list are queues that are hosted in a data center managed by DDFUN. These queues have a fixed capacity and are typically always on, so there is the added benefit of no wait time to provision a new VM, with the issue of not being able to scale these machines.
 
