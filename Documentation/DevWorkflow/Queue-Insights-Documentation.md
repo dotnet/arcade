@@ -26,7 +26,7 @@ Some pipelines we cannot give an accurate prediction for. Typically, this is bec
 
 ### Known Issues
 
-If a Critical Known Issue has been created, we will not show a prediction, and instead inform you that there is a critical known issue that could affect the estimated times.
+If a [Critical Known Issue](../Projects/Build%20Analysis/KnownIssues.md) has been created, we will not show a prediction, and instead inform you that there is a critical known issue that could affect the estimated times.
 
 ### Not enough data
 
