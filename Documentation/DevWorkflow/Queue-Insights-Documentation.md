@@ -16,7 +16,7 @@ Here, we show the lower, expected, and higher estimated times for a pipeline the
 
 You may interpret this data as this pipeline should take between the lower and upper bound, and commonly finishing around the estimated time.
 
-This data is calculated from our build telemetry, and you may visit our [one-pager]() for how it works.
+This data is calculated from our build telemetry, and you may visit our [one-pager](../TeamProcess/One-Pagers/pipeline-machine-learning-arcade8824.md) for how it works.
  
 
 ### Multi-modal distributions
@@ -26,8 +26,7 @@ Some pipelines we cannot give an accurate prediction for. Typically, this is bec
 
 ### Known Issues
 
-If there is a Critical Known Issue in our infrastructure (*e.g.* Helix, AzDo is down) we will not show a prediction, and instead inform you that there is a critical known issue that could affect the estimated ties.
-
+If a Critical Known Issue has been created, we will not show a prediction, and instead inform you that there is a critical known issue that could affect the estimated times.
 
 ### Not enough data
 
