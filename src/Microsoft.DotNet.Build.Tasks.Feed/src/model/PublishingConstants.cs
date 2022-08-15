@@ -426,7 +426,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
             // ".NET 7 RC 2",
             new TargetChannelConfig(
-                2845,
+                3078,
                 false,
                 PublishingInfraVersion.All,
                 new List<string>() { "7.0-rc2" },
@@ -436,7 +436,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
             // ".NET 7 SDK 7.0.1xx RC 2",
             new TargetChannelConfig(
-                3078,
+                3076,
                 false,
                 PublishingInfraVersion.All,
                 new List<string>() { "7.0.1xx-rc2", "7.0-rc2" },
