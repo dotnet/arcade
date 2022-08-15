@@ -19,7 +19,9 @@ Whenever you're setting up a new alert in Grafana make sure that:
 - For every Grafana alert there is a page with alert guide tagged as `[Alert]` in the [internal wiki](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/884/Wiki-for-Grafana-Alerts) dedicated to this specific alert
   - The page is marked as `[Alert]` and contains the the category tag `!!Category-Alerts` so that is is listed in the [Alerts category page](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/925/Category-Alerts)
   - The page contains information about the alert, why it fired, what's the impact/urgency, what actions to take and more. Please see a [more exhaustive list below](#recommended-content-of-guides-to-alerts).
-- The panel that the alert is associated with contains a link to the alert page in its description (the grey panel description mentioned above).
+- The panel that the alert is associated with contains a link to the alert page in its description (the grey panel description mentioned above).  
+    Example:  
+    ![image](https://user-images.githubusercontent.com/7013027/184638967-e8e9cae7-3095-4711-86b2-29c56e3af1e2.png)
 - The body of the alert contains a link to the appropriate wiki page
   - It's much easier to maintain the wiki page than the alert's description
   - If the alert fires repeatedly (uses one of the notification channels with periodic reminders), include this information in the alert's description too.  
