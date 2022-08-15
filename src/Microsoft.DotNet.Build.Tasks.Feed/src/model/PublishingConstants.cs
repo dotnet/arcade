@@ -404,6 +404,46 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
+            // ".NET 7 RC 1",
+            new TargetChannelConfig(
+                3077,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0-rc1" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 7 SDK 7.0.1xx RC 1",
+            new TargetChannelConfig(
+                3075,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0.1xx-rc1", "7.0-rc1" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 7 RC 2",
+            new TargetChannelConfig(
+                2845,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0-rc2" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 7 SDK 7.0.1xx RC 2",
+            new TargetChannelConfig(
+                3078,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0.1xx-rc2", "7.0-rc2" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
             // ".NET 6",
             new TargetChannelConfig(
                 1296,
