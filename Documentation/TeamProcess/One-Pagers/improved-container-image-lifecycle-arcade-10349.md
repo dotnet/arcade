@@ -1,11 +1,11 @@
 # Improved Docker Container Image Lifecycle
 
-As part of #10349 to improve our docker container security and sustainability, we need to improve the container image lifecycle. Currently, our container definitions are stable, but rarely updated, with some of the definitions dating back several years. We don't have means to ensure that all container images we use contain the latest OS patches and CVE fixes. One of the main points of this proposal is to ensure that the containers are updated regularly, accepting servicing updates form the OS on a regular basis. The major business goals of this work are to make sure that:
+As part of [#10123](https://github.com/dotnet/arcade/issues/10123) to improve our docker container security and sustainability, we need to improve the container image lifecycle. Currently, our container definitions are stable, but rarely updated, with some of the definitions dating back several years. We don't have means to ensure that all container images we use contain the latest OS patches and CVE fixes. One of the main points of this proposal is to ensure that the containers are updated regularly, accepting servicing updates form the OS on a regular basis. The major business goals of this work are to make sure that:
 
 - Our container images are re-built regularly and they contain the latest underlying OS patches and CVE fixes
 - There is a mechanism for updating the docker containers used by product teams so that they are always on the latest version of each container image
 - There is a process and tools implemented for identifying and removing images that are out of date
-- There is a process and tools to delete old container images (older than 3-6 months) from MCR
+- There is a process and tools to delete out-of-date container images (older than 3-6 months) from MCR
 - All images used in the building and testing of .NET use Microsoft-approved base images, either Mariner where appropriate, or [Microsoft Artifact Registry-approved images](https://eng.ms/docs/more/containers-secure-supply-chain/approved-images) where Mariner is insufficient
 
 ## Stakeholders
@@ -21,21 +21,16 @@ As part of #10349 to improve our docker container security and sustainability, w
 The major risk in this portion of the epic is finding and updating all container usages by product teams, and making sure that moving them to the latest versions of the container images doesn't break their builds/tests because of missing artifacts. Our goal is to use docker tags to label the latest known good of each container image, and replace usages of specific docker image tags with a `<os>-<version>-<other-identifying-info>-latest` tag. That way, much like with helix images, their builds and tests will be updated automatically when we deploy a new latest version. In the transition to latest images, we may find that older versions of a container may have different versions of artifacts installed on those containers, which could affect builds and tests. We will need to be prepared to help product teams identify these issues and work through them.
 
 - What are your assumptions?
-
-Assumptions include:
-- The Matrix of Truth work will enable us to identify all pipelines and branches that are using docker containers and which images they are using
-- We will be able to extend the existing publishing infrastructure to also idetify images that are due for removal
-- All of our existing base images can be replaced with MAR-approved images
-- Most of the official build that is currently built in docker containers can be built on Mariner
-- MAR-approved images are updated with OS patches and CVE fixes
+  - The Matrix of Truth work will enable us to identify all pipelines and branches that are using docker containers and which images they are using
+  - We will be able to extend the existing publishing infrastructure to also idetify images that are due for removal
+  - All of our existing base images can be replaced with MAR-approved images
+  - Most of the official build that is currently built in docker containers can be built on Mariner
+  - MAR-approved images are updated with OS patches and CVE fixes
 
 - What are your unknowns?
-
-Unknowns include:
-- How will we identify the LKG for each docker image?
-- What testing is currently in place for docker images, so that we can have confidence that updating the `latest` image will not break product teams?
-- What is the rollback story for the `latest` tagging scheme?
-- If the MAR-approved images are not updated on a regular basis, how do we apply OS patches and CVE fixes to the base operating systems?
+  - How will we identify the LKG for each docker image?
+  - What testing is currently in place for docker images, so that we can have confidence that updating the `latest` image will not break product teams?
+  - What is the rollback story for the `latest` tagging scheme?
 
 - What dependencies will this epic/feature(s) have?
 
@@ -51,4 +46,4 @@ We will also need a rollback story so that if an image breaks a product team's b
 
 ### FR and Operations Handoff
 
-We will create documentation for managing the tags so that when a rollback needs to occur, FR will be able to make those changes. Additionally, we will create documentation and processes that can be used by Operations and/or the vendors to handle any manual OS/base image updating or removing of old and out-of-date images from MCR, as necessary. We will also create documentation for responding to customer requests for new docker images, including where to get the base images, and how to install required dependencies (though that is coming in a different one pager).
+We will create documentation for managing the tags so that when a rollback needs to occur, FR will be able to make those changes. Additionally, we will create documentation and processes that can be used by Operations and/or the vendors to handle any manual OS/base image updating or removing of old and out-of-date images from MCR, as necessary. We will also create documentation for responding to customer requests for new docker images, including where to get the base images, how to install required dependencies (though that is coming in a different one pager), and what the process is for adding new images when a major version update is requested for dependencies.
