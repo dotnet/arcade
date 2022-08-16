@@ -23,11 +23,12 @@ The major risk in this portion of the epic is finding and updating all container
 - What are your assumptions?
   - The Matrix of Truth work will enable us to identify all pipelines and branches that are using docker containers and which images they are using
   - We will be able to extend the existing publishing infrastructure to also idetify images that are due for removal
-  - All of our existing base images can be replaced with MAR-approved images
+  - All of our existing base images can be replaced with MAR-approved images (we can already see where this is not true, OpenSuse and Raspian are not available as MAR-tagged images, and Alpine will be deprecated soon)
   - Most of the official build that is currently built in docker containers can be built on Mariner
   - MAR-approved images are updated with OS patches and CVE fixes
 
 - What are your unknowns?
+  - What should we do about images that are not available as MAR-approved base images?
   - How will we identify the LKG for each docker image?
   - What testing is currently in place for docker images, so that we can have confidence that updating the `latest` image will not break product teams?
   - What is the rollback story for the `latest` tagging scheme?
