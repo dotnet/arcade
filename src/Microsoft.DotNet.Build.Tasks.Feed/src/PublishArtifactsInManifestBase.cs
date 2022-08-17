@@ -1776,11 +1776,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 })
                 .ToArray();
 
-            if (Log.HasLoggedErrors)
-            {
-                return;
-            }
-
             var pushOptions = new PushOptions
             {
                 AllowOverwrite = feedConfig.AllowOverwrite,
