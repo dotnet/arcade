@@ -33,7 +33,7 @@ namespace XliffTasks.Tests
   </Commands>
 </CommandTable>";
 
-            var translations = new Dictionary<string, string>
+            Dictionary<string, string> translations = new()
             {
                 ["menuidOne|MenuText"] = "Texte de menu",
                 ["menuidOne|ButtonText"] = "Texte de button",
@@ -61,8 +61,8 @@ namespace XliffTasks.Tests
   </Commands>
 </CommandTable>";
 
-            var document = new VsctDocument();
-            var writer = new StringWriter();
+            VsctDocument document = new();
+            StringWriter writer = new();
             document.Load(new StringReader(source));
             document.Translate(translations);
             document.Save(writer);
@@ -92,8 +92,8 @@ namespace XliffTasks.Tests
   </Bitmaps>
 </CommandTable>".Replace("ABSOLUTEPATH", expectedAbsoluteLocation);
 
-            var document = new VsctDocument();
-            var writer = new StringWriter();
+            VsctDocument document = new();
+            StringWriter writer = new();
             document.Load(new StringReader(source));
             document.RewriteRelativePathsToAbsolute(
                         Path.Combine(sourceFolder, "Resources.resx"));
@@ -112,8 +112,8 @@ namespace XliffTasks.Tests
   </Bitmaps>
 </CommandTable>";
 
-            var document = new VsctDocument();
-            var writer = new StringWriter();
+            VsctDocument document = new();
+            StringWriter writer = new();
             document.Load(new StringReader(source));
             document.RewriteRelativePathsToAbsolute(
                         Path.Combine(Directory.GetCurrentDirectory(), "Resources.resx"));
@@ -151,7 +151,7 @@ namespace XliffTasks.Tests
   </Commands>
 </CommandTable>";
 
-            var translations = new Dictionary<string, string>
+            Dictionary<string, string> translations = new()
             {
                 ["firstGuid|menuid|MenuText"] = "Texte du menu",
                 ["firstGuid|menuid|ButtonText"] = "Texte du bouton",
@@ -187,8 +187,8 @@ namespace XliffTasks.Tests
   </Commands>
 </CommandTable>";
 
-            var document = new VsctDocument();
-            var writer = new StringWriter();
+            VsctDocument document = new();
+            StringWriter writer = new();
             document.Load(new StringReader(source));
             document.Translate(translations);
             document.Save(writer);

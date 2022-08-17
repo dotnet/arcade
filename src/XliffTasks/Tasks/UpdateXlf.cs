@@ -26,22 +26,22 @@ namespace XliffTasks.Tasks
 
         protected override void ExecuteCore()
         {
-            foreach (var item in Sources)
+            foreach (ITaskItem item in Sources)
             {
                 string sourcePath = item.ItemSpec;
                 string sourceDocumentPath = item.GetMetadataOrDefault(MetadataKey.SourceDocumentPath, item.ItemSpec);
                 string sourceFormat = item.GetMetadataOrThrow(MetadataKey.XlfSourceFormat);
-                TranslatableDocument sourceDocument = LoadSourceDocument(sourcePath, sourceFormat);
-                string sourceDocumentId = GetSourceDocumentId(sourcePath);
+                TranslatableDocument sourceDocument = XlfTask.LoadSourceDocument(sourcePath, sourceFormat);
+                string sourceDocumentId = XlfTask.GetSourceDocumentId(sourcePath);
 
-                foreach (var language in Languages)
+                foreach (string language in Languages)
                 {
-                    string xlfPath = GetXlfPath(sourceDocumentPath, language);
+                    string xlfPath = XlfTask.GetXlfPath(sourceDocumentPath, language);
                     XlfDocument xlfDocument;
 
                     try
                     {
-                        xlfDocument = LoadXlfDocument(xlfPath, language, createIfNonExistent: AllowModification);
+                        xlfDocument = XlfTask.LoadXlfDocument(xlfPath, language, createIfNonExistent: AllowModification);
                     }
                     catch (FileNotFoundException fileNotFoundEx) when (fileNotFoundEx.FileName == xlfPath)
                     {

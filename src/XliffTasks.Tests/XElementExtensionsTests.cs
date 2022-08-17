@@ -14,7 +14,7 @@ namespace XliffTasks.Tests
         public void GetTargetValueOrDefault_ReturnsTargetWhenTargetIsPresent()
         {
             XElement transUnitElement =
-                new XElement(TransUnit,
+                new(TransUnit,
                     new XElement(Source, "source text"),
                     new XElement(Target, "target text"));
 
@@ -27,7 +27,7 @@ namespace XliffTasks.Tests
         public void GetTargetValueOrDefault_ReturnsEmptyStringWhenTargetIsEmpty()
         {
             XElement transUnitElement =
-                new XElement(TransUnit,
+                new(TransUnit,
                     new XElement(Source, "source text"),
                     new XElement(Target, string.Empty));
 
@@ -40,7 +40,7 @@ namespace XliffTasks.Tests
         public void GetTargetValueOrDefault_ReturnsSourceWhenTargetIsMissing()
         {
             XElement transUnitElement =
-                new XElement(TransUnit,
+                new(TransUnit,
                     new XElement(Source, "source text"));
 
             string targetValue = transUnitElement.GetTargetValue();
@@ -52,7 +52,7 @@ namespace XliffTasks.Tests
         public void SetTargetValue_SetsValueIfTargetIsPresent()
         {
             XElement transUnitElement =
-                new XElement(TransUnit,
+                new(TransUnit,
                     new XElement(Source, "source text"),
                     new XElement(Target, "original target text"),
                     new XElement(Note));
@@ -66,7 +66,7 @@ namespace XliffTasks.Tests
         public void SetTargetValue_TargetIsCreatedIfNotPresent()
         {
             XElement transUnitElement =
-                new XElement(TransUnit,
+                new(TransUnit,
                     new XElement(Source, "source text"),
                     new XElement(Note));
 
@@ -80,7 +80,7 @@ namespace XliffTasks.Tests
         public void GetTargetState_ReturnsStateWhenStateIsPresent()
         {
             XElement transUnitElement =
-                new XElement(TransUnit,
+                new(TransUnit,
                     new XElement(Target,
                         new XAttribute("state", "original state value")));
 
@@ -93,7 +93,7 @@ namespace XliffTasks.Tests
         public void GetTargetState_ReturnsDefaultWhenTargetIsPresentButStateIsNot()
         {
             XElement transUnitElement =
-                new XElement(TransUnit,
+                new(TransUnit,
                     new XElement(Target));
 
             string stateValue = transUnitElement.GetTargetState();
@@ -104,7 +104,7 @@ namespace XliffTasks.Tests
         [Fact]
         public void GetTargetState_ReturnsDefaultWhenTargetIsNotPresent()
         {
-            XElement transUnitElement = new XElement(TransUnit);
+            XElement transUnitElement = new(TransUnit);
 
             string stateValue = transUnitElement.GetTargetState();
 
@@ -115,7 +115,7 @@ namespace XliffTasks.Tests
         public void SetTargetState_SetsStateWhenAlreadyPresent()
         {
             XElement transUnitElement =
-                new XElement(TransUnit,
+                new(TransUnit,
                     new XElement(Source, "soruce text"),
                     new XElement(Target,
                         new XAttribute("state", "new"),
@@ -130,7 +130,7 @@ namespace XliffTasks.Tests
         public void SetTargetState_AddsStateAttributeIfNotPresent()
         {
             XElement transUnitElement =
-                new XElement(TransUnit,
+                new(TransUnit,
                     new XElement(Source, "soruce text"),
                     new XElement(Target, "target text"));
 
@@ -143,7 +143,7 @@ namespace XliffTasks.Tests
         public void SetTargetState_AddsTargetElementIfNotPresent()
         {
             XElement transUnitElement =
-                new XElement(TransUnit,
+                new(TransUnit,
                     new XElement(Source, "soruce text"));
 
             transUnitElement.SetTargetState("translated");

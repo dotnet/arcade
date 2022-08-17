@@ -15,16 +15,14 @@ namespace XliffTasks.Model
         /// </summary>
         public static void SaveCustom(this XDocument document, TextWriter writer)
         {
-            var settings = new XmlWriterSettings
+            XmlWriterSettings settings = new()
             {
                 Indent = true,
                 OmitXmlDeclaration = writer is StringWriter,
             };
 
-            using (var xmlWriter = XmlWriter.Create(writer, settings))
-            {
-                document.Save(xmlWriter);
-            }
+            using XmlWriter xmlWriter = XmlWriter.Create(writer, settings);
+            document.Save(xmlWriter);
         }
 
         public static void SelfCloseIfPossible(this XElement element)

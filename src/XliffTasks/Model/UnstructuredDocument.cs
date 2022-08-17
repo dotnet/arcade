@@ -12,8 +12,8 @@ namespace XliffTasks.Model
         const string TranslatableSpanMarker = "@@@";
         const string TranslatableSpanSeparator = "|";
 
-        private List<string> _fragments = new List<string>();
-        private List<UnstructuredTranslatableNode> _nodes = new List<UnstructuredTranslatableNode>();
+        private List<string> _fragments = new();
+        private List<UnstructuredTranslatableNode> _nodes = new();
 
         protected override IEnumerable<TranslatableNode> GetTranslatableNodes()
         {
@@ -22,13 +22,13 @@ namespace XliffTasks.Model
 
         protected override void LoadCore(TextReader reader)
         {
-            var text = reader.ReadToEnd();
-            var lastSpanEnd = 0;
-            var spanStart = text.IndexOf(TranslatableSpanMarker);
+            string text = reader.ReadToEnd();
+            int lastSpanEnd = 0;
+            int spanStart = text.IndexOf(TranslatableSpanMarker);
             while (spanStart >= 0)
             {
                 // the previous span of text is untranslatable and is simply copied
-                var plainSpan = text.Substring(lastSpanEnd, spanStart - lastSpanEnd);
+                string plainSpan = text.Substring(lastSpanEnd, spanStart - lastSpanEnd);
                 _fragments.Add(plainSpan);
 
                 // next, find the translatable span
@@ -39,16 +39,16 @@ namespace XliffTasks.Model
                 }
 
                 lastSpanEnd += TranslatableSpanMarker.Length; // account for the length of the end marker
-                var spanLength = lastSpanEnd - spanStart - TranslatableSpanMarker.Length * 2; // trim off the marker start/end length
-                var translatableSpan = text.Substring(spanStart + TranslatableSpanMarker.Length, spanLength);
-                var separatorIndex = translatableSpan.IndexOf(TranslatableSpanSeparator);
+                int spanLength = lastSpanEnd - spanStart - TranslatableSpanMarker.Length * 2; // trim off the marker start/end length
+                string translatableSpan = text.Substring(spanStart + TranslatableSpanMarker.Length, spanLength);
+                int separatorIndex = translatableSpan.IndexOf(TranslatableSpanSeparator);
                 if (separatorIndex < 0)
                 {
                     throw new InvalidOperationException($"No span separator '{TranslatableSpanSeparator}' found.");
                 }
 
-                var id = translatableSpan.Substring(0, separatorIndex);
-                var source = translatableSpan.Substring(separatorIndex + TranslatableSpanSeparator.Length);
+                string id = translatableSpan.Substring(0, separatorIndex);
+                string source = translatableSpan.Substring(separatorIndex + TranslatableSpanSeparator.Length);
 
                 // keep the original span's text
                 _nodes.Add(new UnstructuredTranslatableNode(_fragments, _fragments.Count, id, source));
@@ -68,7 +68,7 @@ namespace XliffTasks.Model
 
         protected override void SaveCore(TextWriter writer)
         {
-            foreach (var fragment in _fragments)
+            foreach (string fragment in _fragments)
             {
                 writer.Write(fragment);
             }

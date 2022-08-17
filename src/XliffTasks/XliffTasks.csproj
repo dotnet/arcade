@@ -3,14 +3,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;net46</TargetFrameworks>
-    <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netcoreapp3.1</TargetFrameworks>
+    <TargetFrameworks>net6.0;net46</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">net6.0</TargetFrameworks>
     <BuildOutputTargetFolder>tools</BuildOutputTargetFolder>
     <EnableDefaultItems>false</EnableDefaultItems>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
     <IsPackable>true</IsPackable>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <LangVersion>8</LangVersion>
+    <LangVersion>10</LangVersion>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <AssemblyName>Microsoft.DotNet.XliffTasks</AssemblyName>
     <RootNamespace>XliffTasks</RootNamespace>
@@ -26,10 +26,10 @@
     <InternalsVisibleTo Include="XliffTasks.Tests" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'netcoreapp3.1'">
+  <ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
     <PackageReference Include="Microsoft.Build.Framework" Version="15.1.1012" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="15.1.1012" PrivateAssets="All" />
-    <PackageReference Include="Microsoft.NETCore.App" Version="2.0.3" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.NETCore.App" Version="2.2.8" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net46'">

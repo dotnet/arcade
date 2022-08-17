@@ -1,11 +1,8 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 namespace XliffTasks.Model
@@ -18,7 +15,7 @@ namespace XliffTasks.Model
     {
         protected override IEnumerable<TranslatableNode> GetTranslatableNodes()
         {
-            foreach (var node in Document.Descendants("data"))
+            foreach (XElement node in Document.Descendants("data"))
             {
                 // skip non-string data
                 if (node.Attribute("type") != null || node.Attribute("mimetype") != null)
@@ -59,15 +56,15 @@ namespace XliffTasks.Model
 
         public override void RewriteRelativePathsToAbsolute(string sourceFullPath)
         {
-            foreach (var node in Document.Descendants("data"))
+            foreach (XElement node in Document.Descendants("data"))
             {
                 if (node.Attribute("type")?.Value == "System.Resources.ResXFileRef, System.Windows.Forms")
                 {
-                    var valueNodeOfFileRef = node.Element("value");
-                    var splitRelativePathAndSerializedType = valueNodeOfFileRef.Value.Split(';');
-                    var resourceRelativePath = splitRelativePathAndSerializedType[0].Replace('\\', Path.DirectorySeparatorChar);
+                    XElement valueNodeOfFileRef = node.Element("value");
+                    string[] splitRelativePathAndSerializedType = valueNodeOfFileRef.Value.Split(';');
+                    string resourceRelativePath = splitRelativePathAndSerializedType[0].Replace('\\', Path.DirectorySeparatorChar);
 
-                    var absolutePath = Path.Combine(Path.GetDirectoryName(sourceFullPath), resourceRelativePath);
+                    string absolutePath = Path.Combine(Path.GetDirectoryName(sourceFullPath), resourceRelativePath);
                     splitRelativePathAndSerializedType[0] = absolutePath;
 
                     valueNodeOfFileRef.Value = string.Join(";", splitRelativePathAndSerializedType);

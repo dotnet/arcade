@@ -28,10 +28,9 @@ namespace XliffTasks.Tasks
 
         protected abstract void ExecuteCore();
 
-        internal TranslatableDocument LoadSourceDocument(string path, string format)
+        internal static TranslatableDocument LoadSourceDocument(string path, string format)
         {
             TranslatableDocument document;
-            string extension = Path.GetExtension(path);
 
             if (format.Equals("Resx", StringComparison.OrdinalIgnoreCase))
             {
@@ -61,9 +60,9 @@ namespace XliffTasks.Tasks
             return document;
         }
 
-        internal XlfDocument LoadXlfDocument(string path, string language = null, bool createIfNonExistent = false)
+        internal static XlfDocument LoadXlfDocument(string path, string language = null, bool createIfNonExistent = false)
         {
-            var document = new XlfDocument();
+            XlfDocument document = new();
 
             if (File.Exists(path))
             {
@@ -82,7 +81,7 @@ namespace XliffTasks.Tasks
             return document;
         }
 
-        internal string GetXlfPath(string sourcePath, string language)
+        internal static string GetXlfPath(string sourcePath, string language)
         {
             string directory = Path.GetDirectoryName(sourcePath);
             string filename = Path.GetFileNameWithoutExtension(sourcePath);
@@ -101,7 +100,7 @@ namespace XliffTasks.Tasks
             return Path.Combine(directory, "xlf", filename + xlfExtension);
         }
 
-        internal string GetSourceDocumentId(string sourcePath)
+        internal static string GetSourceDocumentId(string sourcePath)
         {
             return $"../{Path.GetFileName(sourcePath)}";
         }

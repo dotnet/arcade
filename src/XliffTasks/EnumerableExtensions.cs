@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace XliffTasks
 {
@@ -29,7 +28,7 @@ namespace XliffTasks
             U priorKey = default(U);
             bool first = true;
 
-            foreach (var item in source)
+            foreach (T item in source)
             {
                 U key = keySelector(item);
 

@@ -19,7 +19,7 @@ Say hello: @@@idhello|Hello@@@<end>
 Say goodbye: @@@idgoodbye|Goodbye@@@<end>
 ";
 
-            var translations = new Dictionary<string, string>
+            Dictionary<string, string> translations = new()
             {
                 ["idhello"] = "Bonjour!",
                 ["idgoodbye"] = "Au revoir!",
@@ -31,8 +31,8 @@ Say hello: Bonjour!<end>
 Say goodbye: Au revoir!<end>
 ";
 
-            var document = new UnstructuredDocument();
-            var writer = new StringWriter();
+            UnstructuredDocument document = new();
+            StringWriter writer = new();
             document.Load(new StringReader(source));
             document.Translate(translations);
             document.Save(writer);
@@ -45,15 +45,15 @@ Say goodbye: Au revoir!<end>
         {
             string source = "@@@idhello|Hello@@@";
 
-            var translations = new Dictionary<string, string>
+            Dictionary<string, string> translations = new()
             {
                 ["idhello"] = "Bonjour!",
             };
 
             string expectedTranslation = "Bonjour!";
 
-            var document = new UnstructuredDocument();
-            var writer = new StringWriter();
+            UnstructuredDocument document = new();
+            StringWriter writer = new();
             document.Load(new StringReader(source));
             document.Translate(translations);
             document.Save(writer);

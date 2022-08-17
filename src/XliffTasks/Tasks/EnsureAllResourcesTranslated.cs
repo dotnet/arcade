@@ -19,20 +19,20 @@ namespace XliffTasks.Tasks
 
         protected override void ExecuteCore()
         {
-            foreach (var item in Sources)
+            foreach (ITaskItem item in Sources)
             {
                 string sourceDocumentPath = item.GetMetadataOrDefault(MetadataKey.SourceDocumentPath, item.ItemSpec);
 
-                var untranslatedResourceSet = new SortedSet<string>(StringComparer.Ordinal);
+                SortedSet<string> untranslatedResourceSet = new(StringComparer.Ordinal);
 
-                foreach (var language in Languages)
+                foreach (string language in Languages)
                 {
-                    string xlfPath = GetXlfPath(sourceDocumentPath, language);
+                    string xlfPath = XlfTask.GetXlfPath(sourceDocumentPath, language);
                     XlfDocument xlfDocument;
 
                     try
                     {
-                        xlfDocument = LoadXlfDocument(xlfPath);
+                        xlfDocument = XlfTask.LoadXlfDocument(xlfPath);
                     }
                     catch (FileNotFoundException)
                     {

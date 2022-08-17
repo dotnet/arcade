@@ -2,6 +2,7 @@
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
 using System;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace XliffTasks
@@ -33,7 +34,7 @@ namespace XliffTasks
         /// \}
         ///    The close curly brace indicates the end of the placeholder.
         /// </summary>
-        private static Regex s_placeholderRegex = new Regex(@"\{(\d+)(\,\-?\d+)?(\:[^\}]+)?\}", RegexOptions.Compiled);
+        private static readonly Regex s_placeholderRegex = new(@"\{(\d+)(\,\-?\d+)?(\:[^\}]+)?\}", RegexOptions.Compiled);
 
         /// <summary>
         /// Returns the number of replacement strings needed to properly format the given text.
@@ -44,7 +45,7 @@ namespace XliffTasks
 
             foreach (Match placeholder in s_placeholderRegex.Matches(text))
             {
-                var index = int.Parse(placeholder.Groups[1].Value);
+                int index = int.Parse(placeholder.Groups[1].Value);
                 replacementCount = Math.Max(replacementCount, index + 1);
             }
 

@@ -103,7 +103,7 @@ namespace XliffTasks.Tests
   </file>
 </xliff>";
 
-            var translations = new Dictionary<string, string>
+            Dictionary<string, string> translations = new()
             {
                 ["Rule|MyRule|DisplayName"] = "AAA",
                 ["Rule|MyRule|Description"] = "BBB",
@@ -145,11 +145,11 @@ namespace XliffTasks.Tests
   </StringProperty>
 </Rule>";
 
-            var document = new XamlRuleDocument();
-            var writer = new StringWriter();
+            XamlRuleDocument document = new();
+            StringWriter writer = new();
             document.Load(new StringReader(source));
 
-            var xliffDocument = new XlfDocument();
+            XlfDocument xliffDocument = new();
             xliffDocument.LoadNew("fr");
             xliffDocument.Update(document, "test.xaml");
 
@@ -158,7 +158,7 @@ namespace XliffTasks.Tests
 
             AssertEx.EqualIgnoringLineEndings(expectedTranslation, writer.ToString());
 
-            var xliffWriter = new StringWriter();
+            StringWriter xliffWriter = new();
             xliffDocument.Save(xliffWriter);
 
             AssertEx.EqualIgnoringLineEndings(expectedXlf, xliffWriter.ToString());

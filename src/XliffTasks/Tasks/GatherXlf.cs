@@ -26,17 +26,17 @@ namespace XliffTasks.Tasks
         protected override void ExecuteCore()
         {
             int index = 0;
-            var outputs = new ITaskItem[Sources.Length * Languages.Length];
-            var outputPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            ITaskItem[] outputs = new ITaskItem[Sources.Length * Languages.Length];
+            HashSet<string> outputPaths = new(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var source in Sources)
+            foreach (ITaskItem source in Sources)
             {
                 string sourceDocumentPath = source.GetMetadataOrDefault(MetadataKey.SourceDocumentPath, source.ItemSpec);
 
-                foreach (var language in Languages)
+                foreach (string language in Languages)
                 {
-                    string xlfPath = GetXlfPath(sourceDocumentPath, language);
-                    var xlf = new TaskItem(source) { ItemSpec = xlfPath };
+                    string xlfPath = XlfTask.GetXlfPath(sourceDocumentPath, language);
+                    TaskItem xlf = new(source) { ItemSpec = xlfPath };
                     xlf.SetMetadata(MetadataKey.XlfSource, source.ItemSpec);
                     xlf.SetMetadata(MetadataKey.XlfTranslatedFullPath, GetTranslatedOutputPath(source, language, outputPaths));
                     xlf.SetMetadata(MetadataKey.XlfLanguage, language);

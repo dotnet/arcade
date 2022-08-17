@@ -17,7 +17,7 @@ namespace XliffTasks.Model
         {
             HashSet<string> nonUniqueIds = FindNonUniqueIds();
 
-            foreach (var strings in Document.Descendants(Document.Root.Name.Namespace + "Strings"))
+            foreach (XElement strings in Document.Descendants(Document.Root.Name.Namespace + "Strings"))
             {
                 string id = strings.Parent.Attribute("id").Value;
                 if (nonUniqueIds.Contains(id))
@@ -28,7 +28,7 @@ namespace XliffTasks.Model
                     id = guid + "|" + id;
                 }
 
-                foreach (var child in strings.Elements())
+                foreach (XElement child in strings.Elements())
                 {
                     XName name = child.Name;
 
@@ -58,10 +58,10 @@ namespace XliffTasks.Model
         /// <returns></returns>
         private HashSet<string> FindNonUniqueIds()
         {
-            var idsAlreadySeen = new HashSet<string>();
-            var conflictingIds = new HashSet<string>();
+            HashSet<string> idsAlreadySeen = new();
+            HashSet<string> conflictingIds = new();
 
-            foreach (var strings in Document.Descendants(Document.Root.Name.Namespace + "Strings"))
+            foreach (XElement strings in Document.Descendants(Document.Root.Name.Namespace + "Strings"))
             {
                 string id = strings.Parent.Attribute("id").Value;
 
@@ -76,15 +76,15 @@ namespace XliffTasks.Model
 
         public override void RewriteRelativePathsToAbsolute(string sourceFullPath)
         {
-            foreach (var imageTag in Document.Descendants(Document.Root.Name.Namespace + "Bitmap"))
+            foreach (XElement imageTag in Document.Descendants(Document.Root.Name.Namespace + "Bitmap"))
             {
-                var hrefAttribute = imageTag.Attribute("href");
+                XAttribute hrefAttribute = imageTag.Attribute("href");
 
                 if (hrefAttribute != null)
                 {
                     string resourceRelativePath = hrefAttribute.Value.Replace('\\', Path.DirectorySeparatorChar);
 
-                    var absolutePath = Path.Combine(Path.GetDirectoryName(sourceFullPath), resourceRelativePath);
+                    string absolutePath = Path.Combine(Path.GetDirectoryName(sourceFullPath), resourceRelativePath);
 
                     imageTag.Attribute("href").Value = absolutePath;
                 }

@@ -20,8 +20,8 @@ namespace XliffTasks.Tasks
             string language = XlfFile.GetMetadataOrThrow(MetadataKey.XlfLanguage);
             string translatedFullPath = XlfFile.GetMetadataOrThrow(MetadataKey.XlfTranslatedFullPath);
 
-            TranslatableDocument sourceDocument = LoadSourceDocument(sourcePath, XlfFile.GetMetadata(MetadataKey.XlfSourceFormat));
-            XlfDocument xlfDocument = LoadXlfDocument(XlfFile.ItemSpec);
+            TranslatableDocument sourceDocument = XlfTask.LoadSourceDocument(sourcePath, XlfFile.GetMetadata(MetadataKey.XlfSourceFormat));
+            XlfDocument xlfDocument = XlfTask.LoadXlfDocument(XlfFile.ItemSpec);
 
             bool validationFailed = false;
             xlfDocument.Validate(validationError =>

@@ -10,8 +10,8 @@ namespace XliffTasks.Tests
         [Fact]
         public void GetReplacementCount_NoPlaceholders()
         {
-            var text = "Alpha";
-            var replacementCount = text.GetReplacementCount();
+            string text = "Alpha";
+            int replacementCount = text.GetReplacementCount();
 
             Assert.Equal(expected: 0, actual: replacementCount);
         }
@@ -19,8 +19,8 @@ namespace XliffTasks.Tests
         [Fact]
         public void GetReplacementCount_OneSimplePlaceholder()
         {
-            var text = "{0}";
-            var replacementCount = text.GetReplacementCount();
+            string text = "{0}";
+            int replacementCount = text.GetReplacementCount();
 
             Assert.Equal(expected: 1, actual: replacementCount);
         }
@@ -28,8 +28,8 @@ namespace XliffTasks.Tests
         [Fact]
         public void GetReplacementCount_PlaceholderWithAlignment()
         {
-            var text = "{0,-3}";
-            var replacementCount = text.GetReplacementCount();
+            string text = "{0,-3}";
+            int replacementCount = text.GetReplacementCount();
 
             Assert.Equal(expected: 1, actual: replacementCount);
         }
@@ -37,8 +37,8 @@ namespace XliffTasks.Tests
         [Fact]
         public void GetReplacementCount_PlaceholderWithFormatString()
         {
-            var text = "{0:N}";
-            var replacementCount = text.GetReplacementCount();
+            string text = "{0:N}";
+            int replacementCount = text.GetReplacementCount();
 
             Assert.Equal(expected: 1, actual: replacementCount);
         }
@@ -46,8 +46,8 @@ namespace XliffTasks.Tests
         [Fact]
         public void GetReplacementCount_WithAlignmentAndFormatString()
         {
-            var text = "{0,-10:G1}";
-            var replacementCount = text.GetReplacementCount();
+            string text = "{0,-10:G1}";
+            int replacementCount = text.GetReplacementCount();
 
             Assert.Equal(expected: 1, actual: replacementCount);
         }
@@ -55,8 +55,8 @@ namespace XliffTasks.Tests
         [Fact]
         public void GetReplacementCount_MultiplePlaceholders()
         {
-            var text = "{0} {1}";
-            var replacementCount = text.GetReplacementCount();
+            string text = "{0} {1}";
+            int replacementCount = text.GetReplacementCount();
 
             Assert.Equal(expected: 2, actual: replacementCount);
         }
@@ -64,8 +64,8 @@ namespace XliffTasks.Tests
         [Fact]
         public void GetReplacementCount_MultipleIdenticalPlaceholders()
         {
-            var text = "{2} {2}";
-            var replacementCount = text.GetReplacementCount();
+            string text = "{2} {2}";
+            int replacementCount = text.GetReplacementCount();
 
             Assert.Equal(expected: 3, actual: replacementCount);
         }

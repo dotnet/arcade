@@ -52,7 +52,7 @@ namespace XliffTasks.Model
         {
             EnsureContent();
 
-            foreach (var node in Nodes)
+            foreach (TranslatableNode node in Nodes)
             {
                 if (translations.TryGetValue(node.Id, out string translation))
                 {

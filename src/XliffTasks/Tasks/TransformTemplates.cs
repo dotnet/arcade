@@ -31,18 +31,18 @@ namespace XliffTasks.Tasks
 
         protected override void ExecuteCore()
         {
-            var transformedTemplates = new List<ITaskItem>();
-            var resourceMap = UnstructuredResources.ToDictionary(item => item.GetMetadata("FullPath"));
-            foreach (var template in Templates)
+            List<ITaskItem> transformedTemplates = new();
+            Dictionary<string, ITaskItem> resourceMap = UnstructuredResources.ToDictionary(item => item.GetMetadata("FullPath"));
+            foreach (ITaskItem template in Templates)
             {
                 // special-case the default template items as the 1033 culture
-                var defaultTemplate = TransformTemplate(template, language: null, resourceMap: null);
+                ITaskItem defaultTemplate = TransformTemplate(template, language: null, resourceMap: null);
                 transformedTemplates.Add(defaultTemplate);
 
                 // and process other languages like normal
-                foreach (var language in Languages)
+                foreach (string language in Languages)
                 {
-                    var item = TransformTemplate(template, language, resourceMap);
+                    ITaskItem item = TransformTemplate(template, language, resourceMap);
                     transformedTemplates.Add(item);
                 }
             }
@@ -57,50 +57,50 @@ namespace XliffTasks.Tasks
                 throw new ArgumentException($"Either both '{nameof(language)}' and '{nameof(resourceMap)}' must be specified, or they both must be 'null'.");
             }
 
-            var transformingDefaultTemplate = language == null;
-            var templateCulture = transformingDefaultTemplate ? "1033" : language;
+            bool transformingDefaultTemplate = language == null;
+            string templateCulture = transformingDefaultTemplate ? "1033" : language;
 
-            var templateName = Path.GetFileNameWithoutExtension(template.ItemSpec);
-            var templatePath = template.GetMetadata("FullPath");
-            var templateDirectory = Path.GetDirectoryName(templatePath);
-            var templateXml = XDocument.Load(templatePath);
+            string templateName = Path.GetFileNameWithoutExtension(template.ItemSpec);
+            string templatePath = template.GetMetadata("FullPath");
+            string templateDirectory = Path.GetDirectoryName(templatePath);
+            XDocument templateXml = XDocument.Load(templatePath);
 
             // create a copy of the .vstemplate and all files
-            var localizedTemplateDirectory = transformingDefaultTemplate
+            string localizedTemplateDirectory = transformingDefaultTemplate
                 ? Path.Combine(TranslatedOutputDirectory, $"{templateName}.default.1033")
                 : Path.Combine(TranslatedOutputDirectory, $"{templateName}.{language}");
             Directory.CreateDirectory(localizedTemplateDirectory);
-            var cultureSpecificTemplateFile = Path.Combine(localizedTemplateDirectory, Path.GetFileName(template.ItemSpec));
+            string cultureSpecificTemplateFile = Path.Combine(localizedTemplateDirectory, Path.GetFileName(template.ItemSpec));
             File.Copy(templatePath, cultureSpecificTemplateFile, overwrite: true);
 
             // copy the template project files
-            foreach (var projectNode in templateXml.Descendants().Where(d => d.Name.LocalName == "Project"))
+            foreach (XElement projectNode in templateXml.Descendants().Where(d => d.Name.LocalName == "Project"))
             {
-                var projectFileFullPath = Path.Combine(templateDirectory, projectNode.Attribute("File").Value);
+                string projectFileFullPath = Path.Combine(templateDirectory, projectNode.Attribute("File").Value);
                 File.Copy(projectFileFullPath, Path.Combine(localizedTemplateDirectory, Path.GetFileName(projectNode.Attribute("File").Value)), overwrite: true);
             }
 
             // copy the template project items
-            foreach (var templateItem in templateXml.Descendants().Where(d => d.Name.LocalName == "ProjectItem"))
+            foreach (XElement templateItem in templateXml.Descendants().Where(d => d.Name.LocalName == "ProjectItem"))
             {
-                var templateItemFullPath = Path.Combine(templateDirectory, templateItem.Value);
-                var templateItemDestinationPath = Path.Combine(localizedTemplateDirectory, templateItem.Value);
+                string templateItemFullPath = Path.Combine(templateDirectory, templateItem.Value);
+                string templateItemDestinationPath = Path.Combine(localizedTemplateDirectory, templateItem.Value);
                 if (transformingDefaultTemplate)
                 {
                     // if not localizing anything, simply strip out the translation markers
-                    var document = new UnstructuredDocument();
+                    UnstructuredDocument document = new();
                     document.Load(templateItemFullPath);
-                    var defaultTranslation = document.Nodes.ToDictionary(node => node.Id, node => node.Source);
+                    Dictionary<string, string> defaultTranslation = document.Nodes.ToDictionary(node => node.Id, node => node.Source);
                     document.Translate(defaultTranslation);
                     document.Save(templateItemDestinationPath);
                 }
                 else
                 {
                     // try to localize the template items
-                    if (resourceMap.TryGetValue(templateItemFullPath, out var unstructuredResource))
+                    if (resourceMap.TryGetValue(templateItemFullPath, out ITaskItem unstructuredResource))
                     {
                         // copy a localized file
-                        var localizedFileName = string.Concat(
+                        string localizedFileName = string.Concat(
                             Path.GetFileNameWithoutExtension(unstructuredResource.ItemSpec),
                             ".",
                             language,
@@ -115,7 +115,7 @@ namespace XliffTasks.Tasks
                 }
             }
 
-            var item = new TaskItem(cultureSpecificTemplateFile);
+            TaskItem item = new(cultureSpecificTemplateFile);
             item.SetMetadata("Culture", templateCulture);
             return item;
         }

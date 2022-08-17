@@ -11,8 +11,8 @@ namespace XliffTasks
            Action action,
            int maxRetryCount)
         {
-            var count = 1;
-            foreach (var t in Intervals)
+            int count = 1;
+            foreach (TimeSpan t in Intervals)
             {
                 try
                 {
@@ -34,7 +34,7 @@ namespace XliffTasks
         {
             get
             {
-                var milliseconds = 5;
+                int milliseconds = 5;
                 while (true)
                 {
                     yield return TimeSpan.FromMilliseconds(milliseconds);

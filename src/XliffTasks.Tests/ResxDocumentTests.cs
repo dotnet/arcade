@@ -23,7 +23,7 @@ namespace XliffTasks.Tests
   </data>
 </root>";
 
-            var translations = new Dictionary<string, string>
+            Dictionary<string, string> translations = new()
             {
                 ["Hello"] = "Bonjour!",
                 ["Goodbye"] = "Au revoir!",
@@ -39,8 +39,8 @@ namespace XliffTasks.Tests
   </data>
 </root>";
 
-            var document = new ResxDocument();
-            var writer = new StringWriter();
+            ResxDocument document = new();
+            StringWriter writer = new();
             document.Load(new StringReader(source));
             document.Translate(translations);
             document.Save(writer);
@@ -62,11 +62,6 @@ namespace XliffTasks.Tests
   </data>
 </root>";
 
-            var translations = new Dictionary<string, string>
-            {
-                ["Hello"] = "Bonjour!",
-            };
-
             string expectedTranslation =
 @"<root>
   <data name=""400"" type=""System.Resources.ResXFileRef, System.Windows.Forms"">
@@ -74,8 +69,8 @@ namespace XliffTasks.Tests
   </data>
 </root>".Replace("ABSOLUTEPATH", expectedAbsoluteLocation);
 
-            var document = new ResxDocument();
-            var writer = new StringWriter();
+            ResxDocument document = new();
+            StringWriter writer = new();
             document.Load(new StringReader(source));
             document.RewriteRelativePathsToAbsolute(
                 Path.Combine(sourceFolder, "Resources.resx"));

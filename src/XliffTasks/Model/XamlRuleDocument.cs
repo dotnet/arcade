@@ -17,9 +17,9 @@ namespace XliffTasks.Model
     {
         protected override IEnumerable<TranslatableNode> GetTranslatableNodes()
         {
-            foreach (var element in Document.Descendants())
+            foreach (XElement? element in Document.Descendants())
             {
-                foreach (var attribute in element.Attributes())
+                foreach (XAttribute? attribute in element.Attributes())
                 {
                     if (XmlName(attribute) == "DisplayName"
                         || XmlName(attribute) == "Description")
@@ -65,9 +65,9 @@ namespace XliffTasks.Model
 
         private static string? GetComment(XElement element, string attributeName)
         {
-            foreach (var comment in element.Nodes().OfType<XComment>())
+            foreach (XComment comment in element.Nodes().OfType<XComment>())
             {
-                foreach (var line in comment.Value.Split(new[] { '\n' }, System.StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()))
+                foreach (string? line in comment.Value.Split(new[] { '\n' }, System.StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()))
                 {
                     if (line.StartsWith(attributeName))
                     {

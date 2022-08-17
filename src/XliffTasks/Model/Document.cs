@@ -14,8 +14,8 @@ namespace XliffTasks.Model
         /// </summary>
         public abstract bool HasContent { get; }
 
-        private static Encoding s_utf8WithBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true);
-        private static Encoding s_utf8WithoutBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+        private static readonly Encoding s_utf8WithBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true);
+        private static readonly Encoding s_utf8WithoutBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
 
         /// <summary>
         /// The encoding to use when saving the document to a stream.
@@ -28,10 +28,8 @@ namespace XliffTasks.Model
         /// </summary>
         public void Load(string path)
         {
-            using (var stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                Load(stream);
-            }
+            using FileStream stream = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+            Load(stream);
         }
 
         /// <summary>
@@ -45,11 +43,9 @@ namespace XliffTasks.Model
             // UTF8-with-BOM even if the document has no BOM, which would defeat our purpose of preserving the encoding and BOM
             // of the original document in a Load/Modify/Save cycle.
 
-            using (var reader = new StreamReader(stream, s_utf8WithoutBom, detectEncodingFromByteOrderMarks: true))
-            {
-                Load(reader);
-                Encoding = reader.CurrentEncoding;
-            }
+            using StreamReader reader = new(stream, s_utf8WithoutBom, detectEncodingFromByteOrderMarks: true);
+            Load(reader);
+            Encoding = reader.CurrentEncoding;
         }
 
         /// <summary>
@@ -71,9 +67,9 @@ namespace XliffTasks.Model
             // reading is happening, each reader will see file before or after overwrite, not in between
 
             EnsureContent();
-            var tempPath = Path.Combine(Path.GetDirectoryName(path), Path.GetRandomFileName());
+            string tempPath = Path.Combine(Path.GetDirectoryName(path), Path.GetRandomFileName());
 
-            using (var stream = File.Open(tempPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
+            using (FileStream stream = File.Open(tempPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None))
             {
                 Save(stream);
             }
@@ -102,10 +98,8 @@ namespace XliffTasks.Model
         {
             EnsureContent();
 
-            using (var writer = new StreamWriter(stream, Encoding))
-            {
-                Save(writer);
-            }
+            using StreamWriter writer = new(stream, Encoding);
+            Save(writer);
         }
 
         /// <summary>

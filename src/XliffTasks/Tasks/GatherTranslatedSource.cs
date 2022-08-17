@@ -18,20 +18,20 @@ namespace XliffTasks.Tasks
         protected override void ExecuteCore()
         {
             int index = 0;
-            var outputs = new ITaskItem[XlfFiles.Length];
+            ITaskItem[] outputs = new ITaskItem[XlfFiles.Length];
 
             foreach (ITaskItem xlf in XlfFiles)
             {
                 string translatedFullPath = xlf.GetMetadataOrThrow(MetadataKey.XlfTranslatedFullPath);
                 string language = xlf.GetMetadataOrThrow(MetadataKey.XlfLanguage);
 
-                var output = new TaskItem(xlf) { ItemSpec = translatedFullPath };
+                TaskItem output = new(xlf) { ItemSpec = translatedFullPath };
 
                 // Set up metadata required to give the correct resource names to translated source.
                 SetLink(xlf, output, translatedFullPath);
                 AdjustManifestResourceName(xlf, output, language);
                 AdjustLogicalName(xlf, output, language);
-                AdjustDependentUpon(xlf, output, language);
+                AdjustDependentUpon(xlf, output);
 
                 outputs[index++] = output;
             }
@@ -40,7 +40,7 @@ namespace XliffTasks.Tasks
             Outputs = outputs;
         }
 
-        private static char[] s_directorySeparatorChars = new[]
+        private static readonly char[] s_directorySeparatorChars = new[]
         {
             Path.DirectorySeparatorChar,
             Path.AltDirectorySeparatorChar
@@ -91,7 +91,7 @@ namespace XliffTasks.Tasks
             }
         }
 
-        private static void AdjustDependentUpon(ITaskItem xlf, ITaskItem output, string language)
+        private static void AdjustDependentUpon(ITaskItem xlf, ITaskItem output)
         {
             string dependentUpon = xlf.GetMetadata(MetadataKey.DependentUpon);
             if (!string.IsNullOrEmpty(dependentUpon))

@@ -15,10 +15,10 @@ namespace XliffTasks.Tests
         [Fact]
         public void LoadNewInitializesNewDocumentWithCorrectContent()
         {
-            var xliffDocument = new XlfDocument();
+            XlfDocument xliffDocument = new();
             xliffDocument.LoadNew("es");
 
-            var writer = new StringWriter();
+            StringWriter writer = new();
             xliffDocument.Save(writer);
 
             string expected =
@@ -454,7 +454,7 @@ namespace XliffTasks.Tests
   </file>
 </xliff>";
 
-            var untranslatedResources = UntranslatedResources(xliff);
+            ISet<string> untranslatedResources = UntranslatedResources(xliff);
             Assert.Equal(expected: 0, actual: untranslatedResources.Count);
         }
 
@@ -484,7 +484,7 @@ namespace XliffTasks.Tests
   </file>
 </xliff>";
 
-            var untranslatedResources = UntranslatedResources(xliff);
+            ISet<string> untranslatedResources = UntranslatedResources(xliff);
             Assert.Contains("Goodbye", untranslatedResources, StringComparer.Ordinal);
             Assert.Contains("Hello", untranslatedResources, StringComparer.Ordinal);
             Assert.DoesNotContain("Apple", untranslatedResources, StringComparer.Ordinal);
@@ -564,8 +564,8 @@ namespace XliffTasks.Tests
         [Fact]
         public void ValidationReportsNoErrorsOnDocumentWithNoContent()
         {
-            var document = new XlfDocument();
-            var validationErrors = GetValidationErrors(document);
+            XlfDocument document = new();
+            List<XmlSchemaException> validationErrors = GetValidationErrors(document);
 
             Assert.Empty(validationErrors);
         }
@@ -573,9 +573,9 @@ namespace XliffTasks.Tests
         [Fact]
         public void ValidationReportsNoErrorsOnNewDocument()
         {
-            var document = new XlfDocument();
+            XlfDocument document = new();
             document.LoadNew("cs");
-            var validationErrors = GetValidationErrors(document);
+            List<XmlSchemaException> validationErrors = GetValidationErrors(document);
 
             Assert.Empty(validationErrors);
         }
@@ -583,7 +583,7 @@ namespace XliffTasks.Tests
         [Fact]
         public void ValidationReportsErrorsOnMissingSourceElement()
         {
-            var xliffText =
+            string xliffText =
 @"<xliff xmlns=""urn:oasis:names:tc:xliff:document:1.2"" xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" version=""1.2"" xsi:schemaLocation=""urn:oasis:names:tc:xliff:document:1.2 xliff-core-1.2-transitional.xsd"">
   <file datatype=""xml"" source-language=""en"" target-language=""fr"" original=""test.resx"">
     <body>
@@ -594,10 +594,10 @@ namespace XliffTasks.Tests
     </body>
   </file>
 </xliff>";
-            var document = new XlfDocument();
+            XlfDocument document = new();
             document.Load(new StringReader(xliffText));
 
-            var validationErrors = GetValidationErrors(document);
+            List<XmlSchemaException> validationErrors = GetValidationErrors(document);
 
             Assert.Collection(validationErrors,
                 new Action<XmlSchemaException>[]
@@ -608,27 +608,27 @@ namespace XliffTasks.Tests
 
         private static List<XmlSchemaException> GetValidationErrors(XlfDocument document)
         {
-            var validationErrors = new List<XmlSchemaException>();
-            Action<XmlSchemaException> exceptionHandler = e => validationErrors.Add(e);
+            List<XmlSchemaException> validationErrors = new();
+            void exceptionHandler(XmlSchemaException e) => validationErrors.Add(e);
             document.Validate(exceptionHandler);
             return validationErrors;
         }
 
         private static string Sort(string xliff)
         {
-            var xliffDocument = new XlfDocument();
+            XlfDocument xliffDocument = new();
             xliffDocument.Load(new StringReader(xliff));
 
             xliffDocument.Sort();
 
-            var writer = new StringWriter();
+            StringWriter writer = new();
             xliffDocument.Save(writer);
             return writer.ToString();
         }
 
         private static string Update(string xliff, string resx)
         {
-            var xliffDocument = new XlfDocument();
+            XlfDocument xliffDocument = new();
 
             if (string.IsNullOrEmpty(xliff))
             {
@@ -639,18 +639,18 @@ namespace XliffTasks.Tests
                 xliffDocument.Load(new StringReader(xliff));
             }
 
-            var resxDocument = new ResxDocument();
+            ResxDocument resxDocument = new();
             resxDocument.Load(new StringReader(resx));
             xliffDocument.Update(resxDocument, "test.resx");
 
-            var writer = new StringWriter();
+            StringWriter writer = new();
             xliffDocument.Save(writer);
             return writer.ToString();
         }
 
         private static ISet<string> UntranslatedResources(string xliff)
         {
-            var xliffDocument = new XlfDocument();
+            XlfDocument xliffDocument = new();
             xliffDocument.Load(new StringReader(xliff));
 
             return xliffDocument.GetUntranslatedResourceIDs();
