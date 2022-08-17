@@ -334,11 +334,11 @@ for operation in operations:
         print(f'    Failed to analyze operation: {e}')
 
     # Note down the dimensions that caused retry/reboot
-    if retry and retry_dimensions is None:
+    if retry and not retry_dimensions:
         retry_dimensions = custom_dimensions
         retry_exit_code = exit_code
 
-    if reboot and reboot_dimensions is None:
+    if reboot and not reboot_dimensions:
         reboot_dimensions = custom_dimensions
 
     kusto_metrics = dict()
