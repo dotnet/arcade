@@ -458,12 +458,12 @@ elif [[ "$__CodeName" == "haiku" ]]; then
 
     # Setup the sysroot
     echo "Setting up sysroot and extracting needed packages"
-    mkdir -p "$__RootfsDir/boot/system"
+    mkdir -p "$__RootfsDir"
     for file in "$__RootfsDir/generated/objects/haiku/x86_64/packaging/packages/"*.hpkg; do
-        "$__RootfsDir/generated/objects/linux/x86_64/release/tools/package/package" extract -C "$__RootfsDir/boot/system" "$file"
+        "$__RootfsDir/generated/objects/linux/x86_64/release/tools/package/package" extract -C "$__RootfsDir" "$file"
     done
     for file in "$__RootfsDir/generated/download/"*.hpkg; do
-        "$__RootfsDir/generated/objects/linux/x86_64/release/tools/package/package" extract -C "$__RootfsDir/boot/system" "$file"
+        "$__RootfsDir/generated/objects/linux/x86_64/release/tools/package/package" extract -C "$__RootfsDir" "$file"
     done
 
     # Cleaning up temporary files
