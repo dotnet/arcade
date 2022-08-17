@@ -12,7 +12,7 @@ vs.installSize
   SharedDrive=0
 
 vs.logFiles
-  vs.logFile pattern="dd_seutp*__VS_PACKAGE_NAME__*.log"
+  vs.logFile pattern="dd_setup*__VS_PACKAGE_NAME__*.log"
 
 vs.msiProperties
   vs.msiProperty name="MSIFASTINSTALL" value="7"

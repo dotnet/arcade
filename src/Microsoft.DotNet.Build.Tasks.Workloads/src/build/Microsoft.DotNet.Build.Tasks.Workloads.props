@@ -5,6 +5,5 @@
     <MicrosoftDotNetBuildTasksWorkloadsAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\tools\net472\Microsoft.DotNet.Build.Tasks.Workloads.dll</MicrosoftDotNetBuildTasksWorkloadsAssembly>
   </PropertyGroup>
 
-  <UsingTask TaskName="GenerateManifestMsi" AssemblyFile="$(MicrosoftDotNetBuildTasksWorkloadsAssembly)" />
-  <UsingTask TaskName="GenerateVisualStudioWorkload" AssemblyFile="$(MicrosoftDotNetBuildTasksWorkloadsAssembly)" />
+  <UsingTask TaskName="CreateVisualStudioWorkload" AssemblyFile="$(MicrosoftDotNetBuildTasksWorkloadsAssembly)" />
 </Project>

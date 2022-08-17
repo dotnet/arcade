@@ -52,7 +52,7 @@ stages:
     - job: build (Windows)
         pool:
           name: NetCore1ESPool-Internal
-          demands: ImageOverride -equals Build.Server.Amd64.VS2019
+          demands: ImageOverride -equals windows.vs2019.amd64
 
         steps:
         - checkout: self
@@ -203,7 +203,7 @@ for your release builds:
       - job: build (Windows)
           pool:
             name: NetCore1ESPool-Internal
-            demands: ImageOverride -equals Build.Server.Amd64.VS2019
+            demands: ImageOverride -equals windows.vs2019.amd64
 
           steps:
           - checkout: self

@@ -27,6 +27,8 @@
     <AzurePipelinesExpectedTestFailure Include="HelixReporterTests.failure2"/>
   </ItemGroup>
 
+
+<!-- Disabled : see https://github.com/dotnet/arcade/issues/10358
   <ItemGroup>
     <HelixWorkItem Include="TrxTest">
       <Command>echo 'done!'</Command>
@@ -38,6 +40,7 @@
     <AzurePipelinesExpectedTestFailure Include="HelixReporter.TRXTests.HelixReporter.TRX.Fail2"/>
     <AzurePipelinesExpectedTestFailure Include="tests.UnitTest2.ExpectedFailureTheoryTest"/>
   </ItemGroup>
+-->
 
   <ItemGroup>
     <XUnitProject Include="..\src\**\*.Tests.csproj"/>

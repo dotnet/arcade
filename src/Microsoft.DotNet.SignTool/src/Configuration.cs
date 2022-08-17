@@ -460,21 +460,34 @@ namespace Microsoft.DotNet.SignTool
                     return new FileSignInfo(file, signInfo.WithIsAlreadySigned(isAlreadySigned), wixContentFilePath: wixContentFilePath);
                 }
 
-                // TODO: implement this check for native PE files as well:
-                // extract copyright from native resource (.rsrc section) 
-                if (signInfo.ShouldSign && peInfo != null && peInfo.IsManaged)
+                if (signInfo.ShouldSign && peInfo != null)
                 {
                     bool isMicrosoftLibrary = IsMicrosoftLibrary(peInfo.Copyright);
                     bool isMicrosoftCertificate = !IsThirdPartyCertificate(signInfo.Certificate);
                     if (isMicrosoftLibrary != isMicrosoftCertificate)
                     {
+                        string warning;
+                        SigningToolErrorCode code;
                         if (isMicrosoftLibrary)
                         {
-                            LogWarning(SigningToolErrorCode.SIGN001, $"Signing Microsoft library '{file.FullPath}' with 3rd party certificate '{signInfo.Certificate}'. The library is considered Microsoft library due to its copyright: '{peInfo.Copyright}'.");
+                            code = SigningToolErrorCode.SIGN001;
+                            warning = $"Signing Microsoft library '{file.FullPath}' with 3rd party certificate '{signInfo.Certificate}'. The library is considered Microsoft library due to its copyright: '{peInfo.Copyright}'.";
                         }
                         else
                         {
-                            LogWarning(SigningToolErrorCode.SIGN001, $"Signing 3rd party library '{file.FullPath}' with Microsoft certificate '{signInfo.Certificate}'. The library is considered 3rd party library due to its copyright: '{peInfo.Copyright}'.");
+                            code = SigningToolErrorCode.SIGN004;
+                            warning = $"Signing 3rd party library '{file.FullPath}' with Microsoft certificate '{signInfo.Certificate}'. The library is considered 3rd party library due to its copyright: '{peInfo.Copyright}'.";
+                        }
+
+                        // https://github.com/dotnet/arcade/issues/10293
+                        // Turn the else into a warning (and hoist into the if above) after issue is complete.
+                        if (peInfo.IsManaged)
+                        {
+                            LogWarning(code, warning);
+                        }
+                        else
+                        {
+                            _log.LogMessage(MessageImportance.High, $"{code.ToString()}: {warning}");
                         }
                     }
                 }
@@ -514,7 +527,7 @@ namespace Microsoft.DotNet.SignTool
         /// Copyright used for binary assets (assemblies and packages) built by Microsoft must be Microsoft copyright.
         /// </summary>
         private static bool IsMicrosoftLibrary(string copyright)
-            => copyright.Contains("Microsoft");
+            => copyright != null && copyright.Contains("Microsoft");
 
         private static bool IsThirdPartyCertificate(string name)
             => name.Equals("3PartyDual", StringComparison.OrdinalIgnoreCase) ||
@@ -526,17 +539,31 @@ namespace Microsoft.DotNet.SignTool
 
             if (!isManaged)
             {
-                return new PEInfo(isManaged);
+                return new PEInfo(isManaged, GetNativeLegalCopyright(fullPath));
             }
 
             bool isCrossgened = ContentUtil.IsCrossgened(fullPath);
             string publicKeyToken = ContentUtil.GetPublicKeyToken(fullPath);
 
-            GetTargetFrameworkAndCopyright(fullPath, out string targetFramework, out string copyright);
+            GetManagedTargetFrameworkAndCopyright(fullPath, out string targetFramework, out string copyright);
             return new PEInfo(isManaged, isCrossgened, copyright, publicKeyToken, targetFramework);
         }
 
-        private static void GetTargetFrameworkAndCopyright(string filePath, out string targetFramework, out string copyright)
+        /// <summary>
+        /// Retrieves the copyright info from the file version info resource structure.
+        /// This is used as a backup method, in cases of non-managed binaries as well as managed
+        /// binaries in some cases (crossgen)
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        private static string GetNativeLegalCopyright(string filePath)
+        {
+            var fileVersionInfo = FileVersionInfo.GetVersionInfo(filePath);
+            // Native assets have a space rather than an empty string if there is not a legal copyright available.
+            return fileVersionInfo.LegalCopyright?.Trim();
+        }
+
+        private static void GetManagedTargetFrameworkAndCopyright(string filePath, out string targetFramework, out string copyright)
         {
             targetFramework = string.Empty;
             copyright = string.Empty;
@@ -562,6 +589,12 @@ namespace Microsoft.DotNet.SignTool
                         }
                     }
                 }
+            }
+
+            // If there is no copyright available, it's possible this was a r2r binary. Get the native info instead.
+            if (string.IsNullOrEmpty(copyright))
+            {
+                copyright = GetNativeLegalCopyright(filePath);
             }
         }
 
