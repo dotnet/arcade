@@ -18,9 +18,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         [WindowsOnlyFact]
         public static void ItCanCreateWorkloads()
         {
-            // Create intermediate outputs under Artifacts\obj to avoid path issues and make sure it's clean so we don't pick up
+            // Create intermediate outputs under %temp% to avoid path issues and make sure it's clean so we don't pick up
             // conflicting sources from previous runs.
-            string baseIntermediateOutputPath = Path.Combine(File.ReadAllLines(Path.Combine(AppContext.BaseDirectory, "ObjDir.txt"))[0], "WL");
+            string baseIntermediateOutputPath = Path.Combine(Path.GetTempPath(), "WL");
 
             if (Directory.Exists(baseIntermediateOutputPath))
             {

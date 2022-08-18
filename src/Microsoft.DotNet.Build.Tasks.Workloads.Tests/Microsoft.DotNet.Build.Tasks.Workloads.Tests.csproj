@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
@@ -54,10 +54,4 @@
     <Reference Include="$(WixInstallPath)\Microsoft.Deployment.WindowsInstaller.dll" />
     <Reference Include="$(WixInstallPath)\Microsoft.Deployment.WindowsInstaller.Package.dll" />
   </ItemGroup>
-
-  <Target Name="GenerateObjDirTxt" AfterTargets="Build">
-    <!-- Unit tests need to know the root obj folder since the default location where tests are executed is too
-         deep when extracting workload packs. -->
-    <WriteLinesToFile File="$(OutputPath)ObjDir.txt" Lines="$(ArtifactsObjDir)" Overwrite="true" />
-  </Target>
 </Project>
