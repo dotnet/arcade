@@ -41,6 +41,20 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             _pack = pack;
             Platforms = platforms;
             MsiVersion = Version;
+
+            // Override the SWIX ID for MSI packages to use the shortened, non-aliased ID with the pack version. For example,
+            // if a the manifest defines a pack as 
+            //
+            // "Microsoft.NET.Runtime.Emscripten.Python.net7" : {
+            // "alias-to": {
+            //   "win-x64": "Microsoft.NET.Runtime.Emscripten.3.1.12.Python.win-x64",
+            //   "osx-x64": "Microsoft.NET.Runtime.Emscripten.3.1.12.Python.osx-x64",
+            //   "osx-arm64": "Microsoft.NET.Runtime.Emscripten.3.1.12.Python.osx-x64"
+            //  }
+            //
+            // We'll pick "Microsoft.NET.Runtime.Emscripten.Python.net7" as the SWIX ID + with the pack version, but the SWIX package
+            // will point to the MSI generated from the aliased pack, e.g. Microsoft.NET.Runtime.Emscripten.3.1.12.Python.win-x64
+            SwixPackageId = $"{pack.Id.ToString().Replace(shortNames)}.{Identity.Version}";
         }
 
         /// <summary>
