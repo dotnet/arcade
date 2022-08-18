@@ -100,8 +100,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.Contains("vs.dependency id=Microsoft.Emscripten.Sdk.6.0.4", componentSwr);
 
             // Verify the SWIX authoring for the VS package wrapping the manifest MSI
-            string manifestMsiSwr = File.ReadAllText(Path.Combine(baseIntermediateOutputPath, "src", "swix", "Emscripten.Manifest-6.0.200.6.0.4", "x64", "msi.swr"));
-            Assert.Contains("package name=Emscripten.Manifest-6.0.200.6.0.4", manifestMsiSwr);
+            string manifestMsiSwr = File.ReadAllText(Path.Combine(baseIntermediateOutputPath, "src", "swix", "Emscripten.Manifest-6.0.200", "x64", "msi.swr"));
+            Assert.Contains("package name=Emscripten.Manifest-6.0.200", manifestMsiSwr);
             Assert.Contains("vs.package.type=msi", manifestMsiSwr);
 
             // Verify the SWIX authoring for one of the workload pack MSIs. Packs get assigned random sub-folders so we
