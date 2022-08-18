@@ -41,6 +41,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             _pack = pack;
             Platforms = platforms;
             MsiVersion = Version;
+
+            // Override the SWIX ID for MSI packages to use the shortened, non-aliased ID with the pack version
+            SwixPackageId = $"{pack.Id.ToString().Replace(shortNames)}.{Identity.Version}";
         }
 
         /// <summary>

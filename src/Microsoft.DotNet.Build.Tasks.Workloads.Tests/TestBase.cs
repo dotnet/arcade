@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 {
@@ -17,5 +18,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public static readonly string WixToolsetPath = Path.Combine(TestAssetsPath, "wix");
 
         public static readonly string PackageRootDirectory = Path.Combine(BaseIntermediateOutputPath, "pkg");
+        
     }
 }
