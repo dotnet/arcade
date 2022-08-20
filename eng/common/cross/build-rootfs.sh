@@ -226,6 +226,16 @@ while :; do
                 __CodeName=bionic
             fi
             ;;
+        focal) # Ubuntu 20.04
+            if [[ "$__CodeName" != "jessie" ]]; then
+                __CodeName=focal
+            fi
+            ;;
+        jammy) # Ubuntu 22.04
+            if [[ "$__CodeName" != "jessie" ]]; then
+                __CodeName=jammy
+            fi
+            ;;
         jessie) # Debian 8
             __CodeName=jessie
             __UbuntuRepo="http://ftp.debian.org/debian/"
