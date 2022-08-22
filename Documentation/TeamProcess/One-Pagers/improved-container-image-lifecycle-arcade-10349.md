@@ -1,6 +1,6 @@
 # Improved Docker Container Image Lifecycle
 
-As part of [#10123](https://github.com/dotnet/arcade/issues/10123) to improve our docker container security and sustainability, we need to improve the container image lifecycle. Currently, our container definitions are stable, but rarely updated, with some of the definitions dating back several years. We don't have means to ensure that all container images we use contain the latest OS patches and CVE fixes. One of the main points of this proposal is to ensure that the containers are updated regularly, accepting servicing updates form the OS on a regular basis. The major business goals of this work are to make sure that:
+As part of [#10123](https://github.com/dotnet/arcade/issues/10123) to improve our docker container security and sustainability, we need to improve the container image lifecycle. Currently, our container definitions are stable, but rarely updated, with some of the definitions dating back several years. We don't have means to ensure that all container images we use contain the latest OS patches and CVE fixes. One of the main points of this proposal is to ensure that the containers are updated regularly, accepting servicing updates from the OS on a regular basis. The major business goals of this work are to make sure that:
 
 - Our container images are re-built regularly and they contain the latest underlying OS patches and CVE fixes
 - There is a mechanism for updating the docker containers used by product teams so that they are always on the latest version of each container image
@@ -22,14 +22,14 @@ The major risk in this portion of the epic is finding and updating all container
 
 - What are your assumptions?
   - The Matrix of Truth work will enable us to identify all pipelines and branches that are using docker containers and which images they are using
-  - We will be able to extend the existing publishing infrastructure to also idetify images that are due for removal
+  - We will be able to extend the existing publishing infrastructure to also identify images that are due for removal
   - All of our existing base images can be replaced with MAR-approved images (we can already see where this is not true, OpenSuse and Raspian are not available as MAR-tagged images, and Alpine will be deprecated soon)
   - Most of the official build that is currently built in docker containers can be built on Mariner
   - MAR-approved images are updated with OS patches and CVE fixes
 
 - What are your unknowns?
   - What should we do about images that are not available as MAR-approved base images?
-  - How will we identify the LKG for each docker image?
+  - How will we identify the last known good (LKG) for each docker image?
   - What testing is currently in place for docker images, so that we can have confidence that updating the `latest` image will not break product teams?
   - What is the rollback story for the `latest` tagging scheme?
 
@@ -41,9 +41,7 @@ This feature will depend heavily on MAR-approved images (and whatever updating s
 
 ### Rollout and Deployment
 
-As part of this work, we will need to implement a rollout story for the new tagging feature. We do not want every published image to immediately be tagged as `latest`. In fact, we may want to implement two different tags: `latest` and `staging`. In this scheme, we would branch the `dotnet-buildtools-prereqs-docker` repo so that we have a production branch. Every image published from main would be tagged `staging` which could then be used in testing, much like the images in our Helix -Int pool. This tag would be used for identifying issues ahead of time so that when we rollout, we will be more confident that the images we are tagging as `latest` will be safe for our customers. The rollout would be performed on a weekly basis, much like our helix-service, helix-machines, and arcade-services rollouts. We roll all of the known good changes in the main branch to production, and publish those images with the `latest` tag. This would allow us to reuse the same logic for both staging and latest.
-
-We will also need a rollback story so that if an image breaks a product team's build or test, we can untag that image and retag the previous `latest` image. A rollback should be as simple as reverting a previous change and publishing the images at the new commit. While this image may be identical to a previously published image, it will effectively be treated as a new version.
+As part of this work, we will need to implement a rollout story for the new tagging feature. We do not want every published image to immediately be identified as the production version. To add some testing time, we will create a production branch of `dotnet-buildtools-prereqs-docker`, and perform weekly rollouts alongside our helix-service, helix-machines, and arcade-services rollouts. When we roll all of the known good changes in the main branch to production, those new images will then be tagged as the production versions. Daily images built in main will be considered staging images and will be avaible to customers if they so choose. We will also need a rollback story so that if an image breaks a product team's build or test, we can revert to a previously working version of the image.
 
 ### FR and Operations Handoff
 
