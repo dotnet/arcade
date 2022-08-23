@@ -29,6 +29,7 @@ The major risk in this portion of the epic is identifying the full list of softw
     - Can we have multiple versions of the tools on the same image (multiple versions of clang, for example)
     - What testing is currently in place for docker images, so that we can have confidence that updating the image will not break product teams?
     - How will we identify when the software that we don't install through the package managers needs an update?
+    - Different package managers contain different software versions, we'll need to do investigation to figure out what is available where
 
 - What Dependencies will this epic/feature(s) have?
 
