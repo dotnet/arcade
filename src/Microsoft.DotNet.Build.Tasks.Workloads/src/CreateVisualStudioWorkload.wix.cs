@@ -200,7 +200,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 foreach (ITaskItem workloadManifestPackageFile in WorkloadManifestPackageFiles)
                 {
                     // 1. Process the manifest package and create a set of installers.
-                    WorkloadManifestPackage manifestPackage = new(workloadManifestPackageFile, PackageRootDirectory, new Version(ManifestMsiVersion), ShortNames, Log);
+                    WorkloadManifestPackage manifestPackage = new(workloadManifestPackageFile, PackageRootDirectory, 
+                        string.IsNullOrWhiteSpace(ManifestMsiVersion) ? null : new Version(ManifestMsiVersion), ShortNames, Log);
                     manifestPackages.Add(manifestPackage);
 
                     Dictionary<string, WorkloadManifestMsi> manifestMsisByPlatform = new();
@@ -305,9 +306,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                                         buildData.Remove(sourcePackage);
                                     }
                                 }
-                            }
-
-                            
+                            }                            
 
                             if (CreateWorkloadPackGroups)
                             {
@@ -440,6 +439,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     MsiSwixProject swixProject = new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath);
                     ITaskItem swixProjectItem = new TaskItem(swixProject.Create());
                     swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{((WorkloadManifestPackage)msi.Package).SdkFeatureBand}");
+                    swixProjectItem.SetMetadata(Metadata.PackageType, swixProject.PackageType);
 
                     lock (swixProjectItems)
                     {
@@ -462,12 +462,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 _ = Parallel.ForEach(swixComponents, swixComponent =>
                 {
                     ComponentSwixProject swixComponentProject = new(swixComponent, BaseIntermediateOutputPath, BaseOutputPath);
-                    ITaskItem swixProjItem = new TaskItem(swixComponentProject.Create());
-                    swixProjItem.SetMetadata(Metadata.SdkFeatureBand, $"{swixComponent.SdkFeatureBand}");
+                    ITaskItem swixProjectItem = new TaskItem(swixComponentProject.Create());
+                    swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{swixComponent.SdkFeatureBand}");
+                    swixProjectItem.SetMetadata(Metadata.PackageType, swixComponentProject.PackageType);
 
                     lock (swixProjectItems)
                     {
-                        swixProjectItems.Add(swixProjItem);
+                        swixProjectItems.Add(swixProjectItem);
                     }
                 });
 
