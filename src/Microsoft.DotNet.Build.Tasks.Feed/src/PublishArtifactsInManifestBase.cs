@@ -413,11 +413,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Log.LogMessage(MessageImportance.High,
                 $"Performing symbol publishing... \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false ");
             var symbolCategory = TargetFeedContentType.Symbols;
+            TaskLoggingHelper _log;
 
             using HttpClient httpClient = CreateAzdoClient(AzureDevOpsOrg, false, AzureProject);
             string containerId = await GetContainerIdAsync(httpClient, ArtifactName.BlobArtifacts);
 
-            if (Log.HasLoggedErrors)
+            if (_log.HasLoggedErrors)
             {
                 return;
             }
@@ -1167,10 +1168,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             TargetFeedConfig feedConfig,
             SemaphoreSlim clientThrottle)
         {
+            TaskLoggingHelper _log;
             using HttpClient httpClient = CreateAzdoClient(AzureDevOpsOrg, false, AzureProject);
             string containerId = await GetContainerIdAsync(httpClient, ArtifactName.PackageArtifacts);
 
-            if (Log.HasLoggedErrors)
+            if (_log.HasLoggedErrors)
             {
                 return;
             }
@@ -1523,10 +1525,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             TargetFeedConfig feedConfig,
             SemaphoreSlim clientThrottle)
         {
+            TaskLoggingHelper _log;
             using HttpClient httpClient = CreateAzdoClient(AzureDevOpsOrg, false, AzureProject);
             string containerId = await GetContainerIdAsync(httpClient, ArtifactName.BlobArtifacts);
 
-            if (Log.HasLoggedErrors)
+            if (_log.HasLoggedErrors)
             {
                 return;
             }
@@ -1695,10 +1698,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             TargetFeedConfig feedConfig,
             SemaphoreSlim clientThrottle)
         {
+            TaskLoggingHelper _log;
             using HttpClient httpClient = CreateAzdoClient(AzureDevOpsOrg, false, AzureProject);
             string containerId = await GetContainerIdAsync(httpClient, ArtifactName.BlobArtifacts);
 
-            if (Log.HasLoggedErrors)
+            if (_log.HasLoggedErrors)
             {
                 return;
             }
@@ -1767,14 +1771,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     var fileName = Path.GetFileName(asset);
                     var localBlobPath = Path.Combine(BlobAssetsBasePath, fileName);
+                    TaskLoggingHelper _log;
+
                     if (!File.Exists(localBlobPath))
                     {
-                        Log.LogError($"Could not locate '{asset} at '{localBlobPath}'");
+                        _log.LogError($"Could not locate '{asset} at '{localBlobPath}'");
                     }
 
                     return (localBlobPath, id: asset);
                 })
                 .ToArray();
+
+            if (_log.HasLoggedErrors)
+            {
+                return;
+            }
 
             var pushOptions = new PushOptions
             {
