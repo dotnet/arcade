@@ -6,36 +6,36 @@ using Microsoft.CodeAnalysis;
 namespace Microsoft.DotNet.GenAPI.Shared
 {
     /// <summary>
-    /// Defines interface for implementing filtering of attributes, namespaces, types, members, filter out/allow private, internals.
+    /// Interface responsible for filtering attributes, namespaces, types and members.
     /// </summary>
     public interface IAssemblySymbolFilter
     {
         /// <summary>
-        /// Interface for fitlering our corresponding namespace and it's types, members.
+        /// Including/fitlering out namespace symbol and it's types, members.
         /// </summary>
         /// <param name="ns">Object of <cref="INamespaceSymbol"/>.</param>
-        /// <returns>Boolean value.</returns>
+        /// <returns>Returns boolean value.</returns>
         bool Include(INamespaceSymbol ns);
 
         /// <summary>
-        /// Interface for fitlering our corresponding attribute.
+        /// Including/fitlering out attribute data.
         /// </summary>
         /// <param name="ns">Object of <cref="AttributeData"/>.</param>
-        /// <returns>Boolean value.</returns>
+        /// <returns>Returns boolean value.</returns>
         bool Include(AttributeData at);
 
         /// <summary>
-        /// Interface for fitlering our corresponding type and it's members .
+        /// Including/fitlering out type symbol and it's members .
         /// </summary>
         /// <param name="ns">Object of <cref="ITypeSymbol"/>.</param>
-        /// <returns>Boolean value.</returns>
+        /// <returns>Returns boolean value.</returns>
         bool Include(ITypeSymbol ts);
 
         /// <summary>
-        /// Interface for fitlering our corresponding member.
+        /// Including/fitlering out member symbol.
         /// </summary>
         /// <param name="ns">Object of <cref="ISymbol"/>.</param>
-        /// <returns>Boolean value.</returns>
+        /// <returns>Returns boolean value.</returns>
         bool Include(ISymbol member);
     }
 }
