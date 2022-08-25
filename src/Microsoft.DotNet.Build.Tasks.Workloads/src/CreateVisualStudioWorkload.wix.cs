@@ -369,22 +369,28 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                             msiItems.Add(msiOutputItem);
                         }
 
-                        MsiSwixProject swixProject = new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath);
-                        string swixProj = swixProject.Create();
-
-                        foreach (ReleaseVersion sdkFeatureBand in data.FeatureBands[platform])
+                        // We don't currently support arm64 SWIX authoring for VS. We'd need to pass a machineArch value
+                        // depending on whether the feature band being processed supports arm64 so that we change the SWIX
+                        // authoring to using machineArch instead of chip (which only works on older VS versions for x86/x64.
+                        if (!string.Equals(msiOutputItem.GetMetadata(Metadata.Platform), "arm64"))
                         {
-                            ITaskItem swixProjectItem = new TaskItem(swixProj);
-                            swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{sdkFeatureBand}");
+                            MsiSwixProject swixProject = new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath,
+                                chip: msiOutputItem.GetMetadata(Metadata.Platform));
+                            string swixProj = swixProject.Create();
 
-                            lock (swixProjectItems)
+                            foreach (ReleaseVersion sdkFeatureBand in data.FeatureBands[platform])
                             {
-                                swixProjectItems.Add(swixProjectItem);
+                                ITaskItem swixProjectItem = new TaskItem(swixProj);
+                                swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{sdkFeatureBand}");
+
+                                lock (swixProjectItems)
+                                {
+                                    swixProjectItems.Add(swixProjectItem);
+                                }
                             }
                         }
                     });
                 });
-
 
                 //  Parallel processing of pack groups was causing file access errors for heat in an earlier version of this code
                 //  So we support a flag to disable the parallelization if that starts happening again
@@ -411,19 +417,24 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                         if (UseWorkloadPackGroupsForVS)
                         {
-                            MsiSwixProject swixProject = new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath);
-                            string swixProj = swixProject.Create();
-
-                            PossiblyParallelForEach(!DisableParallelPackageGroupProcessing, packGroup.ManifestsPerPlatform[platform], manifestPackage =>
+                            // Skip generating arm64 SWIX authoring for now.
+                            if (!string.Equals(msiOutputItem.GetMetadata(Metadata.Platform), "arm64"))
                             {
-                                ITaskItem swixProjectItem = new TaskItem(swixProj);
-                                swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{manifestPackage.SdkFeatureBand}");
+                                MsiSwixProject swixProject = new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath,
+                                    chip: msiOutputItem.GetMetadata(Metadata.Platform));
+                                string swixProj = swixProject.Create();
 
-                                lock (swixProjectItems)
+                                PossiblyParallelForEach(!DisableParallelPackageGroupProcessing, packGroup.ManifestsPerPlatform[platform], manifestPackage =>
                                 {
-                                    swixProjectItems.Add(swixProjectItem);
-                                }
-                            });
+                                    ITaskItem swixProjectItem = new TaskItem(swixProj);
+                                    swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{manifestPackage.SdkFeatureBand}");
+
+                                    lock (swixProjectItems)
+                                    {
+                                        swixProjectItems.Add(swixProjectItem);
+                                    }
+                                });
+                            }
                         }
                     }
                 });
@@ -435,15 +446,20 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 {
                     ITaskItem msiOutputItem = msi.Build(MsiOutputPath, IceSuppressions);
 
-                    // Generate SWIX authoring for the MSI package.
-                    MsiSwixProject swixProject = new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath);
-                    ITaskItem swixProjectItem = new TaskItem(swixProject.Create());
-                    swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{((WorkloadManifestPackage)msi.Package).SdkFeatureBand}");
-                    swixProjectItem.SetMetadata(Metadata.PackageType, swixProject.PackageType);
-
-                    lock (swixProjectItems)
+                    // Skip generating arm64 SWIX authoring for now.
+                    if (!string.Equals(msiOutputItem.GetMetadata(Metadata.Platform), "arm64"))
                     {
-                        swixProjectItems.Add(swixProjectItem);
+                        // Generate SWIX authoring for the MSI package.
+                        MsiSwixProject swixProject = new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath,
+                            chip: msiOutputItem.GetMetadata(Metadata.Platform));
+                        ITaskItem swixProjectItem = new TaskItem(swixProject.Create());
+                        swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{((WorkloadManifestPackage)msi.Package).SdkFeatureBand}");
+                        swixProjectItem.SetMetadata(Metadata.PackageType, swixProject.PackageType);
+
+                        lock (swixProjectItems)
+                        {
+                            swixProjectItems.Add(swixProjectItem);
+                        }
                     }
 
                     // Generate a .csproj to package the MSI and its manifest for CLI installs.

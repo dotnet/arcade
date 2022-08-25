@@ -25,10 +25,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 
             Exception e = Assert.Throws<Exception>(() =>
             {
-                MsiSwixProject swixProject = new(msiItem, BaseIntermediateOutputPath, BaseOutputPath);
+                MsiSwixProject swixProject = new(msiItem, BaseIntermediateOutputPath, BaseOutputPath,
+                    chip: "x64", machineArch: "x64", productArch: "neutral");
             });
 
-            Assert.Equal(@"Relative package path exceeds the maximum length (182): Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.100,version=6.0.0.0,chip=x64,productarch=neutral\Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.100.6.0.0-preview.7.21377.12-x64.msi.", e.Message);
+            Assert.Equal(@"Relative package path exceeds the maximum length (182): Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.100,version=6.0.0.0,chip=x64,productarch=neutral,machinearch=x64\Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.100.6.0.0-preview.7.21377.12-x64.msi.", e.Message);
         }
 
         [WindowsOnlyFact]
@@ -48,5 +49,34 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 
             Assert.Equal("Microsoft.iOS.Templates.15.2.302-preview.14.122", item.GetMetadata(Metadata.SwixPackageId));
         }
+
+        [WindowsOnlyFact]
+        public void ItOnlyIncludesDefinedPropertiesForMsiPackages()
+        {
+            // Build to a different path to avoid any file read locks on the MSI from other tests
+            // that can open it.
+            string PackageRootDirectory = Path.Combine(BaseIntermediateOutputPath, Path.GetRandomFileName());
+            string packagePath = Path.Combine(TestAssetsPath, "microsoft.ios.templates.15.2.302-preview.14.122.nupkg");
+
+            WorkloadPack p = new(new WorkloadPackId("Microsoft.iOS.Templates"), "15.2.302-preview.14.122", WorkloadPackKind.Template, null);
+            TemplatePackPackage pkg = new(p, packagePath, new[] { "x64" }, PackageRootDirectory);
+            pkg.Extract();
+            WorkloadPackMsi msi = new(pkg, "x64", new MockBuildEngine(), WixToolsetPath, BaseIntermediateOutputPath);
+
+            ITaskItem msiItem = msi.Build(MsiOutputPath);
+            msiItem.SetMetadata(Metadata.Platform, "x64");            
+
+            Assert.Equal("Microsoft.iOS.Templates.15.2.302-preview.14.122", msiItem.GetMetadata(Metadata.SwixPackageId));
+
+            MsiSwixProject swixProject = new(msiItem, BaseIntermediateOutputPath, BaseOutputPath, chip: msiItem.GetMetadata(Metadata.Platform),
+                machineArch: DefaultValues.x64);
+            string swixProj = swixProject.Create();
+            string msiSwr = File.ReadAllText(Path.Combine(Path.GetDirectoryName(swixProj), "msi.swr"));
+
+            Assert.DoesNotContain("vs.package.productArch", msiSwr);
+            Assert.Contains("vs.package.chip=x64", msiSwr);
+            Assert.Contains("vs.package.machineArch=x64", msiSwr);
+        }
+
     }
 }

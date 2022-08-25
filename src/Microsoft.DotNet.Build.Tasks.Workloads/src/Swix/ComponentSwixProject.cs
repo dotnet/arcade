@@ -2,9 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
 {
@@ -33,7 +31,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
             base(component.Name, component.Version, baseIntermediateOutputPath, baseOutputPath)
         {
             _component = component;
-            ValidateRelativePackagePath($@"{component.Name},version={component.Version}\_package.json");
+            ValidateRelativePackagePath(GetRelativePackagePath());
 
             // Components must have 1 or more dependencies.
             if (!component.HasDependencies)
@@ -41,7 +39,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
                 throw new ArgumentException(string.Format(Strings.ComponentMustHaveAtLeastOneDependency, component.Name));
             }
 
-            ProjectSourceDirectory = Path.Combine(SwixDirectory, $"{component.SdkFeatureBand}", 
+            ProjectSourceDirectory = Path.Combine(SwixDirectory, $"{component.SdkFeatureBand}",
                 $"{component.Name}.{component.Version}");
 
             ReplacementTokens[SwixTokens.__VS_COMPONENT_TITLE__] = component.Title;
@@ -76,5 +74,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
 
             return swixProj;
         }
+
+        /// <inheritdoc />
+        protected override string GetRelativePackagePath() =>
+            Path.Combine(base.GetRelativePackagePath(), "_package.json");
     }
 }

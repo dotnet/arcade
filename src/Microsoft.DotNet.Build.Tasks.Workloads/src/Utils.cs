@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// </summary>
         /// <param name="name">The name of the parameter to check.</param>
         /// <param name="value">The value of the parameter.</param>
-        internal static void CheckNullOrEmpty(string name, string value)
+        internal static string CheckNullOrEmpty(string name, string value)
         {
             if (value is null)
             {
@@ -90,6 +90,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             {
                 throw new ArgumentException($"Parameter cannot be empty: ${name}");
             }
+
+            return value;
         }
 
         /// <summary>

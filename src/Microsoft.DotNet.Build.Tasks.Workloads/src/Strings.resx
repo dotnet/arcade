@@ -126,6 +126,12 @@
   <data name="CannotExtractSdkVersionFromPackageId" xml:space="preserve">
     <value>Unable to extract the SDK version from the package ID: {0}.</value>
   </data>
+  <data name="ChipOrMachineArchRequired" xml:space="preserve">
+    <value>At least one of the following properties must contain a valid value: Chip, MachineArch.</value>
+  </data>
+  <data name="ComponentCategoryCannotBeNull" xml:space="preserve">
+    <value>Components must have define at lease on category.</value>
+  </data>
   <data name="ComponentDescriptionCannotBeNull" xml:space="preserve">
     <value>Components cannot have a null description. Either provide a custom resource or add a description to the workload definition.</value>
   </data>

@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             string baseIntermediateOutputPath = Path.Combine(Path.GetTempPath(), "WL");
 
             if (Directory.Exists(baseIntermediateOutputPath))
+            if (Directory.Exists(baseIntermediateOutputPath))
             {
                 Directory.Delete(baseIntermediateOutputPath, recursive: true);
             }
@@ -38,6 +39,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
                 new TaskItem("microsoft-net-sdk-emscripten")
                 .WithMetadata(Metadata.Title, ".NET WebAssembly Build Tools (Emscripten)")
                 .WithMetadata(Metadata.Description, "Build tools for WebAssembly ahead-of-time (AoT) compilation and native linking.")
+                .WithMetadata(Metadata.Version, "5.6.7.8")
             };
 
             ITaskItem[] shortNames = new[]
@@ -85,12 +87,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.Equal("x64;1033", si.Template);
 
             // Verify the SWIX authoring for the component representing the workload in VS.
-            string componentSwr = File.ReadAllText(Path.Combine(baseIntermediateOutputPath, "src", "swix", "6.0.200", "microsoft.net.sdk.emscripten.6.0.4", "component.swr"));
+            string componentSwr = File.ReadAllText(Path.Combine(baseIntermediateOutputPath, "src", "swix", "6.0.200", "microsoft.net.sdk.emscripten.5.6.7.8", "component.swr"));
             Assert.Contains("package name=microsoft.net.sdk.emscripten", componentSwr);
 
             // Emscripten is an abstract workload so it should be a component group.
             Assert.Contains("vs.package.type=component", componentSwr);
             Assert.Contains("isUiGroup=yes", componentSwr);
+            Assert.Contains("version=5.6.7.8", componentSwr);
 
             // Verify pack dependencies. These should map to MSI packages. The VS package IDs should be the non-aliased
             // pack IDs and version from the workload manifest. The actual VS packages will point to the MSIs generated from the
