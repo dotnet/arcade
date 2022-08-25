@@ -17,12 +17,14 @@ namespace Microsoft.DotNet.GenAPI.Shared
         /// <param name="namespaces">List of namespaces to be sorted.</param>
         /// <returns>Returns namespaces in sorted order.</returns>
         IEnumerable<INamespaceSymbol> OrderNamespaces(IEnumerable<INamespaceSymbol> namespaces);
+
         /// <summary>
         /// Sorts the elements of a ITypeSymbol.
         /// </summary>
         /// <param name="namespaces">List of TypeMembers to be sorted.</param>
         /// <returns>Returns TypeMembers in sorted order.</returns>
         IEnumerable<T> OrderTypes<T>(IEnumerable<T> symbols) where T : ITypeSymbol;
+
         /// <summary>
         /// Sorts the elements of a ISymbol.
         /// </summary>
