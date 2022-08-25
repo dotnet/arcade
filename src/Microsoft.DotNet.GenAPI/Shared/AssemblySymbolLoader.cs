@@ -12,10 +12,8 @@ namespace Microsoft.DotNet.GenAPI.Shared
     {
         public IAssemblySymbol? LoadAssembly(string path)
         {
-            using (var stream = File.OpenRead(path))
-            {
-                return LoadAssembly(stream);
-            }
+            using var stream = File.OpenRead(path);
+            return LoadAssembly(stream);
         }
 
         public IAssemblySymbol? LoadAssembly(Stream stream)
