@@ -3,7 +3,7 @@
 As part of [#10123](https://github.com/dotnet/arcade/issues/10123) we want to improve the way we handle the software installed on our docker containers. Currently we install software from a few different locations: from the repo package managers (most things), and from the open internet (Node.js for example), where we don't run any checksums validation. We also currently don't have means to ensure that all the software we have installed is on supported versions. We also want to start using stable docker tags, so our customers get the OS and software patches, without having to change anything. This brings in an additional layer of complexity, because there is a small group of software (clang, cmake, ...) that, with a major update, might affect the build process, will be known as "breaking software" in the rest of the page. The major business goals of this work are to make sure that:
 
  - Where possible, install all software from the repo package managers
- - Implement checksum recording and validation for components that are installed from the open internet
+ - Not installing components from the open internet, but from a secure storage that has a public read, private write policy, so it can only be maintained by us
  - Ensure that we're not automatically updating major versions of software that might affect the build process
 
 ## Stakeholders
@@ -39,7 +39,7 @@ This feature will need to align with the new tagging schema. We might have to in
 
 ### Rollout and Deployment
 
-Much of the rollout story will be the same as for the Improved Docker Container Image Lifecycle feature. We'd want to have a staging environment before we'd start using new and updated images on the production workloads. Rollouts would be performed on a weekly baisis where we'd roll out all known good changes and publish a new set of production images. We also need to be able to roll back onto previous image versions, in case of issues.
+Much of the rollout story will be the same as for the Improved Docker Container Image Lifecycle feature. We'd want to have a staging environment before we'd start using new and updated images on the production workloads. Rollouts would be performed on a weekly basis where we'd roll out all known good changes and publish a new set of production images. We also need to be able to roll back onto previous image versions, in case of issues.
 
 ### FR and Operations Handoff
 
