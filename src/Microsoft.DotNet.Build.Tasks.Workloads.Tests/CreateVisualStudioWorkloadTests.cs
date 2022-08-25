@@ -23,7 +23,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             string baseIntermediateOutputPath = Path.Combine(Path.GetTempPath(), "WL");
 
             if (Directory.Exists(baseIntermediateOutputPath))
-            if (Directory.Exists(baseIntermediateOutputPath))
             {
                 Directory.Delete(baseIntermediateOutputPath, recursive: true);
             }
