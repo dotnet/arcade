@@ -410,7 +410,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Dictionary<string, HashSet<Asset>> buildAssets,
             SemaphoreSlim clientThrottle)
         {
-            boolean failed = false;
+            bool failed = false;
             Log.LogMessage(MessageImportance.High,
                 $"Performing symbol publishing... \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false ");
             var symbolCategory = TargetFeedContentType.Symbols;
@@ -1170,7 +1170,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             TargetFeedConfig feedConfig,
             SemaphoreSlim clientThrottle)
         {
-            boolean failed = false;
+            bool failed = false;
             using HttpClient httpClient = CreateAzdoClient(AzureDevOpsOrg, false, AzureProject);
             string containerId = await GetContainerIdAsync(httpClient, ArtifactName.PackageArtifacts);
 
@@ -1529,7 +1529,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             TargetFeedConfig feedConfig,
             SemaphoreSlim clientThrottle)
         {
-            boolean failed = false;
+            bool failed = false;
             using HttpClient httpClient = CreateAzdoClient(AzureDevOpsOrg, false, AzureProject);
             string containerId = await GetContainerIdAsync(httpClient, ArtifactName.BlobArtifacts);
 
@@ -1705,7 +1705,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             TargetFeedConfig feedConfig,
             SemaphoreSlim clientThrottle)
         {
-            boolean failed = false;
+            bool failed = false;
             using HttpClient httpClient = CreateAzdoClient(AzureDevOpsOrg, false, AzureProject);
             string containerId = await GetContainerIdAsync(httpClient, ArtifactName.BlobArtifacts);
 
