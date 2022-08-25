@@ -11,7 +11,7 @@ jobs:
     - job: Merge_GitHub_to_Azure_DevOps
       enableSBOM: false
       pool:
-        name: NetCore1ESPool-Internal
+        name: NetCore1ESPool-Svc-Internal
         demands: ImageOverride -equals windows.vs2019.amd64
       variables:
       - name: WorkingDirectoryName
