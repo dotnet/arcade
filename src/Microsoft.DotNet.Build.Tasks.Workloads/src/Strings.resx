@@ -130,7 +130,7 @@
     <value>At least one of the following properties must contain a valid value: Chip, MachineArch.</value>
   </data>
   <data name="ComponentCategoryCannotBeNull" xml:space="preserve">
-    <value>Components must have define at lease on category.</value>
+    <value>Components must define at least one category.</value>
   </data>
   <data name="ComponentDescriptionCannotBeNull" xml:space="preserve">
     <value>Components cannot have a null description. Either provide a custom resource or add a description to the workload definition.</value>
