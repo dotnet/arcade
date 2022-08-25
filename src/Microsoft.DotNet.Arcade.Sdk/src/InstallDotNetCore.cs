@@ -139,8 +139,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                         }
 
                                         Log.LogMessage(MessageImportance.Low, $"To be installed: {DotNetInstallScript} {arguments}");
-                                        // As opposed to start installation process from here, we better just output 
-                                        // list of all required install script argumets, so it can be executed by Exec task on target level
+                                        // As opposed to start installation process from here, we output list of all required install script arguments, 
+                                        // so it can be executed by Exec task on msbuild Target level.
                                         // See https://github.com/dotnet/msbuild/issues/7913 for more info.
                                         toBeInstalled.Add(new TaskItem(arguments));
                                     }
