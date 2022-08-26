@@ -3,13 +3,12 @@
 
 using System;
 
-namespace Microsoft.DotNet.GenAPI.Tool
+namespace Microsoft.DotNet.GenAPI.Tool;
+
+class Program
 {
-    class Program
+    static int Main(string[] args)
     {
-        static int Main(string[] args)
-        {
-            return 0;
-        }
+        return 0;
     }
 }

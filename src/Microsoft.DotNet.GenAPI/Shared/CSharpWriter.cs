@@ -4,43 +4,26 @@
 using System;
 using Microsoft.CodeAnalysis;
 
-namespace Microsoft.DotNet.GenAPI.Shared
+namespace Microsoft.DotNet.GenAPI.Shared;
+
+public abstract class CSharpWriter : AssemblySymbolTraverser, IWriter, IDisposable
 {
-    public class CSharpWriter : AssemblySymbolTraverser, IWriter, IDisposable
+    private readonly ISyntaxWriter _syntaxWriter;
+
+    public CSharpWriter(IAssemblySymbolOrderProvider orderProvider,
+        IAssemblySymbolFilter filter, ISyntaxWriter syntaxWriter)
+        : base(orderProvider, filter)
     {
-        ISyntaxWriter _syntaxWriter;
+        _syntaxWriter = syntaxWriter;
+    }
 
-        public CSharpWriter(IAssemblySymbolOrderProvider orderProvider,
-            IAssemblySymbolFilter filter, ISyntaxWriter syntaxWriter)
-            : base(orderProvider, filter)
-        {
-            _syntaxWriter = syntaxWriter;
-        }
+    public void WriteAssemblies(IAssemblySymbol assembly)
+    {
+        Visit(assembly);
+    }
 
-        public void WriteAssemblies(IAssemblySymbol assembly)
-        {
-            Visit(assembly);
-        }
-
-        protected override void doProcess(INamespaceSymbol namespaceSymbol)
-        {
-        }
-
-        protected override void doProcess(INamedTypeSymbol typeMember)
-        {
-        }
-
-        protected override void doProcess(ISymbol member)
-        {
-        }
-
-        protected override void doProcess(AttributeData attribute)
-        {
-        }
-
-        public void Dispose()
-        {
-            _syntaxWriter.Dispose();
-        }
+    public void Dispose()
+    {
+        _syntaxWriter.Dispose();
     }
 }

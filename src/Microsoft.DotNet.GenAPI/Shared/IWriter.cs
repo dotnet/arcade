@@ -3,13 +3,12 @@
 
 using Microsoft.CodeAnalysis;
 
-namespace Microsoft.DotNet.GenAPI.Shared
+namespace Microsoft.DotNet.GenAPI.Shared;
+
+/// <summary>
+/// Interface incapsulates logic for processing symbol assemblies.
+/// </summary>
+public interface IWriter
 {
-    /// <summary>
-    /// Interface incapsulates logic for processing symbol assemblies.
-    /// </summary>
-    public interface IWriter
-    {
-        void WriteAssemblies(IAssemblySymbol assembly);
-    }
+    void WriteAssemblies(IAssemblySymbol assembly);
 }

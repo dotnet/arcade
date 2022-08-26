@@ -5,13 +5,12 @@ using System;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks;
 
-namespace Microsoft.DotNet.GenAPI.Tasks
+namespace Microsoft.DotNet.GenAPI.Tasks;
+
+public class GenAPITask : BuildTask
 {
-    public class GenAPITask : BuildTask
+    public override bool Execute()
     {
-        public override bool Execute()
-        {
-            return false;
-        }
+        return false;
     }
 }
