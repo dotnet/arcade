@@ -18,7 +18,12 @@
       DotNetInstallScript="$(_DotNetInstallScript)"
       Platform="$(Platform)"
       RuntimeSourceFeed="$(DotNetRuntimeSourceFeed)"
-      RuntimeSourceFeedKey="$(DotNetRuntimeSourceFeedKey)"/>
+      RuntimeSourceFeedKey="$(DotNetRuntimeSourceFeedKey)">
+
+      <Output TaskParameter="ToBeInstalled" ItemName="DotNetCoreToBeInstalled" />
+    </InstallDotNetCore>
+
+    <Exec IgnoreStandardErrorWarningFormat="true" Command="$(_DotNetInstallScript) %(DotNetCoreToBeInstalled.Identity)" />
   </Target>
 
 </Project>

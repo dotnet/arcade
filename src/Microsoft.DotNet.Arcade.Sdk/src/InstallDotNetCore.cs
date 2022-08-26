@@ -4,7 +4,6 @@ using Microsoft.Build.Utilities;
 using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -35,8 +34,13 @@ namespace Microsoft.DotNet.Arcade.Sdk
         
         public string RuntimeSourceFeedKey { get; set; }
 
+        [Output]
+        public ITaskItem[] ToBeInstalled { get; set; }        
+
         public override bool Execute()
         {
+            ToBeInstalled = Array.Empty<ITaskItem>();
+
             if (!File.Exists(GlobalJsonPath))
             {
                 Log.LogWarning($"Unable to find global.json file '{GlobalJsonPath} exiting");
@@ -88,6 +92,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                 }
                             }
 
+                            var toBeInstalled = new List<ITaskItem>();
                             foreach (var runtimeItem in runtimeItems)
                             {
                                 foreach (var item in runtimeItem.Value)
@@ -133,21 +138,15 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                             arguments += $" -runtimeSourceFeedKey {RuntimeSourceFeedKey}";
                                         }
 
-                                        Log.LogMessage(MessageImportance.Low, $"Executing: {DotNetInstallScript} {arguments}");
-                                        var process = Process.Start(new ProcessStartInfo()
-                                        {
-                                            FileName = DotNetInstallScript,
-                                            Arguments = arguments,
-                                            UseShellExecute = false
-                                        });
-                                        process.WaitForExit();
-                                        if (process.ExitCode != 0)
-                                        {
-                                            Log.LogError("dotnet-install failed");
-                                        }
+                                        Log.LogMessage(MessageImportance.Low, $"To be installed: {DotNetInstallScript} {arguments}");
+                                        // As opposed to start installation process from here, we output list of all required install script arguments, 
+                                        // so it can be executed by Exec task on msbuild Target level.
+                                        // See https://github.com/dotnet/msbuild/issues/7913 for more info.
+                                        toBeInstalled.Add(new TaskItem(arguments));
                                     }
                                 }
-                            }
+                            }                            
+                            ToBeInstalled = toBeInstalled.ToArray();
                         }
                     }
                 }
