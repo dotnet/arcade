@@ -9,27 +9,27 @@ namespace Microsoft.DotNet.GenAPI.Shared
     /// <summary>
     /// Interface provides ordering for namespaces, types and members.
     /// </summary>
-    internal interface IAssemblySymbolOrderProvider
+    public  interface IAssemblySymbolOrderProvider
     {
         /// <summary>
         /// Sorts the elements of a INamespaceSymbol.
         /// </summary>
         /// <param name="namespaces">List of namespaces to be sorted.</param>
         /// <returns>Returns namespaces in sorted order.</returns>
-        IEnumerable<INamespaceSymbol> OrderNamespaces(IEnumerable<INamespaceSymbol> namespaces);
+        IEnumerable<INamespaceSymbol> Order(IEnumerable<INamespaceSymbol> namespaces);
 
         /// <summary>
         /// Sorts the elements of a ITypeSymbol.
         /// </summary>
         /// <param name="namespaces">List of TypeMembers to be sorted.</param>
         /// <returns>Returns TypeMembers in sorted order.</returns>
-        IEnumerable<T> OrderTypes<T>(IEnumerable<T> symbols) where T : ITypeSymbol;
+        IEnumerable<T> Order<T>(IEnumerable<T> symbols) where T : ITypeSymbol;
 
         /// <summary>
         /// Sorts the elements of a ISymbol.
         /// </summary>
         /// <param name="namespaces">List of Members to be sorted.</param>
         /// <returns>Returns Members in sorted order.</returns>
-        IEnumerable<ISymbol> OrderMembers(IEnumerable<ISymbol> members);
+        IEnumerable<ISymbol> Order(IEnumerable<ISymbol> members);
     }
 }
