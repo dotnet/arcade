@@ -23,7 +23,7 @@
       <Output TaskParameter="ToBeInstalled" ItemName="DotNetCoreToBeInstalled" />
     </InstallDotNetCore>
 
-    <Exec Command="$(_DotNetInstallScript) %(DotNetCoreToBeInstalled.Identity)" />
+    <Exec IgnoreStandardErrorWarningFormat="true" Command="$(_DotNetInstallScript) %(DotNetCoreToBeInstalled.Identity)" />
   </Target>
 
 </Project>
