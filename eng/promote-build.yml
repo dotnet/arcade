@@ -19,7 +19,7 @@ parameters:
 
   - name: UseServicingBuildPool
     displayName: If true, use the assigned 'Servicing' pool for publishing jobs
-    type: bool 
+    type: boolean
     default: false
 
   - name: SymbolPublishingAdditionalParameters
