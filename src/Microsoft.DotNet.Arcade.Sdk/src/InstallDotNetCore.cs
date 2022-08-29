@@ -19,8 +19,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     {
         static InstallDotNetCore() => AssemblyResolution.Initialize();
 #else
-    public class 
-     : Microsoft.Build.Utilities.Task
+    public class InstallDotNetCore : Microsoft.Build.Utilities.Task
     {
 #endif
         public string VersionsPropsPath { get; set; }
