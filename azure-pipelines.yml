@@ -43,7 +43,7 @@ stages:
         timeoutInMinutes: 90
         pool:
           ${{ if eq(variables._RunAsPublic, True) }}:
-            name: NetCore1ESPool-Svc-Public
+            name: NetCore-Svc-Public
             demands: ImageOverride -equals Build.Server.Amd64.VS2019.Open
           ${{ if eq(variables._RunAsInternal, True) }}:
             name: NetCore1ESPool-Svc-Internal
@@ -69,7 +69,7 @@ stages:
         - job: Linux
           container: LinuxContainer
           pool:
-            name: NetCore1ESPool-Svc-Public
+            name: NetCore-Svc-Public
             demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
           strategy:
             matrix:
