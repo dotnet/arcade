@@ -16,7 +16,7 @@ There are two types of known issues:
 There are two ways to report a known issue, one is via the build analysis and the other is manually.
 
 ## How the matching process works between an issue and a build or test error
-The known issues feature can find build errors and test error, in both cases the match is resolved by a **contains** comparison. 
+The known issues feature can find build and test errors, in both cases the match is resolved by a **contains** comparison. 
 
 Also, each of this has their own strategy and limitations
 
