@@ -27,7 +27,7 @@ Also, each of this has their own strategy and limitations
 - **Test errors**: For test errors the analysis only occurs when the build has up to 25 failing tests. This limitation was put in place due to the cost of reviewing the logs for helix jobs, the errors are searched using “contains” in: 
     - Error message
     - Stack trace
-    - For helix test in the console log
+    - For helix tests in the console log
 
 ### Reporting known issue manually
 1. Decide if you need to open a [repository issue or infrastructure issue](#decide-infrastructure-or-repository-issue)
