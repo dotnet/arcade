@@ -98,7 +98,7 @@ Performance testing has been fully tested in coreclr. Coreclr, corefx and other 
     jobName: perfbuild_windows_x64
     displayName: Windows x64 Performance
     pool: 
-        name: NetCore1ESPool-Public
+        name: NetCore-Public
         queue: Build.Windows.10.Amd64.VS2017.Open
 
     # Test job depends on the corresponding build job
