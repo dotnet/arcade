@@ -20,7 +20,7 @@ The known issues feature can find build and test errors, in both cases the match
 
 Also, each of this has their own strategy and limitations
 
-- **Build error**: For build errors the errors are searched in two places using “contains” to compare them:
+- **Build error**: For build errors the search occurs in two places using “contains” to compare them:
     - AzDO error message 
     - Logs for failing jobs
 
