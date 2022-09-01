@@ -2,10 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Text;
 using System.IO;
 using System.Security.Cryptography;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Workloads.Msi;
+using Microsoft.Deployment.DotNet.Releases;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
 {
@@ -64,6 +66,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         }
 
         public MsiSwixProject(ITaskItem msi, string baseIntermediateOutputPath, string baseOutputPath,
+            ReleaseVersion sdkFeatureBand,
             string chip = null, string machineArch = null, string productArch = null) : base(msi.GetMetadata(Metadata.SwixPackageId), new Version(msi.GetMetadata(Metadata.Version)), baseIntermediateOutputPath, baseOutputPath)
         {
             _msi = msi;
@@ -80,14 +83,16 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
 
             // We need to always use the platform as an output folder because the chip value will be x64 for both arm64/x64 MSIs
             // and machineArch is not guaranteed to be applicable. 
-            ProjectSourceDirectory = Path.Combine(SwixDirectory, Id, Platform);
+            ProjectSourceDirectory = Path.Combine(SwixDirectory, $"{sdkFeatureBand}", Id, Platform);
             ValidateRelativePackagePath(GetRelativePackagePath());
 
             // The name of the .swixproj file is used to create the JSON manifest that will be merged into the .vsman file later.
             // For drop publishing all the JSON manifests and payloads must reside in the same folder so we shorten the project names
             // and use a hashed filename to avoid path too long errors.
-            string projectName = $"{Id}.{Version.ToString(3)}.{Platform}";
-            ProjectFile = $"{Utils.GetHash(projectName, HashAlgorithmName.MD5)}.swixproj";
+            string hashInputs = $"{Id},{Version.ToString(3)},{sdkFeatureBand},{Platform},{Chip},{machineArch}";
+            ProjectFile = $"{Utils.GetHash(hashInputs, HashAlgorithmName.MD5)}.swixproj";
+
+            ReplacementTokens[SwixTokens.__VS_PAYLOAD_SOURCE__] = msi.GetMetadata(Metadata.FullPath);
         }
 
         /// <inheritdoc />
@@ -106,6 +111,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         public override string Create()
         {
             string swixProj = EmbeddedTemplates.Extract("msi.swixproj", ProjectSourceDirectory, ProjectFile);
+            Utils.StringReplace(swixProj, ReplacementTokens, Encoding.UTF8);
             FileInfo fileInfo = new(_msi.ItemSpec);
 
             // Since we can't use preprocessor directives in the source, we'll do the conditional authoring inline instead.
@@ -116,6 +122,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
             msiWriter.WriteLine($"package name={Id}");
             msiWriter.WriteLine($"        version={Version}");
 
+            // VS does support setting chip, productArch, and machineArch on a single package. 
             if (!string.IsNullOrWhiteSpace(Chip))
             {
                 msiWriter.WriteLine($"        vs.package.chip={Chip}");

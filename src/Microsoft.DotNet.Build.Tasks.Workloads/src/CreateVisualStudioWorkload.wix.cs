@@ -22,6 +22,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
     public class CreateVisualStudioWorkload : Task
     {
         /// <summary>
+        /// Used to track which feature bands support the machineArch property.
+        /// </summary>
+        private Dictionary<ReleaseVersion, bool> _supportsMachineArch = new();
+
+        /// <summary>
         /// A set of all supported MSI platforms.
         /// </summary>
         public static readonly string[] SupportedPlatforms = { "x86", "x64", "arm64" };
@@ -200,9 +205,22 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 foreach (ITaskItem workloadManifestPackageFile in WorkloadManifestPackageFiles)
                 {
                     // 1. Process the manifest package and create a set of installers.
-                    WorkloadManifestPackage manifestPackage = new(workloadManifestPackageFile, PackageRootDirectory, 
+                    WorkloadManifestPackage manifestPackage = new(workloadManifestPackageFile, PackageRootDirectory,
                         string.IsNullOrWhiteSpace(ManifestMsiVersion) ? null : new Version(ManifestMsiVersion), ShortNames, Log);
                     manifestPackages.Add(manifestPackage);
+
+                    if (!_supportsMachineArch.ContainsKey(manifestPackage.SdkFeatureBand))
+                    {
+                        // Log the original setting and manifest that created the machineArch setting for the featureband.
+                        Log.LogMessage(MessageImportance.Low, $"Setting {nameof(_supportsMachineArch)} to {manifestPackage.SupportsMachineArch} for {Path.GetFileName(manifestPackage.PackageFileName)}");
+                        _supportsMachineArch[manifestPackage.SdkFeatureBand] = manifestPackage.SupportsMachineArch;
+                    }
+                    else if (_supportsMachineArch[manifestPackage.SdkFeatureBand] != manifestPackage.SupportsMachineArch)
+                    {
+                        // If multiple manifest packages for the same feature band have conflicting machineArch values
+                        // then we'll treat it as an warning. It will likely fail the build.
+                        Log.LogWarning($"{_supportsMachineArch} was previously set to {_supportsMachineArch[manifestPackage.SdkFeatureBand]}");
+                    }
 
                     Dictionary<string, WorkloadManifestMsi> manifestMsisByPlatform = new();
                     foreach (string platform in SupportedPlatforms)
@@ -244,7 +262,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                                 };
                                 packGroupJsonList.Add(packGroupJson);
                             }
-                            
+
 
                             foreach (WorkloadPackId packId in wd.Packs)
                             {
@@ -306,7 +324,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                                         buildData.Remove(sourcePackage);
                                     }
                                 }
-                            }                            
+                            }
 
                             if (CreateWorkloadPackGroups)
                             {
@@ -369,17 +387,16 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                             msiItems.Add(msiOutputItem);
                         }
 
-                        // We don't currently support arm64 SWIX authoring for VS. We'd need to pass a machineArch value
-                        // depending on whether the feature band being processed supports arm64 so that we change the SWIX
-                        // authoring to using machineArch instead of chip (which only works on older VS versions for x86/x64.
-                        if (!string.Equals(msiOutputItem.GetMetadata(Metadata.Platform), "arm64"))
+                        foreach (ReleaseVersion sdkFeatureBand in data.FeatureBands[platform])
                         {
-                            MsiSwixProject swixProject = new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath,
-                                chip: msiOutputItem.GetMetadata(Metadata.Platform));
-                            string swixProj = swixProject.Create();
-
-                            foreach (ReleaseVersion sdkFeatureBand in data.FeatureBands[platform])
+                            // Don't generate a SWIX package if the MSI targets arm64 and VS doesn't support machineArch
+                            if (_supportsMachineArch[sdkFeatureBand] || !string.Equals(msiOutputItem.GetMetadata(Metadata.Platform), DefaultValues.arm64))
                             {
+                                MsiSwixProject swixProject = _supportsMachineArch[sdkFeatureBand] ?
+                                    new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, sdkFeatureBand, chip: null, machineArch: msiOutputItem.GetMetadata(Metadata.Platform)) :
+                                    new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, sdkFeatureBand, chip: msiOutputItem.GetMetadata(Metadata.Platform));
+                                string swixProj = swixProject.Create();
+
                                 ITaskItem swixProjectItem = new TaskItem(swixProj);
                                 swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{sdkFeatureBand}");
 
@@ -417,15 +434,16 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                         if (UseWorkloadPackGroupsForVS)
                         {
-                            // Skip generating arm64 SWIX authoring for now.
-                            if (!string.Equals(msiOutputItem.GetMetadata(Metadata.Platform), "arm64"))
+                            PossiblyParallelForEach(!DisableParallelPackageGroupProcessing, packGroup.ManifestsPerPlatform[platform], manifestPackage =>
                             {
-                                MsiSwixProject swixProject = new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath,
-                                    chip: msiOutputItem.GetMetadata(Metadata.Platform));
-                                string swixProj = swixProject.Create();
-
-                                PossiblyParallelForEach(!DisableParallelPackageGroupProcessing, packGroup.ManifestsPerPlatform[platform], manifestPackage =>
+                                // Don't generate a SWIX package if the MSI targets arm64 and VS doesn't support machineArch
+                                if (_supportsMachineArch[manifestPackage.SdkFeatureBand] || !string.Equals(msiOutputItem.GetMetadata(Metadata.Platform), DefaultValues.arm64))
                                 {
+                                    MsiSwixProject swixProject = _supportsMachineArch[manifestPackage.SdkFeatureBand] ?
+                                        new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, manifestPackage.SdkFeatureBand, chip: null, machineArch: msiOutputItem.GetMetadata(Metadata.Platform)) :
+                                        new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, manifestPackage.SdkFeatureBand, chip: msiOutputItem.GetMetadata(Metadata.Platform));
+                                    string swixProj = swixProject.Create();
+
                                     ITaskItem swixProjectItem = new TaskItem(swixProj);
                                     swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{manifestPackage.SdkFeatureBand}");
 
@@ -433,8 +451,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                                     {
                                         swixProjectItems.Add(swixProjectItem);
                                     }
-                                });
-                            }
+                                }
+                            });
                         }
                     }
                 });
@@ -446,12 +464,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 {
                     ITaskItem msiOutputItem = msi.Build(MsiOutputPath, IceSuppressions);
 
-                    // Skip generating arm64 SWIX authoring for now.
-                    if (!string.Equals(msiOutputItem.GetMetadata(Metadata.Platform), "arm64"))
+                    // Don't generate a SWIX package if the MSI targets arm64 and VS doesn't support machineArch
+                    if (_supportsMachineArch[msi.Package.SdkFeatureBand] || !string.Equals(msiOutputItem.GetMetadata(Metadata.Platform), DefaultValues.arm64))
                     {
                         // Generate SWIX authoring for the MSI package.
-                        MsiSwixProject swixProject = new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath,
-                            chip: msiOutputItem.GetMetadata(Metadata.Platform));
+                        MsiSwixProject swixProject = _supportsMachineArch[msi.Package.SdkFeatureBand] ?
+                            new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, msi.Package.SdkFeatureBand, chip: null, machineArch: msiOutputItem.GetMetadata(Metadata.Platform)) :
+                            new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, msi.Package.SdkFeatureBand, chip: msiOutputItem.GetMetadata(Metadata.Platform));
                         ITaskItem swixProjectItem = new TaskItem(swixProject.Create());
                         swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{((WorkloadManifestPackage)msi.Package).SdkFeatureBand}");
                         swixProjectItem.SetMetadata(Metadata.PackageType, swixProject.PackageType);

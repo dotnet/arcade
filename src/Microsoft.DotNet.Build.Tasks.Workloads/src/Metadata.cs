@@ -37,6 +37,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         public static readonly string SourcePackage = nameof(SourcePackage);
         public static readonly string SwixPackageId = nameof(SwixPackageId);
         public static readonly string SwixProject = nameof(SwixProject);
+
+        /// <summary>
+        /// Metadata describing whether the VS authoring supports the machineArch SWIX property.
+        /// </summary>
+        public static readonly string SupportsMachineArch = nameof(SupportsMachineArch);
+
         public static readonly string Title = nameof(Title);
         public static readonly string Version = nameof(Version);
 

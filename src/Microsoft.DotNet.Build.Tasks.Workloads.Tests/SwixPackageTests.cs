@@ -6,6 +6,7 @@ using System.IO;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Deployment.DotNet.Releases;
 using Microsoft.DotNet.Build.Tasks.Workloads.Msi;
 using Microsoft.DotNet.Build.Tasks.Workloads.Swix;
 using Microsoft.NET.Sdk.WorkloadManifestReader;
@@ -26,6 +27,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Exception e = Assert.Throws<Exception>(() =>
             {
                 MsiSwixProject swixProject = new(msiItem, BaseIntermediateOutputPath, BaseOutputPath,
+                    new ReleaseVersion("6.0.100"),
                     chip: "x64", machineArch: "x64", productArch: "neutral");
             });
 
@@ -68,7 +70,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 
             Assert.Equal("Microsoft.iOS.Templates.15.2.302-preview.14.122", msiItem.GetMetadata(Metadata.SwixPackageId));
 
-            MsiSwixProject swixProject = new(msiItem, BaseIntermediateOutputPath, BaseOutputPath, chip: msiItem.GetMetadata(Metadata.Platform),
+            MsiSwixProject swixProject = new(msiItem, BaseIntermediateOutputPath, BaseOutputPath,
+                new ReleaseVersion("6.0.100"),
+                chip: msiItem.GetMetadata(Metadata.Platform),                
                 machineArch: DefaultValues.x64);
             string swixProj = swixProject.Create();
             string msiSwr = File.ReadAllText(Path.Combine(Path.GetDirectoryName(swixProj), "msi.swr"));
