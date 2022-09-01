@@ -18,7 +18,7 @@ There are two ways to report a known issue, one is via the build analysis and th
 ## How the matching process works between an issue and a build or test error
 The known issues feature can find build and test errors, in both cases the match is resolved by a **contains** comparison. 
 
-Also, each of this has their own strategy and limitations
+The strategy and limitations differ between both types of errors:
 
 - **Build error**: For build errors the search occurs in two places using “contains” to compare them:
     - AzDO error message 
@@ -92,13 +92,10 @@ After selecting the message, fill the "ErrorMessage";
 ```
 
 ## What happens after creating or updating a known issue 
-All the builds that fail after the creation of the issue are going to be analyzed against that issue, to see if the issue is present on the build. 
+All builds from the last 24 hours since the issue was opened or updated will be scanned for the error message, also 
+the builds that fail after the creation of the issue will be scanned.
 
-The issues analyzed are all the infrastructure issues (the issues on dotnet/arcade) and the known issue in the pull request repository.
-
-Furthermore, a retroactive process is going to get triggered, which translates on reanalyzing all the builds for the last 24 hours (by the build analysis), and it will update the pull requests builds analysis if they were impacted by the known issue reported. 
-
-The retroactive process also gets triggered when the [Error message](#how-to-fill-out-a-known-issue-error-message-section") is updated.
+The issues analyzed are all the infrastructure issues (the known issues on dotnet/arcade) and the repository issues (the known issues in the repository of the pull request).
 
 ### Build retry functionality in known issues
 The build retry setting can be set to 'true' when the build failure on 'ErrorMessage' could be solved by retrying the build.
