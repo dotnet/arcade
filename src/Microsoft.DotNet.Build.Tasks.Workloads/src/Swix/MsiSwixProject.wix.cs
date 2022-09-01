@@ -24,6 +24,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         }
 
         /// <inheritdoc />
+        public override string PackageType => "Msi";
+
+        /// <inheritdoc />
         protected override string ProjectFile
         {
             get;

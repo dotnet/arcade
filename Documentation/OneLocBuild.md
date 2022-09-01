@@ -9,6 +9,8 @@ repo. Xliff-Tasks will continue to be used in addition to OneLocBuild.
 To make OneLocBuild easier to use, we have integrated the task into Arcade. This integration is a job template
 ([here](/eng/common/templates/job/onelocbuild.yml)) that is described in this document.
 
+To see your repo's current loc configuration, please refer to https://aka.ms/locstats.
+
 ## Onboarding to OneLocBuild Using Arcade
 
 Onboarding to OneLocBuild is a simple process:

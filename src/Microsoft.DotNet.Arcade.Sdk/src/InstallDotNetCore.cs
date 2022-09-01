@@ -138,8 +138,28 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                         {
                                             FileName = DotNetInstallScript,
                                             Arguments = arguments,
-                                            UseShellExecute = false
+                                            UseShellExecute = false,
+                                            // Redirect to stdout/err. Addressing https://github.com/dotnet/msbuild/issues/7913
+                                            // Without it script execution was failing on Linux when run from
+                                            RedirectStandardOutput = true,
+                                            RedirectStandardError = true,
                                         });
+                                        process.OutputDataReceived += (sender, e) =>
+                                        {
+                                            if (!String.IsNullOrEmpty(e.Data))
+                                            {
+                                                Console.WriteLine(e.Data);
+                                            }
+                                        };
+                                        process.ErrorDataReceived += (sender, e) =>
+                                        {
+                                            if (!String.IsNullOrEmpty(e.Data))
+                                            {
+                                                Console.Error.WriteLine(e.Data);
+                                            }
+                                        };
+                                        process.BeginOutputReadLine();
+                                        process.BeginErrorReadLine();
                                         process.WaitForExit();
                                         if (process.ExitCode != 0)
                                         {

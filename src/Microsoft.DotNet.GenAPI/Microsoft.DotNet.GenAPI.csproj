@@ -8,10 +8,16 @@
     <PackageDescription>An msbuild task to generate code for the API surface of an assembly.</PackageDescription>
     <NoWarn>$(NoWarn);0436</NoWarn>
     <RollForward>Major</RollForward>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="..\Common\Internal\BuildTask.cs" />
+    <Compile Include="GenAPITask.cs" />
+    <Compile Include="SyntaxWriterType.cs" />
+    <Compile Include="TypeListWriter.cs" />
+    <Compile Include="WriterType.cs" />
+    <None Include="build\Microsoft.DotNet.GenAPI.targets" />
   </ItemGroup>
 
   <ItemGroup>

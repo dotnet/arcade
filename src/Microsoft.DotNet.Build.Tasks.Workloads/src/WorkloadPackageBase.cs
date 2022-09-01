@@ -129,9 +129,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             get;
         }
 
+        /// <summary>
+        /// The SWIX identifier for the package in VS.
+        /// </summary>
         public string SwixPackageId
         {
             get;
+            protected set;
         }
 
         /// <summary>

@@ -19,6 +19,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         public static readonly string RelativeDir = nameof(RelativeDir);
         public static readonly string Replacement = nameof(Replacement);        
         public static readonly string PackageProject = nameof(PackageProject);
+        public static readonly string PackageType = nameof(PackageType);
         public static readonly string SdkFeatureBand = nameof(SdkFeatureBand);
         public static readonly string ShortName = nameof(ShortName);
         public static readonly string SourcePackage = nameof(SourcePackage);

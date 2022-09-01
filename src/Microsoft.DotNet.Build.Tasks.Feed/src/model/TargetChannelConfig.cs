@@ -83,24 +83,36 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         public override bool Equals(object other)
         {
             if (other is TargetChannelConfig config &&
+                NullAcceptingSequencesEqual(TargetFeeds, config.TargetFeeds) &&
+                NullAcceptingSequencesEqual(AkaMSChannelNames, config.AkaMSChannelNames) &&
+                NullAcceptingSequencesEqual(FilenamesToExclude, config.FilenamesToExclude) &&
                 PublishingInfraVersion == config.PublishingInfraVersion &&
                 Id == config.Id &&
-                AkaMSChannelNames.SequenceEqual(config.AkaMSChannelNames) &&
-                TargetFeeds.Count == config.TargetFeeds.Count &&
-                TargetFeeds.Zip(config.TargetFeeds, (l, r) => l.Equals(r)).All(b => b) &&
                 IsInternal == config.IsInternal &&
                 Flatten == config.Flatten)
             {
-                if (FilenamesToExclude is null)
-                    return config.FilenamesToExclude is null;
-                
-                if (config.FilenamesToExclude is null)
-                    return false;
-                
-                return FilenamesToExclude.SequenceEqual(config.FilenamesToExclude);
+                return true;
             }
             
             return false;
+
+
+            static bool NullAcceptingSequencesEqual<T>(IEnumerable<T> left, IEnumerable<T> right)
+            {
+                if (left is not null && right is not null)
+                {
+                    if (!left.SequenceEqual(right))
+                    {
+                        return false;
+                    }
+                }
+                else if ((left is null) ^ (right is null))
+                {
+                    return false;
+                }
+
+                return true;
+            }
         }
 
         public override int GetHashCode()
@@ -162,7 +174,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
             if (assets == AssetSelection.All && contentTypes.Contains(TargetFeedContentType.Package))
             {
-                throw new ArgumentException($"Target feed specification for {feedUrl} must have a separated asset selection 'ShippingOnly' and 'NonShippingOnly packages");
+                throw new ArgumentException($"Target feed specification for {feedUrl} must have a separated asset selection 'ShippingOnly' and 'NonShippingOnly' packages");
             }
 
             ContentTypes = contentTypes.ToImmutableList();

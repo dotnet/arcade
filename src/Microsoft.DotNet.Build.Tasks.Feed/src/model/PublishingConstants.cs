@@ -714,6 +714,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
+            // ".NET 7 Eng",
+            new TargetChannelConfig(
+                3114,
+                false,
+                PublishingInfraVersion.Next,
+                new List<string>() { "eng/net7" },
+                DotNetEngFeeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
             // ".NET Eng - Validation",
             new TargetChannelConfig(
                 9,
@@ -740,6 +750,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 false,
                 PublishingInfraVersion.Next,
                 new List<string>() { "eng/net6validation" },
+                DotNetEngFeeds,
+                PublicAndInternalSymbolTargets,
+                flatten: false),
+
+            // ".NET 7 Eng - Validation",
+            new TargetChannelConfig(
+                3115,
+                false,
+                PublishingInfraVersion.Next,
+                new List<string>() { "eng/net7validation" },
                 DotNetEngFeeds,
                 PublicAndInternalSymbolTargets,
                 flatten: false),

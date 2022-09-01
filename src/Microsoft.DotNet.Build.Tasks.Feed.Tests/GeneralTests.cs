@@ -3,15 +3,16 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using FluentAssertions;
+using Microsoft.DotNet.Arcade.Test.Common;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
 using Xunit;
 using static Microsoft.DotNet.Build.Tasks.Feed.GeneralUtils;
-using FluentAssertions;
-using Microsoft.DotNet.Arcade.Test.Common;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
@@ -171,6 +172,92 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 retryHandler);
 
             retryHandler.ActualAttempts.Should().Be(expectedAttemptCount);
+        }
+
+        [Fact]
+        public void TargetChannelConfig_DefaultAreEqual_Test()
+        {
+            // Remember:
+            //      default(TargetChannelConfig)
+            // is not the same as
+            //      new TargetChannelConfig(default, default, ...)
+            // The latter uses the constructor, the former does not.
+
+            TargetChannelConfig defaultLeft = default;
+            TargetChannelConfig defaultRight = default;
+
+            Func<bool> action = () => defaultLeft.Equals(defaultRight);
+
+            action.Should().NotThrow();
+
+            bool actualResult = action();
+
+            actualResult.Should().BeTrue();
+        }
+
+        [Fact]
+        public void TargetChannelConfig_TargetFeeds_EqualTest()
+        {
+            TargetChannelConfig left = new(
+                id: default,
+                isInternal: default,
+                publishingInfraVersion: default,
+                akaMSChannelNames: default,
+                targetFeeds: new TargetFeedSpecification[]
+                {
+                    new (new[] { TargetFeedContentType.Deb }, dummyFeedUrl, AssetSelection.ShippingOnly)  
+                },
+                symbolTargetType: default,
+                filenamesToExclude: default,
+                flatten: default);
+
+            TargetChannelConfig right = new(
+                id: default,
+                isInternal: default,
+                publishingInfraVersion: default,
+                akaMSChannelNames: default,
+                targetFeeds: new TargetFeedSpecification[]
+                {
+                    new (new[] { TargetFeedContentType.Deb }, dummyFeedUrl, AssetSelection.ShippingOnly) 
+                },
+                symbolTargetType: default,
+                filenamesToExclude: default,
+                flatten: default);
+
+            bool actualResult = left.Equals(right);
+
+            actualResult.Should().BeTrue();
+        }
+
+        [Fact]
+        public void TargetChannelConfig_TargetFeeds_UnequalTest()
+        {
+            TargetChannelConfig left = new(
+                id: default,
+                isInternal: default,
+                publishingInfraVersion: default,
+                akaMSChannelNames: default,
+                targetFeeds: new TargetFeedSpecification[]
+                {
+                    new (new[] { TargetFeedContentType.Deb }, dummyFeedUrl, AssetSelection.ShippingOnly)
+                },
+                symbolTargetType: default,
+                filenamesToExclude: default,
+                flatten: default);
+
+            TargetChannelConfig right = new(
+                id: default,
+                isInternal: default,
+                publishingInfraVersion: default,
+                akaMSChannelNames: default,
+                targetFeeds: Enumerable.Empty<TargetFeedSpecification>(),
+                symbolTargetType: default,
+                filenamesToExclude: default,
+                flatten: default);
+
+            bool actualResult = left.Equals(right);
+
+            actualResult.Should().BeFalse();
         }
     }
 }

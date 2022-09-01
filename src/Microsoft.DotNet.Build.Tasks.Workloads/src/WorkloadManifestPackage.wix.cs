@@ -86,6 +86,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
             SdkFeatureBand = GetSdkFeatureBandVersion(GetSdkVersion(Id));
             ManifestId = GetManifestId(Id);
+            SwixPackageId = $"{Id.Replace(shortNames)}";
         }
 
         /// <summary>
