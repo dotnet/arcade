@@ -15,6 +15,7 @@ parameters:
   timeoutInMinutes: ''
   variables: []
   workspace: ''
+  resources: []
 
 # Job base template specific parameters
   # See schema documentation - https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/TemplateSchema.md
@@ -100,6 +101,11 @@ jobs:
 
   ${{ if ne(parameters.workspace, '') }}:
     workspace: ${{ parameters.workspace }}
+
+  ${{ if ne(parameters.resources, '') }}:
+    resources:
+      - ${{ each resource in parameters.resources }}:
+        - ${{ resource }}
 
   steps:
   - ${{ if ne(parameters.preSteps, '') }}:
