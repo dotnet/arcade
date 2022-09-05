@@ -3,11 +3,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.GenAPI.Shared;
@@ -16,6 +12,8 @@ public abstract class AssemblySymbolTraverser
 {
     private readonly IAssemblySymbolOrderProvider _orderProvider;
     private readonly IAssemblySymbolFilter _filter;
+
+    protected IAssemblySymbolFilter Filter { get { return _filter; } }
 
     public AssemblySymbolTraverser(IAssemblySymbolOrderProvider orderProvider, IAssemblySymbolFilter filter)
     {
@@ -29,7 +27,7 @@ public abstract class AssemblySymbolTraverser
 
         foreach (var namespaceSymbol in _orderProvider.Order(namespaces))
         {
-            Process(namespaceSymbol);
+            using var rs = Process(namespaceSymbol);
             Visit(namespaceSymbol);
         }
     }
@@ -45,14 +43,16 @@ public abstract class AssemblySymbolTraverser
                 Process(attribute);
             }
 
-            Process(typeMember);
+            using var rs = Process(typeMember);
             Visit(typeMember);
         }
     }
 
-    public void Visit(INamedTypeSymbol typeMember)
+    public void Visit(INamedTypeSymbol namedType)
     {
-        var members = typeMember.GetMembers().Where(_filter.Include);
+        VisitInnerNamedTypes(namedType);
+
+        var members = namedType.GetMembers().Where(_filter.Include);
 
         foreach (var member in _orderProvider.Order(members))
         {
@@ -65,10 +65,21 @@ public abstract class AssemblySymbolTraverser
         }
     }
 
-    protected abstract void Process(INamespaceSymbol namespaceSymbol);
-    protected abstract void Process(INamedTypeSymbol typeMember);
+    protected abstract IDisposable Process(INamespaceSymbol namespaceSymbol);
+    protected abstract IDisposable Process(INamedTypeSymbol namedType);
     protected abstract void Process(ISymbol member);
-    protected abstract void Process(AttributeData attribute);
+    protected abstract void Process(AttributeData data);
+
+    private void VisitInnerNamedTypes(INamedTypeSymbol namedType)
+    {
+        var innerNamedTypes = namedType.GetTypeMembers().Where(_filter.Include);
+
+        foreach (var innerNamedType in _orderProvider.Order(innerNamedTypes))
+        {
+            using var rs = Process(innerNamedType);
+            Visit(innerNamedType);
+        }
+    }
 
     private IEnumerable<INamespaceSymbol> EnumerateNamespaces(IAssemblySymbol assembly)
     {
