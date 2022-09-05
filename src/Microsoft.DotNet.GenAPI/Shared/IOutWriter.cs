@@ -6,7 +6,7 @@ using System;
 namespace Microsoft.DotNet.GenAPI.Shared;
 
 /// <summary>
-/// Interface responsible for writing C# code in various formats: code file, xml, etc.
+/// Interface responsible for writing output to a file, console, stream etc.
 /// </summary>
 public interface IOutWriter : IDisposable
 {
