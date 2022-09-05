@@ -34,9 +34,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
             get;
         }
 
-        /// <inheritdoc />
-        public override string PackageType => "Msi";
-
         /// <summary>
         /// The platform associated with the MSI.
         /// </summary>

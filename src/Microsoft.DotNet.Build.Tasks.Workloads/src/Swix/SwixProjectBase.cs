@@ -29,14 +29,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         }
 
         /// <summary>
-        /// The package type associated with the SWIX project.
-        /// </summary>
-        public abstract string PackageType
-        {
-            get;
-        }
-
-        /// <summary>
         /// The version of the SWIX package.
         /// </summary>
         public Version Version

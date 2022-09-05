@@ -66,13 +66,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             WorkloadPackMsi msi = new(pkg, "x64", new MockBuildEngine(), WixToolsetPath, BaseIntermediateOutputPath);
 
             ITaskItem msiItem = msi.Build(MsiOutputPath);
-            msiItem.SetMetadata(Metadata.Platform, "x64");            
+            msiItem.SetMetadata(Metadata.Platform, "x64");
 
             Assert.Equal("Microsoft.iOS.Templates.15.2.302-preview.14.122", msiItem.GetMetadata(Metadata.SwixPackageId));
 
             MsiSwixProject swixProject = new(msiItem, BaseIntermediateOutputPath, BaseOutputPath,
                 new ReleaseVersion("6.0.100"),
-                chip: msiItem.GetMetadata(Metadata.Platform),                
+                chip: msiItem.GetMetadata(Metadata.Platform),
                 machineArch: DefaultValues.x64);
             string swixProj = swixProject.Create();
             string msiSwr = File.ReadAllText(Path.Combine(Path.GetDirectoryName(swixProj), "msi.swr"));

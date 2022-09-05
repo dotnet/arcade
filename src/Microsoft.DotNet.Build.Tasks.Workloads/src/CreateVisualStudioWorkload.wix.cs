@@ -399,6 +399,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                                 ITaskItem swixProjectItem = new TaskItem(swixProj);
                                 swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{sdkFeatureBand}");
+                                swixProjectItem.SetMetadata(Metadata.PackageType, DefaultValues.PackageTypeMsiPack);
 
                                 lock (swixProjectItems)
                                 {
@@ -446,6 +447,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                                     ITaskItem swixProjectItem = new TaskItem(swixProj);
                                     swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{manifestPackage.SdkFeatureBand}");
+                                    swixProjectItem.SetMetadata(Metadata.PackageType, DefaultValues.PackageTypeMsiPack);
 
                                     lock (swixProjectItems)
                                     {
@@ -457,8 +459,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     }
                 });
 
-                // Generate MSIs for the workload manifests along with
-                // a .csproj to package the MSI and a SWIX project for
+                // Generate MSIs for the workload manifests along with a .csproj to package the MSI and a SWIX project for
                 // Visual Studio.
                 _ = Parallel.ForEach(manifestMsisToBuild, msi =>
                 {
@@ -473,7 +474,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                             new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, msi.Package.SdkFeatureBand, chip: msiOutputItem.GetMetadata(Metadata.Platform));
                         ITaskItem swixProjectItem = new TaskItem(swixProject.Create());
                         swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{((WorkloadManifestPackage)msi.Package).SdkFeatureBand}");
-                        swixProjectItem.SetMetadata(Metadata.PackageType, swixProject.PackageType);
+                        swixProjectItem.SetMetadata(Metadata.PackageType, DefaultValues.PackageTypeMsiManifest);
 
                         lock (swixProjectItems)
                         {
@@ -499,7 +500,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     ComponentSwixProject swixComponentProject = new(swixComponent, BaseIntermediateOutputPath, BaseOutputPath);
                     ITaskItem swixProjectItem = new TaskItem(swixComponentProject.Create());
                     swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{swixComponent.SdkFeatureBand}");
-                    swixProjectItem.SetMetadata(Metadata.PackageType, swixComponentProject.PackageType);
+                    swixProjectItem.SetMetadata(Metadata.PackageType, DefaultValues.PackageTypeComponent);
 
                     lock (swixProjectItems)
                     {

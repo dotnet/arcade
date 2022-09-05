@@ -13,9 +13,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
     {
         private SwixComponent _component;
 
-        /// <inheritdoc />
-        public override string PackageType => "component";
-
         protected override string ProjectFile
         {
             get;
