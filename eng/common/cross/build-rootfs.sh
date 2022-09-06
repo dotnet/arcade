@@ -391,9 +391,9 @@ elif [[ "$__CodeName" == "illumos" ]]; then
         --with-gnu-ld --disable-nls --disable-libgomp --disable-libquadmath --disable-libssp --disable-libvtv --disable-libcilkrts --disable-libada --disable-libsanitizer \
         --disable-libquadmath-support --disable-shared --enable-tls
     make -j "$JOBS" && make install && cd ..
-    BaseUrl=https://pkgsrc.joyent.com
+    BaseUrl=https://pkgsrc.smartos.org
     if [[ "$__UseMirror" == 1 ]]; then
-        BaseUrl=http://pkgsrc.smartos.skylime.net
+        BaseUrl=https://pkgsrc.smartos.skylime.net
     fi
     BaseUrl="$BaseUrl/packages/SmartOS/trunk/${__illumosArch}/All"
     echo "Downloading manifest"
