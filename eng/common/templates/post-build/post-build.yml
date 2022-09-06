@@ -259,7 +259,7 @@ stages:
         - name: BARBuildId
           value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
       pool:
-        name: NetCore1ESPool-Internal
+        name: NetCore1ESPool-Svc-Internal
         demands: ImageOverride -equals windows.vs2019.amd64
       steps:
         - task: PowerShell@2
