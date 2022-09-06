@@ -259,7 +259,8 @@ stages:
         - name: BARBuildId
           value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
       pool:
-        vmImage: 'windows-2019'
+        name: NetCore1ESPool-Internal
+        demands: ImageOverride -equals windows.vs2019.amd64
       steps:
         - task: PowerShell@2
           displayName: Publish Using Darc
