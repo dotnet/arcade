@@ -15,6 +15,7 @@
 
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
     <FailOnMissingTargetQueue>false</FailOnMissingTargetQueue>
+    <XUnitWorkitemTimeout>300</XUnitWorkitemTimeout>
   </PropertyGroup>
 
   <ItemGroup>
