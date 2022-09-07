@@ -176,12 +176,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
                 new Version((new ReleaseVersion(manifest.Version)).ToString(3));
 
             // Since workloads only define a description, if no custom resources were provided, both the title and description of
-            // the SWIX component will default to the workload description.
-            SwixComponent component = new(sdkFeatureBand, Utils.ToSafeId(workload.Id), 
-                resourceItem?.GetMetadata(Metadata.Title) ?? workload.Description ?? throw new Exception(Strings.ComponentTitleCannotBeNull),
-                resourceItem?.GetMetadata(Metadata.Description) ?? workload.Description ?? throw new Exception(Strings.ComponentDescriptionCannotBeNull), 
+            // the SWIX component will default to the workload description. 
+            SwixComponent component = new(sdkFeatureBand, Utils.ToSafeId(workload.Id),
+                resourceItem != null && !string.IsNullOrEmpty(resourceItem.GetMetadata(Metadata.Title)) ? resourceItem.GetMetadata(Metadata.Title) : workload.Description ?? throw new Exception(Strings.ComponentTitleCannotBeNull),
+                resourceItem != null && !string.IsNullOrEmpty(resourceItem.GetMetadata(Metadata.Description)) ? resourceItem.GetMetadata(Metadata.Description) : workload.Description ?? throw new Exception(Strings.ComponentDescriptionCannotBeNull),
                 componentVersion, workload.IsAbstract,
-                resourceItem?.GetMetadata(Metadata.Category) ?? DefaultValues.ComponentCategory,
+                resourceItem != null && !string.IsNullOrEmpty(resourceItem.GetMetadata(Metadata.Category)) ? resourceItem.GetMetadata(Metadata.Category) : DefaultValues.ComponentCategory ?? throw new Exception(Strings.ComponentCategoryCannotBeNull),
                 shortNames);
 
             // If the workload extends other workloads, we add those as component dependencies before
