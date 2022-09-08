@@ -4,7 +4,7 @@ The "known issues" are GitHub issues that were created with the purpose of repor
 Whenever a build has an error that matches with one of the already existing known issues, this is going to be listed on the [build analysis](https://github.com/dotnet/arcade/blob/main/Documentation/Projects/Build%20Analysis/Introduction.md), helping the developer to know when a build break is not exclusive to their build. 
 This information is going to be listed at the top of the build analysis.
 
-If you need to find the open known issues you can filter the issues with the `Known Build Error` label . All the reported infrastructure issues can be found on [arcade](https://github.com/dotnet/arcade/issues?q=is%3Aopen+is%3Aissue+label%3A%22Known+Build+Error%22).
+ All the reported known issues can be found on [known issues project](https://github.com/orgs/dotnet/projects/111).
 
 ## When and how to report a known issue
 A known issue should be reported when you find a build or test error that is not caused by your changes and that is affecting or could affect more builds. 
