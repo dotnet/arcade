@@ -4,7 +4,7 @@
 
 There are two projects for use.  They are:
 
-- public (https://dev.azure.com/dnceng/public)
+- public (https://dev.azure.com/dnceng-public/public)
   - Used for oss
   - For Pipelines only  (no source code - that's on GitHub)
   - Pipelines are allowed to pull source directly from GitHub
