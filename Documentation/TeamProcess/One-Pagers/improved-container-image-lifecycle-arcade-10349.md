@@ -4,7 +4,7 @@ As part of [#10123](https://github.com/dotnet/arcade/issues/10123) to improve ou
 
 - Our container images are re-built regularly and they contain the latest underlying OS patches and CVE fixes
 - There is a mechanism for updating the docker containers used by product teams so that they are always on the latest version of each container image
-- There is a process and tools implemented for identifying and removing images that are out of date
+- There is a process and tools implemented for identifying and removing dockerfiles based on out-of-support base images
 - There is a process and tools to delete out-of-date container images (older than 3-6 months) from MCR
 - All images used in the building and testing of .NET use Microsoft-approved base images, either Mariner where appropriate, or [Microsoft Artifact Registry-approved images](https://eng.ms/docs/more/containers-secure-supply-chain/approved-images) where Mariner is insufficient
 
