@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 
+#nullable enable
 namespace Microsoft.Arcade.Common;
 
 /// <summary>
