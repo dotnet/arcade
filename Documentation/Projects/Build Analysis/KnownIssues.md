@@ -1,20 +1,33 @@
 # Known issues
-The "known issues" are GitHub issues that were created with the purpose of reporting known build errors.
+The "known issues" are GitHub issues that were created with the purpose of reporting known build or test errors.
 
 Whenever a build has an error that matches with one of the already existing known issues, this is going to be listed on the [build analysis](https://github.com/dotnet/arcade/blob/main/Documentation/Projects/Build%20Analysis/Introduction.md), helping the developer to know when a build break is not exclusive to their build. 
 This information is going to be listed at the top of the build analysis.
 
-
-If you need to find the open known issues you can filter the issues with the `Known Build Error` label . All the reported infrastructure issues can be found on [arcade](https://github.com/dotnet/arcade/issues?q=is%3Aopen+is%3Aissue+label%3A%22Known+Build+Error%22).
+ All the reported known issues can be found on [known issues project](https://github.com/orgs/dotnet/projects/111).
 
 ## When and how to report a known issue
-A known issue should be reported when you find a build error that is not caused by your changes and that is affecting or could affect more builds. 
+A known issue should be reported when you find a build or test error that is not caused by your changes and that is affecting or could affect more builds. 
 
 There are two types of known issues:
 - **Infrastructure**: An infrastructure issue is an issue that is not exclusive to your repository and that needs to be investigated by the engineering services (@dotnet/dnceng)
 - **Repository**: A repository issue is an issue that is happening in a particular repository and that should be investigated by the repository owners.
 
 There are two ways to report a known issue, one is via the build analysis and the other is manually.
+
+## How the matching process works between an issue and a build or test error
+The known issues feature can find build and test errors, in both cases the match is resolved by a **contains** comparison. 
+
+The strategy and limitations differ between both types of errors:
+
+- **Build error**: For build errors the search occurs in two places using “contains” to compare them:
+    - AzDO error message 
+    - Logs for failing jobs
+
+- **Test errors**: For test errors the analysis only occurs when the build has up to 25 failing tests. This limitation was put in place due to the cost of reviewing the logs for helix jobs, the errors are searched using “contains” in: 
+    - Error message
+    - Stack trace
+    - For Helix tests in the console log
 
 ### Reporting known issue manually
 1. Decide if you need to open a [repository issue or infrastructure issue](#decide-infrastructure-or-repository-issue)
@@ -36,16 +49,18 @@ There are two ways to report a known issue, one is via the build analysis and th
     } 
     ```
     ````
-1. If you are opening a Repository issue you need to [fill the "Error message" section](#how-to-fill-a-known-issue-error-message-section"). If you are opening an infrastructure issue, this is going to be handled by the engineering services team.
+1. If you are opening a Repository issue you need to [fill the "Error message" section](#how-to-fill-out-a-known-issue-error-message-section"). If you are opening an infrastructure issue, this is going to be handled by the engineering services team.
 1. If the issue reported on the "ErrorMessage" section can be solved by retrying the build you can consider setting the ["Build Retry" configuration](###build-retry-functionality-in-known-issues) to ``true``
+1. You are done but [what happens after a knonw issue is created?](#what-happens-after-creating-or-updating-a-known-issue)
 
 ### Reporting known issue via build analysis
 1. On the build analysis you will see links for the type of issue you want to open. 
 ![](./Resources/KnownIssuesLinks.png?raw=true)
 1. Click on the link of the [type of issue that suits better the situation](#decide-infrastructure-or-repository-issue).
 1. A template is going to appear for you and most of this information should be already prefilled.
-1. If you are opening a Repository issue you need to [fill the "Error message" section](#how-to-fill-a-known-issue-error-message-section"). If you are opening an infrastructure issue, this is going to be handled by the engineering services team.
+1. If you are opening a Repository issue you need to [fill the "Error message" section](#how-to-fill-out-a-known-issue-error-message-section"). If you are opening an infrastructure issue, this is going to be handled by the engineering services team.
 1. If the issue reported on the "ErrorMessage" section can be solved by retrying the build you can consider setting the ["Build Retry" configuration](###build-retry-functionality-in-known-issues) to ``true``
+1. You are done but [what happens after a knonw issue is created?](#what-happens-after-creating/updating-a-known-issue)
 
 ## How to fill out a known issue error message section
 The "ErrorMessage section" is on the next form:
@@ -56,7 +71,7 @@ The "ErrorMessage section" is on the next form:
 
 And the "ErrorMessage" value needs to be updated with an error message 
 that meets the following requeriments:
-1. Match at least one of the error messages of the reported build
+1. Match at least one of the error messages of the reported build. For more details see: [How matching process works](#how-the-matching-process-works-between-an-issue-and-a-build-or-test-error)
 1. It shouldn't include any unique identifier of the message e.g., machine, path, file name, etc.
 
 
@@ -75,6 +90,12 @@ After selecting the message, fill the "ErrorMessage";
     "ErrorMessage":"(NETCORE_ENGINEERING_TELEMETRY=Restore) Failed to retrieve information" 
 }
 ```
+
+## What happens after creating or updating a known issue 
+All builds from the last 24 hours since the issue was opened or updated will be scanned for the error message, also 
+the builds that fail after the creation of the issue will be scanned.
+
+The issues analyzed are all the infrastructure issues (the known issues on dotnet/arcade) and the repository issues (the known issues in the repository of the pull request).
 
 ### Build retry functionality in known issues
 The build retry setting can be set to 'true' when the build failure on 'ErrorMessage' could be solved by retrying the build.
