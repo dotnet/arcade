@@ -182,5 +182,13 @@ namespace Microsoft.DotNet.Helix.Client
         /// </summary>
         /// <returns>Job accepted by Helix.</returns>
         Task<ISentJob> SendAsync(Action<string> log = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        ///   Uploads all payloads and prepares the job send message for use with the "agentless" job sending system.
+        /// </summary>
+        /// <param name="func"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns>The staged job payload url.</returns>
+        Task<string> StageForSendingAsync(Action<string> log = null, CancellationToken cancellationToken = default);
     }
 }

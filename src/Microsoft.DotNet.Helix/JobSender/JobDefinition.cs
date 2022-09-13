@@ -141,7 +141,7 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
-        public async Task<ISentJob> SendAsync(Action<string> log, CancellationToken cancellationToken)
+        private async Task<(JobCreationRequest request, IBlobContainer storage)> ConstructJobCreationRequestAsync(Action<string> log, CancellationToken cancellationToken)
         {
             IBlobHelper storage;
             if (string.IsNullOrEmpty(StorageAccountConnectionString))
@@ -175,15 +175,17 @@ namespace Microsoft.DotNet.Helix.Client
             var jobList = new List<JobListEntry>();
 
             Dictionary<string, string> correlationPayloadUris =
-                (await Task.WhenAll(CorrelationPayloads.Select(async p => (uri: await p.Key.UploadAsync(storageContainer, log, cancellationToken), destination: p.Value)))).ToDictionary(x => x.uri, x => x.destination);
+                (await Task.WhenAll(CorrelationPayloads.Select(async p =>
+                    (uri: await p.Key.UploadAsync(storageContainer, log, cancellationToken), destination: p.Value))))
+                .ToDictionary(x => x.uri, x => x.destination);
 
             jobList = (await Task.WhenAll(
                 _workItems.Select(async w =>
-                {
-                    var entry = await w.SendAsync(storageContainer, TargetContainerName, log, cancellationToken);
-                    entry.CorrelationPayloadUrisWithDestinations = correlationPayloadUris;
-                    return entry;
-                }
+                    {
+                        var entry = await w.SendAsync(storageContainer, TargetContainerName, log, cancellationToken);
+                        entry.CorrelationPayloadUrisWithDestinations = correlationPayloadUris;
+                        return entry;
+                    }
                 ))).ToList();
 
             string jobListJson = JsonConvert.SerializeObject(jobList, Formatting.Indented);
@@ -199,7 +201,8 @@ namespace Microsoft.DotNet.Helix.Client
             cancellationToken.ThrowIfCancellationRequested();
 
             // Only specify the ResultContainerPrefix if both repository name and source branch are available.
-            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME")) && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH")))
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME")) &&
+                !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH")))
             {
                 // Container names can only be alphanumeric (plus dashes) lowercase names, with no consecutive dashes.
                 // Replace / with -, make all branch and repository names lowercase, remove any characters not
@@ -212,7 +215,7 @@ namespace Microsoft.DotNet.Helix.Client
 
                 // ResultContainerPrefix will be <Repository Name>-<BranchName>
                 ResultContainerPrefix = $"{repoName}-{branchName}-".Replace("/", "-").ToLower();
-                ResultContainerPrefix  = multipleDashes.Replace(illegalCharacters.Replace(ResultContainerPrefix, ""), "-");
+                ResultContainerPrefix = multipleDashes.Replace(illegalCharacters.Replace(ResultContainerPrefix, ""), "-");
             }
 
             var creationRequest = new JobCreationRequest(Type, jobListUri.ToString(), queueId)
@@ -235,10 +238,29 @@ namespace Microsoft.DotNet.Helix.Client
                 creationRequest.Source = Source;
             }
 
+            return (creationRequest, storageContainer);
+        }
+
+        public async Task<ISentJob> SendAsync(Action<string> log, CancellationToken cancellationToken)
+        {
+            var (creationRequest, _) = await ConstructJobCreationRequestAsync(log, cancellationToken);
+
             string jobStartIdentifier = Guid.NewGuid().ToString("N");
             var newJob = await JobApi.NewAsync(creationRequest, jobStartIdentifier, cancellationToken).ConfigureAwait(false);
 
             return new SentJob(JobApi, newJob, newJob.ResultsUri, newJob.ResultsUriRSAS);
+        }
+
+        public async Task<string> StageForSendingAsync(Action<string> log, CancellationToken cancellationToken)
+        {
+            var (creationRequest, storage) = await ConstructJobCreationRequestAsync(log, cancellationToken);
+            string requestJson = JsonConvert.SerializeObject(creationRequest, Formatting.Indented);
+            Uri jobListUri = await storage.UploadTextAsync(
+                requestJson,
+                $"job-request-{Guid.NewGuid()}.json",
+                log,
+                cancellationToken);
+            return jobListUri.AbsoluteUri;
         }
 
         private void WarnForImpendingRemoval(Action<string> log, QueueInfo queueInfo) 

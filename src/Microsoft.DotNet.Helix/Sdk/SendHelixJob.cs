@@ -157,6 +157,8 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </summary>
         public int MaxRetryCount { get; set; }
 
+        public bool StageOnly { get; set; } = false;
+
         private CommandPayload _commandPayload;
 
         protected override async Task ExecuteCore(CancellationToken cancellationToken)
@@ -261,14 +263,23 @@ namespace Microsoft.DotNet.Helix.Sdk
                     return;
                 }
 
-                Log.LogMessage(MessageImportance.High, $"Sending Job to {TargetQueue}...");
                 cancellationToken.ThrowIfCancellationRequested();
                 // LogMessageFromText will take any string formatted as a canonical error or warning and convert the type of log to this
-                ISentJob job = await def.SendAsync(msg => Log.LogMessageFromText(msg, MessageImportance.Normal), cancellationToken);
-                JobCorrelationId = job.CorrelationId;
-                JobCancellationToken = job.HelixCancellationToken;
-                ResultsContainerUri = job.ResultsContainerUri;
-                ResultsContainerReadSAS = job.ResultsContainerReadSAS;
+                if (StageOnly)
+                {
+                    Log.LogMessage(MessageImportance.High, $"Preparing Job for {TargetQueue}...");
+                    var requestUrl = await def.StageForSendingAsync(msg => Log.LogMessageFromText(msg, MessageImportance.Normal), cancellationToken);
+                    Console.WriteLine($"##vso[task.setvariable variable={Guid.NewGuid():N}.HelixJobInformation;isoutput=true]{requestUrl}");
+                }
+                else
+                {
+                    Log.LogMessage(MessageImportance.High, $"Sending Job to {TargetQueue}...");
+                    ISentJob job = await def.SendAsync(msg => Log.LogMessageFromText(msg, MessageImportance.Normal), cancellationToken);
+                    JobCorrelationId = job.CorrelationId;
+                    JobCancellationToken = job.HelixCancellationToken;
+                    ResultsContainerUri = job.ResultsContainerUri;
+                    ResultsContainerReadSAS = job.ResultsContainerReadSAS;
+                }
                 cancellationToken.ThrowIfCancellationRequested();
             }
 
