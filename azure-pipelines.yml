@@ -111,10 +111,10 @@ stages:
             version: 3.1.300
             installationPath: $(Build.SourcesDirectory)/.dotnet
         - task: UseDotNet@2
-          displayName: 'Install .NET Core 6.0'
+          displayName: 'Install .NET Core 6.0 runtime'
           inputs:
-            packageType: sdk
-            version: 6.0.401
+            packageType: runtime
+            version: 6.0.9
             installationPath: $(Build.SourcesDirectory)/.dotnet
         # Use utility script to run script command dependent on agent OS.
         - script: $(_Script)
