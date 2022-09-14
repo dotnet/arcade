@@ -32,7 +32,7 @@
       <Command>echo 'done!'</Command>
       <PayloadDirectory>$(MSBuildThisFileDirectory)Trx</PayloadDirectory>
     </HelixWorkItem>
-  </ItemGroup>
+  </ItemGroup>  
   <ItemGroup>
     <AzurePipelinesExpectedTestFailure Include="HelixReporter.TRXTests.HelixReporter.TRXTests.Fail1"/>
     <AzurePipelinesExpectedTestFailure Include="HelixReporter.TRXTests.HelixReporter.TRX.Fail2"/>

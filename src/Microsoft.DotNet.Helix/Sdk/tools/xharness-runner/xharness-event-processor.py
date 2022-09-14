@@ -334,11 +334,11 @@ for operation in operations:
         print(f'    Failed to analyze operation: {e}')
 
     # Note down the dimensions that caused retry/reboot
-    if retry and retry_dimensions is None:
+    if retry and not retry_dimensions:
         retry_dimensions = custom_dimensions
         retry_exit_code = exit_code
 
-    if reboot and reboot_dimensions is None:
+    if reboot and not reboot_dimensions:
         reboot_dimensions = custom_dimensions
 
     kusto_metrics = dict()
@@ -361,15 +361,15 @@ if retry:
     request_infra_retry('Requesting work item retry because an infrastructure issue was detected on this machine')
 
     # TODO https://github.com/dotnet/core-eng/issues/15059
-    # We need to remove testResults.xml so that it is not uploaded since this run will be discarded
+    # We need to rename testResults.xml so that test results are not uploaded since this run will be discarded
     # This is a workaround until we make AzDO reporter not upload test results
     file_name = "testResults.xml"
     test_results = os.path.join(output_directory, file_name)
     if os.path.exists(test_results):
-        os.remove(test_results)
+        os.rename(test_results, test_results + ".retry")
 
     if os.path.exists(file_name):
-        os.remove(file_name)
+        os.rename(file_name, file_name + ".retry")
 
 if reboot:
     send_metric(REBOOT_METRIC_NAME, reboot_exit_code, reboot_dimensions, event_type=EVENT_TYPE)

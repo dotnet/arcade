@@ -13,8 +13,8 @@
     <Property Id="PackageId" Value="$(var.PackageId)" />
     <Property Id="PackageVersion" Value="$(var.PackageVersion)" />
 
-    <Feature Id="F_PackageContent">
-      <ComponentGroupRef Id="CG_PackageContent"/>
+    <Feature Id="F_PackageContents">
+      <ComponentGroupRef Id="CG_PackageContents"/>
     </Feature>
 
     <FeatureRef Id="F_DependencyProvider" />
