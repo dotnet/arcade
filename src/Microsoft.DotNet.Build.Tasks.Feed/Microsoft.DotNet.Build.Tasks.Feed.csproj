@@ -20,6 +20,7 @@
     <PackageReference Include="DotNet.SleetLib" Version="$(DotNetSleetLibVersion)" />
     <PackageReference Include="Microsoft.Data.Services.Client" Version="$(MicrosoftDataServicesClientVersion)" />
     <PackageReference Include="Microsoft.Data.OData" Version="$(MicrosoftDataODataVersion)" />
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
   </ItemGroup>
 
   <ItemGroup>
