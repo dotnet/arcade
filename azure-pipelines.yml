@@ -5,13 +5,16 @@ trigger:
     - main
     - release/3.x
     - release/5.0
-
+    - release/6.0
+    - release/7.0
 pr:
   branches:
     include:
     - main
     - release/3.x
     - release/5.0
+    - release/6.0
+    - release/7.0
     - templates
 
 variables:
@@ -52,7 +55,7 @@ stages:
           ${{ if eq(variables._RunAsPublic, True) }}:
             vmImage: windows-latest
           ${{ if eq(variables._RunAsInternal, True) }}:
-            name: NetCore1ESPool-Internal
+            name: NetCore1ESPool-Svc-Internal
             demands: ImageOverride -equals windows.vs2019.amd64
         strategy:
           matrix:

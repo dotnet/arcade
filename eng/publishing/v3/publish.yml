@@ -38,7 +38,7 @@ stages:
         # If it's not devdiv, it's dnceng: 
         # If useServicingBuildPools = false, it's a main branch:
         ${{ if and(ne(variables['System.TeamProject'], 'DevDiv'), eq(parameters['useServicingBuildPools'], false)) }}:
-          name: NetCore1ESPool-Internal
+          name: NetCore1ESPool-Svc-Internal
           demands: ImageOverride -equals windows.vs2019.amd64
         # If useServicingBuildPools = true, it's a release branch:
         ${{ if and(ne(variables['System.TeamProject'], 'DevDiv'), eq(parameters['useServicingBuildPools'], true)) }}:
