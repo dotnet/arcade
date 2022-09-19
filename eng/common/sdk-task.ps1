@@ -43,6 +43,7 @@ function Build([string]$target) {
     /p:RepoRoot=$RepoRoot `
     /p:BaseIntermediateOutputPath=$outputPath `
     /v:$verbosity `
+    /p:CheckEolTargetFramework=false
     @properties
 }
 
