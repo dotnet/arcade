@@ -55,7 +55,7 @@ stages:
           ${{ if eq(variables._RunAsPublic, True) }}:
             vmImage: windows-latest
           ${{ if eq(variables._RunAsInternal, True) }}:
-            name: NetCore1ESPool-Svc-Internal
+            name: NetCore1ESPool-Internal
             demands: ImageOverride -equals windows.vs2019.amd64
         strategy:
           matrix:
