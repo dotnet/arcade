@@ -8,12 +8,15 @@ using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.GenAPI.Shared;
 
+/// <summary>
+/// Interface responsible for writing various outputs: C# code, XML etc.
+/// </summary>
 public interface ISyntaxWriter : IDisposable
 {
     IDisposable WriteNamespace(IEnumerable<string> namespacePath);
 
     IDisposable WriteTypeDefinition(IEnumerable<SyntaxKind> accessibility, IEnumerable<SyntaxKind> keywords,
-        string typeName, IEnumerable<string> baseTypeNames, IEnumerable<IEnumerable<SymbolDisplayPart>> constrains);
+        string typeName, IEnumerable<string> baseTypeNames, IEnumerable<IEnumerable<SymbolDisplayPart>> constraints);
 
     void WriteAttribute(string attribute);
 
@@ -21,5 +24,5 @@ public interface ISyntaxWriter : IDisposable
 
     void WriteEvent(string definition, bool hasAddMethod, bool hasRemoveMethod);
 
-    void Writemethod(string definition, bool hasImplementation);
+    void WriteMethod(string definition, bool hasImplementation);
 }

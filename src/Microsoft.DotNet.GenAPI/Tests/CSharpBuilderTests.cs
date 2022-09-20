@@ -13,14 +13,14 @@ public class CSharpBuilderTests
     [Fact]
     public void BuildSimpleNamespacesTest()
     {
-        var syntaxTree = @"
-namespace A
-{
-namespace B {}
+        var syntaxTree = """
+            namespace A
+            {
+            namespace B {}
 
-namespace C.D {}
-}
-";
+            namespace C.D {}
+            }
+            """;
 
         var assembly = CompilationHelper.GetAssemblyFromSyntax(syntaxTree, enableNullable: false);
 
@@ -51,19 +51,19 @@ namespace C.D {}
     [Fact]
     public void BuildSimpleStructureTest()
     {
-        var syntaxTree = @"
-namespace A
-{
-    public struct PublicStruct { }
-    struct InternalStruct { }
-    readonly struct ReadonlyStruct { }
-    public readonly struct PublicReadonlyStruct { }
-    record struct RecordStruct { }
-    readonly record struct ReadonlyRecordStruct { }
-    public ref struct PublicRefStruct { }
-    public readonly ref struct PublicReadonlyRefStruct { }
-}
-";
+        var syntaxTree = """
+            namespace A
+            {
+                public struct PublicStruct { }
+                struct InternalStruct { }
+                readonly struct ReadonlyStruct { }
+                public readonly struct PublicReadonlyStruct { }
+                record struct RecordStruct { }
+                readonly record struct ReadonlyRecordStruct { }
+                public ref struct PublicRefStruct { }
+                public readonly ref struct PublicReadonlyRefStruct { }
+            }
+            """;
 
         var assembly = CompilationHelper.GetAssemblyFromSyntax(syntaxTree, enableNullable: false);
 

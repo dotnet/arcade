@@ -3,16 +3,20 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.GenAPI.Shared;
 
+/// <summary>
+/// Writes C# source code into IO.File or Console.
+/// </summary>
 public class CSharpSyntaxWriter: ISyntaxWriter
 {
-    private readonly IOutWriter _outWriter;
+    private readonly StreamWriter _streamWriter;
 
-    public CSharpSyntaxWriter(IOutWriter outWriter) => _outWriter = outWriter;
+    public CSharpSyntaxWriter(StreamWriter streamWriter) => _streamWriter = streamWriter;
 
     public IDisposable WriteNamespace(IEnumerable<string> namespacePath)
     {
@@ -22,23 +26,27 @@ public class CSharpSyntaxWriter: ISyntaxWriter
         foreach (var ns in namespacePath)
         {
             if (!root)
+            {
                 WriteKeyword(SyntaxKind.DotToken, writeSpace: false);
+            }
             else
+            {
                 root = false;
+            }
 
-            _outWriter.WriteSymbol(ns);
+            _streamWriter.Write(ns);
         }
 
-        _outWriter.OpenBrace();
+        OpenBrace();
 
         return new Block(() =>
         {
-            _outWriter.CloseBrace();
+            CloseBrace();
         });
     }
 
     public IDisposable WriteTypeDefinition(IEnumerable<SyntaxKind> accessibility, IEnumerable<SyntaxKind> keywords,
-        string typeName, IEnumerable<string> baseTypeNames, IEnumerable<IEnumerable<SymbolDisplayPart>> constrains)
+        string typeName, IEnumerable<string> baseTypeNames, IEnumerable<IEnumerable<SymbolDisplayPart>> constraints)
     {
         foreach (var keyword in accessibility)
         {
@@ -50,51 +58,55 @@ public class CSharpSyntaxWriter: ISyntaxWriter
             WriteKeyword(keyword);
         }
 
-        _outWriter.WriteSymbol(typeName);
-        _outWriter.WriteSpace();
+        _streamWriter.Write(typeName);
+        WriteSpace();
 
         bool first = true;
 
         foreach (var baseSymbol in baseTypeNames)
         {
             if (first)
+            {
                 WriteKeyword(SyntaxKind.ColonToken);
+            }
             else
+            {
                 WriteKeyword(SyntaxKind.CommaToken);
+            }
 
             first = false;
 
-            _outWriter.WriteSymbol(baseSymbol);
+            _streamWriter.Write(baseSymbol);
         }
 
-        foreach (var currConstrain in constrains)
+        foreach (var currConstrain in constraints)
         {
-            _outWriter.WriteSpace();
+            WriteSpace();
             foreach (var part in currConstrain)
             {
-                _outWriter.WriteSymbol(part.ToString());
+                _streamWriter.Write(part.ToString());
             }
         }
 
-        _outWriter.OpenBrace();
+        OpenBrace();
 
         return new Block(() =>
         {
-            _outWriter.CloseBrace();
+            CloseBrace();
         });
     }
 
     public void WriteAttribute(string attribute)
     {
         WriteKeyword(SyntaxKind.OpenBracketToken, writeSpace: false);
-        _outWriter.WriteSymbol(attribute);
+        _streamWriter.Write(attribute);
         WriteKeyword(SyntaxKind.CloseBracketToken, writeSpace: false);
-        _outWriter.WriteLine();
+        _streamWriter.WriteLine();
     }
 
     public void WriteProperty(string definition, bool hasImplementation, bool hasGetMethod, bool hasSetMethod)
     {
-        _outWriter.WriteSymbol(definition);
+        _streamWriter.Write(definition);
 
         if (hasGetMethod || hasSetMethod)
         {
@@ -104,13 +116,13 @@ public class CSharpSyntaxWriter: ISyntaxWriter
                 if (hasImplementation)
                 {
                     WriteImplementation();
-                    _outWriter.WriteSpace();
+                    WriteSpace();
                 }
                 else
                     WriteKeyword(SyntaxKind.SemicolonToken);
             };
 
-            _outWriter.WriteSpace();
+            WriteSpace();
             WriteKeyword(SyntaxKind.OpenBraceToken);
 
             if (hasGetMethod)
@@ -130,12 +142,12 @@ public class CSharpSyntaxWriter: ISyntaxWriter
             WriteKeyword(SyntaxKind.SemicolonToken, writeSpace: false);
         }
 
-        _outWriter.WriteLine();
+        _streamWriter.WriteLine();
     }
 
     public void WriteEvent(string definition, bool hasAddMethod, bool hasRemoveMethod)
     {
-        _outWriter.WriteSymbol(definition);
+        _streamWriter.Write(definition);
 
         if (hasAddMethod || hasRemoveMethod)
         {
@@ -143,10 +155,10 @@ public class CSharpSyntaxWriter: ISyntaxWriter
             {
                 WriteKeyword(method);
                 WriteImplementation();
-                _outWriter.WriteSpace();
+                WriteSpace();
             };
 
-            _outWriter.WriteSpace();
+            WriteSpace();
             WriteKeyword(SyntaxKind.OpenBraceToken);
 
             if (hasAddMethod)
@@ -166,15 +178,15 @@ public class CSharpSyntaxWriter: ISyntaxWriter
             WriteKeyword(SyntaxKind.SemicolonToken, writeSpace: false);
         }
 
-        _outWriter.WriteLine();
+        _streamWriter.WriteLine();
     }
 
-    public void Writemethod(string definition, bool hasImplementation)
+    public void WriteMethod(string definition, bool hasImplementation)
     {
-        _outWriter.WriteSymbol(definition);
+        _streamWriter.Write(definition);
         if (hasImplementation)
         {
-            _outWriter.WriteSpace();
+            WriteSpace();
             WriteImplementation();
         }
         else
@@ -182,18 +194,38 @@ public class CSharpSyntaxWriter: ISyntaxWriter
             WriteKeyword(SyntaxKind.SemicolonToken);
         }
 
-        _outWriter.WriteLine();
+        _streamWriter.WriteLine();
     }
 
-    public void Dispose() => _outWriter.Dispose();
+    public void Dispose() => _streamWriter.Dispose();
 
-    /// ------------------------------------------------------
+    #region Private methods
+
+    private void WriteSpace()
+    {
+        _streamWriter.Write(' ');
+    }
+
+    private void OpenBrace()
+    {
+        WriteSpace();
+        WriteKeyword(SyntaxKind.OpenBraceToken, writeSpace: false);
+        _streamWriter.WriteLine();
+    }
+
+    private void CloseBrace()
+    {
+        WriteKeyword(SyntaxKind.CloseBraceToken, writeSpace: false);
+        _streamWriter.WriteLine();
+    }
 
     private void WriteKeyword(SyntaxKind keyword, bool writeSpace = true)
     {
-        _outWriter.WriteSymbol(SyntaxFacts.GetText(keyword));
+        _streamWriter.Write(SyntaxFacts.GetText(keyword));
         if (writeSpace)
-            _outWriter.WriteSpace();
+        {
+            WriteSpace();
+        }
     }
 
     private void WriteImplementation()
@@ -213,4 +245,6 @@ public class CSharpSyntaxWriter: ISyntaxWriter
 
         public void Dispose() => _endBlock();
     }
+
+    #endregion
 }

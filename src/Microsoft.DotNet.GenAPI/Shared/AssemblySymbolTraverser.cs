@@ -27,7 +27,7 @@ public abstract class AssemblySymbolTraverser
 
         foreach (var namespaceSymbol in _orderProvider.Order(namespaces))
         {
-            using var rs = Process(namespaceSymbol);
+            using var rs = ProcessBlock(namespaceSymbol);
             Visit(namespaceSymbol);
         }
     }
@@ -43,7 +43,7 @@ public abstract class AssemblySymbolTraverser
                 Process(attribute);
             }
 
-            using var rs = Process(typeMember);
+            using var rs = ProcessBlock(typeMember);
             Visit(typeMember);
         }
     }
@@ -65,8 +65,8 @@ public abstract class AssemblySymbolTraverser
         }
     }
 
-    protected abstract IDisposable Process(INamespaceSymbol namespaceSymbol);
-    protected abstract IDisposable Process(INamedTypeSymbol namedType);
+    protected abstract IDisposable ProcessBlock(INamespaceSymbol namespaceSymbol);
+    protected abstract IDisposable ProcessBlock(INamedTypeSymbol namedType);
     protected abstract void Process(ISymbol member);
     protected abstract void Process(AttributeData data);
 
@@ -76,7 +76,7 @@ public abstract class AssemblySymbolTraverser
 
         foreach (var innerNamedType in _orderProvider.Order(innerNamedTypes))
         {
-            using var rs = Process(innerNamedType);
+            using var rs = ProcessBlock(innerNamedType);
             Visit(innerNamedType);
         }
     }
