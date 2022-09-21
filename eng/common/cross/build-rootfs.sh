@@ -402,7 +402,8 @@ elif [[ "$__CodeName" == "illumos" ]]; then
     read -ra array <<<"$__IllumosPackages"
     for package in "${array[@]}"; do
         echo "Installing '$package'"
-        package="$(grep ">$package-[0-9]" All | sed -En 's/.*href="(.*)\.tgz".*/\1/p')"
+        # find last occurrence of package in listing and extract its name
+        package="$(sed -En '/.*href="('"$package"'-[0-9].*).tgz".*/h;$!d;g;s//\1/p' All)"
         echo "Resolved name '$package'"
         wget "$BaseUrl"/"$package".tgz
         ar -x "$package".tgz
