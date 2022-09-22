@@ -117,18 +117,25 @@ If you feel this removal is in error, or believe a specific expiration should be
     - If removal is deemed inappropriate, make pull requests to the dotnet-helix-machines repo extending the time to a new, agreed-upon, date.
     - If pull requests are created, monitor subsequent builds in the pipeline until it has succeeded; 
   - Open issues in the dotnet/arcade for all actions, with the "First Responder" tag. Add to list of queues for end-of-week update.
-  - Create pull requests removing these queues after the current week's rollout in the week they will be removed, and follow these until merged.
+  - Create pull requests removing these test or build images after the current week's rollout in the week they will be removed, and follow these until merged.
 
-- If any warnings about "Update-required" queues arise: (e.g. "`##[warning]<image.identifier> has update-required date: YYYY-MM-DD, in the next three weeks. Please either update the image to newer, file an issue requesting this, or extend the date with a comment explaining why if no action is taken.`")
+- If any warnings about "Update-required" images arise: (e.g. "`##[warning]<image.identifier> has update-required date: YYYY-MM-DD, in the next three weeks. Please either update the image to newer, file an issue requesting this, or extend the date with a comment explaining why if no action is taken.`")
   - Check whether updated images exist:
-    - Refer to the yaml for these images, found under the "definitions" folder of [the dotnet-helix-machines repo](https://dnceng.visualstudio.com/internal/_git/dotnet-helix-machines).  Some windows images may be found in definition-base\windows.base.yaml
-    - Find the image referenced in the yaml.  , or directly inside definitions\shared in the dotnet-helix-machines repository.
-    - Run the osob CLI (the following commands assume you have .NET Core runtime on the path and are inside the `tools\OsobCli` folder of this repository.
+    - Refer to the yaml for these images, found under the "[definitions](https://dnceng.visualstudio.com/internal/_git/dotnet-helix-machines?path=/definitions)" folder of [the dotnet-helix-machines repo](https://dnceng.visualstudio.com/internal/_git/dotnet-helix-machines).  Some windows images may be found in [definition-base\windows.base.yaml](https://dnceng.visualstudio.com/internal/_git/dotnet-helix-machines?path=/definition-base/windows.base.yaml)
+    - Find the image referenced in the yaml, or directly inside definitions\shared in the dotnet-helix-machines repository.
+    - Run the osob CLI. The following commands assume you have .NET Core runtime on the path and are inside the `tools\OsobCli` folder of this repository.
       - `dotnet run list-image-versions -l westus -d ..\..\definitions`
       - `dotnet run list-imagefactory-image-versions -d ..\..\definitions`
+      - Images with newer versions available will look like:
+```
+For <Image Name>:
+   Current version:          <Version string from yaml>
+   Latest available version: <Version string from Azure / DDFUN Image gallery>
+   ** Upgrade! **
+```
   - If there are updated versions of the image:
     - Wherever "Current Version" and "Latest Version" do not match, modify the image version to match the version printed out by the OSOB CLI tool above
-    - Set the new "update required date" to 90 days after the previous update required date, or the "EstimatedRemovalDate", (whichever comes first).
+    - Set the new `UpdateRequiredDate` to 90 days after the previous date, or the `EstimatedRemovalDate`, (whichever comes first).
     - Create a pull request with these changes and follow until merged.
   - If there are no updated versions of the image, simply set the update-required date to 90 days past the previous one
   - After merging any pull requests where multiple images are updated, as usual monitor "main" branch builds until they are successful.
