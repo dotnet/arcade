@@ -122,7 +122,7 @@ If you feel this removal is in error, or believe a specific expiration should be
 - If any warnings about "Update-required" queues arise: (e.g. "`##[warning]<image.identifier> has update-required date: YYYY-MM-DD, in the next three weeks. Please either update the image to newer, file an issue requesting this, or extend the date with a comment explaining why if no action is taken.`")
   - Check whether updated images exist:
     - Refer to the yaml for these images, found under the "definitions" folder of [the dotnet-helix-machines repo](https://dnceng.visualstudio.com/internal/_git/dotnet-helix-machines).  Some windows images may be found in definition-base\windows.base.yaml
-    - Find the image referenced in the yaml.  , or directly inside definitions\shared in teh
+    - Find the image referenced in the yaml.  , or directly inside definitions\shared in the dotnet-helix-machines repository.
     - Run the osob CLI (the following commands assume you have .NET Core runtime on the path and are inside the `tools\OsobCli` folder of this repository.
       - `dotnet run list-image-versions -l westus -d ..\..\definitions`
       - `dotnet run list-imagefactory-image-versions -d ..\..\definitions`
@@ -131,7 +131,7 @@ If you feel this removal is in error, or believe a specific expiration should be
     - Set the new "update required date" to 90 days after the previous update required date, or the "EstimatedRemovalDate", (whichever comes first).
     - Create a pull request with these changes and follow until merged.
   - If there are no updated versions of the image, simply set the update-required date to 90 days past the previous one
-  - After merging any pull requests where multiple images are updated, as usual make sure to monitor "main" branch builds until they are successful.
+  - After merging any pull requests where multiple images are updated, as usual monitor "main" branch builds until they are successful.
 
 - If the main build has failed (red): 
   - Ping [DncEng First Responders Teams Channel](https://teams.microsoft.com/l/channel/19%3aafba3d1545dd45d7b79f34c1821f6055%40thread.skype/First%2520Responders?groupId=4d73664c-9f2f-450d-82a5-c2f02756606d&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47) and ask for next steps. 
