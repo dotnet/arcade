@@ -14,9 +14,9 @@ namespace Microsoft.DotNet.GenAPI.Shared;
 /// </summary>
 public class CSharpSyntaxWriter: ISyntaxWriter
 {
-    private readonly StreamWriter _streamWriter;
+    private readonly TextWriter _textWriter;
 
-    public CSharpSyntaxWriter(StreamWriter streamWriter) => _streamWriter = streamWriter;
+    public CSharpSyntaxWriter(TextWriter textWriter) => _textWriter = textWriter;
 
     public IDisposable WriteNamespace(IEnumerable<string> namespacePath)
     {
@@ -34,7 +34,7 @@ public class CSharpSyntaxWriter: ISyntaxWriter
                 root = false;
             }
 
-            _streamWriter.Write(ns);
+            _textWriter.Write(ns);
         }
 
         OpenBrace();
@@ -58,7 +58,7 @@ public class CSharpSyntaxWriter: ISyntaxWriter
             WriteKeyword(keyword);
         }
 
-        _streamWriter.Write(typeName);
+        _textWriter.Write(typeName);
         WriteSpace();
 
         bool first = true;
@@ -76,7 +76,7 @@ public class CSharpSyntaxWriter: ISyntaxWriter
 
             first = false;
 
-            _streamWriter.Write(baseSymbol);
+            _textWriter.Write(baseSymbol);
         }
 
         foreach (var currConstrain in constraints)
@@ -84,7 +84,7 @@ public class CSharpSyntaxWriter: ISyntaxWriter
             WriteSpace();
             foreach (var part in currConstrain)
             {
-                _streamWriter.Write(part.ToString());
+                _textWriter.Write(part.ToString());
             }
         }
 
@@ -99,14 +99,14 @@ public class CSharpSyntaxWriter: ISyntaxWriter
     public void WriteAttribute(string attribute)
     {
         WriteKeyword(SyntaxKind.OpenBracketToken, writeSpace: false);
-        _streamWriter.Write(attribute);
+        _textWriter.Write(attribute);
         WriteKeyword(SyntaxKind.CloseBracketToken, writeSpace: false);
-        _streamWriter.WriteLine();
+        _textWriter.WriteLine();
     }
 
     public void WriteProperty(string definition, bool hasImplementation, bool hasGetMethod, bool hasSetMethod)
     {
-        _streamWriter.Write(definition);
+        _textWriter.Write(definition);
 
         if (hasGetMethod || hasSetMethod)
         {
@@ -142,12 +142,12 @@ public class CSharpSyntaxWriter: ISyntaxWriter
             WriteKeyword(SyntaxKind.SemicolonToken, writeSpace: false);
         }
 
-        _streamWriter.WriteLine();
+        _textWriter.WriteLine();
     }
 
     public void WriteEvent(string definition, bool hasAddMethod, bool hasRemoveMethod)
     {
-        _streamWriter.Write(definition);
+        _textWriter.Write(definition);
 
         if (hasAddMethod || hasRemoveMethod)
         {
@@ -178,12 +178,12 @@ public class CSharpSyntaxWriter: ISyntaxWriter
             WriteKeyword(SyntaxKind.SemicolonToken, writeSpace: false);
         }
 
-        _streamWriter.WriteLine();
+        _textWriter.WriteLine();
     }
 
     public void WriteMethod(string definition, bool hasImplementation)
     {
-        _streamWriter.Write(definition);
+        _textWriter.Write(definition);
         if (hasImplementation)
         {
             WriteSpace();
@@ -194,34 +194,34 @@ public class CSharpSyntaxWriter: ISyntaxWriter
             WriteKeyword(SyntaxKind.SemicolonToken);
         }
 
-        _streamWriter.WriteLine();
+        _textWriter.WriteLine();
     }
 
-    public void Dispose() => _streamWriter.Dispose();
+    public void Dispose() => _textWriter.Dispose();
 
     #region Private methods
 
     private void WriteSpace()
     {
-        _streamWriter.Write(' ');
+        _textWriter.Write(' ');
     }
 
     private void OpenBrace()
     {
         WriteSpace();
         WriteKeyword(SyntaxKind.OpenBraceToken, writeSpace: false);
-        _streamWriter.WriteLine();
+        _textWriter.WriteLine();
     }
 
     private void CloseBrace()
     {
         WriteKeyword(SyntaxKind.CloseBraceToken, writeSpace: false);
-        _streamWriter.WriteLine();
+        _textWriter.WriteLine();
     }
 
     private void WriteKeyword(SyntaxKind keyword, bool writeSpace = true)
     {
-        _streamWriter.Write(SyntaxFacts.GetText(keyword));
+        _textWriter.Write(SyntaxFacts.GetText(keyword));
         if (writeSpace)
         {
             WriteSpace();
