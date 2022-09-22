@@ -364,10 +364,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
-            // ".NET 7 RC 1",
+            // ".NET 7 RC 1 Internal",
             new TargetChannelConfig(
                 3033,
-                false,
+                true,
                 PublishingInfraVersion.All,
                 new List<string>() { "internal/7.0-rc1" },
                 DotNet7InternalFeeds,
