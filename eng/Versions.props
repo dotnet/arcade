@@ -35,10 +35,10 @@
     <MicrosoftIdentityModelClientsActiveDirectoryVersion>3.17.2</MicrosoftIdentityModelClientsActiveDirectoryVersion>
     <MicrosoftRestClientRuntimeVersion>2.3.13</MicrosoftRestClientRuntimeVersion>
     <MicrosoftExtensionsDependencyModelVersion>2.1.0</MicrosoftExtensionsDependencyModelVersion>
-    <MicrosoftExtensionsDependencyInjectionAbstractionsVersion>2.1.1</MicrosoftExtensionsDependencyInjectionAbstractionsVersion>
-    <MicrosoftExtensionsDependencyInjectionVersion>2.1.1</MicrosoftExtensionsDependencyInjectionVersion>
+    <MicrosoftExtensionsDependencyInjectionAbstractionsVersion>6.0.0</MicrosoftExtensionsDependencyInjectionAbstractionsVersion>
+    <MicrosoftExtensionsDependencyInjectionVersion>6.0.0</MicrosoftExtensionsDependencyInjectionVersion>
     <MicrosoftExtensionsFileSystemGlobbingVersion>2.0.0</MicrosoftExtensionsFileSystemGlobbingVersion>
-    <MicrosoftExtensionsLoggingConsoleVersion>2.1.1</MicrosoftExtensionsLoggingConsoleVersion>
+    <MicrosoftExtensionsLoggingConsoleVersion>6.0.0</MicrosoftExtensionsLoggingConsoleVersion>
     <MicrosoftNETCorePlatformsVersion>2.1.0</MicrosoftNETCorePlatformsVersion>
     <MicrosoftNetCompilersToolsetVersion>4.3.0-3.22465.2</MicrosoftNetCompilersToolsetVersion>
     <MicrosoftNetTestSdkVersion>17.4.0-preview-20220707-01</MicrosoftNetTestSdkVersion>
@@ -48,26 +48,26 @@
     <MonoOptionsVersion>5.3.0.1</MonoOptionsVersion>
     <McMasterExtensionsCommandLineUtils>2.3.0</McMasterExtensionsCommandLineUtils>
     <NewtonsoftJsonVersion>13.0.1</NewtonsoftJsonVersion>
-    <SystemTextJsonVersion>4.7.0</SystemTextJsonVersion>
+    <SystemTextJsonVersion>6.0.0</SystemTextJsonVersion>
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
     <NuGetVersion>6.2.1</NuGetVersion>
     <OctokitVersion>0.32.0</OctokitVersion>
     <DotNetSleetLibVersion>2.2.143</DotNetSleetLibVersion>
     <SwashbuckleAspNetCoreSwaggerVersion>3.0.0</SwashbuckleAspNetCoreSwaggerVersion>
-    <SystemBuffersVersion>4.5.0</SystemBuffersVersion>
+    <SystemBuffersVersion>4.5.1</SystemBuffersVersion>
     <SystemCollectionsImmutableVersion>1.5.0</SystemCollectionsImmutableVersion>
     <SystemDiagnosticsTraceSourceVersion>4.0.0</SystemDiagnosticsTraceSourceVersion>
     <SystemIOCompressionVersion>4.3.0</SystemIOCompressionVersion>
     <SystemIOPackagingVersion>4.5.0</SystemIOPackagingVersion>
     <SystemIOFileSystemPrimitivesVersion>4.3.0</SystemIOFileSystemPrimitivesVersion>
-    <SystemMemoryVersion>4.5.3</SystemMemoryVersion>
+    <SystemMemoryVersion>4.5.4</SystemMemoryVersion>
     <SystemNumericsVectorsVersion>4.5.0</SystemNumericsVectorsVersion>
     <SystemReflectionMetadataVersion>1.6.0</SystemReflectionMetadataVersion>
-    <SystemRuntimeCompilerServicesUnsafeVersion>4.7.0</SystemRuntimeCompilerServicesUnsafeVersion>
+    <SystemRuntimeCompilerServicesUnsafeVersion>6.0.0</SystemRuntimeCompilerServicesUnsafeVersion>
     <SystemRuntimeInteropServicesRuntimeInformation>4.3.0</SystemRuntimeInteropServicesRuntimeInformation>
     <SystemSecurityCryptographyX509CertificatesVersion>4.3.0</SystemSecurityCryptographyX509CertificatesVersion>
-    <SystemTextEncodingsWebVersion>4.7.2</SystemTextEncodingsWebVersion>
-    <SystemThreadingTasksExtensionVersion>4.5.2</SystemThreadingTasksExtensionVersion>
+    <SystemTextEncodingsWebVersion>6.0.0</SystemTextEncodingsWebVersion>
+    <SystemThreadingTasksExtensionVersion>4.5.4</SystemThreadingTasksExtensionVersion>
     <SystemValueTupleVersion>4.5.0</SystemValueTupleVersion>
     <WindowsAzureStorageVersion>8.5.0</WindowsAzureStorageVersion>
     <XUnitVersion>2.4.2</XUnitVersion>
