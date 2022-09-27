@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.GenAPI.Shared;
 /// <summary>
 /// Interface incapsulates logic for processing symbol assemblies.
 /// </summary>
-public interface IWriter
+public interface IAssemblySymbolWriter
 {
-    void WriteAssemblies(IAssemblySymbol assembly);
+    void WriteAssembly(IAssemblySymbol assembly);
 }
