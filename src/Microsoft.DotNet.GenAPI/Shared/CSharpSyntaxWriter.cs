@@ -45,8 +45,12 @@ public class CSharpSyntaxWriter: ISyntaxWriter
         });
     }
 
-    public IDisposable WriteTypeDefinition(IEnumerable<SyntaxKind> accessibility, IEnumerable<SyntaxKind> keywords,
-        string typeName, IEnumerable<string> baseTypeNames, IEnumerable<IEnumerable<SymbolDisplayPart>> constraints)
+    public IDisposable WriteTypeDefinition(
+        IEnumerable<SyntaxKind> accessibility,
+        IEnumerable<SyntaxKind> keywords,
+        string typeName,
+        IEnumerable<string> baseTypeNames,
+        IEnumerable<IEnumerable<SymbolDisplayPart>> constraints)
     {
         foreach (var keyword in accessibility)
         {

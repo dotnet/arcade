@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.GenAPI.Shared;
 
 /// <summary>
 /// Processes assemly symbols to build correspoding structures in C# language.
-/// Depend on _syntaxWriter impelemtenation, the result could be C# source file, xml etc.
+/// Depend on ISyntaxWriter impelemtenation, the result could be C# source file, xml etc.
 /// </summary>
 public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDisposable
 {
@@ -45,7 +45,7 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
         var typeName = namedType.ToDisplayString(AssemblySymbolDisplayFormats.NamedTypeDisplayFormat);
 
         var accessibility = BuildAccessibility(namedType as ISymbol);
-        var keywords = GetKeywords(namedType as ITypeSymbol);
+        var keywords = GetKeywords((ITypeSymbol)namedType);
 
         var baseTypeNames = BuildBaseTypes(namedType);
         var constraints = BuildConstraints(namedType);
@@ -115,7 +115,7 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
             Accessibility.Protected => new SyntaxKind[] { SyntaxKind.ProtectedKeyword },
             Accessibility.ProtectedOrInternal => new SyntaxKind[] { SyntaxKind.ProtectedKeyword, SyntaxKind.InternalKeyword },
             Accessibility.Public => new SyntaxKind[] { SyntaxKind.PublicKeyword },
-            _ => throw new Exception(string.Format("Unexpected accesibility found {0}",
+            _ => throw new Exception(string.Format("Unexpected accessibility modifier found {0}",
                     SyntaxFacts.GetText(symbol.DeclaredAccessibility)))
         };
     }
