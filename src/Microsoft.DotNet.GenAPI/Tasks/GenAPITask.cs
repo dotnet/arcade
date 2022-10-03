@@ -55,14 +55,11 @@ public class GenAPITask : BuildTask
         var assemblySymbols = loader.LoadAssemblies(Utils.SplitPaths(Assembly));
         foreach (var assemblySymbol in assemblySymbols)
         {
-            using var textWriter = Utils.GetTextWriter(OutputPath, assemblySymbol.Name);
-
-            using var writer = new CSharpBuilder(
-                new AssemblySymbolOrderProvider(),
-                new IncludeAllFilter(),
-                new CSharpSyntaxWriter(textWriter,
-                    FileHeader.ReadFromFile(HeaderFile),
-                    ExceptionMessage));
+            using var writer = Utils.GetCSharpBuilder(
+                assemblySymbol.Name,
+                OutputPath,
+                HeaderFile,
+                ExceptionMessage);
 
             writer.WriteAssembly(assemblySymbol);
         }

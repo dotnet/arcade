@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Microsoft.CodeAnalysis;
@@ -22,7 +21,7 @@ public class AssemblySymbolLoader : IAssemblySymbolLoader
     /// value are the containing folder.
     /// </summary>
     private readonly Dictionary<string, string> _referencePaths = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, MetadataReference> _loadedAssemblies = new Dictionary<string, MetadataReference>();
+    private readonly Dictionary<string, MetadataReference> _loadedAssemblies = new();
     private readonly List<string> _warnings = new();
     private readonly bool _resolveReferences;
     private CSharpCompilation _cSharpCompilation;
@@ -50,8 +49,7 @@ public class AssemblySymbolLoader : IAssemblySymbolLoader
 
             if (attr.HasFlag(FileAttributes.Directory))
             {
-                if (!_referencePaths.ContainsKey(path))
-                    _referencePaths.Add(path, path);
+                _referencePaths.TryAdd(path, path);
             }
             else
             {
@@ -69,24 +67,17 @@ public class AssemblySymbolLoader : IAssemblySymbolLoader
     }
 
     /// <inheritdoc />
-    public bool HasRoslynDiagnostics(out IEnumerable<Diagnostic> diagnostics)
-    {
-        diagnostics = _cSharpCompilation.GetDiagnostics();
-        return diagnostics.Any();
-    }
+    public IEnumerable<Diagnostic> GetRoslynDiagnostics() => _cSharpCompilation.GetDiagnostics();
 
     /// <inheritdoc />
-    public IEnumerable<string> GetResolutionWarnings()
-    {
-        return _warnings;
-    }
+    public IEnumerable<string> GetResolutionWarnings() => _warnings;
 
     public IEnumerable<IAssemblySymbol> LoadAssemblies(IEnumerable<string> paths)
     {
         IEnumerable<MetadataReference> assembliesToReturn = LoadFromPaths(paths);
 
         List<IAssemblySymbol> result = new();
-        foreach (MetadataReference metadataReference in assembliesToReturn)
+        foreach (var metadataReference in assembliesToReturn)
         {
             ISymbol? symbol = _cSharpCompilation.GetAssemblyOrModuleSymbol(metadataReference);
             if (symbol is IAssemblySymbol assemblySymbol)
@@ -101,7 +92,7 @@ public class AssemblySymbolLoader : IAssemblySymbolLoader
     /// <inheritdoc />
     public IAssemblySymbol? LoadAssembly(string path)
     {
-        MetadataReference metadataReference = CreateOrGetMetadataReferenceFromPath(path);
+        var metadataReference = CreateOrGetMetadataReferenceFromPath(path);
         return _cSharpCompilation.GetAssemblyOrModuleSymbol(metadataReference) as IAssemblySymbol;
     }
 
@@ -183,8 +174,8 @@ public class AssemblySymbolLoader : IAssemblySymbolLoader
             throw new ArgumentException(string.Format("Provided stream for assembly '{0}' doesn't have any metadata to read. from.", name));
         }
 
-        PEMemoryBlock image = reader.GetEntireImage();
-        MetadataReference metadataReference = MetadataReference.CreateFromImage(image.GetContent());
+        var image = reader.GetEntireImage();
+        var metadataReference = MetadataReference.CreateFromImage(image.GetContent());
         _loadedAssemblies.Add(name, metadataReference);
         _cSharpCompilation = _cSharpCompilation.AddReferences(new MetadataReference[] { metadataReference });
 
@@ -198,44 +189,42 @@ public class AssemblySymbolLoader : IAssemblySymbolLoader
 
     private void ResolveReferences(PEReader peReader)
     {
-        MetadataReader reader = peReader.GetMetadataReader();
-        foreach (AssemblyReferenceHandle handle in reader.AssemblyReferences)
+        var reader = peReader.GetMetadataReader();
+        foreach (var handle in reader.AssemblyReferences)
         {
-            AssemblyReference reference = reader.GetAssemblyReference(handle);
+            var reference = reader.GetAssemblyReference(handle);
             string name = $"{reader.GetString(reference.Name)}.dll";
-            bool found = _loadedAssemblies.TryGetValue(name, out MetadataReference _);
-            if (!found)
-            {
-                // First we try to see if a reference path for this specific assembly was passed in directly, and if so
-                // we use that.
-                if (_referencePaths.TryGetValue(name, out string? fullReferencePath))
-                {
-                    using FileStream resolvedStream = File.OpenRead(Path.Combine(fullReferencePath, name));
-                    CreateAndAddReferenceToCompilation(name, resolvedStream);
-                    found = true;
-                }
-                // If we can't find a specific reference path for the dependency, then we look in the folders where the
-                // rest of the reference paths are located to see if we can find the dependency there.
-                else
-                {
-                    foreach (KeyValuePair<string, string> referencePath in _referencePaths)
-                    {
-                        string potentialPath = Path.Combine(referencePath.Value, name);
-                        if (File.Exists(potentialPath))
-                        {
-                            using FileStream resolvedStream = File.OpenRead(potentialPath);
-                            CreateAndAddReferenceToCompilation(name, resolvedStream);
-                            found = true;
-                            break;
-                        }
-                    }
-                }
 
-                if (!found)
-                {
-                    _warnings.Add(string.Format("Could not resolve reference '{0}' in any of the provided search directories.", name));
-                }
+            if (!ResolveReferences(name))
+            {
+                _warnings.Add(string.Format("Could not resolve reference '{0}' in any of the provided search directories.", name));
             }
         }
+    }
+
+    private bool ResolveReferences(string assemblyName)
+    {
+        // First we try to see if a reference path for this specific assembly was passed in directly, and if so
+        // we use that.
+        if (_referencePaths.TryGetValue(assemblyName, out string? fullReferencePath))
+        {
+            using var resolvedStream = File.OpenRead(Path.Combine(fullReferencePath, assemblyName));
+            CreateAndAddReferenceToCompilation(assemblyName, resolvedStream);
+            return true;
+        }
+
+        // If we can't find a specific reference path for the dependency, then we look in the folders where the
+        // rest of the reference paths are located to see if we can find the dependency there.
+        foreach (var referencePath in _referencePaths)
+        {
+            string potentialPath = Path.Combine(referencePath.Value, assemblyName);
+            if (File.Exists(potentialPath))
+            {
+                using FileStream resolvedStream = File.OpenRead(potentialPath);
+                CreateAndAddReferenceToCompilation(assemblyName, resolvedStream);
+                return true;
+            }
+        }
+        return false;
     }
 }

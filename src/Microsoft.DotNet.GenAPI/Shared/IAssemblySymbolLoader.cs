@@ -24,9 +24,8 @@ public interface IAssemblySymbolLoader
     /// Indicates if the <see cref="CSharpCompilation"/> used to resolve binaries has any roslyn diagnostics.
     /// Might be useful when loading an assembly from source files.
     /// </summary>
-    /// <param name="diagnostics">List of diagnostics.</param>
-    /// <returns>True if there are any diagnostics, false otherwise.</returns>
-    bool HasRoslynDiagnostics(out IEnumerable<Diagnostic> diagnostics);
+    /// <returns>Return list of diagnostics.</returns>
+    IEnumerable<Diagnostic> GetRoslynDiagnostics();
 
     /// <summary>
     /// Gets the list of warnings the loader emitted that might affect the assembly resolution.

@@ -68,14 +68,11 @@ class Program
             var assemblySymbols = loader.LoadAssemblies(Utils.SplitPaths(assemblyPathes));
             foreach (var assemblySymbol in assemblySymbols)
             {
-                using var textWriter = Utils.GetTextWriter(outputDirPath, assemblySymbol.Name);
-
-                using var writer = new CSharpBuilder(
-                    new AssemblySymbolOrderProvider(),
-                    new IncludeAllFilter(),
-                    new CSharpSyntaxWriter(textWriter,
-                        FileHeader.ReadFromFile(headerFile),
-                        exceptionMessage));
+                using var writer = Utils.GetCSharpBuilder(
+                    assemblySymbol.Name,
+                    outputDirPath,
+                    headerFile,
+                    exceptionMessage);
 
                 writer.WriteAssembly(assemblySymbol);
             }

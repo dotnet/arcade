@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.GenAPI.Shared;
 /// <summary>
 /// Utility functions shared between CLI and MSBuild tasks frontends.
 /// </summary>
-public class Utils
+public static class Utils
 {
     /// <summary>
     /// Creates a TextWriter capable to write into Console or cs file.
@@ -35,13 +35,39 @@ public class Utils
     }
 
     /// <summary>
-    /// Splits delimeter seperated list of pathes represented as a string to a List of pathes.
+    /// Creates a CSharpBuilder object based on input parameters.
     /// </summary>
-    /// <param name="pathSet">Delimeter seperated list of pathes.</param>
+    /// <param name="assemblyName">Delimited (',' or ';') set of paths for assemblies or
+    ///     directories to get all assemblies.</param>
+    /// <param name="outputPath">Default is the console. Can specify an existing directory as well
+    ///     and then a file will be created for each assembly with the matching name of the assembly.</param>
+    /// <param name="headerFile">Specify a file with an alternate header content to prepend to output.</param>
+    /// <param name="exceptionMessage">If specified - method bodies should throw PlatformNotSupportedException,
+    ///     else `throw null`.</param>
+    /// <returns></returns>
+    public static CSharpBuilder GetCSharpBuilder(
+        string assemblyName,
+        string? outputPath,
+        string? headerFile,
+        string? exceptionMessage)
+    {
+        return new CSharpBuilder(
+            new AssemblySymbolOrderProvider(),
+            new IncludeAllFilter(),
+            new CSharpSyntaxWriter(
+                GetTextWriter(outputPath, assemblyName),
+                FileHeader.ReadFromFile(headerFile),
+                exceptionMessage));
+    }
+
+    /// <summary>
+    /// Splits delimiter separated list of pathes represented as a string to a List of paths.
+    /// </summary>
+    /// <param name="pathSet">Delimiter separated list of paths.</param>
     /// <returns></returns>
     public static string[] SplitPaths(string? pathSet)
     {
-        if (pathSet == null) return new string[0];
+        if (pathSet == null) return Array.Empty<string>();
 
         return pathSet.Split(new char[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
     }

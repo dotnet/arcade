@@ -21,7 +21,7 @@ public class FileHeader
 
     public static string ReadFromFile(string? headerFile)
     {
-        if (headerFile != null && !string.IsNullOrEmpty(headerFile))
+        if (!string.IsNullOrEmpty(headerFile))
         {
             return File.ReadAllText(headerFile);
         }
