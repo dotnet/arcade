@@ -238,9 +238,5 @@ public class AssemblySymbolLoader : IAssemblySymbolLoader
             }
         }
     }
-
-
-
-
     }
 }
