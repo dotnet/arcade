@@ -239,10 +239,8 @@ public class AssemblySymbolLoader : IAssemblySymbolLoader
         }
     }
 
-        var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable);
-        var compilation = CSharpCompilation.Create($"AssemblyLoader_{DateTime.Now:MM_dd_yy_HH_mm_ss_FFF}", options: compilationOptions);
 
-        compilation = compilation.AddReferences(reference);
-        return compilation.GetAssemblyOrModuleSymbol(reference) as IAssemblySymbol;
+
+
     }
 }
