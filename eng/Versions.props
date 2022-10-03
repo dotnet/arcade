@@ -31,7 +31,8 @@
     <MicrosoftCodeAnalysisAnalyzersVersion>2.6.3</MicrosoftCodeAnalysisAnalyzersVersion>
     <MicrosoftCodeAnalysisCSharpVersion>2.9.0</MicrosoftCodeAnalysisCSharpVersion>
     <MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>3.8.0</MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>
-    <GenAPIMicrosoftCodeAnalysisVersion>4.3.0-3.final</GenAPIMicrosoftCodeAnalysisVersion>
+    <GenAPIMicrosoftCodeAnalysisVersion>4.3.0</GenAPIMicrosoftCodeAnalysisVersion>
+    <GenAPISystemCommandLineVersion>2.0.0-beta4.22272.1</GenAPISystemCommandLineVersion>
     <MicrosoftIdentityModelClientsActiveDirectoryVersion>3.17.2</MicrosoftIdentityModelClientsActiveDirectoryVersion>
     <MicrosoftRestClientRuntimeVersion>2.3.13</MicrosoftRestClientRuntimeVersion>
     <MicrosoftExtensionsDependencyModelVersion>2.1.0</MicrosoftExtensionsDependencyModelVersion>

@@ -12,14 +12,34 @@ namespace Microsoft.DotNet.GenAPI.Shared;
 /// <summary>
 /// Writes C# source code into IO.File or Console.
 /// </summary>
-public class CSharpSyntaxWriter: ISyntaxWriter
+public class CSharpSyntaxWriter : ISyntaxWriter
 {
     private readonly TextWriter _textWriter;
+    private readonly string? _exceptionMessage;
+    private readonly int _indentationSize;
+    private readonly char _indentationChar;
 
-    public CSharpSyntaxWriter(TextWriter textWriter) => _textWriter = textWriter;
+    private int Indentation { get; set; }
 
+    public CSharpSyntaxWriter(
+        TextWriter streamWriter,
+        string fileHeader,
+        string? exceptionMessage,
+        int indentationSize = 4,
+        char indentationChar = ' ')
+    {
+        _textWriter = streamWriter;
+        _exceptionMessage = exceptionMessage;
+        _indentationSize = indentationSize;
+        _indentationChar = indentationChar;
+
+        _textWriter.WriteLine(fileHeader);
+    }
+
+    /// <inheritdoc />
     public IDisposable WriteNamespace(IEnumerable<string> namespacePath)
     {
+        WriteIndentation();
         WriteKeyword(SyntaxKind.NamespaceKeyword);
 
         bool root = true;
@@ -45,6 +65,7 @@ public class CSharpSyntaxWriter: ISyntaxWriter
         });
     }
 
+    /// <inheritdoc />
     public IDisposable WriteTypeDefinition(
         IEnumerable<SyntaxKind> accessibility,
         IEnumerable<SyntaxKind> keywords,
@@ -52,6 +73,8 @@ public class CSharpSyntaxWriter: ISyntaxWriter
         IEnumerable<string> baseTypeNames,
         IEnumerable<IEnumerable<SymbolDisplayPart>> constraints)
     {
+        WriteIndentation();
+
         foreach (var keyword in accessibility)
         {
             WriteKeyword(keyword);
@@ -63,7 +86,6 @@ public class CSharpSyntaxWriter: ISyntaxWriter
         }
 
         _textWriter.Write(typeName);
-        WriteSpace();
 
         bool first = true;
 
@@ -71,6 +93,7 @@ public class CSharpSyntaxWriter: ISyntaxWriter
         {
             if (first)
             {
+                WriteSpace();
                 WriteKeyword(SyntaxKind.ColonToken);
             }
             else
@@ -100,16 +123,21 @@ public class CSharpSyntaxWriter: ISyntaxWriter
         });
     }
 
+    /// <inheritdoc />
     public void WriteAttribute(string attribute)
     {
+        WriteIndentation();
+
         WriteKeyword(SyntaxKind.OpenBracketToken, writeSpace: false);
         _textWriter.Write(attribute);
         WriteKeyword(SyntaxKind.CloseBracketToken, writeSpace: false);
-        _textWriter.WriteLine();
+        WriteNewLine();
     }
 
+    /// <inheritdoc />
     public void WriteProperty(string definition, bool hasImplementation, bool hasGetMethod, bool hasSetMethod)
     {
+        WriteIndentation();
         _textWriter.Write(definition);
 
         if (hasGetMethod || hasSetMethod)
@@ -119,11 +147,14 @@ public class CSharpSyntaxWriter: ISyntaxWriter
                 WriteKeyword(method, writeSpace: false);
                 if (hasImplementation)
                 {
+                    WriteSpace();
                     WriteImplementation();
                     WriteSpace();
                 }
                 else
+                {
                     WriteKeyword(SyntaxKind.SemicolonToken);
+                }
             };
 
             WriteSpace();
@@ -146,11 +177,13 @@ public class CSharpSyntaxWriter: ISyntaxWriter
             WriteKeyword(SyntaxKind.SemicolonToken, writeSpace: false);
         }
 
-        _textWriter.WriteLine();
+        WriteNewLine();
     }
 
+    /// <inheritdoc />
     public void WriteEvent(string definition, bool hasAddMethod, bool hasRemoveMethod)
     {
+        WriteIndentation();
         _textWriter.Write(definition);
 
         if (hasAddMethod || hasRemoveMethod)
@@ -182,11 +215,13 @@ public class CSharpSyntaxWriter: ISyntaxWriter
             WriteKeyword(SyntaxKind.SemicolonToken, writeSpace: false);
         }
 
-        _textWriter.WriteLine();
+        WriteNewLine();
     }
 
+    /// <inheritdoc />
     public void WriteMethod(string definition, bool hasImplementation)
     {
+        WriteIndentation();
         _textWriter.Write(definition);
         if (hasImplementation)
         {
@@ -195,10 +230,19 @@ public class CSharpSyntaxWriter: ISyntaxWriter
         }
         else
         {
-            WriteKeyword(SyntaxKind.SemicolonToken);
+            WriteKeyword(SyntaxKind.SemicolonToken, writeSpace: false);
         }
 
-        _textWriter.WriteLine();
+        WriteNewLine();
+    }
+
+    /// <inheritdoc />
+    public void WriteField(string definition)
+    {
+        WriteIndentation();
+        _textWriter.Write(definition);
+        WriteKeyword(SyntaxKind.CommaToken, writeSpace: false);
+        WriteNewLine();
     }
 
     public void Dispose() => _textWriter.Dispose();
@@ -210,17 +254,34 @@ public class CSharpSyntaxWriter: ISyntaxWriter
         _textWriter.Write(' ');
     }
 
+    private void WriteNewLine()
+    {
+        _textWriter.WriteLine();
+    }
+
+    private void WriteIndentation()
+    {
+        _textWriter.Write(new string(_indentationChar, Indentation * _indentationSize));
+    }
+
     private void OpenBrace()
     {
-        WriteSpace();
+        WriteNewLine();
+
+        WriteIndentation();
+        ++Indentation;
+
         WriteKeyword(SyntaxKind.OpenBraceToken, writeSpace: false);
-        _textWriter.WriteLine();
+        WriteNewLine();
     }
 
     private void CloseBrace()
     {
+        --Indentation;
+        WriteIndentation();
+
         WriteKeyword(SyntaxKind.CloseBraceToken, writeSpace: false);
-        _textWriter.WriteLine();
+        WriteNewLine();
     }
 
     private void WriteKeyword(SyntaxKind keyword, bool writeSpace = true)
@@ -235,8 +296,21 @@ public class CSharpSyntaxWriter: ISyntaxWriter
     private void WriteImplementation()
     {
         WriteKeyword(SyntaxKind.OpenBraceToken);
-        WriteKeyword(SyntaxKind.ThrowKeyword);
-        WriteKeyword(SyntaxKind.NullKeyword, writeSpace: false);
+        if (_exceptionMessage is string exceptionMessage)
+        {
+            WriteKeyword(SyntaxKind.ThrowKeyword);
+            _textWriter.Write("PlatformNotSupportedException");
+            _textWriter.Write(SyntaxFacts.GetText(SyntaxKind.OpenParenToken));
+            _textWriter.Write(SyntaxFacts.GetText(SyntaxKind.DoubleQuoteToken));
+            _textWriter.Write(exceptionMessage);
+            _textWriter.Write(SyntaxFacts.GetText(SyntaxKind.DoubleQuoteToken));
+            _textWriter.Write(SyntaxFacts.GetText(SyntaxKind.CloseParenToken));
+        }
+        else
+        {
+            WriteKeyword(SyntaxKind.ThrowKeyword);
+            WriteKeyword(SyntaxKind.NullKeyword, writeSpace: false);
+        }
         WriteKeyword(SyntaxKind.SemicolonToken);
         WriteKeyword(SyntaxKind.CloseBraceToken, writeSpace: false);
     }

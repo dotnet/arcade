@@ -2,10 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -44,8 +42,8 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
     {
         var typeName = namedType.ToDisplayString(AssemblySymbolDisplayFormats.NamedTypeDisplayFormat);
 
-        var accessibility = BuildAccessibility(namedType as ISymbol);
-        var keywords = GetKeywords((ITypeSymbol)namedType);
+        var accessibility = BuildAccessibility(namedType);
+        var keywords = GetKeywords(namedType);
 
         var baseTypeNames = BuildBaseTypes(namedType);
         var constraints = BuildConstraints(namedType);
@@ -69,6 +67,10 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
                 Process((IMethodSymbol)member);
                 break;
 
+            case SymbolKind.Field:
+                Process((IFieldSymbol)member);
+                break;
+
             default:
                 break;
         }
@@ -90,7 +92,7 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
     private void Process(IPropertySymbol ps)
     {
         _syntaxWriter.WriteProperty(ps.ToDisplayString(AssemblySymbolDisplayFormats.MemberDisplayFormat),
-            hasImplementation: !ps.IsAbstract, ps.GetMethod != null, ps.SetMethod != null);
+            isAbstract: !ps.IsAbstract, ps.GetMethod != null, ps.SetMethod != null);
     }
 
     private void Process(IEventSymbol es)
@@ -102,7 +104,13 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
     private void Process(IMethodSymbol ms)
     {
         _syntaxWriter.WriteMethod(ms.ToDisplayString(AssemblySymbolDisplayFormats.MemberDisplayFormat),
-            hasImplementation: !ms.IsAbstract);
+            isAbstract: !ms.IsAbstract);
+    }
+
+    private void Process(IFieldSymbol field)
+    {
+       _syntaxWriter.WriteField(field.ToDisplayString(new(
+            memberOptions: SymbolDisplayMemberOptions.IncludeConstantValue)));
     }
 
     private IEnumerable<SyntaxKind> BuildAccessibility(ISymbol symbol)

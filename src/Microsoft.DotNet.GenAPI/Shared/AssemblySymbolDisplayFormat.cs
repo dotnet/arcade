@@ -5,6 +5,9 @@ using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.GenAPI.Shared;
 
+/// <summary>
+/// Display Formats for displaing various Assemby symbols.
+/// </summary>
 public class AssemblySymbolDisplayFormats
 {
     public static readonly SymbolDisplayFormat NamespaceDisplayFormat = new SymbolDisplayFormat(
