@@ -54,21 +54,14 @@ class Program
 
         rootCommand.SetHandler((InvocationContext context) =>
         {
-            var assemblyPathes = context.ParseResult.GetValueForOption(assemblyOption);
-            var libPathes = context.ParseResult.GetValueForOption(libPathOption);
-            var exceptionMessage = context.ParseResult.GetValueForOption(exceptionMessageOption);
-            var headerFile = context.ParseResult.GetValueForOption(headerFileOption);
-            var outputDirPath = context.ParseResult.GetValueForOption(outputPathOption);
-            var resolveAssemblyReferences = context.ParseResult.GetValueForOption(resolveAssemblyReferencesOption);
-
             GenAPIApp.Run(new GenAPIApp.Context
             {
-                Assembly = assemblyPathes,
-                ResolveAssemblyReferences = resolveAssemblyReferences,
-                LibPath = libPathes,
-                ExceptionMessage = exceptionMessage,
-                HeaderFile = headerFile,
-                OutputPath = outputDirPath
+                Assembly = context.ParseResult.GetValueForOption(assemblyOption),
+                ResolveAssemblyReferences = context.ParseResult.GetValueForOption(resolveAssemblyReferencesOption),
+                LibPath = context.ParseResult.GetValueForOption(libPathOption),
+                ExceptionMessage = context.ParseResult.GetValueForOption(exceptionMessageOption),
+                HeaderFile = context.ParseResult.GetValueForOption(headerFileOption),
+                OutputPath = context.ParseResult.GetValueForOption(outputPathOption)
             });
         });
 
