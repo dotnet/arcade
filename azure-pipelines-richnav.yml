@@ -7,9 +7,7 @@ trigger:
     - release/5.0
 
 variables:
-  system.debug: true
 - template: eng/common-variables.yml
-
 
 stages:
 - stage: build
