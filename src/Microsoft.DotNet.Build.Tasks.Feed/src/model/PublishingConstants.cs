@@ -291,7 +291,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             //      for the major.minor of the corresponding .NET release.
             //    - targetFeeds: Tuples of target feeds for packages and blobs. These will generally correspond to the major.minor release,
             //      and will be "internal only" (e.g. DotNet7InternalFeeds) for internal channels. Again, please see existing channel setups.
-            //    - symbolTargetType: List of symbol targets. Varies based on internal vs. public channels
+            //    - symbolTargetType: List of symbol targets. Internal channels should use InternalSymbolTargets and public channels should use PublicAndInternalSymbolTargets
             //    - filenamesToExclude: Usually left as FilenamesToExclude.
 
             // .NET 3 Eng,
@@ -352,26 +352,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 isInternal: true,
                 publishingInfraVersion: PublishingInfraVersion.Next,
                 akaMSChannelNames: new List<string>() { "internal/5.0" },
-                targetFeeds: DotNet5InternalFeeds,
-                symbolTargetType: InternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // .NET 5.0.1xx SDK,
-            new TargetChannelConfig(
-                id: 1297,
-                isInternal: false,
-                publishingInfraVersion: PublishingInfraVersion.Next,
-                akaMSChannelNames: new List<string>() { "5.0.1xx" },
-                targetFeeds: DotNet5Feeds,
-                symbolTargetType: PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // .NET 5.0.1xx SDK Internal,
-            new TargetChannelConfig(
-                id: 1298,
-                isInternal: true,
-                publishingInfraVersion: PublishingInfraVersion.Next,
-                akaMSChannelNames: new List<string>() { "internal/5.0.1xx" },
                 targetFeeds: DotNet5InternalFeeds,
                 symbolTargetType: InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
