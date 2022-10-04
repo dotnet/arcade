@@ -1,4 +1,4 @@
-# "Vestigal objects" one-pager
+# "Vestigial objects" one-pager
 
 Parent epic: [Regularly find and delete vestigial objects in .NET Engineering Services Subscriptions](https://github.com/dotnet/arcade/issues/8814)
 
