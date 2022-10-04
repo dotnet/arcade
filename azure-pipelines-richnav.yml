@@ -6,8 +6,6 @@ trigger:
     - release/3.x
     - release/5.0
 
-pr: none
-
 variables:
 - template: eng/common-variables.yml
 - system.debug: true
