@@ -46,10 +46,11 @@ public interface ISyntaxWriter : IDisposable
     /// Writes property symbol.
     /// </summary>
     /// <param name="definition">Includes property type and name. `bool Field`</param>
-    /// <param name="isAbstract">If poperty is abstract - implementation should be ommited.</param>
+    /// <param name="hasImplementation">Determines if poperty is abstract.
+    ///     If not - implementation should be ommited.</param>
     /// <param name="hasGetMethod">If `get` method specified.</param>
     /// <param name="hasSetMethod">If `set` method specified.</param>
-    void WriteProperty(string definition, bool isAbstract, bool hasGetMethod, bool hasSetMethod);
+    void WriteProperty(string definition, bool hasImplementation, bool hasGetMethod, bool hasSetMethod);
 
     /// <summary>
     /// Writes event symbol.
@@ -63,8 +64,9 @@ public interface ISyntaxWriter : IDisposable
     /// Writes method symbol.
     /// </summary>
     /// <param name="definition">Includes return type, name and parameters with default values.</param>
-    /// <param name="isAbstract">If method is abstract - implementation should be ommited.</param>
-    void WriteMethod(string definition, bool isAbstract);
+    /// <param name="hasImplementation">Determines if method is abstract.
+    ///     If not - implementation should be ommited.</param>
+    void WriteMethod(string definition, bool hasImplementation);
 
     /// <summary>
     /// Writes field symbols like enum name = value.

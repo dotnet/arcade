@@ -92,7 +92,7 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
     private void Process(IPropertySymbol ps)
     {
         _syntaxWriter.WriteProperty(ps.ToDisplayString(AssemblySymbolDisplayFormats.MemberDisplayFormat),
-            isAbstract: !ps.IsAbstract, ps.GetMethod != null, ps.SetMethod != null);
+            hasImplementation: !ps.IsAbstract, ps.GetMethod != null, ps.SetMethod != null);
     }
 
     private void Process(IEventSymbol es)
@@ -104,7 +104,7 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
     private void Process(IMethodSymbol ms)
     {
         _syntaxWriter.WriteMethod(ms.ToDisplayString(AssemblySymbolDisplayFormats.MemberDisplayFormat),
-            isAbstract: !ms.IsAbstract);
+            hasImplementation: !ms.IsAbstract);
     }
 
     private void Process(IFieldSymbol field)
