@@ -171,7 +171,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
 
             var buildEngine = new MockBuildEngine();
-            var channelConfig = PublishingConstants.ChannelInfos.First(c => c.Id == 131);
+            var channelConfig = PublishingConstants.ChannelInfos.First(c => c.Id == 1299);
             var config = new SetupTargetFeedConfigV3(
                     channelConfig,
                     isInternalBuild,
@@ -280,7 +280,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             }
 
             var buildEngine = new MockBuildEngine();
-            var channelConfig = PublishingConstants.ChannelInfos.First(c => c.Id == 131);
+            var channelConfig = PublishingConstants.ChannelInfos.First(c => c.Id == 1299);
             var config = new SetupTargetFeedConfigV3(
                     channelConfig,
                     isInternalBuild: true,
@@ -388,7 +388,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             }
 
             var buildEngine = new MockBuildEngine();
-            var channelConfig = PublishingConstants.ChannelInfos.First(c => c.Id == 131);
+            var channelConfig = PublishingConstants.ChannelInfos.First(c => c.Id == 1299);
             var config = new SetupTargetFeedConfigV3(
                     channelConfig,
                     isInternalBuild: false,
