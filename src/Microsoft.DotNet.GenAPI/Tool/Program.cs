@@ -9,7 +9,6 @@ using System.CommandLine.Parsing;
 
 namespace Microsoft.DotNet.GenAPI.Tool;
 
-
 /// <summary>
 /// CLI frontend for the Roslyn-based GenAPI.
 /// </summary>
@@ -62,25 +61,15 @@ class Program
             var outputDirPath = context.ParseResult.GetValueForOption(outputPathOption);
             var resolveAssemblyReferences = context.ParseResult.GetValueForOption(resolveAssemblyReferencesOption);
 
-            var loader = new AssemblySymbolLoader(resolveAssemblyReferences);
-            loader.AddReferenceSearchDirectories(Utils.SplitPaths(libPathes));
-
-            var assemblySymbols = loader.LoadAssemblies(Utils.SplitPaths(assemblyPathes));
-            foreach (var assemblySymbol in assemblySymbols)
+            GenAPIApp.Run(new GenAPIApp.Context
             {
-                using var writer = Utils.GetCSharpBuilder(
-                    assemblySymbol.Name,
-                    outputDirPath,
-                    headerFile,
-                    exceptionMessage);
-
-                writer.WriteAssembly(assemblySymbol);
-            }
-
-            foreach (var warn in loader.GetResolutionWarnings())
-            {
-                Console.WriteLine(warn);
-            }
+                Assembly = assemblyPathes,
+                ResolveAssemblyReferences = resolveAssemblyReferences,
+                LibPath = libPathes,
+                ExceptionMessage = exceptionMessage,
+                HeaderFile = headerFile,
+                OutputPath = outputDirPath
+            });
         });
 
         return rootCommand.Invoke(args);

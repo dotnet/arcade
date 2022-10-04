@@ -49,25 +49,15 @@ public class GenAPITask : BuildTask
 
     public override bool Execute()
     {
-        var loader = new AssemblySymbolLoader(ResolveAssemblyReferences ?? false);
-        loader.AddReferenceSearchDirectories(Utils.SplitPaths(LibPath));
-
-        var assemblySymbols = loader.LoadAssemblies(Utils.SplitPaths(Assembly));
-        foreach (var assemblySymbol in assemblySymbols)
+        GenAPIApp.Run(new GenAPIApp.Context
         {
-            using var writer = Utils.GetCSharpBuilder(
-                assemblySymbol.Name,
-                OutputPath,
-                HeaderFile,
-                ExceptionMessage);
-
-            writer.WriteAssembly(assemblySymbol);
-        }
-
-        foreach (var warn in loader.GetResolutionWarnings())
-        {
-            Console.WriteLine(warn);
-        }
+            Assembly = Assembly,
+            ResolveAssemblyReferences = ResolveAssemblyReferences,
+            LibPath = LibPath,
+            OutputPath = OutputPath,
+            HeaderFile = HeaderFile,
+            ExceptionMessage = ExceptionMessage,
+        });
 
         return true;
     }
