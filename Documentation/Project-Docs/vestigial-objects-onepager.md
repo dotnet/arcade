@@ -43,7 +43,7 @@ The Azure Resource Graph provides a Kusto-like query interface to all resources 
 
 Azure allows "Tags", which are simply key-value pairs, to be arbitrarily associated with almost any resource. Internally, Microsoft already uses this feature to track assets and configuration across subscriptions (e.g., AzSecPack, NRMSException). "Inventory" is an explicit use case supported in Azure.
 
-This effort will develop a set of standard Tags that will be applied to resources. These Tags will identify, at minimum, resources that are necessary for operation of our services. 
+This effort will develop a set of standard Tags that will be applied to resources. These Tags will identify, at minimum, resources that are necessary for operation of our services. Application of tags should automated where possible. Resources deployed by ARM or as part of the weekly deployment, for example, will have their deployment process modified to attach these tags with each deployment.
 
 The inverse is also interesting: It will highlight resources that are _not_ necessary for the operation of our services. These will be analyzed and their purpose understood, creating more operational Tags as needed. They may also be deleted to eliminate unnecessary spending.
 
@@ -72,7 +72,7 @@ Once inventory Tags are stable, this data will make plain any new resources crea
   - [ ] Evaluate including Key Vault auditing information
 - [ ] Develop Dashboards presenting data to expected audience. Consider Grafana and Power BI (or a mix of both).
   - [ ] FR can quickly view changes to an arbitrary resource
-  - [ ] New resources or resources with an unknown purpose are easily identifiable
+  - [ ] New resources or resources with an unknown purpose are identifiable from a dashboard
 - [ ] Develop documentation 
   - [ ] On use, targeting expected audience. Where to find information. How to interpret dashboards. Basic, pertinent information on how to interpret the raw Azure data. How to develop and run custom audit-like queries.
   - [ ] For new services, to ensure new resoures are properly inventoried and audited
