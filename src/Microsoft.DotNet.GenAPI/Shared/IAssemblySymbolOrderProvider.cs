@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.GenAPI.Shared;
 /// <summary>
 /// Interface provides ordering for namespaces, types and members.
 /// </summary>
-public  interface IAssemblySymbolOrderProvider
+public interface IAssemblySymbolOrderProvider
 {
     /// <summary>
     /// Sorts the elements of a INamespaceSymbol.
