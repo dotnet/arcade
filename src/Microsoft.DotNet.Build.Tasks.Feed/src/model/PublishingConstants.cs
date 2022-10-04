@@ -344,24 +344,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
-            // ".NET 7 Preview 7",
+            // ".NET 7 SDK 7.0.2xx",
             new TargetChannelConfig(
-                2843,
+                3259,
                 false,
                 PublishingInfraVersion.All,
-                new List<string>() { "7.0-preview7" },
+                new List<string>() { "7.0.2xx" },
                 DotNet7Feeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
-            // ".NET 7 SDK 7.0.1xx Preview 7",
+            // ".NET 7 SDK 7.0.2xx Internal",
             new TargetChannelConfig(
-                2840,
-                false,
+                3260,
+                true,
                 PublishingInfraVersion.All,
-                new List<string>() { "7.0.1xx-preview7", "7.0-preview7" },
-                DotNet7Feeds,
-                PublicAndInternalSymbolTargets,
+                new List<string>() { "internal/7.0.2xx" },
+                DotNet7InternalFeeds,
+                InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
             // ".NET 7 RC 1 Internal",
@@ -1125,6 +1125,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             // "VS 17.4",
             new TargetChannelConfig(
                 2914,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>(),
+                DotNetToolsFeeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
+
+            // "VS 17.5",
+            new TargetChannelConfig(
+                3257,
                 false,
                 PublishingInfraVersion.All,
                 new List<string>(),
