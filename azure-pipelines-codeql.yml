@@ -16,6 +16,9 @@ variables:
   # Do not let CodeQL 3000 Extension gate scan frequency
 - name: Codeql.Cadence
   value: 0
+  # Build variables
+- name: _BuildConfig
+  value: Release
 
 trigger: none
 
@@ -28,8 +31,8 @@ schedules:
     always: true
 
 jobs:
-- job: codeql_windows
-  displayName: CodeQL (Windows)
+- job: codeql
+  displayName: CodeQL
   pool:
     name: NetCore1ESPool-Internal
     demands: ImageOverride -equals 1es-windows-2022
@@ -50,7 +53,6 @@ jobs:
       $(_InternalBuildArgs)
       /p:Test=false
     displayName: Windows Build
-
 
   - task: CodeQL3000Finalize@0
     displayName: CodeQL Finalize
