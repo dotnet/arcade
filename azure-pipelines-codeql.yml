@@ -13,6 +13,7 @@ variables:
   # Force CodeQL enabled so it may be run on any branch
 - name: Codeql.Enabled
   value: true
+  # Do not let CodeQL 3000 Extension gate scan frequency
 - name: Codeql.Cadence
   value: 0
 
