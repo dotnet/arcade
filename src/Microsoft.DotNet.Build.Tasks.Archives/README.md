@@ -13,4 +13,4 @@ Additionally, if a `ProjectServicingConfiguration` item is provided with the ide
 # Creating tar.gz archives on Windows
 
 There is an override that you can use to opt into generating tar.gz archives instead of zip archives on Windows to get an consistent experience as with linux and macos.
-That opt-in is setting ``UseTarOnWindows`` to ``true`` on a project that uses this package.
+That opt-in is setting ``ArchiveFormat`` to ``.tar.gz`` on a project that uses this package when building for Windows.
