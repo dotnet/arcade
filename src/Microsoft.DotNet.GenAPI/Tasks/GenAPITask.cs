@@ -1,7 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks;
 using Microsoft.DotNet.GenAPI.Shared;
@@ -51,7 +50,7 @@ public class GenAPITask : BuildTask
     {
         GenAPIApp.Run(new GenAPIApp.Context
         {
-            Assembly = Assembly,
+            Assembly = Assembly!,
             ResolveAssemblyReferences = ResolveAssemblyReferences,
             LibPath = LibPath,
             OutputPath = OutputPath,

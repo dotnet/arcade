@@ -148,11 +148,11 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
         return baseTypeNames;
     }
 
-    private IEnumerable<IEnumerable<SymbolDisplayPart>> BuildConstraints(INamedTypeSymbol namedType)
+    private IEnumerable<string> BuildConstraints(INamedTypeSymbol namedType)
     {
         bool whereKeywordFound = false;
-        var currConstraint = new List<SymbolDisplayPart>();
-        var constraints = new List<List<SymbolDisplayPart>>();
+        string currConstraint = "";
+        var constraints = new List<string>();
 
         foreach (var part in namedType.ToDisplayParts(AssemblySymbolDisplayFormats.BaseTypeDisplayFormat))
         {
@@ -162,15 +162,15 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
                 if (whereKeywordFound)
                 {
                     constraints.Add(currConstraint);
-                    currConstraint.Clear();
+                    currConstraint = "";
                 }
 
-                currConstraint.Add(part);
+                currConstraint += part.ToString();
                 whereKeywordFound = true;
             }
             else if (whereKeywordFound)
             {
-                currConstraint.Add(part);
+                currConstraint += part.ToString();
             }
         }
 
@@ -212,6 +212,7 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
                 keywords.Add(SyntaxKind.EnumKeyword);
                 break;
             case TypeKind.Interface:
+                keywords.Add(SyntaxKind.PartialKeyword);
                 keywords.Add(SyntaxKind.InterfaceKeyword);
                 break;
             case TypeKind.Struct:
