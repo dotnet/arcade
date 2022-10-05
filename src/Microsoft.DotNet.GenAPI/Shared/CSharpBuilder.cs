@@ -151,7 +151,7 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
     private IEnumerable<string> BuildConstraints(INamedTypeSymbol namedType)
     {
         bool whereKeywordFound = false;
-        string currConstraint = "";
+        string currConstraint = string.Empty;
         var constraints = new List<string>();
 
         foreach (var part in namedType.ToDisplayParts(AssemblySymbolDisplayFormats.BaseTypeDisplayFormat))
@@ -162,7 +162,7 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
                 if (whereKeywordFound)
                 {
                     constraints.Add(currConstraint);
-                    currConstraint = "";
+                    currConstraint = string.Empty;
                 }
 
                 currConstraint += part.ToString();
