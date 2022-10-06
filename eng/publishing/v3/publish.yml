@@ -12,7 +12,7 @@ stages:
     jobs:
     - job: publish_assets
       displayName: Publish Assets and Symbols
-      timeoutInMinutes: 120
+      timeoutInMinutes: 240
       variables:
         - group: DotNet-Symbol-Server-Pats
         - group: DotNetBuilds storage account tokens

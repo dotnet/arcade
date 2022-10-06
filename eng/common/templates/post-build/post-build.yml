@@ -254,7 +254,7 @@ stages:
     jobs:
     - job:
       displayName: Publish Using Darc
-      timeoutInMinutes: 120
+      timeoutInMinutes: 240
       pool:
         # We don't use the collection uri here because it might vary (.visualstudio.com vs. dev.azure.com)
         ${{ if eq(variables['System.TeamProject'], 'DevDiv') }}:
