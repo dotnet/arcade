@@ -28,6 +28,8 @@ schedules:
     branches:
       include:
       - main
+      - release/6.0
+      - release/7.0
     always: true
 
 jobs:
