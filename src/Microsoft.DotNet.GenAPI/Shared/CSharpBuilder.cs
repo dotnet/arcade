@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -128,7 +129,7 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
         };
     }
 
-    private IEnumerable<string> BuildBaseTypes(INamedTypeSymbol namedType)
+    private List<string> BuildBaseTypes(INamedTypeSymbol namedType)
     {
         var baseTypeNames = new List<string>();
 
@@ -148,10 +149,10 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
         return baseTypeNames;
     }
 
-    private IEnumerable<string> BuildConstraints(INamedTypeSymbol namedType)
+    private List<string> BuildConstraints(INamedTypeSymbol namedType)
     {
         bool whereKeywordFound = false;
-        string currConstraint = string.Empty;
+        var currConstraint = new StringBuilder();
         var constraints = new List<string>();
 
         foreach (var part in namedType.ToDisplayParts(AssemblySymbolDisplayFormats.BaseTypeDisplayFormat))
@@ -161,28 +162,28 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
             {
                 if (whereKeywordFound)
                 {
-                    constraints.Add(currConstraint);
-                    currConstraint = string.Empty;
+                    constraints.Add(currConstraint.ToString());
+                    currConstraint.Clear();
                 }
 
-                currConstraint += part.ToString();
+                currConstraint.Append(part.ToString());
                 whereKeywordFound = true;
             }
             else if (whereKeywordFound)
             {
-                currConstraint += part.ToString();
+                currConstraint.Append(part.ToString());
             }
         }
 
-        if (currConstraint.Any())
+        if (currConstraint.Length > 0)
         {
-            constraints.Add(currConstraint);
+            constraints.Add(currConstraint.ToString());
         }
 
         return constraints;
     }
 
-    private IEnumerable<SyntaxKind> GetKeywords(ITypeSymbol namedType)
+    private List<SyntaxKind> GetKeywords(ITypeSymbol namedType)
     {
         var keywords = new List<SyntaxKind>();
 
