@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.GenAPI.Shared;
@@ -25,8 +24,8 @@ public class CSharpSyntaxWriter : ISyntaxWriter
         TextWriter streamWriter,
         string fileHeader,
         string? exceptionMessage,
-        int indentationSize = 4,
-        char indentationChar = ' ')
+        int indentationSize,
+        char indentationChar)
     {
         _textWriter = streamWriter;
         _exceptionMessage = exceptionMessage;
@@ -71,7 +70,7 @@ public class CSharpSyntaxWriter : ISyntaxWriter
         IEnumerable<SyntaxKind> keywords,
         string typeName,
         IEnumerable<string> baseTypeNames,
-        IEnumerable<IEnumerable<SymbolDisplayPart>> constraints)
+        IEnumerable<string> constraints)
     {
         WriteIndentation();
 
@@ -106,13 +105,10 @@ public class CSharpSyntaxWriter : ISyntaxWriter
             _textWriter.Write(baseSymbol);
         }
 
-        foreach (var currConstrain in constraints)
+        foreach (var constraint in constraints)
         {
             WriteSpace();
-            foreach (var part in currConstrain)
-            {
-                _textWriter.Write(part.ToString());
-            }
+            _textWriter.Write(constraint);
         }
 
         OpenBrace();

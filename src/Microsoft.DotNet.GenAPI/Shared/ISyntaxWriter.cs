@@ -34,7 +34,7 @@ public interface ISyntaxWriter : IDisposable
         IEnumerable<SyntaxKind> keywords,
         string typeName,
         IEnumerable<string> baseTypeNames,
-        IEnumerable<IEnumerable<SymbolDisplayPart>> constraints);
+        IEnumerable<string> constraints);
 
     /// <summary>
     /// Writes attribute data.

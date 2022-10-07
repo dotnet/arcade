@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -128,7 +129,7 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
         };
     }
 
-    private IEnumerable<string> BuildBaseTypes(INamedTypeSymbol namedType)
+    private List<string> BuildBaseTypes(INamedTypeSymbol namedType)
     {
         var baseTypeNames = new List<string>();
 
@@ -148,11 +149,11 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
         return baseTypeNames;
     }
 
-    private IEnumerable<IEnumerable<SymbolDisplayPart>> BuildConstraints(INamedTypeSymbol namedType)
+    private List<string> BuildConstraints(INamedTypeSymbol namedType)
     {
         bool whereKeywordFound = false;
-        var currConstraint = new List<SymbolDisplayPart>();
-        var constraints = new List<List<SymbolDisplayPart>>();
+        var currConstraint = new StringBuilder();
+        var constraints = new List<string>();
 
         foreach (var part in namedType.ToDisplayParts(AssemblySymbolDisplayFormats.BaseTypeDisplayFormat))
         {
@@ -161,28 +162,28 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
             {
                 if (whereKeywordFound)
                 {
-                    constraints.Add(currConstraint);
+                    constraints.Add(currConstraint.ToString());
                     currConstraint.Clear();
                 }
 
-                currConstraint.Add(part);
+                currConstraint.Append(part.ToString());
                 whereKeywordFound = true;
             }
             else if (whereKeywordFound)
             {
-                currConstraint.Add(part);
+                currConstraint.Append(part.ToString());
             }
         }
 
-        if (currConstraint.Any())
+        if (currConstraint.Length > 0)
         {
-            constraints.Add(currConstraint);
+            constraints.Add(currConstraint.ToString());
         }
 
         return constraints;
     }
 
-    private IEnumerable<SyntaxKind> GetKeywords(ITypeSymbol namedType)
+    private List<SyntaxKind> GetKeywords(ITypeSymbol namedType)
     {
         var keywords = new List<SyntaxKind>();
 
@@ -212,6 +213,7 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
                 keywords.Add(SyntaxKind.EnumKeyword);
                 break;
             case TypeKind.Interface:
+                keywords.Add(SyntaxKind.PartialKeyword);
                 keywords.Add(SyntaxKind.InterfaceKeyword);
                 break;
             case TypeKind.Struct:
