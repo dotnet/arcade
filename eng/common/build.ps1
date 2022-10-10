@@ -27,6 +27,7 @@ Param(
   [string] $runtimeSourceFeedKey = '',
   [switch] $excludePrereleaseVS,
   [switch] $nativeToolsOnMachine,
+  [switch] $useGlobalNuGetCache = $false,
   [switch] $help,
   [Parameter(ValueFromRemainingArguments=$true)][String[]]$properties
 )
