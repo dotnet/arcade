@@ -22,7 +22,8 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="$(ImportAzurePipelinesTargets)">
-    <_HelixMonoQueueTargets>$(_HelixMonoQueueTargets);$(MSBuildThisFileDirectory)AzurePipelines.MonoQueue.targets</_HelixMonoQueueTargets>
+    <_HelixMonoQueueTargets Condition="!$(ServerlessMode)">$(_HelixMonoQueueTargets);$(MSBuildThisFileDirectory)AzurePipelines.MonoQueue.targets</_HelixMonoQueueTargets>
+    <_HelixMonoQueueTargets Condition="$(ServerlessMode)">$(_HelixMonoQueueTargets);$(MSBuildThisFileDirectory)AzurePipelines.Serverless.MonoQueue.targets</_HelixMonoQueueTargets>
     <_HelixMultiQueueTargets Condition="!$(ServerlessMode)">$(_HelixMultiQueueTargets);$(MSBuildThisFileDirectory)AzurePipelines.MultiQueue.targets</_HelixMultiQueueTargets>
     <_HelixMultiQueueTargets Condition="$(ServerlessMode)">$(_HelixMultiQueueTargets);$(MSBuildThisFileDirectory)AzurePipelines.Serverless.MultiQueue.targets</_HelixMultiQueueTargets>
   </PropertyGroup>

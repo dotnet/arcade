@@ -255,12 +255,12 @@ namespace Microsoft.DotNet.Helix.Client
         {
             var (creationRequest, storage) = await ConstructJobCreationRequestAsync(log, cancellationToken);
             string requestJson = JsonConvert.SerializeObject(creationRequest, Formatting.Indented);
-            Uri jobListUri = await storage.UploadTextAsync(
+            Uri jobRequestUrl = await storage.UploadTextAsync(
                 requestJson,
                 $"job-request-{Guid.NewGuid()}.json",
                 log,
                 cancellationToken);
-            return jobListUri.AbsoluteUri;
+            return jobRequestUrl.AbsoluteUri;
         }
 
         private void WarnForImpendingRemoval(Action<string> log, QueueInfo queueInfo) 

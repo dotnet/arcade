@@ -3,30 +3,4 @@
     <!-- Serverless Mode Implies not waiting for work item completion -->
     <WaitForWorkItemCompletion>false</WaitForWorkItemCompletion>
   </PropertyGroup>
-
-  <Target Name="StartTestRuns"
-          BeforeTargets="CoreBuild"
-          Outputs="%(HelixTargetQueue.Identity)">
-    <PropertyGroup>
-      <_CurrentTargetQueue>%(HelixTargetQueue.Identity)</_CurrentTargetQueue>
-      <_CurrentTestRunName>%(HelixTargetQueue.TestRunName)</_CurrentTestRunName>
-      <_CurrentTestRunName Condition="'$(_CurrentTestRunName)' == ''">$(TestRunNamePrefix)$(_CurrentTargetQueue)$(TestRunNameSuffix)</_CurrentTestRunName>
-    </PropertyGroup>
-    <Message Text="Starting Azure Pipelines Test Run $(_CurrentTestRunName)" Importance="High"/>
-    <StartAzurePipelinesTestRun TestRunName="$(_CurrentTestRunName)">
-      <Output TaskParameter="TestRunId" PropertyName="TestRunId"/>
-    </StartAzurePipelinesTestRun>
-    <ItemGroup>
-      <HelixTargetQueue Condition="'%(Identity)' == '$(_CurrentTargetQueue)'">
-        <TestRunId>$(TestRunId)</TestRunId>
-        <TestRunName>$(_CurrentTestRunName)</TestRunName>
-        <AdditionalProperties>TestRunId=$(TestRunId)</AdditionalProperties>
-      </HelixTargetQueue>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="SaveHelixInformationForServerlessJob"
-    AfterTargets="CoreTest">
-    <Message Text="##vso[task.setvariable variable=HelixJobInformation;isoutput=true]@(SentJob -> '%(Identity),%(TestRunId)', ';')" Importance="High"/>
-  </Target>
 </Project>

@@ -1,0 +1,22 @@
+<Project>
+  <PropertyGroup>
+    <StageOnly>true</StageOnly>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <HelixCorrelationPayload Include="$(MSBuildThisFileDirectory)\reporter" IncludeDirectoryName="true"/>
+  </ItemGroup>
+
+  <PropertyGroup>
+    <HelixPostCommands Condition="$(IsPosixShell)">
+      $(HelixPostCommands);
+      . $HELIX_CORRELATION_PAYLOAD/azure-pipelines-settings
+      $HELIX_PYTHONPATH $HELIX_CORRELATION_PAYLOAD/reporter/run.py $SYSTEM_TEAMFOUNDATIONCOLLECTIONURI $SYSTEM_TEAMPROJECT $TestRunId $SYSTEM_ACCESSTOKEN || exit $?
+    </HelixPostCommands>
+    <HelixPostCommands Condition="!$(IsPosixShell)">
+      $(HelixPostCommands);
+      for /f "delims== tokens=1,2" %%G in (%HELIX_CORRELATION_PAYLOAD%\azure-pipelines-settings) do set %%G=%%H
+      %HELIX_PYTHONPATH% %HELIX_CORRELATION_PAYLOAD%\reporter\run.py %SYSTEM_TEAMFOUNDATIONCOLLECTIONURI% %SYSTEM_TEAMPROJECT% %TestRunId% %SYSTEM_ACCESSTOKEN% || exit /b
+    </HelixPostCommands>
+  </PropertyGroup>
+</Project>
