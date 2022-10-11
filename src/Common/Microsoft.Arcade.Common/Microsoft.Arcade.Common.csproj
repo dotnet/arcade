@@ -15,6 +15,10 @@
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\Microsoft.DotNet.Internal.Utilities\Microsoft.DotNet.Internal.Utilities.csproj" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
     <Compile Include="..\Internal\AssemblyResolver.cs" />
   </ItemGroup>

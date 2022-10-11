@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net472;net6.0;$(TargetFrameworkForNETSDK)</TargetFrameworks>
+    <IsPackable>true</IsPackable>
+    <Description>Common Internal Utilities Library</Description>
+  </PropertyGroup>
+
+</Project>
