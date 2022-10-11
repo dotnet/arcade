@@ -21,6 +21,14 @@ public interface IAssemblySymbolLoader
     void AddReferenceSearchDirectories(IEnumerable<string> paths);
 
     /// <summary>
+    /// Adds a path to the search directories to resolve references from. Path may
+    /// be directory or full path to assembly file.
+    /// This is only used when the setting to resolve assembly references is set to true.
+    /// </summary>
+    /// <param name="path">The path to register as search directories.</param>
+    void AddReferenceSearchDirectory(string path);
+
+    /// <summary>
     /// Indicates if the <see cref="CSharpCompilation"/> used to resolve binaries has any roslyn diagnostics.
     /// Might be useful when loading an assembly from source files.
     /// </summary>

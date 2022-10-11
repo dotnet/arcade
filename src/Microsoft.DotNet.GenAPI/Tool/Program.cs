@@ -29,6 +29,9 @@ class Program
         Option<string?> libPathOption = new("--lib-path",
             "Delimited (',' or ';') set of paths to use for resolving assembly references.");
 
+        Option<string?> excludeAttributesListOption = new("--exclude-attributes-list",
+            @"Specify a path to a file with the list in the DocId format of which attributes
+            should be excluded from being applied on apis.");
 
         Option<string?> outputPathOption = new("--output-path",
             @"Output path. Default is the console. Can specify an existing directory as well
@@ -47,6 +50,7 @@ class Program
         rootCommand.AddGlobalOption(assemblyOption);
         rootCommand.AddGlobalOption(resolveAssemblyReferencesOption);
         rootCommand.AddGlobalOption(libPathOption);
+        rootCommand.AddGlobalOption(excludeAttributesListOption);
         rootCommand.AddGlobalOption(outputPathOption);
         rootCommand.AddGlobalOption(headerFileOption);
         rootCommand.AddGlobalOption(exceptionMessageOption);
@@ -60,7 +64,8 @@ class Program
                 LibPath = context.ParseResult.GetValueForOption(libPathOption),
                 ExceptionMessage = context.ParseResult.GetValueForOption(exceptionMessageOption),
                 HeaderFile = context.ParseResult.GetValueForOption(headerFileOption),
-                OutputPath = context.ParseResult.GetValueForOption(outputPathOption)
+                OutputPath = context.ParseResult.GetValueForOption(outputPathOption),
+                ExcludeAttributesList = context.ParseResult.GetValueForOption(excludeAttributesListOption),
             });
         });
 

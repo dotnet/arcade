@@ -46,6 +46,11 @@ public class GenAPITask : BuildTask
     /// </summary>
     public string? ExceptionMessage { get; set; }
 
+    /// <summary>
+    /// Specify a path to a file with the list in the DocId format of which attributes should be excluded from being applied on apis.
+    /// </summary>
+    public string? ExcludeAttributesList { get; set; }
+
     public override bool Execute()
     {
         GenAPIApp.Run(new GenAPIApp.Context
@@ -56,6 +61,7 @@ public class GenAPITask : BuildTask
             OutputPath = OutputPath,
             HeaderFile = HeaderFile,
             ExceptionMessage = ExceptionMessage,
+            ExcludeAttributesList = ExcludeAttributesList,
         });
 
         return true;

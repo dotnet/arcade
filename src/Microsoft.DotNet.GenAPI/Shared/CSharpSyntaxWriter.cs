@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
 namespace Microsoft.DotNet.GenAPI.Shared;
@@ -119,6 +120,33 @@ public class CSharpSyntaxWriter : ISyntaxWriter
         });
     }
 
+    public IDisposable WriteDelegate(
+        IEnumerable<SyntaxKind> accessibility,
+        IEnumerable<SyntaxKind> keywords,
+        string typeName)
+    {
+        WriteIndentation();
+
+        foreach (var keyword in accessibility)
+        {
+            WriteKeyword(keyword);
+        }
+
+        foreach (var keyword in keywords)
+        {
+            WriteKeyword(keyword);
+        }
+
+        _textWriter.Write(typeName);
+
+        WriteKeyword(SyntaxKind.SemicolonToken);
+        WriteNewLine();
+
+        return new Block(() =>
+        {
+        });
+    }
+
     /// <inheritdoc />
     public void WriteAttribute(string attribute)
     {
@@ -131,9 +159,15 @@ public class CSharpSyntaxWriter : ISyntaxWriter
     }
 
     /// <inheritdoc />
-    public void WriteProperty(string definition, bool hasImplementation, bool hasGetMethod, bool hasSetMethod)
+    public void WriteProperty(IEnumerable<SyntaxKind> accessibilities, string definition, bool hasImplementation, bool hasGetMethod, bool hasSetMethod)
     {
         WriteIndentation();
+
+        foreach (var accessibility in accessibilities)
+        {
+            WriteKeyword(accessibility);
+        }
+
         _textWriter.Write(definition);
 
         if (hasGetMethod || hasSetMethod)
@@ -177,9 +211,15 @@ public class CSharpSyntaxWriter : ISyntaxWriter
     }
 
     /// <inheritdoc />
-    public void WriteEvent(string definition, bool hasAddMethod, bool hasRemoveMethod)
+    public void WriteEvent(IEnumerable<SyntaxKind> accessibilities, string definition, bool hasAddMethod, bool hasRemoveMethod)
     {
         WriteIndentation();
+
+        foreach (var accessibility in accessibilities)
+        {
+            WriteKeyword(accessibility);
+        }
+
         _textWriter.Write(definition);
 
         if (hasAddMethod || hasRemoveMethod)
@@ -215,10 +255,17 @@ public class CSharpSyntaxWriter : ISyntaxWriter
     }
 
     /// <inheritdoc />
-    public void WriteMethod(string definition, bool hasImplementation)
+    public void WriteMethod(IEnumerable<SyntaxKind> accessibilities, string definition, bool hasImplementation)
     {
         WriteIndentation();
+
+        foreach (var accessibility in accessibilities)
+        {
+            WriteKeyword(accessibility);
+        }
+
         _textWriter.Write(definition);
+
         if (hasImplementation)
         {
             WriteSpace();
@@ -233,11 +280,26 @@ public class CSharpSyntaxWriter : ISyntaxWriter
     }
 
     /// <inheritdoc />
-    public void WriteField(string definition)
+    public void WriteEnumField(string definition)
     {
         WriteIndentation();
         _textWriter.Write(definition);
         WriteKeyword(SyntaxKind.CommaToken, writeSpace: false);
+        WriteNewLine();
+    }
+
+    public void WriteField(IEnumerable<SyntaxKind> accessibilities, string definition)
+    {
+        WriteIndentation();
+
+        foreach (var keyword in accessibilities)
+        {
+            WriteKeyword(keyword);
+        }
+
+        _textWriter.Write(definition);
+
+        WriteKeyword(SyntaxKind.SemicolonToken, writeSpace: false);
         WriteNewLine();
     }
 

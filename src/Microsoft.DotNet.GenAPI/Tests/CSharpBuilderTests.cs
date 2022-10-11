@@ -37,10 +37,29 @@ public class CSharpBuilderTests
             It.IsAny<IEnumerable<string>>(),
             It.IsAny<IEnumerable<string>>())).Returns(block.Object);
         _syntaxWriter.Setup(o => o.WriteAttribute(It.IsAny<string>()));
-        _syntaxWriter.Setup(o => o.WriteProperty(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>(), It.IsAny<bool>()));
-        _syntaxWriter.Setup(o => o.WriteEvent(It.IsAny<string>(), It.IsAny<bool>(), It.IsAny<bool>()));
-        _syntaxWriter.Setup(o => o.WriteMethod(It.IsAny<string>(), It.IsAny<bool>()));
-        _syntaxWriter.Setup(o => o.WriteField(It.IsAny<string>()));
+        _syntaxWriter.Setup(o => o.WriteProperty(
+            It.IsAny<IEnumerable<SyntaxKind>>(),
+            It.IsAny<string>(),
+            It.IsAny<bool>(),
+            It.IsAny<bool>(),
+            It.IsAny<bool>()));
+        _syntaxWriter.Setup(o => o.WriteEvent(
+            It.IsAny<IEnumerable<SyntaxKind>>(),
+            It.IsAny<string>(),
+            It.IsAny<bool>(),
+            It.IsAny<bool>()));
+        _syntaxWriter.Setup(o => o.WriteMethod(
+            It.IsAny<IEnumerable<SyntaxKind>>(),
+            It.IsAny<string>(),
+            It.IsAny<bool>()));
+        _syntaxWriter.Setup(o => o.WriteEnumField(It.IsAny<string>()));
+        _syntaxWriter.Setup(o => o.WriteField(
+            It.IsAny<IEnumerable<SyntaxKind>>(),
+            It.IsAny<string>()));
+        _syntaxWriter.Setup(o => o.WriteDelegate(
+            It.IsAny<IEnumerable<SyntaxKind>>(),
+            It.IsAny<IEnumerable<SyntaxKind>>(),
+            It.IsAny<string>())).Returns(block.Object);
     }
 
     [Fact]
@@ -250,18 +269,21 @@ public class CSharpBuilderTests
             new string[] { }), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteProperty(
+            new SyntaxKind[] { },
             "int X",
             /*hasImplementation*/false,
             /*hasGet*/true,
             /*hasSet*/true), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteProperty(
+            new SyntaxKind[] { },
             "int Y",
             /*hasImplementation*/false,
             /*hasGet*/true,
             /*hasSet*/true), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteMethod(
+            new SyntaxKind[] { },
             "double CalculateDistance(A.IPoint p)",
             /*hasImplementation*/false), Times.Once);
 
@@ -298,12 +320,12 @@ public class CSharpBuilderTests
             new string[] { },
             new string[] { }), Times.Once);
         
-        _syntaxWriter.Verify(o => o.WriteField("White = 0"), Times.Once);
-        _syntaxWriter.Verify(o => o.WriteField("Green = 100"), Times.Once);
-        _syntaxWriter.Verify(o => o.WriteField("Blue = 200"), Times.Once);
-        _syntaxWriter.Verify(o => o.WriteField("White = 0"), Times.Once);
+        _syntaxWriter.Verify(o => o.WriteEnumField("White = 0"), Times.Once);
+        _syntaxWriter.Verify(o => o.WriteEnumField("Green = 100"), Times.Once);
+        _syntaxWriter.Verify(o => o.WriteEnumField("Blue = 200"), Times.Once);
+        _syntaxWriter.Verify(o => o.WriteEnumField("White = 0"), Times.Once);
 
-        _syntaxWriter.Verify(o => o.WriteMethod("public Color()", true), Times.Once);
+        _syntaxWriter.Verify(o => o.WriteMethod(new[] { SyntaxKind.PublicKeyword }, "Color()", true), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteNamespace(new string[] { /* global namespace */ }), Times.Once);
         _syntaxWriter.Verify(o => o.WriteNamespace(new[] { "A" }), Times.Once);
@@ -346,13 +368,15 @@ public class CSharpBuilderTests
             new string[] { }), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteProperty(
-            "private int? Wheels",
+            new[] { SyntaxKind.PrivateKeyword },
+            "int? Wheels",
             /*hasImplementation*/true,
             /*hasGet*/true,
             /*hasSet*/false), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteProperty(
-            "public bool IsRunning",
+            new[] { SyntaxKind.PublicKeyword },
+            "bool IsRunning",
             /*hasImplementation*/true,
             /*hasGet*/true,
             /*hasSet*/true), Times.Once);
@@ -395,13 +419,15 @@ public class CSharpBuilderTests
             new string[] { }), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteProperty(
-            "protected abstract int? Wheels",
+            new[] { SyntaxKind.ProtectedKeyword },
+            "abstract int? Wheels",
             /*hasImplementation*/false,
             /*hasGet*/true,
             /*hasSet*/false), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteProperty(
-            "public abstract bool IsRunning",
+            new[] { SyntaxKind.PublicKeyword },
+            "abstract bool IsRunning",
             /*hasImplementation*/false,
             /*hasGet*/true,
             /*hasSet*/true), Times.Once);
@@ -471,9 +497,9 @@ public class CSharpBuilderTests
             new[] { "A.IControl", "A.ISurface" },
             new string[] { }), Times.Once);
 
-        _syntaxWriter.Verify(o => o.WriteMethod("void Paint()", false), Times.Exactly(2));
-        _syntaxWriter.Verify(o => o.WriteMethod("private void A.IControl.Paint()", true), Times.Once);
-        _syntaxWriter.Verify(o => o.WriteMethod("private void A.ISurface.Paint()", true), Times.Once);
+        _syntaxWriter.Verify(o => o.WriteMethod(new SyntaxKind[] { }, "void Paint()", false), Times.Exactly(2));
+        _syntaxWriter.Verify(o => o.WriteMethod(new SyntaxKind[] { }, "void A.IControl.Paint()", true), Times.Once);
+        _syntaxWriter.Verify(o => o.WriteMethod(new SyntaxKind[] { }, "void A.ISurface.Paint()", true), Times.Once);
 
         _syntaxWriter.VerifyNoOtherCalls();
     }
@@ -596,6 +622,171 @@ public class CSharpBuilderTests
             "Collection",
             new string[] { },
             new string[] { }), Times.Once);
+
+        _syntaxWriter.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    void TestPublicMembersGeneration()
+    {
+        var syntaxTree = """
+            namespace A
+            {
+                public enum Kind
+                {
+                    None = 0,
+                    Disable = 1
+                }
+
+                public readonly struct Options
+                {
+                    /// TODO: uncomment after defect # XXX fixed in Roslyn.
+                    public readonly bool BoolMember;// = false;
+                    public readonly Kind KindMember;// = Kind.Disable;
+
+                    public Options(Kind kindVal)
+                        : this(kindVal, false)
+                    {
+                    }
+
+                    public Options(Kind kindVal, bool boolVal)
+                    {
+                        BoolMember = boolVal;
+                        KindMember = kindVal;
+                    }
+                }
+            }
+            """;
+
+        _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
+
+        var assembly = CompilationHelper.GetAssemblyFromSyntax(syntaxTree, enableNullable: false);
+
+        var builder = new CSharpBuilder(
+            _orderProvider.Object,
+            _assemblySymbolFilter.Object,
+            _syntaxWriter.Object);
+        builder.WriteAssembly(assembly);
+
+        _syntaxWriter.Verify(o => o.WriteNamespace(new string[] { /* global namespace */ }), Times.Once);
+        _syntaxWriter.Verify(o => o.WriteNamespace(new[] { "A" }), Times.Once);
+
+        _syntaxWriter.Verify(o => o.WriteTypeDefinition(
+            new[] { SyntaxKind.PublicKeyword },
+            new[] { SyntaxKind.EnumKeyword },
+            "Kind",
+            new string[] { },
+            new string[] { }), Times.Once);
+
+        _syntaxWriter.Verify(o => o.WriteEnumField("None = 0"), Times.Once);
+        _syntaxWriter.Verify(o => o.WriteEnumField("Disable = 1"), Times.Once);
+
+        _syntaxWriter.Verify(o => o.WriteTypeDefinition(
+            new[] { SyntaxKind.PublicKeyword },
+            new[] { SyntaxKind.ReadOnlyKeyword, SyntaxKind.PartialKeyword, SyntaxKind.StructKeyword },
+            "Options",
+            new string[] { },
+            new string[] { }), Times.Once);
+
+        _syntaxWriter.Verify(o => o.WriteField(
+            new[] { SyntaxKind.PublicKeyword },
+            "readonly bool BoolMember"), Times.Once);
+
+        _syntaxWriter.Verify(o => o.WriteField(
+            new[] { SyntaxKind.PublicKeyword },
+            "readonly A.Kind KindMember"), Times.Once);
+
+        _syntaxWriter.Verify(o => o.WriteMethod(
+            new[] { SyntaxKind.PublicKeyword },
+            "Options(A.Kind kindVal)",
+            true), Times.Once);
+        _syntaxWriter.Verify(o => o.WriteMethod(
+            new[] { SyntaxKind.PublicKeyword },
+            "Options(A.Kind kindVal, bool boolVal)",
+            true), Times.Once);
+
+        _syntaxWriter.VerifyNoOtherCalls();
+    }
+
+
+    [Fact]
+    void TestDelegateFunctionGeneration()
+    {
+        var syntaxTree = """
+            namespace A
+            {
+                public delegate bool SyntaxReceiverCreator();
+            }
+            """;
+
+        _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<ISymbol>())).Returns(
+            (ISymbol member) =>
+            {
+                if (member.ContainingType.TypeKind == TypeKind.Delegate)
+                {
+                    return false;
+                }
+
+                return true;
+            });
+
+        var assembly = CompilationHelper.GetAssemblyFromSyntax(syntaxTree, enableNullable: false);
+
+        var builder = new CSharpBuilder(
+            _orderProvider.Object,
+            _assemblySymbolFilter.Object,
+            _syntaxWriter.Object);
+        builder.WriteAssembly(assembly);
+
+        _syntaxWriter.Verify(o => o.WriteNamespace(new string[] { /* global namespace */ }), Times.Once);
+        _syntaxWriter.Verify(o => o.WriteNamespace(new[] { "A" }), Times.Once);
+
+        _syntaxWriter.Verify(o => o.WriteDelegate(
+            new[] { SyntaxKind.PublicKeyword },
+            new[] { SyntaxKind.DelegateKeyword },
+            "bool SyntaxReceiverCreator()"), Times.Once);
+
+        _syntaxWriter.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    void TestAbstractEventGeneration()
+    {
+        var syntaxTree = """
+            namespace A
+            {
+                public abstract class Events
+                {
+                    public abstract event System.EventHandler<bool> TextChanged;
+                }
+            }
+            """;
+
+        _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
+
+        var assembly = CompilationHelper.GetAssemblyFromSyntax(syntaxTree, enableNullable: false);
+
+        var builder = new CSharpBuilder(
+            _orderProvider.Object,
+            _assemblySymbolFilter.Object,
+            _syntaxWriter.Object);
+        builder.WriteAssembly(assembly);
+
+        _syntaxWriter.Verify(o => o.WriteNamespace(new string[] { /* global namespace */ }));
+        _syntaxWriter.Verify(o => o.WriteNamespace(new[] { "A" }));
+
+        _syntaxWriter.Verify(o => o.WriteTypeDefinition(
+            new[] { SyntaxKind.PublicKeyword },
+            new[] { SyntaxKind.AbstractKeyword, SyntaxKind.PartialKeyword, SyntaxKind.ClassKeyword },
+            "Events",
+            new string[] { },
+            new string[] { }), Times.Once);
+
+        _syntaxWriter.Verify(o => o.WriteEvent(
+            new[] { SyntaxKind.PublicKeyword },
+            "abstract event System.EventHandler<bool> TextChanged",
+            false, false
+            ), Times.Once);
 
         _syntaxWriter.VerifyNoOtherCalls();
     }

@@ -3,10 +3,9 @@
 
 using System;
 using System.IO;
-using System.Reflection;
+using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.GenAPI.Shared;
-
 
 /// <summary>
 /// Class to standertize initilization and running of GenAPI tool.
@@ -56,6 +55,11 @@ public static class GenAPIApp
         /// Indentation character: space, tabulation. Default is space.
         /// </summary>
         public char IndentationChar { get; set; } = ' ';
+
+        /// <summary>
+        /// Specify a list in the DocId format of which attributes should be excluded from being applied on apis.
+        /// </summary>
+        public string? ExcludeAttributesList { get; set; }
     }
 
     /// <summary>
@@ -66,12 +70,27 @@ public static class GenAPIApp
         var loader = new AssemblySymbolLoader(cntx.ResolveAssemblyReferences ?? false);
         loader.AddReferenceSearchDirectories(SplitPaths(cntx.LibPath));
 
+        AddReferenceToRuntimeLibraries(loader);
+
+        var intersectionFilter = new IntersectionFilter()
+            .Add<FilterOutDelegateMembers>()
+            .Add<FilterOutImplicitSymbols>()
+            .Add(new AccessibilityFilter(new[] {
+                Accessibility.Public,
+                Accessibility.ProtectedOrInternal,
+                Accessibility.Protected }));
+
+        if (cntx.ExcludeAttributesList != null)
+        {
+            intersectionFilter.Add(new FilterOutAttributes(cntx.ExcludeAttributesList));
+        }
+
         var assemblySymbols = loader.LoadAssemblies(SplitPaths(cntx.Assembly));
         foreach (var assemblySymbol in assemblySymbols)
         {
             using var writer = new CSharpBuilder(
                 new AssemblySymbolOrderProvider(),
-                new IncludeAllFilter(),
+                intersectionFilter,
                 new CSharpSyntaxWriter(
                     GetTextWriter(cntx.OutputPath, assemblySymbol.Name),
                     ReadHeaderFile(cntx.HeaderFile),
@@ -147,5 +166,16 @@ public static class GenAPIApp
             return File.ReadAllText(headerFile);
         }
         return defaultFileHeader;
+    }
+
+    private static void AddReferenceToRuntimeLibraries(IAssemblySymbolLoader loader)
+    {
+        var corlibLocation = typeof(object).Assembly.Location;
+        var runtimeFolder = Path.GetDirectoryName(corlibLocation);
+
+        if (runtimeFolder != null)
+        {
+            loader.AddReferenceSearchDirectory(runtimeFolder);
+        }
     }
 }
