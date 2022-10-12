@@ -8,11 +8,9 @@ using Microsoft.CodeAnalysis;
 namespace Microsoft.DotNet.GenAPI.Shared;
 
 
-using IFilter = IAssemblySymbolFilter;
-
-public class IntersectionFilter : IFilter
+public class IntersectionFilter : IncludeAllFilter
 {
-    private readonly List<IFilter> _innerFilters = new List<IFilter>();
+    private readonly List<IAssemblySymbolFilter> _innerFilters = new();
 
     /// <inheritdoc />
     public override bool Include(INamespaceSymbol ns) => _innerFilters.All(f => f.Include(ns));
@@ -26,15 +24,15 @@ public class IntersectionFilter : IFilter
     /// <inheritdoc />
     public override bool Include(ISymbol member) => _innerFilters.All(f => f.Include(member));
 
-    public IntersectionFilter Add<T>() where T : IFilter, new()
+    public IntersectionFilter Add<T>() where T : IAssemblySymbolFilter, new()
     {
         _innerFilters.Add(new T());
         return this;
     }
 
-    public IntersectionFilter Add<T>(T obj) where T : IFilter
+    public IntersectionFilter Add(IAssemblySymbolFilter filter)
     {
-        _innerFilters.Add(obj);
+        _innerFilters.Add(filter);
         return this;
     }
 }

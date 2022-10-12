@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.GenAPI.Shared;
 
-public class FilterOutImplicitSymbols : IAssemblySymbolFilter
+public class FilterOutImplicitSymbols : IncludeAllFilter
 {
     /// <inheritdoc />
     public override bool Include(INamespaceSymbol ns) => !ns.IsImplicitlyDeclared;

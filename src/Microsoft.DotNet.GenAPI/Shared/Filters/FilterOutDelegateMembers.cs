@@ -5,7 +5,7 @@ using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.GenAPI.Shared;
 
-public class FilterOutDelegateMembers : IAssemblySymbolFilter
+public class FilterOutDelegateMembers : IncludeAllFilter
 {
     /// <inheritdoc />
     public override bool Include(ISymbol member) => member.ContainingType.TypeKind != TypeKind.Delegate;

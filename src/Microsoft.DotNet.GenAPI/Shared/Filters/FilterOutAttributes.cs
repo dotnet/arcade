@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.GenAPI.Shared;
 
-public class FilterOutAttributes : IAssemblySymbolFilter
+public class FilterOutAttributes : IncludeAllFilter
 {
     private readonly HashSet<string> _attributes;
 

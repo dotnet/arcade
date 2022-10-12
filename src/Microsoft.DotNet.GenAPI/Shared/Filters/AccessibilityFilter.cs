@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.GenAPI.Shared;
 
-public class AccessibilityFilter : IAssemblySymbolFilter
+public class AccessibilityFilter : IncludeAllFilter
 {
     private readonly HashSet<Accessibility> _allowedAccessibilities;
     

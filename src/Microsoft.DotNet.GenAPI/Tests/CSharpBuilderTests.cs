@@ -640,7 +640,7 @@ public class CSharpBuilderTests
 
                 public readonly struct Options
                 {
-                    /// TODO: uncomment after defect # XXX fixed in Roslyn.
+                    /// TODO: uncomment after defect https://github.com/dotnet/roslyn/issues/64632 fixed in Roslyn.
                     public readonly bool BoolMember;// = false;
                     public readonly Kind KindMember;// = Kind.Disable;
 
