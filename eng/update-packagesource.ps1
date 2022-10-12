@@ -66,7 +66,8 @@ try {
   $DarcExe = "$dotnetRoot\tools"
   Create-Directory $DarcExe
   $DarcExe = Resolve-Path $DarcExe
-  . .\common\darc-init.ps1 -toolpath $DarcExe
+  # TODO: remove hardcoded darc version once The build machines have a 6.0 sdk: https://github.com/dotnet/arcade/issues/10748
+  . .\common\darc-init.ps1 -toolpath $DarcExe -darcVersion "1.1.0-beta.22220.1"
   CheckExitCode "Running darc-init"
 
   $Env:dotnet_root = $dotnetRoot
