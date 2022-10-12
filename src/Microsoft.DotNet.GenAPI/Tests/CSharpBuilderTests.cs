@@ -23,10 +23,10 @@ public class CSharpBuilderTests
         _orderProvider.Setup(o => o.Order(It.IsAny<IEnumerable<ISymbol>>())).Returns(
             (IEnumerable<ISymbol> v) => { return v; });
 
-        _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<INamespaceSymbol>())).Returns(true);
-        _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<INamespaceSymbol>())).Returns(true);
-        _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<ITypeSymbol>())).Returns(true);
-        _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<ISymbol>())).Returns(true);
+        _assemblySymbolFilter.Setup(o => o.Includes(It.IsAny<INamespaceSymbol>())).Returns(true);
+        _assemblySymbolFilter.Setup(o => o.Includes(It.IsAny<INamespaceSymbol>())).Returns(true);
+        _assemblySymbolFilter.Setup(o => o.Includes(It.IsAny<ITypeSymbol>())).Returns(true);
+        _assemblySymbolFilter.Setup(o => o.Includes(It.IsAny<ISymbol>())).Returns(true);
 
         var block = new Mock<IDisposable>();
         _syntaxWriter.Setup(o => o.WriteNamespace(It.IsAny<IEnumerable<string>>())).Returns(block.Object);
@@ -109,7 +109,7 @@ public class CSharpBuilderTests
             """;
 
         // filter out default constructors.
-        _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<ISymbol>())).Returns(false);
+        _assemblySymbolFilter.Setup(o => o.Includes(It.IsAny<ISymbol>())).Returns(false);
 
         var assembly = CompilationHelper.GetAssemblyFromSyntax(syntaxTree, enableNullable: false);
 
@@ -194,7 +194,7 @@ public class CSharpBuilderTests
             """;
 
         // filter out default constructors.
-        _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<ISymbol>())).Returns(false);
+        _assemblySymbolFilter.Setup(o => o.Includes(It.IsAny<ISymbol>())).Returns(false);
 
         var assembly = CompilationHelper.GetAssemblyFromSyntax(syntaxTree, enableNullable: false);
 
@@ -248,7 +248,7 @@ public class CSharpBuilderTests
             }
             """;
 
-        _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
+        _assemblySymbolFilter.Setup(o => o.Includes(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
 
         var assembly = CompilationHelper.GetAssemblyFromSyntax(syntaxTree, enableNullable: false);
 
@@ -347,7 +347,7 @@ public class CSharpBuilderTests
             }
             """;
 
-        _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
+        _assemblySymbolFilter.Setup(o => o.Includes(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
 
         var assembly = CompilationHelper.GetAssemblyFromSyntax(syntaxTree, enableNullable: false);
 
@@ -398,7 +398,7 @@ public class CSharpBuilderTests
             }
             """;
 
-        _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
+        _assemblySymbolFilter.Setup(o => o.Includes(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
 
         var assembly = CompilationHelper.GetAssemblyFromSyntax(syntaxTree, enableNullable: false);
 
@@ -462,7 +462,7 @@ public class CSharpBuilderTests
             }
             """;
 
-        _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
+        _assemblySymbolFilter.Setup(o => o.Includes(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
 
         var assembly = CompilationHelper.GetAssemblyFromSyntax(syntaxTree, enableNullable: false);
 
@@ -518,7 +518,7 @@ public class CSharpBuilderTests
             }
             """;
 
-        _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
+        _assemblySymbolFilter.Setup(o => o.Includes(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
 
         var assembly = CompilationHelper.GetAssemblyFromSyntax(syntaxTree, enableNullable: false);
 
@@ -568,7 +568,7 @@ public class CSharpBuilderTests
             }
             """;
 
-        _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
+        _assemblySymbolFilter.Setup(o => o.Includes(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
 
         var assembly = CompilationHelper.GetAssemblyFromSyntax(syntaxTree, enableNullable: false);
 
@@ -603,7 +603,7 @@ public class CSharpBuilderTests
             }
             """;
 
-        _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
+        _assemblySymbolFilter.Setup(o => o.Includes(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
 
         var assembly = CompilationHelper.GetAssemblyFromSyntax(syntaxTree, enableNullable: false);
 
@@ -658,7 +658,7 @@ public class CSharpBuilderTests
             }
             """;
 
-        _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
+        _assemblySymbolFilter.Setup(o => o.Includes(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
 
         var assembly = CompilationHelper.GetAssemblyFromSyntax(syntaxTree, enableNullable: false);
 
@@ -719,7 +719,7 @@ public class CSharpBuilderTests
             }
             """;
 
-        _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<ISymbol>())).Returns(
+        _assemblySymbolFilter.Setup(o => o.Includes(It.IsAny<ISymbol>())).Returns(
             (ISymbol member) => member.ContainingType.TypeKind != TypeKind.Delegate);
 
         var assembly = CompilationHelper.GetAssemblyFromSyntax(syntaxTree, enableNullable: false);
@@ -754,7 +754,7 @@ public class CSharpBuilderTests
             }
             """;
 
-        _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
+        _assemblySymbolFilter.Setup(o => o.Includes(It.IsAny<ISymbol>())).Returns(FilterOutImplicitMethods);
 
         var assembly = CompilationHelper.GetAssemblyFromSyntax(syntaxTree, enableNullable: false);
 

@@ -186,14 +186,14 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
         var baseTypeNames = new List<string>();
 
         if (namedType.BaseType != null && namedType.BaseType.SpecialType == SpecialType.None &&
-            Filter.Include(namedType.BaseType))
+            Filter.Includes(namedType.BaseType))
         {
             baseTypeNames.Add(namedType.BaseType.ToDisplayString());
         }
 
         foreach (var interfaceSymbol in namedType.Interfaces)
         {
-            if (!Filter.Include(interfaceSymbol)) continue;
+            if (!Filter.Includes(interfaceSymbol)) continue;
 
             baseTypeNames.Add(interfaceSymbol.ToDisplayString());
         }

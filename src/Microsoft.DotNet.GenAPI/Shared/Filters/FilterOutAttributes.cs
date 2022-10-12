@@ -23,7 +23,7 @@ public class FilterOutAttributes : IncludeAllFilter
     }
 
     /// <inheritdoc />
-    public override bool Include(AttributeData at)
+    public override bool Includes(AttributeData at)
     {
         if (at.AttributeClass == null) return true;
         return !_attributes.Contains(at.AttributeClass.ToString()!);

@@ -13,16 +13,16 @@ public class IntersectionFilter : IncludeAllFilter
     private readonly List<IAssemblySymbolFilter> _innerFilters = new();
 
     /// <inheritdoc />
-    public override bool Include(INamespaceSymbol ns) => _innerFilters.All(f => f.Include(ns));
+    public override bool Includes(INamespaceSymbol ns) => _innerFilters.All(f => f.Includes(ns));
 
     /// <inheritdoc />
-    public override bool Include(AttributeData at) => _innerFilters.All(f => f.Include(at));
+    public override bool Includes(AttributeData at) => _innerFilters.All(f => f.Includes(at));
 
     /// <inheritdoc />
-    public override bool Include(ITypeSymbol ts) => _innerFilters.All(f => f.Include(ts));
+    public override bool Includes(ITypeSymbol ts) => _innerFilters.All(f => f.Includes(ts));
 
     /// <inheritdoc />
-    public override bool Include(ISymbol member) => _innerFilters.All(f => f.Include(member));
+    public override bool Includes(ISymbol member) => _innerFilters.All(f => f.Includes(member));
 
     public IntersectionFilter Add<T>() where T : IAssemblySymbolFilter, new()
     {

@@ -8,5 +8,5 @@ namespace Microsoft.DotNet.GenAPI.Shared;
 public class FilterOutDelegateMembers : IncludeAllFilter
 {
     /// <inheritdoc />
-    public override bool Include(ISymbol member) => member.ContainingType.TypeKind != TypeKind.Delegate;
+    public override bool Includes(ISymbol member) => member.ContainingType.TypeKind != TypeKind.Delegate;
 }

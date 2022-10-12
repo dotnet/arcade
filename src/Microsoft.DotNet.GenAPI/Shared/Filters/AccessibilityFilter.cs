@@ -18,20 +18,20 @@ public class AccessibilityFilter : IncludeAllFilter
     }
 
     /// <inheritdoc />
-    public override bool Include(INamespaceSymbol ns)
+    public override bool Includes(INamespaceSymbol ns)
     {
         return ns.GetTypeMembers().Any(t =>
             _allowedAccessibilities.Contains(t.DeclaredAccessibility));
     }
 
     /// <inheritdoc />
-    public override bool Include(ITypeSymbol ts)
+    public override bool Includes(ITypeSymbol ts)
     {
         return _allowedAccessibilities.Contains(ts.DeclaredAccessibility); ;
     }
 
     /// <inheritdoc />
-    public override bool Include(ISymbol member)
+    public override bool Includes(ISymbol member)
     {
         return _allowedAccessibilities.Contains(member.DeclaredAccessibility);
     }

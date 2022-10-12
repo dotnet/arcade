@@ -15,26 +15,26 @@ public interface IAssemblySymbolFilter
     /// </summary>
     /// <param name="ns">Object of <cref="INamespaceSymbol"/>.</param>
     /// <returns>Returns boolean value.</returns>
-    bool Include(INamespaceSymbol ns);
+    bool Includes(INamespaceSymbol ns);
 
     /// <summary>
     /// Including/fitlering out attribute data.
     /// </summary>
     /// <param name="ns">Object of <cref="AttributeData"/>.</param>
     /// <returns>Returns boolean value.</returns>
-    bool Include(AttributeData at);
+    bool Includes(AttributeData at);
 
     /// <summary>
     /// Including/fitlering out type symbol and it's members .
     /// </summary>
     /// <param name="ns">Object of <cref="ITypeSymbol"/>.</param>
     /// <returns>Returns boolean value.</returns>
-    bool Include(ITypeSymbol ts);
+    bool Includes(ITypeSymbol ts);
 
     /// <summary>
     /// Including/fitlering out member symbol.
     /// </summary>
     /// <param name="ns">Object of <cref="ISymbol"/>.</param>
     /// <returns>Returns boolean value.</returns>
-    bool Include(ISymbol member);
+    bool Includes(ISymbol member);
 }
