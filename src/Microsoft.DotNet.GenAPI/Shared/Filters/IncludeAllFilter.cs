@@ -8,26 +8,14 @@ namespace Microsoft.DotNet.GenAPI.Shared;
 public class IncludeAllFilter : IAssemblySymbolFilter
 {
     /// <inheritdoc />
-    public bool Include(INamespaceSymbol ns)
-    {
-        return true;
-    }
+    public virtual bool Includes(INamespaceSymbol ns) => true;
 
     /// <inheritdoc />
-    public bool Include(AttributeData at)
-    {
-        return true;
-    }
+    public virtual bool Includes(AttributeData at) => true;
 
     /// <inheritdoc />
-    public bool Include(ITypeSymbol ts)
-    {
-        return true;
-    }
+    public virtual bool Includes(ITypeSymbol ts) => true;
 
     /// <inheritdoc />
-    public bool Include(ISymbol member)
-    {
-        return true;
-    }
+    public virtual bool Includes(ISymbol member) => true;
 }

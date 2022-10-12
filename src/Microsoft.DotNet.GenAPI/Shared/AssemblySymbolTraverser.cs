@@ -22,7 +22,7 @@ public abstract class AssemblySymbolTraverser
 
     public void Visit(IAssemblySymbol assembly)
     {
-        var namespaces = EnumerateNamespaces(assembly).Where(Filter.Include);
+        var namespaces = EnumerateNamespaces(assembly).Where(Filter.Includes);
 
         foreach (var namespaceSymbol in _orderProvider.Order(namespaces))
         {
@@ -33,11 +33,11 @@ public abstract class AssemblySymbolTraverser
 
     public void Visit(INamespaceSymbol namespaceSymbol)
     {
-        var typeMembers = namespaceSymbol.GetTypeMembers().Where(Filter.Include);
+        var typeMembers = namespaceSymbol.GetTypeMembers().Where(Filter.Includes);
 
         foreach (var typeMember in _orderProvider.Order(typeMembers))
         {
-            foreach (var attribute in typeMember.GetAttributes().Where(Filter.Include))
+            foreach (var attribute in typeMember.GetAttributes().Where(Filter.Includes))
             {
                 Process(attribute);
             }
@@ -51,11 +51,11 @@ public abstract class AssemblySymbolTraverser
     {
         VisitInnerNamedTypes(namedType);
 
-        var members = namedType.GetMembers().Where(Filter.Include);
+        var members = namedType.GetMembers().Where(Filter.Includes);
 
         foreach (var member in _orderProvider.Order(members))
         {
-            foreach (var attribute in member.GetAttributes().Where(Filter.Include))
+            foreach (var attribute in member.GetAttributes().Where(Filter.Includes))
             {
                 Process(attribute);
             }
@@ -71,7 +71,7 @@ public abstract class AssemblySymbolTraverser
 
     private void VisitInnerNamedTypes(INamedTypeSymbol namedType)
     {
-        var innerNamedTypes = namedType.GetTypeMembers().Where(Filter.Include);
+        var innerNamedTypes = namedType.GetTypeMembers().Where(Filter.Includes);
 
         foreach (var innerNamedType in _orderProvider.Order(innerNamedTypes))
         {

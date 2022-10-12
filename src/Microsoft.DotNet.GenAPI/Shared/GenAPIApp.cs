@@ -3,10 +3,9 @@
 
 using System;
 using System.IO;
-using System.Reflection;
+using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.GenAPI.Shared;
-
 
 /// <summary>
 /// Class to standertize initilization and running of GenAPI tool.
@@ -56,28 +55,48 @@ public static class GenAPIApp
         /// Indentation character: space, tabulation. Default is space.
         /// </summary>
         public char IndentationChar { get; set; } = ' ';
+
+        /// <summary>
+        /// Specify a list in the DocId format of which attributes should be excluded from being applied on apis.
+        /// </summary>
+        public string? ExcludeAttributesList { get; set; }
     }
 
     /// <summary>
     /// Initialize and run Roslyn-based GenAPI tool.
     /// </summary>
-    public static void Run(Context cntx)
+    public static void Run(Context context)
     {
-        var loader = new AssemblySymbolLoader(cntx.ResolveAssemblyReferences ?? false);
-        loader.AddReferenceSearchDirectories(SplitPaths(cntx.LibPath));
+        var loader = new AssemblySymbolLoader(context.ResolveAssemblyReferences ?? false);
+        loader.AddReferenceSearchDirectories(SplitPaths(context.LibPath));
 
-        var assemblySymbols = loader.LoadAssemblies(SplitPaths(cntx.Assembly));
+        AddReferenceToRuntimeLibraries(loader);
+
+        var intersectionFilter = new IntersectionFilter()
+            .Add<FilterOutDelegateMembers>()
+            .Add<FilterOutImplicitSymbols>()
+            .Add(new AccessibilityFilter(new[] {
+                Accessibility.Public,
+                Accessibility.ProtectedOrInternal,
+                Accessibility.Protected }));
+
+        if (context.ExcludeAttributesList != null)
+        {
+            intersectionFilter.Add(new FilterOutAttributes(context.ExcludeAttributesList));
+        }
+
+        var assemblySymbols = loader.LoadAssemblies(SplitPaths(context.Assembly));
         foreach (var assemblySymbol in assemblySymbols)
         {
             using var writer = new CSharpBuilder(
                 new AssemblySymbolOrderProvider(),
-                new IncludeAllFilter(),
+                intersectionFilter,
                 new CSharpSyntaxWriter(
-                    GetTextWriter(cntx.OutputPath, assemblySymbol.Name),
-                    ReadHeaderFile(cntx.HeaderFile),
-                    cntx.ExceptionMessage,
-                    cntx.IndentationSize,
-                    cntx.IndentationChar)); 
+                    GetTextWriter(context.OutputPath, assemblySymbol.Name),
+                    ReadHeaderFile(context.HeaderFile),
+                    context.ExceptionMessage,
+                    context.IndentationSize,
+                    context.IndentationChar)); 
 
             writer.WriteAssembly(assemblySymbol);
         }
@@ -147,5 +166,14 @@ public static class GenAPIApp
             return File.ReadAllText(headerFile);
         }
         return defaultFileHeader;
+    }
+
+    private static void AddReferenceToRuntimeLibraries(IAssemblySymbolLoader loader)
+    {
+        var corlibLocation = typeof(object).Assembly.Location;
+        var runtimeFolder = Path.GetDirectoryName(corlibLocation) ??
+            throw new ArgumentNullException("RuntimeFolder", "Could not find path to a runtime folder");
+
+        loader.AddReferenceSearchDirectory(runtimeFolder);
     }
 }

@@ -10,11 +10,11 @@ namespace Microsoft.DotNet.GenAPI.Shared;
 /// </summary>
 public class AssemblySymbolDisplayFormats
 {
-    public static readonly SymbolDisplayFormat NamespaceDisplayFormat = new SymbolDisplayFormat(
+    public static readonly SymbolDisplayFormat NamespaceDisplayFormat = new (
         globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included,
         typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces);
 
-    public static readonly SymbolDisplayFormat NamedTypeDisplayFormat = new SymbolDisplayFormat(
+    public static readonly SymbolDisplayFormat NamedTypeDisplayFormat = new (
         globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Included,
         delegateStyle: SymbolDisplayDelegateStyle.NameAndSignature,
         miscellaneousOptions: SymbolDisplayMiscellaneousOptions.AllowDefaultLiteral |
@@ -26,7 +26,7 @@ public class AssemblySymbolDisplayFormats
             SymbolDisplayGenericsOptions.IncludeTypeParameters |
             SymbolDisplayGenericsOptions.IncludeVariance);
 
-    public static readonly SymbolDisplayFormat BaseTypeDisplayFormat = new SymbolDisplayFormat(
+    public static readonly SymbolDisplayFormat BaseTypeDisplayFormat = new (
         globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
         typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
         genericsOptions:
@@ -34,7 +34,7 @@ public class AssemblySymbolDisplayFormats
             SymbolDisplayGenericsOptions.IncludeTypeParameters |
             SymbolDisplayGenericsOptions.IncludeVariance);
 
-    public static readonly SymbolDisplayFormat MemberDisplayFormat = new SymbolDisplayFormat(
+    public static readonly SymbolDisplayFormat MemberDisplayFormat = new(
         globalNamespaceStyle: SymbolDisplayGlobalNamespaceStyle.Omitted,
         typeQualificationStyle: SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces,
         delegateStyle: SymbolDisplayDelegateStyle.NameAndSignature,
@@ -58,6 +58,5 @@ public class AssemblySymbolDisplayFormats
             SymbolDisplayMemberOptions.IncludeConstantValue |
             SymbolDisplayMemberOptions.IncludeModifiers |
             SymbolDisplayMemberOptions.IncludeParameters |
-            SymbolDisplayMemberOptions.IncludeType |
-            SymbolDisplayMemberOptions.IncludeAccessibility);
+            SymbolDisplayMemberOptions.IncludeType);
 }

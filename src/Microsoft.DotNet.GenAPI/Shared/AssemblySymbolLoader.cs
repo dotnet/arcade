@@ -31,8 +31,12 @@ public class AssemblySymbolLoader : IAssemblySymbolLoader
     {
         _resolveReferences = resolveAssemblyReferences;
 
-        var compilationOptions = new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable);
-        _cSharpCompilation = CSharpCompilation.Create($"AssemblyLoader_{DateTime.Now:MM_dd_yy_HH_mm_ss_FFF}", options: compilationOptions);
+        var compilationOptions = new CSharpCompilationOptions(
+            OutputKind.DynamicallyLinkedLibrary,
+            nullableContextOptions: NullableContextOptions.Enable);
+        _cSharpCompilation = CSharpCompilation.Create(
+            $"AssemblyLoader_{DateTime.Now:MM_dd_yy_HH_mm_ss_FFF}",
+            options: compilationOptions);
     }
 
     /// <inheritdoc />
@@ -45,22 +49,28 @@ public class AssemblySymbolLoader : IAssemblySymbolLoader
 
         foreach (string path in paths)
         {
-            FileAttributes attr = File.GetAttributes(path);
+            AddReferenceSearchDirectory(path);
+        }
+    }
 
-            if (attr.HasFlag(FileAttributes.Directory))
+    /// <inheritdoc />
+    public void AddReferenceSearchDirectory(string path)
+    {
+        FileAttributes attr = File.GetAttributes(path);
+
+        if (attr.HasFlag(FileAttributes.Directory))
+        {
+            _referencePaths.TryAdd(path, path);
+        }
+        else
+        {
+            string assemblyName = Path.GetFileName(path);
+            if (!_referencePaths.ContainsKey(assemblyName))
             {
-                _referencePaths.TryAdd(path, path);
-            }
-            else
-            {
-                string assemblyName = Path.GetFileName(path);
-                if (!_referencePaths.ContainsKey(assemblyName))
+                string? directoryName = Path.GetDirectoryName(path);
+                if (directoryName != null)
                 {
-                    string? directoryName = Path.GetDirectoryName(path);
-                    if (directoryName != null)
-                    {
-                        _referencePaths.Add(assemblyName, directoryName);
-                    }
+                    _referencePaths.Add(assemblyName, directoryName);
                 }
             }
         }
@@ -164,6 +174,10 @@ public class AssemblySymbolLoader : IAssemblySymbolLoader
 
     private MetadataReference CreateAndAddReferenceToCompilation(string name, Stream fileStream)
     {
+        if (_loadedAssemblies.TryGetValue(name, out MetadataReference? metadataReference))
+        {
+            return metadataReference;
+        }
         // If we need to resolve references we can't reuse the same stream after creating the metadata
         // reference from it as Roslyn closes it. So instead we use PEReader and get the bytes
         // and create the metadata reference from that.
@@ -175,7 +189,7 @@ public class AssemblySymbolLoader : IAssemblySymbolLoader
         }
 
         var image = reader.GetEntireImage();
-        var metadataReference = MetadataReference.CreateFromImage(image.GetContent());
+        metadataReference = MetadataReference.CreateFromImage(image.GetContent());
         _loadedAssemblies.Add(name, metadataReference);
         _cSharpCompilation = _cSharpCompilation.AddReferences(new MetadataReference[] { metadataReference });
 

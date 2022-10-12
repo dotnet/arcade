@@ -46,6 +46,11 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
         var accessibility = BuildAccessibility(namedType);
         var keywords = GetKeywords(namedType);
 
+        if (namedType.TypeKind == TypeKind.Delegate)
+        {
+            return _syntaxWriter.WriteDelegate(accessibility, keywords, typeName);
+        }
+
         var baseTypeNames = BuildBaseTypes(namedType);
         var constraints = BuildConstraints(namedType);
 
@@ -92,56 +97,101 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
 
     private void Process(IPropertySymbol ps)
     {
-        _syntaxWriter.WriteProperty(ps.ToDisplayString(AssemblySymbolDisplayFormats.MemberDisplayFormat),
-            hasImplementation: !ps.IsAbstract, ps.GetMethod != null, ps.SetMethod != null);
+        _syntaxWriter.WriteProperty(
+            BuildMemberAccessibility(ps),
+            ps.ToDisplayString(AssemblySymbolDisplayFormats.MemberDisplayFormat),
+            hasImplementation: !ps.IsAbstract,
+            ps.GetMethod != null,
+            ps.SetMethod != null);
     }
 
     private void Process(IEventSymbol es)
     {
-        _syntaxWriter.WriteEvent(es.ToDisplayString(AssemblySymbolDisplayFormats.MemberDisplayFormat),
-            es.AddMethod != null, es.RemoveMethod != null);
+        _syntaxWriter.WriteEvent(
+            BuildMemberAccessibility(es),
+            es.ToDisplayString(AssemblySymbolDisplayFormats.MemberDisplayFormat),
+            !es.IsAbstract && es.AddMethod != null,
+            !es.IsAbstract && es.RemoveMethod != null);
     }
 
     private void Process(IMethodSymbol ms)
     {
-        _syntaxWriter.WriteMethod(ms.ToDisplayString(AssemblySymbolDisplayFormats.MemberDisplayFormat),
+        _syntaxWriter.WriteMethod(
+            BuildMemberAccessibility(ms),
+            ms.ToDisplayString(AssemblySymbolDisplayFormats.MemberDisplayFormat),
             hasImplementation: !ms.IsAbstract);
     }
 
     private void Process(IFieldSymbol field)
     {
-       _syntaxWriter.WriteField(field.ToDisplayString(new(
-            memberOptions: SymbolDisplayMemberOptions.IncludeConstantValue)));
+        if (field.ContainingType.TypeKind == TypeKind.Enum)
+        {
+            _syntaxWriter.WriteEnumField(
+                field.ToDisplayString(new(memberOptions: 
+                    SymbolDisplayMemberOptions.IncludeConstantValue)));
+        }
+        else
+        {
+            _syntaxWriter.WriteField(
+                BuildMemberAccessibility(field),
+                field.ToDisplayString(AssemblySymbolDisplayFormats.MemberDisplayFormat));
+        }
     }
 
-    private IEnumerable<SyntaxKind> BuildAccessibility(ISymbol symbol)
+    private bool NeedsAccessibility(ISymbol symbol) => symbol switch
     {
-        return symbol.DeclaredAccessibility switch
+        INamespaceSymbol => false,
+        INamedTypeSymbol => false,
+        IFieldSymbol fs => fs.ContainingType.TypeKind != TypeKind.Enum,
+        IMethodSymbol ms =>
+            !ms.ExplicitInterfaceImplementations.Any() &&
+             ms.ContainingType.TypeKind != TypeKind.Interface,
+        IPropertySymbol ps =>
+            !ps.ExplicitInterfaceImplementations.Any() &&
+             ps.ContainingType.TypeKind != TypeKind.Interface,
+        _ => true
+    };
+
+    private IEnumerable<SyntaxKind> BuildMemberAccessibility(ISymbol symbol)
+    {
+        if (!NeedsAccessibility(symbol))
         {
-            Accessibility.Private => new SyntaxKind[] { SyntaxKind.PrivateKeyword },
-            Accessibility.Internal => new SyntaxKind[] { SyntaxKind.InternalKeyword },
-            Accessibility.ProtectedAndInternal => new SyntaxKind[] { SyntaxKind.PrivateKeyword, SyntaxKind.ProtectedKeyword },
-            Accessibility.Protected => new SyntaxKind[] { SyntaxKind.ProtectedKeyword },
-            Accessibility.ProtectedOrInternal => new SyntaxKind[] { SyntaxKind.ProtectedKeyword, SyntaxKind.InternalKeyword },
-            Accessibility.Public => new SyntaxKind[] { SyntaxKind.PublicKeyword },
-            _ => throw new Exception(string.Format("Unexpected accessibility modifier found {0}",
-                    SyntaxFacts.GetText(symbol.DeclaredAccessibility)))
-        };
+            return Array.Empty<SyntaxKind>();
+        }
+
+        if (symbol.DeclaredAccessibility == Accessibility.ProtectedOrFriend && symbol.IsOverride)
+        {
+            return new[] { SyntaxKind.ProtectedKeyword };
+        }
+
+        return BuildAccessibility(symbol);
     }
+
+    private IEnumerable<SyntaxKind> BuildAccessibility(ISymbol symbol) => symbol.DeclaredAccessibility switch
+    {
+        Accessibility.Private => new[] { SyntaxKind.PrivateKeyword },
+        Accessibility.Internal => new[] { SyntaxKind.InternalKeyword },
+        Accessibility.ProtectedAndInternal => new[] { SyntaxKind.InternalKeyword, SyntaxKind.ProtectedKeyword },
+        Accessibility.Protected => new[] { SyntaxKind.ProtectedKeyword },
+        Accessibility.ProtectedOrInternal => new[] { SyntaxKind.ProtectedKeyword, SyntaxKind.InternalKeyword },
+        Accessibility.Public => new[] { SyntaxKind.PublicKeyword },
+        _ => throw new Exception(string.Format("Unexpected accessibility modifier found {0}",
+                SyntaxFacts.GetText(symbol.DeclaredAccessibility)))
+    };
 
     private List<string> BuildBaseTypes(INamedTypeSymbol namedType)
     {
         var baseTypeNames = new List<string>();
 
         if (namedType.BaseType != null && namedType.BaseType.SpecialType == SpecialType.None &&
-            Filter.Include(namedType.BaseType))
+            Filter.Includes(namedType.BaseType))
         {
             baseTypeNames.Add(namedType.BaseType.ToDisplayString());
         }
 
         foreach (var interfaceSymbol in namedType.Interfaces)
         {
-            if (!Filter.Include(interfaceSymbol)) continue;
+            if (!Filter.Includes(interfaceSymbol)) continue;
 
             baseTypeNames.Add(interfaceSymbol.ToDisplayString());
         }
