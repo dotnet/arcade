@@ -269,7 +269,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 {
                     Log.LogMessage(MessageImportance.High, $"Preparing Job for {TargetQueue}...");
                     var requestUrl = await def.StageForSendingAsync(msg => Log.LogMessageFromText(msg, MessageImportance.Normal), cancellationToken);
-                    Console.WriteLine($"##vso[task.setvariable variable={Guid.NewGuid():N}.HelixJobInformation;isoutput=true]{requestUrl}");
+                    Log.LogMessage(MessageImportance.High, $"##vso[task.setvariable variable={Guid.NewGuid():N}.HelixJobInformation;isoutput=true]{requestUrl}");
                 }
                 else
                 {
