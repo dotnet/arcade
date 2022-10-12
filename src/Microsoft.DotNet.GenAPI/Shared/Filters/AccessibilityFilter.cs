@@ -27,7 +27,7 @@ public class AccessibilityFilter : IncludeAllFilter
     /// <inheritdoc />
     public override bool Includes(ITypeSymbol ts)
     {
-        return _allowedAccessibilities.Contains(ts.DeclaredAccessibility); ;
+        return _allowedAccessibilities.Contains(ts.DeclaredAccessibility);
     }
 
     /// <inheritdoc />

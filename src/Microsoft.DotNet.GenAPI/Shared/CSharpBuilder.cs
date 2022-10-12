@@ -154,19 +154,17 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
 
     private IEnumerable<SyntaxKind> BuildMemberAccessibility(ISymbol symbol)
     {
-        if (NeedsAccessibility(symbol))
+        if (!NeedsAccessibility(symbol))
         {
-            if (symbol.DeclaredAccessibility == Accessibility.ProtectedOrFriend && symbol.IsOverride)
-            {
-                return new[] { SyntaxKind.ProtectedKeyword };
-            }
-            else
-            {
-                return BuildAccessibility(symbol);
-            }
+            return Array.Empty<SyntaxKind>();
         }
 
-        return Array.Empty<SyntaxKind>();
+        if (symbol.DeclaredAccessibility == Accessibility.ProtectedOrFriend && symbol.IsOverride)
+        {
+            return new[] { SyntaxKind.ProtectedKeyword };
+        }
+
+        return BuildAccessibility(symbol);
     }
 
     private IEnumerable<SyntaxKind> BuildAccessibility(ISymbol symbol) => symbol.DeclaredAccessibility switch

@@ -171,15 +171,9 @@ public static class GenAPIApp
     private static void AddReferenceToRuntimeLibraries(IAssemblySymbolLoader loader)
     {
         var corlibLocation = typeof(object).Assembly.Location;
-        var runtimeFolder = Path.GetDirectoryName(corlibLocation);
-
-        if (runtimeFolder != null)
-        {
-            loader.AddReferenceSearchDirectory(runtimeFolder);
-        }
-        else
-        {
+        var runtimeFolder = Path.GetDirectoryName(corlibLocation) ??
             throw new ArgumentNullException("RuntimeFolder", "Could not find path to a runtime folder");
-        }
+
+        loader.AddReferenceSearchDirectory(runtimeFolder);
     }
 }
