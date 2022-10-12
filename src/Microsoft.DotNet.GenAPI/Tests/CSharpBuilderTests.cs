@@ -126,57 +126,57 @@ public class CSharpBuilderTests
             new[] { SyntaxKind.PublicKeyword },
             new[] { SyntaxKind.PartialKeyword, SyntaxKind.StructKeyword },
             "PublicStruct",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteTypeDefinition(
             new[] { SyntaxKind.InternalKeyword },
             new[] { SyntaxKind.PartialKeyword, SyntaxKind.StructKeyword },
             "InternalStruct",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteTypeDefinition(
             new[] { SyntaxKind.InternalKeyword },
             new[] { SyntaxKind.ReadOnlyKeyword, SyntaxKind.PartialKeyword, SyntaxKind.StructKeyword },
             "ReadonlyStruct",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteTypeDefinition(
             new[] { SyntaxKind.PublicKeyword },
             new[] { SyntaxKind.ReadOnlyKeyword, SyntaxKind.PartialKeyword, SyntaxKind.StructKeyword },
             "PublicReadonlyStruct",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteTypeDefinition(
             new[] { SyntaxKind.InternalKeyword },
             new[] { SyntaxKind.PartialKeyword, SyntaxKind.StructKeyword },
             "RecordStruct",
             new[] { "System.IEquatable<A.RecordStruct>" },
-            new string[] { }), Times.Once);
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteTypeDefinition(
             new[] { SyntaxKind.InternalKeyword },
             new[] { SyntaxKind.ReadOnlyKeyword, SyntaxKind.PartialKeyword, SyntaxKind.StructKeyword },
             "ReadonlyRecordStruct",
             new[] { "System.IEquatable<A.ReadonlyRecordStruct>" },
-            new string[] { }), Times.Once);
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteTypeDefinition(
             new[] { SyntaxKind.PublicKeyword },
             new[] { SyntaxKind.RefKeyword, SyntaxKind.PartialKeyword, SyntaxKind.StructKeyword },
             "PublicRefStruct",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteTypeDefinition(
             new[] { SyntaxKind.PublicKeyword },
             new[] { SyntaxKind.ReadOnlyKeyword, SyntaxKind.RefKeyword, SyntaxKind.PartialKeyword, SyntaxKind.StructKeyword },
             "PublicReadonlyRefStruct",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.VerifyNoOtherCalls();
     }
@@ -211,22 +211,22 @@ public class CSharpBuilderTests
             new[] { SyntaxKind.PublicKeyword },
             new[] { SyntaxKind.PartialKeyword, SyntaxKind.ClassKeyword },
             "PublicClass",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteTypeDefinition(
             new[] { SyntaxKind.InternalKeyword },
             new[] { SyntaxKind.StaticKeyword, SyntaxKind.PartialKeyword, SyntaxKind.ClassKeyword },
             "StaticInernalClass",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteTypeDefinition(
             new[] { SyntaxKind.PublicKeyword },
             new[] { SyntaxKind.SealedKeyword, SyntaxKind.PartialKeyword, SyntaxKind.ClassKeyword },
             "PublicSealedClass",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.VerifyNoOtherCalls();
     }
@@ -265,25 +265,25 @@ public class CSharpBuilderTests
             new[] { SyntaxKind.PublicKeyword },
             new[] { SyntaxKind.PartialKeyword, SyntaxKind.InterfaceKeyword },
             "IPoint",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteProperty(
-            new SyntaxKind[] { },
+            Array.Empty<SyntaxKind>(),
             "int X",
             /*hasImplementation*/false,
             /*hasGet*/true,
             /*hasSet*/true), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteProperty(
-            new SyntaxKind[] { },
+            Array.Empty<SyntaxKind>(),
             "int Y",
             /*hasImplementation*/false,
             /*hasGet*/true,
             /*hasSet*/true), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteMethod(
-            new SyntaxKind[] { },
+            Array.Empty<SyntaxKind>(),
             "double CalculateDistance(A.IPoint p)",
             /*hasImplementation*/false), Times.Once);
 
@@ -317,8 +317,8 @@ public class CSharpBuilderTests
             new[] { SyntaxKind.PublicKeyword },
             new[] { SyntaxKind.EnumKeyword },
             "Color",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
         
         _syntaxWriter.Verify(o => o.WriteEnumField("White = 0"), Times.Once);
         _syntaxWriter.Verify(o => o.WriteEnumField("Green = 100"), Times.Once);
@@ -364,8 +364,8 @@ public class CSharpBuilderTests
             new[] { SyntaxKind.InternalKeyword },
             new[] { SyntaxKind.PartialKeyword, SyntaxKind.ClassKeyword },
             "Car",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteProperty(
             new[] { SyntaxKind.PrivateKeyword },
@@ -415,8 +415,8 @@ public class CSharpBuilderTests
             new[] { SyntaxKind.InternalKeyword },
             new[] { SyntaxKind.AbstractKeyword, SyntaxKind.PartialKeyword, SyntaxKind.ClassKeyword },
             "Car",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteProperty(
             new[] { SyntaxKind.ProtectedKeyword },
@@ -480,26 +480,26 @@ public class CSharpBuilderTests
             new[] { SyntaxKind.PublicKeyword },
             new[] { SyntaxKind.PartialKeyword, SyntaxKind.InterfaceKeyword },
             "IControl",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteTypeDefinition(
             new[] { SyntaxKind.PublicKeyword },
             new[] { SyntaxKind.PartialKeyword, SyntaxKind.InterfaceKeyword },
             "ISurface",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteTypeDefinition(
             new[] { SyntaxKind.PublicKeyword },
             new[] { SyntaxKind.PartialKeyword, SyntaxKind.ClassKeyword },
             "SampleClass",
             new[] { "A.IControl", "A.ISurface" },
-            new string[] { }), Times.Once);
+            Array.Empty<string>()), Times.Once);
 
-        _syntaxWriter.Verify(o => o.WriteMethod(new SyntaxKind[] { }, "void Paint()", false), Times.Exactly(2));
-        _syntaxWriter.Verify(o => o.WriteMethod(new SyntaxKind[] { }, "void A.IControl.Paint()", true), Times.Once);
-        _syntaxWriter.Verify(o => o.WriteMethod(new SyntaxKind[] { }, "void A.ISurface.Paint()", true), Times.Once);
+        _syntaxWriter.Verify(o => o.WriteMethod(Array.Empty<SyntaxKind>(), "void Paint()", false), Times.Exactly(2));
+        _syntaxWriter.Verify(o => o.WriteMethod(Array.Empty<SyntaxKind>(), "void A.IControl.Paint()", true), Times.Once);
+        _syntaxWriter.Verify(o => o.WriteMethod(Array.Empty<SyntaxKind>(), "void A.ISurface.Paint()", true), Times.Once);
 
         _syntaxWriter.VerifyNoOtherCalls();
     }
@@ -535,22 +535,22 @@ public class CSharpBuilderTests
             new[] { SyntaxKind.PublicKeyword },
             new[] { SyntaxKind.PartialKeyword, SyntaxKind.ClassKeyword},
             "BaseNodeMultiple<T, U>",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteTypeDefinition(
             new[] { SyntaxKind.PublicKeyword },
             new[] { SyntaxKind.PartialKeyword, SyntaxKind.ClassKeyword },
             "Node4<T>",
             new[] { "A.BaseNodeMultiple<T, int>" },
-            new string[] { }), Times.Once);
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteTypeDefinition(
             new[] { SyntaxKind.PublicKeyword },
             new[] { SyntaxKind.PartialKeyword, SyntaxKind.ClassKeyword },
             "Node5<T, U>",
             new[] { "A.BaseNodeMultiple<T, U>" },
-            new string[] { }), Times.Once);
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.VerifyNoOtherCalls();
     }
@@ -585,7 +585,7 @@ public class CSharpBuilderTests
             new[] { SyntaxKind.InternalKeyword },
             new[] { SyntaxKind.PartialKeyword, SyntaxKind.ClassKeyword },
             "SuperKeyType<K, V, U>",
-            new string[] { },
+            Array.Empty<string>(),
             new[] { "where V : new() ", "where U : System.IComparable<U>" }), Times.Once);
 
         _syntaxWriter.VerifyNoOtherCalls();
@@ -620,8 +620,8 @@ public class CSharpBuilderTests
             new[] { SyntaxKind.PublicKeyword },
             new[] { SyntaxKind.PartialKeyword, SyntaxKind.ClassKeyword },
             "Collection",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.VerifyNoOtherCalls();
     }
@@ -675,8 +675,8 @@ public class CSharpBuilderTests
             new[] { SyntaxKind.PublicKeyword },
             new[] { SyntaxKind.EnumKeyword },
             "Kind",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteEnumField("None = 0"), Times.Once);
         _syntaxWriter.Verify(o => o.WriteEnumField("Disable = 1"), Times.Once);
@@ -685,8 +685,8 @@ public class CSharpBuilderTests
             new[] { SyntaxKind.PublicKeyword },
             new[] { SyntaxKind.ReadOnlyKeyword, SyntaxKind.PartialKeyword, SyntaxKind.StructKeyword },
             "Options",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteField(
             new[] { SyntaxKind.PublicKeyword },
@@ -720,15 +720,7 @@ public class CSharpBuilderTests
             """;
 
         _assemblySymbolFilter.Setup(o => o.Include(It.IsAny<ISymbol>())).Returns(
-            (ISymbol member) =>
-            {
-                if (member.ContainingType.TypeKind == TypeKind.Delegate)
-                {
-                    return false;
-                }
-
-                return true;
-            });
+            (ISymbol member) => member.ContainingType.TypeKind != TypeKind.Delegate);
 
         var assembly = CompilationHelper.GetAssemblyFromSyntax(syntaxTree, enableNullable: false);
 
@@ -779,8 +771,8 @@ public class CSharpBuilderTests
             new[] { SyntaxKind.PublicKeyword },
             new[] { SyntaxKind.AbstractKeyword, SyntaxKind.PartialKeyword, SyntaxKind.ClassKeyword },
             "Events",
-            new string[] { },
-            new string[] { }), Times.Once);
+            Array.Empty<string>(),
+            Array.Empty<string>()), Times.Once);
 
         _syntaxWriter.Verify(o => o.WriteEvent(
             new[] { SyntaxKind.PublicKeyword },

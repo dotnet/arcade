@@ -18,16 +18,20 @@ public class AccessibilityFilter : IAssemblySymbolFilter
     }
 
     /// <inheritdoc />
-    public bool Include(INamespaceSymbol ns)
+    public override bool Include(INamespaceSymbol ns)
     {
         return ns.GetTypeMembers().Any(t =>
-        {
-            return _allowedAccessibilities.Contains(t.DeclaredAccessibility);
-        });
+            _allowedAccessibilities.Contains(t.DeclaredAccessibility));
     }
 
     /// <inheritdoc />
-    public bool Include(ISymbol member)
+    public override bool Include(ITypeSymbol ts)
+    {
+        return _allowedAccessibilities.Contains(ts.DeclaredAccessibility); ;
+    }
+
+    /// <inheritdoc />
+    public override bool Include(ISymbol member)
     {
         return _allowedAccessibilities.Contains(member.DeclaredAccessibility);
     }

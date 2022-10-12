@@ -174,9 +174,9 @@ public class AssemblySymbolLoader : IAssemblySymbolLoader
 
     private MetadataReference CreateAndAddReferenceToCompilation(string name, Stream fileStream)
     {
-        if (_loadedAssemblies.ContainsKey(name))
+        if (_loadedAssemblies.TryGetValue(name, out MetadataReference? metadataReference))
         {
-            return _loadedAssemblies.GetValueOrDefault(name)!;
+            return metadataReference;
         }
         // If we need to resolve references we can't reuse the same stream after creating the metadata
         // reference from it as Roslyn closes it. So instead we use PEReader and get the bytes
@@ -189,7 +189,7 @@ public class AssemblySymbolLoader : IAssemblySymbolLoader
         }
 
         var image = reader.GetEntireImage();
-        var metadataReference = MetadataReference.CreateFromImage(image.GetContent());
+        metadataReference = MetadataReference.CreateFromImage(image.GetContent());
         _loadedAssemblies.Add(name, metadataReference);
         _cSharpCompilation = _cSharpCompilation.AddReferences(new MetadataReference[] { metadataReference });
 

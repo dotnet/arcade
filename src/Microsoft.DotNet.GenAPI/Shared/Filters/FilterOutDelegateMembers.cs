@@ -8,13 +8,5 @@ namespace Microsoft.DotNet.GenAPI.Shared;
 public class FilterOutDelegateMembers : IAssemblySymbolFilter
 {
     /// <inheritdoc />
-    public bool Include(ISymbol member)
-    {
-        if (member.ContainingType.TypeKind == TypeKind.Delegate)
-        {
-            return false;
-        }
-
-        return true;
-    }
+    public override bool Include(ISymbol member) => member.ContainingType.TypeKind != TypeKind.Delegate;
 }

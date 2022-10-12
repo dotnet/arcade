@@ -67,7 +67,7 @@ public class CSharpSyntaxWriter : ISyntaxWriter
 
     /// <inheritdoc />
     public IDisposable WriteTypeDefinition(
-        IEnumerable<SyntaxKind> accessibility,
+        IEnumerable<SyntaxKind> accessibilityModifiers,
         IEnumerable<SyntaxKind> keywords,
         string typeName,
         IEnumerable<string> baseTypeNames,
@@ -75,9 +75,9 @@ public class CSharpSyntaxWriter : ISyntaxWriter
     {
         WriteIndentation();
 
-        foreach (var keyword in accessibility)
+        foreach (var modifier in accessibilityModifiers)
         {
-            WriteKeyword(keyword);
+            WriteKeyword(modifier);
         }
 
         foreach (var keyword in keywords)
@@ -121,15 +121,15 @@ public class CSharpSyntaxWriter : ISyntaxWriter
     }
 
     public IDisposable WriteDelegate(
-        IEnumerable<SyntaxKind> accessibility,
+        IEnumerable<SyntaxKind> accessibilityModifiers,
         IEnumerable<SyntaxKind> keywords,
         string typeName)
     {
         WriteIndentation();
 
-        foreach (var keyword in accessibility)
+        foreach (var modifier in accessibilityModifiers)
         {
-            WriteKeyword(keyword);
+            WriteKeyword(modifier);
         }
 
         foreach (var keyword in keywords)
@@ -139,7 +139,7 @@ public class CSharpSyntaxWriter : ISyntaxWriter
 
         _textWriter.Write(typeName);
 
-        WriteKeyword(SyntaxKind.SemicolonToken);
+        WriteKeyword(SyntaxKind.SemicolonToken, writeSpace: false);
         WriteNewLine();
 
         return new Block(() =>
@@ -159,13 +159,18 @@ public class CSharpSyntaxWriter : ISyntaxWriter
     }
 
     /// <inheritdoc />
-    public void WriteProperty(IEnumerable<SyntaxKind> accessibilities, string definition, bool hasImplementation, bool hasGetMethod, bool hasSetMethod)
+    public void WriteProperty(
+        IEnumerable<SyntaxKind> accessibilityModifiers,
+        string definition,
+        bool hasImplementation,
+        bool hasGetMethod,
+        bool hasSetMethod)
     {
         WriteIndentation();
 
-        foreach (var accessibility in accessibilities)
+        foreach (var modifier in accessibilityModifiers)
         {
-            WriteKeyword(accessibility);
+            WriteKeyword(modifier);
         }
 
         _textWriter.Write(definition);
@@ -211,13 +216,17 @@ public class CSharpSyntaxWriter : ISyntaxWriter
     }
 
     /// <inheritdoc />
-    public void WriteEvent(IEnumerable<SyntaxKind> accessibilities, string definition, bool hasAddMethod, bool hasRemoveMethod)
+    public void WriteEvent(
+        IEnumerable<SyntaxKind> accessibilityModifiers,
+        string definition,
+        bool hasAddMethod,
+        bool hasRemoveMethod)
     {
         WriteIndentation();
 
-        foreach (var accessibility in accessibilities)
+        foreach (var modifier in accessibilityModifiers)
         {
-            WriteKeyword(accessibility);
+            WriteKeyword(modifier);
         }
 
         _textWriter.Write(definition);
@@ -255,13 +264,16 @@ public class CSharpSyntaxWriter : ISyntaxWriter
     }
 
     /// <inheritdoc />
-    public void WriteMethod(IEnumerable<SyntaxKind> accessibilities, string definition, bool hasImplementation)
+    public void WriteMethod(
+        IEnumerable<SyntaxKind> accessibilityModifiers,
+        string definition,
+        bool hasImplementation)
     {
         WriteIndentation();
 
-        foreach (var accessibility in accessibilities)
+        foreach (var modifier in accessibilityModifiers)
         {
-            WriteKeyword(accessibility);
+            WriteKeyword(modifier);
         }
 
         _textWriter.Write(definition);
@@ -288,13 +300,13 @@ public class CSharpSyntaxWriter : ISyntaxWriter
         WriteNewLine();
     }
 
-    public void WriteField(IEnumerable<SyntaxKind> accessibilities, string definition)
+    public void WriteField(IEnumerable<SyntaxKind> accessibilityModifiers, string definition)
     {
         WriteIndentation();
 
-        foreach (var keyword in accessibilities)
+        foreach (var modifier in accessibilityModifiers)
         {
-            WriteKeyword(keyword);
+            WriteKeyword(modifier);
         }
 
         _textWriter.Write(definition);

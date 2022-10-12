@@ -138,22 +138,19 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
         }
     }
 
-    private bool NeedsAccessibility(ISymbol symbol)
+    private bool NeedsAccessibility(ISymbol symbol) => symbol switch
     {
-        return symbol switch
-        {
-            INamespaceSymbol => false,
-            INamedTypeSymbol => false,
-            IFieldSymbol fs => fs.ContainingType.TypeKind != TypeKind.Enum,
-            IMethodSymbol ms =>
-                !ms.ExplicitInterfaceImplementations.Any() &&
-                 ms.ContainingType.TypeKind != TypeKind.Interface,
-            IPropertySymbol ps =>
-                !ps.ExplicitInterfaceImplementations.Any() &&
-                 ps.ContainingType.TypeKind != TypeKind.Interface,
-            _ => true
-        };
-    }
+        INamespaceSymbol => false,
+        INamedTypeSymbol => false,
+        IFieldSymbol fs => fs.ContainingType.TypeKind != TypeKind.Enum,
+        IMethodSymbol ms =>
+            !ms.ExplicitInterfaceImplementations.Any() &&
+             ms.ContainingType.TypeKind != TypeKind.Interface,
+        IPropertySymbol ps =>
+            !ps.ExplicitInterfaceImplementations.Any() &&
+             ps.ContainingType.TypeKind != TypeKind.Interface,
+        _ => true
+    };
 
     private IEnumerable<SyntaxKind> BuildMemberAccessibility(ISymbol symbol)
     {
@@ -169,23 +166,20 @@ public class CSharpBuilder : AssemblySymbolTraverser, IAssemblySymbolWriter, IDi
             }
         }
 
-        return new SyntaxKind[] { };
+        return Array.Empty<SyntaxKind>();
     }
 
-    private IEnumerable<SyntaxKind> BuildAccessibility(ISymbol symbol)
+    private IEnumerable<SyntaxKind> BuildAccessibility(ISymbol symbol) => symbol.DeclaredAccessibility switch
     {
-        return symbol.DeclaredAccessibility switch
-        {
-            Accessibility.Private => new[] { SyntaxKind.PrivateKeyword },
-            Accessibility.Internal => new[] { SyntaxKind.InternalKeyword },
-            Accessibility.ProtectedAndInternal => new[] { SyntaxKind.InternalKeyword, SyntaxKind.ProtectedKeyword },
-            Accessibility.Protected => new[] { SyntaxKind.ProtectedKeyword },
-            Accessibility.ProtectedOrInternal => new[] { SyntaxKind.ProtectedKeyword, SyntaxKind.InternalKeyword },
-            Accessibility.Public => new[] { SyntaxKind.PublicKeyword },
-            _ => throw new Exception(string.Format("Unexpected accessibility modifier found {0}",
-                    SyntaxFacts.GetText(symbol.DeclaredAccessibility)))
-        };
-    }
+        Accessibility.Private => new[] { SyntaxKind.PrivateKeyword },
+        Accessibility.Internal => new[] { SyntaxKind.InternalKeyword },
+        Accessibility.ProtectedAndInternal => new[] { SyntaxKind.InternalKeyword, SyntaxKind.ProtectedKeyword },
+        Accessibility.Protected => new[] { SyntaxKind.ProtectedKeyword },
+        Accessibility.ProtectedOrInternal => new[] { SyntaxKind.ProtectedKeyword, SyntaxKind.InternalKeyword },
+        Accessibility.Public => new[] { SyntaxKind.PublicKeyword },
+        _ => throw new Exception(string.Format("Unexpected accessibility modifier found {0}",
+                SyntaxFacts.GetText(symbol.DeclaredAccessibility)))
+    };
 
     private List<string> BuildBaseTypes(INamedTypeSymbol namedType)
     {

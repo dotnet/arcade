@@ -8,19 +8,13 @@ namespace Microsoft.DotNet.GenAPI.Shared;
 public class FilterOutImplicitSymbols : IAssemblySymbolFilter
 {
     /// <inheritdoc />
-    public bool Include(INamespaceSymbol ns)
-    {
-        return !ns.IsImplicitlyDeclared;
-    }
+    public override bool Include(INamespaceSymbol ns) => !ns.IsImplicitlyDeclared;
 
     /// <inheritdoc />
-    public bool Include(ITypeSymbol ts)
-    {
-        return !ts.IsImplicitlyDeclared;
-    }
+    public override bool Include(ITypeSymbol ts) => !ts.IsImplicitlyDeclared;
 
     /// <inheritdoc />
-    public bool Include(ISymbol member)
+    public override bool Include(ISymbol member)
     {
         if (member.Kind == SymbolKind.NamedType || member.IsImplicitlyDeclared)
         {

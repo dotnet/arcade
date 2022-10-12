@@ -23,7 +23,7 @@ public class FilterOutAttributes : IAssemblySymbolFilter
     }
 
     /// <inheritdoc />
-    public bool Include(AttributeData at)
+    public override bool Include(AttributeData at)
     {
         if (at.AttributeClass == null) return true;
         return !_attributes.Contains(at.AttributeClass.ToString()!);

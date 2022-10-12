@@ -65,10 +65,10 @@ public static class GenAPIApp
     /// <summary>
     /// Initialize and run Roslyn-based GenAPI tool.
     /// </summary>
-    public static void Run(Context cntx)
+    public static void Run(Context context)
     {
-        var loader = new AssemblySymbolLoader(cntx.ResolveAssemblyReferences ?? false);
-        loader.AddReferenceSearchDirectories(SplitPaths(cntx.LibPath));
+        var loader = new AssemblySymbolLoader(context.ResolveAssemblyReferences ?? false);
+        loader.AddReferenceSearchDirectories(SplitPaths(context.LibPath));
 
         AddReferenceToRuntimeLibraries(loader);
 
@@ -80,23 +80,23 @@ public static class GenAPIApp
                 Accessibility.ProtectedOrInternal,
                 Accessibility.Protected }));
 
-        if (cntx.ExcludeAttributesList != null)
+        if (context.ExcludeAttributesList != null)
         {
-            intersectionFilter.Add(new FilterOutAttributes(cntx.ExcludeAttributesList));
+            intersectionFilter.Add(new FilterOutAttributes(context.ExcludeAttributesList));
         }
 
-        var assemblySymbols = loader.LoadAssemblies(SplitPaths(cntx.Assembly));
+        var assemblySymbols = loader.LoadAssemblies(SplitPaths(context.Assembly));
         foreach (var assemblySymbol in assemblySymbols)
         {
             using var writer = new CSharpBuilder(
                 new AssemblySymbolOrderProvider(),
                 intersectionFilter,
                 new CSharpSyntaxWriter(
-                    GetTextWriter(cntx.OutputPath, assemblySymbol.Name),
-                    ReadHeaderFile(cntx.HeaderFile),
-                    cntx.ExceptionMessage,
-                    cntx.IndentationSize,
-                    cntx.IndentationChar)); 
+                    GetTextWriter(context.OutputPath, assemblySymbol.Name),
+                    ReadHeaderFile(context.HeaderFile),
+                    context.ExceptionMessage,
+                    context.IndentationSize,
+                    context.IndentationChar)); 
 
             writer.WriteAssembly(assemblySymbol);
         }
@@ -176,6 +176,10 @@ public static class GenAPIApp
         if (runtimeFolder != null)
         {
             loader.AddReferenceSearchDirectory(runtimeFolder);
+        }
+        else
+        {
+            throw new ArgumentNullException("RuntimeFolder", "Could not find path to a runtime folder");
         }
     }
 }
