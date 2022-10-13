@@ -53,7 +53,7 @@ public class FileInfoWrapper : IFileInfo
 
     public FileInfoWrapper(string path)
     {
-        _fileInfo = new(path);
+        _fileInfo = new FileInfo(path);
     }
 
     public long Length => _fileInfo.Length;
