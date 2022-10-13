@@ -155,7 +155,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.GenAPI.Tas
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.GenAPI.Tests", "src\Microsoft.DotNet.GenAPI\Tests\Microsoft.DotNet.GenAPI.Tests.csproj", "{EBC3531D-97AF-494D-B2F8-2EAB47A9D58F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Internal.Utilities", "src\Microsoft.Dotnet.Internal.Utilities\Microsoft.DotNet.Internal.Utilities.csproj", "{B3BBCE6B-1BFB-44F4-B14D-8856488D86CB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Internal.Utilities", "src\Microsoft.DotNet.Internal.Utilities\Microsoft.DotNet.Internal.Utilities.csproj", "{B3BBCE6B-1BFB-44F4-B14D-8856488D86CB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.Internal.Utilities.Tests", "src\Microsoft.DotNet.Internal.Utilities.Tests\Microsoft.DotNet.Internal.Utilities.Tests.csproj", "{D7668E34-1D52-40D9-900D-FA5CCFC7CF18}"
 EndProject
