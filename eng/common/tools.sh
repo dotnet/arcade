@@ -497,11 +497,11 @@ function GetDarc {
     darc_path="$temp_dir/darc"
     version="$1"
 
-    if [[ -z "$version" ]]; then
-      "$eng_root/common/darc-init.sh" --toolpath "$darc_path"
-    else
-      "$eng_root/common/darc-init.sh" --toolpath "$darc_path" -darcversion "$version"
+    if [[ -n "$version" ]]; then
+      version="--darcversion $version"
     fi
+
+    "$eng_root/common/darc-init.sh" --toolpath "$darc_path" $version
 }
 
 ResolvePath "${BASH_SOURCE[0]}"
