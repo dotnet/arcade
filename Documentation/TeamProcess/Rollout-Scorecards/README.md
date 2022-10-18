@@ -44,3 +44,8 @@ Rollout Scorecards are automatically created, submitted, and logged by the [Roll
 ## July 24, 2019 Rollout (Example)
 
 The July 2019 rollout served as the basis for this scorecard. Its scorecard can be found [here](Scorecard_2019-07-24.md).
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CREADME.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CREADME.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CREADME.md)</sub>
+<!-- End Generated Content-->

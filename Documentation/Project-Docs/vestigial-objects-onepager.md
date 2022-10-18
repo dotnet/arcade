@@ -116,3 +116,7 @@ FR is expected to be a critical user of audit information (specifcally, "recent 
 [Query changes made to resource properties](https://learn.microsoft.com/en-us/azure/governance/resource-graph/how-to/get-resource-changes)
 
 [Azure Resource Graph table and resource type reference](https://learn.microsoft.com/en-us/azure/governance/resource-graph/reference/supported-tables-resources)
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Cvestigial-objects-onepager.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Cvestigial-objects-onepager.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Cvestigial-objects-onepager.md)</sub>
+<!-- End Generated Content-->

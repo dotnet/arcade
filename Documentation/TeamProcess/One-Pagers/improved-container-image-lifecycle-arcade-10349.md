@@ -46,3 +46,7 @@ As part of this work, we will need to implement a rollout story for the new tagg
 ### FR and Operations Handoff
 
 We will create documentation for managing the tags so that when a rollback needs to occur, FR will be able to make those changes. Additionally, we will create documentation and processes that can be used by Operations and/or the vendors to handle any manual OS/base image updating or removing of old and out-of-date images from MCR, as necessary. We will also create documentation for responding to customer requests for new docker images, including where to get the base images, how to install required dependencies (though that is coming in a different one pager), and what the process is for adding new images when a major version update is requested for dependencies.
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cimproved-container-image-lifecycle-arcade-10349.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cimproved-container-image-lifecycle-arcade-10349.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cimproved-container-image-lifecycle-arcade-10349.md)</sub>
+<!-- End Generated Content-->

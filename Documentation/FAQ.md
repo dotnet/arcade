@@ -43,3 +43,8 @@ https://github.com/dotnet/arcade/blob/master/Documentation/RepoToolset/Migration
   kinks?**
 
 Sure.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CFAQ.md)](https://helix.dot.net/f/p/5?p=Documentation%5CFAQ.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CFAQ.md)</sub>
+<!-- End Generated Content-->

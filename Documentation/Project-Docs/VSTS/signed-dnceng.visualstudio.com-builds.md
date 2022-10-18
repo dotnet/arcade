@@ -18,3 +18,7 @@ If your build definition is task based, then the build definition for signing sh
 ## Yaml based build definitions
 
 If your build definition is yaml based, then the build definition for signing should be created in devdiv.visualstudio.com, but your code should **also be mirrored into devdiv.visualstudio.com** and the DevDiv Git source should be used for building.  Yaml is only supported for source code from the same project or from specific providers (like GitHub), it is not supported for source code from an external Git source (or other project collection).
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CVSTS%5Csigned-dnceng.visualstudio.com-builds.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CVSTS%5Csigned-dnceng.visualstudio.com-builds.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CVSTS%5Csigned-dnceng.visualstudio.com-builds.md)</sub>
+<!-- End Generated Content-->

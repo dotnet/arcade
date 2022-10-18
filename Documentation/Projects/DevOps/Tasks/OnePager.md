@@ -39,3 +39,8 @@ Here are the current templates we are providing in Azure DevOps are good candida
 - Bash or Cmd script - Most of our teams are cross-plat and they need to either do some Windows thing on Windows platforms or run some Unix command on non-Windows platforms.  Azure DevOps does not provide a way to only include OS specific steps.  Instead, today both Windows steps and Unix steps are included in a build definition and unapplicable steps are simply disabled (they still show up in the build definition but they are skipped).  Instead, we can provide a single task that will task both Windows and non-Windows commands and run the appropriate script at run-time so that you don't end up with disabled steps confusing your build output.
 
 - Gather test results - a task which can be used by Arcade builds to gather test results and report them appropriately
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CDevOps%5CTasks%5COnePager.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CDevOps%5CTasks%5COnePager.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CDevOps%5CTasks%5COnePager.md)</sub>
+<!-- End Generated Content-->

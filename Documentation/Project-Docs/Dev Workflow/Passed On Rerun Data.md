@@ -53,3 +53,8 @@ In this example you can see all the tests in the last week for an assembly, orde
     | summarize count(), any(Arguments) by TestName, ArgumentHash
     | order by count_ desc
     ```
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CDev%20Workflow%5CPassed%20On%20Rerun%20Data.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CDev%20Workflow%5CPassed%20On%20Rerun%20Data.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CDev%20Workflow%5CPassed%20On%20Rerun%20Data.md)</sub>
+<!-- End Generated Content-->

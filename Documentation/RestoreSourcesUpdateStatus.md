@@ -53,3 +53,8 @@ https://api.nuget.org/v3/index.json is not in NuGet.config we recommend it is ad
 | Core-SDK                   | licavalc         | Part 1 complete   |                    |
 
 For any question, please ping @tmat or @jcagme
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CRestoreSourcesUpdateStatus.md)](https://helix.dot.net/f/p/5?p=Documentation%5CRestoreSourcesUpdateStatus.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CRestoreSourcesUpdateStatus.md)</sub>
+<!-- End Generated Content-->

@@ -31,3 +31,8 @@
   - When handing work to someone, make sure they have context
   - Any investigation/existing work should be written down in the same place the handoff is happening to make the handoff productive
   - Be clear why the handoff is happening (avoid mentions/forwards without indicating expectations or reasoning)
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5CDevGuide%5Chybridprinciples.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5CDevGuide%5Chybridprinciples.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5CDevGuide%5Chybridprinciples.md)</sub>
+<!-- End Generated Content-->

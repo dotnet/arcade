@@ -203,3 +203,8 @@ To validate that created subscriptions and channels work as expected you'd need 
    - Last Build: N/A
    ```
 2. Incase of any errors contact @dnceng. 
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CDependencyFlowOnboarding.md)](https://helix.dot.net/f/p/5?p=Documentation%5CDependencyFlowOnboarding.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CDependencyFlowOnboarding.md)</sub>
+<!-- End Generated Content-->

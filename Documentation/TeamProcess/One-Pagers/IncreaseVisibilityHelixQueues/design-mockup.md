@@ -107,3 +107,7 @@ For more in-depth information on the status of Helix, visit our [Grafana Dashboa
 * `Some.OnPrem.Queue3`
 
 *Was this helpful?* 👍👎
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5CIncreaseVisibilityHelixQueues%5Cdesign-mockup.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5CIncreaseVisibilityHelixQueues%5Cdesign-mockup.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5CIncreaseVisibilityHelixQueues%5Cdesign-mockup.md)</sub>
+<!-- End Generated Content-->

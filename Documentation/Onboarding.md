@@ -48,3 +48,8 @@
 Prioritize branches that are producing bits for .NET 5. Given the extended
 support lifecycle for .NET Core 3.1, backporting infrastructure to .NET Core 3.1
 release branches is desired, but .NET 5 branches should go first.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5COnboarding.md)](https://helix.dot.net/f/p/5?p=Documentation%5COnboarding.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5COnboarding.md)</sub>
+<!-- End Generated Content-->

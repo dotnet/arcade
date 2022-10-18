@@ -920,3 +920,8 @@ Allow user to modify configuration (branch names, remove subscriptions, add repo
 **Validate and apply configuration**
 
 Validate the configuration and then apply the configuration using the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) REST API.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CBranchesChannelsAndSubscriptions.md)](https://helix.dot.net/f/p/5?p=Documentation%5CBranchesChannelsAndSubscriptions.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CBranchesChannelsAndSubscriptions.md)</sub>
+<!-- End Generated Content-->

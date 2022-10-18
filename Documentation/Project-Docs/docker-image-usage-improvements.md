@@ -69,3 +69,8 @@ The solution for capturing the Docker toolset required by our builds and the mec
 ## Move Dockerfiles to Open ##
 Work has been going on recently to check-in the build definitions into the product repositories (e.g. [corefx](https://github.com/dotnet/corefx/tree/master/buildpipeline)).  These build definitions reference our Docker images.  Because of this, it would be beneficial to move the Dockerfiles from the [private repository](https://devdiv.visualstudio.com/DevDiv/_git/DotNetCore?path=%2Fdockerfiles&version=GBmaster&_a=contents) into the open.  There are no trade secrets and they could be useful for others to see.  A natural place to put these shared Dockerfiles would be within the [buildtools repo](https://github.com/dotnet/buildtools).
 
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Cdocker-image-usage-improvements.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Cdocker-image-usage-improvements.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Cdocker-image-usage-improvements.md)</sub>
+<!-- End Generated Content-->

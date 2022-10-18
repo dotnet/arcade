@@ -41,3 +41,8 @@ To distinguish team gatherings that fall into the guidelines below from others, 
 
 ## Possible Feature Requests
 - Teams to add the ability to auto deep link portions of the transcript
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5CDevGuide%5Cmeetings.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5CDevGuide%5Cmeetings.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5CDevGuide%5Cmeetings.md)</sub>
+<!-- End Generated Content-->
