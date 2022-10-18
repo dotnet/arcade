@@ -12,11 +12,13 @@ namespace Microsoft.Cci.Mappings
     {
         public MappingSettings(bool excludeAttributes = true)
         {
-            this.ElementCount = 2;
-            this.Filter = new PublicOnlyCciFilter(excludeAttributes);
-            this.Comparers = CciComparers.Default;
-            this.DiffFactory = new ElementDifferenceFactory();
+            ElementCount = 2;
+            Filter = new PublicOnlyCciFilter(excludeAttributes);
+            Comparers = CciComparers.Default;
+            DiffFactory = new ElementDifferenceFactory();
         }
+
+        public IEnumerable<string> AttributesToExclude { get; set; }
 
         public ICciFilter Filter { get; set; }
 

@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.AsmDiff
         {
             var left = configuration.Left;
             var right = configuration.Right;
-            return new DiffConfiguration(left, right, options);
+            return new DiffConfiguration(left, right, options, configuration.AttributesToExclude);
         }
 
         public static bool IsOptionSet(this DiffConfiguration configuration, DiffConfigurationOptions option)
@@ -147,7 +147,7 @@ namespace Microsoft.DotNet.AsmDiff
             var newLeft = isLeft ? assemblySet : configuration.Left;
             var newRight = isRight ? assemblySet : configuration.Right;
 
-            return new DiffConfiguration(newLeft, newRight, configuration.Options);
+            return new DiffConfiguration(newLeft, newRight, configuration.Options, configuration.AttributesToExclude);
         }
     }
 }

@@ -57,7 +57,7 @@ namespace Microsoft.Cci.Differs.Rules
                 return DiffingService.GetTokenList(item);
 
             if (_declHelper == null)
-                _declHelper = new CSDeclarationHelper(new PublicOnlyCciFilter());
+                _declHelper = new CSDeclarationHelper(new PublicOnlyCciFilter(), new List<string>());
 
             return _declHelper.GetTokenList(item);
         }

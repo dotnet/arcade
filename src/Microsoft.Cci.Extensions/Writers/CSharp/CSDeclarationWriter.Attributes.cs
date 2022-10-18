@@ -3,7 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.Cci.Comparers;
@@ -370,40 +372,33 @@ namespace Microsoft.Cci.Writers.CSharp
             return c.ToString();
         }
 
-        private static bool ExcludeSpecialAttribute(ICustomAttribute c)
+        private bool ExcludeSpecialAttribute(ICustomAttribute c)
         {
             string typeName = c.FullName();
 
-            switch (typeName)
+            if (typeName == "System.ObsoleteAttribute")
             {
-                case "System.ParamArrayAttribute": return true;
-                case "System.Reflection.AssemblyDelaySignAttribute": return true;
-                case "System.Reflection.AssemblyKeyFileAttribute": return true;
-                case "System.Reflection.DefaultMemberAttribute": return true;
-                case "System.Runtime.CompilerServices.CompilerFeatureRequiredAttribute": return true;
-                case "System.Runtime.CompilerServices.DynamicAttribute": return true;
-                case "System.Runtime.CompilerServices.ExtensionAttribute": return true;
-                case "System.Runtime.CompilerServices.FixedBufferAttribute": return true;
-                case "System.Runtime.CompilerServices.IsByRefLikeAttribute": return true;
-                case "System.Runtime.CompilerServices.IsReadOnlyAttribute": return true;
-                case "System.Runtime.CompilerServices.RequiredMemberAttribute": return true;
-                case "System.Runtime.CompilerServices.TupleElementNamesAttribute": return true;
-                case "System.ObsoleteAttribute":
-                    {
-                        var arg = c.Arguments.OfType<IMetadataConstant>().FirstOrDefault();
+                var arg = c.Arguments.OfType<IMetadataConstant>().FirstOrDefault();
 
-                        if (arg?.Value is string)
-                        {
-                            string argValue = (string)arg.Value;
-                            if (argValue is "Types with embedded references are not supported in this version of your compiler."
-                                         or "Constructors of types with required members are not supported in this version of your compiler.")
-                            {
-                                return true;
-                            }
-                        }
-                        break;
+                if (arg?.Value is string)
+                {
+                    string argValue = (string)arg.Value;
+                    if (argValue is "Types with embedded references are not supported in this version of your compiler."
+                                    or "Constructors of types with required members are not supported in this version of your compiler.")
+                    {
+                        return true;
                     }
+                }
             }
+
+            foreach (string attributeToExclude in _attributesToExclude)
+            {
+                if (typeName.Equals(attributeToExclude))
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
 

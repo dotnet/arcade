@@ -115,14 +115,15 @@ namespace Microsoft.DotNet.AsmDiff
                                    : new CommonTypesMappingDifferenceFilter(mappingDifferenceFilter, includeAddedTypes, includeRemovedTypes);
 
             return new MappingSettings
-                       {
-                           Filter = cciFilter,
-                           DiffFilter = actualFilter,
-                           IncludeForwardedTypes = true,
-                           GroupByAssembly = configuration.IsOptionSet(DiffConfigurationOptions.GroupByAssembly),
-                           FlattenTypeMembers = configuration.IsOptionSet(DiffConfigurationOptions.FlattenTypes),
-                           AlwaysDiffMembers = configuration.IsOptionSet(DiffConfigurationOptions.AlwaysDiffMembers)
-                       };
+            {
+                AttributesToExclude = configuration.AttributesToExclude,
+                Filter = cciFilter,
+                DiffFilter = actualFilter,
+                IncludeForwardedTypes = true,
+                GroupByAssembly = configuration.IsOptionSet(DiffConfigurationOptions.GroupByAssembly),
+                FlattenTypeMembers = configuration.IsOptionSet(DiffConfigurationOptions.FlattenTypes),
+                AlwaysDiffMembers = configuration.IsOptionSet(DiffConfigurationOptions.AlwaysDiffMembers)
+            };
         }
 
         private static ICciFilter GetFilter(DiffConfiguration configuration)
@@ -150,7 +151,7 @@ namespace Microsoft.DotNet.AsmDiff
                 IEnumerable<DiffLine> lines = GetLines(tokens, cancellationToken);
                 AssemblySet left = configuration.Left;
                 AssemblySet right = configuration.Right;
-                return new DiffDocument(left, right, lines, apiDefinitions);
+                return new DiffDocument(left, right, lines, apiDefinitions, configuration.AttributesToExclude);
             }
             catch (OperationCanceledException)
             {

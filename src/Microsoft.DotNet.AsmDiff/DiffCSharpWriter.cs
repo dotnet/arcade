@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.AsmDiff
         private readonly IEnumerable<DiffComment> _diffComments;
 
         public DiffCSharpWriter(IStyleSyntaxWriter writer, MappingSettings settings, IEnumerable<DiffComment> diffComments)
-            : this(writer, settings, diffComments, includePseudoCustomAttributes:false)
+            : this(writer, settings, diffComments, includePseudoCustomAttributes: false)
         {
         }
 
@@ -41,11 +41,11 @@ namespace Microsoft.DotNet.AsmDiff
         {
             _syntaxWriter = writer;
             _settings = InitializeSettings(settings);
-            _formatter = new CSDeclarationWriter(_syntaxWriter, _settings.Filter, forCompilation: false, includePseudoCustomAttributes: includePseudoCustomAttributes)
+            _formatter = new CSDeclarationWriter(_syntaxWriter, _settings.Filter, forCompilation: false, includePseudoCustomAttributes: includePseudoCustomAttributes, _settings.AttributesToExclude)
             {
                 LangVersion = CSDeclarationWriter.LangVersionPreview
             };
-            _declHelper = new CSDeclarationHelper(_settings.Filter, forCompilation: false, includePseudoCustomAttributes: includePseudoCustomAttributes);
+            _declHelper = new CSDeclarationHelper(_settings.Filter, _settings.AttributesToExclude, forCompilation: false, includePseudoCustomAttributes: includePseudoCustomAttributes);
             _diffComments = diffComments ?? Enumerable.Empty<DiffComment>();
         }
 

@@ -1,11 +1,12 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using McMaster.Extensions.CommandLineUtils;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace Microsoft.DotNet.AsmDiff
 {
@@ -76,6 +77,11 @@ namespace Microsoft.DotNet.AsmDiff
         [Option("-l|--Language", "Provide a languagetag for localized content. If this parameter is not provided the environments default language will be used. Currently language specific content is only available in Markdown Writer.", CommandOptionType.SingleValue)]
         public string Language { get; set; }
 
+        [Option("-aef|--AttributesToExcludeFile", "Indicates the location of the text file containing the list of the attributes to ignore. The default file is 'AttributesToExclude', which is included next to this tool's binaries.", CommandOptionType.SingleValue)]
+        public string AttributesToExcludeFilePath { get; set; }
+
+        public readonly List<string> AttributesToExclude = new List<string>();
+
         public void OnExecute()
         {         
             if (string.IsNullOrEmpty(NewSet))
@@ -99,18 +105,38 @@ namespace Microsoft.DotNet.AsmDiff
                 Thread.CurrentThread.CurrentUICulture = cultureInfo;
             }
 
+            if (string.IsNullOrEmpty(AttributesToExcludeFilePath))
+            {
+                AttributesToExcludeFilePath = Path.Combine(Path.GetDirectoryName(Environment.ProcessPath), "AttributesToExclude.txt");
+            }
+
+            if (!File.Exists(AttributesToExcludeFilePath))
+            {
+                throw new FileNotFoundException($"Excluded attributes file path not found: {AttributesToExcludeFilePath}");
+            }
+
+            List<string> attributesToExclude = new();
+            using (StreamReader reader = File.OpenText(AttributesToExcludeFilePath))
+            {
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    attributesToExclude.Add(line);
+                }
+            }
+
             DiffConfigurationOptions options = GetDiffOptions();
             DiffFormat diffFormat = GetDiffFormat();
 
             AssemblySet oldAssemblies = AssemblySet.FromPaths(OldSetName, OldSet);
             AssemblySet newAssemblies = AssemblySet.FromPaths(NewSetName, NewSet);
 
-            DiffConfiguration diffConfiguration = new DiffConfiguration(oldAssemblies, newAssemblies, options);
+            DiffConfiguration diffConfiguration = new DiffConfiguration(oldAssemblies, newAssemblies, options, attributesToExclude);
 
             if (diffFormat == DiffFormat.Md)
             {
                 DiffDocument diffDocument = DiffEngine.BuildDiffDocument(diffConfiguration);
-                var markdownDiffExporter = new MarkdownDiffExporter(diffDocument, OutFile, IncludeTableOfContents, CreateFilePerNamespace);
+                var markdownDiffExporter = new MarkdownDiffExporter(diffDocument, OutFile, IncludeTableOfContents, CreateFilePerNamespace, attributesToExclude);
                 markdownDiffExporter.Export();
             }
             else

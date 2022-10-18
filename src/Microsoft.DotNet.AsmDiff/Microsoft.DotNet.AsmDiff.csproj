@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  
+
   <!-- Most of the code has been ported from https://devdiv.visualstudio.com/DevDiv/_git/CoreFxTools repo.-->
   <PropertyGroup>
     <TargetFramework>$(NetCurrent)</TargetFramework>
@@ -11,7 +11,7 @@
     <StrongNameKeyId>Open</StrongNameKeyId>
     <UsingToolXliff>true</UsingToolXliff>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <Compile Include="..\Common\Internal\DisposeAction.cs" Link="Internal\DisposeAction.cs" />
   </ItemGroup>
@@ -23,7 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="$(McMasterExtensionsCommandLineUtils)" />
     <!-- Arcade only makes shipping assemblies localizable by default, we'd like to localize this tool without treating it as "shipping". -->
@@ -35,4 +35,13 @@
     <Reference Include="$(NuGetPackageRoot)microsoft.cci\$(MicrosoftCciVersion)\lib\netstandard1.3\Microsoft.Cci.dll" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Update="Resources.resx" GenerateSource="true" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="AttributesToExclude.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>
