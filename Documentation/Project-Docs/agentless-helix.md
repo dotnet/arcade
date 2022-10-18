@@ -3,7 +3,7 @@
 ## Overview
 We want to reduce wasted compute caused by build jobs waiting for helix tests to complete. To do this we can use the "agentless job" feature in azure pipelines to remove the machine that waits for the helix job to be finished.
 
-## Steakholders
+## Stakeholders
 - Our Budget
 - Customers who want to retry test jobs without having to rebuild
 
