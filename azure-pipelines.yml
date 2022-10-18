@@ -129,7 +129,7 @@ stages:
               "TimelineId": "$(system.TimelineId)",
               "TaskInstanceId": "$(system.TaskInstanceId)",
               "AuthToken": "$(system.AccessToken)",
-              "ProjectName": "$(System.TeamProject",
+              "ProjectName": "$(System.TeamProject)",
               "BuildId": "$(Build.BuildId)",
             }
 
