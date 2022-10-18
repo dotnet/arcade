@@ -40,6 +40,7 @@ Using agentless jobs, we can change this flow to the following:
     1. Start test runs
     1. Start helix job execution
     1. Wait for job completion - send progress logs back to azure pipelines
+    1. Report test results for workitem statuses
     1. Finish test runs and check for job pass/fail status
     1. Report task completion to azure pipelines
 1. Agentless job finishes after receiving notification from helix service
