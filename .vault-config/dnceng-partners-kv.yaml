@@ -11,6 +11,12 @@ references:
       subscription: 11c6037b-227b-4d63-bee1-18c7b68c3a40
       name: dotnetbuildskeys
 
+  dotnetstagekeys:
+    type: azure-key-vault
+    parameters:
+      subscription: 11c6037b-227b-4d63-bee1-18c7b68c3a40
+      name: dotnetstagekeys
+
 secrets:
   dotnetbuilds-internal-container-read-token:
     type: azure-storage-container-sas-token
@@ -20,3 +26,22 @@ secrets:
         location: dotnetbuildskeys
       permissions: rl
       container: internal
+
+  dotnetstage-account-sas-read-token:
+    type: azure-storage-account-sas-token
+    parameters:
+      connectionString:
+        name: dotnetstage-connection-string
+        location: dotnetstagekeys
+      permissions: rl
+      service: blob|file
+
+  dotnetchecksumsstage-account-sas-read-token:
+    type: azure-storage-account-sas-token
+    parameters:
+      connectionString:
+        name: dotnetchecksumsstage-connection-string
+        location: dotnetstagekeys
+      permissions: rl
+      service: blob|file
+
