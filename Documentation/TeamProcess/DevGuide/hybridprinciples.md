@@ -27,3 +27,7 @@
 - Always iterating.  
   -	Work is done is in the smallest chunks possible, then iterating.    Velocity is more important than size of change.  
   -	This thinking helps devs not get blocked on others.  
+- Intentional handoff
+  - When handing work to someone, make sure they have context
+  - Any investigation/existing work should be written down in the same place the handoff is happening to make the handoff productive
+  - Be clear why the handoff is happening (avoid mentions/forwards without indicating expectations or reasoning)
