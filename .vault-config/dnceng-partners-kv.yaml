@@ -34,7 +34,7 @@ secrets:
         name: dotnetstage-connection-string
         location: dotnetstagekeys
       permissions: rl
-      services: blob|file
+      service: blob|file
 
   dotnetchecksumsstage-account-sas-read-token:
     type: azure-storage-account-sas-token
@@ -43,5 +43,5 @@ secrets:
         name: dotnetchecksumsstage-connection-string
         location: dotnetstagekeys
       permissions: rl
-      services: blob|file
+      service: blob|file
 
