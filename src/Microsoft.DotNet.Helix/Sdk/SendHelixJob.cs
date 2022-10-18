@@ -269,7 +269,17 @@ namespace Microsoft.DotNet.Helix.Sdk
                 {
                     Log.LogMessage(MessageImportance.High, $"Preparing Job for {TargetQueue}...");
                     var requestUrl = await def.StageForSendingAsync(msg => Log.LogMessageFromText(msg, MessageImportance.Normal), cancellationToken);
-                    Log.LogMessage(MessageImportance.High, $"##vso[task.setvariable variable={Guid.NewGuid():N}.HelixJobInformation;isoutput=true]{requestUrl}");
+                    var helixJobInfo = JsonConvert.SerializeObject(new
+                    {
+                        CreationRequest = requestUrl,
+                        JobName = GetEnvironmentVariable("SYSTEM_JOBNAME"),
+                        JobAttempt = GetEnvironmentVariable("SYSTEM_JOBATTEMPT"),
+                        PhaseName = GetEnvironmentVariable("SYSTEM_PHASENAME"),
+                        PhaseAttempt = GetEnvironmentVariable("SYSTEM_PHASEATTEMPT"),
+                        StageName = GetEnvironmentVariable("SYSTEM_STAGENAME"),
+                        StageAttempt = GetEnvironmentVariable("SYSTEM_STAGEATTEMPT"),
+                    });
+                    Log.LogMessage(MessageImportance.High, $"##vso[task.setvariable variable={Guid.NewGuid():N}.HelixJobInformation;isoutput=true]{helixJobInfo}");
                 }
                 else
                 {
@@ -284,6 +294,17 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             cancellationToken.ThrowIfCancellationRequested();
+        }
+
+        protected string GetEnvironmentVariable(string name)
+        {
+            var result = Environment.GetEnvironmentVariable(name);
+            if (string.IsNullOrEmpty(result))
+            {
+                throw new InvalidOperationException($"Required environment variable {name} not set.");
+            }
+
+            return result;
         }
 
         private IJobDefinition AddBuildVariableProperty(IJobDefinition def, string key, string azdoVariableName)
