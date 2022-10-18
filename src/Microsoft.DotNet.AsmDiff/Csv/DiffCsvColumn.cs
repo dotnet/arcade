@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.AsmDiff.CSV
                 new DiffNamespaceCsvColumn(diffConfiguration),
                 new DiffTypeCsvColumn(diffConfiguration),
                 new DiffMemberCsvColumn(diffConfiguration),
-                new DiffVisibiliyCsvColumn(diffConfiguration),
+                new DiffVisibilityCsvColumn(diffConfiguration),
                 new DiffTypeIdCsvColumn(diffConfiguration),
                 new DiffTypeIsExposedCsvColumn(diffConfiguration),
                 new DiffReturnTypeCsvColumn(diffConfiguration),
