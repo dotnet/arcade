@@ -252,6 +252,7 @@ stages:
     displayName: Publish using Darc
     variables:
       - template: common-variables.yml
+      - template: /eng/common/templates/variables/pool-providers.yml
     jobs:
     - job:
       displayName: Publish Using Darc
