@@ -4,6 +4,7 @@ function Test-FilesUseTelemetryOutput {
     require_telemetry_exclude_files=(
         'eng/common/build.sh'
         'eng/common/cibuild.sh'
+        'eng/common/native/init-compiler.sh'
         'eng/common/cross/arm/tizen-build-rootfs.sh'
         'eng/common/cross/arm/tizen-fetch.sh'
         'eng/common/cross/armel/tizen-build-rootfs.sh'
