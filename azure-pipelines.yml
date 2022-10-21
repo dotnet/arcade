@@ -227,8 +227,8 @@ stages:
             vmimage: ubuntu-latest
           strategy:
             matrix:
-              Build_Release:
-                _BuildConfig: Release
+              Build_Debug:
+                _BuildConfig: Debug
           variables:
           - _Testing: XHarness_Apple_Device_Tests
           preSteps:
@@ -257,8 +257,8 @@ stages:
             vmimage: ubuntu-latest
           strategy:
             matrix:
-              Build_Release:
-                _BuildConfig: Release
+              Build_Debug:
+                _BuildConfig: Debug
           variables:
           - _Testing: XHarness_Android_Simulator_Tests
           preSteps:
