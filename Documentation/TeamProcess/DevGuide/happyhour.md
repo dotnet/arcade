@@ -11,3 +11,7 @@
     - If a game supports neither screen-sharing nor online multiplayer, it's best not to play it.
 - Pop in and pop out at will &ndash; no need to feel like you have to stay for the full two hours! This applies to both virtual and in-person participants.
     - Relatedly, feel free to continue working while attending &ndash; we love to have you there even if you can't participate in whatever games we're playing.
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5CDevGuide%5Chappyhour.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5CDevGuide%5Chappyhour.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5CDevGuide%5Chappyhour.md)</sub>
+<!-- End Generated Content-->

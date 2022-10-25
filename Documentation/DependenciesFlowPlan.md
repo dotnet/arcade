@@ -109,3 +109,8 @@ More information [here]( https://github.com/dotnet/arcade/blob/master/Documentat
 
 ## Speculative product build
 More information [here](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro.md#speculative-product-builds).
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CDependenciesFlowPlan.md)](https://helix.dot.net/f/p/5?p=Documentation%5CDependenciesFlowPlan.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CDependenciesFlowPlan.md)</sub>
+<!-- End Generated Content-->

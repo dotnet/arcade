@@ -120,3 +120,8 @@ Now that our primary dependency is on Azure DevOps feeds for .NET Core 3.x, it's
 |	interactive-window	|	tmat	|	2 months ago	|	tmat	|	
 |	roslyn-analyzers	|	roslyn	|	1 day ago	|	roslyn	|	
 |	roslyn-tools	|	roslyn	|	1 day ago	|	roslyn	|	
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CMigrationPlan%5CMyGetFeeds.md)](https://helix.dot.net/f/p/5?p=Documentation%5CMigrationPlan%5CMyGetFeeds.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CMigrationPlan%5CMyGetFeeds.md)</sub>
+<!-- End Generated Content-->

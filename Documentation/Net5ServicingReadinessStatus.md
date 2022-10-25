@@ -57,3 +57,8 @@ This table represents the status of the .NET 5 Servicing Readiness Test on a Per
 | wpf                | fabiant  | ✔️ (64391)          | ✔️ (64389)         | ❌                  |
 | windowsdesktop     | fabiant  | ✔️ (64407)          | 🚧 (64428)         | ❌                  |
 | templating         | joaguila | ✔️                  | ❌                 | ❌                  |
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CNet5ServicingReadinessStatus.md)](https://helix.dot.net/f/p/5?p=Documentation%5CNet5ServicingReadinessStatus.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CNet5ServicingReadinessStatus.md)</sub>
+<!-- End Generated Content-->

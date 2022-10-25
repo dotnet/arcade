@@ -23,3 +23,8 @@ As a team we have a commitment to respond/help our customers during a certain ti
 ## Impact instead of Time:
 Each of us should be focused primarily on delivering the right impact according to our role and level.  The assumption is that it’ll likely take 40(ish) hours a week to have the right impact – but this priority order is important.  The implication is that there should be flexibility such that we’re able to employ the rhythms that work best for us, leaving ample time/opportunity for family, personal health, well being, as well as work.
 
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5CDevGuide%5Cavailability.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5CDevGuide%5Cavailability.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5CDevGuide%5Cavailability.md)</sub>
+<!-- End Generated Content-->

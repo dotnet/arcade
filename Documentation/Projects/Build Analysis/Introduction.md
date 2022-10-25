@@ -65,3 +65,7 @@ However, we provide links from Build Analysis to logs and test results in Azure 
 - A single place to look at a combination of build and test errors. 
 - Notification that an error that occurred on your pull request is related to a [Known Issue](KnownIssues.md).
 - One click to create a Known Issue related to an error on your pull request for either the product team or infrastructure team. 
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CIntroduction.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CIntroduction.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CIntroduction.md)</sub>
+<!-- End Generated Content-->

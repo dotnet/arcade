@@ -37,3 +37,8 @@ Please check in the logs to validate if requests are still flowing:
  1. Go to the App Service Editor (preview).
  2. Download `bin/Microsoft.DotNet.Maestro.dll` and `bin/Microsoft.DotNet.Maestro.WebApi.dll`
  3. Use ildasm, ILSpy, or some other disassembler to determine if the IL matches the changes you expected.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CMaestro%5Cdeploy.md)](https://helix.dot.net/f/p/5?p=Documentation%5CMaestro%5Cdeploy.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CMaestro%5Cdeploy.md)</sub>
+<!-- End Generated Content-->

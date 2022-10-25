@@ -260,3 +260,8 @@ The log messages from the SignToolTask itself will be included in the log (+.bin
 **Target Framework:** valid values include (but are not limited to): `.NETStandard,Version=v2.0`,  `.NETFramework,Version=v4.6.1`, `.NET Core,Version=v2.0`, etc.
 
 **Public Key Token:** valid values are 16 characters in length comprising values between `[0-9]` and `[a-Z]`.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CCorePackages%5CSigning.md)](https://helix.dot.net/f/p/5?p=Documentation%5CCorePackages%5CSigning.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CCorePackages%5CSigning.md)</sub>
+<!-- End Generated Content-->

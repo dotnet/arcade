@@ -527,3 +527,8 @@ Eg:
   tools/x64_arm64/mscordbi.dll 
 
 During publishing, arcade will pick up SymbolPublishingExclusionsFile.txt and exclude the symbols mentioned in it.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CCorePackages%5CPublishing.md)](https://helix.dot.net/f/p/5?p=Documentation%5CCorePackages%5CPublishing.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CCorePackages%5CPublishing.md)</sub>
+<!-- End Generated Content-->

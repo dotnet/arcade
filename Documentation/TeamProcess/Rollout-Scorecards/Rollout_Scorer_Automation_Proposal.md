@@ -61,3 +61,7 @@ The existing Rollout Scorer will be moved to arcade-services and deployed as an 
 4. Once the timer hits zero, the rollout scorer will score all the repos it received requests from with the start date set to the first day it received a request. As at present, it will create a PR to core-eng and add the scores to the database.
 
 This will effectively fully automate the rollout scorecard creation process.
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CRollout_Scorer_Automation_Proposal.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CRollout_Scorer_Automation_Proposal.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CRollout_Scorer_Automation_Proposal.md)</sub>
+<!-- End Generated Content-->

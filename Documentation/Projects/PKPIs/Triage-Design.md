@@ -37,3 +37,8 @@
   - Find last comment with some metadata like "category=Build", add row to table with category and GitHub link
 
   - If no triage category is specified, then [TBD]
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CPKPIs%5CTriage-Design.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CPKPIs%5CTriage-Design.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CPKPIs%5CTriage-Design.md)</sub>
+<!-- End Generated Content-->

@@ -25,3 +25,7 @@ Each attempt of retry details can be viewed from the Tests Details Page.
 Please create a new issue in the [core-eng](https://github.com/dotnet/core-eng) repository.
 
 [Mission Control]: https://mc.dot.net/#/
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CAuto-Retry%20Failures%5CAutoRetryDocumentation.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CAuto-Retry%20Failures%5CAutoRetryDocumentation.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CAuto-Retry%20Failures%5CAutoRetryDocumentation.md)</sub>
+<!-- End Generated Content-->

@@ -25,3 +25,7 @@ There are several manual overrides for stages which are allowed to have failures
 ## Branching for Arcade Release
 
 Dotnet-Release should be branched on the same cadence as Arcade. Check the [Arcade Servicing doc](https://github.com/dotnet/arcade/blob/main/Documentation/Policy/ArcadeServicing.md) for more information on when branching occurs.
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CStaging-Pipeline%5Crunning-the-pipeline.md)](https://helix.dot.net/f/p/5?p=Documentation%5CStaging-Pipeline%5Crunning-the-pipeline.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CStaging-Pipeline%5Crunning-the-pipeline.md)</sub>
+<!-- End Generated Content-->

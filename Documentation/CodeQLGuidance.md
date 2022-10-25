@@ -75,3 +75,8 @@ Language-specific examples and some variations may be found in LGTM's [Alert Sup
 ## Further Reading
 
 GitHub's official CodeQL documentation: [CodeQL documentation](https://codeql.github.com/docs)
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CCodeQLGuidance.md)](https://helix.dot.net/f/p/5?p=Documentation%5CCodeQLGuidance.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CCodeQLGuidance.md)</sub>
+<!-- End Generated Content-->

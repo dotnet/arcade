@@ -137,3 +137,8 @@ The plan for now is reading log files line by line and using `String.Contains`. 
 - Look more into handling failure cases like limiting user input i.e only 1 outstanding request allowed per person also “(limiting the input sizes, like only X total days, or Y total logs to scan), returning a partial result if we run out of time, a stateful server request, where you could ask "hey, I started this query a bit ago, do you have the answer yet"... Lots of exciting options!
 - Keep in mind the constraints for date range input - for now we are using a 7 day max duration but this can be changed if it is actually faster than expected
 
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CHelixTestLogSearch%5Cone-pager.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CHelixTestLogSearch%5Cone-pager.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CHelixTestLogSearch%5Cone-pager.md)</sub>
+<!-- End Generated Content-->

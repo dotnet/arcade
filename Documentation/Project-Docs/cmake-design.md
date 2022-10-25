@@ -54,3 +54,7 @@ unix/clang | Shell scripts that override the default implementation, and impleme
 Similar folder structure will be available for Windows PowerShell scripts. `Tools/downloads/<toolName>` in CoreFx repository root will be the default location for downloaded tools.
 
 Official builds will override the default locations where the tool is searched and acquired. These override locations for official builds are specified in a copy (not available in open) of `.toolversions` file. If a path to the override is specified as a command line argument to `build.cmd` or `build.sh` then, config values from `.toolversions` file located in that specified path are used in search and acquire scripts.
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Ccmake-design.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Ccmake-design.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Ccmake-design.md)</sub>
+<!-- End Generated Content-->

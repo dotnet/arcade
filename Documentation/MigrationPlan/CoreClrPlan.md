@@ -127,3 +127,8 @@ time we are bringing the rest of the test jobs over.
 |---|---|
 |1| 12/14/2018 |
 |2| 03/15/2019|
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CMigrationPlan%5CCoreClrPlan.md)](https://helix.dot.net/f/p/5?p=Documentation%5CMigrationPlan%5CCoreClrPlan.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CMigrationPlan%5CCoreClrPlan.md)</sub>
+<!-- End Generated Content-->

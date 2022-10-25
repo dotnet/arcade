@@ -154,3 +154,7 @@ To access the heartbeats table using Microsoft Azure Storage Explorer, follow th
 3. Find the storage account helixscripts2 or helixstagescripts2. 
 4. Open the Tables tab.
 5. Click on heartbeats.
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CAutoScaler%5CAutoScalerInvestigateIssues.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CAutoScaler%5CAutoScalerInvestigateIssues.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CAutoScaler%5CAutoScalerInvestigateIssues.md)</sub>
+<!-- End Generated Content-->

@@ -76,3 +76,8 @@ pipelines there but we'd need to special case the code and probably modify some 
 | Roslyn                     | jaredpar         | Not-Moved |   4   | Building from devdiv and doing VS Insertion |
 | Visual-FSharp              | brettfo          | Not-Moved |   4   | Not using Arcade SDK and building from devdiv |
 | Core-SDK                   | licavalc         | Not-Moved |   4   | Publishes to two feeds in the same task |
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CNetCore3ReleasePipelinesMoveStatus.md)](https://helix.dot.net/f/p/5?p=Documentation%5CNetCore3ReleasePipelinesMoveStatus.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CNetCore3ReleasePipelinesMoveStatus.md)</sub>
+<!-- End Generated Content-->

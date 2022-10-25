@@ -64,3 +64,8 @@ In order to align with Epic Content Guidance, one-pagers should be stored in a c
 Guidance for Epics can be found at [Guidelines for Epics](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/552/Guidelines-for-Epics) wiki.
 
 After all discussions have been resolved, the resulting one-pager document should be signed-off (this does not need to be a formal process) by stakeholders (e.g. v-team members, epic owners, et cetera) and then linked to the associated epic's GitHub issue for discover-ability.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Cone-pager-template.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Cone-pager-template.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Cone-pager-template.md)</sub>
+<!-- End Generated Content-->

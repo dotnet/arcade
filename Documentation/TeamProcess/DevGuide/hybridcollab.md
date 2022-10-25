@@ -26,3 +26,7 @@ _One of the most felt aspects of remote and hybrid work is the impact it&#39;s h
 _When people trust one another and have [social] capital, you get a willingness to take risks, you get more innovation and creativity and less groupthink - Nancy Baym, Principal Researcher, Microsoft Research_
 
 _When work-life balance is out of whack, most people cut out relationship-building for more urgent matters,&quot; says Constance Noonan Hadley, an organizational psychologist who studies workplace relationships. &quot;Regardless of remote status, building relationships will still feel like a luxury workers cannot afford unless there is a shift in how time is prioritized and valued by managers_
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5CDevGuide%5Chybridcollab.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5CDevGuide%5Chybridcollab.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5CDevGuide%5Chybridcollab.md)</sub>
+<!-- End Generated Content-->
