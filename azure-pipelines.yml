@@ -286,8 +286,8 @@ stages:
             vmimage: windows-latest
           strategy:
             matrix:
-              Build_Debug:
-                _BuildConfig: Debug
+              Build_Release:
+                _BuildConfig: Release
           variables:
           - _Testing: XHarness_Android_Device_Tests
           preSteps:
