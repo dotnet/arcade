@@ -12,3 +12,6 @@ assignees: ''
 - [ ] This issue is causing unreasonable pain
 
 <!-- Write your issue description below. -->
+
+<!-- For internal use only; put release notes here -->
+## Release Notes
