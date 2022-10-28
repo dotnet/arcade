@@ -1,5 +1,6 @@
 name: Backport PR to branch
 on:
+  workflow_call:
   issue_comment:
     types: [created]
   schedule:
