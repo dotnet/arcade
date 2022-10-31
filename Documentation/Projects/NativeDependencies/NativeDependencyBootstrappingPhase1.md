@@ -72,3 +72,8 @@ They are currently stored in the native-assets container in the dotnetfeed stora
 - Write the Linux infrastructure scripts and CMake sample. Tracked by [#749](https://github.com/dotnet/arcade/issues/749)
 - Update scripts and documentation to add details and remove inconsistencies. Tracked by [#756](https://github.com/dotnet/arcade/issues/756).
 - Handle CLI as a bootstrapped native tool. Tracked by [#151](https://github.com/dotnet/arcade/issues/151).
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CNativeDependencies%5CNativeDependencyBootstrappingPhase1.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CNativeDependencies%5CNativeDependencyBootstrappingPhase1.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CNativeDependencies%5CNativeDependencyBootstrappingPhase1.md)</sub>
+<!-- End Generated Content-->

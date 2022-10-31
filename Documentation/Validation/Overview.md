@@ -72,3 +72,8 @@ Details on how sending jobs to Helix works [here](https://github.com/dotnet/arca
 When the Build portion of the validation build completes we publish the produced package to BAR. This package won't be consumed by any repo but we want to make sure changes in the SDK did not affect it.
 
 While this is good enough to validate basic scenarios we still have to make sure we validate changes in tier one repos. This will be done post preview 2 as specified in [this](https://github.com/dotnet/arcade/issues/111) epic.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CValidation%5COverview.md)](https://helix.dot.net/f/p/5?p=Documentation%5CValidation%5COverview.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CValidation%5COverview.md)</sub>
+<!-- End Generated Content-->

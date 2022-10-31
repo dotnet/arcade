@@ -88,6 +88,24 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to At least one of the following properties must contain a valid value: Chip, MachineArch..
+        /// </summary>
+        internal static string ChipOrMachineArchRequired {
+            get {
+                return ResourceManager.GetString("ChipOrMachineArchRequired", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Components must have define at lease on category..
+        /// </summary>
+        internal static string ComponentCategoryCannotBeNull {
+            get {
+                return ResourceManager.GetString("ComponentCategoryCannotBeNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Components cannot have a null description. Either provide a custom resource or add a description to the workload definition..
         /// </summary>
         internal static string ComponentDescriptionCannotBeNull {

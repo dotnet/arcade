@@ -9,3 +9,8 @@
 - XML hurl w/ regex: https://ci.dot.net/userContent/build-failure-analyzer.xml 
 
 - Aho-Corasick Alg for searching large files: https://github.com/pdonald/aho-corasick (https://en.wikipedia.org/wiki/Aho%E2%80%93Corasick_algorithm)
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Cbuild-failure-buckets.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Cbuild-failure-buckets.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Cbuild-failure-buckets.md)</sub>
+<!-- End Generated Content-->

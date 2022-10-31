@@ -54,6 +54,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
+        /// Returns <see langword="true" /> if the Visual Studio version targeted by the feature band supports the machineArch property;
+        /// <see langword="false" /> otherwise.
+        /// </summary>
+        public bool SupportsMachineArch
+        {
+            get;
+        }
+
+        /// <summary>
         /// Creates a new instance of a <see cref="WorkloadManifestPackage"/>.
         /// </summary>
         /// <param name="package">A task item for the workload manifest NuGet package.</param>
@@ -87,7 +96,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             SdkFeatureBand = GetSdkFeatureBandVersion(GetSdkVersion(Id));
             ManifestId = GetManifestId(Id);
             SwixPackageId = $"{Id.Replace(shortNames)}";
-        }
+            SupportsMachineArch = bool.TryParse(package.GetMetadata(Metadata.SupportsMachineArch), out bool supportsMachineArch) ? supportsMachineArch : false; 
+         }
 
         /// <summary>
         /// Gets the path of the workload manifest file. 

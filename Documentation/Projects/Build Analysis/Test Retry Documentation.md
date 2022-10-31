@@ -44,3 +44,8 @@ When you want to know which test succeeded after a rerun you should go to the Az
 As can be appreciated in the image below:
 
 ![](./Resources/AzureDevOpsPassedOnRerun.PNG?raw=true)
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CTest%20Retry%20Documentation.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CTest%20Retry%20Documentation.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CTest%20Retry%20Documentation.md)</sub>
+<!-- End Generated Content-->

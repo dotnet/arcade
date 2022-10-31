@@ -28,3 +28,8 @@ Example web hooks page url: https://github.com/dotnet/versions/settings/hooks/
  * Active: checked
 
 ![webhook manage](assets/webhook-manage.png)
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CMaestro%5Cweb-hooks.md)](https://helix.dot.net/f/p/5?p=Documentation%5CMaestro%5Cweb-hooks.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CMaestro%5Cweb-hooks.md)</sub>
+<!-- End Generated Content-->

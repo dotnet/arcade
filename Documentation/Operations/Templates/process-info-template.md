@@ -78,3 +78,7 @@ This part is more for guidance but can be retained in documents deriving from th
 - Is/are there at least one (ideally two) SME IC(s) listed as contact for clarification?
 
 - Does the document specify sufficient detail that an artibrary reader would be able to reason about and execute the processes described?
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5COperations%5CTemplates%5Cprocess-info-template.md)](https://helix.dot.net/f/p/5?p=Documentation%5COperations%5CTemplates%5Cprocess-info-template.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5COperations%5CTemplates%5Cprocess-info-template.md)</sub>
+<!-- End Generated Content-->

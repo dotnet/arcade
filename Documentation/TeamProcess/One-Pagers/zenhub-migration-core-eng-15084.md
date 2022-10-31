@@ -135,3 +135,7 @@ We will use AppInsights for monitoring of the service and add grafana alerts for
 ## Decomissioning the CLI tool
 
 Once the migration is complete, we will no longer need the cli tool. After we have successfully helped the rest of the org migrate off of ZenHub, either using the CLI tool or not, we will remove the CLI tool so as to not clutter up helix-services.
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Czenhub-migration-core-eng-15084.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Czenhub-migration-core-eng-15084.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Czenhub-migration-core-eng-15084.md)</sub>
+<!-- End Generated Content-->

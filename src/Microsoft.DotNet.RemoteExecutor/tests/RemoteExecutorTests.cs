@@ -59,6 +59,18 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
         }
 
         [Fact]
+        public void AsyncFuncFiveArgs_ThrowException()
+        {
+            Assert.Throws<RemoteExecutionException>(() =>
+                RemoteExecutor.Invoke(async (a, b, c, d, e) =>
+                {
+                    Assert.True(false);
+                    await Task.Delay(1);
+                }, "a", "b", "c", "d", "e", new RemoteInvokeOptions { RollForward = "Major" }).Dispose()
+            );
+        }
+
+        [Fact]
         public void AsyncFunc_InvalidReturnCode()
         {
             Assert.Throws<TrueException>(() =>

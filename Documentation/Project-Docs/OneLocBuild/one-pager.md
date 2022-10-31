@@ -54,3 +54,7 @@ as a part of Arcade.
 
 ## FR Handoff
 Most likely, we will only need to write a single document on the results of this project to facilitate FR handoff.
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5COneLocBuild%5Cone-pager.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5COneLocBuild%5Cone-pager.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5COneLocBuild%5Cone-pager.md)</sub>
+<!-- End Generated Content-->

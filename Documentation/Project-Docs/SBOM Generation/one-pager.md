@@ -37,3 +37,8 @@ There are 2 ways to generate SBOM
 ## FR handoff 
 - Will document SBOM generation in arcade and how repo owners can on-board. 
 - Will document any failures as I encounter. 
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CSBOM%20Generation%5Cone-pager.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CSBOM%20Generation%5Cone-pager.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CSBOM%20Generation%5Cone-pager.md)</sub>
+<!-- End Generated Content-->

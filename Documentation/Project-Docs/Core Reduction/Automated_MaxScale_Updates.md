@@ -50,3 +50,7 @@ The above steps are done by using the [Scaler Simulator](#Scaler-Simulator) tool
 **Stage 4:**
 
 * Instead of using a simulator to determine the max scale, rebalance the max scale on the fly based on the usage by the custom auto-scaler and is able to take in the input of what the total machines allowed are to consider while rebalancing. TBD - Feasibility of implementing this into auto-scaler and ability to test this thoroughly.
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CCore%20Reduction%5CAutomated_MaxScale_Updates.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CCore%20Reduction%5CAutomated_MaxScale_Updates.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CCore%20Reduction%5CAutomated_MaxScale_Updates.md)</sub>
+<!-- End Generated Content-->

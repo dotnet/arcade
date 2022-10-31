@@ -4,7 +4,7 @@
 
 There are two projects for use.  They are:
 
-- public (https://dev.azure.com/dnceng/public)
+- public (https://dev.azure.com/dnceng-public/public)
   - Used for oss
   - For Pipelines only  (no source code - that's on GitHub)
   - Pipelines are allowed to pull source directly from GitHub
@@ -132,3 +132,8 @@ From time to time, there are some terms you might encounter in documentation or 
 
 - collection --> account --> instance (top level thing - e.g. dev.azure.com/dnceng)
 - team --> group of individuals.  Largely is about the backlog, not much more.  In our case we're not using for permissions.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CAzureDevOps%5CAzureDevOpsGuidance.md)](https://helix.dot.net/f/p/5?p=Documentation%5CAzureDevOps%5CAzureDevOpsGuidance.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CAzureDevOps%5CAzureDevOpsGuidance.md)</sub>
+<!-- End Generated Content-->

@@ -5,22 +5,26 @@ trigger:
     - main
     - release/3.x
     - release/5.0
-
+    - release/6.0
+    - release/7.0
 pr:
   branches:
     include:
     - main
     - release/3.x
     - release/5.0
+    - release/6.0
+    - release/7.0
     - templates
 
 variables:
 - template: eng/common-variables.yml
+- template: eng/common/templates/variables/pool-providers.yml
 
 resources:
   containers:
   - container: LinuxContainer
-    image: mcr.microsoft.com/dotnet-buildtools/prereqs:centos-7-20210714125435-9b5bbc2
+    image: mcr.microsoft.com/dotnet-buildtools/prereqs:centos-7
 
 stages:
 - stage: build
@@ -52,7 +56,7 @@ stages:
           ${{ if eq(variables._RunAsPublic, True) }}:
             vmImage: windows-latest
           ${{ if eq(variables._RunAsInternal, True) }}:
-            name: NetCore1ESPool-Internal
+            name: $(DncEngInternalBuildPool)
             demands: ImageOverride -equals windows.vs2019.amd64
         strategy:
           matrix:

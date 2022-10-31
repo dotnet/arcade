@@ -1,4 +1,4 @@
-﻿# Arcade SDK
+# Arcade SDK
 
 Arcade SDK is a set of msbuild props and targets files and packages that provide common build features used across multiple repos, such as CI integration, packaging, VSIX and VS setup authoring, testing, and signing via Microbuild.
 
@@ -1027,3 +1027,8 @@ If set to true calls to GetResourceString receive a default resource string valu
 
 #### `GenerateResxSourceOmitGetResourceString` (bool)
 If set to true the GetResourceString method is not included in the generated class and must be specified in a separate source file.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CArcadeSdk.md)](https://helix.dot.net/f/p/5?p=Documentation%5CArcadeSdk.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CArcadeSdk.md)</sub>
+<!-- End Generated Content-->

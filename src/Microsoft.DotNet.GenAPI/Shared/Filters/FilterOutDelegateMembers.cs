@@ -5,10 +5,8 @@ using Microsoft.CodeAnalysis;
 
 namespace Microsoft.DotNet.GenAPI.Shared;
 
-/// <summary>
-/// Interface incapsulates logic for processing symbol assemblies.
-/// </summary>
-public interface IWriter
+public class FilterOutDelegateMembers : IncludeAllFilter
 {
-    void WriteAssemblies(IAssemblySymbol assembly);
+    /// <inheritdoc />
+    public override bool Includes(ISymbol member) => member.ContainingType.TypeKind != TypeKind.Delegate;
 }

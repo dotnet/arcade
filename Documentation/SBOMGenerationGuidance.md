@@ -257,3 +257,8 @@ for your release builds:
   SBOMs](https://eng.ms/docs/initiatives/executive-order/executive-order-requirements/executiveorderoncybersecurity/softwarebillofmaterials)
 - [Manifest Generation task
   documentation](https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/secure-supply-chain/ado-sbom-generator)
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CSBOMGenerationGuidance.md)](https://helix.dot.net/f/p/5?p=Documentation%5CSBOMGenerationGuidance.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CSBOMGenerationGuidance.md)</sub>
+<!-- End Generated Content-->

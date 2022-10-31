@@ -121,3 +121,8 @@ Stage 4:
 - We have not begun exploring signing RPM's, Deb's, etc... yet but it is not expected that is a high risk part of the plan.
 
 - Mac notarization is not yet automated, after it is automated, we should add that process to the signing promotion stage.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CSigning%5CSigningPlan.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CSigning%5CSigningPlan.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CSigning%5CSigningPlan.md)</sub>
+<!-- End Generated Content-->

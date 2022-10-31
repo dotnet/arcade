@@ -78,3 +78,7 @@ This section left blank as this will be part of an arcade-services component.
 #### Component: Schedule-Validation-Pipeline
 
 - Update tags for builds to tag with the repo, the channel, and repo-channel. Right now, we only tag as repo-channel
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cvalidation-notifications-arcade7299.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cvalidation-notifications-arcade7299.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cvalidation-notifications-arcade7299.md)</sub>
+<!-- End Generated Content-->

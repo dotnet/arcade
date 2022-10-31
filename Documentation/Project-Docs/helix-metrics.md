@@ -117,3 +117,8 @@ Some examples of things that we should measure ...
     * ... heartbeats inside the code that's doing work
   * ... of any external service we depend on
     * ... availability query (can we contact the service with the credentials we expect)
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Chelix-metrics.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Chelix-metrics.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Chelix-metrics.md)</sub>
+<!-- End Generated Content-->

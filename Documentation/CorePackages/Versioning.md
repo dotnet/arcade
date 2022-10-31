@@ -237,3 +237,8 @@ Below is a list of the main parameters that control the logic.
 | VersionPrefix   | .NET  | Initialized to `$(MajorVersion).$(MinorVersion).0` if not set by the project.  |
 | VersionSuffix   | .NET  | The suffix part of the version string, including the pre-release portion. |
 
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CCorePackages%5CVersioning.md)](https://helix.dot.net/f/p/5?p=Documentation%5CCorePackages%5CVersioning.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CCorePackages%5CVersioning.md)</sub>
+<!-- End Generated Content-->

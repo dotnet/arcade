@@ -53,3 +53,8 @@ Repository builds in .NET 5 must be leaner and more efficient than any of our pr
 - **Add official build validation to repo based on Arcade .yml template​**
 - **Incorporate source-build patches into source​**
 - **Review and approve PRs for incoming source-build implementation​**
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CNet5Builds.md)](https://helix.dot.net/f/p/5?p=Documentation%5CNet5Builds.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CNet5Builds.md)</sub>
+<!-- End Generated Content-->

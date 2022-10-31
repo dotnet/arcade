@@ -43,3 +43,8 @@ One of the goals of Arcade is to be a vehicle to provide code sharing. One of th
 - [`Overview.md`](Overview.md)
 
 - [`..\eng\Versions.props`](../eng/Versions.props)
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CHowToCreatePackages.md)](https://helix.dot.net/f/p/5?p=Documentation%5CHowToCreatePackages.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CHowToCreatePackages.md)</sub>
+<!-- End Generated Content-->

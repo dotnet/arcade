@@ -17,7 +17,6 @@
   -->
 
   <Import Project="Directory.Build.props" />
-  <Import Project="Directory.Build.targets" />
 
   <PropertyGroup>
     <_VisualStudioBuildTasksAssembly>$(NuGetPackageRoot)microsoft.dotnet.build.tasks.visualstudio\$(MicrosoftDotNetBuildTasksVisualStudioVersion)\tools\net472\Microsoft.DotNet.Build.Tasks.VisualStudio.dll</_VisualStudioBuildTasksAssembly>

@@ -61,3 +61,8 @@ Then make sure to comment out the dependencies on those stages.
 4. Running the pipeline now will skip the most time-consuming stages and go straight to the stage you want to test.
 
 Please still make sure to run the full test pipeline before checking in.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CStaging-Pipeline%5Cmaking-and-validating-changes.md)](https://helix.dot.net/f/p/5?p=Documentation%5CStaging-Pipeline%5Cmaking-and-validating-changes.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CStaging-Pipeline%5Cmaking-and-validating-changes.md)</sub>
+<!-- End Generated Content-->

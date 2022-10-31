@@ -34,3 +34,8 @@ Disruptive changes should be minimal.  However, it should be understood that the
 1. A day later email 'dncpartners' and give them a minimum of a 2 day warning 
 1. Two days later, a 'we're doing this now' email to ‘dncpartners’
 1. Proactively provide support and/or help as required 
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CPolicy%5CChangesPolicy.md)](https://helix.dot.net/f/p/5?p=Documentation%5CPolicy%5CChangesPolicy.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CPolicy%5CChangesPolicy.md)</sub>
+<!-- End Generated Content-->

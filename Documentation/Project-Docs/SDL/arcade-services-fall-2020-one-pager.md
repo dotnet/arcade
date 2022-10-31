@@ -31,3 +31,7 @@ No new monitoring is needed.
 ### FR Hand off
 
 There is no FR hand off required but we will prepare documentaton summarizing what has been done and put it in dotnet/core-eng wiki.
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CSDL%5Carcade-services-fall-2020-one-pager.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CSDL%5Carcade-services-fall-2020-one-pager.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CSDL%5Carcade-services-fall-2020-one-pager.md)</sub>
+<!-- End Generated Content-->

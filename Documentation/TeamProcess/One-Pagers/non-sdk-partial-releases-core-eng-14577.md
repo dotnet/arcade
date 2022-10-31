@@ -125,3 +125,7 @@ Changes to the staging pipeline are already documented in the Staging-Pipeline d
 * [Running the Staging Pipeline](https://github.com/dotnet/arcade/blob/main/Documentation/Staging-Pipeline/running-the-pipeline.md)
 * [Original Release Rings Plan](https://github.com/dotnet/arcade/blob/main/Documentation/ReleaseRingsPlan.md)
 * [releases.json](https://github.com/dotnet/core/blob/main/release-notes/6.0/releases.json)
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cnon-sdk-partial-releases-core-eng-14577.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cnon-sdk-partial-releases-core-eng-14577.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cnon-sdk-partial-releases-core-eng-14577.md)</sub>
+<!-- End Generated Content-->

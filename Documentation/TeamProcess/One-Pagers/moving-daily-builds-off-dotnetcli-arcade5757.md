@@ -164,3 +164,7 @@ Once adopted these changes are enshrined in the DotNet Arcade publishing workflo
 - What documentation/information needs to be provided to FR so the team as a whole is successful in maintaining these changes? 
 
 Changes to the publishing workflow, specifically the components inside dotnet/arcade, will need to be detailed and stored in the wiki or documentation folders of dotnet/arcade.
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cmoving-daily-builds-off-dotnetcli-arcade5757.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cmoving-daily-builds-off-dotnetcli-arcade5757.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cmoving-daily-builds-off-dotnetcli-arcade5757.md)</sub>
+<!-- End Generated Content-->

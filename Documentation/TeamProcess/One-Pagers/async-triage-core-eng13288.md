@@ -55,3 +55,8 @@ Suggestions for tracking "usefulness" of the solution include measuring the aver
 
 ## FR Hand off
 - We should create some documentation on what functionalities the solution currently possesses and link to the code for more information. The code should also be clearly documented.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Casync-triage-core-eng13288.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Casync-triage-core-eng13288.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Casync-triage-core-eng13288.md)</sub>
+<!-- End Generated Content-->

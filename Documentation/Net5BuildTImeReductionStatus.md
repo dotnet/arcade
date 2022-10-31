@@ -60,3 +60,8 @@ of whether the repo will be within budge once those items are complete.*
 [red]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png
 [green]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png
 [yello]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CNet5BuildTImeReductionStatus.md)](https://helix.dot.net/f/p/5?p=Documentation%5CNet5BuildTImeReductionStatus.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CNet5BuildTImeReductionStatus.md)</sub>
+<!-- End Generated Content-->

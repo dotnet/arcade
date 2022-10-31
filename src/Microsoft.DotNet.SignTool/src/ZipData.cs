@@ -138,8 +138,17 @@ namespace Microsoft.DotNet.SignTool
         }
         private void RepackWixPack(TaskLoggingHelper log, string tempDir, string wixToolsPath)
         {
-            string workingDir = Path.Combine(tempDir, "extract", Guid.NewGuid().ToString());
-            string outputDir = Path.Combine(tempDir, "output", Guid.NewGuid().ToString());
+            // The wixpacks can have rather long paths when fully extracted.
+            // To avoid issues, use the first element of the GUID (up to first -).
+            // This does leave the very remote possibility of the dir already existing. In this case, the
+            // create.cmd file will always end up being extracted twice, and ExtractToDirectory
+            // will fail. Because of the very very remote possibility of this happening, no
+            // attempt to workaround this possibility is made.
+            var workingDirGuidSegment = Guid.NewGuid().ToString().Split('-')[0];
+            var outputDirGuidSegment = Guid.NewGuid().ToString().Split('-')[0];
+
+            string workingDir = Path.Combine(tempDir, "extract", workingDirGuidSegment);
+            string outputDir = Path.Combine(tempDir, "output", outputDirGuidSegment);
             string createFileName = Path.Combine(workingDir, "create.cmd");
             string outputFileName = Path.Combine(outputDir, FileSignInfo.FileName);
 

@@ -49,3 +49,8 @@ Specific to deploying to prod environment is an additional [manual approval chec
 Stages provide the flexibility of having logical boundaries in pipelines, and can be arranged into a dependency graph (e.g Run Stage B only if Stage A succeeds). Stages also provide the ability to re-run parts of a pipeline; e.g. rerun a failed deployment or run just parts of a deployment which does not require rerunning the entire pipeline. 
 
 ![Stages](Images/Stages.PNG)
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CValidation%5CDeploymentProcess.md)](https://helix.dot.net/f/p/5?p=Documentation%5CValidation%5CDeploymentProcess.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CValidation%5CDeploymentProcess.md)</sub>
+<!-- End Generated Content-->

@@ -79,3 +79,8 @@ Publish manifest to BAR
 ### Publishing multiple manifests
 
 If you have multiple jobs that publish assets, then you need to publish the generated manifests from each of those legs.  In Arcade, this is done by publishing each of the manifests as Artifacts to Azure DevOps and then having a [final job](https://github.com/dotnet/arcade/blob/de44b15e79b9d124d04c16458bead2a1d7ea02ef/eng/common/templates/job/publish-build-assets.yml) that runs and downloads the manifests / publishes them all to BAR
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CDependencyFlowOnboardingWithoutArcade.md)](https://helix.dot.net/f/p/5?p=Documentation%5CDependencyFlowOnboardingWithoutArcade.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CDependencyFlowOnboardingWithoutArcade.md)</sub>
+<!-- End Generated Content-->

@@ -21,3 +21,8 @@ Now that the WebSdk is migrated completely, it should be much easier to complete
 @Joeloff will be doing the work for both dotnet/Templating & aspnet/WebSDK
 
 from @vijayrkn on 12/21/2018
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CMigrationPlan%5CTemplatingAndWebSdkPlan.md)](https://helix.dot.net/f/p/5?p=Documentation%5CMigrationPlan%5CTemplatingAndWebSdkPlan.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CMigrationPlan%5CTemplatingAndWebSdkPlan.md)</sub>
+<!-- End Generated Content-->

@@ -15,6 +15,8 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" Publish="false" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" Publish="false" />
+    <PackageReference Include="Microsoft.CodeAnalysis" Version="$(GenAPIMicrosoftCodeAnalysisVersion)" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(GenAPIMicrosoftCodeAnalysisVersion)" />
   </ItemGroup>
 
   <ItemGroup>

@@ -29,14 +29,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         }
 
         /// <summary>
-        /// The package type associated with the SWIX project.
-        /// </summary>
-        public abstract string PackageType
-        {
-            get;
-        }
-
-        /// <summary>
         /// The version of the SWIX package.
         /// </summary>
         public Version Version
@@ -75,14 +67,20 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         }
 
         /// <summary>
+        /// Compute the relative path of the package within the Visual Studio package cache.
+        /// </summary>
+        /// <returns>The relative path of the package.</returns>
+        protected virtual string GetRelativePackagePath() => $"{Id},version={Version}";
+
+        /// <summary>
         /// Validates that the length of the relative package path does not execeed the maximum limit allowed by Visual Studio. The length
         /// accounts for the location of the Visual Studio installer package cache.
         /// </summary>
         /// <exception cref="Exception" />
         internal static void ValidateRelativePackagePath(string relativePackagePath)
         {
-            _ = relativePackagePath ?? throw new ArgumentNullException(nameof(relativePackagePath));            
- 
+            _ = relativePackagePath ?? throw new ArgumentNullException(nameof(relativePackagePath));
+
             // Visual Studio will verify this as part of its manifest validation logic during PR builds, but
             // any error would require rebuilding workloads and effectively reset .NET builds. 
             if (relativePackagePath.Length > MaxRelativePackagePath)

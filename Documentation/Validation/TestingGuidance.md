@@ -65,3 +65,8 @@ Inject an `ISystemClock` instead.
 
 If you find that your class is injecting a large number of dependencies, it's likely a sign the class is trying to do too much
 (and at the very least, will be difficult to test since every dependency needs to be accounted for in a test).
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CValidation%5CTestingGuidance.md)](https://helix.dot.net/f/p/5?p=Documentation%5CValidation%5CTestingGuidance.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CValidation%5CTestingGuidance.md)</sub>
+<!-- End Generated Content-->

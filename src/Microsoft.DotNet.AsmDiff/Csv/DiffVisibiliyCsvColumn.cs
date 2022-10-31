@@ -6,9 +6,9 @@ using Microsoft.Cci.Mappings;
 
 namespace Microsoft.DotNet.AsmDiff.CSV
 {
-    public sealed class DiffVisibiliyCsvColumn : DiffCsvColumn
+    public sealed class DiffVisibilityCsvColumn : DiffCsvColumn
     {
-        public DiffVisibiliyCsvColumn(DiffConfiguration diffConfiguration)
+        public DiffVisibilityCsvColumn(DiffConfiguration diffConfiguration)
             : base(diffConfiguration)
         {
         }

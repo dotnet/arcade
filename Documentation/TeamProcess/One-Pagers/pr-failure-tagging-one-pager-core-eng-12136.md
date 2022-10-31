@@ -162,3 +162,8 @@ This section left blank as this will be part of an arcade-services component.
 #### Notes
 - All subscriptions to GitHub PR failure tagging must be OK with the "source" repo. That is, target repositories causing failure notifications for teams that do not want these notifications will have them removed.  A blurb to this effect will be part of the failure notification tag boilerplate message.
 - See related feature request: https://github.com/dotnet/arcade/issues/7102
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cpr-failure-tagging-one-pager-core-eng-12136.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cpr-failure-tagging-one-pager-core-eng-12136.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cpr-failure-tagging-one-pager-core-eng-12136.md)</sub>
+<!-- End Generated Content-->

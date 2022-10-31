@@ -134,3 +134,8 @@ darc get-subscriptions --source-repo https://github.com/dotnet/arcade --channel 
 ```
 For each of these subscriptions, call `darc update-subscription --id <GUID id of Subscription> --no-trigger`, updating the channel to `.NET <N or next version> Eng`.  Once completed, the above two commands should show no subscriptions, while adjusting the commands for `.NET <N> Eng` should show all the ones from the initial versions of the command.
 
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CPolicy%5CArcadeServicing.md)](https://helix.dot.net/f/p/5?p=Documentation%5CPolicy%5CArcadeServicing.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CPolicy%5CArcadeServicing.md)</sub>
+<!-- End Generated Content-->

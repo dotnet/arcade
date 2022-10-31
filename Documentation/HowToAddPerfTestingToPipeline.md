@@ -159,3 +159,8 @@ In general, we expect most repositories to test against the default tests and co
 | Csproj              | src\benchmarks\micro\MicroBenchmarks.csproj <br> src\benchmarks\real-world\Microsoft.ML.Benchmarks\Microsoft.ML.Benchmarks.csproj <br> src\benchmarks\real-world\Roslyn\CompilerBenchmarks.csproj |
 | RunCategories       | For micro benchmarks: coreclr, corefx <br> For ML benchmarks: mldotnet <br> For Roslyn benchmarks: roslyn|
 | Kind                | For microbenchmarks: micro <br> For ML benchmarks: mlnet <br> For Roslyn benchmarks: roslyn |
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CHowToAddPerfTestingToPipeline.md)](https://helix.dot.net/f/p/5?p=Documentation%5CHowToAddPerfTestingToPipeline.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CHowToAddPerfTestingToPipeline.md)</sub>
+<!-- End Generated Content-->

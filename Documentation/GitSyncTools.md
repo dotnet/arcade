@@ -13,3 +13,7 @@ It runs as a background service. It does the following jobs.
 - It then opens up the PR in the respective repositories, adds the assignees and waits for new candidates.
 - It makes periodic checks (after every 10 minutes) to the azure table to get the list of commits that has not been mirrored yet. After that it marks those entries as mirrored.
 - The logging is made to console as well as to a log file to make debugging of the failures easy.
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CGitSyncTools.md)](https://helix.dot.net/f/p/5?p=Documentation%5CGitSyncTools.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CGitSyncTools.md)</sub>
+<!-- End Generated Content-->
