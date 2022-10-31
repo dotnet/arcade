@@ -13,10 +13,40 @@ namespace Microsoft.DotNet.RemoteExecutor
     /// <summary>
     /// Provides an entry point in a new process that will load a specified method and invoke it.
     /// </summary>
-    internal static class Program
+    public static class Program
     {
         private static int Main(string[] args)
         {
+            int? maybeExitCode = TryExecute(args);
+            if (maybeExitCode.HasValue)
+            {
+                return maybeExitCode.Value;
+            }
+
+            // we should not get here
+            Console.Error.WriteLine("Remote executor EXE started, but missing magic environmental variable: " + RemoteExecutor.REMOTE_EXECUTOR_ENVIRONMENTAL_VARIABLE);
+            return -1;
+        }
+
+        /// <summary>
+        /// Checks if the command line arguments are for the remote executor. If so, attempts to parse and execute the remote function.
+        /// </summary>
+        /// <remarks>
+        /// This entry point is intended be called by single-file test hosts. It allows one applicaiton to both hosts the tests
+        /// and host the remote executor.
+        /// This method may exit the process before returning.
+        /// </remarks>
+        /// <returns>null the arguments are not for the remote executor, otherwise the exit code for the process as a result of running the remote executor</returns>
+        public static int? TryExecute(string[] args)
+        {
+            if (Environment.GetEnvironmentVariable(RemoteExecutor.REMOTE_EXECUTOR_ENVIRONMENTAL_VARIABLE) is null)
+            {
+                return null;
+            }
+
+            // Allow the remote executor to also start more remote executors.
+            Environment.SetEnvironmentVariable(RemoteExecutor.REMOTE_EXECUTOR_ENVIRONMENTAL_VARIABLE, null);
+
             // The program expects to be passed the target assembly name to load, the type
             // from that assembly to find, and the method from that assembly to invoke.
             // Any additional arguments are passed as strings to the method.

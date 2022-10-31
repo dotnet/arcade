@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\Microsoft.DotNet.RemoteExecutor.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\tests\RemoteExecutorTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit" Version="2.4.2" ExcludeAssets="build" />
+    <PackageReference Include="xunit.analyzers" Version="1.0.0" ExcludeAssets="build" />
+    <PackageReference Include="Microsoft.DotNet.XUnitExtensions" Version="8.0.0-beta.22524.5" />
+    <PackageReference Include="xunit.runner.utility" Version="2.4.2" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(PublishSingleFile)' == 'true'">
+    <UseAppHost>true</UseAppHost>
+    <SelfContained>true</SelfContained>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(PublishAot)' == 'true'">
+    <RdXmlFile Include="rd.xml" />
+    <IlcArg Include="--nometadatablocking" />
+    <IlcArg Include="--feature:System.Reflection.IsTypeConstructionEagerlyValidated=false" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(PublishAot)' == 'true'">
+    <NoWarn>$(NoWarn);IL1005;IL3002</NoWarn>
+    <TrimMode>partial</TrimMode>
+    <SuppressTrimAnalysisWarnings>true</SuppressTrimAnalysisWarnings>
+    <SuppressAotAnalysisWarnings>true</SuppressAotAnalysisWarnings>
+
+    <!-- Forced by ILLink targets; we should fix the SDK -->
+    <SelfContained>true</SelfContained>
+  </PropertyGroup>
+
+</Project>

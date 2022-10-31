@@ -108,6 +108,7 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
             );
         }
 
+        // NativeAOT-TODO: NativeAOT translates the AV into a NullReferenceException rather than just crashing the process.
         [Fact]
         public static void AsyncAction_FatalError_Runtime()
         {
@@ -133,6 +134,7 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
             );
         }
 
+        // NativeAOT-TODO: NativeAOT translates the AV into a NullReferenceException rather than just crashing the process.
         [Fact]
         public static void FatalError_Runtime()
         {
