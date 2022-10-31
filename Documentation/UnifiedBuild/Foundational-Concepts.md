@@ -25,8 +25,8 @@ One insight is that Microsoft's build, source-build, and meaningful upstream/dow
 The following are goals and that will be met by the Unified Build project. Please note that ".NET distro maintainers" includes Microsoft.
 
 - .NET adopts industry standard upstream/downstream practices.
-- A single git commit denotes all product source for a particular .NET build. All commits are coherent
-- A single repo commit can produce a shippable build
+- A single git commit denotes all product source for a particular .NET build. All commits are coherent.
+- A single repo commit can produce a shippable build.
 - .NET's build shall be able to create a specific platform's distribution in a single build environment.
 - .NET distro maintainers shall be able to efficiently update and build .NET (both collaboratively and separately) through the entire lifecycle of a .NET version (first to last commit).
 - .NET distro maintainers can produce downstream distributions without use of Microsoft provided services.
@@ -34,7 +34,7 @@ The following are goals and that will be met by the Unified Build project. Pleas
 - .NET distro maintainers shall be able to coordinate patching of downstream distributions.
 - .NET distro maintainers can run verification tests against the built product.
 - .NET developers shall be able to easily produce full product builds for testing, experimentation, etc.
-- .NET developers shall be able to work efficiently on the section of the product for which they are concerned
+- .NET developers shall be able to work efficiently on the section of the product for which they are concerned.
 
 ## High-Level Overview
 

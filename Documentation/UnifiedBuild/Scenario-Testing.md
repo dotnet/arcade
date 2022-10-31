@@ -15,7 +15,7 @@ It is time to add a formal set of automated scenario tests to .NET. Scenario tes
 The Unified Build scenario testing effort has the following goals:
 - Enable .NET maintainers (including existing source-build partners) and Microsoft to validate installed products prior to shipping.
 - Comply with the provenance and build/test environment requirement needs of a variety of .NET maintainers. Maintainers should be able to target a set of tests that meet their requirements. These needs may vary. Examples:
-  - Maintainers may require no pre-builts when building tests
+  - Maintainers may require no pre-builts when building tests.
   - Maintainers may allow online tests (access to internet resources) or may require tests to run offline.
 - Be able to provide a general read on product quality. Cover breadth over depth.
 - Be able to cover both source-built and traditionally built products.

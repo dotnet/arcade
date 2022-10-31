@@ -57,11 +57,11 @@ The implementation cost of Unified Build is very large. This is a fundamental sw
 - Enable an experimental MacOS source-build variant.
 - Enable Linux portable source-build.
 - Redesign .NET’s build to reduce complexity and align it with “vertical” requirements for source-build.
-- Deliver .NET source-build to Linux partners via a “VMR-lite” repo
+- Deliver .NET source-build to Linux partners via a “VMR-lite” repo.
 
 ### **.NET 9 Milestones (targeting .NET //Build)**
 
 - Enable .NET repo tests to run against full source-build.
-- Build infrastructure to support full VMR source-code flow (forward and backward to individual repos)
-- Expand source-build to support Windows and MacOS (officially)
+- Build infrastructure to support full VMR source-code flow (forward and backward to individual repos).
+- Expand source-build to support Windows and MacOS (officially).
 - Turn off existing official build.
