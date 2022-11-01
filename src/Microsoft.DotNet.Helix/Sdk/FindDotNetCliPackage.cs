@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         public bool ExecuteTask(HttpMessageHandler httpMessageHandler)
         {
             _httpMessageHandler = httpMessageHandler;
-            _client = new HttpClient(_httpMessageHandler);
+            _client = new HttpClient(_httpMessageHandler); // lgtm [cs/httpclient-checkcertrevlist-disabled] False positive; see above in ConfigureServices(); this is always created with CheckCertificateRevocationList = true
             FindCliPackage().GetAwaiter().GetResult();
             return !Log.HasLoggedErrors;
         }
