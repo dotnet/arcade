@@ -2,10 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Microsoft.DotNet.Internal.Utilities;
-
-public enum DependencyType
+namespace Microsoft.DotNet.Internal.Utilities
 {
-    Toolset,
-    Product
+
+    public enum DependencyType
+    {
+        Toolset,
+        Product
+    }
+
 }

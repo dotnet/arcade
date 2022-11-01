@@ -3,60 +3,62 @@
 
 using System.IO;
 
-#nullable enable
-namespace Microsoft.DotNet.Internal.Utilities;
-
-public interface IFileSystem
+namespace Microsoft.DotNet.Internal.Utilities
 {
-    char DirectorySeparatorChar { get; }
 
-    void WriteToFile(string path, string content);
-
-    bool FileExists(string path);
-
-    bool DirectoryExists(string path);
-
-    void CreateDirectory(string path);
-
-    void DeleteDirectory(string path, bool recursive);
-
-    string? GetFileName(string? path);
-
-    string? GetDirectoryName(string? path);
-
-    string? GetFileNameWithoutExtension(string? path);
-
-    string? GetExtension(string? path);
-
-    string PathCombine(string path1, string path2);
-
-    void DeleteFile(string path);
-
-    void CopyFile(string sourceFileName, string destFileName, bool overwrite = false);
-
-    Stream GetFileStream(string path, FileMode mode, FileAccess access);
-
-    FileAttributes GetAttributes(string path);
-
-    IFileInfo GetFileInfo(string path);
-}
-
-public interface IFileInfo
-{
-    long Length { get; }
-    bool Exists { get; }
-}
-
-public class FileInfoWrapper : IFileInfo
-{
-    private readonly FileInfo _fileInfo;
-
-    public FileInfoWrapper(string path)
+    public interface IFileSystem
     {
-        _fileInfo = new FileInfo(path);
+        char DirectorySeparatorChar { get; }
+
+        void WriteToFile(string path, string content);
+
+        bool FileExists(string path);
+
+        bool DirectoryExists(string path);
+
+        void CreateDirectory(string path);
+
+        void DeleteDirectory(string path, bool recursive);
+
+        string? GetFileName(string? path);
+
+        string? GetDirectoryName(string? path);
+
+        string? GetFileNameWithoutExtension(string? path);
+
+        string? GetExtension(string? path);
+
+        string PathCombine(string path1, string path2);
+
+        void DeleteFile(string path);
+
+        void CopyFile(string sourceFileName, string destFileName, bool overwrite = false);
+
+        Stream GetFileStream(string path, FileMode mode, FileAccess access);
+
+        FileAttributes GetAttributes(string path);
+
+        IFileInfo GetFileInfo(string path);
     }
 
-    public long Length => _fileInfo.Length;
+    public interface IFileInfo
+    {
+        long Length { get; }
+        bool Exists { get; }
+    }
 
-    public bool Exists => _fileInfo.Exists;
+    public class FileInfoWrapper : IFileInfo
+    {
+        private readonly FileInfo _fileInfo;
+
+        public FileInfoWrapper(string path)
+        {
+            _fileInfo = new FileInfo(path);
+        }
+
+        public long Length => _fileInfo.Length;
+
+        public bool Exists => _fileInfo.Exists;
+    }
+
 }
