@@ -2,7 +2,7 @@ on:
   workflow_call:
     inputs:
       cleanup_runs:
-        description: 'Whether to run the job that cleans up backport runs that were skipped, e.g. if the comment didn''t contain the trigger word. Should be run on a schedule.'
+        description: 'Whether to run the job that cleans up backport runs, e.g. skipped ones if the comment didn''t contain the trigger word. Should be run on a schedule.'
         required: true
         type: boolean
       pr_title_template:
@@ -20,13 +20,13 @@ on:
           /cc %cc_users%
 
 jobs:
-  cleanup_skipped_runs:
+  cleanup:
     if: ${{ inputs.cleanup_runs }}
     runs-on: ubuntu-latest
     permissions:
       actions: write
     steps:
-    - name: Cleanup skipped workflow runs
+    - name: Cleanup workflow runs
       uses: actions/github-script@v6
       with:
         script: |
@@ -40,13 +40,13 @@ jobs:
             run_id: context.runId
           });
 
-          // get runs which are 'skipped' (other candidate values of status field are e.g. 'queued' and 'in_progress')
+          // get runs which are 'completed' (other candidate values of status field are e.g. 'queued' and 'in_progress')
           for await (const response of github.paginate.iterator(
             github.rest.actions.listWorkflowRuns, {
               owner: repo_owner,
               repo: repo_name,
               workflow_id: currentWorkflowRun.data.workflow_id,
-              status: 'skipped'
+              status: 'completed'
             }
           )) {
             // delete each run
