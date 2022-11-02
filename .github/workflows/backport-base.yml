@@ -1,10 +1,6 @@
 on:
   workflow_call:
     inputs:
-      cleanup_runs:
-        description: 'Whether to run the job that cleans up backport runs, e.g. skipped ones if the comment didn''t contain the trigger word. Should be run on a schedule.'
-        required: true
-        type: boolean
       pr_title_template:
         description: 'The template used for the PR title. Special placeholder tokens that will be replaced with a value: %target_branch%, %source_pr_title%, %source_pr_number%, %cc_users%.'
         required: false
@@ -21,7 +17,7 @@ on:
 
 jobs:
   cleanup:
-    if: ${{ inputs.cleanup_runs }}
+    if: ${{ github.repository_owner == 'dotnet' && github.event_name == 'schedule' }}
     runs-on: ubuntu-latest
     permissions:
       actions: write
@@ -61,7 +57,7 @@ jobs:
           }
 
   run_backport:
-    if: github.event.issue.pull_request != '' && contains(github.event.comment.body, '/backport to')
+    if: ${{ github.repository_owner == 'dotnet' && github.event.issue.pull_request != '' && contains(github.event.comment.body, '/backport to') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

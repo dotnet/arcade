@@ -3,7 +3,7 @@ on:
   issue_comment:
     types: [created]
   schedule:
-    # once a day at 13:00 UTC
+    # once a day at 13:00 UTC to cleanup old runs
     - cron: '0 13 * * *'
 
 permissions:
@@ -15,5 +15,3 @@ permissions:
 jobs:
   backport:
     uses: dotnet/arcade/.github/workflows/backport-base.yml@main
-    with:
-      cleanup_runs: ${{ github.event.schedule == '0 13 * * *' }}
