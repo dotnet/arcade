@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.RemoteExecutor
 {
     public static partial class RemoteExecutor
     {
-        internal const string REMOTE_EXECUTOR_ENVIRONMENTAL_VARIABLE = "DOTNET_REMOTE_EXECUTOR";
+        internal const string REMOTE_EXECUTOR_ENVIRONMENTAL_VARIABLE = "DOTNET_REMOTEEXECUTOR";
 
         /// <summary>
         /// A timeout (milliseconds) after which a wait on a remote operation should be considered a failure.
