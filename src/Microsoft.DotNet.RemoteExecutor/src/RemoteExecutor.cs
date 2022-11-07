@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.RemoteExecutor
 
             Path = typeof(RemoteExecutor).Assembly.Location;
 
-            if (string.IsNullOrEmpty(Path))
+            if (IsSingleFile())
             {
                 // Single file case. Assume that our entry EXE has will detect the special argument and vector into the remote executor.
                 HostRunner = Process.GetCurrentProcess().MainModule.FileName;
