@@ -106,7 +106,7 @@ namespace Microsoft.DotNet.RemoteExecutor
         private static bool IsNetCore() =>
             Environment.Version.Major >= 5 || RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase);
 
-        private static bool IsSingleFile() => string.IsNullOrEmpty(typeof(RemoteExecutor).Assembly.Location);
+        private static bool IsSingleFile() => string.IsNullOrEmpty(Path);
 
         /// <summary>Returns true if the RemoteExecutor works on the current platform, otherwise false.</summary>
         public static bool IsSupported { get; } =
