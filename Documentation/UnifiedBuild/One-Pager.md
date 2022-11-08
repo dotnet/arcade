@@ -54,7 +54,7 @@ The implementation cost of Unified Build is very large. This is a fundamental sw
 
 - Improve current source-build infrastructure to support sustainability and reduce cost.
 - Design and create E2E testing against installed products. Prioritize creation of tests that benefit our source-build partners first.
-- Enable an experimental MacOS source-build variant.
+- Enable an experimental macOS source-build variant.
 - Enable Linux portable source-build.
 - Redesign .NET’s build to reduce complexity and align it with “vertical” requirements for source-build.
 - Deliver .NET source-build to Linux partners via a “VMR-lite” repo.
