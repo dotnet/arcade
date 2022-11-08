@@ -1,9 +1,12 @@
+import logging
 import os
-from defs import TestResult, TestResultAttachment
+from helix.public import TestResult, TestResultAttachment
 from typing import Iterable, List
 from formats import all_formats
 from helpers import get_env
 
+
+log = logging.getLogger(__name__)
 
 def __no_results_result():
     exitCode = get_env("_commandExitCode")
@@ -36,18 +39,18 @@ def read_results(dirs_to_check: List[str]) -> Iterable[TestResult]:
     found = False
 
     for dir in dirs_to_check:
-        print("Searching '{}' for test results files".format(dir))
+        log.info("Searching '{}' for test results files".format(dir))
         for root, dirs, files in os.walk(dir):
             for file_name in files:
                 for f in all_formats:
                     if file_name.endswith(tuple(f.acceptable_file_suffixes)):
                         file_path = os.path.join(root, file_name)
-                        print('Found results file {} with format {}'.format(file_path, f.name))
+                        log.info('Found results file {} with format {}'.format(file_path, f.name))
                         found = True
                         file_results = f.read_results(file_path)
                         for result in file_results:
                             yield result
 
     if not found:
-        print('No results file found in any of the following formats: {}'.format(', '.join((f.name for f in all_formats))))
+        log.warn('No results file found in any of the following formats: {}'.format(', '.join((f.name for f in all_formats))))
         yield __no_results_result()
