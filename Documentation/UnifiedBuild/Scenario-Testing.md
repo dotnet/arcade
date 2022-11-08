@@ -59,7 +59,7 @@ Unified Build scenario testing has the following requirements:
 
 Test logic should not execute tests in-proc. Instead, it should test functionality out-of-proc against installed products or shipping outputs, using a library of functionality to perform common actions. This is similar to how dotnet/sdk tests today. For example, take an SDK test that executes a pack command. The PackCommand class implements basic functionality to execute pack commands (via Process.Start), then the output is compared against an expected layout.
 
-```
+```csharp
 public void It_packs_successfully()
 {
     var helloWorldAsset = _testAssetsManager
