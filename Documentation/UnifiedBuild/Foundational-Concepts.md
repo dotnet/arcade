@@ -84,7 +84,7 @@ While our partners may not always build what they release based on the upstream,
 Orchestration is most associated with CI systems, though other systems like Maestro also provide orchestration in some forms. Orchestration, while useful, tends to:
 - Encourage complexity
 - Add fragility to the overall build process because of an increased use of distributed services.
-- Encourage multi-machine workflows, which are incompatible with many organization's build requirements.
+- Encourage multi-machine workflows, which are incompatible with many organizations' build requirements.
 - Be tied to specific distributed services, which adds a point of fragility and vendor-lock-in.
 - Become interwoven with the build, rather than properly layered.
 
