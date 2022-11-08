@@ -12,9 +12,9 @@ Unified Build for .NET is a combined effort to improve two problematic areas for
 
 .NET is a collection of repositories that collectively ship together to form a coherent product. Each individual repository in the graph contributes build outputs that are consumed in other repositories, and potentially shipped to customers. Therefore, a 'build' of .NET is not just a build of a single repository. .NET maintains two ways of building this product. 
 - **Source-build** - Building an *aggregate* of all of the repositories on a single machine (no orchestration) in a single configuration to produce a .NET SDK that is shippable by our Linux source-build partners.
-- **Microsoft's official build** - The process of building each node in the dependency graph, updating any downstream with newly produced outputs, testing and committing those updates, and then repeating until all changes have flowed through the graph to all possible downstream nodes. As you might imagine, this process is complex. New changes in repositories reset the build. Coordinating branch management for more than a dozen repositories across multiple releases of .NET is challenge. There is a high degree of infrastructural overhead. Furthermore, even within repository builds there tends to be a large degree of complexity and orchestration.
+- **Microsoft's official build** - The process of building each node in the dependency graph, updating any downstream repo with newly produced outputs, testing and committing those updates, and then repeating until all changes have flowed through the graph to all possible downstream nodes. As you might imagine, this process is complex. New changes in repositories reset the build. Coordinating branch management for more than a dozen repositories across multiple releases of .NET is challenge. There is a high degree of infrastructural overhead. Furthermore, even within repository builds there tends to be a large degree of complexity and orchestration.
 
-Maintaining both these methodologies is expensive. There are meaningful differences between how source-build and Microsoft's official build produce binaries. There are different restrictions on what inputs are allowed to be used in source-build as compared to Microsoft's build. Even more, the source-build methodology today does not support building the full breadth of assets that Microsoft ships on a monthly cadence. From a community perspective, these differences contribute to a lack of approachability and an inability to have a meaningful upstream/downstream model for collaboration.
+Maintaining both these methodologies is expensive. There are meaningful differences between how source-build and Microsoft's official build produce binaries. There are different restrictions on what inputs are allowed to be used in source-build as compared to Microsoft's build. Even more, the source-build methodology today does not support building Windows. From a community perspective, these differences contribute to a lack of approachability and an inability to have a meaningful upstream/downstream model for collaboration.
 
 One insight is that Microsoft's build, source-build, and meaningful upstream/downstream collaboration are **overlapping problems**, and can be satisfied by the same solution if considered together. Our whole-product repo structure is very costly for us and unapproachable by others. We have spent a lot on these topics over the years, with hard-won progress, and no end in sight. A different repo design-point could provide us with a better and cheaper system.
 
@@ -24,7 +24,6 @@ One insight is that Microsoft's build, source-build, and meaningful upstream/dow
 
 The following are goals and that will be met by the Unified Build project. Please note that ".NET distro maintainers" includes Microsoft.
 
-- .NET adopts industry standard upstream/downstream practices.
 - A single git commit denotes all product source for a particular .NET build. All commits are coherent
 - A single repo commit can produce a shippable build
 - .NET's build shall be able to create a specific platform's distribution in a single build environment.
@@ -42,7 +41,7 @@ At a high level, the following changes will be made:
 
 ### **Source-build becomes the official build**
 
-Source-build builds the product as an aggregate codebase, which is a better model. It is now proven and has been adopted by partners. Microsoft’s current official build will cease to exist. Logically, this means that the .NET product will be built as a series of **vertical builds** for each platform. Assets produced by these verticals will be shipped by Microsoft and its partners (Linux distros, homebrew developers, etc.). There will also exist a join point that will be used to produce assets that require multiple platforms (e.g. global tool packages). This join point may only be used for assets that are not distributed by our partners, and must remain as simple as possible.
+Source-build builds the product as an aggregate codebase, which is a simpler, more reliable model than Microsoft's current official build. It is now proven and has been adopted by partners. Microsoft’s current official build will cease to exist. Logically, this means that the .NET product will be built as a series of **vertical builds** for each platform. Assets produced by these verticals will be shipped by Microsoft and its partners (Linux distros, homebrew developers, etc.). There will also exist a join point that will be used to produce assets that require multiple platforms (e.g. global tool packages). This join point may only be used for assets that are not distributed by our partners, and must remain as simple as possible.
 
 ### **Product builds move to a “virtual monolithic repository” (VMR)**
 
@@ -75,7 +74,7 @@ Unified Build and the associated infrastructure are built around the rules outli
 
 While our partners may not always build what they release based on the upstream, as they may use private pre-release channels to obtain sources of upcoming versions, those releases must eventually be made open-source in the upstream to maintain their open source status.
 
-***Note: What Microsoft builds and releases for Linux, MacOS or any other platform, is not intended to be ‘bit for bit’ identical with what a partner may be able to build using the upstream. Signing, for example, results in a slightly different product. The product shall be functionally identical***
+***Note: What Microsoft builds and releases for Linux, macOS or any other platform, is not intended to be ‘bit for bit’ identical with what a partner may be able to build using the upstream. Signing, for example, results in a slightly different product. The product shall be functionally identical***
 
 ### **The build shall not require any orchestration to build artifacts for a specific platform distribution**
 
@@ -115,7 +114,11 @@ This multi-build ‘gathering’ process is not allowed in Unified Build. The VM
 
 *This rule focuses on simplicity and robustness.*
 
-Stable binary flow is defined as any flow of binaries from a build to a repository, where the identity of those binaries does not vary from build to build with respect to their packaging systems **and** binaries with the same identity are produced *more than once*. This flow is commonly used in RTM/Servicing releases of .NET. Stable binary flow has been extremely costly to implement and makes the shipping product harder to understand. The basic problems are:
+Stable binary flow is defined as any flow of binaries from a build to a repository, where:
+- The identity of those binaries does not vary from build to build with respect to their packaging systems **and**
+- Binaries with the same identity are produced *more than once*.
+
+This flow is commonly used in RTM/Servicing releases of .NET. Stable binary flow has been extremely costly to implement and makes the shipping product harder to understand. The basic problems are:
 - It bends the rules of the packaging systems, like NuGet, by introducing multiple packages with the same identity into different feeds.
 - Bending packaging system rules requires introducing complex automation to manage those packages. This automation is required to ship the product.
 
