@@ -6,8 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MsbuildTaskMicrosoftCodeAnalysisCSharpVersion)" />
     <PackageReference Include="NuGet.Frameworks" Version="$(NuGetVersion)" />
     <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersion)" />
