@@ -30,7 +30,7 @@ The testing infrastructure will be augmented to support both individual repos *a
 
 ### **Upstream partners primarily focus on the VMR structure**
 
-The VMR focused build enables partners to build and test .NET more easily. This should enable them to more effectively contribute when desired. While they of course may contribute to either the VMR or individual repos, it's expected that they will choose to work in the VMR.
+The VMR focused build enables partners to build and test .NET more easily. This should enable them to more effectively contribute when desired. They of may contribute to either the VMR or individual repos.
 
 ### **Individual developers continue to work primarily in individual repositories for mainline development**
 
@@ -38,15 +38,14 @@ Though they may work in the VMR, it is expected that many developers will contin
 
 ## Implementation
 
-The implementation cost of Unified Build is very large. This is a fundamental switch in how we’ve been developing, building, and delivering the product for the lifetime of .NET. It will take two releases to deliver. The implementation is designed with the following priorities, in order of importance.
+The implementation cost of Unified Build is very large. This is the largest change in how we develop, build and deliver the product in the history of .NET. It will take two releases to deliver. The implementation is designed with the following priorities, in order of importance.
 
 ### **Priorities**
 
 1. Don’t break or remove the existing product build and developer workflows until we must.
 2. Avoid increasing complexity at intermediate stages.
 3. Deliver value at every major phase of implementation.
-4. Don’t rely on project completion to see improvements.
-5. Servicing should get easier as soon as possible.
+4. Servicing should get easier as soon as possible.
 
 ***Note: Work items slipping from .NET 8 into .NET 9 will not affect .NET 8 shipping. The plan is designed to bring incremental benefit over time while avoiding putting at risk our current build/release methodologies.***
 
@@ -54,7 +53,7 @@ The implementation cost of Unified Build is very large. This is a fundamental sw
 
 - Improve current source-build infrastructure to support sustainability and reduce cost.
 - Design and create E2E testing against installed products. Prioritize creation of tests that benefit our source-build partners first.
-- Enable an experimental MacOS source-build variant.
+- Enable an experimental macOS source-build variant.
 - Enable Linux portable source-build.
 - Redesign .NET’s build to reduce complexity and align it with “vertical” requirements for source-build.
 - Deliver .NET source-build to Linux partners via a “VMR-lite” repo.
@@ -63,5 +62,5 @@ The implementation cost of Unified Build is very large. This is a fundamental sw
 
 - Enable .NET repo tests to run against full source-build.
 - Build infrastructure to support full VMR source-code flow (forward and backward to individual repos).
-- Expand source-build to support Windows and MacOS (officially).
+- Expand source-build to support Windows and macOS (officially).
 - Turn off existing official build.
