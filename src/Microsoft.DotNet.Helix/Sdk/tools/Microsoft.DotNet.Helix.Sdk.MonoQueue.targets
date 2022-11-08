@@ -6,7 +6,11 @@
          this failure mode to just a warning, which hopefully still tells the user to remove usage when possible. -->
     <FailOnMissingTargetQueue Condition=" '$(FailOnMissingTargetQueue)' != 'false' ">true</FailOnMissingTargetQueue>
   </PropertyGroup>
-
+  
+  <PropertyGroup Condition=" '$(HelixTestConfigurationFilePath)' == '' ">
+    <HelixTestConfigurationFilePath Condition=" '$(RepositoryEngineeringDir)' != '' ">$(RepositoryEngineeringDir)/test-configuration.json</HelixTestConfigurationFilePath>
+  </PropertyGroup>
+  
   <Choose>
     <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('windows'))">
       <PropertyGroup>
@@ -21,23 +25,15 @@
   </Choose>
 
   <Import Project="$(_HelixMonoQueueTargets)" Condition="'$(_HelixMonoQueueTargets)' != ''"/>
-  
-  <Target Name="AddXUnitReporter" Condition="$(EnableXUnitReporter)" BeforeTargets="CoreTest">
-    <ItemGroup>
-      <HelixCorrelationPayload Include="$(MSBuildThisFileDirectory)xunit-reporter"/>
-    </ItemGroup>
-    <PropertyGroup>
-      <HelixPostCommands Condition="$(IsPosixShell)">$(HelixPostCommands);$HELIX_PYTHONPATH -B $HELIX_CORRELATION_PAYLOAD/xunit-reporter.py</HelixPostCommands>
-      <HelixPostCommands Condition="!$(IsPosixShell)">$(HelixPostCommands);%HELIX_PYTHONPATH% -B %HELIX_CORRELATION_PAYLOAD%\xunit-reporter.py</HelixPostCommands>
-
-      <MaxRetryCount Condition="'$(MaxRetryCount)' == ''">0</MaxRetryCount>
-    </PropertyGroup>
-  </Target>
 
   <ItemGroup>
     <HelixProperties Condition="'$(HelixConfiguration)' != ''" Include="configuration" Value="$(HelixConfiguration)" />
     <HelixProperties Condition="'$(HelixArchitecture)' != ''" Include="architecture" Value="$(HelixArchitecture)" />
     <HelixProperties Include="operatingSystem" Value="$(HelixTargetQueue)" />
+  </ItemGroup>
+  
+  <ItemGroup Condition="Exists('$(HelixTestConfigurationFilePath)')">
+    <HelixCorrelationPayload Include="$(HelixTestConfigurationFilePath)" AsArchive="false" />
   </ItemGroup>
 
   <Target Name="CoreBuild">
@@ -72,7 +68,13 @@
         <ResultsContainerReadSAS>$(HelixResultsContainerReadSAS)</ResultsContainerReadSAS>
       </SentJob>
     </ItemGroup>
-    <Message Text="Sent Helix Job $(HelixJobId)" Importance="High" />
+
+    <PropertyGroup>
+      <_AccessTokenSuffix />
+      <_AccessTokenSuffix Condition=" '$(HelixAccessToken)' != '' ">&amp;access_token={Get this from helix.dot.net}</_AccessTokenSuffix>
+    </PropertyGroup>
+    <Message Condition=" '$(HelixBaseUri)' == '' " Text="Sent Helix Job; see work items at https://helix.dot.net/api/jobs/$(HelixJobId)/workitems?api-version=2019-06-17$(_AccessTokenSuffix)" Importance="High" />
+    <Message Condition=" '$(HelixBaseUri)' != '' " Text="Sent Helix Job; see work items at $(HelixBaseUri)/api/jobs/$(HelixJobId)/workitems?api-version=2019-06-17$(_AccessTokenSuffix)" Importance="High" />
   </Target>
 
   <Target Name="Test"
