@@ -63,5 +63,5 @@ The implementation cost of Unified Build is very large. This is a fundamental sw
 
 - Enable .NET repo tests to run against full source-build.
 - Build infrastructure to support full VMR source-code flow (forward and backward to individual repos).
-- Expand source-build to support Windows and MacOS (officially).
+- Expand source-build to support Windows and macOS (officially).
 - Turn off existing official build.
