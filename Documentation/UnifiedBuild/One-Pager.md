@@ -8,7 +8,7 @@ Unified Build for .NET is a combined effort to improve two problematic areas for
 
 - Predictable builds, faster builds, simpler builds
 - Reduce long-term servicing complexity and risk.
-- Enable non-Microsoft organizations to build, test, deploy, and contribute to .NET in a reasonable manner.
+- Enable any organization to build, test, deploy, and contribute to .NET in a reasonable manner.
 - Enable effective cross-stack development.
 - Align .NET’s organizational collaboration model with industry standard upstream/downstream practices.
 
