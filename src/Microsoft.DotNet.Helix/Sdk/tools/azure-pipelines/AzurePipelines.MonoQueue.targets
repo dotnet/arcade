@@ -1,16 +1,17 @@
 <Project>
   <ItemGroup>
     <HelixCorrelationPayload Include="$(MSBuildThisFileDirectory)\reporter" IncludeDirectoryName="true"/>
+    <HelixProperties Include="AzurePipelinesTestRunId" Value="$(TestRunId)" />
   </ItemGroup>
 
   <PropertyGroup>
     <HelixPostCommands Condition="$(IsPosixShell)">
       $(HelixPostCommands);
-      /bin/sh $HELIX_CORRELATION_PAYLOAD/reporter/run.sh $(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI) $(SYSTEM_TEAMPROJECT) $(TestRunId) $(SYSTEM_ACCESSTOKEN)
+      $HELIX_PYTHONPATH $HELIX_CORRELATION_PAYLOAD/reporter/run.py $(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI) $(SYSTEM_TEAMPROJECT) $(TestRunId) $(SYSTEM_ACCESSTOKEN) || exit $?
     </HelixPostCommands>
     <HelixPostCommands Condition="!$(IsPosixShell)">
       $(HelixPostCommands);
-      call %HELIX_CORRELATION_PAYLOAD%\reporter\run.bat $(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI) $(SYSTEM_TEAMPROJECT) $(TestRunId) $(SYSTEM_ACCESSTOKEN)
+      %HELIX_PYTHONPATH% %HELIX_CORRELATION_PAYLOAD%\reporter\run.py $(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI) $(SYSTEM_TEAMPROJECT) $(TestRunId) $(SYSTEM_ACCESSTOKEN) || exit /b
     </HelixPostCommands>
   </PropertyGroup>
 

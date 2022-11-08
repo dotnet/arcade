@@ -1,78 +1,33 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.AzureDevOps;
-using Microsoft.DotNet.Helix.Client.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
-    public class CreateFailedTestsForFailedWorkItems : AzureDevOpsTask
+    public class CreateTestsForWorkItems : AzureDevOpsTask
     {
         [Required]
-        public ITaskItem[] FailedWorkItems { get; set; }
+        public ITaskItem[] WorkItems { get; set; }
 
         protected override async Task ExecuteCoreAsync(HttpClient client)
         {
-            foreach (ITaskItem failedWorkItem in FailedWorkItems)
+            foreach (ITaskItem workItem in WorkItems)
             {
-                var jobName = failedWorkItem.GetMetadata("JobName");
-                var workItemName = failedWorkItem.GetMetadata("WorkItemName");
-                var testRunId = failedWorkItem.GetMetadata("TestRunId");
+                var jobName = workItem.GetMetadata("JobName");
+                var workItemName = workItem.GetMetadata("WorkItemName");
+                var testRunId = workItem.GetMetadata("TestRunId");
+                var failed = workItem.GetMetadata("Failed") == "true";
 
-                var testResultId = await CreateFakeTestResultAsync(client, testRunId, jobName, workItemName);
-
-                try
-                {
-                    var uploadedFiles = JsonConvert.DeserializeObject<List<UploadedFile>>(failedWorkItem.GetMetadata("UploadedFiles"));
-                    var text = $"<ul>{string.Join("", uploadedFiles.Select(f => $"<li><a href='{f.Link}' target='_blank'>{f.Name}</a></li>"))}</ul>";
-                    await AttachResultFileToTestResultAsync(client, testRunId, testResultId, text);
-                }
-                catch (Exception ex)
-                {
-                    Log.LogWarningFromException(ex);
-                }
+                await CreateFakeTestResultAsync(client, testRunId, jobName, workItemName, failed);
             }
         }
 
-        private async Task AttachResultFileToTestResultAsync(HttpClient client, string testRunId, int testResultId, string text)
-        {
-            var b64Stream = Convert.ToBase64String(Encoding.UTF8.GetBytes(text));
-            await RetryAsync(
-                async () =>
-                {
-                    var req =
-                        new HttpRequestMessage(
-                            HttpMethod.Post,
-                            $"{CollectionUri}{TeamProject}/_apis/test/Runs/{testRunId}/Results/{testResultId}/attachments?api-version=5.1-preview.1")
-                        {
-                            Content = new StringContent(
-                                JsonConvert.SerializeObject(
-                                    new JObject
-                                    {
-                                        ["attachmentType"] = "GeneralAttachment",
-                                        ["fileName"] = "UploadFileResults.html",
-                                        ["stream"] = b64Stream,
-                                    }),
-                                Encoding.UTF8,
-                                "application/json"),
-                        };
-                    using (req)
-                    {
-                        using (var res = await client.SendAsync(req))
-                        {
-                            res.EnsureSuccessStatusCode();
-                        }
-                    }
-                });
-        }
-
-        private async Task<int> CreateFakeTestResultAsync(HttpClient client, string testRunId, string jobName, string workItemFriendlyName)
+        private async Task<int> CreateFakeTestResultAsync(HttpClient client, string testRunId, string jobName, string workItemFriendlyName, bool failed)
         {
             var testResultData = await RetryAsync(
                 async () =>
@@ -91,9 +46,10 @@ namespace Microsoft.DotNet.Helix.Sdk
                                             ["automatedTestName"] = $"{workItemFriendlyName}.WorkItemExecution",
                                             ["automatedTestStorage"] = workItemFriendlyName,
                                             ["testCaseTitle"] = $"{workItemFriendlyName} Work Item",
-                                            ["outcome"] = "Failed",
+                                            ["outcome"] = failed ? "Failed" : "Passed",
                                             ["state"] = "Completed",
-                                            ["errorMessage"] = "The Work Item Failed",
+                                            ["errorMessage"] = failed ? "The Helix Work Item failed. Often this is due to a test crash. Please see the 'Artifacts' tab above for additional logs." : null,
+                                            ["durationInMs"] = 60 * 1000, // Use a non-zero duration so that the graphs look better.
                                             ["comment"] = new JObject
                                             {
                                                 ["HelixJobId"] = jobName,
@@ -113,8 +69,16 @@ namespace Microsoft.DotNet.Helix.Sdk
                     }
                 });
 
-            var testResults = (JArray)testResultData["value"];
-            return (int)testResults.First()["id"];
+            if (testResultData != null)
+            {
+                if ((JArray)testResultData["value"] != null)
+                {
+                    var testResults = (JArray)testResultData["value"];
+                    return (int)testResults.First()["id"];
+                }
+                return 0;
+            }
+            return 0;
         }
     }
 }

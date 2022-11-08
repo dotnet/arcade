@@ -24,6 +24,10 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         );
 
+        Task<IImmutableList<Deploy1esImagesResult>> Deployed1esImagesInfoListAsync(
+            CancellationToken cancellationToken = default
+        );
+
     }
 
     internal partial class Information : IServiceOperations<HelixApi>, IInformation
@@ -202,6 +206,82 @@ namespace Microsoft.DotNet.Helix.Client
                     Request = _req,
                     Response = _res,
                     Body = Client.Deserialize<IImmutableList<QueueInfo>>(_responseContent),
+                };
+            }
+            catch (Exception)
+            {
+                _req?.Dispose();
+                _res?.Dispose();
+                throw;
+            }
+        }
+
+        partial void HandleFailedDeployed1esImagesInfoListRequest(RestApiException ex);
+
+        public async Task<IImmutableList<Deploy1esImagesResult>> Deployed1esImagesInfoListAsync(
+            CancellationToken cancellationToken = default
+        )
+        {
+            using (var _res = await Deployed1esImagesInfoListInternalAsync(
+                cancellationToken
+            ).ConfigureAwait(false))
+            {
+                return _res.Body;
+            }
+        }
+
+        internal async Task OnDeployed1esImagesInfoListFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException<ApiError>(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
+            HandleFailedDeployed1esImagesInfoListRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
+        internal async Task<HttpOperationResponse<IImmutableList<Deploy1esImagesResult>>> Deployed1esImagesInfoListInternalAsync(
+            CancellationToken cancellationToken = default
+        )
+        {
+            const string apiVersion = "2019-06-17";
+
+            var _path = "/api/info/1esimages";
+
+            var _query = new QueryBuilder();
+            _query.Add("api-version", Client.Serialize(apiVersion));
+
+            var _uriBuilder = new UriBuilder(Client.BaseUri);
+            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
+            _uriBuilder.Query = _query.ToString();
+            var _url = _uriBuilder.Uri;
+
+            HttpRequestMessage _req = null;
+            HttpResponseMessage _res = null;
+            try
+            {
+                _req = new HttpRequestMessage(HttpMethod.Get, _url);
+
+                if (Client.Credentials != null)
+                {
+                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
+                }
+
+                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
+                if (!_res.IsSuccessStatusCode)
+                {
+                    await OnDeployed1esImagesInfoListFailed(_req, _res);
+                }
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                return new HttpOperationResponse<IImmutableList<Deploy1esImagesResult>>
+                {
+                    Request = _req,
+                    Response = _res,
+                    Body = Client.Deserialize<IImmutableList<Deploy1esImagesResult>>(_responseContent),
                 };
             }
             catch (Exception)
