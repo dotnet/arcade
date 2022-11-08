@@ -18,7 +18,7 @@ Maintaining both these methodologies is expensive. There are meaningful differen
 
 One insight is that Microsoft's build, source-build, and meaningful upstream/downstream collaboration are **overlapping problems**, and can be satisfied by the same solution if considered together. Our whole-product repo structure is very costly for us and unapproachable by others. We have spent a lot on these topics over the years, with hard-won progress, and no end in sight. A different repo design-point could provide us with a better and cheaper system.
 
-**Proposition** Focusing on the source-build philosophy (aggregate code base is the source-of-truth) as the way that the community **and** Microsoft produce the product will drastically development operations, servicing, and community interaction.
+**Proposition** Focusing on the source-build philosophy (aggregate code base is the source-of-truth) as the way that the community **and** Microsoft produce the product will drastically improve development operations, servicing, and community interaction.
 
 ## Unified Build goals
 
