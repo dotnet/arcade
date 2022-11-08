@@ -1,4 +1,3 @@
-
 # The Unified Build Almanac (TUBA) - Foundational Concepts
 
 ## Purpose

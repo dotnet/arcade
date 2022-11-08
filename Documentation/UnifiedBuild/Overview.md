@@ -36,31 +36,6 @@ The VMR focused build enables partners to build and test .NET more easily. This 
 
 Though they may work in the VMR, it is expected that many developers will continue to primarily work in the individual repositories for mainline development, especially those developers who focus on specfic areas of .NET. Maintaining the individual repository workflows enables high-velocity development for changes in isolated components. It also allows for continued community building in specific product areas. Cross-repo breaking changes will be resolved in the VMR, then build outputs and additional source changes will flow back into the individual repositories.
 
-## Implementation
+## Roadmap
 
-The implementation cost of Unified Build is very large. This is the largest change in how we develop, build and deliver the product in the history of .NET. It will take two releases to deliver. The implementation is designed with the following priorities, in order of importance.
-
-### **Priorities**
-
-1. Don’t break or remove the existing product build and developer workflows until we must.
-2. Avoid increasing complexity at intermediate stages.
-3. Deliver value at every major phase of implementation.
-4. Servicing should get easier as soon as possible.
-
-***Note: Work items slipping from .NET 8 into .NET 9 will not affect .NET 8 shipping. The plan is designed to bring incremental benefit over time while avoiding putting at risk our current build/release methodologies.***
-
-### **.NET 8 Milestones**
-
-- Improve current source-build infrastructure to support sustainability and reduce cost.
-- Design and create E2E testing against installed products. Prioritize creation of tests that benefit our source-build partners first.
-- Enable an experimental macOS source-build variant.
-- Enable Linux portable source-build.
-- Redesign .NET’s build to reduce complexity and align it with “vertical” requirements for source-build.
-- Deliver .NET source-build to Linux partners via a “[VMR-lite](Terminology.md)” repo.
-
-### **.NET 9 Milestones (targeting .NET //Build)**
-
-- Enable .NET repo tests to run against full source-build.
-- Build infrastructure to support full VMR source-code flow (forward and backward to individual repos).
-- Expand source-build to support Windows and macOS (officially).
-- Turn off existing official build.
+Please see [Roadmap](Roadmap.md)
