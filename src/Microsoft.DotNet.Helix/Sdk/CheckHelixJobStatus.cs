@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         public ITaskItem[] Jobs { get; set; }
 
         [Required]
-        public ITaskItem[] FailedWorkItems { get; set; }
+        public ITaskItem[] WorkItems { get; set; }
 
         public bool FailOnWorkItemFailure { get; set; } = true;
 
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             if (FailOnWorkItemFailure)
             {
                 string accessTokenSuffix = string.IsNullOrEmpty(AccessToken) ? "" : "?access_token={Get this from helix.dot.net}";
-                foreach (ITaskItem workItem in FailedWorkItems)
+                foreach (ITaskItem workItem in WorkItems)
                 {
                     var failed = workItem.GetMetadata("Failed");
                     if (failed == "true")
