@@ -18,7 +18,7 @@ Maintaining both these methodologies is expensive. There are meaningful differen
 
 One insight is that Microsoft's build, source-build, and meaningful upstream/downstream collaboration are **overlapping problems**, and can be satisfied by the same solution if considered together. Our whole-product repo structure is very costly for us and unapproachable by others. We have spent a lot on these topics over the years, with hard-won progress, and no end in sight. A different repo design-point could provide us with a better and cheaper system.
 
-**Proposition** Focusing on the source-build philosophy (aggregate code base is the source-of-truth) as the way that the community **and** Microsoft produce the product will drastically development operations, servicing, and community interaction.
+**Proposition** Focusing on the source-build philosophy (aggregate code base is the source-of-truth) as the way that the community **and** Microsoft produce the product will drastically improve development operations, servicing, and community interaction.
 
 ## Unified Build goals
 
@@ -33,7 +33,7 @@ The following are goals and that will be met by the Unified Build project. Pleas
 - .NET distro maintainers shall be able to coordinate patching of downstream distributions.
 - .NET distro maintainers can run verification tests against the built product.
 - .NET developers shall be able to easily produce full product builds for testing, experimentation, etc.
-- .NET developers shall be able to work efficiently on the section of the product for which they are concerned
+- .NET developers shall be able to work efficiently on the section of the product for which they are concerned.
 
 ## High-Level Overview
 
@@ -63,7 +63,7 @@ Though they may work in the VMR, it is expected that many developers will contin
 
 Unified Build and the associated infrastructure are built around the rules outlined below, with their associated reasoning. There are two motivations behind these rules: 
 
-- **Enabling non-Microsoft .NET distro maintainers to succeed** - Microsoft is the primary maintainer of the .NET upstream. Our choices about infrastructure technologies and build methodologies have real effects on our downstream partners, like RedHat, Canonical, or Unity. If we make poor choices, we make it harder or even impossible for our partners to be successful in delivering the product to their customers. While Microsoft has the vast engineering resources to be able to build, service and deliver to all sorts of customers in all manner of scenarios, this is not without cost. To grow our product the way we want, we need to enable our partners to serve their customers without handholding.
+- **Enabling any .NET distro maintainer to succeed** - Microsoft is the primary maintainer of the .NET upstream. Our choices about infrastructure technologies and build methodologies have real effects on our downstream partners, like RedHat, Canonical, or Unity. If we make poor choices, we make it harder or even impossible for our partners to be successful in delivering the product to their customers. While Microsoft has the vast engineering resources to be able to build, service and deliver to all sorts of customers in all manner of scenarios, this is not without cost. To grow our product the way we want, we need to enable our partners to serve their customers without handholding.
 - **Enabling Microsoft to succeed as a distro maintainer** – The biggest issue around Microsoft’s infrastructure for .NET 7 and prior releases has been the overall complexity. Complexity has resulted in unreliability, high maintenance costs, build and release processes that are fragile over time, and infrastructure that is harder to understand. We’ve often tried to tame this complexity with automation, which usually exacerbates the problem rather than solving it. It is time to target simplicity, reproducibility, isolation and long-term sustainability.
 
 ### **Public open-source .NET releases must be buildable by .NET distro maintainers from a single commit in the upstream repository.**
@@ -83,7 +83,7 @@ While our partners may not always build what they release based on the upstream,
 Orchestration is most associated with CI systems, though other systems like Maestro also provide orchestration in some forms. Orchestration, while useful, tends to:
 - Encourage complexity
 - Add fragility to the overall build process because of an increased use of distributed services.
-- Encourage multi-machine workflows, which are incompatible with many organization's build requirements.
+- Encourage multi-machine workflows, which are incompatible with many organizations' build requirements.
 - Be tied to specific distributed services, which adds a point of fragility and vendor-lock-in.
 - Become interwoven with the build, rather than properly layered.
 
