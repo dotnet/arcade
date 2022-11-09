@@ -532,3 +532,8 @@ During publishing, arcade will pick up SymbolPublishingExclusionsFile.txt and ex
 <!-- Begin Generated Content: Doc Feedback -->
 <sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CCorePackages%5CPublishing.md)](https://helix.dot.net/f/p/5?p=Documentation%5CCorePackages%5CPublishing.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CCorePackages%5CPublishing.md)</sub>
 <!-- End Generated Content-->
+
+
+### Can we publish stable packages to target feeds? 
+
+No. We publish the stable packages to isolated feeds, repo owners push these packages to Nuget.org manually. Then these packages flow to dotnet-public feed.
