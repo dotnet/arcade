@@ -18,6 +18,13 @@
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
   </ItemGroup>
 
+  <!-- When building offline we need to bump the version of System.Reflection.Metadata that CodeAnalysis package depends on to match what the source build tarball expects. -->
+  <ItemGroup Condition="'$(DotNetBuildOffline)' == 'true'">
+    <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
+    <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="$(SystemTextEncodingCodePagesVersion)" />
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Include="..\Common\Internal\BuildTask.cs" />
   </ItemGroup>
