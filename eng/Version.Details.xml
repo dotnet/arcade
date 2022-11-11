@@ -43,13 +43,13 @@
       <Uri>https://github.com/dotnet/arcade-services</Uri>
       <Sha>a5f3ed9d5f560555ff6d26b286acdcfbb7ce3b14</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="1.0.0-prerelease.22524.1">
+    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="1.0.0-prerelease.22531.1">
       <Uri>https://github.com/dotnet/xharness</Uri>
-      <Sha>49b581c1ac56352864cb692d3c523b3fc27eddf7</Sha>
+      <Sha>9832d3f69cb3a3ba9b6196b7210cb3949f4af6c1</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="4.5.0-1.22528.14">
+    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="4.5.0-1.22553.5">
       <Uri>https://github.com/dotnet/roslyn</Uri>
-      <Sha>785bc38801eac75a5342c3c639fcc5fd5156f263</Sha>
+      <Sha>c9a6d5cf04904ebd2b1aaab0adb33df16c8e76a6</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="6.0.100-1.22103.2">
       <Uri>https://github.com/dotnet/linker</Uri>
