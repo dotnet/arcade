@@ -536,4 +536,17 @@ During publishing, arcade will pick up SymbolPublishingExclusionsFile.txt and ex
 
 ### Can we publish stable packages to target feeds? 
 
-No. We publish the stable packages to isolated feeds, repo owners push these packages to Nuget.org manually. Then these packages flow to dotnet-public feed.
+No. Stable packages go to isolated feeds (to enable rebuilds), then repo owners push these packages to Nuget.org manually. Then these packages flow to dotnet-public feed via the mirroring process
+
+```mermaid
+flowchart LR
+  Packages[Built Packages]-->ArcadePublishing{Arcade Publishing}
+  ArcadePublishing-->|Non-Stable|PermanantFeeds[Permanant Feeds]
+  ArcadePublishing-->|Stable|IsolatedFeeds[Isolated Feeds]
+  IsolatedFeeds-->DogFoodingAndDepFlow{Dog-Fooding and dependency flow}
+  PermanantFeeds-->DogFoodingAndDepFlow
+  Packages-->|Release final stable packages on NuGet.org|NuGet[NuGet.Org]
+  NuGet-->|Mirroring|DotnetPublic[dotnet-public feed]
+  DotnetPublic-->RepoUse[Repository use]
+  DogFoodingAndDepFlow-->RepoUse
+  
