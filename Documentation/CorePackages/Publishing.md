@@ -534,7 +534,7 @@ During publishing, arcade will pick up SymbolPublishingExclusionsFile.txt and ex
 <!-- End Generated Content-->
 
 
-### Can we publish stable packages to target feeds? 
+### How do I publish stable packages?
 
 No. Stable packages go to isolated feeds (to enable rebuilds), then repo owners push these packages to Nuget.org manually. Then these packages flow to dotnet-public feed via the mirroring process
 
