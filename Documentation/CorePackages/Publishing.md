@@ -536,7 +536,7 @@ During publishing, arcade will pick up SymbolPublishingExclusionsFile.txt and ex
 
 ### How do I publish stable packages?
 
-No. Stable packages go to isolated feeds (to enable rebuilds), then repo owners push these packages to Nuget.org manually. Then these packages flow to dotnet-public feed via the mirroring process
+Stable packages are not published by Arcade except for dependency flow and testing purposes. Stable packages go to isolated feeds (to enable rebuilds), then repo owners push these packages to Nuget.org manually. Then these packages flow to dotnet-public feed via the mirroring process
 
 ```mermaid
 flowchart LR
