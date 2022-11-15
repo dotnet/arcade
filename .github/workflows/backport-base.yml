@@ -80,6 +80,7 @@ jobs:
           return target_branch[1];
     - name: Post backport started comment to pull request
       uses: actions/github-script@v6
+      continue-on-error: true
       with:
         script: |
           const target_branch = '${{ steps.target-branch-extractor.outputs.result }}';
