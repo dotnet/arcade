@@ -271,6 +271,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             return resolvedAssets;
         }
 
+        [Obsolete]
         public IReadOnlyDictionary<string, IEnumerable<ContentItemGroup>> GetAllRuntimeItems()
         {
             Dictionary<string, IEnumerable<ContentItemGroup>> resolvedAssets = new Dictionary<string, IEnumerable<ContentItemGroup>>();
