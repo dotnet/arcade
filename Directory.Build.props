@@ -14,6 +14,8 @@
       Tools and packages produced by this repository support infrastructure and are not shipping on NuGet or via any other official channel.
     -->
     <IsShipping>false</IsShipping>
+    <!-- Release branch; allow targeting existing EOL frameworks -->
+    <CheckEolTargetFramework>false</CheckEolTargetFramework>
   </PropertyGroup>
 
   <!-- Don't let it restore lower versions of this package, which can come transitively from NetStandard package restores (CSProj only) -->
