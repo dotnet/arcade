@@ -255,6 +255,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
                     {
                         try
                         {
+                            _log.LogMessage(MessageImportance.High, $"Sending {(update ? "update" : "create")} aka.ms request.");
                             using (HttpResponseMessage response = await client.SendAsync(requestMessage))
                             {
                                 // Check for auth failures on POST (401, and 403).
