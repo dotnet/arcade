@@ -258,6 +258,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
                             _log.LogMessage(MessageImportance.High, $"Sending {(update ? "update" : "create")} aka.ms request.");
                             using (HttpResponseMessage response = await client.SendAsync(requestMessage))
                             {
+                                _log.LogMessage(MessageImportance.High, $"Processing {(update ? "update" : "create")} aka.ms request response.");
                                 // Check for auth failures on POST (401, and 403).
                                 // No reason to retry here.
                                 if (response.StatusCode == HttpStatusCode.Unauthorized ||
