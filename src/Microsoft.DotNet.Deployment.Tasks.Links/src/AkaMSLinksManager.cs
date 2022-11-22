@@ -240,7 +240,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         {
             _log.LogMessage(MessageImportance.High, $"{(update ? "Updating" : "Creating")} {links.Count()} aka.ms links.");
 
-            using (HttpClient client = CreateClient())
+            using (HttpClient client = await CreateClient())
             {
                 string newOrUpdatedLinksJson = 
                     GetCreateOrUpdateLinkJson(linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, update, links);
@@ -379,7 +379,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
             }
         }
 
-        private HttpClient CreateClient()
+        private async Task<HttpClient> CreateClient()
         {
 #if NETCOREAPP
             var platformParameters = new PlatformParameters();
@@ -390,7 +390,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 #endif
             AuthenticationContext authContext = new AuthenticationContext(Authority);
             ClientCredential credential = new ClientCredential(_clientId, _clientSecret);
-            AuthenticationResult token = authContext.AcquireTokenAsync(Endpoint, credential).Result;
+            AuthenticationResult token = (await authContext.AcquireTokenAsync(Endpoint, credential)).Result;
 
             HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
             httpClient.DefaultRequestHeaders.Add("Authorization", token.CreateAuthorizationHeader());
