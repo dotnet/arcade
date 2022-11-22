@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
             // The bulk hard-delete APIs do not have short-url forms (only identity), so they must be
             // deleted individually. Use a semaphore to avoid excessive numbers of concurrent API calls
 
-            using (HttpClient client = CreateClient())
+            using (HttpClient client = await CreateClient())
             {
                 using (var clientThrottle = new SemaphoreSlim(8, 8))
                 {
@@ -163,7 +163,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
             ConcurrentBag<AkaMSLink> linksToCreate = new ConcurrentBag<AkaMSLink>();
             ConcurrentBag<AkaMSLink> linksToUpdate = new ConcurrentBag<AkaMSLink>();
 
-            using (HttpClient client = CreateClient())
+            using (HttpClient client = await CreateClient())
             using (var clientThrottle = new SemaphoreSlim(8, 8))
             {
                 await Task.WhenAll(links.Select(async link =>
