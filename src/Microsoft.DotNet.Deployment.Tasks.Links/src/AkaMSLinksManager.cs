@@ -390,7 +390,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 #endif
             AuthenticationContext authContext = new AuthenticationContext(Authority);
             ClientCredential credential = new ClientCredential(_clientId, _clientSecret);
-            AuthenticationResult token = (await authContext.AcquireTokenAsync(Endpoint, credential)).Result;
+            AuthenticationResult token = await authContext.AcquireTokenAsync(Endpoint, credential);
 
             HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
             httpClient.DefaultRequestHeaders.Add("Authorization", token.CreateAuthorizationHeader());
