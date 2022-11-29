@@ -1,0 +1,5 @@
+//Documentation: https://github.com/dotnet/arcade/blob/main/Documentation/Projects/Build%20Analysis/BuildRetryOnboard.md#build-configuration-file-structure
+{
+  "RetryCountLimit": 1,
+  "RetryByAnyError": false
+}
