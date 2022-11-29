@@ -329,7 +329,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 
                 if (!success)
                 {
-                    _log.LogError($"Failed to create/update aka.ms links");
+                    _log.LogError("Failed to create/update aka.ms links");
                 }
                 else
                 {
