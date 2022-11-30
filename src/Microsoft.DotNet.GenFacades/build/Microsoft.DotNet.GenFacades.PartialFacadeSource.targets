@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <Target Name="GeneratePartialFacadeSource"
-          Inputs="$(MSBuildAllProjects);@($(GenFacadesReferenceAssemblyItemName));@($(GenFacadesReferencePathItemName));@(Compile)"
+          Inputs="$(MSBuildAllProjects);@($(GenFacadesReferenceAssemblyItemName));@($(GenFacadesReferencePathItemName));@(GenFacadeCompile)"
           Outputs="$(GenFacadesOutputSourcePath)"
           DependsOnTargets="$(GeneratePartialFacadeSourceDependsOn)">
     <GenPartialFacadeSource
