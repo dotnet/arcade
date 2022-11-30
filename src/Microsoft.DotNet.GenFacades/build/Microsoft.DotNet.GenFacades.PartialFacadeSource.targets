@@ -8,15 +8,17 @@
     <GenFacadesReferenceAssemblyItemName Condition="'$(GenFacadesReferenceAssemblyItemName)' == ''">ResolvedMatchingContract</GenFacadesReferenceAssemblyItemName>
     <!-- Tell ResolveMatchingContract to run and resolve contract to project reference -->
     <ResolveMatchingContract>true</ResolveMatchingContract>
-    <GeneratePartialFacadeSourceDependsOn>$(GeneratePartialFacadeSourceDependsOn);ResolveMatchingContract;_GetRoslynAssembliesPath</GeneratePartialFacadeSourceDependsOn>
+    <GeneratePartialFacadeSourceDependsOn>$(GeneratePartialFacadeSourceDependsOn);ResolveMatchingContract;_GetRoslynAssembliesPath;GetGenFacadeCompileItems</GeneratePartialFacadeSourceDependsOn>
     <CoreCompileDependsOn Condition="'$(DesignTimeBuild)' != 'true'">$(CoreCompileDependsOn);GeneratePartialFacadeSource</CoreCompileDependsOn>
     <GenFacadesOutputSourcePath Condition="'$(GenFacadesOutputSourcePath)' == ''">$(IntermediateOutputPath)$(AssemblyTitle).Forwards.cs</GenFacadesOutputSourcePath>
   </PropertyGroup>
   
-  <ItemGroup>
-    <!-- Allow passing in different compile items to GenFacades. -->
-    <GenFacadeCompile Include="@(Compile)" Condition="'@(GenFacadeCompile)' == ''" />
-  </ItemGroup>
+  <!-- Allow passing in different compile items to GenFacades. -->
+  <Target Name="GetGenFacadeCompileItems">
+    <ItemGroup>
+      <GenFacadeCompile Include="@(Compile)" Condition="'@(GenFacadeCompile)' == ''" />
+    </ItemGroup>
+  </Target>
 
   <Target Name="GeneratePartialFacadeSource"
           Inputs="$(MSBuildAllProjects);@($(GenFacadesReferenceAssemblyItemName));@($(GenFacadesReferencePathItemName));@(GenFacadeCompile)"
