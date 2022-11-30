@@ -12,6 +12,11 @@
     <CoreCompileDependsOn Condition="'$(DesignTimeBuild)' != 'true'">$(CoreCompileDependsOn);GeneratePartialFacadeSource</CoreCompileDependsOn>
     <GenFacadesOutputSourcePath Condition="'$(GenFacadesOutputSourcePath)' == ''">$(IntermediateOutputPath)$(AssemblyTitle).Forwards.cs</GenFacadesOutputSourcePath>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <!-- Allow passing in different compile items to GenFacades. -->
+    <GenFacadeCompile Include="@(Compile)" Condition="'@(GenFacadeCompile)' == ''" />
+  </ItemGroup>
 
   <Target Name="GeneratePartialFacadeSource"
           Inputs="$(MSBuildAllProjects);@($(GenFacadesReferenceAssemblyItemName));@($(GenFacadesReferencePathItemName));@(Compile)"
@@ -20,7 +25,7 @@
     <GenPartialFacadeSource
       ReferencePaths="@($(GenFacadesReferencePathItemName))"
       ReferenceAssembly="@($(GenFacadesReferenceAssemblyItemName))"
-      CompileFiles="@(Compile)"
+      CompileFiles="@(GenFacadeCompile)"
       DefineConstants="$(DefineConstants)"
       LangVersion="$(LangVersion)"
       IgnoreMissingTypes="$(GenFacadesIgnoreMissingTypes)"
