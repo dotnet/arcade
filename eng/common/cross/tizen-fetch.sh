@@ -48,8 +48,10 @@ TMPDIR=$1
 if [ ! -d $TMPDIR ]; then
 	TMPDIR=./tizen_tmp
 	Debug "Create temporary directory : $TMPDIR"
-	mkdir -p $TMPDIR 
+	mkdir -p $TMPDIR
 fi
+
+TIZEN_ARCH=$2
 
 TIZEN_URL=http://download.tizen.org/snapshots/TIZEN/Tizen
 BUILD_XML=build.xml
@@ -113,9 +115,9 @@ fetch_tizen_pkgs_init()
 
 	Debug "fetch $PRIMARY_URL to $TMP_PRIMARYGZ"
 
-	gunzip $TMP_PRIMARYGZ 
+	gunzip $TMP_PRIMARYGZ
 
-	Debug "unzip $TMP_PRIMARYGZ to $TMP_PRIMARY" 
+	Debug "unzip $TMP_PRIMARYGZ to $TMP_PRIMARY"
 }
 
 fetch_tizen_pkgs()
@@ -154,17 +156,17 @@ fetch_tizen_pkgs()
 	done
 }
 
-Inform "Initialize arm base"
+Inform "Initialize ${TIZEN_ARCH} base"
 fetch_tizen_pkgs_init standard Tizen-Base
 Inform "fetch common packages"
-fetch_tizen_pkgs armv7hl gcc gcc-devel-static glibc glibc-devel libicu libicu-devel libatomic linux-glibc-devel keyutils keyutils-devel libkeyutils
+fetch_tizen_pkgs ${TIZEN_ARCH} gcc gcc-devel-static glibc glibc-devel libicu libicu-devel libatomic linux-glibc-devel keyutils keyutils-devel libkeyutils
 Inform "fetch coreclr packages"
-fetch_tizen_pkgs armv7hl lldb lldb-devel libgcc libstdc++ libstdc++-devel libunwind libunwind-devel lttng-ust-devel lttng-ust userspace-rcu-devel userspace-rcu
+fetch_tizen_pkgs ${TIZEN_ARCH} lldb lldb-devel libgcc libstdc++ libstdc++-devel libunwind libunwind-devel lttng-ust-devel lttng-ust userspace-rcu-devel userspace-rcu
 Inform "fetch corefx packages"
-fetch_tizen_pkgs armv7hl libcom_err libcom_err-devel zlib zlib-devel libopenssl11 libopenssl1.1-devel krb5 krb5-devel
+fetch_tizen_pkgs ${TIZEN_ARCH} libcom_err libcom_err-devel zlib zlib-devel libopenssl11 libopenssl1.1-devel krb5 krb5-devel
 
 Inform "Initialize standard unified"
 fetch_tizen_pkgs_init standard Tizen-Unified
 Inform "fetch corefx packages"
-fetch_tizen_pkgs armv7hl gssdp gssdp-devel tizen-release
+fetch_tizen_pkgs ${TIZEN_ARCH} gssdp gssdp-devel tizen-release
 
