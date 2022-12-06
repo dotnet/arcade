@@ -4,22 +4,28 @@ set -e
 ARCH=$1
 LINK_ARCH=$ARCH
 
-if [ "$ARCH" == "arm" ]; then
-  TIZEN_ARCH="armv7hl"
-elif [ "$ARCH" == "armel" ]; then
-  TIZEN_ARCH="armv7l"
-  LINK_ARCH="arm"
-elif [ "$ARCH" == "arm64" ]; then
-  TIZEN_ARCH="aarch64"
-elif [ "$ARCH" == "x86" ]; then
-  TIZEN_ARCH="i686"
-elif [ "$ARCH" == "x64" ]; then
-  TIZEN_ARCH="x86_64"
-  LINK_ARCH="x86"
-else
-  echo "Unsupported architecture for tizen: $ARCH"
-  exit 1
-fi
+case "$ARCH" in
+    arm)
+        TIZEN_ARCH="armv7hl"
+        ;;
+    armel)
+        TIZEN_ARCH="armv7l"
+        LINK_ARCH="arm"
+        ;;
+    arm64)
+        TIZEN_ARCH="aarch64"
+        ;;
+    x86)
+        TIZEN_ARCH="i686"
+        ;;
+    x64)
+        TIZEN_ARCH="x86_64"
+        LINK_ARCH="x86"
+        ;;
+    *)
+        echo "Unsupported architecture for tizen: $ARCH"
+        exit 1
+esac
 
 __CrossDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 __TIZEN_CROSSDIR="$__CrossDir/${ARCH}/tizen"
