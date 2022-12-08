@@ -94,6 +94,6 @@
     <MicrosoftDeploymentDotNetReleasesVersion>1.0.0-preview5.1.22263.1</MicrosoftDeploymentDotNetReleasesVersion>
     <!-- Used to flow Source Link version through Arcade SDK -->
     <MicrosoftSourceLinkVersion>$(MicrosoftSourceLinkGitHubVersion)</MicrosoftSourceLinkVersion>
-    <MicrosoftTemplateEngineTasksVersion>7.0.100-preview.2.22075.3</MicrosoftTemplateEngineTasksVersion>
+    <MicrosoftTemplateEngineAuthoringTasksVersion>8.0.100-alpha.1.22607.1</MicrosoftTemplateEngineAuthoringTasksVersion>
   </PropertyGroup>
 </Project>
