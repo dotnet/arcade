@@ -44,7 +44,7 @@ Any solution must meet the following requirements:
 
 ## Targeting
 
-To enable latest-targeting, Arcade will introduce a new property file called `TargetFrameworkDefaults.props`. This is approach takes direct inspiration from current approaches in runtime and other repositories.
+To enable latest-targeting, Arcade will introduce a new property file called `TargetFrameworkDefaults.props`. This approach takes direct inspiration from current approaches in runtime and other repositories.
 
 ```
 <Project>
