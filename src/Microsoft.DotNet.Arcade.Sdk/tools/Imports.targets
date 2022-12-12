@@ -13,7 +13,7 @@
   <Import Project="GenerateInternalsVisibleTo.targets" />
   <Import Project="GenerateResxSource.targets" />
   <Import Project="Workarounds.targets"/>
-  <Import Project="RepositoryInfo.targets" />
+  <Import Project="RepositoryInfo.targets"/>
   <Import Project="Version.targets"/>
   <Import Project="Tests.targets" Condition="'$(DisableArcadeTestFramework)' != 'true'" />
 
