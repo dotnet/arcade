@@ -85,7 +85,7 @@
       <InnerBuildArgs>$(InnerBuildArgs) /p:SourceBuildOutputDir=$(SourceBuildOutputDir)</InnerBuildArgs>
       <InnerBuildArgs>$(InnerBuildArgs) /p:SourceBuiltBlobFeedDir=$(SourceBuiltBlobFeedDir)</InnerBuildArgs>
 
-      <InnerBuildArgs >$(InnerBuildArgs) /p:DotNetBuildOffline=true</InnerBuildArgs>
+      <InnerBuildArgs>$(InnerBuildArgs) /p:DotNetBuildOffline=true</InnerBuildArgs>
       <InnerBuildArgs Condition=" '$(DotNetPackageVersionPropsPath)' != '' ">$(InnerBuildArgs) /p:DotNetPackageVersionPropsPath=$(DotNetPackageVersionPropsPath)</InnerBuildArgs>
     </PropertyGroup>
 
