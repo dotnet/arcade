@@ -91,7 +91,7 @@ This feature is opt-in. Repositories choose to use the properties to reduce the 
 
 Opt-ins to the targeting feature should reduce the amount of downlevel targeting and help .NET move forward as a coherent stack. It does not, however, remove TFMs that are not required when building for a specific consumer. To do so, we need a filter. We need to be able to remove unwanted TFMs.
 
-To accomplish this, we wil implement an MSBuild intrinsic which removes target frameworks that do not match an input set based on name and version. Arcade will then use a targets file which will set the `TargetFrameworks`/`TargetFramework` property based on the output of this intrinsic, if a filter is to be applied. It's important to highlight the MSBuild intrinsic-based as *separate* from the "what should we target in this invocation". It is a method of exclusion, implemented in a way that does not require knowing the full set of possible TFMs to exclude. Instead, acts as a way of filtering out targets that are not required for the consumers of the project.
+To accomplish this, we will implement an MSBuild intrinsic which removes target frameworks that do not match an input set based on name and version. Arcade will then use a targets file which will set the `TargetFrameworks`/`TargetFramework` property based on the output of this intrinsic, if a filter is to be applied. It's important to highlight the MSBuild intrinsic-based as *separate* from the "what should we target in this invocation". It is a method of exclusion, implemented in a way that does not require knowing the full set of possible TFMs to exclude. Instead, acts as a way of filtering out targets that are not required for the consumers of the project.
 
 ### MSBuild Intrinsic
 
