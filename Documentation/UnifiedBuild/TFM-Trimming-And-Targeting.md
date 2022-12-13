@@ -137,3 +137,30 @@ If a repository sets property `NoTargetFrameworkFiltering` to `true`, then filte
 It is entirely possible that TFM filtering will break source-build for a repository. For instance, if a project targets no TFMs after filtering is applied, it will fail to build. The repository owner will then need to decide on a course of action. Perhaps they need to exclude that project during when doing source build (probably based on build platform), or target an included TFM. To avoid unexpected breaks, repo level source-build validation will enable filtering in certain cases. Which TFMs are kept will be dependent on the platform being validated and the build environment requirements of those who usually execute that build. For instance: - A Windows source build leg would not filter any TFMs. Ref packs can be supplied from the internet and many components built on Windows will require targeting a number of TFMs, including net4*
 - An OSX leg might use a filter like "net7;net8;netstandard2.0", which excludes net4* TFMs, but allows for all .NET Core TFMs to be kept. OSX builds have no restriction on pulling targeting packs from the internet, but net4* TFMs wouldn't generally be useful on OSX.
 - A Linux source-build leg would use a filter like "net8;netstandard2.0" to remove all usage of targeting packs that would have to come from the internet or would be undesirable to check-in as source build reference packages, since that is what Linux source build partners require.
+
+## Source-build Usage Example
+
+```
+[root@a4155fe73d9e dotnet]# ./build.sh --clean-while-building --online --tfm-filter net7;netstandard2.0
+```
+
+With this invocation, projects will only produce assets that target net7* and netstandard2.0. For instance, `arcade`, which builds early on in source-build, has a project `src/Microsoft.DotNet.SignTool/Microsoft.DotNet.SignTool.csproj`.
+
+```
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net472;$(TargetFrameworkForNETSDK)</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>Latest</LangVersion>
+    <IsPackable>true</IsPackable>
+    <Description>Build artifact signing tool</Description>
+    <PackageTags>Arcade Build Tool Signing</PackageTags>
+    <DevelopmentDependency>false</DevelopmentDependency>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+  </PropertyGroup>
+  ...
+</Project>
+```
+
+SignTool.csproj will not produce a net472 targeted binary.
