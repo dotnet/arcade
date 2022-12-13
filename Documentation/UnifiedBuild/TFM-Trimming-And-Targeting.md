@@ -22,7 +22,7 @@ We can significantly reduce the dependence on reference packages, especially the
 
 Because .NET uses a distributed, many-repository based development model, producing repositories lack information about any specific consumer, and so must produce assets that target any possible use case. In plainer terms, let's say that we have a single repository with 2 projects. One is a non-packable library project that targets `net462`, `net472`, and `net8.0`. The other is a console exe targeting just `net8.0`, which references the library project. When building and publishing the console exe, there is no need to build the `net462` and `net472` assets. Now, let's say we split those projects into two repositories. The library project now must become packable to be referenced in the downstream console project. It also has no way to know that the `net4*` assets are useless. It must build them all.
 
-Unified Build/source-build builds all input repositories required to produce the assets shipped by .NET distro maintainers, the consumer side of the build **is** known. RedHat ships a RedHat-targeted SDK and packages to its consumers. Microsoft ships packages to nuget.org, SDKs to VS, etc. Roslyn ships packages to nuget.org, VS, and the SDK. When building for a specific consumer n the VMR, a producer should be able to avoid building (trim) away TFMs that are not used. Practically, this means that an organization should be able to only target TFMs that meet their end-customer's needs.
+Unified Build/source-build builds all input repositories required to produce the assets shipped by .NET distro maintainers, the consumer side of the build **is** known. RedHat ships a RedHat-targeted SDK and packages to its consumers. Microsoft ships packages to nuget.org, SDKs to VS, etc. Roslyn ships packages to nuget.org, VS, and the SDK. When building for a specific consumer in the VMR, a producer should be able to avoid building (trim away) away TFMs that are not used. Practically, this means that an organization should be able to only target TFMs that meet their end-customer's needs.
 
 ## Solution Requirements
 
@@ -44,7 +44,7 @@ Any solution must meet the following requirements:
 
 ## Targeting
 
-To enable latest-targeting, Arcade will introduce a new property file called `TargetFrameworkDefaults.props`. This is approach takes direct inspiration from current approaches in runtime and other repositories.
+To enable latest-targeting, Arcade will introduce a new property file called `TargetFrameworkDefaults.props`. This approach takes direct inspiration from current approaches in runtime and other repositories.
 
 ```
 <Project>
@@ -91,7 +91,7 @@ This feature is opt-in. Repositories choose to use the properties to reduce the 
 
 Opt-ins to the targeting feature should reduce the amount of downlevel targeting and help .NET move forward as a coherent stack. It does not, however, remove TFMs that are not required when building for a specific consumer. To do so, we need a filter. We need to be able to remove unwanted TFMs.
 
-To accomplish this, we wil implement an MSBuild intrinsic which removes target frameworks that do not match an input set based on name and version. Arcade will then use a targets file which will set the `TargetFrameworks`/`TargetFramework` property based on the output of this intrinsic, if a filter is to be applied. It's important to highlight the MSBuild intrinsic-based as *separate* from the "what should we target in this invocation". It is a method of exclusion, implemented in a way that does not require knowing the full set of possible TFMs to exclude. Instead, acts as a way of filtering out targets that are not required for the consumers of the project.
+To accomplish this, we will implement an MSBuild intrinsic which removes target frameworks that do not match an input set based on name and version. Arcade will then use a targets file which will set the `TargetFrameworks`/`TargetFramework` property based on the output of this intrinsic, if a filter is to be applied. It's important to highlight the MSBuild intrinsic-based as *separate* from the "what should we target in this invocation". It is a method of exclusion, implemented in a way that does not require knowing the full set of possible TFMs to exclude. Instead, acts as a way of filtering out targets that are not required for the consumers of the project.
 
 ### MSBuild Intrinsic
 
