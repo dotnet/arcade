@@ -1,34 +1,34 @@
 # The Unified Build Almanac (TUBA) - TFM Trimming and Targeting
 
-This document describes the a method by which .NET will allow components to transparent target at least a desired set of TFMs, and by which additional TFMs they choose to target can be filtered out in build environments that require it.
+A Target Framework Moniker (TFM) is the name of the API surface area that a project builds for (https://learn.microsoft.com/en-us/dotnet/standard/frameworks). A project may target multiple TFMs, resulting an multiple output binary for each surface area target. This document describes the a method by which .NET will allow components to transparently target at least a desired set of TFMs, and by which additional TFMs they choose to target can be filtered out in build environments that require it.
 
 ## Problem
 
 .NET's product is made up of a wide variety of repositories. Each of these repositories has a number of projects that specify a desired set of target frameworks. This set is largely determined by the *union* of consumers of the component. Where does it need to run? For instance:
 - A library like `System.Text.Json` may multi-target to netstandard2.0, net472, and net8.0 because it ships on nuget.org and is intended for consumption by .NET Framework customers in addition to .NET Core customers, as well as downstream components which may be targeting older .NET Core TFMs.
 - SDK components may only target net8.0 because they ship in-box with the .NET 8 runtime.
-- .NET tooling components (roslyn, fsharp, etc.) may multi-target to net7.0 and net4* because they will run within Visual Studio (which runs on Framework) as well as different SDKs that may cross major version boundaries of .NET (7.0.2xx and 8.0.1xx). net7 represents a common surface area that *should* work well if rolled forward onto .NET 8.
+- .NET tooling components (roslyn, fsharp, etc.) may multi-target to net7.0 and net4* because they will run within Visual Studio (which runs on Framework) as well as different .NET SDK bands that may cross major version boundaries of .NET (7.0.2xx and 8.0.1xx). net7 represents a common surface area that *should* work well if rolled forward onto .NET 8.
 
-While this flexiblity is useful, it does present a significant challenge for .NET distro maintainers. Targeting frameworks other the one currently being built ultimately requires the reference assemblies for that framework. Most Linux distributions disallow internet access while building, so those targeting packs cannot come from the internet. Source-build provides a mechanism for creating these references assemblies during the build, via a series of text-only packages in the [source-build-reference-packages](https://github.com/dotnet/source-build-reference-packages) repository. These are assembled early in the build. There are major downsides to these reference packages:
+While this flexiblity is useful, it does present a significant challenge for .NET distro maintainers. Targeting frameworks other the one currently being built ultimately requires the reference assemblies for that framework. Most Linux distributions disallow internet access while building, so those targeting packs cannot come from the internet. Source-build provides a mechanism for creating these references assemblies during the build, via the [source-build-reference-packages](https://github.com/dotnet/source-build-reference-packages) repository. These are assembled early in the build. There are major downsides to these reference packages:
 - **Size:** The netframework targeting packs (18 of them) are 2.3GB of IL on-disk. This represents ~50% of the total size of the VMR.
 - **Build Time:** Most costumer scenarios do not require all of target frameworks. RedHat, for instance, has no need for net4* targeted arcade build tooling binaries to be produced. Those binaries cannot even execute on Linux. The extra binaries produced wastes some amount of build time.
-- **Build environment compliance:** Targeting packs/reference assemblies do not generally have functionality. However for various reasons, the analyzer implementations have been integrated *into* the targeting packs in .NET 7 and 8, update with servicing releases, and are executed during the build. This causes circular dependency (the analyzers themselves execute on the runtime that is currently being built) that results in unresolveable pre-builts. To work around this issue in .NET 7 releases, the source-build team has stripped away the functional elements of the targeting packs. However, this approach is fragile at best, and problematic in the long term.
+- **Build environment compliance:** Targeting packs/reference assemblies do not generally have functionality. However for various reasons, the analyzer implementations have been integrated *into* the targeting packs in .NET 7 and 8, update with servicing releases, and are executed during the build (see https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/overview?tabs=net-7#code-quality-analysis) for info on some analyzers. This causes circular dependency (the analyzers themselves execute on the runtime that is currently being built) that results in unresolveable pre-builts. To work around this issue in .NET 7 releases, the source-build team has stripped away the functional elements of the targeting packs. However, this approach is fragile at best, and problematic in the long term.
 
 ## Producers and Consumers
 
-We can significantly reduce the dependence on reference packages, especially the large targeting packs, within the Unified Build environment by recognizing two key points:
+We can significantly reduce the dependence on reference packages, especially the large targeting packs by recognizing two key points:
 - The set of frameworks targeted by a project is currently driven by **all** possible consumers not built within the same repository.
 - When building a specific product (NuGet package, SDK layout, etc.), the set of required input frameworks is usually a subset of the available input frameworks.
 
 Because .NET uses a distributed, many-repository based development model, producing repositories lack information about any specific consumer, and so must produce assets that target any possible use case. In plainer terms, let's say that we have a single repository with 2 projects. One is a non-packable library project that targets `net462`, `net472`, and `net8.0`. The other is a console exe targeting just `net8.0`, which references the library project. When building and publishing the console exe, there is no need to build the `net462` and `net472` assets. Now, let's say we split those projects into two repositories. The library project now must become packable to be referenced in the downstream console project. It also has no way to know that the `net4*` assets are useless. It must build them all.
 
-But because source-build/Unified Build builds all input repositories required to produce the assets shipped by .NET distro maintainers, the consumer side of the build **is** known. RedHat ships a RedHat-targeted SDK and packages to its consumers. Microsoft ships packages to nuget.org, SDKs to VS, etc. Roslyn ships packages to nuget.org, VS, and the SDK. When building for a specific consumer n the VMR, a producer should be able to avoid building (trim) away TFMs that are not used. Practically, this means that an organization should be able to only target TFMs that meet their end-customer's needs.
+Unified Build/source-build builds all input repositories required to produce the assets shipped by .NET distro maintainers, the consumer side of the build **is** known. RedHat ships a RedHat-targeted SDK and packages to its consumers. Microsoft ships packages to nuget.org, SDKs to VS, etc. Roslyn ships packages to nuget.org, VS, and the SDK. When building for a specific consumer n the VMR, a producer should be able to avoid building (trim) away TFMs that are not used. Practically, this means that an organization should be able to only target TFMs that meet their end-customer's needs.
 
 ## Solution Requirements
 
 Any solution must meet the following requirements:
 - It cannot force all projects into targeting a certain TFM or set of TFMs (no big hammer) - Repositories and projects often have real reasons to target the TFMs they do. Roslyn must be able to run in VS. Some global tools want to support multiple runtimes within the same shipping unit.
-- There must be an opt-out - There is wide variance in project needs. There may be situations where a reference pack is simply the only option.
+- A project or repo should be able to opt-out if necessary with reasonable msbuild logic - There is wide variance in project needs. There may be situations where a reference pack is simply the only option.
 - It should avoid "messy" changes in project files - Changes required in project files should avoid excessive conditionals and other high-maintenance constructs. Where possible, provide functionality via Arcade.
 - It should be compatible with the VS project system (ideally ignored)
 - It should be compatible with NuGet static graph restore.
@@ -95,9 +95,17 @@ To accomplish this, we wil implement an MSBuild intrinsic which removes target f
 
 ### MSBuild Intrinsic
 
-**IntersectTargetFrameworks (string left, string right)**
+**IntersectTargetFrameworks (string original, string filter)**
 
-Given two sets of input target frameworks in the form: tfm1[;tfm2][;tfm3], compute the intersection of the set, based on Framework and version. Platform elements of the TFM are ignored. For example, net7.0 will match net7.0-windows.
+Given two sets of input target frameworks in the form: tfm1[;tfm2][;tfm3], compute the intersection of `original` with `filter`, based on Framework and Version. Platform elements of the TFM are ignored. Return the matching elements from the original set. Examples:
+
+```
+IntersectTargetFrameworks("net7.0;netstandard2.0", "net7.0") returns "net7.0"
+IntersectTargetFrameworks("net7.0;netstandard2.0", "net7;netstandard2.0") returns "net7.0;netstandard2.0"
+IntersectTargetFrameworks("net7.0-windows;net472;netstandard2.0", "netstandard2.0") returns "netstandard2.0"
+IntersectTargetFrameworks("net7.0-windows;netstandard2.0", "net472;net7.0") returns "net7.0-windows"
+IntersectTargetFrameworks("net7.0-windows;net7.0-linux;netstandard2.0;net472", "net472;net7.0") returns "net7.0-windows;net7.0-linux;net472"
+```
 
 ### Arcade support for filtering
 
@@ -111,8 +119,8 @@ TargetFrameworkDefaults.targets
 <Project>
   <PropertyGroup>
     <!-- Obtain the original set based on whether TargetFramework or TargetFrameworks was used -->
-    <_OriginalTargetFrameworks Condition="'$(TargetFrameworks)' != ''>$(TargetFrameworks)</_OriginalTargetFrameworks>
-    <_OriginalTargetFrameworks Condition="'$(TargetFramework)' != ''>$(TargetFramework)</_OriginalTargetFrameworks>
+    <_OriginalTargetFrameworks Condition="'$(TargetFrameworks)' != ''">$(TargetFrameworks)</_OriginalTargetFrameworks>
+    <_OriginalTargetFrameworks Condition="'$(TargetFramework)' != ''">$(TargetFramework)</_OriginalTargetFrameworks>
     <_FilteredTargetFrameworks Condition="'$(NoTargetFrameworkFiltering)' != 'true' and '$(DotNetTargetFrameworkFilter)' != ''">$([MSBuild]::Unescape($([MSBuild]::IntersectTargetFrameworks('$(_OriginalTargetFrameworks)', '$(DotNetTargetFrameworkFilter)'))))</_FilteredTargetFrameworks>
     <TargetFrameworks Condition="'$(NoTargetFrameworkFiltering)' != 'true' and '$(_FilteredTargetFrameworks.Contains(';'))'">$(_FilteredTargetFrameworks)</TargetFrameworks>
     <TargetFramework Condition="'$(NoTargetFrameworkFiltering)' != 'true' and '!$(_FilteredTargetFrameworks.Contains(';'))'">$(_FilteredTargetFrameworks)</TargetFramework>
@@ -123,3 +131,9 @@ TargetFrameworkDefaults.targets
 ### Opt-out
 
 If a repository sets property `NoTargetFrameworkFiltering` to `true`, then filtering will not be applied.
+
+### Validation during repo-level source build
+
+It is entirely possible that TFM filtering will break source-build for a repository. For instance, if a project targets no TFMs after filtering is applied, it will fail to build. The repository owner will then need to decide on a course of action. Perhaps they need to exclude that project during when doing source build (probably based on build platform), or target an included TFM. To avoid unexpected breaks, repo level source-build validation will enable filtering in certain cases. Which TFMs are kept will be dependent on the platform being validated and the build environment requirements of those who usually execute that build. For instance: - A Windows source build leg would not filter any TFMs. Ref packs can be supplied from the internet and many components built on Windows will require targeting a number of TFMs, including net4*
+- An OSX leg might use a filter like "net7;net8;netstandard2.0", which excludes net4* TFMs, but allows for all .NET Core TFMs to be kept. OSX builds have no restriction on pulling targeting packs from the internet, but net4* TFMs wouldn't generally be useful on OSX.
+- A Linux source-build leg would use a filter like "net8;netstandard2.0" to remove all usage of targeting packs that would have to come from the internet or would be undesirable to check-in as source build reference packages, since that is what Linux source build partners require.
