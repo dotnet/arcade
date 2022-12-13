@@ -51,12 +51,6 @@ To enable latest-targeting, Arcade will introduce a new property file called `Ta
   <PropertyGroup>
     <NetCurrent>net8.0</NetCurrent>
     <NetPrevious>net7.0</NetPrevious>
-    <NetMinimum>net6.0</NetMinimum>
-
-    <!-- Current supported .NETCoreApp TFM that the SDK supports targeting. -->
-    <NetToolCurrent>net7.0</NetToolCurrent>
-    <NetFrameworkMinimum>net462</NetFrameworkMinimum>
-    <NetFrameworkToolCurrent>net472</NetFrameworkToolCurrent>
   </PropertyGroup>
 </Project>
 ```
