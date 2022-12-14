@@ -157,4 +157,4 @@ With this invocation, projects will only produce assets that target `net7*` and 
 </Project>
 ```
 
-SignTool.csproj will not produce a net472 targeted binary.
+SignTool.csproj will not produce a `net472` targeted binary.
