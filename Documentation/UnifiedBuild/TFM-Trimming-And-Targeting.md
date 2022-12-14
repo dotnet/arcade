@@ -104,7 +104,7 @@ IntersectTargetFrameworks("net7.0-windows;net7.0-linux;netstandard2.0;net472", "
 
 In `Imports.targets`, a new file `TargetFrameworkDefaults.targets` will be imported. 
 
-```
+```xml
 TargetFrameworkDefaults.targets
 
 <?xml version="1.0" encoding="utf-8"?>
