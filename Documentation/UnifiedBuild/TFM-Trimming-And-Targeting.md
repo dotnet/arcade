@@ -1,17 +1,17 @@
 # The Unified Build Almanac (TUBA) - TFM Trimming and Targeting
 
-A Target Framework Moniker (TFM) is the name of the API surface area that a project builds for (https://learn.microsoft.com/en-us/dotnet/standard/frameworks). A project may target multiple TFMs, resulting an multiple output binary for each surface area target. This document describes the a method by which .NET will allow components to transparently target at least a desired set of TFMs, and by which additional TFMs they choose to target can be filtered out in build environments that require it.
+A Target Framework Moniker (TFM) is the name of the API surface area that a project builds for (https://learn.microsoft.com/en-us/dotnet/standard/frameworks). A project may target multiple TFMs, resulting in multiple output binary for each surface area target. This document describes the a method by which .NET will allow components to transparently target at least a desired set of TFMs, and by which additional TFMs they choose to target can be filtered out in build environments that require it.
 
 ## Problem
 
 .NET's product is made up of a wide variety of repositories. Each of these repositories has a number of projects that specify a desired set of target frameworks. This set is largely determined by the *union* of consumers of the component. Where does the component need to run? For instance:
-- A library like `System.Text.Json` may multi-target to netstandard2.0, net472, and net8.0 because it ships on nuget.org and is intended for consumption by .NET Framework customers in addition to .NET Core customers, as well as downstream components which may be targeting older .NET Core TFMs.
-- SDK components may only target net8.0 because they ship in-box with the .NET 8 runtime.
-- .NET tooling components (roslyn, fsharp, etc.) may multi-target to net7.0 and net4* because they will run within Visual Studio (which runs on Framework) as well as different .NET SDK bands that may cross major version boundaries of .NET (7.0.2xx and 8.0.1xx). net7 represents a common surface area that *should* work well if rolled forward onto .NET 8.
+- A library like `System.Text.Json` may multi-target to `netstandard2.0`, `net472`, and `net8.0` because it ships on nuget.org and is intended for consumption by .NET Framework customers in addition to .NET Core customers, as well as downstream components which may be targeting older .NET Core TFMs.
+- SDK components may only target `net8.0` because they ship in-box with the .NET 8 runtime.
+- .NET tooling components (roslyn, fsharp, etc.) may multi-target to `net7.0` and `net4*` because they will run within Visual Studio (which runs on Framework) as well as different .NET SDK bands that may cross major version boundaries of .NET (`7.0.2xx` and `8.0.1xx`). `net7` represents a common surface area that *should* work well if rolled forward onto .NET 8.
 
 While this flexiblity is useful, it does present a significant challenge for .NET distro maintainers. Targeting frameworks other the one currently being built ultimately requires the reference assemblies for that framework. Most Linux distributions disallow internet access while building, so those targeting packs cannot come from the internet. Source-build provides a mechanism for creating these references assemblies during the build, via the [source-build-reference-packages](https://github.com/dotnet/source-build-reference-packages) repository. These are assembled early in the build. There are major downsides to these reference packages:
 - **Size:** The netframework targeting packs (18 of them) are 2.3GB of IL on-disk. This represents ~50% of the total size of the VMR.
-- **Build Time:** Most costumer scenarios do not require all of target frameworks. RedHat, for instance, has no need for net4* targeted arcade build tooling binaries to be produced. Those binaries cannot even execute on Linux. The extra binaries produced wastes some amount of build time.
+- **Build Time:** Most costumer scenarios do not require all of target frameworks. RedHat, for instance, has no need for `net4*` targeted arcade build tooling binaries to be produced. Those binaries cannot even execute on Linux. The extra binaries produced wastes some amount of build time.
 - **Build environment compliance:** Targeting packs/reference assemblies do not generally have functionality. However for various reasons, the analyzer implementations have been integrated *into* the targeting packs in .NET 7 and 8, update with servicing releases, and are executed during the build (see https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/overview?tabs=net-7#code-quality-analysis) for info on some analyzers. This causes circular dependency (the analyzers themselves execute on the runtime that is currently being built) that results in unresolveable pre-builts. To work around this issue in .NET 7 releases, the source-build team has stripped away the functional elements of the targeting packs. However, this approach is fragile at best, and problematic in the long term.
 
 ## Producers and Consumers
@@ -57,7 +57,7 @@ To enable latest-targeting, Arcade will introduce a new property file called `Ta
 Initially, this file will contain only one property, the currrent major version of .NET. If additional properties are needed (minimum version, newest framework versions, etc.), they can be added. This file is imported in `Settings.props` within the Arcade SDK. These properties are then used as desired within repositories' project, property files, etc. For example, a project might do the following:
 
 ```
-Microsoft.FIleProviders.Composite.csproj
+Microsoft.FileProviders.Composite.csproj
 
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -104,7 +104,7 @@ IntersectTargetFrameworks("net7.0-windows;net7.0-linux;netstandard2.0;net472", "
 
 In `Imports.targets`, a new file `TargetFrameworkDefaults.targets` will be imported. 
 
-```
+```xml
 TargetFrameworkDefaults.targets
 
 <?xml version="1.0" encoding="utf-8"?>
@@ -129,18 +129,18 @@ If a repository sets property `NoTargetFrameworkFiltering` to `true`, then filte
 
 It is entirely possible that TFM filtering will break source-build for a repository. For instance, if a project targets no TFMs after filtering is applied, it will fail to build. The repository owner will then need to decide on a course of action. Perhaps they need to exclude that project during when doing source build (probably based on build platform), or target an included TFM. To avoid unexpected breaks, repo level source-build validation will enable filtering in certain cases. Which TFMs are kept will be dependent on the platform being validated and the build environment requirements of those who usually execute that build. For instance: 
 - A Windows source build leg would not filter any TFMs. Ref packs can be supplied from the internet and many components built on Windows will require targeting a number of TFMs, including net4*
-- An OSX leg might use a filter like "net7;net8;netstandard2.0", which excludes net4* TFMs, but allows for all .NET Core TFMs to be kept. OSX builds have no restriction on pulling targeting packs from the internet, but net4* TFMs wouldn't generally be useful on OSX.
-- A Linux source-build leg would use a filter like "net8;netstandard2.0" to remove all usage of targeting packs that would have to come from the internet or would be undesirable to check-in as source build reference packages, since that is what Linux source build partners require.
+- An OSX leg might use a filter like `net7;net8;netstandard2.0`, which excludes `net4*` TFMs, but allows for all .NET Core TFMs to be kept. OSX builds have no restriction on pulling targeting packs from the internet, but `net4*` TFMs wouldn't generally be useful on OSX.
+- A Linux source-build leg would use a filter like `net8;netstandard2.0` to remove all usage of targeting packs that would have to come from the internet or would be undesirable to check-in as source build reference packages, since that is what Linux source build partners require.
 
 ## Source-build Usage Example
 
 ```
-[root@a4155fe73d9e dotnet]# ./build.sh --clean-while-building --online --tfm-filter net7;netstandard2.0
+# ./build.sh --clean-while-building --online --tfm-filter net7;netstandard2.0
 ```
 
-With this invocation, projects will only produce assets that target net7* and netstandard2.0. For instance, `arcade`, which builds early on in source-build, has a project `src/Microsoft.DotNet.SignTool/Microsoft.DotNet.SignTool.csproj`.
+With this invocation, projects will only produce assets that target `net7*` and `netstandard2.0`. For instance, `arcade`, which builds early on in source-build, has a project `src/Microsoft.DotNet.SignTool/Microsoft.DotNet.SignTool.csproj`.
 
-```
+```xml
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
@@ -157,4 +157,4 @@ With this invocation, projects will only produce assets that target net7* and ne
 </Project>
 ```
 
-SignTool.csproj will not produce a net472 targeted binary.
+SignTool.csproj will not produce a `net472` targeted binary.
