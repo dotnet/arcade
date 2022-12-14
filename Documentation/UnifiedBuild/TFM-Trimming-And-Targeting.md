@@ -1,6 +1,6 @@
 # The Unified Build Almanac (TUBA) - TFM Trimming and Targeting
 
-A Target Framework Moniker (TFM) is the name of the API surface area that a project builds for (https://learn.microsoft.com/en-us/dotnet/standard/frameworks). A project may target multiple TFMs, resulting an multiple output binary for each surface area target. This document describes the a method by which .NET will allow components to transparently target at least a desired set of TFMs, and by which additional TFMs they choose to target can be filtered out in build environments that require it.
+A Target Framework Moniker (TFM) is the name of the API surface area that a project builds for (https://learn.microsoft.com/en-us/dotnet/standard/frameworks). A project may target multiple TFMs, resulting in multiple output binary for each surface area target. This document describes the a method by which .NET will allow components to transparently target at least a desired set of TFMs, and by which additional TFMs they choose to target can be filtered out in build environments that require it.
 
 ## Problem
 
