@@ -138,7 +138,7 @@ It is entirely possible that TFM filtering will break source-build for a reposit
 # ./build.sh --clean-while-building --online --tfm-filter net7;netstandard2.0
 ```
 
-With this invocation, projects will only produce assets that target net7* and netstandard2.0. For instance, `arcade`, which builds early on in source-build, has a project `src/Microsoft.DotNet.SignTool/Microsoft.DotNet.SignTool.csproj`.
+With this invocation, projects will only produce assets that target `net7*` and `netstandard2.0`. For instance, `arcade`, which builds early on in source-build, has a project `src/Microsoft.DotNet.SignTool/Microsoft.DotNet.SignTool.csproj`.
 
 ```xml
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
