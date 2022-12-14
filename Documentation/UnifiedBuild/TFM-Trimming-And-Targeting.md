@@ -50,19 +50,18 @@ To enable latest-targeting, Arcade will introduce a new property file called `Ta
 <Project>
   <PropertyGroup>
     <NetCurrent>net8.0</NetCurrent>
-    <NetPrevious>net7.0</NetPrevious>
   </PropertyGroup>
 </Project>
 ```
 
-This file is imported in `Settings.props` within the Arcade SDK. These properties are then used as desired within repositories' project, property files, etc. For example, a project might do the following:
+Initially, this file will contain only one property, the currrent major version of .NET. If additional properties are needed (minimum version, newest framework versions, etc.), they can be added. This file is imported in `Settings.props` within the Arcade SDK. These properties are then used as desired within repositories' project, property files, etc. For example, a project might do the following:
 
 ```
 Microsoft.FIleProviders.Composite.csproj
 
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>$(NetCurrent);$(NetPrevious);$(NetMinimum);netstandard2.0;$(NetFrameworkMinimum)</TargetFrameworks>
+    <TargetFrameworks>$(NetCurrent);netstandard2.0</TargetFrameworks>
     <RootNamespace>Microsoft.Extensions.FileProviders</RootNamespace>
   </PropertyGroup>
 
