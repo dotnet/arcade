@@ -57,7 +57,7 @@ To enable latest-targeting, Arcade will introduce a new property file called `Ta
 Initially, this file will contain only one property, the currrent major version of .NET. If additional properties are needed (minimum version, newest framework versions, etc.), they can be added. This file is imported in `Settings.props` within the Arcade SDK. These properties are then used as desired within repositories' project, property files, etc. For example, a project might do the following:
 
 ```
-Microsoft.FIleProviders.Composite.csproj
+Microsoft.FileProviders.Composite.csproj
 
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
