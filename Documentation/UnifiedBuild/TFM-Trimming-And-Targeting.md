@@ -5,7 +5,7 @@ A Target Framework Moniker (TFM) is the name of the API surface area that a proj
 ## Problem
 
 .NET's product is made up of a wide variety of repositories. Each of these repositories has a number of projects that specify a desired set of target frameworks. This set is largely determined by the *union* of consumers of the component. Where does it need to run? For instance:
-- A library like `System.Text.Json` may multi-target to netstandard2.0, net472, and net8.0 because it ships on nuget.org and is intended for consumption by .NET Framework customers in addition to .NET Core customers, as well as downstream components which may be targeting older .NET Core TFMs.
+- A library like `System.Text.Json` may multi-target to `netstandard2.0`, `net472`, and `net8.0` because it ships on nuget.org and is intended for consumption by .NET Framework customers in addition to .NET Core customers, as well as downstream components which may be targeting older .NET Core TFMs.
 - SDK components may only target net8.0 because they ship in-box with the .NET 8 runtime.
 - .NET tooling components (roslyn, fsharp, etc.) may multi-target to net7.0 and net4* because they will run within Visual Studio (which runs on Framework) as well as different .NET SDK bands that may cross major version boundaries of .NET (7.0.2xx and 8.0.1xx). net7 represents a common surface area that *should* work well if rolled forward onto .NET 8.
 
