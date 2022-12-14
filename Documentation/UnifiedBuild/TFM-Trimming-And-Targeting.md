@@ -50,6 +50,7 @@ To enable latest-targeting, Arcade will introduce a new property file called `Ta
 <Project>
   <PropertyGroup>
     <NetCurrent>net8.0</NetCurrent>
+    <NetSupported>$(NetCurrent);net7.0;net6.0</NetSupported>
   </PropertyGroup>
 </Project>
 ```
