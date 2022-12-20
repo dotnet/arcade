@@ -19,3 +19,8 @@
 - Triage will "fill out" the issue as needed so that it's actionable.
 - If triage assigns an issue to a sprint (milestone), this is a recommendation only.  The actual assignments are done during sprint planning.
 - During sprint planning, all issues assigned to the sprint being planned will be considered first, and then the backlog considered after that.  This means that if you think something is important, please assign it to the sprint you'd like to see it get done in as a recommend.  (then follow up in person too of course as appropriate)
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5CDevGuide%5CIssueTrackingGuidance.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5CDevGuide%5CIssueTrackingGuidance.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5CDevGuide%5CIssueTrackingGuidance.md)</sub>
+<!-- End Generated Content-->

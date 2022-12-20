@@ -74,3 +74,8 @@ Repository: https://github.com/dotnet/arcade
 Currently we miss the name of PR target branch for test jobs so wee need to extend the `SendHelixJob` task to include that property. We already copy some variables here: [SendHelixJob.cs#L219](https://github.com/dotnet/arcade/blob/d244d21e54bd1778ae68b3ecf676e3c95fffac2e/src/Microsoft.DotNet.Helix/Sdk/SendHelixJob.cs#L219) so it should just require to add `system.pullRequest.targetBranch` to that list. After that we will also need to update the version of Helix SDK package in existing servicing branches.
 
 For 2.1 servicing branches it may be necessary to manually update the files in each branch because they don't use the same mechanisms as newer 3.1/5.0 Helix SDK-based builds. There are using groovy scripts and `upload-tests.proj` files (and maybe even other mechanisms) to schedule tests in Helix.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CServicingJobRedirection%5CDesignDocs.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CServicingJobRedirection%5CDesignDocs.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CServicingJobRedirection%5CDesignDocs.md)</sub>
+<!-- End Generated Content-->

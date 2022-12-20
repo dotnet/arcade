@@ -9,3 +9,8 @@
    2. On the "loadCollections" field select "true"
    3. Click on the "Execute" button
 6. The "Response Body" field will contain information about the latest assets published.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CSeePackagesLatestVersion.md)](https://helix.dot.net/f/p/5?p=Documentation%5CSeePackagesLatestVersion.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CSeePackagesLatestVersion.md)</sub>
+<!-- End Generated Content-->

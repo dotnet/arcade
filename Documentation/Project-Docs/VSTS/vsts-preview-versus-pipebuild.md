@@ -72,3 +72,8 @@ These ae additional items which it would be great to utilize, but we could work 
 - Tasks - At the moment, using any task, or understanding how to implement a task in your YAML schema is extremely difficult.  Chris Patterson says that there is work in progress (shipping m126 [aka next week]) which will allow  you to configure a task or definition in the UI and right-click to copy it to YAML.
 
 - Cleanup - I don't know if this is yet a priority or if we continue to use our infrastructure to clean agents / docker.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CVSTS%5Cvsts-preview-versus-pipebuild.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CVSTS%5Cvsts-preview-versus-pipebuild.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CVSTS%5Cvsts-preview-versus-pipebuild.md)</sub>
+<!-- End Generated Content-->

@@ -6,7 +6,7 @@ Arcade is intended to provide well-understood and consistent mechanisms for cons
 
 ## Build & Test Status
 
-Status of Arcade public CI builds: [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet/arcade/arcade-ci)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=208)
+Status of Arcade public CI builds: [![Build Status](https://dev.azure.com/dnceng-public/public/_apis/build/status/dotnet/arcade/arcade-ci?branchName=main)](https://dev.azure.com/dnceng-public/public/_build/latest?definitionId=13&branchName=main)
 
 ## Validation & Dependency Flow Status
 

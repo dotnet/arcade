@@ -41,3 +41,8 @@ Core-eng uses this data to make adjustment in the scaling rules
 Every team, that requires it, has its own queues for their work reducing the noise caused by using shared queries, giving information of how much money is being spent running their jobs and allowing to modify their scaling rules as needed.
 
 ![](./assets/MultipleSubs.png)
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Ccustom-auto-scaling.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Ccustom-auto-scaling.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Ccustom-auto-scaling.md)</sub>
+<!-- End Generated Content-->

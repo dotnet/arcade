@@ -13,3 +13,8 @@ Expected delivery dates:
 2. 23 November 2018.
 3. 30 November 2018.
 4. mid December 2018.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CMigrationPlan%5CVisualFSharp.md)](https://helix.dot.net/f/p/5?p=Documentation%5CMigrationPlan%5CVisualFSharp.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CMigrationPlan%5CVisualFSharp.md)</sub>
+<!-- End Generated Content-->

@@ -126,7 +126,7 @@ if [ -z "$CC" ]; then
 fi
 
 # Only lld version >= 9 can be considered stable
-if [ "$compiler" = "clang" ] && [ -n "$majorVersion" ] && [ "$majorVersion" -ge 9 ]; then
+if [ "$compiler" = "clang" ] && [ -n "$majorVersion" ] && [ "$majorVersion" -ge 9 ] && [ "$build_arch" != "s390x" ]; then
     if "$CC" -fuse-ld=lld -Wl,--version >/dev/null 2>&1; then
         LDFLAGS="-fuse-ld=lld"
     fi

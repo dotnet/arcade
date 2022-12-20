@@ -142,3 +142,8 @@ The name of the label needs to be `Known Build Error`
 The known issues are listed at the top of the build analysis. <br>
 E.g.
 ![](./Resources/KnownIssuesListed.png?raw=true)
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CKnownIssues.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CKnownIssues.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CKnownIssues.md)</sub>
+<!-- End Generated Content-->

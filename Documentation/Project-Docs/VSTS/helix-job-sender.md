@@ -45,3 +45,8 @@ The YAML template is not top priority as devs are familiar with MSBuild tasks. H
 * By end-of-day Fri Sep 14: Items 1 & 2 completed; item 3 in progress
 * By end-of-day Wed Sep 19: Items 3 & 4 completed; item 5 in progress
 * By end-of-day Fri Sep 21: Item 5 completed; Item 6 hopefully completed; in-progress if not
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CVSTS%5Chelix-job-sender.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CVSTS%5Chelix-job-sender.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CVSTS%5Chelix-job-sender.md)</sub>
+<!-- End Generated Content-->

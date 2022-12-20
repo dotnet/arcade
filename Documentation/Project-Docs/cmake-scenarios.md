@@ -170,3 +170,8 @@ Flow of events:
 **Desired**: 
  1. Declared version of the .NET Core repository is available within the repository itself.  I can find it, and enforce it with my toolset story
  2. I can specify a version of CMake that should be consumed in the build command of my .NET Core repository.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Ccmake-scenarios.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Ccmake-scenarios.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Ccmake-scenarios.md)</sub>
+<!-- End Generated Content-->

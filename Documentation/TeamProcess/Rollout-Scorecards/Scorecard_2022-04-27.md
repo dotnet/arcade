@@ -49,3 +49,8 @@ Relevant GitHub issues: [#9203](https://github.com/dotnet/arcade/issues/9203)
 | Rollbacks | 0 |
 | Service downtime | 00:00:00 |
 
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CScorecard_2022-04-27.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CScorecard_2022-04-27.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CScorecard_2022-04-27.md)</sub>
+<!-- End Generated Content-->

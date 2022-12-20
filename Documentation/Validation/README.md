@@ -362,3 +362,7 @@ Lastly, we need to upload both the code coverage report that was generated from 
 #### Code Coverage Reports Locally
 
 To get a report of code coverage locally, you can run the Code Coverage Analyzer from Visual Studio Enterprise. Follow the instructions [here](https://docs.microsoft.com/en-us/visualstudio/test/using-code-coverage-to-determine-how-much-code-is-being-tested?view=vs-2019) for how to run and view code coverage results. 
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CValidation%5CREADME.md)](https://helix.dot.net/f/p/5?p=Documentation%5CValidation%5CREADME.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CValidation%5CREADME.md)</sub>
+<!-- End Generated Content-->

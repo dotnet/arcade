@@ -35,3 +35,8 @@ The Rollout Scorer will reference an INI file which will contain a map from repo
 * **Number of rollbacks** &mdash; Manually specified by the user
 * **Downtime** &mdash; Manually specified by the user, but eventually will be calculated from telemetry
 * **Failure to rollout** &mdash; Manually specified by the user 
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CRollout_Scorer_Proposal.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CRollout_Scorer_Proposal.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CRollout_Scorer_Proposal.md)</sub>
+<!-- End Generated Content-->

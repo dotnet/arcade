@@ -149,3 +149,8 @@ Example ARM template for 1ES hosted pool looks like following:
 }
 ```
 
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CServicingJobRedirection%5C1ESManagedPoolsDesign.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CServicingJobRedirection%5C1ESManagedPoolsDesign.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CServicingJobRedirection%5C1ESManagedPoolsDesign.md)</sub>
+<!-- End Generated Content-->

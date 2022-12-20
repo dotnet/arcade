@@ -275,3 +275,7 @@ Notes:
 - Anything interesting or unusual that happened as part of this week's check-in.
 - Issue(s) falling out of the process for this week:
 ```
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5COperations%5CHelix-Machine-Management%5CHelix-Machine-Lifecycle-Processes.md)](https://helix.dot.net/f/p/5?p=Documentation%5COperations%5CHelix-Machine-Management%5CHelix-Machine-Lifecycle-Processes.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5COperations%5CHelix-Machine-Management%5CHelix-Machine-Lifecycle-Processes.md)</sub>
+<!-- End Generated Content-->

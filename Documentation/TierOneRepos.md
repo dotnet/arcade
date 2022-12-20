@@ -34,3 +34,8 @@ The primary driving business requirement is the ability to build .NET Core 3.
 | winforms                    | master        |  @AdamYoblick   |
 | wpf                         | master        |                 |
 | dotnet/xliff-tasks          | master        |  @tmeschter     |
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTierOneRepos.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTierOneRepos.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTierOneRepos.md)</sub>
+<!-- End Generated Content-->

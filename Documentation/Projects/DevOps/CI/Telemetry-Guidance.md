@@ -78,3 +78,8 @@ This is a completely made up example of a possible way we could surface this dat
 [Category chart](./Category-sample.png)
 
 Repos may provide their own categories or use existing reports as examples of good category names.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CDevOps%5CCI%5CTelemetry-Guidance.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CDevOps%5CCI%5CTelemetry-Guidance.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CDevOps%5CCI%5CTelemetry-Guidance.md)</sub>
+<!-- End Generated Content-->
