@@ -816,7 +816,7 @@ function MSBuild-Core() {
     }
 
     # When running on Azure Pipelines, override the returned exit code to avoid double logging.
-    if ($ci -and $env:BUILD_BUILDNUMBER -ne $null) {
+    if ($ci -and $env:SYSTEM_TEAMPROJECT -ne $null) {
       Write-PipelineSetResult -Result "Failed" -Message "msbuild execution failed."
       # Exiting with an exit code causes the azure pipelines task to log yet another "noise" error
       # The above Write-PipelineSetResult will cause the task to be marked as failure without adding yet another error
