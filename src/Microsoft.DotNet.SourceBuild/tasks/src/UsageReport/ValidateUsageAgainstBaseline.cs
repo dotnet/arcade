@@ -39,8 +39,12 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
 
         public bool AllowTestProjectUsage { get; set; }
 
+        private readonly string _preBuiltDocMessage = "Additional documentation " +
+            "on pre-built detection can be found at https://aka.ms/source-build/pre-built";
+
         public override bool Execute()
         {
+            string PreBuiltDocXmlComment = $"<!-- {_preBuiltDocMessage} -->\n";
             var used = UsageData.Parse(XElement.Parse(File.ReadAllText(DataFile)));
 
             string baselineText = string.IsNullOrEmpty(BaselineDataFile)
@@ -52,10 +56,10 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
             UsageValidationData data = GetUsageValidationData(baseline, used);
 
             Directory.CreateDirectory(Path.GetDirectoryName(OutputBaselineFile));
-            File.WriteAllText(OutputBaselineFile, data.ActualUsageData.ToXml().ToString());
+            File.WriteAllText(OutputBaselineFile, PreBuiltDocXmlComment + data.ActualUsageData.ToXml().ToString());
 
             Directory.CreateDirectory(Path.GetDirectoryName(OutputReportFile));
-            File.WriteAllText(OutputReportFile, data.Report.ToString());
+            File.WriteAllText(OutputReportFile, PreBuiltDocXmlComment + data.Report.ToString());
 
             return !Log.HasLoggedErrors;
         }
@@ -81,8 +85,8 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
                 tellUserToUpdateBaseline = true;
                 Log.LogError(
                     $"{diff.Added.Length} new packages used not in baseline! See report " +
-                    $"at {OutputReportFile} for more information. Package IDs are:\n" +
-                    string.Join("\n", diff.Added.Select(u => u.ToString())));
+                    $"at {OutputReportFile} for more information.\n{_preBuiltDocMessage}\n" +
+                    $"Package IDs are:\n" + string.Join("\n", diff.Added.Select(u => u.ToString())));
 
                 // In the report, list full usage info, not only identity.
                 report.Add(
