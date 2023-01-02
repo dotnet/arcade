@@ -9,9 +9,9 @@
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
       <Sha>62ceb439e80bf0814d0ffa17f022d4624ea4aa6c</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="8.0.100-alpha.1.22623.6">
+    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="8.0.100-alpha.1.22631.2">
       <Uri>https://github.com/dotnet/templating</Uri>
-      <Sha>5bcea69dedd433d41b48462000fcbeba89b61109</Sha>
+      <Sha>533fdd8a7c62e6ccedee74b0920ef6fda1528b62</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
