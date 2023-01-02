@@ -46,7 +46,8 @@
     <MSBuild Projects="@(ProjectReference)"
              Targets="GetTargetFrameworks"
              BuildInParallel="$(BuildInParallel)"
-             RemoveProperties="%(ProjectReference.GlobalPropertiesToRemove);TargetFramework;RuntimeIdentifier;SelfContained;Platform;Configuration;$(_GlobalPropertiesToRemoveFromProjectReferences)"
+             Properties="%(ProjectReference.SetConfiguration);%(ProjectReference.SetPlatform)"
+             RemoveProperties="%(ProjectReference.GlobalPropertiesToRemove);TargetFramework;RuntimeIdentifier;SelfContained;$(_GlobalPropertiesToRemoveFromProjectReferences)"
              Condition="'%(ProjectReference.SkipGetTargetFrameworkProperties)' != 'true'">
       <Output TaskParameter="TargetOutputs" ItemName="_ProjectReferenceWithTargetFrameworks" />
     </MSBuild>
