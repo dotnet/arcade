@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
         public bool AllowTestProjectUsage { get; set; }
 
         private readonly string _preBuiltDocMessage = "Additional documentation " +
-            "on pre-built detection can be found at https://aka.ms/source-build/pre-built";
+            "on pre-built detection can be found at https://aka.ms/dotnet/prebuilts";
 
         public override bool Execute()
         {
