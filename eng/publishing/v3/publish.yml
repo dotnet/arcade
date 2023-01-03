@@ -155,7 +155,7 @@ stages:
           displayName: Enable cross-org publishing
           inputs:
             filePath: $(Build.SourcesDirectory)/eng/common/enable-cross-org-publishing.ps1
-            arguments: -token $(dn-bot-dnceng-artifact-feeds-rw)
+            arguments: -token $(dn-bot-all-orgs-artifact-feeds-rw)
 
         - task: PowerShell@2
           displayName: Publish packages, blobs and symbols
@@ -180,7 +180,7 @@ stages:
               /p:InternalInstallersAzureAccountKey=$(dotnetclimsrc-access-key)
               /p:ChecksumsAzureAccountKey=$(dotnetclichecksums-storage-key)
               /p:InternalChecksumsAzureAccountKey=$(dotnetclichecksumsmsrc-storage-key)
-              /p:AzureDevOpsFeedsKey='$(dn-bot-dnceng-artifact-feeds-rw)'
+              /p:AzureDevOpsFeedsKey='$(dn-bot-all-orgs-artifact-feeds-rw)'
               /p:AzureStorageTargetFeedPAT='$(dotnetfeed-storage-access-key-1)'
               /p:AkaMSClientId=$(akams-client-id)
               /p:AkaMSClientSecret=$(akams-client-secret)
