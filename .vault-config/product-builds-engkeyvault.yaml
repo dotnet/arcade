@@ -136,19 +136,7 @@ secrets:
           name: dn-bot-account-redmond
       name: dn-bot-all-orgs-artifact-feeds
       organizations: dnceng devdiv microsoft
-      scopes: packaging_write 
-
-  # OneLocBuild
-  dn-bot-ceapex-package-r:
-    type: azure-devops-access-token
-    parameters:
-      domainAccountName: dn-bot
-      domainAccountSecret:
-          location: helixkv
-          name: dn-bot-account-redmond
-      name: dn-bot-ceapex-package-r
-      organizations: ceapex
-      scopes: packaging
+      scopes: packaging_write
 
   #DotNet-Symbol-Server-Pats
   microsoft-symbol-server-pat:
