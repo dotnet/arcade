@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <TargetFrameworkForNETSDK>net7.0</TargetFrameworkForNETSDK>
+    <TargetFrameworkForNETSDK>net8.0</TargetFrameworkForNETSDK>
   </PropertyGroup>
 
 </Project>
