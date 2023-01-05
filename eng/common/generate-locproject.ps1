@@ -35,6 +35,8 @@ $jsonWinformsTemplateFiles = Get-ChildItem -Recurse -Path "$SourcesDirectory" | 
 
 $wxlFiles = Get-ChildItem -Recurse -Path "$SourcesDirectory" | Where-Object { $_.FullName -Match "\\.+\.wxl" -And -Not( $_.Directory.Name -Match "\d{4}" ) } # localized files live in four digit lang ID directories; this excludes them
 
+$installerHtmlFiles = Get-ChildItem -Recurse -Path "$SourcesDirecotry" | Where-Object { $_.FullName -Match "en\.lproj\\.+\.html" } # add installer HTML files
+
 $xlfFiles = @()
 
 $allXlfFiles = Get-ChildItem -Recurse -Path "$SourcesDirectory\*\*.xlf"
