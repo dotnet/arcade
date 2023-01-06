@@ -45,12 +45,12 @@ if (-not $wxlFiles) {
     }
 }
 
-$installerHtmlEnFiles = Get-ChildItem -Recurse -Path "$SourcesDirectory" | Where-Object { $_.FullName -Match "en\.lproj\\.+\.html" } # add installer HTML files
-$installerHtmlFiles = @()
-if ($installerHtmlEnFiles) {
-    $installerHtmlEnFiles | ForEach-Object {
+$macosHtmlEnFiles = Get-ChildItem -Recurse -Path "$SourcesDirectory" | Where-Object { $_.FullName -Match "en\.lproj\\.+\.html" } # add installer HTML files
+$macosHtmlFiles = @()
+if ($macosHtmlEnFiles) {
+    $macosHtmlEnFiles | ForEach-Object {
         $destinationFile = "$($_.Directory.Parent.FullName)\$($_.Name)"
-        $installerHtmlFiles += Copy-Item "$($_.FullName)" -Destination $destinationFile -PassThru
+        $macosHtmlFiles += Copy-Item "$($_.FullName)" -Destination $destinationFile -PassThru
     }
 }
 
@@ -138,7 +138,7 @@ $locJson = @{
             LanguageSet = $LanguageSet
             CloneLanguageSet = "VS_macOS_CloneLanguages"
             LocItems = @(
-                $installerHtmlFiles | ForEach-Object {
+                $macosHtmlFiles | ForEach-Object {
                     $outputPath = "$($_.Directory.FullName | Resolve-Path -Relative)\"
                     $continue = $true
                     foreach ($exclusion in $exclusions.Exclusions) {
