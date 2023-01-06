@@ -35,7 +35,7 @@ $jsonWinformsTemplateFiles = Get-ChildItem -Recurse -Path "$SourcesDirectory" | 
 
 $wxlFiles = Get-ChildItem -Recurse -Path "$SourcesDirectory" | Where-Object { $_.FullName -Match "\\.+\.wxl" -And -Not( $_.Directory.Name -Match "\d{4}" ) } # localized files live in four digit lang ID directories; this excludes them
 if (-not $wxlFiles) {
-    $wxlEnFiles = Get-ChildItem -Recurse -Path "$SourcesDirectory" | Where-Object { $_.FullName -Match "\\1033\\.+\.wxl" } # pick up en files specifically
+    $wxlEnFiles = Get-ChildItem -Recurse -Path "$SourcesDirectory" | Where-Object { $_.FullName -Match "\\1033\\.+\.wxl" } #  pick up en files (1033 = en) specifically so we can copy them to use as the neutral xlf files
     if ($wxlEnFiles) {
       $wxlFiles = @()
       $wxlEnFiles | ForEach-Object {
