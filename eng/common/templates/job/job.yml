@@ -95,8 +95,8 @@ jobs:
     #     [key]: [value]
     - ${{ if ne(variable.template, '') }}:
       - template: ${{ variable.template }}
-      ${{ if ne(variable.parameters, '') }}:
-        parameters: ${{ variable.parameters }}
+        ${{ if ne(variable.parameters, '') }}:
+          parameters: ${{ variable.parameters }}
 
     # handle key-value variable syntax.
     # example:
