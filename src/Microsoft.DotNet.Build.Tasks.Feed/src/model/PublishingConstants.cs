@@ -1068,6 +1068,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 symbolTargetType: PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
+
+            // VS 17.6,
+            new TargetChannelConfig(
+                id: 3434,
+                isInternal: false,
+                publishingInfraVersion: PublishingInfraVersion.All,
+                akaMSChannelNames: new List<string>(),
+                targetFeeds: DotNetToolsFeeds,
+                symbolTargetType: PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
         };
         #endregion
     }
