@@ -943,6 +943,14 @@ Set to `false` to override the default (uncommon).
 
 Set to `partial` or `full` in a shipping project to require IBC optimization data to be available for the project and embed them into the binary during official build. The value of `partial` indicates partial NGEN, whereas `full` means full NGEN optimization.
 
+### `NetCurrent/NetSupported/NetCurrentAndSupported` (list of string(s))
+
+Properties that define TargetFramework(s) for use by projects so their targeting easily aligns with the current .NET version in development as well as those that are supported. Arcade will update these properties to match the current supported .NET versions, as well as the release being currently developed.
+
+- NetCurrent - The TFM of the major release of .NET that the Arcade SDK aligns with.
+- NetSupported - Supported, released versions of .NET
+- NetCurrentAndSupported - Supported, released versions of .NET and the current version.
+
 ### `SkipTests` (bool)
 
 Set to `true` in a test project to skip running tests.
