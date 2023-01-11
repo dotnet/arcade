@@ -147,12 +147,12 @@ Query suggested by @dougbu for getting the overall average pass rate for tests, 
   <summary>Expand for query</summary>
 
 Variables: 
-- `ts`: [Kusto timespan format](https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan). 
-- `definition`: Build definition name
-- `repo`: Repository to filter on. Set to empty string to inclue all repositories.
-- `branch`: Name of the target branch
-- `testName`: Test name
-- `excludeAlwaysPassing`: Set to true to filter out tests that are always passing.
+- `ts`: [Kusto timespan format](https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan). How many days ago to query.
+- `definition`: Build definition name. 
+- `repo`: Repository to filter on. Set to empty string to inclue all repositories. 
+- `branch`: Name of the target branch. 
+- `testName`: Test name. 
+- `excludeAlwaysPassing`: Set to true to filter out tests that are always passing. 
 
 ```
 let ts = 30d;                                                  // Timespan value to find test results after. 
