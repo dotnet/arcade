@@ -39,8 +39,8 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
 
         public bool AllowTestProjectUsage { get; set; }
 
-        private readonly string _preBuiltDocMessage = "Additional documentation " +
-            "on pre-built detection can be found at https://aka.ms/dotnet/prebuilts";
+        private readonly string _preBuiltDocMessage = "See aka.ms/dotnet/prebuilts " +
+            "for guidance on what pre-builts are and how to eliminate them.";
 
         public override bool Execute()
         {
@@ -84,8 +84,8 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
             {
                 tellUserToUpdateBaseline = true;
                 Log.LogError(
-                    $"{diff.Added.Length} new packages used not in baseline! See report " +
-                    $"at {OutputReportFile} for more information.\n{_preBuiltDocMessage}\n" +
+                    $"{diff.Added.Length} new pre-builts discovered! Detailed usage " +
+                    $"report can be found at {OutputReportFile}.\n{_preBuiltDocMessage}\n" +
                     $"Package IDs are:\n" + string.Join("\n", diff.Added.Select(u => u.ToString())));
 
                 // In the report, list full usage info, not only identity.
