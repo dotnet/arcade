@@ -312,7 +312,7 @@ done
 
 if [[ "$__BuildArch" == "armel" ]]; then
     __LLDB_Package="lldb-3.5-dev"
-elif [[ "$__BuildArch" == "arm" && "$__CodeName" == "alpine" ]]; then
+elif [[ "$__BuildArch" == "arm" && "$__CodeName" == "alpine" && "$__AlpineVersion" == "3.13" ]]; then
     __AlpinePackages="${__AlpinePackages//numactl-dev/}"
 fi
 
