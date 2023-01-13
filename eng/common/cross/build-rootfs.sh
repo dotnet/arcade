@@ -312,6 +312,8 @@ done
 
 if [[ "$__BuildArch" == "armel" ]]; then
     __LLDB_Package="lldb-3.5-dev"
+elif [[ "$__BuildArch" == "arm" && "$__CodeName" == "alpine" ]]; then
+    __AlpinePackages="$(echo ${__AlpinePackages} | sed 's/ numactl-dev//')"
 fi
 
 __UbuntuPackages+=" ${__LLDB_Package:-}"
