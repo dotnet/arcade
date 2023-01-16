@@ -209,9 +209,9 @@ Following section describes how code flows into the (internal) release branches 
 ```mermaid
 flowchart TD
     subgraph GitHub / public
-        PublicRepos[Public repos]
-        PublicInstaller[github.com\ndotnet/installer]
-        PublicVMR[Public VMR\ngithub.com/dotnet/dotnet]
+        PublicRepos[(Public repos)]
+        PublicInstaller[(github.com\ndotnet/installer)]
+        PublicVMR[(Public VMR\ngithub.com/dotnet/dotnet)]
         PublicRepos-- Maestro flow\nmain, release/* -->PublicInstaller
     end
 
@@ -219,9 +219,9 @@ flowchart TD
     PublicVMR-.triggers build.->CodeMirror2
 
     subgraph AzDO / internal
-        InternalRepos[Internal repos]
-        InternalInstaller[dev.azure.com\ndotnet/installer]
-        InternalVMR[Internal VMR\ndev.azure.com/dotnet-dotnet]
+        InternalRepos[(Internal repos)]
+        InternalInstaller[(dev.azure.com\ndotnet/installer)]
+        InternalVMR[(Internal VMR\ndev.azure.com/dotnet-dotnet)]
         CodeMirror[code-mirror]
         CodeMirror2[code-mirror]
         InstallerBuild[dotnet-installer-official-ci]
@@ -241,8 +241,8 @@ flowchart TD
     class InternalVMR InternalVMR_;
 
     classDef Build fill:#2487DF,stroke:#2487DF,stroke-width:4px,color:#fff;
-    classDef PublicVMR_ fill:#B5E61D,stroke:#B5E61D,stroke-width:4px,color:#000;
-    classDef InternalVMR_ fill:#E6631C,stroke:#E6631C,stroke-width:4px,color:#fff;
+    classDef PublicVMR_ fill:#B5E61D,stroke:#000,color:#000;
+    classDef InternalVMR_ fill:#E6631C,stroke:#fff,color:#fff;
     linkStyle 7 stroke-width:2px,fill:none,stroke:red,color:red;
 ```
 
