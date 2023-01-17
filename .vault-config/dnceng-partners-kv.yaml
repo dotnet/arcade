@@ -55,7 +55,7 @@ secrets:
     type: azure-devops-access-token
     parameters:
       organizations: dnceng
-      scopes: packaging
+      scopes: packaging_write
       domainAccountName: dn-dependabot
       domainAccountSecret:
         name: dn-dependabot-account-redmond
