@@ -202,7 +202,7 @@ Large, cross stack changes may be better suited to VMR work. Experiments where t
 
 Ideally, the VMR PR/CI pipelines will provide a full swath of product coverage. It is not ideal to be dependent on backflow to validate product functionality. However, some specialized pipelines and testing may only be available against the development repositories. For certain changes that depend on this testing, working in the development repo may be more desirable.
 
-## Internal code flow, MSRC and releases
+## Internal code flow and releases
 
 Following section describes how code flows into the (internal) release branches of the VMR.
 
