@@ -251,7 +251,7 @@ On the diagram, you can see two main code flows. The first one for `main` and `r
 2. Runtime flows into `dotnet/installer` as part of the regular Maestro package flow.
 3. `dotnet/installer` is mirrored internally.
 4. The official build of `dotnet/installer` is triggered and performs the synchronization of VMR sources.
-5. CHanges are pushed to the public VMR.
+5. Changes are pushed to the public VMR.
 6. The public VMR is mirrored internally.
 
 The second flow is for internal changes:
