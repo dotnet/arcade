@@ -122,6 +122,10 @@ All builds from the last 24 hours since the issue was opened or updated will be 
 
 The issues analyzed are all infrastructure issues (known issues in dotnet/arcade) and repository issues (the known issues in the repository of the pull request).
 
+Known issues matches found will be displayed in the build analysis check, the example below shows that the automation found 4 matches with the issue "Tracking issue for CI build timeouts"
+
+![Known match example](./Resources/KnownIssueMatch.png?raw=true)
+
 ### Build retry functionality in known issues
 
 The build retry setting can be set to 'true' when the build failure on 'ErrorMessage' could be solved by retrying the build.
@@ -179,3 +183,28 @@ E.g.
 <!-- Begin Generated Content: Doc Feedback -->
 <sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CKnownIssues.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CKnownIssues.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CKnownIssues.md)</sub>
 <!-- End Generated Content-->
+
+## Telemetry
+
+Build analysis sends known issues telemetry to `engineeringdata` Kusto DB. The telemetry includes data about all the matches between build breaks and known issues the automation was able to find.
+
+Two tables are used to store this data, `KnownIssues` for build related matches and `TestKnownIssues` for test related matches. You can use the following columns, in both tables, to build queries:
+
+- Build Id
+- Build repository
+- Known issue Id
+- Known issue repository
+- Pull request that triggered the build (if available)
+
+The query below returns all builds affected by known issue 76454 in the runtime repo
+
+```kusto
+KnownIssues
+| where IssueId == 76454 and IssueRepository == "dotnet/runtime"
+```
+
+## Known issues board
+
+People can look at active known issues using the [.NET Core Engineering Services: Known Build Errors](https://github.com/orgs/dotnet/projects/111) GitHub project. In the board, known issues are divided into tabs, one for infrastructure related issues, the second one for repo specific issues and the last one for all infrastructure issue that have been created (opened and closed).
+
+![Known issues board](./Resources/KnownIssuesBoard.png?raw=true)
