@@ -22,13 +22,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         [InlineData("8.0.100-alpha.1", "8.0.100-alpha.1")]
         [InlineData("8.0.100-preview.1", "8.0.100-preview.1")]
         [InlineData("8.0.100-dev.1", "8.0.100")]
+        [InlineData("7.0.203", "7.0.200")]
         [InlineData("8.0.100-alpha.1.23062.6", "8.0.100-alpha.1")]
         [InlineData("8.0.101-alpha.1.23062.6", "8.0.100-alpha.1")]
         public static void ItConvertsTheManifestSdkVersionToAFeatureBandVersion(string sdkVersion, string expectedVersion)
         {
             ReleaseVersion actualFeatureBandVersion = WorkloadManifestPackage.GetSdkFeatureBandVersion(sdkVersion);
 
-            Assert.Equal(expectedVersion, actualFeatureBandVersion);
+            Assert.Equal(expectedVersion, $"{actualFeatureBandVersion}");
         }
     }
 }
