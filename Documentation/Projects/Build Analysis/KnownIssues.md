@@ -1,6 +1,6 @@
 # Known issues
 
-The "known issues" are GitHub issues that created with the purpose of reporting and tracking known build or test errors.
+"Known issues" are GitHub issues that are created with the purpose of reporting and tracking known build or test errors.
 
 [build analysis](https://github.com/dotnet/arcade/blob/main/Documentation/Projects/Build%20Analysis/Introduction.md) will have a list of known issues whenever a build error matches an existing known issues. This will help the developers to know when a build break is not exclusive to their build. This information is going to be listed at the top of the build analysis.
 
