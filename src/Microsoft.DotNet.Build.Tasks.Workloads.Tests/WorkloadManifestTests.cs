@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         {
             ReleaseVersion actualFeatureBandVersion = WorkloadManifestPackage.GetSdkFeatureBandVersion(sdkVersion);
 
-            Assert.Equal(expectedVersion, $"{actualFeatureBandVersion}");
+            Assert.Equal(expectedVersion, actualFeatureBandVersion);
         }
     }
 }
