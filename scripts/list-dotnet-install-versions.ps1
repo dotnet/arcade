@@ -5,39 +5,51 @@ For a series of known or specified channels, lists out what would be installed f
 .PARAMETER Quality
 Optional quality(s) to check
 
-.PARAMETER Channels
+.PARAMETER Channel
 Optional channel(s) to check. Otherwise checks a bunch of known channels.
 
-.PARAMETER Components
+.PARAMETER Component
 Optional channel(s) to check. Otherwise checks a bunch of known components.
 
 #>
 
 param (
-    [string[]]$Qualities = @("preview", "ga", "daily", "signed", "validated"),
-    [string[]]$Channels = @("6.0", "6.0.1xx", "6.0.3xx", "6.0.4xx", "7.0", "7.0.1xx", "7.0.2xx", "8.0", "8.0.1xx"),
-    [string[]]$Components = @("runtime", "windowsdesktop", "sdk", "aspnetcore"),
+    [CmdletBinding()]
+
+    [ValidateSet("preview", "ga", "daily", "signed", "validated")]
+    [Parameter()]
+    [string[]]$Quality = @("preview", "ga", "daily", "signed", "validated"),
+
+    [ValidateSet("6.0", "6.0.1xx", "6.0.3xx", "6.0.4xx", "7.0", "7.0.1xx", "7.0.2xx", "8.0", "8.0.1xx")]
+    [Parameter()]
+    [string[]]$Channel = @("6.0", "6.0.1xx", "6.0.3xx", "6.0.4xx", "7.0", "7.0.1xx", "7.0.2xx", "8.0", "8.0.1xx"),
+
+    [ValidateSet("runtime", "windowsdesktop", "sdk", "aspnetcore")]
+    [Parameter()]
+    [string[]]$Component = @("runtime", "windowsdesktop", "sdk", "aspnetcore"),
+
+    [Parameter()]
     [switch]$Json
 )
 
 $queries = New-Object System.Collections.ArrayList
-foreach ($channel in $Channels) {
-    foreach ($quality in $Qualities) {
-        foreach ($component in $Components) {
+foreach ($ch in $Channel) {
+    foreach ($q in $Quality) {
+        foreach ($co in $Component) {
             # Filter out ones we know will be wrong
-            if ($component -ne "sdk" -and $channel -like '*xx*') {
+            if ($co -ne "sdk" -and $ch -like '*xx*') {
                 continue
             }
-            $queries += @{channel = $channel; quality = $quality; component = $component; asJson = $Json}
+            $queries += @{channel = $ch; quality = $q; component = $co }
         }
     }
 }
 
-if ($Json) {
-    Write-Host "["
-}
+Write-Verbose "Querying $($queries.Count) combinations"
 
-$queries | ForEach-Object -Parallel {
+$productVersions = @()
+
+$productVersions += $queries | ForEach-Object -Parallel {
     function DoLookup($channel, $quality, $component) {
         $akaMSPrefix = "https://aka.ms/dotnet"
 
@@ -48,7 +60,7 @@ $queries | ForEach-Object -Parallel {
         else {
             $versionStringUrl = "$akaMSPrefix/$channel/$quality/$component-productVersion.txt"
         }
-        
+
         try {
             $response = Invoke-WebRequest $versionStringUrl
 
@@ -61,26 +73,28 @@ $queries | ForEach-Object -Parallel {
 
             return [System.Text.Encoding]::ASCII.GetString($response.Content).Trim()
         }
-        catch
-        {
+        catch {
             return 'N/A'
         }
     }
-    
+
     $channel = $_.channel
     $quality = $_.quality
     $component = $_.component
-    $asJson = $_.asJson
 
-    $elementInfo = @{channel = $channel; quality = $quality; component = $component; version = $(DoLookup $channel $quality $component)}
-    if ($asJson) {
-        Write-Host "$($elementInfo | ConvertTo-Json),"
-    } else {
-        $formatStr = "{0, -10}{1, -10}{2, -16}{3, -10}" -f $elementInfo.channel, $elementInfo.quality, $elementInfo.component, $elementInfo.version
-        Write-Host $formatStr
-    }
+    Write-Verbose "Querying $channel $quality $component" -Verbose:$using:PSBoundParameters.Verbose
+
+    @{channel = $channel; quality = $quality; component = $component; version = $(DoLookup $channel $quality $component) }
 }
 
+$validVersions = $productVersions | Where-Object { $_.version -ne 'N/A' }
+
 if ($Json) {
-    Write-Host "]"
+    $validVersions | ConvertTo-Json
+}
+else {
+    $validVersions | ForEach-Object {
+        $formatStr = "{0, -10}{1, -10}{2, -16}{3, -10}" -f $_.channel, $_.quality, $_.component, $_.version
+        Write-Host $formatStr
+    }
 }
