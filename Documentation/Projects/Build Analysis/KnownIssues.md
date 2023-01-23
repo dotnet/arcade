@@ -31,6 +31,7 @@ There are two ways to report a Known Issue: one is via Build Analysis and the ot
     Build: <!-- Add link to the build with the reported error. -->
     Leg Name: <!-- Add the name of the impacted leg. -->
 
+    <!-- Error message template  -->
     ## Error Message
     <!-- Fill for repository issues. For infrastructure issues the engineering services (@dotnet/dnceng) is going to fill it. -->
     ```json 
