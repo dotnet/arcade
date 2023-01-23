@@ -17,7 +17,7 @@ There are two types of known issues:
 
 There are two ways to report a Known Issue: one is via Build Analysis and the other one is manually.
 
-### Reporting known issue manually
+### Reporting a Known Issue Manually
 
 1. Decide if you need to open a [repository issue or infrastructure issue](#decide-infrastructure-or-repository-issue)
 1. Open a new issue, choosing the repository in which you are opening the issue based on following rule:
