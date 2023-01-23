@@ -1,4 +1,4 @@
-# Known issues
+# Known Issues
 
 "Known issues" are GitHub issues that are created with the purpose of reporting and tracking known build or test errors.
 
