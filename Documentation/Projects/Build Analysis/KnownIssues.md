@@ -52,7 +52,7 @@ There are two ways to report a Known Issue: one is via Build Analysis and the ot
 
 1. In Build Analysis, you will see links for the type of issue you want to open.
 ![Links to report known issue](./Resources/KnownIssuesLinks.png?raw=true)
-1. Click on the link of the [type of issue that suits better the situation](#decide-infrastructure-or-repository-issue).
+1. Click on the link of the [type of issue that suits the situation better](#decide-infrastructure-or-repository-issue).
 1. A template is going to appear for you and most of this information should be already prefilled.
 1. If you are opening a Repository issue you need to [fill the "Error message/pattern" section](#how-to-fill-out-a-known-issue-error-section). If you are opening an infrastructure issue, this is going to be handled by the engineering services team.
 1. If the issue reported can be solved by retrying the build you can consider setting the ["Build Retry" configuration](#build-retry-functionality-in-known-issues) to `true`
