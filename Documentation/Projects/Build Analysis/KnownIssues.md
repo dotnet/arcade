@@ -45,7 +45,7 @@ There are two ways to report a Known Issue: one is via Build Analysis and the ot
 
 1. If you are opening a Repository issue you need to [fill the "Error message/pattern" section](#how-to-fill-out-a-known-issue-error-section). If you are opening an infrastructure issue, this is going to be handled by the engineering services team.
 1. If the issue reported can be solved by retrying the build, you should consider setting the ["Build Retry" configuration](#build-retry-functionality-in-known-issues) to `true`
-1. If you want to exclude console logs from known issues matching, you need to set `ExcludeConsoleLog` to `true`
+1. If you want to exclude console logs from Known Issues matching, you need to set `ExcludeConsoleLog` to `true`
 1. You are done but [what happens after a known issue is created?](#what-happens-after-creating-or-updating-a-known-issue)
 
 ### Reporting known issue via build analysis
