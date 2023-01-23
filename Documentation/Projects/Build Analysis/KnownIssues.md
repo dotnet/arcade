@@ -61,6 +61,10 @@ There are two ways to report a Known Issue: one is via Build Analysis and the ot
 1. You should set `ExcludeConsoleLog` to `true` if you want to exclude console logs from Known Issues matching
 1. You are done but [what happens after a Known Issue is created?](#what-happens-after-creating-or-updating-a-known-issue)
 
+Note: You need to escape special characters to make your JSON valid. You can use the preview tab to validate your JSON blob, GitHub will highlight invalid characters.
+
+![Invalid JSON blob](./Resources/invalid_json_blob.png?raw=true)
+
 ## How the matching process works between a Known Issue and a build/test error
 
 The Known Issues feature finds build and test errors and matches them with open Known Issues using `String.Contains` when there is an "ErrorMessage" property or regex matching if an "ErrorPattern" property is provided.
