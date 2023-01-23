@@ -202,7 +202,7 @@ Two tables are used to store this data, `KnownIssues` for build related matches 
 - Known Issue repository
 - Pull request that triggered the build (if available)
 
-The query below returns all builds affected by Known Issue 76454 in the runtime repo
+The query below returns all builds affected by [Known Issue 76454](https://github.com/dotnet/runtime/issues/76454) in the runtime repo
 
 ```kusto
 KnownIssues
