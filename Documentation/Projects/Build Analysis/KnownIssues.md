@@ -42,11 +42,7 @@ There are two ways to report a known issue, one is via build analysis and the ot
     } 
     ```
     ````
-
-1. If you are opening a Repository issue you need to [fill the "Error message/pattern" section](#how-to-fill-out-a-known-issue-error-section). If you are opening an infrastructure issue, this is going to be handled by the engineering services team.
-1. If the issue reported can be solved by retrying the build you can consider setting the ["Build Retry" configuration](#build-retry-functionality-in-known-issues) to `true`
-1. If you want to exclude console logs from known issues matching, you need to set `ExcludeConsoleLog` to `true`
-1. You are done but [what happens after a known issue is created?](#what-happens-after-creating-or-updating-a-known-issue)
+1. [Fill out the JSON blob](#filling-out-known-issues-json-blob) accordingly
 
 ### Reporting known issue via build analysis
 
@@ -54,9 +50,13 @@ There are two ways to report a known issue, one is via build analysis and the ot
 ![Links to report known issue](./Resources/KnownIssuesLinks.png?raw=true)
 1. Click on the link of the [type of issue that suits better the situation](#decide-infrastructure-or-repository-issue).
 1. A template is going to appear for you and most of this information should be already prefilled.
+1. [Fill out the JSON blob](#filling-out-known-issues-json-blob) accordingly
+
+### Filling out Known Issues JSON Blob
+
 1. If you are opening a Repository issue you need to [fill the "Error message/pattern" section](#how-to-fill-out-a-known-issue-error-section). If you are opening an infrastructure issue, this is going to be handled by the engineering services team.
 1. If the issue reported can be solved by retrying the build you can consider setting the ["Build Retry" configuration](#build-retry-functionality-in-known-issues) to `true`
-1. If you want to exclude test console logs from known issues matching, you need to set `ExcludeConsoleLog` to `true`
+1. You should set `ExcludeConsoleLog` to `true` if you want to exclude console logs from known issues matching
 1. You are done but [what happens after a known issue is created?](#what-happens-after-creating-or-updating-a-known-issue)
 
 ## How the matching process works between an issue and a build or test error
