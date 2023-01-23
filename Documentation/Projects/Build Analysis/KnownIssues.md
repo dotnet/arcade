@@ -23,7 +23,7 @@ There are two ways to report a Known Issue: one is via Build Analysis and the ot
 1. Open a new issue, choosing the repository in which you are opening the issue based on following rule:
     - Infrastructure issue - arcade
     - Repository issue - In the repo in which the issue is happening
-1. Add the label `Known Build Error`. (If the label is not available on the repository follow the instructions to [get onboard](#how-to-get-onboard))
+1. Add the label `Known Build Error`. (If the label is not available on the repository, follow the instructions to [get onboard](#how-to-get-onboard))
 1. Copy and paste the template
 
     ````md
