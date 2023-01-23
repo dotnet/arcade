@@ -50,7 +50,7 @@ There are two ways to report a Known Issue: one is via Build Analysis and the ot
 
 ### Reporting known issue via build analysis
 
-1. In build analysis you will see links for the type of issue you want to open.
+1. In Build Analysis, you will see links for the type of issue you want to open.
 ![Links to report known issue](./Resources/KnownIssuesLinks.png?raw=true)
 1. Click on the link of the [type of issue that suits better the situation](#decide-infrastructure-or-repository-issue).
 1. A template is going to appear for you and most of this information should be already prefilled.
