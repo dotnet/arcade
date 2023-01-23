@@ -1,12 +1,12 @@
-# Known issues
+# Known Issues
 
-The "known issues" are GitHub issues that created with the purpose of reporting and tracking known build or test errors.
+"Known issues" are GitHub issues that are created with the purpose of reporting and tracking known build or test errors.
 
-[build analysis](https://github.com/dotnet/arcade/blob/main/Documentation/Projects/Build%20Analysis/Introduction.md) will have a list of known issues whenever a build error matches an existing known issues. This will help the developers to know when a build break is not exclusive to their build. This information is going to be listed at the top of the build analysis.
+[Build Analysis](https://github.com/dotnet/arcade/blob/main/Documentation/Projects/Build%20Analysis/Introduction.md) has a list of Known Issues whenever a build or test error matches an existing Known Issue. This will help the developers to know when a build break is not exclusive to their build. This information is listed at the top of Build Analysis.
 
 All reported known issues can be found on [known issues project](https://github.com/orgs/dotnet/projects/111).
 
-## When and how to report a known issue
+## When and How to Report a Known Issue
 
 A known issue should be reported when you find a build or test error that is not caused by your changes and that affects or could affect more builds.
 
@@ -15,15 +15,15 @@ There are two types of known issues:
 - **Infrastructure**: An infrastructure issue is an issue that is not exclusive to your repository and that needs to be investigated by the engineering services (@dotnet/dnceng)
 - **Repository**: A repository issue is an issue that is happening in a particular repository and that should be investigated by the repository owners.
 
-There are two ways to report a known issue, one is via build analysis and the other one is manually.
+There are two ways to report a Known Issue: one is via Build Analysis and the other one is manually.
 
-### Reporting known issue manually
+### Reporting a Known Issue Manually
 
 1. Decide if you need to open a [repository issue or infrastructure issue](#decide-infrastructure-or-repository-issue)
 1. Open a new issue, choosing the repository in which you are opening the issue based on following rule:
     - Infrastructure issue - arcade
     - Repository issue - In the repo in which the issue is happening
-1. Add the label `Known Build Error`. (If the label is not available on the repository follow the instructions to [get onboard](#how-to-get-onboard))
+1. Add the label `Known Build Error`. (If the label is not available on the repository, follow the instructions to [get onboard](#how-to-get-onboard))
 1. Copy and paste the template
 
     ````md
@@ -42,13 +42,14 @@ There are two ways to report a known issue, one is via build analysis and the ot
     } 
     ```
     ````
+
 1. [Fill out the JSON blob](#filling-out-known-issues-json-blob) accordingly
 
 ### Reporting known issue via build analysis
 
-1. In build analysis you will see links for the type of issue you want to open.
+1. In Build Analysis, you will see links for the type of issue you want to open.
 ![Links to report known issue](./Resources/KnownIssuesLinks.png?raw=true)
-1. Click on the link of the [type of issue that suits better the situation](#decide-infrastructure-or-repository-issue).
+1. Click on the link of the [type of issue that suits the situation better](#decide-infrastructure-or-repository-issue).
 1. A template is going to appear for you and most of this information should be already prefilled.
 1. [Fill out the JSON blob](#filling-out-known-issues-json-blob) accordingly
 
