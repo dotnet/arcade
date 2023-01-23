@@ -6,7 +6,7 @@
 
 All reported known issues can be found on [known issues project](https://github.com/orgs/dotnet/projects/111).
 
-## When and how to report a known issue
+## When and How to Report a Known Issue
 
 A known issue should be reported when you find a build or test error that is not caused by your changes and that affects or could affect more builds.
 
