@@ -72,8 +72,8 @@ The Known Issues feature finds build and test errors and matches them with open 
 The strategy and limitations differ between both types of errors:
 
 - **Build error**: For build errors the search occurs in two places:
-  - AzDO error message
-  - Logs for failing jobs
+  - Azure DevOps error messages
+  - Build log of failed jobs
 
 - **Test errors**: For test errors the analysis only occurs when the build has up to 25 failing tests. This limitation was put in place due to the cost of reviewing the logs for helix jobs. The analysis uses:
   - Error message
@@ -192,7 +192,7 @@ E.g.
 
 ## Telemetry
 
-Build Analysis sends Known Issues telemetry to `engineeringdata` Kusto DB. The telemetry includes data about all the matches between build breaks and Known Issues the automation was able to find.
+Build Analysis sends Known Issues telemetry to the `engineeringdata` Kusto DB. The telemetry includes data about all the matches between build breaks and Known Issues the automation was able to find.
 
 Two tables are used to store this data, `KnownIssues` for build related matches and `TestKnownIssues` for test related matches. You can use the following columns, in both tables, to build queries:
 
