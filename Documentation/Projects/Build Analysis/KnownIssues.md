@@ -62,7 +62,7 @@ There are two ways to report a Known Issue: one is via Build Analysis and the ot
 
 ## How the Matching Process Works Between an Issue and a Build or Test Error
 
-The known issues feature finds build and test errors and matches them with known issues using `String.Contains` when there is an "ErrorMessage" string or regex matching if an "ErrorPattern" is provided.
+The Known Issues feature finds build and test errors and matches them with open Known Issues using `String.Contains` when there is an "ErrorMessage" property or regex matching if an "ErrorPattern" property is provided.
 
 The strategy and limitations differ between both types of errors:
 
