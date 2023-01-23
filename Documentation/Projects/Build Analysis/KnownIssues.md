@@ -1,23 +1,23 @@
 # Known Issues
 
-"Known issues" are GitHub issues that are created with the purpose of reporting and tracking known build or test errors.
+"Known Issues" are GitHub issues that are created with the purpose of reporting and tracking known build or test errors.
 
 [Build Analysis](https://github.com/dotnet/arcade/blob/main/Documentation/Projects/Build%20Analysis/Introduction.md) has a list of Known Issues whenever a build or test error matches an existing Known Issue. This will help the developers to know when a build break is not exclusive to their build. This information is listed at the top of Build Analysis.
 
-All reported known issues can be found on [known issues project](https://github.com/orgs/dotnet/projects/111).
+All reported Known Issues can be found on [Known Issues project](https://github.com/orgs/dotnet/projects/111).
 
-## When and How to Report a Known Issue
+## When and how to report a Known Issue
 
-A known issue should be reported when you find a build or test error that is not caused by your changes and that affects or could affect more builds.
+A Known Issue should be reported when you find a build or test error that is not caused by your changes and that affects or could affect more builds.
 
-There are two types of known issues:
+There are two types of Known Issues:
 
 - **Infrastructure**: An infrastructure issue is an issue that is not exclusive to your repository and that needs to be investigated by the engineering services (@dotnet/dnceng)
 - **Repository**: A repository issue is an issue that is happening in a particular repository and that should be investigated by the repository owners.
 
 There are two ways to report a Known Issue: one is via Build Analysis and the other one is manually.
 
-### Reporting a Known Issue Manually
+### Reporting a Known Issue manually
 
 1. Decide if you need to open a [repository issue or infrastructure issue](#decide-infrastructure-or-repository-issue)
 1. Open a new issue, choosing the repository in which you are opening the issue based on following rule:
@@ -46,22 +46,22 @@ There are two ways to report a Known Issue: one is via Build Analysis and the ot
 
 1. [Fill out the JSON blob](#filling-out-known-issues-json-blob) accordingly
 
-### Reporting known issue via build analysis
+### Reporting Known Issues via Build Analysis
 
 1. In Build Analysis, you will see links for the type of issue you want to open.
-![Links to report known issue](./Resources/KnownIssuesLinks.png?raw=true)
+![Links to report Known Issue](./Resources/KnownIssuesLinks.png?raw=true)
 1. Click on the link of the [type of issue that suits the situation better](#decide-infrastructure-or-repository-issue).
 1. A template is going to appear for you and most of this information should be already prefilled.
 1. [Fill out the JSON blob](#filling-out-known-issues-json-blob) accordingly
 
-### Filling out Known Issues JSON Blob
+### Filling out Known Issues JSON blob
 
 1. If you are opening a Repository issue you need to [fill the "Error message/pattern" section](#how-to-fill-out-a-known-issue-error-section). If you are opening an infrastructure issue, this is going to be handled by the engineering services team.
 1. If the issue reported can be solved by retrying the build you can consider setting the ["Build Retry" configuration](#build-retry-functionality-in-known-issues) to `true`
-1. You should set `ExcludeConsoleLog` to `true` if you want to exclude console logs from known issues matching
-1. You are done but [what happens after a known issue is created?](#what-happens-after-creating-or-updating-a-known-issue)
+1. You should set `ExcludeConsoleLog` to `true` if you want to exclude console logs from Known Issues matching
+1. You are done but [what happens after a Known Issue is created?](#what-happens-after-creating-or-updating-a-known-issue)
 
-## How the Matching Process Works Between an Issue and a Build or Test Error
+## How the matching process works between a Known Issue and a build/test error
 
 The Known Issues feature finds build and test errors and matches them with open Known Issues using `String.Contains` when there is an "ErrorMessage" property or regex matching if an "ErrorPattern" property is provided.
 
@@ -76,7 +76,7 @@ The strategy and limitations differ between both types of errors:
   - Stack trace
   - For Helix tests in the console log
 
-## How to fill out a known issue error section
+## How to fill out a Known Issue error section
 
 For the error matching to work, you need to provide an error message or an error pattern.
 
@@ -118,17 +118,17 @@ In the following example, the regular expression `The command .+ failed` would m
 }
 ```
 
-## What happens after creating or updating a known issue
+## What happens after creating or updating a Known Issue
 
 All builds from the last 24 hours since the issue was opened or updated will be scanned with the error message provided, also the builds that fail after the creation of the issue will be scanned.
 
-The issues analyzed are all infrastructure issues (known issues in dotnet/arcade) and repository issues (the known issues in the repository of the pull request).
+The issues analyzed are all infrastructure issues (Known Issues in dotnet/arcade) and repository issues (the Known Issues in the repository of the pull request).
 
-Known issues matches found will be displayed in the build analysis check, the example below shows that the automation found 4 matches with the issue "Tracking issue for CI build timeouts"
+Known Issues matches found will be displayed in the Build Analysis check, the example below shows that the automation found 4 matches with the issue "Tracking issue for CI build timeouts"
 
 ![Known match example](./Resources/KnownIssueMatch.png?raw=true)
 
-### Build retry functionality in known issues
+### Build retry functionality in Known Issues
 
 The build retry setting can be set to 'true' when the build failure on 'ErrorMessage' could be solved by retrying the build.
 
@@ -141,7 +141,7 @@ The following is a good example of the use of "BuilRetry" as the only way to fix
 } 
 ```
 
-The build retry functionality retries a build that, in its first attempt, had a failure that matches the known issue 'ErrorMessage' or 'ErrorPattern' and has the 'BuildRetry' set to true.
+The build retry functionality retries a build that, in its first attempt, had a failure that matches the Known Issue 'ErrorMessage' or 'ErrorPattern' and has the 'BuildRetry' set to true.
 
 In the example stated above if a build fails with the error "The agent did not connect within the alloted time" on its first attempt this is going to be retried.
 
@@ -154,7 +154,7 @@ The limitation has been placed by design because of two reasons:
 
 ## How to get onboard
 
-1. This feature is tightly related to the build analysis because of that it's necessary to have the `.NET Helix` GitHub application installed in the repo in which you intend to use known issues. </br>
+1. This feature is tightly related to the Build Analysis because of that it's necessary to have the `.NET Helix` GitHub application installed in the repo in which you intend to use Known Issues. </br>
 To get the application installed, you can contact the [.NET Core Engineering Services team](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/How-to-get-a-hold-of-Engineering-Servicing)
 1. For infrastructure issues there are not additional steps because this are part of dotnet/arcade.
 1. For the repository issues it's necessary to [Create a label](https://docs.github.com/en/enterprise-server@3.1/issues/using-labels-and-milestones-to-track-work/managing-labels#creating-a-label) on the repository in which you need to open the Repository issue. <br>
@@ -175,12 +175,12 @@ The name of the label needs to be `Known Build Error`
     https://github.com/dotnet/<REPOSITORY>/issues?q=is%3Aopen+is%3Aissue+label%3A%22Known+Build+Error%22
     ```
 
-## Where to find the known issue on the build analysis
+## Where to find the Known Issue on the Build Analysis
 
-The known issues are listed at the top of the build analysis.
+The Known Issues are listed at the top of the Build Analysis.
 
 E.g.
-![Known issues list](./Resources/KnownIssuesListed.png?raw=true)
+![Known Issues list](./Resources/KnownIssuesListed.png?raw=true)
 
 <!-- Begin Generated Content: Doc Feedback -->
 <sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CKnownIssues.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CKnownIssues.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CKnownIssues.md)</sub>
@@ -188,25 +188,25 @@ E.g.
 
 ## Telemetry
 
-Build analysis sends known issues telemetry to `engineeringdata` Kusto DB. The telemetry includes data about all the matches between build breaks and known issues the automation was able to find.
+Build Analysis sends Known Issues telemetry to `engineeringdata` Kusto DB. The telemetry includes data about all the matches between build breaks and Known Issues the automation was able to find.
 
 Two tables are used to store this data, `KnownIssues` for build related matches and `TestKnownIssues` for test related matches. You can use the following columns, in both tables, to build queries:
 
 - Build Id
 - Build repository
-- Known issue Id
-- Known issue repository
+- Known Issue Id
+- Known Issue repository
 - Pull request that triggered the build (if available)
 
-The query below returns all builds affected by known issue 76454 in the runtime repo
+The query below returns all builds affected by Known Issue 76454 in the runtime repo
 
 ```kusto
 KnownIssues
 | where IssueId == 76454 and IssueRepository == "dotnet/runtime"
 ```
 
-## Known issues board
+## Known Issues board
 
-People can look at active known issues using the [.NET Core Engineering Services: Known Build Errors](https://github.com/orgs/dotnet/projects/111) GitHub project. In the board, known issues are divided into tabs, one for infrastructure related issues, the second one for repo specific issues and the last one for all infrastructure issue that have been created (opened and closed).
+People can look at active Known Issues using the [.NET Core Engineering Services: Known Build Errors](https://github.com/orgs/dotnet/projects/111) GitHub project. In the board, Known Issues are divided into tabs, one for infrastructure related issues, the second one for repo specific issues and the last one for all infrastructure issue that have been created (opened and closed).
 
-![Known issues board](./Resources/KnownIssuesBoard.png?raw=true)
+![Known Issues board](./Resources/KnownIssuesBoard.png?raw=true)
