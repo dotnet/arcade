@@ -83,7 +83,6 @@ namespace Microsoft.DotNet.Helix.Sdk
                         // Ensure directory exists - A noop if it already does
                         Directory.CreateDirectory(Path.Combine(destinationDir.FullName, Path.GetDirectoryName(file)));
 
-
                         var fileAvailableForDownload = allAvailableFiles.Where(f => f.Name == file).FirstOrDefault();
 
                         if (fileAvailableForDownload == null) 
