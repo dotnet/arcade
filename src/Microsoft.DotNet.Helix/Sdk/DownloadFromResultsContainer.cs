@@ -83,7 +83,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                         // Ensure directory exists - A noop if it already does
                         Directory.CreateDirectory(Path.Combine(destinationDir.FullName, Path.GetDirectoryName(file)));
 
-                        var fileAvailableForDownload = allAvailableFiles.Where(f => f.Name == file).FirstOrDefault();
+                        // Helix clients currently provide file paths in the format of the executing OS;
+                        // the Arcade feature historically only worked with / so only check one direction of conversion.
+                        var fileAvailableForDownload = allAvailableFiles.Where(f => f.Name == file || f.Name.Replace('\\', '/') == file).FirstOrDefault();
 
                         if (fileAvailableForDownload == null) 
                         {
