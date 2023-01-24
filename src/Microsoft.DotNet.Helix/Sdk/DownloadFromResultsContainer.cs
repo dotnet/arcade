@@ -80,6 +80,10 @@ namespace Microsoft.DotNet.Helix.Sdk
                         string destinationFile = Path.Combine(destinationDir.FullName, file);
                         Log.LogMessage(MessageImportance.Normal, $"Downloading {file} => {destinationFile} ...");
 
+                        // Ensure directory exists - A noop if it already does
+                        Directory.CreateDirectory(Path.Combine(destinationDir.FullName, Path.GetDirectoryName(file)));
+
+
                         var fileAvailableForDownload = allAvailableFiles.Where(f => f.Name == file).FirstOrDefault();
 
                         if (fileAvailableForDownload == null) 
