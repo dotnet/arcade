@@ -46,7 +46,7 @@
       <!-- Default to building for the portable OS platform with host machine architecture. -->
       <TargetRid Condition="'$(TargetRid)' == ''">$(PortableRid)</TargetRid>
     
-      <SourceBuildIntermediateNupkgRid Condition="'$(SourceBuildIntermediateNupkgRid)' == '' and '$(DotNetBuildFromSourceFlavor)' != 'Product'">$(PortableRid)</SourceBuildIntermediateNupkgRid>
+      <SourceBuildIntermediateNupkgRid Condition="'$(SourceBuildIntermediateNupkgRid)' == ''">$(PortableRid)</SourceBuildIntermediateNupkgRid>
       
       <SourceBuildIntermediateNupkgPrefix>Microsoft.SourceBuild.Intermediate.</SourceBuildIntermediateNupkgPrefix>
       <SourceBuildIntermediateNupkgSuffix Condition="'$(SourceBuildManagedOnly)' != 'true'">.$(SourceBuildIntermediateNupkgRid)</SourceBuildIntermediateNupkgSuffix>
