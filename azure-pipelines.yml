@@ -7,6 +7,20 @@ trigger:
     - release/5.0
     - release/6.0
     - release/7.0
+  paths:
+    include:
+      - '*'
+    exclude:
+      - .github/*
+      - Documentation/*
+      - CODE-OF-CONDUCT.md
+      - CONTRIBUTING.md
+      - LICENSE.TXT
+      - PATENTS.TXT
+      - README.md
+      - SECURITY.md
+      - THIRD-PARTY-NOTICES.TXT
+
 pr:
   branches:
     include:
@@ -16,6 +30,19 @@ pr:
     - release/6.0
     - release/7.0
     - templates
+  paths:
+    include:
+      - '*'
+    exclude:
+      - .github/*
+      - Documentation/*
+      - CODE-OF-CONDUCT.md
+      - CONTRIBUTING.md
+      - LICENSE.TXT
+      - PATENTS.TXT
+      - README.md
+      - SECURITY.md
+      - THIRD-PARTY-NOTICES.TXT
 
 variables:
 - template: /eng/common-variables.yml
