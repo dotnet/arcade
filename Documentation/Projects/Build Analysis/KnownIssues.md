@@ -136,7 +136,7 @@ In the following example, the regular expression `The command .+ failed` would m
 }
 ```
 
-We recommend you to test your regular expression, to do it you can use [regex101 tester](https://regex101.com/) (choose `.NET (C#)` flavor) with the following regex options:
+We recommend you test your regular expression, to do it you can use [regex101 tester](https://regex101.com/) (choose `.NET (C#)` flavor) with the following regex options:
 
 - Single line
 - Insentitive
