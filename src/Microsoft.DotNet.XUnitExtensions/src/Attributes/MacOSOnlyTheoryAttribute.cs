@@ -11,17 +11,17 @@ namespace Xunit
     /// <summary>
     /// This test should be run only on OSX.
     /// </summary>
-    public class OsxOnlyFactAttribute : FactAttribute
+    public class MacOSOnlyTheoryAttribute : TheoryAttribute
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="OsxOnlyFactAttribute"/> class.
+        /// Initializes a new instance of the <see cref="MacOSOnlyTheoryAttribute"/> class.
         /// </summary>
         /// <param name="additionalMessage">The additional message that is appended to skip reason, when test is skipped.</param>
-        public OsxOnlyFactAttribute(string? additionalMessage = null)
+        public MacOSOnlyTheoryAttribute(string? additionalMessage = null)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                this.Skip = "This test requires OSX to run.".AppendAdditionalMessage(additionalMessage);
+                this.Skip = "This test requires macOS to run.".AppendAdditionalMessage(additionalMessage);
             }
         }
     }
