@@ -104,7 +104,9 @@
     <Copy SourceFiles="%(_VsixFileInfo.VsixPath)" DestinationFolder="%(_VsixFileInfo.UnpackDir)" Condition = "'%(_VsixFileInfo.Extension)' == '.exe'" />
     <Unzip SourceFiles="%(_VsixFileInfo.VsixPath)" DestinationFolder="%(_VsixFileInfo.UnpackDir)" Condition = "'%(_VsixFileInfo.Extension)' != '.exe'"/>
     <!-- Generate SBOM -->
-    <Exec Command='"$(DotNetTool)" --roll-forward major "$(ManifestTool)" generate -BuildDropPath "%(_VsixFileInfo.UnpackDir)" -ManifestDirPath "%(_VsixFileInfo.SbomDir)" -PackageName "%(_VsixFileInfo.VsixFileName)" -PackageVersion "%(_VsixFileInfo.VsixVersion)" -Verbosity Verbose'/>
+    <Exec Command='"$(DotNetTool)" --roll-forward major "$(ManifestTool)" generate -BuildDropPath "%(_VsixFileInfo.UnpackDir)" -ManifestDirPath "%(_VsixFileInfo.SbomDir)" -PackageName "%(_VsixFileInfo.VsixFileName)" -PackageVersion "%(_VsixFileInfo.VsixVersion)" -Verbosity Verbose'
+          ConsoleToMsBuild="true"
+          StandardOutputImportance="Low" />
     <!-- Generate VS manifest with link to the SBOM manifest-->
     <ItemGroup>
       <MergeManifest Include="%(_VsixFileInfo.ManifestJsonPath)" SBOMFileLocation="%(_VsixFileInfo.SbomJsonPath)" />
