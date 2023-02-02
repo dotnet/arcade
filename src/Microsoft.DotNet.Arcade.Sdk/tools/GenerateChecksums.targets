@@ -8,7 +8,7 @@
   -->
   <Target Name="GenerateChecksums"
           Condition="'@(GenerateChecksumItems)' != ''"
-          AfterTargets="Build">
+          AfterTargets="Sign">
 
     <Error Condition="'%(GenerateChecksumItems.DestinationPath)' == ''"
            Text="Item &quot;%(GenerateChecksumItems.Identity)&quot; does not define required metadata &quot;DestinationPath&quot;" />
