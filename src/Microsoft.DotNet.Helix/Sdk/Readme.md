@@ -408,7 +408,7 @@ In this case the  `testName` needs to be "Pizza" and the `failureMessage` needs 
 ```
 
 #### Multiple rules
-In this example we see two rules on  `retryOnRules` section, only one rule needs to be met to retry the build. 
+In this example we see two rules on `retryOnRules` section, only one rule needs to be met to retry the build. 
 
 In this case if a test fails and its `testName` is "Pizza" or its `testName` is "Taco", the test is going to be retried.
 
