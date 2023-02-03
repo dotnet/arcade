@@ -9,8 +9,8 @@
     <_BeforeCommonTargetsHookUsed>true</_BeforeCommonTargetsHookUsed>
     <_BeforeCommonTargetsHookUsed Condition="'$(_ArcadeBeforeCommonTargetsImported)' != 'true'">false</_BeforeCommonTargetsHookUsed>
   </PropertyGroup>
-  <Import Project="BeforeCommonTargets.targets" Condition="'$(_ArcadeBeforeCommonTargetsImported)' != 'true' and '$(IsCrossTargetingBuild)' != 'true'"/>
-  <Import Project="BeforeCommonTargets.CrossTargeting.targets" Condition="'$(_ArcadeBeforeCommonTargetsImported)' != 'true' and '$(IsCrossTargetingBuild)' == 'true'"/>
+  <Import Project="..\tools\BeforeCommonTargets.targets" Condition="'$(_ArcadeBeforeCommonTargetsImported)' != 'true' and '$(IsCrossTargetingBuild)' != 'true'"/>
+  <Import Project="..\tools\BeforeCommonTargets.CrossTargeting.targets" Condition="'$(_ArcadeBeforeCommonTargetsImported)' != 'true' and '$(IsCrossTargetingBuild)' == 'true'"/>
 
   <!-- 
     Output the location of the Build.proj so that the build driver can find where it was restored.
