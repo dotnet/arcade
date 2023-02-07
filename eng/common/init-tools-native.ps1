@@ -83,7 +83,7 @@ try {
                     Select-Object -Expand 'native-tools' -ErrorAction SilentlyContinue
   if ($NativeTools) {
     if ($PathPromotion -eq $True) {
-      $ArcadeToolsDirectory = "C:\arcade-tools"
+      $ArcadeToolsDirectory = "$env:SYSTEMDRIVE\arcade-tools"
       if ($ArcadeToolsDirectory) { # if this directory exists, we should use native tools on machine
         $NativeTools.PSObject.Properties | ForEach-Object {
           $ToolName = $_.Name
