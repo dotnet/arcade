@@ -84,7 +84,7 @@ try {
   if ($NativeTools) {
     if ($PathPromotion -eq $True) {
       $ArcadeToolsDirectory = "$env:SYSTEMDRIVE\arcade-tools"
-      if ($ArcadeToolsDirectory) { # if this directory exists, we should use native tools on machine
+      if (Test-Path $ArcadeToolsDirectory) { # if this directory exists, we should use native tools on machine
         $NativeTools.PSObject.Properties | ForEach-Object {
           $ToolName = $_.Name
           $ToolVersion = $_.Value
