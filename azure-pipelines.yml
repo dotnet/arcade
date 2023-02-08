@@ -18,7 +18,8 @@ pr:
     - templates
 
 variables:
-- template: eng/common-variables.yml
+- template: /eng/common-variables.yml
+- template: /eng/common/templates/variables/pool-providers.yml
 
 resources:
   containers:
@@ -55,7 +56,7 @@ stages:
           ${{ if eq(variables._RunAsPublic, True) }}:
             vmImage: windows-latest
           ${{ if eq(variables._RunAsInternal, True) }}:
-            name: NetCore1ESPool-Svc-Internal
+            name: $(DncEngInternalBuildPool)
             demands: ImageOverride -equals windows.vs2019.amd64
         strategy:
           matrix:
