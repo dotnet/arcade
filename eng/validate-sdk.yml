@@ -18,15 +18,16 @@ jobs:
         logs:
           name: Logs_ValidateSdk_Windows_NT_Release
     timeoutInMinutes: 90
-    pool:
-      name: NetCore1ESPool-Svc-Internal
-      demands: ImageOverride -equals windows.vs2019.amd64
     variables:
     - group: DotNet-Blob-Feed
     - group: Publish-Build-Assets
     - _BuildConfig: ${{ parameters.buildConfig }}
     - _BuildArgs: ${{ parameters.buildArgs }}
     - _ValidateBlobFeedUrl: ${{ parameters.validateBlobFeedUrl }}
+    - template: /eng/common/templates/variables/pool-providers.yml
+    pool:
+      name: $(DncEngInternalBuildPool)
+      demands: ImageOverride -equals windows.vs2019.amd64
     preSteps:
     - checkout: self
       clean: true
