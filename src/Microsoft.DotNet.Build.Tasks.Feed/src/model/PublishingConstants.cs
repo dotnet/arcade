@@ -92,8 +92,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         private const string FeedDotNet31InternalShipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-internal/nuget/v3/index.json";
         private const string FeedDotNet31InternalTransport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-internal-transport/nuget/v3/index.json";
 
-        private const string FeedDotNet31Blazor = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-blazor/nuget/v3/index.json";
-
         private const string FeedDotNet5Shipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json";
         private const string FeedDotNet5Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5-transport/nuget/v3/index.json";
 
@@ -139,14 +137,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         {
             (TargetFeedContentType.Package, FeedDotNet31InternalShipping, AssetSelection.ShippingOnly),
             (TargetFeedContentType.Package, FeedDotNet31InternalTransport, AssetSelection.NonShippingOnly),
-            (InstallersAndSymbols, FeedInternalForInstallers),
-            (TargetFeedContentType.Checksum, FeedInternalForChecksums),
-        };
-
-        private static TargetFeedSpecification[] DotNet31BlazorFeeds =
-        {
-            (TargetFeedContentType.Package, FeedDotNet31Blazor, AssetSelection.ShippingOnly),
-            (TargetFeedContentType.Package, FeedDotNet31Blazor, AssetSelection.NonShippingOnly),
             (InstallersAndSymbols, FeedInternalForInstallers),
             (TargetFeedContentType.Checksum, FeedInternalForChecksums),
         };
@@ -956,8 +946,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 {
                     (TargetFeedContentType.Package, FeedDotNetLibrariesShipping, AssetSelection.ShippingOnly),
                     (TargetFeedContentType.Package, FeedDotNetLibrariesTransport, AssetSelection.NonShippingOnly),
-                    (InstallersAndSymbols, FeedForInstallers),
-                    (TargetFeedContentType.Checksum, FeedForChecksums),
+                    (InstallersAndSymbols, FeedStagingForInstallers),
+                    (TargetFeedContentType.Checksum, FeedStagingForChecksums),
                 },
                 symbolTargetType: PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
