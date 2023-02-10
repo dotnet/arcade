@@ -239,7 +239,7 @@ flowchart TD
         InternalInstaller-.triggers for\nmain, release/*.->VmrSync
         InternalInstaller-.triggers for\ninternal/release/*.->VmrSyncInternal
         VmrSyncInternal-- VMR synchronization\ninternal/release/* -->InternalVMR
-        VmrSync-- VMR synchronization\nmain, release/*\nPotential leak -->PublicVMR
+        VmrSync-- VMR synchronization\nmain, release/*\nSecurity verification, see below -->PublicVMR
         CodeMirror2-- mirrors\nmain, release/* -->InternalVMR
         InternalVMR-.->Releases
     end
@@ -253,7 +253,7 @@ flowchart TD
     classDef PublicVMR_ fill:#B5E61D,stroke:#000,color:#000;
     classDef InternalVMR_ fill:#E6631C,stroke:#fff,color:#fff;
     classDef LegendStyle fill:#fff,stroke:#ccc,color:#aaa;
-    linkStyle 8 stroke-width:2px,fill:none,stroke:red,color:red;
+    linkStyle 8 stroke-width:2px,fill:none,stroke:blue,color:blue;
 ```
 
 On the diagram, you can see two main code flows. The first one for `main` and `release/*` branches (public flow):
