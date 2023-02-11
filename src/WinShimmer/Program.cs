@@ -68,8 +68,8 @@ class Program
     }}
 }}
 "));
-            using (var exe = new FileStream(outputLocation, FileMode.Create))
             using (var resources = compilation.CreateDefaultWin32Resources(true, true, null, null))
+            using (var exe = new FileStream(outputLocation, FileMode.Create))
             {
                 var emit = compilation.Emit(exe, win32Resources: resources);
 
