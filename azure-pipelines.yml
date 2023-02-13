@@ -75,7 +75,6 @@ stages:
 
       - ${{ if eq(variables._RunAsPublic, True) }}:
         - job: Linux
-          container: LinuxContainer
           pool:
             vmImage: ubuntu-latest
           strategy:
