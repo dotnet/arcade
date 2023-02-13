@@ -90,6 +90,6 @@
     <MicrosoftSymbolUploaderVersion>2.0.0-preview.1.21526.15</MicrosoftSymbolUploaderVersion>
     <MicrosoftNetSdkWorkloadManifestReaderVersion>7.0.100-preview.5.22273.2</MicrosoftNetSdkWorkloadManifestReaderVersion>
     <MicrosoftDeploymentDotNetReleasesVersion>1.0.0-preview5.1.22263.1</MicrosoftDeploymentDotNetReleasesVersion>
-    <MicrosoftTemplateEngineAuthoringTasksVersion>8.0.100-preview.2.23078.1</MicrosoftTemplateEngineAuthoringTasksVersion>
+    <MicrosoftTemplateEngineAuthoringTasksVersion>8.0.100-preview.2.23112.2</MicrosoftTemplateEngineAuthoringTasksVersion>
   </PropertyGroup>
 </Project>
