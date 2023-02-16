@@ -148,9 +148,11 @@ $locJson = @{
                         }
                     }
                     $sourceFile = ($_.FullName | Resolve-Path -Relative)
+                    $lciFile = $sourceFile + ".lci"
                     if ($continue) {
                         return @{
                             SourceFile = $sourceFile
+                            LciFile = if (Test-Path $lciFile -PathType Leaf) {$lciFile} else {$null}
                             CopyOption = "LangIDOnPath"
                             OutputPath = $outputPath
                         }
