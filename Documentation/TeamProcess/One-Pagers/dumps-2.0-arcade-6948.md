@@ -6,7 +6,8 @@ Problems with the current process?
 1.	Dumps for hanging test and crashing test are not captured. 
 1.	Dumps are not auto compressed.
 1.	We cannot analyze dumps.
-Motivation for the new solution? 
+
+## Motivation for the new solution? 
 1.	Get system and runtime dumps.
 1.	We can work on the ability to know which test hung/crashed. 
 1.	We can capture screenshots of hung/crashed tests. 
@@ -21,7 +22,7 @@ Coreclr has implemented something similar, so we have proof of concept that this
 
 We will have to test this across all platforms and that is a time-consuming process.
 
-1.	VS test runner is integrated with our test infra, this should give us the ability to play more with dump management. More details on VStest runner. 
+2.	VS test runner is integrated with our test infra, this should give us the ability to play more with dump management. More details on VStest runner. 
 
 Vs test runner will give us the ability to get more details on 
 *	The test that crashed/hung 
@@ -30,7 +31,7 @@ Vs test runner will give us the ability to get more details on
 
 This must be tested across all platforms like the previous implementation.
 
-1.	Dump Auto triage tool: (nice to have feature) 
+3.	Dump Auto triage tool: (nice to have feature) 
 
 *	Tool looks for work item’s uploaded dump files. If it finds any dumps then it downloads the dump file. 
 *	Will use CLRMD to open the dump file and look for exceptions and get the stack trace. (Not sure how this will work)
