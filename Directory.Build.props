@@ -11,7 +11,8 @@
     <DebugType>embedded</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <LangVersion>Latest</LangVersion>
-    <TargetFrameworkForNETSDK>net6.0</TargetFrameworkForNETSDK>
+    <TargetFrameworkForNETSDK>netcoreapp3.1</TargetFrameworkForNETSDK>
+    <TargetFrameworkForNETSDK Condition="'$(DotNetBuildFromSource)' == 'true'">net6.0</TargetFrameworkForNETSDK>
 
     <!--
       Tools and packages produced by this repository support infrastructure and are not shipping on NuGet or via any other official channel.
