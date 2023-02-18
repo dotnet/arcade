@@ -14,7 +14,9 @@ We collect system crash dumps across all platforms. Then we upload the dumps to 
 1.	We can analyze dumps and extract exceptions out of it, to debug system dumps easily.
 
 ## Implementation:
-1. Currently after helix work item is completed, we kill the process.
+1. Without VS-test runner: In this process after the work item completes we run a some commands to create dump, upload and clean up the dump folder. This does not include integration with any VS-test runner.
+
+Currently after helix work item is completed, we kill the process.
 Just before we kill the process we do the following 
 * If the workitem is hung or taking a long time to complete then we create a dump. 
 * Zip the dumps and upload it to azure storage.
@@ -26,7 +28,7 @@ Zipping the contents of the dump folder, which are greater than 1gb(say) before 
 
 We will have to test this across all platforms. 
 
-2.	VS test runner is integrated with our test infra, this should give us the ability to play more with dump management. More details on how we are planning to implement VStest runner is (here) [./shared-test-infra-arcade6948.md]. 
+2. With VS-test runner: VS test runner is integrated with our test infra, this should give us the ability to play more with dump management. More details on how we are planning to implement VStest runner is (here) [./shared-test-infra-arcade6948.md]. 
 
 Vs test runner will give us the ability to get more details on 
 *	The test that crashed/hung 
@@ -35,12 +37,12 @@ Vs test runner will give us the ability to get more details on
 
 This must be tested across all platforms like the previous implementation.
 
-3.	Dump Auto triage tool: 
+3.	Dump Auto triage tool: This tool will help up extract exceptions from dump files. That can later be used to create a github/azure issue.
 
 * This tool we can use to analyze dumps (extract details on exceptions) on the helix agent. 
 * Tool looks for work item’s uploaded dump files. If it finds any dumps for the work item, then it downloads the dump file.
 * Will use CLRMD/windbg (for windows)/gdb (for non windows) to open the dump file and look for exceptions and get the stack trace. In this we are not sure what exceptions we should look for in the dump files.
-* We can then get the stack trace and create github issues/ azdo issues.
+* We can then get the stack trace and create github issue/ azdo issue.
 
 ## Risk: 
 1.	In the first two implementations (with or without vs test runner), we will have to test this across all platforms. We will have to make sure we allot good time for testing across all platforms.
