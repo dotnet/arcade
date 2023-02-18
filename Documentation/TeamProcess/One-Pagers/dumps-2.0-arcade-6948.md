@@ -22,7 +22,7 @@ Just before we kill the process we do the following
 
 Coreclr has implemented something similar, so we have proof of concept that this [works](https://github.com/dotnet/runtime/blob/543bcc5ee7d6a2b9471b016770227421c43a756e/src/tests/Common/Coreclr.TestWrapper/CoreclrTestWrapperLib.cs#L207-L254). We can do something similar in helix.
 
-Zipping the contents of the dump folder before uploading it to the storage account. This is especially helpful for Mac OS and on-prem machines, since most of the times dump folder size is more than 6gb, and it takes forever/fails to upload dump files.
+Zipping the contents of the dump folder, which are greater than 1gb(say) before uploading it to the storage account. This is especially helpful for Mac OS and on-prem machines, since most of the times dump folder size is more than 6gb, and it takes forever/fails to upload dump files.
 
 We will have to test this across all platforms. 
 
@@ -43,7 +43,7 @@ This must be tested across all platforms like the previous implementation.
 * We can then get the stack trace and create github issues/ azdo issues.
 
 ## Risk: 
-1.	In the first two implementations (with and without vs test runner), we will have to test this across all platforms. We will have to make sure we allot good time for testing across all platforms.
+1.	In the first two implementations (with or without vs test runner), we will have to test this across all platforms. We will have to make sure we allot good time for testing across all platforms.
 
 ## Open question:
 1.	We are unsure what data to look for in dumps during the dump analysis phase.
