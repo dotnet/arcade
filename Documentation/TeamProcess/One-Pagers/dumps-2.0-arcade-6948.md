@@ -11,7 +11,7 @@ We collect system crash dumps across all platforms. Then we upload the dumps to 
 ## Motivation for the new solution? 
 1.	We already get system dumps, this feature will let us capture runtime dumps too. This will help repo owners to debug tests for hanging/crashing test. This is one of the most requested features by repo owners, since they do not have a way to debug crashing/hung tests.
 1.	We will have the ability to check, which test actually failed.
-1.	We can analyze dumps and extract data out of it and present it in the more user friendly format.  This will help repo owners debug these errors.
+1.	We can analyze dumps and extract exceptions out of it, to debug system dumps easily.
 
 ## Implementation:
 1. Currently after helix work item is completed, we kill the process.
