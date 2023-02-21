@@ -278,7 +278,10 @@ while :; do
             ;;
         sid) # Debian sid
             __CodeName=sid
-            __UbuntuRepo="http://ftp.debian.org/debian/"
+
+            if [[ -z "$__UbuntuRepo" ]]; then
+                __UbuntuRepo="http://ftp.debian.org/debian/"
+            fi
             ;;
         tizen)
             __CodeName=
