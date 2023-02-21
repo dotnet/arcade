@@ -5,8 +5,6 @@
     <SourceBuildManagedOnly>true</SourceBuildManagedOnly>
   </PropertyGroup>
 
-  <Import Project="TargetFrameworkDefaults.props" />
-
   <!--
     Some MSBuild files in this repo are copied as-is into the outputs, and contain hard-coded target
     framework names. For the Microsoft build, the target framework rarely (never?) changes, so it
