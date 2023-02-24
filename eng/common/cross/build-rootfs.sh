@@ -153,6 +153,7 @@ while :; do
             __AlpinePackages="${__AlpinePackages// compiler-rt-static/}"
             __QEMUArch=riscv64
             __UbuntuArch=riscv64
+            __CodeName=sid
             __UbuntuRepo="http://deb.debian.org/debian-ports"
             __UbuntuPackages="${__UbuntuPackages// libunwind8-dev/}"
             unset __LLDB_Package
