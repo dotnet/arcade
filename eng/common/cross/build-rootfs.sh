@@ -434,7 +434,7 @@ if [[ "$__CodeName" == "alpine" ]]; then
             search 'llvm*-libs' | sort | tail -1 | sed 's/-[^-]*//2g')"
     fi
 
-    # install all pacakges in one go
+    # install all packages in one go
     "$__ApkToolsDir/apk.static" \
         -X "http://dl-cdn.alpinelinux.org/alpine/$version/main" \
         -X "http://dl-cdn.alpinelinux.org/alpine/$version/community" \
