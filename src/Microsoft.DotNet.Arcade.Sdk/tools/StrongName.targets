@@ -8,7 +8,7 @@
       FullAssemblySigningSupported    "false" to use public signing even when full signing is possible. This is useful
                                       in environments where full signing is non-functional or not desired. For example,
                                       in some Linux distributions RSA+SHA1 (required for full signing) is not
-                                      functional/availalbe, and trying to use full signing results in the runtime
+                                      functional/available, and trying to use full signing results in the runtime
                                       throwing an exception. For more details and an example, see
                                       https://github.com/dotnet/runtime/issues/65874.
       StrongNameKeyId The id of the key used for strong name generation
