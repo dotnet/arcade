@@ -23,11 +23,6 @@ namespace Microsoft.DotNet.Arcade.Sdk.SourceBuild
         public string NuGetConfigFile { get; set; }
 
         /// <summary>
-        /// Whether to work in offline mode (remove all internet sources) or online mode (remove only authenticated sources)
-        /// </summary>
-        public bool BuildWithOnlineSources { get; set; }
-
-        /// <summary>
         /// A list of all source-build specific NuGet sources.
         /// </summary>
         public string[] SourceBuildSources { get; set; }
@@ -49,12 +44,6 @@ namespace Microsoft.DotNet.Arcade.Sdk.SourceBuild
                 .Select(e => e.Attribute("pattern").Value)
                 .Distinct()
                 .ToArray();
-
-            if (!BuildWithOnlineSources)
-            {
-                // When building offline remove all packageSourceMappings.
-                pkgSrcMappingElement?.ReplaceNodes(new XElement("clear"));
-            }
 
             XElement pkgSrcMappingClearElement = pkgSrcMappingElement.Descendants().FirstOrDefault(e => e.Name == "clear");
             if (pkgSrcMappingClearElement == null)

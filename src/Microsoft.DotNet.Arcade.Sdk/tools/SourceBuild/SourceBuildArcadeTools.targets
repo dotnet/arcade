@@ -37,7 +37,6 @@
               '$(SetUpSourceBuildIntermediateNupkgCache)' == 'true')"
           AfterTargets="Restore">
     <PropertyGroup>
-      <BuildWithOnlineSources Condition="$(BuildWithOnlineSources) == ''">true</BuildWithOnlineSources>
       <SourceBuildNuGetSourceName>source-build-int-nupkg-cache</SourceBuildNuGetSourceName>
       <SourceBuiltNupkgCacheDir>$([MSBuild]::NormalizeDirectory('$(ArtifactsObjDir)', 'source-built-upstream-cache'))</SourceBuiltNupkgCacheDir>
     </PropertyGroup>
@@ -64,7 +63,6 @@
     <AddSourceMappingToNugetConfig
       NuGetConfigFile="$(RestoreConfigFile)"
       SourceBuildSources="$(SourceBuildNuGetSourceName)"
-      BuildWithOnlineSources="$(BuildWithOnlineSources)" />
   </Target>
 
 </Project>
