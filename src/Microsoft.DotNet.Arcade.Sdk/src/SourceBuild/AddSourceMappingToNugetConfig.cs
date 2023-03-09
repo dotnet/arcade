@@ -14,18 +14,13 @@ namespace Microsoft.DotNet.Arcade.Sdk.SourceBuild
     /// This task updates the package source mappings in the NuGet.Config.
     /// If package source mappings are used, source-build packages sources will be added 
     /// with the cumulative package patterns for all of the existing package sources.
-    /// When building offline, the existing package source mappings will be removed;
-    /// otherwise they will be preserved after the source-build sources.
     /// </summary>
     public class AddSourceMappingToNugetConfig : Microsoft.Build.Utilities.Task
     {
         [Required]
         public string NuGetConfigFile { get; set; }
 
-        /// <summary>
-        /// A list of all source-build specific NuGet sources.
-        /// </summary>
-        public string[] SourceBuildSources { get; set; }
+        public string SourceName { get; set; }
 
         public override bool Execute()
         {
@@ -37,6 +32,18 @@ namespace Microsoft.DotNet.Arcade.Sdk.SourceBuild
                 return true;
             }
 
+            AddPkgSourceMapping(pkgSrcMappingElement);
+
+            using (var fs = new FileStream(NuGetConfigFile, FileMode.Create, FileAccess.ReadWrite))
+            {
+                document.Save(fs);
+            }
+
+            return true;
+        }
+
+        internal void AddPkgSourceMapping(XElement pkgSrcMappingElement)
+        {
             // Union all package sources to get the distinct list.  These will get added to the source-build sources.
             string[] packagePatterns = pkgSrcMappingElement.Descendants()
                 .Where(e => e.Name == "packageSource")
@@ -52,23 +59,13 @@ namespace Microsoft.DotNet.Arcade.Sdk.SourceBuild
                 pkgSrcMappingElement.AddFirst(pkgSrcMappingClearElement);
             }
 
-            foreach (string packageSource in SourceBuildSources)
+            var pkgSrc = new XElement("packageSource", new XAttribute("key", SourceName));
+            foreach (string packagePattern in packagePatterns)
             {
-                XElement pkgSrc = new XElement("packageSource", new XAttribute("key", packageSource));
-                foreach (string packagePattern in packagePatterns)
-                {
-                    pkgSrc.Add(new XElement("package", new XAttribute("pattern", packagePattern)));
-                }
-
-                pkgSrcMappingClearElement.AddAfterSelf(pkgSrc);
+                pkgSrc.Add(new XElement("package", new XAttribute("pattern", packagePattern)));
             }
 
-            using (var fs = new FileStream(NuGetConfigFile, FileMode.Create, FileAccess.ReadWrite))
-            {
-                document.Save(fs);
-            }
-
-            return true;
+            pkgSrcMappingClearElement.AddAfterSelf(pkgSrc);
         }
     }
 }

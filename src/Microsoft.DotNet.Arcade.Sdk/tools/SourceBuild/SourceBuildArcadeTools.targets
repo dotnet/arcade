@@ -62,7 +62,7 @@
 
     <AddSourceMappingToNugetConfig
       NuGetConfigFile="$(RestoreConfigFile)"
-      SourceBuildSources="$(SourceBuildNuGetSourceName)"
+      SourceName="$(SourceBuildNuGetSourceName)" />
   </Target>
 
 </Project>
