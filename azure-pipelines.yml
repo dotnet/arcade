@@ -149,7 +149,6 @@ stages:
 
         - job: Linux
           timeoutInMinutes: 90
-          container: LinuxContainer
           pool:
             vmimage: ubuntu-latest
           strategy:
