@@ -75,7 +75,6 @@ stages:
 
       - ${{ if eq(variables._RunAsPublic, True) }}:
         - job: Linux
-          container: LinuxContainer
           pool:
             vmImage: ubuntu-latest
           strategy:
@@ -222,7 +221,6 @@ stages:
 
         - job: Apple_Devices
           timeoutInMinutes: 90
-          container: LinuxContainer
           pool:
             vmimage: ubuntu-latest
           strategy:
@@ -252,7 +250,6 @@ stages:
 
         - job: Android_Simulators
           timeoutInMinutes: 90
-          container: LinuxContainer
           pool:
             vmimage: ubuntu-latest
           strategy:
