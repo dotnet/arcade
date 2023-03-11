@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Build.Utilities;
 
+
 namespace Microsoft.DotNet.Build.Tasks.Templating
 {
     internal static class MSBuildListSplitter
@@ -22,7 +23,7 @@ namespace Microsoft.DotNet.Build.Tasks.Templating
                 int splitIdx = item.IndexOf('=');
                 if (splitIdx < 0)
                 {
-                    log.LogWarning($"Property: {item} does not have a valid '=' separator");
+                    log.LogWarning($"Property: {item} does not contain a valid '=' separator");
                     continue;
                 }
 
