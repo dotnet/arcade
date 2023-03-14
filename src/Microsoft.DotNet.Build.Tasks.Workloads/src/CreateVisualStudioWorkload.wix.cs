@@ -63,6 +63,17 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
+        /// A suffix appeneded to component IDs for Visual Studio to allow SxS support when
+        /// multiple copies of the same workload need to be inserted. The suffix is appended to
+        /// all components, including external dependencies.
+        /// </summary>
+        public string ComponentSuffix
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// A set of Internal Consistency Evaluators (ICEs) to suppress.
         /// </summary>
         public ITaskItem[] IceSuppressions
@@ -357,7 +368,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                             // Finally, add a component for the workload in Visual Studio.
                             SwixComponent component = SwixComponent.Create(manifestPackage.SdkFeatureBand, workload, manifest, packGroupId,
-                                ComponentResources, ShortNames);
+                                ComponentResources, ShortNames, ComponentSuffix);
 
                             // Check for duplicates, e.g. manifests that were copied without changing workload definition IDs and
                             // provide a more usable error message so users can track down the duplication.

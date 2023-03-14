@@ -61,6 +61,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
                 BaseIntermediateOutputPath = baseIntermediateOutputPath,
                 BuildEngine = buildEngine,
                 ComponentResources = componentResources,
+                ComponentSuffix = "xyz",
                 ManifestMsiVersion = null,
                 PackageSource = TestBase.TestAssetsPath,
                 ShortNames = shortNames,
@@ -89,7 +90,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 
             // Verify the SWIX authoring for the component representing the workload in VS.
             string componentSwr = File.ReadAllText(Path.Combine(baseIntermediateOutputPath, "src", "swix", "6.0.200", "microsoft.net.sdk.emscripten.5.6.7.8", "component.swr"));
-            Assert.Contains("package name=microsoft.net.sdk.emscripten", componentSwr);
+            Assert.Contains("package name=microsoft.net.sdk.emscripten.xyz", componentSwr);
 
             // Emscripten is an abstract workload so it should be a component group.
             Assert.Contains("vs.package.type=component", componentSwr);
