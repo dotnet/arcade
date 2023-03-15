@@ -921,4 +921,5 @@ function Enable-Nuget-EnhancedRetry() {
       Write-PipelineSetVariable -Name 'NUGET_ENHANCED_MAX_NETWORK_TRY_COUNT' -Value '6'
       Write-PipelineSetVariable -Name 'NUGET_ENHANCED_NETWORK_RETRY_DELAY_MILLISECONDS' -Value '1000'
       Write-PipelineSetVariable -Name 'NUGET_RETRY_HTTP_429' -Value 'true'
+    }
 }
