@@ -67,6 +67,16 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// multiple copies of the same workload need to be inserted. The suffix is appended to
         /// all components, including external dependencies.
         /// </summary>
+        /// <remarks>
+        /// For example, given a suffix such as "abc" and a workload named "wasm-tools" that extends "microsoft-net-runtime-mono-tooling",
+        /// the generated SWIX component for Visual Studio would be
+        /// <code>
+        /// package name=wasm.tools.abc
+        /// 
+        /// vs.dependencies
+        ///   vs.dependency id=microsoft.net.runtime.mono.tooling.abc
+        /// </code>
+        /// </remarks>
         public string ComponentSuffix
         {
             get;
