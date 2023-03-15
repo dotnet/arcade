@@ -170,7 +170,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         type,
                         feed,
                         feedType,
-                        sasUri == null ? key : sasUri,
+                        sasUri ?? key
                         LatestLinkShortUrlPrefixes,
                         spec.Assets,
                         false,
