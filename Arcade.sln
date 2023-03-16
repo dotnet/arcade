@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29019.234
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.33502.453
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.Feed", "src\Microsoft.DotNet.Build.Tasks.Feed\Microsoft.DotNet.Build.Tasks.Feed.csproj", "{941D335B-AA65-4089-9502-F306B108D182}"
 EndProject
@@ -144,6 +144,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.Templating.Tests", "src\Microsoft.DotNet.Build.Tasks.Templating\test\Microsoft.DotNet.Build.Tasks.Templating.Tests.csproj", "{FB4168D5-6EA6-4777-AD4F-95758C177FE8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.ApiCompat.Core", "src\Microsoft.DotNet.ApiCompat\src\Microsoft.DotNet.ApiCompat.Core\Microsoft.DotNet.ApiCompat.Core.csproj", "{90FA5F6B-5C96-44EF-BB83-4AFF62A1CF8B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.DeltaBuild", "src\Microsoft.DotNet.DeltaBuild\Microsoft.DotNet.DeltaBuild.csproj", "{47E2EA78-D9AC-4192-A552-3927602BE9AE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -919,6 +921,18 @@ Global
 		{90FA5F6B-5C96-44EF-BB83-4AFF62A1CF8B}.Release|x64.Build.0 = Release|Any CPU
 		{90FA5F6B-5C96-44EF-BB83-4AFF62A1CF8B}.Release|x86.ActiveCfg = Release|Any CPU
 		{90FA5F6B-5C96-44EF-BB83-4AFF62A1CF8B}.Release|x86.Build.0 = Release|Any CPU
+		{47E2EA78-D9AC-4192-A552-3927602BE9AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47E2EA78-D9AC-4192-A552-3927602BE9AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47E2EA78-D9AC-4192-A552-3927602BE9AE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{47E2EA78-D9AC-4192-A552-3927602BE9AE}.Debug|x64.Build.0 = Debug|Any CPU
+		{47E2EA78-D9AC-4192-A552-3927602BE9AE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{47E2EA78-D9AC-4192-A552-3927602BE9AE}.Debug|x86.Build.0 = Debug|Any CPU
+		{47E2EA78-D9AC-4192-A552-3927602BE9AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47E2EA78-D9AC-4192-A552-3927602BE9AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{47E2EA78-D9AC-4192-A552-3927602BE9AE}.Release|x64.ActiveCfg = Release|Any CPU
+		{47E2EA78-D9AC-4192-A552-3927602BE9AE}.Release|x64.Build.0 = Release|Any CPU
+		{47E2EA78-D9AC-4192-A552-3927602BE9AE}.Release|x86.ActiveCfg = Release|Any CPU
+		{47E2EA78-D9AC-4192-A552-3927602BE9AE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
