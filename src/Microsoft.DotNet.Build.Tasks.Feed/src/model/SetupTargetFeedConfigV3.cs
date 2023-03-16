@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             ImmutableList<string> filesToExclude = null,
             bool flatten = true,
             TaskLoggingHelper log = null) 
-            : base(isInternalBuild, isStableBuild, repositoryName, commitSha, null, publishInstallersAndChecksums, null, null, null, null, null, null, null, latestLinkShortUrlPrefixes, null)
+            : base(isInternalBuild, isStableBuild, repositoryName, commitSha, publishInstallersAndChecksums, null, null, null, null, null, null, null, latestLinkShortUrlPrefixes, null)
         {
             _targetChannelConfig = targetChannelConfig;
             BuildEngine = buildEngine;
