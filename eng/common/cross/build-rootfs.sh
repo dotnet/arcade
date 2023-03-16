@@ -380,7 +380,7 @@ if [[ "$__BuildArch" == "armel" ]]; then
     __LLDB_Package="lldb-3.5-dev"
 fi
 
-if [[ "$__CodeName" == "xenial" && "__UbuntuArch" == "armhf" ]]; then
+if [[ "$__CodeName" == "xenial" && "$__UbuntuArch" == "armhf" ]]; then
     # libnuma-dev is not available on armhf for xenial
     __UbuntuPackages="${__UbuntuPackages//libnuma-dev/}"
 fi
