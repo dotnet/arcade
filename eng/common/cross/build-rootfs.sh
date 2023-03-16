@@ -184,6 +184,7 @@ while :; do
             ;;
         x64)
             __BuildArch=x64
+            __AlpineArch=x86_64
             __UbuntuArch=amd64
             __FreeBSDArch=amd64
             __FreeBSDMachineArch=amd64
@@ -351,7 +352,6 @@ case "$__AlpineVersion" in
     edge) __AlpineLlvmLibsLookup=1 ;;
     *)
         if [[ "$__AlpineArch" =~ s390x|ppc64le ]]; then
-        echo boo
             __AlpineVersion=3.15 # minimum version that supports lldb-dev
             __AlpinePackages+=" llvm12-libs"
         elif [[ "$__AlpineArch" == "x86" ]]; then
@@ -380,6 +380,11 @@ if [[ "$__BuildArch" == "armel" ]]; then
     __LLDB_Package="lldb-3.5-dev"
 fi
 
+if [[ "$__CodeName" == "xenial" && "__UbuntuArch" == "armhf" ]]; then
+    # libnuma-dev is not available on armhf for xenial
+    __UbuntuPackages="${__UbuntuPackages//libnuma-dev/}"
+fi
+
 __UbuntuPackages+=" ${__LLDB_Package:-}"
 
 if [[ -n "$__LLVM_MajorVersion" ]]; then
@@ -406,13 +411,17 @@ __RootfsDir="$( cd "$__RootfsDir" && pwd )"
 
 if [[ "$__CodeName" == "alpine" ]]; then
     __ApkToolsVersion=2.12.11
+    __ApkToolsSHA512SUM=53e57b49230da07ef44ee0765b9592580308c407a8d4da7125550957bb72cb59638e04f8892a18b584451c8d841d1c7cb0f0ab680cc323a3015776affaa3be33
     __ApkToolsDir="$(mktemp -d)"
 
     wget "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic//v$__ApkToolsVersion/x86_64/apk.static" -P "$__ApkToolsDir"
+    echo "$__ApkToolsSHA512SUM $__ApkToolsDir/apk.static" | sha512sum -c
     chmod +x "$__ApkToolsDir/apk.static"
 
-    mkdir -p "$__RootfsDir"/usr/bin
-    cp -v "/usr/bin/qemu-$__QEMUArch-static" "$__RootfsDir/usr/bin"
+    if [[ -f "/usr/bin/qemu-$__QEMUArch-static" ]]; then
+        mkdir -p "$__RootfsDir"/usr/bin
+        cp -v "/usr/bin/qemu-$__QEMUArch-static" "$__RootfsDir/usr/bin"
+    fi
 
     if [[ "$__AlpineVersion" == "edge" ]]; then
         version=edge
@@ -424,13 +433,13 @@ if [[ "$__CodeName" == "alpine" ]]; then
     "$__ApkToolsDir/apk.static" \
         -X "http://dl-cdn.alpinelinux.org/alpine/$version/main" \
         -X "http://dl-cdn.alpinelinux.org/alpine/$version/community" \
-        -U --allow-untrusted --root "$__RootfsDir" --arch "$__AlpineArch" --initdb add
+        -U --keys-dir "$__CrossDir/alpine-keys" --root "$__RootfsDir" --arch "$__AlpineArch" --initdb add
 
     if [[ "$__AlpineLlvmLibsLookup" == 1 ]]; then
         __AlpinePackages+=" $("$__ApkToolsDir/apk.static" \
             -X "http://dl-cdn.alpinelinux.org/alpine/$version/main" \
             -X "http://dl-cdn.alpinelinux.org/alpine/$version/community" \
-            -U --allow-untrusted --root "$__RootfsDir" --arch "$__AlpineArch" \
+            -U --keys-dir "$__CrossDir/alpine-keys" --root "$__RootfsDir" --arch "$__AlpineArch" \
             search 'llvm*-libs' | sort | tail -1 | sed 's/-[^-]*//2g')"
     fi
 
@@ -438,7 +447,7 @@ if [[ "$__CodeName" == "alpine" ]]; then
     "$__ApkToolsDir/apk.static" \
         -X "http://dl-cdn.alpinelinux.org/alpine/$version/main" \
         -X "http://dl-cdn.alpinelinux.org/alpine/$version/community" \
-        -U --allow-untrusted --root "$__RootfsDir" --arch "$__AlpineArch" \
+        -U --keys-dir "$__CrossDir/alpine-keys" --root "$__RootfsDir" --arch "$__AlpineArch" \
         add $__AlpinePackages
 
     rm -r "$__ApkToolsDir"
@@ -574,7 +583,16 @@ elif [[ "$__CodeName" == "haiku" ]]; then
         fi
     done
 elif [[ -n "$__CodeName" ]]; then
-    qemu-debootstrap $__Keyring --arch "$__UbuntuArch" "$__CodeName" "$__RootfsDir" "$__UbuntuRepo"
+    if command -v qemu-debootstrap > /dev/null; then
+        __Debootstrap="qemu-debootstrap"
+    else
+        __Debootstrap="debootstrap"
+        __DebootstrapVariant="--variant=minbase"
+        __DebootstrapForceCheckGPG="--force-check-gpg"
+        __Keyring="--keyring=$__CrossDir/ubuntu-archive-keyring.gpg"
+    fi
+
+    $__Debootstrap "$__DebootstrapVariant" "$__DebootstrapForceCheckGPG" "$__Keyring" --arch "$__UbuntuArch" "$__CodeName" "$__RootfsDir" "$__UbuntuRepo"
     cp "$__CrossDir/$__BuildArch/sources.list.$__CodeName" "$__RootfsDir/etc/apt/sources.list"
     chroot "$__RootfsDir" apt-get update
     chroot "$__RootfsDir" apt-get -f -y install
