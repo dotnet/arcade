@@ -33,7 +33,7 @@
     </ItemGroup>
 
     <Exec
-      Command="sed -i 's/netcoreapp3.1/$(TargetFrameworkForNETSDK)/g' '%(ToolMSBuildFileUsingTargetFramework.FullPath)'"
+      Command="sed -i 's/netcoreapp3.1/net6.0/g' '%(ToolMSBuildFileUsingTargetFramework.FullPath)'"
       WorkingDirectory="$(RepoRoot)"
       Condition="'@(ToolMSBuildFileUsingTargetFramework)' != ''" />
   </Target>
