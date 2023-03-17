@@ -6,7 +6,7 @@ using Microsoft.Build.Logging.StructuredLogger;
 
 using TreeNode = Microsoft.Build.Logging.StructuredLogger.TreeNode;
 
-namespace DeltaBuild;
+namespace Microsoft.DotNet.DeltaBuild;
 
 internal static class MsBuild
 {

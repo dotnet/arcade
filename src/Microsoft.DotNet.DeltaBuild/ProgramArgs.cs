@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 using McMaster.Extensions.CommandLineUtils.Abstractions;
 
-namespace DeltaBuild;
+namespace Microsoft.DotNet.DeltaBuild;
 
 internal record ProgramArgs(
     FileInfo? BranchBinLog,

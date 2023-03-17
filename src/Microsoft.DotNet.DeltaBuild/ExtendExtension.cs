@@ -2,7 +2,7 @@
 
 using System.Collections.Generic;
 
-namespace DeltaBuild;
+namespace Microsoft.DotNet.DeltaBuild;
 
 internal static class ExtendExtension
 {

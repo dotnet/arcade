@@ -2,6 +2,6 @@
 
 using System.Collections.Generic;
 
-namespace DeltaBuild;
+namespace Microsoft.DotNet.DeltaBuild;
 
 internal record ProgramOutput(IList<string> AffectedProjectChain, IList<string> AffectedProjects);

@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using DeltaBuild;
+using Microsoft.DotNet.DeltaBuild;
 using Microsoft.Build.Logging.StructuredLogger;
 
 internal static class Program

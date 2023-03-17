@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace DeltaBuild;
+namespace Microsoft.DotNet.DeltaBuild;
 
 internal record FilePath(string FullPath, bool Exists)
     : IEqualityComparer<FilePath>

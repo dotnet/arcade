@@ -4,7 +4,7 @@ using System;
 using System.IO;
 using Microsoft.Build.Logging.StructuredLogger;
 
-namespace DeltaBuild;
+namespace Microsoft.DotNet.DeltaBuild;
 
 internal record ProjectProperties(
     string RepositoryPath,

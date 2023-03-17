@@ -3,7 +3,7 @@
 using System.Collections.Generic;
 using LibGit2Sharp;
 
-namespace DeltaBuild;
+namespace Microsoft.DotNet.DeltaBuild;
 
 internal static class Git
 {
