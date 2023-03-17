@@ -33,7 +33,7 @@ namespace Microsoft.SignCheck.Verification
 
         private bool IsSigned(string path)
         {
-            IEnumerable<ISignatureVerificationProvider> providers = new List<ISignatureVerificationProvider>()
+            List<ISignatureVerificationProvider> providers = new()
             {
                 new IntegrityVerificationProvider(),
                 new SignatureTrustAndValidityVerificationProvider(),
