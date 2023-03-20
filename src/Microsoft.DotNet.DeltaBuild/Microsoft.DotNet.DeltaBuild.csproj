@@ -18,4 +18,15 @@
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="$(McMasterExtensionsCommandLineUtils)" />
   </ItemGroup>
 
+  <!--
+    Workaround for 'error : Invalid ELF BuildID '<null>' for tools/net8.0/any/runtimes/linux-musl-arm/native/libgit2-b7bad55.so'
+    See related: https://github.com/dotnet/symstore/issues/81
+    -->
+  <Target Name="_ExcludeAssembliesNuGetPackages" BeforeTargets="GenerateNuspec">
+    <ItemGroup>
+      <_PackageFilesToExclude Include="$(PublishDir)/runtimes/**/native/**/*.dll" />
+      <_PackageFilesToExclude Include="$(PublishDir)/runtimes/**/native/**/*.so" />
+    </ItemGroup>
+  </Target>
+
 </Project>
