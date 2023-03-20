@@ -10,7 +10,7 @@
     <CommandLineParserVersion>2.2.1</CommandLineParserVersion>
     <CredentialManagementVersion>1.0.2</CredentialManagementVersion>
     <HandlebarsNetVersion>1.10.1</HandlebarsNetVersion>
-    <LibGit2SharpVersion>0.25.2</LibGit2SharpVersion>
+    <LibGit2SharpVersion>0.27.0-preview-0175</LibGit2SharpVersion>
     <log4netVersion>2.0.10</log4netVersion>
     <SystemNetHttpVersion>4.3.4</SystemNetHttpVersion>
     <AzureCoreVersion>1.25.0</AzureCoreVersion>
