@@ -29,7 +29,7 @@ The alignment must not affect the quality of services and support that we provid
 
 ## Risks
 - Charter alignment will involve Maestro Azure resources migration, this means that our services could potentially experience downtime, during and after the migration
-- The Maestro BuildAssetRegistry contains very important information for .NET releases
+- The Maestro BuildAssetRegistry contains very important information for .NET releases, it is of utmost importance that we handle the migration of it with care
 
 ## Rollouts
 - The ProdCon team will be responsible for rollouts of it's own services
@@ -43,9 +43,10 @@ Currently, all of the resources are shared between the teams:
 
 To achieve the alignment, we will:
 
-- Move the code for the ProdCon resources into a new ProdCon repository
 - Create the new Subscriptions under the ProdCon Service Tree
-- Move the Azure resources into the ProdCon subscriptions
+- Move the ProdCon Azure resources into the new ProdCon subscriptions
+- Identify all non ProdCon code in the arcade-services repo
+- Move all non ProdCon code into a different repo
 
 ## Unknowns
 - There is a lot of code in the arcade-services repo that's shared between between various ProdCon and Engineering Services. In the future, this code will have to be considered as shared. We will need to create a maintenance process for these for things like ComponentGovernance, so both teams are happy.
