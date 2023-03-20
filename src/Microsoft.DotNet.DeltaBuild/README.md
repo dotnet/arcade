@@ -6,11 +6,11 @@ DeltaBuild is build tool for code bases that have many projects. By analyzing de
 
 DeltaBuild relies on information provided by MSBuild and Git. 
 
-1. Execute `dotnet restore /bl` to dump MSBuild's binary log from your feature branch and pass it to DeltaBuild.
-1. DeltaBuild performs `git diff` between your feature branch and target branch (default: main).
-1. DeltaBuild creates cross-section between information contained in the binary log and git difference.
+1. Execute `dotnet restore /bl` to produce an MSBuild binary log for your feature branch and pass it to DeltaBuild.
+1. DeltaBuild performs `git diff` between your feature branch and the target branch (default: origin/main).
+1. DeltaBuild creates cross-section between information contained in the binary log and the git-diff.
 
-To cover cases when projects are deleted, you need to additionally execute `dotnet restore /bl` for target branch.
+To cover cases when projects are deleted, you will need to additionally provide a binary log for the target branch, i.e., you will have to execute `dotnet restore /bl` for that branch.
 
 DeltaBuild can produce a JSON file with list of projects that need to be considered for rebuilding.
 
@@ -38,15 +38,15 @@ In this example, a change to `src\My.Component\My.Component.csproj` means we nee
 
 ## How to run
 
-To run DeltaBuild, you need a binary log and path to the repository:
+To run DeltaBuild, you need to provide a binary log and specify the path to the repository:
 ```
 dotnet-deltabuild --binlog msbuild.binlog --repository C:\_w\1\s
 ```
 
-Optionally you may provide..
+Optionally, you may provide additional information such as:
 - `-d|--debug` if you'd like to see additional information.
 - `-o|--output-json` to capture result in a file.
-- `-bbl|--branch-binlog` to account for changes where file or project had been deleted.
+- `-bbl|--branch-binlog` the binlog for the target branch to account for changes where file or project may have been deleted.
 - `-b|--branch` to specify target branch (default: `origin/main`)
 
 
