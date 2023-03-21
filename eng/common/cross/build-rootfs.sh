@@ -610,16 +610,8 @@ elif [[ "$__CodeName" == "haiku" ]]; then
         fi
     done
 elif [[ -n "$__CodeName" ]]; then
-    if command -v qemu-debootstrap > /dev/null; then
-        __Debootstrap="qemu-debootstrap"
-    else
-        __Debootstrap="debootstrap"
-        __DebootstrapVariant="--variant=minbase"
-        __DebootstrapForceCheckGPG="--force-check-gpg"
-        __Keyring="--keyring=$__CrossDir/ubuntu-archive-keyring.gpg"
-    fi
 
-    $__Debootstrap "$__DebootstrapVariant" "$__DebootstrapForceCheckGPG" "$__Keyring" --arch "$__UbuntuArch" "$__CodeName" "$__RootfsDir" "$__UbuntuRepo"
+    debootstrap "--variant=minbase" $__Keyring --force-check-gpg --arch "$__UbuntuArch" "$__CodeName" "$__RootfsDir" "$__UbuntuRepo"
     cp "$__CrossDir/$__BuildArch/sources.list.$__CodeName" "$__RootfsDir/etc/apt/sources.list"
     chroot "$__RootfsDir" apt-get update
     chroot "$__RootfsDir" apt-get -f -y install
