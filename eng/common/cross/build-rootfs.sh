@@ -207,7 +207,7 @@ while :; do
             __FreeBSDArch=amd64
             __FreeBSDMachineArch=amd64
             __illumosArch=x86_64
-            __UbuntuRepo=
+            __UbuntuRepo="http://archive.ubuntu.com/ubuntu/"
             ;;
         x86)
             __BuildArch=x86
