@@ -42,7 +42,6 @@ This repository contains the scenarios where we validate the last produced versi
 1. On every Arcade build dependencies will be updated and auto-merged when all the checks pass
 2. Arcade validation [official build](https://dnceng.visualstudio.com/internal/_build?definitionId=282) 
 is triggered. This will validate the version which was just “pushed” by Arcade
-3. The following process updates are only valid for the current development branch of Arcade and will not affect release or servicing branches. 
 
 #### Validation Scenarios
 
