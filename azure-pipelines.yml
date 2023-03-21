@@ -7,7 +7,6 @@ trigger:
     - release/5.0
     - release/6.0
     - release/7.0
-
 pr:
   branches:
     include:
@@ -124,7 +123,7 @@ stages:
             displayName: sdk-task verification
             inputs:
               filePath: eng\common\sdk-task.ps1
-              arguments: -task PublishToSymbolServers /p:DryRun='true' -restore -msbuildEngine dotnet
+              arguments: -task PublishToSymbolServers /p:DryRun="true" -restore -msbuildEngine dotnet
                 /p:DotNetSymbolServerTokenMsdl=DryRunPTA
                 /p:DotNetSymbolServerTokenSymWeb=DryRunPTA
                 /p:PDBArtifactsDirectory='$(Build.ArtifactStagingDirectory)/PDBArtifacts/'
@@ -192,7 +191,6 @@ stages:
         jobs:
         - job: Apple_Simulators
           timeoutInMinutes: 90
-          container: LinuxContainer
           pool:
             vmimage: ubuntu-latest
           strategy:
@@ -335,14 +333,14 @@ stages:
         enable: true
         publishGdn: true
         continueOnError: false
-        params: ' -SourceToolsList @('policheck','credscan')
+        params: ' -SourceToolsList @("policheck","credscan")
         -TsaInstanceURL $(_TsaInstanceURL)
         -TsaProjectName $(_TsaProjectName)
         -TsaNotificationEmail $(_TsaNotificationEmail)
         -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
         -TsaBugAreaPath $(_TsaBugAreaPath)
         -TsaIterationPath $(_TsaIterationPath)
-        -TsaRepositoryName 'Arcade'
-        -TsaCodebaseName 'Arcade'
+        -TsaRepositoryName "Arcade"
+        -TsaCodebaseName "Arcade"
         -TsaPublish $True
-        -PoliCheckAdditionalRunConfigParams @('UserExclusionPath < $(Build.SourcesDirectory)/eng/PoliCheckExclusions.xml')'
+        -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/PoliCheckExclusions.xml")'
