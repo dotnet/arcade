@@ -9,12 +9,42 @@ We need to create a optimized version of the Stage-DotNet pipeline that can be r
 The proposed implementation is introducing a "emergency switch" parameter in the Stage-DotNet pipeline. Stage dependencies can be rearranged according to this parameter. That will require no changes to the release pipeline that depends on the staging pipeline outputs. (Stage-DotNet is coded as a resourse in Release-DotNet-*). We can test the changes using the available testing pipeline (Stage-DotNet-Test) as it uses the same yaml.  
 
 Another approach was discussed - creating a separate pipeline that will contain the stages in the emergency order. This approach would require changes to the release pipeline and would be harder to maintain as changes to Stage-DotNet would also need to be mirrored to the new pipeline and that can cause divergence from the original in the future. Therefore, the "emergency switch" parameter is the better option. 
- 
-if the parameter set to true, change the sequence of stages/jobs in the following way:
+
+The sequence of stages in the current pipeline is:
 
 ```mermaid
 flowchart LR
-  prep[Prep Ring] -->|If it fails| prep_override[Prep Ring Override]
+  prep[Prep Ring] --> prep_override[Prep Ring Override]
+  prep_override --> signing[Signing Ring]
+  prep_override --> source_code_validation[Source Code Validation]
+  source_code_validation --> source_code_validation_override[Source Code Validation Override]
+  signing --> required_validation[Required Validation]
+  signing --> validation[Validation]
+  required_validation --> sbom_generation[SBOM Generation]
+  required_validation --> required_validation_override[Required Validation Override]
+  validation --> validation_override[Validation Override]
+  required_validation_override --> publishing_v3_signed[Publish Post-Signing Assets]
+  required_validation_override --> post_signing_publishing[Publish Signed Assets]
+  required_validation_override --> vs_insertion[VS Insertion Ring]
+  sbom_generation --> sbom_generation_override[SBOM Generation Override]
+  vs_insertion --> vs_insertion_override[VS Insertion Override]
+  vs_insertion_override --> cti_sign_off[Wait for Test Team Sign Off]
+  cti_sign_off --> staging[Staging Ring]
+  source_code_validation_override --> staging
+  staging --> finalize_sign_off[Sign off for finalizing the release]
+  finalize_sign_off --> finalize_staging[Finalize Staging Ring]
+  finalize_sign_off --> publishing_v3_validated[Publish CTI Validated Assets]
+  classDef default fill:#50C878, stroke:#023020;
+  classDef Override fill:#ECFFDC, stroke:#023020;
+  class prep_override,source_code_validation_override,required_validation_override,sbom_generation_override,vs_insertion_override,validation_override Override;
+```
+*Light colored stages are manual validation that overrides another stage (e.g. Prep - Prep Override). They are run if the corresponding stage fails or succeeds with issues and skipped otherwise.
+
+If the parameter set to true, change the sequence of stages/jobs in the following way:
+
+```mermaid
+flowchart LR
+  prep[Prep Ring] --> prep_override[Prep Ring Override]
   prep_override --> signing[Signing Ring]
   prep_override --> source_code_validation[Source Code Validation]
   source_code_validation --> source_code_validation_override[Source Code Validation Override]
@@ -33,6 +63,9 @@ flowchart LR
   staging --> finalize_sign_off[Sign off for finalizing the release]
   finalize_sign_off --> finalize_staging[Finalize Staging Ring]
   finalize_sign_off --> publishing_v3_validated[Publish CTI Validated Assets ]
+  classDef default fill:#50C878, stroke:#023020;
+  classDef Override fill:#ECFFDC, stroke:#023020;
+  class prep_override,source_code_validation_override,required_validation_override,sbom_generation_override,vs_insertion_override,validation_override Override;
 ```
 
 - The Staging Ring
