@@ -14,26 +14,26 @@ The sequence of stages in the current pipeline is:
 
 ```mermaid
 flowchart LR
-  prep[Prep Ring] --> prep_override[Prep Ring Override]
-  prep_override --> signing[Signing Ring]
-  prep_override --> source_code_validation[Source Code Validation]
+  prep["Prep Ring <b>~30min</b>"] --> prep_override[Prep Ring Override]
+  prep_override --> signing["Signing Ring <b>~50min</b>"]
+  prep_override --> source_code_validation["Source Code Validation <b>~40min</b>"]
   source_code_validation --> source_code_validation_override[Source Code Validation Override]
-  signing --> required_validation[Required Validation]
-  signing --> validation[Validation]
-  required_validation --> sbom_generation[SBOM Generation]
+  signing --> required_validation["Required Validation <b>~1h</b>"]
+  signing --> validation["Validation <b>~5h</b>"]
+  required_validation --> sbom_generation["SBOM Generation <b>~20m</b>"]
   required_validation --> required_validation_override[Required Validation Override]
   validation --> validation_override[Validation Override]
-  required_validation_override --> publishing_v3_signed[Publish Post-Signing Assets]
-  required_validation_override --> post_signing_publishing[Publish Signed Assets]
-  required_validation_override --> vs_insertion[VS Insertion Ring]
+  required_validation_override --> publishing_v3_signed["Publish Post-Signing Assets <b>~1h20m</b>"]
+  required_validation_override --> post_signing_publishing["Publish Signed Assets <b>~1h30m</b>"]
+  required_validation_override --> vs_insertion["VS Insertion Ring <b>~50m</b>"]
   sbom_generation --> sbom_generation_override[SBOM Generation Override]
   vs_insertion --> vs_insertion_override[VS Insertion Override]
   vs_insertion_override --> cti_sign_off[Wait for Test Team Sign Off]
-  cti_sign_off --> staging[Staging Ring]
+  cti_sign_off --> staging["Staging Ring <b>~1h10m</b>"]
   source_code_validation_override --> staging
   staging --> finalize_sign_off[Sign off for finalizing the release]
   finalize_sign_off --> finalize_staging[Finalize Staging Ring]
-  finalize_sign_off --> publishing_v3_validated[Publish CTI Validated Assets]
+  finalize_sign_off --> publishing_v3_validated["Publish CTI Validated Assets <b>~1h20m</b>"]
   classDef default fill:#50C878, stroke:#023020;
   classDef Override fill:#ECFFDC, stroke:#023020;
   class prep_override,source_code_validation_override,required_validation_override,sbom_generation_override,vs_insertion_override,validation_override Override;
@@ -44,25 +44,25 @@ If the parameter set to true, change the sequence of stages/jobs in the followin
 
 ```mermaid
 flowchart LR
-  prep[Prep Ring] --> prep_override[Prep Ring Override]
-  prep_override --> signing[Signing Ring]
-  prep_override --> source_code_validation[Source Code Validation]
+  prep["Prep Ring <b>~30min</b>"] --> prep_override[Prep Ring Override]
+  prep_override --> signing["Signing Ring <b>~50min</b>"]
+  prep_override --> source_code_validation["Source Code Validation <b>~40min</b>"]
   source_code_validation --> source_code_validation_override[Source Code Validation Override]
-  signing --> vs_insertion[VS Insertion Ring]
-  signing --> required_validation[Required Validation]
+  signing --> vs_insertion["VS Insertion Ring <b>~50m</b>"]
+  signing --> required_validation["Required Validation <b>~1h</b>"]
   required_validation --> required_validation_override[Required Validation Override]
-  signing --> validation[Validation]
+  signing --> validation["Validation <b>~5h</b>"]
   validation --> validation_override[Validation Override]
-  signing --> sbom_generation[SBOM Generation]
+  signing --> sbom_generation["SBOM Generation <b>~20m</b>"]
   sbom_generation --> sbom_generation_override[SBOM Generation Override]
-  signing --> publishing_v3_signed[Publish Post-Signing Assets]
-  signing --> post_signing_publishing[Publish Signed Assets]
+  signing --> publishing_v3_signed["Publish Post-Signing Assets <b>~1h20m</b>"]
+  signing --> post_signing_publishing["Publish Signed Assets <b>~1h30m</b>"]
   vs_insertion --> vs_insertion_override[VS Insertion Override]
   vs_insertion_override --> cti_sign_off[Wait for Test Team Sign Off]
-  cti_sign_off --> staging[Staging Ring]
+  cti_sign_off --> staging["Staging Ring <b>~1h10m</b>"]
   staging --> finalize_sign_off[Sign off for finalizing the release]
   finalize_sign_off --> finalize_staging[Finalize Staging Ring]
-  finalize_sign_off --> publishing_v3_validated[Publish CTI Validated Assets ]
+  finalize_sign_off --> publishing_v3_validated["Publish CTI Validated Assets <b>~1h20m</b>"]
   classDef default fill:#50C878, stroke:#023020;
   classDef Override fill:#ECFFDC, stroke:#023020;
   class prep_override,source_code_validation_override,required_validation_override,sbom_generation_override,vs_insertion_override,validation_override Override;
@@ -106,7 +106,19 @@ flowchart LR
 
 ## Risks
 
-- the release pipeline is closely connected to the staging, we need to check that all assets it needs are being published with the expected changes and in the expected location 
+- the release pipeline is closely connected to the staging, we need to check that all assets it needs are being published with the expected changes and in the expected location. 
+
 - make sure that the critical stages of Stage-DotNet have all the needed assets. It is possible that additional changes need to be made in the jobs consuming or publishing artefacts, but on a first glance validation stages don't produce outputs that are used in later stages. 
+
+## Testing 
+
+TBD
+
+## Questions 
+
+1. Which stages should be run in parallel and which can we skip altogether? (for example the Validation stage)
+2. Do we still need all the Override stages?
+3. Do we need the sign off stages (Wait for test team sign off, Sign off for finalizing the release) ?
+4. Is there a dependency between some stages that is required for the release but I've missed on the diagram?
 
   
