@@ -63,27 +63,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
-        /// A suffix appeneded to component IDs for Visual Studio to allow SxS support when
-        /// multiple copies of the same workload need to be inserted. The suffix is appended to
-        /// all components, including external dependencies.
-        /// </summary>
-        /// <remarks>
-        /// For example, given a suffix such as "abc" and a workload named "wasm-tools" that extends "microsoft-net-runtime-mono-tooling",
-        /// the generated SWIX component for Visual Studio would be
-        /// <code>
-        /// package name=wasm.tools.abc
-        /// 
-        /// vs.dependencies
-        ///   vs.dependency id=microsoft.net.runtime.mono.tooling.abc
-        /// </code>
-        /// </remarks>
-        public string ComponentSuffix
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// A set of Internal Consistency Evaluators (ICEs) to suppress.
         /// </summary>
         public ITaskItem[] IceSuppressions
@@ -378,16 +357,22 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                             // Finally, add a component for the workload in Visual Studio.
                             SwixComponent component = SwixComponent.Create(manifestPackage.SdkFeatureBand, workload, manifest, packGroupId,
-                                ComponentResources, ShortNames, ComponentSuffix);
+                                ComponentResources, ShortNames);
+                            // Create an additional component for shipping previews
+                            SwixComponent previewComponent = SwixComponent.Create(manifestPackage.SdkFeatureBand, workload, manifest, packGroupId,
+                                ComponentResources, ShortNames, "pre");
 
                             // Check for duplicates, e.g. manifests that were copied without changing workload definition IDs and
                             // provide a more usable error message so users can track down the duplication.
-                            if (swixComponents.Contains(component))
+                            if (!swixComponents.Add(component))
                             {
-                                Log.LogError($"Duplicate workload ID: {workload.Id}. A SWIX component with the same workload ID already exists.");
+                                Log.LogError(Strings.WorkloadComponentExists, workload.Id, component.Name);
                             }
 
-                            swixComponents.Add(component);
+                            if (!swixComponents.Add(previewComponent))
+                            {
+                                Log.LogError(Strings.WorkloadComponentExists, workload.Id, previewComponent.Name);
+                            }
                         }
                     }
                 }
