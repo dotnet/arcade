@@ -2,7 +2,7 @@
 
 ## Goals
 
-We need to create a optimized version of the Stage-DotNet pipeline that can be run in emergency situation in order to deliver a .NET fix as fast as possible. Currently the critical stages in the pipeline depend on multiple validation stages (Source Code Validation, Validation, Required Validation) that run for a long time, which is one of the causes for the overall long run time of the pipeline. We need to implement a sped up version of the pipeline, skipping some of the validation jobs and running stages in parallel where possible.
+As part of https://github.com/dotnet/arcade/issues/12261 we need to create a version of the Stage-DotNet pipeline that can be run in emergency situation in order to prepare a .NET release as fast as possible. Currently the critical stages in the pipeline depend on multiple validation stages (Source Code Validation, Validation, Required Validation) that run for a long time, which is one of the causes for the overall long run time of the pipeline. We need to implement a sped up version of the pipeline, skipping some of the validation jobs and running stages in parallel where possible.
 
 ## Proposed Implementation
 
