@@ -55,3 +55,4 @@ To achieve the alignment, we will:
 ## Unknowns
 - There is a lot of code in the arcade-services repo that's shared between between various ProdCon and Engineering Services. In the future, this code will have to be considered as shared. We will need to create a maintenance process for these for things like ComponentGovernance, so both teams are happy.
 - There are tools like the Secret Manager would want to use. We need to define a process for scenarios like wanting support for a new type of secret, which team does the implementation.
+- The BAR database is used in many different places (for build promotion, by the staging pipeline, etc..). We need to identify these places and figure out a replacement strategy for the BAR database in the new ProdCon subscription.
