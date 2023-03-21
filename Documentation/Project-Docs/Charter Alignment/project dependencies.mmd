@@ -1,0 +1,269 @@
+flowchart LR
+subgraph EngServices_cluster[Eng Services]
+    subgraph src_cluster[src]
+        DotNet_Status_Web[DotNet.Status.Web]
+        DotNet_Status_Web_Tests[DotNet.Status.Web.Tests]
+        Microsoft_DncEng_Configuration_Bootstrap[Microsoft.DncEng.Configuration.Bootstrap]
+        Microsoft_DncEng_DeployServiceFabricCluster[Microsoft.DncEng.DeployServiceFabricCluster]
+        Microsoft_DncEng_PatGenerator[Microsoft.DncEng.PatGenerator]
+        Microsoft_DncEng_PatGenerator_Tests[Microsoft.DncEng.PatGenerator.Tests]
+        Microsoft_DncEng_PatGeneratorTool[Microsoft.DncEng.PatGeneratorTool]
+        Microsoft_DncEng_SecretManager[Microsoft.DncEng.SecretManager]
+        Microsoft_DncEng_SecretManager_ScenarioTests[Microsoft.DncEng.SecretManager.ScenarioTests]
+        Microsoft_DncEng_SecretManager_Tests[Microsoft.DncEng.SecretManager.Tests]
+        Microsoft_DotNet_Internal_Tools_SynchronizePackageProps[Microsoft.DotNet.Internal.Tools.SynchronizePackageProps]
+    end
+    subgraph Telemetry_cluster[Telemetry]
+        AzureDevOpsClient[AzureDevOpsClient]
+        AzureDevOpsTimeline[AzureDevOpsTimeline]
+        Microsoft_DotNet_AzureDevOpsTimeline_Tests[Microsoft.DotNet.AzureDevOpsTimeline.Tests]
+    end
+    subgraph Monitoring_cluster[Monitoring]
+        Microsoft_DotNet_Metrics[Microsoft.DotNet.Metrics]
+        Microsoft_DotNet_Monitoring_Sdk_Tests[Microsoft.DotNet.Monitoring.Sdk.Tests]
+        Microsoft_DotNet_Monitoring_Sdk[Microsoft.DotNet.Monitoring.Sdk]
+    end
+    subgraph RolloutScorer_cluster[RolloutScorer]
+        RolloutScorer[RolloutScorer]
+        RolloutScorer_Tests[RolloutScorer.Tests]
+        RolloutScorerAzureFunction[RolloutScorerAzureFunction]
+    end
+end
+subgraph Shared_cluster[Shared]
+  Microsoft_DncEng_Configuration_Extensions[Microsoft.DncEng.Configuration.Extensions]
+  Microsoft_DotNet_ServiceFabric_ServiceHost[Microsoft.DotNet.ServiceFabric.ServiceHost]
+  Microsoft_DotNet_ServiceFabric_ServiceHost_Tests[Microsoft.DotNet.ServiceFabric.ServiceHost.Tests]
+  Microsoft_DncEng_CommandLineLib[Microsoft.DncEng.CommandLineLib]
+  Microsoft_DotNet_Authentication_Algorithms[Microsoft.DotNet.Authentication.Algorithms]
+  Microsoft_DotNet_Authentication_Algorithms_Tests[Microsoft.DotNet.Authentication.Algorithms.Tests]
+  Microsoft_DotNet_GitHub_Authentication[Microsoft.DotNet.GitHub.Authentication]
+  Microsoft_DotNet_GitHub_Authentication_Tests[Microsoft.DotNet.GitHub.Authentication.Tests]
+  Microsoft_DotNet_Internal_DependencyInjection[Microsoft.DotNet.Internal.DependencyInjection]
+  Microsoft_DotNet_Internal_DependencyInjection_Testing[Microsoft.DotNet.Internal.DependencyInjection.Testing]
+  Microsoft_DotNet_Internal_DependencyInjection_Testing_Tests[Microsoft.DotNet.Internal.DependencyInjection.Testing.Tests]
+  Microsoft_DotNet_Internal_DependencyInjection_Tests[Microsoft.DotNet.Internal.DependencyInjection.Tests]
+  Microsoft_DotNet_Internal_Health[Microsoft.DotNet.Internal.Health]
+  Microsoft_DotNet_Internal_Health_Tests[Microsoft.DotNet.Internal.Health.Tests]
+  Microsoft_DotNet_Internal_Logging[Microsoft.DotNet.Internal.Logging]
+  Microsoft_DotNet_Internal_Testing_DependencyInjection_Abstractions[Microsoft.DotNet.Internal.Testing.DependencyInjection.Abstractions]
+  Microsoft_DotNet_Internal_Testing_DependencyInjectionCodeGen[Microsoft.DotNet.Internal.Testing.DependencyInjectionCodeGen]
+  Microsoft_DotNet_Internal_Testing_DependencyInjectionCodeGen_Tests[Microsoft.DotNet.Internal.Testing.DependencyInjectionCodeGen.Tests]
+  Microsoft_DotNet_Internal_Testing_Utility[Microsoft.DotNet.Internal.Testing.Utility]
+  Microsoft_DotNet_Kusto[Microsoft.DotNet.Kusto]
+  Microsoft_DotNet_Kusto_Tests[Microsoft.DotNet.Kusto.Tests]
+  Microsoft_DotNet_Services_Utility[Microsoft.DotNet.Services.Utility]
+  Microsoft_DotNet_Web_Authentication[Microsoft.DotNet.Web.Authentication]
+  Microsoft_DotNet_Web_Authentication_Tests[Microsoft.DotNet.Web.Authentication.Tests]
+  ServiceFabricMocks[ServiceFabricMocks]
+end
+subgraph ProdCon_cluster[ProdCon]
+  subgraph Maestro_cluster[Maestro]
+    Microsoft_DotNet_Maestro_Client[Microsoft.DotNet.Maestro.Client]
+    CoreHealthMonitor[CoreHealthMonitor]
+    CoreHealthMonitor_Tests[CoreHealthMonitor.Tests]
+    DependencyUpdateErrorProcessor[DependencyUpdateErrorProcessor]
+    DependencyUpdater[DependencyUpdater]
+    FeedCleanerService[FeedCleanerService]
+    Maestro_AzureDevOps[Maestro.AzureDevOps]
+    Maestro_Contracts[Maestro.Contracts]
+    Maestro_Data[Maestro.Data]
+    Maestro_Data_Tests[Maestro.Data.Tests]
+    Maestro_DataProviders[Maestro.DataProviders]
+    Maestro_MergePolicies[Maestro.MergePolicies]
+    Maestro_MergePolicyEvaluation[Maestro.MergePolicyEvaluation]
+    Maestro_Web[Maestro.Web]
+    Maestro_Web_Tests[Maestro.Web.Tests]
+    Microsoft_AspNetCore_ApiPagination[Microsoft.AspNetCore.ApiPagination]
+    Microsoft_AspNetCore_ApiVersioning[Microsoft.AspNetCore.ApiVersioning]
+    Microsoft_AspNetCore_ApiVersioning_Analyzers[Microsoft.AspNetCore.ApiVersioning.Analyzers]
+    Microsoft_AspNetCore_ApiVersioning_Swashbuckle[Microsoft.AspNetCore.ApiVersioning.Swashbuckle]
+    Microsoft_DotNet_Maestro_Tasks[Microsoft.DotNet.Maestro.Tasks]
+    Microsoft_DotNet_Maestro_Tasks_Tests[Microsoft.DotNet.Maestro.Tasks.Tests]
+    SubscriptionActorService[SubscriptionActorService]
+    DependencyUpdater_Tests[DependencyUpdater.Tests]
+    FeedCleanerService_Tests[FeedCleanerService.Tests]
+    Maestro_ScenarioTests[Maestro.ScenarioTests]
+    SubscriptionActorService_Tests[SubscriptionActorService.Tests]
+  end
+  subgraph Darc_cluster[Darc]
+    Microsoft_DotNet_Darc_Tests[Microsoft.DotNet.Darc.Tests]
+    Microsoft_DotNet_Darc_VirtualMonoRepo_E2E_Tests[Microsoft.DotNet.Darc.VirtualMonoRepo.E2E.Tests]
+    Microsoft_DotNet_DarcLib_Tests[Microsoft.DotNet.DarcLib.Tests]
+    Microsoft_DotNet_Darc[Microsoft.DotNet.Darc]
+    Microsoft_DotNet_DarcLib[Microsoft.DotNet.DarcLib]
+    Microsoft_DotNet_DarcLib_AzDev[Microsoft.DotNet.DarcLib.AzDev]
+  end
+end
+DotNet_Status_Web-->Microsoft_DncEng_Configuration_Extensions
+DotNet_Status_Web-->Microsoft_DotNet_GitHub_Authentication
+DotNet_Status_Web-->Microsoft_DotNet_Internal_Health
+DotNet_Status_Web-->Microsoft_DotNet_Internal_Testing_Utility
+DotNet_Status_Web-->Microsoft_DotNet_Kusto
+DotNet_Status_Web-->Microsoft_DotNet_Services_Utility
+DotNet_Status_Web-->Microsoft_DotNet_Web_Authentication
+DotNet_Status_Web-->AzureDevOpsClient
+DotNet_Status_Web_Tests-->DotNet_Status_Web
+DotNet_Status_Web_Tests-->Microsoft_DotNet_Internal_DependencyInjection_Testing
+DotNet_Status_Web_Tests-->Microsoft_DotNet_Internal_Testing_DependencyInjection_Abstractions
+DotNet_Status_Web_Tests-->Microsoft_DotNet_Internal_Testing_DependencyInjectionCodeGen
+DotNet_Status_Web_Tests-->Microsoft_DotNet_Internal_Testing_Utility
+DotNet_Status_Web_Tests-->Microsoft_DotNet_Web_Authentication_Tests
+CoreHealthMonitor-->Microsoft_DotNet_ServiceFabric_ServiceHost
+CoreHealthMonitor-->Microsoft_DotNet_Internal_Health
+CoreHealthMonitor_Tests-->Microsoft_DotNet_ServiceFabric_ServiceHost
+CoreHealthMonitor_Tests-->Microsoft_DotNet_Internal_DependencyInjection_Testing
+CoreHealthMonitor_Tests-->CoreHealthMonitor
+DependencyUpdateErrorProcessor-->Microsoft_DncEng_Configuration_Extensions
+DependencyUpdateErrorProcessor-->Microsoft_DotNet_ServiceFabric_ServiceHost
+DependencyUpdateErrorProcessor-->Maestro_AzureDevOps
+DependencyUpdateErrorProcessor-->Microsoft_DotNet_GitHub_Authentication
+DependencyUpdateErrorProcessor-->Maestro_Data
+DependencyUpdater-->Microsoft_DncEng_Configuration_Extensions
+DependencyUpdater-->Microsoft_DotNet_DarcLib
+DependencyUpdater-->Microsoft_DotNet_ServiceFabric_ServiceHost
+DependencyUpdater-->Microsoft_DotNet_Kusto
+DependencyUpdater-->Maestro_Contracts
+DependencyUpdater-->Maestro_Data
+DependencyUpdater-->Maestro_DataProviders
+FeedCleanerService-->Microsoft_DncEng_Configuration_Extensions
+FeedCleanerService-->Microsoft_DotNet_ServiceFabric_ServiceHost
+FeedCleanerService-->Maestro_AzureDevOps
+FeedCleanerService-->Maestro_Contracts
+FeedCleanerService-->Maestro_Data
+Maestro_Data-->Microsoft_DotNet_DarcLib_AzDev
+Maestro_Data-->Microsoft_DotNet_GitHub_Authentication
+Maestro_Data-->Microsoft_DotNet_Services_Utility
+Maestro_Data_Tests-->Microsoft_DotNet_Internal_DependencyInjection_Testing
+Maestro_Data_Tests-->Maestro_Data
+Maestro_DataProviders-->Microsoft_DotNet_GitHub_Authentication
+Maestro_DataProviders-->Microsoft_DotNet_DarcLib
+Maestro_DataProviders-->Microsoft_DotNet_ServiceFabric_ServiceHost
+Maestro_DataProviders-->Microsoft_DotNet_Kusto
+Maestro_DataProviders-->Maestro_AzureDevOps
+Maestro_DataProviders-->Maestro_Data
+Maestro_MergePolicies-->Microsoft_DotNet_DarcLib
+Maestro_MergePolicies-->Maestro_Contracts
+Maestro_MergePolicies-->Maestro_MergePolicyEvaluation
+Maestro_Web-->Microsoft_DncEng_Configuration_Extensions
+Maestro_Web-->Microsoft_DotNet_DarcLib
+Maestro_Web-->Microsoft_DotNet_ServiceFabric_ServiceHost
+Maestro_Web-->Microsoft_DotNet_GitHub_Authentication
+Maestro_Web-->Microsoft_DotNet_Internal_DependencyInjection
+Maestro_Web-->Microsoft_DotNet_Kusto
+Maestro_Web-->Microsoft_DotNet_Services_Utility
+Maestro_Web-->Microsoft_DotNet_Web_Authentication
+Maestro_Web-->Maestro_AzureDevOps
+Maestro_Web-->Maestro_Contracts
+Maestro_Web-->Maestro_Data
+Maestro_Web-->Maestro_DataProviders
+Maestro_Web-->Maestro_MergePolicies
+Maestro_Web-->Microsoft_AspNetCore_ApiPagination
+Maestro_Web-->Microsoft_AspNetCore_ApiVersioning_Swashbuckle
+Maestro_Web-->Microsoft_AspNetCore_ApiVersioning
+Maestro_Web_Tests-->Microsoft_DotNet_Internal_Testing_DependencyInjectionCodeGen
+Maestro_Web_Tests-->Maestro_Web
+Maestro_Web_Tests-->Microsoft_DotNet_Internal_Testing_Utility
+Maestro_Web_Tests-->Microsoft_DotNet_Internal_Testing_DependencyInjection_Abstractions
+Maestro_Web_Tests-->Microsoft_DotNet_Internal_DependencyInjection_Testing
+Microsoft_AspNetCore_ApiVersioning_Swashbuckle-->Microsoft_AspNetCore_ApiVersioning
+Microsoft_DotNet_Maestro_Tasks-->Microsoft_DotNet_DarcLib_AzDev
+Microsoft_DotNet_Maestro_Tasks-->Microsoft_DotNet_DarcLib
+Microsoft_DotNet_Maestro_Tasks-->Microsoft_DotNet_Maestro_Client
+Microsoft_DotNet_Maestro_Tasks_Tests-->Microsoft_DotNet_Maestro_Client
+Microsoft_DotNet_Maestro_Tasks_Tests-->Microsoft_DotNet_Maestro_Tasks
+SubscriptionActorService-->Microsoft_DncEng_Configuration_Extensions
+SubscriptionActorService-->Microsoft_DotNet_DarcLib_AzDev
+SubscriptionActorService-->Microsoft_DotNet_DarcLib
+SubscriptionActorService-->Microsoft_DotNet_ServiceFabric_ServiceHost
+SubscriptionActorService-->Microsoft_DotNet_GitHub_Authentication
+SubscriptionActorService-->Microsoft_DotNet_Maestro_Client
+SubscriptionActorService-->Maestro_AzureDevOps
+SubscriptionActorService-->Maestro_Contracts
+SubscriptionActorService-->Maestro_Data
+SubscriptionActorService-->Maestro_MergePolicies
+DependencyUpdater_Tests-->Microsoft_DotNet_Internal_DependencyInjection_Testing
+DependencyUpdater_Tests-->DependencyUpdater
+DependencyUpdater_Tests-->ServiceFabricMocks
+FeedCleanerService_Tests-->Microsoft_DotNet_Internal_DependencyInjection_Testing
+FeedCleanerService_Tests-->FeedCleanerService
+FeedCleanerService_Tests-->ServiceFabricMocks
+Maestro_ScenarioTests-->Microsoft_DotNet_Darc
+Maestro_ScenarioTests-->Microsoft_DotNet_DarcLib
+Maestro_ScenarioTests-->Microsoft_DotNet_Internal_Testing_Utility
+Maestro_ScenarioTests-->Microsoft_DotNet_Maestro_Client
+SubscriptionActorService_Tests-->Microsoft_DotNet_Internal_DependencyInjection_Testing
+SubscriptionActorService_Tests-->Microsoft_DotNet_Internal_Testing_Utility
+SubscriptionActorService_Tests-->ServiceFabricMocks
+SubscriptionActorService_Tests-->SubscriptionActorService
+Microsoft_DncEng_Configuration_Bootstrap-->Microsoft_DncEng_Configuration_Extensions
+Microsoft_DncEng_DeployServiceFabricCluster-->Microsoft_DncEng_Configuration_Extensions
+Microsoft_DncEng_PatGenerator_Tests-->Microsoft_DncEng_PatGenerator
+Microsoft_DncEng_PatGeneratorTool-->Microsoft_DncEng_PatGenerator
+Microsoft_DncEng_SecretManager-->Microsoft_DncEng_Configuration_Extensions
+Microsoft_DncEng_SecretManager-->Microsoft_DncEng_CommandLineLib
+Microsoft_DncEng_SecretManager-->Microsoft_DotNet_Authentication_Algorithms
+Microsoft_DncEng_SecretManager_ScenarioTests-->Microsoft_DncEng_SecretManager_Tests
+Microsoft_DncEng_SecretManager_ScenarioTests-->Microsoft_DncEng_SecretManager
+Microsoft_DncEng_SecretManager_ScenarioTests-->Microsoft_DotNet_Internal_DependencyInjection_Testing
+Microsoft_DncEng_SecretManager_Tests-->Microsoft_DncEng_SecretManager
+Microsoft_DncEng_SecretManager_Tests-->Microsoft_DotNet_Internal_DependencyInjection_Testing
+Microsoft_DotNet_Darc-->Microsoft_DotNet_DarcLib_AzDev
+Microsoft_DotNet_Darc-->Microsoft_DotNet_DarcLib
+Microsoft_DotNet_DarcLib-->Microsoft_DotNet_Maestro_Client
+Microsoft_DotNet_DarcLib-->Maestro_MergePolicyEvaluation
+Microsoft_DotNet_DarcLib-->Microsoft_DotNet_Internal_Logging
+Microsoft_DotNet_DarcLib-->Microsoft_DotNet_Services_Utility
+Microsoft_DotNet_DarcLib_AzDev-->Microsoft_DotNet_Maestro_Client
+Microsoft_DotNet_DarcLib_AzDev-->Microsoft_DotNet_DarcLib
+Microsoft_DotNet_Darc_Tests-->Microsoft_DotNet_DarcLib_AzDev
+Microsoft_DotNet_Darc_Tests-->Microsoft_DotNet_DarcLib
+Microsoft_DotNet_Darc_Tests-->Microsoft_DotNet_Darc
+Microsoft_DotNet_Darc_VirtualMonoRepo_E2E_Tests-->Microsoft_DotNet_Darc
+Microsoft_DotNet_DarcLib_Tests-->Microsoft_DotNet_DarcLib
+Microsoft_DotNet_DarcLib_Tests-->Microsoft_DotNet_GitHub_Authentication
+Microsoft_DotNet_DarcLib_Tests-->Microsoft_DotNet_Internal_Testing_Utility
+Microsoft_DotNet_ServiceFabric_ServiceHost-->Microsoft_DncEng_Configuration_Extensions
+Microsoft_DotNet_ServiceFabric_ServiceHost-->Microsoft_DotNet_Metrics
+Microsoft_DotNet_ServiceFabric_ServiceHost-->Microsoft_DotNet_Internal_Health
+Microsoft_DotNet_ServiceFabric_ServiceHost-->Microsoft_DotNet_Internal_Logging
+Microsoft_DotNet_ServiceFabric_ServiceHost-->Microsoft_DotNet_Services_Utility
+Microsoft_DotNet_ServiceFabric_ServiceHost_Tests-->ServiceFabricMocks
+Microsoft_DotNet_ServiceFabric_ServiceHost_Tests-->Microsoft_DotNet_ServiceFabric_ServiceHost
+Microsoft_DotNet_ServiceFabric_ServiceHost_Tests-->Microsoft_DotNet_Internal_Testing_DependencyInjection_Abstractions
+Microsoft_DotNet_ServiceFabric_ServiceHost_Tests-->Microsoft_DotNet_Internal_Testing_DependencyInjectionCodeGen
+Microsoft_DotNet_ServiceFabric_ServiceHost_Tests-->Microsoft_DotNet_Internal_Testing_Utility
+Microsoft_DotNet_Monitoring_Sdk_Tests-->Microsoft_DotNet_Monitoring_Sdk
+RolloutScorer-->Microsoft_DotNet_Services_Utility
+RolloutScorer_Tests-->RolloutScorer
+RolloutScorerAzureFunction-->Microsoft_DotNet_Services_Utility
+RolloutScorerAzureFunction-->RolloutScorer
+Microsoft_DotNet_Authentication_Algorithms_Tests-->Microsoft_DotNet_Authentication_Algorithms
+Microsoft_DotNet_GitHub_Authentication-->Microsoft_DotNet_Services_Utility
+Microsoft_DotNet_GitHub_Authentication_Tests-->Microsoft_DotNet_GitHub_Authentication
+Microsoft_DotNet_GitHub_Authentication_Tests-->Microsoft_DotNet_Internal_Testing_Utility
+Microsoft_DotNet_GitHub_Authentication_Tests-->Microsoft_DotNet_Internal_Testing_DependencyInjection_Abstractions
+Microsoft_DotNet_GitHub_Authentication_Tests-->Microsoft_DotNet_Internal_Testing_DependencyInjectionCodeGen
+Microsoft_DotNet_Internal_DependencyInjection_Testing_Tests-->Microsoft_DotNet_Internal_DependencyInjection_Testing
+Microsoft_DotNet_Internal_DependencyInjection_Tests-->Microsoft_DotNet_Internal_DependencyInjection
+Microsoft_DotNet_Internal_Health-->Microsoft_DotNet_Internal_DependencyInjection
+Microsoft_DotNet_Internal_Health-->Microsoft_DotNet_Services_Utility
+Microsoft_DotNet_Internal_Health_Tests-->Microsoft_DotNet_Internal_Health
+Microsoft_DotNet_Internal_Health_Tests-->Microsoft_DotNet_Internal_Testing_Utility
+Microsoft_DotNet_Internal_Testing_DependencyInjectionCodeGen_Tests-->Microsoft_DotNet_Internal_Testing_DependencyInjection_Abstractions
+Microsoft_DotNet_Internal_Testing_DependencyInjectionCodeGen_Tests-->Microsoft_DotNet_Internal_Testing_DependencyInjectionCodeGen
+Microsoft_DotNet_Kusto-->Microsoft_DotNet_Internal_DependencyInjection
+Microsoft_DotNet_Kusto_Tests-->Microsoft_DotNet_Internal_Testing_Utility
+Microsoft_DotNet_Kusto_Tests-->Microsoft_DotNet_Kusto
+Microsoft_DotNet_Web_Authentication-->Microsoft_DotNet_GitHub_Authentication
+Microsoft_DotNet_Web_Authentication_Tests-->Microsoft_DotNet_Internal_Testing_Utility
+Microsoft_DotNet_Web_Authentication_Tests-->Microsoft_DotNet_Web_Authentication
+AzureDevOpsClient-->Microsoft_DotNet_Services_Utility
+AzureDevOpsTimeline-->Microsoft_DncEng_Configuration_Extensions
+AzureDevOpsTimeline-->Microsoft_DotNet_ServiceFabric_ServiceHost
+AzureDevOpsTimeline-->Microsoft_DotNet_Kusto
+AzureDevOpsTimeline-->Microsoft_DotNet_Services_Utility
+AzureDevOpsTimeline-->AzureDevOpsClient
+Microsoft_DotNet_AzureDevOpsTimeline_Tests-->Microsoft_DotNet_Internal_Testing_DependencyInjection_Abstractions
+Microsoft_DotNet_AzureDevOpsTimeline_Tests-->Microsoft_DotNet_Internal_Testing_DependencyInjectionCodeGen
+Microsoft_DotNet_AzureDevOpsTimeline_Tests-->Microsoft_DotNet_Internal_Testing_Utility
+Microsoft_DotNet_AzureDevOpsTimeline_Tests-->AzureDevOpsTimeline

@@ -28,12 +28,16 @@ The alignment must not affect the quality of services and support that we provid
 - The DotNet Engineering Services team
 
 ## Risks
-- Charter alignment will involve Maestro Azure resources migration, this means that our services could potentially experience downtime, during and after the migration
-- The Maestro BuildAssetRegistry contains very important information for .NET releases, it is of utmost importance that we handle the migration of it with care
+- Charter alignment will involve Maestro Azure resources migration, this means we will have some down time, during which we won't be able to flow dependencies between repositories, promote builds to their respective channels, etc.. We will have to figure out a way to cause minimum disruption for our customers. This means picking a good time to do the migration, when we're not working on servicing or a new Preview, making a detailed plan on what needs to happen, and having the ability to revert everything, in case it goes wrong.
+- The Maestro BuildAssetRegistry contains very important information for .NET releases, it is of utmost importance that we handle the migration of it with care, and not lose any data inside of it.
 
 ## Rollouts
 - The ProdCon team will be responsible for rollouts of it's own services
 - The rollout schedule won't change, so we don't confuse or customers
+
+## S360/SDL
+- The ProdCon team will be responsible for handling S360 issues for its own Service Tree entry
+- The ProdCon team will be responsible for doing regular SDL Compliance Assessments for its own services
 
 ## High level steps
 Currently, all of the resources are shared between the teams:
