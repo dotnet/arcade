@@ -44,28 +44,20 @@ If the parameter set to true, change the sequence of stages/jobs in the followin
 
 ```mermaid
 flowchart LR
-  prep["Prep Ring <b>~30min</b>"] --> prep_override[Prep Ring Override]
-  prep_override --> signing["Signing Ring <b>~50min</b>"]
-  prep_override --> source_code_validation["Source Code Validation <b>~40min</b>"]
-  source_code_validation --> source_code_validation_override[Source Code Validation Override]
+  prep["Prep Ring <b>~30min</b>"] --> signing["Signing Ring <b>~50min</b>"]
+  prep ---> source_code_validation["Source Code Validation <b>~40min</b>"]
   signing --> vs_insertion["VS Insertion Ring <b>~50m</b>"]
   signing --> required_validation["Required Validation <b>~1h</b>"]
-  required_validation --> required_validation_override[Required Validation Override]
   signing --> validation["Validation <b>~5h</b>"]
-  validation --> validation_override[Validation Override]
   signing --> sbom_generation["SBOM Generation <b>~20m</b>"]
-  sbom_generation --> sbom_generation_override[SBOM Generation Override]
   signing --> publishing_v3_signed["Publish Post-Signing Assets <b>~1h20m</b>"]
   signing --> post_signing_publishing["Publish Signed Assets <b>~1h30m</b>"]
-  vs_insertion --> vs_insertion_override[VS Insertion Override]
-  vs_insertion_override --> cti_sign_off[Wait for Test Team Sign Off]
+  vs_insertion --> cti_sign_off[Wait for Test Team Sign Off]
   cti_sign_off --> staging["Staging Ring <b>~1h10m</b>"]
   staging --> finalize_sign_off[Sign off for finalizing the release]
   finalize_sign_off --> finalize_staging[Finalize Staging Ring]
   finalize_sign_off --> publishing_v3_validated["Publish CTI Validated Assets <b>~1h20m</b>"]
   classDef default fill:#50C878, stroke:#023020;
-  classDef Override fill:#ECFFDC, stroke:#023020;
-  class prep_override,source_code_validation_override,required_validation_override,sbom_generation_override,vs_insertion_override,validation_override Override;
 ```
 
 - The Staging Ring
@@ -103,22 +95,28 @@ flowchart LR
 - Signing Ring
   - skip `validate_signing_inputs` step
 - Prep Ring - no changes 
+- Configure stages to have no override on failure
 
 ## Risks
 
 - the release pipeline is closely connected to the staging, we need to check that all assets it needs are being published with the expected changes and in the expected location. 
 
-- make sure that the critical stages of Stage-DotNet have all the needed assets. It is possible that additional changes need to be made in the jobs consuming or publishing artefacts, but on a first glance validation stages don't produce outputs that are used in later stages. 
+- make sure that the critical stages of Stage-DotNet have all the needed assets. It is possible that additional changes need to be made in the jobs consuming or publishing artifacts, but on a first glance validation stages don't produce outputs that are used in later stages. 
 
-## Testing 
+## Testing
 
-TBD
+The change can be tested by running the Stage-DotNet-Test pipeline. It uses the same yml as Stage-DotNet but uploads assets to temporarily created feeds and blob storage containers so that we can run the pipeline multiple times without uploading to the official places. We should run it with the emergency switch on and off and make sure that
+- stages are run in the correct order in both emergency and regular scenario
+- adding the new parameter doesn't introduce any errors in the current staging process
+- all stages from the diagram are run so that:
+  - all files produced by the staging pipeline are published (to feeds and blob storage containers) in both the emergency and regular scenario
+  - the build artifacts that are used by the release pipeline are published (`config.json`, `manifest.json`, `signed/*`, `signalr-signed/*`, `release-manifests/*`)
 
-## Questions 
+## Open Questions 
 
-1. Which stages should be run in parallel and which can we skip altogether? (for example the Validation stage)
-2. Do we still need all the Override stages?
-3. Do we need the sign off stages (Wait for test team sign off, Sign off for finalizing the release) ?
-4. Is there a dependency between some stages that is required for the release but I've missed on the diagram?
+1. How does the change need to be communicated? 
+
+2. Should we create a separate 1ES pool for the emergency pipeline to decrease wait time, also could we unite jobs with the same goal? (suggested by Djuradj)
+
 
   
