@@ -454,13 +454,12 @@ if [[ "$__CodeName" == "alpine" ]]; then
         version="v$__AlpineVersion"
     fi
 
-	for line in $__AlpineKeys; do
-		id=${line%%:*}
-		content=${line#*:}
+    for line in $__AlpineKeys; do
+        id="${line%%:*}"
+        content="${line#*:}"
 
-		printf -- "-----BEGIN PUBLIC KEY-----\n$content\n-----END PUBLIC KEY-----\n" \
-			> "$__ApkKeysDir/alpine-devel@lists.alpinelinux.org-$id.rsa.pub"
-	done
+        echo -e "-----BEGIN PUBLIC KEY-----\n$content\n-----END PUBLIC KEY-----" > "$__ApkKeysDir/$id.rsa.pub"
+    done
 
     if [[ "$__SkipSigCheck" == "1" ]]; then
         __ApkSignatureArg="--allow-untrusted"
