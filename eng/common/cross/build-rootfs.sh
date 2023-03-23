@@ -458,7 +458,7 @@ if [[ "$__CodeName" == "alpine" ]]; then
         id="${line%%:*}"
         content="${line#*:}"
 
-        echo -e "-----BEGIN PUBLIC KEY-----\n$content\n-----END PUBLIC KEY-----" > "$__ApkKeysDir/$id.rsa.pub"
+        echo -e "-----BEGIN PUBLIC KEY-----\n$content\n-----END PUBLIC KEY-----" > "$__ApkKeysDir/alpine-devel@lists.alpinelinux.org-$id.rsa.pub"
     done
 
     if [[ "$__SkipSigCheck" == "1" ]]; then
