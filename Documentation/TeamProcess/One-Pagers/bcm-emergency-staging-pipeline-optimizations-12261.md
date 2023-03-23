@@ -2,7 +2,7 @@
 
 ## Goals
 
-As part of https://github.com/dotnet/arcade/issues/12261 we need to create a version of the Stage-DotNet pipeline that can be run in emergency situation in order to prepare a .NET release as fast as possible. Currently the critical stages in the pipeline depend on multiple validation stages (Source Code Validation, Validation, Required Validation) that run for a long time, which is one of the causes for the overall long run time of the pipeline. We need to implement a sped up version of the pipeline, skipping some of the validation jobs and running stages in parallel where possible.
+As part of https://github.com/dotnet/arcade/issues/12261 we need to introduce emergency mode to Stage-DotNet and Stage-DotNet-Test pipelines that can be run to prepare a .NET release as fast as possible. Currently the critical stages in the pipeline depend on multiple validation stages (Source Code Validation, Validation, Required Validation) that run for a long time, which is one of the causes for the overall long run time of the pipeline. We need to implement a sped up version of the pipeline, skipping some of the validation jobs and running stages in parallel where possible.
 
 ## Proposed Implementation
 
@@ -99,7 +99,7 @@ flowchart LR
 
 ## Risks
 
-- the release pipeline is closely connected to the staging, we need to check that all assets it needs are being published with the expected changes and in the expected location. 
+- the release pipeline is closely connected to the staging - Stage-DotNet is listed as a resource in Release-DotNet from which build artifacts are being downloaded, the release pipeline also expects that assets are published to certain feeds and storage acccounts. We need to check that all assets it needs are being published with the expected changes and in the expected location. 
 
 - make sure that the critical stages of Stage-DotNet have all the needed assets. It is possible that additional changes need to be made in the jobs consuming or publishing artifacts, but on a first glance validation stages don't produce outputs that are used in later stages. 
 
