@@ -14,6 +14,7 @@ usage()
     echo "lldbx.y - optional, LLDB version, can be: lldb3.9(default), lldb4.0, lldb5.0, lldb6.0 no-lldb. Ignored for alpine and FreeBSD"
     echo "llvmx[.y] - optional, LLVM version for LLVM related packages."
     echo "--skipunmount - optional, will skip the unmount of rootfs folder."
+    echo "--skipsigcheck - optional, will skip package signature checks (allowing untrusted packages)."
     echo "--use-mirror - optional, use mirror URL to fetch resources, when available."
     echo "--jobs N - optional, restrict to N jobs."
     exit 1
@@ -118,6 +119,7 @@ __AlpineKeys='
 616db30d:MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAnpUpyWDWjlUk3smlWeA0\nlIMW+oJ38t92CRLHH3IqRhyECBRW0d0aRGtq7TY8PmxjjvBZrxTNDpJT6KUk4LRm\na6A6IuAI7QnNK8SJqM0DLzlpygd7GJf8ZL9SoHSH+gFsYF67Cpooz/YDqWrlN7Vw\ntO00s0B+eXy+PCXYU7VSfuWFGK8TGEv6HfGMALLjhqMManyvfp8hz3ubN1rK3c8C\nUS/ilRh1qckdbtPvoDPhSbTDmfU1g/EfRSIEXBrIMLg9ka/XB9PvWRrekrppnQzP\nhP9YE3x/wbFc5QqQWiRCYyQl/rgIMOXvIxhkfe8H5n1Et4VAorkpEAXdsfN8KSVv\nLSMazVlLp9GYq5SUpqYX3KnxdWBgN7BJoZ4sltsTpHQ/34SXWfu3UmyUveWj7wp0\nx9hwsPirVI00EEea9AbP7NM2rAyu6ukcm4m6ATd2DZJIViq2es6m60AE6SMCmrQF\nwmk4H/kdQgeAELVfGOm2VyJ3z69fQuywz7xu27S6zTKi05Qlnohxol4wVb6OB7qG\nLPRtK9ObgzRo/OPumyXqlzAi/Yvyd1ZQk8labZps3e16bQp8+pVPiumWioMFJDWV\nGZjCmyMSU8V6MB6njbgLHoyg2LCukCAeSjbPGGGYhnKLm1AKSoJh3IpZuqcKCk5C\n8CM1S15HxV78s9dFntEqIokCAwEAAQ==
 '
 __Keyring=
+__SkipSigCheck=0
 __UseMirror=0
 
 __UnprocessedBuildArgs=
@@ -343,6 +345,9 @@ while :; do
         --skipunmount)
             __SkipUnmount=1
             ;;
+        --skipsigcheck)
+            __SkipSigCheck=1
+            ;;
         --rootfsdir|-rootfsdir)
             shift
             __RootfsDir="$1"
@@ -456,17 +461,23 @@ if [[ "$__CodeName" == "alpine" ]]; then
 			> "$__ApkKeysDir/alpine-devel@lists.alpinelinux.org-$id.rsa.pub"
 	done
 
+    if [[ "$__SkipSigCheck" == "1" ]]; then
+        __ApkSignatureArg="--allow-untrusted"
+    else
+        __ApkSignatureArg="--keys-dir $__ApkKeysDir"
+    fi
+
     # initialize DB
     "$__ApkToolsDir/apk.static" \
         -X "http://dl-cdn.alpinelinux.org/alpine/$version/main" \
         -X "http://dl-cdn.alpinelinux.org/alpine/$version/community" \
-        -U --keys-dir "$__ApkKeysDir" --root "$__RootfsDir" --arch "$__AlpineArch" --initdb add
+        -U $__ApkSignatureArg --root "$__RootfsDir" --arch "$__AlpineArch" --initdb add
 
     if [[ "$__AlpineLlvmLibsLookup" == 1 ]]; then
         __AlpinePackages+=" $("$__ApkToolsDir/apk.static" \
             -X "http://dl-cdn.alpinelinux.org/alpine/$version/main" \
             -X "http://dl-cdn.alpinelinux.org/alpine/$version/community" \
-            -U --keys-dir "$__ApkKeysDir" --root "$__RootfsDir" --arch "$__AlpineArch" \
+            -U $__ApkSignatureArg --root "$__RootfsDir" --arch "$__AlpineArch" \
             search 'llvm*-libs' | sort | tail -1 | sed 's/-[^-]*//2g')"
     fi
 
@@ -474,7 +485,7 @@ if [[ "$__CodeName" == "alpine" ]]; then
     "$__ApkToolsDir/apk.static" \
         -X "http://dl-cdn.alpinelinux.org/alpine/$version/main" \
         -X "http://dl-cdn.alpinelinux.org/alpine/$version/community" \
-        -U --keys-dir "$__ApkKeysDir" --root "$__RootfsDir" --arch "$__AlpineArch" \
+        -U $__ApkSignatureArg --root "$__RootfsDir" --arch "$__AlpineArch" \
         add $__AlpinePackages
 
     rm -r "$__ApkToolsDir"
@@ -611,7 +622,11 @@ elif [[ "$__CodeName" == "haiku" ]]; then
     done
 elif [[ -n "$__CodeName" ]]; then
 
-    debootstrap "--variant=minbase" $__Keyring --force-check-gpg --arch "$__UbuntuArch" "$__CodeName" "$__RootfsDir" "$__UbuntuRepo"
+    if [[ "$__SkipSigCheck" == "0" ]]; then
+        __Keyring="$__Keyring --force-check-gpg"
+    fi
+
+    debootstrap "--variant=minbase" $__Keyring --arch "$__UbuntuArch" "$__CodeName" "$__RootfsDir" "$__UbuntuRepo"
     cp "$__CrossDir/$__BuildArch/sources.list.$__CodeName" "$__RootfsDir/etc/apt/sources.list"
     chroot "$__RootfsDir" apt-get update
     chroot "$__RootfsDir" apt-get -f -y install
