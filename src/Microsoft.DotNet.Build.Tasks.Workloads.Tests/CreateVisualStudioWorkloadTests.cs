@@ -135,6 +135,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.Contains("package name=Microsoft.Emscripten.Python.6.0.4", packMsiSwr);
             Assert.Contains("vs.package.chip=x64", packMsiSwr);
             Assert.DoesNotContain("vs.package.machineArch", packMsiSwr);
+
+            // Verify the swix project items for components. The project files names always contain the major.minor suffix, so we'll end up
+            // with microsoft.net.sdk.emscripten.5.6.swixproj and microsoft.net.sdk.emscripten.pre.5.6.swixproj
+            IEnumerable<ITaskItem> swixComponentProjects = createWorkloadTask.SwixProjects.Where(s => s.GetMetadata(Metadata.PackageType).Equals(DefaultValues.PackageTypeComponent));
+            Assert.All(swixComponentProjects, c => Assert.True(c.ItemSpec.Contains(".pre.") && c.GetMetadata(Metadata.IsPreview) == "true" ||
+                !c.ItemSpec.Contains(".pre.") && c.GetMetadata(Metadata.IsPreview) == "false"));
         }
 
         [WindowsOnlyFact]

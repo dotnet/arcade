@@ -515,6 +515,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     ITaskItem swixProjectItem = new TaskItem(swixComponentProject.Create());
                     swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{swixComponent.SdkFeatureBand}");
                     swixProjectItem.SetMetadata(Metadata.PackageType, DefaultValues.PackageTypeComponent);
+                    swixProjectItem.SetMetadata(Metadata.IsPreview, swixComponent.Name.EndsWith(".pre").ToString().ToLowerInvariant());
 
                     lock (swixProjectItems)
                     {
