@@ -174,10 +174,6 @@ while :; do
             __UbuntuPackages="${__UbuntuPackages// libunwind8-dev/}"
             unset __LLDB_Package
 
-            if [[ -e "/usr/share/keyrings/debian-keyring.gpg" ]]; then
-                __Keyring="--keyring /usr/share/keyrings/debian-keyring.gpg"
-            fi
-
             if [[ -e "/usr/share/keyrings/debian-ports-archive-keyring.gpg" ]]; then
                 __Keyring="--keyring /usr/share/keyrings/debian-ports-archive-keyring.gpg --include=debian-ports-archive-keyring"
             fi
