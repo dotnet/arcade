@@ -1,16 +1,22 @@
 flowchart LR
 subgraph EngServices_cluster[Eng Services]
-    subgraph src_cluster[src]
+    subgraph DotNetStatus_cluster[DotNetStatus]
         DotNet_Status_Web[DotNet.Status.Web]
         DotNet_Status_Web_Tests[DotNet.Status.Web.Tests]
+    end
+    subgraph PatGenerator_cluster[PatGenerator]
+      Microsoft_DncEng_PatGenerator[Microsoft.DncEng.PatGenerator]
+      Microsoft_DncEng_PatGenerator_Tests[Microsoft.DncEng.PatGenerator.Tests]
+      Microsoft_DncEng_PatGeneratorTool[Microsoft.DncEng.PatGeneratorTool]
+    end
+    subgraph SecretManager_cluster[SecretManager]
+      Microsoft_DncEng_SecretManager[Microsoft.DncEng.SecretManager]
+      Microsoft_DncEng_SecretManager_ScenarioTests[Microsoft.DncEng.SecretManager.ScenarioTests]
+      Microsoft_DncEng_SecretManager_Tests[Microsoft.DncEng.SecretManager.Tests]
+    end
+    subgraph Miscellaneous_cluster[Miscellaneous]
         Microsoft_DncEng_Configuration_Bootstrap[Microsoft.DncEng.Configuration.Bootstrap]
         Microsoft_DncEng_DeployServiceFabricCluster[Microsoft.DncEng.DeployServiceFabricCluster]
-        Microsoft_DncEng_PatGenerator[Microsoft.DncEng.PatGenerator]
-        Microsoft_DncEng_PatGenerator_Tests[Microsoft.DncEng.PatGenerator.Tests]
-        Microsoft_DncEng_PatGeneratorTool[Microsoft.DncEng.PatGeneratorTool]
-        Microsoft_DncEng_SecretManager[Microsoft.DncEng.SecretManager]
-        Microsoft_DncEng_SecretManager_ScenarioTests[Microsoft.DncEng.SecretManager.ScenarioTests]
-        Microsoft_DncEng_SecretManager_Tests[Microsoft.DncEng.SecretManager.Tests]
         Microsoft_DotNet_Internal_Tools_SynchronizePackageProps[Microsoft.DotNet.Internal.Tools.SynchronizePackageProps]
     end
     subgraph Telemetry_cluster[Telemetry]
