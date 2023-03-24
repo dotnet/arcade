@@ -414,6 +414,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                                 ITaskItem swixProjectItem = new TaskItem(swixProj);
                                 swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{sdkFeatureBand}");
                                 swixProjectItem.SetMetadata(Metadata.PackageType, DefaultValues.PackageTypeMsiPack);
+                                swixProjectItem.SetMetadata(Metadata.IsPreview, "false");
 
                                 lock (swixProjectItems)
                                 {
@@ -462,6 +463,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                                     ITaskItem swixProjectItem = new TaskItem(swixProj);
                                     swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{manifestPackage.SdkFeatureBand}");
                                     swixProjectItem.SetMetadata(Metadata.PackageType, DefaultValues.PackageTypeMsiPack);
+                                    swixProjectItem.SetMetadata(Metadata.IsPreview, "false");
 
                                     lock (swixProjectItems)
                                     {
@@ -489,6 +491,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                         ITaskItem swixProjectItem = new TaskItem(swixProject.Create());
                         swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{((WorkloadManifestPackage)msi.Package).SdkFeatureBand}");
                         swixProjectItem.SetMetadata(Metadata.PackageType, DefaultValues.PackageTypeMsiManifest);
+                        swixProjectItem.SetMetadata(Metadata.IsPreview, "false");
 
                         lock (swixProjectItems)
                         {
