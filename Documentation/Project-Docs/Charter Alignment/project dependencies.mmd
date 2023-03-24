@@ -15,7 +15,6 @@ subgraph EngServices_cluster[Eng Services]
       Microsoft_DncEng_SecretManager_Tests[Microsoft.DncEng.SecretManager.Tests]
     end
     subgraph Miscellaneous_cluster[Miscellaneous]
-        Microsoft_DncEng_Configuration_Bootstrap[Microsoft.DncEng.Configuration.Bootstrap]
         Microsoft_DncEng_DeployServiceFabricCluster[Microsoft.DncEng.DeployServiceFabricCluster]
         Microsoft_DotNet_Internal_Tools_SynchronizePackageProps[Microsoft.DotNet.Internal.Tools.SynchronizePackageProps]
     end
@@ -36,6 +35,7 @@ subgraph EngServices_cluster[Eng Services]
     end
 end
 subgraph Shared_cluster[Shared]
+  Microsoft_DncEng_Configuration_Bootstrap[Microsoft.DncEng.Configuration.Bootstrap]
   Microsoft_DncEng_Configuration_Extensions[Microsoft.DncEng.Configuration.Extensions]
   Microsoft_DotNet_ServiceFabric_ServiceHost[Microsoft.DotNet.ServiceFabric.ServiceHost]
   Microsoft_DotNet_ServiceFabric_ServiceHost_Tests[Microsoft.DotNet.ServiceFabric.ServiceHost.Tests]
