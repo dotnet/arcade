@@ -14,26 +14,26 @@ The sequence of stages in the current pipeline is:
 
 ```mermaid
 flowchart LR
-  prep["Prep Ring <b>~30min</b>"] --> prep_override[Prep Ring Override]
-  prep_override --> signing["Signing Ring <b>~50min</b>"]
-  prep_override --> source_code_validation["Source Code Validation <b>~40min</b>"]
+  prep["Prep Ring \n <b>~30min</b>"] --> prep_override[Prep Ring Override]
+  prep_override --> signing["Signing Ring \n <b>~50min</b>"]
+  prep_override --> source_code_validation["Source Code Validation \n <b>~40min</b>"]
   source_code_validation --> source_code_validation_override[Source Code Validation Override]
-  signing --> required_validation["Required Validation <b>~1h</b>"]
-  signing --> validation["Validation <b>~5h</b>"]
-  required_validation --> sbom_generation["SBOM Generation <b>~20m</b>"]
+  signing --> required_validation["Required Validation \n <b>~1h</b>"]
+  signing --> validation["Validation \n <b>~5h</b>"]
+  required_validation --> sbom_generation["SBOM Generation \n <b>~20m</b>"]
   required_validation --> required_validation_override[Required Validation Override]
   validation --> validation_override[Validation Override]
-  required_validation_override --> publishing_v3_signed["Publish Post-Signing Assets <b>~1h20m</b>"]
-  required_validation_override --> post_signing_publishing["Publish Signed Assets <b>~1h30m</b>"]
-  required_validation_override --> vs_insertion["VS Insertion Ring <b>~50m</b>"]
+  required_validation_override --> publishing_v3_signed["Publish Post-Signing Assets \n <b>~1h20m</b>"]
+  required_validation_override --> post_signing_publishing["Publish Signed Assets \n <b>~1h30m</b>"]
+  required_validation_override --> vs_insertion["VS Insertion Ring \n <b>~50m</b>"]
   sbom_generation --> sbom_generation_override[SBOM Generation Override]
   vs_insertion --> vs_insertion_override[VS Insertion Override]
   vs_insertion_override --> cti_sign_off[Wait for Test Team Sign Off]
-  cti_sign_off --> staging["Staging Ring <b>~1h10m</b>"]
+  cti_sign_off --> staging["Staging Ring \n <b>~1h10m</b>"]
   source_code_validation_override --> staging
   staging --> finalize_sign_off[Sign off for finalizing the release]
   finalize_sign_off --> finalize_staging[Finalize Staging Ring]
-  finalize_sign_off --> publishing_v3_validated["Publish CTI Validated Assets <b>~1h20m</b>"]
+  finalize_sign_off --> publishing_v3_validated["Publish CTI Validated Assets \n <b>~1h20m</b>"]
   classDef default fill:#50C878, stroke:#023020;
   classDef Override fill:#ECFFDC, stroke:#023020;
   class prep_override,source_code_validation_override,required_validation_override,sbom_generation_override,vs_insertion_override,validation_override Override;
@@ -44,19 +44,19 @@ If the parameter set to true, change the sequence of stages/jobs in the followin
 
 ```mermaid
 flowchart LR
-  prep["Prep Ring <b>~30min</b>"] --> signing["Signing Ring <b>~50min</b>"]
-  prep ---> source_code_validation["Source Code Validation <b>~40min</b>"]
-  signing --> vs_insertion["VS Insertion Ring <b>~50m</b>"]
-  signing --> required_validation["Required Validation <b>~1h</b>"]
-  signing --> validation["Validation <b>~5h</b>"]
-  signing --> sbom_generation["SBOM Generation <b>~20m</b>"]
-  signing --> publishing_v3_signed["Publish Post-Signing Assets <b>~1h20m</b>"]
-  signing --> post_signing_publishing["Publish Signed Assets <b>~1h30m</b>"]
+  prep["Prep Ring \n <b>~30min</b>"] --> signing["Signing Ring \n <b>~50min</b>"]
+  prep ---> source_code_validation["Source Code Validation \n <b>~40min</b>"]
+  signing --> vs_insertion["VS Insertion Ring \n <b>~50m</b>"]
+  signing --> required_validation["Required Validation \n <b>~1h</b>"]
+  signing --> validation["Validation \n <b>~5h</b>"]
+  signing --> sbom_generation["SBOM Generation \n <b>~20m</b>"]
+  signing --> publishing_v3_signed["Publish Post-Signing Assets \n <b>~1h20m</b>"]
+  signing --> post_signing_publishing["Publish Signed Assets \n <b>~1h30m</b>"]
   vs_insertion --> cti_sign_off[Wait for Test Team Sign Off]
-  cti_sign_off --> staging["Staging Ring <b>~1h10m</b>"]
+  cti_sign_off --> staging["Staging Ring \n <b>~1h10m</b>"]
   staging --> finalize_sign_off[Sign off for finalizing the release]
   finalize_sign_off --> finalize_staging[Finalize Staging Ring]
-  finalize_sign_off --> publishing_v3_validated["Publish CTI Validated Assets <b>~1h20m</b>"]
+  finalize_sign_off --> publishing_v3_validated["Publish CTI Validated Assets \n <b>~1h20m</b>"]
   classDef default fill:#50C878, stroke:#023020;
 ```
 
