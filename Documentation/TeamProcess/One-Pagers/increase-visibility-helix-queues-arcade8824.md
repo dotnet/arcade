@@ -146,3 +146,8 @@ See https://github.com/maestro-auth-test/helix-queue-insights-test/pull/11/check
 ## Service-ability of Feature
 
 If the format of our database changes, we'll have to change the Kusto queries that this feature uses. In that event, our Grafana dashboard will also be broken.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cincrease-visibility-helix-queues-arcade8824.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cincrease-visibility-helix-queues-arcade8824.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cincrease-visibility-helix-queues-arcade8824.md)</sub>
+<!-- End Generated Content-->

@@ -50,7 +50,8 @@ secrets:
           location: helixkv
           name: dn-bot-account-redmond
       name: dn-bot-dnceng-build
-      organization: dnceng
+      organizations: dnceng
+      scopes: build_execute code_write
 
   akams:
     type: github-oauth-secret
@@ -66,7 +67,8 @@ secrets:
           location: helixkv
           name: dn-bot-account-redmond
       name: publishing-dnceng-devdiv-code
-      organization: dnceng
+      organizations: dnceng devdiv
+      scopes: code build_execute 
 
   dn-bot-dotnet-build-rw-code-rw:
     type: azure-devops-access-token
@@ -76,7 +78,8 @@ secrets:
           location: helixkv
           name: dn-bot-account-redmond
       name: dn-bot-dotnet-build
-      organization: dnceng
+      organizations: dnceng
+      scopes: build_execute code_write 
 
   dn-bot-all-orgs-build-rw-code-rw:
     type: azure-devops-access-token
@@ -86,7 +89,8 @@ secrets:
           location: helixkv
           name: dn-bot-account-redmond
       name: dn-bot-all-orgs-build
-      organization: dnceng
+      organizations: dnceng devdiv microsoft
+      scopes: build_execute code_write
 
   #DotNet-AllOrgs-Darc-Pats
   dn-bot-devdiv-dnceng-rw-code-pat:
@@ -97,7 +101,8 @@ secrets:
           location: helixkv
           name: dn-bot-account-redmond
       name: dn-bot-devdiv-dnceng
-      organization: dnceng
+      organizations: dnceng devdiv
+      scopes: code_write
 
   #AzureDevOps-Artifact-Feeds-Pats
   dn-bot-dnceng-artifact-feeds-rw:
@@ -108,7 +113,8 @@ secrets:
           location: helixkv
           name: dn-bot-account-redmond
       name: dn-bot-dnceng-artifact-feeds
-      organization: dnceng
+      organizations: dnceng
+      scopes: packaging_write
 
   dn-bot-dnceng-universal-packages-rw:
     type: azure-devops-access-token
@@ -118,7 +124,8 @@ secrets:
           location: helixkv
           name: dn-bot-account-redmond
       name: dn-bot-dnceng-universal-packages
-      organization: dnceng
+      organizations: dnceng
+      scopes: packaging_write
 
   dn-bot-all-orgs-artifact-feeds-rw:
     type: azure-devops-access-token
@@ -128,26 +135,31 @@ secrets:
           location: helixkv
           name: dn-bot-account-redmond
       name: dn-bot-all-orgs-artifact-feeds
-      organization: dnceng
+      organizations: dnceng devdiv microsoft
+      scopes: packaging_write 
 
   #DotNet-Symbol-Server-Pats
   microsoft-symbol-server-pat:
     type: azure-devops-access-token
     parameters:
+      domainAccountName: dn-bot
       domainAccountSecret:
           location: helixkv
           name: dn-bot-account-redmond
       name: microsoft-symbol-server-pat
-      organization: dnceng
+      organizations: microsoftpublicsymbols
+      scopes: packaging_write  
 
   symweb-symbol-server-pat:
     type: azure-devops-access-token
     parameters:
+      domainAccountName: dn-bot
       domainAccountSecret:
           location: helixkv
           name: dn-bot-account-redmond
       name: dn-symweb-symbol-server-pat
-      organization: dnceng
+      organizations: microsoft
+      scopes: packaging_write 
 
   dotnetfeedmsrc-storage-access-key-1:
     type: text

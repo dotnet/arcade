@@ -4,13 +4,12 @@ We need to make sure changes done in the Arcade SDK as well as in the [core pack
 
 ## Arcade Validation Policy
 
-- Each bellwether repo (defined as runtime, aspnetcore, installer) must be building green so build problems won’t be compounded by new Arcade versions or images.
-- Contributors who are changing existing code should use their best judgement to decide if additional validation against the "bellwether repos" is necessary. The following is a list of situations in which the contributor may want to run their changes against the bellwether repos: 
+- Contributors who are changing existing code should use their best judgement to decide if additional validation against the runtime, aspnetcore and installer repos is necessary. The following is a list of situations in which the contributor may want to run their changes against these repos: 
   - Changes made to Signing, Publishing, or other stages outside of the build stage that would not show up in a PR build. 
   - Changes that affect a fundamental piece of Arcade (e.g. build scripts, install scripts)
   - Changes that affect many files (e.g. refactoring MSBuild Tasks to use a new abstract class for dependency injection support)
   - Changes to packages that are only exercised by a specific set of repos, such as the Shared Framework SDK. 
-- If there are any known breaking changes or any breaking changes surface during the validation against the bellwether repos, those changes should be communicated per the [Breaking Change Policy](../Policy/ChangesPolicy.md).
+- If there are any known breaking changes or any breaking changes surface during the validation, those changes should be communicated per the [Breaking Change Policy](../Policy/ChangesPolicy.md).
 - Official Arcade builds from main will now be promoted automatically to `.NET Eng - Latest` channel once it has passed the official Arcade Validation pipeline. 
 
 ## The process
@@ -30,9 +29,9 @@ To validate against the Arcade Validation for Promotion pipeline (that includes 
 5. Push your branch up to Azure DevOps Arcade Validation repository and run a build of your branch on the [dotnet-arcade-validation-for-promotion](https://dev.azure.com/dnceng/internal/_build?definitionId=838&_a=summary) to verify your changes. 
 6. It's not necessary to merge your Arcade Validation branch into the repo's main branch, so feel free to delete it when you're done validating your changes.
 
-### '.NET Tools - Validation' channel
+### '.NET Eng - Validation' channel
 
-Arcade's official builds go to the ".NET Tools - Validation" channel.
+Arcade's official builds go to the ".NET Eng - Validation" channel.
 
 ### [Arcade-Validation Repository](https://github.com/dotnet/arcade-validation)
 
@@ -43,8 +42,6 @@ This repository contains the scenarios where we validate the last produced versi
 1. On every Arcade build dependencies will be updated and auto-merged when all the checks pass
 2. Arcade validation [official build](https://dnceng.visualstudio.com/internal/_build?definitionId=282) 
 is triggered. This will validate the version which was just “pushed” by Arcade
-3. The following process updates are only valid for the current development branch of Arcade and will not affect release or servicing branches. 
-    1. During the Arcade Validation pipeline, we will verify if the latest build of the main branches of the bellwether repos (e.g. `dotnet/runtime`, `dotnet/aspnetcore`, and `dotnet/installer`) are currently failing. If any are, we will not promote Arcade per the policy above. 
 
 #### Validation Scenarios
 
@@ -72,3 +69,8 @@ Details on how sending jobs to Helix works [here](https://github.com/dotnet/arca
 When the Build portion of the validation build completes we publish the produced package to BAR. This package won't be consumed by any repo but we want to make sure changes in the SDK did not affect it.
 
 While this is good enough to validate basic scenarios we still have to make sure we validate changes in tier one repos. This will be done post preview 2 as specified in [this](https://github.com/dotnet/arcade/issues/111) epic.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CValidation%5COverview.md)](https://helix.dot.net/f/p/5?p=Documentation%5CValidation%5COverview.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CValidation%5COverview.md)</sub>
+<!-- End Generated Content-->

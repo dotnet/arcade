@@ -37,3 +37,8 @@ For now, we will limit triage to core-eng and arcade issues.  Depending on how t
 *	Most every dev didn't like not meeting synchronously.
 *	The cost of not having serendipitous conversations is significant – but hard to quantify.
 *	Ironically, async triage seemed less inclusive because the participation has gone down, not up.  (it’s been falling to a subset of folks to make sure things are triaged)
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5CDevGuide%5Chybridtriage.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5CDevGuide%5Chybridtriage.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5CDevGuide%5Chybridtriage.md)</sub>
+<!-- End Generated Content-->

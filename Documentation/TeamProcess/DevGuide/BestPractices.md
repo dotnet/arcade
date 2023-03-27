@@ -17,3 +17,8 @@ The intent of this document is to help the team learn and grow by sharing best p
 - The Operations v-team - including our vendor resource - is responsible for triaging any internal work that come in from S360 and other internal notifications (i.e. emails from security, policy notifications from PM, etc). Any work that they determine as meeting the First Responder bar will be tagged for FR and be addressed by that virtual team. 
 - Current First Responder responsibilities, best practices and how to documentation can be found at our [Team Wiki](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/889/Home)
 
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5CDevGuide%5CBestPractices.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5CDevGuide%5CBestPractices.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5CDevGuide%5CBestPractices.md)</sub>
+<!-- End Generated Content-->

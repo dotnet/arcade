@@ -55,40 +55,40 @@ Subscriptions have the following characteristics:
 
 A subscription can be visualized with the following pseudocode
 
-```
-    function runSubscription(newBuild, subscription) {}
-        // Determine whether the build applies to the subscription
-        if (subscription.sourceRepo != newBuild.sourceRepo ||
-            subscription.sourceChannel != newBuild.channel) {
-            return 
-        }
-        // Determine whether trigger should be run
-        // For example, this might return false if we've already run once today and the subscription only runs once a day.
-        if (!subscription.isTriggered(newBuild)) {
-            return
-        }
-        // Check out the target repo and branch.
-        // git clone targetRepo; git checkout targetBranch
-        repo = checkOutSources(targetRepo, targetBranch)
-        // Check out a new branch in which to make a commit
-        // git checkout -b update-dependencies
-        repo.checkOutBranchForChanges()
-        // Map assets existing in target's 
-        foreach (dependency in repo.Dependencies) {
-            if (newBuild.assets.contains(dependency)) {
-                if (subscription.assets.count == 0 || subscription.assets.contains(dependency)) {
-                    repo.updateAsset(newBuild.assets)
-                }
+```js
+function runSubscription(newBuild, subscription) {
+    // Determine whether the build applies to the subscription
+    if (subscription.sourceRepo != newBuild.sourceRepo ||
+        subscription.sourceChannel != newBuild.channel) {
+        return 
+    }
+    // Determine whether trigger should be run
+    // For example, this might return false if we've already run once today and the subscription only runs once a day.
+    if (!subscription.isTriggered(newBuild)) {
+        return
+    }
+    // Check out the target repo and branch.
+    // git clone targetRepo; git checkout targetBranch
+    repo = checkOutSources(targetRepo, targetBranch)
+    // Check out a new branch in which to make a commit
+    // git checkout -b update-dependencies
+    repo.checkOutBranchForChanges()
+    // Map assets existing in target's 
+    foreach (dependency in repo.Dependencies) {
+        if (newBuild.assets.contains(dependency)) {
+            if (subscription.assets.count == 0 || subscription.assets.contains(dependency)) {
+                repo.updateAsset(newBuild.assets)
             }
         }
-        // Check quality of new repo content (do a build, etc.)
-        if (subscription.isDesiredQuality(repo)) {
-            mergeChanges()
-        }
-        else if (subscription.hasFailureNotificationTags and subscription.isNotBatched) {
-            tagTheseUsersOnDependencyFlowPullRequest()
-        }
     }
+    // Check quality of new repo content (do a build, etc.)
+    if (subscription.isDesiredQuality(repo)) {
+        mergeChanges()
+    }
+    else if (subscription.hasFailureNotificationTags and subscription.isNotBatched) {
+        tagTheseUsersOnDependencyFlowPullRequest()
+    }
+}
 ```
 
 ![Channels, Branches, and Subscriptions Flow](ChannelsBranchesSubscriptionsFlow.png)
@@ -920,3 +920,8 @@ Allow user to modify configuration (branch names, remove subscriptions, add repo
 **Validate and apply configuration**
 
 Validate the configuration and then apply the configuration using the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) REST API.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CBranchesChannelsAndSubscriptions.md)](https://helix.dot.net/f/p/5?p=Documentation%5CBranchesChannelsAndSubscriptions.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CBranchesChannelsAndSubscriptions.md)</sub>
+<!-- End Generated Content-->

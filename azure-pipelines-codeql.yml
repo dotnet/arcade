@@ -1,12 +1,13 @@
 parameters:
   # Optionally do not publish to TSA. Useful for e.g. verifying fixes before PR.
-- name: Codeql.TSAEnabled
+- name: TSAEnabled
   displayName: Publish results to TSA
   type: boolean
   default: true
 
 variables:
-- template: eng/common-variables.yml
+- template: /eng/common-variables.yml
+- template: /eng/common/templates/variables/pool-providers.yml
   # CG is handled in the primary CI pipeline
 - name: skipComponentGovernanceDetection
   value: true
@@ -16,6 +17,10 @@ variables:
   # Do not let CodeQL 3000 Extension gate scan frequency
 - name: Codeql.Cadence
   value: 0
+  # CodeQL needs this plumbed along as a variable to enable TSA
+- name: Codeql.TSAEnabled
+  value: ${{ parameters.TSAEnabled }}
+
   # Build variables
 - name: _BuildConfig
   value: Release
@@ -36,7 +41,7 @@ jobs:
 - job: codeql
   displayName: CodeQL
   pool:
-    name: NetCore1ESPool-Internal
+    name: $(DncEngInternalBuildPool)
     demands: ImageOverride -equals 1es-windows-2022
   timeoutInMinutes: 90
 

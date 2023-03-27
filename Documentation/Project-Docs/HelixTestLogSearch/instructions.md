@@ -82,3 +82,7 @@ Here is sample output for a `HitsPerFile`  response. Each item in the hits array
 
 ## Other notes
 - There is a timeout of 120 seconds/2 minutes on the whole program. If the query and parsing time out, the program throws an error and will not return any data.
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CHelixTestLogSearch%5Cinstructions.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CHelixTestLogSearch%5Cinstructions.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CHelixTestLogSearch%5Cinstructions.md)</sub>
+<!-- End Generated Content-->

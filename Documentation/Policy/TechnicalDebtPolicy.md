@@ -44,3 +44,8 @@ It would be unreasonable to do nothing other than pay down our technical debt as
 -	There should always be a business priority on the board that actively focuses on reducing technical debt.  (right this minute we have two, Helix, and Validation)
 -	We should limit debt reduction business priorities to one at a time.  This is to help stay away from “peanut butter” (spreading effort over a wide area) and make significant progress reducing debt in one area.  It’s sorta like choosing a credit card balance with the highest interest to pay down first.
 -	There may be times where the business dictates that we don’t have a debt reduction business priority on the board.  However, this should be the exception and requires M2 approval as it would go against one of our core principles.  For a review, remember to check out our guiding principles.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CPolicy%5CTechnicalDebtPolicy.md)](https://helix.dot.net/f/p/5?p=Documentation%5CPolicy%5CTechnicalDebtPolicy.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CPolicy%5CTechnicalDebtPolicy.md)</sub>
+<!-- End Generated Content-->

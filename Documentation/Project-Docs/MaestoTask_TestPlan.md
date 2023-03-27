@@ -133,3 +133,8 @@ Test coverage for any code outside of the Maestro.task project.
 
 **Risk**
 This is fairly low risk, since it’s going to be based on the other existing test projects. There are some changes required in the product code to allow for DI and mocking attachment points, that’s the biggest risk in this set of changes.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CMaestoTask_TestPlan.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CMaestoTask_TestPlan.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CMaestoTask_TestPlan.md)</sub>
+<!-- End Generated Content-->

@@ -76,3 +76,8 @@ If `TsaNotificationEmail` is set, a notification email will be sent out with a l
 ## See Also
 - [SDL Control Flow Document](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/442/ArcadeSecurityControlFlowDocumentation)
 - [Introduction to Guardian and TSA](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/443/IntroToGuardianAndTSA)
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CHowToAddSDLRunToPipeline.md)](https://helix.dot.net/f/p/5?p=Documentation%5CHowToAddSDLRunToPipeline.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CHowToAddSDLRunToPipeline.md)</sub>
+<!-- End Generated Content-->

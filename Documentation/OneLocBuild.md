@@ -159,8 +159,8 @@ Because the script can be run locally, devs can also do this validation prior to
 
 Currently, the LocProject.json generation script only creates fairly uniform LocProject.json files. If your repository
 requires the use of any of the more complex LocProject.json features as described in the OneLocBuild docs linked above,
-the OneLocBuild template in this doc will not work and you will need to check in and maintain the LocProject.json file
-manually.
+you will need to check in and maintain the LocProject.json file manually. To still use this template for running the task,
+set the `SkipLocProjectJsonGeneration` parameter to `true`.
 
 ## OneLocBuild Template Parameters
 
@@ -189,6 +189,7 @@ The parameters that can be passed to the template are as follows:
 | `MirrorRepo` | `''` | The name of the GitHub repository to make a PR to (only used when using a mirrored repository). |
 | `MirrorBranch` | `'main'` | The branch on GitHub to make a PR to (only used when using a mirrored repository). |
 | `UseCheckedInLocProjectJson` | `false` | When set to `true`, instructs the LocProject.json generation script to use build-time validation rather than build-time generation, as described above. |
+| `SkipLocProjectJsonGeneration` | `false` | When set to `true`, skips the LocProject.json generation in favor of using a checked-in LocProject.json.
 | `LanguageSet` | `VS_Main_Languages` | This defines the `LanguageSet` of the LocProject.json as described in the [OneLocBuild task documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)). |
 | `LclSource` | `LclFilesInRepo` | This passes the `LclSource` input to the OneLocBuild task as described in [its documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)). For most repos, this should be set to `LclFilesfromPackage`. |
 | `LclPackageId` | `''` | When `LclSource` is set to `LclFilesfromPackage`, this passes in the package ID as described in the [OneLocBuild task documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=scenario-2%3A-lcl-files-from-a-package). |
@@ -196,3 +197,8 @@ The parameters that can be passed to the template are as follows:
 | `JobNameSuffix` | `''` | Allows for custom job name suffix. This is helpful for disambiguation in case of need for more then one OneLocBuild job run - e.g. as a way to set multiple package IDs. |
 
 It is recommended that you set `LclSource` and `LclPackageId` as shown in the example above.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5COneLocBuild.md)](https://helix.dot.net/f/p/5?p=Documentation%5COneLocBuild.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5COneLocBuild.md)</sub>
+<!-- End Generated Content-->

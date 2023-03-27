@@ -79,3 +79,7 @@ This feature is primarily for the product teams, however, the Engineering Servic
 
 - We will create user documentation for how to configure the retries and expectations for viewing results. 
 - We will create documentation for the Engineering Services team to investigate issues with the feature itself. 
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CDev%20Workflow%5CRetry%20Tests%20-%20arcade5963.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CDev%20Workflow%5CRetry%20Tests%20-%20arcade5963.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CDev%20Workflow%5CRetry%20Tests%20-%20arcade5963.md)</sub>
+<!-- End Generated Content-->

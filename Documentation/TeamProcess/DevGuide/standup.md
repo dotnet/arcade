@@ -13,3 +13,7 @@
 * All team members are encouraged to stand during standup, but sitting is ok as well.
 * Standup should focus on quick status updates, with implementation details handled offline where possible.
 * While off topic conversations are fun and a good part of our culture, they should be kept to the end of the meeting so that people who need to leave can leave, without feeling like they may miss out on important business
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5CDevGuide%5Cstandup.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5CDevGuide%5Cstandup.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5CDevGuide%5Cstandup.md)</sub>
+<!-- End Generated Content-->

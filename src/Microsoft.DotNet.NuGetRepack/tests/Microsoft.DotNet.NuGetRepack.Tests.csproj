@@ -8,7 +8,7 @@
     <None Include="Resources\*.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="NuGet.Versioning" Version="$(NuGetVersion)" />
+    <PackageReference Include="NuGet.Versioning" Version="$(NuGetPackagingVersion)" />
     <PackageReference Include="System.IO.Compression" Version="$(SystemIOCompressionVersion)" />
     <PackageReference Include="System.IO.Packaging" Version="$(SystemIOPackagingVersion)" />
     <PackageReference Include="System.ValueTuple" Version="$(SystemValueTupleVersion)" />
@@ -82,6 +82,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Microsoft.DotNet.XUnitExtensions\src\Microsoft.DotNet.XUnitExtensions.csproj" />
     <ProjectReference Include="..\tasks\Microsoft.DotNet.NuGetRepack.Tasks.csproj" />
   </ItemGroup>
 </Project>

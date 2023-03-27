@@ -28,9 +28,10 @@ namespace Microsoft.DotNet.XUnitExtensions
                 (platforms.HasFlag(TestPlatforms.iOS) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) && !RuntimeInformation.IsOSPlatform(OSPlatform.Create("MACCATALYST"))) ||
                 (platforms.HasFlag(TestPlatforms.tvOS) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS"))) ||
                 (platforms.HasFlag(TestPlatforms.MacCatalyst) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("MACCATALYST"))) ||
-                (platforms.HasFlag(TestPlatforms.LinuxBionic) && RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) && !String.IsNullOrEmpty(Environment.GetEnvironmentVariable("ANDROID_STORAGE")) ||
+                (platforms.HasFlag(TestPlatforms.LinuxBionic) && RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("ANDROID_STORAGE"))) ||
                 (platforms.HasFlag(TestPlatforms.Android) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID"))) ||
                 (platforms.HasFlag(TestPlatforms.Browser) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"))) ||
+                (platforms.HasFlag(TestPlatforms.Wasi) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("WASI"))) ||
                 (platforms.HasFlag(TestPlatforms.Windows) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
 
         public static bool TestRuntimeApplies(TestRuntimes runtimes) =>
@@ -107,6 +108,9 @@ namespace Microsoft.DotNet.XUnitExtensions
             {
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, category);
             }
-        }        
+        }
+
+        internal static string AppendAdditionalMessage(this string message, string additionalMessage)
+            => !string.IsNullOrWhiteSpace(additionalMessage) ? $"{message} {additionalMessage}" : message;
     }
 }

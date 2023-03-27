@@ -49,3 +49,7 @@ This graph will be a bar graph and display two measurements: the best case measu
 This graph will be a line graph and display the same measurements as the first, but over time. We will include a single option slicer to narrow our view to a single source repository.
 
 ![LongestBuildPathOverTime](./lbp-ot.png)
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CPKPIs%5CLongestBuildPath.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CPKPIs%5CLongestBuildPath.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CPKPIs%5CLongestBuildPath.md)</sub>
+<!-- End Generated Content-->

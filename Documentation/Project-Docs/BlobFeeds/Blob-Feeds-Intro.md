@@ -132,3 +132,7 @@ Yes. This is currently supported and requires a proxy to be stood up. Please con
 4. Does the blob feed support symbol packages?
 
 Not yet so for publishing them put them in a flat container until support is added for the symbol package indexing.
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CBlobFeeds%5CBlob-Feeds-Intro.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CBlobFeeds%5CBlob-Feeds-Intro.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CBlobFeeds%5CBlob-Feeds-Intro.md)</sub>
+<!-- End Generated Content-->

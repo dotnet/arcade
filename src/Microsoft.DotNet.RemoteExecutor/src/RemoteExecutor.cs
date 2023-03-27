@@ -46,6 +46,11 @@ namespace Microsoft.DotNet.RemoteExecutor
 
         static RemoteExecutor()
         {
+            if (!IsSupported)
+            {
+                return;
+            }
+
             string processFileName = Process.GetCurrentProcess().MainModule?.FileName;
             if (processFileName == null)
             {
@@ -103,8 +108,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             !RuntimeInformation.IsOSPlatform(OSPlatform.Create("MACCATALYST")) &&
             !RuntimeInformation.IsOSPlatform(OSPlatform.Create("WATCHOS")) &&
             !RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER")) &&
-            // The current RemoteExecutor design is not compatible with single file
-            !string.IsNullOrEmpty(typeof(RemoteExecutor).Assembly.Location) &&
+            !RuntimeInformation.IsOSPlatform(OSPlatform.Create("WASI")) &&
             Environment.GetEnvironmentVariable("DOTNET_REMOTEEXECUTOR_SUPPORTED") != "0";
 
         /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>

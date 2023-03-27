@@ -3,6 +3,7 @@ trigger: none
 
 variables:
   - group: Mirror-Credentials
+  - template: /eng/common/templates/variables/pool-providers.yml
 
 # Merges code from GitHub into internal branches in internal repos
 jobs:
@@ -19,7 +20,7 @@ jobs:
           demands: Cmd
         # If it's not devdiv, it's dnceng
         ${{ if ne(variables['System.TeamProject'], 'DevDiv') }}:
-          name: NetCore1ESPool-Internal
+          name: $(DncEngInternalBuildPool)
           demands: ImageOverride -equals windows.vs2019.amd64
       variables:
       - name: WorkingDirectoryName
