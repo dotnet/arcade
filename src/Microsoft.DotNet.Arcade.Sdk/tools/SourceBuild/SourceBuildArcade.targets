@@ -80,7 +80,7 @@
     </ItemGroup>
 
     <Error
-      Text="No source-build artifacts were produced and the resulting intermediate is empty." 
+      Text="No source-build artifacts were found and the resulting intermediate is empty." 
       Condition="'@(IntermediateNupkgArtifactFile)' == ''" />
     
     <ItemGroup>
