@@ -20,6 +20,7 @@ Param(
   [switch] $publish,
   [switch] $clean,
   [switch][Alias('bl')]$binaryLog,
+  [string] $binaryLogName = "Build.binlog",
   [switch][Alias('nobl')]$excludeCIBinarylog,
   [switch] $ci,
   [switch] $prepareMachine,
@@ -69,6 +70,7 @@ function Print-Usage() {
   Write-Host "  -msbuildEngine <value>  Msbuild engine to use to run build ('dotnet', 'vs', or unspecified)."
   Write-Host "  -excludePrereleaseVS    Set to exclude build engines in prerelease versions of Visual Studio"
   Write-Host "  -nativeToolsOnMachine   Sets the native tools on machine environment variable (indicating that the script should use native tools on machine)"
+  Write-Host "  -binaryLogName          Name for a binary log (Build.binlog by default)"
   Write-Host ""
 
   Write-Host "Command line arguments not listed above are passed thru to msbuild."
@@ -93,7 +95,7 @@ function Build {
   $toolsetBuildProj = InitializeToolset
   InitializeCustomToolset
 
-  $bl = if ($binaryLog) { '/bl:' + (Join-Path $LogDir 'Build.binlog') } else { '' }
+  $bl = if ($binaryLog) { '/bl:' + (Join-Path $LogDir $binaryLogName) } else { '' }
   $platformArg = if ($platform) { "/p:Platform=$platform" } else { '' }
 
   if ($projects) {
