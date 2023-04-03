@@ -14,11 +14,6 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MsbuildTaskMicrosoftCodeAnalysisCSharpVersion)" ExcludeAssets="analyzers" Publish="false" />
   </ItemGroup>
 
-  <!-- When building offline we need to bump the version of System.Reflection.Metadata that CodeAnalysis package depends on to match what the source build tarball expects. -->
-  <ItemGroup Condition="'$(DotNetBuildOffline)' == 'true'">
-    <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
-  </ItemGroup>
-
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
     <Compile Include="..\Common\Internal\AssemblyResolver.cs" />
     <Compile Include="..\Common\Internal\BuildTask.Desktop.cs" />
