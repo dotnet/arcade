@@ -5,7 +5,9 @@
     <!-- TODO: Ignore needed until https://github.com/NuGet/Home/issues/11059 is addressed. -->
     <UsagePattern IdentityGlob="Nuget.*/*" />
 
-    <UsagePattern IdentityGlob="Microsoft.Bcl.AsyncInterfaces/*6.0.0*" />
+    <UsagePattern IdentityGlob="Microsoft.Extensions.DependencyModel/*6.0.0*" />
     <UsagePattern IdentityGlob="System.Text.Encodings.Web/*7.0.0*" />
+    <UsagePattern IdentityGlob="System.Text.Json/*7.0.1*" />
+    <UsagePattern IdentityGlob="System.Text.Json/*7.0.2*" />
   </IgnorePatterns>
 </UsageData>
