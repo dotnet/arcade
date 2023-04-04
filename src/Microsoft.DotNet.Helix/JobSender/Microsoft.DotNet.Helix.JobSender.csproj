@@ -12,7 +12,7 @@
     <PackageReference Include="Azure.Storage.Blobs" Version="$(AzureStorageBlobsVersion)" /> 
     <PackageReference Include="Microsoft.Data.OData" Version="$(MicrosoftDataODataVersion)" />
     <PackageReference Include="System.IO.Compression" Version="$(SystemIOCompressionVersion)" />
-    <PackageReference Include="System.ValueTuple" Version="$(SystemValueTupleVersion)" />
+    <!-- <PackageReference Include="System.ValueTuple" Version="$(SystemValueTupleVersion)" /> -->
   </ItemGroup>
 
   <ItemGroup>
