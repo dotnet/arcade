@@ -50,7 +50,7 @@
     <MonoOptionsVersion>5.3.0.1</MonoOptionsVersion>
     <McMasterExtensionsCommandLineUtils>2.3.0</McMasterExtensionsCommandLineUtils>
     <NewtonsoftJsonVersion>13.0.1</NewtonsoftJsonVersion>
-    <SystemTextJsonVersion>6.0.0</SystemTextJsonVersion>
+    <SystemTextJsonVersion>7.0.2</SystemTextJsonVersion>
     <NuGetPackagingVersion>6.2.2</NuGetPackagingVersion>
     <OctokitVersion>0.32.0</OctokitVersion>
     <SwashbuckleAspNetCoreSwaggerVersion>3.0.0</SwashbuckleAspNetCoreSwaggerVersion>
