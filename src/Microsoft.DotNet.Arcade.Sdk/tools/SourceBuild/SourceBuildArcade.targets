@@ -79,6 +79,10 @@
       <IntermediateNupkgArtifactFile Remove="$(CurrentRepoSourceBuildArtifactsPackagesDir)**\*.symbols.nupkg" />
     </ItemGroup>
 
+    <Error
+      Text="No source-build artifacts were found and the resulting intermediate is empty." 
+      Condition="'@(IntermediateNupkgArtifactFile)' == ''" />
+    
     <ItemGroup>
       <IntermediateNupkgFile Include="@(IntermediateNupkgArtifactFile)" PackagePath="artifacts" />
 
