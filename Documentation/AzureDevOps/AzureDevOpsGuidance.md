@@ -72,12 +72,12 @@ For repos in Azure DevOps, the build pipelines should live:
 
 ```TEXT
 public project:
-  dotnet/arcade-ci
-  dotnet/coreclr-jit-stress
+  dotnet/arcade/arcade-ci
+  dotnet/coreclr/coreclr-jit-stress
 internal project:
-  dotnet/arcade-official
-  dotnet/coreclr-ci
-  dotnet/coreclr-jit-stress
+  dotnet/arcade/arcade-official
+  dotnet/coreclr/coreclr-ci
+  dotnet/coreclr/coreclr-jit-stress
 ```
 
 ## Source Code
