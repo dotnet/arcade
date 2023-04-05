@@ -10,7 +10,7 @@ There are two projects for use.  They are:
   - Pipelines are allowed to pull source directly from GitHub
 - internal  (https://dev.azure.com/dnceng/internal)
   - Pipelines are only allowed to pull source from internal repos
-  - Public GitHub repos should be mirrored here for official msft builds
+  - Public GitHub repos should be mirrored here for official Microsoft builds
 
 We will have multiple Pipelines, effectively a mirrored set in the public and internal. We will have one set of YAML which applies to both. This will allow for CI (PR testing) in both internal and OSS venues, and well as official build production on the internal side.
 
