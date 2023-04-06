@@ -54,7 +54,7 @@ flowchart LR
   signing --> sbom_generation["SBOM Generation \n <b>~20m</b>"]
   signing --> publishing_v3_signed["Publish Post-Signing Assets \n <b>~1h20m</b>"]
   signing --> post_signing_publishing["Publish Signed Assets \n <b>~1h30m</b>"]
-  vs_insertion --> cti_sign_off[Wait for Test Team Sign Off]
+  signing --> cti_sign_off[Wait for Test Team Sign Off]
   cti_sign_off --> staging["Staging Ring \n <b>~1h10m</b>"]
   staging --> finalize_sign_off[Sign off for finalizing the release]
   finalize_sign_off --> finalize_staging[Finalize Staging Ring]
