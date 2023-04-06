@@ -34,6 +34,8 @@ flowchart LR
   staging --> finalize_sign_off[Sign off for finalizing the release]
   finalize_sign_off --> finalize_staging[Finalize Staging Ring]
   finalize_sign_off --> publishing_v3_validated["Publish CTI Validated Assets \n <b>~1h20m</b>"]
+  finalize_staging --> handoff_sign_off_dotnetcsainternal[Approve Publishing to Dotnetcsainternal]
+  handoff_sign_off_dotnetcsainternal --> handoff_publishing_dotnetcsainternal["Handoff Publishing Ring (dotnetcsainternal)"]
   classDef default fill:#50C878, stroke:#023020;
   classDef Override fill:#ECFFDC, stroke:#023020;
   class prep_override,source_code_validation_override,required_validation_override,sbom_generation_override,vs_insertion_override,validation_override Override;
@@ -57,6 +59,9 @@ flowchart LR
   staging --> finalize_sign_off[Sign off for finalizing the release]
   finalize_sign_off --> finalize_staging[Finalize Staging Ring]
   finalize_sign_off --> publishing_v3_validated["Publish CTI Validated Assets \n <b>~1h20m</b>"]
+  staging --> handoff_sign_off_dotnetcsainternal[Approve Publishing to Dotnetcsainternal]
+  handoff_sign_off_dotnetcsainternal --> handoff_publishing_dotnetcsainternal["Handoff Publishing Ring (dotnetcsainternal)"]
+  sbom_generation --> handoff_publishing_dotnetcsainternal
   classDef default fill:#50C878, stroke:#023020;
 ```
 
