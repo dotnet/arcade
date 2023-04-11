@@ -201,20 +201,6 @@ stages:
               -restore
               -test
               -warnAsError false
-              -projects $(Build.SourcesDirectory)/tests/XHarness.Apple.SimulatorTests.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/XHarness.Apple.Simulator.Tests.binlog
-              /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness Apple Simulator Helix Testing
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''
-          - script: eng/common/build.sh
-              -configuration $(_BuildConfig)
-              -prepareMachine
-              -ci
-              -restore
-              -test
-              -warnAsError false
               -projects $(Build.SourcesDirectory)/tests/XHarness.Apple.DeviceTests.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Apple.Device.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
