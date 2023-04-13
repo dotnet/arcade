@@ -12,7 +12,7 @@
     2. Add (or copy)
        [Directory.Build.props](https://github.com/dotnet/arcade/blob/main/Directory.Build.props)
        and
-       [Directory.build.targets](https://github.com/dotnet/arcade/blob/main/Directory.Build.targets).
+       [Directory.Build.targets](https://github.com/dotnet/arcade/blob/main/Directory.Build.targets).
     3. Copy `eng\common` from
        [Arcade](https://github.com/dotnet/arcade/tree/main/eng/common)
        into repo.
