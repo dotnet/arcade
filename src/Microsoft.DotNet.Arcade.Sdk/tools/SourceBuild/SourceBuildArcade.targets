@@ -81,7 +81,7 @@
 
     <Error
       Text="No source-build artifacts were found and the resulting intermediate is empty." 
-      Condition="'$(NoSourceBuildArtifactsProduced)' == '' and '@(IntermediateNupkgArtifactFile)' == ''" />
+      Condition="'$(AllowEmptySourceBuiltIntermediates)' != 'true' and '@(IntermediateNupkgArtifactFile)' == ''" />
     
     <ItemGroup>
       <IntermediateNupkgFile Include="@(IntermediateNupkgArtifactFile)" PackagePath="artifacts" />
