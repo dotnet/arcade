@@ -21,7 +21,7 @@
        and
        [Version.Details.xml](https://github.com/dotnet/arcade/blob/main/eng/Version.Details.xml)
        files to your eng\ folder. Adjust the version prefix and prerelease label
-       as necessary.
+       as necessary. Only include versions for dependencies required by the repository.
     5. Add the following feeds to your nuget.config:
        * https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json
        * https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
