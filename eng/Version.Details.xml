@@ -95,6 +95,12 @@
       <Uri>https://github.com/dotnet/deployment-tools</Uri>
       <Sha>b60c95e1ce736630d17e16626c59e3dd85ebae2b</Sha>
     </Dependency>
+    <!-- Necessary for source-build. This allows the package to be retrieved from previously-source-built artifacts
+         and flow in as dependencies of the packages produced by arcade. -->
+    <Dependency Name="Microsoft.Extensions.DependencyModel" Version="6.0.0">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>8470979eb44c2218025515234d3e01138bd74afb</Sha>
+    </Dependency>
     <!-- Explicit dependency because Microsoft.Deployment.DotNet.Releases has different versioning
          than the SB intermediate -->
     <Dependency Name="Microsoft.SourceBuild.Intermediate.deployment-tools" Version="8.0.0-preview.1.23159.4" CoherentParentDependency="Microsoft.NET.Sdk.WorkloadManifestReader">
@@ -106,6 +112,12 @@
       <Uri>https://github.com/dotnet/sdk</Uri>
       <Sha>39aef81ec6cffa06da9964b46d4b9e3bf2fc9979</Sha>
       <SourceBuild RepoName="sdk" ManagedOnly="true" />
+    </Dependency>
+    <!-- Necessary for source-build. This allows the package to be retrieved from previously-source-built artifacts
+         and flow in as dependencies of the packages produced by arcade. -->
+    <Dependency Name="System.IO.Packaging" Version="4.5.0">
+      <Uri>https://github.com/dotnet/corefx</Uri>
+      <Sha>30ab651fcb4354552bd4891619a0bdd81e0ebdbf</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
