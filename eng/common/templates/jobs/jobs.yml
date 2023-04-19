@@ -59,6 +59,11 @@ jobs:
           ${{ property.key }}: ${{ property.value }}
 
       name: ${{ job.job }}
+      ${{ if eq(parameters.disableComponentGovernance, '') }}:
+        ${{ if and(ne(variables['System.TeamProject'], 'public'), or(contains(variables['Build.SourceBranch'], 'internal/release'), eq(variables['Build.SourceBranch'], 'main'))) }}:
+          disableComponentGovernance: false
+        ${{ else }}:
+          disableComponentGovernance: true
 
 - ${{ if eq(parameters.enableSourceBuild, true) }}:
   - template: /eng/common/templates/jobs/source-build.yml
