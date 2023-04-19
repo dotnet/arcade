@@ -179,7 +179,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         blobArtifacts = blobItems.Select(i => blobArtifactModelFactory.CreateBlobArtifactModel(i)).Where(blob => blob != null);
                     }
 
-                    PublishingInfraVersion targetPublishingVersion = PublishingInfraVersion.Latest;
+                    PublishingInfraVersion targetPublishingVersion = PublishingInfraVersion.Next;
 
                     if (!string.IsNullOrEmpty(PublishingVersion))
                     {
