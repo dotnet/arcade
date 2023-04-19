@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -225,7 +226,11 @@ namespace Xunit.Sdk
 		static string FormatComplexValue(
 			object value,
 			int depth,
-			Type type)
+			[DynamicallyAccessedMembers(
+					DynamicallyAccessedMemberTypes.PublicFields
+					| DynamicallyAccessedMemberTypes.NonPublicFields
+					| DynamicallyAccessedMemberTypes.PublicProperties
+					| DynamicallyAccessedMemberTypes.NonPublicProperties)] Type type)
 		{
 			if (depth == MAX_DEPTH)
 				return $"{type.Name} {{ ... }}";

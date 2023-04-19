@@ -18,7 +18,7 @@ namespace Xunit.Sdk
 	/// Default implementation of <see cref="IEqualityComparer{T}"/> used by the xUnit.net equality assertions.
 	/// </summary>
 	/// <typeparam name="T">The type that is being compared.</typeparam>
-	class AssertEqualityComparer<T> : IEqualityComparer<T>
+	class AssertEqualityComparer<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] T> : IEqualityComparer<T>
 	{
 		static readonly IEqualityComparer DefaultInnerComparer = new AssertEqualityComparerAdapter<object>(new AssertEqualityComparer<object>());
 		static readonly TypeInfo NullableTypeInfo = typeof(Nullable<>).GetTypeInfo();
@@ -153,7 +153,9 @@ namespace Xunit.Sdk
 			if (structuralEquatable != null && structuralEquatable.Equals(y, new TypeErasedEqualityComparer(innerComparerFactory())))
 				return true;
 
+#if !XUNIT_AOT
 			// Implements IEquatable<typeof(y)>?
+			// Not supported on AOT due to MakeGenericType
 			var iequatableY = typeof(IEquatable<>).MakeGenericType(y.GetType()).GetTypeInfo();
 			if (iequatableY.IsAssignableFrom(x.GetType().GetTypeInfo()))
 			{
@@ -167,8 +169,11 @@ namespace Xunit.Sdk
 				return (bool)equalsMethod.Invoke(x, new object[] { y });
 #endif
 			}
+#endif
 
+#if !XUNIT_AOT
 			// Implements IComparable<typeof(y)>?
+			// Not supported on AOT due to MakeGenericType
 			var icomparableY = typeof(IComparable<>).MakeGenericType(y.GetType()).GetTypeInfo();
 			if (icomparableY.IsAssignableFrom(x.GetType().GetTypeInfo()))
 			{
@@ -191,6 +196,7 @@ namespace Xunit.Sdk
 					// If this happens, just swallow up the exception and continue comparing.
 				}
 			}
+#endif
 
 			// Last case, rely on object.Equals
 			return object.Equals(x, y);
@@ -296,11 +302,13 @@ namespace Xunit.Sdk
 			return dictionaryYKeys.Count == 0;
 		}
 
+#if !XUNIT_AOT
 #if XUNIT_NULLABLE
 		static MethodInfo? s_compareTypedSetsMethod;
 #else
 		static MethodInfo s_compareTypedSetsMethod;
 #endif
+#endif // !XUNIT_AOT
 
 		bool? CheckIfSetsAreEqual(
 #if XUNIT_NULLABLE
@@ -310,7 +318,7 @@ namespace Xunit.Sdk
 			T x,
 			T y,
 #endif
-			TypeInfo typeInfo)
+			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] TypeInfo typeInfo)
 		{
 			if (!IsSet(typeInfo))
 				return null;
@@ -320,6 +328,10 @@ namespace Xunit.Sdk
 			if (enumX == null || enumY == null)
 				return null;
 
+#if XUNIT_AOT
+			// Can't use MakeGenericType in AOT
+			return CompareUntypedSets(enumX, enumY);
+#else
 			Type elementType;
 			if (typeof(T).GenericTypeArguments.Length != 1)
 				elementType = typeof(object);
@@ -338,7 +350,18 @@ namespace Xunit.Sdk
 			return method.Invoke(this, new object[] { enumX, enumY }) is true;
 #else
 			return (bool)method.Invoke(this, new object[] { enumX, enumY });
-#endif
+#endif // XUNIT_NULLABLE
+#endif // XUNIT_AOT
+		}
+
+		static bool CompareUntypedSets(
+			IEnumerable enumX,
+			IEnumerable enumY)
+		{
+			var setX = new HashSet<object>(enumX.Cast<object>());
+			var setY = new HashSet<object>(enumY.Cast<object>());
+
+			return setX.SetEquals(setY);
 		}
 
 		bool CompareTypedSets<R>(
@@ -351,7 +374,8 @@ namespace Xunit.Sdk
 			return setX.SetEquals(setY);
 		}
 
-		bool IsSet(TypeInfo typeInfo) =>
+		bool IsSet(
+			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] TypeInfo typeInfo) =>
 			typeInfo
 				.ImplementedInterfaces
 				.Select(i => i.GetTypeInfo())
@@ -374,11 +398,13 @@ namespace Xunit.Sdk
 				this.innerComparer = innerComparer;
 			}
 
+#if !XUNIT_AOT
 #if XUNIT_NULLABLE
 			static MethodInfo? s_equalsMethod;
 #else
 			static MethodInfo s_equalsMethod;
 #endif
+#endif // XUNIT_AOT
 
 			public new bool Equals(
 #if XUNIT_NULLABLE
@@ -394,6 +420,10 @@ namespace Xunit.Sdk
 				if (y == null)
 					return false;
 
+#if XUNIT_AOT
+				// Can't use MakeGenericType, have to use object
+				return EqualsGeneric(x, y);
+#else
 				// Delegate checking of whether two objects are equal to AssertEqualityComparer.
 				// To get the best result out of AssertEqualityComparer, we attempt to specialize the
 				// comparer for the objects that we are checking.
@@ -414,10 +444,11 @@ namespace Xunit.Sdk
 				return s_equalsMethod.MakeGenericMethod(objectType).Invoke(this, new object[] { x, y }) is true;
 #else
 				return (bool)s_equalsMethod.MakeGenericMethod(objectType).Invoke(this, new object[] { x, y });
-#endif
+#endif // XUNIT_NULLABLE
+#endif // XUNIT_AOT
 			}
 
-			bool EqualsGeneric<U>(
+			bool EqualsGeneric<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] U>(
 				U x,
 				U y) =>
 					new AssertEqualityComparer<U>(innerComparer: innerComparer).Equals(x, y);

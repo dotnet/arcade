@@ -286,7 +286,7 @@ public class EqualityAssertsTests
 			Assert.Equal(nco1, nco2);
 		}
 
-		[Fact]
+		[Fact(Skip = "Not AOT compatible")]
 		public void IStructuralEquatable_Equal()
 		{
 			var expected = new Tuple<StringWrapper>(new StringWrapper("a"));
@@ -518,7 +518,7 @@ public class EqualityAssertsTests
 
 		class TwoGenericSet<T, U> : HashSet<T> { }
 
-		[Fact]
+		[Fact(Skip = "Not AOT compatible")]
 		public void IEquatableActual_Implicit_Equal()
 		{
 			var expected = new ImplicitIEquatableExpected(1);
@@ -548,7 +548,7 @@ public class EqualityAssertsTests
 			public bool Equals(IntWrapper? other) => Value == other!.Value;
 		}
 
-		[Fact]
+		[Fact(Skip = "Not AOT compatible")]
 		public void IEquatableActual_Explicit_Equal()
 		{
 			var expected = new ExplicitIEquatableExpected(1);
@@ -578,7 +578,7 @@ public class EqualityAssertsTests
 			bool IEquatable<IntWrapper>.Equals(IntWrapper? other) => Value == other!.Value;
 		}
 
-		[Fact]
+		[Fact(Skip = "Not AOT compatible")]
 		public void IComparableActual_Implicit_Equal()
 		{
 			var expected = new ImplicitIComparableExpected(1);
@@ -608,7 +608,7 @@ public class EqualityAssertsTests
 			public int CompareTo(IntWrapper? other) => Value.CompareTo(other!.Value);
 		}
 
-		[Fact]
+		[Fact(Skip = "Not AOT compatible")]
 		public void IComparableActual_Explicit_Equal()
 		{
 			var expected = new ExplicitIComparableActual(1);

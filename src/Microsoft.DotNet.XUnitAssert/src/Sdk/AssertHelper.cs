@@ -29,7 +29,12 @@ namespace Xunit.Internal
 #else
 		static Dictionary<string, Func<object, object>> GetGettersForType(Type type) =>
 #endif
-			gettersByType.GetOrAdd(type, _type =>
+			gettersByType.GetOrAdd(type,
+				([DynamicallyAccessedMembers(
+					DynamicallyAccessedMemberTypes.PublicFields
+					| DynamicallyAccessedMemberTypes.NonPublicFields
+					| DynamicallyAccessedMemberTypes.PublicProperties
+					| DynamicallyAccessedMemberTypes.NonPublicProperties)] Type _type) =>
 			{
 				var fieldGetters =
 					_type

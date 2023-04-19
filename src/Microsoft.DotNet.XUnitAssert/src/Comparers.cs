@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Xunit.Sdk;
 
 namespace Xunit
@@ -21,10 +22,10 @@ namespace Xunit
 				new AssertComparer<T>();
 
 #if XUNIT_NULLABLE
-		static IEqualityComparer<T?> GetEqualityComparer<T>(IEqualityComparer? innerComparer = null) =>
+		static IEqualityComparer<T?> GetEqualityComparer<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] T>(IEqualityComparer? innerComparer = null) =>
 			new AssertEqualityComparer<T?>(innerComparer);
 #else
-		static IEqualityComparer<T> GetEqualityComparer<T>(IEqualityComparer innerComparer = null) =>
+		static IEqualityComparer<T> GetEqualityComparer<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] T>(IEqualityComparer innerComparer = null) =>
 			new AssertEqualityComparer<T>(innerComparer);
 #endif
 	}
