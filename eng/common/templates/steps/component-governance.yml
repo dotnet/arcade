@@ -7,7 +7,7 @@ steps:
 - ${{ if eq(parameters.disableComponentGovernance, 'true') }}:
   - script: "echo ##vso[task.setvariable variable=skipComponentGovernanceDetection]true"
     displayName: Set skipComponentGovernanceDetection variable
-- ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), ne(parameters.disableComponentGovernance, 'true')) }}:
+- ${{ if ne(parameters.disableComponentGovernance, 'true')) }}:
   - task: ComponentGovernanceComponentDetection@0
     continueOnError: true
     inputs:
