@@ -20,7 +20,7 @@
   <!-- Opt-in target to verify that a project doesn't bring in the .NET Standard 1.x dependency graph
        (usually transitively) via old dependencies. -->        
   <Target Name="FlagNetStandard1xDependencies"
-          Condition="'$(FlagNetStandard1xDependencies)' == 'true'"
+          Condition="'$(FlagNetStandard1XDependencies)' == 'true'"
           AfterTargets="ResolvePackageAssets">
     <ItemGroup>
       <NetStandard1xPackage Include="
