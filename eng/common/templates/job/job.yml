@@ -163,7 +163,6 @@ jobs:
         ${{ else }}:
           disableComponentGovernance: true
       componentGovernanceIgnoreDirectories: ${{ parameters.componentGovernanceIgnoreDirectories }}
-      runAsPublic: ${{ parameters.runAsPublic }}
 
   - ${{ if eq(parameters.enableMicrobuild, 'true') }}:
     - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:

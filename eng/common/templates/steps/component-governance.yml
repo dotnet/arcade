@@ -1,7 +1,6 @@
 parameters:
   disableComponentGovernance: false
   componentGovernanceIgnoreDirectories: ''
-  runAsPublic: false
 
 steps:
 - ${{ if eq(parameters.disableComponentGovernance, 'true') }}:
