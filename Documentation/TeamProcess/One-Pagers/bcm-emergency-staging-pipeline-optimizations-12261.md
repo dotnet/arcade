@@ -59,8 +59,8 @@ flowchart LR
   staging --> finalize_sign_off[Sign off for finalizing the release]
   finalize_sign_off --> finalize_staging[Finalize Staging Ring]
   finalize_sign_off --> publishing_v3_validated["Publish CTI Validated Assets \n <b>~1h20m</b>"]
-  finalize_sign_off --> handoff_publishing_dotnetcsainternal["Handoff Publishing Ring (dotnetcsainternal)"]
-  sbom_generation --> handoff_publishing_dotnetcsainternal
+  finalize_staging --> handoff_sign_off_dotnetcsainternal[Approve Publishing to Dotnetcsainternal]
+  handoff_sign_off_dotnetcsainternal --> handoff_publishing_dotnetcsainternal["Handoff Publishing Ring (dotnetcsainternal)"]
   classDef default fill:#50C878, stroke:#023020;
 ```
 
