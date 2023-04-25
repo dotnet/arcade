@@ -4,7 +4,6 @@
     <TargetFrameworks>$(NetCurrent);$(NetMinimum)</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <AssemblyName>Microsoft.DotNet.XUnitAssert</AssemblyName>
     <IsPackable>true</IsPackable>
     <Description>This package is a fork of xunit.assert that is AOT-compatible.</Description>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>

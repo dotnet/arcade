@@ -4,8 +4,6 @@
     <TargetFramework>$(NetCurrent)</TargetFramework>
     <Nullable>enable</Nullable>
     <DisableArcadeTestFramework>true</DisableArcadeTestFramework>
-
-    <IsPackable>false</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
