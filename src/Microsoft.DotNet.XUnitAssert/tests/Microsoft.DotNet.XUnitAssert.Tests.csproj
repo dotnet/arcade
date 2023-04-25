@@ -4,12 +4,9 @@
     <TargetFramework>$(NetCurrent)</TargetFramework>
     <Nullable>enable</Nullable>
     <!-- Can't use Arcade test framework because it brings in the xunit.assert package. -->
-    <DisableArcadeTestFramework>true</DisableArcadeTestFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="xunit.core" Version="$(XUnitVersion)" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="$(XUnitRunnerVisualStudioVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true"/>
     <ProjectReference Include="..\src\Microsoft.DotNet.XUnitAssert.csproj" />
   </ItemGroup>
 
