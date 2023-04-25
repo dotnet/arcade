@@ -108,7 +108,6 @@ In `Imports.targets`, a new file `TargetFrameworkDefaults.targets` will be impor
 ```xml
 TargetFrameworkDefaults.targets
 
-<?xml version="1.0" encoding="utf-8"?>
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
   <PropertyGroup>
