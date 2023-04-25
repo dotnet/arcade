@@ -64,6 +64,7 @@
     <MicrosoftNETWorkloadMonoToolChainManifest_60200Version>6.0.3</MicrosoftNETWorkloadMonoToolChainManifest_60200Version>
     <MicrosoftiOSTemplatesVersion>15.2.302-preview.14.122</MicrosoftiOSTemplatesVersion>
     <SystemCollectionsImmutableVersion>1.5.0</SystemCollectionsImmutableVersion>
+    <SystemCompositionVersion>7.0.0</SystemCompositionVersion>
     <SystemIOPackagingVersion>4.5.0</SystemIOPackagingVersion>
     <SystemReflectionMetadataVersion>6.0.1</SystemReflectionMetadataVersion>
     <SystemTextEncodingsWebVersion>6.0.0</SystemTextEncodingsWebVersion>
@@ -106,6 +107,7 @@
     <LibGit2SharpVersion>0.25.2</LibGit2SharpVersion>
     <McMasterExtensionsCommandLineUtils>2.3.0</McMasterExtensionsCommandLineUtils>
     <MicrosoftApplicationInsightsVersion>2.21.0</MicrosoftApplicationInsightsVersion>
+    <MicrosoftCciVersion>4.0.0-rc3-24214-00</MicrosoftCciVersion>
     <MicrosoftDataODataVersion>5.8.4</MicrosoftDataODataVersion>
     <MicrosoftDataServicesClientVersion>5.8.5</MicrosoftDataServicesClientVersion>
     <!-- TODO: This library is deprecated, brings in the entire .NET Standard 1.3 dependency graph (including vulnerable libraries)
