@@ -1,14 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <DisableImplicitAssetTargetFallback>true</DisableImplicitAssetTargetFallback>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <DisableImplicitAssetTargetFallback>true</DisableImplicitAssetTargetFallback>
     <AssetTargetFallback>$(PackageTargetFallback)portable-net45+win8;</AssetTargetFallback>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
     <IsPackable>true</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <NoWarn>NU1701</NoWarn>
     <DefineConstants>$(DefineConstants);COREFX</DefineConstants>
   </PropertyGroup>
@@ -18,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Don't change these versions as they rely on Microsoft.Cci which is already deprecated. -->
     <PackageReference Include="Microsoft.Cci" Version="4.0.0-rc3-24214-00" />
     <PackageReference Include="Microsoft.Composition" Version="1.0.30" />
     <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
