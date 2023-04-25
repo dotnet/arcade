@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <DisableImplicitAssetTargetFallback>true</DisableImplicitAssetTargetFallback>
     <AssetTargetFallback>$(PackageTargetFallback)portable-net45+win8;</AssetTargetFallback>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
