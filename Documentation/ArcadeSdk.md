@@ -144,7 +144,6 @@ By default, Arcade builds solutions in the root of the repo.  Overriding the def
   Example:
 
   ```xml
-  <?xml version="1.0" encoding="utf-8"?>
   <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <ItemGroup>
       <ProjectToBuild Include="$(MSBuildThisFileDirectory)..\MyProject.proj" />
@@ -1041,6 +1040,8 @@ If set to `true` calls to GetResourceString receive a default resource string va
 #### `GenerateResxSourceOmitGetResourceString` (bool)
 If set to `true` the GetResourceString method is not included in the generated class and must be specified in a separate source file.
 
+#### `FlagNetStandard1XDependencies` (bool)
+If set to `true` the `FlagNetStandard1xDependencies` target validates that the dependency graph doesn't contain any netstandard1.x packages.
 
 <!-- Begin Generated Content: Doc Feedback -->
 <sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CArcadeSdk.md)](https://helix.dot.net/f/p/5?p=Documentation%5CArcadeSdk.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CArcadeSdk.md)</sub>

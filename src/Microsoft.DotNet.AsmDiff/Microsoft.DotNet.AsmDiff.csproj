@@ -1,10 +1,9 @@
-﻿<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   
   <!-- Most of the code has been ported from https://devdiv.visualstudio.com/DevDiv/_git/CoreFxTools repo.-->
   <PropertyGroup>
+    <TargetFramework>$(NetCurrent)</TargetFramework>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>$(TargetFrameworkForNETSDK)</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>dotnet-asmdiff</ToolCommandName>
@@ -27,4 +26,5 @@
   <ItemGroup>
     <EmbeddedResource Update="Resources.resx" GenerateSource="true" />
   </ItemGroup>
+
 </Project>
