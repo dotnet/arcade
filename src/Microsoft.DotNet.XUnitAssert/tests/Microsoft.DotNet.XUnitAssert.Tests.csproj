@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>$(NetCurrent)</TargetFramework>
     <Nullable>enable</Nullable>
-    <!-- Can't use Arcade test framework because it brings in the xunit.assert package. -->
   </PropertyGroup>
 
   <ItemGroup>
