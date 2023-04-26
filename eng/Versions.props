@@ -1,5 +1,4 @@
 <Project>
-
   <PropertyGroup>
     <!-- This repo version -->
     <VersionPrefix>8.0.0</VersionPrefix>
@@ -7,50 +6,39 @@
     <!-- Opt-out repo features -->
     <UsingToolXliff>false</UsingToolXliff>
   </PropertyGroup>
-
   <PropertyGroup>
     <!-- arcade -->
     <MicrosoftDotNetBuildTasksFeedVersion>8.0.0-beta.23219.2</MicrosoftDotNetBuildTasksFeedVersion>
     <MicrosoftDotNetSignToolVersion>8.0.0-beta.23219.2</MicrosoftDotNetSignToolVersion>
     <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>8.0.0-beta.23219.2</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
-
     <!-- arcade-services -->
     <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.21553.1</MicrosoftDotNetMaestroClientVersion>
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.22076.4</MicrosoftDotNetMaestroTasksVersion>
-
     <!-- corefx -->
     <MicrosoftBclHashCodeVersion>1.1.1</MicrosoftBclHashCodeVersion>
     <SystemMemoryVersion>4.5.5</SystemMemoryVersion>
     <SystemRuntimeInteropServicesRuntimeInformation>4.3.0</SystemRuntimeInteropServicesRuntimeInformation>
-
     <!-- deployment-tools -->
     <MicrosoftDeploymentDotNetReleasesVersion>1.0.0-preview6.1.23159.4</MicrosoftDeploymentDotNetReleasesVersion>
-
     <!-- dotnet-symuploader -->
     <MicrosoftSymbolUploaderBuildTaskVersion>2.0.0-preview.1.21526.15</MicrosoftSymbolUploaderBuildTaskVersion>
     <MicrosoftSymbolUploaderVersion>2.0.0-preview.1.21526.15</MicrosoftSymbolUploaderVersion>
-
     <!-- linker -->
     <MicrosoftNETILLinkTasksVersion>6.0.100-1.22103.2</MicrosoftNETILLinkTasksVersion>
-
     <!-- msbuild -->
     <MicrosoftBuildFrameworkVersion>17.3.2</MicrosoftBuildFrameworkVersion>
     <MicrosoftBuildTasksCoreVersion>17.3.2</MicrosoftBuildTasksCoreVersion>
     <MicrosoftBuildUtilitiesCoreVersion>17.3.2</MicrosoftBuildUtilitiesCoreVersion>
     <MicrosoftBuildVersion>17.3.2</MicrosoftBuildVersion>
-
     <!-- netstandard -->
     <NETStandardLibraryVersion>2.0.3</NETStandardLibraryVersion>
-
     <!-- nuget -->
     <NuGetFrameworksVersion>6.2.2</NuGetFrameworksVersion>
     <NuGetPackagingVersion>6.2.2</NuGetPackagingVersion>
     <NuGetVersioningVersion>6.2.2</NuGetVersioningVersion>
-
     <!-- roslyn -->
     <MicrosoftCodeAnalysisCSharpVersion>4.4.0</MicrosoftCodeAnalysisCSharpVersion>
     <MicrosoftNetCompilersToolsetVersion>4.5.2-3.23152.4</MicrosoftNetCompilersToolsetVersion>
-
     <!-- runtime -->
     <MicrosoftExtensionsDependencyInjectionAbstractionsVersion>6.0.0</MicrosoftExtensionsDependencyInjectionAbstractionsVersion>
     <MicrosoftExtensionsDependencyInjectionVersion>6.0.0</MicrosoftExtensionsDependencyInjectionVersion>
@@ -68,29 +56,21 @@
     <SystemReflectionMetadataVersion>6.0.1</SystemReflectionMetadataVersion>
     <SystemTextEncodingsWebVersion>6.0.0</SystemTextEncodingsWebVersion>
     <SystemTextJsonVersion>7.0.2</SystemTextJsonVersion>
-
     <!-- sdk -->
     <MicrosoftNetSdkWorkloadManifestReaderVersion>8.0.100-preview.3.23178.3</MicrosoftNetSdkWorkloadManifestReaderVersion>
-
     <!-- sourcelink -->
     <MicrosoftSourceLinkGitHubVersion>8.0.0-beta.23218.3</MicrosoftSourceLinkGitHubVersion>
     <MicrosoftSourceLinkAzureReposGitVersion>8.0.0-beta.23218.3</MicrosoftSourceLinkAzureReposGitVersion>
-
     <!-- symreader-converter -->
     <MicrosoftDiaSymReaderPdb2PdbVersion>1.1.0-beta2-19575-01</MicrosoftDiaSymReaderPdb2PdbVersion>
-
     <!-- templating -->
     <MicrosoftTemplateEngineAuthoringTasksVersion>8.0.100-preview.4.23224.3</MicrosoftTemplateEngineAuthoringTasksVersion>
-
     <!-- vstest -->
     <MicrosoftNetTestSdkVersion>17.5.0</MicrosoftNetTestSdkVersion>
-
     <!-- xharness -->
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.23212.1</MicrosoftDotNetXHarnessCLIVersion>
-
     <!-- xliff-tasks -->
     <MicrosoftDotNetXliffTasksVersion>1.0.0-beta.23218.1</MicrosoftDotNetXliffTasksVersion>
-
     <!-- external -->
     <AzureCoreVersion>1.31.0</AzureCoreVersion>
     <AzureDataTablesVersion>12.8.0</AzureDataTablesVersion>
@@ -125,5 +105,4 @@
     <XUnitVersion>2.4.2</XUnitVersion>
     <log4netVersion>2.0.10</log4netVersion>
   </PropertyGroup>
-
 </Project>
