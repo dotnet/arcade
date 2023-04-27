@@ -44,6 +44,8 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         private bool _useNewLibrary;
 
         private Microsoft.Build.Utilities.TaskLoggingHelper _log;
+        private IConfidentialClientApplication _akamsLinksApp;
+
 
         public AkaMSLinkManager(string clientId, string clientSecret, string tenant, Microsoft.Build.Utilities.TaskLoggingHelper log, bool useNewLibrary)
         {
@@ -395,7 +397,24 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         {
             if (_useNewLibrary)
             {
+                if (_akamsLinksApp == null)
+                {
+                    _akamsLinksApp = ConfidentialClientApplicationBuilder.Create(_clientId)
+                    .WithClientSecret(_clientSecret)
+                    .WithAuthority(Authority)
+                    .Build();
+                }
 
+                Identity.Client.AuthenticationResult token = await _akamsLinksApp.AcquireTokenForClient(
+                    new[] { $"{Endpoint}/.default" })
+                    .WithTenantId(_tenant)
+                    .ExecuteAsync()
+                    .ConfigureAwait(false);
+
+                HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
+                httpClient.DefaultRequestHeaders.Add("Authorization", token.CreateAuthorizationHeader());
+
+                return httpClient;
             }
             else
             {
