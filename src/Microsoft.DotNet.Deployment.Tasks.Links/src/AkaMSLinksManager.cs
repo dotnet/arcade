@@ -4,6 +4,7 @@
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
@@ -40,14 +41,17 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         private string ApiTargeturl { get => $"{ApiBaseUrl}/1/{_tenant}"; }
         private ExponentialRetry RetryHandler;
 
+        private bool _useNewLibrary;
+
         private Microsoft.Build.Utilities.TaskLoggingHelper _log;
 
-        public AkaMSLinkManager(string clientId, string clientSecret, string tenant, Microsoft.Build.Utilities.TaskLoggingHelper log)
+        public AkaMSLinkManager(string clientId, string clientSecret, string tenant, Microsoft.Build.Utilities.TaskLoggingHelper log, bool useNewLibrary)
         {
             _clientId = clientId;
             _clientSecret = clientSecret;
             _tenant = tenant;
             _log = log;
+            _useNewLibrary = useNewLibrary;
 
             RetryHandler = new ExponentialRetry
             {
@@ -389,21 +393,28 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 
         private async Task<HttpClient> CreateClient()
         {
+            if (_useNewLibrary)
+            {
+
+            }
+            else
+            {
 #if NETCOREAPP
             var platformParameters = new PlatformParameters();
 #elif NETFRAMEWORK
-            var platformParameters = new PlatformParameters(PromptBehavior.Auto);
+                var platformParameters = new PlatformParameters(PromptBehavior.Auto);
 #else
 #error "Unexpected TFM"
 #endif
-            AuthenticationContext authContext = new AuthenticationContext(Authority);
-            ClientCredential credential = new ClientCredential(_clientId, _clientSecret);
-            AuthenticationResult token = await authContext.AcquireTokenAsync(Endpoint, credential);
+                AuthenticationContext authContext = new AuthenticationContext(Authority);
+                IdentityModel.Clients.ActiveDirectory.ClientCredential credential = new IdentityModel.Clients.ActiveDirectory.ClientCredential(_clientId, _clientSecret);
+                IdentityModel.Clients.ActiveDirectory.AuthenticationResult token = await authContext.AcquireTokenAsync(Endpoint, credential);
 
-            HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
-            httpClient.DefaultRequestHeaders.Add("Authorization", token.CreateAuthorizationHeader());
+                HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
+                httpClient.DefaultRequestHeaders.Add("Authorization", token.CreateAuthorizationHeader());
 
-            return httpClient;
+                return httpClient;
+            }
         }
     }
 }
