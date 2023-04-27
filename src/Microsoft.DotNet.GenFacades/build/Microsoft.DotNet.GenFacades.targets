@@ -2,7 +2,7 @@
 <Project>
 
   <PropertyGroup>
-    <GenFacadesTargetAssemblyPath Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\tools\net7.0\Microsoft.DotNet.GenFacades.dll</GenFacadesTargetAssemblyPath>
+    <GenFacadesTargetAssemblyPath Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\tools\net8.0\Microsoft.DotNet.GenFacades.dll</GenFacadesTargetAssemblyPath>
     <GenFacadesTargetAssemblyPath Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\tools\net472\Microsoft.DotNet.GenFacades.dll</GenFacadesTargetAssemblyPath>
   </PropertyGroup>
 
@@ -17,7 +17,9 @@
     </PropertyGroup>
   </Target>
 
-  <Import Project="Microsoft.DotNet.GenPartialFacadeSource.targets" Condition="'$(IsPartialFacadeAssembly)' == 'true'" />
-  <Import Project="Microsoft.DotNet.GenFacadesNotSupported.targets" Condition="'$(GeneratePlatformNotSupportedAssembly)' == 'true' or
-                                                                               '$(GeneratePlatformNotSupportedAssemblyMessage)' != ''" />
+  <Import Project="Microsoft.DotNet.GenFacades.ClearVersion.targets" Condition="'$(GenFacadesForceZeroVersionSeeds)' == 'true'" />
+  <Import Project="Microsoft.DotNet.GenFacades.NotSupported.targets" Condition="'$(GeneratePlatformNotSupportedAssembly)' == 'true' or
+                                                                                '$(GeneratePlatformNotSupportedAssemblyMessage)' != ''" />
+  <Import Project="Microsoft.DotNet.GenFacades.PartialFacadeSource.targets" Condition="'$(IsPartialFacadeAssembly)' == 'true'" />
+
 </Project>

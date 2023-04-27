@@ -190,7 +190,6 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
 
    Sample: 
      ```XML
-      <?xml version="1.0" encoding="utf-8"?>
         <Project>
            <PropertyGroup>
               <PublishingVersion>3</PublishingVersion>
@@ -266,75 +265,6 @@ Repositories that make direct use of tasks in Tasks.Feed to publish assets durin
 However, if for some reason the infra in the default publishing stages don't meet you requirements you can create additional stages and make them dependent on the default ones. That way, it will at least be clear that the build does custom operations.
 
 **Note:** We strongly suggest that you discuss with the *.Net Engineering* team the intended use case for this before starting your work. We might be able to give other options.
-
-### Moving away from the legacy PushToBlobFeed task
-
-If you use the legacy `PushToBlobFeed` task from the `Microsoft.DotNet.Build.Tasks.Feed` package, you should change your code to use a new task called [PushToAzureDevOpsArtifacts](https://github.com/dotnet/arcade/blob/main/src/Microsoft.DotNet.Build.Tasks.Feed/src/PushToAzureDevOpsArtifacts.cs). This new task is also in the Tasks.Feed package and should act as a drop-in replacement for the previous one.
-
-`PushToAzureDevOpsArtifacts` generates an appropriately populated Build Asset Manifest and registers the build assets as Azure DevOps build artifacts. This will guarantee that the default publishing stages will be able to access the build assets.
-
-A conversion to `PushToAzureDevOpsArtifacts` for repos that are using the `PushToBlobFeed` task inside their build would look like this:
-
-1. Replace the `PushToBlobFeed` task with `PushToAzureDevOpsArtifacts`:
-
-    ```XML
-    <PropertyGroup>
-      <AssetManifestFileName>ManifestFileName.xml</AssetManifestFileName>
-      <AssetManifestPath>$(ArtifactsLogDir)AssetManifest\$(AssetManifestFileName)</AssetManifestPath>
-    </PropertyGroup>
-    
-    <PushToBlobFeed
-      ExpectedFeedUrl="$(FeedURL)"
-      AccountKey="$(FeedKey)"
-      ItemsToPush="@(ItemsToPush)"
-      ManifestBuildData="Location=$(FeedURL)"
-      ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
-      ManifestBranch="$(BUILD_SOURCEBRANCH)"
-      ManifestBuildId="$(BUILD_BUILDNUMBER)"
-      ManifestCommit="$(BUILD_SOURCEVERSION)"
-      AssetManifestPath="$(AssetManifestPath)"
-      PublishFlatContainer="$(PublishFlatContainer)" />
-    ```
-
-    becomes
-
-    ```XML
-    <PropertyGroup>
-      <AssetManifestFileName>ManifestFileName</AssetManifestFileName>
-      <AssetManifestPath>$(ArtifactsLogDir)AssetManifest\$(SdkAssetManifestFileName)</AssetManifestPath>
-    
-      <!-- Create a temporary directory to store the generated asset manifest by the task -->
-      <TempWorkingDirectory>$(ArtifactsDir)\..\AssetsTmpDir\$([System.Guid]::NewGuid())</TempWorkingDirectory>
-    </PropertyGroup>
-    
-    <MakeDir Directories="$(TempWorkingDirectory)"/>
-    
-    <!-- Generate the asset manifest using the PushToAzureDevOpsArtifacts task -->
-    <PushToAzureDevOpsArtifacts
-      ItemsToPush="@(ItemsToPush)"
-      ManifestBuildData="Location=$(FeedURL)"
-      ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
-      ManifestBranch="$(BUILD_SOURCEBRANCH)"
-      ManifestBuildId="$(BUILD_BUILDNUMBER)"
-      ManifestCommit="$(BUILD_SOURCEVERSION)"
-      PublishFlatContainer="$(PublishFlatContainer)"
-      AssetManifestPath="$(AssetManifestPath)"
-      AssetsTemporaryDirectory="$(TempWorkingDirectory)"
-      PublishingVersion="3" />
-    
-    <!-- Copy the generated manifest to the build's artifacts -->
-    <Copy
-      SourceFiles="$(AssetManifestPath)"
-      DestinationFolder="$(TempWorkingDirectory)\$(AssetManifestFileName)" />
-    
-    <Message
-      Text="##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]$(TempWorkingDirectory)/$(AssetManifestFileName)"
-      Importance="high" />
-    ```
-
-    This will do something similar to what the SDK does for its default publishing pipeline, as seen in [publish.proj](https://github.com/dotnet/arcade/blob/main/src/Microsoft.DotNet.Arcade.Sdk/tools/Publish.proj). 
-
-    **Note:** the usage of a temporary directory for placing the assets while uploading them is needed to guarantee that nothing interferes with the upload since it occurs asynchronously. See [this issue](https://github.com/dotnet/arcade/issues/2197) for context.
 
 ## PublishingUsingPipelines & Deprecated Properties
 
@@ -464,7 +394,7 @@ Publishing to General Testing channel : General Testing
             new TargetChannelConfig(
                 529,
                 false,
-                PublishingInfraVersion.All,
+                PublishingInfraVersion.Latest,
                 "generaltesting",
                 GeneralTestingFeeds,
                 PublicAndInternalSymbolTargets),
@@ -532,3 +462,21 @@ During publishing, arcade will pick up SymbolPublishingExclusionsFile.txt and ex
 <!-- Begin Generated Content: Doc Feedback -->
 <sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CCorePackages%5CPublishing.md)](https://helix.dot.net/f/p/5?p=Documentation%5CCorePackages%5CPublishing.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CCorePackages%5CPublishing.md)</sub>
 <!-- End Generated Content-->
+
+
+### How do I publish stable packages?
+
+Stable packages are not published by Arcade except for dependency flow and testing purposes. Stable packages go to isolated feeds (to enable rebuilds), then repo owners push these packages to Nuget.org manually. Then these packages flow to dotnet-public feed via the mirroring process
+
+```mermaid
+flowchart LR
+  Packages[Built Packages]-->ArcadePublishing{Arcade Publishing}
+  ArcadePublishing-->|Non-Stable|PermanantFeeds[Permanant Feeds]
+  ArcadePublishing-->|Stable|IsolatedFeeds[Isolated Feeds]
+  IsolatedFeeds-->DogFoodingAndDepFlow{Dog-Fooding and dependency flow}
+  PermanantFeeds-->DogFoodingAndDepFlow
+  Packages-->|Release final stable packages on NuGet.org|NuGet[NuGet.Org]
+  NuGet-->|Mirroring|DotnetPublic[dotnet-public feed]
+  DotnetPublic-->RepoUse[Repository use]
+  DogFoodingAndDepFlow-->RepoUse
+  

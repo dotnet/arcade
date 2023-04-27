@@ -4,6 +4,7 @@
   <Import Project="SourceBuildArcade.targets" />
 
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.SourceBuild.AddSourceToNuGetConfig" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.SourceBuild.AddSourceMappingToNugetConfig" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.SourceBuild.ReadSourceBuildIntermediateNupkgDependencies" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
 
   <ItemGroup>
@@ -12,9 +13,9 @@
 
   <Target Name="CollectSourceBuildIntermediateNupkgDependencies"
           Condition="
-            ('$(ArcadeBuildFromSource)' == 'true' and
-              '$(ArcadeInnerBuildFromSource)' == 'true') or
-            '$(SetUpSourceBuildIntermediateNupkgCache)' == 'true'"
+            '$(DotNetBuildFromSourceFlavor)' != 'Product' and
+            (('$(ArcadeBuildFromSource)' == 'true' and '$(ArcadeInnerBuildFromSource)' == 'true') or
+              '$(SetUpSourceBuildIntermediateNupkgCache)' == 'true')"
           DependsOnTargets="GetSourceBuildIntermediateNupkgNameConvention"
           BeforeTargets="CollectPackageReferences">
     <ReadSourceBuildIntermediateNupkgDependencies
@@ -31,12 +32,12 @@
 
   <Target Name="SetUpSourceBuildIntermediateNupkgCache"
           Condition="
-            ('$(ArcadeBuildFromSource)' == 'true' and
-              '$(ArcadeInnerBuildFromSource)' == 'true' and
-              '@(SourceBuildIntermediateNupkgReference)' != '') or
-            '$(SetUpSourceBuildIntermediateNupkgCache)' == 'true'"
+            '$(DotNetBuildFromSourceFlavor)' != 'Product' and
+            (('$(ArcadeBuildFromSource)' == 'true' and '$(ArcadeInnerBuildFromSource)' == 'true' and '@(SourceBuildIntermediateNupkgReference)' != '') or
+              '$(SetUpSourceBuildIntermediateNupkgCache)' == 'true')"
           AfterTargets="Restore">
     <PropertyGroup>
+      <SourceBuildNuGetSourceName>source-build-int-nupkg-cache</SourceBuildNuGetSourceName>
       <SourceBuiltNupkgCacheDir>$([MSBuild]::NormalizeDirectory('$(ArtifactsObjDir)', 'source-built-upstream-cache'))</SourceBuiltNupkgCacheDir>
     </PropertyGroup>
 
@@ -56,8 +57,12 @@
 
     <AddSourceToNuGetConfig
       NuGetConfigFile="$(RestoreConfigFile)"
-      SourceName="source-build-int-nupkg-cache"
+      SourceName="$(SourceBuildNuGetSourceName)"
       SourcePath="$(SourceBuiltNupkgCacheDir)" />
+
+    <AddSourceMappingToNugetConfig
+      NuGetConfigFile="$(RestoreConfigFile)"
+      SourceName="$(SourceBuildNuGetSourceName)" />
   </Target>
 
 </Project>

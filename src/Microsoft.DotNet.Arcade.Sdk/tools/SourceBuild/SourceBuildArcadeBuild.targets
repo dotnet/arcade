@@ -13,6 +13,8 @@
     <InnerSourceBuildRepoRoot Condition="'$(InnerSourceBuildRepoRoot)' == ''">$(CurrentRepoSourceBuildSourceDir)</InnerSourceBuildRepoRoot>
 
     <CleanInnerSourceBuildRepoRoot Condition="'$(CleanInnerSourceBuildRepoRoot)' == ''">true</CleanInnerSourceBuildRepoRoot>
+
+    <FullAssemblySigningSupported Condition="'$(FullAssemblySigningSupported)' == ''">false</FullAssemblySigningSupported>
   </PropertyGroup>
 
   <Target Name="ExecuteWithSourceBuiltTooling"
@@ -78,16 +80,47 @@
       <InnerBuildArgs>$(InnerBuildArgs) /p:ArtifactsDir=$(CurrentRepoSourceBuildArtifactsDir)</InnerBuildArgs>
       <!-- Set a custom binlog location to avoid clashing over the currenly specified file. -->
       <InnerBuildArgs>$(InnerBuildArgs) /bl:$(CurrentRepoSourceBuildBinlogFile)</InnerBuildArgs>
+      <!-- Flow ContinuousIntegrationBuild to the inner build. -->
+      <InnerBuildArgs Condition="'$(ContinuousIntegrationBuild)' == 'true'">$(InnerBuildArgs) /p:ContinuousIntegrationBuild=true</InnerBuildArgs>
 
       <!-- The inner build needs to reference the overall output dir for nupkg transport etc. -->
       <InnerBuildArgs>$(InnerBuildArgs) /p:SourceBuildOutputDir=$(SourceBuildOutputDir)</InnerBuildArgs>
       <InnerBuildArgs>$(InnerBuildArgs) /p:SourceBuiltBlobFeedDir=$(SourceBuiltBlobFeedDir)</InnerBuildArgs>
+
+      <InnerBuildArgs>$(InnerBuildArgs) /p:DotNetBuildOffline=true</InnerBuildArgs>
+      <InnerBuildArgs Condition=" '$(DotNetPackageVersionPropsPath)' != '' ">$(InnerBuildArgs) /p:DotNetPackageVersionPropsPath=$(DotNetPackageVersionPropsPath)</InnerBuildArgs>
+
+      <InnerBuildArgs>$(InnerBuildArgs) /p:FullAssemblySigningSupported=$(FullAssemblySigningSupported)</InnerBuildArgs>
     </PropertyGroup>
 
     <ItemGroup>
       <!-- Override package cache to separate source-built packages from upstream. -->
       <InnerBuildEnv Include="NUGET_PACKAGES=$(CurrentRepoSourceBuildPackageCache)" />
+      <InnerBuildEnv Include="DotNetTargetFrameworkFilter=$(SourceBuildTargetFrameworkFilter)" />
     </ItemGroup>
+  </Target>
+
+  <!--
+    PrepareInnerSourceBuildRepoRoot either clones the source to the inner repo
+    or copies the source to the inner repo depending on CopySrcInsteadOfClone.
+    Repos take a dependency on PrepareInnerSourceBuildRepoRoot, so this target
+    exists to wait until either the source is cloned or copied.
+  -->
+  <Target Name="PrepareInnerSourceBuildRepoRoot"
+          DependsOnTargets="CopyInnerSourceBuildRepoRoot;CloneInnerSourceBuildRepoRoot">
+  </Target>
+
+  <Target Name="CopyInnerSourceBuildRepoRoot" Condition=" '$(CopySrcInsteadOfClone)' == 'true' ">
+    <ItemGroup>
+      <SourceBuildFilesToCopy Include="$(RepoRoot)/**/*" />
+      <SourceBuildFilesToCopy Include="$(RepoRoot)/**/.*" />
+      <SourceBuildFilesToCopy Remove="$(RepoRoot)/artifacts/**/*" />
+      <SourceBuildFilesToCopy Remove="$(RepoRoot)/artifacts/**/.*" />
+    </ItemGroup>
+
+    <Copy
+      SourceFiles="@(SourceBuildFilesToCopy)"
+      DestinationFolder="$(InnerSourceBuildRepoRoot)%(RecursiveDir)" />
   </Target>
 
   <!--
@@ -97,7 +130,7 @@
     access to the git data, this also makes it easy to see what changes the source-build infra has
     made, for diagnosis or exploratory purposes.
   -->
-  <Target Name="PrepareInnerSourceBuildRepoRoot">
+  <Target Name="CloneInnerSourceBuildRepoRoot" Condition=" '$(CopySrcInsteadOfClone)' != 'true' ">
     <PropertyGroup>
       <!--
         By default, copy WIP. WIP copy helps with local machine dev work. Don't copy WIP if this is

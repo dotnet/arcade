@@ -18,8 +18,8 @@ pr:
     - templates
 
 variables:
-- template: eng/common-variables.yml
-- template: eng/common/templates/variables/pool-providers.yml
+- template: /eng/common-variables.yml
+- template: /eng/common/templates/variables/pool-providers.yml
 
 resources:
   containers:
@@ -62,9 +62,6 @@ stages:
           matrix:
             Build_Release:
               _BuildConfig: Release
-            ${{ if eq(variables._RunAsPublic, True) }}:
-              Build_Debug:
-                _BuildConfig: Debug
         preSteps:
         - checkout: self
           clean: true
@@ -85,8 +82,6 @@ stages:
             matrix:
               Build_Debug:
                 _BuildConfig: Debug
-              Build_Release:
-                _BuildConfig: Release
           preSteps:
           - checkout: self
             clean: true
@@ -119,8 +114,6 @@ stages:
             matrix:
               Build_Release:
                 _BuildConfig: Release
-              Build_Debug:
-                _BuildConfig: Debug
           variables:
           - _Testing: Helix
           preSteps:
@@ -163,8 +156,6 @@ stages:
             matrix:
               Build_Debug:
                 _BuildConfig: Debug
-              Build_Release:
-                _BuildConfig: Release
           variables:
           - _Testing: Helix
           preSteps:
@@ -200,7 +191,7 @@ stages:
         workspace:
           clean: all
         jobs:
-        - job: Apple_Simulators
+        - job: Android_Simulators
           timeoutInMinutes: 90
           container: LinuxContainer
           pool:
@@ -209,66 +200,6 @@ stages:
             matrix:
               Build_Debug:
                 _BuildConfig: Debug
-          variables:
-          - _Testing: XHarness_Apple_Simulator_Tests
-          preSteps:
-          - checkout: self
-            clean: true
-          steps:
-          - script: eng/common/build.sh
-              -configuration $(_BuildConfig)
-              -prepareMachine
-              -ci
-              -restore
-              -test
-              -warnAsError false
-              -projects $(Build.SourcesDirectory)/tests/XHarness.Apple.SimulatorTests.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/XHarness.Apple.Simulator.Tests.binlog
-              /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness Apple Simulator Helix Testing
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''
-
-        - job: Apple_Devices
-          timeoutInMinutes: 90
-          container: LinuxContainer
-          pool:
-            vmimage: ubuntu-latest
-          strategy:
-            matrix:
-              Build_Release:
-                _BuildConfig: Release
-          variables:
-          - _Testing: XHarness_Apple_Device_Tests
-          preSteps:
-          - checkout: self
-            clean: true
-          steps:
-          - script: eng/common/build.sh
-              -configuration $(_BuildConfig)
-              -prepareMachine
-              -ci
-              -restore
-              -test
-              -warnAsError false
-              -projects $(Build.SourcesDirectory)/tests/XHarness.Apple.DeviceTests.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Apple.Device.Tests.binlog
-              /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness Apple Device Helix Testing
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''
-
-        - job: Android_Simulators
-          timeoutInMinutes: 90
-          container: LinuxContainer
-          pool:
-            vmimage: ubuntu-latest
-          strategy:
-            matrix:
-              Build_Release:
-                _BuildConfig: Release
           variables:
           - _Testing: XHarness_Android_Simulator_Tests
           preSteps:
@@ -296,8 +227,8 @@ stages:
             vmimage: windows-latest
           strategy:
             matrix:
-              Build_Debug:
-                _BuildConfig: Debug
+              Build_Release:
+                _BuildConfig: Release
           variables:
           - _Testing: XHarness_Android_Device_Tests
           preSteps:

@@ -211,7 +211,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         protected PublishArtifactsInManifestBase(AssetPublisherFactory assetPublisherFactory = null)
         {
-            AssetPublisherFactory = assetPublisherFactory ?? new AssetPublisherFactory(new MsBuildUtils.TaskLoggingHelper(this));
+            AssetPublisherFactory = assetPublisherFactory ?? new AssetPublisherFactory(Log);
         }
 
         public override bool Execute()
@@ -309,14 +309,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///   Persist in BAR all pending associations of Asset -> AssetLocation stored in `NewAssetLocations`.
         /// </summary>
         /// <param name="client">Maestro++ API client</param>
-        protected Task PersistPendingAssetLocationAsync(IMaestroApi client)
+        protected async Task PersistPendingAssetLocationAsync(IMaestroApi client)
         {
+            Log.LogMessage(MessageImportance.High, "\nPersisting new locations of assets in the Build Asset Registry.");
+
             var updates = NewAssetLocations.Keys.Select(nal => new AssetAndLocation(nal.AssetId, (LocationType)nal.LocationType)
             {
                 Location = nal.AssetLocation
             }).ToImmutableList();
 
-            return client.Assets.BulkAddLocationsAsync(updates);
+            await client.Assets.BulkAddLocationsAsync(updates);
+
+            Log.LogMessage(MessageImportance.High, "\nCompleted persisting of new asset locations...");
         }
 
         /// <summary>
@@ -586,7 +590,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             treatPdbConversionIssuesAsInfo: false,
                             dryRun: false,
                             timer: false,
-                            verboseLogging: true);
+                            verboseLogging: false);
                     }
                     catch (Exception ex)
                     {
@@ -715,7 +719,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             treatPdbConversionIssuesAsInfo: false,
                             dryRun: false,
                             timer: false,
-                            verboseLogging: true);
+                            verboseLogging: false);
                     }
                     catch (Exception ex)
                     {
@@ -796,9 +800,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                         feedConfig,
                                         clientThrottle));
                                 break;
-                            case FeedType.AzureStorageFeed:
-                                Log.LogWarning($"Publishing of packages to Azure storage feed is deprecated.");
-                                break;
                             default:
                                 Log.LogError(
                                     $"Unknown target feed type for category '{category}': '{feedConfig.Type}'.");
@@ -813,6 +814,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             await Task.WhenAll(publishTasks);
+
+            Log.LogMessage(MessageImportance.High, "\nCompleted publishing of packages: ");
         }
 
         private HashSet<PackageArtifactModel> FilterPackages(HashSet<PackageArtifactModel> packages, TargetFeedConfig feedConfig)
@@ -947,12 +950,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             string uri =
                 $"{AzureDevOpsBaseUrl}/{AzureDevOpsOrg}/_apis/resources/Containers/{containerId}?itemPath=/{artifactName}/{fileName}&isShallow=true&api-version={AzureApiVersionForFileDownload}";
-            Log.LogMessage(MessageImportance.Low, $"Download file uri = {uri}");
             Exception mostRecentlyCaughtException = null;
             bool success = await RetryHandler.RunAsync(async attempt =>
             {
                 try
                 {
+                    Log.LogMessage(MessageImportance.Low, $"Download file uri = {uri}");
+
                     CancellationTokenSource timeoutTokenSource =
                         new CancellationTokenSource(TimeSpan.FromMinutes(TimeoutInMinutes));
 
@@ -966,11 +970,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         FileMode.Create,
                         FileAccess.ReadWrite,
                         FileShare.ReadWrite);
-                    using var stream = await response.Content.ReadAsStreamAsync();
+                    using var stream = await response.Content.ReadAsStreamAsync(timeoutTokenSource.Token);
 
                     try
                     {
-                        await stream.CopyToAsync(fs);
+                        await stream.CopyToAsync(fs, timeoutTokenSource.Token);
                     }
                     finally
                     {
@@ -999,7 +1003,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             List<Task> publishTasks = new List<Task>();
 
             // Just log a empty line for better visualization of the logs
-            Log.LogMessage(MessageImportance.High, "\nPublishing blobs: ");
+            Log.LogMessage(MessageImportance.High, "\nBegin publishing of blobs: ");
 
             foreach (var blobsPerCategory in BlobsByCategory)
             {
@@ -1039,6 +1043,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             await Task.WhenAll(publishTasks);
+
+            Log.LogMessage(MessageImportance.High, "\nCompleted publishing of blobs: ");
         }
 
         /// <summary>
@@ -1671,8 +1677,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 await PublishAssetsWithoutStreamingPublishingAsync(assetPublisher, assetsToPublish, buildAssets, feedConfig);
             }
 
-            if (feedConfig.Type == FeedType.AzureStorageContainer ||
-                feedConfig.Type == FeedType.AzureStorageFeed)
+            if (feedConfig.Type == FeedType.AzureStorageContainer)
             {
 
                 if (LinkManager == null)
@@ -1815,45 +1820,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             using var clientThrottle = new SemaphoreSlim(MaxClients, MaxClients);
             await Task.WhenAll(assets.Select(asset =>
                 assetPublisher.PublishAssetAsync(asset.localBlobPath, asset.id, pushOptions, clientThrottle)));
-        }
-
-        private BlobFeedAction CreateBlobFeedAction(TargetFeedConfig feedConfig)
-        {
-            var proxyBackedFeedMatch = Regex.Match(feedConfig.TargetURL, PublishingConstants.AzureStorageProxyFeedPattern);
-            var proxyBackedStaticFeedMatch = Regex.Match(feedConfig.TargetURL, PublishingConstants.AzureStorageProxyFeedStaticPattern);
-            var azureStorageStaticBlobFeedMatch = Regex.Match(feedConfig.TargetURL, PublishingConstants.AzureStorageStaticBlobFeedPattern);
-
-            if (proxyBackedFeedMatch.Success || proxyBackedStaticFeedMatch.Success)
-            {
-                var regexMatch = (proxyBackedFeedMatch.Success) ? proxyBackedFeedMatch : proxyBackedStaticFeedMatch;
-                var containerName = regexMatch.Groups["container"].Value;
-                var baseFeedName = regexMatch.Groups["baseFeedName"].Value;
-                var feedURL = regexMatch.Groups["feedURL"].Value;
-                var storageAccountName = "dotnetfeed";
-
-                // Initialize the feed using sleet
-                SleetSource sleetSource = new SleetSource()
-                {
-                    Name = baseFeedName,
-                    Type = "azure",
-                    BaseUri = feedURL,
-                    AccountName = storageAccountName,
-                    Container = containerName,
-                    FeedSubPath = baseFeedName,
-                    ConnectionString = $"DefaultEndpointsProtocol=https;AccountName={storageAccountName};AccountKey={feedConfig.Token};EndpointSuffix=core.windows.net"
-                };
-
-                return new BlobFeedAction(sleetSource, feedConfig.Token, Log);
-            }
-            else if (azureStorageStaticBlobFeedMatch.Success)
-            {
-                return new BlobFeedAction(feedConfig.TargetURL, feedConfig.Token, Log);
-            }
-            else
-            {
-                Log.LogError($"Could not parse Azure feed URL: '{feedConfig.TargetURL}'");
-                return null;
-            }
         }
 
         private async Task PushPackageToNugetFeed(
