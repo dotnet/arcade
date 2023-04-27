@@ -395,6 +395,8 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 
         private async Task<HttpClient> CreateClient()
         {
+            //TODO remove feature switch: https://github.com/dotnet/arcade/issues/13318
+
             if (_useIdentityClientLibrary)
             {
                 _log.LogMessage(MessageImportance.High, "Creating a client using MSAL Library");
