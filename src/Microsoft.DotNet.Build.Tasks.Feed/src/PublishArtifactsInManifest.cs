@@ -185,7 +185,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public int NonStreamingPublishingMaxClients {get; set;}
 
         /// <summary>
-        /// Feature flag for switching to the Microsoft.Identity.Client library https://github.com/dotnet/arcade/pull/13316
+        /// Feature flag for switching to the Microsoft.Identity.Client library
+        /// TODO (https://github.com/dotnet/arcade/issues/13318): Remove the switch and use the new library
         /// </summary>
         private bool UseIdentityClientLibrary { get; set; } = false;
 
