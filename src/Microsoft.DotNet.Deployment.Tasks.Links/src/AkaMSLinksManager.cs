@@ -41,19 +41,19 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         private string ApiTargeturl { get => $"{ApiBaseUrl}/1/{_tenant}"; }
         private ExponentialRetry RetryHandler;
 
-        private bool _useNewLibrary;
+        private bool _useIdentityClientLibrary;
 
         private Microsoft.Build.Utilities.TaskLoggingHelper _log;
         private IConfidentialClientApplication _akamsLinksApp;
 
 
-        public AkaMSLinkManager(string clientId, string clientSecret, string tenant, Microsoft.Build.Utilities.TaskLoggingHelper log, bool useNewLibrary)
+        public AkaMSLinkManager(string clientId, string clientSecret, string tenant, Microsoft.Build.Utilities.TaskLoggingHelper log, bool UseIdentityClientLibrary)
         {
             _clientId = clientId;
             _clientSecret = clientSecret;
             _tenant = tenant;
             _log = log;
-            _useNewLibrary = useNewLibrary;
+            _useIdentityClientLibrary = UseIdentityClientLibrary;
 
             RetryHandler = new ExponentialRetry
             {
@@ -395,8 +395,10 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 
         private async Task<HttpClient> CreateClient()
         {
-            if (_useNewLibrary)
+            if (_useIdentityClientLibrary)
             {
+                _log.LogMessage(MessageImportance.High, "Creating a client using MSAL Library");
+                
                 if (_akamsLinksApp == null)
                 {
                     _akamsLinksApp = ConfidentialClientApplicationBuilder.Create(_clientId)

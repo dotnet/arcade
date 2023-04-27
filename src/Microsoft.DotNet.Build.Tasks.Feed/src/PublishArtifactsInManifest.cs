@@ -184,6 +184,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public int NonStreamingPublishingMaxClients {get; set;}
 
+        private bool UseIdentityClientLibrary { get; set; } = false;
+
         /// <summary>
         /// Just an internal flag to keep track whether we published assets via a V3 manifest or not.
         /// </summary>
@@ -343,6 +345,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 UseStreamingPublishing = this.UseStreamingPublishing,
                 StreamingPublishingMaxClients = this.StreamingPublishingMaxClients,
                 NonStreamingPublishingMaxClients = this.NonStreamingPublishingMaxClients,
+                UseIdentityClientLibrary = this.UseIdentityClientLibrary,
             };
         }
     }
