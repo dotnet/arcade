@@ -393,51 +393,55 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
             }
         }
 
-        private async Task<HttpClient> CreateClient()
+
+        //TODO remove feature switch: https://github.com/dotnet/arcade/issues/13318
+        private async Task<HttpClient> CreateClient() => _useIdentityClientLibrary
+            ? await CreateClientUsingMSAL()
+            : await CreateClientUsingADAL();
+
+        // using the old Microsoft.IdentityModel.Clients.ActiveDirectory library
+        private async Task<HttpClient> CreateClientUsingADAL()
         {
-            //TODO remove feature switch: https://github.com/dotnet/arcade/issues/13318
-
-            if (_useIdentityClientLibrary)
-            {
-                _log.LogMessage(MessageImportance.High, "Creating a client using MSAL Library");
-                
-                if (_akamsLinksApp == null)
-                {
-                    _akamsLinksApp = ConfidentialClientApplicationBuilder.Create(_clientId)
-                    .WithClientSecret(_clientSecret)
-                    .WithAuthority(Authority)
-                    .Build();
-                }
-
-                Identity.Client.AuthenticationResult token = await _akamsLinksApp.AcquireTokenForClient(
-                    new[] { $"{Endpoint}/.default" })
-                    .WithTenantId(_tenant)
-                    .ExecuteAsync()
-                    .ConfigureAwait(false);
-
-                HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
-                httpClient.DefaultRequestHeaders.Add("Authorization", token.CreateAuthorizationHeader());
-
-                return httpClient;
-            }
-            else
-            {
 #if NETCOREAPP
-            var platformParameters = new PlatformParameters();
+                var platformParameters = new PlatformParameters();
 #elif NETFRAMEWORK
                 var platformParameters = new PlatformParameters(PromptBehavior.Auto);
 #else
 #error "Unexpected TFM"
 #endif
-                AuthenticationContext authContext = new AuthenticationContext(Authority);
-                IdentityModel.Clients.ActiveDirectory.ClientCredential credential = new IdentityModel.Clients.ActiveDirectory.ClientCredential(_clientId, _clientSecret);
-                IdentityModel.Clients.ActiveDirectory.AuthenticationResult token = await authContext.AcquireTokenAsync(Endpoint, credential);
+            AuthenticationContext authContext = new AuthenticationContext(Authority);
+            IdentityModel.Clients.ActiveDirectory.ClientCredential credential = new IdentityModel.Clients.ActiveDirectory.ClientCredential(_clientId, _clientSecret);
+            IdentityModel.Clients.ActiveDirectory.AuthenticationResult token = await authContext.AcquireTokenAsync(Endpoint, credential);
 
-                HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
-                httpClient.DefaultRequestHeaders.Add("Authorization", token.CreateAuthorizationHeader());
+            HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
+            httpClient.DefaultRequestHeaders.Add("Authorization", token.CreateAuthorizationHeader());
 
-                return httpClient;
+            return httpClient;
+        }
+
+        // using the new Microsoft.Identity.Client library
+        private async Task<HttpClient> CreateClientUsingMSAL()
+        {
+            _log.LogMessage(MessageImportance.High, "Creating a client using MSAL.NET");
+
+            if (_akamsLinksApp == null)
+            {
+                _akamsLinksApp = ConfidentialClientApplicationBuilder.Create(_clientId)
+                .WithClientSecret(_clientSecret)
+                .WithAuthority(Authority)
+                .Build();
             }
+
+            Identity.Client.AuthenticationResult token = await _akamsLinksApp.AcquireTokenForClient(
+                new[] { $"{Endpoint}/.default" })
+                .WithTenantId(_tenant)
+                .ExecuteAsync()
+                .ConfigureAwait(false);
+
+            HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
+            httpClient.DefaultRequestHeaders.Add("Authorization", token.CreateAuthorizationHeader());
+
+            return httpClient;
         }
     }
 }
