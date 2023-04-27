@@ -41,19 +41,23 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         private string ApiTargeturl { get => $"{ApiBaseUrl}/1/{_tenant}"; }
         private ExponentialRetry RetryHandler;
 
+        /// <summary>
+        /// Feature flag for switching to the Microsoft.Identity.Client library
+        /// TODO (https://github.com/dotnet/arcade/issues/13318): Remove the switch and use the new library
+        /// </summary>
         private bool _useIdentityClientLibrary;
 
         private Microsoft.Build.Utilities.TaskLoggingHelper _log;
         private IConfidentialClientApplication _akamsLinksApp;
 
 
-        public AkaMSLinkManager(string clientId, string clientSecret, string tenant, Microsoft.Build.Utilities.TaskLoggingHelper log, bool UseIdentityClientLibrary)
+        public AkaMSLinkManager(string clientId, string clientSecret, string tenant, Microsoft.Build.Utilities.TaskLoggingHelper log, bool useIdentityClientLibrary)
         {
             _clientId = clientId;
             _clientSecret = clientSecret;
             _tenant = tenant;
             _log = log;
-            _useIdentityClientLibrary = UseIdentityClientLibrary;
+            _useIdentityClientLibrary = useIdentityClientLibrary;
 
             RetryHandler = new ExponentialRetry
             {
@@ -394,7 +398,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         }
 
 
-        //TODO remove feature switch: https://github.com/dotnet/arcade/issues/13318
+        // TODO (https://github.com/dotnet/arcade/issues/13318) Remove feature switch
         private async Task<HttpClient> CreateClient() => _useIdentityClientLibrary
             ? await CreateClientUsingMSAL()
             : await CreateClientUsingADAL();
@@ -427,13 +431,13 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
             if (_akamsLinksApp == null)
             {
                 _akamsLinksApp = ConfidentialClientApplicationBuilder.Create(_clientId)
-                .WithClientSecret(_clientSecret)
-                .WithAuthority(Authority)
-                .Build();
+                    .WithClientSecret(_clientSecret)
+                    .WithAuthority(Authority)
+                    .Build();
             }
 
-            Identity.Client.AuthenticationResult token = await _akamsLinksApp.AcquireTokenForClient(
-                new[] { $"{Endpoint}/.default" })
+            Identity.Client.AuthenticationResult token = await _akamsLinksApp
+                .AcquireTokenForClient(new[] { $"{Endpoint}/.default" })
                 .WithTenantId(_tenant)
                 .ExecuteAsync()
                 .ConfigureAwait(false);
