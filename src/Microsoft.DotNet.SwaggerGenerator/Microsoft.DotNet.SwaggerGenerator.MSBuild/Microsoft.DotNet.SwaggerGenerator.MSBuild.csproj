@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)"/>
+    <PackageReference Include="System.Security.Cryptography.Xml" Version="$(SystemSecurityCryptographyXmlVersion)" />
     <ProjectReference Include="..\Microsoft.DotNet.SwaggerGenerator.CodeGenerator\Microsoft.DotNet.SwaggerGenerator.CodeGenerator.csproj" />
   </ItemGroup>
 
