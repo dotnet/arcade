@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         private bool _useIdentityClientLibrary;
 
         private Microsoft.Build.Utilities.TaskLoggingHelper _log;
-        private IConfidentialClientApplication _akamsLinksApp;
+        private Lazy<IConfidentialClientApplication> _akamsLinksApp;
 
 
         public AkaMSLinkManager(string clientId, string clientSecret, string tenant, Microsoft.Build.Utilities.TaskLoggingHelper log, bool useIdentityClientLibrary)
@@ -58,6 +58,12 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
             _tenant = tenant;
             _log = log;
             _useIdentityClientLibrary = useIdentityClientLibrary;
+            _akamsLinksApp = new Lazy<IConfidentialClientApplication>(() => 
+                ConfidentialClientApplicationBuilder
+                    .Create(_clientId)
+                    .WithClientSecret(_clientSecret)
+                    .WithAuthority(Authority)
+                    .Build());
 
             RetryHandler = new ExponentialRetry
             {
@@ -256,7 +262,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 
             using (HttpClient client = await CreateClient())
             {
-                string newOrUpdatedLinksJson = 
+                string newOrUpdatedLinksJson =
                     GetCreateOrUpdateLinkJson(linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, update, links);
 
                 bool success = await RetryHandler.RunAsync(async attempt =>
@@ -407,7 +413,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         private async Task<HttpClient> CreateClientUsingADAL()
         {
 #if NETCOREAPP
-                var platformParameters = new PlatformParameters();
+            var platformParameters = new PlatformParameters();
 #elif NETFRAMEWORK
                 var platformParameters = new PlatformParameters(PromptBehavior.Auto);
 #else
@@ -426,17 +432,9 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         // using the new Microsoft.Identity.Client library
         private async Task<HttpClient> CreateClientUsingMSAL()
         {
-            _log.LogMessage(MessageImportance.High, "Creating a client using MSAL.NET");
+            //_log.LogMessage(MessageImportance.High, "Creating a client using MSAL.NET");
 
-            if (_akamsLinksApp == null)
-            {
-                _akamsLinksApp = ConfidentialClientApplicationBuilder.Create(_clientId)
-                    .WithClientSecret(_clientSecret)
-                    .WithAuthority(Authority)
-                    .Build();
-            }
-
-            Identity.Client.AuthenticationResult token = await _akamsLinksApp
+            Identity.Client.AuthenticationResult token = await _akamsLinksApp.Value
                 .AcquireTokenForClient(new[] { $"{Endpoint}/.default" })
                 .WithTenantId(_tenant)
                 .ExecuteAsync()
