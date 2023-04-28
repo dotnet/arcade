@@ -185,6 +185,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public int NonStreamingPublishingMaxClients {get; set;}
 
         /// <summary>
+        /// Feature flag for switching to the Microsoft.Identity.Client library
+        /// TODO (https://github.com/dotnet/arcade/issues/13318): Remove the switch and use the new library
+        /// </summary>
+        private bool UseIdentityClientLibrary { get; set; } = false;
+
+        /// <summary>
         /// Just an internal flag to keep track whether we published assets via a V3 manifest or not.
         /// </summary>
         private static bool PublishedV3Manifest { get; set; }
@@ -284,16 +290,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             BuildModel buildModel = _buildModelFactory.ManifestFileToModel(manifestFullPath);
             
-            if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Legacy)
+            if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.UnsupportedV1 || 
+                     buildModel.Identity.PublishingVersion == PublishingInfraVersion.UnsupportedV2)
             {
                 Log.LogError("This task is not able to handle legacy manifests.");
                 return null;
             }
             else if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Latest)
-            {
-                return ConstructPublishingV2Task(buildModel);
-            }
-            else if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Next)
             {
                 return ConstructPublishingV3Task(buildModel);
             }
@@ -302,12 +305,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 Log.LogError($"The manifest version '{buildModel.Identity.PublishingVersion}' is not recognized by the publishing task.");
                 return null;
             }
-        }
-
-        internal PublishArtifactsInManifestBase ConstructPublishingV2Task(BuildModel buildModel)
-        {
-            Log.LogError("V2 Publishing is no longer supported.");
-            return null;
         }
 
         internal PublishArtifactsInManifestBase ConstructPublishingV3Task(BuildModel buildModel)
@@ -352,6 +349,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 UseStreamingPublishing = this.UseStreamingPublishing,
                 StreamingPublishingMaxClients = this.StreamingPublishingMaxClients,
                 NonStreamingPublishingMaxClients = this.NonStreamingPublishingMaxClients,
+                UseIdentityClientLibrary = this.UseIdentityClientLibrary,
             };
         }
     }
