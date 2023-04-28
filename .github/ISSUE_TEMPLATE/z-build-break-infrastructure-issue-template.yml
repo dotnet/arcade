@@ -25,11 +25,11 @@ body:
   - type: textarea
     id: error-message
     attributes:
-      label: Action required for the engineering services team
-      description: This information is going to be filled in by the engineering services team. 
+      label: Known issue core information
+      description: Fill in the known issue information to match build breaks across multiple repositories.
       value: |
         If this is an issue that could be causing build breaks across multiple respositories:
-        1. Edit this issue and add an error string in the JSON. Use the [known issues documentation](https://github.com/dotnet/arcade/blob/main/Documentation/Projects/Build%20Analysis/KnownIssues.md#how-to-fill-out-a-known-issue-error-section)
+        1. Edit this issue and add an error string in the JSON. Use the [Known Issues documentation](https://github.com/dotnet/arcade/blob/main/Documentation/Projects/Build%20Analysis/KnownIssues.md#how-to-fill-out-a-known-issue-error-section)
 
          ```json
          {
