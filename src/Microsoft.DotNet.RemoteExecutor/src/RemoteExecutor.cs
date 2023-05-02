@@ -9,7 +9,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using Xunit;
 using IOPath = System.IO.Path;
 
 namespace Microsoft.DotNet.RemoteExecutor
@@ -429,8 +428,8 @@ namespace Microsoft.DotNet.RemoteExecutor
             if (!options.EnableProfiling)
             {
                 // Profilers / code coverage tools doing coverage of the test process set environment
-                // variables to tell the targeted process what profiler to load.  We don't want the child process 
-                // to be profiled / have code coverage, so we remove these environment variables for that process 
+                // variables to tell the targeted process what profiler to load.  We don't want the child process
+                // to be profiled / have code coverage, so we remove these environment variables for that process
                 // before it's started.
                 psi.Environment.Remove("Cor_Profiler");
                 psi.Environment.Remove("Cor_Enable_Profiling");
@@ -478,7 +477,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             }
 
             string args = "exec";
-            
+
             string runtimeConfigPath = GetRuntimeConfigPath(options, out toDispose);
             if (runtimeConfigPath != null)
             {

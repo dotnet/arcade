@@ -10,8 +10,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using Xunit;
-using Xunit.Sdk;
 
 namespace Microsoft.DotNet.RemoteExecutor
 {
@@ -221,7 +219,7 @@ namespace Microsoft.DotNet.RemoteExecutor
                                 }
                                 catch { }
 
-                                throw new XunitException(description.ToString());
+                                throw new Exception(description.ToString());
                             }
                         }
 
