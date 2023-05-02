@@ -188,7 +188,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Feature flag for switching to the Microsoft.Identity.Client library
         /// TODO (https://github.com/dotnet/arcade/issues/13318): Remove the switch and use the new library
         /// </summary>
-        private bool UseIdentityClientLibrary { get; set; } = false;
+        public bool UseIdentityClientLibrary { get; set; } = false;
 
         /// <summary>
         /// Just an internal flag to keep track whether we published assets via a V3 manifest or not.
