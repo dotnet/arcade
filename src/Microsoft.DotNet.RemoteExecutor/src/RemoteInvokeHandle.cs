@@ -92,7 +92,10 @@ namespace Microsoft.DotNet.RemoteExecutor
 
         private void Dispose(bool disposing)
         {
-            Assert.True(disposing, $"A test {AssemblyName}!{ClassName}.{MethodName} forgot to Dispose() the result of RemoteInvoke()");
+            if (!disposing)
+            {
+                throw new InvalidOperationException($"A test {AssemblyName}!{ClassName}.{MethodName} forgot to Dispose() the result of RemoteInvoke()");
+            }
 
             try
             {
@@ -219,14 +222,14 @@ namespace Microsoft.DotNet.RemoteExecutor
                                 }
                                 catch { }
 
-                                throw new Exception(description.ToString());
+                                throw new RemoteExecutionTimeoutException(description.ToString());
                             }
                         }
 
                         FileInfo exceptionFileInfo = new FileInfo(Options.ExceptionFile);
                         if (exceptionFileInfo.Exists && exceptionFileInfo.Length != 0)
                         {
-                            throw new RemoteExecutionException(File.ReadAllText(Options.ExceptionFile));
+                            throw new RemoteExecutionException("Remote process failed with an unhandled exception.", File.ReadAllText(Options.ExceptionFile));
                         }
 
                         if (Options.CheckExitCode)
@@ -234,7 +237,10 @@ namespace Microsoft.DotNet.RemoteExecutor
                             int expected = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? Options.ExpectedExitCode : unchecked((sbyte)Options.ExpectedExitCode);
                             int actual = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? Process.ExitCode : unchecked((sbyte)Process.ExitCode);
 
-                            Assert.True(expected == actual, $"Exit code was {Process.ExitCode} but it should have been {Options.ExpectedExitCode}");
+                            if (expected != actual)
+                            {
+                                throw new RemoteExecutionException($"Exit code was {Process.ExitCode} but it should have been {Options.ExpectedExitCode}");
+                            }
                         }
                     }
                     finally

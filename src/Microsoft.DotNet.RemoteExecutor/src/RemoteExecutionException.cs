@@ -7,11 +7,10 @@ using System;
 
 namespace Microsoft.DotNet.RemoteExecutor
 {
-    public sealed class RemoteExecutionException : Exception
+    public class RemoteExecutionException : Exception
     {
         private readonly string? _stackTrace;
-        public RemoteExecutionException(string? stackTrace)
-            : base("Remote process failed with an unhandled exception.")
+        public RemoteExecutionException(string message, string? stackTrace = null)
         {
             _stackTrace = stackTrace;
         }
