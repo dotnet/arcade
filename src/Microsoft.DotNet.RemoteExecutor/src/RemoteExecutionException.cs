@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.RemoteExecutor
     /// <summary>
     /// Exception thrown for a remote execution failure.
     /// </summary>
-    public class RemoteExecutionException : Exception
+    public sealed class RemoteExecutionException : Exception
     {
         private readonly string? _stackTrace;
         public RemoteExecutionException(string message, string? stackTrace = null)

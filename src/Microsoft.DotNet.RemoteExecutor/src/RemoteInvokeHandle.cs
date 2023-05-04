@@ -222,7 +222,7 @@ namespace Microsoft.DotNet.RemoteExecutor
                                 }
                                 catch { }
 
-                                throw new RemoteExecutionTimeoutException(description.ToString());
+                                throw new RemoteExecutionException(description.ToString());
                             }
                         }
 
