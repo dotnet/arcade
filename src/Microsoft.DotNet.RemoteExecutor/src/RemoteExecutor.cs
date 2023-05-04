@@ -411,9 +411,9 @@ namespace Microsoft.DotNet.RemoteExecutor
             // Verify the specified method returns an int (the exit code) or nothing,
             // and that if it accepts any arguments, they're all strings.
             if (method.ReturnType != typeof(void)
-                || method.ReturnType != typeof(int)
-                || method.ReturnType != typeof(Task)
-                || method.ReturnType != typeof(Task<int>))
+                && method.ReturnType != typeof(int)
+                && method.ReturnType != typeof(Task)
+                && method.ReturnType != typeof(Task<int>))
             {
                 throw new ArgumentException($"Invalid return type: {method.ReturnType}. Expected void, int, or Task", nameof(method));
             }
