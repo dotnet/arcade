@@ -7,6 +7,9 @@ using System;
 
 namespace Microsoft.DotNet.RemoteExecutor
 {
+    /// <summary>
+    /// Exception thrown when a remote execution times out.
+    /// </summary>
     public sealed class RemoteExecutionTimeoutException : RemoteExecutionException
     {
         public RemoteExecutionTimeoutException(string message)

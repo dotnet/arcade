@@ -7,6 +7,9 @@ using System;
 
 namespace Microsoft.DotNet.RemoteExecutor
 {
+    /// <summary>
+    /// Exception thrown for a remote execution failure.
+    /// </summary>
     public class RemoteExecutionException : Exception
     {
         private readonly string? _stackTrace;
