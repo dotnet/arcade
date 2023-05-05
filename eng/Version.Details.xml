@@ -73,9 +73,9 @@
       <Uri>https://github.com/dotnet/symreader-converter</Uri>
       <Sha>c5ba7c88f92e2dde156c324a8c8edc04d9fa4fe0</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="1.0.0-beta.23253.1">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="1.0.0-beta.23254.1">
       <Uri>https://github.com/dotnet/xliff-tasks</Uri>
-      <Sha>513000e77df5ec1f9b86397d8df6e3254703c636</Sha>
+      <Sha>28d00bc451a6f95b76d851353e6b695be677c9fd</Sha>
     </Dependency>
     <Dependency Name="NuGet.Packaging" Version="6.2.2">
       <Uri>https://github.com/NuGet/NuGet.Client</Uri>
