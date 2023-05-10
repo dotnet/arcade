@@ -41,23 +41,16 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         private string ApiTargeturl { get => $"{ApiBaseUrl}/1/{_tenant}"; }
         private ExponentialRetry RetryHandler;
 
-        /// <summary>
-        /// Feature flag for switching to the Microsoft.Identity.Client library
-        /// TODO (https://github.com/dotnet/arcade/issues/13318): Remove the switch and use the new library
-        /// </summary>
-        private bool _useIdentityClientLibrary;
-
         private Microsoft.Build.Utilities.TaskLoggingHelper _log;
         private Lazy<IConfidentialClientApplication> _akamsLinksApp;
 
 
-        public AkaMSLinkManager(string clientId, string clientSecret, string tenant, Microsoft.Build.Utilities.TaskLoggingHelper log, bool useIdentityClientLibrary)
+        public AkaMSLinkManager(string clientId, string clientSecret, string tenant, Microsoft.Build.Utilities.TaskLoggingHelper log)
         {
             _clientId = clientId;
             _clientSecret = clientSecret;
             _tenant = tenant;
             _log = log;
-            _useIdentityClientLibrary = useIdentityClientLibrary;
             _akamsLinksApp = new Lazy<IConfidentialClientApplication>(() => 
                 ConfidentialClientApplicationBuilder
                     .Create(_clientId)
@@ -403,11 +396,21 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
             }
         }
 
+        private async Task<HttpClient> CreateClient()
+        {
+            _log.LogMessage("Creating a client using MSAL.NET");
 
-        // TODO (https://github.com/dotnet/arcade/issues/13318) Remove feature switch
-        private async Task<HttpClient> CreateClient() => _useIdentityClientLibrary
-            ? await CreateClientUsingMSAL()
-            : await CreateClientUsingADAL();
+            Identity.Client.AuthenticationResult token = await _akamsLinksApp.Value
+                .AcquireTokenForClient(new[] { $"{Endpoint}/.default" })
+                .WithTenantId(_tenant)
+                .ExecuteAsync()
+                .ConfigureAwait(false);
+
+            HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
+            httpClient.DefaultRequestHeaders.Add("Authorization", token.CreateAuthorizationHeader());
+
+            return httpClient;
+        }
 
         // using the old Microsoft.IdentityModel.Clients.ActiveDirectory library
         private async Task<HttpClient> CreateClientUsingADAL()
@@ -422,22 +425,6 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
             AuthenticationContext authContext = new AuthenticationContext(Authority);
             IdentityModel.Clients.ActiveDirectory.ClientCredential credential = new IdentityModel.Clients.ActiveDirectory.ClientCredential(_clientId, _clientSecret);
             IdentityModel.Clients.ActiveDirectory.AuthenticationResult token = await authContext.AcquireTokenAsync(Endpoint, credential);
-
-            HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
-            httpClient.DefaultRequestHeaders.Add("Authorization", token.CreateAuthorizationHeader());
-
-            return httpClient;
-        }
-
-        // using the new Microsoft.Identity.Client library
-        private async Task<HttpClient> CreateClientUsingMSAL()
-        {
-            _log.LogMessage(MessageImportance.High, "Creating a client using MSAL.NET");
-
-            Identity.Client.AuthenticationResult token = await _akamsLinksApp.Value
-                .AcquireTokenForClient(new[] { $"{Endpoint}/.default" })
-                .ExecuteAsync()
-                .ConfigureAwait(false);
 
             HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
             httpClient.DefaultRequestHeaders.Add("Authorization", token.CreateAuthorizationHeader());

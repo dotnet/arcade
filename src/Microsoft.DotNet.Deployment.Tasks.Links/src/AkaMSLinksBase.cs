@@ -19,7 +19,5 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links
         public string ClientSecret { get; set; }
         [Required]
         public string Tenant { get; set; }
-
-        public bool UseIdentityClientLibrary { get; set; } = false;
     }
 }
