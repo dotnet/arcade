@@ -81,6 +81,13 @@
       <Uri>https://github.com/NuGet/NuGet.Client</Uri>
       <Sha>027ca8b8ef4b4dc94995f87b9c441d2bcf742c1d</Sha>
     </Dependency>
+    <!-- Live version required by source-build. It is loaded in during built-time by
+      consumers of SharedFramework.Sdk (such as runtime), so we cannot use a ref pack for it -->
+    <Dependency Name="Microsoft.Extensions.DependencyModel" Version="8.0.0-preview.5.23259.1">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>547c506abe05e510bd43330fc8f6d4c5961e9223</Sha>
+      <SourceBuild RepoName="runtime" ManagedOnly="false" />
+    </Dependency>
     <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="8.0.0-alpha.1.23259.1">
       <Uri>https://github.com/dotnet/source-build-reference-packages</Uri>
       <Sha>3e23b3bb8fb547e2431e80c6f510146d09aaae84</Sha>
