@@ -91,6 +91,7 @@
     <MicrosoftApplicationInsightsVersion>2.21.0</MicrosoftApplicationInsightsVersion>
     <MicrosoftCciVersion>4.0.0-rc3-24214-00</MicrosoftCciVersion>
     <MicrosoftDataODataVersion>5.8.4</MicrosoftDataODataVersion>
+    <MicrosoftIdentityClientVersion>4.53.0</MicrosoftIdentityClientVersion>
     <!-- Keep Microsoft.Data.Services.Client package version in sync with Microsoft.Data.OData -->
     <MicrosoftDataServicesClientVersion>5.8.4</MicrosoftDataServicesClientVersion>
     <!-- TODO: This library is deprecated, brings in the entire .NET Standard 1.3 dependency graph (including vulnerable libraries)

@@ -432,11 +432,10 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         // using the new Microsoft.Identity.Client library
         private async Task<HttpClient> CreateClientUsingMSAL()
         {
-            //_log.LogMessage(MessageImportance.High, "Creating a client using MSAL.NET");
+            _log.LogMessage(MessageImportance.High, "Creating a client using MSAL.NET");
 
             Identity.Client.AuthenticationResult token = await _akamsLinksApp.Value
                 .AcquireTokenForClient(new[] { $"{Endpoint}/.default" })
-                .WithTenantId(_tenant)
                 .ExecuteAsync()
                 .ConfigureAwait(false);
 
