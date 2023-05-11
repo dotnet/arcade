@@ -5,13 +5,14 @@
 Today we must run the entire Staging pipeline if we encounter any errors in the pipeline. 
 For eg: If required validation fails then we will have to run Prep, Signing and then Validation stage. 
 
-There is no way to test the pipeline with fewer stages. Since most of the later stages are dependent on earlier stages that takes a lot of time to comeplete. 
+There is no way to test the pipeline with fewer stages. Since most of the later stages are dependent on earlier stages that takes a lot of time to complete. 
 For eg: If we want to test only the Required Validation stage, we will need to run Prep and Signing.
 
 ## Problems with current process:
 1.	Rerunning a single stage in the pipeline is not possible without executing the entire pipeline again.
 1.	Running only the stage where changes were implemented is not feasible.
 1.	Re-executing the entire process and testing consumes a considerable amount of time.
+1.  Staging pipeline is complicated to understand, we need a simpler process.
 
 ## Different approach for staging pipeline: 
 
@@ -29,7 +30,7 @@ After carefully analyzing the pros and cons of all the above approaches, we deci
 
 The proposal here is to split the Staging Pipeline into two different pipelines and add the ability to rerun stages. Thinking of this work as 2 part process.
 #### Version 1 (V1):
-1. First pipeline will contain anything the alters the artifacts (Eg: Signing, SBOM generation). 
+1. First pipeline will contain anything that alters the artifacts (Eg: Signing, SBOM generation). 
 1. Second pipeline will contain Validation and publishing to various storage accounts.
 #### Version 2 (V2): 
 1. Ability to add rerun stages in the Second pipeline.
@@ -78,6 +79,7 @@ flowchart LR;
   prep["Prep Ring \n <b>~30min</b>"] --> prep_override[Prep Ring Override]
   prep_override --> signing["Signing Ring \n <b>~50min</b>"]
   signing--> sbom_generation["SBOM Generation \n <b>~20m</b>"]
+  signing--> kick_2nd_pipeline["Stage-Dotnet-Validate-Publish pipeline kick off \n <b>~20m</b>"]
   sbom_generation --> sbom_generation_override[SBOM Generation Override]
 ```
 #### 2. Second pipeline: Stage-Dotnet-Validate-Publish
@@ -110,6 +112,13 @@ flowchart LR;
 1. Bug fix and testing in validation and publishing stages are lot faster. We do not have to wait for the build to be signed everytime we make a fix to validation/publishing stage or re-run flaky tests.
 1. We can add ability to rerun to smaller subset of stages as compared to Stage-Dotnet pipeline.
 
+### Interface between the Stage-Dotnet-Sign-Artifacts Pipeline and Stage-Dotnet-Validate-Publish pipeline:
+
+The first pipeline Stage-Dotnet-Sign-Artifacts (May be during the create SBOM stage or after) kicks off a build in the Stage-Dotnet-Validate-Publish pipeline. This is similar to what we have in maestro promotion pipeline. The Stage-Dotnet-Sign-Artifacts is not dependent on the Stage-Dotnet-Validate-Publish pipeline to be completed.
+
+The second pipeline Stage-Dotnet-Validate-Publish pipeline downloads the signed build artifacts from the Stage-Dotnet-Sign-Artifacts pipeline. 
+
+One of the main reason for adding the trigger to kick off a the Stage-Dotnet-Validate-Publish from the Stage-Dotnet-Sign-Artifacts pipeline is so that we don't have to manually kick off the Stage-Dotnet-Validate-Publish build after the first pipeline completes. Additionally the Stage-Dotnet-Validate-Publish can be kicked off manually too. It will use BarBuildID / BuildId combination to download the signed assets from the first pipeline. 
 
 ## V2:
 
