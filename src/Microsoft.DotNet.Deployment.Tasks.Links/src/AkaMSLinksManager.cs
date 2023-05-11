@@ -3,7 +3,6 @@
 
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using System;
@@ -405,26 +404,6 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
                 .WithTenantId(_tenant)
                 .ExecuteAsync()
                 .ConfigureAwait(false);
-
-            HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
-            httpClient.DefaultRequestHeaders.Add("Authorization", token.CreateAuthorizationHeader());
-
-            return httpClient;
-        }
-
-        // using the old Microsoft.IdentityModel.Clients.ActiveDirectory library
-        private async Task<HttpClient> CreateClientUsingADAL()
-        {
-#if NETCOREAPP
-            var platformParameters = new PlatformParameters();
-#elif NETFRAMEWORK
-                var platformParameters = new PlatformParameters(PromptBehavior.Auto);
-#else
-#error "Unexpected TFM"
-#endif
-            AuthenticationContext authContext = new AuthenticationContext(Authority);
-            IdentityModel.Clients.ActiveDirectory.ClientCredential credential = new IdentityModel.Clients.ActiveDirectory.ClientCredential(_clientId, _clientSecret);
-            IdentityModel.Clients.ActiveDirectory.AuthenticationResult token = await authContext.AcquireTokenAsync(Endpoint, credential);
 
             HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
             httpClient.DefaultRequestHeaders.Add("Authorization", token.CreateAuthorizationHeader());
