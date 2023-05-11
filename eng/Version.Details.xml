@@ -93,9 +93,9 @@
       <Sha>3e23b3bb8fb547e2431e80c6f510146d09aaae84</Sha>
       <SourceBuild RepoName="source-build-reference-packages" ManagedOnly="true" />
     </Dependency>
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-externals" Version="8.0.0-alpha.1.23258.2">
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-externals" Version="8.0.0-alpha.1.23260.1">
       <Uri>https://github.com/dotnet/source-build-externals</Uri>
-      <Sha>89d4778cc9ed6063be7a2f92266bfc2952d95fdc</Sha>
+      <Sha>5661eb3d593b2150fb7e153ee31282722098690a</Sha>
       <SourceBuild RepoName="source-build-externals" ManagedOnly="true" />
     </Dependency>
     <Dependency Name="Microsoft.Deployment.DotNet.Releases" Version="1.0.0-preview6.1.23159.4" CoherentParentDependency="Microsoft.NET.Sdk.WorkloadManifestReader">
