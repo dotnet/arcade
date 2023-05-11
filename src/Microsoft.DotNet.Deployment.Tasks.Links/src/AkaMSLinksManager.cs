@@ -39,10 +39,9 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         private string _tenant;
         private string ApiTargeturl { get => $"{ApiBaseUrl}/1/{_tenant}"; }
         private ExponentialRetry RetryHandler;
-
         private Microsoft.Build.Utilities.TaskLoggingHelper _log;
         private Lazy<IConfidentialClientApplication> _akamsLinksApp;
-
+       
 
         public AkaMSLinkManager(string clientId, string clientSecret, string tenant, Microsoft.Build.Utilities.TaskLoggingHelper log)
         {
@@ -397,11 +396,8 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 
         private async Task<HttpClient> CreateClient()
         {
-            _log.LogMessage("Creating a client using MSAL.NET");
-
-            Identity.Client.AuthenticationResult token = await _akamsLinksApp.Value
+            AuthenticationResult token = await _akamsLinksApp.Value
                 .AcquireTokenForClient(new[] { $"{Endpoint}/.default" })
-                .WithTenantId(_tenant)
                 .ExecuteAsync()
                 .ConfigureAwait(false);
 
