@@ -91,12 +91,9 @@
     <MicrosoftApplicationInsightsVersion>2.21.0</MicrosoftApplicationInsightsVersion>
     <MicrosoftCciVersion>4.0.0-rc3-24214-00</MicrosoftCciVersion>
     <MicrosoftDataODataVersion>5.8.4</MicrosoftDataODataVersion>
+    <MicrosoftIdentityClientVersion>4.53.0</MicrosoftIdentityClientVersion>
     <!-- Keep Microsoft.Data.Services.Client package version in sync with Microsoft.Data.OData -->
     <MicrosoftDataServicesClientVersion>5.8.4</MicrosoftDataServicesClientVersion>
-    <!-- TODO: This library is deprecated, brings in the entire .NET Standard 1.3 dependency graph (including vulnerable libraries)
-         and should be replaced with Microsoft.Identity.Client.
-         Meanwhile make sure that the version is in sync with the version used by symboluploader. -->
-    <MicrosoftIdentityModelClientsActiveDirectoryVersion>3.17.2</MicrosoftIdentityModelClientsActiveDirectoryVersion>
     <MicrosoftOpenApiReadersVersion>1.3.2</MicrosoftOpenApiReadersVersion>
     <MicrosoftOpenApiVersion>1.3.2</MicrosoftOpenApiVersion>
     <MicrosoftSignedWixVersion>1.0.0-v3.14.0.5722</MicrosoftSignedWixVersion>
