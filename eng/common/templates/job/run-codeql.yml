@@ -13,13 +13,6 @@ parameters:
 #   # CodeQL needs this plumbed along as a variable to enable TSA
 # - name: Codeql.TSAEnabled
 #   value: ${{ parameters.TSAEnabled }}
-#   # Variables for building
-# - name: _BuildConfig
-#   value: Release
-# - name: _InternalBuildArgs
-#   value: ''
-# - name: _ProductionArgs
-#   value: ''
 
 jobs:
 - job: CSharp
