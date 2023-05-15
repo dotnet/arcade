@@ -2,7 +2,7 @@ parameters:
   steps: []
   TSAEnabled: true
 
-# The pipeline calling this template should have this variables declared in its top level yaml
+# The pipeline calling this template should have these variables declared in its top level yaml
 # variables:
 #   # Force CodeQL enabled so it may be run on any branch
 # - name: Codeql.Enabled
