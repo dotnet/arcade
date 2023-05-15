@@ -1,0 +1,60 @@
+parameters:
+  steps: []
+  TSAEnabled: true
+
+# The pipeline calling this template should have this variables declared in its top level yaml
+# variables:
+#   # Force CodeQL enabled so it may be run on any branch
+# - name: Codeql.Enabled
+#   value: true
+#   # Do not let CodeQL 3000 Extension gate scan frequency
+# - name: Codeql.Cadence
+#   value: 0
+#   # CodeQL needs this plumbed along as a variable to enable TSA
+# - name: Codeql.TSAEnabled
+#   value: ${{ parameters.TSAEnabled }}
+#   # Variables for building
+# - name: _BuildConfig
+#   value: Release
+# - name: _InternalBuildArgs
+#   value: ''
+# - name: _ProductionArgs
+#   value: ''
+
+jobs:
+- job: CSharp
+  timeoutInMinutes: 90
+  pool: 
+    name: NetCore1ESPool-Internal
+    demands: ImageOverride -equals 1es-windows-2022
+  displayName: "CodeQL Scan"
+  
+  steps:
+  - task: UseDotNet@2
+    displayName: Install Correct .NET Version
+    inputs:
+      useGlobalJson: true
+
+  - task: NuGetToolInstaller@0
+    inputs:
+      versionSpec: 6.1.x
+
+  - task: NodeTool@0
+    inputs:
+      versionSpec: 12.x
+
+  - task: NuGetCommand@2
+    displayName: Restore Packages
+    inputs:
+      command: restore
+      solution: "**/*.sln"
+      feedstoUse: config
+
+  - task: CodeQL3000Init@0
+    displayName: CodeQL Initialize
+
+  - ${{ each step in parameters.steps }}:
+    - ${{ step }}
+
+  - task: CodeQL3000Finalize@0
+    displayName: CodeQL Finalize
