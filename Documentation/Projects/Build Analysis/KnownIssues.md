@@ -85,7 +85,7 @@ The matching process and its limitations depend on the type of error:
   - Azure DevOps error messages
   - Build log of failed jobs
 
-- **Test errors**:  For test errors, the feature analyzes the errors only when the build has 1000 or fewer failing tests. It also limits the analysis to 100 helix logs. This limitation is due to the high cost of analyzing tests and helix logs. The feature uses the following information to find matches:
+- **Test errors**:  For test errors, the feature analyzes the errors only when the build has 1000 or fewer failing tests. It also limits the analysis to 100 Helix logs. This limitation is due to the high cost of analyzing tests and Helix logs. The feature uses the following information to find matches:
   - Error message
   - Stack trace
   - Helix log for Helix tests
