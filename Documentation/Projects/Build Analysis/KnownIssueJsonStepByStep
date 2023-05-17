@@ -1,7 +1,7 @@
 ## Known issue step by step
 This is a summarized version of our documentation, you can always look at [Complete known issues documentation](https://github.com/dotnet/arcade/blob/main/Documentation/Projects/Build%20Analysis/KnownIssues.md#filling-out-known-issues-json-blob) or at [Runtime known issues documentation](https://github.com/dotnet/runtime/blob/main/docs/workflow/ci/failure-analysis.md) for more details.
 
-1. Select the line of the error message that you want to match, the one that better represents the failure.
+1. Select the line of the error message that you want to match. Choose the line that best represents the failure.
 1. Decide if you need to use “ErrorMessage” or “ErrorPattern”
     - "ErrorMessage" works as `contains` (single line, insensitive)
     - "ErrorPattern" works as `regex` (single line, insensitive, no backtracking)
