@@ -144,7 +144,7 @@ We recommend you test your regular expression, to do it you can use [regex101 te
 
 ## What happens after creating or updating a Known Issue
 
-Knonw issues scans all builds from the last 24 hours since the issue was opened or updated with the error message provided. It also scans the builds that fail after the issue is created.
+Known Issues scan all builds from the last 24 hours since the issue was opened or updated with the error message provided. It also scans all builds that fail after the issue is created.
 
 Known issues analyzes both infrastructure issues (Known Issues in dotnet/arcade) and repository issues (Known Issues in the pull request’s repository).
 
