@@ -12,7 +12,7 @@ This is a summarized version of our documentation, you can always look at [Compl
 1. Set BuildRetry to `true` if you would like to enable automatic build retries for any build that matches the error.
 1. Set ExcludeConsoleLog to `true` if you would like to exclude the Helix console logs from the search space. 
 
-Tip: Look at [NET Core Engineering Services: Known Build Errors Project](https://github.com/orgs/dotnet/projects/111/views/2) to see other known issues and use them as examples.
+Tip: Look at [.NET Core Engineering Services: Known Build Errors Project](https://github.com/orgs/dotnet/projects/111/views/2) to see other known issues and use them as examples.
 
 
 <details>
