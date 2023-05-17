@@ -148,7 +148,7 @@ Known Issues scan all builds from the last 24 hours since the issue was opened o
 
 Known issues analyzes both infrastructure issues (Known Issues in dotnet/arcade) and repository issues (Known Issues in the pull request’s repository).
 
-Additioally displays the Known Issues matches in the Build Analysis check. The example below shows that the feature found 4 matches with the issue “Tracking issue for CI build timeouts”.
+Additionally displays the Known Issues matches in the Build Analysis check. The example below shows that the feature found 4 matches for the issue “Tracking issue for CI build timeouts”.
 
 ![Known match example](./Resources/KnownIssueMatch.png?raw=true)
 
