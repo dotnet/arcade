@@ -72,7 +72,7 @@
     <!-- xharness -->
     <MicrosoftDotNetXHarnessCLIVersion>8.0.0-prerelease.23259.1</MicrosoftDotNetXHarnessCLIVersion>
     <!-- xliff-tasks -->
-    <MicrosoftDotNetXliffTasksVersion>1.0.0-beta.23265.1</MicrosoftDotNetXliffTasksVersion>
+    <MicrosoftDotNetXliffTasksVersion>1.0.0-beta.23266.1</MicrosoftDotNetXliffTasksVersion>
     <!-- external -->
     <AzureCoreVersion>1.31.0</AzureCoreVersion>
     <AzureDataTablesVersion>12.8.0</AzureDataTablesVersion>
