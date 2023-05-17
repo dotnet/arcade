@@ -48,9 +48,9 @@
       <Uri>https://github.com/dotnet/xharness</Uri>
       <Sha>86ee2687cca0a1a28adf67eb3451ca06f0e989b4</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="4.5.2-3.23211.5">
+    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="4.5.2-3.23261.3">
       <Uri>https://github.com/dotnet/roslyn</Uri>
-      <Sha>3248c02ac85f8e12c865fe6153b6a82ad4231d92</Sha>
+      <Sha>870c38d673c4a2815af8bc74f2d2cd718b2ffe67</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="6.0.100-1.22103.2">
       <Uri>https://github.com/dotnet/linker</Uri>
