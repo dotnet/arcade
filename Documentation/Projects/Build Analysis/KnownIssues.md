@@ -154,7 +154,7 @@ Additioally displays the Known Issues matches in the Build Analysis check. The e
 
 ### Build retry functionality in Known Issues
 
-Build Analysis can retry a build that fails with an error that matches a Known Issue. To enable this functionality, the Known Issue must have the ‘BuildRetry’ property set to true. This property indicates that the build failure can be solved by retrying the build.
+Build Analysis can retry a build that fails with an error that matches a Known Issue. To enable this functionality, the Known Issue must have the ‘BuildRetry’ property set to true. This property indicates that the build failure may be solved by retrying the build.
 
 The following is an example of a Known Issue with the ‘BuildRetry’ property:
 
