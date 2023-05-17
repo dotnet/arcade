@@ -56,7 +56,7 @@ There are two ways to report a Known Issue: one is via Build Analysis and the ot
 
 ### Filling out Known Issues JSON blob
 
-1.  [Fill the "Error message / Error pattern" section](#how-to-fill-out-a-known-issue-error-section). If
+1.  [Fill the "Error message / Error pattern" section](#how-to-fill-out-a-known-issue-error-section).
 1. If the issue reported can be solved by retrying the build you can consider setting the ["Build Retry" configuration](#build-retry-functionality-in-known-issues) to `true`
 1. You should set `ExcludeConsoleLog` to `true` if you want to exclude console logs from Known Issues matching
 1. You are done but [what happens after a Known Issue is created?](#what-happens-after-creating-or-updating-a-known-issue)
