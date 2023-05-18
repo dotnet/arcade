@@ -30,7 +30,7 @@ body:
        Fill in the known issue information to match build breaks across multiple repositories.
        Use ErrorMessage for String.Contains matches. Use ErrorPattern for regex matches (single line/no backtracking). Set BuildRetry to `true` to retry builds with this error. Set ExcludeConsoleLog to `true` to skip helix logs analysis.
       value: |
-        Fill out the known issue json by following the [Known Issues documentation](https://github.com/dotnet/arcade/blob/main/Documentation/Projects/Build%20Analysis/KnownIssues.md#how-to-fill-out-a-known-issue-error-section)
+        Fill out the known issue JSON section by following the [step by step documentation on how to create a known issue](https://github.com/dotnet/arcade/blob/main/Documentation/Projects/Build%20Analysis/KnownIssueJsonStepByStep.md#how-to-create-a-known-issue-step-by-step)
 
         ```json
          {
