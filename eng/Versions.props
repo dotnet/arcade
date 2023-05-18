@@ -107,6 +107,7 @@
     <WindowsAzureStorageVersion>9.3.3</WindowsAzureStorageVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
     <XUnitVersion>2.4.2</XUnitVersion>
+    <XUnitAnalyzersVersion>1.0.0</XUnitAnalyzersVersion>
     <log4netVersion>2.0.15</log4netVersion>
   </PropertyGroup>
 </Project>
