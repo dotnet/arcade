@@ -106,7 +106,7 @@ D:\a\1\s\src\Directory.Build.props(3,3): warning : Failed to retrieve informatio
 }
 ```
 
-**Explanation:** This is a flaky failure that is more related to a connection issue than a bug. It’s highly likely that the problem will be resolved by just retrying the build, so we can set BuildRetry to true.
+**Explanation:** This is a flaky failure that is related to a connection issue. It’s highly likely that the problem will be resolved by just retrying the build, so we set BuildRetry to true.
 
 </details>
 
