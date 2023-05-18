@@ -17,6 +17,14 @@ There are two types of Known Issues:
 
 There are two ways to report a Known Issue: one is via Build Analysis and the other one is manually.
 
+### Reporting Known Issues via Build Analysis
+
+1. In Build Analysis, you will see links for the type of issue you want to open.
+![Links to report Known Issue](./Resources/KnownIssuesLinks.png?raw=true)
+1. Click on the link of the [type of issue that suits the situation better](#decide-infrastructure-or-repository-issue).
+1. A template is going to appear for you and most of this information should be already prefilled.
+1. [Fill out the JSON blob](#filling-out-known-issues-json-blob) accordingly
+
 ### Reporting a Known Issue manually
 
 1. Decide if you need to open a [repository issue or infrastructure issue](#decide-infrastructure-or-repository-issue)
@@ -44,14 +52,6 @@ There are two ways to report a Known Issue: one is via Build Analysis and the ot
     ```
     ````
 
-1. [Fill out the JSON blob](#filling-out-known-issues-json-blob) accordingly
-
-### Reporting Known Issues via Build Analysis
-
-1. In Build Analysis, you will see links for the type of issue you want to open.
-![Links to report Known Issue](./Resources/KnownIssuesLinks.png?raw=true)
-1. Click on the link of the [type of issue that suits the situation better](#decide-infrastructure-or-repository-issue).
-1. A template is going to appear for you and most of this information should be already prefilled.
 1. [Fill out the JSON blob](#filling-out-known-issues-json-blob) accordingly
 
 ### Filling out Known Issues JSON blob
