@@ -81,7 +81,7 @@ CSC : error CS8032: An instance of analyzer Microsoft.CodeAnalysis.CSharp.Analyz
 ```
 
 **Explanation:**
- The main error is `an instance of the analyzer cannot be created...` but the instance of the analyzer can change (Ex .CSharpImmutableObjectMethodAnalyzer or CSharpUpgradeMSBuildWorkspaceAnalyzer).Therefore, we need to use a regex. Keep in mind that the regex matches one line and does not backtrack. 
+ The main error is `an instance of the analyzer cannot be created...` but the instance of the analyzer can change (Ex .CSharpImmutableObjectMethodAnalyzer or CSharpUpgradeMSBuildWorkspaceAnalyzer). Therefore, we need to use a regex. Keep in mind that the regex matches one line and does not backtrack. 
 </details>
 
 <details open>
