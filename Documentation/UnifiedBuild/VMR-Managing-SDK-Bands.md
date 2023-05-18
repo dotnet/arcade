@@ -271,3 +271,75 @@ By validation we mean the process of running some set of tests over a changed co
 
 It is unclear what the validation story should be when we have all SDKs in folders side-by-side and how it would impact developers. On one hand, validating a shared component change in all SDK branches adds up to more compute time as the shared components will get re-built in each branch. On the other hand, building all non-shared components always impacts every build and that might have negative impact on developer productivity.
 
+> TODO: Missing table
+
+> TODO: Diagram showing the break
+
+### VMR size & performance
+
+By size and performance we mean the implications of each proposed repository layout onto these metrics onto few key metrics that affect common operations we do with the VMR.
+
+#### Git repository size
+
+The expectation is that the size of the overall repository won’t differ much between the two proposed layouts. This is due to the mechanism of how git stores data internally. For illustration of this expectation, imagine a situation where we have two SDK bands which differ in one file only – `src/sdk/foo/bar.txt`. Let’s look at what is inside of the git object database:
+
+- For SDK branches, we have the two commits that describe the two branches. These are equal at first, when we freshly snap the band branches.
+- For side-by-side folders, the situation isn’t much different with the two git trees for each of the band folders – `src/sdk/9.0.1xx` and `src/sdk/9.0.2xx`. These are also the same at first – only the parent tree representing the sdk folder is an object created after the snap.
+- 
+Once we change bar.txt, we’d get a new object for the file itself and then some other:
+
+- For SDK branches, we have the new git trees that describe the parent folders of the changed file leading up to the root of the repository (`/` → `src` → `sdk` → `foo`).
+- For side-by-side folders, the situation is again not much different – we get a new set of git trees describing the path from foo through the new `src/sdk/9.0.2xx`.
+
+Looking at this simple example, it hints that whatever solution we pick, the number of git objects we’ll create to capture the changes are around the same.
+
+#### Single SDK source tarball size
+
+Another interesting metric is the archive of sources needed to build a single SDK. It seems that when 3rd parties that only care about one SDK band would be downloading sources of VMR commits, the side-by-side layout incurs quite a big toll on the overall size as we’d need to download the sources of all bands always. The release process might be customized, and we could omit other bands from the tarball.
+
+#### Release source tarball size
+
+By release source tarball we mean an archive of all sources needed to build a whole release containing several SDK bands.
+For side-by-side folders, this would simply equal to a VMR commit. For SDK branches, we’d have to do something about compiling the release archive as the shared components need to appear in the tarball just once.
+
+> TODO: It’s a question whether there would be a thing such as “tarball for the whole release with all bands” but it’s probably possible to exclude the shared components from all but one band and reach the same result with SDK folder as with SDK branches.
+
+#### Git operation performance
+
+We care about the duration of common git operation duration such as checkout or status. We also need to consider scenarios in which we use the VMR – do we care about more bands than one?
+
+SDK branches seem to have the innate benefit of not having to check out all the bands always. This seems like a big win for scenarios where we for instance make changes to one band only. But it goes away quite quickly once we need to build all of them and suddenly the checkout takes much longer.
+
+> TODO: We should figure out how often would we care about building all bands in various flows – from CI to inner dev loop.
+
+#### Summary of git size/performance
+
+From the analysis above, it seems that to declare a winner, we need to consider how often we deal with a single vs multiple bands. Both solutions are a good fit for one or the other, never both.
+
+> TODO: Missing table
+
+### Community, 3rd parties & upstream/downstream story
+
+There are quite big implications of how we lay the bands out in the VMR. 3rd parties consuming .NET might or might not care about building multiple bands. Overall, the fact that we even need to have different SDK bands is native to Microsoft’s rhythm and way of bundling releases.
+
+For SDK branches, nothing really changes in this regard as you can keep building the branch as you were doing until now and get the SDK you care about.  
+For side-by-side, the situation is quite different. We’re suddenly influencing everyone’s experience with the VMR by projecting how we bundle releases into the layout of the code. This has negative implications such as having to check out all the bands always which would for instance prolong all repo operations.
+
+> TODO: Forks and upstreaming changes differences? Some things are common for both, such as confusion about where a change should go but that’s the same for folders/branches.
+
+### Implementation and maintenance complexity
+
+- TODO: Much more work to implement side-by-side
+- TODO: Resiliency to band explosion – keeping bands in branches seems more resilient to outer requirements such as a sudden increase in the number of bands due to Visual Studio speeding up its release cycle.
+
+### Comparison summary
+
+## Comparison evaluation
+
+Both approaches seem to have pros and cons. To choose the best approach, we should assign importance to the evaluation areas on which we were comparing these and see which approach seems better.
+
+When doing so, we should take into account the product lifecycle. At first, the most active busy development happens in the preview time (on main branches). Only after the release, we move into servicing and only after then we branch out and snap the bands. We expect the servicing period to last very long but with less activity. During active development, we should prioritize **developer experience** and **code flow** as that has impact on product construction.  
+During servicing we need the system to be as frictionless as possible so that we’re able to react to external impulses fast and release fixes fast which hints at prioritizing **code flow**, **release**, and **maintenance complexity**. Some areas should be important in both periods such as **community impact**.
+
+> TODO: Actually decide
+
