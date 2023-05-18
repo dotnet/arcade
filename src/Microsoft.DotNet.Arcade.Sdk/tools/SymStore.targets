@@ -28,6 +28,7 @@
       <_SymStoreTargetFramework>$(TargetFramework)</_SymStoreTargetFramework>
       <_SymStoreOutputDir>$(ArtifactsSymStoreDirectory)$(OutDirName)\$(_SymStoreTargetFramework)\</_SymStoreOutputDir>
       <_SymStoreOutputDir Condition="'$(PlatformName)' != 'AnyCPU'">$(_SymStoreOutputDir)$(PlatformName)\</_SymStoreOutputDir>
+      <_SymStoreOutputDir Condition="'$(RuntimeIdentifier)' != ''">$(_SymStoreOutputDir)$(RuntimeIdentifier)\</_SymStoreOutputDir>
 
       <_SymStorePdbPath>$(_SymStoreOutputDir)$(TargetName).pdb</_SymStorePdbPath>
 
