@@ -1,6 +1,6 @@
 # Known Issues
 
-“Known Issues” are GitHub issues that are created to report and track known build or test errors.
+Known Issues are GitHub issues that are created to report and track known build or test errors.
 
 [Build Analysis](https://github.com/dotnet/arcade/blob/main/Documentation/Projects/Build%20Analysis/Introduction.md) shows a list of Known Issues for any build or test error that matches an existing Known Issue. This helps the developers to identify when a build break is not specific to their build. This information is displayed at the top of Build Analysis.
 
@@ -12,8 +12,8 @@ A Known Issue should be reported when you find a build or test error that is not
 
 There are two types of Known Issues:
 
-- **Infrastructure**: An infrastructure issue is an issue that is not specific to your repository and that requires investigation by the engineering services (@dotnet/dnceng)
-- **Repository**: A repository issue is an issue that occurs in a particular repository and that should be investigated by the repository owners.
+- **Infrastructure Known Issue**: An infrastructure issue is an issue that is not specific to your repository and that requires investigation by the engineering services (@dotnet/dnceng)
+- **Repository Known Issue**: A repository issue is an issue that occurs in a particular repository and that should be investigated by the repository owners.
 
 There are two ways to report a Known Issue: one is via Build Analysis and the other one is manually.
 

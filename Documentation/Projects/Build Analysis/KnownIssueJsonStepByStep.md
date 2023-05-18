@@ -15,6 +15,10 @@ This is a summarized version of our documentation, you can always look at [Compl
 Tip: Look at [.NET Core Engineering Services: Known Build Errors Project](https://github.com/orgs/dotnet/projects/111/views/2) to see other known issues and use them as examples.
 
 
+
+## Examples
+Expand/Collapse the examples to navigate between them more easily.
+
 <details>
   <summary><b>Examples</b></summary>
 
