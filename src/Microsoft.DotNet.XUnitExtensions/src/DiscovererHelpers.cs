@@ -35,10 +35,12 @@ namespace Microsoft.DotNet.XUnitExtensions
                 (platforms.HasFlag(TestPlatforms.Windows) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
 
         public static bool TestRuntimeApplies(TestRuntimes runtimes) =>
+                (runtimes.HasFlag(TestPlatforms.Any)) ||
                 (runtimes.HasFlag(TestRuntimes.Mono) && IsMonoRuntime) ||
                 (runtimes.HasFlag(TestRuntimes.CoreCLR) && !IsMonoRuntime); // assume CoreCLR if it's not Mono
 
         public static bool TestFrameworkApplies(TargetFrameworkMonikers frameworks) =>
+                (frameworks.HasFlag(TestPlatforms.Any)) ||
                 (frameworks.HasFlag(TargetFrameworkMonikers.Netcoreapp) && IsRunningOnNetCoreApp) ||
                 (frameworks.HasFlag(TargetFrameworkMonikers.NetFramework) && IsRunningOnNetFramework);
 
