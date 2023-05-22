@@ -66,6 +66,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
                 ShortNames = shortNames,
                 WixToolsetPath = TestBase.WixToolsetPath,
                 WorkloadManifestPackageFiles = manifestsPackages,
+                IsOutOfSupportInVisualStudio = true
             };
 
             bool result = createWorkloadTask.Execute();
@@ -93,6 +94,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 
             // Emscripten is an abstract workload so it should be a component group.
             Assert.Contains("vs.package.type=component", componentSwr);
+            Assert.Contains("vs.package.outOfSupport=yes", componentSwr);
             Assert.Contains("isUiGroup=yes", componentSwr);
             Assert.Contains("version=5.6.7.8", componentSwr);
 
@@ -106,9 +108,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             // Verify the SWIX authoring for the VS package wrapping the manifest MSI
             string manifestMsiSwr = File.ReadAllText(Path.Combine(baseIntermediateOutputPath, "src", "swix", "6.0.200", "Emscripten.Manifest-6.0.200", "x64", "msi.swr"));
             Assert.Contains("package name=Emscripten.Manifest-6.0.200", manifestMsiSwr);
-            Assert.Contains("vs.package.type=msi", manifestMsiSwr);
+            Assert.Contains("vs.package.type=msi", manifestMsiSwr);            
             Assert.Contains("vs.package.chip=x64", manifestMsiSwr);
             Assert.DoesNotContain("vs.package.machineArch", manifestMsiSwr);
+            Assert.DoesNotContain("vs.package.outOfSupport", manifestMsiSwr);
 
             // Verify that no arm64 MSI authoring for VS. EMSDK doesn't define RIDs for arm64, but manifests always generate
             // arm64 MSIs for the CLI based installs so we should not see that.
@@ -122,6 +125,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             string packMsiSwr = File.ReadAllText(Path.Combine(Path.GetDirectoryName(pythonPackSwixItem.ItemSpec), "msi.swr"));
             Assert.Contains("package name=Microsoft.Emscripten.Python.6.0.4", packMsiSwr);
             Assert.Contains("vs.package.chip=x64", packMsiSwr);
+            Assert.Contains("vs.package.outOfSupport=yes", packMsiSwr);
             Assert.DoesNotContain("vs.package.machineArch", packMsiSwr);
         }
 
