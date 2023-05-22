@@ -120,7 +120,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             // Verify the SWIX authoring for the VS package wrapping the manifest MSI
             string manifestMsiSwr = File.ReadAllText(Path.Combine(baseIntermediateOutputPath, "src", "swix", "6.0.200", "Emscripten.Manifest-6.0.200", "x64", "msi.swr"));
             Assert.Contains("package name=Emscripten.Manifest-6.0.200", manifestMsiSwr);
-            Assert.Contains("vs.package.type=msi", manifestMsiSwr);            
+            Assert.Contains("vs.package.type=msi", manifestMsiSwr);
             Assert.Contains("vs.package.chip=x64", manifestMsiSwr);
             Assert.DoesNotContain("vs.package.machineArch", manifestMsiSwr);
             Assert.DoesNotContain("vs.package.outOfSupport", manifestMsiSwr);
@@ -226,6 +226,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.Contains("vs.package.type=component", componentSwr);
             Assert.Contains("isUiGroup=yes", componentSwr);
             Assert.Contains("version=5.6.7.8", componentSwr);
+            // Default setting should be off
+            Assert.Contains("vs.package.outOfSupport=no", componentSwr);
 
             // Verify pack dependencies. These should map to MSI packages. The VS package IDs should be the non-aliased
             // pack IDs and version from the workload manifest. The actual VS packages will point to the MSIs generated from the
