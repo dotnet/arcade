@@ -47,6 +47,40 @@ The dependency flow eventually flows all the bits into the `dotnet/installer` re
 
 The long-term plan is to transition to building and releasing using the Virtual Monolithic Repository which is a repository where each commit denotes a full set of sources needed for building .NET. The sources of this repository are synchronized from the individual repositories based on the contents of the `dotnet/installer` repository. The goal of this document is to discuss how this will be done with regards to both the different bands as well as the shared components.
 
+### Repository types
+
+Below you can find the split of shared component vs SDK-specific component as it is today.
+
+List of repositories without SDK branches:
+- `dotnet/arcade`
+- `dotnet/aspnetcore`
+- `dotnet/cecil`
+- `dotnet/deployment-tools`
+- `dotnet/emsdk`
+- `dotnet/runtime`
+- `dotnet/source-build-externals`
+- `dotnet/source-build-reference-packages`
+
+List of repositories with SDK branches:
+- `dotnet/command-line-api`
+- `dotnet/diagnostics`
+- `dotnet/format`
+- `dotnet/fsharp`
+- `dotnet/installer`
+- `dotnet/msbuild`
+- `NuGet/NuGet.Client`
+- `dotnet/razor - SDK`
+- `dotnet/roslyn`
+- `dotnet/roslyn-analyzers`
+- `dotnet/sdk`
+- `dotnet/sourcelink`
+- `dotnet/symreader`
+- `dotnet/templating`
+- `dotnet/test-templates`
+- `microsoft/vstest`
+- `dotnet/xdt`
+- `dotnet/xliff-tasks`
+
 ## Proposed solutions
 
 Currently, we end up with SDK branches in the `dotnet/installer` repository and the release process makes sure to package those into the final product. With releasing from the VMR, we have two ways we can approach this:
@@ -246,7 +280,7 @@ Important area to consider is how the day-to-day interactions of .NET developers
 
 - **Working with sources** – working with the source files such as searching, usual investigations such as checking file history & looking for symbols, and finally code editing and building itself
 - **Git operation complexity** – actions such as checking file history, diffing bands, backporting changes between bands..
-- **Git operation performance** – duration of operations such as `git status`. This area is considered separately [later in the document](#TODO_Link_to_VMR_size_and_performance).
+- **Git operation performance** – duration of operations such as `git status`. This area is considered separately [later in the document](#vmr-size--performance).
 
 That said, it’s important to realize that most of the work and the VMR is the most active in the preview time where we only have one SDK band.
 
