@@ -449,7 +449,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                                 // Don't generate a SWIX package if the MSI targets arm64 and VS doesn't support machineArch
                                 if (_supportsMachineArch[manifestPackage.SdkFeatureBand] || !string.Equals(msiOutputItem.GetMetadata(Metadata.Platform), DefaultValues.arm64))
                                 {
-                                    // Do not flag manifest MSI packages for out-of-support. These are typically pulled in through .NET SDK components.
                                     MsiSwixProject swixProject = _supportsMachineArch[manifestPackage.SdkFeatureBand] ?
                                         new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, manifestPackage.SdkFeatureBand, chip: null, machineArch: msiOutputItem.GetMetadata(Metadata.Platform), outOfSupport: IsOutOfSupportInVisualStudio) :
                                         new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, manifestPackage.SdkFeatureBand, chip: msiOutputItem.GetMetadata(Metadata.Platform), outOfSupport: IsOutOfSupportInVisualStudio);
@@ -478,7 +477,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     // Don't generate a SWIX package if the MSI targets arm64 and VS doesn't support machineArch
                     if (_supportsMachineArch[msi.Package.SdkFeatureBand] || !string.Equals(msiOutputItem.GetMetadata(Metadata.Platform), DefaultValues.arm64))
                     {
-                        // Generate SWIX authoring for the MSI package.
+                        // Generate SWIX authoring for the MSI package. Do not flag manifest MSI packages for out-of-support.
+                        // These are typically pulled in through .NET SDK components.
                         MsiSwixProject swixProject = _supportsMachineArch[msi.Package.SdkFeatureBand] ?
                             new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, msi.Package.SdkFeatureBand, chip: null, machineArch: msiOutputItem.GetMetadata(Metadata.Platform)) :
                             new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, msi.Package.SdkFeatureBand, chip: msiOutputItem.GetMetadata(Metadata.Platform));
