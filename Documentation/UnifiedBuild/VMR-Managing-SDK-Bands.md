@@ -325,13 +325,11 @@ sequenceDiagram
 
     runtime->>runtime: Change in runtime
     runtime->>VMR: Flow of 📄 RUN_2
-    Note over VMR: 📦 Runtime intermediate 2 is built
-    VMR->>SDK_1xx: Backflow of 📦 RUN_IP_2
-    SDK_1xx->>VMR: Flow of 📄 SDK_1.2
-    Note over VMR: 📦 SDK 1xx intermediate is built
-    VMR->>SDK_2xx: Backflow of 📦 RUN_IP_2
-    SDK_2xx->>VMR: Flow of 📄 SDK_1.2
-    Note over VMR: 📦 SDK 2xx intermediate is built
+    Note over VMR: 📦 Intermediate VMR_2 is built
+    VMR->>SDK_1xx: Backflow of 📦 VMR_2
+    SDK_1xx-->>VMR: No-op
+    VMR->>SDK_2xx: Backflow of 📦 VMR_2
+    SDK_2xx-->>VMR: No-op
 ```
 
 The situation gets more interesting for breaking changes. Let’s imagine a situation where a change is needed in one of the bands that requires a breaking change in a shared component. For this, we assume that a change like this would be always made in the VMR where we can change both components at the same time.
@@ -348,28 +346,26 @@ sequenceDiagram
     participant VMR_1xx as VMR<br />release/9.0.1xx
     participant VMR_2xx as VMR<br />release/9.0.2xx
 
-    Note over runtime, VMR_2xx: Initial state - all changes flown<br />dotnet/runtime 9.0 @ RUN_1<br />dotnet/sdk 1xx @ SDK_1.1 (RUN_1)<br />dotnet/sdk 2xx @ SDK_2.1 (RUN_1)<br />VMR 1xx @ VMR_1 (SDK_1.1, RUN_1)<br />VMR 2xx @ VMR_2 (SDK_2.1, RUN_1)
+    Note over runtime, VMR_2xx: Initial state - all changes flown<br />dotnet/runtime 9.0 @ RUN_1<br />dotnet/sdk 1xx @ SDK_1.1 (RUN_1)<br />dotnet/sdk 2xx @ SDK_2.1 (RUN_1)<br />VMR 1xx @ VMR_1.1 (SDK_1.1, RUN_1)<br />VMR 2xx @ VMR_2.1 (SDK_2.1, RUN_1)
 
     # Change in SDK+runtime
-    VMR_1xx->>VMR_1xx: Change in runtime ➡️ SDK_1.2, RUN_2
-    Note over VMR_1xx: 📦 Runtime intermediate 2 is built<br />📦 SDK 1xx intermediate is built
+    runtime->>runtime: Change in runtime ➡️ RUN_2
 
-    # Backflow
-    VMR_1xx->>runtime: Backflow of 📄 RUN_2
-    VMR_1xx->>SDK_1xx: Backflow of 📄 SDK_1.2, 📦 RUN_IP_2 ➡️ SDK_1.3
+    runtime->>VMR_1xx: 📄 PR with source change to RUN_2 is opened
+    activate VMR_1xx
+    Note over VMR_1xx: ❌ Requires a change in SDK
+    Note over VMR_1xx: 📦 VMR_2 intermediates are built
+    VMR_1xx->>SDK_1xx: Flow of 📄 SDK_2.2, 📦 VMR_2
+    deactivate VMR_1xx
 
-    runtime->>VMR_2xx: Flow of RUN_2
+    runtime->>VMR_2xx: 📄 PR with source change to RUN_2 is opened
     activate VMR_2xx
-    Note over VMR_2xx: ❌ Requires change in 2xx
-    Note over VMR_2xx: 📦 Runtime intermediate 3 is built<br />📦 SDK 2xx intermediate is built
-
+    Note over VMR_2xx: ❌ Requires a change in SDK
+    Note over VMR_2xx: 📦 VMR_3 intermediates are built
     deactivate VMR_2xx
+    VMR_2xx->>SDK_2xx: Flow of 📄 SDK_2.2, 📦 VMR_3
 
-    Note over VMR_2xx: ✅ Coherent state<br />VMR 1xx and 2xx have 📄 RUN_2
-
-    VMR_2xx->>SDK_2xx: Backflow of 📄 SDK_2.2, 📦 RUN_IP_3 ➡️ SDK_2.2
-    SDK_2xx->>VMR_2xx: Flow of 📄 SDK_2.2
-    Note over VMR_2xx: 📦 SDK 2xx intermediate is built
+    Note over VMR_2xx: ✅ Coherent state<br />VMR 1xx and 2xx have RUN_2
 ```
 
 Side-by-side folders:
@@ -385,17 +381,21 @@ sequenceDiagram
 
     Note over runtime, VMR: Initial state - all changes flown<br />dotnet/runtime 9.0 @ RUN1<br />dotnet/sdk 1xx @ SDK1 / RUN1<br />dotnet/sdk 2xx @ SDK2 / RUN1<br />VMR 9.0 @ VMR1 / SDK1+SDK2, RUN1
 
+    runtime->>runtime: Change in runtime ➡️ RUN_2
+
+
+    activate SDK_2xx
+    runtime->>VMR: Flow of runtime
     activate VMR
-    VMR->>VMR: New change of runtime + SDK 1xx
-    Note over VMR: ❌ PR fails - Requires change in 2xx too
+    Note over VMR: ❌ Requires change<br />(in sdk/1xx and sdk/2xx)
     Note over VMR: Fix is made immediately
-    Note over VMR: 📄 RUN1, SDK_1.2 and SDK_2.2<br />📦 Runtime intermediate 2 is built
+    Note over VMR: 📄 RUN1, SDK_1.2 and SDK_2.2<br />📦 VMR_2 intermediates are built
     deactivate VMR
 
-    # Backflow
-    VMR->>runtime: Backflow of 📄 RUN_2
-    VMR->>SDK_1xx: Backflow of 📄 SDK_1.2, 📦 RUN_IP_2
-    VMR->>SDK_2xx: Backflow of 📄 SDK_2.2, 📦 RUN_IP_2
+    VMR->>SDK_1xx: Backflow of 📄 SDK_1.2, 📦 VMR_2
+    VMR->>SDK_2xx: Backflow of 📄 SDK_2.2, 📦 VMR_2
+    SDK_1xx-->>VMR: No-op
+    SDK_2xx-->>VMR: No-op
 ```
 
 From the above, the side-by-side solution is much more resilient to breaking changes as those need to be dealt with immediately. The VMR won’t ever get into an inconsistent state as the bands live within a single commit. Whereas in the SDK folder solution, the breaking change is created and is dealt with in a follow-up step once code flows to the branch of the other band.
