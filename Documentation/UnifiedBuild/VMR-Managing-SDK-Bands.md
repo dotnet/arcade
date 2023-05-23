@@ -293,20 +293,20 @@ sequenceDiagram
 
     runtime->>runtime: New change ➡️ RUN_2
 
-    runtime->>VMR_1xx: Flow of 📄 RUN_2 ➡️ VMR_1.2
-    Note over VMR_1xx: 📦 Runtime intermediate 2 is built
-    runtime->>VMR_2xx: Flow of 📄 RUN_2 ➡️ VMR_2.1
-    Note over VMR_2xx: 📦 Runtime intermediate 3 is built
+    runtime->>VMR_1xx: Flow of 📄 RUN_2
+    Note over VMR_1xx: 📦 VMR_2 intermediates are built
+    runtime->>VMR_2xx: Flow of 📄 RUN_2
+    Note over VMR_2xx: 📦 VMR_3 intermediates are built
 
     Note over VMR_2xx: ✅ Coherent state<br />VMR 1xx and 2xx have 📄 RUN_2
 
-    # Backflow
-    VMR_1xx->>SDK_1xx: Backflow of 📦 RUN_IP_2 ➡️ SDK_1.2
-    SDK_1xx->>VMR_1xx: Flow of 📄 SDK_1.2
-    Note over VMR_1xx: 📦 SDK 1xx intermediate is built
-    VMR_2xx->>SDK_2xx: Backflow of 📦 RUN_IP_3 ➡️ SDK_2.2
-    SDK_2xx->>VMR_2xx: Flow of 📄 SDK_2.2
-    Note over VMR_2xx: 📦 SDK 2xx intermediate is built
+    par Backflow of intermediates
+        VMR_1xx->>SDK_1xx: Backflow of 📦 VMR_2 ➡️ SDK_1.2
+        SDK_1xx-->>VMR_1xx: No-op
+    and
+        VMR_2xx->>SDK_2xx: Backflow of 📦 VMR_3 ➡️ SDK_2.2
+        SDK_2xx-->>VMR_2xx: No-op
+    end
 ```
 
 Side-by-side folders:
@@ -326,10 +326,14 @@ sequenceDiagram
     runtime->>runtime: Change in runtime
     runtime->>VMR: Flow of 📄 RUN_2
     Note over VMR: 📦 Intermediate VMR_2 is built
-    VMR->>SDK_1xx: Backflow of 📦 VMR_2
-    SDK_1xx-->>VMR: No-op
-    VMR->>SDK_2xx: Backflow of 📦 VMR_2
-    SDK_2xx-->>VMR: No-op
+
+    par Backflow of intermediates
+        VMR->>SDK_1xx: Backflow of 📦 VMR_2
+        SDK_1xx-->>VMR: No-op
+    and
+        VMR->>SDK_2xx: Backflow of 📦 VMR_2
+        SDK_2xx-->>VMR: No-op
+    end
 ```
 
 The situation gets more interesting for breaking changes. Let’s imagine a situation where a change is needed in one of the bands that requires a breaking change in a shared component. For this, we assume that a change like this would be always made in the VMR where we can change both components at the same time.
@@ -351,19 +355,21 @@ sequenceDiagram
     # Change in SDK+runtime
     runtime->>runtime: Change in runtime ➡️ RUN_2
 
-    runtime->>VMR_1xx: 📄 PR with source change to RUN_2 is opened
-    activate VMR_1xx
-    Note over VMR_1xx: ❌ Requires a change in SDK
-    Note over VMR_1xx: 📦 VMR_2 intermediates are built
-    VMR_1xx->>SDK_1xx: Flow of 📄 SDK_2.2, 📦 VMR_2
-    deactivate VMR_1xx
-
-    runtime->>VMR_2xx: 📄 PR with source change to RUN_2 is opened
-    activate VMR_2xx
-    Note over VMR_2xx: ❌ Requires a change in SDK
-    Note over VMR_2xx: 📦 VMR_3 intermediates are built
-    deactivate VMR_2xx
-    VMR_2xx->>SDK_2xx: Flow of 📄 SDK_2.2, 📦 VMR_3
+    par
+        runtime->>VMR_1xx: 📄 PR with source change to RUN_2 is opened
+        activate VMR_1xx
+        Note over VMR_1xx: ❌ Requires a change in SDK
+        Note over VMR_1xx: 📦 VMR_2 intermediates are built
+        VMR_1xx->>SDK_1xx: Flow of 📄 SDK_2.2, 📦 VMR_2
+        deactivate VMR_1xx
+    and
+        runtime->>VMR_2xx: 📄 PR with source change to RUN_2 is opened
+        activate VMR_2xx
+        Note over VMR_2xx: ❌ Requires a change in SDK
+        Note over VMR_2xx: 📦 VMR_3 intermediates are built
+        deactivate VMR_2xx
+        VMR_2xx->>SDK_2xx: Flow of 📄 SDK_2.2, 📦 VMR_3
+    end
 
     Note over VMR_2xx: ✅ Coherent state<br />VMR 1xx and 2xx have RUN_2
 ```
@@ -387,15 +393,17 @@ sequenceDiagram
     activate SDK_2xx
     runtime->>VMR: Flow of runtime
     activate VMR
-    Note over VMR: ❌ Requires change<br />(in sdk/1xx and sdk/2xx)
-    Note over VMR: Fix is made immediately
-    Note over VMR: 📄 RUN1, SDK_1.2 and SDK_2.2<br />📦 VMR_2 intermediates are built
+    Note over VMR: ❌ Requires change<br />(in sdk/1xx and sdk/2xx)<br />Fix is made immediately
     deactivate VMR
+    Note over VMR: 📄 RUN1, SDK_1.2 and SDK_2.2<br />📦 VMR_2 intermediates are built
 
-    VMR->>SDK_1xx: Backflow of 📄 SDK_1.2, 📦 VMR_2
-    VMR->>SDK_2xx: Backflow of 📄 SDK_2.2, 📦 VMR_2
-    SDK_1xx-->>VMR: No-op
-    SDK_2xx-->>VMR: No-op
+    par Backflow
+        VMR->>SDK_1xx: Backflow of 📄 SDK_1.2, 📦 VMR_2
+        SDK_1xx-->>VMR: No-op
+    and
+        VMR->>SDK_2xx: Backflow of 📄 SDK_2.2, 📦 VMR_2
+        SDK_2xx-->>VMR: No-op
+    end
 ```
 
 From the above, the side-by-side solution is much more resilient to breaking changes as those need to be dealt with immediately. The VMR won’t ever get into an inconsistent state as the bands live within a single commit. Whereas in the SDK folder solution, the breaking change is created and is dealt with in a follow-up step once code flows to the branch of the other band.
