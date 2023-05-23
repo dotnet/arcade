@@ -289,8 +289,6 @@ sequenceDiagram
     participant VMR_1xx as VMR<br />release/9.0.1xx
     participant VMR_2xx as VMR<br />release/9.0.2xx
 
-    Note over runtime, VMR_2xx: Initial state - all changes flown<br />dotnet/runtime 9.0 @ RUN_1<br />dotnet/sdk 1xx @ SDK_1.1 (RUN_1)<br />dotnet/sdk 2xx @ SDK_2.1 (RUN_1)<br />VMR 1xx @ VMR_1.1 (SDK_1.1, RUN_1)<br />VMR 2xx @ VMR_2.1 (SDK_2.1, RUN_1)
-
     runtime->>runtime: New change ➡️ RUN_2
 
     runtime->>VMR_1xx: Flow of 📄 RUN_2
@@ -321,8 +319,6 @@ sequenceDiagram
     participant SDK_2xx as dotnet/sdk<br />release/9.0.2xx
     participant VMR as VMR<br />release/9.0
 
-    Note over runtime, VMR: Initial state - all changes flown<br />dotnet/runtime 9.0 @ RUN1<br />dotnet/sdk 1xx @ SDK1 / RUN1<br />dotnet/sdk 2xx @ SDK2 / RUN1<br />VMR 9.0 @ VMR1 / SDK1+SDK2, RUN1
-
     runtime->>runtime: Change in runtime
     runtime->>VMR: Flow of 📄 RUN_2
     Note over VMR: 📦 Intermediate VMR_2 is built
@@ -349,8 +345,6 @@ sequenceDiagram
     participant SDK_2xx as dotnet/sdk<br />release/9.0.2xx
     participant VMR_1xx as VMR<br />release/9.0.1xx
     participant VMR_2xx as VMR<br />release/9.0.2xx
-
-    Note over runtime, VMR_2xx: Initial state - all changes flown<br />dotnet/runtime 9.0 @ RUN_1<br />dotnet/sdk 1xx @ SDK_1.1 (RUN_1)<br />dotnet/sdk 2xx @ SDK_2.1 (RUN_1)<br />VMR 1xx @ VMR_1.1 (SDK_1.1, RUN_1)<br />VMR 2xx @ VMR_2.1 (SDK_2.1, RUN_1)
 
     # Change in SDK+runtime
     runtime->>runtime: Change in runtime ➡️ RUN_2
@@ -384,8 +378,6 @@ sequenceDiagram
     participant SDK_1xx as dotnet/sdk<br />release/9.0.1xx
     participant SDK_2xx as dotnet/sdk<br />release/9.0.2xx
     participant VMR as VMR<br />release/9.0
-
-    Note over runtime, VMR: Initial state - all changes flown<br />dotnet/runtime 9.0 @ RUN1<br />dotnet/sdk 1xx @ SDK1 / RUN1<br />dotnet/sdk 2xx @ SDK2 / RUN1<br />VMR 9.0 @ VMR1 / SDK1+SDK2, RUN1
 
     runtime->>runtime: Change in runtime ➡️ RUN_2
 
