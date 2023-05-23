@@ -40,13 +40,13 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
         private readonly string _preBuiltDocMessage = "See aka.ms/dotnet/prebuilts " +
             "for guidance on what pre-builts are and how to eliminate them.";
 
-        private readonly string _changesReviewRequestMessage = "Whenever altering this " +
+        private readonly string _reviewRequestMessage = "Whenever altering this " +
             "or other Source Build files, please make sure to include @dotnet/source-build-internal " +
             "as a reviewer";
 
         public override bool Execute()
         {
-            string ChangesReviewRequestComment = $"<!-- {_changesReviewRequestMessage} -->\n";
+            string ReviewRequestComment = $"<!-- {_reviewRequestMessage} -->\n";
             string PreBuiltDocXmlComment = $"<!-- {_preBuiltDocMessage} -->\n";
             
             var used = UsageData.Parse(XElement.Parse(File.ReadAllText(DataFile)));
@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
             UsageValidationData data = GetUsageValidationData(baseline, used);
 
             Directory.CreateDirectory(Path.GetDirectoryName(OutputBaselineFile));
-            File.WriteAllText(OutputBaselineFile, ChangesReviewRequestComment + PreBuiltDocXmlComment + data.ActualUsageData.ToXml().ToString());
+            File.WriteAllText(OutputBaselineFile, ReviewRequestComment + PreBuiltDocXmlComment + data.ActualUsageData.ToXml().ToString());
 
             Directory.CreateDirectory(Path.GetDirectoryName(OutputReportFile));
             File.WriteAllText(OutputReportFile, PreBuiltDocXmlComment + data.Report.ToString());
