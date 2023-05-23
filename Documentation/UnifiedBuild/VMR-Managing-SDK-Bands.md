@@ -20,10 +20,107 @@ This section presents more precise definitions of common terms used in this docu
 
 ## SDK bands
 
-Presently, for each major .NET version (e.g., `7.0`), Microsoft not only releases new servicing versions of .NET in succession, but also multiple so-called “bands” of the .NET SDK per each servicing release. These bands differ in their feature set but also share some common parts such as the .NET runtime.  
-To best illustrate how this works in practice, let’s imagine the following timeline:
+Presently, for each major .NET version (e.g., `7.0`), Microsoft not only releases new servicing versions of .NET in succession, but also multiple so-called “bands” of the .NET SDK per each servicing release. These bands differ in their feature set but also share some common parts such as the .NET runtime.
 
-![Example of git history of repositories with shared components and with SDK bands](images/sdk-branches.png)
+To best illustrate how this works in practice, let’s imagine the following timeline for repositories with SDK branches (e.g., `dotnet/sdk`):
+
+```mermaid
+%%{init: { 'logLevel': 'debug', 'theme': 'base', 'gitGraph': {'showCommitLabel': false, 'tagLabelFontSize': '24px'}} }%%
+gitGraph
+   commit
+   commit
+   branch release/8.0.1xx
+   checkout release/8.0.1xx
+   commit
+   commit type: HIGHLIGHT tag: "Release #1 - SDK 8.0.100"
+   commit
+   checkout main
+   commit
+   commit
+   commit
+   checkout release/8.0.1xx
+   branch release/8.0.2xx
+   checkout release/8.0.2xx
+   commit
+   commit
+   commit type: HIGHLIGHT tag: "Release #2 - SDK 8.0.205"
+   checkout main
+   commit
+   checkout release/8.0.1xx
+   commit type: HIGHLIGHT tag: "Release #2 - SDK 8.0.109"
+   commit
+   commit
+   checkout main
+   commit
+   checkout release/8.0.1xx
+   commit
+   commit
+   checkout release/8.0.2xx
+   commit
+   checkout release/8.0.1xx
+   commit
+   checkout main
+   commit
+   commit
+   commit
+   checkout release/8.0.2xx
+   branch release/8.0.3xx
+   checkout release/8.0.3xx
+   commit
+   commit
+   checkout release/8.0.2xx
+   commit type: HIGHLIGHT tag: "Release #3 - SDK 8.0.207"
+   checkout release/8.0.1xx
+   commit type: HIGHLIGHT tag: "Release #3 - SDK 8.0.111"
+   checkout release/8.0.3xx
+   commit type: HIGHLIGHT tag: "Release #3 - SDK 8.0.302"
+   checkout main
+   commit
+```
+
+In parallel, this would represent the state of a shared repository (e.g., `dotnet/runtime`) that is not specific to any particular SDK band:
+
+```mermaid
+%%{init: { 'logLevel': 'debug', 'theme': 'base', 'gitGraph': {'showCommitLabel': false, 'tagLabelFontSize': '24px'}} }%%
+gitGraph
+   commit
+   commit
+   branch release/8.0
+   checkout release/8.0
+   commit
+   commit type: HIGHLIGHT tag: "Release #1 - Runtime 8.0.0"
+   commit
+   checkout main
+   commit
+   commit
+   commit
+   checkout release/8.0
+   commit
+   commit
+   commit type: HIGHLIGHT tag: "Release #2 - Runtime 8.0.6"
+   checkout main
+   commit
+   commit
+   commit
+   checkout release/8.0
+   commit
+   commit
+   checkout main
+   commit
+   checkout release/8.0
+   commit
+   commit
+   checkout main
+   commit
+   commit
+   commit
+   checkout release/8.0
+   commit
+   commit
+   commit type: HIGHLIGHT tag: "Release #3 - Runtime 8.0.12"
+   checkout main
+   commit
+```
 
 On the image you can see timelines of branches of two different repositories – `dotnet/sdk` and `dotnet/runtime`. As noted previously, each (servicing) release of .NET contains multiple SDK bands but only one runtime. Each individual repository of each component that needs to differ per band would then have these so-called “SDK branches” named `release/Z.0.Yxx` while repositories that are shared per release have the non-SDK `release/Z.0` branches. As shown in the example, the development of the single runtime would happen in the `release/8.0` branch while the various SDK bands are stored in the following SDK branches (e.g., `release/8.0.1xx` represents the “100th band”).
 
@@ -37,7 +134,38 @@ Once we hit each release day (denoted with red vertical lines), we take the late
 
 We call the builds of the SDK bands coherent when the versions of all shared components of each band are the same. To make sure, the bands are coherent and depend on the same version of each non-SDK component (e.g., runtime), we utilize the Maestro dependency flow channels. Non-SDK repositories publish their build products in those channels and the SDK branches consume those. Again, as an example, the following diagram shows a possible setup:
 
-![Example of relationships of repositories with SDK dependency flow channels](images/sdk-channels.png)
+```mermaid
+flowchart TD
+    classDef Channel fill:#2487DF,stroke:#fff,stroke-width:4px,color:#fff;
+
+    sdk[dotnet/sdk<br />release/7.0.3xx]
+    roslyn[dotnet/roslyn<br />release/7.0.3xx]
+
+    runtime[dotnet/runtime<br />release/7.0]
+    aspnetcore[dotnet/aspnetcore<br />release/7.0]
+
+    arcade[dotnet/arcade<br />release/7.0]
+
+    channel3xx[(.NET 7.0.3xx SDK<br />channel)]
+    channel7[(.NET 7<br />channel)]
+    channel7Eng[(.NET 7 Eng<br />channel)]
+
+    installer[dotnet/installer<br />release/7.0.3xx]
+
+    sdk-->channel3xx
+    roslyn-->channel3xx
+
+    runtime-->channel7
+    aspnetcore-->channel7
+
+    arcade-->channel7Eng
+
+    channel3xx-->installer
+    channel7-->installer
+    channel7Eng-->installer
+
+    class channel3xx,channel7,channel7Eng Channel
+```
 
 This makes sure that eventually the latest version of each shared component (e.g., runtime) flows to all SDK branches which then become coherent between each other.
 
@@ -69,7 +197,7 @@ List of repositories with SDK branches:
 - `dotnet/installer`
 - `dotnet/msbuild`
 - `NuGet/NuGet.Client`
-- `dotnet/razor - SDK`
+- `dotnet/razor`
 - `dotnet/roslyn`
 - `dotnet/roslyn-analyzers`
 - `dotnet/sdk`
