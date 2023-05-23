@@ -116,9 +116,9 @@ gitGraph
    commit
    checkout release/8.0
    commit
-   commit
    commit type: HIGHLIGHT tag: "Release #3 - Runtime 8.0.12"
    checkout main
+   commit
    commit
 ```
 
@@ -126,9 +126,9 @@ On the image you can see timelines of branches of two different repositories –
 
 Once we hit each release day (denoted with red vertical lines), we take the latest commit of each of those branches (that already exist) and release those together. For the releases in the example diagram, this might be:
 
-- Release day #1 – 8.0.0 runtime + one SDK (`8.0.100`)
-- Release day #2 – 8.0.6 runtime + two SDKs (`8.0.109`, `8.0.205`)
-- Release day #3 – 8.0.12 runtime + three SDKs (`8.0.111`, `8.0.207`, `8.0.302`)
+- Release day #1 – `8.0.0` runtime + one SDK (`8.0.100`)
+- Release day #2 – `8.0.6` runtime + two SDKs (`8.0.109`, `8.0.205`)
+- Release day #3 – `8.0.12` runtime + three SDKs (`8.0.111`, `8.0.207`, `8.0.302`)
 
 ### Band coherence
 
@@ -228,9 +228,8 @@ To compare the two proposals, we identified several areas which might be impacte
 - **Developer experience** – impact on developer lives and how they work with the VMR; their options for making changes that span multiple repositories
 - **Release** – how do we compile the final Microsoft release
 - **Validation** – what do we validate (build/test) and when
-- **build their own SDK(s)
 - **VMR size & performance** – impact of selected architecture on the git repository
-- **Community, 3rd parties & upstream/downstream story** – what does it mean for partners to 
+- **Community, 3rd parties & upstream/downstream story** – what does it mean for partners to build their own SDK(s)
 - **Implementation and maintenance complexity** – risks and costs associated with the future
 
 ### Build
