@@ -136,7 +136,7 @@ To organize what ends up in each band and to drive the code flow between the rep
 
 - **VS-centric channels** – To better match how teams opererate, some repositories align their build outputs with the Visual Studio versions, e.g. `dotnet/roslyn`. Outputs of repositories like that would end up in a channel named based on the version of VS, e.g. `17.5`.
 - **SDK band channels** – The repositories that are closer to how we organize the final release are then targeting channels named based on the band version, e.g. `.NET 7.0.3xx SDK`.
-- **Shared component channels** – Lastly, repositories with shared components and tooling repositories target channels named based on the major .NET version, e.g. `.NET 7`.
+- **Shared component channels** – Lastly, repositories with shared components and tooling repositories target channels named based on the major .NET version, e.g. `.NET 7` or `.NET 7 Eng`.
 
 The following diagram shows a simplified example:
 
@@ -263,10 +263,10 @@ Code flow is where the two approaches differ dramatically. The biggest differenc
 ```mermaid
 flowchart TD
     VMR[VMR]
-    Runtime[runtime]
-    Roslyn[roslyn]
-    MSBuild[msbuild]
-    FSharp[fsharp]
+    Runtime[dotnet/runtime]
+    Roslyn[dotnet/roslyn]
+    MSBuild[dotnet/msbuild]
+    FSharp[dotnet/fsharp]
     Other[...]
 
     Runtime-->VMR
@@ -429,8 +429,10 @@ Some points of interested are rather a matter of personal preference – is it b
 
 ### Release
 
-> TODO
-> –	Separating development and release cycle – the fact that we release several SDKs is a Microsoft problem that 3rd parties may or may not care about. We shouldn’t enforce the problems of our custom release on others through the code layout – for instance, you shouldn’t be forced to check out multiple versions of the code if you don’t care about multiple bands. Further, we shouldn’t tax the .NET team itself and subordinate how we store code to how we release it later.
+> TODO: Describe what putting a release together looks like - but we should describe that in each of the proposals
+
+> Note : Separating development and release cycle – the fact that we release several SDKs is a Microsoft problem that 3rd parties may or may not care about. We shouldn’t enforce the problems of our custom release on others through the code layout – for instance, you shouldn’t be forced to check out multiple versions of the code if you don’t care about multiple bands. Further, we shouldn’t tax the .NET team itself and subordinate how we store code to how we release it later.
+
 > –	Note: Resiliency to band explosion – keeping bands in branches seems more resilient to outer requirements such as a sudden increase in the number of bands due to Visual Studio speeding up its release cycle.
 
 ### Validation
@@ -439,9 +441,30 @@ By validation we mean the process of running some set of tests over a changed co
 
 It is unclear what the validation story should be when we have all SDKs in folders side-by-side and how it would impact developers. On one hand, validating a shared component change in all SDK branches adds up to more compute time as the shared components will get re-built in each branch. On the other hand, building all non-shared components always impacts every build and that might have negative impact on developer productivity.
 
-> TODO: Missing table
+<table>
 
-> TODO: Diagram showing the break
+<tr>
+<th> SDK branches </th>
+<th> Side-by-Side folders </th>
+</tr>
+
+<tr>
+<th colspan=2> SDK-band-specific component changed </th>
+</tr>
+
+<tr>
+  <td>We only rebuild 1 band/branch where the change happens. Change is flown to source repo and re-validated there.</td>
+  <td>We’d need to detect that we don’t need to build all bands. Change is flown to source repo and re-validated there.</td>
+</tr>
+<tr>
+<th colspan=2> Shared component changed </th>
+</tr>
+
+<tr>
+  <td>We only rebuild 1 band – the branch this happened. Possible breaking changes with other bands which are detected after we try to flow the change back.</td>
+  <td>We’d need to detect that and build/test all bands, validating the change.</td>
+</tr>
+</table>
 
 ### VMR size & performance
 
@@ -484,11 +507,52 @@ SDK branches seem to have the innate benefit of not having to check out all the 
 
 From the analysis above, it seems that to declare a winner, we need to consider how often we deal with a single vs multiple bands. Both solutions are a good fit for one or the other, never both.
 
-> TODO: Missing table
+<table>
+
+<tr>
+<th> SDK branches </th>
+<th> Side-by-Side folders </th>
+</tr>
+
+<tr>
+<th colspan=2> Git repository size </th>
+</tr>
+
+<tr>
+  <td colspan=2>Roughly the same overhead</td>
+</tr>
+
+<tr>
+<th colspan=2> Single SDK source tarball size </th>
+</tr>
+<tr>
+  <td>Each VMR commit gives us this.</td>
+  <td>Release process would have to be customized and other bands omitted.</td>
+</tr>
+
+<tr>
+<th colspan=2> Release source tarball size </th>
+</tr>
+
+<tr>
+  <td>Release process would have to be customized and shared components included just once.</td>
+  <td>Each VMR commit gives us this.</td>
+</tr>
+
+<tr>
+<th colspan=2> Git operation performance </th>
+</tr>
+
+<tr>
+  <td>Ideal for scenarios concerning 1 band. Worse off for multi-band scenarios.</td>
+  <td>Ideal for scenarios concerning multiple bands. Worse off for single-band scenarios.</td>
+</tr>
+
+</table>
 
 ### Community, 3rd parties & upstream/downstream story
 
-There are quite big implications of how we lay the bands out in the VMR. 3rd parties consuming .NET might or might not care about building multiple bands. Overall, the fact that we even need to have different SDK bands is native to Microsoft’s rhythm and way of bundling releases.
+There are quite big implications of how we lay the bands out in the VMR on the outside world. 3rd parties consuming .NET might or might not care about building multiple bands. Overall, the fact that we even need to have different SDK bands is native to Microsoft’s rhythm and way of bundling releases.
 
 For SDK branches, nothing really changes in this regard as you can keep building the branch as you were doing until now and get the SDK you care about.  
 For side-by-side, the situation is quite different. We’re suddenly influencing everyone’s experience with the VMR by projecting how we bundle releases into the layout of the code. This has negative implications such as having to check out all the bands always which would for instance prolong all repo operations.
@@ -501,6 +565,17 @@ For side-by-side, the situation is quite different. We’re suddenly influencing
 - TODO: Resiliency to band explosion – keeping bands in branches seems more resilient to outer requirements such as a sudden increase in the number of bands due to Visual Studio speeding up its release cycle.
 
 ### Comparison summary
+
+|                       Comparison area                       |    What comes out on top    |
+|-------------------------------------------------------------|:---------------------------:|
+|     Build                                                   |        Does not matter      |
+|     Code flow                                               |     Side-by-side folders    |
+|     Developer experience                                    |         SDK branches        |
+|     Release                                                 |               ?             |
+|     Validation                                              |               ?             |
+|     VMR size & performance                                  |         SDK branches        |
+|     Community, 3rd parties & upstream/downstream story      |         SDK branches        |
+|     Implementation and maintenance complexity               |         SDK branches        |
 
 ## Comparison evaluation
 
