@@ -17,6 +17,7 @@ This section presents more precise definitions of common terms used in this docu
 - **SDK branch** – A git branch related to a specific SDK band, e.g. `release/8.0.1xx`.
 - **Non-SDK branch** – A git branch common for all associated SDK bands, e.g. `release/8.0`.
 - **Intermediate packages** – Packaged build produces of each of the individual repositories either built in their source repos or during the subsequent build of each individual repository component within the VMR. These are used during package flow between the VMR and the individual repositories.
+- **Maestro** - a service used by the .NET team to manage dependency flow between repositories.
 
 ## SDK bands
 
@@ -132,7 +133,7 @@ Once we hit each release day (denoted with red vertical lines), we take the late
 
 ### Current code flow
 
-To organize what ends up in each band and to drive the code flow between the repositories, we utilize the Maestro dependency flow, namely the Maestro channels:
+To organize what ends up in each band and to drive the code flow between the repositories, we utilize the Maestro dependency flow, namely the Maestro channels (see [Channels, Branches and Subscriptions](../BranchesChannelsAndSubscriptions.md for details):
 
 - **VS-centric channels** – To better match how teams opererate, some repositories align their build outputs with the Visual Studio versions, e.g. `dotnet/roslyn`. Outputs of repositories like that would end up in a channel named based on the version of VS, e.g. `17.5`.
 - **SDK band channels** – The repositories that are closer to how we organize the final release are then targeting channels named based on the band version, e.g. `.NET 7.0.3xx SDK`.
@@ -187,7 +188,9 @@ flowchart TD
     class channel174,channel175,channel2xx,channel3xx,channel7,channel7Eng Channel
 ```
 
-This setup makes sure that eventually the latest version of each shared component (e.g., runtime) flows to all SDK branches which then become coherent between each other. **We call the SDK bands coherent when the versions of all shared components of each band are the same**.
+<center><i>*Note: Dependencies of roslyn and sdk on tooling repositories were left out for simplicity</i></center>
+
+This setup makes sure that the latest version of each shared component (e.g., runtime) eventually flows to all SDK branches which then become coherent between each other. **We call the SDK bands coherent when the versions of all shared components of each band are the same**.
 
 ### Band lifecycle
 
@@ -208,6 +211,35 @@ When we would be ready to release VS `17.2`, we'd flow the latest shared compone
 - We'd create the `dev/17.2` branch in VS-centric repositories, point it to the `17.2` channel and retarget `main` to `dev/17.3`.
 - We'd snap branches of SDK repositories by branching `7.0.3xx` from `7.0.4xx`. While doing that, we'd update the runtime version of `7.0.3xx` to the just released version.
 - We would set up the `7.0` shared channels to start flowing into the `7.0.3xx` branches as the runtime there would start reving.
+
+### Full code backflow and Maestro
+
+Currently, the [VMR is synchronized](./VMR-Design-And-Operation.md#source-synchronization-process) based on the `dotnet/installer` repository mapping its commits 1:1 with `dotnet/installer`. This will have to change once we switch over to the full code backflow model.
+
+To re-iterate what the planned code flow looks like for .NET 9 (with full VMR back flow) – the individual repositories only receive and send updates from/to the VMR and not between each other, so the situation looks like this (see [VMR Code and Build Workflow](./VMR-Code-And-Build-Workflow.md) for details):
+
+```mermaid
+flowchart TD
+    VMR[VMR]
+    arcade[dotnet/arcade]
+    runtime[dotnet/runtime]
+    roslyn[dotnet/roslyn]
+    sdk[dotnet/sdk]
+    other[...]
+
+    arcade-->VMR
+    runtime-->VMR
+    roslyn-->VMR
+    sdk-->VMR
+    other-->VMR
+    VMR-->arcade
+    VMR-->runtime
+    VMR-->roslyn
+    VMR-->sdk
+    VMR-->other
+```
+
+The updates of the VMR will no longer happen when `dotnet/installer` is updated but rather whenever a new build appears in one of the channels. The information making the builds of the `dev/17.4` branch of `dotnet/roslyn` end up in the `7.0.3xx` SDK band is stored in the configuration of Maestro subscriptions between those branches. The Maestro service will have to follow this configuration and update the corresponding sources (the right folder of the right branch) of the VMR accordingly. It will also have to flow changes the other way too when a change is made in the VMR or when VMR produces a new intermediate package. **This is all new functionality that Maestro will have to implement.** That being said, both proposed solutions seem orthogonal to this and the impact on the Maestro changes needed should be minimal.
 
 ### Release process
 
@@ -257,28 +289,7 @@ The various situations can be summarized as follows:
 
 ### Code flow
 
-Code flow is where the two approaches differ dramatically. The biggest difference is during breaking changes in shared components and how/when these get resolved. To re-iterate what the code flow will look like in .NET 9 time frame with full VMR back flow – the individual repositories only receive and send updates from/to the VMR and not between each other, so the situation looks like this (see [VMR Code and Build Workflow](./VMR-Code-And-Build-Workflow.md) for details):
-
-```mermaid
-flowchart TD
-    VMR[VMR]
-    Runtime[dotnet/runtime]
-    Roslyn[dotnet/roslyn]
-    MSBuild[dotnet/msbuild]
-    FSharp[dotnet/fsharp]
-    Other[...]
-
-    Runtime-->VMR
-    Roslyn-->VMR
-    MSBuild-->VMR
-    Other-->VMR
-    FSharp-->VMR
-    VMR-->Runtime
-    VMR-->Roslyn
-    VMR-->MSBuild
-    VMR-->Other
-    VMR-->FSharp
-```
+Code flow is where the two approaches differ dramatically. The biggest difference is during breaking changes in shared components and how/when these get resolved.
 
 For a simple forward flow where a shared component is changed, the code flow needed to update all branches does not differ much.
 
