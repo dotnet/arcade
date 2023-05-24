@@ -139,7 +139,7 @@ To organize what ends up in each band and to drive the code flow between the rep
 - **SDK band channels** – The repositories that are closer to how we organize the final release are then targeting channels named based on the band version, e.g. `.NET 7.0.3xx SDK`.
 - **Shared component channels** – Lastly, repositories with shared components and tooling repositories target channels named based on the major .NET version, e.g. `.NET 7` or `.NET 7 Eng`.
 
-The following diagram shows a simplified example:
+The following diagram shows a simplified example (some relationships are left out for brevity such as tooling leading to all repositories):
 
 ```mermaid
 flowchart TD
@@ -187,8 +187,6 @@ flowchart TD
 
     class channel174,channel175,channel2xx,channel3xx,channel7,channel7Eng Channel
 ```
-
-<center><i>*Note: Dependencies of roslyn and sdk on tooling repositories were left out for simplicity</i></center>
 
 This setup makes sure that the latest version of each shared component (e.g., runtime) eventually flows to all SDK branches which then become coherent between each other. **We call the SDK bands coherent when the versions of all shared components of each band are the same**.
 
