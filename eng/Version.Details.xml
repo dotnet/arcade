@@ -3,6 +3,11 @@
   <ProductDependencies>
   </ProductDependencies>
   <ToolsetDependencies>
+    <Dependency Name="Microsoft.CodeAnalysis.CSharp" Version="4.7.0-2.23274.2">
+      <Uri>https://github.com/dotnet/roslyn</Uri>
+      <Sha>2b33f51dabed9c603211996922e05fd762f72b00</Sha>
+      <SourceBuild RepoName="roslyn" ManagedOnly="true" />
+    </Dependency>
     <Dependency Name="Microsoft.SymbolUploader.Build.Task" Version="2.0.0-preview.1.21526.15">
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
       <Sha>62ceb439e80bf0814d0ffa17f022d4624ea4aa6c</Sha>
