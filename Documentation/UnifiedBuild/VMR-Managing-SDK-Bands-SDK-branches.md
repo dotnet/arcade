@@ -105,13 +105,15 @@ The diagram shows:
 
 After the last step, both SDK branches have the same sources of `dotnet/runtime` which means they're coherent.
 
-## Build
-
-🚧 WIP
-
 ## Band snap
 
-🚧 WIP
+To create a new band, and for the ease, it would be the best to do the snap in the VMR from where it would be flown to the appropriate branches in the individual repositories:
+
+1. Create the new branch based off of the current one.  
+   E.g. `src/sdk/9.0.1xx` to `src/sdk/9.0.2xx`
+2. Adjust versions, point the new band to the new runtime intermediate package. ❓❓❓ This doesn't make sense
+3. Configure Maestro subscriptions between new VMR bands and their individual repository counterparts.
+4. Maestro flows the changes from the VMR and creates the appropriate branches in the individual repositories.
 
 ## Release
 
