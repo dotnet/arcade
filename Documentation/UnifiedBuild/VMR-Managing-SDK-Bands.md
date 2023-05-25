@@ -1,4 +1,4 @@
-# Managing SDK Bands
+# The Unified Build Almanac (TUBA) - Managing SDK Bands
 
 ## Purpose
 
@@ -6,7 +6,7 @@ This document describes the problematics of managing multiple .NET SDK bands and
 
 ## Terminology
 
-This section presents more precise definitions of common terms used in this document that may be prone to confusion.
+This section presents more precise definitions of common terms used in this document that may be prone to confusion. Also see the [Unified Build terminology](./Terminology.md) for more.
 
 - **Individual/Source repository** – One of the current development repositories, e.g., `dotnet/runtime`. An "individual product repository" is then one that contains code for part of the product (but no individual repository contains code to build the whole .NET Core product).
 - **VMR (Virtual Monolithic Repository)** – A repository containing code layout that produces the official build product of .NET Core. The repository contains individual product repositories plus tooling to enable a full build of the product.
