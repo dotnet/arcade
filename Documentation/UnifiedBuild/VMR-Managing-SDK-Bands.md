@@ -451,7 +451,7 @@ For side-by-side, the situation is quite different. We’re suddenly influencing
 
 ### Comparison summary
 
-|                       Comparison area                       |    What comes out on top    |
+|                       Comparison area                       |     Preferred solution      |
 |-------------------------------------------------------------|:---------------------------:|
 |     Build                                                   |        Does not matter      |
 |     Code flow                                               |     Side-by-side folders    |
@@ -468,6 +468,3 @@ Both approaches seem to have pros and cons. To choose the best approach, we shou
 
 When doing so, we should take into account the product lifecycle. At first, the most active busy development happens in the preview time (on main branches). Only after the release, we move into servicing and only after then we branch out and snap the bands. We expect the servicing period to last very long but with less activity. During active development, we should prioritize **developer experience** and **code flow** as that has impact on product construction.  
 During servicing we need the system to be as frictionless as possible so that we’re able to react to external impulses fast and release fixes fast which hints at prioritizing **code flow**, **release**, and **maintenance complexity**. Some areas should be important in both periods such as **community impact**.
-
-> TODO: Actually decide
-

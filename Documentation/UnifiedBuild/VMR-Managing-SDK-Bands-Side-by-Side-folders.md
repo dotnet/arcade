@@ -41,7 +41,7 @@ The layout has the following characteristics:
 - VMR has branches for each major .NET version, e.g. `release/9.0`.
 - Each commit of the VMR contains code for all SDK bands with shared components having a single copy.
 
-> TODO: ❓❓❓ What does a single band VMR look like? Single band VMR is in the `main` where we develop preview version of .NET.
+> TODO: ❓❓❓ What does a single band preview-time VMR look like? Single band VMR is in the `main` where we develop preview version of .NET.
 
 ## Code flow
 
@@ -60,7 +60,7 @@ sequenceDiagram
     runtime->>VMR: Flow of 📄 RUN_2
     Note over VMR: 📦 Intermediate VMR_2 is built
 
-    par Backflow of intermediates
+    par Parallel backflow of intermediates
         VMR->>SDK_1xx: Backflow of 📦 VMR_2
         SDK_1xx-->>VMR: No-op
     and
@@ -87,17 +87,29 @@ sequenceDiagram
     runtime->>VMR: Flow of runtime
     activate VMR
     Note over VMR: ❌ Requires change<br />(in sdk/1xx and sdk/2xx)<br />Fix is made immediately
+    VMR->>VMR: Change is made to sdk, creating 📄 SDK_1.2, SDK_2.2
     deactivate VMR
-    Note over VMR: 📄 RUN1, SDK_1.2 and SDK_2.2<br />📦 VMR_2 intermediates are built
 
-    par Backflow
+    Note over VMR: 📦 VMR_2 intermediates are built
+
+    par Parallel backflow
         VMR->>SDK_1xx: Backflow of 📄 SDK_1.2, 📦 VMR_2
-        SDK_1xx-->>VMR: No-op
     and
         VMR->>SDK_2xx: Backflow of 📄 SDK_2.2, 📦 VMR_2
-        SDK_2xx-->>VMR: No-op
     end
 ```
+
+The diagram shows:
+
+1. A change was made in `dotnet/runtime`.
+2. The change is flown to the VMR SDK branch where a PR with the source change is opened.
+3. Sources of both SDK bands are changed, PR is merged.  
+   Official VMR build publishes intermediate packages for each repository.  
+   This triggers the next steps in parallel.
+4. New sources of both bands, together with the we new runtime intermediate package are flown back to `dotnet/sdk`.
+5. Same as step `4.` but for the other SDK band.
+
+After the last step, both SDK branches have the same sources of `dotnet/runtime` which means they're coherent.
 
 ## Build
 

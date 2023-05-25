@@ -50,7 +50,7 @@ sequenceDiagram
 
     Note over VMR_2xx: ✅ Coherent state<br />VMR 1xx and 2xx have 📄 RUN_2
 
-    par Backflow of intermediates
+    par Parallel backflow of intermediates
         VMR_1xx->>SDK_1xx: Backflow of 📦 VMR_2 ➡️ SDK_1.2
         SDK_1xx-->>VMR_1xx: No-op
     and
@@ -59,7 +59,7 @@ sequenceDiagram
     end
 ```
 
-The situation gets more interesting for breaking changes. Let’s imagine a situation where a change is needed in one of the bands that requires a breaking change in a shared component. For this, we assume that a change like this would be always made in the VMR where we can change both components at the same time:
+The situation gets more interesting for breaking changes. Let’s imagine a situation where a change is needed in one of the bands that requires a breaking change in a shared component:
 
 ```mermaid
 sequenceDiagram
@@ -73,24 +73,37 @@ sequenceDiagram
 
     runtime->>runtime: Change in runtime ➡️ RUN_2
 
-    par
-        runtime->>VMR_1xx: 📄 PR with source change to RUN_2 is opened
+    par Parallel backflow
+        runtime->>VMR_1xx: PR with source change to 📄 RUN_2 is opened
         activate VMR_1xx
         Note over VMR_1xx: ❌ Requires a change in SDK
-        Note over VMR_1xx: 📦 VMR_2 intermediates are built
-        VMR_1xx->>SDK_1xx: Flow of 📄 SDK_2.2, 📦 VMR_2
+        VMR_1xx->>VMR_1xx: Change is made to sdk, creating 📄 SDK_1.2
         deactivate VMR_1xx
+        Note over VMR_1xx: 📦 VMR_2 intermediates are built
+        VMR_1xx->>SDK_1xx: Flow of 📄 SDK_1.2, 📦 VMR_2
     and
-        runtime->>VMR_2xx: 📄 PR with source change to RUN_2 is opened
+        runtime->>VMR_2xx: PR with source change to 📄 RUN_2 is opened
         activate VMR_2xx
         Note over VMR_2xx: ❌ Requires a change in SDK
-        Note over VMR_2xx: 📦 VMR_3 intermediates are built
+        VMR_2xx->>VMR_2xx: Change is made to sdk, creating 📄 SDK_2.2
         deactivate VMR_2xx
+        Note over VMR_2xx: 📦 VMR_3 intermediates are built
         VMR_2xx->>SDK_2xx: Flow of 📄 SDK_2.2, 📦 VMR_3
     end
 
-    Note over VMR_2xx: ✅ Coherent state<br />VMR 1xx and 2xx have RUN_2
+    Note over VMR_2xx: ✅ Coherent state<br />VMR 1xx and 2xx have 📄 RUN_2
 ```
+
+The diagram shows:
+
+1. A change was made in `dotnet/runtime`. This starts steps `2.` and `5.` in parallel.
+2. The change is flown in parallel to the VMR SDK branch where a PR with the source change is opened.  
+3. The PR build fails and more changes are needed under the `src/sdk` folder. PR is merged.  
+   Official VMR build publishes intermediate packages for each repository.
+4. New sources of the `1xx` band, together with the we new runtime intermediate package are flown back to `dotnet/sdk`.
+5. Same as steps `3.`-`6.` but for the other SDK band.
+
+After the last step, both SDK branches have the same sources of `dotnet/runtime` which means they're coherent.
 
 ## Build
 
