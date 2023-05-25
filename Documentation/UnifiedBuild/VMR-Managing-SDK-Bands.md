@@ -442,9 +442,13 @@ There are quite big implications of how we lay the bands out in the VMR on the o
 For SDK branches, nothing really changes in this regard as you can keep building the branch as you were doing until now and get the SDK you care about.  
 For side-by-side, the situation is quite different. We’re suddenly influencing everyone’s experience with the VMR by projecting how we bundle releases into the layout of the code. This has negative implications such as having to check out all the bands always which would for instance prolong all repo operations.
 
+🚧 WIP
+
 > TODO: Forks and upstreaming changes differences? Some things are common for both, such as confusion about where a change should go but that’s the same for folders/branches.
 
 ### Implementation and maintenance complexity
+
+🚧 WIP
 
 - TODO: Much more work to implement side-by-side
 - TODO: Resiliency to band explosion – keeping bands in branches seems more resilient to outer requirements such as a sudden increase in the number of bands due to Visual Studio speeding up its release cycle.

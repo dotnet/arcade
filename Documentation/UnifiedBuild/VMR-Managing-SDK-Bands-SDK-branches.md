@@ -107,8 +107,14 @@ After the last step, both SDK branches have the same sources of `dotnet/runtime`
 
 ## Build
 
+🚧 WIP
+
 ## Band snap
 
+🚧 WIP
+
 ## Release
+
+🚧 WIP
 
 > TODO - note: However, we need to make sure the shared bits are the same in each released SDK branch – we’d say the SDK branches would be coherent then. We also need to make sure that changes made to the shared components in VMR’s SDK branches are flown everywhere appropriately.
