@@ -29,6 +29,69 @@ The layout has the following characteristics:
 
 ## Code flow
 
+To re-iterate what the planned code flow looks like for .NET 9 (with full VMR back flow) – the individual repositories only receive and send updates from/to the VMR and not between each other. A regular forward flow with changes going to the VMR only would look like this:
+
+```mermaid
+sequenceDiagram
+    autonumber
+
+    participant runtime as dotnet/runtime<br />release/9.0
+    participant SDK_1xx as dotnet/sdk<br />release/9.0.1xx
+    participant SDK_2xx as dotnet/sdk<br />release/9.0.2xx
+    participant VMR_1xx as VMR<br />release/9.0.1xx
+    participant VMR_2xx as VMR<br />release/9.0.2xx
+
+    runtime->>runtime: New change ➡️ RUN_2
+
+    runtime->>VMR_1xx: Flow of 📄 RUN_2
+    Note over VMR_1xx: 📦 VMR_2 intermediates are built
+    runtime->>VMR_2xx: Flow of 📄 RUN_2
+    Note over VMR_2xx: 📦 VMR_3 intermediates are built
+
+    Note over VMR_2xx: ✅ Coherent state<br />VMR 1xx and 2xx have 📄 RUN_2
+
+    par Backflow of intermediates
+        VMR_1xx->>SDK_1xx: Backflow of 📦 VMR_2 ➡️ SDK_1.2
+        SDK_1xx-->>VMR_1xx: No-op
+    and
+        VMR_2xx->>SDK_2xx: Backflow of 📦 VMR_3 ➡️ SDK_2.2
+        SDK_2xx-->>VMR_2xx: No-op
+    end
+```
+
+The situation gets more interesting for breaking changes. Let’s imagine a situation where a change is needed in one of the bands that requires a breaking change in a shared component. For this, we assume that a change like this would be always made in the VMR where we can change both components at the same time:
+
+```mermaid
+sequenceDiagram
+    autonumber
+
+    participant runtime as dotnet/runtime<br />release/9.0
+    participant SDK_1xx as dotnet/sdk<br />release/9.0.1xx
+    participant SDK_2xx as dotnet/sdk<br />release/9.0.2xx
+    participant VMR_1xx as VMR<br />release/9.0.1xx
+    participant VMR_2xx as VMR<br />release/9.0.2xx
+
+    runtime->>runtime: Change in runtime ➡️ RUN_2
+
+    par
+        runtime->>VMR_1xx: 📄 PR with source change to RUN_2 is opened
+        activate VMR_1xx
+        Note over VMR_1xx: ❌ Requires a change in SDK
+        Note over VMR_1xx: 📦 VMR_2 intermediates are built
+        VMR_1xx->>SDK_1xx: Flow of 📄 SDK_2.2, 📦 VMR_2
+        deactivate VMR_1xx
+    and
+        runtime->>VMR_2xx: 📄 PR with source change to RUN_2 is opened
+        activate VMR_2xx
+        Note over VMR_2xx: ❌ Requires a change in SDK
+        Note over VMR_2xx: 📦 VMR_3 intermediates are built
+        deactivate VMR_2xx
+        VMR_2xx->>SDK_2xx: Flow of 📄 SDK_2.2, 📦 VMR_3
+    end
+
+    Note over VMR_2xx: ✅ Coherent state<br />VMR 1xx and 2xx have RUN_2
+```
+
 ## Build
 
 ## Band snap

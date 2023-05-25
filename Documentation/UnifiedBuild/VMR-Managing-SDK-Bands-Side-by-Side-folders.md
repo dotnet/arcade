@@ -22,6 +22,19 @@ Layout of files in the VMR would be as follows:
         └── runtime
 ```
 
+There could be variations such as
+
+```
+/
+├── sdk
+│   ├── roslyn
+│   └── sdk
+└── shared
+    ├── arcade
+    └── runtime
+```
+
+and it's more a matter of taste and up for discussion but it won't have as much of an impact down the line.  
 The layout has the following characteristics:
 
 - Each repository is a folder either under `src/` or `src/shared/` in the VMR.
@@ -31,6 +44,60 @@ The layout has the following characteristics:
 > TODO: ❓❓❓ What does a single band VMR look like? Single band VMR is in the `main` where we develop preview version of .NET.
 
 ## Code flow
+
+To re-iterate what the planned code flow looks like for .NET 9 (with full VMR back flow) – the individual repositories only receive and send updates from/to the VMR and not between each other. A regular forward flow with changes going to the VMR only would look like this:
+
+```mermaid
+sequenceDiagram
+    autonumber
+
+    participant runtime as dotnet/runtime<br />release/9.0
+    participant SDK_1xx as dotnet/sdk<br />release/9.0.1xx
+    participant SDK_2xx as dotnet/sdk<br />release/9.0.2xx
+    participant VMR as VMR<br />release/9.0
+
+    runtime->>runtime: Change in runtime
+    runtime->>VMR: Flow of 📄 RUN_2
+    Note over VMR: 📦 Intermediate VMR_2 is built
+
+    par Backflow of intermediates
+        VMR->>SDK_1xx: Backflow of 📦 VMR_2
+        SDK_1xx-->>VMR: No-op
+    and
+        VMR->>SDK_2xx: Backflow of 📦 VMR_2
+        SDK_2xx-->>VMR: No-op
+    end
+```
+
+The situation gets more interesting for breaking changes. Let’s imagine a situation where a change is needed in one of the bands that requires a breaking change in a shared component. For this, we assume that a change like this would be always made in the VMR where we can change both components at the same time:
+
+```mermaid
+sequenceDiagram
+    autonumber
+
+    participant runtime as dotnet/runtime<br />release/9.0
+    participant SDK_1xx as dotnet/sdk<br />release/9.0.1xx
+    participant SDK_2xx as dotnet/sdk<br />release/9.0.2xx
+    participant VMR as VMR<br />release/9.0
+
+    runtime->>runtime: Change in runtime ➡️ RUN_2
+
+
+    activate SDK_2xx
+    runtime->>VMR: Flow of runtime
+    activate VMR
+    Note over VMR: ❌ Requires change<br />(in sdk/1xx and sdk/2xx)<br />Fix is made immediately
+    deactivate VMR
+    Note over VMR: 📄 RUN1, SDK_1.2 and SDK_2.2<br />📦 VMR_2 intermediates are built
+
+    par Backflow
+        VMR->>SDK_1xx: Backflow of 📄 SDK_1.2, 📦 VMR_2
+        SDK_1xx-->>VMR: No-op
+    and
+        VMR->>SDK_2xx: Backflow of 📄 SDK_2.2, 📦 VMR_2
+        SDK_2xx-->>VMR: No-op
+    end
+```
 
 ## Build
 
