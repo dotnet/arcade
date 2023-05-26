@@ -2,7 +2,7 @@
 
 # Managing SDK Bands - "SDK branches" proposal
 
-This proposal is probably the most obvious solution that comes to mind considering where we are today. The bottom line is that we'd just keep using SDK branches in the VMR the same way we have them today. This is, in fact, what we’re currently already doing with today’s read-only VMR-lite where we synchronize the SDK branches of `dotnet/installer`.
+This proposal follows closely how we organize SDK band branches today. The bottom line is that we'd just keep using SDK branches in the VMR the same way we have them in other repositories. This is, in fact, what we’re currently already doing with today’s read-only VMR-lite where we synchronize the SDK branches of `dotnet/installer`.
 
 This document describes the end-to-end process from developing to shipping multiple SDK bands using this model.
 
@@ -10,22 +10,31 @@ This document describes the end-to-end process from developing to shipping multi
 
 For simplicity, let's consider we are synchronizing the repositories `dotnet/arcade`, `dotnet/runtime`, `dotnet/roslyn` and `dotnet/sdk` where `dotnet/runtime` and `dotnet/arcade` are the shared components.
 
-The layout of files stays the same as today's VMR-lite:
+The layout of files stays the same as today's VMR-lite. There is one caveat though. The SDK branches for other bands than the first one (`1xx`) would not contain the sources of the shared components.
+Instead, they would flow in the branches via a package flow where the branches would reference the intermediate packages that would be built in the from the `1xx` branch.
 
-```
-/
+So the layout would look like this:
+
+```sh
+# release/9.0.1xx branch
 └── src
     ├── arcade
     ├── roslyn
     ├── runtime
     └── sdk
+
+# release/9.0.2xx branch
+└── src
+    ├── roslyn
+    └── sdk
 ```
 
 The layout has the following characteristics:
-- Each repository is a folder under `src/` in the VMR.
 - VMR has SDK branches, e.g. `release/9.0.1xx` and `release/9.0.2xx`.
-- Each branch has a full copy of all repositories, even shared ones.
-- Each commit of the VMR produces a single runtime and single SDK.
+- Each repository is a folder under `src/` in the `1xx` branch of the VMR.
+- Each non-1xx branch of each SDK-specific repository maps to a folder under `src/` in a matching branch in the VMR.
+- Each commit of the `1xx` branch produces a single runtime and single SDK.
+- Commits of the `non-1xx` branches produce SDKs only and their shared components are referenced as packages built from the `1xx` branch.
 
 ## Code flow
 
@@ -73,37 +82,39 @@ sequenceDiagram
 
     runtime->>runtime: Change in runtime ➡️ RUN_2
 
-    par Parallel backflow
-        runtime->>VMR_1xx: PR with source change to 📄 RUN_2 is opened
-        activate VMR_1xx
-        Note over VMR_1xx: ❌ Requires a change in SDK
-        VMR_1xx->>VMR_1xx: Change is made to sdk, creating 📄 SDK_1.2
-        deactivate VMR_1xx
-        Note over VMR_1xx: 📦 VMR_2 intermediates are built
-        VMR_1xx->>SDK_1xx: Flow of 📄 SDK_1.2, 📦 VMR_2
-    and
-        runtime->>VMR_2xx: PR with source change to 📄 RUN_2 is opened
-        activate VMR_2xx
-        Note over VMR_2xx: ❌ Requires a change in SDK
-        VMR_2xx->>VMR_2xx: Change is made to sdk, creating 📄 SDK_2.2
-        deactivate VMR_2xx
-        Note over VMR_2xx: 📦 VMR_3 intermediates are built
-        VMR_2xx->>SDK_2xx: Flow of 📄 SDK_2.2, 📦 VMR_3
-    end
+    runtime->>VMR_1xx: PR with source change to 📄 RUN_2 is opened
+    activate VMR_1xx
+    Note over VMR_1xx: ❌ Requires a change in SDK
+    VMR_1xx->>VMR_1xx: Change is made to sdk, creating 📄 SDK_1.2
+    deactivate VMR_1xx
+    Note over VMR_1xx: 📦 VMR_2 intermediates are built
 
-    Note over VMR_2xx: ✅ Coherent state<br />VMR 1xx and 2xx have 📄 RUN_2
+    VMR_1xx->>SDK_1xx: Flow of 📄 SDK_1.2, 📦 VMR_2
+
+    VMR_1xx->>VMR_2xx: Flow of 📦 VMR_2
+    activate VMR_2xx
+    Note over VMR_2xx: ❌ Requires a change in SDK
+    VMR_2xx->>VMR_2xx: Change is made to sdk, creating 📄 SDK_2.2
+    deactivate VMR_2xx
+    Note over VMR_2xx: 📦 VMR_3 intermediates are built
+    VMR_2xx->>SDK_2xx: Flow of 📄 SDK_2.2, 📦 VMR_3
+
+    Note over VMR_2xx: ✅ Coherent state<br />VMR 1xx and 2xx have both 📦 VMR_2
 ```
 
 The diagram shows:
 
 1. A change was made in `dotnet/runtime`. This starts steps `2.` and `5.` in parallel.
-2. The change is flown in parallel to the VMR SDK branch where a PR with the source change is opened.  
+2. The change is flown to VMR's 1xx branch where a PR with the source change is opened.  
 3. The PR build fails and more changes are needed under the `src/sdk` folder. PR is merged.  
    Official VMR build publishes intermediate packages for each repository.
 4. New sources of the `1xx` band, together with the we new runtime intermediate package are flown back to `dotnet/sdk`.
-5. Same as steps `3.`-`6.` but for the other SDK band.
+5. Intermediate packages of shared components are flown to VMR's 2xx branch.
+6. The PR build fails and more changes are needed under the `src/sdk` folder. PR is merged.  
+   Official VMR build publishes intermediate packages for each repository.
+7. New sources of the `2xx` band, together with the we new runtime intermediate package are flown back to `dotnet/sdk`.
 
-After the last step, both SDK branches have the same sources of `dotnet/runtime` which means they're coherent.
+After the last step, the `1xx` VMR branch has the sources of `dotnet/runtime` that are packaged and used by the `2xx` branch which means they're coherent.
 
 ## Band snap
 
@@ -111,12 +122,15 @@ To create a new band, and for the ease, it would be the best to do the snap in t
 
 1. Create the new branch based off of the current one.  
    E.g. `src/sdk/9.0.1xx` to `src/sdk/9.0.2xx`
-2. Adjust versions, point the new band to the new runtime intermediate package. ❓❓❓ This doesn't make sense
+2. Remove sources of shared components, adjust versions and point the new band to the intermediate packages of shared components from the last release.
 3. Configure Maestro subscriptions between new VMR bands and their individual repository counterparts.
-4. Maestro flows the changes from the VMR and creates the appropriate branches in the individual repositories.
+4. If there are at least 3 bands, configure subscriptions of the currently released band to consume the intermediates of the `1xx` band.
+5. Maestro flows the changes from the VMR and creates the appropriate branches in the individual repositories.
+
+This makes sure that the new (preview) band is locked down to use the latest released shared components and that the a newly released bands will start getting the newest shared components built in the `1xx` branch.
 
 ## Release
 
-🚧 WIP
+On a release day, we need to make sure the SDK branches are coherent. This means that the lastly published intermediates from the `1xx` branch have flown to all of the other SDK band branches. For that to happen, we need to enable the package flow for the preview band and consume the newest bits to validate everything.
 
-> TODO - note: However, we need to make sure the shared bits are the same in each released SDK branch – we’d say the SDK branches would be coherent then. We also need to make sure that changes made to the shared components in VMR’s SDK branches are flown everywhere appropriately.
+Since the shared components were built only once and stored inside of the intermediates, we can assemble the packages from all band branches and release them together.
