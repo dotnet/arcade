@@ -1,4 +1,4 @@
-# Managing SDK Bands
+# The Unified Build Almanac (TUBA) - Managing SDK Bands
 
 ## Purpose
 
@@ -6,7 +6,7 @@ This document describes the problematics of managing multiple .NET SDK bands and
 
 ## Terminology
 
-This section presents more precise definitions of common terms used in this document that may be prone to confusion.
+This section presents more precise definitions of common terms used in this document that may be prone to confusion. Also see the [Unified Build terminology](./Terminology.md) for more.
 
 - **Individual/Source repository** – One of the current development repositories, e.g., `dotnet/runtime`. An "individual product repository" is then one that contains code for part of the product (but no individual repository contains code to build the whole .NET Core product).
 - **VMR (Virtual Monolithic Repository)** – A repository containing code layout that produces the official build product of .NET Core. The repository contains individual product repositories plus tooling to enable a full build of the product.
@@ -26,7 +26,7 @@ To align with new Visual Studio releases, .NET SDK updates sometimes include new
 To best illustrate how this works in practice, let’s imagine the following timeline for repositories with SDK branches (e.g., `dotnet/sdk`):
 
 ```mermaid
-%%{init: { 'logLevel': 'debug', 'theme': 'base', 'gitGraph': {'showCommitLabel': false, 'tagLabelFontSize': '24px'}} }%%
+%%{init: { 'gitGraph': {'showCommitLabel': false }}}%%
 gitGraph
     commit
     commit
@@ -135,7 +135,7 @@ Once we hit each release day (denoted with red vertical lines), we take the late
 
 To organize what ends up in each band and to drive the code flow between the repositories, we utilize the Maestro dependency flow, namely the Maestro channels (see [Channels, Branches and Subscriptions](../BranchesChannelsAndSubscriptions.md for details):
 
-- **VS-centric channels** – To better match how teams opererate, some repositories align their build outputs with the Visual Studio versions, e.g. `dotnet/roslyn`. Outputs of repositories like that would end up in a channel named based on the version of VS, e.g. `17.5`.
+- **VS-centric channels** – To better match how teams operate, some repositories align their build outputs with the Visual Studio versions, e.g. `dotnet/roslyn`. Outputs of repositories like that would end up in a channel named based on the version of VS, e.g. `17.5`.
 - **SDK band channels** – The repositories that are closer to how we organize the final release are then targeting channels named based on the band version, e.g. `.NET 7.0.3xx SDK`.
 - **Shared component channels** – Lastly, repositories with shared components and tooling repositories target channels named based on the major .NET version, e.g. `.NET 7` or `.NET 7 Eng`.
 
@@ -192,7 +192,7 @@ This setup makes sure that the latest version of each shared component (e.g., ru
 
 ### Band lifecycle
 
-As described above, the band lifecycle is tightly coupled with the releases of Visual Studio. For repositories that target the VS-centric bands, the `main` branch usually targets the next VS version which is in preview. Once a version of VS is released (is GA-ed), we create a new branch named `dev/XX.Y` where `XX.Y` is the version of the released VS. The `main` branch then targets the next VS version in preview
+As described above, the band lifecycle is tightly coupled with the releases of Visual Studio. The exception is 100th band that ships on .NET annual schedule and VS snaps to it. For repositories that target the VS-centric bands, the `main` branch usually targets the next VS version which is in preview. Once a version of VS is released (is GA-ed), we create a new branch named `dev/XX.Y` where `XX.Y` is the version of the released VS. The `main` branch then targets the next VS version in preview
 
 As an example, let's say we have the following setup:
 - VS `17.1` is the latest stable version of VS and is associated with the `7.0.1xx` band.
