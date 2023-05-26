@@ -192,7 +192,7 @@ This setup makes sure that the latest version of each shared component (e.g., ru
 
 ### Band lifecycle
 
-As described above, the band lifecycle is tightly coupled with the releases of Visual Studio. For repositories that target the VS-centric bands, the `main` branch usually targets the next VS version which is in preview. Once a version of VS is released (is GA-ed), we create a new branch named `dev/XX.Y` where `XX.Y` is the version of the released VS. The `main` branch then targets the next VS version in preview
+As described above, the band lifecycle is tightly coupled with the releases of Visual Studio. The exception is 100th band that ships on .NET annual schedule and VS snaps to it. For repositories that target the VS-centric bands, the `main` branch usually targets the next VS version which is in preview. Once a version of VS is released (is GA-ed), we create a new branch named `dev/XX.Y` where `XX.Y` is the version of the released VS. The `main` branch then targets the next VS version in preview
 
 As an example, let's say we have the following setup:
 - VS `17.1` is the latest stable version of VS and is associated with the `7.0.1xx` band.
