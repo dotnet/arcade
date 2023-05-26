@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This document describes the problematics of managing multiple .NET SDK bands and discusses how we propose to solve this in the Unified Build world during the .NET 9 timeframe using the new build methodology and the full VMR.
+This document describes the problematics of managing multiple .NET SDK bands and discusses how we propose to solve this in the Unified Build world during the .NET 9 timeframe using the new build methodology and the full VMR. The document first gives context and explains how we do it today. Then there are two possible solutions discussed and compared.
 
 ## Terminology
 
@@ -98,7 +98,7 @@ gitGraph
     checkout release/8.0
     commit
     commit
-    commit type: HIGHLIGHT tag: "Release #2 – Runtime 8.0.6"
+    commit type: HIGHLIGHT tag: "Release #2 – Runtime 8.0.1"
     checkout main
     commit
     commit
@@ -117,19 +117,21 @@ gitGraph
     commit
     checkout release/8.0
     commit
-    commit type: HIGHLIGHT tag: "Release #3 – Runtime 8.0.12"
+    commit type: HIGHLIGHT tag: "Release #3 – Runtime 8.0.2"
     checkout main
     commit
     commit
 ```
 
-On the image you can see timelines of branches of two different repositories – `dotnet/sdk` and `dotnet/runtime`. As noted previously, each (servicing) release of .NET contains multiple SDK bands but only one runtime. Each individual repository of each component that needs to differ per band would then have these so-called “SDK branches” named `release/Z.0.Yxx` while repositories that are shared per release have the non-SDK `release/Z.0` branches. As shown in the example, the development of the single runtime would happen in the `release/8.0` branch while the various SDK bands are stored in the following SDK branches (e.g., `release/8.0.1xx` represents the “100th band”).
+On the image you can see timelines of branches of two different repositories – `dotnet/sdk` and `dotnet/runtime`. As noted previously, each (servicing) release of .NET contains multiple SDK bands but only one runtime. Each individual repository of each component that needs to differ per band would then have these so-called *“SDK branches”* named `release/Z.0.Yxx` while repositories that are shared per release have the non-SDK `release/Z.0` branches. As shown in the example, the development of the single runtime would happen in the `release/8.0` branch while the various SDK bands are stored in the following SDK branches (e.g., `release/8.0.1xx` represents the “100th band”).
 
-Once we hit each release day (denoted with red vertical lines), we take the latest commit of each of those branches (that already exist) and release those together. For the releases in the example diagram, this might be:
+Once we hit each release day (denoted with red vertical lines), we take the latest commit of each of those branches (that already exist) and release those together. For the releases in the example diagram, these are the released compilations:
 
-- Release day #1 – `8.0.0` runtime + one SDK (`8.0.100`)
-- Release day #2 – `8.0.6` runtime + two SDKs (`8.0.109`, `8.0.205`)
-- Release day #3 – `8.0.12` runtime + three SDKs (`8.0.111`, `8.0.207`, `8.0.302`)
+| Release |   Runtime   |               SDKs              |
+|:-------:|:-----------:|:-------------------------------:|
+|     #1  |     `8.0.0` |            `8.0.100`            |
+|     #2  |   `8.0.1`   |       `8.0.109`, `8.0.205`      |
+| #3      |   `8.0.2`   | `8.0.111`, `8.0.207`, `8.0.302` |
 
 ### Current code flow
 
