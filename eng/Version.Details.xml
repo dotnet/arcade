@@ -3,9 +3,9 @@
   <ProductDependencies>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.CodeAnalysis.CSharp" Version="4.7.0-2.23274.2">
+    <Dependency Name="Microsoft.CodeAnalysis.CSharp" Version="4.6.0">
       <Uri>https://github.com/dotnet/roslyn</Uri>
-      <Sha>2b33f51dabed9c603211996922e05fd762f72b00</Sha>
+      <Sha>c3cc1d0ceeab1a65da0217e403851a1e8a30086a</Sha>
       <SourceBuild RepoName="roslyn" ManagedOnly="true" />
     </Dependency>
     <Dependency Name="Microsoft.SymbolUploader.Build.Task" Version="2.0.0-preview.1.21526.15">
