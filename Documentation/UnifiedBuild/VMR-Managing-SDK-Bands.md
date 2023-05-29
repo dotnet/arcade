@@ -135,7 +135,7 @@ Once we hit each release day (denoted with red vertical lines), we take the late
 
 ### Current code flow
 
-To organize what ends up in each band and to drive the code flow between the repositories, we utilize the Maestro dependency flow, namely the Maestro channels (see [Channels, Branches and Subscriptions](../BranchesChannelsAndSubscriptions.md for details):
+To organize what ends up in each band and to drive the code flow between the repositories, we utilize the Maestro dependency flow, namely the Maestro channels (see [Channels, Branches and Subscriptions](../BranchesChannelsAndSubscriptions.md) for details):
 
 - **VS-centric channels** – To better match how teams operate, some repositories align their build outputs with the Visual Studio versions, e.g. `dotnet/roslyn`. Outputs of repositories like that would end up in a channel named based on the version of VS, e.g. `17.5`.
 - **SDK band channels** – The repositories that are closer to how we organize the final release are then targeting channels named based on the band version, e.g. `.NET 7.0.3xx SDK`.
@@ -327,7 +327,7 @@ There are few key parts of the release process:
 
 From the above, it seems like the release process itself might be much easier with the side-by-side folder layout. Everything is identified by a single commit and we can just build/share this commit.
 
-🚧 TODO - Mean time to release metric and implications
+> 🚧 TODO - Mean time to release metric and implications
 
 ### Validation
 
@@ -445,21 +445,21 @@ From the analysis above, it seems that to declare a winner, we need to consider 
 
 ### Community, 3rd parties & upstream/downstream story
 
-There are quite big implications of how we lay the bands out in the VMR on the outside world. 3rd parties consuming .NET might or might not care about building multiple bands. Overall, the fact that we even need to have different SDK bands is native to Microsoft’s rhythm and way of bundling releases.
+There are quite big implications of how we lay the bands out in the VMR on the outside world. 3rd parties consuming .NET might or might not care about building multiple bands. Overall, the fact that we even need to have different SDK bands is native to Microsoft’s rhythm and way of bundling releases. It is a question whether we will impose more pain on 3rd parties by having to build multiple band branches or by having to deal with the side-by-side layout.
 
 For SDK branches, nothing really changes in this regard as you can keep building the branch as you were doing until now and get the SDK you care about.  
 For side-by-side, the situation is quite different. We’re suddenly influencing everyone’s experience with the VMR by projecting how we bundle releases into the layout of the code. This has negative implications such as having to check out all the bands always which would for instance prolong all repo operations.
 
-🚧 WIP
+Additionally, both proposals have the problem of locking the preview band on the latest runtime. The SDK branch proposal is more intuitive in this as the SDK branch of the preview band doesn't contain code for shared components. This is better than the side-by-side design which has the sources laid out but they are not used as the preview band will restore them from an intermediate package. This will cause confusion.
 
-> TODO: Forks and upstreaming changes differences? Some things are common for both, such as confusion about where a change should go but that’s the same for folders/branches.
+> 🚧 TODO: We should be clear on how to interact with the VMR/repositories, e.g. where do we expect the community to upstream their changes to, etc.
 
 ### Implementation and maintenance complexity
 
 There will be several areas where we’ll need to implement new functionality to make the above work:
 
 - **Code/dependency flow** - changes required to flow the code and the intermediate packages between the VMR and the individual repositories.
-- **Source Build** - tooling and infrastracture to build either one or multiple bands from the new layout of the sources.
+- **Source Build** - tooling and infrastructure to build either one or multiple bands from the new layout of the sources.
 - **Product lifecycle processes** - tooling connected to processes such as branching, band snapping, servicing, etc.
 
 #### Code/dependency flow
@@ -481,7 +481,7 @@ Both solutions will require us to define, document and support processes such as
 
 #### Maintenance
 
-🚧 WIP
+> 🚧 WIP - Costs associated with keeping the infrastructure running so that we can do servicing
 
 #### Summary
 
@@ -491,7 +491,7 @@ The SDK folder solution is much closer to where we are these days as the layout 
 
 |                       Comparison area                       |     Preferred solution      | Impact on decision |
 |-------------------------------------------------------------|:---------------------------:|:------------------:|
-|     Build                                                   |        Does not matter      |        high        |
+|     Build                                                   |        Does not matter      |       medium       |
 |     Code flow                                               |     Side-by-side folders    |     medium/high    |
 |     Developer experience                                    |         SDK branches        |        high        |
 |     Community, 3rd parties & upstream/downstream story      |         SDK branches        |        high        |
