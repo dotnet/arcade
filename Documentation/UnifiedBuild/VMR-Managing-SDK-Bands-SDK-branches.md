@@ -96,10 +96,10 @@ sequenceDiagram
     Note over VMR_2xx: ✅ Coherent state<br />VMR 1xx and 2xx have 📄 RUN_2
 
     par Parallel backflow of intermediates
-        VMR_1xx->>SDK_1xx: Backflow of 📦 VMR_2 ➡️ SDK_1.2
+        VMR_1xx->>SDK_1xx: Backflow of 📦 VMR_2 ➡️ 📄 SDK_1.2
         SDK_1xx-->>VMR_1xx: No-op
     and
-        VMR_2xx->>SDK_2xx: Backflow of 📦 VMR_3 ➡️ SDK_2.2
+        VMR_2xx->>SDK_2xx: Backflow of 📦 VMR_3 ➡️ 📄 SDK_2.2
         SDK_2xx-->>VMR_2xx: No-op
     end
 ```

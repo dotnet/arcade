@@ -275,20 +275,20 @@ To compare the two proposals, we identified several areas which might be impacte
 
 ### Build
 
-The current (Microsoft) way of building the SDKs is based on re-using previously built artifacts which come into the build as NuGet packages. The components are flown as already compiled packages. This means that when building each SDK band, we only restore the shared components which were built only once at some point in the past during the official build of their source repository.
-
+The current (Microsoft) way of building the SDKs is based on re-using previously built artifacts which come into the build as NuGet packages. The components are flown as already compiled packages. This means that when building each SDK band, we only restore the shared components which were built only once at some point in the past during the official build of their source repository.  
 In .NET 9.0, when the full VMR code flow is in place (see [VMR Code and Build Workflow](./VMR-Code-And-Build-Workflow.md) for details), we’ll be building the individual repositories on more occasions:
 
 - During the official build of their source repository – this will use other repo’s intermediate packages whenever they depend on another repo as if they were just built from source.
 - During the official build of the VMR – when we build the whole product from source. This will end up producing an intermediate package per each individual repository built as part of the whole build.
 
-This means that at several places, we’ll be building both the shared components and the SDK band components from source where their dependencies will be either freshly built or restored in a local NuGet cache of the build machine.
-
-Regardless of how this will happen, there’s no real difference whether we’d build the SDK bands from folders which are side by side in a folder of a checked-out branch or which are checkouts of different SDK branches. The build process would need to know about the existence of multiple SDK bands eventually placed in a folder “somewhere on the disk”. **This means that the selected architecture doesn’t really affect the build and we don’t need to consider it during evaluation.** There will, however, be a change to the build process needed to accommodate for the new locations of the bands.
+This means that in several places, we’ll be building both the shared components and the SDK band components from source where their dependencies will be either freshly built or restored in a local NuGet cache.  
+Regardless of how this will happen, there’s no real difference whether we’d build the SDK bands from folders which are side by side in a folder of a checked-out branch or which are checkouts of different SDK branches.
 
 The various situations can be summarized as follows:
-- For individual repository builds, the build process will need to know about the location of the SDK bands. This is the same for both proposals.
-- For the VMR build shared components are built with the first band and put in a local NuGet cache. Other bands restore shared components from the cache (or rebuild the components over of cache is not possible).
+- For individual repository builds, the build process will restore the dependencies from intermediate packages.
+- For the VMR build shared components are built with the first band and put in a local NuGet cache. Other bands restore shared components from the cache.
+
+Upon inspection of the proposals, the above **doesn't differ for the given proposal which means the selected architecture doesn’t really affect the build** and we don’t need to consider it during evaluation. There will, however, be a change to the build process needed to accommodate for the new locations of the bands within the VMR.
 
 ### Code flow
 
@@ -308,22 +308,26 @@ Important area to consider is how the day-to-day interactions of .NET developers
 
 That said, it’s important to realize that most of the work and the VMR is the most active in the preview time where we only have one SDK band.
 
-It is obvious that the SDK branch proposal wins in most of these categories. It stays truer to git by using commits/branches for file versioning rather than folders with versions in their name as it is with the side-by-side layout. This works well with all kinds of tooling and workflows:
+It is obvious that the SDK branch proposal wins in most of these categories. It stays more true to git by using commits/branches for file versioning rather than folders with version using in their name as it is with the side-by-side layout. This works well with all kinds of tooling and workflows:
 
-- File history breaks with side-by-side folders once we snap the bands.
+- File history breaks with side-by-side folders once we snap the bands as files are copied in a new path.
 - File and symbol search might be confusing when going through almost identical side-by-side folders.
 - Backporting a change between bands sounds less error prone with SDK branches as it’s just porting commits. Making a change in several bands at once can lead to omitting a change in one of the bands, harder-to-review pull requests and overall it seems to be easier to transfer changes between bands using git-native approaches. Of course it’s possible to utilize patches but once a change is up for review, making sure all bands stay in sync might be problematic.
 - Diffing bands sounds easier to do with SDK branches as well as you don’t need to worry which all components are shared and which are not – diffing side-by-side folders might become tedious once we need to compare several repositories at once.
 
-Some points of interested are rather a matter of personal preference – is it better for a developer to make a change in one SDK branch, open a PR and then backport to other branches, or is it better to do everything at once and build/validate it together? But over all it seems that storing code based on how we work with it rather than how we release it sounds better and the SDK branches proposal seems as the superior approach in this area since it optimizes for development rather than bend the architecture/layout to how we release the product.
+Some points of interest are rather a matter of personal preference – is it better for a developer to make a change in one SDK branch, open a PR and then backport to other branches, or is it better to do everything at once and build/validate it together? Over all it seems that storing code based on how we work with it rather than how we release it sounds better and the SDK branches proposal seems as the superior approach in this area since it optimizes for development rather than bend the layout to how we release the product.
 
 ### Release
 
-> TODO: Describe what putting a release together looks like - but we should describe that in each of the proposals
+There are few key parts of the release process:
 
-> Note : Separating development and release cycle – the fact that we release several SDKs is a Microsoft problem that 3rd parties may or may not care about. We shouldn’t enforce the problems of our custom release on others through the code layout – for instance, you shouldn’t be forced to check out multiple versions of the code if you don’t care about multiple bands. Further, we shouldn’t tax the .NET team itself and subordinate how we store code to how we release it later.
+- Figuring out what to release - we need to flow dependencies to the right places and determine which sources are coherent enough to be released.
+- Compiling the binary release - we need to be able to build all the sources in such a way that shared components do not get built more than once.
+- Publishing and communicating the release of the sources (Source Build release) - Identifying and publishing sources of the release so that they are easily consumed by 3rd party partners.
 
-> –	Note: Resiliency to band explosion – keeping bands in branches seems more resilient to outer requirements such as a sudden increase in the number of bands due to Visual Studio speeding up its release cycle.
+From the above, it seems like the release process itself might be much easier with the side-by-side folder layout. Everything is identified by a single commit and we can just build/share this commit.
+
+🚧 TODO - Mean time to release metric and implications
 
 ### Validation
 
@@ -366,8 +370,7 @@ The expectation is that the size of the overall repository won’t differ much b
 
 - For SDK branches, we have the two commits that describe the two branches. These are equal at first, when we freshly snap the band branches.
 - For side-by-side folders, the situation isn’t much different with the two git trees for each of the band folders – `src/sdk/9.0.1xx` and `src/sdk/9.0.2xx`. These are also the same at first – only the parent tree representing the sdk folder is an object created after the snap.
-- 
-Once we change bar.txt, we’d get a new object for the file itself and then some other:
+- Once we change `bar.txt`, we’d get a new object for the file itself and then some other:
 
 - For SDK branches, we have the new git trees that describe the parent folders of the changed file leading up to the root of the repository (`/` → `src` → `sdk` → `foo`).
 - For side-by-side folders, the situation is again not much different – we get a new set of git trees describing the path from foo through the new `src/sdk/9.0.2xx`.
@@ -383,17 +386,17 @@ Another interesting metric is the archive of sources needed to build a single SD
 By release source tarball we mean an archive of all sources needed to build a whole release containing several SDK bands.
 For side-by-side folders, this would simply equal to a VMR commit. For SDK branches, we’d have to do something about compiling the release archive as the shared components need to appear in the tarball just once.
 
-> TODO: It’s a question whether there would be a thing such as “tarball for the whole release with all bands” but it’s probably possible to exclude the shared components from all but one band and reach the same result with SDK folder as with SDK branches.
+> 🚧 TODO: It’s a question whether there would be a thing such as “tarball for the whole release with all bands” but it’s probably possible to exclude the shared components from all but one band and reach the same result with SDK folder as with SDK branches.
+
+> 🚧 TODO: Resiliency to band explosion – keeping bands in branches seems more resilient to outer requirements such as a sudden increase in the number of bands due to Visual Studio speeding up its release cycle.
 
 #### Git operation performance
 
 We care about the duration of common git operation duration such as checkout or status. We also need to consider scenarios in which we use the VMR – do we care about more bands than one?
 
-SDK branches seem to have the innate benefit of not having to check out all the bands always. This seems like a big win for scenarios where we for instance make changes to one band only. But it goes away quite quickly once we need to build all of them and suddenly the checkout takes much longer.
+SDK branches seem to have the innate benefit of not having to check out all the bands always. This seems like a big win for scenarios where we for instance make changes to one band only. Checking out mostly the same versions of the same files but in few copies will take its toll on the performance of git operations.
 
-> TODO: We should figure out how often would we care about building all bands in various flows – from CI to inner dev loop.
-
-#### Summary of git size/performance
+#### Summary
 
 From the analysis above, it seems that to declare a winner, we need to consider how often we deal with a single vs multiple bands. Both solutions are a good fit for one or the other, never both.
 
@@ -453,23 +456,49 @@ For side-by-side, the situation is quite different. We’re suddenly influencing
 
 ### Implementation and maintenance complexity
 
+There will be several areas where we’ll need to implement new functionality to make the above work:
+
+- **Code/dependency flow** - changes required to flow the code and the intermediate packages between the VMR and the individual repositories.
+- **Source Build** - tooling and infrastracture to build either one or multiple bands from the new layout of the sources.
+- **Product lifecycle processes** - tooling connected to processes such as branching, band snapping, servicing, etc.
+
+#### Code/dependency flow
+
+Both solutions will require us to extend the Maestro service so that it understands flowing both sources and intermediate package versions between the VMR and the individual repositories. Most of the work will be captured in extending the configuration of Maestro subscriptions and working through the problems of the backflow process itself.
+For the side-by-side solution, we’ll need to further implement a new code flow model which will allow us to target specific folders within the VMR. This will also slightly complicate several aspects such as configuration of the source mappings in the VMR and how we keep track of which sources are presently in the VMR.
+
+#### Source Build
+
+Both solutions will require us to implement new behaviours into the Source Build infrastructure that will allow us:
+- Build one or multiple bands from the new layout.
+- Swap between restoring shared components from an intermediate package and building them from source.
+
+The SDK branch solution is closer to what we have today as the layout of files would stay the same while switching between restoring and building shared components would be common for both proposals. It is also already partially implemented.
+
+#### Product lifecycle processes
+
+Both solutions will require us to define, document and support processes such as snapping the bands. It doesn't look like these would differ much between the two.
+
+#### Maintenance
+
 🚧 WIP
 
-- TODO: Much more work to implement side-by-side
-- TODO: Resiliency to band explosion – keeping bands in branches seems more resilient to outer requirements such as a sudden increase in the number of bands due to Visual Studio speeding up its release cycle.
+#### Summary
+
+The SDK folder solution is much closer to where we are these days as the layout of the VMR won't really change. That being said, the complexity of the implementation should not have a high priority when making the decision as it is a one-time cost.
 
 ### Comparison summary
 
-|                       Comparison area                       |     Preferred solution      |
-|-------------------------------------------------------------|:---------------------------:|
-|     Build                                                   |        Does not matter      |
-|     Code flow                                               |     Side-by-side folders    |
-|     Developer experience                                    |         SDK branches        |
-|     Release                                                 |               ?             |
-|     Validation                                              |               ?             |
-|     VMR size & performance                                  |         SDK branches        |
-|     Community, 3rd parties & upstream/downstream story      |         SDK branches        |
-|     Implementation and maintenance complexity               |         SDK branches        |
+|                       Comparison area                       |     Preferred solution      | Impact on decision |
+|-------------------------------------------------------------|:---------------------------:|:------------------:|
+|     Build                                                   |        Does not matter      |        high        |
+|     Code flow                                               |     Side-by-side folders    |     medium/high    |
+|     Developer experience                                    |         SDK branches        |        high        |
+|     Community, 3rd parties & upstream/downstream story      |         SDK branches        |        high        |
+|     Release                                                 |     Side-by-side folders    |       medium       |
+|     Validation                                              |               ?             |       medium       |
+|     VMR size & performance                                  |         SDK branches        |       medium       |
+|     Implementation and maintenance complexity               |         SDK branches        |        low         |
 
 ## Comparison evaluation
 
