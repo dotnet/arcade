@@ -15,10 +15,10 @@ Layout of files in the VMR would be as follows:
 ```sh
 └── src
     ├── roslyn
-    │   ├── 9.0.1xx # Note: These could also be named just 2xx # dev/17.X branch of dotnet/roslyn maps here
+    │   ├── 9.0.1xx # Note: These could also be named just 2xx
     │   └── 9.0.2xx
     ├── sdk
-    │   ├── 9.0.1xx # release/9.0.1xx branch of dotnet/sdk maps here
+    │   ├── 9.0.1xx
     │   └── 9.0.2xx
     └── shared
         ├── arcade
@@ -28,21 +28,43 @@ Layout of files in the VMR would be as follows:
 There could be also variations of this such as this:
 
 ```sh
-├── sdk
-│   ├── roslyn
-│   │   ├── 9.0.1xx
-│   │   └── 9.0.2xx
-│   └── sdk
-│       ├── 9.0.1xx
-│       └── 9.0.2xx
-└── shared
-    ├── arcade
-    └── runtime
+└── src
+    ├── sdk
+    │   ├── roslyn
+    │   │   ├── 9.0.1xx
+    │   │   └── 9.0.2xx
+    │   └── sdk
+    │       ├── 9.0.1xx
+    │       └── 9.0.2xx
+    └── shared
+        ├── arcade
+        └── runtime
 ```
 
 The impact of the actual structure is not so important in the context of this design but it's an important detail to consider that will influence the usability of the VMR.
 
-The layout has the following characteristics:
+This layout however doesn't comply with the requirement where the preview band is locked down to use the latest released runtime. To work around that, we'd have to make an adjustment. This adjustment would require a feature in Source Build where we could specify whether a components is built form source or restored from its intermediate package.
+This functionality actually already exists and each repository already references its dependencies via `eng/Version.Details.xml` so that it can build inside of its individual repository.
+
+Considering we have this capability, we'd then change the VMR contents so that the SDK-specific components of other bands than the first one (`1xx`) would not contain the sources of the shared components.
+Instead, they would reference intermediate packages that would be built from the `1xx` branch. This will give us more flexibility such as locking down the version of the shared components in the preview band to the last released version.
+
+The complete layout would then look like this:
+
+```sh
+└── src
+    ├── roslyn
+    │   ├── 9.0.1xx
+    │   └── 9.0.2xx # references the runtime and arcade intermediates instead of sources
+    ├── sdk
+    │   ├── 9.0.1xx
+    │   └── 9.0.2xx # references the runtime and arcade intermediates instead of sources
+    └── shared
+        ├── arcade
+        └── runtime
+```
+
+To summarize the characteristics:
 
 - Each repository is a folder either under `src/` or `src/shared/` in the VMR.
 - Each band-specific component would have its full copy in the respective band folder. When creating a new band, the contents of `src/sdk/9.0.2xx` would be copied from `src/sdk/9.0.1xx` (with some changes described below).
@@ -51,6 +73,18 @@ The layout has the following characteristics:
 - Each commit of the VMR contains code for all SDK bands with shared components having a single copy.
 
 > TODO: ❓❓❓ What does a single band preview-time VMR look like? Single band VMR is in the `main` where we develop preview version of .NET. Would we have this layout from the start?
+
+## Working with the code
+
+The proposed layout has some problematic implications. Let's consider the following scenarios:
+
+1. A developer wants to make a cross-repo change in a preview band and a shared component.
+2. Distro maintainer wants to build the latest band only.
+
+It might be counter-intuitive to build a commit only to find out that the non-1xx bands do not contain the runtime from that commit. For instance, when you change a sources of a shared component to rebuild a non-1xx band only for the change to not manifest. This is due to the fact that the band would restore the dependencies from the intermediate package instead. This is not ideal as it will be quite hard to test the branch against arbitrary code.
+
+It seems that to make this work, we'd need to be able to tell Source Build to easily swap between using the sources and the intermediate packages of the shared components.
+When someone would be interested in these flows, they would point Source Build to sources somewhere on their disk - either directly in the VMR (e.g. `src/runtime`) or in a full clone of the individual repository checked out outside of the VMR folder.
 
 ## Code flow
 
@@ -120,16 +154,16 @@ The diagram shows:
 
 After the last step, both SDK branches have the same sources of `dotnet/runtime` which means they're coherent.
 
+## Release
+
+Release would mean we'd have to make all released SDK band components use sources to build and use their dependencies from. After that, it should be quite simple to build everything together as all the sources would happen to be within one commit.
+
 ## Band snap
 
 To create a new band, and for the ease, it would be the best to do the snap in the VMR from where it would be flown to the appropriate branches in the individual repositories:
 
 1. Create the new band folders by copying the sources of the latest band.  
    E.g. `src/sdk/9.0.1xx` to `src/sdk/9.0.2xx`
-2. Adjust versions, point the new band to the new runtime intermediate package. ❓❓❓ This doesn't make sense
+2. Adjust versions, point the new band to the new runtime intermediate package.
 3. Configure Maestro subscriptions between new VMR bands and their individual repository counterparts.
 4. Maestro flows the changes from the VMR and creates the appropriate branches in the individual repositories.
-
-## Release
-
-Release would be quite simple as it would just mean doing a full build of a single VMR commit.
