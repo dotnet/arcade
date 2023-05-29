@@ -40,7 +40,7 @@
     <NuGetVersioningVersion>6.2.2</NuGetVersioningVersion>
     <!-- roslyn -->
     <MicrosoftCodeAnalysisCSharpVersion>4.4.0</MicrosoftCodeAnalysisCSharpVersion>
-    <MicrosoftNetCompilersToolsetVersion>4.5.2-3.23261.3</MicrosoftNetCompilersToolsetVersion>
+    <MicrosoftNetCompilersToolsetVersion>4.5.2-3.23266.1</MicrosoftNetCompilersToolsetVersion>
     <!-- runtime -->
     <MicrosoftExtensionsDependencyInjectionAbstractionsVersion>6.0.0</MicrosoftExtensionsDependencyInjectionAbstractionsVersion>
     <MicrosoftExtensionsDependencyInjectionVersion>6.0.0</MicrosoftExtensionsDependencyInjectionVersion>
