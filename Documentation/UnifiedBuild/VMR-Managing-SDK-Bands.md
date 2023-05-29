@@ -252,14 +252,14 @@ The long-term plan is to transition to building and releasing using the Virtual 
 Currently, we end up with SDK branches in the `dotnet/installer` repository and the release process makes sure to package those into the final product. With releasing from the VMR, we have two ways we can approach this:
 
 - **SDK branches** - [📄 Detailed description of the proposal](./VMR-Managing-SDK-Bands-SDK-branches.md)  
-    The first obvious solution that comes to mind considering where we are today. The bottom line is that we'd just keep using SDK branches in the VMR the same way we have them today. This is, in fact, what we’re currently already doing with today’s read-only VMR-lite where we synchronize the SDK branches of `dotnet/installer`. Each branch/commit of the VMR would then keep producing a single SDK. Each branch/commit of the VMR would then keep producing a single SDK. However, we need to make sure the shared bits are the same in each released SDK branch – we’d say the SDK branches would be coherent then. We also need to make sure that changes made to the shared components in VMR’s SDK branches are flown everywhere appropriately.
+    The first obvious solution that comes to mind considering where we are today. The bottom line is that we'd just keep using SDK branches in the VMR the same way we have them today. This is, in fact, what we’re currently already doing with today’s read-only VMR-lite where we synchronize the SDK branches of `dotnet/installer`. Each branch/commit of the VMR would then keep producing a single SDK. However, we need to make sure the shared bits are the same in each released SDK branch – we’d say the SDK branches would be coherent then. We also need to make sure that changes made to the shared components in VMR’s SDK branches are flown everywhere appropriately.
 
 - **Side-by-Side folders in the VMR** - [📄 Detailed description of the proposal](./VMR-Managing-SDK-Bands-Side-by-Side-folders.md)  
     The second proposed solution would be to take the inverse approach and, instead of having SDK branches, we’d organize VMR’s branches based on the shared bits (e.g. `release/9.0`) and place the different bands of the SDK components side by side in the VMR, e.g. `src/sdk/9.0.1xx`. This makes sure that the shared bits exist only once and each commit of the VMR contains all bands which are coherent.
 
 ## Proposal comparison
 
-To compare the two proposals, we identified several areas which might be impacted by the selected architecture, and we’ll try to evaluate how each of the solutions affect them:
+To compare the two proposals, we identified several areas which might be impacted by the selected architecture:
 
 - **Build** – what would build of a single and of multiple bands look like with regards to Source Build
 - **Code flow** – what does a breaking change mean; how do we (back-)flow the code between the VMR and the individual repositories
