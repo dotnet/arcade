@@ -213,6 +213,8 @@ When we would be ready to release VS `17.2`, we'd flow the latest shared compone
 - We'd snap branches of SDK repositories by branching `7.0.3xx` from `7.0.2xx`. While doing that, we'd update the runtime version of `7.0.3xx` to the just released version.
 - We would set up the `7.0` shared channels to start flowing into the `7.0.2xx` branches as the runtime there would start revving.
 
+Technically, the steps above could happen in a different order based on repository needs. The important part is the alignment of repository's development branches with the Maestro channels.
+
 ### Full code backflow and Maestro
 
 Currently, the [VMR is synchronized](./VMR-Design-And-Operation.md#source-synchronization-process) based on the `dotnet/installer` repository mapping its commits 1:1 with `dotnet/installer`. This will have to change once we switch over to the full code backflow model.
