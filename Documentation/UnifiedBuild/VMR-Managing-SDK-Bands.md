@@ -511,13 +511,13 @@ The SDK folder solution is much closer to where we are these days as the layout 
 
 |                       Comparison area                       |     Preferred solution      | Impact on decision |
 |-------------------------------------------------------------|:---------------------------:|:------------------:|
-|     Build                                                   |        Does not matter      |       medium       |
-|     Code flow                                               |         Side-by-side        |     medium/high    |
-|     Developer experience                                    |         SDK branches        |        high        |
-|     Community, 3rd parties & upstream/downstream story      |         SDK branches        |        high        |
+|     Build                                                   |        Does not matter      |        none        |
+|     Code flow                                               |         Side-by-side        |   **medium/high**  |
+|     Developer experience                                    |         SDK branches        |      **high**      |
+|     Community, 3rd parties & upstream/downstream story      |         SDK branches        |      **high**      |
 |     Release                                                 |         Side-by-side        |       medium       |
 |     Validation                                              |               ?             |       medium       |
-|     VMR size & performance                                  |         SDK branches        |       medium       |
+|     VMR size & performance                                  |         SDK branches        |   **medium/high**  |
 |     Implementation and maintenance complexity               |         SDK branches        |        low         |
 
 ## Comparison evaluation
