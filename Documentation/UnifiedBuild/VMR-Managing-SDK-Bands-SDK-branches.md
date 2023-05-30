@@ -152,10 +152,13 @@ After the last step, the `1xx` VMR branch has the sources of `dotnet/runtime` th
 
 ## Release
 
-On a release day, we need to make sure the SDK branches are coherent. This means that the lastly published intermediates from the `1xx` branch have flown to all of the other SDK band branches. For that to happen, we need to enable the package flow for the preview band and consume the newest bits to validate everything.
-Since the shared components were built only once and stored inside of the intermediates, we can assemble the packages from all band branches and release them together, similarly to how we do it today.
+The release has three main phases:
 
-The Source Build releases where we publish sources to distro maintainers, would have to be adjusted and in cases when building a single non-1xx band only, we'd have to make sure the distro maintainers can acquire a tarball with the complete sources.
+1. **Figuring out what to release** - We need to make sure the SDK branches are coherent. This means that the lastly published intermediates from the `1xx` branch have flown to all of the other SDK band branches. For that to happen, we need to enable the package flow for the preview band and consume the newest bits to validate everything.
+
+2. **Compiling the binary release** - Since the shared components were built only once and stored inside of the intermediates, we can assemble the packages from all band branches and release them together, similarly to how we do it today. The staging pipeline could assemble the build products from the official builds similarly to how we do it today.
+
+3. **Publishing and communicating the release of the sources** - Publishing of sources so they are easily consumed by 3rd party partners would differ based on whether the consumer cares about one or all bands. or a single SDK band release, only the 1xx band branch would contain the sources in such a way that you could build directly. The non-1xx band branches do not contain the source code of the shared components and only reference them as intermediate packages. This means that we'd need to compile the sources by restoring them from the 1xx band branch. For releases of multiple SDKs together, we'd also need to compile the full set of sources by bringing the branches together.
 
 ## Band snap
 

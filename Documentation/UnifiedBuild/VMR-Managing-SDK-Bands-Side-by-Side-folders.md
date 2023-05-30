@@ -154,7 +154,13 @@ After the last step, both SDK branches have the same sources of `dotnet/runtime`
 
 ## Release
 
-Release would mean we'd have to make all released SDK band components use sources to build and use their dependencies from. After that, it should be quite simple to build everything together as all the sources would happen to be within one commit.
+The release has three main phases:
+
+1. **Figuring out what to release** - We need to make sure the SDK bands are coherent. This means that the preview bands do not restore shared components from intermediate packages anymore and that we can build and validate the whole VMR commit we're about to release.
+
+2. **Compiling the binary release** - We need to collect the build products of the official VMR build of a commit that we're releasing. The staging pipeline would pull the artifacts from there which is very close to pulling it from installer today.
+
+3. **Publishing and communicating the release of the sources** - The VMR contains all of the sources within one commit which makes things easy. However, for anyone who only cares about a single band, we'd need to be able to provide some trimmed-down version of the released commit.
 
 ## Band snap
 
