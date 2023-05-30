@@ -321,13 +321,33 @@ Some points of interest are rather a matter of personal preference – is it bet
 
 There are few key parts of the release process:
 
-- Figuring out what to release - we need to flow dependencies to the right places and determine which sources are coherent enough to be released.
-- Compiling the binary release - we need to be able to build all the sources in such a way that shared components do not get built more than once.
-- Publishing and communicating the release of the sources (Source Build release) - Identifying and publishing sources of the release so that they are easily consumed by 3rd party partners.
+- **Figuring out what to release** - we need to flow dependencies to the right places and determine which sources are coherent enough to be released.
+- **Compiling the binary release** - we need to be able to build all the sources in such a way that shared components do not get built more than once.
+- **Publishing and communicating the release of the sources** - publishing of sources so they are easily consumed by 3rd party partners.
 
-From the above, it seems like the release process itself might be much easier with the side-by-side folder layout. Everything is identified by a single commit and we can just build/share this commit.
+#### Figuring out what to release
 
-> 🚧 TODO - Mean time to release metric and implications
+For side-by-side, we only need to identify a single commit which is easier than SDK branches, for which we need to identify a commit per each band where also the commits of the non-1xx band reference the intermediate packages of the 1xx band commit.
+
+#### Compiling the binary release
+
+It is unclear whether we would re-build everything from source or whether we'd just collect outputs of the official VMR build(s). The latter seems more likely as it seems it would be easier to re-use the existing staging pipeline which does that for `dotnet/installer` builds already. It would also make sure we only build the shared components once and we have tested those exact binaries.
+
+It seems that both proposals would mean we have an official VMR build to take the products from. We currently don't have the build infrastructure to build several bands together but that would happen for both proposals.
+
+#### Publishing and communicating the release of the sources
+
+Last part of the release would be the so-called Source Build release where we'd need to collect and publish the sources representing the release for the .NET distro maintainers. The side-by-side proposal would contain all of the sources within one commit which makes things easier. However, for anyone who only cares about a single band, we'd need to be able to provide some trimmed version of this commit.  
+For SDK branches, the situation is a bit more complicated. For a single SDK band release, only the 1xx band branch would contain the sources in such a way that you could build directly. The non-1xx band branches do not contain the source code of the shared components and only reference them as intermediate packages. This means that we'd need to compile the sources by restoring them from the 1xx band branch. For releases of multiple SDKs together, we'd also need to compile the full set of sources by bringing the branches together.
+
+It seems that while the SDK branches approach brings a bit more complexity, we'll have to create new processes of how to get the sources to our partners for both approaches.
+
+#### Mean time to release
+
+There is one more metric important to consider connected to releases and that is *mean time to release*. This says how long it takes from making an arbitrary change in the product to releasing it. This is very important is it says how reactive we might be in situations like security fixes.
+
+The side-by-side solution needs fewer steps to flow a change between the VMR and the individual repositories but this difference is not dramatic. The flow still needs to happen to/from the same amount of individual repository branches. It only happens for one VMR branch as opposed to all SDK band branches as with the SDK branches proposal.  
+The key improvement that Unified Build brings is flattening the dependency graph which will have a big impact and improve this metric regardless of what we choose here.
 
 ### Validation
 
@@ -384,7 +404,7 @@ Another interesting metric is the archive of sources needed to build a single SD
 #### Release source tarball size
 
 By release source tarball we mean an archive of all sources needed to build a whole release containing several SDK bands.
-For side-by-side folders, this would simply equal to a VMR commit. For SDK branches, we’d have to do something about compiling the release archive as the shared components need to appear in the tarball just once.
+For side-by-side folders, this would simply equal to a VMR commit. For SDK branches, we’d have to do something about compiling the release archive as the shared components need to appear in the tarball just once. For that, we'd have to specify what such a layout would look like and how we would build that as there is no immediate plan for that in the SDK branches proposal.
 
 > 🚧 TODO: It’s a question whether there would be a thing such as “tarball for the whole release with all bands” but it’s probably possible to exclude the shared components from all but one band and reach the same result with SDK folder as with SDK branches.
 
@@ -492,10 +512,10 @@ The SDK folder solution is much closer to where we are these days as the layout 
 |                       Comparison area                       |     Preferred solution      | Impact on decision |
 |-------------------------------------------------------------|:---------------------------:|:------------------:|
 |     Build                                                   |        Does not matter      |       medium       |
-|     Code flow                                               |     Side-by-side folders    |     medium/high    |
+|     Code flow                                               |         Side-by-side        |     medium/high    |
 |     Developer experience                                    |         SDK branches        |        high        |
 |     Community, 3rd parties & upstream/downstream story      |         SDK branches        |        high        |
-|     Release                                                 |     Side-by-side folders    |       medium       |
+|     Release                                                 |         Side-by-side        |       medium       |
 |     Validation                                              |               ?             |       medium       |
 |     VMR size & performance                                  |         SDK branches        |       medium       |
 |     Implementation and maintenance complexity               |         SDK branches        |        low         |
