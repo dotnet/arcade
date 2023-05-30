@@ -102,6 +102,5 @@
     <OctokitVersion>0.41.0</OctokitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
     <XUnitVersion>2.4.2</XUnitVersion>
-    <XUnitAnalyzersVersion>1.0.0</XUnitAnalyzersVersion>
   </PropertyGroup>
 </Project>
