@@ -105,10 +105,8 @@ sequenceDiagram
 
     par Parallel backflow of intermediates
         VMR->>SDK_1xx: Backflow of 📦 VMR_2
-        SDK_1xx-->>VMR: No-op
     and
         VMR->>SDK_2xx: Backflow of 📦 VMR_2
-        SDK_2xx-->>VMR: No-op
     end
 ```
 
