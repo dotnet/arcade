@@ -406,7 +406,7 @@ Another interesting metric is the archive of sources needed to build a single SD
 By release source tarball we mean an archive of all sources needed to build a whole release containing several SDK bands.
 For side-by-side folders, this would simply equal to a VMR commit. For SDK branches, we’d have to do something about compiling the release archive as the shared components need to appear in the tarball just once. For that, we'd have to specify what such a layout would look like and how we would build that as there is no immediate plan for that in the SDK branches proposal.
 
-> 🚧 TODO: It’s a question whether there would be a thing such as “tarball for the whole release with all bands” but it’s probably possible to exclude the shared components from all but one band and reach the same result with SDK folder as with SDK branches.
+> 🚧 TODO: It’s a question whether there would be a thing such as “tarball for the whole release with all bands” and what the flow for distro maintaners would be. If there wasn't a need for this, the SDK branch proposal would benefit from this but it would still need a story for assembling sources of a single non-1xx band.
 
 > 🚧 TODO: Resiliency to band explosion – keeping bands in branches seems more resilient to outer requirements such as a sudden increase in the number of bands due to Visual Studio speeding up its release cycle.
 
@@ -472,7 +472,7 @@ For side-by-side, the situation is quite different. We’re suddenly influencing
 
 Additionally, both proposals have the problem of locking the preview band on the latest runtime. The SDK branch proposal is more intuitive in this as the SDK branch of the preview band doesn't contain code for shared components. This is better than the side-by-side design which has the sources laid out but they are not used as the preview band will restore them from an intermediate package. This will cause confusion.
 
-> 🚧 TODO: We should be clear on how to interact with the VMR/repositories, e.g. where do we expect the community to upstream their changes to, etc.
+Regardless of the chosen solution, we must be clear on how to interact with the VMR/repositories (e.g. where do we expect the community to upstream their changes to) and we must have communicate it well.
 
 ### Implementation and maintenance complexity
 
@@ -501,7 +501,7 @@ Both solutions will require us to define, document and support processes such as
 
 #### Maintenance
 
-> 🚧 WIP - Costs associated with keeping the infrastructure running so that we can do servicing
+> 🚧 WIP - Costs associated with keeping the infrastructure running so that we can do servicing. I don't think there will be many differences though.
 
 #### Summary
 
