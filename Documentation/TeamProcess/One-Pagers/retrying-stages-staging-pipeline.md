@@ -73,7 +73,7 @@ flowchart LR;
 
 Proposed implementation is splitting the pipeline into two pipelines.
 #### 1. First pipeline: Stage-Dotnet-Prepare-Artifacts
-The Stage-Dotnet-Prepare-Artifacts pipeline will contain stages that alters the artifacts. 
+The Stage-Dotnet-Prepare-Artifacts pipeline will contain stages that alters or generates new (e.g. SBOM) artifacts. 
 ```mermaid
 flowchart LR;
   prep["Prep Ring \n <b>~30min</b>"] --> prep_override[Prep Ring Override]
