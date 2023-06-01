@@ -148,7 +148,7 @@ flowchart LR;
 
 #### Risks: 
 1. We are dissecting the staging pipeline, there is a chance we might be messing up publishing to correct storage containers. 
-1. We are going to retire the old pipeline only after the new pipelines Stage-Dotnet-Prepare-Artifacts and  Stage-Dotnet-Validate-Publish are up and running.
+1. Since we will retire the old pipeline only after the new pipelines Stage-Dotnet-Prepare-Artifacts and Stage-Dotnet-Validate-Publish are up and running, there may be an extended period where we need to maintain extra pipelines.
 
 #### Additional information: 
 1. Verify we don't duplicate publishing of assets is tracked in (issue)[https://github.com/dotnet/arcade/issues/13025]
