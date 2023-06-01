@@ -147,12 +147,11 @@ flowchart LR;
 ```
 
 #### Risks: 
-1. We are dissecting the staging pipeline. We need to make sure all the assets are published to the correct storage containers. 
-1. Verify if asset publishing is happening to the right container.
-1. Verify we don't duplicate publishing of assets is tracked in (issue)[https://github.com/dotnet/arcade/issues/13025]
-1. Adding testing infra to Staging pipeline is tracked (here)[https://github.com/dotnet/arcade/issues/13462]
+1. We are dissecting the staging pipeline, there is a chance we might be messing up publishing to correct storage containers. 
 1. We are going to retire the old pipeline only after the new pipelines Stage-Dotnet-Prepare-Artifacts and  Stage-Dotnet-Validate-Publish are up and running.
 
-
+#### Additional information: 
+1. Verify we don't duplicate publishing of assets is tracked in (issue)[https://github.com/dotnet/arcade/issues/13025]
+1. Adding testing infra to Staging pipeline is tracked (here)[https://github.com/dotnet/arcade/issues/13462]
 
 
