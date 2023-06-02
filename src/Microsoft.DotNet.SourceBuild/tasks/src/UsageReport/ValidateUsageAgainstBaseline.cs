@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
             "for guidance on what pre-builts are and how to eliminate them.";
 
         private readonly string _reviewRequestMessage = "Whenever altering this " +
-            "or other Source Build files, please make sure to include @dotnet/source-build-internal " +
+            "or other Source Build files, please include @dotnet/source-build-internal " +
             "as a reviewer.";
 
         public override bool Execute()
