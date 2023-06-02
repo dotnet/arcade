@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
 
         public override bool Execute()
         {
-            string ReviewRequestComment = $"<!-- {_reviewRequestMessage} -->";
+            string ReviewRequestComment = $"<!-- {_reviewRequestMessage} -->{Environment.NewLine}";
             string PreBuiltDocXmlComment = $"<!-- {_preBuiltDocMessage} -->{Environment.NewLine}";
             
             var used = UsageData.Parse(XElement.Parse(File.ReadAllText(DataFile)));
@@ -61,10 +61,10 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
             UsageValidationData data = GetUsageValidationData(baseline, used);
 
             Directory.CreateDirectory(Path.GetDirectoryName(OutputBaselineFile));
-            File.WriteAllText(OutputBaselineFile, ReviewRequestComment + PreBuiltDocXmlComment + data.ActualUsageData.ToXml().ToString());
+            File.WriteAllText(OutputBaselineFile, ReviewRequestComment + PreBuiltDocXmlComment + Environment.NewLine + data.ActualUsageData.ToXml().ToString());
 
             Directory.CreateDirectory(Path.GetDirectoryName(OutputReportFile));
-            File.WriteAllText(OutputReportFile, PreBuiltDocXmlComment + data.Report.ToString());
+            File.WriteAllText(OutputReportFile, PreBuiltDocXmlComment + Environment.NewLine + data.Report.ToString());
 
             return !Log.HasLoggedErrors;
         }
