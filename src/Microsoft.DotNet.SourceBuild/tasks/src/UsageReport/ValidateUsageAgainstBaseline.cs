@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
 
         public override bool Execute()
         {
-            string ReviewRequestComment = $"<!-- {_reviewRequestMessage} -->{Environment.NewLine}";
+            string ReviewRequestComment = $"<!-- {_reviewRequestMessage} -->";
             string PreBuiltDocXmlComment = $"<!-- {_preBuiltDocMessage} -->{Environment.NewLine}";
             
             var used = UsageData.Parse(XElement.Parse(File.ReadAllText(DataFile)));
