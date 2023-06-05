@@ -97,6 +97,13 @@ stages:
           fetchDepth: 0
           clean: true
         steps:
+        - script: eng\common\cibuild.cmd
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            $(_InternalBuildArgs)
+            /p:Test=false
+          displayName: Windows Build / Publish
+
         - ${{ if and(eq(variables._RunAsPublic, True), eq(variables['Build.Reason'], 'PullRequest')) }}:
           - powershell: |
               # Detects if current change contains change for which we need to run XHarness E2E tests
@@ -122,13 +129,6 @@ stages:
               Write-Host "No changes detected that will require running XHarness E2E tests"
             name: XHarnessChangeDetection
             displayName: Detect XHarness changes
-
-        - script: eng\common\cibuild.cmd
-            -configuration $(_BuildConfig)
-            -prepareMachine
-            $(_InternalBuildArgs)
-            /p:Test=false
-          displayName: Windows Build / Publish
 
       - ${{ if eq(variables._RunAsPublic, True) }}:
         - job: Linux
