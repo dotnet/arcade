@@ -113,7 +113,7 @@ stages:
               if ($diff) {
                 Write-Host "Detected changes that will require running XHarness E2E tests. Changed files:"
                 Write-Host $diff
-                Write-Host "##vso[task.setvariable variable=RunXHarnessTests]True"
+                Write-Host "##vso[task.setvariable variable=RunXHarnessTests;isOutput=true]True"
                 exit 0
               }
 
@@ -122,7 +122,7 @@ stages:
               if ($fullDiff -match 'Microsoft.DotNet.XHarness.CLI')
               {
                 Write-Host "Detected a version bump of Microsoft.DotNet.XHarness.CLI, will run XHarness E2E tests"
-                Write-Host "##vso[task.setvariable variable=RunXHarnessTests]True"
+                Write-Host "##vso[task.setvariable variable=RunXHarnessTests;isOutput=true]True"
                 exit 0
               }
 
