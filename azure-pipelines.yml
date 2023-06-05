@@ -96,13 +96,7 @@ stages:
         - checkout: self
           clean: true
         steps:
-        - script: eng\common\cibuild.cmd
-            -configuration $(_BuildConfig)
-            -prepareMachine
-            $(_InternalBuildArgs)
-            /p:Test=false
-          displayName: Windows Build / Publish
-        - powershell:
+        - powershell: |
             # Detects if current change contains change for which we need to run XHarness E2E tests
             $diff=$(git diff HEAD "$(Build.SourceBranch)" --name-only)
             $files=$diff -split ' '
@@ -124,7 +118,14 @@ stages:
                 Write-Host "Detected a version bump of Microsoft.DotNet.XHarness.CLI, will run XHarness E2E tests"
                 Write-Host "##vso[task.setvariable variable=RunXHarnessTests]True"
             }
-          name: XHarnessChangeDetection
+            name: XHarnessChangeDetection
+
+        - script: eng\common\cibuild.cmd
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            $(_InternalBuildArgs)
+            /p:Test=false
+          displayName: Windows Build / Publish
 
       - ${{ if eq(variables._RunAsPublic, True) }}:
         - job: Linux
