@@ -94,6 +94,7 @@ stages:
               _BuildConfig: Release
         preSteps:
         - checkout: self
+          fetchDepth: 0
           clean: true
         steps:
         - ${{ if and(eq(variables._RunAsPublic, True), eq(variables['Build.Reason'], 'PullRequest')) }}:
