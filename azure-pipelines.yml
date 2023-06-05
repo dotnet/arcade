@@ -121,9 +121,9 @@ stages:
               $fullDiff=$(git diff HEAD HEAD~ -- eng/Version.Details.xml eng/Versions.props)
               if ($fullDiff -match 'Microsoft.DotNet.XHarness.CLI')
               {
-                  Write-Host "Detected a version bump of Microsoft.DotNet.XHarness.CLI, will run XHarness E2E tests"
-                  Write-Host "##vso[task.setvariable variable=RunXHarnessTests]True"
-                  exit 0
+                Write-Host "Detected a version bump of Microsoft.DotNet.XHarness.CLI, will run XHarness E2E tests"
+                Write-Host "##vso[task.setvariable variable=RunXHarnessTests]True"
+                exit 0
               }
 
               Write-Host "No changes detected that will require running XHarness E2E tests"
