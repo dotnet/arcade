@@ -101,7 +101,7 @@ stages:
           - powershell: |
               # Detects if current change contains change for which we need to run XHarness E2E tests
               git fetch --all
-              $diff=$(git diff HEAD $(System.PullRequest.TargetBranch) --name-only -- src/Microsoft.DotNet.Helix/Sdk 'tests/XHarness*')
+              $diff=$(git diff HEAD HEAD~ --name-only -- src/Microsoft.DotNet.Helix/Sdk 'tests/XHarness*')
 
               if ($diff) {
                 Write-Host "Detected changes that will require running XHarness E2E tests. Changed files:"
@@ -111,7 +111,7 @@ stages:
               }
 
               # Detects if Version.Details.xml or Versions.props changed (a version bump)
-              $fullDiff=$(git diff HEAD "$(System.PullRequest.TargetBranch)" -- eng/Version.Details.xml eng/Versions.props)
+              $fullDiff=$(git diff HEAD HEAD~ -- eng/Version.Details.xml eng/Versions.props)
               if ($fullDiff -match 'Microsoft.DotNet.XHarness.CLI')
               {
                   Write-Host "Detected a version bump of Microsoft.DotNet.XHarness.CLI, will run XHarness E2E tests"
