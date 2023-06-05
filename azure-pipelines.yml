@@ -99,6 +99,7 @@ stages:
         - ${{ if and(eq(variables._RunAsPublic, True), eq(variables['Build.Reason'], 'PullRequest')) }}:
           - powershell: |
               # Detects if current change contains change for which we need to run XHarness E2E tests
+              Set-PSDebug -Trace 1
               $diff=$(git diff HEAD..$(System.PullRequest.TargetBranch) --name-only -- src/Microsoft.DotNet.Helix/Sdk 'tests/XHarness*')
 
               if ($diff) {
