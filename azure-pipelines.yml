@@ -96,29 +96,31 @@ stages:
         - checkout: self
           clean: true
         steps:
-        - powershell: |
-            # Detects if current change contains change for which we need to run XHarness E2E tests
-            $diff=$(git diff HEAD "$(Build.SourceBranch)" --name-only)
-            $files=$diff -split ' '
+        - ${{ if and(eq(variables._RunAsPublic, True), eq(variables['Build.Reason'], 'PullRequest')) }}:
+          - powershell: |
+              # Detects if current change contains change for which we need to run XHarness E2E tests
+              $diff=$(git diff HEAD "$(System.PullRequest.TargetBranch)" --name-only)
+              $files=$diff -split ' '
 
-            foreach ($file in $files)
-            {
-                if (($file -like "src/Microsoft.DotNet.Helix/Sdk/*") -or ($file -like "src/XHarness*"))
-                {
-                    Write-Host "Detected a change in '$file', will run XHarness E2E tests"
-                    Write-Host "##vso[task.setvariable variable=RunXHarnessTests]True"
-                    exit 0
-                }
-            }
+              foreach ($file in $files)
+              {
+                  if (($file -like "src/Microsoft.DotNet.Helix/Sdk/*") -or ($file -like "src/XHarness*"))
+                  {
+                      Write-Host "Detected a change in '$file', will run XHarness E2E tests"
+                      Write-Host "##vso[task.setvariable variable=RunXHarnessTests]True"
+                      exit 0
+                  }
+              }
 
-            # Detects if Version.Details.xml or Versions.props changed (a version bump)
-            $fullDiff=$(git diff HEAD "$(Build.SourceBranch)")
-            if ($fullDiff -match 'Microsoft.DotNet.XHarness.CLI')
-            {
-                Write-Host "Detected a version bump of Microsoft.DotNet.XHarness.CLI, will run XHarness E2E tests"
-                Write-Host "##vso[task.setvariable variable=RunXHarnessTests]True"
-            }
+              # Detects if Version.Details.xml or Versions.props changed (a version bump)
+              $fullDiff=$(git diff HEAD "$(System.PullRequest.TargetBranch)")
+              if ($fullDiff -match 'Microsoft.DotNet.XHarness.CLI')
+              {
+                  Write-Host "Detected a version bump of Microsoft.DotNet.XHarness.CLI, will run XHarness E2E tests"
+                  Write-Host "##vso[task.setvariable variable=RunXHarnessTests]True"
+              }
             name: XHarnessChangeDetection
+            displayName: Detect XHarness changes
 
         - script: eng\common\cibuild.cmd
             -configuration $(_BuildConfig)
