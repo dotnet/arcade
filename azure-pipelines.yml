@@ -99,26 +99,25 @@ stages:
         - ${{ if and(eq(variables._RunAsPublic, True), eq(variables['Build.Reason'], 'PullRequest')) }}:
           - powershell: |
               # Detects if current change contains change for which we need to run XHarness E2E tests
-              $diff=$(git diff HEAD "$(System.PullRequest.TargetBranch)" --name-only)
-              $files=$diff -split ' '
+              $diff=$(git diff HEAD..$(System.PullRequest.TargetBranch) --name-only -- src/Microsoft.DotNet.Helix/Sdk 'tests/XHarness*')
 
-              foreach ($file in $files)
-              {
-                  if (($file -like "src/Microsoft.DotNet.Helix/Sdk/*") -or ($file -like "src/XHarness*"))
-                  {
-                      Write-Host "Detected a change in '$file', will run XHarness E2E tests"
-                      Write-Host "##vso[task.setvariable variable=RunXHarnessTests]True"
-                      exit 0
-                  }
+              if ($diff) {
+                Write-Host "Detected changes that will require running XHarness E2E tests. Changed files:"
+                Write-Host $diff
+                Write-Host "##vso[task.setvariable variable=RunXHarnessTests]True"
+                exit 0
               }
 
               # Detects if Version.Details.xml or Versions.props changed (a version bump)
-              $fullDiff=$(git diff HEAD "$(System.PullRequest.TargetBranch)")
+              $fullDiff=$(git diff HEAD "$(System.PullRequest.TargetBranch)" -- eng/Version.Details.xml eng/Versions.props)
               if ($fullDiff -match 'Microsoft.DotNet.XHarness.CLI')
               {
                   Write-Host "Detected a version bump of Microsoft.DotNet.XHarness.CLI, will run XHarness E2E tests"
                   Write-Host "##vso[task.setvariable variable=RunXHarnessTests]True"
+                  exit 0
               }
+
+              Write-Host "No changes detected that will require running XHarness E2E tests"
             name: XHarnessChangeDetection
             displayName: Detect XHarness changes
 
