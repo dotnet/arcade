@@ -278,7 +278,7 @@ To compare the two proposals, we identified several areas which might be impacte
 The current (Microsoft) way of building the SDKs is based on re-using previously built artifacts which come into the build as NuGet packages. The components are flown as already compiled packages. This means that when building each SDK band, we only restore the shared components which were built only once at some point in the past during the official build of their source repository.  
 In .NET 9.0, when the full VMR code flow is in place (see [VMR Code and Build Workflow](./VMR-Code-And-Build-Workflow.md) for details), we’ll be building the individual repositories on more occasions:
 
-- During the official build of their source repository – this will use other repo’s intermediate packages whenever they depend on another repo as if they were just built from source.
+- During the rolling build of their source repository – this will use other repo’s intermediate packages whenever they depend on another repo as if they were just built from source.
 - During the official build of the VMR – when we build the whole product from source. This will end up producing an intermediate package per each individual repository built as part of the whole build.
 
 This means that in several places, we’ll be building both the shared components and the SDK band components from source where their dependencies will be either freshly built or restored in a local NuGet cache.  
