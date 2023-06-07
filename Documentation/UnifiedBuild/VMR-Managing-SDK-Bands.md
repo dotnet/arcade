@@ -255,7 +255,7 @@ The long-term plan is to transition to building and releasing using the Virtual 
 Currently, we end up with SDK branches in the `dotnet/installer` repository and the release process makes sure to package those into the final product. With releasing from the VMR, we have two ways we can approach this:
 
 - **SDK branches** - [📄 Detailed description of the proposal](./VMR-Managing-SDK-Bands-SDK-branches.md)  
-    The first obvious solution that comes to mind considering where we are today. The bottom line is that we'd just keep using SDK branches in the VMR the same way we have them today. This is, in fact, what we’re currently already doing with today’s read-only VMR-lite where we synchronize the SDK branches of `dotnet/installer`. Each branch/commit of the VMR would then keep producing a single SDK. However, we need to make sure the shared bits are the same in each released SDK branch – we’d say the SDK branches would be coherent then. We also need to make sure that changes made to the shared components in VMR’s SDK branches are flown everywhere appropriately.
+    Keep using SDK branches in the VMR the same way we have them today. This is, in fact, what we’re currently already doing with today’s read-only VMR-lite where we synchronize the SDK branches of `dotnet/installer`. Each branch/commit of the VMR would then keep producing a single SDK. However, we need to make sure the shared bits are the same in each released SDK branch – we’d say the SDK branches would be coherent then. We also need to make sure that changes made to the shared components in VMR’s SDK branches are flown everywhere appropriately.
 
 - **Side-by-Side folders in the VMR** - [📄 Detailed description of the proposal](./VMR-Managing-SDK-Bands-Side-by-Side-folders.md)  
     The second proposed solution would be to take the inverse approach and, instead of having SDK branches, we’d organize VMR’s branches based on the shared bits (e.g. `release/9.0`) and place the different bands of the SDK components side by side in the VMR, e.g. `src/sdk/9.0.1xx`. This makes sure that the shared bits exist only once and each commit of the VMR contains all bands which are coherent.
@@ -286,7 +286,7 @@ Regardless of how this will happen, there’s no real difference whether we’d 
 
 The various situations can be summarized as follows:
 - For individual repository builds, the build process will restore the dependencies from intermediate packages.
-- For the VMR build shared components are built with the first band and put in a local NuGet cache. Other bands restore shared components from the cache.
+- For the VMR build shared components are built with the first band and put in a local NuGet feed. Other bands restore shared components from the feed.
 
 Upon inspection of the proposals, the above **doesn't differ for the given proposal which means the selected architecture doesn’t really affect the build** and we don’t need to consider it during evaluation. There will, however, be a change to the build process needed to accommodate for the new locations of the bands within the VMR.
 
@@ -294,7 +294,7 @@ Upon inspection of the proposals, the above **doesn't differ for the given propo
 
 Code flow is where the two approaches differ dramatically. The biggest difference is during breaking changes in shared components and how/when these get resolved. For a simple forward flow where a shared component is changed, the code flow needed to update all branches does not differ much as shown in the detailed designs of each of the proposals.
 
-The situation gets more interesting for breaking changes. where the side-by-side solution shows much more resiliency to breaking changes as those need to be dealt with immediately when we do the initial change. The VMR won’t ever get into an inconsistent state as the bands live within a single commit. Whereas in the SDK folder solution, the breaking change is created and is dealt with in a follow-up step once code flows to the branch of the other band.
+The situation gets more interesting for breaking changes. The side-by-side solution shows much more resiliency to breaking changes as those need to be dealt with immediately when we do the initial shared component change. The VMR won’t ever get into an inconsistent state as the bands live within a single commit. Whereas in the SDK branch solution, the breaking change is created and is dealt with in a follow-up step once code flows to the branch of the other band.
 
 Other difference is in the number of steps in the flow to reach a coherent state. This is lower for side-by-side as incoherency is impossible from the start and the system does not need to deal with it. The number of changes needed is not that much higher though as we still need to flow changes to the same number of branches of all individual repositories that are part of the change. This does not differ much whether we flow folders from one or more branches.
 
@@ -306,7 +306,7 @@ Important area to consider is how the day-to-day interactions of .NET developers
 - **Git operation complexity** – actions such as checking file history, diffing bands, backporting changes between bands..
 - **Git operation performance** – duration of operations such as `git status`. This area is considered separately [later in the document](#vmr-size--performance).
 
-That said, it’s important to realize that most of the work and the VMR is the most active in the preview time where we only have one SDK band.
+**_That said, it’s important to realize that most of the work and the VMR is the most active in the preview time where we only have one SDK band._**
 
 It is obvious that the SDK branch proposal wins in most of these categories. It stays more true to git by using commits/branches for file versioning rather than folders with version using in their name as it is with the side-by-side layout. This works well with all kinds of tooling and workflows:
 
