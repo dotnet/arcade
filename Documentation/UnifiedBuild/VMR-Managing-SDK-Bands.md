@@ -511,14 +511,17 @@ The SDK folder solution is much closer to where we are these days as the layout 
 
 |                       Comparison area                       |     Preferred solution      | Impact on decision |
 |-------------------------------------------------------------|:---------------------------:|:------------------:|
-|     Build                                                   |        Does not matter      |        none        |
-|     Code flow                                               |         Side-by-side        |   **medium/high**  |
+|     Build                                                   |         Side-by-side        |        low         |
+|     Code flow                                               |         Side-by-side        |    low/medium\*    |
 |     Developer experience                                    |         SDK branches        |      **high**      |
 |     Community, 3rd parties & upstream/downstream story      |         SDK branches        |      **high**      |
 |     Release                                                 |         Side-by-side        |       medium       |
-|     Validation                                              |               ?             |       medium       |
+|     Validation                                              |             tie             |       medium       |
 |     VMR size & performance                                  |         SDK branches        |   **medium/high**  |
-|     Implementation and maintenance complexity               |         SDK branches        |        low         |
+|     Implementation and maintenance complexity               |         SDK branches        |        low\*\*     |
+
+> \* The impact of code flow may be low, given that most changes in shared components that require changes in the SDK happen when the 1xx band is the only band. So the code flow is not really affected by this edge case. Over all the simplification we are getting with using the VMR is massive regardless of the chosen solution.  
+> \*\* The implementation complexity is a one-time cost (but much lower for SDK branches). Maintenance seems to be similar for both.solutions.
 
 ## Comparison evaluation
 
