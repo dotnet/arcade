@@ -168,7 +168,8 @@ To create a new band, and for the ease, it would be the best to do the snap in t
    E.g. `src/sdk/9.0.1xx` to `src/sdk/9.0.2xx`
 2. Remove sources of shared components in the `2xx` branch. Adjust package versions and point the new band to the intermediate packages of shared components from the last release.
 3. Configure Maestro subscriptions between new VMR bands and their individual repository counterparts.
-4. If there are at least 3 bands, configure subscriptions of the currently released band to consume the intermediates of the `1xx` band.
+4. If there are at least 3 bands, configure subscriptions of the currently released band to consume the intermediates of the `1xx` band.  
+   > Note: We need 3 bands at minimum because The first one is there from the beginning so we need to wait until a second one only gets out of preview which happens when we snap the third one.
 5. Maestro flows the changes from the VMR and creates the appropriate branches in the individual repositories.
 
 This makes sure that the new (preview) band is locked down to use the latest released shared components and that the a newly released bands will start getting the newest shared components built in the `1xx` branch.
