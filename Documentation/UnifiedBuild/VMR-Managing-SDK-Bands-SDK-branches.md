@@ -90,7 +90,7 @@ sequenceDiagram
 
     runtime->>VMR_1xx: Flow of 📄 RUN_2
     Note over VMR_1xx: 📦 VMR_2 intermediates are built
-    runtime->>VMR_2xx: Flow of 📄 RUN_2
+    VMR_1xx->>VMR_2xx: Flow of 📦 VMR_2<br />(runtime intermediates)
     Note over VMR_2xx: 📦 VMR_3 intermediates are built
 
     Note over VMR_2xx: ✅ Coherent state<br />VMR 1xx and 2xx have 📄 RUN_2
