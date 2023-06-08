@@ -501,7 +501,7 @@ Both solutions will require us to define, document and support processes such as
 
 #### Maintenance
 
-> 🚧 WIP - Costs associated with keeping the infrastructure running so that we can do servicing. I don't think there will be many differences though.
+Both solutions will require the Maestro dependency (back-)flow system to work. The solution will not differ much between the two as we'll be synchronizing code into the VMR and back based on some rules. It's a detail whether those are folders in one branch or multiple.
 
 #### Summary
 
