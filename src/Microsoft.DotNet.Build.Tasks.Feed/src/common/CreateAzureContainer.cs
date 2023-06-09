@@ -25,6 +25,8 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
         /// </summary>
         public bool FailIfExists { get; set; }
 
+        public bool CreateNewVersionedIfExists { get; set; }
+
         /// <summary>
         /// The read-only SAS token created when ReadOnlyTokenDaysValid is greater than zero.
         /// </summary>
@@ -67,14 +69,41 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
         {
             try
             {
-                AzureStorageUtils blobUtils = new AzureStorageUtils(AccountName, AccountKey, ContainerName);
+                AzureStorageUtils blobUtils = null;
 
-                if (FailIfExists && await blobUtils.CheckIfContainerExistsAsync())
+                if (CreateNewVersionedIfExists)
                 {
-                    Log.LogError($"Container {ContainerName} already exists in storage account {AccountName}.");
-                    return false;
-                }
+                    bool needsUniqueName = false;
+                    int version = 0;
+                    string versionedContainerName = ContainerName;
 
+                    do
+                    {
+                        blobUtils = new AzureStorageUtils(AccountName, AccountKey, versionedContainerName);
+                        if (await blobUtils.CheckIfContainerExistsAsync())
+                        {
+                            versionedContainerName = $"{ContainerName}-{++version}";
+                            needsUniqueName = true;
+                        }
+                        else
+                        {
+                            needsUniqueName = false;
+                            ContainerName = versionedContainerName;
+                        }
+                    }
+                    while (needsUniqueName);
+                }
+                else
+                {
+                    blobUtils = new AzureStorageUtils(AccountName, AccountKey, ContainerName);
+
+                    if (FailIfExists && await blobUtils.CheckIfContainerExistsAsync())
+                    {
+                        Log.LogError($"Container {ContainerName} already exists in storage account {AccountName}.");
+                        return false;
+                    }
+                }
+                
                 PublicAccessType permissions = IsPublic ? PublicAccessType.Blob : PublicAccessType.None;
 
                 StorageUri = await blobUtils.CreateContainerAsync(permissions);
