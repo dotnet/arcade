@@ -20,9 +20,11 @@ The layout of files will stay almost the same as today's VMR-lite:
     └── sdk
 ```
 
-The problem with this is that each SDK branch would contain source code for all shared components. This would cause problems with keeping the sources of these synchronized. To work around that, we'd have to make an adjustment. This adjustment would require a feature in Source Build where we could specify whether a components is built form source or restored from its intermediate package.
-This functionality actually already exists and each repository already references its dependencies via `eng/Version.Details.xml` so that it can build inside of its individual repository.
+The problem with this is that each SDK branch would contain source code for all shared components. This would cause problems with keeping the sources of these synchronized.
+Furthermore, we don't really even want this behavior as for instance, the preview band always stays locked to the last released version of the shared components until right before the release happens.
 
+To work around that, we'd have to make an adjustment. This adjustment would require a feature in Source Build where we could specify whether a components is built form source or restored from its intermediate package.
+This functionality actually already exists and each repository already references its dependencies via `eng/Version.Details.xml` so that it can build inside of its individual repository.
 Considering we have this capability, we'd then change the VMR contents so that the SDK branches of other bands than the first one (`1xx`) would not contain the sources of the shared components.
 Instead, they would flow in the branches via a package dependency flow where the branches would reference the intermediate packages that would be built from the `1xx` branch. This will give us more flexibility such as locking down the version of the shared components in the preview band to the last released version.
 
