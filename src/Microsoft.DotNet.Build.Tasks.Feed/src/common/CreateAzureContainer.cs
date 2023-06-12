@@ -108,7 +108,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 
                 StorageUri = await blobUtils.CreateContainerAsync(permissions);
 
-                Log.LogMessage($"Created blob storage container {StorageUri}");
+                Log.LogMessage(MessageImportance.High, $"Created blob storage container {StorageUri}");
 
                 ReadOnlyToken = blobUtils.CreateSASToken(ReadOnlyTokenDaysValid, BlobContainerSasPermissions.Read);
                 WriteOnlyToken = blobUtils.CreateSASToken(WriteOnlyTokenDaysValid, BlobContainerSasPermissions.Write);
