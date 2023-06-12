@@ -331,7 +331,7 @@ For side-by-side, we only need to identify a single commit which is easier than 
 
 #### Compiling the binary release
 
-For the release, we'd just collect outputs of the official VMR build(s) so it's quite similar to today's staging pipeline behavour which does that for `dotnet/installer` builds already. This also makes sure we only build the shared components once and we have tested those exact binaries already.
+For the release, we'd just collect outputs of the official VMR build(s) so it's quite similar to today's staging pipeline behavior which does that for `dotnet/installer` builds already. This also makes sure we only build the shared components once and we have tested those exact binaries already.
 
 It seems that both proposals would mean we have an official VMR build to take the products from. We currently don't have the build infrastructure to build several bands together but that would happen for both proposals.
 
