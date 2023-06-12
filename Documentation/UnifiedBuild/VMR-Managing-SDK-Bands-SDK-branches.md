@@ -52,6 +52,27 @@ To summarize the characteristics:
 - Each commit of the `1xx` branch produces a single runtime and single SDK. The non-1xx branches do not contain all the code however.
 - Commits of the `non-1xx` branches produce SDKs only and their shared components are referenced as packages built from the `1xx` branch.
 
+## Band life cycle
+
+- **Product preview time**  
+    The preview time is when most of the development happens and the VMR would contain a single band only. For this time, we only have the 1xx branch in the VMR and everything works the same way as now.
+
+- **Band preview time**  
+    The band that is created the latest and is to be released next is called the preview band. Except of the 1xx, each preview band is locked down to use the latest released version of the shared components for the time of development. Since this proposal won't put the sources of the shared components in the non-1xx branches, it will be quite obvious that the dependencies come from packages.
+
+- **Band snap**  
+    To create a new band, and for the ease, it would be the best to do the snap in the VMR from where it would be flown to the appropriate branches in the individual repositories:
+
+    1. Create the new branch based off of the current one.  
+    E.g. `src/sdk/9.0.1xx` to `src/sdk/9.0.2xx`
+    2. Remove sources of shared components in the `2xx` branch. Adjust package versions and point the new band to the intermediate packages of shared components from the last release.
+    3. Configure Maestro subscriptions between new VMR bands and their individual repository counterparts.
+    4. If there are at least 3 bands, configure subscriptions of the currently released band to consume the intermediates of the `1xx` band.  
+    > Note: We need 3 bands at minimum because The first one is there from the beginning so we need to wait until a second one only gets out of preview which happens when we snap the third one.
+    5. Maestro flows the changes from the VMR and creates the appropriate branches in the individual repositories.
+
+    This makes sure that the new (preview) band is locked down to use the latest released shared components and that the a newly released bands will start getting the newest shared components built in the `1xx` branch.
+
 ## Working with the code
 
 The proposed layout has some problematic implications. Let's consider the following scenarios:
@@ -161,17 +182,3 @@ The release has three main phases:
 2. **Compiling the binary release** - Since the shared components were built only once and stored inside of the intermediates, we can assemble the packages from all band branches and release them together, similarly to how we do it today. The staging pipeline could assemble the build products from the official builds similarly to how we do it today.
 
 3. **Publishing and communicating the release of the sources** - Publishing of sources so they are easily consumed by 3rd party partners would differ based on whether the consumer cares about one or all bands. or a single SDK band release, only the 1xx band branch would contain the sources in such a way that you could build directly. The non-1xx band branches do not contain the source code of the shared components and only reference them as intermediate packages. This means that we'd need to compile the sources by restoring them from the 1xx band branch. For releases of multiple SDKs together, we'd also need to compile the full set of sources by bringing the branches together.
-
-## Band snap
-
-To create a new band, and for the ease, it would be the best to do the snap in the VMR from where it would be flown to the appropriate branches in the individual repositories:
-
-1. Create the new branch based off of the current one.  
-   E.g. `src/sdk/9.0.1xx` to `src/sdk/9.0.2xx`
-2. Remove sources of shared components in the `2xx` branch. Adjust package versions and point the new band to the intermediate packages of shared components from the last release.
-3. Configure Maestro subscriptions between new VMR bands and their individual repository counterparts.
-4. If there are at least 3 bands, configure subscriptions of the currently released band to consume the intermediates of the `1xx` band.  
-   > Note: We need 3 bands at minimum because The first one is there from the beginning so we need to wait until a second one only gets out of preview which happens when we snap the third one.
-5. Maestro flows the changes from the VMR and creates the appropriate branches in the individual repositories.
-
-This makes sure that the new (preview) band is locked down to use the latest released shared components and that the a newly released bands will start getting the newest shared components built in the `1xx` branch.
