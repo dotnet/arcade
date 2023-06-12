@@ -294,7 +294,7 @@ Upon inspection of the proposals, the above **doesn't differ for the given propo
 
 Code flow is where the two approaches differ dramatically. The biggest difference is during breaking changes in shared components and how/when these get resolved. For a simple forward flow where a shared component is changed, the code flow needed to update all branches does not differ much as shown in the detailed designs of each of the proposals.
 
-The situation gets more interesting for breaking changes. The side-by-side solution shows much more resiliency to breaking changes as those need to be dealt with immediately when we do the initial shared component change. The VMR won’t ever get into an inconsistent state as the bands live within a single commit. Whereas in the SDK branch solution, the breaking change is created and is dealt with in a follow-up step once code flows to the branch of the other band.
+The situation gets more interesting for breaking changes. However, that does not happen often once we have multiple bands out already. This would mean API changes which does not really happen or rarely when dependencies EOL or infrastructural changes are needed. Regardless, the side-by-side solution shows much more resiliency to breaking changes as those need to be dealt with immediately when we do the initial shared component change. The VMR won’t ever get into an inconsistent state as the bands live within a single commit. Whereas in the SDK branch solution, the breaking change is created and is dealt with in a follow-up step once code flows to the branch of the other band.
 
 Other difference is in the number of steps in the flow to reach a coherent state. This is lower for side-by-side as incoherency is impossible from the start and the system does not need to deal with it. The number of changes needed is not that much higher though as we still need to flow changes to the same number of branches of all individual repositories that are part of the change. This does not differ much whether we flow folders from one or more branches.
 
@@ -331,7 +331,7 @@ For side-by-side, we only need to identify a single commit which is easier than 
 
 #### Compiling the binary release
 
-It is unclear whether we would re-build everything from source or whether we'd just collect outputs of the official VMR build(s). The latter seems more likely as it seems it would be easier to re-use the existing staging pipeline which does that for `dotnet/installer` builds already. It would also make sure we only build the shared components once and we have tested those exact binaries.
+For the release, we'd just collect outputs of the official VMR build(s) so it's quite similar to today's staging pipeline behavour which does that for `dotnet/installer` builds already. This also makes sure we only build the shared components once and we have tested those exact binaries already.
 
 It seems that both proposals would mean we have an official VMR build to take the products from. We currently don't have the build infrastructure to build several bands together but that would happen for both proposals.
 
