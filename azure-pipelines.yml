@@ -239,7 +239,7 @@ stages:
   - stage: Test_XHarness
     displayName: Test XHarness SDK
     dependsOn: build
-    condition: and(succeeded(), eq(stageDependencies.build.Build_Release.outputs['XHarnessChangeDetection.RunXHarnessTests'], 'True'))
+    condition: and(succeeded(), eq(dependencies.build.outputs['Build_Release.XHarnessChangeDetection.RunXHarnessTests'], 'True'))
     jobs:
     - template: /eng/common/templates/jobs/jobs.yml
       parameters:
