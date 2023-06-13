@@ -151,6 +151,23 @@ stages:
       #         /p:Test=false
       #       displayName: Unix Build / Publish
 
+- stage: s3
+  displayName: getvars
+  dependsOn: build
+  variables:
+    checkDependencies: $[ convertToJson(dependencies) ]
+  jobs:
+    - job:
+      pool:
+        vmimage: ubuntu-latest
+      variables:
+        checkStageDependencies: $[ convertToJson(stageDependencies) ]
+      steps:
+      - script: "echo '$(checkDependencies)'"
+        name: checkDependencies
+      - script: "echo '$(checkStageDependencies)'"
+        name: checkStageDependencies
+
 - ${{ if eq(variables._RunAsPublic, True) }}:
   - stage: Test
     dependsOn: build
