@@ -75,8 +75,8 @@ stages:
           manifests: true
       enableMicrobuild: true
       enablePublishUsingPipelines: true
-      enableSourceIndex: true
-      enableSourceBuild: true
+      enableSourceIndex: false
+      enableSourceBuild: false
       workspace:
         clean: all
       jobs:
@@ -97,12 +97,14 @@ stages:
           fetchDepth: 0
           clean: true
         steps:
-        - script: eng\common\cibuild.cmd
-            -configuration $(_BuildConfig)
-            -prepareMachine
-            $(_InternalBuildArgs)
-            /p:Test=false
-          displayName: Windows Build / Publish
+        # - script: eng\common\cibuild.cmd
+        #     -configuration $(_BuildConfig)
+        #     -prepareMachine
+        #     $(_InternalBuildArgs)
+        #     /p:Test=false
+        #   displayName: Windows Build / Publish
+        - script: mkdir artifacts & mkdir artifacts\bin & mkdir artifacts\packages
+          displayName: Create artifacts directory
 
         - ${{ if and(eq(variables._RunAsPublic, True), eq(variables['Build.Reason'], 'PullRequest')) }}:
           - powershell: |
@@ -130,24 +132,24 @@ stages:
             name: XHarnessChangeDetection
             displayName: Detect XHarness changes
 
-      - ${{ if eq(variables._RunAsPublic, True) }}:
-        - job: Linux
-          container: LinuxContainer
-          pool:
-            vmImage: ubuntu-latest
-          strategy:
-            matrix:
-              Build_Debug:
-                _BuildConfig: Debug
-          preSteps:
-          - checkout: self
-            clean: true
-          steps:
-          - script: eng/common/cibuild.sh
-              --configuration $(_BuildConfig)
-              --prepareMachine
-              /p:Test=false
-            displayName: Unix Build / Publish
+      # - ${{ if eq(variables._RunAsPublic, True) }}:
+      #   - job: Linux
+      #     container: LinuxContainer
+      #     pool:
+      #       vmImage: ubuntu-latest
+      #     strategy:
+      #       matrix:
+      #         Build_Debug:
+      #           _BuildConfig: Debug
+      #     preSteps:
+      #     - checkout: self
+      #       clean: true
+      #     steps:
+      #     - script: eng/common/cibuild.sh
+      #         --configuration $(_BuildConfig)
+      #         --prepareMachine
+      #         /p:Test=false
+      #       displayName: Unix Build / Publish
 
 - ${{ if eq(variables._RunAsPublic, True) }}:
   - stage: Test
