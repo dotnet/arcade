@@ -214,7 +214,8 @@ namespace Microsoft.DotNet.SignTool
                 var repackList = files.Where(w => toRepackSet.Contains(w.FullPath)).ToList();
 
                 repackCount = repackList.Count();
-                if(repackCount == 0)
+
+                if (repackCount == 0)
                 {
                     return;
                 }
@@ -252,6 +253,11 @@ namespace Microsoft.DotNet.SignTool
                     repackContainer(file);
                     toRepackSet.Remove(file.FullPath);
                 });
+
+                if (largeRepackList.Count == 0)
+                {
+                    return;
+                }
 
                 _log.LogMessage(MessageImportance.High, $"Repacking {largeRepackList.Count} large containers in serial.");
 
