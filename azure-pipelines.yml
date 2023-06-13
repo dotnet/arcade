@@ -237,7 +237,7 @@ stages:
   - stage: Test_XHarness
     displayName: Test XHarness SDK
     dependsOn: build
-    condition: and(succeeded(), eq(stageDependencies.build.Windows_NT.outputs['XHarnessChangeDetection.RunXHarnessTests'], 'True'))
+    condition: and(succeeded(), eq(stageDependencies.build.Build_Release.outputs['XHarnessChangeDetection.RunXHarnessTests'], 'True'))
     jobs:
     - template: /eng/common/templates/jobs/jobs.yml
       parameters:
@@ -325,7 +325,7 @@ stages:
             clean: true
           steps:
           - script: eng/common/build.sh
-              -configuration $(_BuildConfig) 
+              -configuration $(_BuildConfig)
               -prepareMachine
               -ci
               -restore
