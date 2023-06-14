@@ -1,0 +1,157 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Proposal for automating max scale updates </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Proposal for automating max scale updates ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h2 id="proposal-for-automating-max-scale-updates"><strong>Proposal for automating max scale updates</strong></h2>
+
+<h3 id="steps-needed-to-calculate-max-scale-for-queues"><strong>Steps needed to calculate max scale for queues:</strong></h3>
+<ol>
+<li>Determine the usage for the queue for the past 60 days by querying the Kusto database and getting the workitems that were queued, process and completed during this time frame.</li>
+<li>Determine the average waittime and 95th percentile waittime for the queue based on #1</li>
+<li>Determine max machines / cores used to process the workitems from #1.</li>
+</ol>
+<p>The above steps are done by using the <a href="#Scaler-Simulator">Scaler Simulator</a> tool.</p>
+<h3 id="scaler-simulator"><strong>Scaler Simulator:</strong></h3>
+<p><a href="https://dev.azure.com/dnceng/internal/_git/dotnet-helix-machines?path=%2Ftools%2FScalerSimulator&amp;version=GBScalerSimulator&amp;_a=contents">Scaler Simulator</a> is a tool that can currently do the following:</p>
+<ul>
+<li>Query Kusto to get workitems for a specific queue for a specified time frame.</li>
+<li>Calculate the average and 95th percentile wait time for the queue based on data from Kusto.</li>
+<li>Determine the max machines that were needed to process the workitems for that specific queue.</li>
+<li>Given a max set of machines for a queue, the simulator can simulate the processing of workitems (based on the Kusto query above) and calculate the average and 95th percentile waititme.</li>
+<li>Given a SLA for wait time, the simulator can also reverse-engineer and determine how many machines would be needed for the queue to process the workitems(based on the Kusto query above)</li>
+</ul>
+<h3 id="automation-proposal-stages"><strong>Automation Proposal Stages:</strong></h3>
+<p><strong>Stage 1:</strong></p>
+<ul>
+<li><p>Extending Scaler Simulator to do the following based on the assumption that the baseline of core/machine distribution is already arrived at in the machine config yamls:</p>
+<ul>
+<li><p>Inputs:</p>
+<ul>
+<li>Total machines / cores that can be used</li>
+<li>95th percentile SLA for wait time for Build Queues</li>
+<li>95th percentile SLA for wait time for Test Queues</li>
+</ul>
+</li>
+<li><p>Process/simulate each queue in the list of queues that are active (this list currently is hardcoded in a csv but can be extended to pick non-deadlettered queues from info.json directly) to determine what the max machines that are needed to process the load in the queue to be able to hit the SLA given.</p>
+</li>
+<li><p>Rebalance the max machines allocated based on the past usage by maintaining a running surplus list during the course of a simulator run.A successful run spits out the updated max scale list for the queues processed.</p>
+<ul>
+<li>i. If the simulation determines that the max machines needed for a specific queue is less than the max scale already set, then update the max scale and add the remaining to the surplus.</li>
+<li>ii. Maintain a list of queues that need more machines than the current max scale value. If the simulation determines that the max machines needed are more than the max scale already set, then update the list with the queues and how much more is needed.</li>
+<li>iii. Once the simulation finishes processing all queues and a final surplus machines count is available, allocate / distribute the surplus among the list of queues identified in #ii. TBD – Actual implementation on the mechanics behind the distribution process.</li>
+<li>iv. While doing #iii, if the simulator exhausts all items in the surplus list and there are still queues that require more machines than the max scale that is already set, then fail the simulator letting the user know “This operation will exceed the max total cores allowed, please readjust the total cores or the wait time SLA”</li>
+<li>v. During the process, if any queue has no past usage then mark the queue to be deadlettered unless identified as a new queue. TBD -  process to identify a new queue.</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>Stage 2:</strong></p>
+<ul>
+<li>The extended simulator opens a PR with the determined changes to the max scale to dotnet-helix-machines master branch which then will be reviewed and merged by a human. The change will then follow the normal rollout process to make it to Production.</li>
+</ul>
+<p><strong>Stage 3:</strong></p>
+<ul>
+<li>The extended Simulator can be run manually by providing the inputs on as-need-basis. If we determine that this is needed to be run on a regular cadence, then the simulator can be hooked up to a separate pipeline and schedule a run based on the need with the variables of the pipeline as inputs.</li>
+</ul>
+<p><strong>Stage 4:</strong></p>
+<ul>
+<li>Instead of using a simulator to determine the max scale, rebalance the max scale on the fly based on the usage by the custom auto-scaler and is able to take in the input of what the total machines allowed are to consider while rebalancing. TBD - Feasibility of implementing this into auto-scaler and ability to test this thoroughly.</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CCore%20Reduction%5CAutomated_MaxScale_Updates.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CCore%20Reduction%5CAutomated_MaxScale_Updates.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CCore%20Reduction%5CAutomated_MaxScale_Updates.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

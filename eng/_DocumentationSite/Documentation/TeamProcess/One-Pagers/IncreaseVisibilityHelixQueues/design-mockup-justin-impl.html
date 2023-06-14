@@ -1,0 +1,194 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Pipeline Status </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Pipeline Status ">
+      
+      <link rel="icon" href="../../../../favicon.ico">
+      <link rel="stylesheet" href="../../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../../public/main.js'
+    import { init } from './../../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../../index.html">
+            <img id="logo" class="svg" src="../../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="pipeline-status">Pipeline Status</h1>
+
+<p><em>The list of queues is cached weekly. If your PR changes what queues your pipelines use, this information will not show the updated queues.</em></p>
+<p>Here's a list of the top 5 highest work item wait times:</p>
+<table>
+<thead>
+<tr>
+<th>Queue</th>
+<th>Work Item Wait Time</th>
+<th>Difference in Moving Avg</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href=""><code>Windows.11.Amd64.Client.Open</code></a></td>
+<td><strong>43min 2s</strong></td>
+<td><em>+12%</em> 📈</td>
+</tr>
+<tr>
+<td><a href=""><code>Ubuntu.1804.Amd64.Open</code></a></td>
+<td><strong>43min 2s</strong></td>
+<td><em>-3.0%</em> 📉</td>
+</tr>
+<tr>
+<td><a href=""><code>Debian.11.Amd64.Open</code></a></td>
+<td><strong>43min 2s</strong></td>
+<td><em>+0.1%</em> 📈</td>
+</tr>
+<tr>
+<td><a href=""><code>Windows.11.Amd64.Client.Open</code></a></td>
+<td><strong>43min 2s</strong></td>
+<td><em>+1%</em> 📈</td>
+</tr>
+<tr>
+<td><a href=""><code>Windows.11.Amd64.Client.Open</code></a></td>
+<td><strong>43min 2s</strong></td>
+<td><em>-7%</em> 📉</td>
+</tr>
+</tbody>
+</table>
+<h2 id="grafana-dashboard">Grafana Dashboard</h2>
+<p>For more in-depth information on the status of Helix, visit our <a href="">Grafana Dashboard</a>.</p>
+<h2 id="your-queues">Your Queues</h2>
+<p>☁️ <strong>dotnet/runtime</strong> is currently configured to submit to the following Helix queues:</p>
+<ul>
+<li><code>Alpine.313.Amd64.Open</code></li>
+<li><code>Alpine.313.Arm64.Open</code></li>
+<li><code>Alpine.314.Amd64.Open</code></li>
+<li><code>Alpine.314.Arm64.Open</code></li>
+<li><code>Centos.7.Amd64.Open</code></li>
+<li><code>Centos.8.Amd64.Open</code></li>
+<li><code>Debian.10.Amd64.Open</code></li>
+<li><code>Debian.10.Arm32.Open</code></li>
+<li><code>Debian.11.Amd64.Open</code></li>
+<li><code>Debian.11.Arm32.Open</code></li>
+<li><code>Fedora.34.Amd64.Open</code></li>
+<li><code>Mariner.1.0.Amd64.Open</code></li>
+<li><code>OSX.1015.Amd64.AppleTV.Open</code></li>
+<li><code>OSX.1015.Amd64.Iphone.Open</code></li>
+<li><code>OSX.1015.Amd64.Open</code></li>
+<li><code>OSX.1100.Arm64.Open</code></li>
+<li><code>OSX.1200.ARM64.Open</code></li>
+<li><code>OSX.1200.Amd64.Open</code></li>
+<li><code>Raspbian.10.Armv6.Open</code></li>
+<li><code>RedHat.7.Amd64.Open</code></li>
+<li><code>SLES.15.Amd64.Open</code></li>
+<li><code>Ubuntu.1804.Amd64</code></li>
+<li><code>Ubuntu.1804.Amd64.Android.29.Open</code></li>
+<li><code>Ubuntu.1804.Amd64.Open</code></li>
+<li><code>Ubuntu.1804.ArmArch.Open</code></li>
+<li><code>Ubuntu.2004.S390X.Experimental.Open</code></li>
+<li><code>Ubuntu.2110.Amd64.Open</code></li>
+<li><code>Ubuntu.2110.Arm64.Open</code></li>
+<li><code>Windows.10.Amd64.Android.Open</code></li>
+<li><code>Windows.10.Amd64.Client21H1.Open</code></li>
+<li><code>Windows.10.Amd64.Server2022.ES.Open</code></li>
+<li><code>Windows.10.Amd64.ServerRS5.Open</code></li>
+<li><code>Windows.10.Arm64.Open</code></li>
+<li><code>Windows.10.Arm64v8.Open</code></li>
+<li><code>Windows.11.Amd64.Client.Open</code></li>
+<li><code>Windows.7.Amd64.Open</code></li>
+<li><code>Windows.81.Amd64.Open</code></li>
+<li><code>Windows.Amd64.Server2022.Open</code></li>
+<li><code>Windows.Nano.1809.Amd64.Open</code></li>
+<li><code>openSUSE.15.2.Amd64.Open</code></li>
+</ul>
+<p>🏢 <strong>dotnet/runtime</strong> uses the following on-prem queues:</p>
+<ul>
+<li><code>Some.OnPrem.Queue</code></li>
+<li><code>Some.OnPrem.Queue2</code></li>
+<li><code>Some.OnPrem.Queue3</code></li>
+</ul>
+<p><em>Was this helpful?</em> 👍👎</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5CIncreaseVisibilityHelixQueues%5Cdesign-mockup-justin-impl.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5CIncreaseVisibilityHelixQueues%5Cdesign-mockup-justin-impl.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5CIncreaseVisibilityHelixQueues%5Cdesign-mockup-justin-impl.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,158 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Secret Management </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Secret Management ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="secret-management">Secret Management</h1>
+
+<p>We need a secret management system which allows us to audit and monitor secrets, rotate them in an automated fashion (as much as possible), and manage appropriate / inappropriate secret usage. More specific (and additional requirements) are available <a href="#requirements">below</a>.</p>
+<h2 id="requirements">Requirements</h2>
+<p>Requirements <a href="https://gist.github.com/chcosta/51af24ab8a1cfd303a50d0aa7332e7f0">gist</a></p>
+<h2 id="stakeholders">Stakeholders</h2>
+<ul>
+<li>The First Responder team</li>
+<li>All of .NET Core Engineering</li>
+</ul>
+<h2 id="risks">Risks</h2>
+<ul>
+<li>Another service that we have to manage and monitor</li>
+<li>Adds more policy around secret usage in our services</li>
+</ul>
+<h3 id="unknowns">Unknowns</h3>
+<ul>
+<li>Can we monitor all key vault secret accesses? Azure has access logs for this that log requesting IP. Is that enough?</li>
+<li>There are categories of secrets which don't involve a service accessing key vault for the value (things like account passwords and otp codes), can we monitor those without introducing another layer? If not, is that ok? These should be monitored and managed in a key vault just accessed manually and/or with a tool when a person needs them.</li>
+<li>Can we use a third party tool for secret management? None of them look promising. <a href="https://github.com/microsoft/AuthJanitor">https://github.com/microsoft/AuthJanitor</a> has a disclamier in their readme about it not being ready for prime time, and it requires deploying a website that requires SDL stuff.</li>
+</ul>
+<h3 id="proof-of-concepts">Proof of Concepts</h3>
+<ul>
+<li><a href="https://github.com/microsoft/AuthJanitor">https://github.com/microsoft/AuthJanitor</a> exists. We very much don't want a website, but can we use some of this.</li>
+<li><a href="https://www.vaultproject.io/use-cases/secrets-management">https://www.vaultproject.io/use-cases/secrets-management</a> looks cool but costs money.</li>
+<li>Azure has a sample <a href="https://github.com/Azure-Samples/serverless-keyvault-secret-rotation-handling">https://github.com/Azure-Samples/serverless-keyvault-secret-rotation-handling</a> but that is just boiler plate that we might be able to take something from.</li>
+</ul>
+<h2 id="serviceability">Serviceability</h2>
+<ul>
+<li>Tests for rotation of all secrets that can be rotated</li>
+<li>Management system runs for PRs to validate configuration, and changes are validated in staging before deployment</li>
+<li>The tool will not accept customer input, so doesn't affect SDL or threat model. All authentication will be handled by azure cli, so arbitrary people can't mess with secrets they don't already have access to.</li>
+</ul>
+<h2 id="rollout-and-deployment">Rollout and Deployment</h2>
+<ul>
+<li>We need to deprecate the existing &quot;secret notifier&quot;</li>
+<li>This will be deployed with the existing services</li>
+</ul>
+<h2 id="usage-telemetry">Usage Telemetry</h2>
+<ul>
+<li>Usage will be tracked in application insights</li>
+</ul>
+<h2 id="monitoring">Monitoring</h2>
+<ul>
+<li>Grafana alerts and build results</li>
+</ul>
+<h2 id="fr-hand-off">FR Hand off</h2>
+<ul>
+<li>Will create documentation about
+<ul>
+<li>How to use the tool</li>
+<li>What to do when it fails the build</li>
+<li>What to do when a secret gets leaked or expires</li>
+<li>How to diagnose the tool when alerts get triggered</li>
+</ul>
+</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CSecret%20Management%5Cone-pager.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CSecret%20Management%5Cone-pager.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CSecret%20Management%5Cone-pager.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

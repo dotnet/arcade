@@ -1,0 +1,185 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Rollout Scorer Proposal </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Rollout Scorer Proposal ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="rollout-scorer-proposal">Rollout Scorer Proposal</h1>
+
+<p>This is a proposal for the Rollout Scorer which will assist in generating rollout scorecards. Given a few inputs, it will scrape AzDO (and later, telemetry sources) to calculate a score and then generate a markdown file in a PR to core-eng and upload the data to Kusto.</p>
+<h2 id="tool-description">Tool Description</h2>
+<p>The Rollout Scorer will be a command-line tool. The arguments it will accept are as follows:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Argument</th>
+<th style="text-align: center;">Required?</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><code>--repo</code> or <code>-r</code></td>
+<td style="text-align: center;"><strong>Required</strong></td>
+<td style="text-align: left;">The repository to score</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>--branch</code> or <code>-b</code></td>
+<td style="text-align: center;"><em>Optional</em></td>
+<td style="text-align: left;">The branch of the repo to score(e.g. servicing or prod); defaults to production</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>--rollout-start-date</code> or <code>-s</code></td>
+<td style="text-align: center;"><strong>Required</strong></td>
+<td style="text-align: left;">The date on which the rollout started</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>--rollout-end-date</code> or <code>-e</code></td>
+<td style="text-align: center;"><em>Optional</em></td>
+<td style="text-align: left;">The date on which the rollout ended; defaults to current date</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>--number-of-rollbacks</code></td>
+<td style="text-align: center;"><em>Optional</em></td>
+<td style="text-align: left;">The number of rollbacks which occurred as part of the rollout; defaults to 0</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>--downtime</code> or <code>-d</code></td>
+<td style="text-align: center;"><em>Optional</em></td>
+<td style="text-align: left;">Specifies an amount of downtime which occurred</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>--failed</code> or <code>-f</code></td>
+<td style="text-align: center;"><em>Optional</em></td>
+<td style="text-align: left;">Indicates a failed rollout (50 points)</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>--output</code> or <code>-o</code></td>
+<td style="text-align: center;"><em>Optional</em></td>
+<td style="text-align: left;">File which the generated csv will be outputted to; defaults to <code>./scorecard.csv</code></td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>--skip-output</code></td>
+<td style="text-align: center;"><em>Optional</em></td>
+<td style="text-align: left;">Skips the output step and directly uploads results</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>--upload</code> or <code>-u</code></td>
+<td style="text-align: center;"><em>Optional</em></td>
+<td style="text-align: left;">Replaces all other parameters; uploads csv file to Kusto and makes PR in core-eng</td>
+</tr>
+</tbody>
+</table>
+<p>The flow for using the Rollout Scorer is as follows:</p>
+<ul>
+<li>Run <code>RolloutScorer.exe</code> and specify the repo, rollout start date, and any optional parameters</li>
+<li>The Rollout Scorer will scrape AzDO for the appropriate data and create a CSV file containing the scorecard data</li>
+<li>User can make manual corrections to the CSV file as necessary</li>
+<li>Run <code>RolloutScorer.exe --upload {csv}</code> and the Rollout Scorer will upload the CSV file to Kusto and AzDO</li>
+</ul>
+<p>As shown in the parameters table, the user can optionally choose to skip the manual CSV adjustment stage.</p>
+<h2 id="score-calculation">Score Calculation</h2>
+<p>The Rollout Scorer will reference an INI file which will contain a map from repository name to the URI of the AzDO release or build definition. It will scrape this definition for all of the builds (targeting the production branch) or releases that occurred within the specified timeframe. From this data it will calculate:</p>
+<ul>
+<li><strong>Total rollout time</strong> — The sum of all build/release times</li>
+<li><strong>Number of critical issues</strong> — Calculated from the number of commits in each hotfix release/build</li>
+<li><strong>Number of hotfixes</strong> — Calculated from number of release/builds after the first one</li>
+<li><strong>Number of rollbacks</strong> — Manually specified by the user</li>
+<li><strong>Downtime</strong> — Manually specified by the user, but eventually will be calculated from telemetry</li>
+<li><strong>Failure to rollout</strong> — Manually specified by the user</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CRollout_Scorer_Proposal.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CRollout_Scorer_Proposal.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CRollout_Scorer_Proposal.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

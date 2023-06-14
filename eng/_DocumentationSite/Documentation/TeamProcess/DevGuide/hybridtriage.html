@@ -1,0 +1,151 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Hybrid Triage </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Hybrid Triage ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="hybrid-triage">Hybrid Triage</h1>
+
+<h2 id="triage-logistics">Triage Logistics:</h2>
+<ul>
+<li>One 30 minute synchronous meeting per week at each locale.  In this case that’s one for Redmond, and a separate one for Prague.</li>
+<li>One triage driver per locale, although the driver could be shared or rotating.  Triage driver responsibilities:
+<ul>
+<li>Running CLI tool twice a week.  Once the morning of the day synchronous triage occurs, and once 4 days later.</li>
+<li>Scheduling and running the weekly synchronous triage meeting, and keeping it on track and focused.</li>
+<li>Making sure stale issues are taken care of.</li>
+</ul>
+</li>
+<li>It continues to be expected that issues are reviewed async (offline) by each senior dev at least once during the week.  This should be made much easier using the new async tool – however, I’m well aware that there will be a strong propensity to just waiting until the weekly synchronous meeting.  However, please remember the following:
+<ul>
+<li>Seniors are expected to do things they don’t necessary like or are hard to do.</li>
+<li>30 minutes is not enough time to get through all the issues if we don’t keep up during the week.</li>
+<li>The weekly meeting should be reserved for discussions about challenging or interesting issues – which is the thing that has been one of the things most missed.  If we spend our time triaging boring issues….we won’t get that value.</li>
+<li>The added visibility has been super important, and the easiest way to solve this is to review the majority of issues throughout the week.</li>
+</ul>
+</li>
+<li>Both locales should continue to review/triage all incoming issues.  This is part of how we share context.</li>
+</ul>
+<h2 id="scope">Scope:</h2>
+<p>For now, we will limit triage to core-eng and arcade issues.  Depending on how things go, we can discuss bringing other repos in later.  (e.g. xharness etc)</p>
+<h2 id="tools">Tools:</h2>
+<ul>
+<li><strong>Async Triage CLI</strong>  is a brand new tool that stuffs issue activity into the Async Triage Teams Channel.</li>
+<li>We also use <strong>ZenHub</strong> to manage our issues and epics.  Please let your lead know if you have problems with ZenHub licenses or want to know more how to use the tool.  (for example one super nice feature is the ability to manage issues across multiple repos)</li>
+</ul>
+<h2 id="policy">Policy:</h2>
+<ul>
+<li>Any dev can (and should) ask for further clarification as to what any issue is about from the creator.  (any issue that does not get further clarification w/in 1 week is automatically closed)</li>
+<li>Any dev can triage (assign the issue to an epic) if they feel confident in doing so.</li>
+<li>All issues must be triaged within one week.</li>
+<li>Any issues that are &gt; 1 week old, must be dealt with at the weekly synchronous meeting.</li>
+</ul>
+<h2 id="what-triage-is--refresher">What triage is:  (refresher)</h2>
+<ul>
+<li>An issue is considered triaged when it’s assigned to a business priority.  (we calls these Epics)</li>
+<li>The V-Team assigned to an epic is responsible for triaging/prioritizing the issues within their Epic – which may include “kicking” issues back out for triage again – e.g. unassigning them from an epic.</li>
+<li>Our current (now dated) documentation on Epics is here:  <a href="https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/Sprint-Planning-and-Execution">https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/Sprint-Planning-and-Execution</a> for a bit more background/rationale.  Also, be sure and talk to your lead for further clarification, or you can reach out to me (Mark Wilkie) directly.</li>
+</ul>
+<h2 id="for-a-bit-of-history-a-few-things-i-think-weve-learned">For a bit of history, a few things I think we’ve learned:</h2>
+<ul>
+<li>We tried async triage, and it does actually work (sorta/mostly) and would work even better with the new CLI tool.</li>
+<li>Our teammates in Prague have appreciated the increased visibility (which is something we must continuing doing).</li>
+<li>Most every dev didn't like not meeting synchronously.</li>
+<li>The cost of not having serendipitous conversations is significant – but hard to quantify.</li>
+<li>Ironically, async triage seemed less inclusive because the participation has gone down, not up.  (it’s been falling to a subset of folks to make sure things are triaged)</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5CDevGuide%5Chybridtriage.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5CDevGuide%5Chybridtriage.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5CDevGuide%5Chybridtriage.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

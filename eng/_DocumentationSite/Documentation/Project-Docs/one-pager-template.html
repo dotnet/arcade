@@ -1,0 +1,159 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Epic Template - One-Pagers Guidelines </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Epic Template - One-Pagers Guidelines ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="epic-template---one-pagers-guidelines">Epic Template - One-Pagers Guidelines</h1>
+
+<h2 id="goal-and-motivation">Goal and Motivation</h2>
+<p>The information included within our epics are high level business objectives and does not always leave much room for practical information. Sometime the v-team is able to capture all the information listed within outlined below in the epic. If that is the case, there is no need for an additional document.</p>
+<p>In most cases, however, v-teams need a place where they can capture additional information that helps them &quot;think about&quot; how they are going to implement a given feature.</p>
+<p>The goal of the one-pager is to bring clarity to how the v-team is going to implement and support specific aspects of the business goals defined in the epic.</p>
+<p>The document below is meant to be a guideline on what the v-team should be thinking about when defining the feature they are working on. It is up to you what you include in your one pager.</p>
+<h2 id="one-pager-guidelines">One-Pager Guidelines</h2>
+<p>In this section you will find the areas that you should consider including in your one-pager.</p>
+<h3 id="stakeholders">Stakeholders</h3>
+<p>Who is this work for (i.e. stakeholder and those that should &quot;sign-off&quot; on your POC) and what are the problem(s) they asking us to solve?</p>
+<h3 id="proof-of-concept-poc">Proof of Concept (POC)</h3>
+<p>An effective proof of concept proves the goal of a proposed project is viable, and will be successful. The value of a POC is it can help the v-team identify gaps in processes that might interfere with success.</p>
+<p>A POC can help</p>
+<ul>
+<li>Elicits feedback from everyone involved in a project, including those who might not have otherwise contributed, thereby mitigating unforeseen risk.</li>
+<li>Creates a test project to evaluate before work begins on an actual project.</li>
+<li>Verifies that concepts and theories applied to a project will have a real-world application.</li>
+<li>Helps us to prove our assumptions (for example, if certain functionality, like using a service account to post comments from GitHub to Teams in a service, is possible) before committing to completing the work in a given timeframe.</li>
+<li>Helps us to adjust our expectations about how much work a feature might take to complete depending on the challenges we run into that we didn't originally consider in our assumptions.</li>
+<li>Can have more than one POC, if necessary, for a project.</li>
+</ul>
+<h3 id="risk">Risk</h3>
+<ul>
+<li>Will the new implementation of any existing functionality cause breaking changes for existing consumers?</li>
+<li>What are your assumptions?</li>
+<li>What are your unknowns?</li>
+<li>What dependencies will this epic/feature(s) have?
+<ul>
+<li>Are the dependencies currently in a state that the functionality in the epic can consume them now, or will they need to be updated?</li>
+</ul>
+</li>
+<li>Is there a goal to have this work completed by, and what is the risk of not hitting that date? (e.g. missed OKRs, increased pain-points for consumers, functionality is required for the next product release, et cetera)</li>
+<li>Does anything the new feature depend on consume a limited/throttled API resource?</li>
+<li>Have you estimated what maximum usage is?</li>
+<li>Are you utilizing any response data that allows intelligent back-off from the service?</li>
+<li>What is the plan for getting more capacity if the feature both must exist and needs more capacity than available?</li>
+</ul>
+<h3 id="usage-telemetry">Usage Telemetry</h3>
+<ul>
+<li>How are we measuring the “usefulness” to the stakeholders of the business objectives?</li>
+<li>How are we tracking the usage of this new feature?</li>
+</ul>
+<h2 id="service-ability-of-feature">Service-ability of Feature</h2>
+<p>Changes that we implement often require addition maintenance to support them long term. The FR group has been set up to handle this work but it is up to the v-team to make sure FR is successful in servicing the changes made within your epic long term. Please see the <a href="https://github.com/dotnet/arcade/blob/main/Documentation/Project-Docs/Servicing%20Guidelines.md">Servicing Guidelines</a> Document for what you should be thinking about during your feature creation to help the team be able to easily service your feature long term.</p>
+<h2 id="house-keeping">House Keeping</h2>
+<p>In order to align with Epic Content Guidance, one-pagers should be stored in a central location.</p>
+<ul>
+<li>The folder to store your One-Pager can be found in the <a href="https://github.com/dotnet/arcade/tree/main/Documentation/TeamProcess/One-Pagers">Documentation Folder</a></li>
+<li>The name the one-pager should contain the name of the epic and the epic issue number (for easy reference).
+<ul>
+<li>Example: Coordinate migration from &quot;master&quot; to &quot;main&quot; in all dotnet org repos - core-eng10412.md.</li>
+</ul>
+</li>
+<li>Use the PR process to document the discussion around the content of the one-pager.</li>
+</ul>
+<p>Guidance for Epics can be found at <a href="https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/552/Guidelines-for-Epics">Guidelines for Epics</a> wiki.</p>
+<p>After all discussions have been resolved, the resulting one-pager document should be signed-off (this does not need to be a formal process) by stakeholders (e.g. v-team members, epic owners, et cetera) and then linked to the associated epic's GitHub issue for discover-ability.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Cone-pager-template.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Cone-pager-template.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Cone-pager-template.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

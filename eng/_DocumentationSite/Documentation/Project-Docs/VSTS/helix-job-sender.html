@@ -1,0 +1,147 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Arcade Helix Job Sender Plan </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Arcade Helix Job Sender Plan ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="arcade-helix-job-sender-plan">Arcade Helix Job Sender Plan</h1>
+
+<h2 id="the-current-state-of-things-in-arcade">The Current State of Things in Arcade</h2>
+<p>Currently, to send a job to Helix using Arcade, developers need to do the following:</p>
+<ul>
+<li>Add the <code>Microsoft.DotNet.Helix.Sdk</code> package to their <code>global.json</code></li>
+<li>Send up <code>scriptrunner.py</code> as part of a correlation payload if they want to receive XUnit results</li>
+<li>Create an MSBuild proj file which specifies source, type, build number, queue, and appropriate payloads (both correlation &amp; work item). This is capable of handling single-directory wildcards (e.g. zip up all the directories in directory /xyz).</li>
+<li>Doing some trickery to output the correlation ID from that project file to an environment variable that can be read by future tasks</li>
+<li>Create a custom script file that monitors Helix for work item completion and reports whether tests succeeded or failed.</li>
+<li>Add a variable group to their build which contains the appropriate Helix token secret</li>
+</ul>
+<p>Then, during their build they must:</p>
+<ul>
+<li>Do some work to prep all their test payloads into individual folders.</li>
+<li>Call <code>dotnet msbuild</code> on their MSBuild proj file (regular MSBuild won't work)</li>
+<li>If they want to send the same items to multiple queues, they must repeatedly call the same proj file while changing the <code>HelixTargetQueue</code> variable</li>
+<li>Trigger their script to wait for Helix to finish</li>
+</ul>
+<h2 id="where-we-want-to-go">Where We Want to Go</h2>
+<p>While devs will still need to prepare their tests to send to Helix, we can improve this experience for them. To do this, we will be creating an MSBuild task included in Arcade's <code>eng/common</code> directory. This would all be wrapped in a YAML template for easy inclusion in CI builds.</p>
+<p>The current thinking for the future process is as follows:</p>
+<ol>
+<li>Devs take a dependency on Arcade and the <code>Microsoft.DotNet.Helix.Sdk</code></li>
+<li>Add a variable group to their build which contains the appropriate Helix token secret</li>
+<li>Devs can choose to either use a YAML template or an MSBuild task (both located in Arcade's <code>eng/common</code> directory) to talk to Helix. The YAML template is simply a wrapper for the MSBuild task.</li>
+<li>If they choose to use the YAML template, they provide the source, type, queues, and payloads as parameters to the template. One of the template parameters would allow for specifying pre- and post-task scripts to run, which would incorporate the functionality of <code>scriptrunner.py</code> today.</li>
+<li>The MSBuild task would support multiqueueing and waiting on multiple jobs.</li>
+<li>The task would then wait for the job to finish. Optional parameters would be provided for whether failed tests should fail the build or not and whether it should simply fire and forget.</li>
+</ol>
+<p>The YAML template is not top priority as devs are familiar with MSBuild tasks. However, having a template would be nice as it provides consistency with YAML.</p>
+<h2 id="work-to-be-done">Work to be Done</h2>
+<ol>
+<li>Add .zip file payload support to the SDK (assigned to jofortes; estimated 1 hour of work): PR <a href="https://github.com/dotnet/arcade/pull/766">here</a></li>
+<li>Add multiqueueing support to the MSBuild task using MSBuild batching (assigned to jofortes; estimated 1 day work): PR <a href="https://github.com/dotnet/arcade/pull/768">here</a></li>
+<li>Add multi-job waiting to the SDK and link it to MSBuild task (assigned to jofortes; estimated 2 days work)</li>
+<li>Add pre- and post-task scripting functionality to the SDK and support XUnit result reporting (assigned to alperovi; estimated 2 days of work): PR <a href="https://github.com/dotnet/arcade/pull/767/files">here</a></li>
+<li>Documentation for use of all this jazz (assigned to jofortes; estimated 1 day of work)</li>
+<li>(Stretch goal) Add YAML template wrapper to MSBuild task (assigned to jofortes; estimated 1 day of work)</li>
+</ol>
+<h4 id="completion-schedule">Completion Schedule:</h4>
+<ul>
+<li>By end-of-day Fri Sep 14: Items 1 &amp; 2 completed; item 3 in progress</li>
+<li>By end-of-day Wed Sep 19: Items 3 &amp; 4 completed; item 5 in progress</li>
+<li>By end-of-day Fri Sep 21: Item 5 completed; Item 6 hopefully completed; in-progress if not</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CVSTS%5Chelix-job-sender.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CVSTS%5Chelix-job-sender.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CVSTS%5Chelix-job-sender.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

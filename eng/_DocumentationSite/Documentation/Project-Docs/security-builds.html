@@ -1,0 +1,302 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Security Builds for .NET Core </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Security Builds for .NET Core ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="security-builds-for-net-core">Security Builds for .NET Core</h1>
+
+<p>This document describes security builds of .NET Core.</p>
+<ul>
+<li><a href="#how-to-setup-a-security-build">How to setup a security build</a></li>
+<li><a href="#how-to-kickoff-a-security-build">How to kickoff a security build</a></li>
+<li><a href="#how-to-get-values-for-queue-variables">How to get values for queue variables</a></li>
+<li><a href="#how-to-access-and-resolve-security-issues">How to access and resolve security issues</a></li>
+</ul>
+<h2 id="how-to-setup-a-security-build">How to setup a security build</h2>
+<p>Security Development Lifecycle (<a href="http://sdl/">SDL</a>) specifies the minimum security requirements that must be satisfied before making a Microsoft software or service available to customers. To help product teams fulfill the security requirements, SDL team provides a few tools and services, in addition to detailed guidance and a dedicated support team. Some these tools and services are available as a VSTS extension called Secure Development Tools (<a href="https://www.1eswiki.com/wiki/Secure_Development_Tools_VSTS_Extension">SDT</a>), which is a collection of build tasks. These build tasks can be added to a VSTS build definition.</p>
+<p>Trust Services Automation (<a href="http://sql/wiki/Trust_Services_Automation_%28TSA%29">TSA</a>) is a service that analyzes the logs produced for security tools, identifies regressions, creates workitems to track the regressions, and generates a detailed report. One of the tasks in SDT extension is to collect logs from security tools and upload them for processing at TSA. This allows product teams to setup a VSTS build definition that acquire the latest version of security tools, run the tools against the product, gather and analyze logs, detect regressions, and prepare reports.</p>
+<p>Security build for .NET Core is a VSTS build definition that uses SDT extension. A security build does not involve building the product from source. This build operates on build artifacts of an official build.  The approach for security build can be summarized as follows.</p>
+<ol>
+<li>Download the packages, using <code>sync</code> command, for the specified official build Id</li>
+<li>Extract assemblies and symbols from the packages</li>
+<li>Run security tasks that scan assemblies. Use APIScan and BinSkim tasks from SDT extension.</li>
+<li>Get the sources at the SHA specified in <code>version.txt</code>, which is obtained when packages are extracted at step #2</li>
+<li>Run security tasks that scan source code. Use CredScan and PoliCheck tasks from SDT extension.</li>
+<li>Gather logs and upload to TSA. Use publish task in SDT extension.</li>
+</ol>
+<p>SDT extension currently support 4 tools that are applicable to .NET Core. A short description of each tool is shown in the table below.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Tool</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">BinSkim</td>
+<td style="text-align: left;">Validates compiler/linker settings and other security-relevant binary characteristics.</td>
+</tr>
+<tr>
+<td style="text-align: left;">APIScan</td>
+<td style="text-align: left;">Determines whether or not the software complies with the API Usage Standard of the Interoperability Policy.</td>
+</tr>
+<tr>
+<td style="text-align: left;">CredScan</td>
+<td style="text-align: left;">Index and scan for credentials or other sensitive content.</td>
+</tr>
+<tr>
+<td style="text-align: left;">PoliCheck</td>
+<td style="text-align: left;">Scan code, code comments, and content for words that may be sensitive for legal, cultural, or geopolitical reasons.</td>
+</tr>
+</tbody>
+</table>
+<p>.NET Core security build definitions and link to the report is listed in the table below.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Build Definition</th>
+<th style="text-align: left;">TSA Report</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><a href="https://devdiv.visualstudio.com/DevDiv/_build/index?context=allDefinitions&amp;path=%5CDotNet%5CSecurity&amp;definitionId=6552&amp;_a=completed">CoreFx</a></td>
+<td style="text-align: left;"><a href="http://aztsa/api/Result/CodeBase/DotNet-CoreFx-Trusted_master/Summary">CoreFx-master</a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="https://devdiv.visualstudio.com/DevDiv/_build/index?context=allDefinitions&amp;path=%5CDotNet%5CSecurity&amp;definitionId=6598&amp;_a=completed">CoreCLR</a></td>
+<td style="text-align: left;"><a href="http://aztsa/api/Result/CodeBase/DotNet-CoreCLR-Trusted_master/Summary">CoreCLR-master</a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="https://devdiv.visualstudio.com/DevDiv/_build/index?context=allDefinitions&amp;path=%5CDotNet%5CSecurity&amp;definitionId=6658&amp;_a=completed">Core-Setup</a></td>
+<td style="text-align: left;"><a href="http://aztsa/api/Result/CodeBase/DotNet-Core-Setup-Trusted_master/Summary">Core-Setup-master</a></td>
+</tr>
+<tr>
+<td style="text-align: left;"><a href="https://devdiv.visualstudio.com/DevDiv/_build/index?context=allDefinitions&amp;path=%5CDotNet%5CSecurity&amp;definitionId=6698&amp;_a=completed">CLI</a></td>
+<td style="text-align: left;"><a href="http://aztsa/api/Result/CodeBase/DotNet-CLI-Trusted_master/Summary">CLI-master</a></td>
+</tr>
+</tbody>
+</table>
+<p>In the current setup, a security build is triggered manually. Official Id and corresponding Azure container name  needs to be provided at the time of queuing the build. In near future, Maestro will be extend to determine the Official Id and container name, and trigger a security build automatically.</p>
+<p>TSA is configured to send an email report for each scan or security build to <a href="dncsec@microsoft.com">dncsec</a> that include .NET Core repository owners responsible for security issues. Repository owners should focus on new issues and regressions highlighted in the report, and take necessary action to resolve those issues.</p>
+<h2 id="how-to-kickoff-a-security-build">How to kickoff a security build</h2>
+<p>Kickoff of a security build is as simple as queuing a VSTS build definition. While queuing, values for four input variables need to be provided. These variables are as follows:</p>
+<ul>
+<li><em>PB_BuildNumber</em> - official build Id of the repository.</li>
+<li><em>PB_CloudDropContainer</em> - name of the Azure container from where the packages published from the official build (<em>PB_BuildNumber</em>) can be downloaded.</li>
+<li><em>CodeBase</em> - TSA codebase that corresponds to the branch. For example, <code>master</code> or <code>2.0.0</code>.</li>
+<li><em>NotificationAlias</em> - A comma separated email Ids where the TSA report should be sent.</li>
+</ul>
+<p>For example, a recent build Id of CoreCLR <code>2.0.0</code> branch is <code>20170621-01</code>. Packages produced from this build were published to Azure container named <code>coreclr-preview3-20170621-01</code> . To launch a security build that will scan the assemblies and source code from that official build, perform the following steps:</p>
+<ol>
+<li><p>Navigate to CoreCLR security build <a href="https://devdiv.visualstudio.com/DevDiv/_build/index?context=allDefinitions&amp;path=%5CDotNet%5CSecurity&amp;definitionId=6598&amp;_a=completed">definition</a></p>
+</li>
+<li><p>Click &quot;Queue new build&quot;</p>
+</li>
+<li><p>Enter the variable values:</p>
+<ul>
+<li><em>PB_BuildNumber</em> = <code>20170621-01</code></li>
+<li><em>PB_CloudDropContainer</em> = <code>coreclr-preview3-20170621-01</code></li>
+<li><em>CodeBase</em> = <code>2.0.0</code></li>
+<li><em>NotificationAlias</em>  = <code>dncsec@microsoft.com,joc@microsoft.com</code></li>
+</ul>
+<p>Refer to the screenshot below. See <a href="#how-to-get-values-for-queue-variables">how to get values for queue variables</a></p>
+</li>
+<li><p>Click OK to start the build</p>
+</li>
+</ol>
+<hr>
+<p><img src="./assets/QueueSecurityBuild.png?raw=true" alt="QueueSecurityBuild."></p>
+<hr>
+<h4 id="core-setup">Core-Setup</h4>
+<p>Core-Setup requires an additional queue variable called <code>PB_BlobName</code>, which is the name of the Azure Storage blob that contains the packages produced from the official build under test. This blob is under the default container named <code>dotnet</code>.</p>
+<hr>
+<p><img src="./assets/QueueCoreSetup.png?raw=true" alt="QueueCoreSetup."></p>
+<hr>
+<h4 id="cli">CLI</h4>
+<p>CLI builds are fully automated. This means no variable needs to be set at the time of queuing.
+A build is triggerred everyday around midnight. Build downloads the latest packages (zip) from Azure Storage corresponding to the branch. For example, latest packages of <code>master</code> branch are downloaded from (<a href="https://dotnetcli.blob.core.windows.net/dotnet/Sdk/master">https://dotnetcli.blob.core.windows.net/dotnet/Sdk/master</a>). SHA and build number are read from <code>latest.version</code> file (<a href="https://dotnetcli.blob.core.windows.net/dotnet/Sdk/master/latest.version">https://dotnetcli.blob.core.windows.net/dotnet/Sdk/master/latest.version</a>).</p>
+<p>As described in the earlier section, when the build finishes successfully, an email report of the security build is sent to listed email Ids. The same report can be viewed online. For example, report for CoreCLR <code>2.0.0</code> will be at TSA <a href="http://aztsa/api/Result/CodeBase/DotNet-CoreCLR-Trusted_2.0.0/Summary">website</a></p>
+<h3 id="how-to-get-values-for-queue-variables">How to get values for queue variables</h3>
+<p>Team dashboard <a href="https://mc.dot.net">MC</a> is the place to begin when looking for details about .NET Core builds. In the dashboard, navigate to .NET Core release branch such as <a href="https://mc.dot.net/#/product/netcore/200">2.0.0</a> to get the summary of most recent builds. Described below is how to get the values for queue variables for each .NET Core repository's security build.</p>
+<p><em>PB_BuildNumber</em> is the official build number, and is a required variable in security build of all four repositories. To determine this build number for a repository, navigate to the dashboard, identify the most recent build under the corresponding repository. Build number is usually in a year-month-day format. For example, <code>20170622.01</code>. Replace the dot with a hyphen.  In this example,  <em>PB_BuildNumber</em> is <code>20170622-01</code>.</p>
+<p><em>PB_CloudDropContainer</em> is the name of the container where the packages produced from <em>PB_BuildNumber</em> build are stored. To get this container name, in the dashboard, click on the build number link or button. In the details, click the URL against <code>buildUri</code> to navigate to VSTS build. Navigate to the log for <code>PipeBuild.exe</code> task in this VSTS build, and locate the container name as described below.</p>
+<h4 id="corefx">CoreFx</h4>
+<p>In case of CoreFx, container name is the value against <code>PB_Label</code>. Shown below is a portion of <code>PipeBuild.exe</code> task log showing the container name.</p>
+<blockquote>
+<p>OfficialBuildId=20170622-01 PB_SignType=real PB_Label=<strong>corefx-preview1-20170622-01</strong> SourceVersion...</p>
+</blockquote>
+<h4 id="coreclr">CoreCLR</h4>
+<p>In case of CoreCLR, container name is <code>Label</code>. Shown below is a portion of <code>PipeBuild.exe</code> task log showing the container name.</p>
+<blockquote>
+<p>OfficialBuildId=20170622-01 SignType=real Label=<strong>coreclr-preview3-20170622-01</strong> SourceVersion...</p>
+</blockquote>
+<h4 id="core-setup-1">Core-Setup</h4>
+<p>In Core-Setup, the default container name (<em>PB_CloudDropContainer</em>) is <code>dotnet</code>. An additional variable named <code>PB_BlobName</code> is required for security build of Core-Setup.  To locate this value, open <code>PipeBuild.exe</code> task log, search for the build leg named <code>Core-Setup-Publish</code>, and click the URL against this to navigate to the build leg. Example fragment from the log is shown below.</p>
+<blockquote>
+<p>Core-Setup-Publish - <a href="https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_build?_a=summary&amp;buildId=820812..">https://devdiv.visualstudio.com/DefaultCollection/DevDiv/_build?_a=summary&amp;buildId=820812..</a>.</p>
+</blockquote>
+<p>In the build leg, locate text similar to the fragment shown below.</p>
+<blockquote>
+<p>Downloading <strong>Runtime/2.0.0-preview3-25422-01</strong>...</p>
+</blockquote>
+<p><code>Runtime/2.0.0-preview3-25422-01</code> is the value for <code>PB_BlobName</code>.</p>
+<hr>
+<h2 id="how-to-access-and-resolve-security-issues">How to access and resolve security issues</h2>
+<p>For each successful build, TSA analyzes the logs from the build, and create issues, which are VSTS workitems. Query to the workitems will be in the email report sent to <code>dncsec</code>. As mentioned earlier, the report can be accessed at TSA reports, whose URL is in the format - <code>http://aztsa/api/Result/CodeBase/&lt;codebase-name&gt;/Summary</code>. For example, CoreFx master is at <code>http://aztsa/api/Result/CodeBase/DotNet-CoreFx-Trusted_master/Summary</code></p>
+<p>Repository owner is responsible to triage, and drive towards resolving all security issues logged against the codebase. There are certain cases where an issue cannot be fixed, a few of them are summarized below.</p>
+<h4 id="case-1-external">Case #1: External</h4>
+<p>Say an issue is with an assembly that is not owned or built by the repository, then resolve the issue by setting the following attribute-value in the workitem.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Attribute</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">State</td>
+<td style="text-align: left;">Done</td>
+</tr>
+<tr>
+<td style="text-align: left;">Reason</td>
+<td style="text-align: left;">Work Finished</td>
+</tr>
+<tr>
+<td style="text-align: left;">Status</td>
+<td style="text-align: left;">Resolved</td>
+</tr>
+<tr>
+<td style="text-align: left;">Resolution</td>
+<td style="text-align: left;">Will not Fix</td>
+</tr>
+</tbody>
+</table>
+<p>TSA will stop reporting such issues in future builds.</p>
+<h4 id="case-2-configuration">Case #2: Configuration</h4>
+<p>Say there was a configuration error while launching the build. For example, the branch name was set to <code>2.0.0</code>  instead of <code>master</code>. This will pollute TSA codebase with issues from other branch. So, to cleanup the codebase, resolve such configuration issues by setting the following attribute-value in the workitem.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Attribute</th>
+<th style="text-align: left;">Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">State</td>
+<td style="text-align: left;">Done</td>
+</tr>
+<tr>
+<td style="text-align: left;">Reason</td>
+<td style="text-align: left;">Work Finished</td>
+</tr>
+<tr>
+<td style="text-align: left;">Status</td>
+<td style="text-align: left;">Resolved</td>
+</tr>
+<tr>
+<td style="text-align: left;">Resolution</td>
+<td style="text-align: left;">Configuration/Environment</td>
+</tr>
+</tbody>
+</table>
+<p>For any questions about security builds, please contact <a href="dncsec@microsoft.com">dncsec</a>.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Csecurity-builds.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Csecurity-builds.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Csecurity-builds.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

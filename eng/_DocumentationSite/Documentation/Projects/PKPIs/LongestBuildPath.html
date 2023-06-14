@@ -1,0 +1,135 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>PKPIs - Longest Build Path </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="PKPIs - Longest Build Path ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="pkpis---longest-build-path">PKPIs - Longest Build Path</h1>
+
+<p>This document will describe how we define longest build path and how we will demonstrate longest build path in context the PKPI work.</p>
+<h2 id="goal">Goal</h2>
+<p>The goal of the longest build path calculation is to answer the question: if a change is made in a repository, how long will it take from the time that change is checked into a repository to when we have a coherent and shippable product containing that change.</p>
+<h2 id="definitions">Definitions</h2>
+<ul>
+<li>Source Repository: a repository that flows changes from itself to downstream repositories.</li>
+<li>Shipping Repository: a repository that does not flow changes to any other repositories as a product dependency (ie a shipping product).</li>
+</ul>
+<h2 id="metrics">Metrics</h2>
+<p>We will use three metrics to measure longest build path time:</p>
+<ul>
+<li>Best-case: Best-case is defined by the absolute fastest path through the dependency graph, assuming no issues flowing dependencies through each node of the graph. We will use official build time of each of the nodes in the graph to calculate best-case scenario.</li>
+<li>Worst-case: Worst-case assumes all dependency updates fail and must go through the slowest method for dependency flow. This will be measured by adding official build time of each node with the time a PR takes for each node that is not the leaf node. When we have the new dependency flow, worst case will be defined by doubling the official build time of each node that requires dependency flow.</li>
+</ul>
+<h2 id="views">Views</h2>
+<p>We are proposing to visualize the longest path per repository by adding the longest path time to each node on the dependency flow graph. For each node, we will display the best case time and worst case time. We will also mark any node that we don't have any runtime information for. We will also highlight the longest path through the graph in a different color. This graph will be displayed in BarViz.</p>
+<p><img src="./flowgraph.png" alt="FlowGraph"></p>
+<h2 id="potential-future-work">Potential Future Work</h2>
+<p>As potential future work, we leave creating charts that display this data over time and in bar graph form. We also leave adding a confidence factor.</p>
+<h3 id="additional-metrics">Additional Metrics</h3>
+<ul>
+<li>Confidence factor: how likely the longest build path is to be closer to the best-case scenario vs the worst case scenario. This will be determined by our dependency flow metrics, specifically the metric that determines how likely dependencies flow automatically.</li>
+</ul>
+<h3 id="additional-views">Additional Views</h3>
+<p>We will have two views of the longest build path time: an average over a specific period of time, and a line graph that displays how our longest build path time is changing over time.</p>
+<h4 id="longest-build-path-time-in-a-given-time-period">Longest Build Path time in a given time period</h4>
+<p>This graph will be a bar graph and display two measurements: the best case measurement in the time period and the worst case measurement in the time period.</p>
+<p><img src="./lbp-stacked.png" alt="LongestBuildPathStacked"></p>
+<p><img src="./lbp-breakdown.png" alt="LongestBuildPathBreakdown"></p>
+<h4 id="longest-build-path-time-over-time">Longest Build Path time over time</h4>
+<p>This graph will be a line graph and display the same measurements as the first, but over time. We will include a single option slicer to narrow our view to a single source repository.</p>
+<p><img src="./lbp-ot.png" alt="LongestBuildPathOverTime"></p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CPKPIs%5CLongestBuildPath.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CPKPIs%5CLongestBuildPath.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CPKPIs%5CLongestBuildPath.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

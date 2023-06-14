@@ -1,0 +1,194 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>The Unified Build Almanac (TUBA) - Strategy for managing external source dependencies </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="The Unified Build Almanac (TUBA) - Strategy for managing external source dependencies ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="the-unified-build-almanac-tuba---strategy-for-managing-external-source-dependencies">The Unified Build Almanac (TUBA) - Strategy for managing external source dependencies</h1>
+
+<h2 id="purpose">Purpose</h2>
+<p>This document serves as a summary of the current situation around consuming of external dependencies needed to source-build the .NET product. Furthermore, the document also proposes and compares several ways of managing external dependencies in the VMR. Finally, it briefly discusses future standardization of how to approach external dependencies across the whole product.</p>
+<p>It is important to note that this document takes on the problem from the point of view of the Source-Build effort and the issues of building the product from source or from the VMR.</p>
+<h2 id="external-dependency-ingestion-approaches">External dependency ingestion approaches</h2>
+<p>Currently, the individual product repositories contain several dozen external dependencies which are ingested in different ways:</p>
+<ul>
+<li><p><strong>Git submodule (also just “submodule”)</strong> – Git native process where we reference a specific commit of a remote repository and checkout it out as if it had been a full git repository. The host repository builds the submodule as if it was part of its own infrastructure. Submodules may be a part of individual product repositories or in the source-build-externals repo, which gathers together a number of common dependencies and builds them using arcade's infrastructure.</p>
+<p>Examples: <a href="https://github.com/dotnet/aspnetcore/blob/main/.gitmodules">https://github.com/dotnet/aspnetcore/blob/main/.gitmodules</a> and <a href="https://github.com/dotnet/source-build-externals/tree/main/repos">https://github.com/dotnet/source-build-externals/tree/main/repos</a></p>
+</li>
+<li><p><strong>Custom fork</strong> – we maintain our own fork which is then included the same way as if it was an individual product repository.</p>
+<p>Example: <a href="https://github.com/dotnet/llvm-project">https://github.com/dotnet/llvm-project</a></p>
+</li>
+<li><p><strong>Vendoring</strong> – The process by which a component is integrated as part of another, rather than integrated as a dependency. The bottom line of this approach is that the sources of the external dependency are hard copied into the repository that needs the dependency.</p>
+<p>Example: <a href="https://github.com/dotnet/runtime/tree/main/src/native/external">https://github.com/dotnet/runtime/tree/main/src/native/external</a></p>
+</li>
+</ul>
+<h2 id="requirements-for-external-dependencies">Requirements for external dependencies</h2>
+<p>To build the product successfully and safely from source (regardless of whether from tarball or the VMR), we have several requirements towards external dependencies:</p>
+<ol>
+<li><strong>Serviceability</strong> – We must be able to apply any patch onto any dependency, behind closed doors, if necessary (to allow security patches). Furthermore, it is expected it might not be possible to upstream all the patches as they might be customizations related to integration of the component into Source-Build and would not be suitable for upstreaming. Additionally, we should have a clear audit trail of changes made.</li>
+<li><strong>Business continuity</strong> – Thinking long-term, we must ensure the ability to build non-current versions of the product for servicing reasons. Even in a case when a third-party dependency is no longer available.</li>
+<li><strong>Source-Buildability</strong> – It must be possible to build each external dependency that is part of the Source-Build from source.
+<ol>
+<li>The source files of the dependency must be stripped from disallowed artifacts (binary files).</li>
+<li>We validate the component builds from source early in the pipeline (ideally at the point of ingestion).</li>
+</ol>
+</li>
+<li><strong>Secure supply chain</strong> – We should not assume that owners of the dependencies adhere to the same level of due diligence as us. Ultimately, this means we scan the sources of the dependencies for security threats at the point of ingestion.</li>
+<li><strong>Licensing compliance</strong> – We must ensure that third party components are compliant from a licensing perspective.</li>
+<li><strong>Auditability</strong> – For each source-build dependency introduced into the product, we need to keep records of its origin so that origin of the source code can be exactly identified. Additionally, we need to keep track of all changes applied to the original source code by us.</li>
+<li><strong>Frequent synchronization with upstream</strong> – The goal is to stay as close as possible with the dependency’s upstream to ensure the code flows both ways:
+<ol>
+<li>Downstream to consume feature updates, security patches and bug fixes.</li>
+<li>Upstream to honor the OSS playbook to contribute back to the original project.</li>
+</ol>
+</li>
+</ol>
+<p>Additionally, the following would bring value but were not evaluated as strict requirements:</p>
+<ol>
+<li><strong>Get rid of all Source-Build patches</strong> – It is preferrable to flow all Source-Build patches upstream (either into an individual repo or to an external upstream) as having some custom file transformation as part of the VMR construction is not viable.</li>
+</ol>
+<h2 id="meeting-the-requirements">Meeting the requirements</h2>
+<p>This section of the document elaborates on how we will approach the problem of getting from where we are into a situation where we comply with the requirements above. We must consider the fact that we are in a situation where we already have several dozen dependencies, and we ingest them using different mechanisms. Further, each situation has a slightly different context and ideal solution:</p>
+<ul>
+<li>Projects that need a lot of customization work well for us in the form of a custom fork (e.g., LLVM project).</li>
+<li>Small, stable libraries are ideal for Vendoring</li>
+<li>Frequently updated and well-maintained projects are suitable for ingestion as a submodule directly from the source (e.g., googletest).</li>
+</ul>
+<p>When coming up with a proposal of the policy for external dependency management, we should respect the fact that there might not be a silver bullet solution that fits all scenarios. Instead of forcing everyone onto one way of ingestion of dependencies (e.g., vendoring), we should rather provide tooling and guidance on how to make each approach comply with the requirements above and then mandate it.</p>
+<p>Following subsections explain how we can meet all requirements while letting product repositories use any ingestion approach.</p>
+<h3 id="implications-for-the-vmr">Implications for the VMR</h3>
+<p>Prior to Unified Build, source-build was delivered to .NET partners via a tarball of all sources, rather than a git repository. The VMR brings some problems that were non-existent with the tarball. For instance, the fact that the VMR should be directly source-buildable (no binaries inside, patches applied, …) does not mix well with some types of dependency references. Let us compare a case when the VMR contains git submodules pointing to external (3rd party) repositories with some of the requirements:</p>
+<ul>
+<li><strong>Patching submodules (1)</strong> – With the requirement of source-building the VMR directly, there is no place for additional patch application on top of external git submodules. We could apply patches during the final build process, but we have decided this is not viable as it breaks mechanisms such as source-linking.</li>
+<li><strong>Business continuity (2)</strong> – One of the drawbacks of git submodules is that the build stops working when the remote repository (or the referenced SHA within the repository) is no longer available.</li>
+<li><strong>Submodules with binaries (3a)</strong> – When an individual repository references an external submodule that contains binaries, having the submodule as-is in the VMR presents an issue as the clone (+submodule restore) of the VMR inevitably contains these binaries.</li>
+</ul>
+<p>From the above, it is quite clear that the <strong>VMR should not contain submodules</strong>. If it did, they would have to be our custom forks (just because of 1 &amp; 3a). Mandating forks for all submoduled dependencies would not scale though as we would have to transitively fork all submodules within the submodules. It also does not scale from the maintainability point of view where having a fork is very costly.</p>
+<h3 id="vendoring-submodules-on-vmr-ingestion">Vendoring submodules on VMR ingestion</h3>
+<p>VMR not being able to contain submodules itself does not mean that we need to ban submodules in individual product repositories too. Instead, we can modify the VMR ingestion process (when we pull individual repositories into the VMR) so that it would vendor (inline) submodules into the VMR as a hard copy. This has several implications:</p>
+<ul>
+<li>We can use the same cloaking mechanism, we use for individual repos, for the submodules too. This means we can deal with requirement <em>(3a)</em>.</li>
+<li>We can utilize the Source-Build patches mechanism for the sources of the inlined submodules as well. Further (closed-door) patches can also be done in the VMR, if necessary. This satisfies <em>(1)</em>.</li>
+<li>Having the code in the VMR satisfies also <em>(2)</em> as we have a copy.</li>
+<li>It should also be trivially easy to support audit trail <em>(6)</em> in the VMR as the VMR always keeps track of the last synced commits from each individual repo. However, we need to ensure this for the vendored code as well.</li>
+</ul>
+<h3 id="policies-for-external-dependencies">Policies for external dependencies</h3>
+<p>Considering we have the VMR-lite built, we have satisfied requirements <em>1-3a</em>. What is left is <em>3b-7</em>. These can be dealt with on the side of the individual repositories based on the type of dependency ingestion used. To achieve this, there will have to be:</p>
+<ul>
+<li>Tooling created by the .NET Engineering Services team to help manage and maintain the dependencies. This will constitute validations to cover requirements <em>(3b)</em>, <em>(4)</em> and <em>(5)</em>.</li>
+<li>Teams owning a dependency will be mandated to comply with a few maintenance rules on top of what they are currently doing – mostly configuring provided tooling to register the dependencies.</li>
+<li>Guidance for bringing a new dependency explaining ways and their benefits/pitfalls – teams should be able to make an educated decision on which type of ingestion they want.</li>
+<li>Guidance for switching from one type of ingestion into another (imagine a case when upstream stops accepting updates and we need to switch from an external submodule to a fork).</li>
+<li>Automation that will identify unrecognized dependencies, which are not properly registered, and bring it to attention (exact method/channel is an implementation detail depending on how we design the dev UX). Note: not all dependencies might be recognizable by automation (e.g., vendoring) so our automation might need to rely on dev input.</li>
+</ul>
+<p>Continuing further, if we consider requirements <em>(3b)</em>, <em>(4)</em> and <em>(5)</em>, these can all be dealt with if we assure there is some sort of automation run over the ingested sources (regardless of whether they come from a submodule or are vendored). The policies we want to mandate are then obvious.</p>
+<h4 id="present-infrastructure">Present Infrastructure</h4>
+<p>To police external dependencies, we will utilize infrastructure that is already in place. This constitutes of:</p>
+<ul>
+<li><strong>Source-Build build leg</strong> – a build leg that we mandate already for every individual repo, and which runs with every PR and validates source-buildability.</li>
+<li><strong>The source-build-externals repository</strong> – This repository contains submodules pointing to external repositories and verifies we can build them from source. The repo also contains patches in case we need to customize these before building. This repo then builds these packages Source-Build and populates the local cache for the individual repos to consume them during their build.</li>
+</ul>
+<h4 id="policy-for-external-submodules">Policy for external submodules</h4>
+<p>For submodules referencing external repositories, we can leverage the source-build-externals repository and mandate a registration there. We can run appropriate automation as part of this repository’s CI. Further, it should be trivial to add a check to the VMR ingestion process and verify that each resolved external submodule has its counterpart in source-build-externals and police the requirement this way.</p>
+<h4 id="policy-for-non-forkednon-vendored-external-dependencies">Policy for non-forked/non-vendored external dependencies</h4>
+<p>External dependencies that are required for source-build but are not forked or submodules of a product repository should continue to be included as submodules in the source-build-externals repository. This ensures that these dependencies remain source-buildable using arcade's infrastructure and new versions of source-build intermediate packages can flow out to product repos for any required updates.</p>
+<h4 id="policy-for-submodules-of-forks">Policy for submodules of forks</h4>
+<p>When we own a fork of an external dependency, we will mandate CI to run with the fork and again validate source-buildability, secure supply chain and licensing there. Further, we might mandate source-buildability check within the Source-Build leg as well to assure the integration with the individual repository works.</p>
+<h4 id="policy-for-vendored-dependencies">Policy for vendored dependencies</h4>
+<p>For vendored dependencies, we can utilize the Source-Build leg running with the builds of the individual repositories and add whatever validation there. We will have to manually catalogue all vendored dependencies as this might be impossible to do with automation.</p>
+<p>Additionally, to this validation, we also need to set policies for storing vendored metadata so that we can track the origin of the code to satisfy the requirement <em>(6)</em>.</p>
+<h3 id="dealing-with-upstream">Dealing with upstream</h3>
+<p>The last requirement <em>(7)</em> is about us being able to flow code efficiently between our product and the original external upstream. Whatever technical solution of ingesting the dependency, being able to pull latest updates from and to push changes to the upstream must be an integral part of the solution.</p>
+<p>For submodules, this is baked into the practices of working with these and requires no further engineering support. For vendoring, we will need to standardize how to handle ingestion and what kind of metadata needs to be stored with the vendored code. This is to satisfy <em>(6)</em> but also to be effectively flow code. We will also have to standardize how we log down changes done to the code post-ingestion. Example solution can be storing git patches with the code so that the originally ingested code is available.</p>
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

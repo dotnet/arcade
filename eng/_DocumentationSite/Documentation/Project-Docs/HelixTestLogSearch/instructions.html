@@ -1,0 +1,179 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>How to use Helix test log search </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="How to use Helix test log search ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="how-to-use-helix-test-log-search">How to use Helix test log search</h1>
+
+<p>This functionality is accessible through an endpoint in Helix Services at <code>/logs/search</code></p>
+<h2 id="input">Input</h2>
+<p>All of the following are required parameters:</p>
+<ul>
+<li><code>repository</code>: The error string the program will search for</li>
+<li><code>searchString</code>: The public repository whose test logs will be parsed. The program will only search for non-internal test logs.</li>
+<li><code>startDate</code>: The start date of the date range in which the test logs will be searched. This argument must be in the format yyyy/MM/dd. For example, 2022-05-10. The date must be within the last 14 days.</li>
+<li><code>endDate</code>: The end date of the date range in which the test logs will be searched. This argument must be in the format yyyy/MM/dd. For example, 2022-05-10. The date must be within the last 14 days.</li>
+<li><code>responseType</code>: This argument is one of &quot;Hits&quot; or &quot;HitsPerFile&quot;. The string must exactly match. This determines the type of response returned (sample responses can be found in the Outputs section below).</li>
+</ul>
+<p>Note that the <code>repository</code> and <code>searchString</code> values should be URL encoded when they are passed in through the browser.</p>
+<p>Example:</p>
+<pre><code>http://localhost:8080/logs/search/dotnet%2Fruntime/Remote%20process%20failed%20with%20an%20unhandled%20exception./2022-07-14/2022-07-21/HitsPerFile/
+</code></pre>
+<h2 id="output">Output</h2>
+<h3 id="hits">Hits</h3>
+<p>Here is sample output for a <code>Hits</code> response. Each item in the hits array corresponds to a string match in a log file.</p>
+<pre><code>{
+&quot;filter&quot;: {
+    &quot;repository&quot;: &quot;dotnet/runtime&quot;,
+    &quot;errorString&quot;: &quot;Microsoft.DotNet.RemoteExecutor.RemoteExecutionException : Remote process failed with an unhandled exception.&quot;,
+    &quot;startDate&quot;: &quot;2022-07-15T07:00:00Z&quot;,
+    &quot;endDate&quot;: &quot;2022-07-21T07:00:00Z&quot;,
+    &quot;responseType&quot;: &quot;Hits&quot;
+},
+&quot;hits&quot;: [
+    {
+    &quot;lineContent&quot;: &quot;Microsoft.DotNet.RemoteExecutor.RemoteExecutionException : Remote process failed with an unhandled exception.&quot;,
+    &quot;lineNumber&quot;: 29,
+    &quot;jobId&quot;: 20180433,
+    &quot;friendlyName&quot;: &quot;System.Net.Security.Tests&quot;,
+    &quot;status&quot;: &quot;Fail&quot;,
+    &quot;started&quot;: &quot;2022-07-15T12:00:20.807Z&quot;,
+    &quot;finished&quot;: &quot;2022-07-15T12:01:18.036Z&quot;,
+    &quot;consoleUri&quot;: &quot;https://helixre107v0xdeko0k025g8.blob.core.windows.net/dotnet-runtime-refs-heads-release-50-0a95b79667f444c8ac/System.Net.Security.Tests/1/console.a9847084.log?helixlogtype=result&quot;,
+    &quot;queueName&quot;: &quot;osx.1015.amd64.open&quot;,
+    &quot;attempt&quot;: 1
+    },
+    ...
+],
+&quot;occurrenceCount&quot;: 4,
+&quot;filesCount&quot;: 4
+}
+</code></pre>
+<h3 id="hitsperfile">HitsPerFile</h3>
+<p>Here is sample output for a <code>HitsPerFile</code>  response. Each item in the hits array corresponds to one log file.</p>
+<pre><code>{
+&quot;filter&quot;: {
+    &quot;repository&quot;: &quot;dotnet/runtime&quot;,
+    &quot;errorString&quot;: &quot;Microsoft.DotNet.RemoteExecutor.RemoteExecutionException : Remote process failed with an unhandled exception.&quot;,
+    &quot;startDate&quot;: &quot;2022-07-15T07:00:00Z&quot;,
+    &quot;endDate&quot;: &quot;2022-07-21T07:00:00Z&quot;,
+    &quot;responseType&quot;: &quot;HitsPerFile&quot;
+},
+&quot;hits&quot;: [
+    {
+    &quot;occurrences&quot;: 1,
+    &quot;jobId&quot;: 20214225,
+    &quot;friendlyName&quot;: &quot;System.Net.Security.Tests&quot;,
+    &quot;status&quot;: &quot;Fail&quot;,
+    &quot;started&quot;: &quot;2022-07-20T12:04:48.094Z&quot;,
+    &quot;finished&quot;: &quot;2022-07-20T12:05:47.138Z&quot;,
+    &quot;consoleUri&quot;: &quot;https://helixre107v0xdeko0k025g8.blob.core.windows.net/dotnet-runtime-refs-heads-release-50-db3c3d858764452e9d/System.Net.Security.Tests/1/console.57a6404e.log?helixlogtype=result&quot;,
+    &quot;queueName&quot;: &quot;osx.1015.amd64.open&quot;,
+    &quot;attempt&quot;: 1
+    },
+    ...
+],
+&quot;occurrenceCount&quot;: 4,
+&quot;filesCount&quot;: 4
+}
+</code></pre>
+<h2 id="other-notes">Other notes</h2>
+<ul>
+<li>There is a timeout of 120 seconds/2 minutes on the whole program. If the query and parsing time out, the program throws an error and will not return any data.</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CHelixTestLogSearch%5Cinstructions.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CHelixTestLogSearch%5Cinstructions.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CHelixTestLogSearch%5Cinstructions.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

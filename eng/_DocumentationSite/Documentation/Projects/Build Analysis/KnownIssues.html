@@ -1,0 +1,294 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Known Issues </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Known Issues ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="known-issues">Known Issues</h1>
+
+<p>Known Issues are GitHub issues that are created to report and track known build or test errors.</p>
+<p><a href="https://github.com/dotnet/arcade/blob/main/Documentation/Projects/Build%20Analysis/Introduction.md">Build Analysis</a> shows a list of Known Issues for any build or test error that matches an existing Known Issue. This helps the developers to identify when a build break is not specific to their build. This information is displayed at the top of Build Analysis.</p>
+<p>All reported Known Issues can be found on <a href="https://github.com/orgs/dotnet/projects/111">Known Issues project</a>.</p>
+<h2 id="when-and-how-to-report-a-known-issue">When and how to report a Known Issue</h2>
+<p>A Known Issue should be reported when you find a build or test error that is not caused by your changes and that affects or could affect more builds.</p>
+<p>There are two types of Known Issues:</p>
+<ul>
+<li><strong>Infrastructure Known Issue</strong>: An infrastructure issue is an issue that is not specific to your repository and that requires investigation by the engineering services (@dotnet/dnceng)</li>
+<li><strong>Repository Known Issue</strong>: A repository issue is an issue that occurs in a particular repository and that should be investigated by the repository owners.</li>
+</ul>
+<p>There are two ways to report a Known Issue: one is via Build Analysis and the other one is manually.</p>
+<h3 id="reporting-known-issues-via-build-analysis">Reporting Known Issues via Build Analysis</h3>
+<ol>
+<li>In Build Analysis, you will see links for the type of issue you want to open.
+<img src="./Resources/KnownIssuesLinks.png?raw=true" alt="Links to report Known Issue"></li>
+<li>Click on the link of the <a href="#decide-infrastructure-or-repository-issue">type of issue that suits the situation better</a>.</li>
+<li>A template is going to appear for you and most of this information should be already prefilled.</li>
+<li><a href="#filling-out-known-issues-json-blob">Fill out the JSON blob</a> accordingly</li>
+</ol>
+<h3 id="reporting-a-known-issue-manually">Reporting a Known Issue manually</h3>
+<ol>
+<li><p>Decide if you need to open a <a href="#decide-infrastructure-or-repository-issue">repository issue or infrastructure issue</a></p>
+</li>
+<li><p>Open a new issue, choosing the repository in which you are opening the issue based on following rule:</p>
+<ul>
+<li>Infrastructure issue - arcade</li>
+<li>Repository issue - In the repo in which the issue is happening</li>
+</ul>
+</li>
+<li><p>Add the label <code>Known Build Error</code>. (If the label is not available on the repository, follow the instructions to <a href="#how-to-get-onboard">get onboard</a>)</p>
+</li>
+<li><p>Copy and paste the template</p>
+<pre><code class="lang-md">## Build Information
+Build: &lt;!-- Add link to the build with the reported error. --&gt;
+Leg Name: &lt;!-- Add the name of the impacted leg. --&gt;
+
+&lt;!-- Error message template  --&gt;
+## Error Message
+&lt;!-- Fill for repository issues. For infrastructure issues the engineering services (@dotnet/dnceng) is going to fill it. --&gt;
+```json 
+{ 
+    &quot;ErrorMessage&quot;: &quot;&quot;,
+    &quot;BuildRetry&quot;: false,
+    &quot;ErrorPattern&quot;: &quot;&quot;,
+    &quot;ExcludeConsoleLog&quot;: false
+} 
+```
+</code></pre>
+</li>
+<li><p><a href="#filling-out-known-issues-json-blob">Fill out the JSON blob</a> accordingly</p>
+</li>
+</ol>
+<h3 id="filling-out-known-issues-json-blob">Filling out Known Issues JSON blob</h3>
+<ol>
+<li><a href="#how-to-fill-out-a-known-issue-error-section">Fill the &quot;Error message / Error pattern&quot; section</a>.</li>
+<li>If the issue reported can be solved by retrying the build you can consider setting the <a href="#build-retry-functionality-in-known-issues">&quot;Build Retry&quot; configuration</a> to <code>true</code></li>
+<li>You should set <code>ExcludeConsoleLog</code> to <code>true</code> if you want to exclude console logs from Known Issues matching</li>
+<li>You are done but <a href="#what-happens-after-creating-or-updating-a-known-issue">what happens after a Known Issue is created?</a></li>
+</ol>
+<p>Note: You need to escape special characters to make your JSON valid, to do it you can use online tools like <a href="https://www.freeformatter.com/json-escape.html">freeformatter</a>.</p>
+<p>For example, if your error message is <code>text &quot;using&quot; quotes</code></p>
+<p><img src="./Resources/UnescapedText.png?raw=true" alt="Unescaped text example"></p>
+<p>You need to enter <code>text \&quot;using\&quot; quotes</code> as the <code>ErrorMessage</code> value</p>
+<p><img src="./Resources/EscapedText.png?raw=true" alt="Escaped text example"></p>
+<p>You can use the preview tab to validate your JSON blob, GitHub will highlight invalid characters.</p>
+<p><img src="./Resources/invalid_json_blob.png?raw=true" alt="Invalid JSON blob"></p>
+<h2 id="how-the-matching-process-works-between-a-known-issue-and-a-buildtest-error">How the matching process works between a Known Issue and a build/test error</h2>
+<p>The Known Issues feature identifies build and test errors and matches them with open Known Issues. It uses <code>String.Contains</code> to compare the errors with the “ErrorMessage” property of Known Issues, or regex matching if an “ErrorPattern” property is provided.</p>
+<p>The matching process and its limitations depend on the type of error:</p>
+<ul>
+<li><p><strong>Build error</strong>: For build errors, the feature searches for matches in two sources:</p>
+<ul>
+<li>Azure DevOps error messages</li>
+<li>Build log of failed jobs</li>
+</ul>
+</li>
+<li><p><strong>Test errors</strong>:  For test errors, the feature analyzes the errors only when the build has 1000 or fewer failing tests. It also limits the analysis to 100 Helix logs. This limitation is due to the high cost of analyzing tests and Helix logs. The feature uses the following information to find matches:</p>
+<ul>
+<li>Error message</li>
+<li>Stack trace</li>
+<li>Helix log for Helix tests</li>
+</ul>
+</li>
+</ul>
+<h2 id="how-to-fill-out-a-known-issue-error-section">How to fill out a Known Issue error section</h2>
+<p>For the error matching to work, you need to provide an error message or an error pattern.</p>
+<pre><code class="lang-json">{
+    &quot;ErrorMessage&quot;:&quot;&quot;,
+    &quot;ErrorPattern&quot;: &quot;&quot;,
+}
+</code></pre>
+<h3 id="string-matching">String matching</h3>
+<p>The <code>ErrorMessage</code> value needs to be updated with an error message that meets the following requirements:</p>
+<ol>
+<li><p>Match at least one of the error messages of the reported build. For more details see: <a href="#how-the-matching-process-works-between-an-issue-and-a-build-or-test-error">How matching process works</a></p>
+</li>
+<li><p>It shouldn't include any unique identifier of the message e.g., machine, path, file name, etc.</p>
+<p>For example, for the following error:</p>
+<pre><code class="lang-log">##[error].dotnet/sdk/6.0.100-rc.1.21411.28/NuGet.RestoreEx.targets(19,5): error : (NETCORE_ENGINEERING_TELEMETRY=Restore) Failed to retrieve information about 'Microsoft.Extensions.Hosting.WindowsServices' from remote source 'https://pkgs.dev.azure.com/dnceng/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_packaging/c9f8ac11-6bd8-4926-8306-f075241547f7/nuget/v3/flat2/microsoft.extensions.hosting.windowsservices/index.json'.
+</code></pre>
+<p>We could choose this part of the message: <code>(NETCORE_ENGINEERING_TELEMETRY=Restore) Failed to retrieve information</code>. This is a good option because it targets a particular problem but excludes details of the build, thus making it possible for this same error to match with other builds.</p>
+</li>
+</ol>
+<p>After selecting the message, fill <code>ErrorMessage</code> value:</p>
+<pre><code class="lang-json">{ 
+    &quot;ErrorMessage&quot;:&quot;(NETCORE_ENGINEERING_TELEMETRY=Restore) Failed to retrieve information&quot; 
+}
+</code></pre>
+<h3 id="regex-matching">Regex matching</h3>
+<p>If you need to match an error using a regex, you should use the <code>ErrorPattern</code> value.</p>
+<p>In the following example, the regular expression <code>The command .+ failed</code> would match errors like <code>The command 'open explorer' failed</code></p>
+<pre><code class="lang-json">{
+    &quot;ErrorPattern&quot;: &quot;The command .+ failed&quot;,
+}
+</code></pre>
+<p>We recommend you test your regular expression, to do it you can use <a href="https://regex101.com/">regex101 tester</a> (choose <code>.NET (C#)</code> flavor) with the following regex options:</p>
+<ul>
+<li>Single line</li>
+<li>Insentitive</li>
+<li>No backtracking</li>
+</ul>
+<h2 id="what-happens-after-creating-or-updating-a-known-issue">What happens after creating or updating a Known Issue</h2>
+<p>Known Issues scan all builds from the last 24 hours since the issue was opened or updated with the error message provided. It also scans all builds that fail after the issue is created.</p>
+<p>Known issues analyzes both infrastructure issues (Known Issues in dotnet/arcade) and repository issues (Known Issues in the pull request’s repository).</p>
+<p>Additionally displays the Known Issues matches in the Build Analysis check. The example below shows that the feature found 4 matches for the issue “Tracking issue for CI build timeouts”.</p>
+<p><img src="./Resources/KnownIssueMatch.png?raw=true" alt="Known match example"></p>
+<h3 id="build-retry-functionality-in-known-issues">Build retry functionality in Known Issues</h3>
+<p>Build Analysis can retry a build that fails with an error that matches a Known Issue. To enable this functionality, the Known Issue must have the ‘BuildRetry’ property set to true. This property indicates that the build failure may be solved by retrying the build.</p>
+<p>The following is an example of a Known Issue with the ‘BuildRetry’ property:</p>
+<pre><code class="lang-json">{ 
+    &quot;ErrorMessage&quot;:&quot;The agent did not connect within the alloted time&quot;,
+    &quot;BuildRetry&quot;: true
+} 
+</code></pre>
+<p>In this example, if a build fails with the error “The agent did not connect within the allotted time” on its first attempt, the feature will retry the build.</p>
+<p>However, this functionality has some limitations. It only retries the build if the failure occurs on the first attempt. If the failure happens on a later attempt, the build will not be retried.</p>
+<p>This limitation is designed for two reasons:</p>
+<ol>
+<li>If a build fails multiple times, the underlying cause may be something different.</li>
+<li>Many builds are analyzed and retrying them repeatedly can be costly and problematic.</li>
+</ol>
+<h2 id="how-to-get-onboard">How to get onboard</h2>
+<ol>
+<li>This feature depends on the Build Analysis feature. Therefore, you need to have the <code>Build Analysis</code> GitHub application installed in the repo where you want to use Known Issues. <br> To install the application, you can contact the <a href="https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/How-to-get-a-hold-of-Engineering-Servicing">.NET Core Engineering Services team</a></li>
+<li>For infrastructure issues, there are no additional steps because they are part of dotnet/arcade.</li>
+<li>For repository issues, you need to <a href="https://docs.github.com/en/enterprise-server@3.1/issues/using-labels-and-milestones-to-track-work/managing-labels#creating-a-label">Create a label</a> on the repo where you want to open the Repository issue. <br> The name of the label must be <code>Known Build Error</code></li>
+</ol>
+<h2 id="decide-infrastructure-or-repository-issue">Decide Infrastructure or Repository issue</h2>
+<ul>
+<li><strong>Infrastructure</strong>:
+<ul>
+<li>The issue is not exclusive to a repository</li>
+<li>Needs to be investigated by the engineering services (@dotnet/dnceng)</li>
+<li>It hasn't been reported on <a href="https://github.com/orgs/dotnet/projects/111/views/1">arcade</a></li>
+</ul>
+</li>
+<li><strong>Repository</strong>:
+<ul>
+<li><p>The issue is happening in a particular repository</p>
+</li>
+<li><p>The error needs to be investigated by the repository owners.</p>
+</li>
+<li><p>The problem hasn't been reported in the <code>REPOSITORY</code>, use the following query to verify that:</p>
+<pre><code class="lang-text">https://github.com/dotnet/&lt;REPOSITORY&gt;/issues?q=is%3Aopen+is%3Aissue+label%3A%22Known+Build+Error%22
+</code></pre>
+<p>or see all repository issues at <a href="https://github.com/orgs/dotnet/projects/111/views/2">Repository issues board</a></p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="where-to-find-the-known-issue-on-the-build-analysis">Where to find the Known Issue on the Build Analysis</h2>
+<p>The Known Issues are listed at the top of the Build Analysis.</p>
+<p>E.g.
+<img src="./Resources/KnownIssuesListed.png?raw=true" alt="Known Issues list"></p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CKnownIssues.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CKnownIssues.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CKnownIssues.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+<h2 id="telemetry">Telemetry</h2>
+<p>Build Analysis sends Known Issues telemetry to the <code>engineeringdata</code> Kusto DB. The telemetry includes data about all the matches between build breaks and Known Issues the automation was able to find.</p>
+<p>Two tables are used to store this data, <code>KnownIssues</code> for build related matches and <code>TestKnownIssues</code> for test related matches. You can use the following columns, in both tables, to build queries:</p>
+<ul>
+<li>Build Id</li>
+<li>Build repository</li>
+<li>Known Issue Id</li>
+<li>Known Issue repository</li>
+<li>Pull request that triggered the build (if available)</li>
+</ul>
+<p>The query below returns all builds affected by <a href="https://github.com/dotnet/runtime/issues/76454">Known Issue 76454</a> in the runtime repo</p>
+<pre><code class="lang-kusto">KnownIssues
+| where IssueId == 76454 and IssueRepository == &quot;dotnet/runtime&quot;
+</code></pre>
+<h2 id="known-issues-board">Known Issues board</h2>
+<p>People can look at active Known Issues using the <a href="https://github.com/orgs/dotnet/projects/111">.NET Core Engineering Services: Known Build Errors</a> GitHub project. In the board, Known Issues are divided into tabs, one for infrastructure related issues, the second one for repo specific issues and the last one for all infrastructure issue that have been created (opened and closed).</p>
+<p><img src="./Resources/KnownIssuesBoard.png?raw=true" alt="Known Issues board"></p>
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

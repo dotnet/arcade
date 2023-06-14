@@ -1,0 +1,345 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Localization with OneLocBuild in Arcade </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Localization with OneLocBuild in Arcade ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="localization-with-onelocbuild-in-arcade">Localization with OneLocBuild in Arcade</h1>
+
+<p>As of April 1, 2021, all .NET repositories will be using OneLocBuild for localization. Documentation on this system can
+be found <a href="https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task">here</a>.
+This system is <strong>not a replacement for Xliff-Tasks</strong>; rather, it is replacing the localization team's old system called
+Simple Loc. OneLocBuild coordinates getting translations for new and updated strings and merging them back into the
+repo. Xliff-Tasks will continue to be used in addition to OneLocBuild.</p>
+<p>To make OneLocBuild easier to use, we have integrated the task into Arcade. This integration is a job template
+(<a href="/eng/common/templates/job/onelocbuild.yml">here</a>) that is described in this document.</p>
+<p>To see your repo's current loc configuration, please refer to <a href="https://aka.ms/locstats">https://aka.ms/locstats</a>.</p>
+<h2 id="onboarding-to-onelocbuild-using-arcade">Onboarding to OneLocBuild Using Arcade</h2>
+<p>Onboarding to OneLocBuild is a simple process:</p>
+<ol>
+<li>Ensure that your repository is on the latest version of Arcade.</li>
+<li>Create a test branch (e.g. <code>LocalizationTests</code>) in your repository and add the following job template to your YAML:</li>
+</ol>
+<pre><code class="lang-yaml">- template: /eng/common/templates/job/onelocbuild.yml
+  parameters:
+    CreatePr: false
+</code></pre>
+<p>Note: If you are running your PR builds and official builds off of the same definition and are on dnceng,
+you will want to conditionalize this step with the following:</p>
+<pre><code class="lang-yaml">- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+</code></pre>
+<p>To prevent OneLocBuild from running in the public project where it will fail.</p>
+<ol start="3">
+<li>Run the pipeline you want to use OneLocBuild on your test branch.</li>
+<li>Open a ticket with the localization team using
+<a href="https://aka.ms/ceChangeLocConfig">this template</a>.
+Include the link to the test build you've done.</li>
+<li>The loc team will generate an LCL package for you and send you its ID. It will be something like
+<code>LCL-JUNO-PROD-YOURREPO</code>.</li>
+<li>Change your YAML (subbing <code>'LCL-JUNO-PROD-YOURREPO'</code> for the package ID given to you) to:</li>
+</ol>
+<pre><code class="lang-yaml">- ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+  - template: /eng/common/templates/job/onelocbuild.yml
+    parameters:
+      LclSource: lclFilesfromPackage
+      LclPackageId: 'LCL-JUNO-PROD-YOURREPO'
+</code></pre>
+<p>Make sure to remove the <code>CreatePr: false</code> line from step 2. Additionally, if you added the YAML condition from step
+2, make sure that your new YAML condition now looks like:</p>
+<pre><code class="lang-yaml">- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+</code></pre>
+<ol start="7">
+<li>If using a mirrored repository (your code is mirrored to a trusted repository which your official build uses),
+add the following parameter to your YAML (subbing e.g. <code>sdk</code> for the value):</li>
+</ol>
+<pre><code class="lang-yaml">    MirrorRepo: name of your GitHub repository, e.g. 'sdk'
+</code></pre>
+<p>This naming might be confusing for repositories using code mirroring through Maestro, as typically the
+&quot;mirror repository&quot; refers to the trusted Azure DevOps repository our GitHub repositories mirror to.
+In this case, however, it refers to the repository that <em>mirrors to</em> the Azure DevOps repository
+that the official build is based on.</p>
+<p>As a further note, the template by default assumes that your mirror repository is located in the dotnet GitHub
+organization. If that is not the case, you will need to specify <code>GitHubOrg</code> as well.</p>
+<ol start="8">
+<li>Merge the changes to your main branch and then open a
+<a href="https://aka.ms/ceChangeLocConfig">repo modification ticket</a>
+with the loc team to let them know to retarget the branch.</li>
+</ol>
+<h2 id="releasing-with-onelocbuild-using-arcade">Releasing with OneLocBuild Using Arcade</h2>
+<p><strong>Note: The SLA for translations is one week. Please allow at least two weeks from the release for this process.</strong></p>
+<h3 id="if-youre-releasing-from-main">If You're Releasing from <code>main</code></h3>
+<p>If you're releasing from the main branch of your repository, all that you need to do is ensure that you're merging
+PRs from OneLocBuild as they are made and that you allow the translator SLA for any new strings prior to the release.</p>
+<h3 id="if-youre-releasing-from-a-branch-other-than-main-including-servicing-branches">If You're Releasing from a Branch Other Than <code>main</code> (Including Servicing Branches)</h3>
+<p>Depending on how often you want to release from the servicing branch you could:</p>
+<ul>
+<li><p>Change the loc task, that parses your default branch, to temporarily parse resources from the servicing branch. Here is what you would need to do for that:</p>
+<ol>
+<li>Add the OneLocBuild job template to the pipeline YAML of the release branch. When you do this, you have to change the YAML of both the main branch and the target branch to include a conditional specifying
+the target branch rather than main (as above). Additionally, your YAML should include the following line (substituting your target branch for <code>target-branch</code>):</li>
+</ol>
+<pre><code class="lang-yaml">    MirrorBranch: target-branch
+</code></pre>
+<ol start="2">
+<li>Open a <a href="https://aka.ms/ceChangeLocConfig">repo modification ticket</a> with the
+loc team at least two weeks before the release and request that they re-target your repository to the release branch.</li>
+<li>Merge the OneLocBuild PRs to your release branch.</li>
+<li>After the release, open another repo modification ticket to re-target your repository to the <code>main</code> branch again.</li>
+</ol>
+</li>
+<li><p>Register a servicing branch with the loc team using <a href="https://aka.ms/ceNewLoc">this ticket</a> (<a href="https://ceapex.visualstudio.com/CEINTL/_workitems/edit/523494">Here</a>'s an example). This allows the loc team to parse your servicing branch(es) while your default branch continues to be parsed. If you already have an old servicing branch parsed by the loc team, you could update it to point to a newer servicing branch. Here's what you would need to do to update the branch:</p>
+<ol>
+<li>Open a <a href="https://aka.ms/ceChangeLocConfig">repo modification ticket</a> with the
+loc team at least two weeks before the release and request that they re-target your servicing branch to new branch.</li>
+<li>Ask the loc team for a package Id for this servicing branch on the ticket. The value of the Package ID would then be substituted in the YAML of the OneLocBuild task.</li>
+</ol>
+<pre><code class="lang-yaml">    LclPackageId: 'LCL-JUNO-PROD-YOURREPOSVC'
+</code></pre>
+<ol start="3">
+<li>Update the conditional on the OneLocBuild task to point to the right branch and change/add in a MirrorBranch field to the task as well. So if the servicing branch is <code>dev17.0.x</code> the task would look like:</li>
+</ol>
+<pre><code class="lang-yaml">- ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/dev17.0.x') }}:
+   - template: /eng/common/templates/job/onelocbuild.yml
+     parameters:
+       LclSource: lclFilesfromPackage
+       LclPackageId: 'LCL-JUNO-PROD-YOURREPOSVC'
+       MirrorBranch: dev17.0.x
+</code></pre>
+</li>
+</ul>
+<h1 id="common-issues">Common Issues</h1>
+<h2 id="filing-issues-for-translation-issues">Filing Issues for Translation Issues</h2>
+<p>File a translation issue ticket with the localization team <a href="https://aka.ms/ceLocBug">here</a>.</p>
+<h2 id="leaving-comments-for-translators">Leaving Comments for Translators</h2>
+<p>Sometimes the proper solution to translation issues is to give the translators context for their work. This can be done easily in RESX files (which will be carried over to the XLF files by xliff-tasks) or in JSON files directly. For more information on how to leave translation comments, see the documentation <a href="https://aka.ms/commenting">here</a>.</p>
+<h1 id="technical-documentation">Technical Documentation</h1>
+<h2 id="locprojectjson-index-file">LocProject.json Index File</h2>
+<p>The core component of OneLocBuild is the LocProject.json file. This file is an index file containing references to
+all of the files to localize in your repository. In order to reduce overhead for repo owners, we are auto-generating
+the LocProject.json file (PowerShell script <a href="/eng/common/generate-locproject.ps1">here</a>). This script and the
+OneLocBuild Azure DevOps task are both wrapped in the onelocbuild.yml job template.</p>
+<p>The script searches your checked-in code for all localized XLF files and template JSON files. Files can be excluded
+using a checked in file (/Localize/LocExclusions.json). The LocExclusions file excludes files based on simple matching.
+For example, the LocExclusions.json file below will exclude everything in a directory called <code>tests</code> and any file
+which include <code>test.xlf</code> in its name.</p>
+<pre><code class="lang-json">{
+    &quot;Exclusions&quot;: [
+        &quot;\\tests\\&quot;,
+        &quot;test.xlf&quot;
+    ]
+}
+</code></pre>
+<p>The selected files are then added to a generated LocProject.json file. At this point, template currently provides two
+options for how to proceed.</p>
+<h3 id="build-time-generation">Build-Time Generation</h3>
+<p><strong>The recommended path</strong> is to have the script pass the generated LocProject.json directly to the OneLocBuild task.
+This is the simpler of the two methods and removes the overhead of needing to maintain a checked in
+LocProject.json file. The LocProject.json file is emitted in build logs and as a build artifact for examination.</p>
+<h3 id="build-time-validation">Build-Time Validation</h3>
+<p>While it is <strong>not the recommended path</strong>, repos can instead opt to check in a static LocProject.json and have the
+script compare it against the generated one. If they differ, the script will break the build so that a dev can
+update either the LocProject.json or the LocExclusions.json file accordingly. The LocProject.json should be checked
+placed in the <code>eng/Localize</code> directory.</p>
+<p>Because the script can be run locally, devs can also do this validation prior to pushing their changes.</p>
+<h3 id="custom-locprojectjson-files">Custom LocProject.json Files</h3>
+<p>Currently, the LocProject.json generation script only creates fairly uniform LocProject.json files. If your repository
+requires the use of any of the more complex LocProject.json features as described in the OneLocBuild docs linked above,
+you will need to check in and maintain the LocProject.json file manually. To still use this template for running the task,
+set the <code>SkipLocProjectJsonGeneration</code> parameter to <code>true</code>.</p>
+<h2 id="onelocbuild-template-parameters">OneLocBuild Template Parameters</h2>
+<p>The most basic structure for calling the OneLocBuild template is:</p>
+<pre><code class="lang-yaml">jobs:
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+  - template: /eng/common/templates/job/onelocbuild.yml
+    parameters:
+      LclSource: lclFilesfromPackage
+      LclPackageId: 'LCL-PACKAGE-ID'
+</code></pre>
+<p>The parameters that can be passed to the template are as follows:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;"><strong>Parameter</strong></th>
+<th style="text-align: center;"><strong>Default Value</strong></th>
+<th><strong>Notes</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;"><code>RepoType</code></td>
+<td style="text-align: center;"><code>'gitHub'</code></td>
+<td>Should be set to <code>'gitHub'</code> for GitHub-based repositories and <code>'azureDevOps'</code> for Azure DevOps-based ones.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>SourcesDirectory</code></td>
+<td style="text-align: center;"><code>$(Build.SourcesDirectory)</code></td>
+<td>This is the root directory for your repository source code.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>CreatePr</code></td>
+<td style="text-align: center;"><code>true</code></td>
+<td>When set to <code>true</code>, instructs the OneLocBuild task to make a PR back to the source repository containing the localized files.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>AutoCompletePr</code></td>
+<td style="text-align: center;"><code>false</code></td>
+<td>When set to <code>true</code>, instructs the OneLocBuild task to autocomplete the created PR. Requires permissions to bypass any checks on the main branch.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>ReusePr</code></td>
+<td style="text-align: center;"><code>true</code></td>
+<td>When set to <code>true</code>, instructs the OneLocBuild task to update an existing PR (if one exists) rather than open a new one to reduce PR noise.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>UseLfLineEndings</code></td>
+<td style="text-align: center;"><code>true</code></td>
+<td>When set to <code>true</code>, instructs the OneLocBuild task to use LF line endings during check-in rather than CRLF.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>GitHubOrg</code></td>
+<td style="text-align: center;"><code>'dotnet'</code></td>
+<td>The GitHub organization to be used when making a PR (only used when using a mirrored repository).</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>MirrorRepo</code></td>
+<td style="text-align: center;"><code>''</code></td>
+<td>The name of the GitHub repository to make a PR to (only used when using a mirrored repository).</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>MirrorBranch</code></td>
+<td style="text-align: center;"><code>'main'</code></td>
+<td>The branch on GitHub to make a PR to (only used when using a mirrored repository).</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>UseCheckedInLocProjectJson</code></td>
+<td style="text-align: center;"><code>false</code></td>
+<td>When set to <code>true</code>, instructs the LocProject.json generation script to use build-time validation rather than build-time generation, as described above.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>SkipLocProjectJsonGeneration</code></td>
+<td style="text-align: center;"><code>false</code></td>
+<td>When set to <code>true</code>, skips the LocProject.json generation in favor of using a checked-in LocProject.json.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>LanguageSet</code></td>
+<td style="text-align: center;"><code>VS_Main_Languages</code></td>
+<td>This defines the <code>LanguageSet</code> of the LocProject.json as described in the <a href="https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)">OneLocBuild task documentation</a>.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>LclSource</code></td>
+<td style="text-align: center;"><code>LclFilesInRepo</code></td>
+<td>This passes the <code>LclSource</code> input to the OneLocBuild task as described in <a href="https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)">its documentation</a>. For most repos, this should be set to <code>LclFilesfromPackage</code>.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>LclPackageId</code></td>
+<td style="text-align: center;"><code>''</code></td>
+<td>When <code>LclSource</code> is set to <code>LclFilesfromPackage</code>, this passes in the package ID as described in the <a href="https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=scenario-2%3A-lcl-files-from-a-package">OneLocBuild task documentation</a>.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>condition</code></td>
+<td style="text-align: center;"><code>''</code></td>
+<td>Allows for conditionalizing the template's steps on build-time variables.</td>
+</tr>
+<tr>
+<td style="text-align: center;"><code>JobNameSuffix</code></td>
+<td style="text-align: center;"><code>''</code></td>
+<td>Allows for custom job name suffix. This is helpful for disambiguation in case of need for more then one OneLocBuild job run - e.g. as a way to set multiple package IDs.</td>
+</tr>
+</tbody>
+</table>
+<p>It is recommended that you set <code>LclSource</code> and <code>LclPackageId</code> as shown in the example above.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5COneLocBuild.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5COneLocBuild.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5COneLocBuild.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

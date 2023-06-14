@@ -1,0 +1,329 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>.NET Core 2.1/2.2 Servicing Workflow </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content=".NET Core 2.1/2.2 Servicing Workflow ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="net-core-2122-servicing-workflow">.NET Core 2.1/2.2 Servicing Workflow</h1>
+
+<p>This document is intended to provide a practical servicing workflow for .NET Core 2.1.</p>
+<h2 id="overview">Overview</h2>
+<p>.NET Core 2.1/2.2 were built via the &quot;ProdCon v1&quot; model, in which repositories are strung together via the PipeBuild orchestration system (see below). A build produces outputs to a specified per-repository location.  Those outputs are analyzed and an msbuild property file is created with version numbers for all package outputs.  That property file is fed into any builds of repositories that depend on the previously built repository, which in term produces new outputs, which are analyzed, and so on until a product is produced. Building each individual repo after this commit can produce functionally equivalent assets to the final build.</p>
+<p>The general servicing flow looks like this:</p>
+<ol>
+<li>Modify ProdCon definition to reflect the minimal set of repos that must be built.</li>
+<li>Update branding in repositories</li>
+<li>Check in fixes.</li>
+<li>Invoke product construction build</li>
+</ol>
+<h3 id="pipebuild">Pipebuild</h3>
+<p>Pipebuild is an orchestration system that predates native Azure DevOps orchestration. It is an executable that reads a json description of a build pipeline, then executes that build pipelines. Each build in the pipeline consists of an Azure DevOps build definition, a set of input parameters, and other builds that the build definition depends on.  Pipebuild evaluates the dependency graph of builds, launch any that have had their dependencies complete successfully (or that have no dependencies). As builds complete, the dependency graph is evaluated again and more builds are launched until all builds have been completed (or failed).</p>
+<h3 id="build-definitions-and-pipebuild-definitions">Build Definitions and Pipebuild Definitions</h3>
+<p>The pipebuild descriptions for the builds are held in <a href="https://dev.azure.com/devdiv/DevDiv/_git/DotNet-BuildPipeline">https://dev.azure.com/devdiv/DevDiv/_git/DotNet-BuildPipeline</a>. For 2.1 and 2.2, the definitions are comprised of 'outer' pipebuild definition which orchestrates inner pipebuild and utility build definitions. For example, the orchestrated pipebuild build definition launches the corefx pipebuild build definition with specific parameters, waits for it to complete, then launches the corefx pipebuild build definition.</p>
+<ul>
+<li><strong>Public Servicing</strong> - Public builds will use publicly visible intermediate storage and publish build information to the dotnet/versions repo on completion.
+<ul>
+<li><strong>2.1 Build Definition</strong> - <a href="https://dev.azure.com/devdiv/DevDiv/_build/index?definitionId=8287">https://dev.azure.com/devdiv/DevDiv/_build/index?definitionId=8287</a></li>
+<li><strong>2.2 Build Definition</strong> - <a href="https://dev.azure.com/devdiv/DevDiv/_build/index?definitionId=9482">https://dev.azure.com/devdiv/DevDiv/_build/index?definitionId=9482</a></li>
+<li><strong>2.1 Pipebuild Description</strong> - <a href="https://dev.azure.com/devdiv/DevDiv/Default/_git/DotNet-BuildPipeline?path=%2Fsrc%2FPipeBuild%2FPipeBuild%2Fpipelines.orchestrated-release-2.1.json&amp;version=GBmaster">https://dev.azure.com/devdiv/DevDiv/Default/_git/DotNet-BuildPipeline?path=%2Fsrc%2FPipeBuild%2FPipeBuild%2Fpipelines.orchestrated-release-2.1.json&amp;version=GBmaster</a></li>
+<li><strong>2.2 Pipebuild Description</strong> - <a href="https://dev.azure.com/devdiv/DevDiv/Default/_git/DotNet-BuildPipeline?path=%2Fsrc%2FPipeBuild%2FPipeBuild%2Fpipelines.orchestrated-release-2.2.json&amp;version=GBmaster">https://dev.azure.com/devdiv/DevDiv/Default/_git/DotNet-BuildPipeline?path=%2Fsrc%2FPipeBuild%2FPipeBuild%2Fpipelines.orchestrated-release-2.2.json&amp;version=GBmaster</a></li>
+</ul>
+</li>
+<li><strong>Internal Servicing</strong> - Internal builds will use private intermediate storage, including private blob feeds and will not publish build information to the dotnet/versions repo on completion.
+<ul>
+<li><strong>2.1 Build Definition</strong> - <a href="https://dev.azure.com/devdiv/DevDiv/_build/index?definitionId=9010">https://dev.azure.com/devdiv/DevDiv/_build/index?definitionId=9010</a></li>
+<li><strong>2.2 Build Definition</strong> - <a href="https://dev.azure.com/devdiv/DevDiv/_build/index?definitionId=10367">https://dev.azure.com/devdiv/DevDiv/_build/index?definitionId=10367</a></li>
+<li><strong>2.1 Pipebuild Definition</strong> - `https://dev.azure.com/devdiv/DevDiv/Default/_git/DotNet-BuildPipeline?path=%2Fsrc%2FPipeBuild%2FPipeBuild%2Fpipelines.orchestrated-release-2.1-internal.json&amp;version=GBmaster</li>
+<li><strong>2.2 Pipebuild Definition</strong> - `https://dev.azure.com/devdiv/DevDiv/Default/_git/DotNet-BuildPipeline?path=%2Fsrc%2FPipeBuild%2FPipeBuild%2Fpipelines.orchestrated-release-2.2-internal.json&amp;version=GBmaster</li>
+</ul>
+</li>
+</ul>
+<h2 id="step-by-step">Step-by-Step</h2>
+<ol>
+<li><p>Update branding in required repos to reflect the servicing event. How this is done is repository dependent, but generally post-release, the pre-release label is updated in each of the servicing branches to 'servicing' (or something like that) and the patch version element is incremented. The <code>PB_VersionStamp</code> default should be changed on the build definition.</p>
+</li>
+<li><p>Check in fixes to required repositories.</p>
+</li>
+<li><p>Update ProdCon pipebuild descriptions</p>
+<ol>
+<li>Change to reflect the minimal set of repos that must be built. Typically, the description does not change and contains all the core repositories (coreclr, corefx, core-setup aspnet, extensions, cli). Occasionally, sdk will have a servicing fix and require an entry in the description file.  When adding or removing builds from prodcon, ensure that dependency and input/output merges are updated.</li>
+<li>Verify/Update input branches</li>
+<li>For build of CLI, update the <strong>MicrosoftNETCoreAppLatestVersion1_0</strong> (2.1 + 2.2),
+<strong>MicrosoftNETCoreAppLatestVersion1_1</strong> (2.1 + 2.2), <strong>MicrosoftNETCoreAppLatestVersion2_0</strong> (2.1 only),
+<strong>MicrosoftNETCoreAppLatestVersion2_1</strong> (2.2),
+<strong>MicrosoftAspNetCoreAppLatestVersion2_1</strong> (2.2) and
+<strong>MicrosoftAspNetCoreAllLatestVersion2_1</strong> (2.2) parameters to reflect the
+versions of those products that will be produced in the current servicing cycle.</li>
+</ol>
+<p>Each repository in the graph is described in the following way in the description file.</p>
+<pre><code> // Create inputs pipeline merges outputs from input builds
+ // (CoreClr-Build) to PB_OutputFeed.
+ {
+   &quot;Name&quot;: &quot;CoreFx-CreateInputs&quot;,
+   &quot;DependsOn&quot;: [ &quot;CoreClr-Build&quot; ],
+   &quot;Parameters&quot;: {
+     &quot;TreatWarningsAsErrors&quot;: &quot;false&quot;
+   },
+   &quot;BuildParameters&quot;: {},
+   &quot;Definitions&quot;: [
+     {
+       &quot;Name&quot;: &quot;DotNet-Orchestration-Merge-Feeds&quot;,
+       &quot;Parameters&quot;: {
+         &quot;PB_InputFeeds&quot;: &quot;$(PB_FeedBaseUrl)/$(ProductBuildId)/coreclr/index.json&quot;,
+         &quot;PB_OutputFeed&quot;: &quot;$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx-inputs/index.json&quot;,
+         &quot;PB_OutputPropsLocation&quot;: &quot;orchestration-metadata/PackageVersions.props&quot;
+       },
+       &quot;ReportingParameters&quot;: {
+         &quot;Type&quot;: &quot;build/productconstruction/&quot;,
+         &quot;Source&quot;: &quot;prodcon/packageversions/CoreFx&quot;
+       }
+     },
+     {
+       &quot;Name&quot;: &quot;DotNet-Orchestration-Merge-Blobs&quot;,
+       &quot;Parameters&quot;: {
+         &quot;PB_InputUrls&quot;: &quot;$(PB_FeedBaseUrl)/$(ProductBuildId)/coreclr/assets/symbols&quot;,
+         &quot;PB_OutputUrl&quot;: &quot;$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx-inputs/assets/symbols&quot;
+       },
+       &quot;ReportingParameters&quot;: {
+         &quot;Type&quot;: &quot;build/productconstruction/&quot;,
+         &quot;Source&quot;: &quot;prodcon/packageversions/CoreFx&quot;
+       }
+     }
+   ]
+ },
+ // Delete existing repo specific outputs
+ {
+   &quot;Name&quot;: &quot;CoreFx&quot;,
+   &quot;DependsOn&quot;: [
+     &quot;CoreFx-CreateInputs&quot;
+   ],
+   &quot;Parameters&quot;: {
+     &quot;TreatWarningsAsErrors&quot;: &quot;false&quot;
+   },
+   &quot;BuildParameters&quot;: {},
+   &quot;Definitions&quot;: [
+     {
+       &quot;Name&quot;: &quot;DotNet-Orchestration-Create-Outputs&quot;,
+       &quot;Parameters&quot;: {
+         &quot;PB_OutputUrl&quot;: &quot;$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx/&quot;
+       },
+       &quot;ReportingParameters&quot;: {
+         &quot;Type&quot;: &quot;build/orchestration/&quot;,
+         &quot;Source&quot;: &quot;prodcon/createoutputs/CoreFx&quot;
+       }
+     }
+   ]
+ },
+ // Call actual corefx build
+ {
+   &quot;Name&quot;: &quot;CoreFx-Build&quot;,
+   &quot;DependsOn&quot;: [
+     &quot;CoreFx&quot;
+   ],
+   &quot;Parameters&quot;: {
+     &quot;TreatWarningsAsErrors&quot;: &quot;false&quot;
+   },
+   &quot;BuildParameters&quot;: {},
+   &quot;Definitions&quot;: [
+     {
+       &quot;Name&quot;: &quot;DotNet-CoreFx-PipeBuild-Master&quot;,
+       &quot;Parameters&quot;: {
+         // Branch name
+         &quot;Branch&quot;: &quot;release/2.2&quot;,
+         &quot;PB_PublishBlobFeedUrl&quot;: &quot;$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx/index.json&quot;,
+         &quot;PB_PackageVersionPropsUrl&quot;: &quot;$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx-inputs/orchestration-metadata/PackageVersions.props&quot;,
+         &quot;PB_RestoreSource&quot;: &quot;$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx-inputs/index.json&quot;,
+         &quot;PB_AssetRootUrl&quot;: &quot;$(PB_FeedBaseUrl)/$(ProductBuildId)/corefx-inputs/assets/&quot;
+       },
+       &quot;ReportingParameters&quot;: {
+         &quot;Type&quot;: &quot;build/orchestration/&quot;
+       }
+     }
+   ]
+ },
+</code></pre>
+</li>
+<li><p>Perform <strong>initial</strong> validation builds with pre-release branding (e.g. date varying)</p>
+<ul>
+<li><strong>If public</strong> - Launch public servicing build definition with the default parameters and monitor progress. Monitoring can be done via the Azure DevOps console output.  Use links to launched builds to drill down into launched builds.</li>
+<li><strong>If internal</strong> - Launch internal servicing build definition with the default parameters and monitor progress. Monitoring can be done via the Azure DevOps console output.  Use links to launched builds to drill down into launched builds.</li>
+</ul>
+</li>
+<li><p>Perform any partial build respins as necessary (e.g. failures, new fixes, etc.) - New builds can be partially spun starting from a specific repo.  To do this, requeue the build definition with the following parameters:</p>
+<ul>
+<li><code>ProductBuildId</code> - <code>ProductBuildId</code> of the build being respun</li>
+<li><code>PB_PipelineRoots</code> - A comma separated list of the repos that need respinning.  These correspond to <code>Name</code> elements of the <code>Pipelines</code> array in the pipeline definition json. Typically, to respin a repo just type the repo name.  This corresponds to deletion of previous outputs prior to the build rerun.</li>
+</ul>
+<p>The repository sha that a build uses is always the <strong>latest at the time that the build is queued</strong>. For example, if a new fix is checked into corefx, but coreclr has already been produced final outputs, launching pipebuild again starting with corefx will pick up the new fix.</p>
+<p><strong>Warning: To avoid an excessive amount of time spent merging and creating input sets, the input feeds are not cleaned automatically on a respin. If you are respinning a previously <em>successful</em> build, delete the <em>-inputs</em> feeds in Azure Storage Explorer prior to launching the build</strong>.</p>
+</li>
+<li><p>Validate outputs based on build definition input parameters</p>
+<ul>
+<li><strong>If public</strong> - Check dotnet/versions repo once build definition for README containing links to build outputs, including blob feed.  Raw outputs can be found in <code>$(PB_FeedBaseUrl)/$(ProductBuildId)/final</code>
+<ul>
+<li>Assets - <code>$(PB_FeedBaseUrl)/$(ProductBuildId)/final/assets</code></li>
+<li>Feed - <code>$(PB_FeedBaseUrl)/$(ProductBuildId)/final/index.json</code></li>
+</ul>
+</li>
+<li><strong>If internal</strong> - Find outputs in: <span class="math">\((PB_FeedBaseUrl)/\)</span>(ProductBuildId)/final/assets
+<ul>
+<li>Assets -  <code>$(PB_FeedBaseUrl)/$(ProductBuildId)/final/assets</code></li>
+<li>Feed - <code>$(PB_AuthenticatedFeedBaseUrl)/$(ProductBuildId)/final/index.json</code></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Perform final stabilized build - Typically for public builds, outputs are published to public feeds post-build based on triggers in the versions repo.  For the final stabilized build this is not desirable, since any respins will need to overwrite those outputs.  Instead, the final build manifest is initially published to a different path in the versions repo which does not trigger the final publish steps.  For internal builds nothing changes. Parameters should be set as follows:</p>
+<ul>
+<li><code>PB_VersionStamp</code> - <code>&lt;empty string&gt;</code></li>
+<li><code>PB_IsStable</code> - <code>true</code></li>
+<li><code>PB_VersionsRepoPath</code> - <code>build-info/dotnet/product/cli/release/2.1.&lt;servicing suffix&gt;</code> (e.g. 2.1.6)</li>
+<li><code>PB_VersionsRepoPath</code> - <code>build-info/dotnet/product/cli/release/2.2.&lt;servicing suffix&gt;</code> (2.2.5)</li>
+</ul>
+</li>
+<li><p>Validate final stabilized build - <strong>See step 6 for info on how to obtain build.</strong> For internal builds, the asset outputs are typically copied to a share with a link to the internal feed url for ease of access.</p>
+</li>
+<li><p>Add triggers for final publishing steps in the versions repo - This file contains a set of actions that are taken when outputs are seen at specific paths in the repo. These actions take the form of launching Azure DevOps build definitions. For 2.1 and 2.2, the following activities are performed:</p>
+<ul>
+<li>Push symbols to symweb and MSDL</li>
+<li>Validate signatures</li>
+<li>Push installers (may not be required if installer outputs have already been staged. Talk to Lee Coward.)</li>
+<li>Push packages to dotnetfeed.</li>
+<li>Send dependency update PRs to various repositories</li>
+</ul>
+<p>Triggers are added by adding or updating blocks in the <a href="https://github.com/dotnet/versions/blob/master/Maestro/subscriptions.json">https://github.com/dotnet/versions/blob/master/Maestro/subscriptions.json</a> file.  Please see <a href="https://github.com/dotnet/versions/pull/459/files">https://github.com/dotnet/versions/pull/459/files</a> for an example.</p>
+</li>
+<li><p>Perform final release - In conjunction with normal tic-toc activities, final release can be done by ensuring the build description is published to the versions repo, then adding triggers for that location.</p>
+<ol>
+<li><strong>If public</strong> - Poke the &quot;build.semaphore&quot; file by adding a digit to the end of the versions repo file where the stabilized build was published. For example: <a href="https://github.com/dotnet/versions/commit/641b24a434bbb4fc801ec56a7ad9eef36e5c5a01">https://github.com/dotnet/versions/commit/641b24a434bbb4fc801ec56a7ad9eef36e5c5a01</a></li>
+<li><strong>If internal</strong> - Execute <a href="https://dev.azure.com/devdiv/DevDiv/_build?definitionId=11719&amp;_a=summary">DotNet-Orchestrated-Release-2-1-Move-To-Public</a>
+or
+<a href="https://dev.azure.com/devdiv/DevDiv/_build?definitionId=11723&amp;_a=summary">DotNet-Orchestrated-Release-2-2-Move-To-Public</a>
+build definitions with appropriate parameters to move the builds to
+public storage
+<ul>
+<li><code>ProductBuildId</code> = build product build id</li>
+<li><code>PB_VersionsRepoPath</code> -
+<code>build-info/dotnet/product/cli/release/2.1.&lt;servicing suffix&gt;</code> (2.2.5,
+2.1.12, etc.)</li>
+</ul>
+</li>
+</ol>
+</li>
+</ol>
+<h2 id="build-flow-diagram">Build Flow Diagram</h2>
+<p><img src="ProdconV1BuldFLow.png" alt="Build Flow Diagram"></p>
+<h2 id="things-to-pay-attention-to">Things to pay attention to</h2>
+<p>There are a number of things that require attention to ensure a working product construction build, as well as avoiding leaks of internal assets or stabilized assets before the product is finalized for a servicing event.</p>
+<ul>
+<li><p>What kind of changes have been made to the build definitions or repositories lately?  Prodcon v1 treats each repository's build infrastructure as a black box.  Each of them only needs to conform to the following contract:</p>
+<ul>
+<li>Versions for dependencies are obtained from <code>PB_PackageVersionPropsUrl</code></li>
+<li>Restore sources should include <code>PB_RestoreSource</code></li>
+<li>Results should be published to <code>PB_PublishBlobFeedUrl</code></li>
+<li>Non-nuget assets should be pulled from <code>PB_AssetRootUrl</code></li>
+<li>If <code>PB_IsStable=true</code> is passed, stable build numbers should be produced</li>
+<li>If <code>PB_PublishType</code> is <code>blob</code>, only publish assets to the <code>PB_PublishBlobFeedUrl</code> location (e.g. avoid myget, NuGet.org, etc.).  <code>PB_PublishType=blob</code> is only passed for product construction builds, so some repos have chosen to use the existence of PB_PublishBlobFeedUrl as an equivalent marker.  The point is that outputs shouldn't be visible outside the isolated orchestrated blob feed.</li>
+</ul>
+<p>If significant changes have been made to build definitions or repo infrastructure code, ensuring that this contract is still abided by can ensure a proper isolated product build.</p>
+</li>
+<li><p>Did all repos update their branding properly?</p>
+</li>
+<li><p>Are intra-build storage accounts publicly visible?  Intra-build storage (typically only used in corefx, coreclr and core-setup) should not be publicly visible in internal build scenarios.</p>
+</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CNetCore2122ServicingFlow.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CNetCore2122ServicingFlow.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CNetCore2122ServicingFlow.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

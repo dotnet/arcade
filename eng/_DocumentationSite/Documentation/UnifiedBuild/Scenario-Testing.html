@@ -1,0 +1,213 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>The Unified Build Almanac (TUBA) - Scenario Testing </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="The Unified Build Almanac (TUBA) - Scenario Testing ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="the-unified-build-almanac-tuba---scenario-testing">The Unified Build Almanac (TUBA) - Scenario Testing</h1>
+
+<h2 id="introduction">Introduction</h2>
+<p>Unified Build seeks to make .NET easier to build, contribute to, and distribute by all parties, including Microsoft. To achieve this, we need good testing. .NET today lacks solid automated scenario testing against <em>installed</em> products (or other shipping outputs). That is not to say that there are not tests for .NET. On the contrary, there are a large quantity of manual scenario validation tests, and <em>extensive</em> repository level tests. These repository level tests provide great coverage, but they do not run against the final product. They typically run against a subset. Individual assemblies, subsets of the SDK layout, etc. They do in-depth testing of specific behaviors. There are few automated tests that are designed to run against an installed product. This presents several challenges:</p>
+<ul>
+<li>Source-build partners have difficulty validating that their builds are working as expected. Most of .NET's repo testing is not applicable to source-build.</li>
+<li>.NET may have difficulty validating that we have not regressed product behavior when we change around how it builds.</li>
+</ul>
+<p>It is time to add a formal set of automated scenario tests to .NET. Scenario tests run against an installed product have a couple qualities:</p>
+<ul>
+<li>Because they run over installed products, they are agnostic of build methodology.</li>
+<li>They have the ability to validate wide swaths of behavior and provide a good general read on product quality.</li>
+</ul>
+<h2 id="goals">Goals</h2>
+<p>The Unified Build scenario testing effort has the following goals:</p>
+<ul>
+<li>Enable .NET maintainers (including existing source-build partners) and Microsoft to validate installed products prior to shipping.</li>
+<li>Comply with the provenance and build/test environment requirement needs of a variety of .NET maintainers. Maintainers should be able to target a set of tests that meet their requirements. These needs may vary. Examples:
+<ul>
+<li>Maintainers may require no pre-builts when building tests.</li>
+<li>Maintainers may allow online tests (access to internet resources) or may require tests to run offline.</li>
+</ul>
+</li>
+<li>Be able to provide a general read on product quality. Cover breadth over depth.</li>
+<li>Be able to cover both source-built and traditionally built products.</li>
+<li>Avoid complicated pre-test setups.</li>
+</ul>
+<h2 id="requirements">Requirements</h2>
+<p>Unified Build scenario testing has the following requirements:</p>
+<ul>
+<li>Tests shall not require a build layout to execute.</li>
+<li>Tests shall run against <em>shipping assets of .NET</em> or <em>installed .NET products</em>. For instance:
+<ul>
+<li><strong>Allowed</strong> - Tests that verify installability/uninstallability of MSIs, PKGs, debian installers, etc.</li>
+<li><strong>Allowed</strong> - Tests that verify behavior of an extracted or installed SDK. Installed covers all present and future supported acquisition methods.</li>
+<li><strong>Allowed</strong> - Tests that verify behavior of an extracted or installed runtime. Installed covers all present and future supported acquisition methods.</li>
+<li><strong>Allowed</strong> - Tests that reference a shipping NuGet package and verify behavior.</li>
+<li><strong>Not Allowed</strong> - Tests that run against 'pre-final' or non-shipping outputs.</li>
+<li><strong>Not Allowed</strong> - Tests that require a repository build layout to run.</li>
+</ul>
+</li>
+<li>Tests shall be tagged such that a specific subset can be targeted based on an installed product or available build output.</li>
+<li>Tests shall be executable by all/any project contributors.</li>
+<li>Tests and the test harness shall be designed so .NET distro maintainers can meet provenance and build/test environment requirements. This means:
+<ul>
+<li>Tests shall be runnable against internal only products, meaning that any resources required for tests must not assume public availabiloty. For example:
+<ul>
+<li>Shipping NuGet package feeds used as inputs to tests may be public or internal</li>
+<li>Tests that work to install the product may pull from public or internal sources.</li>
+</ul>
+</li>
+<li>Tests shall be selectable/tagged based on the resources they require for execution</li>
+<li>Tests shall be excludable/includable in the test preparation build based on their source-buildability.</li>
+<li>The test harness shall be source-buildable for platforms/organizations that require it.</li>
+</ul>
+</li>
+<li>Test execution shall be compatible with, <em>but be agnostic of</em>, distributed execution systems like Helix.</li>
+<li>Tests shall run against products built with Microsoft's traditional build methods, as well as products built in the VMR or source-build.</li>
+</ul>
+<h2 id="high-level-design">High-Level Design</h2>
+<h3 id="harness-design">Harness Design</h3>
+<p>.NET scenario tests will use C# and standard xunit, with a library of utility functionality to perform common test tasks (e.g. executing <code>dotnet</code> commands against an installed product). Test projects will be built as self-contained applications, so that an installed SDK product is not required to execute those tests. If an installed product was required, this would interfere with the desired test environment. A similar model has been used already in the mobile and wasm configurations today as well as runtime.</p>
+<h3 id="test-reporting">Test Reporting</h3>
+<p>.NET scenario tests will use the standard xunit reporting format. This format is human readable and compatible with a variety of CI systems.</p>
+<h3 id="test-execution-model">Test Execution Model</h3>
+<p>Test logic should not execute tests in-proc. Instead, it should test functionality out-of-proc against installed products or shipping outputs, using a library of functionality to perform common actions. This is similar to how dotnet/sdk tests today. For example, take an SDK test that executes a pack command. The PackCommand class implements basic functionality to execute pack commands (via Process.Start), then the output is compared against an expected layout.</p>
+<pre><code class="lang-csharp">public void It_packs_successfully()
+{
+    var helloWorldAsset = _testAssetsManager
+        .CopyTestAsset(&quot;HelloWorld&quot;, &quot;PackHelloWorld&quot;)
+        .WithSource();
+
+    var packCommand = new PackCommand(Log, helloWorldAsset.TestRoot);
+
+    packCommand
+        .Execute()
+        .Should()
+        .Pass();
+
+    //  Validate the contents of the NuGet package by looking at the generated .nuspec file, as that's simpler
+    //  than unzipping and inspecting the .nupkg
+    string nuspecPath = packCommand.GetIntermediateNuspecPath();
+    var nuspec = XDocument.Load(nuspecPath);
+
+    var ns = nuspec.Root.Name.Namespace;
+    XElement filesSection = nuspec.Root.Element(ns + &quot;files&quot;);
+
+    var fileTargets = filesSection.Elements().Select(files =&gt; files.Attribute(&quot;target&quot;).Value).ToList();
+
+    var expectedFileTargets = new[]
+    {
+        $@&quot;lib\{ToolsetInfo.CurrentTargetFramework}\HelloWorld.runtimeconfig.json&quot;,
+        $@&quot;lib\{ToolsetInfo.CurrentTargetFramework}\HelloWorld.dll&quot;
+    }.Select(p =&gt; p.Replace('\\', Path.DirectorySeparatorChar));
+
+    fileTargets.Should().BeEquivalentTo(expectedFileTargets);
+}
+</code></pre>
+<h3 id="test-location">Test Location</h3>
+<p>Tests shall be kept in <a href="https://github.com/dotnet/scenario-tests">https://github.com/dotnet/scenario-tests</a>, which shall be vendored into the VMR alongside product source. This allows the tests to be runnable against a product without the VMR (e.g. against Microsoft's traditionally built product).</p>
+<h3 id="test-qualities">Test Qualities</h3>
+<p>Tests should seek to test end-to-end functionality, and generally focus on product breadth over depth for specific areas. For example, a good test might use an installed SDK to build a self-contained application that reads, alters, and writes json files. The application would be run against a set of known inputs, and the output compared in each case.</p>
+<h2 id="scenario-priorization">Scenario Priorization</h2>
+<p>When writing new tests, .NET should prioritize, in order:</p>
+<ul>
+<li>Platforms currently being shipped via source-build.</li>
+<li>Areas that currently lack coverage</li>
+<li>Platforms targeted for source-build bring up sooner.</li>
+</ul>
+<p>.NET distro maintainers who utilize Linux source-build currently do not have a lot coverage, aside from some basic smoke testing and additional tests that they develop themselves (e.g. <a href="https://github.com/redhat-developer/dotnet-regular-tests">https://github.com/redhat-developer/dotnet-regular-tests</a>). We primarily rely on the repo tests to validate the source-built product will work as expected. But the repo tests run within the traditional Microsoft build process, which means they may not give a good read on source-built products. Filling those gaps first not only gives those .NET maintainers better coverage, but also helps .NET ensure that as it switches away from the Microsoft traditional build for Linux builds it distributes (e.g. Linux portable), that quality does not slip.</p>
+<h2 id="what-about">What about...</h2>
+<h4 id="visual-studio-testing">Visual Studio testing?</h4>
+<p>While there is nothing preventing testing Visual Studio scenarios in this model, Visual Studio testing should not appear within dotnet/scenario-tests. .NET's scenario tests should focus on the primary outputs of its build. Those outputs that can be validated <em>without</em> another phase of insertions. Visual Studio scenarios would require a .NET build and a VS insertion and build before validation could begin. Tests that target those scenarios are more suited to be located within various Visual Studio test suites.</p>
+<h4 id="tests-with-binary-dependencies">Tests with binary dependencies?</h4>
+<p>Tests with binary dependencies may exist. However, because the VMR may not contain most kinds of binaries (these are typically automatically stripped away in the VMR sync), binaries must be kept in a separate repository. Dependency flow (via packages or other versioned containers) is used to version the binaries within the scenario-tests repo. Of course, this makes the scenario-tests repo not usable for some organizations. Use of these binaries (either in build scenarios or in tests scenarios) must be properly identified via test tags or build metadata to ensure that those .NET distro maintainers can meet provenance and build/test environment requirements.</p>
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

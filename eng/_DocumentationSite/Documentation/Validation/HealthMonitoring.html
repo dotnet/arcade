@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Health Monitoring </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Health Monitoring ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="health-monitoring">Health Monitoring</h1>
+
+<h2 id="features-and-processes-in-scope">Features and Processes in Scope</h2>
+<p>Helix Services</p>
+<ul>
+<li>Helix Client</li>
+<li>Helix API</li>
+<li>Controller</li>
+<li>EventHub</li>
+<li>ServiceBus</li>
+<li>Data Migration Services</li>
+</ul>
+<p>Arcade-Services:</p>
+<ul>
+<li>Maestro++</li>
+<li>Darc API</li>
+<li>BAR</li>
+<li>Telemetry Service</li>
+<li>BARViz</li>
+</ul>
+<h2 id="links-to-relevant-pipelines-and-builds">Links to Relevant Pipelines and Builds</h2>
+<p>MSENG:</p>
+<ul>
+<li><a href="https://dev.azure.com/mseng/Tools/_pipeline/analytics/stageawareoutcome?definitionId=6216&amp;contextType=build">Helix-PR-Master</a></li>
+<li><a href="https://dev.azure.com/mseng/Tools/_build?definitionId=6171&amp;_a=summary&amp;view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics">Helix-CI</a></li>
+<li><a href="https://dev.azure.com/mseng/Tools/_build?definitionId=6843&amp;_a=summary&amp;view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics">Helix-Daily</a></li>
+<li><a href="https://dev.azure.com/mseng/Tools/_build?definitionId=6707&amp;_a=summary&amp;view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics">Helix Agents - CI</a></li>
+</ul>
+<p>DNCENG (internal):</p>
+<ul>
+<li><a href="https://dev.azure.com/dnceng/public/_build?definitionId=208&amp;view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics">Arcade-ci</a></li>
+<li><a href="https://dev.azure.com/dnceng/public/_build?definitionId=386&amp;view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics">Arcade-extensions-ci</a></li>
+<li><a href="https://dev.azure.com/dnceng/public/_build?definitionId=209&amp;view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics">Arcade-minimalci-sample-ci</a></li>
+<li><a href="https://dev.azure.com/dnceng/public/_build?definitionId=411&amp;view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics">Arcade-pool-provider-ci</a></li>
+<li><a href="https://dev.azure.com/dnceng/public/_build?definitionId=247&amp;view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics">Dotnet-arcade-service</a></li>
+<li><a href="https://dev.azure.com/dnceng/public/_build?definitionId=269&amp;view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics">Arcade-validation-ci</a></li>
+<li>Helix-machines
+<ul>
+<li><a href="https://dev.azure.com/dnceng/internal/_build?definitionId=145&amp;view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics">Build-and-deploy-production</a></li>
+<li><a href="https://dev.azure.com/dnceng/internal/_build?definitionId=103&amp;view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics">Build-and-deploy-staging</a></li>
+<li><a href="https://dev.azure.com/dnceng/internal/_build?definitionId=3&amp;view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics">Pr</a></li>
+<li><a href="https://dev.azure.com/dnceng/internal/_build?definitionId=129&amp;view=ms.vss-pipelineanalytics-web.new-build-definition-pipeline-analytics-view-cardmetrics">Pr-prod-queues</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="existing-functionality-and-processes">Existing Functionality and Processes</h2>
+<p><a href="https://msit.powerbi.com/groups/de8c4cb8-b06d-4af8-8609-3182bb4bdc7c/reports/09be7698-941b-4df7-966e-d0e1ca96d656/ReportSection">Availability and reliability monitoring</a> for PROD services already exists in Power BI from data in AppInsights and Kusto. Our focus for Health Reporting will be based on tests and builds in AzDO.</p>
+<h2 id="assumptions">Assumptions</h2>
+<p>All the builds and deployments we care about are either in mseng or dnceng in AzDO</p>
+<h2 id="concerns">Concerns</h2>
+<ul>
+<li>There may be some &quot;weirdness&quot; with AzDO collecting test results when deploying Helix.</li>
+<li>SSL validation pre and post deployment enough or should we do periodic health checking?</li>
+<li>How to health report for Docker and OnPrem?</li>
+</ul>
+<h2 id="use-cases-and-solutions">Use Cases and Solutions</h2>
+<ul>
+<li>Build status widgets in AzDO Dashboard using data pulled from Pipelines</li>
+<li>Test Run status widgets in AzDO Dashboard using data pulled from Pipelines</li>
+<li>Deployment status widgets in AzDO Dashboard using data pulled from Pipelines</li>
+</ul>
+<p>The above should give the picture needed to know if staging is stable to rollout out to Prod. Health Monitoring of already deployed services in PROD is available in PowerBI and is not covered part of this epic.
+Checks to ensure Service Fabric is reachable, up and running, will not fall over with deployment etc., are validated via tests that will get hooked up to pipelines.</p>
+<p>Sample AzDO Dashboard - <a href="https://dev.azure.com/dnceng/internal/_dashboards/dashboard/755b52e7-b7a3-423b-bb60-7a01ff7241b8">https://dev.azure.com/dnceng/internal/_dashboards/dashboard/755b52e7-b7a3-423b-bb60-7a01ff7241b8</a></p>
+<h2 id="dependencies">Dependencies</h2>
+<ul>
+<li>AzDO (Dashboard, widgets, pipelines)</li>
+<li>Azure</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CValidation%5CHealthMonitoring.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CValidation%5CHealthMonitoring.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CValidation%5CHealthMonitoring.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,394 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>The Unified Build Almanac (TUBA) - Upstream/Downstream Relationships </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="The Unified Build Almanac (TUBA) - Upstream/Downstream Relationships ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="the-unified-build-almanac-tuba---upstreamdownstream-relationships">The Unified Build Almanac (TUBA) - Upstream/Downstream Relationships</h1>
+
+<h2 id="introduction">Introduction</h2>
+<p>Unified Build seeks to enable better product-level upstream/downstream collaboration in the .NET community. To achieve this, it is important that it be possible to maintain a number of inter-related forks and associated branches of .NET. There are two aspects to such an effort:</p>
+<ul>
+<li>Enabling the effective building and management of the product source code via the VMR.</li>
+<li>Formally identifying the VMRs that could or will exist, their branches, and any associated tagging schemas.</li>
+</ul>
+<p>This document focuses on the latter aspect.</p>
+<h2 id="what-vmrs-exist-and-what-are-their-relationships">What VMRs exist and what are their relationships?</h2>
+<pre><code class="lang-mermaid">flowchart TD
+SecFixSharing[Security Sharing\n-Location: AzDO\n-Purpose: Source for upcoming releases with security fixes.]
+Upstream[Upstream\n-Location: https://github.com/dotnet/dotnet\n-Purpose: Primary development and source releases.]
+Microsoft[Microsoft\n-Location: AzDO\n-Purpose: Official builds of Microsoft's .NET distribution and servicing releases.]
+Canonical[Canonical\n-Location: ?-Purpose: Source for Canonical's .NET distribution.]
+RedHat[RedHat\n-Location: ?-Purpose: Source for RedHat's .NET distribution.]
+OtherCommunity[?? Foo Community Member\n-Location: ?\n-Purpose: Source for Foo Community Member's .NET distribution.]
+
+Microsoft--&gt;SecFixSharing
+Microsoft--&gt;Upstream
+Upstream--&gt;Microsoft
+Upstream--&gt;RedHat
+Upstream--&gt;Canonical
+Upstream--&gt;OtherCommunity
+SecFixSharing--&gt;RedHat
+SecFixSharing--&gt;Canonical
+</code></pre>
+<p><em>VMRs and their relationships. Arrows represent typical code flow.</em></p>
+<p>Because the VMR enables the organizations other than Microsoft to realistically build a full .NET distribution, it also means that the project can now more closely model typical upstream/downstream collaboration. At least the following VMRs will exist:</p>
+<ul>
+<li><strong>Upstream</strong>
+<ul>
+<li><strong>Location</strong> – ‘dotnet’ Github Organization. (likely <a href="https://github.com/dotnet/dotnet">https://github.com/dotnet/dotnet</a>)</li>
+<li><strong>Maintainer</strong> – Microsoft</li>
+<li><strong>Relationship to other VMRs</strong> – Top level upstream</li>
+<li><strong>Purpose</strong> - This repository represents the public collaboration location and viewpoint for .NET public servicing, previews, and daily builds. All public releases of Microsoft's .NET distribution will be buildable from a commit in this VMR.</li>
+</ul>
+</li>
+<li><strong>Security Sharing</strong>
+<ul>
+<li><strong>Location</strong> – Azure DevOps</li>
+<li><strong>Maintainer</strong> – Microsoft</li>
+<li><strong>Relationship to other VMRs</strong> – Downstream of Upstream and Microsoft</li>
+<li><strong>Purpose</strong> – See Dotnet CVE Pre-disclosure Program. The purpose is to provide a location for collaboration with trusted partners on fixes for the pre-disclosure program. Patches for security issues will be applied to this VMR, and trusted partners may pull/cherry-pick into their own VMRs. Trusted partners may also send pull requests for security fixes.</li>
+</ul>
+</li>
+<li><strong>Microsoft</strong>
+<ul>
+<li><strong>Location</strong> – Azure DevOps</li>
+<li><strong>Maintainer</strong> – Microsoft</li>
+<li><strong>Relationship to other VMRs</strong> – Downstream of Upstream</li>
+<li><strong>Purpose</strong> - Building monthly servicing releases and previews.</li>
+</ul>
+</li>
+<li><strong>Non-Microsoft .NET distribution maintainer</strong>
+<ul>
+<li><strong>Location</strong> – As appropriate for organization or individual</li>
+<li><strong>Maintainer</strong> – Organizations or individuals.</li>
+<li><strong>Relationship to other VMRs</strong> – Typically downstream of Upstream.</li>
+<li><strong>Purpose</strong> – Maintaining and releasing .NET for customers. Location for interesting projects. Development work.</li>
+</ul>
+</li>
+</ul>
+<h2 id="branching-and-tagging">Branching and Tagging</h2>
+<p>For those VMRs that Microsoft is the maintainer, the following branch and tag structures will be used:</p>
+<h3 id="tags">Tags</h3>
+<p>All releases shall be tagged. This includes public releases as well as internal releases and internal pre-release builds handed to customers for deployment. Shas of builds sent for validation do not need tags.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Release Scenario</strong></th>
+<th><strong>Tag Format</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Public GA</td>
+<td><code>vMAJOR.MINOR.PATCH</code></td>
+</tr>
+<tr>
+<td>Servicing</td>
+<td><code>vMAJOR.MINOR.PATCH</code></td>
+</tr>
+<tr>
+<td>Internal/Private GA (stable)</td>
+<td><code>vMAJOR.MINOR.PATCH</code></td>
+</tr>
+<tr>
+<td>Internal Servicing (stable)</td>
+<td><code>vMAJOR.MINOR.PATCH</code></td>
+</tr>
+<tr>
+<td>Public Previews</td>
+<td><code>vMAJOR.MINOR.PATCH-previewN</code></td>
+</tr>
+<tr>
+<td>Internal/Private purpose-specific builds, e.g. Private build for internal customers</td>
+<td><code>vMAJOR.MINOR.PATCH-private-PURPOSE</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="branches">Branches</h3>
+<p>The table below represents branches that are present in various VMRs. Some branches may only be present in some VMRs. Branch names should strive to be consistent across all Microsoft-maintained VMRs.</p>
+<table>
+<thead>
+<tr>
+<th><strong>Branch Purpose</strong></th>
+<th><strong>Present in these VMRs</strong></th>
+<th><strong>Changes checked into branch (vs. flowed)</strong></th>
+<th><strong>‘Primary’ VMR (changes made here, mirrored elsewhere)</strong></th>
+<th><strong>Format and Example(s)</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mainline development</td>
+<td>Upstream, Microsoft</td>
+<td>Public OSS changes</td>
+<td>Upstream</td>
+<td>main (e.g. main)</td>
+</tr>
+<tr>
+<td>Public Servicing/RTM sources for a MAJOR.MINOR release</td>
+<td>Upstream, Microsoft</td>
+<td>Public OSS changes approved through Tactics</td>
+<td>Upstream</td>
+<td>release/MAJOR.MINOR (e.g. release/8.0, release/9.0)</td>
+</tr>
+<tr>
+<td>Source for next servicing release, including security fixes.</td>
+<td>Microsoft,Security Sharing</td>
+<td>Security fixes</td>
+<td>Microsoft</td>
+<td>internal/release/MAJOR.MINOR (e.g. internal/release/8.0)</td>
+</tr>
+<tr>
+<td>Public preview</td>
+<td>Upstream, Microsoft</td>
+<td>Fixes approved through Tactics</td>
+<td>Upstream</td>
+<td>release/MAJOR.MINOR-previewN (e.g. release/8.0-preview1)</td>
+</tr>
+<tr>
+<td>Public source for RC</td>
+<td>Upstream, Microsoft</td>
+<td>Fixes approved through Tactics</td>
+<td>Upstream</td>
+<td>release/MAJOR.MINOR-rcN (e.g. release/9.0-rc1)</td>
+</tr>
+<tr>
+<td>Source for RC with security fixes (go-live)</td>
+<td>Microsoft, Security Sharing</td>
+<td>Security fixes</td>
+<td>Microsoft</td>
+<td>internal/release/MAJOR.MINOR-rcN (e.g. internal/release/8.0-rc1)</td>
+</tr>
+<tr>
+<td>Preview SDK development post MAJOR.MINOR GA. Has non-SDK components cloaked or inoperable, pre-GA</td>
+<td>Upstream, Microsoft</td>
+<td>Preview SDK features</td>
+<td>Upstream</td>
+<td>release/MAJOR.MINOR.SDK_BAND (e.g. release/8.0.2xx)</td>
+</tr>
+<tr>
+<td>SDK-only VMR branch with security fixes</td>
+<td>N/A – Security fixes should not be applied to an SDK-only VMR</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note: Addendum at <a href="https://dev.azure.com/dnceng/internal/_git/dotnet-eng-wiki?path=/Documentation/unified-build/VMR-Upstream-Downstream-Addendum.md">https://dev.azure.com/dnceng/internal/_git/dotnet-eng-wiki?path=/Documentation/unified-build/VMR-Upstream-Downstream-Addendum.md</a></strong></p>
+<h2 id="inter-branch-relationships-and-flow">Inter-branch relationships and flow</h2>
+<p>There is code flow between various branches of the VMR and across various VMR forks. The following code flow methods are used:</p>
+<ul>
+<li><strong>Direct mirror</strong> - Direct mirrors are used to ensure that the same branch across multiple VMR remotes remains identical. The destination of the mirror shall have no direct check-in. When a commit occurs in the source of the mirror the destination is fast-forwarded to match that commit. If no fast-forward is possible, then the mirror fails and the error should be investigated. Typically, failure is caused by checking into the destination of the mirror.</li>
+<li><strong>On-demand mirror</strong> - An on-demand mirror is performed when the destination needs updating. This mirror is typically used to update a remote used by partners. The destination is fast-forwarded to ensure matching HEAD commits.</li>
+<li><strong>PR merge</strong> - A PR merge is used to move fixes between product release lines and ensure that fixes in older releases are not missed in newer releases. When the merge is made, a PR is opened with the changes (and potential merge conflicts) for review and check-in.</li>
+<li><strong>Merge mirror</strong> - A merge mirror is an automatic mirror between a source and a destination that uses a traditional merge. It’s used in multi-level branch structures and delta branch schemes. Every commit appearing in the source is merged into the destination. It is possible to check-in additional changes in the destination. If the merge fails, then a developer should resolve conflicts.</li>
+</ul>
+<p>Using these methods, the following code flow will be used for the product.</p>
+<pre><code class="lang-mermaid">flowchart TD
+  subgraph Mainline
+    UpstreamMain[Upstream\nmain]
+    MicrosoftMain[Microsoft\nmain]
+    UpstreamPreview[Upstream\nrelease/9.0-preview2]
+    MicrosoftPreview[Microsoft\nrelease/9.0-preview2]
+    MicrosoftInternalPreview[Microsoft\ninternal/release/9.0-preview2]
+
+    UpstreamPreview--&gt;|'E' PR Merge **|UpstreamMain
+    UpstreamPreview--&gt;|'A' Direct Mirror|MicrosoftPreview
+
+    MicrosoftPreview--&gt;|'B' Merge Mirror|MicrosoftInternalPreview
+    
+    UpstreamMain--&gt;|'A' Direct Mirror|MicrosoftMain
+  end
+  subgraph Servicing
+    Upstream90[Upstream\nrelease/9.0]
+    Microsoft90[Microsoft\nrelease/9.0]
+    Security90[Securty\ninternal/release/9.0]
+    MicrosoftInternal90[Microsoft\ninternal/release/9.0]
+
+    Upstream100[Upstream\nrelease/10.0]
+    Microsoft100[Microsoft\nrelease/10.0]
+    MicrosoftInternal100[Microsoft\ninternal/release/10.0]
+    Security100[Security\ninternal/release/10.0]
+
+    Upstream90--&gt;|'A' Direct Mirror|Microsoft90
+    Microsoft90--&gt;|'B' Merge Mirror|MicrosoftInternal90
+    MicrosoftInternal90--&gt;|'D' On Demand Mirror|Security90
+    MicrosoftInternal90--&gt;|'C' PR Merge on Release Day|Upstream90
+
+    Upstream100--&gt;|'A' Direct Mirror|Microsoft100
+    Microsoft100--&gt;|'B' Merge Mirror|MicrosoftInternal100
+    MicrosoftInternal100--&gt;|'D' On Demand Mirror|Security100
+    MicrosoftInternal100--&gt;|'C' PR Merge on Release Day|Upstream100
+  end
+  subgraph PreviewSDK
+    UpstreamPreviewSdk[Upstream\nrelease/9.0.2xx]
+    MicrosoftPreviewSdk[Microsoft\nrelease/9.0.2xx]
+
+    UpstreamPreviewSdk--&gt;|'A' Direct Mirror|MicrosoftPreviewSdk
+  end
+</code></pre>
+<p>**<em>PR merges might be used to keep mainline up to date with a short-lived preview branch. This will be evaluated at a later time.</em></p>
+<h3 id="desired-flow-rates-and-triggers">Desired Flow Rates and Triggers</h3>
+<p>Based on these flow methods and directions, we can now establish the desired flow for the various VMR branches:</p>
+<h4 id="a"><em>'A'</em></h4>
+<ul>
+<li><strong>Description and Purpose</strong>: This flow uses a direct mirror to keep the same branch in two different remotes up to date. Microsoft builds its own .NET distribution from Azure DevOps downstream in <a href="https://dev.azure.com/dnceng/internal">dnceng</a>. This flow keeps Microsoft’s internal copy of the main VMR branch, as well as servicing branches, up to date with the Upstream VMR. A PR is not used.</li>
+<li><strong>Trigger</strong>: Every commit to the source branch</li>
+<li><strong>System Responsible</strong>: Maestro Mirror Service</li>
+</ul>
+<h4 id="b"><em>'B'</em></h4>
+<ul>
+<li><p><strong>Description and Purpose</strong>:
+This flow uses a merge mirror to keep a branch up to date with respect to another branch, but allowing for additional commits on the target branch</p>
+<p>This merge is used to keep delta branches up to date in the following scenarios:</p>
+<ul>
+<li>Servicing branches (internal/release/MAJOR.MINOR) containing the public servicing bits plus security fixes</li>
+<li>Internal private development branches up to date with mainline</li>
+</ul>
+</li>
+<li><p><strong>Trigger</strong>: Every commit to the source branch</p>
+</li>
+<li><p><strong>System Responsible</strong>: Maestro Mirror Service</p>
+</li>
+</ul>
+<h4 id="c"><em>'C'</em></h4>
+<ul>
+<li><p><strong>Description and Purpose</strong>:
+This flow uses a PR merge to move code from closed to open source. This is typically done on servicing release day for security fixes. The sha in internal/release/MAJOR.MINOR that corresponds to the release (which may not be the same sha in cases of permanent closed source) is merged into the corresponding upstream branch and a PR is opened.</p>
+</li>
+<li><p><strong>Trigger</strong>: Need to open-source internal code (e.g. Servicing Release Day)</p>
+</li>
+<li><p><strong>System Responsible</strong>: Scripting or manual push</p>
+</li>
+</ul>
+<h4 id="d"><em>'D'</em></h4>
+<ul>
+<li><p><strong>Description and Purpose</strong>:
+This flow uses an on-demand mirror to update the Security fork of the VMR with the source of an upcoming release. The desire is for the shas to match the internal branch exactly, so a fast forward is expected.</p>
+</li>
+<li><p><strong>Trigger</strong>: Sources for next release have been finalized</p>
+</li>
+<li><p><strong>System Responsible</strong>: Scripting or manual push</p>
+</li>
+</ul>
+<h4 id="e"><em>'E'</em></h4>
+<ul>
+<li><p><strong>Description and Purpose</strong>:
+This flow uses a PR merge to keep a newer line of code up to date with an older line of code. Use of this flow is repository dependent, and inconsistent across the .NET product today. In Unified build, this flow may be used to keep branches of a development repository up to date as desired by owners of those repositories. It is <strong>unlikely</strong> to be in use for the full VMR.</p>
+<p>Between major release, it is unlikely that the source and components between those releases (especially w.r.t. SDKs) will remain consistent enough to allow for easy merges</p>
+</li>
+<li><p><strong>Trigger</strong>: Every commit to source branch</p>
+</li>
+<li><p><strong>System Responsible</strong>: Maestro Mirror Service</p>
+</li>
+</ul>
+<p><strong>Note: Addendum at <a href="https://dev.azure.com/dnceng/internal/_git/dotnet-eng-wiki?path=/Documentation/unified-build/VMR-Upstream-Downstream-Addendum.md">https://dev.azure.com/dnceng/internal/_git/dotnet-eng-wiki?path=/Documentation/unified-build/VMR-Upstream-Downstream-Addendum.md</a></strong></p>
+<h2 id="development-repository-branch-flow-from-older-releases">Development Repository Branch Flow from Older Releases</h2>
+<p>.NET tries hard to ensure that newer releases do not miss fixes from older releases. While practices vary per-repo, typically fixes start in the mainline development release, then are back-ported and merged into to servicing releases after organization approval. Some repositories then use inter-branch merging (typically automated) to merge forward from older releases into newer ones, ensuring that the head of a newer release branch (or mainline) contains all shas from older releases. While still possible, this makes it less likely that a fix made exclusively in servicing will fail to make it into the next release.</p>
+<p>The development repositories may get flow from older releases in two ways, depending on whether those releases were built on the VMR. <em>Note: Relying on inter-branch merging to move fixes between releases is fragile and is typically only used to double check work. Repository structures frequently change over time (e.g. coreclr, corefx, and core-setup merge has made merging from dotnet/3.1 to dotnet/5.0 difficult). Even VMR inter-merging will be difficult since SDK bands and components will be added or removed over releases.</em></p>
+<ul>
+<li><strong>VMR Releases</strong> - The VMR <em>may</em> use inter-branch merging (see above diagram) to ensure that VMR-built releases and the VMR mainline contain required fixes, though dual check-in should be used in almost all cases. Due to VMR backflow, this means that missed fixes will eventually make it into development repositories once the inter-branch merge reaches the VMR mainline.
+<pre><code class="lang-mermaid">flowchart LR
+  release100runtime[release/10.0 fix in VMR src/runtime]--&gt;mergeIntoRelease90[Merge into release/9.0 VMR]--&gt;mergeIntoMain[Merge into main VMR]--&gt;backFlow[Back flow into dotnet/runtime]
+</code></pre>
+</li>
+<li><strong>Pre-VMR releases</strong> – Repositories <em>may</em> use inter-branch merging to merge from older isolated servicing repositories into newer releases and onto main. Depending on the extent of changes, re-shuffling of repo sources, etc. this may not always be possible.
+<pre><code class="lang-mermaid">flowchart LR
+  release80runtime[release/8.0 fix in dotnet/runtime]--&gt;mainRuntime[Merge into main dotnet/runtime on 9.0]--&gt;forwardFlow[Forward flow into VMR]
+</code></pre>
+</li>
+</ul>
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

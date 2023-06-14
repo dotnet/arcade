@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Rollout Score Card </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Rollout Score Card ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="rollout-score-card">Rollout Score Card</h1>
+
+<p>Each rollout will be scored accordingly. The mechanics are similar to golf scoring, in which the higher the number, the worse the score. The goal is a score of 0. Each item has a threshold associated with it and a score associated for each infraction. The &quot;threshold&quot; is the allowable amount for each item, and any amount over the allowable will incur penalties.</p>
+<p>The score card allows us to count up infractions against our rollouts. A successful rollout should be completed in the time allowed (i.e. threshold), and should not require any sort of intervention, like a hotfix or rollback. Also, we should not receive any customer complaints based on the rollout. A rollout like that would give us a score of 0, which is our goal. We should be able to drill down into the score to see why the penalties were incurred and improve our rollout process (e.g. adding validation, testing, et cetera).</p>
+<ol>
+<li><p>Time taken to rollout (Every 15 minutes over [rounded up] is worth 1 point). This value is calculated based on the total time to build and deploy the service (explicitly: the sum of the build pipeline's elapsed time and the release pipeline's elapsed time). End-to-end tests run after the service has been deployed are not added to this value. (Reason for this is that the faster our builds and deployments are, the faster we can make changes and hotfixes, if necessary).</p>
+<p>A. OS Onboarding Threshold: 1 hour</p>
+<p>B. Helix Threshold: 30 minutes</p>
+<p>C. Arcade-Services Threshold: 1 hour</p>
+</li>
+<li><p>Number of critical/blocking issues as a result of the rollout (1 point per issue). Threshold is 0.</p>
+</li>
+<li><p>Service downtime (availability and reliability) as a result of the rollout (1 point for every minute of downtime). Threshold is 0.</p>
+</li>
+<li><p>Number of hotfixes (5 points per hotfix). Threshold is 0. Also, the time it takes to roll this out is cumulatively added to the initial rollout time (see #1 above).</p>
+</li>
+<li><p>Number of rollbacks (10 points per rollback). Threshold is 0. Also, the time it takes to roll this out is cumulatively added to the initial rollout time (see #1 above).</p>
+</li>
+<li><p>Failure to rollout (50 points). This is a scenario in which we have made a commitment to our customers (e.g. posted it in release notes), and did not meet the window to rollout. This includes partial rollouts (i.e. rollouts in which some parts of the deployment failed and were not remedied).</p>
+</li>
+</ol>
+<p>Example: A rollout of OS Onboarding took 6 hours (20 points), Helix took less than 30 minutes (0 points), and Arcade-Services took 1 hour (0 points). A critical issue occurred in Helix (1 point), which resulted in the need for a hotfix (5 points) and another rollout of Helix, that took less than 30 minutes (0 points). During that time, the component in Helix that was broken caused a service downtime of an hour (60 points). This score of this rollout would have been 86 points.</p>
+<h2 id="dashboard">Dashboard</h2>
+<p>A Power BI dashboard of all rollout scorecard metrics so far can be found <a href="https://msit.powerbi.com/groups/de8c4cb8-b06d-4af8-8609-3182bb4bdc7c/reports/6d2bd5cd-f96f-40df-af3f-33fd4cf1d82d">here</a>.</p>
+<h2 id="pre-requisites">Pre-Requisites</h2>
+<p>In order for this to work, we'll need the entire team to be on board with this process:</p>
+<ul>
+<li>Every hotfix needs to be noted as a hotfix for us to measure those metrics. Same with rollbacks.</li>
+<li>Issues (critical or not) that are a result of a rollout need to be marked as such with labels.</li>
+</ul>
+<p>The full guidelines for these are noted in the <a href="/Documentation/Policy/DeploymentPolicy.md">Policy Document</a>.</p>
+<h2 id="automation">Automation</h2>
+<p>Rollout Scorecards are automatically created, submitted, and logged by the <a href="https://github.com/dotnet/arcade-services/tree/master/src/RolloutScorer/Readme.md">Rollout Scorer</a>.</p>
+<h2 id="july-24-2019-rollout-example">July 24, 2019 Rollout (Example)</h2>
+<p>The July 2019 rollout served as the basis for this scorecard. Its scorecard can be found <a href="Scorecard_2019-07-24.html">here</a>.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CREADME.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CREADME.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CREADME.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

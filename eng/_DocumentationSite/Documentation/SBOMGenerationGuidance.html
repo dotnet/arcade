@@ -1,0 +1,344 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>SBOM Generation Guidance </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="SBOM Generation Guidance ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="sbom-generation-guidance">SBOM Generation Guidance</h1>
+
+<h2 id="background">Background</h2>
+<p>An SBOM (Software Bill of Materials) is a formal record containing the details and supply chain
+relationships of various components used in building software. Physically, an SBOM is usually a
+single file (such as .json) that captures this information about the software from the build. As
+part of the requiements to be compliant with the Executive Order on Cyber Security, each repository
+involved in the composition of .NET needs to produce and upload an SBOM for each job of their
+official build that produces or modifies any assets. In this initial phase, we are focusing our
+efforts to have 6.0 and 7.0 builds generate the SBOMs.</p>
+<h2 id="use-with-arcade">Use with Arcade</h2>
+<p>As an initial phase for SBOM generation, Arcade provides <a href="https://github.com/dotnet/arcade/tree/main/eng/common/templates/steps/generate-sbom.yml">a new YAML
+template</a>
+to encapsulate the creation and upload of the SBOM to the build's artifacts, leveraging the <a href="https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/secure-supply-chain/ado-sbom-generator">ADO
+SBOM generator
+task</a>.
+This section describes how to integrate this template into your repo's official build depending on
+your current usage of the YAML templates that Arcade provides.</p>
+<h3 id="repositories-using-arcades-jobsyml-templates">Repositories using Arcade's job(s).yml templates</h3>
+<p>If you are using Arcade from the &quot;.NET Eng - latest&quot; or &quot;.NET 6 Eng&quot; channels, and using the provided job
+templates (<a href="https://github.com/dotnet/arcade/tree/main/eng/common/templates/job/job.yml">job.yml</a>,
+<a href="https://github.com/dotnet/arcade/blob/main/eng/common/templates/jobs/jobs.yml">jobs.yml</a>), Your
+build legs should start attempting to generate and upload SBOMs automatically.</p>
+<p>For most cases, this is all that a repository using the arcade templates will need to do to generate
+and upload their SBOMs. If the generation doesn't work as expected, follow the <a href="#troubleshooting">troubleshooting
+instructions</a>. Once you have verified the SBOMs are being generated for all of your
+jobs, you can <a href="#reviewing-generated-sboms-for-correctness">review your SBOMs for correctness</a>, and set up <a href="#retention-rules-for-release-build-sboms">retention rules
+for your release builds</a></p>
+<h3 id="repositories-not-using-arcades-jobsyml-templates">Repositories not using Arcade's job(s).yml templates</h3>
+<p>We encourage the usage of the job templates, as it's the best way for newer changes to the
+infrastructure to be added to your repository via the Arcade dependency flow. In cases where it's
+not possible for your repository to use the job templates, you will have to insert the
+<a href="https://github.com/dotnet/arcade/tree/main/eng/common/templates/steps/generate-sbom.yml">generate-sbom.yml</a>
+template directly into each of your jobs that produce or modify assets.</p>
+<p>A minimal example follows:</p>
+<pre><code class="lang-yaml"># One stage, one job: just build and generate an sbom
+stages:
+- stage: build
+  displayName: Build
+  jobs:
+    - job: build (Windows)
+        pool:
+          name: NetCore1ESPool-Internal
+          demands: ImageOverride -equals windows.vs2019.amd64
+
+        steps:
+        - checkout: self
+          clean: true
+
+        - script: eng\common\cibuild.cmd
+            -configuration release
+            -prepareMachine
+          displayName: Windows Build / Publish
+          
+        - template: eng\common\templates\steps\generate-sbom.yml
+</code></pre>
+<p>Much of this template can be used as-is for most repositories, with defaults based on the common
+Arcade configurations. The template allows customization of behavior via the following parameters:</p>
+<ul>
+<li><code>PackageVersion</code>: Version that will be reported by the SBOM. For repositories based on Arcade's
+main branch, this should be &quot;7.0.0&quot;, and &quot;6.0.0&quot; for .NET 6 release branches.</li>
+<li><code>PackageName</code>: default is '.NET'. Contact @dotnet/dnceng if you think your repo should use a
+different name.</li>
+<li><code>ManifestDirPath</code>: Determines where in the build agent the SBOM will be generated to, defaults to
+<code>$(Build.ArtifactStagingDirectory)/sbom</code></li>
+<li><code>BuildDropPath</code> : Determines the directory that the SBOM tooling will use to find build outputs.
+Defaults to $<code>(Build.SourcesDirectory)/artifacts</code> to match Arcade's convention.</li>
+<li><code>sbomContinueOnError</code>: By default the tasks are set up to not break the build and instead continue
+on error if anything goes wrong in the generation process.</li>
+</ul>
+<h2 id="reviewing-generated-sboms-for-correctness">Reviewing generated SBOMs for correctness</h2>
+<p>To verify that the functionality worked as expected in your repository:</p>
+<ol>
+<li><p>The following steps should have been added to every job that is using the templates:</p>
+<ul>
+<li><strong>Prep for SBOM generation</strong>: Prepares the output directory for the sbom manifest and sets up
+the name of the artifact that will be uploaded.</li>
+<li><strong>Create SBOM output folder</strong>: Creates the directory where the sbom will be stored in the build
+agent.</li>
+<li><strong>Generate SBOM manifest</strong>: calls the SBOM generator task to produce the SBOM.</li>
+<li><strong>Publish generated SBOM</strong>: Uploads the SBOM to the build's artifacts</li>
+</ul>
+</li>
+<li><p>In the build's artifacts, you should find a new artifact for every job that added these new
+steps. The artifacts will be named with a pattern of <code>&lt;stage&gt;_&lt;job&gt;_&lt;SBOM&gt;</code></p>
+<p><img src="SbomArtifactExample.png" alt=""></p>
+</li>
+</ol>
+<p>For each SBOM produced, you should download the <code>spdx2.2/manifest.spdx.json</code> file to make sure all the
+build outputs, OSS (Open Source Software) dependencies are captured in the manifest and that
+the product name and version for the SBOM match expectations.</p>
+<p>It's recommended to open the manifest files with VSCode and format them so they are slightly more
+readable.</p>
+<ul>
+<li><p><code>Build outputs</code>: These should be present in the <code>files</code> collection of the manifest. At this time,
+we are not concerned with the tooling overreporting the build outputs, but the SBOMs should be
+checked for missing output packages.</p>
+</li>
+<li><p><code>Dependencies</code>: These should be present in the <code>packages</code> collection of the manifest, and use the
+same detection mechanism as the component governance tasks.</p>
+</li>
+<li><p><code>Package name and version</code>: After the packages section, the last entry should mention the correct
+name and version for the software that the SBOM is about. The <code>name</code> property should read as &quot;.NET
+7.0.0&quot; for main branches, and &quot;.NET 6.0.0&quot; for .NET 6 release branches.</p>
+<pre><code class="lang-JSON">&quot;spdxVersion&quot;: &quot;SPDX-2.2&quot;,
+    &quot;dataLicense&quot;: &quot;CC0-1.0&quot;,
+    &quot;SPDXID&quot;: &quot;SPDXRef-DOCUMENT&quot;,
+    &quot;name&quot;: &quot;.NET 7.0.0&quot;,
+    &quot;documentNamespace&quot;: &quot;https://sbom.microsoft/1:7eRdtVpLFUKo5AoKX3Hn2A:bhGpfqyfPUCyWLMfzxuykw/286:1593108/w6ix__ZFGEGpJcSV4N1qbA&quot;,
+    &quot;creationInfo&quot;: {
+        &quot;created&quot;: &quot;2022-02-04T21:15:00Z&quot;,
+        &quot;creators&quot;: [
+            &quot;Organization: Microsoft&quot;,
+            &quot;Tool: Microsoft.SBOMTool-2.1.4&quot;
+        ]
+    },
+    &quot;documentDescribes&quot;: [
+        &quot;SPDXRef-RootPackage&quot;
+    ]
+</code></pre>
+</li>
+</ul>
+<h1 id="retention-rules-for-release-build-sboms">Retention rules for release build SBOMs</h1>
+<p>We are required to store the SBOMs for builds that are released to the public in that pipeline's
+artifacts so that they are available if they are requested by customers. In order to achieve this
+for your release builds:</p>
+<ul>
+<li><p><strong>For builds of repositories that produce assets referenced by the .NET release pipeline</strong>: Retention rules
+will be applied automatically via the .NET release pipeline for the following repositories (which
+may appear in .NET's build drops):</p>
+<ul>
+<li><a href="https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage">https://dev.azure.com/devdiv/DevDiv/_git/vs-code-coverage</a></li>
+<li><a href="https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int">https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int</a></li>
+<li><a href="https://github.com/dotnet/aspnetcore">https://github.com/dotnet/aspnetcore</a></li>
+<li><a href="https://github.com/dotnet/command-line-api">https://github.com/dotnet/command-line-api</a></li>
+<li><a href="https://github.com/dotnet/diagnostics">https://github.com/dotnet/diagnostics</a></li>
+<li><a href="https://github.com/dotnet/efcore">https://github.com/dotnet/efcore</a></li>
+<li><a href="https://github.com/dotnet/emsdk">https://github.com/dotnet/emsdk</a></li>
+<li><a href="https://github.com/dotnet/format">https://github.com/dotnet/format</a></li>
+<li><a href="https://github.com/dotnet/fsharp">https://github.com/dotnet/fsharp</a></li>
+<li><a href="https://github.com/dotnet/icu">https://github.com/dotnet/icu</a></li>
+<li><a href="https://github.com/dotnet/installer">https://github.com/dotnet/installer</a></li>
+<li><a href="https://github.com/dotnet/linker">https://github.com/dotnet/linker</a></li>
+<li><a href="https://github.com/dotnet/llvm-project">https://github.com/dotnet/llvm-project</a></li>
+<li><a href="https://github.com/dotnet/msbuild">https://github.com/dotnet/msbuild</a></li>
+<li><a href="https://github.com/dotnet/msquic">https://github.com/dotnet/msquic</a></li>
+<li><a href="https://github.com/dotnet/razor-compiler">https://github.com/dotnet/razor-compiler</a></li>
+<li><a href="https://github.com/dotnet/roslyn">https://github.com/dotnet/roslyn</a></li>
+<li><a href="https://github.com/dotnet/roslyn-analyzers">https://github.com/dotnet/roslyn-analyzers</a></li>
+<li><a href="https://github.com/dotnet/runtime">https://github.com/dotnet/runtime</a></li>
+<li><a href="https://github.com/dotnet/sdk">https://github.com/dotnet/sdk</a></li>
+<li><a href="https://github.com/dotnet/source-build">https://github.com/dotnet/source-build</a></li>
+<li><a href="https://github.com/dotnet/source-build-reference-packages">https://github.com/dotnet/source-build-reference-packages</a></li>
+<li><a href="https://github.com/dotnet/templating">https://github.com/dotnet/templating</a></li>
+<li><a href="https://github.com/dotnet/test-templates">https://github.com/dotnet/test-templates</a></li>
+<li><a href="https://github.com/dotnet/windowsdesktop">https://github.com/dotnet/windowsdesktop</a></li>
+<li><a href="https://github.com/dotnet/winforms">https://github.com/dotnet/winforms</a></li>
+<li><a href="https://github.com/dotnet/wpf">https://github.com/dotnet/wpf</a></li>
+<li><a href="https://github.com/microsoft/vstest">https://github.com/microsoft/vstest</a></li>
+<li><a href="https://github.com/nuget/nuget.client">https://github.com/nuget/nuget.client</a></li>
+</ul>
+</li>
+<li><p><strong>For repositories that have their own release process and cadence</strong>: Retention rules will need to
+be applied manually for any repository that isn't present in the above list. Not every build
+should be retained indefinitely, but rather whichever builds will be used to release assets to
+customers. To help
+with this, Arcade provides a <a href="https://github.com/dotnet/arcade/blob/main/eng/common/retain-build.ps1">PowerShell
+script</a> and a helper <a href="https://github.com/dotnet/arcade/blob/main/eng/common/templates/steps/retain-build.yml">YAML
+template</a>
+that can be added together or individually to build and release pipelines. The YAML template by
+default will attempt to retain the same build where the pipeline is running, and the script can
+also be ran by itself by providing the required parameters.</p>
+<p>Following up from the minimal example above:</p>
+<pre><code class="lang-YAML"># One stage, one job: Generate an SBOM, and retain the build forever 
+# if a variable to do so is passed to the build
+
+parameters:
+- name: retainBuild
+  type: boolean
+  default: false
+
+stages:
+
+- stage: build
+  displayName: Build
+  jobs:
+    - job: build (Windows)
+        pool:
+          name: NetCore1ESPool-Internal
+          demands: ImageOverride -equals windows.vs2019.amd64
+
+        steps:
+        - checkout: self
+          clean: true
+
+        - script: eng\common\cibuild.cmd
+            -configuration release
+            -prepareMachine
+          displayName: Windows Build / Publish
+
+        - template: eng\common\templates\steps\generate-sbom.yml
+
+        - ${{if eq(parameters.retainBuild, true}}
+          - template: eng\common\templates\steps\retain-build.yml
+</code></pre>
+<p>The template takes the following parameters if more configuration is required:</p>
+<ul>
+<li><code>Token</code>: Default is the build's <code>(System.AccessToken)</code>. In cases where the pipeline that retains
+the build is in a different AzDO organization than the build to be retained, this should be
+configured to an Azure DevOps PAT with the build read + execute scopes.</li>
+<li><code>AzdoOrgUri</code>: Azure DevOps organization URI for the build to be retained, in the
+`https://dev.azure.com/<organization> format. Default is the organization where the build is
+running.</organization></li>
+<li><code>AzdoProject</code>: Azure DevOps project for the build to be retained. Defaults to the project where
+the current pipeline is hosted.</li>
+<li><code>BuildId</code> : Azure DevOps Build ID for the build to be retained. Default is the build where the
+template is running.</li>
+</ul>
+<p>If the retention was successful, you should see the following in the Azure DevOps build view:
+<img src="BuildRetentionExample.png" alt=""></p>
+</li>
+</ul>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<ul>
+<li><p>If the SBOM generation task fails with the message:</p>
+<pre><code>Encountered error while running ManifestTool generation workflow. Error: BuildDropPath directory not found: &lt;directory&gt;
+</code></pre>
+<p>It means that your build outputs might not match with the expected location for Arcade:
+<code>$(Build.SourcesDirectory)/Artifacts</code>. In this case you should modify the <code>BuildDropPath</code>
+parameter of the template to point to your build's output directory.</p>
+</li>
+<li><p>For any other problems with the tasks or templates, you can reach out to the <a href="https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/How-to-get-a-hold-of-Engineering-Servicing">.NET Engineering
+Services
+team</a>.</p>
+</li>
+</ul>
+<h2 id="further-reading">Further Reading</h2>
+<ul>
+<li><a href="https://eng.ms/docs/initiatives/executive-order/executive-order-requirements/executiveorderoncybersecurity/softwarebillofmaterials">More information on
+SBOMs</a></li>
+<li><a href="https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/secure-supply-chain/ado-sbom-generator">Manifest Generation task
+documentation</a></li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CSBOMGenerationGuidance.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CSBOMGenerationGuidance.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CSBOMGenerationGuidance.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

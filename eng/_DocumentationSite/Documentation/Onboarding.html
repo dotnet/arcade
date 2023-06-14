@@ -1,0 +1,160 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Onboarding onto Arcade </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Onboarding onto Arcade ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="onboarding-onto-arcade">Onboarding onto Arcade</h1>
+
+<ul>
+<li><p>Onboard onto the Arcade SDK, which provides templates (building blocks) for
+interacting with Azure DevOps, as well as shared tooling for signing,
+packaging, publishing and general build infrastructure.</p>
+<p>Resources: <a href="ArcadeSdk.html">Reference documentation</a>, <a href="https://msit.microsoftstream.com/video/e22d2dad-ef72-4cca-9b62-7e33621f86a1">walkthough video</a>, <a href="CorePackages/">feature documentation</a>.</p>
+<p>Steps:</p>
+<ol>
+<li><p>Add a
+<a href="https://github.com/dotnet/arcade/blob/main/global.json">global.json</a>.</p>
+</li>
+<li><p>Add (or copy)
+<a href="https://github.com/dotnet/arcade/blob/main/Directory.Build.props">Directory.Build.props</a>
+and
+<a href="https://github.com/dotnet/arcade/blob/main/Directory.Build.targets">Directory.build.targets</a>.</p>
+</li>
+<li><p>Copy <code>eng\common</code> from
+<a href="https://github.com/dotnet/arcade/tree/main/eng/common">Arcade</a>
+into repo.</p>
+</li>
+<li><p>Add (or copy) the
+<a href="https://github.com/dotnet/arcade/blob/main/eng/Versions.props">Versions.props</a>
+and
+<a href="https://github.com/dotnet/arcade/blob/main/eng/Version.Details.xml">Version.Details.xml</a>
+files to your eng\ folder. Adjust the version prefix and prerelease label
+as necessary.</p>
+</li>
+<li><p>Add the following feeds to your nuget.config:</p>
+<ul>
+<li><a href="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json">https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json</a></li>
+<li><a href="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json">https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json</a></li>
+<li><a href="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json">https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json</a></li>
+</ul>
+<p>along with any other feeds your repo needs to restore packages from. You can see which feeds Arcade uses at: <a href="https://github.com/dotnet/arcade/blob/main/NuGet.config">NuGet.config</a>.</p>
+</li>
+</ol>
+<p><strong>Using Arcade packages</strong> - See <a href="CorePackages/">documentation</a> for
+information on specific packages.</p>
+</li>
+<li><p>Move out of .NET CI and into our new Azure DevOps project
+(<a href="https://dev.azure.com/dnceng/public">https://dev.azure.com/dnceng/public</a>) for your public CI. - See <a href="AzureDevOps/AzureDevOpsOnboarding.html">Onboarding Azure DevOps</a>.</p>
+</li>
+<li><p>Move out of the devdiv Azure DevOps instance (<a href="https://dev.azure.com/devdiv/">https://dev.azure.com/devdiv/</a> or
+<a href="https://devdiv.visualstudio.com">https://devdiv.visualstudio.com</a>) and into the internal project for
+(<a href="https://dev.azure.com/dnceng/internal">https://dev.azure.com/dnceng/internal</a>) internal CI and official builds. - See
+<a href="AzureDevOps/AzureDevOpsOnboarding.html">Onboarding Azure DevOps</a> and <a href="AzureDevOps/MovingFromDevDivToDncEng.html">Moving Official Builds from
+DevDiv to DncEng</a>.</p>
+</li>
+<li><p>Onboard onto dependency flow (Darc). - See <a href="DependencyFlowOnboarding.html">Dependency Flow
+Onboarding</a>.</p>
+</li>
+<li><p>Use <a href="/Documentation/Helix.md">Helix</a> for testing where possible - See <a href="https://github.com/dotnet/arcade/blob/main/Documentation/AzureDevOps/SendingJobsToHelix.md">Sending Jobs to Helix</a></p>
+</li>
+</ul>
+<h2 id="which-branches-should-i-make-these-changes-in">Which branches should I make these changes in?</h2>
+<p>Prioritize branches that are producing bits for .NET 5. Given the extended
+support lifecycle for .NET Core 3.1, backporting infrastructure to .NET Core 3.1
+release branches is desired, but .NET 5 branches should go first.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5COnboarding.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5COnboarding.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5COnboarding.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

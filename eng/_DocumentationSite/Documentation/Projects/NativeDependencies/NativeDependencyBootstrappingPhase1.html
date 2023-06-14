@@ -1,0 +1,183 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Native Dependency Bootstrapping Phase 1 One-Page Overview </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Native Dependency Bootstrapping Phase 1 One-Page Overview ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="native-dependency-bootstrapping-phase-1-one-page-overview">Native Dependency Bootstrapping Phase 1 One-Page Overview</h1>
+
+<h2 id="intent">Intent</h2>
+<p>The intent of this doc is to describe the plan for the first phase towards native bootstrapping.  Once we've reached agreement on this doc, we will have an actionable plan towards accomplishing phase 1 of native dependency bootstrapping.  Items in this doc which are listed as &quot;Out of Scope&quot; are NOT out of scope for native bootstrapping, they are out of scope for phase 1.  After phase 1 is accomplished, we will have more experience or lessons learned towards accomplishing the next phases of native toolset bootstrapping.</p>
+<p>It is possible that the landscape will change w.r.t. available technologies, and we should be ready to consider re-evaluating the plan and choosing those technologies if they are mature enough for adoption.  I think that the work here in phase 1 will not be entirely thrown away should that event occur (bootstrapping unsupported platforms will likely require a similar mechanism as we define here).</p>
+<h2 id="scope">Scope</h2>
+<ul>
+<li><p>CLI and Pre-CLI toolsets</p>
+</li>
+<li><p>Xcopy deployable native dependencies</p>
+</li>
+</ul>
+<h3 id="out-of-scope-for-phase-1-921">Out of scope for phase 1 (9/21)</h3>
+<ul>
+<li><p>Non-Xcopy deployable dependencies.</p>
+<ul>
+<li>ie, docker, <a href="https://github.com/dotnet/arcade/issues/64">Visual Studio</a>, NodeJS, etc...</li>
+</ul>
+</li>
+<li><p>Toolset detection</p>
+<ul>
+<li>Detecting if a tool (and which version) is already installed, as well as which one should be used by the build (pre-installed vs repo specified).</li>
+</ul>
+</li>
+<li><p>Native tool install scripts</p>
+<ul>
+<li>We will only be providing an example installer for a particular tool (CMake) both as a sample for teams to follow, and as a proof of concept.
+Additional installers will be written on an as-needed basis.</li>
+</ul>
+</li>
+</ul>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>Cloning a repo and building deploys versioned native dependencies (within <a href="#scope">scope</a>) which are available for use in the repo's build.</li>
+</ul>
+<h2 id="plan-overview">Plan Overview</h2>
+<ul>
+<li><p>Create zips / tarballs of a couple of xcopy deployable native dependencies (like cmake) which are stored and publicly accessible in Azure blob storage.  These will be proof of concept, and not an exhaustive list of native toolset dependencies.</p>
+</li>
+<li><p>Determine how repos will define a dependency version list for native dependencies which fits into the <a href="https://github.com/dotnet/arcade/pull/120/files">dependency description</a> spec or modifies it where necessary.</p>
+</li>
+<li><p>Create <a href="https://docs.microsoft.com/en-us/powershell/scripting/setup/installing-windows-powershell?view=powershell-6">Powershell</a> and bash scripts (these are in-box available tools) which are capable of understanding the dependency list and downloading / extracting versioned dependencies so that they are available in the repo from a well-known (or defined) location.</p>
+</li>
+</ul>
+<h2 id="alternatives-considered">Alternatives considered</h2>
+<ul>
+<li><p>dependencies distributed as Nupkg's - Why not use nupkg's as the distribution mechanism?  Nupkg's have a couple of desirable attributes including being versioned, tfm / runtime awareness, well-known format.  There are a couple of downsides though.</p>
+<ul>
+<li><p>All implementations of the dependency are packaged into a single unit.  ie, you can't just download the Windows dependency from the package unless you package it separately.  You would always bring down the Windows, Linux variants, and OSX implementations for a native dependency.</p>
+</li>
+<li><p>Native dependencies are not (yet) supported by CLI.  There is some work in progress by CLI team to support global tools with native dependencies (and also repo tools), but that work is not yet available and not expected until late in the .NET Core 2.2 timeframe.  We could create global tools with managed console apps that wrap native dependencies, but there is an investment there and it's throw-away work (ie, not something customers currently expect / do).</p>
+</li>
+<li><p>If we used a nupkg format, we wouldn't actually be able to use NuGet to download and extract them, they would be purely used as zip files.</p>
+</li>
+</ul>
+</li>
+<li><p>X-Plat choco - beyond the scope of what's necessary for xcopy deployable native dependencies.</p>
+</li>
+<li><p>MSI's, debian packages, etc - beyond  the scope of what's necessary for xcopy deployable native dependencies.</p>
+</li>
+</ul>
+<h2 id="current-status">Current status</h2>
+<h3 id="done">Done</h3>
+<ul>
+<li><p>Repos list their native toolset dependencies via global.json</p>
+</li>
+<li><p>We already have a working and tested version of:</p>
+<ul>
+<li>Windows bootstrapping scripts</li>
+<li>Windows common library scripts</li>
+<li>Windows install sample (CMake)</li>
+</ul>
+</li>
+</ul>
+<h3 id="pending">Pending</h3>
+<ul>
+<li>Move the current storage location for the native assets, and write guidance for teams on where to upload them in the future.
+They are currently stored in the native-assets container in the dotnetfeed storage account and need to be moved to the storage account in use by OS onboarding. Tracked by: <a href="https://github.com/dotnet/arcade/issues/757">#757</a>.</li>
+<li>Write the Linux infrastructure scripts and CMake sample. Tracked by <a href="https://github.com/dotnet/arcade/issues/749">#749</a></li>
+<li>Update scripts and documentation to add details and remove inconsistencies. Tracked by <a href="https://github.com/dotnet/arcade/issues/756">#756</a>.</li>
+<li>Handle CLI as a bootstrapped native tool. Tracked by <a href="https://github.com/dotnet/arcade/issues/151">#151</a>.</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CNativeDependencies%5CNativeDependencyBootstrappingPhase1.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CNativeDependencies%5CNativeDependencyBootstrappingPhase1.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CNativeDependencies%5CNativeDependencyBootstrappingPhase1.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

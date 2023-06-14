@@ -1,0 +1,178 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>.NET Core Engineering Services Operations info: - {Process Name} </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content=".NET Core Engineering Services Operations info: - {Process Name} ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="net-core-engineering-services-operations-info---process-name">.NET Core Engineering Services Operations info: - {Process Name}</h1>
+
+<h2 id="process-details">Process Details</h2>
+<h3 id="summary">Summary:</h3>
+<p>Why does this &quot;process&quot; exist in the first place? Who benefits? What happens if it doesn't happen?</p>
+<h3 id="process-boundaries">Process Boundaries</h3>
+<p>What is, and isn't part of this process? Provide data that provides boundaries both in terms of code base and time. As this is a template, feel free to remove / add as applicable.  If you find yourself adding content that should be global, please make a pull request to this template doc.</p>
+<ul>
+<li>Related repositories: Links to relevant repos where work will be done</li>
+<li>Task scope:  List guidance/examples of in-scope and out-of-scope for the task</li>
+<li>Contacts for non-owned parts of the process: For external ownership, who can we talk to?</li>
+</ul>
+<h3 id="process-inputs--outputs">Process Inputs / Outputs</h3>
+<p>Descriptions of what/where the inputs to the process come from (the answer to &quot;what do I or the automated process neeed to consider to perform this task?&quot;, and what performing the below steps correctly achieves (&quot;what comes out the other side?&quot;)</p>
+<p>Examples:</p>
+<p>Inputs:</p>
+<ul>
+<li>Base Docker images from DockerHub.io / mcr.microsoft.com</li>
+<li>Gallery Images available from the Azure Portal</li>
+<li>Package versions from public / internal NuPkg feeds</li>
+<li>State of the objects in an Azure Subscription</li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li>Updated dependencies / images</li>
+<li>Changed state of</li>
+<li>Assorted reports or telemetry used in reporting</li>
+</ul>
+<h3 id="execution-steps">Execution Steps</h3>
+<p>These steps will vary based off the type of operation involved.  As your process may use any combination of automated / manual stages, use what you need from the template and delete</p>
+<h4 id="fully-automatable-routines">Fully-automatable routines:</h4>
+<ul>
+<li>Description of the process</li>
+<li>Links to:
+<ul>
+<li>Source code, any other (say, in-repo) documentation for the automation</li>
+<li>Pipelines associated with build / deployment  of relevant components.</li>
+<li>Telemetry pages / Grafana alerts related to this process</li>
+</ul>
+</li>
+<li>Known issues impacting the area</li>
+<li>Known tech debt that may cause validation &quot;blindness&quot;</li>
+</ul>
+<h4 id="manual-processes">Manual processes:</h4>
+<ul>
+<li>Step-by-step description of the process in sequential markdown list format.</li>
+<li>Known issues impacting the area</li>
+<li>Known tech debt that may cause validation &quot;blindness&quot;</li>
+<li>Troubleshooting guide per-step, ideally tested by execution by an individual unfamiliar with the feature area(s) involved.</li>
+</ul>
+<h4 id="troubleshooting">Troubleshooting:</h4>
+<p>List of what to do when &quot;known&quot; things go wrong.  When a new problem occurs and requires investigation and fixing, it should be added here.</p>
+<h3 id="validation-steps">Validation Steps</h3>
+<p>After completing manual steps, or on some regular cadence (to be determined), list any follow up checks/activities that need to be done, including things like:</p>
+<ul>
+<li>Which build(s) need to be in a green state</li>
+<li>Sites to check</li>
+<li>&quot;Smoke testing&quot; steps for functionality known to lack automation/ have historical regressions</li>
+</ul>
+<h4 id="checklist-for-reviewing-this-document">Checklist for reviewing this document</h4>
+<p>This part is more for guidance but can be retained in documents deriving from the template; it gives the writer a means to try to warn against any recurring problems seen.</p>
+<ul>
+<li><p>Have the supplied steps been executed by a non-SME, non-author IC?</p>
+</li>
+<li><p>Do any references to resources include how to obtain and which security permissions are required (if any)</p>
+</li>
+<li><p>Are links pointing to other documents or locations valid?</p>
+<ul>
+<li>Will they be readable by the target audience?  If restricted, do they tell the reader where to gain access?</li>
+<li>Will they continue to exist in the future? (some links, like non-retained AzDO builds, are impermanent)</li>
+</ul>
+</li>
+<li><p>Is/are there at least one (ideally two) SME IC(s) listed as contact for clarification?</p>
+</li>
+<li><p>Does the document specify sufficient detail that an artibrary reader would be able to reason about and execute the processes described?</p>
+</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5COperations%5CTemplates%5Cprocess-info-template.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5COperations%5CTemplates%5Cprocess-info-template.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5COperations%5CTemplates%5Cprocess-info-template.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

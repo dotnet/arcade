@@ -1,0 +1,798 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>The Unified Build Almanac (TUBA) - VMR Design and Operation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="The Unified Build Almanac (TUBA) - VMR Design and Operation ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="the-unified-build-almanac-tuba---vmr-design-and-operation">The Unified Build Almanac (TUBA) - VMR Design and Operation</h1>
+
+<p>The VMR (<strong>VMR</strong> - <strong>V</strong>irtual <strong>M</strong>onolithic <strong>R</strong>epository) is a source layout projection of a set of separate input repositories into a single repository.
+Unlike a repository with a set of submodules, this repository is a source copy of the input repositories.</p>
+<p>The VMR aims to serve as the build repository for the .NET Unified Build product.
+Rather than building as a set of independent repositories and flowing dependencies among them, the entire coherent source of the product is cloned at a single time and built using the <a href="https://github.com/dotnet/source-build">source-build methodology</a>.</p>
+<h2 id="contents">Contents</h2>
+<ul>
+<li><a href="#contents">Contents</a></li>
+<li><a href="#structure">Structure</a>
+<ul>
+<li><a href="#goals">Goals</a></li>
+<li><a href="#general-components">General Components</a>
+<ul>
+<li><a href="#component-source-types">Component Source Types</a></li>
+<li><a href="#special-note-sdk-band-layout">Special Note: SDK Band Layout</a></li>
+</ul>
+</li>
+<li><a href="#examples">Examples</a></li>
+<li><a href="#layout">Layout</a></li>
+<li><a href="#repository-source-inclusion">Repository Source Inclusion</a></li>
+<li><a href="#repository-source-mappings">Repository Source Mappings</a>
+<ul>
+<li><a href="#mapping-defaults">Mapping Defaults</a></li>
+<li><a href="#repo-level-overrides-for-exinclusions">Repo-level Overrides for Ex/inclusions</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#moving-code-and-dependencies-between-the-vmr-and-development-repos">Moving Code and Dependencies between the VMR and Development Repos</a>
+<ul>
+<li><a href="#forward-flow">Forward Flow</a>
+<ul>
+<li><a href="#dealing-with-conflicts">Dealing with Conflicts</a></li>
+</ul>
+</li>
+<li><a href="#back-flow">Back Flow</a></li>
+<li><a href="#automation">Automation</a></li>
+</ul>
+</li>
+<li><a href="#source-synchronization-process">Source Synchronization Process</a>
+<ul>
+<li><a href="#synchronizing-submodules">Synchronizing Submodules</a></li>
+<li><a href="#tracking-sources">Tracking Sources</a>
+<ul>
+<li><a href="#source-manifest">Source Manifest</a></li>
+<li><a href="#commit-messages">Commit Messages</a></li>
+<li><a href="#component-list-in-vmrs-readme">Component List in VMR's README</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#temporary-mechanics">Temporary Mechanics</a>
+<ul>
+<li><a href="#vmr-lite">VMR-lite</a></li>
+<li><a href="#source-build-patches">Source-Build Patches</a></li>
+<li><a href="#synchronization-based-on-declared-dependencies">Synchronization Based on Declared Dependencies</a>
+<ul>
+<li><a href="#example">Example</a></li>
+</ul>
+</li>
+<li><a href="#synchronizing-patched-files">Synchronizing Patched Files</a></li>
+<li><a href="#git-info-xmls-to-support-source-link"><em>&quot;git-info&quot;</em> XMLs to support source-link</a></li>
+<li><a href="#storing-original-package-version-of-dependencies">Storing original package version of dependencies</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="structure">Structure</h2>
+<p>This section describes how we structure the monolithic repository, how we track what sources and components are synchronized inside and other pieces of the infrastructure needed for the build.</p>
+<h3 id="goals">Goals</h3>
+<ul>
+<li>Simple, easy to understand layout.</li>
+<li>The repository contains all source code necessary to build the whole .NET product from source contained in any given commit.</li>
+<li>Other organizations and contributors can use their own <em>Continuous Integration</em> systems (e.g. Microsoft uses AzDO, while the Contoso Company might use GitHub Actions).</li>
+<li>Allow for multiple versions of the same code to be used (e.g. multiple SDKs or multiple Newtonsoft.Json versions).</li>
+</ul>
+<h3 id="general-components">General Components</h3>
+<p>The VMR contains 5 primary components:</p>
+<ul>
+<li><strong>Engineering and infrastructure sources</strong> - These sources cover the infrastructure tooling for the VMR, both in general, org-agnostic cases as well as org-specific functionality. Examples:
+<ul>
+<li><strong>Organization agnostic</strong> - General build scripting and root projects (<code>Build.cmd</code>, <code>build.sh</code>, ..).</li>
+<li><strong>Organization specific</strong> - YAML for building the VMR with signing in Microsoft’s AzDO orchestration systems. YAML for building using CircleCI.</li>
+</ul>
+</li>
+<li><strong>Documentation</strong> - Documentation covering the VMR repository. Developer guides, etc.</li>
+<li><strong>Component sources</strong> - Sources for individual component (development) repositories. <code>aspnetcore</code>, <code>NuGet.Client</code>, <code>msbuild</code>.</li>
+<li><strong>End-to-end tests</strong> - Product scope tests that validate end-to-end scenarios.</li>
+<li><strong>Reference package sources</strong> - Text-only sources that are required to build the product. For instance, the product requires the netstandard reference libraries. Some .NET distro maintainers cannot obtain these using a pre-built binary package. Instead, they are checked in as IL (viewed as hand-editable), then assembled for use as input to component builds.</li>
+</ul>
+<h4 id="component-source-types">Component Source Types</h4>
+<p>There are two types of component sources:</p>
+<ul>
+<li><strong>.NET</strong> - These are components that are inherently part of the .NET project. Examples include: <code>dotnet/wpf</code>, <code>dotnet/installer</code>, <code>dotnet/aspnetcore</code>, <code>dotnet/msbuild</code>.</li>
+<li><strong>External</strong> - These components are redistributed or referenced by the .NET product but are not developed as part of the .NET project. In a ‘traditional’ non-source build methodology, they would be brought in via binary dependency flow. Build requirements from partners prohibit pre-build binaries, so they are included in the VMR sources instead. Examples include: <code>Newtonsoft.Json</code>.</li>
+</ul>
+<h4 id="special-note-sdk-band-layout">Special Note: SDK Band Layout</h4>
+<p>SDK bands, e.g. 8.0.1xx and 8.0.2xx are laid out under the <code>src/sdk</code> directory, with a directory for each specific band that is active for the given branch. In all cases except post-RTM-Band preview SDKs, all active SDKs are laid out in parallel in the VMR. They are not kept in other branches in the VMR, or in a separate VMR. This is for the following reasons:</p>
+<ul>
+<li><strong>Runtime:SDK is a one:many relationship</strong> - For each .NET distro maintainer, a single runtime is shipped in at least one SDK. Ensuring that the identity of those runtime files is identical between the SDKs is less confusing for SDK consumers.</li>
+<li><strong>Separate VMRs would require stable binary flow</strong> -  Stable binary flow violates the Unified Build Rule &quot;There may be no pre-release, non-final stable binary flow&quot;. This avoids complexity and ensures that our partners do not have to violate their build requirements.</li>
+<li><strong>We already have multiple versions of the same source in the VMR</strong> - There is precedent for this situation already, as there are occasionally multiple versions of the same repository (e.g. <code>Newtonsoft.Json</code>) shipped within the product.
+For post-RTM preview SDKs, they shall exist in their expected location in the VMR (e.g. <code>src/sdk/8.0.2xx</code>) in a separate branch of the VMR, with the non-SDK elements of the VMR removed. This VMR may only depend on released .NET runtimes. When this SDK goes to RTM, it shall be merged into the parent <code>MAJOR.MINOR</code> servicing branch.</li>
+</ul>
+<h3 id="examples">Examples</h3>
+<table>
+<thead>
+<tr>
+<th>Scenario</th>
+<th>VMR branch</th>
+<th>SDK directories</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8.0   pre-RTM (development)</td>
+<td>main</td>
+<td>src/sdk/8.0.1xx</td>
+<td></td>
+</tr>
+<tr>
+<td>8.0 Preview 2</td>
+<td>release/8.0-preview2</td>
+<td>src/sdk/8.0.1xx</td>
+<td></td>
+</tr>
+<tr>
+<td>8.0 RTM</td>
+<td>release/8.0</td>
+<td>src/sdk/8.0.1xx</td>
+<td></td>
+</tr>
+<tr>
+<td>8.0.2xx Preview SDK</td>
+<td>release/8.0.2xx</td>
+<td>src/sdk/8.0.2xx</td>
+<td>VMR contains SDK-relevant directories only (e.g. runtime directories are removed as the preview SDK typically builds against shipped runtimes</td>
+</tr>
+<tr>
+<td>8.0 at   8.0.2xx RTM</td>
+<td>release/8.0</td>
+<td>src/sdk/8.0.1xx<br>src/sdk/8.0.2xx</td>
+<td>release/8.0.2xx VMR integrated into release/8.0</td>
+</tr>
+<tr>
+<td>8.0 at 8.0.3xx RTM (8.0.2xx out of servicing)</td>
+<td>release/8.0</td>
+<td>src/sdk/8.0.1xx<br>src/sdk/8.0.3xx</td>
+<td>release/sdk/8.0.2xx deleted</td>
+</tr>
+</tbody>
+</table>
+<h3 id="layout">Layout</h3>
+<table>
+<thead>
+<tr>
+<th>Directory</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>src/source-mappings.json</code></td>
+<td>Source subset mappings definition. See <a href="#repository-source-mappings">Repository source mappings</a></td>
+</tr>
+<tr>
+<td><code>src/source-manifest.json</code></td>
+<td>An always up-to-date list of all original sources, paths where and versions which are synchronized into the VMR (in that given commit). See <a href="#source-manifest">Source Manifest</a></td>
+</tr>
+<tr>
+<td><code>src/&lt;repo&gt;/</code></td>
+<td>Product source for <code>&lt;repo&gt;</code> (e.g. <code>src/runtime</code>). See <a href="#repository-source-inclusion">Repository source inclusion</a> for what does and does not get included</td>
+</tr>
+<tr>
+<td><code>src/&lt;repo&gt;/&lt;version&gt;</code></td>
+<td>If multiple versions of a repository must be built in the VMR, then subdirectories for each required version are placed under <code>&lt;repo&gt;</code>.<br>- <code>src/Newtonsoft.Json/13.0/</code><br>- <code>src/Newtonsoft.Json/12.0/</code></td>
+</tr>
+<tr>
+<td><code>src/sdk/&lt;sdk band&gt;/</code></td>
+<td>Active SDK bands that are not in preview are laid out in parallel, like the layout of development repo versions above. When a band goes out of active servicing, it is removed from the VMR. See SDK Band Layout for more details.</td>
+</tr>
+<tr>
+<td><nobr><code>src/source-build-reference-packages/</code></nobr></td>
+<td>Reference packages required to bootstrap the product build.</td>
+</tr>
+<tr>
+<td><code>eng/</code></td>
+<td>Top level directory for engineering functionality:<br>- Build scripting (e.g. <code>Versions.props</code>)</td>
+</tr>
+<tr>
+<td><code>eng/keys/</code></td>
+<td>Strong name keys</td>
+</tr>
+<tr>
+<td><code>eng/tools</code></td>
+<td>Organization agnostic tooling. E.g.<br>- Tooling for VMR management<br>- Tooling for change tracing</td>
+</tr>
+<tr>
+<td><code>eng/org/&lt;org or orchestration system&gt;</code></td>
+<td>Organization or orchestration system specific infrastructure for <org>. E.g.<br>- <code>eng/msft</code><br>- <code>eng/travisci</code><br>- <code>eng/github</code></org></td>
+</tr>
+<tr>
+<td><code>eng/msft/</code></td>
+<td>Microsoft-specific infra<br>- <code>eng/msft/pipelines</code> – AzDO Pipelines<br>- <code>eng/msft/scripts</code> – Microsoft specific scripts</td>
+</tr>
+<tr>
+<td><code>documentation/</code></td>
+<td>Documentation<br>- Engineering system documentation<br>- Build environment requirements.<br>- VMR architecture info<br>- ...</td>
+</tr>
+</tbody>
+</table>
+<p>Additional rules:</p>
+<ul>
+<li>Repositories shall maintain the original casing of their development repository name.</li>
+<li>Organization specific engineering shall be placed in an organization (or directory indicative of the type of engineering) directory.</li>
+</ul>
+<h3 id="repository-source-inclusion">Repository Source Inclusion</h3>
+<p>A development repository does not need to contribute all its sources to the VMR.
+The sources it contributes are defined by the following rules:</p>
+<ul>
+<li><p><strong>The repository shall not contribute any sources that would cause VMR input/output flow to continue forever</strong> – The VMR has two-way flow during mainline development.</p>
+<ul>
+<li><p>Sources flow into the VMR from development repositories</p>
+</li>
+<li><p>VMR outputs (source build intermediate packages) and any additional source changes flow back out of the VMR and into the development repositories.
+Maestro is used for backflow.
+This means that each time the VMR back flows into the development repositories, the Version.Details.xml file will be updated in the development repository.
+If files that are always changed with VMR backflow also generate forward flow, the VMR flow will cycle forever.
+We wish to avoid this.</p>
+<pre><code class="lang-mermaid">flowchart TD
+    Step1[VMR Forward Flow]
+    Step2[VMR Build]
+    Step3[VMR Back Flow]
+    Step4[Development Repo Change]
+
+    Step1--&gt;Step2
+    Step2--&gt;Step3
+    Step3--&gt;Step4
+    Step4-. avoid this .-&gt;Step1
+
+    linkStyle default fill:none,stroke-width:3px
+    linkStyle 3 stroke:red,color:red
+</code></pre>
+</li>
+</ul>
+<p><em><p align="center">Avoiding cyclical flow</p></em></p>
+</li>
+<li><p><strong>The repository only need contribute sources required to build and test the desired VMR outputs</strong>
+A repository doesn’t need to contribute all of its sources (e.g. roslyn might cloak VS IDE sources), but it does need to contribute enough to build the desired outputs of the VMR.
+Tests may also be included in these sources.</p>
+</li>
+</ul>
+<h3 id="repository-source-mappings">Repository Source Mappings</h3>
+<p>Because each repository usually only contributes a subset of its sources, we need a way of specifying this specification for user and tooling purposes.
+This is accomplished by a file called <code>source-mappings.json</code> file under <code>src/</code> in the VMR.</p>
+<p>For each repository in the <code>src/</code> directory that maps onto a development repository, the source mapping file shall contain an entry that specifies:</p>
+<table>
+<thead>
+<tr>
+<th>Element</th>
+<th>Description</th>
+<th>Examples</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>name</code></td>
+<td>Name of component. This is the directory that the source will map to.</td>
+<td><code>name: sdk</code></td>
+</tr>
+<tr>
+<td><code>version</code></td>
+<td><em>Optional</em>. If specified, the sources map onto a subdirectory of the repository name</td>
+<td><code>name: sdk</code>,<br><code>version: 8.0.1xx</code></td>
+</tr>
+<tr>
+<td><code>defaultRef</code></td>
+<td><em>Optional</em>. If specified, this is the source branch, tag, or commit of the repository that maps onto this directory. Defaults to <code>main</code>.</td>
+<td><code>defaultRef: mytestBranch</code><br><code>defaultRef: v1.0</code></td>
+</tr>
+<tr>
+<td><code>defaultRemote</code></td>
+<td>Default git remote for the source</td>
+<td><code>defaultRemote: https://github.com/dotnet/sdk</code></td>
+</tr>
+<tr>
+<td><code>include</code></td>
+<td><em>Optional</em>. Inclusion globs. If omitted, everything is included (<code>**/*</code>).</td>
+<td><code>include: [ src/**/* ]</code></td>
+</tr>
+<tr>
+<td><code>exclude</code></td>
+<td><em>Optional</em>. Exclusion globs. If omitted, nothing is excluded.</td>
+<td><code>exclude: [ eng/Version.Details, global.json ]</code></td>
+</tr>
+</tbody>
+</table>
+<p>We expect the VMR to be the backbone of future .NET releases and to use the VMR strategy for servicing as well.
+This means that the automation will be flowing code to different VMRs of varying .NET versions.
+To enable that, we need to define this interface between the automation and the VMR, so that the automation can flow the changes appropriately.
+This interface then needs to be shared between and stay backwards compatible.
+The <code>source-mappings.json</code> file is expected to be one part of such interface.</p>
+<h4 id="mapping-defaults">Mapping Defaults</h4>
+<p>Furthermore, the <code>source-mappings.json</code> file will contain &quot;useful defaults&quot; (a default mapping) as we expect most of the repositories will share some common exclusions or a common <code>defaultRef</code>.
+The mappings will have a chance to discard the defaults by specifying a flag <code>overrideDefaults: true</code>.</p>
+<p>In practice, in/exclusion filters of the mappings would be merged with the defaults, so a following setup:</p>
+<pre><code class="lang-json">{
+    &quot;defaults&quot;: {
+        &quot;defaultRef&quot;: &quot;main&quot;,
+        &quot;exclude&quot;: [
+            &quot;**/*.dll&quot;,
+            &quot;**/*.exe&quot;,
+        ]
+    },
+    &quot;mappings&quot;: [
+        {
+            &quot;name&quot;: &quot;arcade&quot;,
+            &quot;defaultRemote&quot;: &quot;https://github.com/dotnet/arcade&quot;,
+            &quot;include&quot;: [
+                &quot;*.*&quot;,
+                &quot;.*&quot;,
+                &quot;eng/**/*&quot;,
+                &quot;scripts/**/*&quot;
+            ],
+            &quot;exclude&quot;: [
+                &quot;**/tests/**/*&quot;
+            ]
+        },
+        {
+            &quot;name&quot;: &quot;fsharp&quot;,
+            &quot;defaultRef&quot;: &quot;develop&quot;,
+            &quot;defaultRemote&quot;: &quot;https://github.com/dotnet/fsharp&quot;
+        },
+        {
+            &quot;name&quot;: &quot;aspnetcore&quot;,
+            &quot;defaultRemote&quot;: &quot;https://github.com/dotnet/aspnetcore&quot;,
+            &quot;overrideDefaults&quot;: true,
+            &quot;defaultRef&quot;: &quot;dev&quot;,
+            &quot;exclude&quot;: [
+                &quot;**/samples/**/*.js&quot;
+            ]
+        },
+    ]
+}
+</code></pre>
+<p>would yield the following subset of sources to be synchronized:</p>
+<pre><code class="lang-bash">https://github.com/dotnet/arcade@main → src/arcade
+    included: 'eng/**/*', 'scripts/**/*',
+    excluded: '**/*.dll', '**/*.exe', '**/tests/**/*'
+
+https://github.com/dotnet/fsharp@master → src/fsharp
+    included: '**/*'
+    excluded: '**/*.dll', '**/*.exe'
+
+https://github.com/dotnet/aspnetcore@dev → src/aspnetcore
+    included: '**/*'
+    excluded: '**/samples/**/*.js'
+</code></pre>
+<h4 id="repo-level-overrides-for-exinclusions">Repo-level Overrides for Ex/inclusions</h4>
+<p>Some exclusion patterns get complicated and would be hard to enforce using the include/exclude filters described above.
+For instance, it might be desirable for repositories to exclude all binaries (e.g., <code>**/*.pdb</code>).
+However, there might be exceptions to these rules where it might be needed to include specific PDB files. Actually, these already apply in today’s setting.</p>
+<p>For cases like these, it should be possible for the development repos to have a final say in which files are required or, in contrary, ignored.
+The repos should ultimately be able to override this as in the end they have the best knowledge about the concrete files.
+To deal with this requirement and to plug this together well with the process that we have for repo synchronization, the tooling will take into account git attributes that the repositories can set via the <code>.gitattributes</code> files.
+The repository will utilize two attributes named vmr-preserve and vmr-ignore and files tagged with these will override the filters from the mapping.</p>
+<p>Example <code>.gitattributes</code> record:</p>
+<pre><code class="lang-bash">src/.nuget/**/*.pdb     vmr-preserve
+src/SomeNonDesiredFile.cs    vmr-ignore
+</code></pre>
+<h2 id="moving-code-and-dependencies-between-the-vmr-and-development-repos">Moving Code and Dependencies between the VMR and Development Repos</h2>
+<p>Information may move in two directions for a VMR that is still connected to its development repositories:</p>
+<ul>
+<li><strong>Forward Flow</strong> - Source from mapped files in a development repository to a VMR.</li>
+<li><strong>Back Flow</strong> - Source, intermediate packages, and product binaries from a component of a VMR to a development repository.</li>
+</ul>
+<p>When moving code in either direction, the VMR tooling must take care to:</p>
+<ul>
+<li>Indicate the VMR/development repository commit that represents the latest sync.</li>
+<li>Preserve the desired granularity of commits.</li>
+<li>For each commit moved, preserve the source commit information.</li>
+<li>Add extra information into each commit message in the VMR to indicate its corresponding commit(s) in a development repository, and vice versa
+<blockquote>
+<p>Note: Tooling should use such information for information purposes only, since it could be incorrectly populated, formatted, or simply lost by squashes, rewriting of commit metadata, etc.</p>
+</blockquote>
+</li>
+<li>Allow for merge conflict resolution.</li>
+</ul>
+<blockquote>
+<p>Note: .NET 8 version of the VMR will only support automated forward flow. The <a href="#manual-back-flow">back flow process will be manual</a>.</p>
+</blockquote>
+<h3 id="forward-flow">Forward Flow</h3>
+<p>During mainline development, most changes occur in development repositories.</p>
+<blockquote>
+<p>Note: It will be possible to work solely in the VMR and may even be desirable for some changes.</p>
+</blockquote>
+<p>When source code changes in a repository branch that maps onto a VMR, this source needs to flow into the VMR.
+This is completed using the following steps:</p>
+<ol>
+<li>Trigger Update
+<ul>
+<li>Manual trigger/local update</li>
+<li>On commit to tracked development repo branch</li>
+</ul>
+</li>
+<li>Create patch(es)
+<ul>
+<li>Create diff(s) from set of target commits to be moved.</li>
+<li>Modify patch to exclude unmapped sources, deal with renames, etc.</li>
+<li>Format commit message(s)</li>
+</ul>
+</li>
+<li>Apply patch
+<ul>
+<li>Apply patch to target VMR</li>
+</ul>
+</li>
+<li>Open PR
+<ul>
+<li>N/A for local-only updates</li>
+</ul>
+</li>
+<li>Verify, Modify and Approve PR
+<ul>
+<li>N/A for local-only updates</li>
+<li>PR validation</li>
+<li>Resolve conflicts</li>
+<li>Modify as necessary for breaking changes</li>
+</ul>
+</li>
+<li>Merge PR
+<ul>
+<li>N/A for local-only updates</li>
+<li>Typically merge commit, not a squash</li>
+</ul>
+</li>
+</ol>
+<h4 id="dealing-with-conflicts">Dealing with Conflicts</h4>
+<p>In case a file in the VMR changes outside of the <em>Forward Flow</em> (e.g., directly in the VMR), it may happen that the synchronization process will fail due to conflicts with changes in the development repository.</p>
+<p>In this case, the development repository will cease to synchronize into the VMR without human intervention.
+The other repositories will keep synchronizing as they are dealt with separately.
+A conflict needs to be dealt with as soon as possible not to fall behind and this should be the main driving metric of the conflict resolution process.</p>
+<p>In case of a conflict the tooling should:</p>
+<ul>
+<li>Create a branch off the top of the VMR, synchronize the problematic commit and open a PR using this branch.</li>
+<li>Assign reviewers to the PR – ideally author(s) of the original commit and additionally some group such as QB who will be responsible for driving the resolution.</li>
+</ul>
+<h3 id="back-flow">Back Flow</h3>
+<p>Back flow is used to keep development repositories up to date with respect to their dependencies.
+This is the replacement for classic dependency flow in .NET 6 and prior releases.</p>
+<p>To explain, let’s look at <code>dotnet/aspnetcore</code>.
+<code>dotnet/aspnetcore</code> has dependencies on artifacts that are developed in the <code>dotnet/runtime</code> source code.
+In .NET 6 and prior, <code>dotnet/runtime</code> would produce an official build, and those artifacts would flow from <code>dotnet/runtime</code> build to <code>dotnet/aspnetcore</code>'s development branch, allowing it to react to breaking changes and take advantage of new APIs.
+In Unified Build, the <code>dotnet/runtime</code> development repository does not produce any official artifacts.
+Instead, its source flows into the VMR via <em>Forward Flow</em>, which then produces official artifacts and intermediate packages representing the build outputs of each component.
+To code against a newly available feature in the product repository, a development repository must build against intermediate packages that support that feature.
+Similarly, if a <code>dotnet/runtime</code> breaking change flows into the VMR, reaction in the aspnetcore component must occur in that flow PR.
+Then, when those intermediate outputs of <code>dotnet/runtime</code> back flow into <code>dotnet/aspnetcore</code>, the modified VMR source for the aspnetcore component must be patched onto the development repository.</p>
+<p>Back flow is completed using the following steps:</p>
+<ol>
+<li>Trigger Update
+<ul>
+<li>Manual trigger/local update</li>
+<li>On new build of VMR</li>
+</ul>
+</li>
+<li>Prepare a diff between the VMR and each development repo
+<ul>
+<li>Checkout the development repo at revision that matches last forward flow into the VMR</li>
+<li>Copy the development repo onto VMR (adhere to cloaking rules, resolve source-build patches, ...)</li>
+<li>If there are any diffs, submit PR to development repo with inverse diff</li>
+</ul>
+</li>
+<li>Open PR or update an existing one
+<ul>
+<li>N/A for local-only updates</li>
+</ul>
+</li>
+<li>Verify, Modify and Approve PR
+<ul>
+<li>N/A for local-only updates</li>
+<li>PR validation</li>
+<li>Resolve conflicts</li>
+</ul>
+</li>
+<li>Merge PR
+<ul>
+<li>N/A for local-only updates</li>
+<li>Typically a squash commit, not a merge</li>
+</ul>
+</li>
+</ol>
+<h3 id="automation">Automation</h3>
+<p>The automation of the code flow will largely be active only for mainline development where development repositories are in use.
+When the product switches to public servicing, when a VMR is being used for a private full-stack development, or being used for closed-source development, automation will not be used except in cases of repositories that dual insert into Visual Studio. In those cases, repos must maintain an official build for VS insertion, but will insert source into the VMR. They can <strong>choose</strong> to maintain a development repo for servicing workflows, though this is not required.</p>
+<p>The automation shall provide the following functionality:</p>
+<ul>
+<li>Automated forward flow from development repositories to the VMR, by opening PRs in the VMR repository with updated sources for review, testing, and merge.</li>
+<li>Automated back flow between a VMR and development repositories, opening PRs in the development repositories with updated sources  and input binaries (intermediates and updated SDKs).</li>
+<li>Ability to configure the frequency of updates.</li>
+<li>Ability to trigger updates to/from the VMR (via command line tooling).</li>
+<li>Provide functionality to pause updates.</li>
+</ul>
+<p>In addition to VMR code-flow, we will preserve the already present binary flow to the VMR and to development repositories as necessary.
+However, due to rules regarding what is and is not required to be part of the VMR (see <a href="Foundational-Concepts.html#scope---who-participates">Scope - &quot;Who Participates?&quot;</a>), it is expected that the number of cases shall be small and focused on constrained leaf scenarios (e.g. <code>wpf-int</code>, IBC/PGO data).</p>
+<blockquote>
+<p>Note: It is important to remember that the product shall not be dependent on orchestration systems like Maestro or Dependabot to be reliably constructable.
+Dependencies should be self-evident and hand-editable. See the following Rules of Unified Build for more information:</p>
+<ul>
+<li>There may be no pre-release, non-final stable binary flow.</li>
+<li>The build shall not require any orchestration to build artifacts for a specific platform distribution.</li>
+<li>Public open-source .NET releases must be buildable by .NET distro maintainers from a single commit in the upstream repository.</li>
+</ul>
+</blockquote>
+<h2 id="source-synchronization-process">Source Synchronization Process</h2>
+<p>This section describes the process of how we synchronize the sources of the development repositories into the VMR.</p>
+<h3 id="synchronizing-submodules">Synchronizing Submodules</h3>
+<p>Some development repositories contain <a href="https://www.git-scm.com/book/en/v2/Git-Tools-Submodules">git submodules</a> and need them to successfully build.
+Some of these are also external to the .NET Foundation.
+These could be kept as submodules in the VMR too, however, this conflicts with some of the requirements and goals for the VMR:</p>
+<ul>
+<li>One of the main goals of the VMR is to be able to build the whole .NET product from any given commit always.</li>
+<li>Some .NET distro maintainers require that the build needs to happen without internet connectivity to ensure no further artifacts are downloaded in the process.</li>
+<li>Some .NET distro maintainers require that there are no non-text-based files in the VMR (e.g. binaries).</li>
+<li>We would like to upstream as many changes back into the submodules as possible.</li>
+<li>We would like to not be dependent on the external submodule remote to exist long-term (to be able to service .NET releases).</li>
+</ul>
+<p>The above gives us two options:</p>
+<ul>
+<li>We would either must fork all submodules, strip all non-text-based files and reference these forks from the VMR.</li>
+<li>Synchronize submodules into the VMR as hard copies of the sources instead of preserving them as a submodule (stripping the binaries during this process).</li>
+</ul>
+<p>We have considered both options and decided to go with the latter as it will mean less friction when working with these upstreams.
+Without the man-in-the-middle forks, we can consume new versions faster and contribute back to the upstream easier.</p>
+<p>Effectivelly, this means the tooling will be synchronizing the sources using patches and diffing the submodules the same way as when synchronizing non-submodule code.
+We call this process <em>submodule inlining</em>.</p>
+<h3 id="tracking-sources">Tracking Sources</h3>
+<p>When we synchronize sources from the development repositories into the VMR, we create a patch file for the diff of where we synchronized from, then transfer that onto the VMR sources.
+To be able to do this, we need to store the information about the currently synchronized sources.</p>
+<p>For every development repo synchronized into the VMR, the VMR tracks the remote URI and the last SHA it has pulled the last time when synchronizing.
+Whenever we synchronize the VMR and pull new changes from the development repo, we make a diff of the changes in the development repo between this last SHA and wherever we want to synchronize to (e.g., HEAD).
+We then apply this change set onto the VMR by creating a commit for the diff.</p>
+<p>Similarly to this, we need to be able to track the inlined submodules.</p>
+<h4 id="source-manifest">Source Manifest</h4>
+<p>The information about the SHA synchronized in the VMR is stored in a JSON manifest file.
+An example entry in the manifest file can look like this:</p>
+<pre><code class="lang-json">{
+    &quot;path&quot;: &quot;aspnetcore&quot;,
+    &quot;remoteUri&quot;: &quot;https://github.com/dotnet/aspnetcore&quot;,
+    &quot;commitSha&quot;: &quot;1e859f1c9e7e4a8aa823f7e95d820e7049892ee6&quot;
+}
+</code></pre>
+<p>The fields represent following pieces of information:</p>
+<ul>
+<li><code>path</code> - Path where sources are synchronized into.</li>
+<li><code>remoteUri</code> - Remote URI from which the last synchronization happened.</li>
+<li><code>commitSha</code> - SHA of the commit that was synchronized.</li>
+</ul>
+<p>Similarly to this, we will also track the <a href="#synchronizing-submodules">inlined submodules</a>.</p>
+<h4 id="commit-messages">Commit Messages</h4>
+<p>Furthermore, when pulling new changes, we will also include tracking information in the commit messages.
+This information is meant to be human readable and serve as a quick way to navigate to original source if need be.
+The tooling that synchronizes the sources will utilize the <a href="#source-manifest">source manifest</a> and not these.</p>
+<p>Example of a commit message when synchronizing the <code>dotnet/installer</code> repository:</p>
+<pre><code>[installer] Sync 4545c34 → 46786fe
+
+Diff: https://github.com/dotnet/installer/compare/4545c34392c668fe84b93dae0ff613c9b5c3cad6..46786fe77759d7f58cffef1ec2f71d5be5e11f31
+
+Commits:
+- Remove unused xliff-task patch (#14201)
+   https://github.com/dotnet/installer/commit/4545c34392c668fe84b93dae0ff613c9b5c3cad6
+- Update dependencies from dotnet/arcade (#14202)
+   https://github.com/dotnet/installer/commit/46786fe392c668fe88b911ae0ff613c9b5c3cb38
+
+From: https://github.com/dotnet/installer/commit/4545c34392c668fe84b93dae0ff613c9b5c3cad6
+To: https://github.com/dotnet/installer/commit/46786fe77759d7f58cffef1ec2f71d5be5e11f31
+
+[[ commit created by automation ]]
+</code></pre>
+<p>We should consider a special case when we only synchronize a single commit and possibly preserve full original message.</p>
+<h4 id="component-list-in-vmrs-readme">Component List in VMR's README</h4>
+<p>Additionally, for full transparency of all components (development repositories, submodules) synchronized in the VMR, we will also dynamically generate a markdown list of components
+and place it in the main README of the VMR.</p>
+<p>Example:</p>
+<ul>
+<li><code>src/arcade</code><br>
+<em><a href="https://github.com/dotnet/arcade/commit/d149051ba716ea81b818d69d3d6a944576ad275b">dotnet/arcade@d149051</a></em></li>
+<li><code>src/aspnetcore</code><br>
+<em><a href="https://github.com/dotnet/aspnetcore/commit/ce60f0d10c0adb79b2b824f5da05e41e1199f6cf">dotnet/aspnetcore@ce60f0d</a></em>
+<ul>
+<li><code>src/aspnetcore/src/submodules/MessagePack-CSharp</code><br>
+<em><a href="https://github.com/aspnet/MessagePack-CSharp/tree/fe9fa0834d18492eb229ff2923024af2c87553f8">aspnet/MessagePack-CSharp@fe9fa08</a></em></li>
+<li><code>src/aspnetcore/src/submodules/googletest</code><br>
+<em><a href="https://github.com/google/googletest/tree/93f08be653c36ddc6943e9513fc14c7292b4d007">google/googletest@93f08be</a></em></li>
+</ul>
+</li>
+</ul>
+<h2 id="temporary-mechanics">Temporary Mechanics</h2>
+<p>This section is dedicated to temporary measures we had to take in order to transition the infrastructure towards the end goals of Unified Build effort.
+It is expected that these processes and behaviours will go away once we finish other pieces of the big picture.</p>
+<h3 id="vmr-lite">VMR-lite</h3>
+<p>Currently, not all of the capabilities described above are in place. While we work on getting there, we have coined a term <em>VMR-lite</em> which describes an intermediate goal which would meet a relaxed set of requirements:</p>
+<ul>
+<li>It is <em>read-only</em> meaning no changes done to the VMR will flow back to the development repos automatically yet.</li>
+<li>It can be initialized from ground up using any <code>dotnet/installer</code> commit by using the SHAs from its <code>Version.Details.xml</code>.</li>
+<li>It can update its contents (mirrored development repos) from one SHA to another by diffing the development repos and applying this change.</li>
+<li>We are able to validate its readiness as part of the <code>dotnet/installer</code> PR build.</li>
+<li>We can build the RedHat/Canonical product from it (i.e. it is interchangeable with the tarball) and it does not contain binaries / files with invalid licenses (i.e. ready for a handover to Canonical).</li>
+</ul>
+<h3 id="source-build-patches">Source-Build Patches</h3>
+<p>Making the VMR build from source is no easy task and development and maintenance often requires quick fixes that bend the original source code to make it build.
+For this reason, the VMR contains so-called <em>&quot;Source-Build patches&quot;</em> which are applied on top of the synchronized sources.
+The required changes could technically be applied with a commit in the VMR directly but that would possibly cause conflicts on future synchronization.</p>
+<p>The idea is that if we keep these changes in the form of patches, cataloguing them will be more explicit and transparent in what we're changing for the VMR only.
+The expected workflow is to use these patches to quickly react to breaks in the Source-Build but upstream them as soon as possible since they only bring complexity into the process.</p>
+<p>Presently, these patches are located in the <code>dotnet/installer</code> repository but might be moved into the VMR later.</p>
+<h3 id="synchronization-based-on-declared-dependencies">Synchronization Based on Declared Dependencies</h3>
+<p>The VMR-lite should match exactly what is in the Microsoft built product, so that validation from the Microsoft built product is as applicable as possible. The exact match is only possible for coherent build. During development time (pre-coherency), VMR-lite should be as close as possible to what's in the Microsoft built product,</p>
+<p>We take a look at the dependency tree of the whole product based on information stored in the <code>Version.Details.xml</code> files that each repo has and which is a well-defined way of how we currently deal with dependency declaration in .NET.
+For more information, see <a href="https://github.com/dotnet/arcade/blob/e7ede87875f41a9b3df898ae08da5ebc96e24f56/Documentation/DependencyDescriptionFormat.md">Dependency Description Format</a>.
+The root of the dependency tree, that we consider during the process, is the <code>dotnet/installer</code> repository where all product repositories eventually flow their packages into.</p>
+<p>We start by pulling the new version of this repository into the VMR, parse its <code>Version.Details.xml</code> file and recursively repeat this process down the dependency tree.
+We only consider dependencies containing the special <code>&lt;SourceBuild&gt;</code> tag that marks repositories required for Source-Build.
+The graph tree that these tags form is the same as the already existing binary flow between the repositories that we have today.
+We always synchronize to the first version (in the sense of a top layer) of a particular development repository we encounter during this process, making this deterministic but also dependent on the declarations.</p>
+<h4 id="example">Example</h4>
+<p>The algorithm can be explained using a following dependency tree:</p>
+<pre><code>└── installer       1.0.0
+    ├── aspnetcore  3.0.0
+    │   └── runtime 2.1.1
+    ├── runtime     2.0.0
+    └── sdk         3.0.0
+    ...
+</code></pre>
+<p>When start recursively synchronizing <code>v1.0.0</code> of <code>installer</code>.
+After pulling in its sources, we'd continue down its dependencies:</p>
+<ul>
+<li><code>aspnetcore v3.0.0</code></li>
+<li><code>runtime v2.0.0</code></li>
+<li><code>sdk v3.0.0</code></li>
+</ul>
+<p>We move onto <code>aspnetcore</code> which has a dependency on <code>runtime</code> as well.
+This time, we ignore <code>runtime 2.1.1</code> as we've already seen <code>runtime v2.0.0</code> on the previous layer.
+After we're done with <code>aspnetcore</code>, we move onto <code>runtime v2.0.0</code> and further.</p>
+<p>Please consider one more situation. Let's say dependencies update on a follow-up sync the following way:</p>
+<pre><code>└── installer       1.0.1*
+    ├── aspnetcore  3.0.1*
+    │   └── runtime 2.2.2*
+    ├── runtime     2.0.0
+    └── sdk         3.0.0
+    ...
+</code></pre>
+<p><em>* marks an update from the previous state</em></p>
+<p>In this case, we would only update <code>installer</code> and <code>aspnetcore</code>, as, again, <code>runtime</code>'s version would come from <code>installer</code>'s list of dependencies.</p>
+<h3 id="synchronizing-patched-files">Synchronizing Patched Files</h3>
+<p>As described above (see <a href="#source-build-patches">Source-Build patches</a>), we will have patches in the VMR that we will apply on top of the synchronized sources.
+This presents an interesting challenge as when we are creating patch files for diffs of the incoming changes, those will not be applicable anymore as the version of the file in VMR will differ.</p>
+<p>For this reason, we will need to handle the patches differently. The synchronization process will:</p>
+<ol>
+<li>Revert all patched files onto their old versions from the development repository</li>
+<li>Apply new changes from the development repository</li>
+<li>Apply the Source-Build patch again</li>
+</ol>
+<p>Now, depending on what changes and how, this process can break.
+For instance, the changes coming from the development repository might change the file enough so that the Source-Build patch won't be applicable anymore.
+For cases like these, the patches will have to be fixed so that the synchronization process can continue.</p>
+<p>To better illustrate this process, consider the following notation:</p>
+<p><img src="images/patch.png" alt="Graphical patch notation"></p>
+<ol>
+<li>Imagine we denote file's content with a colour. When the content changes, a new colour is used.</li>
+<li>A patch then has two sides - the kind of content it expects and is applicable onto and the resulting patched file which has a new content.</li>
+<li>When a file changes so that patch does not apply, we can clearly see that whenever colours don't match.</li>
+</ol>
+<p>The diagram below shows various situations that can occur within the VMR when new changes from the development repo are synchronized and how they interact with patches.</p>
+<blockquote>
+<p>Note: the patches are originally stored in the <code>installer</code> repo at the moment and are synchronized together with this repository. Changes to patches then happen in that repository and are brought in with the sources.</p>
+</blockquote>
+<p><img src="images/synchronization-process.png" alt="Synchronization process &amp; patches">
+<em><p align="center">Synchronization process &amp; patches</p></em></p>
+<h3 id="git-info-xmls-to-support-source-link"><em>&quot;git-info&quot;</em> XMLs to support source-link</h3>
+<p>Following what the present Source-Build does, we need to preserve the origin of the sources in the VMR in automatically generated XML files in the <code>git-info/</code> folder which serve as metadata for <a href="https://learn.microsoft.com/en-us/dotnet/standard/library-guidance/sourcelink">source-link</a>.</p>
+<p>Example file (<code>git-info/fsharp.props</code>):</p>
+<pre><code class="lang-xml">&lt;Project&gt;
+  &lt;PropertyGroup&gt;
+    &lt;GitCommitHash&gt;6d626ff0752a77d339f609b4d361787dc9ca93a5&lt;/GitCommitHash&gt;
+    &lt;IsStable&gt;false&lt;/IsStable&gt;
+    &lt;OfficialBuildId&gt;20211022.2&lt;/OfficialBuildId&gt;
+    &lt;OutputPackageVersion&gt;6.0.1-beta.21522.2&lt;/OutputPackageVersion&gt;
+    &lt;PreReleaseVersionLabel&gt;beta&lt;/PreReleaseVersionLabel&gt;
+  &lt;/PropertyGroup&gt;
+&lt;/Project&gt;
+</code></pre>
+<p>It is expected that these files will go away as there will be no need to preserve the reference to the original source.
+The VMR will become the source and <code>source-link</code> information will point to the VMR directly.</p>
+<h3 id="storing-original-package-version-of-dependencies">Storing original package version of dependencies</h3>
+<p>As part of the <em>&quot;git-info&quot;</em> files mentioned above and also inside of the <a href="#source-manifest">source manifest</a> file, we store a &quot;package version&quot; attribute (also called <code>OfficialBuildId</code>).
+This attribute holds the version of a package produced from that given SHA of that particular development repository.
+It is used to reproduce the exact build versions over again when building the VMR.</p>
+<p>There will be no need to preserve the package version of sources as we will always pin and flow one common version for the whole source-build and set that as the version of the packages produced.</p>
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

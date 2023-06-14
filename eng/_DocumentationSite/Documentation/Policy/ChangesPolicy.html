@@ -1,0 +1,135 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Arcade Breaking Changes Policy </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Arcade Breaking Changes Policy ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="arcade-breaking-changes-policy">Arcade Breaking Changes Policy</h1>
+
+<h2 id="overview">Overview</h2>
+<p>In a nutshell, no breaking changes within a major version (SemVer rules) except where absolutely necessary.  To be sure there are some nuances to this, but in general - Arcade doesn't do breaking changes.</p>
+<h2 id="validation">Validation:</h2>
+<p>In order to not break Arcade consumers, there must be comprehensive validation <em>before</em> pushing to the latest channel.  From there, it's expected that the repo's PR validation would catch things specific to that repo.  More specific here. <a href="../Validation/Overview.html">Arcade Validation Document</a></p>
+<h2 id="policy">Policy:</h2>
+<p>Again, the intent is to not break consumers outside of major versions wherever possible.  A bit more on this:</p>
+<ul>
+<li>Note the last principle: <a href="../Overview.html">Arcade Overview</a></li>
+<li>Arcade updates: <a href="../Servicing.html">Arcade Servicing</a></li>
+<li>Toolsets consumed by Arcade: <a href="../Toolsets.html">Arcade Toolsets</a></li>
+</ul>
+<h2 id="process-for-when-breaking-changes-are-required">Process for when Breaking Changes are required</h2>
+<ol>
+<li>Email 'arcadewg' with the breaking change particulars</li>
+<li>A day later email 'dncpartners' and give them a minimum of a 2 day warning</li>
+<li>Two days later, a 'we're doing this now' email to ‘dncpartners’</li>
+<li>Proactively provide support and/or help as required</li>
+</ol>
+<h1 id="arcade-disruptive-changes-policy">Arcade Disruptive Changes Policy</h1>
+<h2 id="overview-1">Overview</h2>
+<p>From time to time, it is necessary or desirable to make a change which is not technically breaking, but is likely disruptive. The process is largely the same as breaking changes.</p>
+<h2 id="validation-1">Validation:</h2>
+<p>In order to not break Arcade consumers, there must be comprehensive validation <em>before</em> pushing to the latest channel.  From there, it's expected that the repo's PR validation would catch things specific to that repo.  More specific here. <a href="../Validation/Overview.html">Arcade Validation Document</a></p>
+<h2 id="policy-1">Policy:</h2>
+<p>Disruptive changes should be minimal.  However, it should be understood that they will happen, although very infrequently.  As a rule of thumb, if there is more than one (1) disruptive change per month, a root cause investigation should be initiated.</p>
+<h2 id="process-for-disruptive-changes">Process for disruptive changes</h2>
+<ol>
+<li>Email 'arcadewg' with the disruptive change particulars</li>
+<li>A day later email 'dncpartners' and give them a minimum of a 2 day warning</li>
+<li>Two days later, a 'we're doing this now' email to ‘dncpartners’</li>
+<li>Proactively provide support and/or help as required</li>
+</ol>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CPolicy%5CChangesPolicy.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CPolicy%5CChangesPolicy.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CPolicy%5CChangesPolicy.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,149 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Temporary Quarantine Procedure </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Temporary Quarantine Procedure ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="temporary-quarantine-procedure">Temporary Quarantine Procedure</h1>
+
+<p>In order to allow .NET development to proceed, problems in the build or test that cannot be resolved immediately need a mechanism
+to quarantine them in order to unblock the developer workflow of the many developers that contribute to the product.</p>
+<p>Quarantine is not the first resort, but it is a tool in order to ensure successful building of the product.</p>
+<p>In general if a build or test fails, the steps should be as follows.</p>
+<ol>
+<li>If the source PR/change can be identified, it should be backed out to restore correct behavior, and then the correction made in a future PR to reinstate the new code</li>
+<li>If the problem can be definitively fixed quickly, it should be done as soon as possible</li>
+<li><strong>If the broken component can be isolated to be removed from PR's and CI builds, it should be quarantined</strong></li>
+<li>If none of the above are possible, is should be priority 0 to tackle the situation to get the build unblocked as soon as possible</li>
+</ol>
+<p>Step 3 is the focus of this proposal.</p>
+<h2 id="when-is-something-broken--70-pass-rate">When is something &quot;broken&quot; : &lt;70% pass rate</h2>
+<p>We are going to consider something &quot;broken&quot; and in need of remediation <strong>if it has failed 3 of the last 10 builds in the CI pipeline</strong>.
+The CI pipeline should be passing 100% of the time, so 3 fails indicates that something needs to be done to unblock PRs.</p>
+<p>The quarantine option is meant to be used for issues that are believed to be short term disruptions.  If the fix cannot be determined immediately,
+within 5 minutes of the failure, quarantine needs to be enacted to unblock PR workflows.
+Permanent unreliability is a different problem not addressed by this procedure.</p>
+<h2 id="what-happens-when-something-is-quarantined">What happens when something is quarantined</h2>
+<p>PR builds will not include the quarantined component.
+The primary CI pipelines (e.g. the 'runtime' pipeline) will not include the quarantined component.
+A separate pipeline will be run on the same cadence as the CI pipeline in order to execute quarantined components in order to determine when
+it is appropriate to unquarantine the affected component.</p>
+<p>Owners should be aware every quarantined item, with a tracking issue in the most appropriate repository assigned to them.
+The primary purpose of this ownership is to ensure that the quarantined item is being addressed and tracked for reintroduction into the mainline builds.</p>
+<h2 id="how-to-quarantine">How to quarantine</h2>
+<p>The smallest unit possible should be quarantined, to minimize the coverage gap in PR.</p>
+<ol>
+<li>A single test in a single configuration</li>
+<li>A single test in all configurations</li>
+<li>A test assembly</li>
+<li>A build &quot;job&quot;</li>
+<li>An entire pipeline</li>
+</ol>
+<h3 id="a-single-test-in-a-single-configuration">A single test in a single configuration</h3>
+<p>TBD (<a href="https://github.com/dotnet/arcade/issues/6661">https://github.com/dotnet/arcade/issues/6661</a>)</p>
+<h3 id="a-single-test-in-all-configurations">A single test in all configurations</h3>
+<p>TBD (<a href="https://github.com/dotnet/arcade/issues/6661">https://github.com/dotnet/arcade/issues/6661</a>)</p>
+<h3 id="a-test-assembly">A test assembly</h3>
+<p>TBD (<a href="https://github.com/dotnet/arcade/issues/6662">https://github.com/dotnet/arcade/issues/6662</a>)</p>
+<h3 id="a-build-job">A build job</h3>
+<p>TBD (<a href="https://github.com/dotnet/arcade/issues/6663">https://github.com/dotnet/arcade/issues/6663</a>)</p>
+<h3 id="an-entire-pipeline">An entire pipeline</h3>
+<p>TBD (<a href="https://github.com/dotnet/arcade/issues/6663">https://github.com/dotnet/arcade/issues/6663</a>)</p>
+<h2 id="how-to-reintroduce--run-without-failure-for-30-days">How to reintroduce : Run without failure for 30 days</h2>
+<p>Once a fix has been introduced, and that component has passed passed for a month, it can be reintroduced into the mainline build by reverting the change
+made to quarantine it.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CTemporary-Quarantine.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CTemporary-Quarantine.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CTemporary-Quarantine.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

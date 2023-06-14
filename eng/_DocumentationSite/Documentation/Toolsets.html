@@ -1,0 +1,140 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Toolsets </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Toolsets ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="toolsets">Toolsets</h1>
+
+<h2 id="overview">Overview</h2>
+<p>Various tools exist that are not built in <a href="Documentation/Overview.md">Arcade</a>, but are still needed to support both bootstrapping (both managed and native), as well as various build related workloads needed by different repos.  This document attempts to address the requirements for acquiring these tools that will work for Arcade, and thus the rest of the repos in the .NET Core stack.  Please note that these tools may be either internally or externally owned.  This document applies to both.</p>
+<h2 id="requirements">Requirements</h2>
+<ul>
+<li>Enable the toolset acquisition portion of 'clone' + 'build' (no prereqs)</li>
+<li>Each tool must have a clear owner (see 'ownership' section below)</li>
+<li>Works for all supported OS's</li>
+<li>Ability to specify (or override default) which version of a tool is needed</li>
+<li>Updates are only made after there is reasonable confidence they won't break</li>
+<li>Both managed and native tools (including any dependencies) must be supported</li>
+<li>It should be possible to reasonably get required tools for new platform bring up.  (distros not yet supported by core)</li>
+</ul>
+<h2 id="ownership">Ownership</h2>
+<p>Each tool/package not built by Arcade, but needed by .NET Core must have a clear owner.  This section describes what it means to own a tool which is used by the .NET core stack.</p>
+<ul>
+<li>Current documentation sufficient to onboard and use the tool for the main supported scenarios</li>
+<li>It must be clearly documented how to get needed updates or fixes done.</li>
+<li>All documentation must be included with the tool</li>
+<li>No breaking changes</li>
+<li>It must be apparent what the current (latest) version is.  E.g., which version to use.</li>
+<li>Might need to be source buildable  (please check with engineering services)</li>
+</ul>
+<h2 id="basic-mechanics">Basic Mechanics</h2>
+<p>At a high level, toolsets not built by Arcade are managed by:</p>
+<ul>
+<li>Known location in Azure blob storage for all tools not built in Arcade</li>
+<li>Scripts acquire the correct tools as part of the bootstrapping process  ('clone' + 'build'), or build support/validation.</li>
+<li>Scripts kept up to date by updating every participating repo (Maestro++)</li>
+<li>Community uses the same Azure blob storage end points MSFT does to get the tools from</li>
+</ul>
+<h2 id="servicing">Servicing</h2>
+<ul>
+<li>See the <a href="Servicing.html">&quot;Servicing&quot; document</a> for a broader discussion of servicing and its policies</li>
+<li>New tools and tool versions are added to the Azure blob location.  (no replacements, only adds)</li>
+<li>Script updates are deployed to each repo using automation</li>
+<li>When absolutely necessary, a repo can &quot;pin&quot; to a specific &quot;channel&quot;, or branch/fork.  (see &quot;servicing&quot; document for policy around this)</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CToolsets.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CToolsets.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CToolsets.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

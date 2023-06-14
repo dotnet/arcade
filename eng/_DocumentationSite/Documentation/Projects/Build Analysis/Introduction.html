@@ -1,0 +1,146 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Build Analysis </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Build Analysis ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="build-analysis">Build Analysis</h1>
+
+<p>The Build Analysis Check makes GitHub Pull Request results more actionable. It is a service to improve the GitHub Pull Request experience by highlighting build and test information most helpful to .NET developers.</p>
+<h2 id="what-does-it-do">What does it do?</h2>
+<p>High-level features include:</p>
+<ul>
+<li>Highlight most important failure information</li>
+<li>Add context by combining information in Azure DevOps and Helix</li>
+<li>Reduce distance to most helpful analysis tools, such as Azure DevOps Test Result History for a particular test or the Helix artifact logs</li>
+</ul>
+<p>For more details, see the <a href="Specifics.html">specifics</a> document.</p>
+<h2 id="how-do-i-get-it">How do I get it?</h2>
+<p>Build Analysis is enabled on a per-repository basis. Contact the <a href="https://github.com/dotnet/arcade/wiki/How-to-get-a-hold-of-.NET-Engineering-Services">.NET Engineering Services Team</a> to request it be enabled in your repository.</p>
+<p><strong>Note</strong>: This feature requires your repository's pull request builds to occur in the <code>dnceng-public/public</code> Azure DevOps organization/project. Unfortunately, we cannot accommodate builds that occur in other Azure DevOps organizations (such as DevDiv).</p>
+<h3 id="how-do-i-know-if-its-enabled-in-my-repository">How do I know if it's enabled in my repository?</h3>
+<p>An easy way to see if Build Analysis is enabled in your repository is by viewing a pull request (particularly a recent one) and look for the <code>Build Analysis</code> check.</p>
+<p><img src="Resources/build_analysis_check_on_pr.png" alt="build analysis check on pr"></p>
+<p>Additionally, if you have sufficient permissions on your repository, you can browse to the Installed GitHub Apps settings and verify that the <code>.NET Helix</code> app is installed in your repository. (See the following screenshot)</p>
+<p><img src="Resources/installed_github_apps.png" alt="installed github apps"></p>
+<h2 id="how-do-i-use-it">How do I use it?</h2>
+<p>Once enabled, a new GitHub check suite will be included in all pull requests. Navigate to the <code>Checks</code> tab, then look for the <code>.NET Helix</code> suite.</p>
+<p><img src="Resources/checks_tab.png" alt="checks tab"></p>
+<p>The data that is used in the Build Analysis check is provided by each pipeline (in the dnceng/public Azure DevOps project) that your pull request runs. From that data we are able to present you with errors that occurred during the build process, tests that failed, and even match the error messages with currently open <a href="KnownIssues.html">Known Issues</a>.</p>
+<p>As each pipeline completes, the Build Analysis Processor evaluates the results from the build (e.g. build failures, test failures) and updates the GitHub check run to reflect errors it detected in your build.</p>
+<p>Check out the <a href="Specifics.html">specifics</a> page for a deeper dive into the features provided by Build Analysis.</p>
+<h2 id="other-features">Other Features</h2>
+<p>Related to the work done for Build Analysis, we also provide the following features:</p>
+<ul>
+<li><a href="BuildRetryOnboard.html"><strong>Automatic Build Retries</strong></a>: Configure your repo's pull request builds to automatically retry when it encounters specific errors.</li>
+<li><a href="Test%20Retry%20Documentation.html"><strong>Automatic Test Retries</strong></a>: Configure tests in your repo's pull requests to automatically retry when they encounter specific errors. <em>This feature requires tests to use Helix as it leverages Helix to retry specific tests.</em></li>
+<li><a href="../../AzureDevOps/TestReportingQueries.html"><strong>Test Reporting</strong></a>: We've collected your test results data into Kusto for ease of querying and put together a few queries to get started.</li>
+</ul>
+<h2 id="frequently-asked-questions">Frequently Asked Questions</h2>
+<h3 id="is-this-useful-even-if-my-project-does-not-use-helix">Is this useful even if my project does not use Helix?</h3>
+<p>Yes! The Build Analysis result leverages Azure DevOps history and information to provide context and workflow improvements. Though it may bring additional information for Helix-based execution, it is not required.</p>
+<h3 id="why-am-i-not-seeing-all-the-errors-from-my-buildtests-in-build-analysis">Why am I not seeing all the errors from my build/tests in Build Analysis?</h3>
+<p>Technical limitations, such as message size and API throttling, constrain the information shown in the check. The service tries to always include the most pertinent information with links to more complete views.</p>
+<p>However, we provide links from Build Analysis to logs and test results in Azure DevOps for deeper investigations.</p>
+<h3 id="what-benefit-does-build-analysis-provide-over-going-directly-to-azure-devops">What benefit does Build Analysis provide over going directly to Azure DevOps?</h3>
+<ul>
+<li>One click to see errors that occurred on pipelines your pull request ran through.</li>
+<li>A single place to look at a combination of build and test errors.</li>
+<li>Notification that an error that occurred on your pull request is related to a <a href="KnownIssues.html">Known Issue</a>.</li>
+<li>One click to create a Known Issue related to an error on your pull request for either the product team or infrastructure team.</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CIntroduction.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CIntroduction.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CIntroduction.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,164 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Infrastructure Ask &amp; Tell Mode </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Infrastructure Ask &amp; Tell Mode ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="infrastructure-ask--tell-mode">Infrastructure Ask &amp; Tell Mode</h1>
+
+<p>Infrastructure changes are handled a bit differently from the product because they don't actually ship.<br>
+The main goal is to ensure that the product can always be built and shipped.</p>
+<p>When multiple products share the same infrastructure, the most &quot;strict&quot; product determines the mode according to the table below.  (Definitions right after table)</p>
+<table>
+<thead>
+<tr>
+<th>Product &quot;mode&quot;</th>
+<th>Product Infra</th>
+<th>Shared Infra</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Open</td>
+<td>Open</td>
+<td>Open</td>
+<td>Changes are handled according to normal policy</td>
+</tr>
+<tr>
+<td>Tell</td>
+<td>Tell --&gt; Prod</td>
+<td>Tell --&gt; Arcade</td>
+<td>Product branch changes are handled by the product team, and shared infra updates reviewed by the larger working group</td>
+</tr>
+<tr>
+<td>Ask</td>
+<td>Tell --&gt; Tactics</td>
+<td>Tell --&gt; Tactics</td>
+<td>Tactics needs to know when in ask mode.  Holding off on 'ask mode' to Arcade for now</td>
+</tr>
+<tr>
+<td>Stabilization</td>
+<td>Tell --&gt; Tactics</td>
+<td>Ask --&gt; Arcade</td>
+<td>Changes when trying to get a coherent build can be very destabilizing.  Arcade decides if it's ask or tell to tactics</td>
+</tr>
+</tbody>
+</table>
+<h2 id="definitions">Definitions:</h2>
+<ul>
+<li>&quot;Branch Infra&quot;: Infrastructure changes in the product branch</li>
+<li>&quot;Product Infra&quot;: Infrastructure changes in shared infra like Arcade, Helix, etc.</li>
+<li>&quot;Tell Mode&quot; for each product, teams will follow their own process</li>
+<li>&quot;Tell Mode&quot; to Arcade means including the <a href="AskModeTellModeTemplate.html">PR template</a> and adding the 'tell-mode' label on your PR as an FYI that the change is being made. Review is required.</li>
+<li>&quot;Ask Mode&quot; to Arcade means including the <a href="AskModeTellModeTemplate.html">PR template</a> and adding the 'servicing-consider' label on your PR. Your PR must be explicitly approved by a member of the dnceng LT prior to merge, who will replace 'servicing-consider' with 'servicing-approved' label. The approver may require additional approval from .NET Core tactics if the change is particularly impactful to the product.</li>
+<li>&quot;Ask Mode&quot; to tactics handled according the guidance managed by Lee Coward</li>
+</ul>
+<h2 id="things-to-keep-in-mind">Things to keep in mind:</h2>
+<ul>
+<li>Breaking changes are basically never ok.  See <a href="ChangesPolicy.html">Policy</a> for details.</li>
+<li>Be aware of which arcade branch you're working in, as this determines which part of the product you're affecting. <a href="ArcadeServicing.html">Arcade Servicing Doc</a></li>
+<li>Shared services (like Helix and Maestro) have versioned APIs. (they don't branch)  So again, be sure you understand what you're affecting.</li>
+<li>When in doubt, please reach out.  (mail arcadewg@microsoft.com)</li>
+</ul>
+<h2 id="servicing">Servicing</h2>
+<p>There are a few things to keep in mind with servicing:</p>
+<ul>
+<li>Shared infra servicing workflow and policies are <a href="ArcadeServicing.html">found here</a>.</li>
+<li>Servicing release are basically in perpetual 'Stabilization' mode.</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CPolicy%5CAskTellMode.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CPolicy%5CAskTellMode.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CPolicy%5CAskTellMode.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

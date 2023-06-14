@@ -1,0 +1,253 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Summary </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Summary ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+
+<p>This document presents the scenarios for CMake in .NET Core.</p>
+<h1 id="summary">Summary</h1>
+<p><a href="https://cmake.org/overview/">CMake</a> is a prerequisite for building .NET Core repositories such as CoreFx and CoreCLR. When a developer attempts to build, a repository using the build script, the script probes for CMake on the machine, and if CMake is not found then, the script terminates and the build fails. There is no guidance for developer on which version of CMake to install. Not stating a version of CMake for a repository can lead to further challenges for example, when a servicing a release.</p>
+<p>Thus, there is need to improve CMake usage and acquisition experience. Hence the purpose of this document is to define the scenarios for CMake in .NET Core, and lay a foundation for designing the improved experience.</p>
+<h1 id="cmake-scenarios">CMake Scenarios</h1>
+<p>Each subheading below is a name of a scenario. Under each subheading there will be a short description of the scenario and a narrative. The narrative includes an actor, flow of events, and the resulting outcomes. An outcome consists of one or more pairs of the current and desired experiences.</p>
+<ul>
+<li><a href="#build-a-net-core-repository-on-a-clean-machine">Build a .NET Core repository on a clean machine</a></li>
+<li><a href="#build-a-net-core-repository-on-an-existing-development-machine">Build a .NET Core repository on an existing development machine</a></li>
+<li><a href="#setup-an-official-build-for-a-net-core-repository">Setup an official build for a .NET Core repository</a></li>
+<li><a href="#service-a-net-core-release">Service a .NET Core release</a></li>
+<li><a href="#revise-the-cmake-version-of-a-net-core-repository">Revise the CMake version of a .NET Core repository</a></li>
+<li><a href="#a-new-version-of-cmake-can-be-tested-against-a-net-core-repository">A new version of CMake can be tested against a .NET Core repository</a></li>
+<li><a href="#guidance-for-setting-up-official-builds-for-a-net-core-repository-is-available">Guidance for setting up official builds for a .NET Core repository is available</a></li>
+</ul>
+<h2 id="build-a-net-core-repository-on-a-clean-machine">Build a .NET Core repository on a clean machine</h2>
+<p>A .NET Core user (Microsoft employee or someone in the open) clones a .NET Core repository and attempts to build.</p>
+<h3 id="narrative">Narrative</h3>
+<p>I am an IT Manager from Contoso who was inspired by .NET Core demos at <a href="https://msdn.microsoft.com/en-us/magazine/connect16mag.aspx">Connect(); 2016</a>, and I would like to contribute to .NET Core.</p>
+<p>Flow of events:</p>
+<ol>
+<li>I setup a clean Windows 10 VM through my Azure subscription.</li>
+<li>I cloned CoreFx repository from <a href="https://github.com/dotnet/corefx.git">dotnet/corefx</a></li>
+<li>I attempted to build the repository using the build command (build.cmd)</li>
+</ol>
+<h3 id="outcome-1-build-fails">Outcome #1 Build fails</h3>
+<p><strong>Current</strong>: Build fails saying CMake, which is a prerequisite, is missing on the VM.  Though the error message provides an URL from where CMake can be downloaded, it does not list a specific version or a range of supported versions. I am not certain on what version to download.</p>
+<p><strong>Desired</strong>:
+Build probes for CMake in .NET Core sandbox tools folder in addition to the current probing locations. If CMake is not found, then the build attempts to acquire the declared version of CMake from the <em><strong>tools</strong></em> cache. If acquisition fails, then the build presents an error message that informs the user the specific version of CMake to download, and the suggested source to download it from. I have two options from here:</p>
+<ul>
+<li>I download the specific version and perform a default install. <em>(TBD: Should the user restart Command or Terminal window?).</em></li>
+<li>Perform a gesture described in the error message to acquire CMake. I perform the gesture so that a tool downloads and extracts the declared version of CMake to a .NET Core sandbox tools folder.</li>
+</ul>
+<p>Either of the above options allow me to run build command successfully.</p>
+<h2 id="build-a-net-core-repository-on-an-existing-development-machine">Build a .NET Core repository on an existing development machine</h2>
+<p>A .NET Core user would like to clone a .NET Core repository to his/her existing development machine, and build that repository.</p>
+<h3 id="narrative-1">Narrative</h3>
+<p>I am an IT Manager from Contoso who was inspired by .NET Core demos at <a href="https://msdn.microsoft.com/en-us/magazine/connect16mag.aspx">Connect(); 2016</a>, and I would like to contribute to .NET Core.</p>
+<p>Flow of events:</p>
+<ol>
+<li>On my existing development machine, I cloned CoreFx repository from
+<a href="https://github.com/dotnet/corefx.git">dotnet/corefx</a></li>
+<li>I attempted to build the repository using the build command (build.cmd)</li>
+</ol>
+<h3 id="outcome-1-build-succeeds">Outcome #1: Build succeeds</h3>
+<p><strong>Current</strong>: I have no indication about the CMake version used.</p>
+<p><strong>Desired</strong>: I can refer to a build artifact to find the version of CMake used in the build.</p>
+<p>Note: Since an existing development machine is being used, the machine could have the declared version of CMake.</p>
+<h3 id="outcome-2-build-fails">Outcome #2: Build fails</h3>
+<p><strong>Current</strong>:</p>
+<ul>
+<li>Build fails saying CMake, which is a prerequisite is not available on the machine. I try to download CMake based on the error message. I am not certain on what version to download.</li>
+<li>Build fails in strange ways due to a version of CMake present on the machine, and thus making it difficult to trace back.</li>
+</ul>
+<p><strong>Desired</strong>:</p>
+<ol>
+<li>On a clean machine, the desired experience should be same as earlier scenario <a href="#build-a-net-core-repository-on-a-clean-machine">Build a .NET Core repository on a clean machine</a></li>
+<li>On an existing machine that has a version of CMake, which is different than the declared version, there are two outcomes:</li>
+<li>Default outcome is build consumes the available CMake version.</li>
+<li>I can ensure the build consumes the declared version of CMake. This means if the build detects that the version of CMake available is not the declared version, then the build attempts to acquire the declared version. This acquisition experience should be same as in the earlier scenario <a href="#build-a-net-core-repository-on-a-clean-machine">Build a .NET Core repository on a clean machine</a>.</li>
+</ol>
+<p>Either of the above options allow me to run build command successfully.</p>
+<h2 id="setup-an-official-build-for-a-net-core-repository">Setup an official build for a .NET Core repository</h2>
+<p>A .NET Core repository owner would like to setup a reliable, repeatable and trustable process of producing official builds.</p>
+<h3 id="narrative-2">Narrative</h3>
+<p>I am the owner of <a href="https://github.com/dotnet/corefx">.NET CoreFx</a> repository.  I would like to setup a process that will produce reliable, repeatable and trustable builds for this repository.</p>
+<p>Flow of events:</p>
+<ol>
+<li>Created a new VSTS build definition that runs the build command of the repository.</li>
+<li>Ensured the builds succeed</li>
+</ol>
+<h3 id="outcome-1-official-builds-consume-the-declared-version-of-cmake">Outcome #1: Official builds consume the declared version of CMake.</h3>
+<p><strong>Current</strong>: .NET Core repository is built using a version of CMake installed while setting up the VM. Version of CMake is not logged in build artifact.</p>
+<p><strong>Desired</strong>:</p>
+<ol>
+<li>I can find the declared version of CMake for CoreFx or any .NET Core repository within the repository itself.</li>
+<li>I can setup official build of a .NET Core repository such that the build acquires the declared version of CMake from OSS Tools repository, and places it in a sandbox location.</li>
+<li>I can ensure that the official build utilizes CMake tool from the sandbox folder.</li>
+</ol>
+<p>Note: OSS Tool repository will download CMake source code, security audit the source code, build and then host. Thus, minimizing any security risks that might arise when CMake is consumed directly from internet.</p>
+<h3 id="outcome-2-official-builds-setup-and-maintenance-is-reliable-and-costs-lowered">Outcome #2: Official builds setup and maintenance is reliable and costs lowered</h3>
+<p><strong>Current</strong>: Build agents are tied to a specific version of CMake.</p>
+<p><strong>Desired</strong>: Build agents are more contained and not dependent on a particular build agent for CMake installations. Thus, the same agent can build multiple repositories and branches.</p>
+<h2 id="service-a-net-core-release">Service a .NET Core release</h2>
+<p>A .NET Core team member who would like to service a release, and needs the release configuration to rebuild.</p>
+<h3 id="narrative-3">Narrative</h3>
+<p>I am a .NET Core team member who is assigned to service a <a href="https://github.com/dotnet/corefx">CoreFx</a> release to address an issue reported in the product.</p>
+<p>Flow of events:</p>
+<ol>
+<li>I checked out the release branch on my local developer machine. Understood the root cause of the reported issue.</li>
+<li>I created a service branch i.e., fork from release branch, and have a fix ready.</li>
+<li>I followed the developer guidelines available for that branch to perform a build.</li>
+</ol>
+<h3 id="outcome-service-branch-builds-consume-the-declared-version-of-cmake">Outcome: Service branch builds consume the declared version of CMake</h3>
+<p><strong>Current</strong>: Since a declared version of CMake is not available within the repository, I will build the service branch using the latest version of CMake available. This latest version of CMake might introduce new product behaviors that I will have to resolve. Thus, lack of declared version introduces uncertainty and additional costs in servicing a branch.</p>
+<p><strong>Desired</strong>:</p>
+<ol>
+<li>I can run the build such that if the required toolset does not match then, the build acquires the required toolset.</li>
+<li>I can find out the CMake version used to build the release branch. Declared version is available within the repository itself.</li>
+<li>I can acquire and run build with tools in a sandbox folder.</li>
+</ol>
+<h2 id="revise-the-cmake-version-of-a-net-core-repository">Revise the CMake version of a .NET Core repository</h2>
+<p>A .NET Core contributor can update the declared CMake version for a given .NET Core repository.</p>
+<h3 id="narrative-4">Narrative</h3>
+<p>I am a .NET Core contributor working on new features in CoreFx. These features require the latest version of CMake.</p>
+<p>Flow of events:</p>
+<ol>
+<li>I verified the compatibility of existing features with the new version of CMake.</li>
+<li>I would like to update the product to be built using this new version of CMake.</li>
+</ol>
+<h3 id="outcome-all-build-scenarios-are-aware-of-the-new-version-of-cmake">Outcome: All build scenarios are aware of the new version of CMake</h3>
+<p><strong>Current</strong>: Though as a .NET Core contributor I can build a local repository using different versions of CMake, doing the same with official builds involves cost such as updating build definition, notifying repository owners, and finally inform the open community of users about the new version of CMake.</p>
+<p><strong>Desired</strong>: As a .NET Core contributor I can modify declared CMake version, and submit this change as a pull request (PR). The change to declared CMake version is reflected in all build scenarios. This means, the official builds will pick up the new version from OSS Tools repository, and other scenarios reflect the change to the declared version of CMake.</p>
+<p>Note: A requirement for this scenario is that the new version of CMake should be available on OSS Tool repository.</p>
+<h2 id="a-new-version-of-cmake-can-be-tested-against-a-net-core-repository">A new version of CMake can be tested against a .NET Core repository</h2>
+<p>A .NET Core team member can try a new version of CMake to build a .NET Core repository.</p>
+<h3 id="narrative-5">Narrative</h3>
+<p>As a team member of .NET Core or Engineering Services, I would like to check the applicability of a new version of CMake in a .NET Core repository. For instance, verify if a new version of CMake is compatible with a .NET Core repository, and no unexpected regressions in the product are introduced.</p>
+<p>Flow of events:</p>
+<ol>
+<li>I built the local repository using the new version of CMake. Ensure build succeeds.</li>
+<li>I would like to test official builds produced with this new version of CMake.</li>
+</ol>
+<h3 id="outcome-a-test-run-of-official-build-consuming-the-new-cmake-package-can-be-performed">Outcome: A test run of official build consuming the new CMake package can be performed</h3>
+<p><strong>Current</strong>: Updating an official build to test a new version of CMake involves the following steps -</p>
+<ol>
+<li>Creating a new agent pool</li>
+<li>Adding VMs to the pool where each VM has the new version of CMake installed</li>
+<li>Setting up new build definitions that point to this pool</li>
+</ol>
+<p><strong>Desired</strong>:</p>
+<ol>
+<li>I'm able to build a .NET Core repository using a CMake version, which is not in the declared version.</li>
+<li>I can perform a test run of official build and ensure that the CMake package is consumed, and build succeeded.</li>
+</ol>
+<h2 id="guidance-for-setting-up-official-builds-for-a-net-core-repository-is-available">Guidance for setting up official builds for a .NET Core repository is available</h2>
+<p>A .NET Core repository owner refers to documentation that describes the procedure to setup up official builds.</p>
+<h3 id="narrative-6">Narrative</h3>
+<p>I'm team member on Red Hat.  I would like to setup official builds of our CoreFx repository using the same CMake version used in .NET Core official builds.</p>
+<p>Flow of events:</p>
+<ol>
+<li>I forked CoreFx repository from <a href="https://github.com/dotnet/corefx.git">dotnet/corefx</a></li>
+<li>I followed the developer guidelines to setup official builds</li>
+</ol>
+<h3 id="outcome-net-core-users-refer-to-documentation-about-setting-up-official-builds">Outcome: .NET Core users refer to documentation about setting up official builds</h3>
+<p><strong>Current</strong>: In my attempt to setup official builds, I will use the latest version of CMake in official builds since CoreFx documentation does not provide any guidance on declared CMake version. Native binaries from Red Hat build is now significantly different from those produced in .NET Core product team's official builds. This difference is due to the different versions of CMake used in the respective builds.</p>
+<p><strong>Desired</strong>:</p>
+<ol>
+<li>Declared version of the .NET Core repository is available within the repository itself.  I can find it, and enforce it with my toolset story</li>
+<li>I can specify a version of CMake that should be consumed in the build command of my .NET Core repository.</li>
+</ol>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Ccmake-scenarios.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Ccmake-scenarios.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Ccmake-scenarios.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

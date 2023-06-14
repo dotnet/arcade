@@ -1,0 +1,145 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Helix </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Helix ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="helix">Helix</h1>
+
+<p>Helix is a system/service that allows for very broad scaling of workloads and their results in a reliable and low cost fashion. The Azure back-end allows for cloud-level scalability without needing to maintain the underlying infrastructure.</p>
+<p>The <a href="/src/Microsoft.DotNet.Helix/Client/CSharp">Helix C# Client</a> and <a href="/src/Microsoft.DotNet.Helix/JobSender">JobSender</a> library can be used to programmatically interact with Helix.</p>
+<h2 id="goals">Goals</h2>
+<ul>
+<li>System can run any arbitrary work (not just .NET)</li>
+<li>Have a work execution system leveraging the cloud that enables us to deliver our products across all platforms without a dependency on internal Microsoft resources.</li>
+<li>Create a componentized system where each piece could be swapped out for something else</li>
+<li>Each component only requires HTTPS access</li>
+<li>Leverage, as much as is possible, released Microsoft technology</li>
+</ul>
+<h2 id="what-helix-does-for-us">What Helix does for us</h2>
+<ul>
+<li><p>Distributed work execution</p>
+<ul>
+<li>Helix machines perform arbitrary work on custom-curated, sometimes-scalable machines. When users want to test on other OSes, or run large quantities of work across many machines even from the same OS, Helix enables distributed execution on dozens of different operating systems with work specified in the same, simple JSON-based format for all operating systems. Supported operating systems include macOS, various Windows configurations (Client and server SKUs, non-en-us languages, and variations), Linux systems, with the option to expand to anywhere Python 3 is supported.</li>
+</ul>
+</li>
+<li><p>Telemetry</p>
+<ul>
+<li>When an Engineering-Services-supported Azure DevOps pipeline kicks off a build or test run, telemetry is automated-ly gathered and sent through the Helix pipeline to be stored and reported.</li>
+<li>This is accomplished by sending telemetry via the Helix API from Azure DevOps pipelines and the various machines performing work.</li>
+<li>Telemetry is gathered and reported in near-real-time to provide minute-by-minute build and test updates, monitoring things like exit code, console and harness logs, output files, and even crash dumps.</li>
+</ul>
+</li>
+<li><p>Helix API</p>
+<ul>
+<li>The Helix API allows users to submit work and telemetry, query previously run work items and jobs for logging and aggregation of results.</li>
+<li><a href="/src/Microsoft.DotNet.Helix">Helix's Client libraries</a> are used by most consumers whether it be for submitting work items, sending telemetry, or waiting on and determining the results of a run.</li>
+<li>Anonymous execution and machines are supported, as well as authenticated work using a GitHub authentication token. Sensitive workloads can be locked down to one or more GitHub user names, which must match to use these queues.</li>
+<li>Users are also able to directly interact with the Helix API via its swagger endpoints in both anonymous and authenticated fashion.</li>
+</ul>
+</li>
+</ul>
+<p>Additional Helix implementation details are available in the private .NET Engineering Services wiki: <a href="https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/606/HelixDocumentation">https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/606/HelixDocumentation</a></p>
+<h2 id="features-of-helix">Features of Helix</h2>
+<h3 id="job-distribution-at-scale">Job Distribution at Scale</h3>
+<p>With Helix we leverage the power of Azure to create and remove VMs as needed.  This allows us to create the scale we want at whatever budget we can afford.  We also have the ability to add physical machines for other scenarios such as executing work on macOS, ARM, ARM64, dedicated physical hardware for performance, and on virtually any device capable of running Python 3.5 or greater with internet connectivity.</p>
+<p>When designing Helix our goal was to leverage the cloud in a way that gave us the reliability we needed, the performance we desired, and simplicity throughout. Azure gives us the ability to have reliable services that we can communicate to over HTTPS.</p>
+<h3 id="cross-platform-support">Cross Platform Support</h3>
+<p>A major requirement for this system was to be able to execute work across multiple platforms.  A wide, constantly-growing variety of operating systems are available, generally removed within a month or two of end-of-life.  To see this list live, visit <a href="https://helix.dot.net/">https://helix.dot.net/</a>.</p>
+<h3 id="docker-image-support">Docker Image Support</h3>
+<p>For any Helix queue where Docker is installed (viewable via the Queue info API), work items may be executed in a docker image via the syntax <code>(Fake.Queue.Name)real.queue.name@docker.tag</code>.  This allows running on OS combinations we either can't install on Azure (e.g. Fedora Linuxes) or which only support Docker (Windows Nano, etc.)</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CHelix.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CHelix.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CHelix.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

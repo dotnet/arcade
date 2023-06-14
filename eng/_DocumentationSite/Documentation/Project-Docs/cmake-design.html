@@ -1,0 +1,158 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Design Contract for Searching and Acquiring Build Prerequisites </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Design Contract for Searching and Acquiring Build Prerequisites ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="design-contract-for-searching-and-acquiring-build-prerequisites">Design Contract for Searching and Acquiring Build Prerequisites</h1>
+
+<p>This document presents the design contract for searching and acquiring build prerequisites. Scope is limited to developer workflow in <a href="https://github.com/dotnet/corefx.git">CoreFx</a> repository.</p>
+<p>A CoreFx developer uses <code>build.cmd</code> or <code>build.sh</code> to build the repository. Build requires certain tools, for example, CMake. Build should have a specified set of locations to search a tool, and if the tool is not found in any of those locations then, acquire the tool from a specified URL. This document describes the contract between the build and scripts that search and acquire a tool.</p>
+<p>####Tool Manifest</p>
+<p>Details of each tool required for the build will be in a manifest file <code>.toolversions</code> located in the root of the repository. Each tool should have the following details:</p>
+<ol>
+<li>Name of the tool</li>
+<li>Declared version</li>
+<li>Search paths where the tool is likely to be found</li>
+<li>Acquire paths from where the tool can be obtained</li>
+</ol>
+<p>An example of <code>.toolversions</code> is shown below:</p>
+<hr>
+<p><img src="./assets/toolversions.png?raw=true" alt="toolversions."></p>
+<hr>
+<p>####Probing Mechanism</p>
+<p>Build will use a probing mechanism to get the required tool. For any tool, probing involves the following three tasks in sequence:</p>
+<ol>
+<li>Search the tool requested by the build. Searches the tool in locations specified in <code>.toolversions</code> If tool is found then, return the tool path to the build.</li>
+<li>If search fails to find the tool then, acquire the tool from the location specified in <code>.toolversions</code></li>
+<li>If search and acquire fail then, return an error message to build</li>
+</ol>
+<p>####Search</p>
+<p>ISearchTool interface provides virtual and abstracts methods that accomplish searching of a tool. Default implementation would search the tool in environment path and a location within the repository specified in<code>.toolversions</code>. A tool can override the base, and have its own implementation of search.
+Each tool should implement abstract methods.</p>
+<p>####Acquire</p>
+<p>IAcquireTool interface provides virtual and abstracts methods that accomplish the acquisition of a tool. Default implementation would download the tool from the URL specified in <code>.toolversions</code>, and extract the tool to a location within the repository specified in <code>.toolversions</code>. A tool can override the base, and have it own implementation of acquisition.
+Each tool should implement abstract methods.</p>
+<p>####Helpers</p>
+<p>Helpers are a set of utility functions.  For example, a function that can parse <code>.toolversions</code> and get the declared version of a tool.  Probe, search and acquire scripts will use these functions.</p>
+<p>Probe, search and acquire scripts will be in <code>tools-local</code> folder in root folder of CoreFx repository.
+A short description of each folder under <code>tools-local</code> is provided in the table below.</p>
+<table>
+<thead>
+<tr>
+<th>Folder</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>unix</td>
+<td>Shell scripts that provide default implementation of ISearchTool and IAcquireTool, probe-tool, and helpers</td>
+</tr>
+<tr>
+<td>unix/cmake</td>
+<td>Shell scripts that override the default implementation, and implement abstract methods for CMake.</td>
+</tr>
+<tr>
+<td>unix/clang</td>
+<td>Shell scripts that override the default implementation, and implement abstract methods for CMake.</td>
+</tr>
+</tbody>
+</table>
+<p>Similar folder structure will be available for Windows PowerShell scripts. <code>Tools/downloads/&lt;toolName&gt;</code> in CoreFx repository root will be the default location for downloaded tools.</p>
+<p>Official builds will override the default locations where the tool is searched and acquired. These override locations for official builds are specified in a copy (not available in open) of <code>.toolversions</code> file. If a path to the override is specified as a command line argument to <code>build.cmd</code> or <code>build.sh</code> then, config values from <code>.toolversions</code> file located in that specified path are used in search and acquire scripts.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Ccmake-design.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Ccmake-design.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Ccmake-design.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

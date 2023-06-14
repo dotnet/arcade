@@ -1,0 +1,248 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Emergency staging pipeline optimizations </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Emergency staging pipeline optimizations ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="emergency-staging-pipeline-optimizations">Emergency staging pipeline optimizations</h1>
+
+<h2 id="goals">Goals</h2>
+<p>As part of <a href="https://github.com/dotnet/arcade/issues/12261">https://github.com/dotnet/arcade/issues/12261</a> we need to introduce emergency mode to Stage-DotNet and Stage-DotNet-Test pipelines that can be run to prepare a .NET release as fast as possible. Currently the critical stages in the pipeline depend on multiple validation stages (Source Code Validation, Validation, Required Validation) that run for a long time, which is one of the causes for the overall long run time of the pipeline. We need to implement a sped up version of the pipeline, skipping some of the validation jobs and running stages in parallel where possible.</p>
+<h2 id="proposed-implementation">Proposed Implementation</h2>
+<p>The proposed implementation is introducing a &quot;emergency switch&quot; parameter in the Stage-DotNet pipeline. Stage dependencies can be rearranged according to this parameter. That will require no changes to the release pipeline that depends on the staging pipeline outputs. (Stage-DotNet is coded as a resourse in Release-DotNet-*). We can test the changes using the available testing pipeline (Stage-DotNet-Test) as it uses the same yaml.</p>
+<p>Another approach was discussed - creating a separate pipeline that will contain the stages in the emergency order. This approach would require changes to the release pipeline and would be harder to maintain as changes to Stage-DotNet would also need to be mirrored to the new pipeline and that can cause divergence from the original in the future. Therefore, the &quot;emergency switch&quot; parameter is the better option.</p>
+<p>The sequence of stages in the current pipeline is:</p>
+<pre><code class="lang-mermaid">flowchart LR
+  prep[&quot;Prep Ring \n &lt;b&gt;~30min&lt;/b&gt;&quot;] --&gt; prep_override[Prep Ring Override]
+  prep_override --&gt; signing[&quot;Signing Ring \n &lt;b&gt;~50min&lt;/b&gt;&quot;]
+  prep_override --&gt; source_code_validation[&quot;Source Code Validation \n &lt;b&gt;~40min&lt;/b&gt;&quot;]
+  source_code_validation --&gt; source_code_validation_override[Source Code Validation Override]
+  signing --&gt; required_validation[&quot;Required Validation \n &lt;b&gt;~1h&lt;/b&gt;&quot;]
+  signing --&gt; validation[&quot;Validation \n &lt;b&gt;~5h&lt;/b&gt;&quot;]
+  required_validation --&gt; sbom_generation[&quot;SBOM Generation \n &lt;b&gt;~20m&lt;/b&gt;&quot;]
+  required_validation --&gt; required_validation_override[Required Validation Override]
+  validation --&gt; validation_override[Validation Override]
+  required_validation_override --&gt; publishing_v3_signed[&quot;Publish Post-Signing Assets \n &lt;b&gt;~1h20m&lt;/b&gt;&quot;]
+  required_validation_override --&gt; post_signing_publishing[&quot;Publish Signed Assets \n &lt;b&gt;~1h30m&lt;/b&gt;&quot;]
+  required_validation_override --&gt; vs_insertion[&quot;VS Insertion Ring \n &lt;b&gt;~50m&lt;/b&gt;&quot;]
+  sbom_generation --&gt; sbom_generation_override[SBOM Generation Override]
+  vs_insertion --&gt; vs_insertion_override[VS Insertion Override]
+  vs_insertion_override --&gt; cti_sign_off[Wait for Test Team Sign Off]
+  cti_sign_off --&gt; staging[&quot;Staging Ring \n &lt;b&gt;~1h10m&lt;/b&gt;&quot;]
+  source_code_validation_override --&gt; staging
+  staging --&gt; finalize_sign_off[Sign off for finalizing the release]
+  finalize_sign_off --&gt; finalize_staging[Finalize Staging Ring]
+  finalize_sign_off --&gt; publishing_v3_validated[&quot;Publish CTI Validated Assets \n &lt;b&gt;~1h20m&lt;/b&gt;&quot;]
+  finalize_staging --&gt; handoff_sign_off_dotnetcsainternal[Approve Publishing to Dotnetcsainternal]
+  handoff_sign_off_dotnetcsainternal --&gt; handoff_publishing_dotnetcsainternal[&quot;Handoff Publishing Ring (dotnetcsainternal)&quot;]
+  classDef default fill:#50C878, stroke:#023020;
+  classDef Override fill:#ECFFDC, stroke:#023020;
+  class prep_override,source_code_validation_override,required_validation_override,sbom_generation_override,vs_insertion_override,validation_override Override;
+</code></pre>
+<p>*Light colored stages are manual validation that overrides another stage (e.g. Prep - Prep Override). They are run if the corresponding stage fails or succeeds with issues and skipped otherwise.</p>
+<p>If the parameter set to true, change the sequence of stages/jobs in the following way:</p>
+<pre><code class="lang-mermaid">flowchart LR
+  prep[&quot;Prep Ring \n &lt;b&gt;~30min&lt;/b&gt;&quot;] --&gt; signing[&quot;Signing Ring \n &lt;b&gt;~50min&lt;/b&gt;&quot;]
+  prep ---&gt; source_code_validation[&quot;Source Code Validation \n &lt;b&gt;~40min&lt;/b&gt;&quot;]
+  signing --&gt; vs_insertion[&quot;VS Insertion Ring \n &lt;b&gt;~50m&lt;/b&gt;&quot;]
+  signing --&gt; required_validation[&quot;Required Validation \n &lt;b&gt;~1h&lt;/b&gt;&quot;]
+  signing --&gt; validation[&quot;Validation \n &lt;b&gt;~5h&lt;/b&gt;&quot;]
+  signing --&gt; sbom_generation[&quot;SBOM Generation \n &lt;b&gt;~20m&lt;/b&gt;&quot;]
+  signing --&gt; publishing_v3_signed[&quot;Publish Post-Signing Assets \n &lt;b&gt;~1h20m&lt;/b&gt;&quot;]
+  signing --&gt; post_signing_publishing[&quot;Publish Signed Assets \n &lt;b&gt;~1h30m&lt;/b&gt;&quot;]
+  signing --&gt; cti_sign_off[Wait for Test Team Sign Off]
+  cti_sign_off --&gt; staging[&quot;Staging Ring \n &lt;b&gt;~1h10m&lt;/b&gt;&quot;]
+  staging --&gt; finalize_sign_off[Sign off for finalizing the release]
+  finalize_sign_off --&gt; finalize_staging[Finalize Staging Ring]
+  finalize_sign_off --&gt; publishing_v3_validated[&quot;Publish CTI Validated Assets \n &lt;b&gt;~1h20m&lt;/b&gt;&quot;]
+  classDef default fill:#50C878, stroke:#023020;
+</code></pre>
+<ul>
+<li>The Staging Ring
+<ul>
+<li>skip the <code>validate-staging-inputs</code> and <code>validate_staging_outputs</code> step</li>
+<li>dynamically change dependencies to
+<ul>
+<li>prep</li>
+<li>prep_override</li>
+<li>signing</li>
+<li>cti_sign_off</li>
+</ul>
+</li>
+<li>dynamically change conditions</li>
+</ul>
+</li>
+<li>VS Insertion Ring
+<ul>
+<li>skip <code>validate_vs_insertion_inputs</code> job</li>
+<li>dynamically change dependencies to
+<ul>
+<li>prep</li>
+<li>prep_override</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Publish Signed Assets
+<ul>
+<li>depends on:
+<ul>
+<li>signing</li>
+</ul>
+</li>
+<li>add a condition that signing was successful</li>
+</ul>
+</li>
+<li>Publish Post-Signing Assets
+<ul>
+<li>depends on:
+<ul>
+<li>prep</li>
+<li>prep_override</li>
+<li>signing</li>
+</ul>
+</li>
+<li>remove required_validation conditions</li>
+</ul>
+</li>
+<li>Validation Ring - no changes</li>
+<li>Sbom Generation Ring
+<ul>
+<li>depends on:
+<ul>
+<li>prep</li>
+<li>prep_override</li>
+<li>signing</li>
+</ul>
+</li>
+<li>no changes in conditions</li>
+</ul>
+</li>
+<li>Required Validation Ring - no changes</li>
+<li>Source Code Validation - no changes</li>
+<li>Signing Ring
+<ul>
+<li>skip <code>validate_signing_inputs</code> step</li>
+</ul>
+</li>
+<li>Prep Ring - no changes</li>
+<li>Configure stages to have no override on failure</li>
+</ul>
+<h2 id="risks">Risks</h2>
+<ul>
+<li><p>the release pipeline is closely connected to the staging - Stage-DotNet is listed as a resource in Release-DotNet from which build artifacts are being downloaded, the release pipeline also expects that assets are published to certain feeds and storage acccounts. We need to check that all assets it needs are being published with the expected changes and in the expected location.</p>
+</li>
+<li><p>make sure that the critical stages of Stage-DotNet have all the needed assets. It is possible that additional changes need to be made in the jobs consuming or publishing artifacts, but on a first glance validation stages don't produce outputs that are used in later stages.</p>
+</li>
+</ul>
+<h2 id="testing">Testing</h2>
+<p>The change can be tested by running the Stage-DotNet-Test pipeline. It uses the same yml as Stage-DotNet but uploads assets to temporarily created feeds and blob storage containers so that we can run the pipeline multiple times without uploading to the official places. We should run it with the emergency switch on and off and make sure that</p>
+<ul>
+<li>stages are run in the correct order in both emergency and regular scenario</li>
+<li>adding the new parameter doesn't introduce any errors in the current staging process</li>
+<li>all stages from the diagram are run so that:
+<ul>
+<li>all files produced by the staging pipeline are published (to feeds and blob storage containers) in both the emergency and regular scenario</li>
+<li>the build artifacts that are used by the release pipeline are published (<code>config.json</code>, <code>manifest.json</code>, <code>signed/*</code>, <code>signalr-signed/*</code>, <code>release-manifests/*</code>)</li>
+</ul>
+</li>
+</ul>
+<h2 id="open-questions">Open Questions</h2>
+<ol>
+<li><p>How does the change need to be communicated?</p>
+</li>
+<li><p>Should we create a separate 1ES pool for the emergency pipeline to decrease wait time, also could we unite jobs with the same goal? (suggested by Djuradj)</p>
+</li>
+</ol>
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

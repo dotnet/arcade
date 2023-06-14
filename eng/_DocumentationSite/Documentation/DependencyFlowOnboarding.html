@@ -1,0 +1,276 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Dependency flow onboarding </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Dependency flow onboarding ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="dependency-flow-onboarding">Dependency flow onboarding</h1>
+
+<p>There's a set of steps that need to be completed so the versions of assets your repository depends on are updated and also the assets your repository produces are updated in upstream repositories.</p>
+<ul>
+<li><p><a href="#prerequisites">Dependency flow prerequisites</a></p>
+</li>
+<li><p><a href="#publishing">Publishing dependencies</a></p>
+</li>
+<li><p><a href="#consuming">Consuming dependencies</a></p>
+</li>
+</ul>
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+<li>If your repository is not part of the Dotnet GitHub organization, contact an administrator for the organization to install the dotnet-maestro app in your repository: <a href="https://github.com/apps/dotnet-maestro">https://github.com/apps/dotnet-maestro</a></li>
+</ul>
+<p>The following pre-requisites are not hard requirements, but enabling dependency flow will be much simpler if you are using these processes:</p>
+<ul>
+<li><p>Internal builds produced out of <a href="https://dev.azure.com/dnceng/internal">https://dev.azure.com/dnceng/internal</a></p>
+</li>
+<li><p>Publishing using the <a href="https://github.com/dotnet/arcade/blob/master/Documentation/StartHere.md#im-ready-to-get-started-what-do-i-do">Arcade SDK</a></p>
+</li>
+</ul>
+<h2 id="publishing">Publishing</h2>
+<h3 id="steps-for-publishing">Steps for publishing</h3>
+<h4 id="1-copy-files-from-eng-folder">1. Copy files from eng/ folder</h4>
+<p>Copy <code>Versions.props</code>, <code>Versions.Details.xml</code> and the <code>common/</code> folder from the <code>eng/</code> folder of the <a href="https://github.com/dotnet/arcade-validation/tree/master/eng">arcade-validation</a> repo.</p>
+<p>This folder contains required version files as well as Pipeline templates used for publishing assets.</p>
+<p>For more information about version files go to: <a href="https://github.com/dotnet/arcade/blob/master/Documentation/DependencyDescriptionFormat.md">https://github.com/dotnet/arcade/blob/master/Documentation/DependencyDescriptionFormat.md</a></p>
+<h4 id="2-enable-arcade-publishing-and-publishing-to-the-build-asset-registry">2. Enable Arcade publishing and publishing to the Build Asset Registry</h4>
+<p>To enable publishing of your assets, follow the instructions outlined in <a href="https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md#basic-onboarding-scenario">https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md#basic-onboarding-scenario</a></p>
+<h2 id="consuming">Consuming</h2>
+<h3 id="steps-for-consuming">Steps for consuming</h3>
+<h4 id="1-add-or-copy-versiondetailsxml">1. Add or copy Version.Details.xml</h4>
+<p>Dependency consumption depends on the <a href="https://github.com/dotnet/arcade/blob/master/Documentation/DependencyDescriptionFormat.md#details-file">details file</a> defining what dependencies your repo is going to consume.</p>
+<p>You can create this file or copy the file from arcade-minimalci-sample's <a href="https://github.com/dotnet/arcade-minimalci-sample/blob/master/eng/Version.Details.xml">Version.Details.xml</a> file as a starting point.</p>
+<h4 id="2-add-or-copy-your-expression-files">2. Add or copy your expression files</h4>
+<p>Dependency flow will update versions in your <a href="https://github.com/dotnet/arcade-minimalci-sample/blob/master/eng/Version.Details.xml">expression files</a>.</p>
+<p>You can create these files or copy them from the arcade-minimalci-sample repo:</p>
+<ul>
+<li><p><a href="https://github.com/dotnet/arcade-minimalci-sample/blob/master/eng/Versions.props">Version.props</a></p>
+</li>
+<li><p><a href="https://github.com/dotnet/arcade-minimalci-sample/blob/master/global.json">global.json</a></p>
+</li>
+</ul>
+<h4 id="3-add-subscriptions-and-channels">3. Add subscriptions and channels</h4>
+<p>More about <a href="https://github.com/dotnet/arcade/blob/master/Documentation/BranchesChannelsAndSubscriptions.md">Channels, Branches, and Subscriptions</a></p>
+<p><a href="https://github.com/dotnet/arcade/blob/master/Documentation/BranchesChannelsAndSubscriptions.md#scenarios">Scenarios</a></p>
+<h5 id="31-join-the-arcade-contrib-team">3.1. Join the <code>arcade-contrib</code> team</h5>
+<ol>
+<li>Go to <a href="https://github.com/orgs/dotnet/teams/arcade-contrib/members">https://github.com/orgs/dotnet/teams/arcade-contrib/members</a></li>
+<li>Click on &quot;Request to join&quot;</li>
+</ol>
+<h5 id="32-set-up-your-darc-client">3.2. Set up your darc client</h5>
+<p>Once you are part of the <code>arcade-contrib</code> team</p>
+<ol>
+<li>Go to <a href="https://maestro-prod.westus2.cloudapp.azure.com/">https://maestro-prod.westus2.cloudapp.azure.com/</a></li>
+<li>Click &quot;Sign in&quot; in the upper right of the page</li>
+<li>Give consent to &quot;DotNet Maestro&quot;</li>
+<li>Click on your name and then on &quot;Tokens&quot;</li>
+<li>Choose a name for your token and then &quot;Create&quot;</li>
+<li>Copy the created token</li>
+<li>Open a powershell or bash prompt and navigate to a repository that has the arcade toolset.</li>
+<li>Run <code>.\eng\common\darc-init.ps1</code> or <code>./eng/common/darc-init.sh</code>.  This will install darc as a global tool.</li>
+<li>Run <code>darc authenticate</code></li>
+<li>Place the token into the <code>bar_password</code> field.  You may leave the rest of the fields as-is.</li>
+<li>Save and close.</li>
+</ol>
+<h5 id="33-get-all-existing-channels">3.3. Get all existing channels</h5>
+<ol>
+<li>Run <code>darc get-channels</code> to display available channels.  Arcade builds are published to the '.NET Eng - Latest' channel.</li>
+</ol>
+<h5 id="34-create-a-subscription-to-get-arcade-updates">3.4. Create a subscription to get Arcade updates</h5>
+<p>Darc can be used to create new subscriptions, either in interactive mode or non-interactive mode.
+Interactive will open an editor to modify the fields, while non-interactive expects all fields on the command line.</p>
+<h6 id="interactive-mode">Interactive mode</h6>
+<ol>
+<li><p>Run <code>darc add-subscription</code></p>
+</li>
+<li><p>Fill out the fields.  For Arcade, this typically looks like:</p>
+</li>
+</ol>
+<pre><code>Channel: .NET Eng - Latest
+Source Repository URL: https://github.com/dotnet/arcade
+Target Repository URL: &lt;your repository URL&gt;
+Target Branch: &lt;target branch for arcade updates, e.g. master&gt;
+Update Frequency: everyDay
+Batchable: False
+Merge Policies:
+- Name: Standard
+  Properties: {}
+Pull Request Failure Notification Tags: ''
+</code></pre>
+<ol start="3">
+<li>Save and close</li>
+</ol>
+<h6 id="non-interactive-mode">Non-interactive mode</h6>
+<ol>
+<li>Run <code>darc add-subscription --channel &quot;.NET Eng - Latest&quot; --source-repo https://github.com/dotnet/arcade --target-repo &lt;your repo&gt; --target-branch master --update-frequency everyDay --ignore-checks WIP,license/cla --all-checks-passed -q</code></li>
+</ol>
+<p>These steps can be altered for additional subscriptions to other repositories.</p>
+<h6 id="supported-values">Supported values</h6>
+<p>Merge Policies</p>
+<p>Merge policies are a set of rules that, if satisfied, mean that an auto-update PR will be
+automatically merged. A PR is only merged automatically if policies exist and all are satisfied.</p>
+<ul>
+<li>AllChecksSuccessful. All PR checks must be successful, potentially ignoring a set of checks
+specified in <code>ignoreChecks</code>. Checks might be ignored if they are unrelated to PR validation.
+The check name corresponds to the string that shows up in GitHub/Azure DevOps.</li>
+<li>RequireChecks. Require that a specific set of checks pass. Check names need to be defined in
+the <code>checks</code> property. The check name corresponds to the string that shows up in GitHub/Azure DevOps.</li>
+<li>NoExtraCommits. If additional non-bot commits appear in the PR, the PR should not be merged.</li>
+<li>NoRequestedChanges - If changes are requested on the PR (or the PR is rejected), it will not be merged.</li>
+<li>Standard. Combines the AllChecksSuccessful and NoRequestedChanges policies. This is the recommended merge policy to use unless there's a reason to use the others.</li>
+</ul>
+<p>Update frequencies</p>
+<p>How often does a source repo flows dependencies into a target repo.</p>
+<ul>
+<li>everyDay. The target repo only gets the dependencies updated once a day.</li>
+<li>twiceDaily. The target repo gets the dependencies updated twice a day.</li>
+<li>everyBuild. The target repo gets the dependencies updated after every source repo build.</li>
+<li>everyWeek. The target repo gets the dependencies updated once a week (On Mondays).</li>
+<li>none. No updates will happen in the target repo.</li>
+</ul>
+<h5 id="35-create-a-channel-optional-typically-not-needed">3.5. Create a channel (optional, typically not needed)</h5>
+<p>You only need to create a channel in rare cases.  Most .NET 5 builds should be assigned to the &quot;.NET 5 Dev&quot; channel.  However, if you do need to create a new channel:</p>
+<ol>
+<li>Run the following darc command:
+<pre><code>darc add-channel --name &quot;&lt;channel name&gt;&quot; --classification &quot;&lt;classification&gt;&quot;
+</code></pre>
+The classification is typically 'product'.  Later on this will be used to differentiate dev or non-product builds, etc.</li>
+</ol>
+<h5 id="36-associate-a-branch-with-a-channel">3.6. Associate a branch with a channel</h5>
+<p>This will associate each new build of a specific branch in a repository with a channel. This is not technically required.
+Outputs from any build of any branch could be associated with a channel after the upload to the build asset registry.
+For example, I might decide that 'dev/foobar', containing a one off fix, is what I want to flow into downstream repositories.</p>
+<p>In practice, it's tedious to manually associate each new build with a channel.
+Most of the time, each build 'master' is intended for '.NET 5 Dev', each build of release/2.1 is intended for
+'.NET Core Release 2.1', etc. Associating a branch with a channel causes every new build of that branch to be automatically
+applied to the channel.</p>
+<p>For most .NET Core repositories, 'master' should be associated with '.NET 5 Dev'.</p>
+<ol>
+<li>Run the following darc command:
+<pre><code>darc add-default-channel --branch refs/heads/&lt;branch&gt; --repo &lt;repo URI&gt; --channel &lt;target channel&gt;
+</code></pre>
+Example: For corefx master (the .NET 5 development branch), this would be:
+<pre><code>darc add-default-channel --branch refs/heads/master --repo https://github.com/dotnet/corefx --channel &quot;.NET 5 Dev&quot;
+</code></pre>
+</li>
+<li>Verify with <code>darc get-default-channels</code></li>
+</ol>
+<h4 id="5-validate">5. Validate</h4>
+<p>At this time we don't have a way to notify users if something went wrong while updating dependencies but this work is tracked by
+<a href="https://github.com/dotnet/arcade/issues/821">https://github.com/dotnet/arcade/issues/821</a>.</p>
+<p>To validate that created subscriptions and channels work as expected you'd need to verify that a PR has been created on your subscription's <code>targetRepository</code> once a build from <code>sourceRepository</code> has successfully completed. If a PR was not created something went wrong and we can use darc to find out what happened</p>
+<ol>
+<li>Obtain the id of the non-functioning subscription:
+<pre><code>darc get-subscriptions
+</code></pre>
+You can use various parameters to filter the list and find the subscription you're interested in.  For instance:
+<pre><code>darc get-subscriptions --target-repo corefx
+https://github.com/dotnet/arcade (.NET Eng - Latest) ==&gt; 'https://github.com/dotnet/corefx' ('master')
+- Id: c297d885-0692-40f8-6b97-08d61f281b4c
+- Update Frequency: everyDay
+- Merge Policies:
+  AllChecksSuccessful
+    ignoreChecks =
+                  [
+                    &quot;WIP&quot;,
+                    &quot;license/cla&quot;
+                  ]
+- Last Build: N/A
+</code></pre>
+</li>
+<li>Incase of any errors contact @dnceng.</li>
+</ol>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CDependencyFlowOnboarding.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CDependencyFlowOnboarding.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CDependencyFlowOnboarding.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

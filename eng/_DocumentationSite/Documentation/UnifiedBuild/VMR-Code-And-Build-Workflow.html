@@ -1,0 +1,350 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>The Unified Build Almanac (TUBA) - VMR Workflow Concepts </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="The Unified Build Almanac (TUBA) - VMR Workflow Concepts ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="the-unified-build-almanac-tuba---vmr-workflow-concepts">The Unified Build Almanac (TUBA) - VMR Workflow Concepts</h1>
+
+<h2 id="introduction">Introduction</h2>
+<p>Unified build seeks not only to use the source-build methodology to build the .NET product across the board, but also to &quot;flatten the graph&quot; of the build. Rather than flow dependencies from repository to repository through a deep graph, then walking that graph to determine what commits contribute to the product build, source will flow directly from development repositories into the VMR itself, in parallel.</p>
+<pre><code class="lang-mermaid">flowchart TD
+    subgraph Traditional[Traditional Flow -- .NET 8 and previous]
+        tradEmsdk[emsdk]
+        tradRuntime[runtime]
+        tradWinforms[winforms]
+        tradWPF[wpf]
+        tradWindowsDesktop[windows-desktop]
+        tradEFCore[efcore]
+        tradASPNetCore[aspnetcore]
+        tradTemplating[templating]
+        tradSDK[sdk]
+        tradInstaller[installer]
+        tradRoslyn[roslyn]
+        tradMSBuild[msbuild]
+        tradNuGet[nuget]
+        tradFSharp[fsharp]
+
+        tradEmsdk--&gt;|Build Outputs|tradRuntime
+        tradRuntime--&gt;|Build Outputs|tradWinforms
+        tradRuntime--&gt;|Build Outputs|tradTemplating
+        tradRuntime--&gt;|Build Outputs|tradSDK
+        tradRuntime--&gt;|Build Outputs|tradASPNetCore
+        tradRuntime--&gt;|Build Outputs|tradEFCore
+        tradWinforms--&gt;|Build Outputs|tradWPF
+        tradWPF--&gt;|Build Outputs|tradWindowsDesktop
+        tradWindowsDesktop--&gt;|Build Outputs|tradSDK
+        tradEFCore--&gt;|Build Outputs|tradASPNetCore
+        tradASPNetCore--&gt;|Build Outputs|tradSDK
+        tradTemplating--&gt;|Build Outputs|tradSDK
+        tradRoslyn--&gt;|Build Outputs|tradSDK
+        tradMSBuild--&gt;|Build Outputs|tradSDK
+        tradNuGet--&gt;|Build Outputs|tradSDK
+        tradFSharp--&gt;|Build Outputs|tradSDK
+        tradSDK--&gt;|Build Outputs|tradInstaller
+    end
+
+    subgraph VMR[VMR Flow -- .NET 9+]
+        vmrRuntime--&gt;vmrVMR
+        vmrWinforms--&gt;vmrVMR
+        vmrWPF--&gt;vmrVMR
+        vmrWindowsDesktop--&gt;vmrVMR
+        vmrEFCore--&gt;vmrVMR
+        vmrASPNetCore--&gt;vmrVMR
+        vmrTemplating--&gt;vmrVMR
+        vmrEmsdk--&gt;vmrVMR
+        vmrSDK--&gt;vmrVMR
+        vmrInstaller--&gt;vmrVMR
+        vmrRoslyn--&gt;vmrVMR
+        vmrMSBuild--&gt;vmrVMR
+        vmrNuGet--&gt;vmrVMR
+        vmrFSharp--&gt;vmrVMR
+
+        vmrEmsdk[emsdk]
+        vmrRuntime[runtime]
+        vmrWinforms[winforms]
+        vmrWPF[wpf]
+        vmrWindowsDesktop[windows-desktop]
+        vmrEFCore[efcore]
+        vmrASPNetCore[aspnetcore]
+        vmrTemplating[templating]
+        vmrSDK[sdk]
+        vmrInstaller[installer]
+        vmrRoslyn[roslyn]
+        vmrMSBuild[msbuild]
+        vmrNuGet[nuget]
+        vmrFSharp[fsharp]
+        vmrVMR[VMR]
+
+        vmrVMR--&gt;vmrEmsdk
+        vmrVMR--&gt;vmrRuntime
+        vmrVMR--&gt;vmrWinforms
+        vmrVMR--&gt;vmrWPF
+        vmrVMR--&gt;vmrWindowsDesktop
+        vmrVMR--&gt;vmrEFCore
+        vmrVMR--&gt;vmrASPNetCore
+        vmrVMR--&gt;vmrTemplating
+        vmrVMR--&gt;vmrSDK
+        vmrVMR--&gt;vmrInstaller
+        vmrVMR--&gt;vmrRoslyn
+        vmrVMR--&gt;vmrMSBuild
+        vmrVMR--&gt;vmrNuGet
+        vmrVMR--&gt;vmrFSharp
+    end
+
+    Traditional--&gt;VMR
+</code></pre>
+<p><em>Subset of the code flow graph for Traditional and VMR workflows</em></p>
+<p>While this may appear to be a signficant departure from the current build methodology, it is functionally not altogether that different. This document seeks to explain some of the basic concepts around the VMR development workflow: dealing with breaking changes, where development can happen, etc.</p>
+<h2 id="now-vs-net-9---how-code-flow-works">Now vs. .NET 9 - How Code Flow Works</h2>
+<p>Today, a development repository such as <code>dotnet/runtime</code> serves as both a home for development of the .NET runtime as well as the home for its official build. However, the <code>dotnet/runtime</code> repository alone does not constitute the entire .NET product. Repositories like <code>dotnet/winforms</code>, <code>dotnet/wpf</code>, and <code>dotnet/sdk</code> also contribute, and they have strong dependencies on the <code>dotnet/runtime</code>, from its API surface area to, in some cases, specific version numbers. Developing and building the .NET product is an iterative process by which code changes are made in a repository, those changes are built officially, and then the outputs flow downstream via automation to repositories that depend on them. A build is 'done' when all 'real' code changes have been made, and the resultant official builds have flowed throughout the entire dependency graph. The key highlight is that <em>functionality in product code is flowed via the resultant outputs of building that code (binaries), and the product build is simply the closure of all shipping outputs from the input builds.</em>.</p>
+<p>Unified Build tweaks this by splitting the build and development repository concepts. Rather than being home of the code for the .NET runtime <em>and</em> its official build, <code>dotnet/runtime</code> is instead home to just the code, and the VMR is home to the official build. Repositories flow source changes into the VMR and then the VMR builds the code all at once. The key highlight here is that <em>functionality in product code is flowed via the code itself; then source-build's methodology is used to build the product in the VMR.</em></p>
+<p>To understand how this works, let's take look at how source-build works today. Source-build uses a code layout which combines the source of a set of input components together in a build environment. The build then starts at the lowest layer of the dependency structure of the product (e.g. roslyn). The packages and other output binaries are then held locally on the machine, and those are fed into the next layer. For example, let's consider a few low-level repos:</p>
+<pre><code class="lang-mermaid">flowchart TD
+    packageStore[(Local build output store)]
+    installerRepo[(dotnet/installer Version.Details.xml)]
+    cloneSource[Clone source of repos]
+    buildArcade[Build arcade]
+    buildRoslyn[Build roslyn]
+    buildRuntime[Build runtime]
+
+    installerRepo--&gt;|Product commits in Version.Details.xml|cloneSource
+    cloneSource--&gt;buildArcade
+    buildArcade--&gt;|Outputs|packageStore
+    buildArcade--&gt;buildRoslyn
+    buildRoslyn--&gt;|Outputs|packageStore
+    buildRoslyn--&gt;buildRuntime
+    buildRuntime--&gt;|Outputs|packageStore
+
+    packageStore--&gt;|Inputs|buildRoslyn
+    packageStore--&gt;|Inputs|buildRuntime
+
+    packageStore--&gt;ShippingBinaries[(Shipping binaries)]
+</code></pre>
+<p>The key difference between today and .NET 9 is how those source-build input commits are determined. Today, source-build piggy-backs on the traditional code--&gt;dependency flow--&gt;build model and uses the <em>same commits</em> that appear in the traditionally constructed product. .NET 9 flattens the graph, and the source is directly flowed, in parallel, into the VMR. Each time (or on a definable schedule) a commit is made to a development repo, the tooling obtains the <em>source diffs</em> from the set of commits that have occurred between the last time the repo was synced to the VMR, and the current commit. It then commit a patch or set of commits, mapping the development repo files onto the directory structure of the VMR. The VMR now has the updated sources and can build. While this is vastly more efficient for most code changes, it does present an obvious problem. What happens if there are breaking changes?</p>
+<h3 id="dealing-with-breaking-changes">Dealing with breaking changes</h3>
+<p>The traditional graph-based build methodology deals with breaking changes by flowing new functionality into downstream repositories via pull requests. The pull request contains the versions of the new binaries that have been produced, and validation (build and test) takes place in the downstream repository. Reactions to breaking changes generally occur within those PRs. Thus, changes in components that are required because of changes in their dependencies &quot;roll&quot; through the product build graph over time. While this works, it's generally slow. It does allow teams to react over time to new functionality, but this hinders fast iteration on the product. It also introduces the possibility of incoherency. Incoherency is:</p>
+<p><em>A state of the traditional product build graph in which multiple versions of the same component are transitively referenced, and where the difference in those versions does or could have meaningful impact on product functionality. For instance, if two dotnet/runtimes are referenced within the same SDK, one may be packaged with the SDK, but the other may have been what <code>dotnet/aspnetcore</code> was built against. If there are meaningful differences between those two runtimes, <code>dotnet/aspnetcore</code> may not operate as expected.</em></p>
+<p>So, because the build graph has multiple paths for various components to flow new functionality to the eventual end-point in <code>dotnet/installer</code>, and because that functionality will flow at different rates, there is a possibility that some or part of the product may simply be broken at some point. Unified Build gets rid of this possibility, but adds that wrinkle that <em>all repositories built together in the VMR simultaneously observe changes in the functionality of shared dependencies</em>. For example, when <code>dotnet/runtime</code> flows new code that removes an API, the <code>dotnet/sdk</code>, <code>dotnet/installer</code>, <code>dotnet/winforms</code>, <code>dotnet/aspnetcore</code> will see that change immediately.</p>
+<p>To deal with this, the Unified Build uses the same concept as the traditional build. Sets of source changes for a development repo are packaged into a pull request against the VMR. Any required reaction to functionality changes in other components (or, the source component itself) also occurs <em>in that PR</em>. The primary difference between the traditional and VMR-style workflow is simply <em>when</em> the reaction happens. In the traditional model, it &quot;rolls&quot; through over time (and in fact, in some cases it is impossible to react immediately), and in the VMR model, the reaction happens immediately. Functionally, the same source changes are necessary.</p>
+<p>But of course, this brings up another question: How does development manage to continue effectively in the development repos?</p>
+<h3 id="closing-the-loop---keeping-developement-repos-up-to-date">Closing the loop - Keeping developement repos up to date</h3>
+<p>To understand how development repositories are kept up to date, it's again helpful to look at how source-build works in .NET 8 and prior releases. Even though the full &quot;source-build&quot; happens against the full set of product commits, for practical purposes there needs to be validation at individual repo PR/CI time to ensure that no regressions occur. To do this, source-build again piggy-backs off of the traditional model. Each repo runs in its official build pipeline an additional leg which runs the individual repo in source-build mode, as if the required inputs were already available. It then produces a set of intermediate outputs, which are flowed along the 'normal' product assets to dependent repos. Those inputs can then be used to run that source-build leg in CI/PR validation. Essentially, the source-build leg for a repo is a pinhole view of source-build, mimicking how that component would build were it in the &quot;full&quot; source-build infrastructure.</p>
+<pre><code class="lang-mermaid">flowchart TD
+    packageStore[(SourceBuild.intermediates.* feed)]
+    buildArcade[Build arcade SB intermediates]
+    buildRoslyn[Build roslyn SB intermediates]
+    sbPRRoslyn[SB PR+CI roslyn]
+    buildRuntime[Build runtime SB intermediates]
+    sbPRRuntime[SB PR+CI runtime]
+
+    buildArcade--&gt;|SourceBuild.Intermediates.arcade package|packageStore
+    packageStore--&gt;|SourceBuild.Intermediates.arcade|sbPRRoslyn
+    buildArcade--&gt;|Dependency flow|sbPRRoslyn
+    buildArcade--&gt;|Dependency flow|sbPRRuntime
+
+    packageStore--&gt;|SourceBuild.Intermediates.arcade|buildRoslyn
+    buildRoslyn--&gt;|SourceBuild.Intermediates.roslyn|packageStore
+    buildRoslyn--&gt;|Dependency flow|sbPRRuntime
+    
+    packageStore--&gt;|SourceBuild.Intermediates.arcade|sbPRRuntime
+    packageStore--&gt;|SourceBuild.Intermediates.roslyn|sbPRRuntime
+
+    packageStore--&gt;|SourceBuild.Intermediates.arcade|buildRuntime
+    packageStore--&gt;|SourceBuild.Intermediates.roslyn|buildRuntime
+
+    buildRuntime--&gt;|SourceBuild.Intermediates.runtime|packageStore
+</code></pre>
+<p><em>Source build legs are kept up to date using traditional dependency flow</em></p>
+<p>In Unified Build, development repositories use the same source-build intermediates to enable isolated workflows. Most 'normal' dependency flow (e.g. <code>Microsoft.NETCore.App.Ref</code>) ceases. To keep the <code>SourceBuild.Intermediate</code> packages up to date, the VMR build saves off the outputs of each individual component as the build progresses. Those are then flowed <em>back</em> into the development repos on a definable cadence. Essentially, the workflow is identical to traditional builds, with one signficant tweak: any source changes made only in the VMR are flowed too.</p>
+<p>Consider the following example: <code>dotnet/runtime</code> fixes a typo in an API, renaming <code>WaitForConnectionsToDrainAsink</code> to a more appropriate <code>WaitForConnectionsToDrainAsync</code>. These source changes flow into the VMR after the runtime commit, in the form of a PR. It turns out, <code>dotnet/aspnetcore</code> had taken a dependency on this incorrect name and now needs a fix. The developer who made the runtime change updates the <code>src/aspnetcore</code> directory, replacing several incorrect usages with the correct name. The VMR builds, and the <code>SourceBuild.Intermediate</code> packages are saved off as the build progresses. These flow back into the <code>dotnet/aspnetcore</code> using traditional-style dependency flow (as binary package flow), and a PR is opened. To help the developer, <em>this PR also contains the source-diffs introduced in the VMR update</em>.</p>
+<p>Essentially, the same mechanism for forward flow (create patches -&gt; map onto target directories -&gt; create commits) is used to gather up <strong>any</strong> changes in the <code>src/aspnetcore</code> directories made since the last time the VMR flowed to <code>dotnet/aspnetcore</code> and places them alongside binary updates in the same PR. This helps keep the development repo up to date with minimal user intervention. If by chance <code>dotnet/aspnetcore</code> had introduced <em>new</em> usages of <code>WaitForConnectionsToDrainAsink</code> that had not yet been dealt with, these reaction occur in the development repo update PR. That of course would trigger new forward flow to the VMR, and the cycle occurs over again until a stable state is reached.</p>
+<pre><code class="lang-mermaid">flowchart TD
+    runtimeDev[(dotnet/runtime)]
+    aspnetcoreDev[(dotnet/aspnetcore)]
+    vmr[(VMR)]
+    vmrBuild[dotnet/dotnet VMR]
+
+    runtimeDev--&gt;|Source forward flow|vmr
+    vmr--&gt;vmrBuild
+    vmrBuild--&gt;|Source diffs + SourceBuild.Intermediate back flow|runtimeDev
+    aspnetcoreDev--&gt;|Source forward flow|vmr
+    vmrBuild--&gt;|Source diffs + SourceBuild.Intermediate back flow|aspnetcoreDev
+</code></pre>
+<p>This opens up a new possibility: If source and intermediates automatically flow backwards to development repos, does this mean that work can happen solely in the VMR?</p>
+<h2 id="where-development-happens">Where development happens</h2>
+<p>Backflow introduces the option of working in the full VMR <em>in addition</em> to working in the development repository. When a change is made solely in the VMR, it is <em>immediately</em> part of the product, and will be reflected in development repository workflows as backflow occurs. Therefore, it becomes possible to choose where to work based on the type of change.</p>
+<p>Large, cross stack changes may be better suited to VMR work. Experiments where the developer wishes to immediately obtain an SDK become simpler. Simply clone the VMR, make appropriate changes, and build to get an SDK to test. Small changes that are unlikely to affect downstream components happen in development repos where inner-loop times are shorter. Working in the development repo also adds a bit of risk mitigation. When a bug is introduced in the VMR, it will immediate start propagating everywhere. Working in development repo adds additional bake time before the change starts propagating and reduces risk of large-scale breakages.</p>
+<p>Ideally, the VMR PR/CI pipelines will provide a full swath of product coverage. It is not ideal to be dependent on backflow to validate product functionality. However, some specialized pipelines and testing may only be available against the development repositories. For certain changes that depend on this testing, working in the development repo may be more desirable.</p>
+<h2 id="internal-code-flow-and-releases">Internal code flow and releases</h2>
+<p>Following section describes how code flows into the (internal) release branches of the VMR.</p>
+<pre><code class="lang-mermaid">flowchart TD
+
+    subgraph GitHub / public
+        PublicRepos[(Public repos)]
+        PublicInstaller[(github.com\ndotnet/installer)]
+        PublicVMR[(Public VMR\ngithub.com\ndotnet/dotnet)]
+        PublicRepos-- Maestro flow\nmain, release/* --&gt;PublicInstaller
+    end
+
+    subgraph Legend
+        LegendRepo[(Repository)]
+        LegendPipeline[AzDO pipeline]
+    end
+
+    PublicInstaller-.triggers.-&gt;CodeMirror
+    PublicVMR-.triggers.-&gt;CodeMirror2
+
+    subgraph AzDO / internal
+        InternalRepos[(Internal repos)]
+        InternalInstaller[(dev.azure.com\ndotnet-installer)]
+        InternalVMR[(Internal VMR\ndev.azure.com\ndotnet-dotnet)]
+        CodeMirror[code-mirror]
+        CodeMirror2[code-mirror]
+        VmrSync[dotnet-dotnet-synchronization]
+        VmrSyncInternal[dotnet-dotnet-synchronization-internal]
+        Releases[Partner releases]
+
+        CodeMirror-- mirrors\nmain, release/* --&gt;InternalInstaller
+        InternalRepos-- Maestro flow\ninternal/release/* --&gt;InternalInstaller
+        InternalInstaller-.triggers for\nmain, release/*.-&gt;VmrSync
+        InternalInstaller-.triggers for\ninternal/release/*.-&gt;VmrSyncInternal
+        VmrSyncInternal-- VMR synchronization\ninternal/release/* --&gt;InternalVMR
+        VmrSync-- VMR synchronization\nmain, release/*\nSecurity verification, see below --&gt;PublicVMR
+        CodeMirror2-- mirrors\nmain, release/* --&gt;InternalVMR
+        InternalVMR-.-&gt;Releases
+    end
+
+    class CodeMirror,CodeMirror2,VmrSync,VmrSyncInternal,LegendPipeline Build;
+    class PublicVMR PublicVMR_;
+    class InternalVMR InternalVMR_;
+    class Legend LegendStyle;
+
+    classDef Build fill:#2487DF,stroke:#2487DF,stroke-width:4px,color:#fff;
+    classDef PublicVMR_ fill:#B5E61D,stroke:#000,color:#000;
+    classDef InternalVMR_ fill:#E6631C,stroke:#fff,color:#fff;
+    classDef LegendStyle fill:#fff,stroke:#ccc,color:#aaa;
+    linkStyle 8 stroke-width:2px,fill:none,stroke:blue,color:blue;
+</code></pre>
+<p>On the diagram, you can see two main code flows. The first one for <code>main</code> and <code>release/*</code> branches (public flow):</p>
+<ol>
+<li>Changes are made to product repos as usual (e.g. <code>dotnet/runtime</code>).</li>
+<li>Runtime flows into <code>dotnet/installer</code> as part of the regular Maestro package flow.</li>
+<li><code>dotnet/installer</code> is mirrored internally.</li>
+<li>The VMR synchronization build is triggered and newly ingested sources are pushed to the public VMR.</li>
+<li>The public VMR is then mirrored internally.</li>
+</ol>
+<p>The second flow is for internal changes:</p>
+<ol>
+<li>Changes are made to an <code>internal/release/X</code> branch of an internal mirror of some product repo.</li>
+<li>These changes are flown to an <code>internal/release/X</code> branch of the internal mirror of <code>dotnet/installer</code>.</li>
+<li>The <em>internal</em> VMR synchronization build triggered and changes are pushed to the internal VMR.</li>
+</ol>
+<h3 id="security-considerations">Security considerations</h3>
+<p>As you can see from the diagram above, there are some security risks connected to the VMR code flow. The problem arises from the fact that code is being pushed from the internal AzDO instance back to GitHub. This direction of code flow does not happen for the product repos where we always cross the boundary the other way only.<br>
+Furthermore, the official build of the internal mirror of <code>dotnet/installer</code> is handling both internal and public synchronization of the VMR.</p>
+<p>For this reason, we had to put some security mechanisms in place so that a commit from an internal release branch is not pushed in the public VMR:</p>
+<ol>
+<li>When building an internal release branch of the internal mirror of <code>dotnet/installer</code>, the credentials used for pushing to the public VMR are not available.</li>
+<li>Before pushing to the public VMR, we verify that each commit of each product repo, that is being synchronized into the VMR, is available in the respective public product repository as well.</li>
+<li>We verify branch names of where the build is running from and where it wants to push.</li>
+</ol>
+<h2 id="what-happens-when">What happens when...?</h2>
+<p>In any dependency flow system, there are possible issues that may arise. Below are listed possible scenarios and how they are handled in the VMR:</p>
+<h3 id="a-repo-falls-behind-on-their-backflow">A repo falls behind on their backflow?</h3>
+<p>When a development repository falls behind on their backflow, they cannot make new changes that are also dependent on (or conflicting with) functionality coming in through the backflow, but they can make all other changes which will flow into the VMR. This is exactly the same as it has been in .NET 8 and prior releases:</p>
+<p>Let's say <code>dotnet/runtime</code> removes an API <code>Foo.Bar</code>. If <code>dotnet/aspnetcore</code> has calls to <code>Foo.Bar</code>. In .NET 8 and prior releases the <code>dotnet/runtime</code> dependency flow PR into <code>dotnet/aspnetcore</code> fails. But there are plenty of other PRs in <code>dotnet/aspnetcore</code>'s repo which continue onward (e.g. fixing bugs, new features, etc.). Those can be checked in and flow onward. The same goes for Unified Build and the VMR code flow. If a bug is fixed that does not involve <code>Foo.Bar</code>, the change that flows into the VMR is only the <em>diff</em> of that change, not the current state of <code>dotnet/aspnetcore</code>'s sources, so it will flow just fine. It does, however, mean that aspnetcore cannot <em>new</em> flow changes that are dependent or incompatible with the <code>dotnet/runtime</code> in the VMR. That's a good thing though. In the old model, it could flow new changes into the product there are dependent on the <code>dotnet/runtime</code> version it last ingested. Those would likely not break in downstream dependency PRs (depending on testing) and simply cause product behavioral issues.</p>
+<h3 id="a-bug-in-the-productvmr-breaks-development-repo-workflow">A bug in the product/VMR breaks development repo workflow?</h3>
+<p>If a bug is introduced into the product (i.e. into the VMR sources), it could start to flow backwards into the development repositories and cause issues. In this case, the fix could be reverted or fixed in the VMR or even in the development repository that is the source of the bug. Like the traditional product build, what to do is mostly a policy and impact evaluation. Fixes/reverts in the VMR flow faster to development repositories, but low-priority issues can easily be handled in a development repo.</p>
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

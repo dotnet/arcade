@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Core-Eng Repository Migration </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Core-Eng Repository Migration ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="core-eng-repository-migration">Core-Eng Repository Migration</h1>
+
+<p>It is discouraged to have repositories without code. Our documentation and issues are fragmented between multiple places, and it's hard to orient in it. To make things cleaner, it makes sense to migrate all valid items from core-eng repository and archive this repository.</p>
+<h2 id="stakeholders">Stakeholders</h2>
+<ul>
+<li>.NET Core Engineering Services team (contact: @dnceng)</li>
+<li>.NET Core Engineering Partners (contact:@dncpartners)</li>
+</ul>
+<h2 id="components-to-change">Components to change</h2>
+<p>This work consists of four parts:</p>
+<ul>
+<li>Move repository files (documentation only)</li>
+<li>Move Wiki</li>
+<li>Code changes</li>
+<li>Issues / Epics</li>
+<li>Guidance for security issues</li>
+</ul>
+<h3 id="move-repository-files-documentation-only">Move repository files (documentation only)</h3>
+<p>This change includes:
+* <a href="https://github.com/dotnet/core-eng/tree/main/DevDocumentation/DevWorkflow/Design">DevDocumentation</a> - contains new documentation for DevWorkflow. The whole folder should be moved.
+* <a href="https://github.com/dotnet/core-eng/tree/main/docs">Docs</a> - some items seems to be obsolete, but there are recent (&lt;=1 year) updates.
+* <a href="https://github.com/dotnet/core-eng/tree/main/Documentation">Documentation</a> - the whole folder should be moved.</p>
+<p>For each document we need to find the best location. Internal documentation shouldn't go to the Arcade repository which is available for public. List of target locations:
+* <a href="https://github.com/dotnet/arcade/tree/main/Documentation">arcade documentation</a>.
+* <a href="https://github.com/dotnet/arcade-services/tree/main/docs">arcade-services documentation</a>.
+* <a href="https://dev.azure.com/dnceng/internal/_git/dotnet-helix-service?path=/docs">helix-service documentation</a>
+* <a href="https://dev.azure.com/dnceng/internal/_git/dotnet-helix-machines">helix-machines documentation</a>.
+* <a href="https://dev.azure.com/dnceng/internal/_wiki/wikis/internal.wiki/1/Home">AzDO wiki</a></p>
+<p>Note: While moving to a new location, we need to update links in the existing code. The rest of the <a href="https://github.com/dotnet/core-eng">repository core-eng</a> seems to be safe to be deleted.</p>
+<h3 id="move-wiki">Move Wiki</h3>
+<p>The whole wiki should be migrated. There are two options for new placement:</p>
+<ul>
+<li><a href="https://dev.azure.com/dnceng/internal/_wiki/wikis/internal.wiki/1/Home">AzDO dnceng wiki</a> - visible internally only</li>
+<li><a href="https://github.com/dotnet/arcade/wiki">Arcade wiki</a> - available to everyone</li>
+</ul>
+<p>If we split content between public and internal location, fragmentation of our documentation will increase. This is the reason why we are planning to move the whole wiki into AzDO.</p>
+<h3 id="code-changes">Code changes</h3>
+<p>This is to change configuration to point against a different repository and to update ZenHub logic to a new representation of epic.</p>
+<p>Affected components:</p>
+<ul>
+<li>Alerting under dotnet-arcade-services\src\DotNet.Status.Web</li>
+<li>RolloutScorer under dotnet-arcade-services\src\RolloutScorer</li>
+<li>Maestro under dotnet-arcade-services\src\Maestro</li>
+<li>Async triage tool under dotnet-helix-service\src\async-triage-cli</li>
+</ul>
+<h3 id="issues--epics">Issues / Epics</h3>
+<p>There are many issues created long time ago which probably aren't valid anymore. We should be automatically migrating issues that are newer than a year. Epics could be older and should be automatically migrated if they contain at least one issue that is newer than a year.</p>
+<p>We should flag issues with the Security or EOC labels as not to be automatically migrated. We don't want to announce security issues to the public before they are fixed.</p>
+<p>Note: No issues will be closed automatically. The core-eng repository will be archived so if required, any issue can be moved manually in the future.</p>
+<h3 id="guidance-for-security-issues">Guidance for security issues</h3>
+<p>All issues with the Security or EOC labels should not to be automatically migrated. Security issues must not be announced to the public before they are fixed. We need to come up with new guidance for security issues. One option would be to track them as AzDO work items.</p>
+<h2 id="migration-approach">Migration approach</h2>
+<p>No item will be deleted as part of this change. Once all valid items are copied into a new location, the repository core-eng will be archived.</p>
+<h2 id="rollout-and-deployment">Rollout and Deployment</h2>
+<ul>
+<li>Affected components which points against core-eng repo has to be updated and deployed. See the list above.</li>
+</ul>
+<h2 id="communication-of-changes">Communication of changes</h2>
+<p>FR has to be notified about:</p>
+<ul>
+<li>new location of documentation</li>
+<li>new location of alerts</li>
+</ul>
+<p>Partners have to be notified about:</p>
+<ul>
+<li>new location of documentation</li>
+</ul>
+<h2 id="monitoring">Monitoring</h2>
+<p>All affected components have to be verified after deployment. No additional monitoring is required.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Ccore-eng-repository-migration-15084.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Ccore-eng-repository-migration-15084.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Ccore-eng-repository-migration-15084.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

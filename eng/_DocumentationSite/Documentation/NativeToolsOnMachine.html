@@ -1,0 +1,133 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Using Native Tools on Machine </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Using Native Tools on Machine ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="using-native-tools-on-machine">Using Native Tools on Machine</h1>
+
+<p>The replacement for <a href="NativeToolsBootstrapping.md">native tools bootstrapping</a> is having all tools needed come pre-installed on
+the build machines. This document describes how to onboard to this new process.</p>
+<p>This document only applies to Windows machines as Linux machines already come with native tools installed via package manager.</p>
+<h2 id="steps">Steps</h2>
+<ol>
+<li>Before calling <code>InitializeNativeTools</code>, <code>init-tools-native.ps1</code>, or <code>eng/common</code>'s <code>build.ps1</code> in PowerShell,
+set <code>$env:NativeToolsOnMachine = $True</code>. Alternatively, simply set it as an environment variable when calling
+a template such as <code>jobs.yml</code> in YAML.</li>
+<li>Modify your <code>global.json</code>'s <code>native-tools</code> section to change the version of your tools to one of the following values:
+<ul>
+<li><code>latest</code> (e.g. <code>&quot;cmake&quot;: &quot;latest&quot;</code>) – Grabs the latest version of the tool on the machine; this should be what you use in the majority of cases</li>
+<li>Major version (e.g. <code>&quot;cmake&quot;: &quot;3&quot;</code>) – Grabs the latest minor &amp; patch version of a particular major version on the machine; this is useful for artifacts you want to pin to a specific major version</li>
+<li>Minor version (e.g. <code>&quot;python&quot;: &quot;3.10&quot;</code>) – Grabs the latest patch version of a particular minor version on the machine; this is useful for artifacts you want to pin to a specific minor version (such as Python)</li>
+</ul>
+</li>
+<li>Adjust any usage of the artifacts on the machines in your scripts. The artifacts you specify in your <code>global.json</code> are promoted to the path,
+so in general simply calling <code>cmake</code> will work. However, if you need the specific locations of tools, <code>InitializeNativeTools</code> will return those to
+you as a dictionary, e.g.:
+<pre><code class="lang-pwsh">$nativeToolsLocs = InitializeNativeTools
+$cmakeLoc = $nativeToolsLocs[&quot;cmake&quot;]
+</code></pre>
+</li>
+<li>Switch the image you're using from a <code>build.*</code> image to the equivalent <code>windows.*</code> image (the full list of which can be found on <a href="https://helix.dot.net/#1ESHostedPoolImagesWestUS-rg-Internal-Windows">helix.dot.net</a>).
+For example, if you were previously using build.windows.amd64.vs2022, switch to windows.amd64.vs2022.</li>
+</ol>
+<p>Once you've executed these steps, you'll be using the native tools installed on the machines.</p>
+<h2 id="documentation-updates">Documentation Updates</h2>
+<p>After switching, the local dev experience will change as devs will be expected to install dependencies ahead of time. Consider
+creating a document similar to <a href="https://github.com/dotnet/runtime/blob/main/docs/workflow/requirements/windows-requirements.md">this</a>
+dotnet/runtime requirements doc.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CNativeToolsOnMachine.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CNativeToolsOnMachine.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CNativeToolsOnMachine.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

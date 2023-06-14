@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>.NET 5 Build Shape </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content=".NET 5 Build Shape ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="net-5-build-shape">.NET 5 Build Shape</h1>
+
+<p>This document is intended to cover the desired shape of builds in .NET 5, and what repositories will need to do achieve this.</p>
+<h2 id="net-5-overall-build-goals">.NET 5 Overall Build Goals</h2>
+<h3 id="two-hour-build">Two-Hour Build</h3>
+<p>For .NET 5 any change should be able to propagate from any repository, to all places it needs to go, to produce shipping products in 2 hours or less. To do this, we are taking a many-pronged approach to improve today's build times:</p>
+<ul>
+<li>Official builds will not run tests (tests can be run in parallel in a separate CI job)</li>
+<li>Reduce long polls in various repository builds.</li>
+<li>Reduce signing time by (most likely) move signing out of the individual repo builds and into the build promotion pipelines.</li>
+<li>In release channels (primarily when inter-repo interfaces are stable), dependency flow will eliminate PR builds at every step, instead attempting an official build immediately, and merging the update into the mainline if possible.</li>
+<li>Move other tasks non-essential to individual repo builds into the build promotion pipeline (e.g. SDL).</li>
+<li>Use more powerful build machines.</li>
+<li>Consolidate some repositories to reduce the number of build steps.</li>
+</ul>
+<h3 id="a-first-class-source-build-experience">A First Class Source-Build Experience</h3>
+<p>In addition to build times, we will working to ensure that Linux has true first-class support:</p>
+<ul>
+<li>Sustainable builds of .NET Core for inclusion in Linux Distros​</li>
+<li>Source-build is a part of the official build​</li>
+<li>Eliminate a separate “source-build” repo.</li>
+</ul>
+<p>While some of these tasks will be largely taken care of by the infrastructure team (e.g. enabling the ability for signing to move out of the builds), we'll need your help for the other tasks.</p>
+<h2 id="shape-of-a-repositorys-official-build-in-net-5">Shape Of A Repository's Official Build In .NET 5</h2>
+<p>Repository builds in .NET 5 must be leaner and more efficient than any of our prior releases. They must build as much in parallel as possible and do no work not essential to the production of outputs necessary to create the product. They must also ensure that source build is treated like a first class citizen rather than a bolt-on. Practically, this means:</p>
+<ul>
+<li><strong>Official builds should</strong> only create what is necessary for the shipping product or downstream repos (for dependency flow). This includes not building tests.</li>
+<li><strong>Official builds should not</strong> build or run tests. Tests should be built and run in separate CI jobs.</li>
+<li><strong>Official builds should not</strong> sign outputs if that repo is part of the &quot;core&quot; .NET stack (tooling repos are excluded as they ship to VS too).</li>
+<li><strong>Official builds should</strong> have minimal long poles.</li>
+<li><strong>Official builds should</strong> utilize higher powered machines where possible (when available).</li>
+<li><strong>Official builds should</strong> build a source build job in parallel with 'traditional' outputs.</li>
+</ul>
+<h2 id="work-item-for-repository-owners">Work Item For Repository Owners</h2>
+<h3 id="two-hour-build-1">Two-hour build</h3>
+<ul>
+<li><strong>Remove tests from your official build</strong> - Tests should be run separate CI pipelines that run on each commit or a cadence of your choosing. If you need guidance, contact the engineering services team or take a look at what .NET runtime has done.</li>
+<li><strong>Work with the engineering team to improve signing</strong> - Signing will be moving out of individual repo builds and into the post-build pipelines. This overall should be relatively painless, may require coordination in some cases.</li>
+<li><strong>Take regular arcade updates</strong> - We will be steadily improving some of our infrastructure (e.g. moving some validation into the post-build pipelines). Taking regular arcade updates will help propagate those changes more quickly.</li>
+<li><strong>Analyze build long poles and improve or remove</strong> - The end to end build needs to be &lt; 2 hours. Your build needs to be quite a bit shorter to achieve this. Concrete goals</li>
+<li><strong>Complete repository consolidations in a timely manner</strong> - Repository consolidation is a large part of the overall build improvement. There are still a few places where consolidation is not yet complete. Every consolidation removes a serial sequence point in the overall build.</li>
+<li><strong>Ensure your official build has high pass rates with minimal flakiness</strong> - Retries greatly increase the end to end time for shipping the product. High pass rates are necessary for short, predictable, end to end builds.</li>
+</ul>
+<h3 id="first-class-source-build-experience">First class source-build experience</h3>
+<ul>
+<li><strong>Assist with issues when building 5.0​</strong></li>
+<li><strong>Add source-build PR validation to repo based on Arcade .yml template​</strong></li>
+<li><strong>Resolve issues when failures occur​</strong></li>
+<li><strong>Add official build validation to repo based on Arcade .yml template​</strong></li>
+<li><strong>Incorporate source-build patches into source​</strong></li>
+<li><strong>Review and approve PRs for incoming source-build implementation​</strong></li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CNet5Builds.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CNet5Builds.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CNet5Builds.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

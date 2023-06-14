@@ -1,0 +1,166 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Telemetry Scripts </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Telemetry Scripts ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="telemetry-scripts">Telemetry Scripts</h1>
+
+<h3 id="what-is-it">What is it?</h3>
+<p>A pair of scripts that can be used to send telemetry information so that you'll be able to see the status of phases of your build on the <a href="http://mc.dot.net/">Mission Control</a> website. Essentially, you have a <a href="../../eng/common/templates/steps/telemetry-start.yml">start</a> and an <a href="../../eng/common/templates/steps/telemetry-end.yml">end</a> script that you can use to track the execution status of particular regions of your build definitions. These scripts are reentrant, so you can use them several times on the same build definition. See example at the end of this document.</p>
+<p>One of the <strong>main benefits</strong> of using these scripts to collect telemetry for the build is that you'll be able to see <em>aggregated information from all your build configurations</em> on the Mission Control website.</p>
+<p>Note that this component (the telemetry implementation) is not part of the Arcade SDK. Only referencing the SDK isn't sufficient to use the telemetry scripts. See below instructions on how to use it.</p>
+<h3 id="will-an-onboarded-repository-automatically-use-it">Will an onboarded repository automatically use it?</h3>
+<p>One of the requirements for onboarding in Arcade is to copy the <code>eng\common</code> folder from the root of the Arcade repository to the onboarding repository and reference the  <code>eng\common\templates\phases\base.yml</code> file on your YAML build definitions. This will plug in the use of the telemetry scripts on your build.</p>
+<p>These scripts automate the process, but there is some setup that you have to do to enable telemetry collection. Basically, you'll need to:</p>
+<ul>
+<li>Setup parameters to identify the region of code that you are collecting telemetry for and,</li>
+<li>Enable telemetry sending for the build.</li>
+</ul>
+<p>For enabling the use of telemetry you will have to set <code>enableTelemetry</code> (see file <code>eng\build.yml</code> -&gt; <code>enableTelemetry</code>) to true. You also have to setup these three parameters <code>_HelixType</code>, <code>_HelixSource</code> and <code>_HelixBuildConfig</code> for each region that you want to collect telemetry. They will basically work as identifiers for the region being monitored. You can find some description of these parameters <a href="https://github.com/dotnet/arcade/blob/master/eng/common/templates/phases/base.yml">here</a>.</p>
+<p>Once that setup is done you can use the telemetry scripts <a href="../../eng/common/templates/steps/telemetry-start.yml">start</a> and <a href="../../eng/common/templates/steps/telemetry-end.yml">end</a> to denote regions that you want to collect telemetry for. Note that you can collect telemetry for more than one region of code. Use the parameters mentioned above to identify the region that you're collecting telemetry.</p>
+<h3 id="usage-example">Usage Example</h3>
+<p>Below is an example of a <code>.vsts-ci.yaml</code> configuration using the telemetry scripts to track the status of the several phases of the repository build. Particularly, note that the <code>telemetry.yml</code> file is included in every phase and the Helix parameters (<code>helixType</code>, <code>helixSource</code> and <code>buildConfig</code>) are used to identify which phase the telemetry is being collected for.</p>
+<pre><code class="lang-yaml">name: $(Date:yyyMMdd)$(Rev:rr)
+variables:
+  Build.Repository.Clean: true
+
+phases:
+
+- phase: Build
+  steps:
+  - template: eng/common/templates/steps/telemetry.yml
+    parameters:
+      helixType: build/product/
+      helixSource: official/helix/$(Build.SourceBranch)/
+      buildConfig: $(BuildConfiguration)
+      steps:
+      - template: /eng/configure.yaml
+      - template: /eng/restore.yaml
+      - template: /eng/build.yaml
+
+- phase: CredScan
+  steps:
+  - template: eng/common/templates/steps/telemetry.yml
+    parameters:
+      helixType: build/staticanalysis/
+      helixSource: official/helix/$(Build.SourceBranch)/
+      buildConfig: $(BuildConfiguration)
+      steps:
+      - template: /eng/cred-scan.yaml
+
+- phase: TSLint
+  steps:
+  - template: eng/common/templates/steps/telemetry.yml
+    parameters:
+      helixType: build/tslint/
+      helixSource: official/helix/$(Build.SourceBranch)/
+      buildConfig: $(BuildConfiguration)
+      steps:
+      - template: /eng/tslint.yaml
+
+- phase: CodeInspection
+  steps:
+  - template: eng/common/templates/steps/telemetry.yml
+    parameters:
+      helixType: build/codeinspection/
+      helixSource: official/helix/$(Build.SourceBranch)/
+      buildConfig: $(BuildConfiguration)
+      steps:
+      - template: /eng/code-inspection.yaml
+</code></pre>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CCorePackages%5CTelemetry.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CCorePackages%5CTelemetry.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CCorePackages%5CTelemetry.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

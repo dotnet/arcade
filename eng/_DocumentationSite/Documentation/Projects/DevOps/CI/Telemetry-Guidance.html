@@ -1,0 +1,151 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Telemetry Guidance </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Telemetry Guidance ">
+      
+      <link rel="icon" href="../../../../favicon.ico">
+      <link rel="stylesheet" href="../../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../../public/main.js'
+    import { init } from './../../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../../index.html">
+            <img id="logo" class="svg" src="../../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="telemetry-guidance">Telemetry Guidance</h1>
+
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#telemetry-format">Telemetry format</a></li>
+<li><a href="#writing-to-the-timeline-api">Writing to the Timeline API</a></li>
+<li><a href="#arcade-support-for-writing-categorized-telemetry">Arcade support for categorized telemetry</a></li>
+<li><a href="#logging-categories">Logging categories</a></li>
+</ul>
+<h2 id="overview">Overview</h2>
+<p>Arcade projects will emit telemetry metadata that allows us to more easily classify where failures occur.  This metadata will follow a prescribed format outlined below.  The metadata will be written to Azure DevOp's <a href="https://docs.microsoft.com/en-us/rest/api/azure/devops/build/Timeline/Get?view=azure-devops-rest-5.0">Timeline API</a> so that it can be gathered later and moved to our Engineering database or otherwise analyzed.</p>
+<h2 id="telemetry-format">Telemetry format</h2>
+<p><code>(NETCORE_ENGINEERING_TELEMETRY=[telemetry category]) [Message]</code></p>
+<h3 id="example">Example</h3>
+<p><code>(NETCORE_ENGINEERING_TELEMETRY=Publish) Publishing failed with exit code 1.</code></p>
+<h2 id="writing-to-the-timeline-api">Writing to the Timeline API</h2>
+<p>Data can be written into Azure DevOp's <a href="https://docs.microsoft.com/en-us/rest/api/azure/devops/build/Timeline/Get?view=azure-devops-rest-5.0">Timeline API</a> by writing error or warning messages to the console in the prescribed <a href="https://github.com/Microsoft/azure-pipelines-tasks/blob/master/docs/authoring/commands.md">Azure DevOps format</a>.</p>
+<h3 id="example-1">Example</h3>
+<p><code>echo &quot;##vso[task.logissue type=error](NETCORE_ENGINEERING_TELEMETRY=Publish) Publishing failed with exit code 1.&quot;</code></p>
+<h2 id="arcade-support-for-writing-categorized-telemetry">Arcade support for writing categorized telemetry</h2>
+<p>Arcade will provide support for writing telemetry both in scripts (Powershell and bash) and in <a href="https://github.com/dotnet/arcade/blob/3079c495f38bb1306a65b2af13cf25a516610a4f/src/Microsoft.DotNet.Arcade.Sdk/src/PipelinesLogger.cs">Arcade's MSBuild logger</a>.</p>
+<h3 id="arcade-script-support">Arcade script support</h3>
+<p>Arcade scripts will support a <code>Write-PipelineTelemetryError</code> function that can be called and will provide properly formatted error message output.</p>
+<p>Repos with custom scripts can add telemetry categorization by using Arcade's logging functions which are available in their repo via dependency flow of the <code>eng/common</code> scripts.</p>
+<p>Please note: for scripts that call the logging functions to properly report back to AzDO, you must set <code>$ci=$true</code>.</p>
+<h3 id="arcade-msbuild-logger-support">Arcade MSBuild logger support</h3>
+<p>Arcade's MSBuild logger looks for an <code>NETCORE_ENGINEERING_TELEMETRY</code> static or global property.  If present, then error output will be decorated in the expected <a href="#telemetry-format">telemetry format</a>.</p>
+<p>This will allow us to add telemetry properties into MSBuild projects which will then decorate the Timeline API results with the expected categorization.</p>
+<p>Project properties are useful to set a generic categorization for a project.  This model works well for Arcade because Arcade directly invokes MSBuild on a project and we can specify a categorization when that invocation occurs.  For dynamic categorization (specifying a category to be set when a target is executing), you can use MSBuilds &quot;Telemetry&quot; task.</p>
+<h4 id="example-2">Example</h4>
+<p>If we add...</p>
+<pre><code class="lang-XML">&lt;PropertyGroup&gt;
+  &lt;NETCORE_ENGINEERING_TELEMETRY&gt;Build&lt;/NETCORE_ENGINEERING_TELEMETRY&gt;
+&lt;/PropertyGroup&gt;
+
+&lt;Target Name=&quot;Build&quot; /&gt;
+
+&lt;Target Name=&quot;MyCustomBuildTarget&quot;
+        AfterTargets=&quot;Build&quot;&gt;
+    &lt;Telemetry EventName=&quot;NETCORE_ENGINEERING_TELEMETRY&quot; EventData=&quot;Category=Custom&quot; /&gt;
+&lt;/Target&gt;
+</code></pre>
+<p>into a project file, then any CI failures in the &quot;Build&quot; target will be categorized as &quot;Build&quot;.  Any failure in &quot;MyCustomBuildTarget&quot; will be categorized as &quot;Custom&quot; because of the &quot;Telemetry&quot; task.</p>
+<p>Arcade will use a combination of the above techniques to enable categorization for anyone using Arcade.</p>
+<h2 id="logging-categories">Logging categories</h2>
+<p>We are not intending to be proscriptive are hard-lined about a specific set of categories that a repo must use when sending telemetry.  Initially, however, we will modify Arcade to categorize &quot;Restore&quot;, &quot;Build&quot;, &quot;Test&quot;, &quot;Sign&quot;, and &quot;InitializeToolset&quot; (Arcade script) changes.</p>
+<h3 id="example-chart">Example chart</h3>
+<p>This is a completely made up example of a possible way we could surface this data.</p>
+<p><a href="./Category-sample.png">Category chart</a></p>
+<p>Repos may provide their own categories or use existing reports as examples of good category names.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CDevOps%5CCI%5CTelemetry-Guidance.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CDevOps%5CCI%5CTelemetry-Guidance.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CDevOps%5CCI%5CTelemetry-Guidance.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

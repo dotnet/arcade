@@ -1,0 +1,164 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>NET Core Telemetry Reports </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="NET Core Telemetry Reports ">
+      
+      <link rel="icon" href="../../../../favicon.ico">
+      <link rel="stylesheet" href="../../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../../public/main.js'
+    import { init } from './../../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../../index.html">
+            <img id="logo" class="svg" src="../../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="net-core-telemetry-reports">NET Core Telemetry Reports</h1>
+
+<ul>
+<li><p><a href="#overview">Overview</a></p>
+</li>
+<li><p><a href="#walkthrough">Walkthrough</a></p>
+<ul>
+<li><p><a href="#repo-passing-rate">Repo Passing Rate report</a></p>
+</li>
+<li><p><a href="#failure-categories">Failure categories report</a></p>
+</li>
+</ul>
+</li>
+<li><p><a href="#telemetry-message-filtering">Telemetry Message Filtering</a></p>
+</li>
+<li><p><a href="#images">Images</a></p>
+</li>
+</ul>
+<h2 id="overview">Overview</h2>
+<p>The <a href="https://dev.azure.com/dnceng/public/_dashboards/dashboard/40ac4990-3498-4b3a-85dd-2ffde961d672">NET Core telemetry reports</a> are available via an Azure DevOps dashboard.  The reports are used to help analyze the health of our CI builds and failure categories via <a href="https://github.com/dotnet/arcade/blob/master/Documentation/Projects/DevOps/CI/Telemetry-Guidance.md">telemetry categorization</a>.</p>
+<h2 id="walkthrough">Walkthrough</h2>
+<h3 id="repo-passing-rate">Repo passing rate</h3>
+<p>Screenshot is shown in <a href="#image-1">image 1</a> below.</p>
+<p>The first page you end up on is the “Repo passing rate” page which shows you the current passing percentage for CI builds in a few select repos (we can adjust the default list of repos to monitor).</p>
+<p>Hovering over a bar, allows you to see how many builds went into the repo pass rate calculation.</p>
+<h4 id="repo-passing-rate-drillthrough">Repo passing rate drillthrough</h4>
+<p>Right-clicking on one of the bar items will allow you to select &quot;Drillthrough&quot; and then either &quot;Repo Passing Rate Over Time&quot; or &quot;Definition Passing Rate Over Time&quot; (see <a href="#image-1">image 1</a>)</p>
+<p>Note: If the repo's passing rate is at 0%, then you can't click on the bar and you have to go directly to either the &quot;Repo Passing Rate Over Time&quot; or &quot;Definition Passing Rate Over Time&quot; pages and manually filter to the repository you are interested in.</p>
+<p><strong>Next Step</strong> Select a bar for a repo, right-click, go to &quot;Drillthrough&quot;, and click &quot;Definition Passing Rate Over Time&quot;.</p>
+<h3 id="definition-passing-rate-over-time">Definition Passing Rate Over Time</h3>
+<p>Screenshot is show in <a href="#image-2">image 2</a> below.</p>
+<p>This page shows you the build definitions for a particular repo and their pass/fail rate over an extended time period.  This view allows you to see how the build definition is trending in terms of build pass / fail.</p>
+<p><strong>Next Step</strong> The next thing to investigate is &quot;what are the issues causing a build definition to fail&quot;.  You can investigate failure categories either by going back to the <a href="#repo-passing-rate">repo passing rate</a> page and &quot;drilling through&quot; to &quot;Failure Categories&quot; or directly going to the <a href="failure-categories">Failure Categories</a> page and filtering results as desired.</p>
+<h3 id="failure-categories">Failure Categories</h3>
+<p>Screenshot is shown in <a href="#image-3">image 3</a> below.</p>
+<p>This page shows you the failure categories which have been seen in the build.</p>
+<p>&quot;Code&quot; and &quot;Unknown&quot; are similar buckets.</p>
+<ul>
+<li><p>&quot;Unknown&quot; are groups of failures which have not been bucketed either via <a href="https://github.com/dotnet/arcade/blob/master/Documentation/Projects/DevOps/CI/Telemetry-Guidance.md">telemetry categorization</a> or <a href="#telemetry-message-filtering">telemetry message filtering</a>.</p>
+</li>
+<li><p>&quot;Code&quot; is the same as &quot;Unknown&quot; except it's the set of issues that &quot;Azure DevOps&quot; itself does limited bucketing (ie, one category) and decided was the code that Azure DevOps was running and not something that Azure DevOps was responsible for.</p>
+</li>
+</ul>
+<p>We could do some transformation of these categories and combine them, but for now they are separate.</p>
+<p><strong>Next Step</strong> Select a category bar, right-click, choose &quot;Drillthrough&quot; and then <a href="#failure-breakdown">Failure Breakdown</a></p>
+<h3 id="failure-breakdown">Failure Breakdown</h3>
+<p>Screenshot is shown in <a href="#image-4">image 4</a> below.</p>
+<p>This page shows you the build failure messages for categories and also includes links to logs for further investigation.</p>
+<h2 id="telemetry-message-filtering">Telemetry Message Filtering</h2>
+<p>Screenshot is shown in [image 5](#image-5] below.)</p>
+<p>The telemetry message filtering page shows you a list of error strings.  When an uncategorized error message is seen, it is automatically associated with the specified category if the &quot;Message&quot; is matched in the error string.</p>
+<p>Note: We don't, currently, have a good way to permit developers to edit this list and help categorize error messages.  It's not even clear that this is the best way to handle external (to Arcade) errors, but it was the most expedient method.  If you have areas you want to categorize, please reach out to @chcosta.</p>
+<h2 id="images">Images</h2>
+<h3 id="image-1">Image 1</h3>
+<p><img src="./repo-passing-rate.PNG" alt="Repo passing rate screenshot"></p>
+<h3 id="image-2">Image 2</h3>
+<p><img src="./definition-passing-rate-over-time.PNG" alt="Definition Passing rate over time screenshot"></p>
+<h3 id="image-3">Image 3</h3>
+<p><img src="./failure-categories.PNG" alt="Failure categories screenshot"></p>
+<h3 id="image-4">Image 4</h3>
+<p><img src="./failure-breakdown.PNG" alt="Failure breakdown screenshot"></p>
+<h3 id="image-5">Image 5</h3>
+<p><img src="./telemetry-message-filtering.PNG" alt="Telemetry message filtering screenshot"></p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CDevOps%5CCI%5CNET-Core-Telemetry-Reports.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CDevOps%5CCI%5CNET-Core-Telemetry-Reports.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CDevOps%5CCI%5CNET-Core-Telemetry-Reports.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

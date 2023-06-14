@@ -1,0 +1,207 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Documentation Principles </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Documentation Principles ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="documentation-principles">Documentation Principles</h1>
+
+<p>This document is to provide value guidance when creating Arcade documentation. This supplements the <a href="https://microsoft.sharepoint.com/:w:/r/teams/netfx/engineering/_layouts/15/Doc.aspx?sourcedoc=%7Bef69fcfc-3475-415a-b3ab-651a352b9bbe%7D&amp;action=view&amp;wdAccPdf=0&amp;wdparaid=3E030EA3">.NET Core Engineering Services Principles</a>.</p>
+<h2 id="principles">Principles</h2>
+<ol>
+<li><p>Documentation is successful only if the customer is successful.</p>
+</li>
+<li><p>Documentation, not code, is the primary source of information for customers.</p>
+</li>
+<li><p>Documentation is written for the customer.</p>
+</li>
+<li><p>Documentation is up-to-date.</p>
+</li>
+<li><p>Documentation is explicit.</p>
+</li>
+<li><p>Developers, including First Responders, are able to contribute documentation easily and without disruption.</p>
+</li>
+<li><p>Features are documented. Feature documentation explains why the feature is needed, what the feature does, and how the feature is used.</p>
+</li>
+<li><p>Questions are documented. If someone had to ask, it was overlooked in the docs.</p>
+</li>
+</ol>
+<h2 id="project-assumptions">Project assumptions</h2>
+<ul>
+<li><p>Value ease of maintenance and information quality.</p>
+</li>
+<li><p>Arcade's customers are developers who understand their project's current build. Therefore there is high value in providing a mapping of existing non-Arcade build steps and concepts to Arcade build steps and concepts.</p>
+</li>
+<li><p>Arcade's customers have high technical knowledge. Use this expectation to avoid over-documenting simple tasks.</p>
+</li>
+<li><p>Examples should be simple but not trivial.</p>
+</li>
+<li><p>Documentation starts with a single landing page (like current StartHere.md). All other documentation may be found within a few clicks of here.</p>
+</li>
+<li><p>Documentation is organized by category, then by product. Categories borrow from 1ES and mirror development flow. This provides natural boundaries and flow for both customers and developers, improving understanding. Existing documentation maps well to this space. The categories are: Code, Build, Test, Deploy.</p>
+</li>
+<li><p>Markdown files are sufficient for current efforts. GitHub pages provides a nice path for extending simple Markdown support, adding options and complexity. These options may be added as needed.</p>
+</li>
+<li><p>The Arcade Project is itself a product, though it may also be viewed as a collection of smaller products. As such, Arcade also benefits from having product documentation.</p>
+</li>
+<li><p>A &quot;Frequently Asked Questions&quot; section within product documentation is an easy place to address a question or provide some piece of information that otherwise does not have a home (perhaps because that part of the documentation has not yet been written, or perhaps because the question is so common it benefits from being highlighted). The Arcade repository has a FAQ document to act both as a place for questions about Arcade and to provide a central hub for links to other, product-specific FAQs.</p>
+</li>
+</ul>
+<h2 id="writing-documentation">Writing documentation</h2>
+<p>Documentation is centered around a product. Product documentation contains all knowledge necessary for a user to be successful. They may be a single page or many as best fits the needs. Documentation spanning multiple documents should be anchored from a single starting document, perhaps as a table of contents or integrated with the Overview section.</p>
+<p>Documentation for a product may be stored in multiple places. For example, a User's Manual may reside in a Azure Repo repository alongside the code while the design documents live in a Word document on SharePoint. In this case it is important that documentation be anchored in a single starting document.</p>
+<p>Topics typical for product documentation include:</p>
+<ul>
+<li>An <em>overview</em> describing the need the tool fulfills and how it does this.</li>
+<li><em>Requirements</em> and specifications for the product's execution and operation</li>
+<li><em>Architecture</em> and design details about the product's construction</li>
+<li><em>Concepts</em> or in-depth explanations fundamental to understanding and use</li>
+<li><em>How-to guides</em> or task-based recipes of the product's use</li>
+<li><em>Examples</em> or samples illustrating the use of the product</li>
+<li><em>Reference</em> information or detailed product APIs, CLI commands</li>
+</ul>
+<p>An ideal documentation set would contain all of these items at an appropriate level of verbosity. When this is not possible, remember Customer Obsessed: Include information necessary to ensure a successful customer experience.</p>
+<p>Be mindful of the differences between documentation intended for users of a product and documentation intended for developers of a product. Keeping the two separate can improve a user's experience, and providing design information to users can improve a user's self-sufficiency.</p>
+<p>Documentation reflects the latest version of the product. The documentation should be updated whenever product functionality changes. If needed, consider document migration issues and breaking changes in a separate &quot;Migration Issues&quot; section.</p>
+<h2 id="resources-for-writing">Resources for writing</h2>
+<p>Some information to guide writers.</p>
+<ul>
+<li><a href="https://aka.ms/writingprinciples">The 5 Writing Principles</a></li>
+<li><a href="https://aka.ms/style">Microsoft Writing Style Guide</a></li>
+</ul>
+<h2 id="a-template">A Template</h2>
+<p>Below is a simple template for user-facing documentation.</p>
+<pre><code class="lang-markdown"># Product++
+
+Product++ is a tool that moves bits from Here to There, performing all of the tedious and error-prone authentication and error-checking along the way. It runs very fast.
+
+This product is owned by Us. For support, see [How To Get Help](how-to-get-help.md).
+
+## Requirements and Architecture
+
+The Product is a web-based service. See [https://github.com/dotnet/core-eng/blob/master/Documentation/Product/ProductDesign.md](the design document) for more information on its construction.
+
+## Concepts
+
+### Speculative File Copy
+
+Speculative File Copy is the idea that the file being copied is already present at the destination. When this is true, the copy operation runs very fast.
+
+## How to Use
+Product++ is a RESTful webservice driven entirely by simple JSON statements. A typical operation requires a payload of two URLs.
+
+### Copying two files from remote locations.
+Provide the source files in the *source* array payload and the destination files in the *destination* array payload.
+
+### How do I use this with Other Project?
+See also [Other Project FAQ](other-project-faq.md) for questions related to interoperability with Other Project.
+
+### How fast does this copy files?
+Really fast.
+
+### I'm getting HTTP Error 429.
+This indicates the server received too many requests from you. Use batching to send fewer requests or send requests at a slower rate. Use the information sent in the Retry-After header to determine maximum rate.
+
+### Migration from previous versions
+#### Migrating from versions 0.2 to 0.3
+See [Migrating from v0.2](Migrating-0.2.md).
+
+#### Migrating to 1.0 from earlier versions
+Version 1.0 works always; there is no change needed.
+
+</code></pre>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CDocumentationPrinciples.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CDocumentationPrinciples.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CDocumentationPrinciples.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

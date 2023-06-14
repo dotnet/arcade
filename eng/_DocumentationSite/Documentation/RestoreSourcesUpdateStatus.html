@@ -1,0 +1,302 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>.NET Core 3 RestoreSources update </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content=".NET Core 3 RestoreSources update ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="net-core-3-restoresources-update">.NET Core 3 RestoreSources update</h1>
+
+<p>We decided to use Azure Artifacts feeds to store the assets we produce during internal builds. Testing revealed that nuget restore doesn't
+support private feeds that are defined in RestoreSources, and instead it expects ALL sources to be specified in NuGet.config.</p>
+<h2 id="what-is-needed">What is needed?</h2>
+<p>We need repo owners to complete a two-part work explained bellow in the following parts:</p>
+<h3 id="part-1">Part 1</h3>
+<ol>
+<li>Copy the list of feeds from <code>Version.props</code> file to <code>NuGet.config</code> file in the repository root. Keep the feeds in <code>Version.props</code> file</li>
+<li>Update the Status of your repo in the table bellow to &quot;Part 1 complete&quot;</li>
+</ol>
+<h3 id="part-2">Part 2</h3>
+<ol>
+<li>Once all repos have completed Part 1, <a href="https://github.com/dotnet/arcade/pull/3041">https://github.com/dotnet/arcade/pull/3041</a> will be merged and changes propagated to all repos</li>
+<li>Arcade working group member will inform that #4 is complete and will inform the working group that Part 2 can be done</li>
+<li>Delete the code that sets <code>RestoreSources</code> in <code>Version.props</code></li>
+<li>Make sure your repo doesn't need any of the feeds removed <a href="https://github.com/dotnet/arcade/pull/3041/files#diff-f1b1f6d246bc1f9a81d8ea1c4498e3a5L101">here</a>. If
+<a href="https://api.nuget.org/v3/index.json">https://api.nuget.org/v3/index.json</a> is not in NuGet.config we recommend it is added</li>
+<li>Update the Status of your repo in the table bellow to &quot;Part 2 complete&quot;</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Repo</th>
+<th>Owner</th>
+<th>Status</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Arcade</td>
+<td>mawilkie</td>
+<td>Part 2 complete</td>
+<td></td>
+</tr>
+<tr>
+<td>Arcade-Validation</td>
+<td>mawilkie</td>
+<td>Part 2 complete</td>
+<td></td>
+</tr>
+<tr>
+<td>Arcade-Services</td>
+<td>mawilkie</td>
+<td>Part 2 complete</td>
+<td></td>
+</tr>
+<tr>
+<td>SymReader</td>
+<td>tmat</td>
+<td>Part 2 complete</td>
+<td></td>
+</tr>
+<tr>
+<td>SymReader-Portable</td>
+<td>tmat</td>
+<td>Part 2 complete</td>
+<td></td>
+</tr>
+<tr>
+<td>CoreFx</td>
+<td>danmose</td>
+<td>Part 2 complete</td>
+<td></td>
+</tr>
+<tr>
+<td>Templating</td>
+<td>phenning</td>
+<td>Part 2 complete</td>
+<td></td>
+</tr>
+<tr>
+<td>Test-Templates</td>
+<td>singhsarab</td>
+<td>Part 2 complete</td>
+<td></td>
+</tr>
+<tr>
+<td>Toolset</td>
+<td>licavalc</td>
+<td>Part 2 complete</td>
+<td></td>
+</tr>
+<tr>
+<td>CoreClr</td>
+<td>russellk</td>
+<td>Part 1 complete</td>
+<td>No change needed</td>
+</tr>
+<tr>
+<td>WebSDK</td>
+<td>vramak</td>
+<td>Part 1 complete</td>
+<td></td>
+</tr>
+<tr>
+<td>WinForms</td>
+<td>mmcgaw</td>
+<td>Part 1 complete</td>
+<td>No change needed</td>
+</tr>
+<tr>
+<td>WPF</td>
+<td>vatsan-madhavan</td>
+<td>Part 1 complete</td>
+<td>No change needed</td>
+</tr>
+<tr>
+<td>aspnet-EntityFrameworkCore</td>
+<td>namc</td>
+<td>Part 1 complete</td>
+<td></td>
+</tr>
+<tr>
+<td>aspnet-Extensions</td>
+<td>namc</td>
+<td>Part 1 complete</td>
+<td>No change needed</td>
+</tr>
+<tr>
+<td>aspnet-AspNetCore-Tooling</td>
+<td>namc</td>
+<td>Part 1 complete</td>
+<td></td>
+</tr>
+<tr>
+<td>aspnet-Blazor</td>
+<td>namc</td>
+<td>Part 1 complete</td>
+<td>No change needed</td>
+</tr>
+<tr>
+<td>aspnet-EntityFramework6</td>
+<td>namc</td>
+<td>Part 1 complete</td>
+<td>No change needed</td>
+</tr>
+<tr>
+<td>aspnet-AspLabs</td>
+<td>namc</td>
+<td>Part 1 complete</td>
+<td></td>
+</tr>
+<tr>
+<td>CLI</td>
+<td>licavalc</td>
+<td>Part 1 complete</td>
+<td></td>
+</tr>
+<tr>
+<td>CLICommandLineParser</td>
+<td>licavalc</td>
+<td>Part 1 complete</td>
+<td>No change needed</td>
+</tr>
+<tr>
+<td>nuget-NugetClient</td>
+<td>dtivel</td>
+<td>Part 1 complete</td>
+<td>No change needed</td>
+</tr>
+<tr>
+<td>aspnet-AspNetCore</td>
+<td>namc</td>
+<td>Part 1 complete</td>
+<td></td>
+</tr>
+<tr>
+<td>Core-Setup</td>
+<td>dleeapho</td>
+<td>Part 1 complete</td>
+<td></td>
+</tr>
+<tr>
+<td>MSBuild</td>
+<td>licavalc</td>
+<td>Part 1 complete</td>
+<td></td>
+</tr>
+<tr>
+<td>Roslyn</td>
+<td>jaredpar</td>
+<td>Part 1 complete</td>
+<td></td>
+</tr>
+<tr>
+<td>Visual-FSharp</td>
+<td>brettfo</td>
+<td>Part 1 complete</td>
+<td></td>
+</tr>
+<tr>
+<td>Core-SDK</td>
+<td>licavalc</td>
+<td>Part 1 complete</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>For any question, please ping @tmat or @jcagme</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CRestoreSourcesUpdateStatus.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CRestoreSourcesUpdateStatus.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CRestoreSourcesUpdateStatus.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

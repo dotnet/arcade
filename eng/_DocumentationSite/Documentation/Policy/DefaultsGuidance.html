@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Defaults and Arcade </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Defaults and Arcade ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="defaults-and-arcade">Defaults and Arcade</h1>
+
+<p>It is often challenging to reconcile differences between a given repo build and Arcade - which represents .NET overall.  It's sometimes tough to determine when to conform to how Arcade expects settings/properties/patterns/targets/conventions to be and when to 'override' (fork) for a given repo.  This document attempts to provide some guidance which hopefully gives at least a place to start - as well as a 'frame' for discussions.</p>
+<h2 id="remindersprinciples">Reminders/Principles</h2>
+<ul>
+<li>There is significant value in sharing a common engineering infrastructure for .NET.</li>
+<li>Buying into (not necessarily agreeing to always....grin) a shared/common infra is always hard - and expensive.</li>
+<li>The 'how' Arcade does something is always open for discussion.  We should all be working together in an attempt to have the right implementation that works best for .NET.</li>
+<li>We're all in the same boat - we all ship as part of .NET.  In other words, no 'privileged' repos here...  (the egalitarian sword cuts both ways though...)</li>
+<li>We prefer defaults that match the defaults used by 'vanilla' Visual Studio/C# code formatters/MSBuild/.NET SDK.</li>
+<li>Weigh the costs of adopting different alternatives by looking at impact on existing Arcade repos across the product (.NET) as a whole.</li>
+<li>Give consideration to how this affects new repos onboarding to Arcade.</li>
+<li>We try and avoid blocking people based on differences, but still strongly encourage consistency.</li>
+</ul>
+<h2 id="categories-of-differences">Categories of Differences</h2>
+<ul>
+<li>Category 1 - Company, Divisional, Visual Studio, or .NET requirements.</li>
+<li>Category 2 - Differences which are truly exceptions to what is otherwise correct for .NET overall.</li>
+<li>Category 3 - Differences which are excessively expensive or risky to change.</li>
+<li>Category 4 - Differences which are the result of team/individual preferences and/or history.</li>
+</ul>
+<h2 id="category-criteria-bar-for-each-and-mitigation-guidance">Category Criteria (&quot;bar&quot; for each) and Mitigation Guidance</h2>
+<h3 id="category-1---company-divisional-or-net-requirements">Category 1 - Company, Divisional, or .NET requirements</h3>
+<ul>
+<li>Hard requirements (like SDL or certs) that .NET must confirm to.</li>
+<li>These differences <strong>should have no defaults</strong> and should have the required parameters explicitly provided by the repo based on supported options presented by the Arcade SDK.</li>
+<li>This might also result in cases where the implementation choice Arcade took proves excessively expensive or unreasonable for a specific product team to adopt.  (see other category for more on this)</li>
+<li>Obviously, any differences here need to be reconciled - but there's always room for the &quot;how&quot; discussion.</li>
+</ul>
+<h3 id="category-2---differences-which-are-truly-exceptions-to-what-is-otherwise-correct-for-net-overall">Category 2 - Differences which are truly exceptions to what is otherwise correct for .NET overall</h3>
+<ul>
+<li>True exceptions mean that there's a concrete business case driving the difference.</li>
+<li>These differences have defaults (or preferences) that are set by Arcade which can be overridden <strong>only</strong> for this category of differences.</li>
+<li>Preference or history don't fall into this category.</li>
+<li>These differences should always be the <em>exception</em>.  If multiple repos are experiencing the same differences, this likely points to a broader .NET (Arcade) change.</li>
+</ul>
+<h3 id="category-3---differences-which-are-excessively-expensive-or-risky-to-change">Category 3 - Differences which are excessively expensive or risky to change.</h3>
+<ul>
+<li>Sometimes, the 'right' thing to do is simply too expensive or risky to change right away.</li>
+<li><em>Expensive</em> here is defined as taking more than 2 man-weeks of dev time to reconcile.</li>
+<li><em>Risky</em> here is defined as likely destabilizing .NET for more than 2 days.</li>
+<li>The mitigation for this category is to create a plan for moving to the 'right' place over time - and then executing on that plan.  As with most things, 'scope' is usually where the magic of goodness lives.</li>
+<li>This mitigation plan should take into account the cost of moving, and the end value over time as well.</li>
+</ul>
+<h3 id="category-4---differences-which-are-the-result-of-teamindividual-preferences-andor-history">Category 4 - Differences which are the result of team/individual preferences and/or history</h3>
+<ul>
+<li>In a perfect world, this category would not exist.</li>
+<li>It is <strong>strongly</strong> recommended that the Arcade behavior is adopted.</li>
+<li>In most cases, repo owners can override the Arcade defaults. It should be understood that this will often result in additional risk and cost over time.  Regardless, it should continue to be the repo  team's 'call' what is done.</li>
+<li>Eliminating (or reducing at least) this category is part of the cost of getting the value of a shared infra.</li>
+<li>It's hard to do....as it often involves team culture change.  The idea though is that the effort (and pain) is worth it.</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CPolicy%5CDefaultsGuidance.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CPolicy%5CDefaultsGuidance.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CPolicy%5CDefaultsGuidance.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

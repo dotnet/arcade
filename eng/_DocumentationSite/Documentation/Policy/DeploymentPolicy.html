@@ -1,0 +1,214 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Scope for the Deployment Policy and Principles </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Scope for the Deployment Policy and Principles ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="scope-for-the-deployment-policy-and-principles">Scope for the Deployment Policy and Principles</h1>
+
+<p>The Deployment principles and policies defined in this document applies to all services owned currently and in future by Engineering Systems team (dotnetes@microsoft.com). The specific deployment steps/process for each service should be documented as a ReadMe doc along with the service source code.</p>
+<h1 id="deployment-principles">Deployment Principles</h1>
+<ul>
+<li>The rollout updates and impact are known beforehand by our customers</li>
+<li>Deployment quality shows a continual, positive trend over time</li>
+<li>Key metrics are measured for each rollout and displayed on a dashboard (<a href="../Rollout-Scorecards/README.md">Rollout Score Card</a>), and a clear rollback threshold is defined.</li>
+<li>Deploying multiple small updates is much more preferable to single large updates.</li>
+<li>No breaking changes (<a href="https://github.com/dotnet/arcade/blob/main/Documentation/Policy/ChangesPolicy.md">exceptions granted via policy</a>)</li>
+<li>Rollouts themselves are frictionless, automated, and meet deployment quality goals</li>
+<li>Rollbacks (when triggered by clear thresholds) are also frictionless, automated, and meet quality goals</li>
+<li>Scenario tests are automated, accurately represent our customers, run prior to every deployment, and block deployment on failure</li>
+<li>All ad-hoc/exploratory testing is done by the dev (not as part of the rollout)</li>
+<li>Staging accurately represents production can be used for testing with confidence</li>
+<li>Staging is always green</li>
+</ul>
+<p>It is important that we have metrics, with clear targets to measure how we're doing against these principles over time.</p>
+<h1 id="what-is-the-deployment-process">What is the deployment process?</h1>
+<p>Builds and Deployment for all our services are executed via AzDO Pipelines and the deployments follow the pattern described in the <a href="../Validation/DeploymentProcess.html">Deployment Process</a>. A typical deployment involves kicking off the CI Pipeline for the services which involves Building the code, publishing artifacts, pre-deployment checks, deployment of bits that were built to the environment (staging or production), post-deployment checks. Each service or unit of deployment has its own pipeline for build and deploy.</p>
+<h1 id="who-owns-deployments">Who owns deployments?</h1>
+<p>The deployments themselves can be done by anyone on the team, but point of accountability for deployments lies with Mark Wilkie (mawilkie@microsoft.com)</p>
+<h1 id="when-can-a-rollout-be-done">When can a rollout be done?</h1>
+<p>Typically rollouts are done once a week but the goal is to be able to at least deploy twice a week. The pre-req for a deployment to be started is to have green builds for at least 3 days in a row.</p>
+<h1 id="who-should-be-notified-of-the-rollout">Who should be notified of the rollout?</h1>
+<p><strong>Two days</strong> before a rollout is done, a email notification containing the release notes (significant features and bug fixes are called out) needs to be sent out to dncpartners@microsoft.com. This acts like a notice to eng services team internally, that the rollout process has started. Once the release notes have been sent out, staging/master goes into lock-down period for stabilization as mentioned in <a href="#Staging-always-green">Staging always green</a> section below.</p>
+<p>A notification to the same alias once the rollout is complete also needs to be sent, explaining if there is any fallout from the rollout that would affect the customers.</p>
+<h1 id="how-are-we-tracking-issues-that-are-encountered-during-a-rollout">How are we tracking issues that are encountered during a rollout?</h1>
+<p>See the sections <a href="#GitHub-Issue-Tagging">GitHub Issue Tagging</a>, <a href="#Rollbacks">Rollbacks</a> and <a href="#Hotfixes">Hotfixes</a> below.</p>
+<h1 id="where-are-any-logs-regarding-the-rollout-stored">Where are any logs regarding the rollout stored?</h1>
+<p><a href="https://dev.azure.com/dnceng/internal/_build/results?buildId=495249&amp;view=logs&amp;j=a56e1ba3-a390-516c-722b-3bd40c7def9a">Pipeline runs</a> store the logs for each deployment. History of deployments can be obtained from <a href="https://dev.azure.com/dnceng/internal/_environments/10?view=resources">AzDO environments</a></p>
+<h1 id="process-of-filing-out-rollout-score-card">Process of filing out rollout score card</h1>
+<p><a href="../Rollout-Scorecards/README.md">Rollout Score Card Documentation</a></p>
+<h1 id="policy">Policy</h1>
+<h2 id="github-issue-tagging">GitHub Issue Tagging</h2>
+<p>Every issue that arises as a result of a rollout must be filed on GitHub in dotnet/core-eng. These issues should include labels that specify the type of event and the repo in which it occurred.</p>
+<ul>
+<li>The event type labels are: <strong>Rollout Issue</strong> for issues that arise as a result of the rollout, <strong>Rollout Manual Hotfix</strong> for manual hotfixes, <strong>Rollout Manual Rollback</strong> for manual rollbacks, <strong>Rollout Downtime</strong> for downtime that occurs as a result of the deployment, and <strong>Rollout Failure</strong> for deployments that need to be manually marked as failures.
+<ul>
+<li>Hotfixes and rollbacks that result in a deployment do not need to be filed on GitHub (i.e. only manual hotfixes and rollbacks should be filed)</li>
+<li>Downtime issues may be automatically filed by telemetry</li>
+</ul>
+</li>
+<li>Additionally, all issues must contain a label indicating the repo affected:
+<ul>
+<li><strong>Rollout Helix</strong> for Helix rollouts</li>
+<li><strong>Rollout OSOB</strong> for OS Onboarding rollouts</li>
+<li><strong>Rollout Arcade Services</strong> for Arcade Services rollouts.</li>
+</ul>
+</li>
+</ul>
+<h2 id="rollbacks">Rollbacks</h2>
+<ul>
+<li>Rollbacks are triggered by manually kicking off a build/release pipeline to deploy the <em>n-1</em>th version. There should be minimal to no human intervention needed in rolling back a deployment. Every new deployable service/feature that is coming up needs to have a rollback story defined and implemented as part of the epic.
+<ul>
+<li>For Pipeline-based deployment, revert the change to production branch and kick-off a build and deploy pipeline.</li>
+<li>For non-yaml based release pipelines, rollout the previous release.</li>
+<li>Rolling back database changes can be tricky especially if data loss is incurred like in case of a added column/dropping a table. This is only scenario where they might be manual intervention needed for rollback.</li>
+</ul>
+</li>
+<li>Workflow for Rollback:
+<ul>
+<li>When a service in production is discovered to be in a &quot;downed&quot; state (e.g. not taking work, constantly throwing errors, etc.) following a rollout, then rollback IMMEDIATELY to a previously known working deployment. Continue investigation in staging by reproing the failure.</li>
+<li>Rollback PRs need to have a commit message which contains <code>[ROLLBACK]</code>, e.g. &quot;[ROLLBACK] blah blah&quot;</li>
+<li>Create a GitHub issue for tracking. If and only if this is a manual rollback, label it with the <strong>Rollout Manual Rollback</strong> label and the appropriate rollout repo label</li>
+<li>Communicate the state of affairs to dncpartners@microsoft.com when the issue is identified along with the tracking GitHub issue, and when it's mitigated.</li>
+</ul>
+</li>
+</ul>
+<h2 id="hotfixes">Hotfixes</h2>
+<ul>
+<li>Hotfixes are reactive rollouts done in response to an error in production due to the rollout that just occurred. There are 2 different ways to do this:
+<ul>
+<li>Make a PR to the Production branch -&gt; rollout to Prod environment -&gt; Make a PR to merge the change back to master.</li>
+<li>Make a PR to the Staging / master branch -&gt; rollout to staging environment -&gt; test the change -&gt; make a PR to merge the change from master to production branch -&gt; rollout to Prod environment. (This can be done only if staging / master is on lockdown)</li>
+<li>Manual changes to Prod environment - data changes in the DB, on-prem machine settings etc.</li>
+</ul>
+</li>
+<li>Workflow for Hotfix:
+<ul>
+<li>When a service in production is discovered to be in a erroneous state following a rollout.</li>
+<li>Hotfix PRs need to have a commit message which starts with <code>[HOTFIX]</code>, e.g. &quot;[HOTFIX] blah blah&quot;</li>
+<li>Create a GitHub issue for tracking. If and only if this is a manual hotfix, label it with the <strong>Rollout Manual Hotfix</strong> label and the appropriate rollout repo label</li>
+<li>If the root cause of failure is determined, make the hotfix and deploy to prod.</li>
+<li>Communicate the state of affairs to dncpartners@microsoft.com when the issue is identified along with the tracking GitHub issue, and when it's mitigated.</li>
+<li>The hotfix needs to be communicated to the team and approved by management.</li>
+</ul>
+</li>
+</ul>
+<h2 id="downtime">Downtime</h2>
+<ul>
+<li>If service downtime occurs as a result of a rollout, an issue must be filed. If alerting files an issue for us, ensure that it is appropriately labeled with <strong>Rollout Downtime</strong> label and the appropriate rollout repo label.</li>
+<li>If the downtime started prior to the issue filing, note the start of the downtime with <code>Started: [DATE TIME OFFSET]</code>, not including the square brackets.</li>
+<li>Once the downtime ends, close the issue. If the issue cannot be closed for some reason or the downtime ended prior to the issue closure, the end of the downtime can be noted in the issue body or a comment with <code>Ended: [DATE TIME OFFSET]</code>, not including the square brackets.</li>
+<li>If you want to specify the downtime end and start in the same comment or issue body, separate them with a semicolon or a newline, e.g. <code>Started: [DATE TIME OFFSET]; Ended: [DATE TIME OFFSET]</code>.</li>
+<li><code>[DATE TIME OFFSET]</code> is formatted as <strong>yyyy-MM-dd hh:mm [+/-]hh:mm</strong>, so to represent 1:30 PM Pacific Time on 29 December 2019 you would write <strong>2019-12-29 13:30 -08:00</strong>.</li>
+</ul>
+<h2 id="unit-of-deployment">Unit Of Deployment</h2>
+<ul>
+<li>All services that are dependent on each other to rollout, are considered a unit of deployment and need to be deployed together in a pipeline.</li>
+<li>Each service in the unit can be in a separate stage for the ease of rerunning a specific service's deployment.</li>
+<li>Deployments to Prod must be approved.</li>
+<li>Any service that is not connected to other services needs to be in a separate pipeline for deployment, in other words is considered a separate unit.</li>
+</ul>
+<h2 id="staging-always-green">Staging always green</h2>
+<ul>
+<li>The staging environment should accurately reflect prod. In other words, if a rollout would break prod it should break staging too.</li>
+<li>Any issues found in staging, regardless of the service, should be communicated to the team (dotnetes@microsoft.com) for transparency.</li>
+<li>Unit/Functional tests will run on staging on every PR Build and block PR merges if tests fail.</li>
+<li>Every service should have post-deployment checks/scenario tests to ensure the services are up and running taking work. If post-deployment checks/tests fail, changes need to be reverted/fixed via PR in Staging to ensure the deployed services in staging are not broken.</li>
+<li>All exploratory / experimental changes need to be done on a dev branch. Any change that is known/expected to temproraily break staging, needs to be communicated to the team (dotnetes@microsoft.com) well in advance and be reasonably timeboxed (case-by-case). This communication should be sent out explaining the period of time in which we expect staging will be down/broken, and put back into a working state by kicking off a build/deploy from master at the appropriate time.</li>
+<li>All merges to staging/master need to stop <strong>two days</strong> prior to the day of rollout for e.g. if the rollout is happening on a Wednesday, the last merge to staging/master should happen on EOD Sunday giving us 2 full days for stabilization. Only changes that unblock the staging build would go into staging/master during the stabilization period.</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CPolicy%5CDeploymentPolicy.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CPolicy%5CDeploymentPolicy.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CPolicy%5CDeploymentPolicy.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

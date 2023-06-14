@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Service KPIs and Metrics </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Service KPIs and Metrics ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="service-kpis-and-metrics">Service KPIs and Metrics</h1>
+
+<h2 id="mission">Mission</h2>
+<p>Contribute to the successful release of .NET Core 3.0 by improving developer productivity through efficient build/test iterations.</p>
+<h2 id="new-service-guidelines">New Service Guidelines</h2>
+<p>Health telemetry is a fundamental monitoring tool and should be considered early in the design of a service.</p>
+<p>Telemetry storage must be enterprise grade, highly available, and redundant. The data must be made available to reporting services. Application Insights is a preferred channel with easy integration for Azure services. Other storage solutions, like Azure Data Explorer and SQL Server, may also be used as appropriate for the particular needs of a service.</p>
+<p>As general guidance, consider:</p>
+<ul>
+<li><p>Telemetry related to the <em>value</em> the service provides to its users, example:</p>
+<ul>
+<li>Number of events or triggers</li>
+<li>Queries of a particular endpoint</li>
+<li>Count of completed tasks</li>
+</ul>
+</li>
+<li><p>Telemetry related to the <em>health</em> of the service, example:</p>
+<ul>
+<li>Successful and failed operations</li>
+<li>Unknown events or triggers</li>
+<li>Malformed payloads</li>
+<li>Recoverable and unrecoverable errors</li>
+</ul>
+</li>
+</ul>
+<p>Document the service's telemetry. Include for each metric:</p>
+<ul>
+<li>Technical detail on <em>how</em> the data is collected (to help provide context)</li>
+<li><em>Why</em> the data is collected.</li>
+<li>What is <em>good</em> and <em>bad</em> for the data? How will a monitor determine when to act?</li>
+<li>What <em>action</em> should be taken if telemetry indicates &quot;bad&quot;?</li>
+</ul>
+<p>Work with Leadership to identify any additional telemetry for current business efforts.</p>
+<h2 id="first-responder">First Responder</h2>
+<p>As GitHub issues is the primary means of work management for DNCEng, it is expected that all First Responder efforts of note be captured as a GitHub issue and added to the &quot;First Responder&quot; Epic. Telemetry and workload data is collected through this channel.</p>
+<p>Customers may initiate communication with the First Responder team through other means, such as the <a href="https://teams.microsoft.com/l/channel/19%3aafba3d1545dd45d7b79f34c1821f6055%40thread.skype/First%2520Responders?groupId=4d73664c-9f2f-450d-82a5-c2f02756606d&amp;tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47">First Responder Teams channel</a>, <a href="mailto:dnceng@microsoft.com">email alias</a> and direct communication. Substantive communication should be moved to GitHub to allow telemetery gathering, improve workflow clarity, and increase information sharing.</p>
+<p>Open a new issue for any customer support effort taking more than fifteen minutes.</p>
+<p>Ensure issues are labeled appropriately.</p>
+<p>These telemetry guidelines are meant to extend but not supersede operational guidelines set in <a href="https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/163/-int-First-Responders">First Responder Responsibilities</a>.</p>
+<h3 id="metrics">Metrics</h3>
+<p>Name: Count of issues opened by members outside of DNCEng</p>
+<p>Goal: Understand FR workload balance</p>
+<p>Action:</p>
+<ul>
+<li>Significant external customer load indicates issue in documentation or service quality</li>
+<li>Significant internal customer load indicate technical debt</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CServiceKPIs.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CServiceKPIs.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CServiceKPIs.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

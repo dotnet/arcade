@@ -1,0 +1,126 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Signed dnceng.visualstudio.com builds </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Signed dnceng.visualstudio.com builds ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="signed-dncengvisualstudiocom-builds">Signed dnceng.visualstudio.com builds</h1>
+
+<p>Dnceng.visualstudio.com does not have support for signed builds.</p>
+<p>Code should still be mirrored to dnceng.visualstudio.com/internal as outlined in the <a href="https://github.com/dotnet/arcade/blob/main/Documentation/AzureDevOps/VSTSGuidance.md#projects">Azure DevOps Guidance</a>.</p>
+<h2 id="task-based-build-definitions">Task based build definitions</h2>
+<p>If your build definition is task based, then the build definition for signing should be created in devdiv.visualstudio.com with an &quot;External Git&quot; source which references the dnceng.visualstudio.com/internal git repository</p>
+<ol>
+<li>Select a source: External Git</li>
+<li>Change the Connection to &quot;New Service Endpoint&quot;
+<ul>
+<li>User name: dotnet-bot@microsoft.com</li>
+<li>Password / Token Key: Listed in &quot;EngKeyVault&quot; as &quot;dn-bot-dnceng-build-rw-code-rw&quot;
+<ul>
+<li>You can get Read access to &quot;EngKeyVault&quot; by joining the &quot;DncEngKvRead&quot; <a href="https://idweb/identitymanagement/aspx/groups/AllGroups.aspx">security group</a>
+<ul>
+<li>Note: It may take a few hours for permissions to propagate</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ol>
+<h2 id="yaml-based-build-definitions">Yaml based build definitions</h2>
+<p>If your build definition is yaml based, then the build definition for signing should be created in devdiv.visualstudio.com, but your code should <strong>also be mirrored into devdiv.visualstudio.com</strong> and the DevDiv Git source should be used for building.  Yaml is only supported for source code from the same project or from specific providers (like GitHub), it is not supported for source code from an external Git source (or other project collection).</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CVSTS%5Csigned-dnceng.visualstudio.com-builds.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CVSTS%5Csigned-dnceng.visualstudio.com-builds.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CVSTS%5Csigned-dnceng.visualstudio.com-builds.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

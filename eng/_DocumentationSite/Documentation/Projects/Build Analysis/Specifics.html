@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Build Analysis Specifics </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Build Analysis Specifics ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="build-analysis-specifics">Build Analysis Specifics</h1>
+
+<p>The Build Analysis check includes these details:</p>
+<ul>
+<li>Collapse failures of the same name across Jobs and Pipelines to improve discoverability. For example, failures of the same test across multiple operating systems are grouped together.</li>
+<li>Highlight a failure's state in the target branch</li>
+<li>Provide direct links to the most common pages for continuing analysis
+<ul>
+<li>Link to the Azure DevOps build</li>
+<li>Link to the log of the specific step that failed</li>
+<li>Link to the Azure DevOps Test History for the pipeline</li>
+<li>Link to test history of the specific test</li>
+<li>Link to the Helix artifacts produced by a test</li>
+<li>Link to the test execution details</li>
+</ul>
+</li>
+<li>Alerting on errors that are occurring on the pull request that are related to reported Known Issues.
+<ul>
+<li>Links to create a new Known Issue for either a product issue or an infrastructure issue.</li>
+</ul>
+</li>
+</ul>
+<p>Each Build Analysis page also includes a &quot;was this helpful&quot; link. This allows you to call out specific highlights or lowlights in your experience with the check. This feedback is then used by the Dev WF team to refine the analysis.</p>
+<h2 id="known-issues">Known Issues</h2>
+<p>Dive into the Known Issues documentation <a href="KnownIssues.html">here</a>.</p>
+<h2 id="unique-build-failures">Unique Build Failures</h2>
+<p>When failures are detected in the result of the build, Build Analysis compares them to errors currently occurring in the target branch the PR is wanting to merge into (e.g. main). If the errors are not occurring on the target branch, Build Analysis will display these errors on the GitHub check.</p>
+<p><img src="Resources/unique_build_failures.png" alt="unique build failures"></p>
+<p>In addition to listing out errors that have occurred on the build, links to the Azure DevOps pipeline are also included if you want to investigate the error directly from Azure DevOps.</p>
+<h2 id="test-failures">Test Failures</h2>
+<p>Build Analysis will display two types of test failures on the PR in which they occur: failures occurring only on the PR, and failures that are occurring on the target branch as well as the PR.</p>
+<p><img src="Resources/test_failures.png" alt="test failures"></p>
+<p><img src="Resources/shared_test_failures.png" alt="shared test failures"></p>
+<p>Test failure data also includes the following:</p>
+<ul>
+<li>Stack Traces and Exception Messages (if available)</li>
+<li>How often the test passes</li>
+<li>Which configuration it failed on</li>
+<li>Links to sections of the Azure DevOps Result Details:
+<ul>
+<li><em>Details</em>: Debug panel</li>
+<li><em>History</em>: History panel</li>
+<li><em>Artifacts</em>: Artifacts panel</li>
+</ul>
+</li>
+<li>Link to the whole Azure DevOps test results (useful if more tests have failed than we are able to display on the GitHub check)</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CSpecifics.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CSpecifics.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CSpecifics.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

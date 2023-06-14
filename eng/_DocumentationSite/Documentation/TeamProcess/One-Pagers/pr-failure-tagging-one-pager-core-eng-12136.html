@@ -1,0 +1,276 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Automated GitHub tagging for failed Pull requests from Maestro++ dependency flow </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Automated GitHub tagging for failed Pull requests from Maestro++ dependency flow ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h2 id="automated-github-tagging-for-failed-pull-requests-from-maestro-dependency-flow">Automated GitHub tagging for failed Pull requests from Maestro++ dependency flow</h2>
+
+<h3 id="limitations">Limitations:</h3>
+<ul>
+<li>This functionality only makes sense when the subscriptions involved are non-batched, and documentation will call this out. We only want to tag a partner team if we're fairly sure that it's worth someone from the source repo to take a look.</li>
+<li>We won't be able to detangle whether the root cause of a failure is the target repo build's flakiness, an intentional breaking change from the source repo that was advertised via email, or a break from changes that lack test coverage from the source repository, so a list of these posssibilities will be part of the message where source repos get tagged.</li>
+</ul>
+<p>See Epic: <a href="https://github.com/dotnet/core-eng/issues/12136">https://github.com/dotnet/core-eng/issues/12136</a></p>
+<h3 id="stakeholders">Stakeholders</h3>
+<p>While we hope that the features added in this epic provide benefit to any &quot;target&quot; repo of dependency flow, the primary stakeholder currently is the .NET SDK team. They exist at the end of the metaphorical dependency-flow river, so they experience potential issues with dependency updates from every layer in the stack, possibly in a synergistic fashion (i.e. the regression requires two or more repos' changes).</p>
+<h3 id="risk">Risk</h3>
+<ul>
+<li><p>What are the unknowns?</p>
+<p>Unknowns are minimal for the work as described; the main being simply &quot;will this improve how long it takes to look at a PR failure by the source repository of the build change?</p>
+</li>
+<li><p>Are there any POCs (proof of concepts) required to be built for this epic?</p>
+<p>No. This will be adding functionality to existing components that already do most of the related behaviors; after review it looks like every challenging thing done already has some component that could be augmented to support this.</p>
+</li>
+<li><p>What dependencies will this epic have? Are the dependencies currently in a state that the functionality in the epic can consume them now, or will they need to be updated?</p>
+<p>None.  All work will occur in the arcade-services repo (unless we decide to store the mappings in another)</p>
+</li>
+<li><p>Will the new implementation of any existing functionality cause breaking changes for existing consumers?</p>
+<p>No breaking changes; the idea is simply to add logging and tagging to an existing semi-mature process.</p>
+</li>
+<li><p>Is there a goal to have this work completed by, and what is the risk of not hitting that date? (e.g. missed OKRs, increased pain-points for consumers, functionality is required for the next product release, et cetera)</p>
+<p>Goal is to finish by end of April 2021. Slipping the date has no associated risk, just means that the SDK team and other &quot;end-of-the-line&quot; repos will continue to operate as they are currently for some time.</p>
+</li>
+</ul>
+<h3 id="serviceability">Serviceability</h3>
+<ul>
+<li><p>How will the components that make up this epic be tested?</p>
+<ul>
+<li>Add tests to existing unit tests in the area (expanding on existing)</li>
+<li>Arcade-services scenario test. (Tests using checks already exist, will be an exercise in code reuse for this somewhat similar scenario.)</li>
+</ul>
+</li>
+<li><p>How will we have confidence in the deployments/shipping of the components of this epic?</p>
+<p>Regularly run scenario and unit tests that exercise this code path always run before deployment to production.</p>
+</li>
+<li><p>Identifying secrets (e.g. PATs, certificates, et cetera) that will be used (new ones to be created; existing ones to be used).</p>
+<p>No new secrets will be needed by the change.</p>
+</li>
+<li><p>Does this change any existing SDL threat or data privacy models? (models can be found in <a href="https://github.com/dotnet/core-eng/SDL">core-eng/SDL</a> folder)</p>
+</li>
+<li><p>Does this require a new SDL threat or data privacy models?</p>
+<p>No; the only PII used will be GitHub aliases / tags and this will be augmenting existing functionality.</p>
+</li>
+<li><p>Steps for setting up repro/test/dev environments?</p>
+<p>Same as <a href="https://github.com/dotnet/arcade-services/blob/main/docs/DevGuide.md">https://github.com/dotnet/arcade-services/blob/main/docs/DevGuide.md</a></p>
+</li>
+</ul>
+<h4 id="rollout-and-deployment">Rollout and Deployment</h4>
+<p>This section left blank as this will be part of an arcade-services component.</p>
+<h3 id="usage-telemetry">Usage Telemetry</h3>
+<ul>
+<li><p>How are we tracking the “usefulness” to our customers of the goals?</p>
+<p>Since there can be lots of reasons a PR is merged quickly or slowly, pure data metrics likely do not help here unless we somehow had many more data points.  However, we can monitor:</p>
+<ul>
+<li>Feedback from SDK and other end-of-the-line repo team members</li>
+<li>Whether we observe incidence of an upstream repo team member taking action before the downstream team raises the issue with them.</li>
+</ul>
+</li>
+<li><p>How are we tracking the usage of the changes of the goals?</p>
+<ul>
+<li>We already use Application Insights for telemetry.  The idea here will be to start tracking the success rate % of PRs from a given repo to another.  By simply writing down source, destination, and success of the PR build we'll be able to identify which teams flow problems out of their repositories. It should be straightforward to make a &quot;top N list&quot; of repos whose changes break others, and dig in to the data from there.</li>
+</ul>
+</li>
+</ul>
+<h3 id="monitoring">Monitoring</h3>
+<p>Already covered by the Dependency Flow error processor and Grafana alerts.</p>
+<h3 id="fr-hand-off">FR Hand off</h3>
+<ul>
+<li><p>What documentation/information needs to be provided to FR so the team as a whole is successful in maintaining these changes?</p>
+<p>The location of mappings for Repository URL -&gt; GitHub Tag, and instructions to update these.</p>
+</li>
+</ul>
+<h3 id="description-of-the-work">Description of the work:</h3>
+<h4 id="components-changed">Components changed:</h4>
+<ul>
+<li><p>New function: TagSourceRepositoryGitHubContacts()</p>
+<ul>
+<li>Reads config file from below, ensure a message is created in the PR to come check out the failure. Will reuse as much as possible from existing GitHub helper functions in Pull Request Actor.</li>
+</ul>
+</li>
+<li><p>Changes to <a href="https://github.com/dotnet/arcade-services/blob/main/src/Maestro/SubscriptionActorService/PullRequestActor.cs">PullRequestActor</a></p>
+<ul>
+<li>NonBatchedPullRequestActorImplementation changes:
+<ul>
+<li>Pass along a flag inside its overload of SynchronizeInProgressPullRequestAsync() to indicate that repo-tagging should occur (this can only happen in non-batched, since it's not feasible to detangle who broke what in a batched update)</li>
+<li>This is needed to ensure that UpdatePullRequestAsync() gets called to check</li>
+</ul>
+</li>
+<li>PullRequestActorImplementation changes:
+<ul>
+<li><p>UpdatePullRequestAsync() would check first if it was being called inside a non-batched PR actor, and if so it would also check the existing field for the interesting state (<code>InProgressPullRequest.MergePolicyCheckResult == MergePolicyCheckResult.FailedPolicies</code>)</p>
+</li>
+<li><p>Before continuing to updating the PR with new commits it would fetch the <code>dependency-flow-failure-notifications.json</code> file described below (or just have it as a local asset in the Maestro++ service), check to see if any failure tagging is requested, and apply a comment to the issue with all unique tags which have been requested.</p>
+</li>
+<li><p>SynchronizePullRequestAsync already has an entry in <a href="https://github.com/dotnet/arcade-services/blob/main/src/Maestro/SubscriptionActorService/PullRequestActor.cs#L424-L426">its switch statement</a>, so we'd have a different actionresult added for this case.</p>
+</li>
+</ul>
+</li>
+<li>For the <code>case MergePolicyCheckResult.FailedToMerge:</code> entry, we'd add a new enum value to SynchronizePullRequestResult (e.g. &quot;InProgressCanUpdateNeedsNotification&quot;)</li>
+<li>At this point SynchronizeInProgressPullRequestAsync calls the new function (TagSourceRepositoryGitHubContacts()) to ensure that a boilerplate message is pasted in with the tags from the config file.</li>
+<li>Telemetry changes:
+<ul>
+<li>Send telemetry with source and destianation repos whenever a non-batched PR is created.</li>
+<li>Whenever we tag an issue due to failed checks, send additional piece of telemetry with the same information indicating failure</li>
+<li>Could just send once at the very end, but this might miss sending check failure telemetry on PRs that get manually fixed up to pass, or are manually merged.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Changes to allow users to self-service dependency-flow failure notifications:</p>
+<ul>
+<li>Introduce a new file, say <code>https://github.com/dotnet/arcade-services/blob/main/dependency-flow-failure-notifications.json</code> sample content:</li>
+</ul>
+</li>
+</ul>
+<pre><code class="lang-json">  {
+    [
+      // Example showing options for disabling and specifying particular channels
+      {
+        // Notify @dotnet/runtime-infrastructure for any runtime content coming from the .NET 6 channel
+        // targeted to the Sdk and ASP.NET Core teams where PRs fail.
+        &quot;SourceGitHubRepoUrl&quot;: &quot;https://github.com/dotnet/runtime&quot;,
+        &quot;TargetGitHubRepoUrls&quot;: 
+        [
+          &quot;https://github.com/dotnet/sdk&quot;,
+          &quot;https://github.com/dotnet/aspnetcore&quot;,
+        ],
+        &quot;NotificationSettings&quot;: [{
+            &quot;GitHubTagsToNotify&quot;: [
+              &quot;@dotnet/runtime-infrastructure&quot;
+            ],
+            &quot;Channels&quot;: [
+              &quot;.NET 6&quot;,
+            ]
+          },
+          // Notify a different tag for servicing branches
+          {
+            &quot;GitHubTagsToNotify&quot;: [
+              &quot;@dotnet/runtime-infrastructure-servicing&quot;
+            ],
+            &quot;Channels&quot;: [
+               &quot;.NET 5&quot;,
+               &quot;.NET 3&quot;
+            ],
+            // leave the ability to disable in case failures are expected
+            &quot;Enabled&quot;: false
+          }
+        ]
+      },
+      // Minimal example: always alert on all channels for PRs made from Nuget.Client -&gt; Dotnet SDK
+      {
+        &quot;SourceGitHubRepoUrl&quot;: &quot;https://github.com/nuget/nuget.client&quot;,
+        &quot;TargetGitHubRepoUrls&quot;: 
+        [
+          &quot;https://github.com/dotnet/sdk&quot;
+        ],
+        &quot;NotificationSettings&quot;: [{
+            &quot;GitHubTagsToNotify&quot;: [
+              &quot;@nuget/nuget-infrastructure&quot;,
+            ]
+          }
+        ]
+      }
+    ]
+  }
+</code></pre>
+<h4 id="notes">Notes</h4>
+<ul>
+<li>All subscriptions to GitHub PR failure tagging must be OK with the &quot;source&quot; repo. That is, target repositories causing failure notifications for teams that do not want these notifications will have them removed.  A blurb to this effect will be part of the failure notification tag boilerplate message.</li>
+<li>See related feature request: <a href="https://github.com/dotnet/arcade/issues/7102">https://github.com/dotnet/arcade/issues/7102</a></li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cpr-failure-tagging-one-pager-core-eng-12136.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cpr-failure-tagging-one-pager-core-eng-12136.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cpr-failure-tagging-one-pager-core-eng-12136.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

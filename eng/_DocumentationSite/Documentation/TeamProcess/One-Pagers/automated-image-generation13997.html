@@ -1,0 +1,242 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Automated Image Generation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Automated Image Generation ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="automated-image-generation">Automated Image Generation</h1>
+
+<p><a href="https://github.com/dotnet/core-eng/issues/13997">Link to Automated Image Generation Epic</a></p>
+<h2 id="summary">Summary</h2>
+<h3 id="motivation">Motivation</h3>
+<p>Currently only way how to generate Helix custom images for our Windows queues is to ask DDFUN. This happens on a weekly basis, always when we want to update Visual Studio versions or include the newest Windows patches. This process has several drawbacks from allocating someone from DDFUN team to introduction of typos by manual steps.</p>
+<h3 id="goal">Goal</h3>
+<p>The goal of this epic is to automate the process of custom image generation, so this can be done by our team or vendors, without the need of external teams. These are images which contains various versions of Visual Studio and various versions of Windows. We will introduce a new automated and monitored process which removes the need for manual steps done by DDFUN.</p>
+<p>When this is completed we will be able to:</p>
+<ul>
+<li>generate images ourselves without spending time on coordination with DDFUN, similarly to other teams using Image Factory</li>
+<li>specify new versions at one place instead of tens of configuration files</li>
+<li>automatically regenerate images on change of configuration files</li>
+<li>monitor completion of process instead of relying on notifications from DDFUN</li>
+</ul>
+<p>Part of this epic is to take the ownership of <a href="https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=%2FMonthly%2FHelixBaseImages">custom image definitions</a> that currently reside with DDFUN to get complete control over the definitions and to be able to run our automation against them seamlessly. This will be part of new documentation so maintenance of these definitions can be done also by vendors.</p>
+<h3 id="implementation-details">Implementation Details</h3>
+<p>Let's start with a scenario where we need to update Visual Studio 2019 Preview version per our <a href="https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/VS2019-Upgrade-Schedule">schedule</a> which has to be done almost every week.</p>
+<p>Currently this change requires update of same values in six <a href="https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=/Monthly/HelixBaseImages/VS2019Preview">image definitions</a>. Specifically:</p>
+<ul>
+<li>update artifact windows-vs-willowreleased, set parameter VSBootstrapperURL to a new value.</li>
+<li>update version in parameter CustomImageName under Destination.</li>
+</ul>
+<p>To simplify this, we will introduce templating, so variables are defined at exactly one place and are not duplicated across multiple files, similarly to what we have in OSOB.</p>
+<h4 id="example">Example:</h4>
+<p>Instead of hardcoding the same version and the same URL at <a href="https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=/Monthly/HelixBaseImages/VS2019Preview">six places</a>, we introduce template variable {VS_2019_PREVIEW_URL} which declares an URL to Visual Studio artifact and the template variable {VS_2019_PREVIEW_VERSION} which declares version of Visual Studio.</p>
+<p>All templated variables will be stored in one file.</p>
+<ol>
+<li><p>Given our example scenario, we will update variables VS_2019_PREVIEW_URL and VS_2019_PREVIEW_VERSION. And this change will be pushed into the repository. This change triggers our new build pipeline under Azure DevOps.</p>
+</li>
+<li><p>The pipeline executes command line tool which processes all payloads and substitutes all template variables from the variable file and call Image Factory with this payload. To prevent duplication we will calculate hash of payload and store it a simple Azure storage table and call Image Factory only for payloads which haven't been processed yet. If needed it will be possible to force rebuilding of images.</p>
+</li>
+<li><p>The pipeline won't block until all images are completed. It will post Image Factory jobs, store tracking ids in Azure storage table mentioned above and finish.</p>
+</li>
+<li><p>To get results, the same pipeline will be executed periodically (e.g. every hour) and check states of all pending Image Factory jobs and provide summary report so it's clear if all images that were requested are ready. In case any image build fails, the pipeline will fail and FR will be notified by email.</p>
+</li>
+<li><p>Once Helix custom images are generated, FR has to create an OSOB PR with updated image names. Existing OSOB post validation performs version test of Visual Studio.</p>
+</li>
+</ol>
+<p>Documentation of the Image Factory API can be found <a href="https://devdiv.visualstudio.com/XlabImageFactory/_wiki/wikis/XlabImageFactory.wiki/6330/AccessingImageFactory">here</a>.</p>
+<h2 id="take-ownership-of-helix-custom-image-definitions">Take ownership of Helix custom image definitions</h2>
+<p>Making custom image definitions templated requires modifications. This is why we need to move all <a href="https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=%2FMonthly%2FHelixBaseImages">definitions</a> under our repository. It was confirmed by DDFUN (Casey) that these definitions aren't shared with any other team. Beside changing URL and version the structure is left unchanged, so there isn't any additional maintenance cost related to owning these definitions.</p>
+<p>Currently the definitions with DDFUN use YAML only to be converted to JSON payloads. As part of the move I would suggest to start using JSON file format as it's expected input of the Image Factory. The only benefit of YAML are comments, but in our case these comments are copy pasted across all definitions and don't add any additional value.</p>
+<p>Here is an example of a fragment of a templated image definition with template variables VS_2019_PREVIEW_URL and VS_2019_PREVIEW_VERSION:</p>
+<pre><code>{
+    &quot;Artifacts&quot;: [
+        {
+            &quot;Name&quot;: &quot;windows-vs-willowreleased&quot;,
+            &quot;Parameters&quot;: {
+                &quot;WorkLoads&quot;: &quot;reduced&quot;,
+                &quot;Sku&quot;: &quot;Enterprise&quot;,
+                &quot;VSBootstrapperURL&quot;: &quot;{VS_2019_PREVIEW_URL}/vs_Enterprise.exe&quot;
+            }
+        }
+    ],
+    &quot;Destination&quot;: [
+        {
+            &quot;StorageAccountName&quot;: &quot;heliximgfctdncwus2&quot;,
+            &quot;CustomImageName&quot;: &quot;Helix-Server-DataCenter-19H1-ES-ES-VS2019-Preview-Enterprise_{VS_2019_PREVIEW_VERSION}&quot;,
+            &quot;SubId&quot;: &quot;84a65c9a-787d-45da-b10a-3a1cefce8060&quot;
+        }
+    ]
+}
+</code></pre>
+<p><em>Note: Nested templated variables won't be supported.</em></p>
+<p>Variables file:</p>
+<pre><code>{
+    &quot;VS_2019_PREVIEW_URL&quot;:&quot;https://aka.ms/vs/16/pre/133508311_-1151188015&quot;,
+    &quot;VS_2019_PREVIEW_VERSION&quot;:&quot;16_11_2_1&quot;,
+}
+</code></pre>
+<h2 id="stakeholders">Stakeholders</h2>
+<ul>
+<li>.NET Engineering Services</li>
+</ul>
+<h2 id="risk">Risk</h2>
+<ul>
+<li><p>Are there any POCs (proof of concepts) required to be built for this work?</p>
+<p>POC for Visual Studio images was done before creating this one pager.</p>
+</li>
+<li><p>What dependencies will this epic have? Are the dependencies currently in a state that the functionality in the epic can consume them now, or will they need to be updated?</p>
+<p>This epic depends on external service Image Factory. It's functionality is currently stable and no breaking changes are planned. I asked to notify our team in a case of changes.</p>
+</li>
+<li><p>Will the new implementation of any existing functionality cause breaking changes for existing consumers?</p>
+<p>Implementation of this shouldn't cause breaking changes as all issues with images should be detected during OSOB validation phase.</p>
+</li>
+</ul>
+<h2 id="serviceability">Serviceability</h2>
+<ul>
+<li><p>How will the components that make up this epic be tested?</p>
+<p>CLI will be tested by unit tests. There will be also scenario test which generates one image and verifies it.</p>
+</li>
+<li><p>Identifying secrets (e.g. PATs, certificates, et cetera) that will be used (new ones to be created; existing ones to be used).</p>
+<p>Existing secrets:</p>
+<ul>
+<li>image-factory-tenant-id</li>
+<li>image-factory-client-id</li>
+<li>image-factory-client-secret</li>
+<li>image-factory-resource-id</li>
+</ul>
+<p>New secret:</p>
+<ul>
+<li>image-factory-state-connection-string</li>
+</ul>
+</li>
+<li><p>Does this change any existing SDL threat or data privacy models? (models can be found
+in <a href="https://github.com/dotnet/core-eng/SDL">core-eng/SDL</a> folder)</p>
+<p>It doesn't change SDL threat or data privacy models.</p>
+</li>
+</ul>
+<h2 id="rollout-and-deployment">Rollout and Deployment</h2>
+<ul>
+<li><p>A new Azure DevOps build pipeline will take specific version of this tool from artifacts and executes it.</p>
+</li>
+<li><p>In a case of issues, it is still possible generate images manually.</p>
+</li>
+</ul>
+<h2 id="usage-telemetry">Usage Telemetry</h2>
+<ul>
+<li>This tool is internal only. Basic information about runs will be available from the pipeline history. We don't plan to include any additional data, unless they are requested. If we start experience problems with the image generation though, we might need to start gathering some reliability data.</li>
+</ul>
+<h2 id="monitoring">Monitoring</h2>
+<ul>
+<li>Monitoring is based on result of the build pipeline. It will send email notification on any failure. If there is any issue, it should be picked up by FR.</li>
+</ul>
+<h2 id="fr-hand-off">FR Hand off</h2>
+<ul>
+<li><p>We will create documentation about</p>
+<ul>
+<li>How to generate custom images with Visual Studio</li>
+<li>How to use the tool in manual mode</li>
+<li>What to do when pipeline fails the build</li>
+</ul>
+</li>
+<li><p>The policies of generating images overlaps with Matrix of Truth epic and will be further discussed with the epic owner.</p>
+</li>
+</ul>
+<h2 id="future-outlook">Future outlook</h2>
+<ul>
+<li>Execution of the process should be possible to be done by vendors with minimal cost.</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cautomated-image-generation13997.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cautomated-image-generation13997.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cautomated-image-generation13997.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

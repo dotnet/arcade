@@ -1,0 +1,216 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Jumping into .NET Infrastructure </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Jumping into .NET Infrastructure ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="jumping-into-net-infrastructure">Jumping into .NET Infrastructure</h1>
+
+<p>The purpose of this document is to provide a jumping off point for repository
+owners looking to start upgrading their infrastructure to .NET. It will
+provide a general overview of the direction .NET infrastructure is going
+and a general outline of steps you should take to get started with the upgrade,
+with links to appropriate detailed documentation.</p>
+<h2 id="what-are-we-doing">What are we doing?</h2>
+<p>With every new major product cycle, we take the chance to upgrade our
+infrastructure based on what we learned in the previous product cycle. The goal
+is to produce a better product more efficiently in the next product cycle. .NET
+is no different, though in many ways the infrastructure changes we are
+making are much more an overhaul than normal. Generally, we are focusing in 3
+areas:</p>
+<ul>
+<li><strong>Shared tooling (Arcade)</strong> - Striving to reduce duplication of tooling,
+improve development consistency between repos and drive tooling improvements
+across a wider swath of the ecosystem more quickly.</li>
+<li><strong>Transitioning to Azure DevOps for public CI, and upgrading official builds</strong>
+<ul>
+<li>Move away from Jenkins, improve CI reliability, increase the consistency
+between our official and PR builds, and bring first-class workflow for
+internal as well as public changes.</li>
+</ul>
+</li>
+<li><strong>Improving our inter-repo dependency version management (Darc)</strong> - Improve
+the rate at which dependencies are updated in repos, improve content
+traceability, etc.</li>
+</ul>
+<h2 id="does-my-repository-need-to-be-involved">Does my repository need to be involved?</h2>
+<p>Generally, if your repo is shipping in .NET, yes.  For <a href="TierOneRepos.html">'Tier
+1'</a> repos a full transition is required.  While there exist
+some special cases (e.g. repos used as submodules in aspnet/universe), we're
+striving to move as many people towards the new infrastructure as possible.</p>
+<ul>
+<li>If you use .NET CI (ci.dot.net, ci2.dot.net, ci3.dot.net) you'll need to move
+into Azure DevOps.</li>
+<li>If you pull new dependencies from other repos (e.g. latest
+Microsoft.NETCore.App package), you'll need to onboard onto Arcade and
+dependency flow.</li>
+<li>If you publish dependencies used by other repos, you'll need to onboard onto
+Arcade, so that other repos may consume your outputs.</li>
+</ul>
+<h2 id="im-ready-to-get-started-what-do-i-do">I'm ready to get started, what do I do?</h2>
+<p>See the <a href="Onboarding.html">Arcade Onboarding</a> guide.</p>
+<p>Additionally, the WinForms team has documented their path to adopt Arcade from scratch, including moving their repositories public. Their guide can be found here: <a href="https://microsoft.sharepoint.com/:w:/t/MerriesWinFormsandSetup/EdJpqtiLVdtFuS6p10E0o_IBVu2WsETAd4zBf6YdVKsLcQ?rtime=MyHzd7Rx1kg">Arcade - Starting from Scratch</a></p>
+<h2 id="where-can-i-find-general-information-on-net-infrastructure">Where can I find general information on .NET infrastructure?</h2>
+<p>There is quite a bit of documentation living under the
+<a href="../Documentation/">Documentation</a> folder in the dotnet/arcade repo.  Here are
+some highlights</p>
+<h3 id="concepts-and-goals">Concepts and Goals</h3>
+<ul>
+<li><a href="Overview.html">Arcade overview</a></li>
+<li><a href="Policy/ArcadeCommunications.html">Arcade communications</a></li>
+<li><a href="BranchesChannelsAndSubscriptions.html">How dependency flow works in .NET</a></li>
+<li><a href="Policy/DefaultsGuidance.html">Guidance for defaults</a></li>
+<li><a href="CorePackages/Versioning.html">Versioning rules</a></li>
+<li><a href="DependenciesFlowPlan.html">Dependencies Flow Plan</a>: Flowing dependencies with Darc, Maestro and BAR.</li>
+<li><a href="HowToCreatePackages.html">How to Create an Arcade Package</a></li>
+<li><a href="InfrastructureEcosystemOverview.html">.NET Core Infrastructure Ecosystem Overview</a></li>
+<li><a href="PublishConsumeContract.html">Toolset Publish/Consume Contract</a></li>
+<li><a href="Servicing.html">Servicing</a></li>
+<li><a href="Toolsets.html">Toolsets</a></li>
+<li><a href="VersionQueryingAndUpdating.html">Version Querying and Updating</a></li>
+<li><a href="Validation/Overview.html">How Arcade tests itself</a></li>
+</ul>
+<h3 id="tools-we-are-using-and-how-we-are-using-them">Tools we are using and how we are using them</h3>
+<h4 id="code-and-repository-configuration">Code and repository configuration</h4>
+<ul>
+<li><a href="ArcadeSdk.html">The Arcade Build SDK</a></li>
+<li>GitHub and Azure Repos
+<ul>
+<li><a href="AzureDevOps/internal-mirror.html">Mirroring public projects</a></li>
+<li>Bots and connectors</li>
+</ul>
+</li>
+<li><a href="DependencyDescriptionFormat.html">Dependency Description Format</a></li>
+<li><a href="SeePackagesLatestVersion.html">How to See What's the Latest Version of an Arcade Package</a></li>
+</ul>
+<h4 id="building-projects">Building projects</h4>
+<ul>
+<li><a href="CorePackages/Telemetry.html">Telemetry</a></li>
+<li><a href="TaskPackages.html">MSBuild Task Packages</a></li>
+<li>Azure Pipelines: Orchestrating continuous integration
+<ul>
+<li><a href="AzureDevOps/WritingBuildDefinitions.html">Goals</a></li>
+<li><a href="AzureDevOps/AzureDevOpsOnboarding.html">Onboarding to Azure DevOps</a></li>
+<li><a href="ChoosingAMachinePool.html">Choosing a Machine Pool</a></li>
+<li><a href="AzureDevOps/PhaseToJobSchemaChange.html">Migrating from <code>phase</code> to <code>job</code></a> in Pipeline build definitions</li>
+<li>Tasks and Templates</li>
+</ul>
+</li>
+<li><a href="Darc.html">Darc</a>: Arcade's dependency management system</li>
+<li><a href="Maestro.html">Maestro</a>: CI automation of dependency flow</li>
+<li>Mission Control</li>
+</ul>
+<h4 id="testing-projects">Testing projects</h4>
+<ul>
+<li>Helix: <a href="/Documentation/Helix.md">Introduction</a>, <a href="../src/Microsoft.DotNet.Helix/Sdk/Readme.md">SDK</a>, <a href="../src/Microsoft.DotNet.Helix/JobSender/Readme.md">JobSender</a></li>
+<li>Azure Agent pools and queues</li>
+<li>Docker support</li>
+<li><a href="Dumps/Dumps.html">Dump file retrieval</a></li>
+</ul>
+<h4 id="deploying-projects">Deploying projects</h4>
+<ul>
+<li><a href="CorePackages/Packaging.html">Packaging</a></li>
+<li><a href="CorePackages/Publishing.html">Publishing</a></li>
+<li><a href="CorePackages/Signing.html">SignTool</a> (and Microbuild)</li>
+<li>BAR</li>
+</ul>
+<h2 id="i-need-help-who-should-i-talk-to">I need help, who should I talk to?</h2>
+<p>Contact 'dnceng' for additional guidance.  Either @dotnet/dnceng on GitHub, or
+dnceng@microsoft.com</p>
+<h2 id="frequently-asked-questions">Frequently Asked Questions</h2>
+<p>See the <a href="FAQ.html">FAQ</a>.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CStartHere.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CStartHere.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CStartHere.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,155 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Dependency flow automation =&gt; Maestro ++ </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Dependency flow automation =&gt; Maestro ++ ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="dependency-flow-automation--maestro-">Dependency flow automation =&gt; Maestro ++</h1>
+
+<p>Maestro++ is an automation of the work a developer would do to flow dependencies across repos using <a href="Darc.html">Darc</a>.</p>
+<h2 id="requirements">Requirements:</h2>
+<ul>
+<li>Triggers:
+<ul>
+<li>Package publish</li>
+<li>Schedule task</li>
+<li>Requested in a PR (i.e. @dotnet-bot test product build) by following a speculative product build.</li>
+<li>Manual trigger</li>
+</ul>
+</li>
+<li>It must work for GitHub/Azure DevOps and Public/Internal builds/repos (all combos).</li>
+<li>Manage channels subscriptions for each repo.</li>
+<li>It must be able to set policies for each repo:
+<ul>
+<li>When to trigger Maestro++</li>
+<li>When to merge an auto-PR. (i.e. auto-merge when all the checks are green).</li>
+<li>When to abort a flow of dependencies (i.e. what to do when test failed for a specific repo).</li>
+</ul>
+</li>
+<li>It must have the option to auto-merge PRs when all the required checks are green.</li>
+<li>It must signal when an Official Build is being built in order to produce signed bits.</li>
+<li>Notify the result of the build triggered by maestro++. Did the target repo get the update? Does the source repo know if the children were updated?</li>
+</ul>
+<h2 id="considerations">Considerations:</h2>
+<ul>
+<li>It must manage <a href="#Speculative-Version-Flow">speculative version flow</a> (Once the product build is done, in parallel execute tests and queue product builds for the dependents).</li>
+<li>It must manage <a href="#Speculative-Product-Build">speculative product build</a> (Dev test build. Flow dependencies until the last dependent validating build and option to not consider test results).</li>
+<li>Secret management</li>
+<li>Diamond dependency problem. There are cases where, for example, CLI depends on the package Microsoft.NetCore.App that comes from Core-Setup. ASP.NET depends on the same package. In order for the product
+to work, the version of Microsoft.NetCore.App needs to be the same across all the dependencies that end in CLI. This involves management on transient dependencies. We could think of this as having a check
+in the auto-pr that will validate this (using Darc?). =&gt; We still need to think about this.</li>
+</ul>
+<h2 id="speculative-version-flow">Speculative Version Flow</h2>
+<p>Speculative version flow is the concept that we do not need a commit to a mainline branch in a repository to begin flowing dependencies to downstream repositories.  As soon as assets required for downstream repository builds are available, we can begin to flow those bits.
+For example, a change originating in CoreCLR would have bits flowed in the following way:</p>
+<ol>
+<li>Dev creates a PR that after approval, gets merged.</li>
+<li>Official build starts on trigger</li>
+<li>Upon completion of build+package step of CoreCLR official build, assets are now available for downstream consumption (i.e. CoreFx).  Tests for CoreCLR continue asynchronously.</li>
+<li>Maestro++ uses Darc to create a commit containing dependency updates and starts new dependency update PR in CoreFx.  Because this “official” PR comes from the
+Maestro++ bot, signed bits are generated.</li>
+<li>Upon completion of build+package steps in CoreFx, assets are now available for downstream consumption (core-setup, corefxlab). Tests for CoreFx continue asynchronously.</li>
+<li>Maestro++ uses Darc to create a commit containing dependency updates and starts new dependency update PR in core-setup and corefxlab.  Because this “official” PR comes from the Maestro++ bot, signed bits are generated.</li>
+<li>Dependency update PRs are automatically merged by Maestro++ into target branches based on configurable policy. Typically, they would only get merged if tests passed for that PR as well as any speculative parents.  For example, if core-setup’s tests pass with speculative CoreFx bits, but CoreFx's tests fail with speculative CoreCLR bits, then core-setup’s PR is not eligible for merge.</li>
+<li>As PRs are merged, the assets they produced speculatively are merged into the mainline blob feeds and downstream PRs can be merged.</li>
+</ol>
+<p><img src="versionFlow.jpg" alt="Diagram"></p>
+<h2 id="speculative-product-builds">Speculative Product Builds</h2>
+<p>It answers the question of “what would the product (or subproduct) look like if a specific version of a repo was injected into the dependency graph.
+While these assets are generated in the process of flowing dependencies, the “default” model is to abort the flow if tests fail.  When attempting a speculative product build, the flow could be continued, without committing results, as long as builds complete successfully.
+The important part to recognize is that a speculative product build is NOT a shippable product.  It is intended to be used by devs as a “what if” tool to view a commit in context of other repositories.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CMaestro.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CMaestro.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CMaestro.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

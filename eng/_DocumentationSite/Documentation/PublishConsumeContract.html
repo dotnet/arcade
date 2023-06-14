@@ -1,0 +1,233 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Toolset Packages </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Toolset Packages ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="toolset-packages">Toolset Packages</h1>
+
+<ul>
+<li><a href="#toolset-feed">Toolset Feed</a></li>
+<li><a href="#core-tools-sdk">Core Tools SDK</a></li>
+<li><a href="#bootstrapping">Bootstrapping</a></li>
+<li><a href="#using-tools-in-non-bootstrapping-scenarios">Using tools in non-bootstrapping scenarios</a></li>
+<li><a href="#onboarding">Onboarding</a></li>
+<li><a href="#toolset-package-versions">Package versioning</a></li>
+<li><a href="#package-contents">Package contents</a></li>
+<li><a href="#package-symbols">Package symbols</a></li>
+<li><a href="#maestro-and-the-versions-repo">Maestro and the Versions repo</a></li>
+<li><a href="#gallery">Gallery</a></li>
+<li><a href="#package-validation">Package validation</a></li>
+<li><a href="#sdk-validation">Sdk validation</a></li>
+<li><a href="#provenance">Provenance</a></li>
+<li><a href="#usage">Usage</a></li>
+</ul>
+<h2 id="toolset-feed">Toolset Feed</h2>
+<p>Toolset packages should be published to a consistent location for consumption.</p>
+<p>There are currently a couple of different sources for various repo toolsets.</p>
+<ul>
+<li><a href="https://dotnet.myget.org/F/aspnetcore-tools/api/v3/index.json">https://dotnet.myget.org/F/aspnetcore-tools/api/v3/index.json</a></li>
+<li><a href="https://dotnet.myget.org/F/roslyn-tools/api/v3/index.json">https://dotnet.myget.org/F/roslyn-tools/api/v3/index.json</a></li>
+<li><a href="https://dotnet.myget.org/F/dotnet-buildtools/api/v3/index.json">https://dotnet.myget.org/F/dotnet-buildtools/api/v3/index.json</a></li>
+</ul>
+<p>Shared toolset packages will be published to a single location so that consumption / <a href="#gallery">discoverability</a> is simplified.</p>
+<p>Toolset package feed: <a href="https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json">https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json</a></p>
+<h2 id="core-tools-sdk">Core Tools SDK</h2>
+<p>The core tools SDK is the entry point for toolset functionality.  We will provide a core SDK which repo's will consume as an SDK (or package reference) that provides functionality for tasks that are common across repo's.  The core tools SDK may contain one or more tools packages which have been determined to be beneficial to a common set of repos (most?) across DotNet.  As packages prove valuable to more than one repo, they will be considered for inclusion in the core tools SDK.  However, we want to be considerate of package bloat and seek alternative (but common) means of consumption for tool packages which do not meet the criteria for inclusion in the core tools SDK.  In other words, the packages will need to provide clear benefit to the majority (or all) of repos in order to be considered for inclusion in the core tools SDK.</p>
+<h2 id="tools-packages">Tools packages</h2>
+<p>Tools packages provide functionality (MSBuild or other) which are useful to one ore more repo's.  Tools packages (specifically MSBuild task packages) are currently being <a href="https://github.com/dotnet/core-eng/pull/2541/files">discussed</a> and will be considered for inclusion in the core tools SDK (if they provide clear functionality to the majority of DotNet repos).  Additional tools / task packages will be available for direct consumption or via the core tools SDK.</p>
+<h2 id="bootstrapping">Bootstrapping</h2>
+<p>Bootstrapping a repo will consist of using the CLI (obtainable via a script from a well-known / secure location) to restore the <a href="#core-tools-sdk">core tools SDK</a> project.</p>
+<h2 id="using-tools-in-non-bootstrapping-scenarios">Using tools in non-bootstrapping scenarios</h2>
+<p>There are some scenarios where bootstrapping is not ideal for acquiring tools.  These are scenarios which are not project based, or not tied to a specific repo.  A primary example of this is telemetry, where you want to be able to send information about a build, before a repo has even bootstrapped.  Another may be orchestration (depending on implementation), the orchestration may schedule and report on multiple repo's, but itself is not tied to a repo.  For these scenarios, we would like to be able to provide common tooling.  At this point, there are a couple of ideas being thrown around.</p>
+<ul>
+<li>&quot;DotNet CLI install tools&quot; is one option for local toolset installs, but not available until .NET Core 2.1 Preview 2 (at the earliest).</li>
+<li>&quot;Shared Library&quot; model (like Jenkins), where tools are provided via another common tools repo.</li>
+<li><a href="https://cbt-userguide/Introduction.html">CBT</a> is a new offering from 1ES.  Not enough investigation has occurred to determine if this is a viable option.</li>
+</ul>
+<p>We will evaluate guidance for these scenarios when they arise.</p>
+<h2 id="onboarding">Onboarding</h2>
+<p>Onboarding a repo to the toolset will be a <a href="https://github.com/dotnet/arcade/tree/main/Documentation/Project-Docs/buildtools-bootstrap.md">simple process</a>.</p>
+<p>We will provide links to zips / tarballs to acquire the basic pieces necessary for bootstrapping the core tools SDK on a supported platform.</p>
+<p>Note: Further guidance on onboarding a repo and customizing for a particular repo's needs will be provided in a separate documentation.  Some general <a href="#usage">usage</a> is provided below.</p>
+<h2 id="toolset-package-versions">Toolset package versions</h2>
+<p>Package versioning should follow precedent set by other repo's rather than trying to produce new versioning scheme / tooling.  Most of the &quot;core&quot; DotNet repositories (CoreFx, CoreClr, Core-Setup, etc...) are using <a href="https://github.com/dotnet/corefx/blob/master/Documentation/building/versioning.md">versioning</a> tools which are a part of <a href="https://github.com/dotnet/buildtools/blob/master/src/Microsoft.DotNet.Build.Tasks/PackageFiles/versioning.targets">BuildTools</a>.  The versioning logic will be available from a <a href="https://github.com/dotnet/core-eng/pull/2541/files">task package</a> where it will be generally available for all participating repositories.</p>
+<h3 id="versioning-constraints">Versioning constraints</h3>
+<ul>
+<li>Version needed to be higher than the versions previously shipped.</li>
+<li>There needs to be an ability to have multiple versions per day.</li>
+<li>Versions need to be always increasing.</li>
+<li>Version needs to be lower than 65535 (unsigned short int max) since the version is used as assembly file version which has that constraint.</li>
+<li>Version needs to be reproducible.</li>
+<li>We shouldn't have the need to check in a file containing the buildnumber.  Checked in files containing major/minor/patch will be permitted.</li>
+<li>We will support SemVer <a href="https://semver.org/spec/v1.0.0.html">1.0</a> and <a href="https://blog.nuget.org/20140924/supporting-semver-2.0.0.html">2.0</a> semantics.  If there are issues related to SemVer 2.0 support on older clients, then we'll consider adjusting to support those scenarios.</li>
+</ul>
+<p>Package version example:</p>
+<pre><code class="lang-Text">SemVer 1.0: mylibrary.1.0.0-prerelease-00001-01.nupkg
+SemVer 2.0: mylibrary.1.0.0-prerelease.1.1.nupkg
+</code></pre>
+<h2 id="package-contents">Package contents</h2>
+<p>Standard package layout</p>
+<pre><code class="lang-Text">(root)
+  - sdk/
+    + Sdk.props (optional)
+    + Sdk.targets
+  - build/
+    + $packageId.props (optional)
+    + $packageId.targets
+    - netstandard1.5/
+      + $taskAssembly.dll
+    - net46/
+      + $taskAssembly.dll
+</code></pre>
+<p>The standard package layout <em>supports</em> (not required) consuming packages as <a href="https://docs.microsoft.com/en-us/visualstudio/msbuild/how-to-use-project-sdk">MSBuild Project SDKs</a>.  In general, we believe that there will be one project SDK which is referenced and that the toolset packages will be consumed as package references, not as SDK's.  At this time, however, we are not enforcing a strict model which prevents or requires toolset consumption as individual SDK's.</p>
+<p><code>Sdk.props</code> and <code>Sdk.targets</code> should not contain any functional code, only imports for the respective build props / targets.</p>
+<h3 id="requirements">Requirements</h3>
+<ul>
+<li><p>Utilities, exe's, scripts, etc which are part of the package functionality must be usable via MSBuild properties / targets.  You should not have a collection of executable files in your package which do not include MSBuild entry points for using them.</p>
+</li>
+<li><p>Additional package guidelines are outlined <a href="https://github.com/dotnet/arcade/tree/main/Documentation/Project-Docs/Toolshed/TaskPackages.md#implementation-details">here</a></p>
+</li>
+<li><p>Packages need to include accountability information in the nuspec.  At a minimum, source repository link and commit SHA.</p>
+</li>
+</ul>
+<h3 id="package-dependencies">Package dependencies</h3>
+<p>The tools provided via NuGet packages for MSBuild tasks will be self-contained (include all of their dependencies).  It is important to be deliberate about what dependency versions are included in a package because otherwise the mix-match model of the tools will be broken.  As a starting place, dependency versions should align with what is provided by the core tools SDK.  If you have additional dependencies outside of those in the core tools SDK (or need to change dependency versions), then we should be deliberate (have a conversation with core tools stakeholders) about what those dependencies are and what versions are required.</p>
+<h3 id="best-practices">Best practices</h3>
+<ul>
+<li><p>Choose non-generic build property / target names.  Packages should be very considerate when defining property / target names.  For example, if each package defines a property called <code>TaskDir</code> which is defined as <code>$(MSBuildThisFileDirectory)build/blah</code>, then the last package imported will be the one to define <code>TaskDir</code>, and all of your other packages will be broken.  So packages should prefer to choose target / property names which are unlikely to conflict with other packages or which include the package name in the property / targetname, ie <code>MyPackageNameTaskDir</code></p>
+</li>
+<li><p>Ensure build props file is imported.  In the props file, you should define some property such as <code>&lt;_MyPackageNameImported&gt;true&lt;/_MyPackageNameImported&gt;</code> and the targets file then includes <code>&lt;Import Project=&quot;$(MSBuildThisFileDirectory)$(MSBuildThisFileName).props&quot; Condition=&quot;'$(_MyPackageNameImported)' == ''&quot; /&gt;</code>.  This would permit consumers to just directly import the targets file if desired instead of importing two files.</p>
+</li>
+</ul>
+<h2 id="package-symbols">Package symbols</h2>
+<p>Task package symbols should be embedded in the binaries.</p>
+<h2 id="maestro-and-the-versions-repo">Maestro and the Versions repo</h2>
+<p>Toolset packages will assume the use of Maestro for automatic version uptake.</p>
+<p>Toolset packages should be publishing version information to the versions repo so that repositories using automatic version updating can consume them.  When publishing, there should be package versions entries both for the repo producing the package, and for a tools location which aggregates the various toolset packages. [Details are TBD]</p>
+<h2 id="gallery">Gallery</h2>
+<p>A traditional gallery (ie myget.org) is not provided for the toolset.  Instead toolset packages may be browsed using a <a href="https://docs.microsoft.com/en-us/nuget/tools/package-manager-ui#package-sources">package source</a> in Visual Studio.  Additionally, toolset packages will be listed on the versions repo [link TBD].</p>
+<h2 id="package-validation">Package validation</h2>
+<p>Currently, there are no unit tests for package validation / conformance.</p>
+<h2 id="sdk-validation">Sdk validation</h2>
+<p>Currently, there are no unit tests for Sdk validation / conformance</p>
+<h2 id="provenance">Provenance</h2>
+<p>Security is continuing to tighten, and we require provenance for any bits that we own / control directly.  Provenance guidance / requirements are provided <a href="https://securityguidance.cloudapp.net/">here</a>.  It is important to keep these rules in mind for all tools package providing repos.</p>
+<h2 id="usage">Usage</h2>
+<h3 id="core-tools-sdk-usage">Core Tools SDK Usage</h3>
+<p>The core tools SDK will be typically consumed as a <a href="https://docs.microsoft.com/en-us/visualstudio/msbuild/how-to-use-project-sdk">project SDK</a>.</p>
+<h3 id="tools-packages-usage">Tools packages Usage</h3>
+<p>Tools packages will typically be consumed as package references in an individual repo.  The toolset SDK should provide extensibility points to add package references for the toolset which are specific to a repo.   If functionality proves to be beneficial to additional repo's, it will go under consideration for becoming part of the core toolset SDK.</p>
+<p>[Note: Extensibility points may not yet be present]</p>
+<p>Example of common <code>Toolset.proj</code></p>
+<pre><code class="lang-XML">&lt;Project Sdk=&quot;DotNet.Tools.Internal.Sdk&quot;&gt;
+  &lt;PropertyGroup&gt;
+    &lt;TargetFramework&gt;net462&lt;/TargetFramework&gt;
+    &lt;RestoreSources&gt;https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json&lt;/RestoreSources&gt;
+  &lt;/PropertyGroup&gt;
+&lt;/PropertyGroup&gt;
+</code></pre>
+<p>[Note: This example should include how to add project specific PackageReferences to the toolset]</p>
+<p>Example of tools as SDK's usage (less common usage)</p>
+<pre><code class="lang-XML">&lt;Project Sdk=&quot;DotNet.Tools.Internal.Sdk;SignTool;Microsoft.DotNet.Build.Tasks.Feed&quot;&gt;
+  &lt;PropertyGroup&gt;
+    &lt;TargetFramework&gt;net462&lt;/TargetFramework&gt;
+    &lt;RestoreSources&gt;https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json&lt;/RestoreSources&gt;
+  &lt;/PropertyGroup&gt;
+&lt;/PropertyGroup&gt;
+</code></pre>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CPublishConsumeContract.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CPublishConsumeContract.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CPublishConsumeContract.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

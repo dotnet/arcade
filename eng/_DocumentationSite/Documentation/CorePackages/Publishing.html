@@ -1,0 +1,694 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Arcade SDK Publishing Infrastructure </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Arcade SDK Publishing Infrastructure ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="arcade-sdk-publishing-infrastructure">Arcade SDK Publishing Infrastructure</h1>
+
+<p>This document describes the infrastructure provided by the Arcade SDK for publishing build assets.</p>
+<h3 id="what-is-v1-publishing">What is V1 publishing?</h3>
+<p>The publishing infrastructure has multiple stage(s), these stages represent available channels. Only the stages corresponding to the default channel will execute. This is for arcade3.x only.</p>
+<p>V1 came into existence when we branched for release/3.x in arcade. Main and arcade/3.x initially had the same publishing logic. Over time the publishing stage in arcade main evolved so that became V2 publishing.</p>
+<p>Asset manifest Example :</p>
+<p><code>publishingVersion</code> is not present in V1.</p>
+<pre><code class="lang-XML">&lt;Build Name=&quot;https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade-validation&quot;
+BuildId=&quot;20200915.7&quot;
+Branch=&quot;refs/heads/release/3.x&quot;
+Commit=&quot;0f733414ac0a5e5d4b7233d47851a400204a7cac&quot;
+AzureDevOpsAccount=&quot;dnceng&quot;
+AzureDevOpsBranch=&quot;refs/heads/release/3.x&quot;
+AzureDevOpsBuildDefinitionId=&quot;282&quot;
+AzureDevOpsBuildId=&quot;816405&quot;
+AzureDevOpsBuildNumber=&quot;20200915.7&quot;
+AzureDevOpsProject=&quot;internal&quot;
+AzureDevOpsRepository=&quot;https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade-validation&quot;
+InitialAssetsLocation=&quot;https://dev.azure.com/dnceng/internal/_apis/build/builds/816405/artifacts&quot;
+IsStable=&quot;False&quot;
+Location=&quot;https://dotnetfeed.blob.core.windows.net/arcade-validation/index.json&quot;&gt;
+
+</code></pre>
+<p>All the 3.1 servicing branches of repos use this version of the infrastructure.</p>
+<h3 id="what-is-v2-publishing">What is V2 publishing?</h3>
+<p>V2 is a legacy publishing infrastructure that is no longer utilized. It's essentially V1 publishing with explicit publishing version info. It uses a stage per channel and repositories must take Arcade updates to get publishing updates (e.g. new channels or fixes).</p>
+<h3 id="what-is-v3-publishing">What is V3 publishing?</h3>
+<p>In V3, a single job or stage 'Publish Using Darc' handles all publishing for all available channels. Even if the repo branch is associated to more than one default channel(s) there will be only one stage. V3 uses <a href="https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-build-to-channel"><code>darc add-build-to-channel</code></a> to promote builds based on the current configured default channels for the branch just built.
+The <a href="https://dnceng.visualstudio.com/internal/_build?definitionId=750">maestro promotion pipeline</a> is a pipeline used to publish the packages to the target channel(s).
+<code>Add-build-to-channel</code> queues a new build of this pipeline and waits for it to publish assets to the appropriate locations. The publishing job is run against Arcade's main branch by default, meaning that repositories do not need to take an Arcade update to be able to publish to newly created channels or get most publishing fixes.</p>
+<p>Example from arcade-validation:</p>
+<p><img src="./images/V3-publishing.PNG" alt="V3-publishing"></p>
+<h2 id="basic-onboarding-scenario-for-new-repositories-to-the-current-publishing-version-v3">Basic onboarding scenario for new repositories to the current publishing version (V3)</h2>
+<p>In order to use the new publishing mechanism, the easiest way to start is by turning your existing build pipeline into an AzDO YAML stage, and then making use of a YAML template (<a href="https://github.com/dotnet/arcade/blob/66175ebd3756697a3ca515e16cd5ffddc30582cd/eng/common/templates/post-build/post-build.yml">eng/common/templates/post-build/post-build.yml</a>) provided by Arcade to use the default publishing stages. The process is explained below step by step.</p>
+<ol>
+<li><p>Update the Arcade SDK version used by the repository to <code>5.0.0-beta.20461.7</code> or newer.</p>
+</li>
+<li><p>Disable asset publishing during the build. There are two common situations here. Some build definitions make use of the <code>jobs.yml</code> template and others make use of the <code>job.yml</code> (singular). The former is a wrapper around a few things, among them the <code>job.yml</code> and <code>publish-build-assets.yml</code> templates. If your build definition doesn't use <code>jobs.yml</code> you'll need to directly pass the <code>PublishUsingPipelines</code> parameter to the included templates. See examples below.</p>
+<ol>
+<li><p>If the build job uses the <code>eng\common\templates\jobs\jobs.yml</code> template, set the parameter <code>enablePublishUsingPipelines</code> to <code>true</code>. See example below:</p>
+<pre><code class="lang-YAML">jobs:
+- template: /eng/common/templates/jobs/jobs.yml
+  parameters:
+    enablePublishUsingPipelines: true
+</code></pre>
+</li>
+<li><p>If the build job makes direct use of <code>eng\common\templates\job\job.yml</code> you will have to do the following changes.</p>
+<ol>
+<li><p>Set the <code>enablePublishUsingPipelines</code> parameter to <code>true</code> when instantiating <code>job.yml</code>:</p>
+<pre><code class="lang-YAML">jobs:
+...
+- template: /eng/common/templates/job/job.yml
+  parameters:
+    ...
+    enablePublishUsingPipelines: true
+    ...
+</code></pre>
+</li>
+<li><p>Make sure that you use the template <code>eng\common\templates\job\publish-build-assets.yml</code> to inform Maestro++ that <em>all</em> build jobs have finished executing. Also, make sure that you are setting the template parameter <code>enablePublishUsingPipelines</code> to <code>true</code>:</p>
+<pre><code class="lang-YAML">jobs:
+...
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+  - template: /eng/common/templates/job/publish-build-assets.yml
+    parameters:
+      ...
+      publishUsingPipelines: true
+      ...
+</code></pre>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li><p>You'll also need to pass the below MSBuild property to the Arcade build scripts.</p>
+</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>/p:DotNetPublishUsingPipelines</td>
+<td>true</td>
+</tr>
+</tbody>
+</table>
+<p>For example, if the repo has the following configuration for invoking <code>cibuild.cmd</code>:</p>
+<pre><code class="lang-YAML">  - _InternalBuildArgs: /p:DotNetSignType=$(_SignType) 
+      /p:TeamName=$(_TeamName)
+      /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+      /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
+      /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+  
+  - script: eng\common\cibuild.cmd
+      -configuration $(_BuildConfig)
+      -prepareMachine
+       $(_InternalBuildArgs)
+</code></pre>
+<p>after setting the needed MSBuild properties it should looks like this:</p>
+<pre><code class="lang-YAML">  - _InternalBuildArgs: /p:DotNetSignType=$(_SignType) 
+      /p:TeamName=$(_TeamName)
+      /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+      /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
+      /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+      /p:DotNetPublishUsingPipelines=$(_PublishUsingPipelines)
+  
+  - script: eng\common\cibuild.cmd
+      -configuration $(_BuildConfig)
+      -prepareMachine
+       $(_InternalBuildArgs)
+</code></pre>
+<ol>
+<li><p>Transform your existing build-definition to a single stage. Do that by nesting the current job definition(s) under the <code>stages</code> keyword. For instance, this example build definition with a single job definition:</p>
+<pre><code class="lang-YAML">jobs:
+- template: /eng/common/templates/jobs/jobs.yml
+  parameters:
+    enablePublishUsingPipelines: true
+...
+</code></pre>
+<p>should be changed to:</p>
+<pre><code class="lang-YAML">stages:
+- stage: build
+  displayName: Build
+  jobs:
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enablePublishUsingPipelines: true
+...
+</code></pre>
+<p>We suggest you to use the stage name <em>build</em> and have only one build stage. However, that's not a requirement. If you choose to use a different stage name or need to use multiple build stages you'll need to pass the name of the stage(s) to the <code>post-build.yml</code> template (see table on next section).</p>
+</li>
+<li><p>Import the<code>eng\common\templates\post-build\post-build.yml</code> Arcade template at the end of the build definition. This will import all default test, validate and publishing stages provided by Arcade. The bottom part of your build definition will look like this:</p>
+<pre><code class="lang-YAML">- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+  - template: eng\common\templates\post-build\post-build.yml
+    parameters:
+      publishingInfraVersion: 3
+      enableSourceLinkValidation: false
+      ...
+</code></pre>
+<p>The <code>post-build.yml</code> template accepts the following parameters:</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>publishingInfraVersion</td>
+<td>int</td>
+<td>Publishing infrastructure version - Use 3 for latest publishing infra. Accepted values are 3 (.NET 5.0+) and 2 (.NET 3.1).</td>
+<td>3</td>
+</tr>
+<tr>
+<td>enableSourceLinkValidation</td>
+<td>bool</td>
+<td>Run SourceLink validation during the post-build stage.</td>
+<td>false</td>
+</tr>
+<tr>
+<td>enableSigningValidation</td>
+<td>bool</td>
+<td>Run signing validation during the post-build stage.</td>
+<td>true</td>
+</tr>
+<tr>
+<td>enableNugetValidation</td>
+<td>bool</td>
+<td>Run NuGet package validation tool during the post build stage.</td>
+<td>true</td>
+</tr>
+<tr>
+<td>symbolPublishingAdditionalParameters</td>
+<td>string</td>
+<td>Additional arguments for the PublishToSymbolServers sdk task.</td>
+<td>''</td>
+</tr>
+<tr>
+<td>artifactsPublishingAdditionalParameters</td>
+<td>string</td>
+<td>Additional arguments for the PublishArtifactsInManifest sdk task.</td>
+<td>''</td>
+</tr>
+<tr>
+<td>signingValidationAdditionalParameters</td>
+<td>string</td>
+<td>Additional arguments for the SigningValidation sdk task.</td>
+<td>''</td>
+</tr>
+<tr>
+<td>publishInstallersAndChecksums</td>
+<td>bool</td>
+<td>Publish installers packages and checksums from the build artifacts to the dotnetcli storage account. Documentation for opting in to automatic checksum generation can be found in the <a href="https://github.com/dotnet/arcade/blob/main/Documentation/CorePackages/Publishing.md#checksum-generation">Checksum section</a> of this document.</td>
+<td>true</td>
+</tr>
+<tr>
+<td>SDLValidationParameters</td>
+<td>object</td>
+<td>Parameters for the SDL job template, as documented in the <a href="https://github.com/dotnet/arcade/blob/66175ebd3756697a3ca515e16cd5ffddc30582cd/Documentation/HowToAddSDLRunToPipeline.md">SDL template documentation</a></td>
+<td>--</td>
+</tr>
+<tr>
+<td>validateDependsOn</td>
+<td>[array]</td>
+<td>Which stage(s) should the validation stage depend on.</td>
+<td>build</td>
+</tr>
+<tr>
+<td>publishDependsOn</td>
+<td>[array]</td>
+<td>Which stage(s) should the publishing stage(s) depend on.</td>
+<td>Validate</td>
+</tr>
+</tbody>
+</table>
+<p>After these changes the build job(s) will publish the build assets to Azure DevOps build artifacts instead of immediately publishing them to a feed or storage location. Once the post-build template is added, a repo's official build will include a series of stages that will publish the assets to different locations, depending on the Maestro++ default channel(s) that the build is assigned to.</p>
+<p>Examples of the use of the basic onboarding scenario can be found in  the following repos:</p>
+<ul>
+<li><a href="https://github.com/dotnet/arcade/blob/main/azure-pipelines.yml">Arcade</a></li>
+<li><a href="https://github.com/dotnet/arcade-validation/blob/main/azure-pipelines.yml">Arcade-Validation</a></li>
+<li><a href="https://github.com/dotnet/arcade-services/blob/main/azure-pipelines.yml">Arcade-Services</a></li>
+</ul>
+</li>
+<li><p>Create or update eng/Publishing.props, adding the following MSBuild property:</p>
+<pre><code class="lang-XML">    &lt;PublishingVersion&gt;3&lt;/PublishingVersion&gt;
+</code></pre>
+<p>Sample:</p>
+<pre><code class="lang-XML">   &lt;Project&gt;
+      &lt;PropertyGroup&gt;
+         &lt;PublishingVersion&gt;3&lt;/PublishingVersion&gt;
+      &lt;/PropertyGroup&gt;
+   &lt;/Project&gt;
+</code></pre>
+<p>Example of the use of Publishing.props can be found in the following repos :</p>
+<ul>
+<li><a href="https://github.com/dotnet/arcade-validation/blob/6009d37b7ecacbb0bc1e0c5a601b8d7e3b2e5fa5/eng/Publishing.props#L4">Arcade-Validation</a></li>
+</ul>
+</li>
+</ol>
+<p>The pipeline for a build with stages enabled will look like the one shown below.</p>
+<p><img src="./images/V3-publishing.PNG" alt="V3-publishing"></p>
+<h3 id="validating-the-changes">Validating the changes</h3>
+<p>Since the post-build stages will only trigger during builds that run in the internal project (i.e., they won't show up on public builds), there are some additional steps that need to be performed in order to test that the changes to the pipeline are correct, and that publishing works as expected.</p>
+<ol>
+<li><p>Create a branch on the Azure DevOps internal mirror of the repo that includes the pipeline changes.</p>
+</li>
+<li><p>Set up the &quot;General Testing Channel&quot; as a default channel for the internal repo + branch combination using Darc.</p>
+<pre><code class="lang-Powershell">darc add-default-channel --channel &quot;General Testing&quot; --branch &quot;&lt;my_new_branch&gt;&quot; --repo &quot;https://dev.azure.com/dnceng/internal/_git/&lt;repo_name&gt;&quot;
+</code></pre>
+</li>
+<li><p>Queue a build for your test branch</p>
+</li>
+<li><p>Once the Build and Validate Build Assets stages complete, the <em>Publish Using Darc</em> stage should execute and publish the packages to the feed during the <code>Publish Using Darc</code> job. <a href="https://dnceng.visualstudio.com/internal/_build?definitionId=750">Maestro Promotion Pipeline</a> is a pipeline used to publish the packages to the target channel. The job informs that a new build has been triggered in the promotion pipeline, and once it succeeds the build will be in the channel. The <code>Publish Using Darc</code> job calls <a href="https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-build-to-channel"><code>darc add-build-to-channel</code></a> which waits until a build of the promotion pipeline publishes the assets.</p>
+</li>
+</ol>
+<h3 id="checksum-generation">Checksum generation</h3>
+<p>Arcade also includes support for automatically generating checksum files. To opt in to this feature, in each project that generates an asset for which you want to generate a checksum, add an Item named <code>GenerateChecksumItems</code> to the project file, which includes the output path of the original asset, and a metadata element named <code>DestinationPath</code> which represents the desired output path of the checksum file.</p>
+<p>Example:</p>
+<pre><code>```XML
+&lt;ItemGroup&gt;
+  &lt;GenerateChecksumItems Include=&quot;@(OutputFile)&quot;&gt;
+    &lt;DestinationPath&gt;%(FullPath).Sha512&lt;/OutputPath&gt;
+  &lt;/GenerateChecksumItems&gt;
+&lt;/ItemGroup&gt;
+```
+</code></pre>
+<p>Ensure that you do not set <code>publishInstallersAndChecksums=false</code> in your call to the <code>post-build.yml</code> template.</p>
+<h2 id="enabling-faster-publishing">Enabling 'faster' publishing</h2>
+<p>There are generally two shapes for official builds:</p>
+<ul>
+<li>Build -&gt; Publish to Build Asset Registry -&gt; Validate Assets (SDL, NuGet, etc.) -&gt; Publish</li>
+<li>Build -&gt; Publish to Build Asset Registry -&gt; Publish</li>
+</ul>
+<p>In the second case, the use of an additional stage and job for publishing is superfluous. In those case, all artifacts required for publishing are available at the end of 'Publish to Build Asset Registry'. The use of an additional stage (and job) for publishing involves allocating a new machine. This is generally inefficient. Fast publishing eliminates the 'Publish' stage, instead launching the Maestro publishing job at the end of the 'Publish to Build Asset Registry' job.</p>
+<h3 id="eligibility">Eligibility</h3>
+<p>A build is eligible for faster publishing if:</p>
+<ul>
+<li>It does not wish to gate publishing on any logic after 'Publish to Build Asset Registry' - For example, if a repository utilizes the 'Validate' stage and jobs to check NuGet packages and signing status and avoid publishing if that fails, it would not be eligible for fast publishing. Most repositories in .NET's typical product build (runtime, sdk, installer, winforms, etc.) do not use Validate.</li>
+<li>It is on V3 publishing - This is the case for all repos beyond .NET Core 3.1.</li>
+</ul>
+<h3 id="enabling-fast-publishing">Enabling fast publishing</h3>
+<ol>
+<li><strong>Set the parameter on post-build.yml</strong> - In your call to the post-build.yml template, pass <code>publishAssetsImmediately: true</code>.</li>
+<li><strong>Enable publishing during the Publish to Bar job</strong> -
+<ul>
+<li><strong>If you are using the jobs.yml template</strong> - Pass parameter <code>publishAssetsImmediately: true</code> to the template. If you also use <code>artifactsPublishingAdditionalParameters</code> or <code>signingValidationAdditionalParameters</code>, then add those parameters to the template.</li>
+<li><strong>If you explicitly call publish-build.assets.yml</strong> - Pass parameter <code>publishAssetsImmediately: true</code> to the template. If you also use <code>artifactsPublishingAdditionalParameters</code> or <code>signingValidationAdditionalParameters</code>, then add those parameters to the template.</li>
+</ul>
+</li>
+</ol>
+<h2 id="more-complex-onboarding-scenarios">More complex onboarding scenarios</h2>
+<h3 id="integrating-custom-publishing-logic">Integrating custom publishing logic</h3>
+<p>Repositories that make direct use of tasks in Tasks.Feed to publish assets during their <em>build jobs</em> should move away from doing so, as they would likely end up publishing to incorrect feeds for servicing builds.</p>
+<p>However, if for some reason the infra in the default publishing stages don't meet you requirements you can create additional stages and make them dependent on the default ones. That way, it will at least be clear that the build does custom operations.</p>
+<p><strong>Note:</strong> We strongly suggest that you discuss with the <em>.Net Engineering</em> team the intended use case for this before starting your work. We might be able to give other options.</p>
+<h2 id="publishingusingpipelines--deprecated-properties">PublishingUsingPipelines &amp; Deprecated Properties</h2>
+<p>Starting with Arcade SDK version <strong>5.0.0-beta.20120.2</strong> there is not support anymore for the old publishing infrastructure where the Arcade SDK handled publishing of all assets during the build stage. That means, that if:</p>
+<ul>
+<li><p><strong>The build definition sets <code>/p:DotNetPublishusingPipelines=true</code>:</strong> Arcade will handle the control of assets publishing to Maestro++ and also that the build definition doesn't need to inform any of the following properties to the build scripts <a href="https://github.com/dotnet/arcade/blob/main/eng/common/CIBuild.cmd">CIBuild.cmd/sh</a> :</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DotNetPublishBlobFeedKey</td>
+</tr>
+<tr>
+<td>DotNetPublishBlobFeedUrl</td>
+</tr>
+<tr>
+<td>DotNetPublishToBlobFeed</td>
+</tr>
+<tr>
+<td>DotNetSymbolServerTokenMsdl</td>
+</tr>
+<tr>
+<td>DotNetSymbolServerTokenSymWeb</td>
+</tr>
+</tbody>
+</table>
+</li>
+<li><p><strong>The build definition doesn't set <code>/p:DotNetPublishingUsingPipelines</code> or set it to false:</strong> only symbols will be published and they will be controlled by the Arcade SDK. The build definition still needs to inform the <code>DotNetSymbolServerToken[Msdl/SymWeb]</code> properties, but the following properties aren't required anymore:</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DotNetPublishBlobFeedKey</td>
+</tr>
+<tr>
+<td>DotNetPublishBlobFeedUrl</td>
+</tr>
+<tr>
+<td>DotNetPublishToBlobFeed</td>
+</tr>
+</tbody>
+</table>
+</li>
+</ul>
+<p>Furthermore, starting with Arcade SDK version <strong>5.0.0-beta.20120.2</strong> the default value for the <code>DotNetArtifactsCategory</code> property is <code>.NETCore</code>, therefore you don't need to set that property anymore if you were setting it to <code>.NETCore</code>.</p>
+<h2 id="frequently-asked-questions">Frequently Asked Questions</h2>
+<h3 id="guiding-principles-of-the-new-infra">Guiding principles of the new infra?</h3>
+<ul>
+<li><p><strong>Controlled by Maestro++ Channels:</strong> The locations where packages are published to are determined based on which Maestro++ channel the build is assigned to. Look <a href="https://github.com/dotnet/arcade/blob/66175ebd3756697a3ca515e16cd5ffddc30582cd/Documentation/BranchesChannelsAndSubscriptions.md">here</a> for more info about channels.</p>
+</li>
+<li><p><strong>Publishing is decoupled from the build job:</strong> Publishing is managed by the Arcade SDK entirely and assets are not published to any external storage during the build job. They are instead registered as Azure DevOps artifacts and only published to external locations after the build job finishes.</p>
+</li>
+<li><p><strong>Single view for building and publishing:</strong> The new infrastructure doesn't use Release Pipelines - the previous one did. Instead, the concept of Stages is used. See below section about stages.</p>
+</li>
+</ul>
+<h3 id="what-are-yaml-stages">What are YAML stages?</h3>
+<p>Stages are a concept introduced by Azure DevOps to organize the jobs in a pipeline. Just as Jobs are a collection of Steps, Stages can be thought of as a collection of Jobs, where for example, the same pipeline can be split into Build, Test and, Publishing stages.</p>
+<p>Stages are the way that Azure DevOps is bringing build and release pipelines together, and are going to be the replacement for the RM UI based release pipelines. The official documentation for YAML-based Stages can be found <a href="https://docs.microsoft.com/en-us/azure/devops/pipelines/process/stages?view=azure-devops&amp;tabs=yaml">here</a>.</p>
+<h3 id="why-use-yaml-stages-for-publishing">Why use YAML stages for publishing?</h3>
+<p>Using stages for publishing seeks to unify the Arcade SDK build artifact publishing mechanisms into a single solution that brings together the advantages of both the in-build synchronous publishing and the previous release pipeline based asynchronous publishing approaches. Other benefits are:</p>
+<ul>
+<li>Clearly separate the concepts of build, test, publish and validate.</li>
+<li>Support publishing and validation errors to be reported in the build page UI.</li>
+<li>Stages can depend on each other, which provides a natural way to extend default Arcade publishing infra with custom (repo or branch specific) publishing steps.</li>
+</ul>
+<h3 id="are-there-new-package-feeds-which-feed-will-be-used">Are there new package feeds? Which feed will be used?</h3>
+<p>Each Maestro++ channel is configured in <a href="https://github.com/dotnet/arcade/blob/main/src/Microsoft.DotNet.Build.Tasks.Feed/src/model/PublishingConstants.cs">source</a> to use three <em>Azure DevOps</em> feeds:</p>
+<ul>
+<li><strong>A transport feed:</strong> used for publishing packages intended for use internally in the .Net Core stack.</li>
+<li><strong>A shipping feed:</strong> used for publishing packages that will be directly used by end users.</li>
+<li><strong>A symbols feed:</strong> symbol packages (<code>.symbols.nupkg</code>) are published to this feed as well as to symbol servers.</li>
+</ul>
+<p>The target feed will be public/private depending on whether the Maestro++ channel is public/private. For public channels the packages/blobs are <em>also</em> published to the legacy <code>dotnetfeed/dotnet-core</code> feed - You can override this and publish to a another custom feed, see description in a further section.</p>
+<p>Each stable build (i.e., <a href="https://github.com/dotnet/arcade/blob/84f3b4a8520b9e6d50afece47fa1adf4de8ec292/Documentation/CorePackages/Versioning.md#build-kind">Release Official Builds</a>) publish to a different set of target feeds. This is because these builds always produce the same package version and overriding packages in the feeds is usually something not supported. Whenever a branch receive a PR from Maestro++, <em>that contains packages that were published to a dynamically created feed</em>, it will add the new feed to the repository root NuGet.Config file as a package source feed. <em>Note that Maestro++ currently doesn't update NuGet.Config with the static feeds</em>.</p>
+<h3 id="what-benefits-do-i-get-from-the-new-infrastructure">What benefits do I get from the new infrastructure?</h3>
+<p>There are a few benefits, but the bottom line is: you can rely on Arcade SDK and Maestro++ to determine the correct place to publish the build assets. This is specially important for servicing and/or private builds where assets must not go to public locations before further validations. The new infrastructure also performs Signing validation, SDL validation and NuGet packages metadata validation.</p>
+<h3 id="whats-this-setup-maestro-vars-job">What's this &quot;Setup Maestro Vars&quot; job?</h3>
+<p>Currently Azure DevOps does not support communicating &quot;YAML variables&quot; across stages. The recommended workaround to do this is to use an AzDO artifact to persist the variables. The <code>Setup Maestro Vars</code> job is used to read one of such artifacts and set stage-scope variables based on the file content.</p>
+<h3 id="how-will-this-change-affect-symbol-publishing">How will this change affect symbol publishing?</h3>
+<p>Symbol publishing to MSDL and SymWeb will be done as a regular part of publishing the build assets. The symbol packages (i.e., symbols.nupkg files) are also published to a feed as a form of backup.</p>
+<h3 id="can-we-manually-assign-a-build-to-a-channel">Can we manually assign a build to a channel?</h3>
+<p>Yes, that's possible. You need to <a href="https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-build-to-channel">use Darc to do that</a>.</p>
+<h3 id="why-the-build-assets-arent-getting-published-anywhere">Why the build assets aren't getting published anywhere?</h3>
+<p>Most frequent cause of this is that there is no Default Channel configured for the build. <a href="https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#get-default-channels">Take a look here</a> to see how to check that.</p>
+<h3 id="why-do-you-need-the-dotnetpublishusingpipelines-parameter">Why do you need the DotNetPublishUsingPipelines parameter?</h3>
+<p>The <code>DotNetPublishUsingPipelines</code> is a flag that Arcade SDK uses to determine if the repo wants Maestro++ to control all aspects of publishing. If that parameter is not set (not advisable)  Arcade SDK will only publish symbols produced by the build; publishing of other assets should be taken care of by the repo build definition.</p>
+<h3 id="whats-packageartifacts-blobartifacts-pdbartifacts-and-releaseconfigs-for">What's PackageArtifacts, BlobArtifacts, PdbArtifacts and ReleaseConfigs for?</h3>
+<ul>
+<li><strong>PackageArtifacts</strong>: contains all NuGet (.nupkg) packages to be published.</li>
+<li><strong>BlobArtifacts</strong>: contains all blob artifacts (usually .symbols.nupkg) to be published.</li>
+<li><strong>PdbArtifacts</strong>: contains all PDB artifacts to be published to symbol servers - SymWeb &amp; MSDL.</li>
+<li><strong>ReleaseConfigs</strong>: contains configuration files used by the post-build stages. In particular it should contain a file called <code>ReleaseConfigs.txt</code> that stores the BAR BuildId, the list of default channels IDs of the build and whether the current build is stable or not, respectively.</li>
+</ul>
+<p><strong>Note:</strong> only packages and blobs described in at least one build manifest will be published.</p>
+<h3 id="where-can-i-see-publishing-logs-in-v1">Where can I see publishing logs in V1?</h3>
+<p>The publishing logs are stored inside an Azure DevOps artifacts container named <code>PostBuildLogs</code>. Each activated post-build channel/stage will have a subfolder under <code>PostBuildLogs</code>. Each job in a publishing channel/stage will have <code>.binlogs</code> in the container.</p>
+<h3 id="where-can-i-see-publishing-logs-in-v3">Where can I see publishing logs in V3?</h3>
+<p>Under the <code>Publish Using Darc</code> job get the link to the newly queued build in the <a href="https://dnceng.visualstudio.com/internal/_build?definitionId=750">Maestro promotion pipeline</a>. The publishing logs are stored inside an Azure DevOps artifacts container named <code>PostBuildLogs</code>.</p>
+<h3 id="how-to-add-a-new-channel-to-use-v3-publishing">How to add a new channel to use V3 publishing?</h3>
+<p>Create the channel using <a href="https://github.com/dotnet/arcade/blob/main/Documentation/Darc.md#add-channel">darc add-channel</a>. Verify if the channel was created successfully using <a href="https://github.com/dotnet/arcade/blob/main/Documentation/Darc.md#get-channels">darc get-channel</a> and get the channelId.</p>
+<p>In the Microsoft.DotNet.Build.Task.Feed/src/Model/PublishingConstants.cs file, create a new TargetChannelConfig</p>
+<p>TargetChannelConfig takes the following attributes</p>
+<table>
+<thead>
+<tr>
+<th>Params</th>
+<th>Description</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ChannelId</td>
+<td>Id for channel to publish</td>
+<td></td>
+</tr>
+<tr>
+<td>isInternal</td>
+<td>Publishing to an internal Channel or public channel</td>
+<td>true or false</td>
+</tr>
+<tr>
+<td>PublishingInfraVersion</td>
+<td>Which version of the publishing infra can use this configuration.</td>
+<td>Enum = All(0), Legacy(1), Latest(2), Next(3)</td>
+</tr>
+<tr>
+<td>AkaMSChannelName</td>
+<td>The name that should be used for creating Aka.ms links for this channel. A specified build quality will be appended to this value if supplied.</td>
+<td>See <a href="#what-build-qualities-are-supported">What build qualities are supported?</a> for valid build quality values</td>
+</tr>
+<tr>
+<td>TargetFeedSpecification</td>
+<td>List of feeds to publish (type of asset -&gt; feed mapping)</td>
+<td></td>
+</tr>
+<tr>
+<td>SymbolTargetType</td>
+<td>Publish to MSDL or SymWeb symbol server</td>
+<td>PublicAndInternalSymbolTargets -publishes to both Msdl and SymWeb or InternalSymbolTargets -publishes only to SymWeb</td>
+</tr>
+<tr>
+<td>FilenamesToExclude</td>
+<td>List of files to exclude from creating aka.ms links. Should be exact file names</td>
+<td>For most channels, we exclude MergedManifest.xml</td>
+</tr>
+<tr>
+<td>Flatten</td>
+<td>Whether or not to flatten the path when creating the aka.ms links</td>
+<td>Defaults to true, which means the path in the aka.ms link will be flattened. False will use the full path without the version information of the files being published</td>
+</tr>
+</tbody>
+</table>
+<pre><code class="lang-C#">Eg:
+Publishing to General Testing channel : General Testing
+
+            // &quot;General Testing&quot;,
+            new TargetChannelConfig(
+                529,
+                false,
+                PublishingInfraVersion.Latest,
+                &quot;generaltesting&quot;,
+                GeneralTestingFeeds,
+                PublicAndInternalSymbolTargets),
+</code></pre>
+<h3 id="which-feeds-does-arcade-infra-publish-to">Which feeds does Arcade infra publish to?</h3>
+<table>
+<thead>
+<tr>
+<th>Feed Name</th>
+<th>Intended Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dotnet-eng</td>
+<td>Packages required for engineering infra</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json">https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json</a></td>
+</tr>
+<tr>
+<td>dotnet-tools</td>
+<td>Tooling packages, such as Symreader, Sourcelink, etc…</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json">https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json</a></td>
+</tr>
+<tr>
+<td>dotnet5</td>
+<td>.NET 5 shipping packages</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json">https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json</a></td>
+</tr>
+<tr>
+<td>dotnet5-transport</td>
+<td>.NET 5 non-shipping packages</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5-transport/nuget/v3/index.json">https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5-transport/nuget/v3/index.json</a></td>
+</tr>
+<tr>
+<td>dotnet3.1</td>
+<td>.NET Core 3.1 shipping packages</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1/nuget/v3/index.json">https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1/nuget/v3/index.json</a></td>
+</tr>
+<tr>
+<td>dotnet3.1-transport</td>
+<td>.NET Core 3.1 non-shipping packages</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-transport/nuget/v3/index.json">https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-transport/nuget/v3/index.json</a></td>
+</tr>
+<tr>
+<td>dotnet3.1-blazor</td>
+<td>Packages specific to Blazor 3.1 This is an example of a repo-specific feed/channel</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-blazor/nuget/v3/index.json">https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-blazor/nuget/v3/index.json</a></td>
+</tr>
+<tr>
+<td>dotnet3</td>
+<td>.NET Core 3 shipping packages</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3/nuget/v3/index.json">https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3/nuget/v3/index.json</a></td>
+</tr>
+<tr>
+<td>dotnet3-transport</td>
+<td>.NET Core 3 non-shipping packages</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3-transport/nuget/v3/index.json">https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3-transport/nuget/v3/index.json</a></td>
+</tr>
+</tbody>
+</table>
+<h3 id="can-the-feeds-be-overriden">Can the feeds be overriden?</h3>
+<p>Yes. The feeds can be overriden by adding the following options when calling PublishArtifactsInManifest.proj:</p>
+<pre><code>/p:AllowFeedOverrides=True
+/p:InstallersFeedOverride=$(InstallersFeedOverride)
+/p:ChecksumsFeedOverride=$(ChecksumsFeedOverride)
+/p:ShippingFeedOverride=$(ShippingFeedOverride)
+/p:TransportFeedOverride=$(TransportFeedOverride)
+/p:SymbolsFeedOverride=$(SymbolsFeedOverride)
+</code></pre>
+<h3 id="how-are-the-akams-links-formatted">How are the aka.ms links formatted?</h3>
+<p>The aka.ms links are generated using the <code>BuildQuality</code> parameter that is passed to PublishArtifactsInManifest.proj, and the <code>akaMsChannelName</code> parameter passed to the <code>TargetChannelConfig</code> constructor. When akaMsChannelName is specified, we will create aka.ms links for the assets being published to that channel. Additionally, these links are &quot;flatten,&quot; meaning that only the filename is used in addition to the build quality and the channel name when constructing the links. Finally, all version information is stripped from the filename. For example, if the <code>buildQuality</code> is <code>daily</code>, <code>akaMsChannelName</code> is <code>6.0</code>, <code>flatten</code> is <code>true</code>, and the filename is <code>dotnet-sdk-6.0.100-12345.12-win-x64.zip</code>, the aka.ms link generated will be <code>aka.ms/dotnet/6.0/daily/dotnet-sdk-win-x64.zip</code>.</p>
+<h3 id="what-build-qualities-are-supported">What build qualities are supported?</h3>
+<p>The build qualities that are supported are daily, signed, validated, preview, and ga. All official daily builds that publish using V3 should use the <code>daily</code> build quality. Signed and validated builds are generated by the staging process of the release process. Preview and GA links are generated at release time, on release day. All builds that have preview in the release version will be of the <code>preview</code> quality. All other builds will be marked as <code>GA</code>. GA builds do not append a build quality to the links.</p>
+<h3 id="can-we-exclude-symbols-from-publishing-to-symbols-server">Can we exclude symbols from publishing to symbols server?</h3>
+<p>Yes.</p>
+<p>Create a file eng/SymbolPublishingExclusionsFile.txt in your repo, add the file name that has to be excluded from symbol publishing in SymbolPublishingExclusionsFile.txt.</p>
+<p>Eg:
+tools/x86_arm/mscordaccore.dll
+tools/x86_arm/mscordbi.dll
+tools/x64_arm64/mscordaccore.dll
+tools/x64_arm64/mscordbi.dll</p>
+<p>During publishing, arcade will pick up SymbolPublishingExclusionsFile.txt and exclude the symbols mentioned in it.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CCorePackages%5CPublishing.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CCorePackages%5CPublishing.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CCorePackages%5CPublishing.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+<h3 id="how-do-i-publish-stable-packages">How do I publish stable packages?</h3>
+<p>Stable packages are not published by Arcade except for dependency flow and testing purposes. Stable packages go to isolated feeds (to enable rebuilds), then repo owners push these packages to Nuget.org manually. Then these packages flow to dotnet-public feed via the mirroring process</p>
+<pre><code class="lang-mermaid">flowchart LR
+  Packages[Built Packages]--&gt;ArcadePublishing{Arcade Publishing}
+  ArcadePublishing--&gt;|Non-Stable|PermanantFeeds[Permanant Feeds]
+  ArcadePublishing--&gt;|Stable|IsolatedFeeds[Isolated Feeds]
+  IsolatedFeeds--&gt;DogFoodingAndDepFlow{Dog-Fooding and dependency flow}
+  PermanantFeeds--&gt;DogFoodingAndDepFlow
+  Packages--&gt;|Release final stable packages on NuGet.org|NuGet[NuGet.Org]
+  NuGet--&gt;|Mirroring|DotnetPublic[dotnet-public feed]
+  DotnetPublic--&gt;RepoUse[Repository use]
+  DogFoodingAndDepFlow--&gt;RepoUse
+  
+</code></pre>
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

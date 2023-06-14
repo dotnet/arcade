@@ -1,0 +1,126 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Stakeholders </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Stakeholders ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h3 id="stakeholders">Stakeholders</h3>
+
+<p>Stakeholders are: Chris Bohm as SDL owner but also whole .NET Engineering Services team as this work relates to every part of our codebase.</p>
+<h3 id="risk">Risk</h3>
+<p>Biggest potential risks are:</p>
+<ul>
+<li>Huge surface area to cover - Arcade Services contains many different services, tools and libraries. They all have to be assessed separately. This will also require a lot of investigative work especially in less known parts of our infrastructure.</li>
+<li>Mission Control service - it was not deployed since a long time and we have to make it compilable and deployable again to fix reported SDL vulnerabilities</li>
+<li>Risk of big changes to our services for compliance reasons that will either consume a lot of time or require us to do big breaking changes to our services.</li>
+<li>We have 60 days to fix the found vulnerabilities so there is also a risk of running out of time. Not meeting this deadline could potentially cause some legal/compliance problems for our team.</li>
+</ul>
+<h3 id="serviceability">Serviceability</h3>
+<p>This epic will change only those parts that are found to be non-compliant. We don't expect many changes to testing, deployment and servicability of our components. In cases where it will be needed we will try to document the process inside relevant services. We will also prepare the documentation summarizing the work done and tips for future SDL rounds.</p>
+<h4 id="rollout-and-deployment">Rollout and Deployment</h4>
+<p>This epic does not introduce any new componentss so there won't be any major changes to rollout and deployments. The only exceptions are:</p>
+<ul>
+<li>Mission Control - it haven't been deployed since long time so we will need to get the deployment scripts to working state again and deploy it.</li>
+<li>Grafana - we need changes to deployment scripts to be able to deploy specific version of Grafana instead of the latest one found in package repository. This is needed so that version of Grafana in Component Governance matches the actual instance.</li>
+</ul>
+<h3 id="usage-telemetry">Usage Telemetry</h3>
+<p>There is no telemetry to track in this epic. The only metric is that we need to close all work items in SDL assessments.</p>
+<h3 id="monitoring">Monitoring</h3>
+<p>No new monitoring is needed.</p>
+<h3 id="fr-hand-off">FR Hand off</h3>
+<p>There is no FR hand off required but we will prepare documentaton summarizing what has been done and put it in dotnet/core-eng wiki.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CSDL%5Carcade-services-fall-2020-one-pager.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CSDL%5Carcade-services-fall-2020-one-pager.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CSDL%5Carcade-services-fall-2020-one-pager.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

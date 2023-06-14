@@ -1,0 +1,216 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Querying and updating repo dependencies </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Querying and updating repo dependencies ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="querying-and-updating-repo-dependencies">Querying and updating repo dependencies</h1>
+
+<h2 id="business-requirement">Business Requirement</h2>
+<p>Know what's in any given product build at any time including versions, SHAs, bits locations, etc.
+making the process as seamless as possible and usable by devs and other tools.</p>
+<h2 id="goal">Goal</h2>
+<p>The main goal of this set of tools is to centralize the way we maintain
+the bootstrapping scripts in sync across participating repos and at the
+same time have a single way of updating the dependencies on each repo,
+keeping track of what’s in each product at all times.</p>
+<h2 id="description">Description</h2>
+<p>Maestro++ and Darc will drive the operations in which versions and dependencies
+are maintained in sync across repos subscribed to arcade. Darc will serve commands
+coming from Maestro++ as well as from a dev in a local repo. Maestro++ will call
+Darc when it is triggered by an action that could be: schedule, change in a file or
+manually.</p>
+<p><img src="VersionQueryingAndUpdating.png" alt="Diagram"></p>
+<h2 id="scenarios">Scenarios</h2>
+<p>Here I list the top level scenarios which come to mind and try to
+describe the required steps to accomplish them:</p>
+<h4 id="how-to-update-arcade-scripts-across-all-repos-without-using-maestro">How to update arcade scripts across all repos without using Maestro++</h4>
+<p>Dev generates a change in arcade by adding, updating or removing a
+script. Depending on the operation there is a version which needs to be
+updated in participating repos.</p>
+<p>For each participant repo:</p>
+<ol>
+<li>Dev uses Darc to update a dependency in current repo</li>
+<li>Dev uses Darc to commit and push the update</li>
+<li>Dev uses Darc to create the Auto-PR</li>
+<li>Auto-PR is approved and merged by dev</li>
+</ol>
+<h4 id="how-to-update-a-package-using-maestro">How to update a package using Maestro++</h4>
+<ol>
+<li>Maestro++ is triggered by actions such as package publishing and/or
+GitHub webhooks monitoring changes in files like bootstrapping scripts
+or even when manually triggered</li>
+<li>Maestro++ uses Darc to determine which files in which repos need to be updated</li>
+<li>For each repo which needs the update, Maestro++:
+<ol>
+<li>Uses Darc to update a dependency in current repo</li>
+<li>Uses Darc to commit and push the update</li>
+<li>Auto-PR is approved and merged. Initially even though a PR is
+created by Maestro++ it will require a human to approve</li>
+</ol>
+</li>
+</ol>
+<h4 id="how-to-find-out-whos-using-package-n-and-what-versions-are-out-there">How to find out who’s using package n, and what versions are out there</h4>
+<ol>
+<li>Dev/Maestro++ uses Darc to query for package n</li>
+<li>Dev/Maestro++ uses Darc to query for package n’s versions</li>
+</ol>
+<h4 id="how-to-determine-the-versions-of-the-packages-contained-in-a-final-build">How to determine the versions of the packages contained in a final build</h4>
+<ol>
+<li>Dev/Maestro++ uses Darc to query for build version v</li>
+<li>Darc returns the dependency graph under build v</li>
+</ol>
+<h2 id="components">Components</h2>
+<h3 id="darc">Darc</h3>
+<p>A command line tool which performs version operations on .NET Core repos subscribed to arcade.
+Darc knows how to execute git commands on a repo, such as, clone, commit, push, create a PR, etc. And
+also the mechanics of reading and writing version information in a repo as well as to query
+and update the global version reporting store.  Its functionality is:</p>
+<h4 id="input-dependency-data">Input: dependency data</h4>
+<ul>
+<li>Query dependencies in <code>Version.Details.xml</code></li>
+<li>Query SHA+repositories for dependencies in <code>Version.Details.xml</code></li>
+<li>Update an entry in <code>Version.Details.xml</code> to move a dependency to a new version</li>
+<li>Query the reporting system for SHAs+repositories in which a versioned item was
+used</li>
+<li>Query the reporting system for SHAs+repository that produced a versioned item</li>
+<li>Query locations of official assets for a versioned item</li>
+</ul>
+<p>You can find more information about dependency descriptions <a href="DependencyDescriptionFormat.html">here</a></p>
+<h4 id="input-local-repository">Input: local repository</h4>
+<ul>
+<li>Query versioned items in repo's <code>Version.Details.xml</code></li>
+<li>Query SHAs+repositories for dependencies in the repo's <code>Version.Details.xml</code></li>
+<li>Query SHAs+repositories for all downstream dependencies</li>
+<li>Alter the package+version+SHA+repository information in <code>Version.Details.xml</code>
+<ul>
+<li>Add new dependency</li>
+<li>Change existing dependency</li>
+<li>Remove dependency</li>
+</ul>
+</li>
+</ul>
+<h4 id="input-sharepository">Input: SHA+repository</h4>
+<ul>
+<li>Query reporting system for versioned items produced by SHA+repository</li>
+<li>Query reporting system for versioned items in which this SHA+repository is referenced</li>
+<li>Query reporting system for SHAs+repositories in which this SHA+repository is referenced</li>
+</ul>
+<h4 id="input-packageversion">Input: package+version</h4>
+<ul>
+<li>Query binary (if known format) for SHA+repository</li>
+</ul>
+<h4 id="common-functionality">Common functionality</h4>
+<ul>
+<li>Create source layout for matching versions in repo dependency tree.</li>
+<li>Download product+tools of official build for matching versions, SHA+repository,
+package+version</li>
+</ul>
+<h3 id="darc-vs-maestro">Darc Vs. Maestro++</h3>
+<p>Mestro++ based on times or triggers (i.e. a change in a file) flows the new dependency
+into subscribed repos using Darc. Main Maestro++ scenario is:</p>
+<ul>
+<li>Identify when there is an update in Arcade’s scripts/dependencies and
+<ul>
+<li>Add new dependency (using Darc for versions)</li>
+<li>Change existing dependency (using Darc for versions)</li>
+<li>Remove dependency (using Darc for versions)
+for each participating repo depending on each repo’s subscriptions</li>
+</ul>
+</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CVersionQueryingAndUpdating.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CVersionQueryingAndUpdating.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CVersionQueryingAndUpdating.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

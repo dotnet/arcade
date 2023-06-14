@@ -1,0 +1,194 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Dev Design for Work Item Retry and Result Recording </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Dev Design for Work Item Retry and Result Recording ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="dev-design-for-work-item-retry-and-result-recording">Dev Design for Work Item Retry and Result Recording</h1>
+
+<p>Today in Helix, the Helix SDK (code that lives inside arcade) handles all of the running and uploading of helix results.
+Unfortunately, this means that the Helix systems and services have no visibility into this behavior, and cannot modify
+or depend on it.</p>
+<p>In order to more strongly integrate this into Helix, allowing us stronger controls and reporting, we need to change this
+to be more embedded into Helix itself.</p>
+<p>The changes should require no sweeping changes to repositories other than arcade and helix, product repositories will
+get the correct behavior by virtue of having the eng/test-configuration.json file.</p>
+<h2 id="current-flow">Current flow</h2>
+<ol>
+<li>Arcade code generates a workitem payload, embedding the Azure Pipelines tokens necessary to report back to the test run</li>
+<li>Arcade send this workitem to helix</li>
+<li>Helix runs this workitem, ignorant of what is happening inside</li>
+<li>The python code inside the workitem directly parses the results and uploads it to Azure using
+<a href="https://docs.microsoft.com/en-us/rest/api/azure/devops/test/results/add?view=azure-devops-rest-5.0">https://docs.microsoft.com/en-us/rest/api/azure/devops/test/results/add?view=azure-devops-rest-5.0</a></li>
+<li>If this workitem get's retried for any reason (like infrastructure failures), the reporting is nonsense</li>
+<li>The workitem completes, and helix uploads any completed artifacts to helix storage</li>
+<li>The Azure Helix Logs plugin combines data in Azure with the data in Helix to produce a report</li>
+</ol>
+<h4 id="issues">Issues</h4>
+<ul>
+<li>This behavior is the only thing that causes test workitem to not be idempotent, which is an important quality of a queue based system.
+Because helix sometimes needs to retry workitems (for example, if the &quot;Finished&quot; even fails to upload), this can cause
+duplicate reporting to Azure, leading to confusing results.  It means we can't safely run a sample workitem to validate a fix / repro a problem.
+In general, if idempotency can be acheived, the queue based nature of our system can shine to help identify and correct
+systematic errors.</li>
+<li>Code inside the workitem cannot get to a different machine if that is desired to resolve test issues</li>
+<li>Helix is unaware that &quot;retries&quot; happen inside the workitem, so cannot differentiate them in reporting</li>
+<li>If there is a need to change this reporting, it involves pushing python code changes through arcade to every branch of every repository</li>
+<li>Version of this code gets very difficult, since we need to support arbitrary backwards compat because of release branches,
+and there is no clear boundary where this compatibility must be preserved.</li>
+</ul>
+<h2 id="proposed-new-flow">Proposed new flow</h2>
+<ol>
+<li>Arcade similar to today, creates a workitem that <em>runs</em> the tests, and puts a file in a well defined format in a provided folder</li>
+</ol>
+<ul>
+<li>This will include the results for the execution</li>
+<li>Any necessary authentication necessary to report back</li>
+<li>Any rerun instructions</li>
+</ul>
+<ol>
+<li>Helix's client python will use this information to upload the results to Azure, similar to how the arcade code does this today</li>
+<li>If the folder contains rerun instructions, Helix will use these to determin appropriate behavior.</li>
+<li>If a rerun is required, before uploading to Azure, it will run the workitem a second time, creating a second set of artifacts.</li>
+<li>These artifacts are combined to produce a final upload to Azure, using &quot;SubResults&quot; type of &quot;rerun&quot;.</li>
+</ol>
+<ul>
+<li>If all executions pass, report only the first result (to save upload time, which is significant), report test as passing
+* If some, but not all, executions fail, upload all runs, and mark the overall test as &quot;passing with rerun&quot;
+* If all executions fail, upload all runs and mark the overall test as failed.</li>
+</ul>
+<ol>
+<li>Each artifact will be related to the &quot;attempt&quot; that triggered it, so the correct console logs can be viewed for each result</li>
+<li>(Version 2) Helix will also provide a mechanism to run the workitem on a different machine in case machine configuration issues
+are at fault, if data shows this to be necessary, and local retries are not functioning</li>
+</ol>
+<h3 id="contract-file-formats">Contract file formats</h3>
+<h4 id="result-file">Result file</h4>
+<p>This will likely be a JSON file that is an intermediate step between the raw execution (XUnit XML or VSTest TRX files). The type of runner
+isn't useful information for Helix, so it's fine for that to remain inside the workitem (which also allows teams to use other runners without
+having to make modifications to the Helix server code).</p>
+<p>Whatever is necessary to report back to Azure DevOps</p>
+<p>Something like</p>
+<pre><code class="lang-json">{
+  &quot;results&quot;: [
+    {
+      &quot;testName&quot;: &quot;System.Example.TestClass.TestMethod(\&quot;Test argument\&quot;)&quot;,
+      &quot;duration&quot;: 1345,
+      &quot;result&quot;: &quot;fail&quot;,
+      &quot;output&quot; : &quot;Full test output\nFrom runner&quot;,
+      &quot;failureMessage&quot;: &quot;Expected: 5\nActual: 4&quot;,
+      &quot;callstack&quot;: &quot;A callstack\nat a place&quot;,
+  ]
+</code></pre>
+<p>The code that handles producing this will live in arcade, since that's where it lives now, and there is no compelling reason to move it.</p>
+<h4 id="rerun-instructions">Rerun instructions</h4>
+<p>Rerun instructions will just be a copy of the eng\test-configuration.json file from the repository</p>
+<ul>
+<li>Includes number of rerun attempts</li>
+<li>Any qualifiers for which tests to rerun or not</li>
+</ul>
+<p>If this file is missing, no reruns are performed, and the single result is uploaded just as current</p>
+<h4 id="parameters">Parameters</h4>
+<p>Since uploading to an Azure pipeline requires authentication, a file will need to be generated including a token capable of uploading to that
+specific test run. This is already in place today, and is passed</p>
+<h2 id="testing-and-deployment">Testing and deployment</h2>
+<p>We current have no infrastructure for testing the python code that drives the bulk of the helix system. This will need to be written to make sure
+the logic in this code, including the strong file and location contracts are respected. This will be a large expense, as the python code
+is not well structured for testing.</p>
+<p>Most of the code logic will be made in the helix-machines repository, because that is where the python code resides today.  It could theoretically be
+moved, but the value isn't there for that.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CDevWorkflow%5CDesign%5CDev-Design-Work-Item-Retry.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CDevWorkflow%5CDesign%5CDev-Design-Work-Item-Retry.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CDevWorkflow%5CDesign%5CDev-Design-Work-Item-Retry.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

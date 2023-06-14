@@ -1,0 +1,491 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Release 3.0 Release Shutdown Tasks (Coherency QB) </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Release 3.0 Release Shutdown Tasks (Coherency QB) ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="release-30-release-shutdown-tasks-coherency-qb">Release 3.0 Release Shutdown Tasks (Coherency QB)</h1>
+
+<p>This document describes the process by which a 3.x release is shut down and
+prepared for validation. This is the job of the &quot;coherency QB&quot;.</p>
+<p>This document makes some assumptions about familiarity with the Maestro++
+concepts of <a href="BranchesChannelsAndSubscriptions.html">Channels, Branches and
+Subscriptions</a>. Please read if you are unfamiliar.</p>
+<h2 id="general-workflow">General workflow</h2>
+<p>The general workflow for a release looks like:</p>
+<ol>
+<li>Commit desired changes to each repository involved in the release.
+<ol>
+<li>For a .NET Core 3.x preview, these changes may be committed by the process
+of branching the working (typically master) branch into a release branch
+(like release 3.0)</li>
+<li>For a servicing release, these changes may simply be committed into an
+existing release branch.</li>
+</ol>
+</li>
+<li>Official builds and dependency flow begins in each repository with changes.</li>
+<li>New commits are built, generating new assets, which flow via Maestro++
+subscriptions into other repositories.</li>
+<li>Dependency flow generates new commits, which in turn cause new builds and
+additional dependency flow.</li>
+<li>Repeat 3-4 until no additional changes appear and build is 'coherent'. See
+<a href="#what-is-coherency-and-why-is-it-important">What is coherency and why is it important</a></li>
+<li>Starting with dotnet/core-sdk (which aggregates all repos), gather a drop for the build.</li>
+<li>Validate the SDKz</li>
+<li>For each additional fix needed, repeat steps 3-7.</li>
+<li>Once quality has reached the desired level, release build to public.</li>
+</ol>
+<h2 id="what-is-coherency-and-why-is-it-important">What is coherency and why is it important?</h2>
+<p>Each node in .NET Core's dependency graph may flow dependencies to more than one other node. For
+instance, the Microsoft.NETCore.App dependency, produced out of core-setup,
+flows to dotnet/toolset, dotnet/core-sdk, aspnet/extensions and a number of
+other places. Updates of dependency will be committed at different rates in each
+of those places, due to variations in pull request validation time, need for
+reaction to breaking changes, and desired subscription update frequencies. As
+those repositories then flow elsewhere and eventually coalesce under
+dotnet/core-sdk, there may be a number of different versions of
+Microsoft.NETCore.App that have been transitively referenced throughout the
+graph. This is called <strong>incoherency</strong>. When only a single version of each
+product dependency is referenced throughout the dependency graph, the graph is
+<strong>coherent</strong>.</p>
+<p><img src="IncoherentGraph.png" alt="Incoherent graph">
+<em>Wildly incoherent graph</em></p>
+<p><img src="CoherentGraph.png" alt="Coherent graph">
+<em>Coherent graph, except for one pinned dependency in core-setup</em></p>
+<p><em><strong>What kinds of problems of does incoherency cause?</strong></em> Incoherency represents a
+<em>possible</em> error state. For an example, let's take a look at
+Microsoft.NETCore.App. Microsoft.NETCore.App represents a specific API surface area.
+While multiple versions of Microsoft.NETCore.App may be referenced in the
+repository dependency graph, the SDK ships with just one. This runtime must
+satisfy all of the demands of the transitively referenced components (e.g.
+winforms and wpf) that may execute on that runtime. If the runtime does not
+satisfy those demands (e.g. breaking API change), failures may occur. In an
+incoherent graph, because all repositories have not ingested the same version of
+Microsoft.NETCore.App, there is a possibility that a breaking change has not
+been reacted to.</p>
+<p><em><strong>Does this mean that incoherency is always an error state?</strong></em> No. For example, let's
+say that the incoherency of Microsoft.NETCore.App in the graph only
+represents a single change in coreclr, a single non-breaking JIT bug fix. There
+would technically be no need to ingest the new Microsoft.NETCore.App at each
+point in the graph. Simply shipping the same components against the new runtime
+will suffice.</p>
+<p><em><strong>If incoherency only matters occasionally, why do we strive to ship a coherent
+product?</strong></em> Because determining when incoherency does not matter is hard. It is
+easier to simply ship with coherency as the desired state than attempt to
+understand any semantic effects differences between incoherent components will
+have on the completed product. It can be done, but on a build to build basis
+it is time intensive and prone to error. Enforcing coherency as the default
+state is safer.</p>
+<p><em><strong>Does this mean we always ship a coherent product?</strong></em> No. There are various
+scenarios (e.g. pinned dependencies) where it is not possible to drive to a
+coherent state. In these cases, we drive to be as coherent as possible, then
+evaluate the incoherency to determine whether it is problematic.</p>
+<p>When shutting down for a release, the &quot;coherency QB&quot; is responsible for driving
+the product to as coherent a state as is possible. They are responsible for
+ensuring the orchestration of the end to end process is done properly.</p>
+<p><em><strong>What does the coherency QB do when there is no imminent release?</strong></em>
+Primarily, the Coherency QB's job outside of times when the product needs to
+drive to coherency includes:</p>
+<ul>
+<li>Advising on schedules. When is the right time to start the drive to coherency
+and a final build for a release?</li>
+<li>Watching for potential issues in the Dev channel which might be an issue in a
+time-sensitive coherency drive:
+<ul>
+<li>Are any repositories far out of date in the Dev channel? This should
+generally be watched by .NET Core Tactics, but other pairs of eyes is
+always useful.</li>
+<li>Is overall dependency flow health okay for the Dev channel? Have product
+dependency cycles been accidentally introduced?</li>
+</ul>
+</li>
+</ul>
+<h2 id="coherency-qb-workflow">Coherency QB workflow</h2>
+<p>The coherency QB is responsible for the following:</p>
+<ul>
+<li><strong>Verifying</strong> the dependency flow is correct and will produce the desired
+build, and fixing if necessary. Repository owners are generally responsible
+for dependency flow into their repositories and designating branches as
+producing assets for the correct channels. The coherency QB serves as a final
+check that this flow is correct for producing the desired final result.</li>
+<li><strong>Verifying</strong> with repository owners that commits (or branching) have been
+completed for those repositories that are contributing to a release.</li>
+<li><strong>Verifying</strong> that dependencies are flowing and official builds are completing.
+Unblocking and communicating with repository owners where necessary.</li>
+<li><strong>Orchestrating</strong> flow to reduce risk of undesired product churn
+that would adversely affect &quot;time to coherency&quot;.</li>
+<li><strong>Evaluating</strong> the effect additional changes (e.g. taking a bug fix) will have
+on the &quot;time to coherency&quot;.</li>
+<li><strong>Evaluating</strong> the level coherency state and declaring &quot;done&quot; when
+appropriate.</li>
+<li><strong>Gathering</strong> a drop of the product once coherent and providing it for use in
+testing, for release, etc.</li>
+</ul>
+<p><em>Note: There is a goal to automate as much of this process as is possible.</em></p>
+<p>Below specific steps in the coherency QB are detailed.</p>
+<h3 id="prepare-and-verify-dependency-flow">Prepare and verify dependency flow</h3>
+<p>.NET Core releases are generally tied to Maestro++ channels. For instance, for
+.NET Core 3.1, the <em>.NET Core 3.1 Dev</em> channel is used for dependency flow of
+day-to-day development builds, while the <em>.NET Core 3.1 Release</em> channel is used
+for the flow of the final builds. Different channels are used for two reasons:</p>
+<ul>
+<li>A separate set of branches can be used to flow outputs into each channel,
+allowing for development to continue during product shutdown.</li>
+<li>Release channel dependency flow is optimized for stability (e.g. no back-edges) and
+speed, while dependency flow in the Dev channel is optimized to reduce the
+number of dependency updates and allow for back edges (generally used for
+toolset and test updates).</li>
+</ul>
+<p>The Dev channel is generally in more active use than Release, and thus the
+dependency flow setup is usually more up to date. When we branch for a release,
+it's usually necessary to update the dependency flow of the Release channel to
+reflect changes in dependency flow on the Dev channel. Thus, it's necessary to
+evaluate the subscriptions currently applied to the Release channel and update
+as needed. Generally, we're trying to achieve the following:</p>
+<ul>
+<li>Each repository currently contributing to the Dev channel should have an
+equivalent default channel association for the Release channel. There are some
+exceptions to the rule here (e.g. NuGet likes to manually assign builds to
+channels), but generally this should be the case for the &quot;core stack&quot;.</li>
+<li>There should be equivalent subscriptions in the Release channel for each
+subscription in the Dev channel.</li>
+<li>Subscriptions updating toolsets should have their frequencies set to &quot;none&quot;</li>
+<li>Subscriptions updating product dependencies should have their frequencies set
+to &quot;everyBuild&quot;.</li>
+</ul>
+<h4 id="prior-to-branchcommit-day">Prior to branch/commit day</h4>
+<p>The <code>darc</code> tool can identify a lot of gaps in the dependency flow for a specific
+channel. However, because branching/committing of changes has not yet been
+performed, <code>darc</code> is less useful because the current state of the channel may
+not match the future state. Prior to branch/commit day it is still possible to
+get the Release channel subscription state relatively close based on the current
+state of the Dev channel subscription state.</p>
+<ol>
+<li><p>Dump all subscriptions that apply specifically to the Dev and Release
+channels with two separate darc commands</p>
+<pre><code>darc get-subscriptions --channel &quot;.NET Core 3.1 Dev&quot;
+
+darc get-subscriptions --channel &quot;.NET Core 3.1 Release&quot;
+</code></pre>
+</li>
+<li><p>Match Dev and Release subscriptions. Identify missing Release channel
+subscriptions and add. Identify existing Release channel subscriptions that
+have no equivalent Dev subscription and eliminate.</p>
+<p>Use <code>darc add-subscription</code> and <code>darc delete-subscription</code> to add and delete subscriptions.</p>
+<p><strong>Ensure that subscriptions updating toolsets (generally these are backedges
+in the graph) have update frequencies set to 'none'</strong></p>
+<p><em>Note: <a href="https://github.com/dotnet/arcade/issues/3012">https://github.com/dotnet/arcade/issues/3012</a> tracks adding some
+features to get-subscriptions to help out with this exercise</em></p>
+</li>
+<li><p>Dump the default channel state and ensure that repositories with a default
+channel association in the Dev channel have a default channel association in the
+Release channel. Where there are gaps work with with repository owners to
+understand which branch will ship the coming release. Some repositories may
+not have default associations and can be left alone. For example nuget
+generally avoid automatic channel assignment and &quot;inserts&quot; into the SDK via
+<code>darc add-build-to-channel</code>.</p>
+<pre><code># Get the default channel associations
+darc get-default-channels
+
+# Add a default channel
+darc add-default-channel
+</code></pre>
+<p>Some typical repositories with odd/no associations:</p>
+<ul>
+<li><strong>dotnet/roslyn</strong> - Branch changes preview to preview to align with VS</li>
+<li><strong>microsoft/msbuild</strong> - Branch changes preview to preview to align with VS</li>
+<li><strong>dotnet/fsharp</strong> - Branch changes preview to preview to align with VS</li>
+<li><strong>nuget/nuget.client</strong> - Typically no default association, nuget assigns
+builds manually</li>
+<li><strong>mono/linker</strong> - Not always branched for release (typically sticks with
+what is in dotnet/toolset@master at the time of branching for release).</li>
+<li><em><em>aspnet/</em> except aspnet/websdk</em>* - Handles their own subscriptions and
+default channels as they generally change branches per-release.</li>
+</ul>
+<p>**Note: All branch names in default channels (and only default channels)
+should be prefixed with <code>refs/heads/</code>.</p>
+</li>
+</ol>
+<h4 id="commitbranching-day">Commit/Branching day</h4>
+<p>Commit/branching day happens in the following steps:</p>
+<ol>
+<li><strong>Turn off core-sdk builds and/or dependency flow out of specific components to
+avoid mixed branding</strong> - In Azure DevOps, disable the official build pipeline
+for dotnet/core-sdk. You may also need to disable other flow if other
+repositories branch early. Please see below for notes.</li>
+<li><strong>Branch/commit for release</strong> - Repository owners should branch and commit
+branding updates. The Coherency QB need only monitor the status of this as
+the core-sdk build cannot be turned back on until branding is consistent.</li>
+<li><strong>Turn back on disabled dependency flow if necessary</strong> - If some repositories
+had their dependency flow disabled because of an early branching scenario,
+now is the time to turn these back on.</li>
+<li><strong>Verify dependency flow health</strong> - Once all branching and commits are complete,
+the Coherency QB can verify the release channel health with <code>darc get-health --channel &quot;&lt;channel name&gt;&quot;</code> and correct any issues. the <code>darc get-flow-graph</code>
+command is sometimes also also useful in this case. Remember, the goals are:
+<ul>
+<li>Fast flow between repositories in the channel (updated every build)</li>
+<li>No automatic cycles in dependency flow (toolset dependencies are updated
+with frequency 'none').</li>
+</ul>
+</li>
+<li><strong>Drive for consistent branding in core-sdk repository</strong> - Watch the
+core-sdk's eng/Version.Details.xml to determine when branding is updated in
+the affected branches. Use <a href="https://aka.ms/bar">https://aka.ms/bar</a> and the
+<a href="https://github.com/pulls?utf8=%E2%9C%93&amp;q=is%3Aopen+is%3Apr+author%3Aapp%2Fdotnet-maestro+archived%3Afalse+user%3Adotnet+user%3Aaspnet+">Open Dependency Update PRs</a> GitHub query to track updates.</li>
+<li><strong>Turn core-sdk builds back on</strong> - Re-enable official dotnet/core-sdk build
+and queue builds on affected branches.</li>
+<li><strong>Notify validation teams when a new (even non-coherent build) is
+available</strong> - Notify netcoretac that core-sdk builds are available.
+Validation teams may now begin testing for release based on the
+dotnet/core-sdk GitHub page.</li>
+</ol>
+<p><em><strong>Why are dotnet/core-sdk builds turned off on branch/commit day?</strong></em> The primary
+concern is branding. dotnet/core-sdk will publish its outputs to public on the
+main web github page on each build (it overwrites a set of 'latest' blobs based
+on information in the current branch being built). Until the core-sdk branches
+affected by branching/committing for release (e.g. release/3.0.1xx moves to
+previewN and master moves to previewN+1) reflect the branding updates for their
+input dependencies, exposing new builds to the public will cause confusion. The
+builds will have mixed previewN and previewN+1 branding. We want to avoid this.
+By turning off the official core-sdk build (disable in AzDO), the 'latest' will
+not update and confusion will be avoided. <em>Note that this may change at a later
+date, and we may be able to avoid updating the latest simply by disabling a
+default channel association.</em></p>
+<p>Often, &quot;branching&quot; is a multi-day operation. For example, dotnet/core-setup may
+branch early as to reduce schedule risk (dotnet/coreclr + dotnet/corefx are
+expensive steps in the coherent build process). Because branching will involve a
+branding update, allowing normal dependency flow will cause core-sdk's branches
+to have mixed branding. This can be avoided by disabling the default channel assignment
+of those key components that are branching early, then turning it back on later.
+Specifically, in the dotnet/core-setup case, disabling the default channel
+assignment out of core-setup is an ideal solution. Non &quot;coherent-parent&quot;
+references to dotnet/coreclr and dotnet/corefx components are not allowed above
+dotnet/core-setup. By just disabling dotnet/core-setup's default channel
+assignments dotnet/coreclr and dotnet/corefx may flow into dotnet/core-setup,
+reducing the time to coherency after the full branch on Monday, but the rest of
+the stack will not see the updated branding until the default channel assignment
+is re-enabled. For completeness, this <strong>could</strong> be done by disabling the
+dotnet/core-sdk build earlier, when dotnet/core-setup branches. But that means
+a longer period of time without a running dotnet/core-sdk build.</p>
+<h3 id="drive-product-to-coherency-with-the-desired-commits-from-each-repository">Drive product to coherency with the desired commits from each repository</h3>
+<p>This stage is primarily about verifying that dependency flow pull requests are
+being merged, official builds of affected branches are succeeding, and watching
+the dependency graph to determine where incoherencies need resolution. Both
+<a href="https://aka.ms/bar">https://aka.ms/bar</a> and <code>darc get-dependency-graph</code> are useful in this regard.
+The Coherency QB is looking for a coherent build with the desired (usually the
+latest) commits from each repository transitively referenced by dotnet/core-sdk.</p>
+<p>Generally speaking, the build is coherent when <a href="https://aka.ms/bar">https://aka.ms/bar</a> shows
+dotnet/core-sdk as having no yellow (incoherencies in dependencies) nodes in the
+Dependencies list. Expanding the list with &quot;Show Sub-Dependencies&quot; can be
+helpful in identifying sources of incoherency.</p>
+<p><em><strong>When might incoherency be okay?</strong></em> Incoherency is generally a situation to
+avoid. In some cases, however, it may be unavoidable. For instance, a repository that
+pins to an old version of a corefx package can not become coherent (without
+forcing everyone to use that old version). It may be possible to
+ship with incoherency if it is determined that the incoherency has no meaningful
+effects. The Coherency QB should work with repository owners to understand
+whether incoherencies are meaningful or not.</p>
+<h3 id="gather-product-drops-and-hand-off-for-testing">Gather product drops and hand-off for testing</h3>
+<p>After a candidate build is reached, it's time to prep a drop of the candidate
+for validation. A drop consists of 3 parts:</p>
+<ul>
+<li>A &quot;unified&quot; drop of all assets in the product, in separate &quot;shipping&quot; and
+&quot;non-shipping&quot; designations - This drop is used for validation.</li>
+<li>A &quot;release&quot; drop separated by repo. This drop contains a release.json and
+is used if the candidate will actually ship.</li>
+<li>A nuget feed with all shipping packages. For validation, it is important to
+only restore packages that will ship to nuget.org (what our customers use)
+along with packages that have already shipped to nuget.org.  Our day to day
+dev builds upload packages to feeds that contain a mix of transport and
+shipping packages, as those feeds are needed for downstream builds.</li>
+</ul>
+<p>Drops of builds are uploaded to
+<code>\\vsufile\patches\sign\NET\CORE_BUILDS\3.0.X\3.0.0\</code></p>
+<p>To gather a drop:</p>
+<ol>
+<li><p>Create a directory (if it does not exist) under the drop root for the
+appropriate preview/release (e.g. `preview6').</p>
+</li>
+<li><p>Create a directory under that with the appropriate SDK build number. E.g.
+<code>3.0.100-preview6-012264</code> of the top level SDK build.</p>
+</li>
+<li><p>Run <code>darc gather-drop</code> to upload the unified drop to the share:</p>
+<pre><code>darc gather-drop --sdk --commit &lt;version&gt; -o &lt;share&gt; --non-shipping --full --continue-on-error --skip-existing
+</code></pre>
+</li>
+<li><p>Run <code>darc gather-drop</code> to upload the release drop to the share:</p>
+<pre><code>darc gather-drop --sdk --commit &lt;version&gt; -o &lt;share&gt; --release --non-shipping --full --continue-on-error --skip-existing
+</code></pre>
+<p><em>Note: In cases of incoherent builds, the generated release.json may need to
+be trimmed to remove product builds that do not need to ship to nuget.org</em></p>
+</li>
+<li><p>Generate a new feed with only the shipping packages - While eventually we
+will use Azure public feeds for this, today we will use a blob feed because
+of the simplicity of authentication.  There is a build definition that can create
+this today: <a href="https://dev.azure.com/devdiv/DevDiv/_build?definitionId=9767">https://dev.azure.com/devdiv/DevDiv/_build?definitionId=9767</a>.</p>
+<ol>
+<li>Find the unified directory of shipping packages we want on the feed.  If
+looking at the on your local machine, e.g.
+<code>\\vsufile\patches\sign\NET\CORE_BUILDS\3.0.X\3.0.0\preview6\3.0.100-preview6-012264\shipping\packages</code></li>
+<li>Start the build definition using that directory using the following parameters
+<ul>
+<li>Change the CentralBlobFeedUrl to point to an unused, isolated feed. Keep
+the storage account the same but change the container to something new.
+<ul>
+<li>Container name: dotnet-core-preview6-012258</li>
+<li>Full blob feed url: <a href="https://dotnetfeed.blob.core.windows.net/dotnet-core-preview6-012258/index.json">https://dotnetfeed.blob.core.windows.net/dotnet-core-preview6-012258/index.json</a>.
+Note that the container name can only have letters, numbers and dashes.</li>
+</ul>
+</li>
+<li>Clear the MyGetFeedUrl parameter (no myget upload)</li>
+<li>Change PackagePublishGlob to point to a glob of the nuget packages.
+E.g.
+<code>\\vsufile\patches\sign\NET\CORE_BUILDS\3.0.X\3.0.0\preview6\3.0.100-preview6-012264\shipping\packages</code></li>
+</ul>
+</li>
+</ol>
+</li>
+<li><p>Send mail to netcoretac with information about the new build (share location
+feed)</p>
+</li>
+</ol>
+<h3 id="iterate-until-release">Iterate until release</h3>
+<p>As validation proceeds, there may be bugs found. These will be sent to shiproom
+for approval, and changes may be accepted. At that point, we enter a new
+&quot;incoherent&quot; state as those dependencies flow up to dotnet/core-sdk, and the
+Coherency QB will help drive back to coherency, generate a new drop, etc.</p>
+<h2 id="dependency-flow-tools">Dependency flow tools</h2>
+<p>Below are listed various tools and commands useful for the Coherency QB.</p>
+<ul>
+<li><strong>GraphViz</strong> - Graph visualization software that can be used to produce
+graphical representations of the output of <code>darc get-dependency-graph</code> and
+<code>darc get-flow-graph</code>. <a href="https://www.graphviz.org/download/">https://www.graphviz.org/download/</a> has downloads for
+various platforms.  For example, given an input graphviz (.dot) file, one can
+generate a png with:
+<pre><code>'C:\Program Files (x86)\Graphviz2.38\bin\dot.exe' -Tpng -o'C:\scratch\mygraph.png' 'C:\scratch\mydependencies.dot'
+</code></pre>
+</li>
+<li><strong><a href="https://aka.ms/bar">https://aka.ms/bar</a></strong> - Website for tracking build state.</li>
+<li><strong><a href="https://github.com/pulls?utf8=%E2%9C%93&amp;q=is%3Aopen+is%3Apr+author%3Aapp%2Fdotnet-maestro+archived%3Afalse+user%3Adotnet+user%3Aaspnet+">Open Dependency Update PRs</a></strong> - List of open
+dependency update PRs within the microsoft, aspnet, and dotnet orgs.</li>
+<li><strong><a href="Darc.html#add-default-channel">darc add-default-channel</a></strong> - Adds a new
+default channel association. See example in linked docs.</li>
+<li><strong><a href="Darc.html#get-default-channels">darc get-default-channels</a></strong> - Retrieve
+default channel associations. See example in linked docs.</li>
+<li><strong><a href="Darc.html#default-channel-status">darc default-channel-status</a></strong> - Enable or
+disable a default channel association. See example in linked docs.</li>
+<li><strong><a href="Darc.html#delete-default-channel">darc delete-default-channel</a></strong> - Delete a
+default channel. See example in linked docs.</li>
+<li><strong><a href="Darc.html#add-subscription">darc add-subscription</a></strong> - Add a new
+subscription. See example in linked docs.</li>
+<li><strong><a href="Darc.html#get-subscriptions">darc get-subscriptions</a></strong> - Get current
+subscriptions. See example in linked docs.</li>
+<li><strong><a href="Darc.html#delete-subscription">darc delete-subscription</a></strong> - Delete a
+subscription. See example in linked docs.</li>
+<li><strong><a href="Darc.html#update-subscription">darc update-subscription</a></strong> - Update a
+subscription (e.g. source channel or merge policies). See example in linked docs.</li>
+<li><strong><a href="Darc.html#subscription-status">darc subscription-status</a></strong> - Enable or
+disable a subscription. See example in linked docs.</li>
+<li><strong><a href="Darc.html#gather-drop">darc gather-drop</a></strong> - Gather a drop of a repo,
+potentially including all referenced components. See example in linked docs.</li>
+<li><strong><a href="Darc.html#get-dependency-graph">darc get-dependency-graph</a></strong> - Get a
+dependency graph (textual or graphviz) of the current dependency state. See
+example in linked docs.</li>
+<li><strong><a href="Darc.html#get-flow-graph">darc get-flow-graph</a></strong> - Retrieve the dependency
+flow graph. See example in linked docs.</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5C3xReleaseShutdownTasks.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5C3xReleaseShutdownTasks.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5C3xReleaseShutdownTasks.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

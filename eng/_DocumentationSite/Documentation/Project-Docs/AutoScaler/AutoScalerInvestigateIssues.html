@@ -1,0 +1,258 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Autoscaler - Debugging </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Autoscaler - Debugging ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="autoscaler---debugging">Autoscaler - Debugging</h1>
+
+<p>The autoscaler is running on all Helix subscriptions and HelixStaging . <br>
+All the logs, traces, and exceptions of the autoscaler live on Application Insights.</p>
+<p>If you want to find any error or log about the running service, for production navigate to <a href="https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourceGroups/dotnet-eng-cluster/providers/microsoft.insights/components/dotnet-eng/logs">dotnet-eng</a> and for staging navigate to <a href="https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/cab65fc3-d077-467d-931f-3932eabf36d3/resourceGroups/dotnet-eng-int-cluster/providers/Microsoft.Insights/components/dotnet-eng-int/logs">dotnet-eng-int</a>. You can use this <a href="#logs-in-dotnet-engdotnet-eng-int">dotnet-eng/dotnet-eng-int guide</a> to navigate the information.</p>
+<p>If you want to see metrics or more data that is sent by the autoscaler for production navigate to <a href="https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourceGroups/helix-autoscale-prod/providers/microsoft.insights/components/helix-autoscale-prod/logs">helix-autoscale-prod</a> and for staging navigate to <a href="https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/cab65fc3-d077-467d-931f-3932eabf36d3/resourceGroups/auto-scale-int/providers/microsoft.insights/components/helix-autoscale-int/logs">helix-autoscale-int</a> for staging. You can use this <a href="#data-in-helix-autoscale-inthelix-autoscale-prod">helix-autoscale-prod/helix-autoscale-int guide</a> to know which information you can find in there.</p>
+<h2 id="alerts"><strong>Alerts</strong></h2>
+<p>The main alerts related to the autoscaler are: <br></p>
+<ul>
+<li><a href="#Helix-AutoScaler-Service-Stopped-Running">Helix AutoScaler Service Stopped Running</a> <br></li>
+<li><a href="#Cores-consumption">Cores consumption</a></li>
+<li><a href="#autoscale-minutes-to-scale-up-from-zero-machine">Autoscale: Minutes to scale-up from zero machine</a></li>
+</ul>
+<h3 id="helix-autoscaler-service-stopped-running"><strong>Helix AutoScaler Service Stopped Running</strong></h3>
+<p><a href="https://dotnet-eng-grafana.westus2.cloudapp.azure.com/d/arcadeAvailability/service-availability?orgId=1&amp;refresh=30s&amp;from=1606937931219&amp;to=1606959531219&amp;panelId=60&amp;fullscreen">Helix AutoScaler Service Stopped Running Grafana</a> <br>
+Example: <a href="https://github.com/dotnet/core-eng/issues/11478">https://github.com/dotnet/core-eng/issues/11478</a></p>
+<p>Step by step:</p>
+<ol>
+<li><a href="#How-to-restart-the-autoscaler">Restart autoscaler node</a> as soon as you can - A lot of issues come after the autoscaler stops running such as the alert <a href="#Autoscale:-Minutes-to-scale-up-from-zero-machine">Autoscale: Minutes to scale-up from zero machine</a>.</li>
+<li>Find when the autoscaler stopped running (hour)</li>
+<li>See if there is any exception that was thrown on that period of time (on <a href="#logs-in-dotnet-engdotnet-eng-int">dotnet-eng/dotnet-eng-int</a>). This will help you to know what happened.</li>
+<li>If there is not an exception, you can see the traces and analyze the last trace that was recorded to have an idea in which step the autoscaler stopped running.</li>
+<li>At this point the auto scaler should be running and you should be able to find the issue and fix it.</li>
+</ol>
+<h3 id="cores-consumption"><strong>Cores consumption</strong></h3>
+<p><a href="https://dotnet-eng-grafana.westus2.cloudapp.azure.com/d/quota/azure-quota-limits?orgId=1&amp;refresh=30s&amp;from=1606937685479&amp;to=1606959285479&amp;var-Resource=cores&amp;var-Resource=standardDv3Family&amp;panelId=30&amp;fullscreen">Cores consumption Grafana</a> <br>
+Example: <a href="https://github.com/dotnet/core-eng/issues/11542">https://github.com/dotnet/core-eng/issues/11542</a></p>
+<p>The autoscaler is in charge of enforcing the core consumption while trying to make all the queues meet the SLA, when this alert gets trigger, we should answer the following questions:</p>
+<ol>
+<li>Are we over-scaling? This means we have more machines than we need. Grafana <a href="https://dotnet-eng-grafana.westus2.cloudapp.azure.com/d/queues/queue-monitor?orgId=1">queue monitor</a> could be an awesome way to review this.</li>
+<li>Are we having problems scaling down? We should check if there are a lot of machines offline and they are not being deleted. (You can look at the <a href="#Heartbeats-table">heartbeats table</a>)</li>
+<li>Are a lot of machines not working and not getting clean? (The autoscaler always try to have machines heart beating so if there are a lot of machines dying the autoscaler is going to try to replace them which can lead to something similar of over scaling, for this you should check the scale sets)</li>
+</ol>
+<h3 id="autoscale-minutes-to-scale-up-from-zero-machine"><strong>Autoscale: Minutes to scale-up from zero machine</strong></h3>
+<p><a href="https://dotnet-eng-grafana.westus2.cloudapp.azure.com/d/queues/queue-monitor?orgId=1&amp;from=1606937898053&amp;to=1606959498053&amp;var-QueueName=buildpool.windows.10.amd64.open&amp;var-QueueName=buildpool.windows.10.amd64.vs2017&amp;var-QueueName=buildpool.windows.10.amd64.vs2017.open&amp;var-QueueName=windows.10.amd64.open&amp;var-UntrackedQueues=%22osx%22,%20%22perf%22,%20%22arm%22,%20%22arcade%22,%20%22xaml%22,%20%22appcompat%22&amp;panelId=99&amp;fullscreen">Autoscale: Minutes to scale-up from zero machine Grafana</a> <br></p>
+<p>This alert can get triggered by a bunch of reasons but in some cases, it can be because of the autoscaler.</p>
+<p>There are two scenarios in which the alert normally gets triggered:</p>
+<ul>
+<li>We are having problems scaling up.</li>
+<li>The scale set has machines, but the machines are not heartbeating.</li>
+</ul>
+<h4 id="scenario-scaling-up-problems"><em>Scenario: Scaling up problems</em></h4>
+<p>The scale up problems can come for the autoscaler or the scale set.</p>
+<ol>
+<li>Check if the alert 'Helix AutoScaler Service Stopped Running' is not active, if this alert is active most likely this is the reason, and you should focus on getting the autoscaler running.</li>
+<li>Review the scale set and see if there are machines being created, if this is the case you know that soon there are going to be machines. Even in this case I suggest you take a quick look to see if the problem is not related to <a href="#scenario-the-scale-set-has-machines-but-the-machines-are-not-heartbeating">machines not heartbeating</a>.</li>
+<li>If there are no machines getting created
+<ul>
+<li>Check the <code>scaling up</code> traces for the queue in which the alert got trigger on <a href="#logs-in-dotnet-engdotnet-eng-int">dotnet-eng/dotnet-eng-int</a>. If there are not logs you should check the <a href="#scenario-the-scale-set-has-machines-but-the-machines-are-not-heartbeating">machines not heartbeating scenario</a>.</li>
+<li>Pick the more recent scaling up trace and go to the scale set and see if the scale up instruction was received and which is the status (Started, Accepted or Succeeded) to know if it is a delay on Azure.</li>
+</ul>
+</li>
+</ol>
+<h4 id="scenario-the-scale-set-has-machines-but-the-machines-are-not-heartbeating"><em>Scenario: The scale set has machines, but the machines are not heartbeating</em></h4>
+<p>The autoscaler is designed to replace the machines that are not heartbeating but this can be triggered if:</p>
+<ul>
+<li>We are out of cores.</li>
+<li>All the machines are offline, and we are not deleting the machines.</li>
+<li>The machines are not starting.</li>
+<li>We are taking too long to replace the machines.</li>
+</ul>
+<ol>
+<li>Review the scale set and the heartbeats table:
+<ul>
+<li>If all the machines are offline, we are having problems scaling down. Start for checking if the autoscaler puts those machines offline by reviewing the &quot;OfflineReason&quot;, the autoscaler use &quot;Scaling Down&quot; as OfflineReason.</li>
+<li>If a machine is on the scale set but is not appearing on the heartbeat table review if the machine ever appears (This information is available on HeartbeatExport table on Kusto) if it appears check the last status. Tha information can give you an idea if it has never started up or if it dies while doing a job.</li>
+</ul>
+</li>
+<li>The system is designed to always reserve cores for the queues so all the queues should be able to have at least one machine so if this happens major changes need to be made to the rebalanced cores logic.</li>
+</ol>
+<h2 id="logs-in-dotnet-engdotnet-eng-int"><strong>Logs in dotnet-eng/dotnet-eng-int</strong></h2>
+<p>There are two tables that have information about the autoscaler <code>traces</code> and <code>exceptions</code>.</p>
+<p>The autoscaler is not the only service that logs data on that App Insights, so you need to filter the information, a straightforward way to filter this is using the cloud_RoleName, the identifier for the autoscaler is 'fabric:/CustomAutoScale', and inside that group there are subgroups:</p>
+<ul>
+<li>fabric:/CustomAutoScale/ProcessAutoScaleService - This is the one in charge of managing the actors.</li>
+<li>fabric:/CustomAutoScale/AutoScaleActorService - This is the actor itself.</li>
+<li>fabric:/CustomAutoScale/ProcessTelemetryService - This reports information about the telemetry that we are sending, in most cases you can exclude this one, unless you are investigating something telemetry specific.</li>
+</ul>
+<p>When looking for an error starting with the exceptions can give information faster, in most cases, you are going to need information about ProcessAutoScaleService and AutoScaleActorService having a query like the following one:</p>
+<pre><code>exceptions
+| where cloud_RoleName == &quot;fabric:/Helix/ProcessAutoScaleService&quot;
+or cloud_RoleName == &quot;fabric:/Helix/AutoScaleActorService&quot;
+| sort by timestamp desc
+</code></pre>
+<p>Remember to always use <code>Time range</code> to limit the information as much as you can.</p>
+<p>If you need more information you can always use the traces to get more data.</p>
+<p>If the problem is specific to a queue you should start by filtering the message with the queue, this could be done on the message or as part of a customDimensions:</p>
+<pre><code>| where message contains &quot;windows.10.amd64.open.rt&quot;
+
+or
+
+| where customDimensions.queue == &quot;windows.10.amd64.open.rt&quot;
+  or  customDimensions.queueName == &quot;windows.10.amd64.open.rt&quot;
+</code></pre>
+<p>If it is related to a specific problem, there are a couple of keywords that we normally use to filter the data, and this can be filtered as part of the message:</p>
+<ul>
+<li>Scaling (or scaling up / scaling down)</li>
+<li>Deleting</li>
+<li>Machines online</li>
+<li>MaxCapacity (this is related to the cores assigned for queue)</li>
+</ul>
+<p>For example:</p>
+<pre><code>traces
+| where cloud_RoleName == &quot;fabric:/CustomAutoScale/ProcessAutoScaleService&quot;
+or cloud_RoleName == &quot;fabric:/CustomAutoScale/AutoScaleActorService&quot;
+| where customDimensions.queue == &quot;windows.10.amd64.open.rt&quot;
+| where message contains &quot;scaling down&quot;
+| sort by timestamp desc
+</code></pre>
+<h2 id="data-in-helix-autoscale-inthelix-autoscale-prod"><strong>Data in helix-autoscale-int/helix-autoscale-prod</strong></h2>
+<p>If you want more information about how the autoscaler is behaving, you can look at helix-autoscale-int/helix-autoscale-prod Application Insight in which information is recorded on  <code>custom events </code> table with the following names:</p>
+<ul>
+<li>AdjustCapacity: Every 30 seconds reports all the variables that are important for the autoscaler to decide how many machines need, this are active messages, current capacity, desired capacity, machine creation time, max capacity, work items per machine and SLA.</li>
+<li>AutoScaleReport: Every 30 seconds reports the current capacity (machines heartbeating) and queue depth.</li>
+<li>QueueReport: Every minute reports queue depth and state of the heartbeating machines (initializing, offline, online, busy). This data can be analyzed on Grafana on <a href="https://dotnet-eng-grafana.westus2.cloudapp.azure.com/d/queues/queue-monitor">Queue Monitor Production</a> or <a href="https://dotnet-eng-grafana-staging.westus2.cloudapp.azure.com/d/queues/queue-monitor">Queue Monitor Staging</a>.</li>
+<li>QueueCapacityChanged: When the capacity of a queue changes send data about current capacity, previous capacity, and future capacity.</li>
+</ul>
+<h2 id="additional-info"><strong>Additional Info</strong></h2>
+<h3 id="how-to-restart-the-autoscaler">How to restart the autoscaler</h3>
+<ol>
+<li>For production navigate to <a href="https://dotnet-eng.westus2.cloudapp.azure.com:19080/Explorer/index.html#/">Service Fabric Explorer dotnet-eng</a> and for staging navigate to <a href="https://dotnet-eng-int.westus2.cloudapp.azure.com:19080/Explorer/index.html#/">Service Fabric Explorer dotnet-eng-int</a>. <br> (If you have problems accessing this site, remember that you need a <a href="#get-the-certificate-to-access-autoscaler-cluster">certificate</a>)</li>
+<li>Find in which node is running ProcessAutoScaleService:
+<ul>
+<li>Open the following tabs: CustomAutoScaleType -&gt; fabric:/CustomAutoScale -&gt; Service fabric:/CustomAutoScale/ProcessAutoScaleService.</li>
+<li>Open one more tab and you are going to be able to see the name of the node, is going to look like this: _Primary_3.</li>
+</ul>
+</li>
+<li>Open the Nodes tab and find the node name that you got on the previous step.</li>
+<li>Go to Actions button and click on Restart.</li>
+</ol>
+<h3 id="get-the-certificate-to-access-autoscaler-cluster">Get the certificate to access autoscaler cluster</h3>
+<ol>
+<li>Navigate to <a href="https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourceGroups/helixinfrarg/providers/Microsoft.KeyVault/vaults/HelixProdKV/certificates">HelixProdKV | Certificates</a> / <a href="https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/cab65fc3-d077-467d-931f-3932eabf36d3/resourceGroups/helixstagingkvrg/providers/Microsoft.KeyVault/vaults/HelixStagingKV/certificates">HelixStagingKV | Certificates</a></li>
+<li>Select <code>dotnet-eng-client-westus2-cloudapp-azure-com</code> certificate.</li>
+<li>Open the current version.</li>
+<li>Download in PFX/PEM format:
+<ul>
+<li>Leave password empty</li>
+<li>Certificate Store select Place all certificates in the following store &gt; Browse &gt; Personal</li>
+</ul>
+</li>
+</ol>
+<h3 id="heartbeats-table">Heartbeats table</h3>
+<p>To access the heartbeats table using Azure Portal, follow these steps:</p>
+<ol>
+<li>Navigate to <a href="https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourceGroups/helixinfrarg/providers/Microsoft.Storage/storageAccounts/helixscripts2/storageexplorer">helixscripts2</a>/<a href="https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/cab65fc3-d077-467d-931f-3932eabf36d3/resourceGroups/helixstaginginfrarg/providers/Microsoft.Storage/storageAccounts/helixstagescripts2/storageexplorer">helixstagescripts2</a></li>
+<li>Open the Tables tab.</li>
+<li>Click on heartbeats.</li>
+</ol>
+<p>To access the heartbeats table using Microsoft Azure Storage Explorer, follow these steps:</p>
+<ol>
+<li>Open Microsoft Azure Storage Explorer.</li>
+<li>Navigate to Helix/HelixStaging subscription.</li>
+<li>Find the storage account helixscripts2 or helixstagescripts2.</li>
+<li>Open the Tables tab.</li>
+<li>Click on heartbeats.</li>
+</ol>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CAutoScaler%5CAutoScalerInvestigateIssues.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CAutoScaler%5CAutoScalerInvestigateIssues.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CAutoScaler%5CAutoScalerInvestigateIssues.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

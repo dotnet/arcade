@@ -1,0 +1,139 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Generating the Software Bill of Material (SBOM) </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Generating the Software Bill of Material (SBOM) ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h2 id="generating-the-software-bill-of-material-sbom">Generating the Software Bill of Material (SBOM)</h2>
+
+<h2 id="sbom">SBOM</h2>
+<p>The Executive Order(EO) and The National Telecommunications &amp; Information Administration (NTIA) report defines an SBOM as a formal record containing the details and supply chain relationships of various components used in building software. On May 12, 2021, the U.S. Presidential EO, section 4(e)(vii) is requiring all software sold to the federal government to provide a Software Bill of Material (SBOM).</p>
+<p>SBOM is usually a single file (such as .json) that captures this information about the software from the build. Microsoft has decided to use Software Package Data Exchange (SPDX) as its SBOM format of choice. All software produced from Microsoft will have an SPDX SBOM.</p>
+<p>SBOMs provide two core benefits:</p>
+<p>i) Software Transparency - this is a small step towards increasing trust as the SBOM describes the &quot;ingredients&quot; of the software and their relationships. This also enables external consumers of SBOMs to do vulnerability lookups on the open source software embedded within.
+ii) File checksums for integrity verification purposes</p>
+<h2 id="goals">Goals</h2>
+<p>Primary goal is to generate SBOM for all the software produced by .Net. Here we are focusing on the following areas:</p>
+<p>i) Staging pipeline
+ii) Arcade and all the repos that use arcade eg: Runtime, aspnetcore etc.
+iii) Repos that are not on-boarded to arcade eg: arcade-services, OSOB, helix etc.</p>
+<h2 id="stakeholders">Stakeholders</h2>
+<ul>
+<li>.NET Core Engineering</li>
+<li>.NET Core Engingeering Partners</li>
+<li>Microsoft</li>
+</ul>
+<h2 id="unknowns">Unknowns</h2>
+<p>There are 2 ways to generate SBOM</p>
+<ol>
+<li>Azure Task - Helps with generation of SBOM and uploads it to db</li>
+<li>Executable - Creates the manifest but uploading is TBD</li>
+</ol>
+<h2 id="rollout-and-deployment">Rollout and Deployment</h2>
+<ul>
+<li>Firstly we will be generating SBOM for staging pipeline. Here we already have a place where we upload all the signed assets, so we will need to add a azure task to generate and upload the SBOM. After generating SBOM, we will need to get a one time manual sign off from partners to see if the generated SBOM is valid and contains all the 'expected' items.</li>
+<li>Then focus on our Engineering systems - In Arcade (main branch) we are planning to use the executable to generate SBOM. Here we will validate if SBOM is generated correctly. In Arcade we will add a feature flag for SBOM generation. We will initially turn on this feature for a few repos and see if SBOM is getting generated correctly, then roll out for all the other repos. This gives repo owners the ability to opt-out of the feature incase of failure, while we investigate.</li>
+<li>Backport SBOM generation changes to release/6.0 branch.</li>
+<li>The repos that use arcade may have multiple places where will have to generate SBOM. We will need to generate SBOM for all the repos that use arcade.There might be multiple SBOM in this scenario. Then we need to get sign off from the repo owners to validate SBOM.</li>
+<li>Lastly, we will have to work on repos that are not on-boarded to arcade like arcade-service, helix, OSOB.</li>
+</ul>
+<h2 id="fr-handoff">FR handoff</h2>
+<ul>
+<li>Will document SBOM generation in arcade and how repo owners can on-board.</li>
+<li>Will document any failures as I encounter.</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CSBOM%20Generation%5Cone-pager.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CSBOM%20Generation%5Cone-pager.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CSBOM%20Generation%5Cone-pager.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

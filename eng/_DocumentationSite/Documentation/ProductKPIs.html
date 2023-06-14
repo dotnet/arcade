@@ -1,0 +1,323 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Product KPIs (PKPIs) </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Product KPIs (PKPIs) ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="product-kpis-pkpis">Product KPIs (PKPIs)</h1>
+
+<p>This document describes product KPIs that can be used to determine the 'health' of
+the overall product and its constituent repositories.</p>
+<h2 id="goals-of-pkpis">Goals of PKPIs</h2>
+<p>Traditional KPIs used by the engineering services team measure metrics like service reliability,
+service availability, queue wait times, etc. Analysis of the indicators (e.g.
+against a baseline expected value) helps the engineering team determine whether
+action needs to be taken to ensure that the product can build and ship on time.
+For example, a spike in Helix queue times will affect how fast PRs can be
+validated, which in turn affects how fast the product can iterate.</p>
+<p>Though product KPIs bear limited resemblance to traditional service KPIs, the
+goal is largely the same:</p>
+<p><strong>Ensure that the product can iterate and ship quickly with high quality by
+identifying problem areas early and often.</strong></p>
+<p>As a quantitative goal, the PKPI's defined here help drive towards the goal of being able to produce a product build in under 2 hours.</p>
+<h2 id="audience">Audience</h2>
+<p>There are two main audiences for these PKPI's.  <strong>The primary audience is the repo owners.</strong>  The secondary audience is our leadership team (Joc, Steve, etc...).  The audience should be kept forefront in mind when determining an implementation.</p>
+<h2 id="scope">Scope</h2>
+<p>The PKPI's will be applicable to all channels, but primarily focused on .NET 5.</p>
+<h2 id="metrics">Metrics</h2>
+<p>The desired product KPI metrics are listed below, with the following fields:</p>
+<ul>
+<li><p><strong>Name</strong> - Name of metric</p>
+</li>
+<li><p><strong>Qualifier</strong> - How is this metric broken out? For example, dependency update
+PR merge time broken out by input channel, or are all dependency update PRs
+aggregated per repo. Is this metric an aggregator of all repos underneath it?
+For example, staleness can be aggregated such that even if all direct inputs
+to a repository A are new, if those inputs have stale inputs, then A is viewed
+as stale.</p>
+</li>
+<li><p><strong>Drives Action</strong> - What action can be taken to improve the metric and thus
+improve the chances of shipping with high quality.</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Workstream</th>
+<th>UI</th>
+<th>Qualifier</th>
+<th>Indicates</th>
+<th>Drives Action</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Longest Official Build Time Path</strong></td>
+<td></td>
+<td>PowerBI</td>
+<td>Per default output channel</td>
+<td>Aggregation of constituent build times including dependency flow times (SKPI, not PKPI) and mirror times (SKPI, not PKPI).</td>
+<td>Drives secondary audience (Jared, Steve, dotnetes) to monitor and ensure &quot;good&quot; time.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Official Build Time</strong></td>
+<td>Official build</td>
+<td>PowerBI</td>
+<td>per repo, Per default output channel</td>
+<td>Measures the median build time of <em>successful</em> official builds of a branch that are applied by default to the specified channel. This should include time for retries. A large official build time indicates that it is slow to move dependencies through the node or get new outputs from the node, and that failures in the official build that require retries will be expensive, potentially putting ship schedules at risk. chcosta - task time and trend time</td>
+<td>Repository owner investigates official build time, determines why it has regressed, and develops a plan to mitigate it.</td>
+<td>Epsitha</td>
+</tr>
+<tr>
+<td><strong>Official Build Pass Rate</strong></td>
+<td>Official build</td>
+<td>PowerBI</td>
+<td>per repo, Per default output channel</td>
+<td>Measures the average 'without intervention' pass rate over the last N days of builds of a branch that are applied by default to the specified channel. A build that is retried after an initial failure counts as a failure. A low pass rate indicates that dependencies or new content will not flow easily through the node, potentially putting ship schedules at risk.</td>
+<td>Repository owner investigates official build pass rate, determines why it has regressed, and develops a plan to mitigate it.</td>
+<td>Epsitha</td>
+</tr>
+<tr>
+<td><strong>Percent of changes that don't require a dependency Update PR</strong></td>
+<td>Dependency updates</td>
+<td>PowerBI</td>
+<td>per repo, Per default output channel</td>
+<td>Indicates a failure in the build that requires a fix, fragility between components, or poor official build pass rates.</td>
+<td>Repository owner determines why dependency update PRs are required and investigates how to have cleaner dependency flows going forward.</td>
+<td>Megan<br><br>- Ideally this number should be zero.<br>- Not actionable until new dependency flow is in place</td>
+</tr>
+<tr>
+<td><strong>Dependency updates that flow seamlessly</strong></td>
+<td>Dependency updates</td>
+<td>PowerBI</td>
+<td>per repo, per output channel</td>
+<td>Contributes to answering the question &quot;how many times a day to dependencies flow through the system&quot;. Indicates healthy dependency flow.</td>
+<td></td>
+<td>Michelle</td>
+</tr>
+<tr>
+<td><strong>Dependency updates that fail, open a corresponding PR, and that PR fails initially</strong></td>
+<td>Dependency updates</td>
+<td>PowerBi</td>
+<td>per repo, per output channel</td>
+<td>Contributes to answering the question &quot;how many times a day do dependencies flow through the system&quot;?  Indicates the officaial build detected a break and that break was confirmed by PR testing</td>
+<td>Repository owner investigates to understand why dependencies are not flowing</td>
+<td>Michelle</td>
+</tr>
+<tr>
+<td><strong>Dependency updates that fail, open a corresponding PR, and that PR fails instantly</strong></td>
+<td>Dependency updates</td>
+<td>PowerBi</td>
+<td>per repo, per output channel</td>
+<td>Contributes to answer the question &quot;how many times a day do dependencies flow through the system&quot;?  Indicates a merge conflict that requires manual intervention.</td>
+<td>Repository owner investigates to understand why dependencies are not flowing (merge conflict)</td>
+<td>Michelle</td>
+</tr>
+<tr>
+<td><strong>Dependency updates that fail, open a corresponding PR, and that PR passes and is auto-merged</strong></td>
+<td>Dependency updates</td>
+<td>PowerBi</td>
+<td>per repo, per output channel</td>
+<td>Contributes to answering the question &quot;how many times a day do dependencies flow through the system&quot;?  Indicates official build detected a break, but that break did not show up in PR testing.</td>
+<td>Highlights a gap in PR testing that may need to be addressed by the repo owner.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Dependency updates that require a merge commit</strong></td>
+<td>Dependency updates</td>
+<td>PowerBi</td>
+<td>per repo, per output channel</td>
+<td>Contributes to answering the question &quot;how many times a day do dependencies flow through the system&quot;?</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Number of dependency updates per given time frame</strong></td>
+<td>Dependency updates</td>
+<td>PowerBi</td>
+<td>per output channel, per repo</td>
+<td>Measures rate at which dependency updates are produced.  Lower numbers are better, large numbers indicate unneccessary complexity. As product moves towards shipping, number of dependency update PR's decreases.</td>
+<td>Repository owner investigates open dependency updates and determines if increasing or current numbers are valid.</td>
+<td>Megan<br><br>- This is a pulse metric, giving a sense of product health but may not be specifically actionable by repo owners.</td>
+</tr>
+<tr>
+<td><strong>Direct Product Dependency Staleness</strong></td>
+<td>Dependency staleness</td>
+<td>BarViz</td>
+<td>per output channel, per repo</td>
+<td>Measures the staleness of the direct <em>product</em> inputs of a repository, ignoring pinned dependencies. A dependency's staleness is measured against the latest version of the dependency applied to the input channel.<br>For example, if the repository has dependency 'Foo.Bar', and 'Foo.Bar' is updated with a subscription to repo 'A' on channel 'Dev', then the dependency is not considered stale if repo A has produced no new builds containing Foo.Bar on channel Dev.<br>A higher degree of staleness indicates that the repo is out of date vs. possible inputs, and there may be a higher possibility of surprise breaks when it does catch up. This indicator is more important in a day to day Dev channel, especially right before branching for a release.</td>
+<td>Repository owner finds dependency update PRs for old dependencies and fixes/merges as needed.  If the PRs do not exist, the repository owner investigates why (missing subscription, etc.)</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Direct Toolset Dependency Staleness</strong></td>
+<td>Dependency staleness</td>
+<td>BarViz</td>
+<td>per output channel, per repo</td>
+<td>Measures the staleness of the direct <em>toolset</em> inputs of a repository, ignoring pinned dependencies. A dependency's staleness is measured against the latest version of the dependency applied to the input channel.<br>For example, if the repository has dependency 'Foo.Bar', and 'Foo.Bar' is updated with a subscription to repo 'A' on channel 'Dev', then the dependency is not considered stale if repo A has produced no new builds containing Foo.Bar on channel Dev.<br>A higher degree of staleness indicates that the repo is out of date vs. possible inputs, and there may be a higher possibility of surprise breaks when it does catch up. This indicator is often less important than product staleness, as toolset inputs are used largely for test and arcade dependencies. However, a very stale test-only dependency may be hiding some kind of breaking change that may only appear when the repository's outputs roll up into the SDK.</td>
+<td>Repository owner finds dependency update PRs for old dependencies and fixes/merges as needed.  If the PRs do not exist, the repository owner investigates why (missing subscription, etc.)</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Existence of Product Dependency Cycles</strong></td>
+<td>Dependency flow</td>
+<td>Darc / BarViz</td>
+<td>Per Channel</td>
+<td>Indicates the existence/non-existence of cycles containing only product dependencies within the dependency flow graph. A cycle unbroken by toolset a toolset dependency indicates the product cannot be become coherent.</td>
+<td>Coherency QB or repository owner that is part of the cycle investigates and determines how to break the cycle</td>
+<td>- this may already be done for darc</td>
+</tr>
+<tr>
+<td><strong>Existence of Automated dependency Flow Cycles</strong></td>
+<td>Dependency flow</td>
+<td>Darc / BarViz</td>
+<td>Per Channel</td>
+<td>Indicates the existence/non-existence of cycles within the dependency flow graph that will flow without intervention. A subscription will flow without intervention if it is not disabled and its frequency is not 'none'. This metric is a shorthand way of saying that the product will never become coherent if 'real' product changes in the repositories are halted, potentially putting ship schedules at risk. In Dev channels, this is not an interesting metric.</td>
+<td>For a release channel, the coherency QB and/or repository owner determines which subscriptions in the cycle do not need to flow automatically, and disables/changes update frequency as needed.</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Existence of cross-channel flow</strong></td>
+<td>Dependency flow</td>
+<td>Darc / BarViz</td>
+<td>Per Channel</td>
+<td>Indicates the existence/non-existence of flow that may enter the specified channel from another channel. If the other channel has a higher rate of change than the specified channel, then the product may not end up becoming coherent if left to its own devices. A good example of this is: A branch that applies to Release has a subscription to Arcade (on .NET Tools - Latest) that is set to update every day. Because branches applying to the release channel and arcade's master branch have different check-in policies during release shutdown time (arcade has a lower bar), it's likely that the arcade subscription will continue to generate changes on the release channel, potentially putting coherency at risk. The subscription causing cross-channel flow should be disabled or have its update rate set to &quot;none&quot;. This metric is not as interesting in a dev channel.</td>
+<td>For a release channel, the coherency QB and/or repository owner determines which repositories are contributing to the cross channel flow (using Darc/BARViz) and determines a plan of action (e.g. branch offending repos, turn off automated subscriptions contributing to the flow, etc.)</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Missing/Disabled Product Input Subscriptions</strong></td>
+<td>Subscriptions</td>
+<td>Darc / BarViz</td>
+<td>per repo, Per Default Channel (input branch)</td>
+<td>Indicates that a branch that applies to a default channel is missing inputs subscriptions for product dependencies, and thus coherency may not be able to be achieved. A subscription is not missing when dependencies are pinned or when they are tied via CoherentParentDependency attributes to other dependencies. Subscriptions that do not update automatically should also be viewed as disabled. Each dependency should be evaluated based on the assets produced by the last build applied to the input subscriptions. This metric is inexact. It's possible that a dependency missing a subscription now will be produced by the next build applied to a different subscription.</td>
+<td>chcosta<br><br>Repository owner determines whether those input dependencies need to be marked as Pinned or whether subscriptions should be created/changed to update automatically</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Missing/Disabled Toolset Input Subscriptions</strong></td>
+<td>Subscriptions</td>
+<td>Darc / BarViz</td>
+<td>per repo, Per Default Channel (input branch)</td>
+<td>Indicates that a branch that applies to a default channel is missing inputs subscriptions for toolset dependencies. A subscription is not missing when dependencies are pinned or when they are tied via CoherentParentDependency attributes to other dependencies. Each dependency should be evaluated based on the assets produced by the last build applied to the input subscriptions. This metric is inexact. It's possible that a dependency missing a subscription now will be produced by the next build applied to a different subscription.</td>
+<td>Repository owner determines whether those input dependencies need to be marked as Pinned or whether subscriptions should be created/changed to update automatically. In a release channel, this is not generally needed but should be evaluated on a case-by-case basis.</td>
+<td>chcosta<br><br>- This is already done in darc, needs to be done in barviz</td>
+</tr>
+<tr>
+<td><strong>Superfluous Input Subscriptions</strong></td>
+<td>Subscriptions</td>
+<td>Darc / BarViz</td>
+<td>per repo, Per Default Channel (input branch)</td>
+<td>Indicates that a branch that applies to a default channel has subscriptions that may do nothing. Each dependency should be evaluated based on the assets produced by the last build applied to the input subscriptions. This metric is inexact. It's possible that a subscription that looks superfluous now will produce a needed asset in the future.</td>
+<td>Repository owner determines whether those subscriptions can be deleted.</td>
+<td>chcosta<br><br>- This is already done in darc, needs to be done in barviz</td>
+</tr>
+<tr>
+<td><strong>Conflicting Input Subscriptions</strong></td>
+<td>Subscriptions</td>
+<td>Darc / BarViz</td>
+<td>per repo, Per Default Channel (input branch) (darc / barviz)</td>
+<td>Indicates that a branch that applies to a default channel has subscriptions that produce the same asset. Each dependency should be evaluated based on the assets produced by the last build applied to the input subscriptions. This metric is inexact. It's possible that two currently conflicting subscriptions will not produce conflicting outputs in the future. Because outputs switching between repositories happens infrequently, this metric typically indicates an actual issue.</td>
+<td>Repository owner determines whether both subscriptions are needed or whether one should be deleted.</td>
+<td>chcosta<br><br>- this might already be done</td>
+</tr>
+</tbody>
+</table>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProductKPIs.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProductKPIs.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProductKPIs.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

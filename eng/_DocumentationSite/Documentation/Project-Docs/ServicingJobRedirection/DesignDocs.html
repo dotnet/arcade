@@ -1,0 +1,156 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Design doc for executing servicing Helix jobs in a COGS Azure subscription </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Design doc for executing servicing Helix jobs in a COGS Azure subscription ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="design-doc-for-executing-servicing-helix-jobs-in-a-cogs-azure-subscription">Design doc for executing servicing Helix jobs in a COGS Azure subscription</h1>
+
+<p>Epic link: <a href="https://github.com/dotnet/core-eng/issues/11639">https://github.com/dotnet/core-eng/issues/11639</a></p>
+<h2 id="motivation">Motivation</h2>
+<p>In order to reduce costs of running our <code>HelixProd</code> Azure subscription we want to redirect all servicing builds to <code>dncenghelix-02</code> subscription. The difference between those subscriptions is that <code>HelixProd</code> is assigned to R&amp;D budget, <code>dncenghelix-02</code> on the other hand is assigned to COGS budget (Cost Of Goods Sold). The latter one should be used for all released software but currently we are using R&amp;D budget for everything. Moving servicing builds to COGS-based subscription will allow us to optimize the usage of our current R&amp;D bugdet.</p>
+<p>More information about how we use different subscription types can be found at the following links:</p>
+<ul>
+<li><a href="https://dev.azure.com/devdiv/Engineering/_wiki/wikis/CNEKB/7968/Guidance-for-Production-and-Non-Production">Guidance for Production and Non Production</a></li>
+<li><a href="https://dev.azure.com/devdiv/Engineering/_wiki/wikis/CNEKB/10037/Categories-of-R-D-Subscriptions-in-DevDiv">Categories of R&amp;D Subscriptions in DevDiv</a></li>
+</ul>
+<p>All 2.1, 3.1 and 5.x builds and tests should be redirected. Any servicing branches that are created in the future will also have to be onboarded into this mechanism which must be taken into account in this epic.</p>
+<p>Parts of the changes in this epic will leverage the work we already did to enable team/repository based redirection for <code>runtime</code> and <code>xaml</code> subscriptions. The documentation on this can be found here: <a href="https://github.com/dotnet/arcade/blob/main/Documentation/Project-Docs/RepositoriesInTheirOwnSubscription.md">Documentation/Project-Docs/RepositoriesInTheirOwnSubscription.md</a>.</p>
+<p>Following diagram depicts high level view of the components that will be involved in the implementation and the general logic of redirecting jobs to queues located in separate subscriptions:</p>
+<p><img src="ServicingBuildsRedirectDesign.svg" alt="Design Diagram"></p>
+<h2 id="development-work-overview">Development work overview</h2>
+<p>The changes have to be done in four areas: Helix SDK, pool provider, OSOB and Helix API. They are mostly independent of each other so can be done in any order but it makes the most sense to do changes in OSOB before we update Helix API.</p>
+<p>The needed changes are:</p>
+<h3 id="arcade-pool-provider">arcade-pool-provider</h3>
+<p>Repository: <a href="https://github.com/dotnet/arcade-pool-provider">https://github.com/dotnet/arcade-pool-provider</a></p>
+<p>Pool Provider has to send additional information in Helix API SendJob request - in particular the name of branch that is being built or the target branch for the PR. Based on this data Helix API will be able to differentiate servicing builds from normal ones. Luckily when AzDO calls our pool provider to acquire agent it gives us <code>getAssociatedJobUrl</code> property as part of the request and we can call this endpoint to get more detailed information about the job. We also receive <code>authenticationToken</code> from AzDO so there's no need to add additional secrets or configuration on our side.</p>
+<p>The process will look like this:</p>
+<ol>
+<li>AzDO calls our pool provider to acquire new agent</li>
+<li>We check if the base queue specified in request exists, if not we return error to AzDO. This check already exists so there are no changes needed here.</li>
+<li>We add new HTTP request to <code>getAssociatedJobUrl</code> to get the data about the job</li>
+<li>The response contains list of all build variables. We need to extract following ones:
+<ul>
+<li><code>build.reason</code> to distinguish between PR and non-PR builds</li>
+<li>for PR: at least <code>system.pullRequest.targetBranch</code> but it may be also useful to include <code>system.pullRequest.sourceBranch</code> and <code>system.pullRequest.sourceRepositoryUri</code> at the same time as they may be useful for debugging.</li>
+<li>for non-PR: at least <code>build.sourceBranch</code> and optionally also <code>build.repository.name</code>.</li>
+</ul>
+</li>
+<li>We store the extracted variables as properties on job creation request sent to Helix API</li>
+<li>If <code>getAssociatedJobUrl</code> fails we send job anyway without additional properties to not block it's execution. It will be then sent to standard subscription by Helix API.</li>
+</ol>
+<p>When adding this functionality we have to pay attention to performance because:</p>
+<ol>
+<li>We have hard limit of 30s to respond to each acquire agent call</li>
+<li>AzDO sends acquire agent requests synchronously so any slowdown in processing of this call will affect other jobs irregardless if they are servicing or not</li>
+</ol>
+<p>For this reason we will need to prepare monitoring for pool provider acquire agent calls in Grafana. If the slowdown will be significant then we need to change pool provider so that it returns response earlier and then calls <code>getAssociatedJobUrl</code> and Helix API asynchronously in the background.</p>
+<h3 id="dotnet-helix-machines">dotnet-helix-machines</h3>
+<p>Repository: <a href="https://dev.azure.com/dnceng/internal/_git/dotnet-helix-machines">https://dev.azure.com/dnceng/internal/_git/dotnet-helix-machines</a></p>
+<p>We need to add new servicing queues in OSOB. We will duplicate the minimum set of queues that is currently needed for any servicing builds and instantiate the copies of them in <code>dncenghelix-02</code> subscription. New queues will inherit all settings from original queues in <code>HelixProd</code> subscription with the exception of new suffix <code>.svc</code>. For example there will exist queue called <code>windows.10.amd64.svc</code> and the related scaleset <code>windows.10.amd64.svc-a-scaleset</code> placed in <code>dncenghelix-02</code> subscription. This new queue and scaleset will have the same configuration as original <code>windows.10.amd64</code> queue and scaleset. This will be done in similar way as for <code>runtime</code> jobs redirection. An example can be found here: <a href="https://dev.azure.com/dnceng/internal/_git/dotnet-helix-machines?path=%2Fdefinitions%2Fshared%2Fwindows.yaml&amp;version=GC72af1ddb6e9ff7c7374512ccad6f78e93778066c&amp;line=1754&amp;lineEnd=1756&amp;lineStartColumn=1&amp;lineEndColumn=33&amp;lineStyle=plain&amp;_a=contents">definitions/shared/windows.yaml</a>. As we can see in the example the servicing queue will inherit all future changes to the base queue. There will be technical possibility to modify servicing queue directly so that it diverges from the base queue that it was based on but to ease maintenance we will probably try to avoid this situation whenever possible. This will be the same approach we have chosen for <code>xaml</code> and <code>runtime</code> subscriptions (<a href="https://github.com/dotnet/core-eng/issues/10630#issuecomment-707224671">https://github.com/dotnet/core-eng/issues/10630#issuecomment-707224671</a>).</p>
+<p>By querying Kusto we can find around 57 queues (out of total 108 non-onprem queues) that were used by servicing branch in last 200 days. Copying only those queues that are actually used for servicing lowers the overall number of resources we have to manage but on the other hand it means that we will have to create new queues after any new servicing branches are created in the future. We will need to prepare the documentation on how to do it and put it into some post-release checklist if we have one. We will also have monitoring in place that will catch any cases in which we missed some queues.</p>
+<h3 id="dotnet-helix-service">dotnet-helix-service</h3>
+<p>Repository: <a href="https://dev.azure.com/dnceng/internal/_git/dotnet-helix-service">https://dev.azure.com/dnceng/internal/_git/dotnet-helix-service</a></p>
+<p>We need to extend the logic in Helix API to check additional job properties specified in request - in particular the branch name. If the job is related to servicing branch (i.e. <code>release/X.X</code>) or PR targeted at servicing branch then the <code>.svc</code> suffix will be appended to the queue name specified in original request and job will be redirected to this new queue (e.g. from <code>windows.10.amd64</code> to <code>windows.10.amd64.svc</code>).</p>
+<p>If the servicing queue does not exist for any reason then the job will be sent to standard queue to not block it's execution but we will log an error in AppInsights and have Grafana alert that will notify us about this situation.</p>
+<p>The changes have to be made in <code>ValidateAndNormalizeRequest</code> controller method: <a href="https://dev.azure.com/dnceng/internal/_git/dotnet-helix-service?path=%2Fsrc%2FServiceFabric%2FHelix%2FHelixAPI%2FApi%2Fv2019_06_17%2FControllers%2FJobController.cs&amp;version=GBmaster&amp;line=104&amp;lineEnd=105&amp;lineStartColumn=1&amp;lineEndColumn=1&amp;lineStyle=plain&amp;_a=contents">JobController.cs#L104</a></p>
+<p>This mechanism will be done in similar way as currently implemented team-based redirection (<code>runtime</code>/<code>xaml</code>) - the difference will be that we will check source branch instead of source repository when redirecting jobs. This servicing branch check will take priority over the team check.</p>
+<h3 id="arcade-helix-sdk">arcade (Helix SDK)</h3>
+<p>Repository: <a href="https://github.com/dotnet/arcade">https://github.com/dotnet/arcade</a></p>
+<p>Currently we miss the name of PR target branch for test jobs so wee need to extend the <code>SendHelixJob</code> task to include that property. We already copy some variables here: <a href="https://github.com/dotnet/arcade/blob/d244d21e54bd1778ae68b3ecf676e3c95fffac2e/src/Microsoft.DotNet.Helix/Sdk/SendHelixJob.cs#L219">SendHelixJob.cs#L219</a> so it should just require to add <code>system.pullRequest.targetBranch</code> to that list. After that we will also need to update the version of Helix SDK package in existing servicing branches.</p>
+<p>For 2.1 servicing branches it may be necessary to manually update the files in each branch because they don't use the same mechanisms as newer 3.1/5.0 Helix SDK-based builds. There are using groovy scripts and <code>upload-tests.proj</code> files (and maybe even other mechanisms) to schedule tests in Helix.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CServicingJobRedirection%5CDesignDocs.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CServicingJobRedirection%5CDesignDocs.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CServicingJobRedirection%5CDesignDocs.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

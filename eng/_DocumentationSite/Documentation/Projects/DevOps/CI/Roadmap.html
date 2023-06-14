@@ -1,0 +1,187 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>.NET Core CI Telemetry Roadmap </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content=".NET Core CI Telemetry Roadmap ">
+      
+      <link rel="icon" href="../../../../favicon.ico">
+      <link rel="stylesheet" href="../../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../../public/main.js'
+    import { init } from './../../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../../index.html">
+            <img id="logo" class="svg" src="../../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="net-core-ci-telemetry-roadmap">.NET Core CI Telemetry Roadmap</h1>
+
+<h2 id="phase-1---build-telemetry-reporting">Phase 1 - Build telemetry reporting</h2>
+<p><strong>Estimated Completion Date:</strong> 6/14</p>
+<h3 id="summary">Summary</h3>
+<p>After this phase completes, we will be surfacing reasonable errors from our builds that help us differentiate categories of failures. We will surface data to the Azure DevOps Timeline API.  We will also provide the tools such that if surfaced failures do not provide enough differentiable value, we can tweak the telemetry / guidance.</p>
+<h3 id="phase-1a---net-core-engineering-telemetry-reporting">Phase 1a - .NET Core Engineering Telemetry Reporting</h3>
+<p>Phase 1a and 1b (below) are parallel work streams.</p>
+<h4 id="work-items">Work Items</h4>
+<ul>
+<li><p>In progress - provide <a href="https://github.com/dotnet/core-eng/issues/6390">guidance</a> on what “good” error telemetry is.  Guidance can also include general rules for different types of failures (timeouts, cancelled jobs, bad yaml parsing, other azdo failures, etc...)</p>
+<p><a href="Telemetry-Guidance.html">Guidance document</a></p>
+</li>
+<li><p>In progress - <a href="https://github.com/dotnet/arcade/issues/2038">report powershell pipeline errors</a></p>
+</li>
+<li><p>Done - report bash pipeline errors</p>
+</li>
+<li><p>Done - report Linux MSBuild errors</p>
+</li>
+<li><p>Done - report Windows MSBuild errors</p>
+</li>
+</ul>
+<h3 id="phase-1b---continue-gathering-telemetry">Phase 1b - Continue Gathering Telemetry</h3>
+<p>In parallel with phase 1a (above).</p>
+<p>Jeff Schwartz (w/ Jared Parsons' help) is going to update Jared Parsons' telemetry gathering tool to push to a Kusto (staging) database or at least set up the process such that repos can capture telemetry and self-report it to a central location.  This will give us real data that we can analyze during CI council and we can later converge with the workstreams in Phases 2/3.</p>
+<p>Jeff is also going to look at what data is useful and the kind of reports that are valuable, working towards Phase 3 where applicable.</p>
+<h2 id="phase-2--capture-telemetry">Phase 2 – Capture telemetry</h2>
+<p><strong>Estimated Completion Date:</strong> 7/19/2019</p>
+<h3 id="summary-1">Summary</h3>
+<p>After this phase completes, data from the Azure DevOps Timeline API will be stored in a database we own where it can be used to drive phase 3.</p>
+<h3 id="work-items-1">Work Items</h3>
+<ul>
+<li><p>Setup Kusto database for storing telemetry results</p>
+</li>
+<li><p>Determine the format for Kusto tables</p>
+</li>
+<li><p>Create an Azure DevOps task that can be used to gather telemetry the Timeline API and move into our database / format</p>
+<ul>
+<li><p>Modify and package <a href="https://github.com/jaredpar/AzureUtil">https://github.com/jaredpar/AzureUtil</a></p>
+</li>
+<li><p>Task acquires AzureUtil package and <a href="https://kusto.azurewebsites.net/docs/tools/lightingest.html">LightIngest</a> package</p>
+</li>
+<li><p>Task authenticates with Azure Key Vault to acquire secrets for lightingest</p>
+</li>
+<li><p>Task ingests into Kusto database</p>
+</li>
+</ul>
+</li>
+<li><p>Create an dnceng build definition that runs on a scheduled trigger which will be used to gather telemetry on a defined cadence (daily? hourly? weekly?) or create a service that triggers automatically based on REST API calls or schedule.</p>
+</li>
+</ul>
+<h2 id="phase-3--provide-reports">Phase 3 – Provide reports</h2>
+<p><strong>Estimated Completion Date:</strong> TBD</p>
+<h3 id="summary-2">Summary</h3>
+<p>After this phase completes, teams will be able to look at telemetry driven reports that can be used to help them understand the health of their CI system and make decisions about what tasks require attention.</p>
+<h3 id="work-items-2">Work Items</h3>
+<ul>
+<li><p>Determine what information is useful to make decisions about CI “health”</p>
+</li>
+<li><p>Provide a place to view reports.</p>
+<ul>
+<li>Current thinking is Azure DevOps dashboard and / or each builds &quot;Build Analytics&quot; tab</li>
+</ul>
+</li>
+</ul>
+<h3 id="open-issues">Open Issues</h3>
+<ul>
+<li><p>Chcosta - can we extend the Build Analytics tab.</p>
+</li>
+<li><p>Chcosta - Can Azure DevOps automatically surface information we put in the Timeline API if we structure it correctly?</p>
+</li>
+<li><p>Chcosta - The Build Analytics tab's &quot;task failure trends&quot; section doesn't appear to be working</p>
+</li>
+<li><p>Chcosta - To work with Jeff Schwartz for what he found valuable / problematic in his investigations</p>
+</li>
+</ul>
+<h2 id="phase-4--reassess">Phase 4 – Reassess</h2>
+<p><strong>Estimated Completion Date:</strong> TBD</p>
+<h3 id="summary-3">Summary</h3>
+<p>Assess the state of our system and prioritize additional goals</p>
+<ul>
+<li><p>Work with Jared / Nate to determine how best to manage / report on test flakiness</p>
+</li>
+<li><p>Are we tackling the right issues / surfacing the right data? Do we have coverage in the right areas (CI, PR, official)?</p>
+</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CDevOps%5CCI%5CRoadmap.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CDevOps%5CCI%5CRoadmap.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CDevOps%5CCI%5CRoadmap.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

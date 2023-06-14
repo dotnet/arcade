@@ -1,0 +1,144 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>V3 Publishing </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="V3 Publishing ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h2 id="v3-publishing">V3 Publishing</h2>
+
+<p>We need to retire V1 and V2 publishing.</p>
+<p>Why do we need to retire V1 and V2?
+Both V1 and V2 use multi stage(s) publishing infrastructure. V3 on the other hand uses single stage publishing, thereby reducing UI clutter. V3 reduces the number of machines used during publishing, which speeds up the whole process. In both V1 and V2, when new channels are added it requires an arcade update to the customer repository, but in V3 it will only require arcade getting an arcade update.</p>
+<p>Currently arcade release/5.0, main and all the repos getting updates from these branches are already using V3 publishing. In this epic we are planning to move arcade release/3.0 branch to use V3 publishing. We need all the repos currently which takes updates from arcade release/3.0 to use the latest V3 publishing. Also removing all the legacy publishing code that includes V1 and V2 publishing from arcade main and release/3.0 branches.</p>
+<p>Also will be working on ways to improve the performance of publishing artifacts and symbols, and add more tests during this process. This will include better way of downloading artifacts to improve publishing performance.</p>
+<h2 id="stakeholders">Stakeholders</h2>
+<ul>
+<li>.NET Core Engineering</li>
+<li>.NET Core Engingeering Partners</li>
+</ul>
+<h2 id="risk">Risk</h2>
+<p>What are the unknowns?</p>
+<ul>
+<li>How arcade-services would react to this publishing arcade update, because right now we have special stages in arcade-services compared to other repos which consumes update from arcade/release-3.0.</li>
+<li>While on-boarding repos to V3, there might be some risk because of some unknown dependency of the repo on V1/V2 publishing.</li>
+</ul>
+<h2 id="rollout-and-deployment">Rollout and Deployment</h2>
+<p>V1/V2 to V3
+a) We are deprecating legacy publshing code. This functionality will be first tested in arcade main and then in arcade-validation. Upon successful test, since all the repos getting update from arcade main are currently using V3 publishing. This rollout is going to be seamless. This is just going to be an arcade update and repo owners do not have to do anything here.
+b) Then V3 publishing infrastructure has to be added in arcade/release-3.0 and this will be tested against some repos that takes update from arcade/release-3.0. Upon successful testing, an arcade update will be rolled out which customer repos have to consume.
+c) Make a list of all the repos that will require to update like we did for arcade/release-5.0 eg:(<a href="https://github.com/dotnet/arcade/blob/main/Documentation/V3StatusUpdate.md">https://github.com/dotnet/arcade/blob/main/Documentation/V3StatusUpdate.md</a>)
+d) Will send out an email to partners to upgrade from V1/V2 to V3 and help them upgrade to V3. Documentation on how to upgrade can be found here (<a href="https://github.com/dotnet/arcade/blob/main/Documentation/CorePackages/Publishing.md#how-to-upgrade-from-v2-to-v3">https://github.com/dotnet/arcade/blob/main/Documentation/CorePackages/Publishing.md#how-to-upgrade-from-v2-to-v3</a>)
+e) After all the repos are onboarded successfully, V1 and V2 publishing infrastructure will be deprecated from arcade/release-3.0. This is going to be an arcade rollout which customers repos have to consume.</p>
+<p>Performance improvements
+a) All the performance related improvements are going to be an arcade update which customer repos have to consume. This will be tested against runtime, installer before roll out.</p>
+<h2 id="serviceability">Serviceability</h2>
+<p>Testing
+a) While improving the performance of publishing artifacts and symbols, tests will be added to cover downloading artifacts.
+b) While deprecating legacy publishing, some V2 publishing tests will replaced by V3 publishing tests.
+c) Some tests related to PublishArtifactsInManifest, SettingUpV3Config and Symbol publishing are already in place and can be found here (<a href="https://github.com/dotnet/arcade/tree/main/src/Microsoft.DotNet.Build.Tasks.Feed.Tests">https://github.com/dotnet/arcade/tree/main/src/Microsoft.DotNet.Build.Tasks.Feed.Tests</a>)</p>
+<p>PATs
+a) No new PATs are added as part of this epic.</p>
+<p>SDL
+No change to the SDL threat model.</p>
+<p>Confidence in deployments/shipping
+a) Before on-boarding repos using arcade/release-3.0 on V3 publishing, a subset of repos will be tested with the latest update, only upon successful test the repos will be on-boarded.
+b) Adding more tests to the publishing infrastructure will increase the confidence.</p>
+<h2 id="monitoring">Monitoring</h2>
+<p>Customers are responsible for keeping their build green once the changes are rolled out.</p>
+<h2 id="fr-hand-off">FR Hand off</h2>
+<p>Publishing FAQs are already in place here (<a href="https://github.com/dotnet/arcade/blob/main/Documentation/CorePackages/Publishing.md#frequently-asked-questions">https://github.com/dotnet/arcade/blob/main/Documentation/CorePackages/Publishing.md#frequently-asked-questions</a>), this document can be updated incase of new errors.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CV3%20Publishing%5Cone-pager.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CV3%20Publishing%5Cone-pager.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CV3%20Publishing%5Cone-pager.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

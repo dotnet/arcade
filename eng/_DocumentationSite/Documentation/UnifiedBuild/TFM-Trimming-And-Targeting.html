@@ -1,0 +1,229 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>The Unified Build Almanac (TUBA) - TFM Trimming and Targeting </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="The Unified Build Almanac (TUBA) - TFM Trimming and Targeting ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="the-unified-build-almanac-tuba---tfm-trimming-and-targeting">The Unified Build Almanac (TUBA) - TFM Trimming and Targeting</h1>
+
+<p>A Target Framework Moniker (TFM) is the name of the API surface area that a project builds for (<a href="https://learn.microsoft.com/en-us/dotnet/standard/frameworks">https://learn.microsoft.com/en-us/dotnet/standard/frameworks</a>). A project may target multiple TFMs, resulting in multiple output binary for each surface area target. This document describes the a method by which .NET will allow components to transparently target at least a desired set of TFMs, and by which additional TFMs they choose to target can be filtered out in build environments that require it.</p>
+<h2 id="problem">Problem</h2>
+<p>.NET's product is made up of a wide variety of repositories. Each of these repositories has a number of projects that specify a desired set of target frameworks. This set is largely determined by the <em>union</em> of consumers of the component. Where does the component need to run? For instance:</p>
+<ul>
+<li>A library like <code>System.Text.Json</code> may multi-target to <code>netstandard2.0</code>, <code>net472</code>, and <code>net8.0</code> because it ships on nuget.org and is intended for consumption by .NET Framework customers in addition to .NET Core customers, as well as downstream components which may be targeting older .NET Core TFMs.</li>
+<li>SDK components may only target <code>net8.0</code> because they ship in-box with the .NET 8 runtime.</li>
+<li>.NET tooling components (roslyn, fsharp, etc.) may multi-target to <code>net7.0</code> and <code>net4*</code> because they will run within Visual Studio (which runs on Framework) as well as different .NET SDK bands that may cross major version boundaries of .NET (<code>7.0.2xx</code> and <code>8.0.1xx</code>). <code>net7</code> represents a common surface area that <em>should</em> work well if rolled forward onto .NET 8.</li>
+</ul>
+<p>While this flexiblity is useful, it does present a significant challenge for .NET distro maintainers. Targeting frameworks other the one currently being built ultimately requires the reference assemblies for that framework. Most Linux distributions disallow internet access while building, so those targeting packs cannot come from the internet. Source-build provides a mechanism for creating these references assemblies during the build, via the <a href="https://github.com/dotnet/source-build-reference-packages">source-build-reference-packages</a> repository. These are assembled early in the build. There are major downsides to these reference packages:</p>
+<ul>
+<li><strong>Size:</strong> The netframework targeting packs (18 of them) are 2.3GB of IL on-disk. This represents ~50% of the total size of the VMR.</li>
+<li><strong>Build Time:</strong> Most costumer scenarios do not require all of target frameworks. RedHat, for instance, has no need for <code>net4*</code> targeted arcade build tooling binaries to be produced. Those binaries cannot even execute on Linux. The extra binaries produced wastes some amount of build time.</li>
+<li><strong>Build environment compliance:</strong> Targeting packs/reference assemblies do not generally have functionality. However for various reasons, the analyzer implementations have been integrated <em>into</em> the targeting packs in .NET 7 and 8, update with servicing releases, and are executed during the build (see <a href="https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/overview?tabs=net-7#code-quality-analysis">https://learn.microsoft.com/en-us/dotnet/fundamentals/code-analysis/overview?tabs=net-7#code-quality-analysis</a>) for info on some analyzers. This causes circular dependency (the analyzers themselves execute on the runtime that is currently being built) that results in unresolveable pre-builts. To work around this issue in .NET 7 releases, the source-build team has stripped away the functional elements of the targeting packs. However, this approach is fragile at best, and problematic in the long term.</li>
+</ul>
+<h2 id="producers-and-consumers">Producers and Consumers</h2>
+<p>We can significantly reduce the dependence on reference packages, especially the large targeting packs by recognizing two key points:</p>
+<ul>
+<li>The set of frameworks targeted by a project is currently driven by <strong>all</strong> possible consumers not built within the same repository.</li>
+<li>When building a specific product (NuGet package, SDK layout, etc.), the set of required input frameworks is usually a subset of the available input frameworks.</li>
+</ul>
+<p>Because .NET uses a distributed, many-repository based development model, producing repositories lack information about any specific consumer, and so must produce assets that target any possible use case. In plainer terms, let's say that we have a single repository with 2 projects. One is a non-packable library project that targets <code>net462</code>, <code>net472</code>, and <code>net8.0</code>. The other is a console exe targeting just <code>net8.0</code>, which references the library project. When building and publishing the console exe, there is no need to build the <code>net462</code> and <code>net472</code> assets. Now, let's say we split those projects into two repositories. The library project now must become packable to be referenced in the downstream console project. It also has no way to know that the <code>net4*</code> assets are useless. It must build them all.</p>
+<p>Unified Build/source-build builds all input repositories required to produce the assets shipped by .NET distro maintainers, the consumer side of the build <strong>is</strong> known. RedHat ships a RedHat-targeted SDK and packages to its consumers. Microsoft ships packages to nuget.org, SDKs to VS, etc. Roslyn ships packages to nuget.org, VS, and the SDK. When building for a specific consumer in the VMR, a producer should be able to avoid building (trim away) away TFMs that are not used. Practically, this means that an organization should be able to only target TFMs that meet their end-customer's needs.</p>
+<h2 id="solution-requirements">Solution Requirements</h2>
+<p>Any solution must meet the following requirements:</p>
+<ul>
+<li>It cannot force all projects into targeting a certain TFM or set of TFMs (no big hammer) - Repositories and projects often have real reasons to target the TFMs they do. Roslyn must be able to run in VS. Some global tools want to support multiple runtimes within the same shipping unit.</li>
+<li>A project or repo should be able to opt-out if necessary with reasonable msbuild logic - There is wide variance in project needs. There may be situations where a reference pack is simply the only option.</li>
+<li>It should avoid &quot;messy&quot; changes in project files - Changes required in project files should avoid excessive conditionals and other high-maintenance constructs. Where possible, provide functionality via Arcade.</li>
+<li>It should be compatible with the VS project system (ideally ignored)</li>
+<li>It should be compatible with NuGet static graph restore.</li>
+</ul>
+<h2 id="proposed-solution">Proposed Solution</h2>
+<p>.NET can reduce its dependence on reference packages with a two-pronged, layered approach:</p>
+<ul>
+<li><strong>Targeting</strong> Reduce undesired downlevel targeting - Repositories are often slow to update to the latest target frameworks. This is for a variety of reasons:
+<ul>
+<li><strong>Cost</strong> - It is often not cost-free to upgrade.</li>
+<li><strong>Forgetfulness</strong> - Because the roll-forward behavior of the runtime generally &quot;just works&quot;, it's easy for projects to simply be left behind on older frameworks.
+To improve things, Arcade can provide a set of properties for use in project files which denote desired target frameworks. When .NET starts working on a new major release and its TFM becomes available, Arcade can update those properties. Repositories who have opted-in will see their projects upgraded with normal infrastructre update PRs.</li>
+</ul>
+</li>
+<li><strong>Trimming</strong> Remove unecessary TFMs based on build-environment and consumer requirements - Provide a way to specify which TFMs should be kept and which should not be built at a build invocation level. This is accomplished via a set of Arcade functionality that utilizes a new MSBuild intrinsic to set the TargetFrameworks/TargetFramework property based on a desired input set.</li>
+</ul>
+<h2 id="targeting">Targeting</h2>
+<p>To enable latest-targeting, Arcade will introduce a new property file called <code>TargetFrameworkDefaults.props</code>. This approach takes direct inspiration from current approaches in runtime and other repositories.</p>
+<pre><code>&lt;Project&gt;
+  &lt;PropertyGroup&gt;
+    &lt;NetCurrent&gt;net8.0&lt;/NetCurrent&gt;
+    &lt;NetSupported&gt;$(NetCurrent);net7.0;net6.0&lt;/NetSupported&gt;
+  &lt;/PropertyGroup&gt;
+&lt;/Project&gt;
+</code></pre>
+<p>Initially, this file will contain only one property, the currrent major version of .NET. If additional properties are needed (minimum version, newest framework versions, etc.), they can be added. This file is imported in <code>Settings.props</code> within the Arcade SDK. These properties are then used as desired within repositories' project, property files, etc. For example, a project might do the following:</p>
+<pre><code>Microsoft.FileProviders.Composite.csproj
+
+&lt;Project Sdk=&quot;Microsoft.NET.Sdk&quot;&gt;
+  &lt;PropertyGroup&gt;
+    &lt;TargetFrameworks&gt;$(NetCurrent);netstandard2.0&lt;/TargetFrameworks&gt;
+    &lt;RootNamespace&gt;Microsoft.Extensions.FileProviders&lt;/RootNamespace&gt;
+  &lt;/PropertyGroup&gt;
+
+  &lt;ItemGroup&gt;
+    &lt;Compile Include=&quot;Microsoft.Extensions.FileProviders.Composite.cs&quot; /&gt;
+  &lt;/ItemGroup&gt;
+
+  &lt;ItemGroup&gt;
+    &lt;ProjectReference Include=&quot;$(LibrariesProjectRoot)Microsoft.Extensions.FileProviders.Abstractions\ref\Microsoft.Extensions.FileProviders.Abstractions.csproj&quot; /&gt;
+    &lt;ProjectReference Include=&quot;$(LibrariesProjectRoot)Microsoft.Extensions.Primitives\ref\Microsoft.Extensions.Primitives.csproj&quot; /&gt;
+  &lt;/ItemGroup&gt;
+&lt;/Project&gt;
+</code></pre>
+<h3 id="opt-in">Opt-in</h3>
+<p>This feature is opt-in. Repositories choose to use the properties to reduce the chance of falling behind and targeting older TFMs, especially .NET Core TFMs.</p>
+<h2 id="trimming">Trimming</h2>
+<p>Opt-ins to the targeting feature should reduce the amount of downlevel targeting and help .NET move forward as a coherent stack. It does not, however, remove TFMs that are not required when building for a specific consumer. To do so, we need a filter. We need to be able to remove unwanted TFMs.</p>
+<p>To accomplish this, we will implement an MSBuild intrinsic which removes target frameworks that do not match an input set based on name and version. Arcade will then use a targets file which will set the <code>TargetFrameworks</code>/<code>TargetFramework</code> property based on the output of this intrinsic, if a filter is to be applied. It's important to highlight the MSBuild intrinsic-based as <em>separate</em> from the &quot;what should we target in this invocation&quot;. It is a method of exclusion, implemented in a way that does not require knowing the full set of possible TFMs to exclude. Instead, acts as a way of filtering out targets that are not required for the consumers of the project.</p>
+<h3 id="msbuild-intrinsic">MSBuild Intrinsic</h3>
+<p><strong>IntersectTargetFrameworks (string original, string filter)</strong></p>
+<p>Given two sets of input target frameworks in the form: tfm1[;tfm2][;tfm3], compute the intersection of <code>original</code> with <code>filter</code>, based on Framework and Version. Platform elements of the TFM are ignored. Return the matching elements from the original set. Examples:</p>
+<pre><code>IntersectTargetFrameworks(&quot;net7.0;netstandard2.0&quot;, &quot;net7.0&quot;) returns &quot;net7.0&quot;
+IntersectTargetFrameworks(&quot;net7.0;netstandard2.0&quot;, &quot;net7;netstandard2.0&quot;) returns &quot;net7.0;netstandard2.0&quot;
+IntersectTargetFrameworks(&quot;net7.0-windows;net472;netstandard2.0&quot;, &quot;netstandard2.0&quot;) returns &quot;netstandard2.0&quot;
+IntersectTargetFrameworks(&quot;net7.0-windows;netstandard2.0&quot;, &quot;net472;net7.0&quot;) returns &quot;net7.0-windows&quot;
+IntersectTargetFrameworks(&quot;net7.0-windows;net7.0-linux;netstandard2.0;net472&quot;, &quot;net472;net7.0&quot;) returns &quot;net7.0-windows;net7.0-linux;net472&quot;
+</code></pre>
+<h3 id="arcade-support-for-filtering">Arcade support for filtering</h3>
+<p>In <code>Imports.targets</code>, a new file <code>TargetFrameworkDefaults.targets</code> will be imported.</p>
+<pre><code class="lang-xml">TargetFrameworkDefaults.targets
+
+&lt;!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. --&gt;
+&lt;Project&gt;
+  &lt;PropertyGroup&gt;
+    &lt;!-- Obtain the original set based on whether TargetFramework or TargetFrameworks was used --&gt;
+    &lt;_OriginalTargetFrameworks Condition=&quot;'$(TargetFrameworks)' != ''&quot;&gt;$(TargetFrameworks)&lt;/_OriginalTargetFrameworks&gt;
+    &lt;_OriginalTargetFrameworks Condition=&quot;'$(TargetFramework)' != ''&quot;&gt;$(TargetFramework)&lt;/_OriginalTargetFrameworks&gt;
+    &lt;_FilteredTargetFrameworks Condition=&quot;'$(NoTargetFrameworkFiltering)' != 'true' and '$(DotNetTargetFrameworkFilter)' != ''&quot;&gt;$([MSBuild]::Unescape($([MSBuild]::IntersectTargetFrameworks('$(_OriginalTargetFrameworks)', '$(DotNetTargetFrameworkFilter)'))))&lt;/_FilteredTargetFrameworks&gt;
+    &lt;TargetFrameworks Condition=&quot;'$(NoTargetFrameworkFiltering)' != 'true' and '$(_FilteredTargetFrameworks.Contains(';'))'&quot;&gt;$(_FilteredTargetFrameworks)&lt;/TargetFrameworks&gt;
+    &lt;TargetFramework Condition=&quot;'$(NoTargetFrameworkFiltering)' != 'true' and '!$(_FilteredTargetFrameworks.Contains(';'))'&quot;&gt;$(_FilteredTargetFrameworks)&lt;/TargetFramework&gt;
+  &lt;/PropertyGroup&gt;
+&lt;/Project&gt;
+</code></pre>
+<h3 id="opt-out">Opt-out</h3>
+<p>If a repository sets property <code>NoTargetFrameworkFiltering</code> to <code>true</code>, then filtering will not be applied.</p>
+<h3 id="validation-during-repo-level-source-build">Validation during repo-level source build</h3>
+<p>It is entirely possible that TFM filtering will break source-build for a repository. For instance, if a project targets no TFMs after filtering is applied, it will fail to build. The repository owner will then need to decide on a course of action. Perhaps they need to exclude that project during when doing source build (probably based on build platform), or target an included TFM. To avoid unexpected breaks, repo level source-build validation will enable filtering in certain cases. Which TFMs are kept will be dependent on the platform being validated and the build environment requirements of those who usually execute that build. For instance:</p>
+<ul>
+<li>A Windows source build leg would not filter any TFMs. Ref packs can be supplied from the internet and many components built on Windows will require targeting a number of TFMs, including net4*</li>
+<li>An OSX leg might use a filter like <code>net7;net8;netstandard2.0</code>, which excludes <code>net4*</code> TFMs, but allows for all .NET Core TFMs to be kept. OSX builds have no restriction on pulling targeting packs from the internet, but <code>net4*</code> TFMs wouldn't generally be useful on OSX.</li>
+<li>A Linux source-build leg would use a filter like <code>net8;netstandard2.0</code> to remove all usage of targeting packs that would have to come from the internet or would be undesirable to check-in as source build reference packages, since that is what Linux source build partners require.</li>
+</ul>
+<h2 id="source-build-usage-example">Source-build Usage Example</h2>
+<pre><code># ./build.sh --clean-while-building --online --tfm-filter net7;netstandard2.0
+</code></pre>
+<p>With this invocation, projects will only produce assets that target <code>net7*</code> and <code>netstandard2.0</code>. For instance, <code>arcade</code>, which builds early on in source-build, has a project <code>src/Microsoft.DotNet.SignTool/Microsoft.DotNet.SignTool.csproj</code>.</p>
+<pre><code class="lang-xml">&lt;!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. --&gt;
+&lt;Project Sdk=&quot;Microsoft.NET.Sdk&quot;&gt;
+  &lt;PropertyGroup&gt;
+    &lt;TargetFrameworks&gt;$(NetCurrent);net472&lt;/TargetFrameworks&gt;
+    &lt;AllowUnsafeBlocks&gt;true&lt;/AllowUnsafeBlocks&gt;
+    &lt;IsPackable&gt;true&lt;/IsPackable&gt;
+    &lt;Description&gt;Build artifact signing tool&lt;/Description&gt;
+    &lt;PackageTags&gt;Arcade Build Tool Signing&lt;/PackageTags&gt;
+    &lt;DevelopmentDependency&gt;false&lt;/DevelopmentDependency&gt;
+    &lt;NoWarn&gt;$(NoWarn);NU5128&lt;/NoWarn&gt;
+  &lt;/PropertyGroup&gt;
+  ...
+&lt;/Project&gt;
+</code></pre>
+<p>SignTool.csproj will not produce a <code>net472</code> targeted binary.</p>
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,242 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Deprecating Native Tools Bootstrapping </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Deprecating Native Tools Bootstrapping ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="deprecating-native-tools-bootstrapping">Deprecating Native Tools Bootstrapping</h1>
+
+<h2 id="purpose">Purpose</h2>
+<p>The whole thrust behind native tools bootstrapping was that build machines should be
+clean and repos should bring their dependencies to the machines at build times. However,
+this presents a major security problem: how do we ensure that all these repos are keeping
+the executables they're installing on the build machines up to date? The current answer
+is that we simply aren't, but that needs to change.</p>
+<p>Going forward, <strong>we will be installing all artifacts on the build machines directly via
+dotnet-helix-machines</strong> (the machine prep process), except for the ones installed via package
+feeds. This is a departure from the &quot;keep build machines clean&quot; philosophy and from our work
+with folks on bootstrapping native dependencies, but it makes sense from a security and
+maintainability perspective.</p>
+<h2 id="the-current-state-of-the-world">The Current State of the World</h2>
+<p>Based on <a href="https://github.com/search?l=JSON&amp;q=org%3Adotnet+native-tools&amp;type=Code">a search of the dotnet org</a>,
+there are currently 10 non-archived repos using native tools bootstrapping. The artifacts
+they're bootstrapping are as follows:</p>
+<table>
+<thead>
+<tr>
+<th>Artifact</th>
+<th>Version(s)</th>
+<th>Latest Patch Version(s)</th>
+<th>Repos Using</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cmake</td>
+<td>3.11.1, 3.14.5, 3.16.4, 3.21.0</td>
+<td>3.11.4, 3.14.7, 3.16.9, 3.21.5</td>
+<td>arcade-validation, deployment-tools, installer, msquic, runtime, winforms</td>
+</tr>
+<tr>
+<td>cmake-test (fake artifact for testing)</td>
+<td>3.11.1</td>
+<td>N/A</td>
+<td>arcade-validation</td>
+</tr>
+<tr>
+<td>dotnet-api-docs_netcoreapp3.0</td>
+<td>0.0.0.2</td>
+<td>N/A</td>
+<td>wpf-test</td>
+</tr>
+<tr>
+<td>dotnet-api-docs_net5.0</td>
+<td>0.0.0.3</td>
+<td>N/A</td>
+<td>winforms, wpf</td>
+</tr>
+<tr>
+<td>msvcurt-c1xx</td>
+<td>0.0.0.8</td>
+<td>N/A</td>
+<td>wpf-test</td>
+</tr>
+<tr>
+<td>net-framework-48-ref-assemblies</td>
+<td>0.0.0.1</td>
+<td>N/A</td>
+<td>wpf, wpf-test</td>
+</tr>
+<tr>
+<td>perl</td>
+<td>5.32.1.1</td>
+<td>5.32.1.1</td>
+<td>fsharp</td>
+</tr>
+<tr>
+<td>python3</td>
+<td>3.7.1</td>
+<td>3.7.12</td>
+<td>deployment-tools, performance, runtime</td>
+</tr>
+<tr>
+<td>strawberry-perl</td>
+<td>5.28.1.1-1</td>
+<td>5.28.2.1</td>
+<td>wpf, wpf-test</td>
+</tr>
+</tbody>
+</table>
+<p>This indicates that four main executables are being bootstrapped:</p>
+<ul>
+<li>CMake (multiple different minor versions)</li>
+<li>Perl</li>
+<li>Python 3</li>
+<li>Strawberry Perl</li>
+</ul>
+<p>Additionally, Winforms and WPF rely on some zip files that probably should come directly from
+framework targeting packs, etc.</p>
+<p>Evidence of the necessity of this work can be found in the fact that Python 3.7.1 has
+<a href="https://cve.mitre.org/cgi-bin/cvekey.cgi?keyword=python+3.7">multiple CVEs</a> against it.</p>
+<h2 id="removing-native-tools-bootstrapping-direct-downloading">Removing Native Tools Bootstrapping Direct Downloading</h2>
+<p>The most straightforward way to deal with this problem is to simply stop natively bootstrapping artifacts
+onto the machines. This approach has two main advantages: first, it brings the security of the machines fully
+under the purview of the .NET Engineering Services team (which makes sense as we manage the machines
+in every other respect) and allows us to make sure these artifacts are kept up-to-date, and second,
+it simplifies the task of maintaining these artifacts for vendors (as there will be one central repository
+for the artifacts and one place to check for component governance alerts).</p>
+<p>It also has its drawbacks, however, which will be mentioned later in the document. However, it is the
+belief of the .NET Engineering Services team that these drawbacks do not outweigh the benefits of
+consolidating artifacts in dotnet-helix-machines.</p>
+<p>The basic outline of this process would be:</p>
+<ol>
+<li>Take stock of what native tools are currently being used, create artifacts for them, and install
+and add those artifacts to the build queues.</li>
+<li>Alert teams that we will be decommissioning native tools bootstrapping and installing tools like
+CMake and Perl on the build machines and give them time to migrate their builds to not use
+native tools bootstrapping anymore.</li>
+<li>Rework native tools scripts in Arcade to put the appropriate version of an artifact on the machine
+(e.g., a specific minor version of CMake) on the path.</li>
+</ol>
+<p>In the future, when a team needs a specific artifact, they can request it be added to the machines. We will
+vet the artifact through component governance before adding it to machines in production. If the artifact
+is going to be installed side-by-side along with other versions of the artifact (e.g., if they want to install
+CMake 3.21 and 3.11 is already on the machines), the requester will specify the version they want to use
+in the global.json under &quot;native-tools&quot; just like they do today. The bootstrapping scripts will then elevate
+the specific version of a tool to the path. However, when possible, we should attempt to consolidate on a
+single version to obviate the need for the use of these scripts.</p>
+<h3 id="takebacksdownsides">Takebacks/Downsides</h3>
+<p>This solution is, unfortunately, a takeback from previous solutions that involved investment in native
+tools bootstrapping (see our epic for <a href="https://github.com/dotnet/arcade/issues/6560">Harmonizing Arcade and Runtime Repos</a>).
+Most obviously, this worsens the local dev experience which previously relied on native tools bootstrapping
+to make specific dependencies less necessary. Going forward, repos will instead have to specifically note
+which dependencies are required to build the product in their readme or COMPILING.md. The .NET Engineering
+Services team will send out reminders to update the versioning of these dependencies every time there is a
+version bump of an artifact. Eventually the plan is to use the matrix of truth (which knows which versions
+of artifacts are installed on images) to flow the exact versions being used on build machines to READMEs automatedly.</p>
+<p>This also reduces the control that repos have over their dependencies. The hope is that by allowing for side-by-side
+installation and minor version selection, repos will still be able to have control over minor versions of
+the tools they use while staying up to date with the latest patches.</p>
+<p>In order to avoid build breaks while still maintaining security, once we have settled on a minor version for an artifact,
+we will only be bumping its patch version as that is updated. This will restrict artifacts to security updates and bugfixes,
+minimizing build breakage. The only time when a minor or major version bump will be required is when a particular version
+reaches end-of-life and thus will no longer be maintained.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>While this is a significant departure from our previous thinking in the space, deprecating direct downloads via
+native tools bootstrapping and moving to a machine-only artifacts world will significantly improve the
+security and maintainability of machine artifacts going forward.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cnative-tools-bootstrapping-security15522.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cnative-tools-bootstrapping-security15522.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cnative-tools-bootstrapping-security15522.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,314 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Test Result Storage </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Test Result Storage ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="test-result-storage">Test Result Storage</h1>
+
+<p>In order to facilitate several features in the reporting space, we need to store test results in a way we can query historically at fairly large scale.
+The query API's in Azure DevOps work well enough for a single test or a single run, but when attempting to draw conclusions about all tests in all runs,
+the API surface isn't sufficient or fast enough.</p>
+<p>To that end, we should store tests in a large data store with broader query capabilities: Kusto</p>
+<h2 id="initial-data-colletion">Initial Data Colletion</h2>
+<p>We will create <strong>a new service</strong> in the Helix cluster that will monitor for build complete notifications, and translate the data into Kusto.
+It's a new service so that</p>
+<ul>
+<li>It doesn't interfere with existing behaviors</li>
+<li>It can handle internal and public builds both (since test results from internal builds are important as well)</li>
+</ul>
+<p>All &quot;failed&quot; tests for a build are easy enough to gather by calling
+<a href="https://docs.microsoft.com/en-us/rest/api/azure/devops/test/runs/query?view=azure-devops-rest-6.0">Test Runs - Query</a>
+followed by
+<a href="https://docs.microsoft.com/en-us/rest/api/azure/devops/test/results/list?view=azure-devops-rest-6.0">Test Results - List</a>
+to expand the lists into results with &quot;outcome=Failed&quot;.</p>
+<p>Unfortunately, &quot;Passed on Rerun&quot; tests are not queryable via any documented endpoint, but after talking with the Azure DevOps
+devs, we were told about another endpoint,
+<code>https://dev.azure.com/{organization}/{project}/_apis/test/ResultDetailsByBuild?buildId={buildId}&amp;$filter=Outcome%20eq%20PassedOnRerun&amp;api-version=6.1-preview</code>
+that will list the testCaseResultIds of each test in this state.  We can follow that up with a call to
+<a href="https://docs.microsoft.com/en-us/rest/api/azure/devops/test/results/get?view=azure-devops-rest-6.0">Test Result - Get</a>
+for each test in this state to get the details.  It is expected that for a given run, a small number of tests will be in this state,
+so the number of calls necessary will be low.</p>
+<p>All of this data can then be passed into Kusto, using our existing &quot;TestResults&quot; table, with a few minor tweaks</p>
+<ul>
+<li>Not all test results will necessarily correspond to a helix job/workitem (in build tests), so these columns will begin to have null</li>
+<li>We will add a &quot;FailCount&quot; and &quot;RunCount&quot; to each test, to account for flakiness.</li>
+</ul>
+<h2 id="historical-data-collection">Historical Data Collection</h2>
+<p>On some timed cadence, we will create a list of tests that have failed in some time horizon, probably 28 days to start.  Then, using the
+<a href="https://docs.microsoft.com/en-us/rest/api/azure/devops/test/test-history/test-history-query?view=azure-devops-rest-6.0">Test History - Query</a>
+api, we will gather statistics for that test since the last execution (probably nightly, so in the last day).</p>
+<p>This data will be aggregated and put into Kusto as a raw count (100 executions, 4 failures, 5 pass in the previous 24 hours).
+The same columns as in the TestResults table that are applicable for aggergations will be used (e.g. yes &quot;Type&quot; and &quot;Method&quot;, but no &quot;StackTrace&quot;)
+Storing <em>every</em> passing result is unecessary, so daily aggregations will be sufficient.
+This, combined with the TestResultTable, will allow for deep querying about the reliability numbers for any specific test or group of tests.</p>
+<h2 id="testresults-and-testaggregations-table-schema">TestResults and TestAggregations table schema</h2>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>In TestResults</th>
+<th>In Aggergations</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>JobId</td>
+<td>I64</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>WorkItemId</td>
+<td>I64</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>JobName</td>
+<td>StringBuffer</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>WorkItemName</td>
+<td>StringBuffer</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>WorkItemFriendlyName</td>
+<td>StringBuffer</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Type</td>
+<td>StringBuffer</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>Method</td>
+<td>StringBuffer</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>ArgumentHash</td>
+<td>StringBuffer</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>Arguments</td>
+<td>StringBuffer</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>Result</td>
+<td>StringBuffer</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>Count</td>
+<td>I32</td>
+<td></td>
+<td>X</td>
+</tr>
+<tr>
+<td>Duration</td>
+<td>R64</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Exception</td>
+<td>StringBuffer</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Message</td>
+<td>StringBuffer</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>StackTrace</td>
+<td>StringBuffer</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Traits</td>
+<td>StringBuffer</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Reason</td>
+<td>StringBuffer</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Attempt</td>
+<td>StringBuffer</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>AzurePipelinesTestRunId</td>
+<td>I64</td>
+<td></td>
+<td>X</td>
+</tr>
+<tr>
+<td>AzurePipelinesTestResultId</td>
+<td>I64</td>
+<td></td>
+<td>X</td>
+</tr>
+<tr>
+<td>ExecutionCount</td>
+<td>I32</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>FailCount</td>
+<td>I32</td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Branch</td>
+<td>StringBuffer</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>BuildId</td>
+<td>I32</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>DefinitionId</td>
+<td>I32</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>DefinitionName</td>
+<td>StringBuffer</td>
+<td>X</td>
+<td>X</td>
+</tr>
+<tr>
+<td>AggregationDate</td>
+<td>DateTimeOffset</td>
+<td></td>
+<td>X</td>
+</tr>
+</tbody>
+</table>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CDevWorkflow%5CDesign%5CDev-Design-Test-Data-Storage.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CDevWorkflow%5CDesign%5CDev-Design-Test-Data-Storage.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CDevWorkflow%5CDesign%5CDev-Design-Test-Data-Storage.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

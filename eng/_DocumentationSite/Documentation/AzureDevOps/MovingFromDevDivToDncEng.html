@@ -1,0 +1,138 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Moving Official Builds from DevDiv to DncEng </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Moving Official Builds from DevDiv to DncEng ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="moving-official-builds-from-devdiv-to-dnceng">Moving Official Builds from DevDiv to DncEng</h1>
+
+<h2 id="guidance">Guidance</h2>
+<p>These are the general steps for moving an official build from <a href="https://dev.azure.com/devdiv">https://dev.azure.com/devdiv</a> (DevDiv) to <a href="https://dev.azure.com/dnceng">https://dev.azure.com/dnceng</a> (DncEng).  This document is geared slightly towards .NET Core 3 component repos.  This document does not discuss converting builds from a task based definition to a YAML based definition.  YAML based builds are not a strict requirement for moving to DncEng though we should take note of repos which are not using YAML based builds and decide upon a timeline for moving to YAML (YAML based builds are a requirement for .NET Core 3 component repos).</p>
+<ol>
+<li><p>Update the <a href="#agent-pools">agent pools</a> used by your build.  Example: <a href="https://github.com/dotnet/dotnet-cli-archiver/pull/18/files">https://github.com/dotnet/dotnet-cli-archiver/pull/18/files</a></p>
+</li>
+<li><p>Create an internal code repository for your <a href="https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/AzureDevOpsGuidance.md#source-code">source code</a> in <a href="https://dev.azure.com/dnceng/internal">https://dev.azure.com/dnceng/internal</a>.</p>
+</li>
+<li><p>Add your repo to the dnceng/internal mirror. Example: <a href="https://github.com/dotnet/versions/pull/361/files">https://github.com/dotnet/versions/pull/361/files</a></p>
+</li>
+<li><p>Create a Pipeline following the documented <a href="https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/AzureDevOpsGuidance.md#pipelines">guidance</a>.</p>
+</li>
+<li><p>Request signing approval</p>
+<p>To do this:</p>
+<p>a. Go to Preview Features and turn off &quot;New builds hub&quot; (the &quot;Request signing approval&quot; link does not work in the &quot;New builds hub&quot;)</p>
+<p>b. Navigate to the Pipeline and select &quot;Request signing approval&quot; from &quot;...&quot;</p>
+<ul>
+<li><p>M2's name: [Your M2's name]</p>
+</li>
+<li><p>M2's alias: [Your M2's alias]</p>
+</li>
+<li><p>Justification: .Net Core product repo</p>
+</li>
+</ul>
+<p>c. Your M2 will be notified of the request and will have to approve the request before the MicroBuild team will review the request enable signing of your Pipeline.</p>
+</li>
+</ol>
+<h2 id="known-issues">Known issues</h2>
+<ul>
+<li>RepoToolset based repos cannot build from an internal Git repo with SourceLink enabled (the default).  Builds will fail with an error like</li>
+</ul>
+<pre><code>2018-09-12T22:25:57.4923150Z E:\A\_work\7\s\.packages\microsoft.sourcelink.common\1.0.0-beta-62911-01\build\Microsoft.SourceLink.Common.targets(60,5): error : SourceRoot.SourceLinkUrl is empty: 'E:\A\_work\7\s\' [E:\A\_work\7\s\src\Tasks\Microsoft.NET.Build.Tasks\Microsoft.NET.Build.Tasks.csproj]
+</code></pre>
+<p>This is because RepoToolset is expecting a GitHub url but internal builds are building from an Azure Git repo.  This issue is fixed in Arcade SDK and it is recommended that you move to the Arcade SDK for your builds.  If moving to the Arcade SDK is not an immediate option, then you can work around the issue by <a href="https://github.com/dotnet/sourcelink/blob/master/docs/README.md#enablesourcelink">disabling SourceLink</a></p>
+<h2 id="agent-pools">Agent pools</h2>
+<p>See <a href="AzureDevOpsOnboarding.html#agent-queues">Azure DevOps Onboarding documentation</a></p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CAzureDevOps%5CMovingFromDevDivToDncEng.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CAzureDevOps%5CMovingFromDevDivToDncEng.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CAzureDevOps%5CMovingFromDevDivToDncEng.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

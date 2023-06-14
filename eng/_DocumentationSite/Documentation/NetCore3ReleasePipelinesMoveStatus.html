@@ -1,0 +1,355 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>.NET Core 3 repos move to Release Pipelines status </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content=".NET Core 3 repos move to Release Pipelines status ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="net-core-3-repos-move-to-release-pipelines-status">.NET Core 3 repos move to Release Pipelines status</h1>
+
+<h2 id="what-is-needed">What is needed?</h2>
+<ul>
+<li>Repositories do signing and symbol validation as well as publishing of symbols and packages in an
+async release pipeline independent from the build. Specifics on how this works can be found <a href="https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/AsyncPublishing_HowToUse.md">here</a>.</li>
+</ul>
+<h2 id="batches">Batches</h2>
+<p>The order in which we'll move things to release pipelines will be by batches mostly defined
+by how easy would the move be. Also, we won't move to the next batch until all repos in the
+previous batch have been moved and we have validated that things are working for them.</p>
+<h2 id="arcade-like-repositories">Arcade-like repositories</h2>
+<p>These repositories publish using the packages provided by arcade and make use of the shared
+templates following the same processes as Arcade, so, since using release pipelines is already on
+for the arcade-* repos, moving the following should, in theory, be straight forward. For details
+on what changes are needed check <a href="https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/AsyncPublishing_HowToUse.md#how-do-i-use-it">&quot;How do I use it?&quot;</a>.</p>
+<h3 id="potential-etas">Potential ETAs*</h3>
+<ul>
+<li>Batch 1: 4/10/2019</li>
+<li>Batch 2: 4/15/2019</li>
+<li>Batch 3: 4/17/2019</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Repo</th>
+<th>Owner</th>
+<th>Status</th>
+<th>Batch</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Arcade</td>
+<td>mawilkie</td>
+<td>Moved</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Arcade-Validation</td>
+<td>mawilkie</td>
+<td>Moved</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Arcade-Services</td>
+<td>mawilkie</td>
+<td>Moved</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Standard</td>
+<td>danmose</td>
+<td>Moved</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>SymReader</td>
+<td>tmat</td>
+<td>Moved</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>SymReader-Portable</td>
+<td>tmat</td>
+<td>Moved</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>CoreFx</td>
+<td>danmose</td>
+<td>Not-Moved</td>
+<td>1</td>
+<td>Direct access to Task.Feed tasks</td>
+</tr>
+<tr>
+<td>Templating</td>
+<td>vramak</td>
+<td>Moved</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>Test-Templates</td>
+<td>singhsarab</td>
+<td>Moved</td>
+<td>1</td>
+<td></td>
+</tr>
+<tr>
+<td>Toolset</td>
+<td>licavalc</td>
+<td>Not-Moved</td>
+<td>1</td>
+<td>Direct access to Task.Feed tasks</td>
+</tr>
+<tr>
+<td>CoreClr</td>
+<td>russellk</td>
+<td>Not-Moved</td>
+<td>2</td>
+<td>Direct access to Task.Feed tasks</td>
+</tr>
+<tr>
+<td>WebSDK</td>
+<td>vramak</td>
+<td>Moved</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>WinForms</td>
+<td>mmcgaw</td>
+<td>Moved</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>WPF</td>
+<td>vatsan-madhavan</td>
+<td>Moved</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>aspnet-EntityFrameworkCore</td>
+<td>namc</td>
+<td>Moved</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>aspnet-Extensions</td>
+<td>namc</td>
+<td>Moved</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>aspnet-AspNetCore-Tooling</td>
+<td>namc</td>
+<td>Moved</td>
+<td>2</td>
+<td></td>
+</tr>
+<tr>
+<td>CLI</td>
+<td>licavalc</td>
+<td>Moved</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>CLI-Migrate</td>
+<td>licavalc</td>
+<td>Moved</td>
+<td>3</td>
+<td></td>
+</tr>
+<tr>
+<td>CLICommandLineParser</td>
+<td>licavalc</td>
+<td>Moved</td>
+<td>3</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>*If a given batch is completed before its planned ETA, we'll move on to the next right away. Also,
+if the move takes more than what was estimated we'll move the rest of the batches forward</p>
+<h2 id="special-repositories">Special repositories</h2>
+<p>Repositories which don't use Arcade SDK, are still building on devdiv or execute other actions different
+from signing and publishing packages and symbols i.e. push assets to two different feeds in the same task.</p>
+<p>For these, we'd need to do extra work since the current implementation won't work for them. Issues
+currently tracking this work are:</p>
+<ul>
+<li><a href="https://github.com/dotnet/arcade/issues/2371">https://github.com/dotnet/arcade/issues/2371</a> for those repos not using Arcade SDK</li>
+<li><a href="https://github.com/dotnet/arcade/issues/2398">https://github.com/dotnet/arcade/issues/2398</a> for repos publishing to more than one feed</li>
+<li>Need to determine what is the plan for those repos building in devdiv. We could maybe support them by &quot;cloning&quot; the release
+pipelines there but we'd need to special case the code and probably modify some table schemas on the DB</li>
+</ul>
+<h3 id="potential-etas-1">Potential ETAs*</h3>
+<ul>
+<li>Batch 4: TBD (depending on the completion of the issues above)</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Repo</th>
+<th>Owner</th>
+<th>Status</th>
+<th>Batch</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>nuget-NugetClient</td>
+<td>dtivel</td>
+<td>Not-Moved</td>
+<td>4</td>
+<td>Not using Arcade SDK</td>
+</tr>
+<tr>
+<td>aspnet-AspNetCore</td>
+<td>namc</td>
+<td>Not-Moved</td>
+<td>4</td>
+<td>Not using Arcade SDK</td>
+</tr>
+<tr>
+<td>Core-Setup</td>
+<td>dleeapho</td>
+<td>Not-Moved</td>
+<td>4</td>
+<td>Not using Arcade SDK</td>
+</tr>
+<tr>
+<td>MSBuild</td>
+<td>licavalc</td>
+<td>Not-Moved</td>
+<td>4</td>
+<td>Building from devdiv</td>
+</tr>
+<tr>
+<td>Roslyn</td>
+<td>jaredpar</td>
+<td>Not-Moved</td>
+<td>4</td>
+<td>Building from devdiv and doing VS Insertion</td>
+</tr>
+<tr>
+<td>Visual-FSharp</td>
+<td>brettfo</td>
+<td>Not-Moved</td>
+<td>4</td>
+<td>Not using Arcade SDK and building from devdiv</td>
+</tr>
+<tr>
+<td>Core-SDK</td>
+<td>licavalc</td>
+<td>Not-Moved</td>
+<td>4</td>
+<td>Publishes to two feeds in the same task</td>
+</tr>
+</tbody>
+</table>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CNetCore3ReleasePipelinesMoveStatus.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CNetCore3ReleasePipelinesMoveStatus.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CNetCore3ReleasePipelinesMoveStatus.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

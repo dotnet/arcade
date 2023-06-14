@@ -1,0 +1,171 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Failure Guessing for Pull Requests </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Failure Guessing for Pull Requests ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="failure-guessing-for-pull-requests">Failure Guessing for Pull Requests</h1>
+
+<p>We want to implement a mechanism that will trigger when a build fails and provides information (much like the <a href="https://github.com/jaredpar/runfo/tree/master/runfo">runfo</a> tool operates) to the developer on the pull request that initiated the build, via a GitHub Check (if possible).</p>
+<p>The information relayed back to the developer should note the following:</p>
+<ul>
+<li>link to an open, public GitHub issue if the failure appears to be known</li>
+<li>that the failure encountered was novel</li>
+</ul>
+<p>Examples of failure notes:</p>
+<ul>
+<li><code>This test is also failing in the main branch</code> (link to open issue, if available)</li>
+<li><code>This is a known Mac disconnect issue</code> (link to open issue, if available)</li>
+</ul>
+<p>This functionality may provide comparable data that is already provided by the runfo tool. In other words, if there is functionality that already exists in runfo that does what we need to do, we should look at implementing similar functionality in our own project.</p>
+<h2 id="stakeholders">Stakeholders</h2>
+<ul>
+<li>Product teams' developers</li>
+<li>Product teams' management</li>
+<li>Engineering Services team's developers</li>
+<li>Engineering Services team's management</li>
+</ul>
+<p>This feature is primarily for the product teams, however, the Engineering Services team should dogfood their own functionality.</p>
+<h2 id="risks">Risks</h2>
+<ul>
+<li>Data could be misleading and provide incorrect assumptions on cause of failures. (Because this functionality is new, we may not be able to create algorithms strong enough to sufficiently raise the signal-to-noise ratio experienced by devs.)</li>
+<li>Information relayed to the user may not contain actionable information (e.g. should they wait for other issues to be resolved? Do they need to fix a test? Is this something they need to report to Engineering Services team? et cetera)</li>
+<li>Information relayed to the user may be noisy.</li>
+<li>Ensure we are not hiding data that used to be visible</li>
+</ul>
+<h3 id="proof-of-concepts">Proof of Concepts</h3>
+<ul>
+<li><p>Through a proof of concept, verify that we are able to build a service that will be able to accurately analyze the failure and provide relevant data (e.g. links to open GitHub issues regarding the failure) to the user regarding the failure.</p>
+<p>We will build a service that can take in an Azure DevOps build ID. This service will contain functionality that will detect failure patterns. Likely, this information will need to be provided by humans, so we will also need the ability to take in and store this information, such as in a JSON file. This should connect to a GitHub Checks API in order to report the failure analysis back to the user in the pull request.</p>
+<p>Additionally, we may want to build our POC as a command line tool initially, to ensure that the functionality works as expected before we integrate it with the infrastructure.</p>
+</li>
+<li><p>Through a proof of concept, verify that we are able to provide a mechanism for the repo owner to annotate their error messages so they can ignore non-useful error messages.</p>
+</li>
+</ul>
+<h3 id="dependencies">Dependencies</h3>
+<ul>
+<li>Helix Services</li>
+<li>Azure DevOps</li>
+<li>GitHub, GitHub Checks API</li>
+<li>Helix</li>
+</ul>
+<h2 id="serviceability">Serviceability</h2>
+<ul>
+<li>Unit and functional (where appropriate, for both) tests for the individual components of the service</li>
+<li>Post-deployment scenario tests for the service to ensure that it is functioning as intended with all it's integrated parts.</li>
+<li>Algorithms developed for this feature should all be unit tested in order to detect errors if the algorithm changes.</li>
+<li>Ensure additional resources needed for this feature, such as additional data stores are well-documented for serviceability.</li>
+</ul>
+<h3 id="rollout-and-deployment">Rollout and Deployment</h3>
+<ul>
+<li>If the service is built in an existing project, such as Arcade Services or Helix Services, the rollout should be consistent with the existing rollouts for the project.</li>
+</ul>
+<h2 id="usage-telemetry">Usage Telemetry</h2>
+<ul>
+<li>Create a feedback mechanism (e.g. tracking image with a thumbs-up and thumbs-down) to include next to any communication so that the users can provide feedback quickly.</li>
+<li>Links created in new areas (e.g. GitHub comments, Failure Summary in GitHub Checks) could pass-through an aka.ms redirect link for us to capture usage from.</li>
+</ul>
+<h2 id="monitoring">Monitoring</h2>
+<ul>
+<li>This new service will require usage and health monitoring.</li>
+</ul>
+<h2 id="fr-hand-off">FR Hand off</h2>
+<ul>
+<li>We will create user documentation for how to configure the retries and expectations for viewing results.</li>
+<li>We will create documentation for the Engineering Services team to investigate issues with the feature itself.</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CDev%20Workflow%5CFailure%20Guessing%20-%20arcade5963.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CDev%20Workflow%5CFailure%20Guessing%20-%20arcade5963.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CDev%20Workflow%5CFailure%20Guessing%20-%20arcade5963.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

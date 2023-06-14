@@ -1,0 +1,145 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Generating the Localization Index File (LocProject.json) for the New Localization System (OneLocBuild) </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Generating the Localization Index File (LocProject.json) for the New Localization System (OneLocBuild) ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="generating-the-localization-index-file-locprojectjson-for-the-new-localization-system-onelocbuild">Generating the Localization Index File (<code>LocProject.json</code>) for the New Localization System (OneLocBuild)</h1>
+
+<h2 id="project-summary">Project Summary</h2>
+<p>For a variety of reasons, the localization workflow is changing and we need to <a href="https://github.com/dotnet/arcade/issues/6842">migrate to the new loc system</a>.
+This system is essentially an Azure DevOps task(<a href="https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task">OneLocBuild</a>)
+that we run in each repo's build pipeline to gather up our English resource files, send them off to the localization system, and receive
+localized resource files back. Because this is common infrastructure that will need to be implemented across all of our customer repos,
+it makes sense to implement it in Arcade.</p>
+<p>More information on migration can be found <a href="https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/1481/Migrating-out-of-SimpleLoc?anchor=ado-pipeline-creation-for-projects-hosted-in-github">here</a>.</p>
+<p>A major component of the new localization system is an index file called <code>LocProject.json</code>. In the linked documentation above, this file is
+checked into the repository, which would require every single repo to maintain a list of all of their resource files that need to be localized
+manually and make sure it stays in sync with their changes. This is a non-ideal solution. Instead, we hope to generate the <code>LocProject.json</code> file
+at build time prior to running the OneLocBuild task.</p>
+<h2 id="goals">Goals</h2>
+<p>The primary goal of the project is to generate the <code>LocProject.json</code> file at build time so that we can automate the localization process
+as much as possible with minimal to no intervention from customer repos.</p>
+<h2 id="stakeholders">Stakeholders</h2>
+<p>The primary stakeholders for this project are the .NET Core Engineering team (who will maintain this process on
+behalf of our customer repos) and the localization team. The other stakeholders include all of the customer repos who may have
+to maintain some new files for localization on their end if we aren't able to completely automate the work within <code>eng/common</code>.</p>
+<h2 id="risk">Risk</h2>
+<p>The most significant risk facing this project is any information in the index file that needs to be manually tweaked. As an example,
+<a href="https://github.com/RussKie">@RussKie</a> created a <a href="https://github.com/dotnet/arcade/issues/6842#issuecomment-771963490">first pass attempt</a>
+at this and found that he still had to manually remove some .resx files from the <code>LocProject.json</code> file after generation. We could
+create something like an exclusions list or other file that is <em>more</em> static than the <code>LocProject.json</code> would be to take much
+of the burden off of customer repos if we can't find a way to be smart with our file inclusion.</p>
+<p>To mitigate this risk, we will work with the localization team to see if we can replicate the logic they were using previously when they were
+automatically scanning our repos and loop in the customer repos to make sure the localization pipelines are working properly for them.</p>
+<p>A second risk facing us is the need to backport this to servicing branches of Arcade. At this time it is unknown if there will be significant
+challenges to this separate from the ones we currently face in master. We will work in tandem with <a href="http://github.com/mmitche">@mmitche</a>
+to make sure that this is mitigated as much as possible.</p>
+<p>Finally, the hard deadline of March 31, 2021, which is when the old localization system will be turned off is a risk. While we will likely
+be able to accomplish the majority of the work by this point, the unknowns of the servicing branches, in particular, are worrisome. We will work
+with the localization team to put in place a temporary manual process they recommended if this date slips for any of our branches.</p>
+<h2 id="serviceability">Serviceability</h2>
+<p>Two PATs are required by the OneLocBuild task: a GitHub PAT and an AzDO PAT for the <a href="https://dev.azure.com/ceapex">ceapex organization</a>.
+The latter will have to be created and maintained.</p>
+<p>There will be tests for the <code>LocProject.json</code> generation script and any other scripts that are created to ensure they are generating files
+correctly.</p>
+<h3 id="rollout-and-deployment">Rollout and Deployment</h3>
+<p>This project will be tested thoroughly in customer repos before we check it into Arcade. Once we do check it into Arcade, it will simply be rolled out
+as a part of Arcade.</p>
+<h2 id="fr-handoff">FR Handoff</h2>
+<p>Most likely, we will only need to write a single document on the results of this project to facilitate FR handoff.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5COneLocBuild%5Cone-pager.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5COneLocBuild%5Cone-pager.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5COneLocBuild%5Cone-pager.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

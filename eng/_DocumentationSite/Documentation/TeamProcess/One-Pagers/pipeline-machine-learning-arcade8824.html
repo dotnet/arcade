@@ -1,0 +1,346 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Predicting Pipeline Durations </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Predicting Pipeline Durations ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="predicting-pipeline-durations">Predicting Pipeline Durations</h1>
+
+<p>Our customers would love to know how long their CI pipeline takes. Ideally, we would want to build a model that can account for the current state of Helix, the work items they send, the congestion of AzDo, etc. to get a decent accurate. Unfortunately, this is a highly complex model that is quite difficult to build (but theoretically possible).</p>
+<p>Instead, we can build a model to give us a range of estimates, based on the past durations of their pipelines.</p>
+<p>We have tons of historical data that can enable us to make predictions and generate confidence intervals on the length of CI pipelines.</p>
+<h2 id="stakeholders">Stakeholders</h2>
+<ul>
+<li>Our Partners (@dncpartners)</li>
+<li>.NET Engineering Services (@dnceng)</li>
+</ul>
+<h2 id="proof-of-concept">Proof of Concept</h2>
+<p><em><a href="https://ml.azure.com/fileexplorerAzNB?wsid=/subscriptions/a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1/resourcegroups/t-jperez/workspaces/HelixMLTest&amp;tid=72f988bf-86f1-41af-91ab-2d7cd011db47&amp;activeFilePath=Users/t-jperez/pipeline-machine-learning-arcade8824.ipynb">Here is a jupyter notebook</a> with the detailed statistics and data science that supports the following claims.</em></p>
+<p>By plotting a histogram of pipeline durations for specific pipelines, I've determined that they seem to follow distributions that we can model. For instance, here is the <code>roslyn-CI</code> pipeline, with a dweibull distribution fitted.</p>
+<img src="./IncreaseVisibilityHelixQueues/roslyn-CI.svg" width="600" height="600">
+<p>With this distribution, we can compute the 95% confidence interval, which for this pipeline, is:</p>
+<p><code>1:11:27 +- 0:27:57</code></p>
+<p>We can vary the confidence interval, and thus the accuracy of our predictions, for a smaller range. From testing on all pipelines that have Build Analysis enabled, here are the detailed statistics for the <em>ranges</em> of predictions we give, in seconds. This data is back-tested, meaning that at the time the range was computed, the model only had the data available previously.</p>
+<pre><code>count     534.000000
+mean       69.490963
+std       415.535966
+min         3.197592
+25%        12.124280
+50%        19.041886
+75%        27.074249
+max      6289.076812
+dtype: object
+</code></pre>
+<h3 id="model-accuracy">Model Accuracy</h3>
+<p>With a target of 95% accurate, the back-testing concluded that we had a true accuracy of 93.3%.</p>
+<p>We backtested the model by training on all previous data before a point, and then testing on 1 week ahead, on data the model has not seen before. Here is a graph of the accuracy over time.</p>
+<img src="./IncreaseVisibilityHelixQueues/back-tested-accuracy-vs-time.svg" width="600" height="600">
+<p>The dashed red line shows the target, 95% accurate predictions. Our predictions hold accurate, at worst dipping to just below 89%, and hovering between 90% and 95%.</p>
+<p>This data is an aggregation of accuracy vs time for all repos with Build Analysis. When evaluating the accuracy, the data point in question was not used to fit the distribution, preventing a look-ahead bias. Accuracy is defined as:</p>
+<p><span class="math">\(\frac{\text{points in predicted range}}{\text{total points}}\)</span></p>
+<h3 id="implementation">Implementation</h3>
+<p>A unique distribution for each pipeline requires a training for each pipeline, and this functionality would more than likely require an Azure Function. The added burden of maintenance and engineering machinery makes this too cumbersome.</p>
+<p>Instead, we can use <a href="https://en.wikipedia.org/wiki/Chebyshev%27s_inequality">Chebyshev's inequality</a>, because we have the mean and variance defined for each pipeline.  Using <span class="math">\({\displaystyle k={\sqrt {2}}}\)</span> shows that the probability that values lie outside the interval <span class="math">\({\displaystyle (\mu -{\sqrt {2}}\sigma ,\mu +{\sqrt {2}}\sigma )}\)</span> does not exceed <span class="math">\({\displaystyle {\frac {1}{2}}}\)</span>. At the time of writing, here is a list of the ranges we'd give customers who have Build Analysis enabled:</p>
+<table>
+<thead>
+<tr>
+<th>Definition</th>
+<th>Mean</th>
+<th>Confidence Interval</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>\dotnet\arcade\arcade-ci</td>
+<td>45m 14s</td>
+<td>± 10m 41s</td>
+</tr>
+<tr>
+<td>\dotnet\arcade-services\dotnet-arcade-services</td>
+<td>25m 8s</td>
+<td>± 5m 26s</td>
+</tr>
+<tr>
+<td>\dotnet\arcade-validation\arcade-validation-ci</td>
+<td>13m 24s</td>
+<td>± 6m 17s</td>
+</tr>
+<tr>
+<td>\dotnet\aspnetcore\aspnetcore-ci</td>
+<td>1hr 32m 8s</td>
+<td>± 27m 56s</td>
+</tr>
+<tr>
+<td>\dotnet\aspnetcore\aspnetcore-components-e2e</td>
+<td>33m 58s</td>
+<td>± 3m 11s</td>
+</tr>
+<tr>
+<td>\dotnet\aspnetcore\aspnetcore-quarantined-pr</td>
+<td>1hr 4m 4s</td>
+<td>± 17m 7s</td>
+</tr>
+<tr>
+<td>\dotnet\installer\installer</td>
+<td>57m 22s</td>
+<td>± 36m 3s</td>
+</tr>
+<tr>
+<td>\dotnet\performance\performance-ci</td>
+<td>47m 41s</td>
+<td>± 22m 7s</td>
+</tr>
+<tr>
+<td>\dotnet\roslyn\roslyn-CI</td>
+<td>1hr 10m 41s</td>
+<td>± 19m 22s</td>
+</tr>
+<tr>
+<td>\dotnet\roslyn\roslyn-integration-CI</td>
+<td>1hr 22m 24s</td>
+<td>± 12m 23s</td>
+</tr>
+<tr>
+<td>\dotnet\roslyn\roslyn-integration-corehost</td>
+<td>1hr 22m 56s</td>
+<td>± 11m 2s</td>
+</tr>
+<tr>
+<td>\dotnet\runtime\dotnet-linker-tests</td>
+<td>59m 55s</td>
+<td>± 13m 55s</td>
+</tr>
+<tr>
+<td>\dotnet\runtime\runtime</td>
+<td>2hrs 10m 52s</td>
+<td>± 1hr 21m 38s</td>
+</tr>
+<tr>
+<td>\dotnet\runtime\runtime-coreclr outerloop</td>
+<td>4hrs 20m 24s</td>
+<td>± 57m 37s</td>
+</tr>
+<tr>
+<td>\dotnet\runtime\runtime-coreclr superpmi-asmdiffs</td>
+<td>1hr 20m 26s</td>
+<td>± 14m 10s</td>
+</tr>
+<tr>
+<td>\dotnet\runtime\runtime-coreclr superpmi-diffs</td>
+<td>1hr 53m 35s</td>
+<td>± 19m 24s</td>
+</tr>
+<tr>
+<td>\dotnet\runtime\runtime-coreclr superpmi-replay</td>
+<td>1hr 38m 15s</td>
+<td>± 17m 26s</td>
+</tr>
+<tr>
+<td>\dotnet\runtime\runtime-dev-innerloop</td>
+<td>1hr 21m 38s</td>
+<td>± 8m 16s</td>
+</tr>
+<tr>
+<td>\dotnet\runtime\runtime-extra-platforms</td>
+<td>2hrs 23m</td>
+<td>± 52m 44s</td>
+</tr>
+<tr>
+<td>\dotnet\runtime\runtime-libraries enterprise-linux</td>
+<td>41m 48s</td>
+<td>± 7m 57s</td>
+</tr>
+<tr>
+<td>\dotnet\runtime-assets\runtime-assets</td>
+<td>2m 5s</td>
+<td>± 35s</td>
+</tr>
+<tr>
+<td>\dotnet\sdk\dotnet-sdk-public-ci</td>
+<td>59m 1s</td>
+<td>± 16m 15s</td>
+</tr>
+</tbody>
+</table>
+<p>We can use a Kusto Query like so and show this information in Queue Insights. (Here, I use Definition name for clarity, but I will use the DefinitionId in production)</p>
+<pre><code>TimelineBuilds
+| where Project == &quot;public&quot;
+| where Reason == &quot;pullRequest&quot;
+| where TargetBranch == &quot;main&quot;
+| where Result == &quot;succeeded&quot;
+| extend PipelineDuration = datetime_diff('second', FinishTime, StartTime) * 1s
+| project-keep Definition, PipelineDuration
+| join kind=inner (
+    TimelineBuilds
+    | where Project == &quot;public&quot;
+    | where Reason == &quot;pullRequest&quot;
+    | where TargetBranch == &quot;main&quot;
+    | where Result == &quot;succeeded&quot;
+    | project Definition, PipelineDuration = datetime_diff('second', FinishTime, StartTime) * 1s
+    | summarize
+        Bottom5 = percentile(PipelineDuration, 5),
+        Top95 = percentile(PipelineDuration, 95),
+        Count = count()
+        by Definition
+    | where Count &gt;= 30)
+    on Definition
+| where PipelineDuration between (Bottom5..Top95)
+| summarize Mean = avg(PipelineDuration), ConfidenceInterval = sqrt(2) * totimespan(stdevp(PipelineDuration)) by Definition
+</code></pre>
+<p><em>Thanks to Nikki (<a href="https://github.com/mathaholic">@mathaholic</a>) for her help with this data analysis, and her idea to use Chebyshev’s Theorem!</em></p>
+<h3 id="caveats">Caveats</h3>
+<h4 id="multimodal-distributions">Multimodal Distributions</h4>
+<p>There are some issues with this model. First, some pipelines, like <code>dotnet/runtime</code>'s have a multimodal distribution. This means we cannot accurately predict their pipeline duration. In this case, their distribution is multimodal because their first step, <code>Evaluate Paths</code> evaluates the changes in a given PR, and runs or skips different steps of their pipeline.</p>
+<p>We will hide the estimated time and instead inform the user that their pipeline cannot be predicted as it is too variable. This will also handle the case where the range of a CI pipeline exceeds the estimated time (<em>e.g.</em> <code>1min ± 5min</code>)</p>
+<h4 id="infrastructure-outages">Infrastructure Outages</h4>
+<p>In addition, there is the issue of AzDo, Helix, or builds being on the floor, and we still give customers an estimate, blissfully unaware of any infrastructure errors. In the Juptyer notebook, I dive into an anomaly detection model, based on Helix work item wait times trying to predict this, but the model only improves accuracy by 0.3%.</p>
+<p>For Helix and/or AzDo being on the floor, we will rely on our Known Issues infrastructure, and simply hide the checks when there are any critical infrastructure issues.</p>
+<h2 id="risk">Risk</h2>
+<ul>
+<li>Will the new implementation of any existing functionality cause breaking changes for existing consumers?
+<ul>
+<li>No, this will be a new feature.</li>
+</ul>
+</li>
+<li>What are your assumptions?
+<ul>
+<li>We'll constantly maintain data in the <code>TimelineBuilds</code> table. This feature depends on it.</li>
+</ul>
+</li>
+<li>What are your unknowns?
+<ul>
+<li>See above, how do we decompose multimodal distributions and become notified when services are down?</li>
+</ul>
+</li>
+<li>What dependencies will this epic/feature(s) have?
+<ul>
+<li><code>TimelineBuilds</code></li>
+<li>Kusto</li>
+</ul>
+</li>
+<li>Are the dependencies currently in a state that the functionality in the epic can consume them now, or will they need to be updated?
+<ul>
+<li>We can consume them now.</li>
+</ul>
+</li>
+<li>Is there a goal to have this work completed by, and what is the risk of not hitting that date? (e.g. missed OKRs, increased pain-points for consumers, functionality is required for the next product release, et cetera)
+<ul>
+<li>Aug 12, the end of the internship.</li>
+</ul>
+</li>
+<li>Does anything the new feature depend on consume a limited/throttled API resource?
+<ul>
+<li>No.</li>
+</ul>
+</li>
+<li>Have you estimated what maximum usage is?
+<ul>
+<li>No, but it wil be the same as the Queue Insights project.</li>
+</ul>
+</li>
+<li>Are you utilizing any response data that allows intelligent back-off from the service?
+<ul>
+<li>We only query Kusto, so there is no need for back-off.</li>
+</ul>
+</li>
+<li>What is the plan for getting more capacity if the feature both must exist and needs more capacity than available?
+<ul>
+<li>This feature wont require any additional capacity.</li>
+</ul>
+</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cpipeline-machine-learning-arcade8824.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cpipeline-machine-learning-arcade8824.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cpipeline-machine-learning-arcade8824.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

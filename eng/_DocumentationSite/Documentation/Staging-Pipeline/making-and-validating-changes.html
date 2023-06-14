@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Making and Validating Changes to the Staging Pipeline </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Making and Validating Changes to the Staging Pipeline ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="making-and-validating-changes-to-the-staging-pipeline">Making and Validating Changes to the Staging Pipeline</h1>
+
+<p>Need to edit the staging pipeline for some reason? This doc has you covered.</p>
+<h2 id="making-changes">Making Changes</h2>
+<p>The staging pipeline (<a href="https://dev.azure.com/dnceng/internal/_build?definitionId=792">Stage-DotNet</a>) is fairly easy to make changes to.
+The pipeline has two main components: its <a href="https://dev.azure.com/dnceng/internal/_git/dotnet-release?path=%2Feng%2Fpipeline&amp;version=GBmain&amp;_a=contents">YAML</a> and the <a href="https://dev.azure.com/dnceng/internal/_git/dotnet-release?path=%2Fsrc%2FMicrosoft.DotNet.Release&amp;version=GBmain&amp;_a=contents">Release CLI/Library C# code</a>.</p>
+<p>The Release CLI makes extensive use of dependency injection.
+New changes may need to also modify <a href="https://dev.azure.com/dnceng/internal/_git/dotnet-release?path=%2Fsrc%2FMicrosoft.DotNet.Release%2FMicrosoft.DotNet.ReleaseCli%2Fsrc%2FServiceCollectionExtensions.cs&amp;version=GBmain"><code>ServiceCollectionExtensions.cs</code></a> in order to have their dependency injection work properly.
+Additionally, any new operations will need to be added to <a href="https://dev.azure.com/dnceng/internal/_git/dotnet-release?path=%2Fsrc%2FMicrosoft.DotNet.Release%2FMicrosoft.DotNet.ReleaseCli%2Fsrc%2FProgram.cs&amp;version=GBmain"><code>Program.cs</code></a> in alphabetical order.</p>
+<p>The <a href="https://dev.azure.com/dnceng/internal/_git/dotnet-release?path=%2Fsrc%2FMicrosoft.DotNet.Release%2FMicrosoft.DotNet.Signing.Extensions&amp;version=GBmain">Signing Extensions</a> project is where all of our signing-related tasks live. If you need to make changes to the signing setup, modify this project.</p>
+<p>The Release CLI, Release Library, and Signing Extnesions already have tests alongside their code.
+Any new functionality should have test coverage added to it.</p>
+<h2 id="validating-changes">Validating Changes</h2>
+<p>So you've recently made a change to the pipeline and you want to make sure you're not going to break anything?
+Good for you! Lucky for you, we (the authors of this document) have done some work to make that easier for you.</p>
+<h3 id="stage-dotnet-test">Stage-DotNet-Test</h3>
+<p>This pipeline is your best friend when it comes to validating changes in the staging pipeline.
+It has a separate entry point from Stage-DotNet (<a href="https://dev.azure.com/dnceng/internal/_git/dotnet-release?path=%2Fstaging-test-pipeline.yml&amp;version=GBmain&amp;_a=contents"><code>staging-test-pipeline.yml</code></a> vs. <a href="https://dev.azure.com/dnceng/internal/_git/dotnet-release?path=%2Fstaging-pipeline.yml&amp;version=GBmain&amp;_a=contents"><code>staging-pipeline.yml</code></a>),
+but otherwise uses the exact same YAML templates and files past that entry point.
+A few notable changes from the staging pipeline to the staging test pipeline:</p>
+<ul>
+<li>Stage-DotNet-Test has a BAR ID prefilled for you – we've created a build that is known to work.
+Note that when we say &quot;work,&quot; we don't mean &quot;entirely green&quot;; you will still notice some orange circles in the validation steps.
+However, all the pipeline functionality itself will work perfectly for you.</li>
+<li>Stage-DotNet-Test skips over approval stages – no need to babysit it!</li>
+<li>Stage-DotNet-Test tests publishing by actually publishing to temporarily created feeds and containers,
+so any changes to publishing will actually be validated!</li>
+</ul>
+<p>Simply run the test pipeline on your branch and then wait six hours for it to finish and you'll be golden!</p>
+<h3 id="what-six-hours">What? Six Hours?</h3>
+<p>Okay, okay. If you have to iterate rapidly for some reason,
+there is a way to save time and test only a particular stage or set of stages.</p>
+<ol>
+<li>Find a previous, successful run of the test pipeline. Copy the Build ID (the bit after <code>buildId=</code> in the URI).</li>
+<li>Pull up the YAML file for the stage(s) you want to run. Add the following inputs to any <code>DownloadPipelineArtifact</code> tasks:</li>
+</ol>
+<pre><code class="lang-yaml">          source: 'specific'
+          project: '7ea9116e-9fac-403d-b258-b31fcf1bb293'
+          pipeline: 799
+          preferTriggeringPipeline: true
+          runVersion: 'specific'
+          runId: the build ID copied from earlier
+          allowPartiallySucceededBuilds: true
+          allowFailedBuilds: true
+</code></pre>
+<p>Note: if you want to use artifacts from Stage-DotNet instead of Stage-DotNet-Test, set <code>pipeline</code> to <code>792</code> instead.</p>
+<ol start="3">
+<li>Open up <a href="https://dev.azure.com/dnceng/internal/_git/dotnet-release?path=%2Feng%2Fpipeline%2Fstage_dotnet.yml&amp;version=GBmain&amp;_a=contents"><code>eng/pipeline/stage_dotnet.yml</code></a> and comment out all of the stages prior to the one you're testing.
+Then make sure to comment out the dependencies on those stages.</li>
+<li>Running the pipeline now will skip the most time-consuming stages and go straight to the stage you want to test.</li>
+</ol>
+<p>Please still make sure to run the full test pipeline before checking in.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CStaging-Pipeline%5Cmaking-and-validating-changes.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CStaging-Pipeline%5Cmaking-and-validating-changes.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CStaging-Pipeline%5Cmaking-and-validating-changes.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

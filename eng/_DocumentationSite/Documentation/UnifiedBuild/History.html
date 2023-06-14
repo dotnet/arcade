@@ -1,0 +1,125 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>The Unified Build Almanac (TUBA) - History </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="The Unified Build Almanac (TUBA) - History ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="the-unified-build-almanac-tuba---history">The Unified Build Almanac (TUBA) - History</h1>
+
+<p>There have been at least 5 major iterations in how we build and ship:</p>
+<h3 id="product-construction-v0-net-core-10-to-net-core-20"><strong>Product Construction v0 (.NET Core 1.0 to .NET Core 2.0)</strong></h3>
+<p>Mists of time...</p>
+<p>.NET was built using many inter-related repositories. A rudimentary dependency flow system (Maestro Classic) was used to update the relationships between these repositories. When a repository built officially, it uploaded information about the produced packages to the <a href="https://github.com/dotnet/versions">versions</a> repository. Changes to this repository were monitored by Maestro Classic, which then ran specific Azure DevOps pipelines based on those changed files. Those pipelines then created PRs to consumers of those packages. A build was complete once the set of desired changes to all repositories had propagated along all the dependency flow paths.</p>
+<p>This system worked, in a way, but had serious drawbacks. It was very difficult to determine the state of the build. How much had propagated? What was left to do? The dependency flow system lacked any sort of reasonable UX. Historical data was very difficult to find and sift through. The dependency flow mechanics essentially lived within the build logic of the repository and could be broken by changes to the repo. It was very difficult to produce builds with security fixes. All of this led to builds that were slow to produce and prone to errors.</p>
+<p>.NET decided to move to a different approach that could produce builds faster and more reliably. Enter Product Construction v1 (informally, this was referred to as &quot;ProdCon&quot;).</p>
+<h3 id="product-construction-v1-net-core-21-to-net-core-22"><strong>Product Construction v1 (.NET Core 2.1 to .NET Core 2.2)</strong></h3>
+<p>Product Construction v1 was an attempt to lower the cost of builds and produce them faster. ProdCon, as it was informally called, produced builds of .NET by sequentially launching the official builds of the &quot;core repositories&quot; of .NET and feeding the outputs of each one into the next. For example, coreclr would build, then ProdCon would feed the packages produced into the corefx build, and so on. The key difference between ProdCon and Product Construction v0's approach is that ProdCon orchestrated the build from the top down, rather than letting repositories orchestrate it from the bottom up. Dependency flow was done without commits to each repo. The orchestration system simply overrode the input package versions of dependent repositories with the outputs of previous legs, and then told the build where to put the outputs.</p>
+<p>Again, this system worked, but had serious drawbacks. On one hand, it was easy to determine what the state of a build was. It was easy to deal with security fixes. It produced builds relatively quickly compared to previous systems. On the other hand, it had no way to deal with breaking changes, making it prohibitive for use in early product development phases. Because dependency flow was not implemented with repository commits, building a shipping commit for a repository wouldn't produce the same build that ProdCon created. Reproducing official builds was expensive and required specialized knowledge.</p>
+<p>Again, .NET decided to try a different approach (<strong>Product Construction v2</strong>).</p>
+<h3 id="source-build-net-core-21---today"><strong>Source-Build (.NET Core 2.1 - Today)</strong></h3>
+<p>In <em>parallel</em> to Product Construction v1, .NET began a separate effort to enable Linux distributions to natively include .NET, beginning with RedHat. There are key differences between how Microsoft traditionally builds its products and how Redhat and other organizations build what they include in their distributions. Linux distributions usually require that all software be built from source alone, using other software that has been built from source, on a single machine, disconnected from the internet. No other inputs. This is fundamentally at odds with how .NET's product is constructed; as a set of independent repositories interconnected by binary dependency flow transport mechanisms, with heavy reliance on orchestration and multiple machines even within a single repository build. There are many places within the product build that join together artifacts built on multiple machines.</p>
+<p>To enable RedHat and other organizations to build .NET, we began the &quot;Source-Build&quot; effort. Source-Build re-architects the build to produce artifacts required for Linux distributions (typically the .NET SDK) from a single source layout. Each repository in .NET and its external dependencies (e.g. Newtonsoft.Json) are cloned into a flat source layout, along with associated tooling and scripts. The repositories are built and their outputs are fed (on disk) to the next repository. The build logic is tweaked to exclude package references, build targets, projects, etc. that do not contribute to the required artifacts, or would bring in additional additional dependencies that can't be source built.</p>
+<p>While source-build does work, it takes significant resources to maintain. There are significant differences between the source-build methodology and Microsoft's .NET build methodology, and these tend to contribute to build breaks.</p>
+<h3 id="product-construction-v2-net-core-30---today"><strong>Product Construction v2 (.NET Core 3.0 - Today)</strong></h3>
+<p>Because the drawbacks of Product Construction v1 made it unsuitable for day-to-day development and because .NET Core 3.0 was a significantly more complex product than 2.1, .NET decided to move back towards the Product Construction v0 methodology for .NET 3.0 and onward. Essentially, orchestrate the .NET build from the bottom up (repo-repo relationships) instead of the top down. To reduce cost, we decided to rewrite the dependency flow system to enable better UX and flow control and added shared tooling via Arcade to enable consistency across repositories. You can read more about these changes in: <a href="https://devblogs.microsoft.com/dotnet/the-evolving-infrastructure-of-net-core/">The Evolving Infrastructure of .NET Core</a> and <a href="https://devblogs.microsoft.com/dotnet/a-deep-dive-into-how-net-builds-and-ships/">A Deep Dive into How .NET Builds and Ships</a>.</p>
+<p>For most cases, Product Construction v2 is a significant improvement over either previous Product Construction systems. The dependency flow system (Maestro++), in particular, is much more flexible, self-service, and easier to understand than previous iterations. Unfortunately, the ease of dependency flow has actually led to a <em>more</em> complex build. Because more repositories could participate and introduce new relationships, they did. This strains .NET's ability to build and ship. A single commit in a repository at the base of the dependency flow graph might lead to <em>dozens</em> of eventual commits in downstream repositories. Cross-stack changes are still expensive to make. Maintaining source-build in the face of this complexity is harder than ever. Furthermore, the infrastructure required to produce a <em>full</em> .NET build (as opposed to a source-built SDK) really only exists within Microsoft's labs, and even Microsoft's own .NET developers struggle to work efficiently. This is a hindrance to the .NET community.</p>
+<p>Again, we need a new methodology.</p>
+<h3 id="unified-build-product-construction-v3-net-89"><strong>Unified Build (Product Construction v3) (.NET 8/9+)</strong></h3>
+<p>Unified Build for .NET is a combined effort to improve two problematic areas for .NET:</p>
+<ul>
+<li><strong>True upstream model</strong> – Partners are efficient and can do the same things we can.</li>
+<li><strong>Product build and servicing complexity</strong> – Taming our incredibly complex infrastructure.</li>
+</ul>
+<p>Unified Build will eliminate Microsoft's current method of building the full .NET product, replacing it with source-build across all platforms. This will result in only needing to maintain one build system, shared with the community. The product will be built as an aggregate codebase (a monolithic repository), although individual repositories will still be used for day-to-day development. The goal is simplicity and consistency. We believe that this will not only make .NET easier to develop, build, and ship, but it will also enable .NET contributors to be more productive.</p>
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

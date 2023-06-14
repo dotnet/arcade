@@ -1,0 +1,340 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>The Unified Build Almanac (TUBA) - Managing SDK Bands </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="The Unified Build Almanac (TUBA) - Managing SDK Bands ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="the-unified-build-almanac-tuba---managing-sdk-bands">The Unified Build Almanac (TUBA) - Managing SDK Bands</h1>
+
+<h2 id="purpose">Purpose</h2>
+<p>This document describes the problematics of managing multiple .NET SDK bands and discusses how we propose to solve this in the Unified Build world during the .NET 9 timeframe using the new build methodology and the full VMR.</p>
+<h2 id="terminology">Terminology</h2>
+<p>This section presents more precise definitions of common terms used in this document that may be prone to confusion. Also see the <a href="Terminology.html">Unified Build terminology</a> for more.</p>
+<ul>
+<li><strong>Individual/Source repository</strong> – One of the current development repositories, e.g., <code>dotnet/runtime</code>. An &quot;individual product repository&quot; is then one that contains code for part of the product (but no individual repository contains code to build the whole .NET Core product).</li>
+<li><strong>VMR (Virtual Monolithic Repository)</strong> – A repository containing code layout that produces the official build product of .NET Core. The repository contains individual product repositories plus tooling to enable a full build of the product.</li>
+<li><strong>VMR-lite</strong> – present state where changes only flow one way into the VMR which is read-only.</li>
+<li><strong>Full VMR (Backflow)</strong> – future final state where changes can be made in the VMR too and flow both ways. Dependency flow at that time will be only between VMR and individual repos, not between individual repos themselves.</li>
+<li><strong>Source-Build</strong> – A set of sources and a process which allows to build the entire product end to end including all its dependencies in offline mode, excluding native dependencies from the source.</li>
+<li><strong>Microsoft build</strong> – The current build methodology used to assemble the final product that Microsoft ships binaries from.</li>
+<li><strong>SDK branch</strong> – A git branch related to a specific SDK band, e.g. <code>release/8.0.1xx</code>.</li>
+<li><strong>Non-SDK branch</strong> – A git branch common for all associated SDK bands, e.g. <code>release/8.0</code>.</li>
+<li><strong>Intermediate packages</strong> – Packaged build products of each of the individual repositories either built in their individual repo source-build or during the build of each individual repository component within the full VMR build. These are used during package flow between the VMR and the individual repositories, and in the VMR build itself.</li>
+<li><strong>Maestro</strong> - a service used by the .NET team to manage dependency flow between repositories.</li>
+</ul>
+<h2 id="sdk-bands">SDK bands</h2>
+<p>To align with new Visual Studio releases, .NET SDK updates sometimes include new features or new versions of components such as Roslyn or MSBuild. These new features or components may be incompatible with the versions that shipped in previous SDK updates for the same major or minor version. To differentiate such updates, the .NET SDK uses the concept of feature bands. While these bands differ in their feature set they share some common parts such as the .NET runtime.</p>
+<p>To best illustrate how this works in practice, let’s imagine the following timeline for repositories with SDK branches (e.g., <code>dotnet/sdk</code>):</p>
+<pre><code class="lang-mermaid">%%{init: { 'gitGraph': {'showCommitLabel': false }}}%%
+gitGraph
+    commit
+    commit
+    branch release/8.0.1xx
+    checkout release/8.0.1xx
+    commit
+    commit type: HIGHLIGHT tag: &quot;Release #1 – SDK 8.0.100&quot;
+    commit
+    checkout main
+    commit
+    commit
+    commit
+    checkout release/8.0.1xx
+    branch release/8.0.2xx
+    checkout release/8.0.2xx
+    commit
+    commit
+    commit type: HIGHLIGHT tag: &quot;Release #2 – SDK 8.0.205&quot;
+    checkout main
+    commit
+    checkout release/8.0.1xx
+    commit type: HIGHLIGHT tag: &quot;Release #2 – SDK 8.0.109&quot;
+    commit
+    commit
+    checkout main
+    commit
+    checkout release/8.0.1xx
+    commit
+    commit
+    checkout release/8.0.2xx
+    commit
+    checkout release/8.0.1xx
+    commit
+    checkout main
+    commit
+    commit
+    commit
+    checkout release/8.0.2xx
+    branch release/8.0.3xx
+    checkout release/8.0.3xx
+    commit
+    commit
+    checkout release/8.0.2xx
+    commit type: HIGHLIGHT tag: &quot;Release #3 – SDK 8.0.207&quot;
+    checkout release/8.0.1xx
+    commit type: HIGHLIGHT tag: &quot;Release #3 – SDK 8.0.111&quot;
+    checkout release/8.0.3xx
+    commit type: HIGHLIGHT tag: &quot;Release #3 – SDK 8.0.302&quot;
+    checkout main
+    commit
+</code></pre>
+<p>In parallel, this would represent the state of a shared repository (e.g., <code>dotnet/runtime</code>) that is not specific to any particular SDK band:</p>
+<pre><code class="lang-mermaid">%%{init: { 'logLevel': 'debug', 'theme': 'base', 'gitGraph': {'showCommitLabel': false, 'tagLabelFontSize': '24px'}} }%%
+gitGraph
+    commit
+    commit
+    branch release/8.0
+    checkout release/8.0
+    commit
+    commit type: HIGHLIGHT tag: &quot;Release #1 – Runtime 8.0.0&quot;
+    commit
+    checkout main
+    commit
+    commit
+    commit
+    checkout release/8.0
+    commit
+    commit
+    commit type: HIGHLIGHT tag: &quot;Release #2 – Runtime 8.0.1&quot;
+    checkout main
+    commit
+    commit
+    commit
+    checkout release/8.0
+    commit
+    commit
+    checkout main
+    commit
+    checkout release/8.0
+    commit
+    commit
+    checkout main
+    commit
+    commit
+    commit
+    checkout release/8.0
+    commit
+    commit type: HIGHLIGHT tag: &quot;Release #3 – Runtime 8.0.2&quot;
+    checkout main
+    commit
+    commit
+</code></pre>
+<p>On the image you can see timelines of branches of two different repositories – <code>dotnet/sdk</code> and <code>dotnet/runtime</code>. As noted previously, each (servicing) release of .NET may contain multiple SDK bands but <strong>only</strong> one runtime. Each individual repository of each component that needs to differ per band would then have these so-called <em>“SDK branches”</em> named <code>release/Z.0.Yxx</code> while repositories that are shared per release have the non-SDK <code>release/Z.0</code> branches. As shown in the example, the development of the single runtime would happen in the <code>release/8.0</code> branch while the various SDK bands are stored in the following SDK branches (e.g., <code>release/8.0.1xx</code> represents the “100th band”).</p>
+<p>Once we hit each release day (denoted with red vertical lines), we take the latest commit of each of those branches (that already exist) and release those together. For the releases in the example diagram, these are the released compilations:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: center;">Release</th>
+<th style="text-align: center;">Runtime</th>
+<th style="text-align: center;">SDKs</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: center;">#1</td>
+<td style="text-align: center;"><code>8.0.0</code></td>
+<td style="text-align: center;"><code>8.0.100</code></td>
+</tr>
+<tr>
+<td style="text-align: center;">#2</td>
+<td style="text-align: center;"><code>8.0.1</code></td>
+<td style="text-align: center;"><code>8.0.109</code>, <code>8.0.205</code></td>
+</tr>
+<tr>
+<td style="text-align: center;">#3</td>
+<td style="text-align: center;"><code>8.0.2</code></td>
+<td style="text-align: center;"><code>8.0.111</code>, <code>8.0.207</code>, <code>8.0.302</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="current-code-flow">Current code flow</h3>
+<p>To organize what ends up in each band and to drive the code flow between the repositories, we utilize the Maestro dependency flow, namely the Maestro channels (see [Channels, Branches and Subscriptions](../BranchesChannelsAndSubscriptions.md for details):</p>
+<ul>
+<li><strong>VS-centric channels</strong> – To better match how teams operate, some repositories align their build outputs with the Visual Studio versions, e.g. <code>dotnet/roslyn</code>. Outputs of repositories like that would end up in a channel named based on the version of VS, e.g. <code>17.5</code>.</li>
+<li><strong>SDK band channels</strong> – The repositories that are closer to how we organize the final release are then targeting channels named based on the band version, e.g. <code>.NET 7.0.3xx SDK</code>.</li>
+<li><strong>Shared component channels</strong> – Lastly, repositories with shared components and tooling repositories target channels named based on the major .NET version, e.g. <code>.NET 7</code> or <code>.NET 7 Eng</code>.</li>
+</ul>
+<p>The following diagram shows a simplified example (some relationships are left out for brevity such as tooling leading to all repositories):</p>
+<pre><code class="lang-mermaid">flowchart TD
+    classDef Channel fill:#2487DF,stroke:#fff,stroke-width:1px,color:#fff;
+
+    roslyn174[dotnet/roslyn&lt;br /&gt;dev/17.4]
+    channel174[(VS 17.4 channel)]
+    sdk2xx[dotnet/sdk&lt;br /&gt;release/7.0.2xx]
+    channel2xx[(.NET 7.0.2xx SDK&lt;br /&gt;channel)]
+
+    subgraph Shared components
+        runtime[dotnet/runtime&lt;br /&gt;release/7.0]
+        aspnetcore[dotnet/aspnetcore&lt;br /&gt;release/7.0]
+        arcade[dotnet/arcade&lt;br /&gt;release/7.0]
+        channel7[(.NET 7&lt;br /&gt;channel)]
+        channel7Eng[(.NET 7 Eng&lt;br /&gt;channel)]
+    end
+
+    roslyn175[dotnet/roslyn&lt;br /&gt;dev/17.5]
+    channel175[(VS 17.5 channel)]
+    sdk3xx[dotnet/sdk&lt;br /&gt;release/7.0.3xx]
+    channel3xx[(.NET 7.0.3xx SDK&lt;br /&gt;channel)]
+
+    roslyn174--&gt;channel174
+    channel174--&gt;sdk2xx
+    sdk2xx--&gt;channel2xx
+    channel2xx--&gt;installer2xx
+
+    runtime--&gt;channel7
+    aspnetcore--&gt;channel7
+    arcade--&gt;channel7Eng
+
+    channel7--&gt;installer3xx
+    channel7--&gt;installer2xx
+    channel7Eng--&gt;installer2xx
+    channel7Eng--&gt;installer3xx
+
+    roslyn175--&gt;channel175
+    channel175--&gt;sdk3xx
+    sdk3xx--&gt;channel3xx
+    channel3xx--&gt;installer3xx
+
+    installer2xx[dotnet/installer&lt;br /&gt;release/7.0.2xx]
+    installer3xx[dotnet/installer&lt;br /&gt;release/7.0.3xx]
+
+    class channel174,channel175,channel2xx,channel3xx,channel7,channel7Eng Channel
+</code></pre>
+<p>This setup makes sure that the latest version of each shared component (e.g., runtime) eventually flows to all SDK products. Over time, the SDK products become coherent. <strong>We call the SDK bands coherent when the versions of all shared components of each band are the same</strong>.</p>
+<h3 id="band-lifecycle">Band lifecycle</h3>
+<p>As described above, the band lifecycle is tightly coupled with the releases of Visual Studio. The exception is 100th band that ships on .NET's annual schedule and VS snaps to it. For repositories that target the VS-centric bands, the <code>main</code> branch usually targets the next VS version which is in preview. Once a version of VS is released (is GA-ed), we create a new branch named <code>dev/XX.Y</code> where <code>XX.Y</code> is the version of the released VS. The <code>main</code> branch then targets the next VS version in preview</p>
+<p>As an example, let's say we have the following setup:</p>
+<ul>
+<li>VS <code>17.1</code> is the latest stable version of VS and is associated with the <code>7.0.1xx</code> band.</li>
+<li>VS <code>17.2</code> is in preview and is associated with the <code>7.0.2xx</code> band.</li>
+<li>VS-centric repositories would have a <code>dev/17.1</code> branch targeting the <code>17.1</code> channel and a <code>main</code> branch targeting <code>17.2</code>.</li>
+<li>The <code>17.1</code> channel would then flow into the <code>7.0.1xx</code> branches and the <code>17.2</code> channel would flow into the <code>7.0.2xx</code>.</li>
+<li>The <code>7.0.1xx</code> branches would then flow into the <code>7.0.1xx</code> SDK channel and the <code>7.0.2xx</code> branches would flow into the <code>7.0.2xx</code> SDK channel.</li>
+<li>The <code>7.0</code> channels would collect builds of shared repositories and flow into <code>7.0.Yxx</code> branches that are currently in servicing.</li>
+<li>The <code>7.0 Eng</code> channels would collect builds of shared eng repositories and flow into their respective all <code>7.0.Yxx</code> branches, including previews.</li>
+</ul>
+<p>For this setup, we'd say the 100th band is in <strong>servicing</strong> and the 200th band is in <strong>preview</strong>. It is important to also note that <strong>while a band is in preview, it uses the most recently released .NET runtime</strong> while <strong>the servicing band revs with the <code>7.0</code> channel</strong>.</p>
+<p>When we would be ready to release VS <code>17.2</code>, we'd flow the latest shared components into the 200th band branches so that it becomes coherent with the 100th band. Then we'd release the coherent bands and after we would do the following:</p>
+<ul>
+<li>We'd create the <code>dev/17.2</code> branch in VS-centric repositories, point it to the <code>17.2</code> channel and retarget <code>main</code> to <code>dev/17.3</code>.</li>
+<li>We'd snap branches of SDK repositories by branching <code>7.0.3xx</code> from <code>7.0.2xx</code>. While doing that, we'd update the runtime version of <code>7.0.3xx</code> to the just released version.</li>
+<li>We would set up the <code>7.0</code> shared channels to start flowing into the <code>7.0.2xx</code> branches as the runtime there would start revving.</li>
+</ul>
+<p>Technically, the steps above could happen in a different order based on repository needs. The important part is the alignment of repository's development branches with the Maestro channels.</p>
+<h3 id="full-code-backflow-and-maestro">Full code backflow and Maestro</h3>
+<p>Currently, the <a href="VMR-Design-And-Operation.html#source-synchronization-process">VMR is synchronized</a> based on the <code>dotnet/installer</code> repository mapping its commits 1:1 with <code>dotnet/installer</code>. This will have to change once we switch over to the full code backflow model.</p>
+<p>To re-iterate what the planned code flow looks like for .NET 9 (with full VMR back flow) – the individual repositories only receive and send updates from/to the VMR and not between each other, so the situation looks like this (see <a href="VMR-Code-And-Build-Workflow.html">VMR Code and Build Workflow</a> for details):</p>
+<pre><code class="lang-mermaid">flowchart TD
+    VMR[VMR]
+    arcade[dotnet/arcade]
+    runtime[dotnet/runtime]
+    roslyn[dotnet/roslyn]
+    sdk[dotnet/sdk]
+    other[...]
+
+    arcade--&gt;VMR
+    runtime--&gt;VMR
+    roslyn--&gt;VMR
+    sdk--&gt;VMR
+    other--&gt;VMR
+    VMR--&gt;arcade
+    VMR--&gt;runtime
+    VMR--&gt;roslyn
+    VMR--&gt;sdk
+    VMR--&gt;other
+</code></pre>
+<p>The updates of the VMR will no longer happen when <code>dotnet/installer</code> is updated but rather whenever a new build appears in one of the channels. The information making the builds of the <code>dev/17.4</code> branch of <code>dotnet/roslyn</code> end up in the <code>7.0.3xx</code> SDK band is stored in the configuration of Maestro subscriptions between those branches. The Maestro service will have to follow this configuration and update the corresponding sources (the right folder of the right branch) of the VMR accordingly. It will also have to flow changes the other way too when a change is made in the VMR or when VMR produces a new intermediate package. <strong>This is all new functionality that Maestro will have to implement.</strong> That being said, both proposed solutions seem orthogonal to this and the impact on the Maestro changes needed should be minimal.</p>
+<h3 id="release-process">Release process</h3>
+<p>The dependency flow eventually flows all the bits into the <code>dotnet/installer</code> repository which also uses the SDK branching. Each of those branches then produces an official build – so one build per band – and we release those. The exact process is that a dedicated person selects all the right official builds which are coherent on the shared bits (so each has the same of the runtime for instance) and inputs the IDs of these builds into the staging pipeline called <code>Stage-DotNet</code>. <strong>During this process, it is important that the shared bits are only built once officially and then re-used in the respective band builds.</strong></p>
+<p>The long-term plan is to transition to building and releasing using the Virtual Monolithic Repository which is a repository where each commit denotes a full set of sources needed for building .NET. The sources of this repository are synchronized from the individual repositories based on the contents of the <code>dotnet/installer</code> repository. The goal of this document is to discuss how this will be done with regards to both the different bands as well as the shared components.</p>
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

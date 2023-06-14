@@ -1,0 +1,191 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Improve Arcade Reliability </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Improve Arcade Reliability ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="improve-arcade-reliability">Improve Arcade Reliability</h1>
+
+<p>The goal of this effort is to help us improve Arcade Validation by filling in its test gaps, while mitigating potential build breaks before the latest version of Arcade is pushed out to customers.</p>
+<h2 id="step-1">Step 1</h2>
+<p>We will reassess this step after two weeks to see if we're getting any value out of it.</p>
+<ol>
+<li>Create a scheduled pipeline similar to Arcade Validation today, with some alterations:
+<ol>
+<li>If Arcade-Validation passes, create a branch of the <code>runtime</code> and <code>roslyn</code> repos using the last known good build within the last three days. (If there are no last known good builds in the last three days, we will skip building the latest Arcade against that repository.)</li>
+<li>Update those branches with the latest version of Arcade being validated.</li>
+<li>Build those branches and check for errors.
+<ol>
+<li>Should any errors occur, Arcade SMEs should help to determine if the errors are related to Arcade or not.
+<ol>
+<li>If the errors are related to Arcade, authors of commits included in the latest Arcade build since the last Arcade version release, must be contacted.</li>
+<li>Authors will be expected to fix whatever in their commits broke the other repos.</li>
+<li>Authors will be expected to add tests/validation to Arcade-Validation so that it will be caught in the future.</li>
+</ol>
+</li>
+<li>If the errors are unrelated to Arcade we will send the Arcade build to the Latest channel to proceed with the normal dependency flow.</li>
+</ol>
+</li>
+<li>The pipeline should run 3 times a week, scheduled during non-peak hours.</li>
+<li>Clean up branches of non Arcade-Validation repos used.</li>
+<li>Ensure that we can use existing telemetry to capture any data from the builds. Data from SME triage/investigation can be stored in an Excel spreadsheet (or another low cost document.) Data we want to capture:
+<ol>
+<li>Repo and SHA branched from (since we are using the last known good build in the last three days).</li>
+<li>Result of the investigation:
+<ol>
+<li>Passing (document that we ran Arcade through that branch and it was passing)</li>
+<li>Failure due to product (this will include the scenario if there are no last known good builds in the last three days, thus, we do not build Arcade against that repo)</li>
+<li>Failure due to Arcade/infra failure (this will result in any authors fixing the bug and contributing to the tests in Arcade Validation)</li>
+<li>Failure due to &quot;Impedance Mismatch&quot; (this is when there's too much churn)</li>
+</ol>
+</li>
+</ol>
+</li>
+</ol>
+</li>
+<li>After this process is set up, we will turn off automatic dependecy flow of Arcade.</li>
+</ol>
+<h2 id="step-2">Step 2</h2>
+<ol>
+<li>As test gaps are identified in Arcade Validation, we need to fill in those gaps with tests. This will be an ongoing process as test gaps are identified during the short term solution.</li>
+<li>Once we are satisified with the robustness of Arcade Validation, we can re-enable automatic dependency flow of Arcade to the Latest channel.</li>
+<li>Ensure that we have process/policy in place to promote adding validation to Arcade Validition when changes are made to Arcade.</li>
+</ol>
+<h2 id="known-testing-gaps">Known Testing Gaps</h2>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Description</th>
+<th>Root Cause</th>
+<th>Resolution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/dotnet/arcade/issues/4660">https://github.com/dotnet/arcade/issues/4660</a></td>
+<td>Roslyn signed builds failed to publish on 1/20/2020 to the package feeds in Dnceng due to authorization issues after taking an Arcade update.</td>
+<td>A refactoring of powershell scripts done in 11/21/2019 made it so the script that enables the authentication for publishing and restore across AzDO account boundaries stopped running.</td>
+<td>Made sure the script always runs during AzDO builds in <a href="https://github.com/dotnet/arcade/pull/4661">https://github.com/dotnet/arcade/pull/4661</a></td>
+</tr>
+<tr>
+<td><a href="https://github.com/dotnet/arcade/issues/4759">https://github.com/dotnet/arcade/issues/4759</a></td>
+<td>Roslyn signed builds failed to queue due to a missing variable group after taking an Arcade update.</td>
+<td>We refactored a YAML template so that the set of common variables that are required by post-build validation and publishing were shared across the stage instead of being referenced in each individual job. This caused the Validation stage to try and load a variable group that didn’t exist in DevDiv.<br>This break made it apparent that SDL validation was never set up to work for repos outside of dnceng as there was a variable group missing.</td>
+<td>The variable group was created in DevDiv with the required variables and subsequent builds were queued successfully.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/dotnet/arcade/issues/4748">https://github.com/dotnet/arcade/issues/4748</a></td>
+<td>A Roslyn build was published to the “.NET Core SDK 3.1.2xx” channel in the Build Asset Registry, but no packages were actually published, so the Dependency flow PRs opened by this build were all failing to restore the packages.</td>
+<td>The branch that produced the build was using a version of Arcade that didn’t have the publishing set up for that channel.</td>
+<td>The branch was updated to use the latest arcade in the “.NET 3 Eng” channel, which brought in the correct publishing templates, and we’re working on adding a warning to builds that try to publish to channels and there’s no publishing implementation available in the YAML templates flowed to that branch.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/dotnet/arcade/issues/4775">https://github.com/dotnet/arcade/issues/4775</a><br>https://github.com/dotnet/arcade/issues/4728</td>
+<td>The darc version that gets installed by default from the darc-init scripts fails during any operation that uses the paged APIs.</td>
+<td>The auto rest client generator generated an invalid client that would fail with a 404 for any APIs that are paged, such as update-dependencies, get-builds, or get-asset.</td>
+<td>The generator, and the generated client Darc have already been patched, but we require a production deployment so that the darc-init scripts install a fixed version by default.</td>
+</tr>
+<tr>
+<td><a href="https://github.com/dotnet/arcade/issues/4860">https://github.com/dotnet/arcade/issues/4860</a></td>
+<td></td>
+<td>Roslyn Updated the SDK version they use to build their compilers to 3.1, this change flowed to Arcade, and caused every Repo that wasn’t using a 3.1 SDK to break when compiling certain types of code that we don’t build in Arcade itself</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Cimprove-arcade-reliability.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Cimprove-arcade-reliability.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Cimprove-arcade-reliability.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

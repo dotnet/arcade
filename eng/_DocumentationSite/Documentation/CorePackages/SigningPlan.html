@@ -1,0 +1,133 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Signing Plan </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Signing Plan ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="signing-plan">Signing Plan</h1>
+
+<p>The goal of the signing plan is to provide guidance on how the tier 1 (T1) product repositories should sign binaries that are going to be published.</p>
+<h2 id="requirements">Requirements</h2>
+<ul>
+<li>Leverage pre-existing solutions so that work isn't duplicated.</li>
+<li>Where possible, avoid dependency on software installed on the machine to facilitate the consumption of the tool across the .NET Core repositories.</li>
+<li>The consumption method of the SignTool should follow the <a href="https://github.com/dotnet/arcade/blob/master/Documentation/Overview.md#methods-for-consuming-the-net-core-shared-infrastructure-components">Methods for Consuming the .NET Core Shared Infrastructure Components</a>.</li>
+<li>Signtool will need a list of containers in order to know what to sign.</li>
+</ul>
+<h2 id="roadmap">Roadmap</h2>
+<ol>
+<li>(S137) Migrate SignTool from Repo tool set to Arcade.</li>
+<li>(S138) Add SignTool to Arcade SDK.</li>
+<li>(S138) Arcade should sign its packages using the SignTool that is in the SDK.</li>
+<li>(S138 - S139) Refactor the SignTool to accommodate scenarios for other repositories. Examples of the changes are:
+<ul>
+<li>Convert to MsBuild task.</li>
+<li>Accept a list of containers that need to be signed. Those containers will be expanded and nested assemblies signed. Current support will be to VSIX and NuGet packages.</li>
+<li>Read the strong name from the metadata of the file.</li>
+</ul>
+</li>
+<li>(S140) Onboard one repository from T1 to use the SignTool from the SDK to sign its binaries.</li>
+<li>(S140) Once validated in a repository, start onboarding the other T1 repositories.</li>
+</ol>
+<h2 id="sprint-to-dates">Sprint to dates</h2>
+<ul>
+<li>S137: 6/11 - 6/29</li>
+<li>S138: 7/2 - 7/20</li>
+<li>S139: 7/23 - 8/10</li>
+<li>S140: 8/13 - 8/31</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CCorePackages%5CSigningPlan.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CCorePackages%5CSigningPlan.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CCorePackages%5CSigningPlan.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,305 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Helix Test Log Search POC Summary </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Helix Test Log Search POC Summary ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="helix-test-log-search-poc-summary">Helix Test Log Search POC Summary</h1>
+
+<p>To recall, this POC queries Kusto for failed test logs for a specified repository and date range, and parses these logs line by line for a given string.</p>
+<p>In general, since we are limiting the number of days a user can search for a string, depending on the number of files that are returned by the Kusto query, the program will run for anywhere between 20s and 1m30s.</p>
+<h2 id="-how-to-use">📋 How to use</h2>
+<p>The program requires all arguments to be passed when running it in command line:</p>
+<pre><code>    dotnet run --errorString={SEARCH_STRING} --repository={REPOSITORY_NAME} --startDate={STARTING_DATE_RANGE} --endDate={ENDING_DATE_RANGE} --mode={RESULT_TYPE}
+    
+</code></pre>
+<p>See the Input section below for more details on input constraints.</p>
+<h3 id="input">Input</h3>
+<p>Run the console app in terminal and pass all of the following options:</p>
+<ul>
+<li><code>errorString</code>: The error string the program will search for</li>
+<li><code>repository</code>: The public repository whose test logs will be parsed</li>
+<li><code>startDate</code>: The start date of the date range in which the test logs will be searched. This argument must be in the format <strong>yyyy/MM/dd</strong> and is in UTC.</li>
+<li><code>endDate</code>: The end date of the date range in which the test logs will be searched. This argument must be in the format <strong>yyyy/MM/dd</strong> and is in UTC.</li>
+<li><code>mode</code>: Either <code>&quot;Hits&quot;</code> or <code>&quot;HitsPerFile&quot;</code>. Hits will return an array of all occurences of <code>errorString</code>, including each occurrence's line number within its test log file. HitsPerFile will return an array of hits per file, including the count of occurrences per file.</li>
+</ul>
+<h4 id="example">Example</h4>
+<pre><code>dotnet run --errorString=&quot;UseCallback_BadCertificate_ExpectedPolicyErrors&quot; --repository=dotnet/runtime --startDate=2022-06-01 --endDate=2022-06-07 --mode=HitsPerFile
+</code></pre>
+<p>This command will search for all instances of the string &quot;UseCallback_BadCertificate_ExpectedPolicyErrors&quot; in all the <code>dotnet/runtime</code> Helix test logs created between June 1, 2022 and June 7, 2022. It will return the number of hits found per file.</p>
+<h3 id="output">Output</h3>
+<p>Here is some sample output showing the 2 different response types.</p>
+<h4 id="hits">Hits</h4>
+<pre><code>    {
+      &quot;filter&quot;: {
+        &quot;repository&quot;: &quot;dotnet/runtime&quot;,
+        &quot;errorString&quot;: &quot;UseCallback_BadCertificate_ExpectedPolicyErrors&quot;,
+        &quot;startDate&quot;: &quot;2022-05-25T07:00:00Z&quot;,
+        &quot;endDate&quot;: &quot;2022-06-07T07:00:00Z&quot;
+      },
+      &quot;hits&quot;: [
+        {
+          &quot;lineContent&quot;: &quot;System.Net.Http.Functional.Tests.SocketsHttpHandler_HttpClientHandler_ServerCertificates_Test.UseCallback_BadCertificate_ExpectedPolicyErrors(url: \&quot;https://wrong.host.badssl.com/\&quot;, expectedErrors: RemoteCertificateNameMismatch) [FAIL]&quot;,
+          &quot;lineNumber&quot;: 129,
+          &quot;jobId&quot;: 19894144,
+          &quot;friendlyName&quot;: &quot;System.Net.Http.Functional.Tests&quot;,
+          &quot;status&quot;: &quot;Fail&quot;,
+          &quot;started&quot;: &quot;2022-06-01T12:36:28.573Z&quot;,
+          &quot;finished&quot;: &quot;2022-06-01T12:42:46.786Z&quot;,
+          &quot;consoleUri&quot;: &quot;https://helixre107v0xdeko0k025g8.blob.core.windows.net/dotnet-runtime-refs-heads-release-50-159e0decb4474dbfbb/System.Net.Http.Functional.Tests/1/console.52339d8a.log?helixlogtype=result&quot;,
+          &quot;queueName&quot;: &quot;ubuntu.1804.armarch.open&quot;,
+          &quot;attempt&quot;: 1
+        },
+        {
+          &quot;lineContent&quot;: &quot;/_/src/libraries/Common/tests/System/Net/Http/HttpClientHandlerTest.ServerCertificates.cs(334,0): at System.Net.Http.Functional.Tests.HttpClientHandler_ServerCertificates_Test.UseCallback_BadCertificate_ExpectedPolicyErrors_Helper(String url, String useHttp2String, SslPolicyErrors expectedErrors)&quot;,
+          &quot;lineNumber&quot;: 142,
+          &quot;jobId&quot;: 19894144,
+          &quot;friendlyName&quot;: &quot;System.Net.Http.Functional.Tests&quot;,
+          &quot;status&quot;: &quot;Fail&quot;,
+          &quot;started&quot;: &quot;2022-06-01T12:36:28.573Z&quot;,
+          &quot;finished&quot;: &quot;2022-06-01T12:42:46.786Z&quot;,
+          &quot;consoleUri&quot;: &quot;https://helixre107v0xdeko0k025g8.blob.core.windows.net/dotnet-runtime-refs-heads-release-50-159e0decb4474dbfbb/System.Net.Http.Functional.Tests/1/console.52339d8a.log?helixlogtype=result&quot;,
+          &quot;queueName&quot;: &quot;ubuntu.1804.armarch.open&quot;,
+          &quot;attempt&quot;: 1
+        },
+        ...
+      ],
+      &quot;occurrenceCount&quot;: 96,
+      &quot;filesCount&quot;: 24
+    }
+</code></pre>
+<h4 id="hits-per-file">Hits per File</h4>
+<pre><code>    {
+      &quot;filter&quot;: {
+        &quot;repository&quot;: &quot;dotnet/runtime&quot;,
+        &quot;errorString&quot;: &quot;UseCallback_BadCertificate_ExpectedPolicyErrors&quot;,
+        &quot;startDate&quot;: &quot;2022-05-25T07:00:00Z&quot;,
+        &quot;endDate&quot;: &quot;2022-06-07T07:00:00Z&quot;
+      },
+      &quot;hits&quot;: [
+        {
+          &quot;occurrences&quot;: 4,
+          &quot;jobId&quot;: 19902082,
+          &quot;friendlyName&quot;: &quot;System.Net.Http.Functional.Tests&quot;,
+          &quot;status&quot;: &quot;Fail&quot;,
+          &quot;started&quot;: &quot;2022-06-02T12:16:47.584Z&quot;,
+          &quot;finished&quot;: &quot;2022-06-02T12:21:47.023Z&quot;,
+          &quot;consoleUri&quot;: &quot;https://helixre107v0xdeko0k025g8.blob.core.windows.net/dotnet-runtime-refs-heads-release-50-ab8bca7d45fc4cd0bb/System.Net.Http.Functional.Tests/1/console.e36c2801.log?helixlogtype=result&quot;,
+          &quot;queueName&quot;: &quot;ubuntu.1804.armarch.open&quot;,
+          &quot;attempt&quot;: 1
+        },
+        {
+          &quot;occurrences&quot;: 4,
+          &quot;jobId&quot;: 19909540,
+          &quot;friendlyName&quot;: &quot;System.Net.Http.Functional.Tests&quot;,
+          &quot;status&quot;: &quot;Fail&quot;,
+          &quot;started&quot;: &quot;2022-06-03T13:37:32.456Z&quot;,
+          &quot;finished&quot;: &quot;2022-06-03T13:43:35.135Z&quot;,
+          &quot;consoleUri&quot;: &quot;https://helixre107v0xdeko0k025g8.blob.core.windows.net/dotnet-runtime-refs-heads-release-50-e3fe329caffc4ab3be/System.Net.Http.Functional.Tests/1/console.76909294.log?helixlogtype=result&quot;,
+          &quot;queueName&quot;: &quot;ubuntu.1804.armarch.open&quot;,
+          &quot;attempt&quot;: 1
+        },
+        ...
+      ],
+      &quot;occurrenceCount&quot;: 547,
+      &quot;filesCount&quot;: 17
+    }
+</code></pre>
+<h2 id="-performance-findings">🔍 Performance findings</h2>
+<p>We can take a look at how long the program ran for different volumes of logs retrieved and parsed, as well as for different lengths of the search string.</p>
+<p>For one given repo and a one word string, we found:</p>
+<table>
+<thead>
+<tr>
+<th>Start date</th>
+<th>End date</th>
+<th># of Occurrences</th>
+<th># of Files with hits</th>
+<th>Total time elapsed</th>
+<th>Lines scanned/sec</th>
+<th>Files scanned/sec</th>
+<th>Total files scanned</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2022/06/01</td>
+<td>2022/06/07</td>
+<td>2528</td>
+<td>20</td>
+<td>00:00:31.7819027</td>
+<td>2532.73</td>
+<td>0.69</td>
+<td>22</td>
+</tr>
+<tr>
+<td>2022/05/25</td>
+<td>2022/06/07</td>
+<td>22768</td>
+<td>510</td>
+<td>00:00:35.2533931</td>
+<td>41198.75</td>
+<td>14.60</td>
+<td>515</td>
+</tr>
+<tr>
+<td>2022/05/07</td>
+<td>2022/06/07</td>
+<td>124973</td>
+<td>3023</td>
+<td>00:00:41.9848476</td>
+<td>193610.51</td>
+<td>79.95</td>
+<td>3357</td>
+</tr>
+</tbody>
+</table>
+<p>For one given repo and a string with 6 words:</p>
+<table>
+<thead>
+<tr>
+<th>Start date</th>
+<th>End date</th>
+<th># of Occurrences</th>
+<th># of Files with hits</th>
+<th>Total time elapsed</th>
+<th>Lines scanned/sec</th>
+<th>Files scanned/sec</th>
+<th>Total files scanned</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2022/06/01</td>
+<td>2022/06/07</td>
+<td>547</td>
+<td>17</td>
+<td>00:00:31.2928707</td>
+<td>2572.31</td>
+<td>0.70</td>
+<td>22</td>
+</tr>
+<tr>
+<td>2022/05/25</td>
+<td>2022/06/07</td>
+<td>6106</td>
+<td>124</td>
+<td>00:00:28.0314279</td>
+<td>51813.12</td>
+<td>18.37</td>
+<td>515</td>
+</tr>
+<tr>
+<td>2022/05/07</td>
+<td>2022/06/07</td>
+<td>16431</td>
+<td>310</td>
+<td>00:00:49.0204510</td>
+<td>165822.79</td>
+<td>68.48</td>
+<td>3357</td>
+</tr>
+</tbody>
+</table>
+<p>Note that the time taken can vary based on the repository, date range, network, etc so this is just a snapshot of a couple of times of running the program. But in general the times are pretty consistent and stay under a minute.</p>
+<h2 id="-future-considerations">🤔 Future considerations</h2>
+<ul>
+<li>More input sanitization to limit number of rows returned by Kusto and avoid timeouts, also to avoid injections into the query</li>
+<li>Error handling for if we try to parse a file that doesn't exist on the server anymore</li>
+<li>Before implementing functionality to accept a token from the user to access non-public work item logs, consider how to handle when a user enters a private repo</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CHelixTestLogSearch%5Cpoc-summary.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CHelixTestLogSearch%5Cpoc-summary.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CHelixTestLogSearch%5Cpoc-summary.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

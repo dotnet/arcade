@@ -1,0 +1,212 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Dependencies Flow Plan </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Dependencies Flow Plan ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="dependencies-flow-plan">Dependencies Flow Plan</h1>
+
+<p>The components needed in order to flow dependencies through different repositories are: Darc, Maestro++, and the Build Asset Registry (using Darc)
+For more information take a look at <a href="VersionQueryingAndUpdating.html">version querying and updating</a>.</p>
+<p>This document outlines the main stages to implement the work needed to accomplish the dependencies flow.
+First, we'll focus on <a href="#Prototype">prototype</a> and once validated, we'll start adding functionalities to each component.</p>
+<p>In order for the dependency flow plan to be done, tier 1 product repositories need to:</p>
+<ul>
+<li>Use Darc for dependency management.</li>
+<li>Subscribe to Maestro++.</li>
+<li>Builds for both CI and official builds happen in Azure DevOps.</li>
+</ul>
+<h1 id="prototype">Prototype</h1>
+<p>The goal of the prototype is to validate the interaction proposed between Darc and Maestro++, as well as the boundaries of each.
+We will showcase it by the end of S136.</p>
+<h2 id="conditions">Conditions:</h2>
+<ul>
+<li>The code for both Darc and Maestro++ live in Arcade.</li>
+<li>Maestro++ uses Darc to update Arcade dependencies.</li>
+</ul>
+<h2 id="scenario">Scenario:</h2>
+<ol>
+<li>A file gets updated in Arcade, that needs to go to other branches in Arcade.</li>
+<li>Maestro++ schedule trigger happens.</li>
+<li>Maestro++ asks Darc if there are any updates required for Arcade.</li>
+<li>Maestro++ calls Darc asking to update make an update.</li>
+<li>Darc creates a PR in Arcade.</li>
+<li>Dev merges the PR.</li>
+</ol>
+<h2 id="assumptions">Assumptions:</h2>
+<ul>
+<li>The trigger of Maestro++ for the Arcade repo will be scheduled.</li>
+<li>Maestro++ has a the subscriptions hardcoded.</li>
+<li>PR created will have one of the developers as owner.</li>
+<li>The PR created by Darc will need to be merged by a developer.</li>
+<li>PRs won't be monitored by Maestro++.</li>
+<li>We'll use a mock for the Build Asset Registry.</li>
+</ul>
+<h1 id="adding-functionalities---v1">Adding functionalities - V1</h1>
+<p>Once we have gathered feedback from the prototype, we can start adding functionalities to create Dependencies Flow V1. Targeting 3 sprints (S139 - June 8th) of work that will include:</p>
+<h2 id="build-asset-registry">Build Asset Registry</h2>
+<h3 id="design-the-model-of-the-build-asset-registry-s137---june-29th">Design the model of the Build Asset Registry (S137 - June 29th)</h3>
+<p>The Build Asset Registry is going to be used by:</p>
+<ul>
+<li>Builds: As part of the publish steps, once the assets produced during the build have been published, the build needs to tell the Build Asset Registry about what was produced and where it is located at.</li>
+<li>Darc: Query and updates the Build Asset Registry.</li>
+<li>Mission Control: Shows the information of the dependencies to users.</li>
+</ul>
+<h3 id="implement-api-to-access-the-build-asset-registry-s138---july-20th">Implement API to access the Build Asset Registry (S138 - July 20th)</h3>
+<p>For V1, the minimum APIs needed are:</p>
+<ul>
+<li>Add</li>
+<li>Get</li>
+</ul>
+<h2 id="darc">Darc</h2>
+<h3 id="interaction-with-the-build-asset-registry-s138---july-20th">Interaction with the Build Asset Registry (S138 - July 20th)</h3>
+<p>Darc uses the GET API call from the Build Asset Registry</p>
+<h3 id="add-the-ability-to-set-the-owner-of-the-pr">Add the ability to set the owner of the PR</h3>
+<p>By using GitHub tokens, be able to set the owner of the PR.</p>
+<h3 id="push-to-more-than-one-repo">Push to more than one repo</h3>
+<p>Define if we need this and how it should work.</p>
+<h2 id="maestro">Maestro++</h2>
+<h3 id="implement-channel-subscription-mechanism-to-arcade-s137---june-29th">Implement Channel subscription mechanism to Arcade (S137 - June 29th)</h3>
+<p>This involves:</p>
+<ul>
+<li>Evaluate if the current model (manage the subscriptions in a repository with a JSON file) is sufficient.</li>
+<li>Have the subscriptions in the Arcade repository.</li>
+</ul>
+<h3 id="implement-the-ability-to-set-policies-s138---s139---july-20th">Implement the ability to set policies. (S138 - S139 - July 20th)</h3>
+<p>For triggers, PR and auto-merge management.</p>
+<p><strong>auto-merge</strong>
+The minimum set of policies we need to enable this functionality are:</p>
+<ul>
+<li>Set the group of checks/validations that are needed in order to determine the PR is green and ready to merge. Note that each repo will have a different request on what goes into a group of checks, for example:
+<ul>
+<li>Green CI on GitHub/Azure DevOps PR</li>
+<li>No newer version updates have been merged</li>
+<li>No non-maestro bot commits have been added to the PR</li>
+<li>Would committing the PR results in an invalid dependency graph (e.g. aspnet's core-setup dependency is no longer matching CLI's core-setup dependency)</li>
+</ul>
+</li>
+<li>Turn on/off the ability to auto-merge a PR that has as owner Maestro++ (in the form of a Bot, for example). =&gt; at this point, this is not enabled and it is by default on the Dev.</li>
+</ul>
+<p><strong>Note</strong> that policies are for each repository.</p>
+<h2 id="onboard-1-repository-to-use-darc-and-maestro-for-their-official-builds-s139---august-10th">Onboard 1 repository to use Darc and Maestro++ for their official builds. (S139 - August 10th)</h2>
+<p>It involves:</p>
+<ul>
+<li>Define which repository.</li>
+<li>Add the repository to the Maestro++ subscriptions mechanism.</li>
+<li>Set Maestro++ policies for the repository.</li>
+<li>Builds send information to the Build Asset Registry using the API to report on the assets produced, the location, and other Build information.</li>
+</ul>
+<h1 id="adding-functionalities---v2">Adding functionalities - V2</h1>
+<p>Targeting 2 sprints (S141 - Sept 21st) of work that will include:</p>
+<h2 id="local-work-for-darc">Local work for Darc</h2>
+<p>Make sure a dev can use Darc locally to update the dependencies of the repo, and other repos too.</p>
+<h2 id="finish-implementing-build-asset-registry-apis">Finish implementing Build Asset Registry APIs</h2>
+<h2 id="on-board-other-repositories-to-use-darc-and-maestro-for-their-official-builds">On board other repositories to use Darc and Maestro++ for their official builds.</h2>
+<p>It involves:</p>
+<ul>
+<li>Add the repositories to the Maestro++ subscriptions mechanism.</li>
+<li>Set Maestro++ policies for each repository.</li>
+<li>Builds send information to the Build Asset Registry using the API to report on the assets produced, the location, and other Build information.</li>
+</ul>
+<h1 id="adding-functionalities---v3">Adding functionalities - V3...</h1>
+<h2 id="mirror-builds-using-maestro">Mirror builds using Maestro++</h2>
+<p>Currently, Maestro is in charge of this builds. Part of the work here is to define how those mirrors are going to happen in this new world and eventually stop relying on Maestro to build .NET CORE 3.0.</p>
+<h2 id="speculative-version-flow">Speculative version flow</h2>
+<p>More information <a href="https://github.com/dotnet/arcade/blob/master/Documentation/Maestro.md#speculative-version-flow">here</a>.</p>
+<h2 id="speculative-product-build">Speculative product build</h2>
+<p>More information <a href="https://github.com/dotnet/arcade/blob/master/Documentation/Maestro.md#speculative-product-builds">here</a>.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CDependenciesFlowPlan.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CDependenciesFlowPlan.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CDependenciesFlowPlan.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

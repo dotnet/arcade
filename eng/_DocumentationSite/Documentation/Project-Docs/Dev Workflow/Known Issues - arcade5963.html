@@ -1,0 +1,165 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Known Issues and Outage Reporting for Pull Requests </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Known Issues and Outage Reporting for Pull Requests ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="known-issues-and-outage-reporting-for-pull-requests">Known Issues and Outage Reporting for Pull Requests</h1>
+
+<p>We want to implement a notification that will be communicated to the developer on the pull request that initiated the build that notes any known outages that may cause or is causing failures. This will be similar to the Failure Guessing feature.</p>
+<p>Some of this data may already be available via <a href="https://github.com/jaredpar/runfo/tree/master/runfo">runfo</a>, so we should try to leverage the functionality that it has there, if it's useful for this feature. (e.g. recreating the functionality in our own code)</p>
+<p>Also, if possible, we'd like to automatically retry builds that have failed due to outages when the outage has been resolved.</p>
+<h2 id="stakeholders">Stakeholders</h2>
+<ul>
+<li>Product teams' developers</li>
+<li>Product teams' management</li>
+<li>Engineering Services team's developers</li>
+<li>Engineering Services team's management</li>
+</ul>
+<p>This feature is primarily for the product teams, however, the Engineering Services team should dogfood their own functionality.</p>
+<h2 id="risks">Risks</h2>
+<ul>
+<li>Data could be misleading and provide incorrect assumptions on cause of failures.</li>
+<li>Information relayed to the user may not contain actionable information (e.g. should they wait for other issues to be resolved? Do they need to fix a test? Is this something they need to report to Engineering Services team? et cetera)</li>
+<li>Information relayed to the user may be noisy.</li>
+<li>It's possible that the amount of work required for this future will overlap greatly with the greater Outage epic that is on the backlog.</li>
+<li>A manual process for tracking outages may mean issues that are tracking outages may be missed when the outage is resolved, or resolved prematurely.</li>
+</ul>
+<h3 id="proof-of-concepts">Proof of Concepts</h3>
+<ul>
+<li><p>Through a proof of concept, verify that we are able to retry a build that had previously failed due to an outage. This will require us to track the builds that are affected by outages and then know when an outage has been resolved so that it can retry the failed builds.</p>
+<p>Additional things to consider:</p>
+<ul>
+<li>Is a retry for the build already in progress?</li>
+<li>Are there other things in the build that caused a failure that does not warrant a retry?</li>
+<li>Should only builds of a certain &quot;age&quot; be retried? (e.g. what if a build is a week old before a reported outage is marked as resolved?)</li>
+<li>Can a customer opt out of an automatic retry? (Would this make sense to have?)</li>
+</ul>
+</li>
+<li><p>Through a proof of concept, verify that we have a way of tracking outages that can be posted back to the pull request in GitHub via the GitHub Checks API to report this information back to the user. This may be a specific way of naming GitHub issues to track outages, or a service that will track the outages.</p>
+</li>
+</ul>
+<h3 id="dependencies">Dependencies</h3>
+<ul>
+<li>Helix Services</li>
+<li>Azure DevOps</li>
+<li>GitHub, GitHub Checks API</li>
+</ul>
+<h2 id="serviceability">Serviceability</h2>
+<ul>
+<li>Unit and functional (where appropriate, for both) tests for the individual components of the service</li>
+<li>Post-deployment scenario tests for the service to ensure that it is functioning as intended with all it's integrated parts.</li>
+</ul>
+<h3 id="rollout-and-deployment">Rollout and Deployment</h3>
+<ul>
+<li>If the service is built in an existing project, such as Arcade Services or Helix Services, the rollout should be consistent with the existing rollouts for the project.</li>
+</ul>
+<h2 id="usage-telemetry">Usage Telemetry</h2>
+<ul>
+<li>Create a feedback mechanism (e.g. tracking image with a thumbs-up and thumbs-down) to include next to any communication so that the users can provide feedback quickly.</li>
+<li>Links created in new areas (e.g. GitHub comments, Failure Summary in GitHub Checks) could pass-through an aka.ms redirect link for us to capture usage from.</li>
+</ul>
+<h2 id="monitoring">Monitoring</h2>
+<ul>
+<li>This new service will require usage and health monitoring.</li>
+</ul>
+<h2 id="fr-hand-off">FR Hand off</h2>
+<ul>
+<li>We will create user documentation for how to configure the retries and expectations for viewing results.</li>
+<li>We will create documentation for the Engineering Services team to investigate issues with the feature itself.</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CDev%20Workflow%5CKnown%20Issues%20-%20arcade5963.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CDev%20Workflow%5CKnown%20Issues%20-%20arcade5963.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CDev%20Workflow%5CKnown%20Issues%20-%20arcade5963.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

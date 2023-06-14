@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Renaming or Moving a Repository </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Renaming or Moving a Repository ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="renaming-or-moving-a-repository">Renaming or Moving a Repository</h1>
+
+<p>When a repo is renamed or moved, a number of things need to be done to ensure a seamless transition. These updates do not need to be done in any particular order</p>
+<ul>
+<li>Rename internal AzDO repository. Form should be: <code>&lt;github org&gt;-&lt;repo name&gt;</code></li>
+<li>Rename instance of the github repo name in the classic Maestro's subscriptions file <a href="https://github.com/dotnet/versions/blob/master/Maestro/subscriptions.json">https://github.com/dotnet/versions/blob/master/Maestro/subscriptions.json</a></li>
+<li>Update Maestro default channels to point to the new repo name
+<pre><code>darc get-default-channels
+&lt;for each default channel on that repo&gt;
+darc delete-default-channel --id &lt;id&gt;
+darc add-default-channel --repo &lt;new repo name&gt; --branch &lt;original branch name&gt; --channel &lt;original channel name&gt;
+</code></pre>
+</li>
+<li>Update Maestro subscriptions to pull from/to the new repo name.
+<pre><code>&lt;update subscriptions sourcing from the repo&gt;
+darc get-subscriptions --source-repo &lt;original repo url&gt;
+&lt;for each subscription&gt;
+darc update-subscription --id &lt;subscription id&gt;
+
+&lt;update subscriptions targeting the repo&gt;
+darc get-subscriptions --target-repo &lt;original repo url&gt;
+&lt;foreach subscription&gt;
+darc add-subscription
+  &lt;fill out form with new url and original parameters&gt;
+
+darc delete-subscriptions --target-repo &lt;original repo url&gt;
+</code></pre>
+</li>
+<li>Add appropriate repository policies for the new repo name for any batched subscriptions
+<pre><code>darc get-repository-policies --repo &lt;original repo url&gt;
+&lt;for each original repository policy on active branches&gt;
+darc add-repository-policy
+</code></pre>
+</li>
+<li>Update the <code>repositories</code> variable in GatherDropOperation to point to the new repo name, if that repo is present in the list: <a href="https://github.com/dotnet/arcade-services/blob/d2ef862c8262c3945a0c2098c3307ae9e264124a/src/Microsoft.DotNet.Darc/src/Darc/Operations/GatherDropOperation.cs#L336-L380">https://github.com/dotnet/arcade-services/blob/d2ef862c8262c3945a0c2098c3307ae9e264124a/src/Microsoft.DotNet.Darc/src/Darc/Operations/GatherDropOperation.cs#L336-L380</a>.</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CHowToRenameARepo.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CHowToRenameARepo.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CHowToRenameARepo.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

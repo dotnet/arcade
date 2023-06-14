@@ -1,0 +1,172 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Asynchronous Triage Bot </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Asynchronous Triage Bot ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="asynchronous-triage-bot">Asynchronous Triage Bot</h1>
+
+<p>We want to implement a mechanism that will allow newly-created issues on GitHub that still need to be triaged to automatically have their own dedicated conversation started on Teams. It would also be useful to denote Teams conversations as [Triaged] or [Needs Triage] in Teams for clarity.</p>
+<p>See Epic for more context: <a href="https://github.com/dotnet/core-eng/issues/13288">https://github.com/dotnet/core-eng/issues/13288</a></p>
+<h2 id="stakeholders">Stakeholders</h2>
+<ul>
+<li>.NET Engineering Services team</li>
+</ul>
+<h2 id="risk">Risk</h2>
+<h3 id="unknowns-and-open-questions">Unknowns and Open Questions</h3>
+<ul>
+<li>How can we distinguish if an issue needs triage, or if it was just created and will immediately have an Epic assigned to it? (<a href="https://github.com/dotnet/core-eng/issues/13457">link to issue</a>)
+<ul>
+<li>Suggested - a background job that occasionally scans for unassigned issues and adds a conversation on Teams if necessary, rather than generating a conversation every time an issue is created. This also addresses an interesting case in which an issue was assigned to one Epic, then unassigned.</li>
+</ul>
+</li>
+<li>Some issues may not need to be assigned to an Epic (ex. customers that open issues for themselves).
+<ul>
+<li>Suggested - marking these issues with a label for the bot to ignore, or triage assigns them to the &quot;work tracking for other teams&quot; epic.</li>
+</ul>
+</li>
+</ul>
+<h3 id="proof-of-concepts">Proof of Concepts</h3>
+<ul>
+<li>Verify that we are able to open a new conversation in a channel on Teams when a new issue is opened on GitHub. Try to utilize some similar functionality to the FR Mention Bot.</li>
+<li>Verify that additional comments added to an issue update their dedicated Teams conversation.</li>
+<li>Verify that existing Teams conversations can be updated when triaged, such as denoting [Triaged] in the conversation title.</li>
+<li>Verify that we can grab all the existing unassigned issues from GitHub (this will require the use of the ZenHub API to check if it is in an Epic).</li>
+</ul>
+<h3 id="dependencies">Dependencies</h3>
+<ul>
+<li>GitHub API</li>
+<li>ZenHub API</li>
+<li>Teams</li>
+</ul>
+<p>Additionally, the solution should mostly be a new addition to the Arcade Services repo. Note that most of the GitHub webhook functionality is already implemented in Arcade Services. The goal to have the work completed by is September 10th at the latest.</p>
+<h2 id="serviceability">Serviceability</h2>
+<h3 id="testing">Testing</h3>
+<p>To avoid sending actual requests to Teams and cluttering up the channel, we can test some functionality of the code by creating mock HTTP calls and checking if they send requests in the right cases. We can also try creating a hidden channel on Teams for integration testing.</p>
+<h3 id="security">Security</h3>
+<p>Identifying secrets that will be used include the Teams channel connector URI and authentication for the GitHub app. Note that all PII is owned by GitHub and Teams.</p>
+<ul>
+<li>The &quot;bot&quot; account that will be posting to Teams will also require authentication and must have permission to access channel messages, add replies to a discussion, etc.</li>
+<li>Setting up repro/test/dev environments: this will vary based on implementation details; the environment may simply be able to be set up and opened as a VS project, or might require a more complicated process.</li>
+</ul>
+<h3 id="rollout-and-deployment">Rollout and Deployment</h3>
+<ul>
+<li>The solution will be most likely be deployed on Arcade Services, and thus on the Arcade Services cadence. Once deployed, check the Async Triage channel on Teams for updates.</li>
+<li>While nothing is being deprecated, we will probably remove the &quot;Needs Triage&quot; and &quot;I Think This is Triaged&quot; Fabric bot tags once the solution is deployed.</li>
+<li>What are the risks during deployment?
+<ul>
+<li>If the solution stops working, new untriaged issues may go unnoticed without a conversation being created on Teams. It may require some monitoring to make sure that untriaged issues are consistently being added on Teams.</li>
+</ul>
+</li>
+</ul>
+<h2 id="usage-telemetry">Usage Telemetry</h2>
+<p>Suggestions for tracking &quot;usefulness&quot; of the solution include measuring the average amount of time it takes for an issue to be triaged, how many people are involved, the average length of conversations, etc. However, more discussion is needed to figure out how the necessary information will be collected.</p>
+<h2 id="monitoring">Monitoring</h2>
+<ul>
+<li>Is there existing monitoring that will be used by this epic?
+<ul>
+<li>On the Teams end, we can monitor if there are an abnormal amount of non-successful requests made to Teams.</li>
+<li>Suggested - using Azure Application Insights to monitor the functionality of the GitHub controller.</li>
+</ul>
+</li>
+<li>If new monitoring is needed, it should be defined and alerting thresholds should be set up.</li>
+</ul>
+<h2 id="fr-hand-off">FR Hand off</h2>
+<ul>
+<li>We should create some documentation on what functionalities the solution currently possesses and link to the code for more information. The code should also be clearly documented.</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Casync-triage-core-eng13288.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Casync-triage-core-eng13288.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Casync-triage-core-eng13288.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,226 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Azure DevOps Guidance </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Azure DevOps Guidance ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="azure-devops-guidance">Azure DevOps Guidance</h1>
+
+<h2 id="projects">Projects</h2>
+<p>There are two projects for use.  They are:</p>
+<ul>
+<li>public (<a href="https://dev.azure.com/dnceng-public/public">https://dev.azure.com/dnceng-public/public</a>)
+<ul>
+<li>Used for oss</li>
+<li>For Pipelines only  (no source code - that's on GitHub)</li>
+<li>Pipelines are allowed to pull source directly from GitHub</li>
+</ul>
+</li>
+<li>internal  (<a href="https://dev.azure.com/dnceng/internal">https://dev.azure.com/dnceng/internal</a>)
+<ul>
+<li>Pipelines are only allowed to pull source from internal repos</li>
+<li>Public GitHub repos should be mirrored here for official Microsoft builds</li>
+</ul>
+</li>
+</ul>
+<p>We will have multiple Pipelines, effectively a mirrored set in the public and internal. We will have one set of YAML which applies to both. This will allow for CI (PR testing) in both internal and OSS venues, and well as official build production on the internal side.</p>
+<h2 id="teams">Teams</h2>
+<p>In this context, teams pretty much only affect which level the kanban (or whatever) boards are at.  While permissions can be set at the team level, we're choosing not to do so.</p>
+<ul>
+<li>$(GitHubOrg)</li>
+</ul>
+<h2 id="permissions">Permissions</h2>
+<p>To keep things as simple (manageable) as possible, we're going to manage permissions coarsely at the project level - pointing directly to existing AD security groups managed in idweb.  <strong>We should not be managing permission outside of this method</strong></p>
+<ul>
+<li>Permissions will point to existing security groups in AD which are managed in idweb.  This admin is done at the <strong>project</strong> level.  (<a href="https://dev.azure.com/dnceng/internal/_admin/_security">Azure DevOps link</a>)</li>
+<li>The bulk of folks will be in the 'contributors' group, with special additions for other groups (like admin)</li>
+<li>There are Azure DevOps permission groups that can be set out side of the project context. (<a href="https://dev.azure.com/dnceng/_admin/_security">Azure DevOps link</a>)   <strong>We're not going to use those</strong></li>
+<li>It is also possible to set permissions at the team.  <strong>We're not going to do that</strong></li>
+</ul>
+<h2 id="casing">Casing</h2>
+<ul>
+<li>Casing of projects/repos/build pipelines/etc. should match as closely as possible our GitHub guidelines.  Generally, that means lower-case except where we have already used upper-case.  Examples:
+<ul>
+<li>dotnet (org name/folder name)</li>
+<li>public (project name)</li>
+<li>internal (project name)</li>
+<li>Microsoft (folder name matching GitHub org name)</li>
+<li>dotnet-runtime (Azure DevOps repo name on internal project)</li>
+</ul>
+</li>
+</ul>
+<h2 id="pipelines">Pipelines</h2>
+<h3 id="folder-names-for-github-repos">Folder names for GitHub repos</h3>
+<p>For those repos which are in GitHub, the pipelines should live:</p>
+<ul>
+<li><span class="math">\((GitHubOrg)/\)</span>(GitHubRepoName)/*.def</li>
+</ul>
+<h3 id="folders-for-azure-devops-repos">Folders for Azure DevOps repos</h3>
+<p>For repos in Azure DevOps, the build pipelines should live:</p>
+<ul>
+<li>lower-case, no spaces, use dashes</li>
+<li>Put it where it makes sense (closest GitHub org), just not top-level</li>
+<li>Use the closest GitHub org</li>
+<li>Use the closet GitHub repo name/Azure DevOps repo name without the prefix</li>
+<li>*.def</li>
+</ul>
+<h3 id="pipeline-file-name-convention">Pipeline file name convention</h3>
+<ul>
+<li>lower-case, No spaces, use dashes</li>
+<li>Pattern: <code>&lt;repo-scenario&gt;</code>
+<ul>
+<li>Scenario:
+<ul>
+<li>code-coverage</li>
+<li>slow-tests</li>
+<li>fast-tests</li>
+<li>internal-tools (TBD -- Nate and Matt to investigate more)</li>
+<li>official</li>
+<li>ci</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="example">Example</h3>
+<pre><code class="lang-TEXT">public project:
+  dotnet/arcade/arcade-ci
+  dotnet/coreclr/coreclr-jit-stress
+internal project:
+  dotnet/arcade/arcade-official
+  dotnet/coreclr/coreclr-ci
+  dotnet/coreclr/coreclr-jit-stress
+</code></pre>
+<h2 id="source-code">Source Code</h2>
+<p>For now, everything should be in 'internal' and any code that is public should be on GitHub</p>
+<h3 id="azure-devops-repos-should">Azure DevOps repos should</h3>
+<ul>
+<li>Be mirrored from GitHub, if not internal only.</li>
+<li>Internal-only projects should only be in the 'internal' project with no GitHub equivalent</li>
+</ul>
+<h3 id="naming-conventions">Naming conventions</h3>
+<ul>
+<li><span class="math">\((orgName)-\)</span>(repoName)</li>
+<li>Again - *No plan to have public repos in Azure DevOps at this time</li>
+</ul>
+<h3 id="example-1">Example</h3>
+<pre><code class="lang-TEXT">Project: Public:
+  Repo: dotnet/corefx - Located in GitHub
+  Repo: dotnet/coreclr - Located in GitHub
+Project: Internal:
+  Repo: dotnet-corefx
+  Repo: dotnet-coreclr
+  Repo: Microsoft-visualfsharp
+</code></pre>
+<p>Both of these would point to the same yaml file in the forks of the repo:</p>
+<ul>
+<li>GitHub: dotnet\corefx</li>
+<li>Azure DevOps: dotnet-corefx</li>
+<li>The only differences here are:
+<ul>
+<li>Repo name: Repos are top level objects in Azure DevOps so we have an org prefix</li>
+<li>Leaf folder/build pipeline name (depending on how Azure DevOps's pipelines folder work goes)</li>
+</ul>
+</li>
+</ul>
+<h2 id="terms">Terms</h2>
+<p>From time to time, there are some terms you might encounter in documentation or otherwise.  Here's some I've run across so far and the interpretation.</p>
+<ul>
+<li>collection --&gt; account --&gt; instance (top level thing - e.g. dev.azure.com/dnceng)</li>
+<li>team --&gt; group of individuals.  Largely is about the backlog, not much more.  In our case we're not using for permissions.</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CAzureDevOps%5CAzureDevOpsGuidance.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CAzureDevOps%5CAzureDevOpsGuidance.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CAzureDevOps%5CAzureDevOpsGuidance.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

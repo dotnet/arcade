@@ -1,0 +1,263 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Retrying Stages to Address Errors in Staging pipeline </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Retrying Stages to Address Errors in Staging pipeline ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="retrying-stages-to-address-errors-in-staging-pipeline">Retrying Stages to Address Errors in Staging pipeline</h1>
+
+<h2 id="what-is-the-current-process">What is the current process?</h2>
+<p>Today we must run the entire Staging pipeline if we encounter any errors in the pipeline.
+For eg: When Package push fails, we need to rerun everything to fix the bug.</p>
+<p>There is no way to test the pipeline with fewer stages. Since most of the later stages are dependent on earlier stages that takes a lot of time to complete.
+For eg: If we want to test only the Required Validation stage, we will need to run Prep and Signing.</p>
+<h2 id="problems-with-current-process">Problems with current process:</h2>
+<ol>
+<li>Rerunning a single stage in the pipeline is not possible without executing the entire pipeline again.</li>
+<li>Running only the stage where changes were implemented is not feasible.</li>
+<li>Re-executing the entire process and testing consumes a considerable amount of time.</li>
+<li>Staging pipeline is complicated to understand, we need a simpler process.</li>
+</ol>
+<h2 id="different-approach-for-staging-pipeline">Different approach for staging pipeline:</h2>
+<table>
+<thead>
+<tr>
+<th>Approach</th>
+<th>Pros</th>
+<th>Cons</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1. We add some parameters in the pipeline, and make staging pipeline download the pipeline assets uploaded in the Signing stage of build with build id 12345 in the new pipeline run. Since the assets are already signed we just run required validation and publishing stage only We will need build id of the successful build. We will use azure apis to download the pipeline artifacts</td>
+<td><li>  Easier to test     <li> We can pick and choose which stages to rerun                                                         <li>Relatively easy to implement <li> Release pipeline is doing something similar</li></td>
+<td><li> Seems primitive and hacky</li></td>
+</tr>
+<tr>
+<td>2. Pipeline should be intelligent enough, like if we rerun the pipeline with the same BarId, it should look up the data in timeline builds and if the stage was previously successful from previous runs it should just not do anything. Like here if prep ring was successful, so it would skip prep and go to signing. Signing was already successful so now it will skip this stage and just download assets from the build with build if 12345. Then eventually just run Required Validation and publishing stage</td>
+<td><li> Lot of code change in every stage <li> Timeline data is in Kusto and they sometime take time to show up in kusto so prone to errors(waiting can help)</li></td>
+<td><li> Need to capture details which build ran with which barid <li> Seems hacky <li> Adds non determinism based on time, availability of systems.</li></td>
+</tr>
+<tr>
+<td>3. Create a cache to cache the Signed assets, so next time we re run the pipeline for the same barID, We look for signed assets in the cache. The assets are hashed, so if there is no change in the bits, we do not have to run that stage. So in case required validation was previously successful for the signed assets hash  then skip this stage.</td>
+<td><li> Lot cleaner</li></td>
+<td><li> We may be adding  complexity to our current infra <li> Have to maintain cache <li> Need to add an explicit ovveride when we need to re-sign. <li> Does not save a lot of time  in 7.0/8.0 where in-build signing reduces the time in the signing stage.</li></td>
+</tr>
+<tr>
+<td>4. Split the pipeline into 2 <li> Anything that alters the artifacts ( Signing) <li>Validation and publishing</li></td>
+<td><li> .Net 9 we are moving towards moving signing (anything that alters/creates the build artifacts is going to be moved) to main builds, so by splitting this we will align to work with .Net 9 ( which is awesome!) <li> Making the pipeline lot less complex<li> We can introduce testing infra (inject DI in the second pipeline, publish to test vs prod containers) <li> Makes the whole pipeline simpler <li> If we want to fix something in the second pipeline we don't have to rerun the first one. So fixes are and flaky test reruns are lot faster and easier.</li></td>
+<td><li> Have to maintain 2 pipeline <li> BCM work has to be reevaluated.</li></td>
+</tr>
+</tbody>
+</table>
+<h2 id="goal-and-motivation">Goal and Motivation</h2>
+<p>After carefully analyzing the pros and cons of all the above approaches, we decided to go with splitting the pipeline.</p>
+<p>The proposal here is to split the Staging Pipeline into two different pipelines and add the ability to rerun stages. Thinking of this work as 2 part process.</p>
+<h4 id="version-1-v1">Version 1 (V1):</h4>
+<ol>
+<li>First pipeline will contain anything that alters or generates the artifacts (Eg: Signing, SBOM generation).</li>
+<li>Second pipeline will contain Validation and publishing to various storage accounts.</li>
+</ol>
+<h4 id="version-2-v2">Version 2 (V2):</h4>
+<ol>
+<li>Ability to add rerun stages in the Second pipeline</li>
+</ol>
+<h2 id="stakeholders">Stakeholders:</h2>
+<ol>
+<li>Tomas team</li>
+<li>Release team</li>
+</ol>
+<h3 id="current-flow">Current Flow</h3>
+<pre><code class="lang-mermaid">flowchart LR;
+  prep[&quot;Prep Ring \n &lt;b&gt;~30min&lt;/b&gt;&quot;] --&gt; prep_override[Prep Ring Override]
+  prep_override --&gt; signing[&quot;Signing Ring \n &lt;b&gt;~50min&lt;/b&gt;&quot;]
+  prep_override --&gt; source_code_validation[&quot;Source Code Validation \n &lt;b&gt;~40min&lt;/b&gt;&quot;]
+  source_code_validation --&gt; source_code_validation_override[Source Code Validation Override]
+  signing --&gt; required_validation[&quot;Required Validation \n &lt;b&gt;~1h&lt;/b&gt;&quot;]
+  signing --&gt; validation[&quot;Validation \n &lt;b&gt;~5h&lt;/b&gt;&quot;]
+  required_validation --&gt; sbom_generation[&quot;SBOM Generation \n &lt;b&gt;~20m&lt;/b&gt;&quot;]
+  required_validation --&gt; required_validation_override[Required Validation Override]
+  validation --&gt; validation_override[Validation Override]
+  required_validation_override --&gt; publishing_v3_signed[&quot;Publish Post-Signing Assets \n &lt;b&gt;~1h20m&lt;/b&gt;&quot;]
+  required_validation_override --&gt; post_signing_publishing[&quot;Publish Signed Assets \n &lt;b&gt;~1h30m&lt;/b&gt;&quot;]
+  required_validation_override --&gt; vs_insertion[&quot;VS Insertion Ring \n &lt;b&gt;~50m&lt;/b&gt;&quot;]
+  vs_insertion --&gt; vs_insertion_override[&quot;VS Insertion \n Override \n &lt;b&gt;&lt;/b&gt;&quot;]
+  vs_insertion_override --&gt; test_team_sign_off[&quot;Waiting for \n Test team \n to Sign off \n &lt;b&gt;&lt;/b&gt;&quot;]
+  test_team_sign_off --&gt; staging_ring[&quot;Staging Ring \n &lt;b&gt;&lt;/b&gt;&quot;]
+  source_code_validation_override --&gt; staging_ring[&quot;Staging Ring \n &lt;b&gt;~1h10m&lt;/b&gt;&quot;]
+  staging_ring --&gt; staging_ring_override[&quot;Staging Ring \n Override \n &lt;b&gt;&lt;/b&gt;&quot;]
+  staging_ring_override --&gt; sign_off_for_finalizing_release[&quot;Sign off for \nfinalizing \n the release \n &lt;b&gt;&lt;/b&gt;&quot;]
+  sign_off_for_finalizing_release --&gt; finalize_staging_ring[&quot;Finalize \n Staging Ring \n &lt;b&gt;&lt;/b&gt;&quot;]
+  sign_off_for_finalizing_release --&gt; publish_cit_validated_assets[&quot;Publish CTI \n validated assets \n &lt;b&gt;1h20m&lt;/b&gt;&quot;]
+  finalize_staging_ring --&gt; approve_publishing_dotnetcs_internal[&quot;Approve \n publishing to \n dotnetcsinternal \n &lt;b&gt;&lt;/b&gt;&quot;]
+  approve_publishing_dotnetcs_internal --&gt; handoff_publishing_ring[&quot;Handoff \n Publishing Ring \n (dotnetcsinternal) \n &lt;b&gt;&lt;/b&gt;&quot;]
+  sbom_generation --&gt; sbom_generation_override[SBOM Generation Override]
+</code></pre>
+<h2 id="v1">V1:</h2>
+<h3 id="splitting-staging-pipeline">Splitting Staging Pipeline:</h3>
+<p>Proposed implementation is splitting the pipeline into two pipelines.</p>
+<h4 id="1-first-pipeline-stage-dotnet-prepare-artifacts">1. First pipeline: Stage-Dotnet-Prepare-Artifacts</h4>
+<p>The Stage-Dotnet-Prepare-Artifacts pipeline will contain stages that alters or generates new (e.g. SBOM) artifacts.</p>
+<pre><code class="lang-mermaid">flowchart LR;
+  prep[&quot;Prep Ring \n &lt;b&gt;~30min&lt;/b&gt;&quot;] --&gt; prep_override[Prep Ring Override]
+  prep_override --&gt; signing[&quot;Signing Ring \n &lt;b&gt;~50min&lt;/b&gt;&quot;]
+  signing--&gt; sbom_generation[&quot;SBOM Generation \n &lt;b&gt;~20m&lt;/b&gt;&quot;]
+  sbom_generation--&gt; kick_2nd_pipeline[&quot;Stage-Dotnet-Validate-Publish pipeline kick off \n &lt;b&gt;~20m&lt;/b&gt;&quot;]
+  sbom_generation --&gt; sbom_generation_override[SBOM Generation Override]
+</code></pre>
+<h4 id="2-second-pipeline-stage-dotnet-validate-publish">2. Second pipeline: Stage-Dotnet-Validate-Publish</h4>
+<p>The Stage-Dotnet-Validate-Publish pipeline will contain validation and publishing stages.</p>
+<pre><code class="lang-mermaid">flowchart LR;
+  start[&quot;Queued \n&quot;] --&gt; validation[&quot;Validation &lt;b&gt;~5h&lt;/b&gt;&quot;]
+  validation --&gt; validation_override[Validation Override]
+  start--&gt; source_code_validation[&quot;Source Code \n Validation \n &lt;b&gt;~40min&lt;/b&gt;&quot;]
+  source_code_validation --&gt; source_code_validation_override[Source Code \n Validation \n Override]
+  start--&gt; required_validation[&quot;Required \n Validation \n &lt;b&gt;~1h&lt;/b&gt;&quot;]
+  required_validation --&gt; required_validation_override[Required \n Validation \n Override]
+  required_validation_override --&gt; publishing_v3_signed[&quot;Publish \n Post-Signing Assets \n &lt;b&gt;~1h20m&lt;/b&gt;&quot;]
+  required_validation_override --&gt; post_signing_publishing[&quot;Publish Signed \n Assets \n &lt;b&gt;~1h30m&lt;/b&gt;&quot;]
+  required_validation_override --&gt; vs_insertion[&quot;VS Insertion \n Ring \n &lt;b&gt;~50m&lt;/b&gt;&quot;]
+  vs_insertion --&gt; vs_insertion_override[&quot;VS Insertion \n Override \n &lt;b&gt;&lt;/b&gt;&quot;]
+  vs_insertion_override --&gt; test_team_sign_off[&quot;Waiting for \n Test team \n to Sign off \n &lt;b&gt;&lt;/b&gt;&quot;]
+  test_team_sign_off --&gt; staging_ring[&quot;Staging Ring \n &lt;b&gt;&lt;/b&gt;&quot;]
+  source_code_validation_override --&gt; staging_ring[&quot;Staging Ring \n &lt;b&gt;~1h10m&lt;/b&gt;&quot;]
+  staging_ring --&gt; staging_ring_override[&quot;Staging Ring \n Override \n &lt;b&gt;&lt;/b&gt;&quot;]
+  staging_ring_override --&gt; sign_off_for_finalizing_release[&quot;Sign off for \nfinalizing \n the release \n &lt;b&gt;&lt;/b&gt;&quot;]
+  sign_off_for_finalizing_release --&gt; finalize_staging_ring[&quot;Finalize \n Staging Ring \n &lt;b&gt;&lt;/b&gt;&quot;]
+  sign_off_for_finalizing_release --&gt; publish_cit_validated_assets[&quot;Publish CTI \n validated assets \n &lt;b&gt;1h20m&lt;/b&gt;&quot;]
+  finalize_staging_ring --&gt; approve_publishing_dotnetcs_internal[&quot;Approve \n publishing to \n dotnetcsinternal \n &lt;b&gt;&lt;/b&gt;&quot;]
+  approve_publishing_dotnetcs_internal --&gt; handoff_publishing_ring[&quot;Handoff \n Publishing Ring \n (dotnetcsinternal) \n &lt;b&gt;&lt;/b&gt;&quot;]
+</code></pre>
+<h3 id="advantages-of-splitting-pipeline">Advantages of splitting pipeline:</h3>
+<ol>
+<li>In .Net 9 we are going to move signing to main build. By splitting pipeline we are going to be in alignment with that plan, meaning we can retire the first pipeline when time comes and only the second pipeline will be staging pipeline then.</li>
+<li>Bug fix and testing in validation and publishing stages are lot faster. We do not have to wait for the build to be signed everytime we make a fix to validation/publishing stage or re-run flaky tests.</li>
+<li>We can add ability to rerun to smaller subset of stages as compared to Stage-Dotnet pipeline.</li>
+</ol>
+<h3 id="interface-between-the-stage-dotne-prepare-artifacts-pipeline-and-stage-dotnet-validate-publish-pipeline">Interface between the Stage-Dotne-Prepare-Artifacts Pipeline and Stage-Dotnet-Validate-Publish pipeline:</h3>
+<p>The first pipeline Stage-Dotnet-Prepare-Artifacts (May be during the create SBOM stage or after) kicks off a build in the Stage-Dotnet-Validate-Publish pipeline. This is similar to what we have in maestro promotion pipeline. The Stage-Dotnet-Prepare-Artifacts is not dependent on the Stage-Dotnet-Validate-Publish pipeline to be completed.</p>
+<p>The second pipeline Stage-Dotnet-Validate-Publish pipeline downloads the signed build artifacts from the Stage-Dotnet-Prepare-Artifacts pipeline.</p>
+<p>One of the main reason for adding the trigger to kick off a the Stage-Dotnet-Validate-Publish from the Stage-Dotnet-Prepare-Artifacts pipeline is so that we don't have to manually kick off the Stage-Dotnet-Validate-Publish build after the first pipeline completes. Additionally the Stage-Dotnet-Validate-Publish can be kicked off manually too. It will use BarBuildID / BuildId combination to download the signed assets from the first pipeline.</p>
+<h2 id="v2">V2:</h2>
+<p>Rerruning stages in Stage-Dotnet-Validate-Publish pipeline:</p>
+<p>Say Publishing Signed Assets fails and validation is successful</p>
+<ol>
+<li>We can add the ability to pick and choose the stages to run in the second pipeline.</li>
+</ol>
+<p>Here we skipped Validation stage altogether. Similarly we can can add ability to skip other stages in the pipeline.</p>
+<pre><code class="lang-mermaid">flowchart LR;
+  start[&quot;Queued \n&quot;] --&gt; publishing_v3_signed[&quot;Publish \n Post-Signing Assets \n &lt;b&gt;~1h20m&lt;/b&gt;&quot;]
+  start --&gt; post_signing_publishing[&quot;Publish Signed \n Assets \n &lt;b&gt;~1h30m&lt;/b&gt;&quot;]
+  start --&gt; vs_insertion[&quot;VS Insertion \n Ring \n &lt;b&gt;~50m&lt;/b&gt;&quot;]
+  vs_insertion --&gt; vs_insertion_override[&quot;VS Insertion \n Override \n &lt;b&gt;&lt;/b&gt;&quot;]
+  vs_insertion_override --&gt; test_team_sign_off[&quot;Waiting for \n Test team \n to Sign off \n &lt;b&gt;&lt;/b&gt;&quot;]
+  test_team_sign_off --&gt; staging_ring[&quot;Staging Ring \n &lt;b&gt;&lt;/b&gt;&quot;]
+  staging_ring --&gt; staging_ring_override[&quot;Staging Ring \n Override \n &lt;b&gt;&lt;/b&gt;&quot;]
+  staging_ring_override --&gt; sign_off_for_finalizing_release[&quot;Sign off for \nfinalizing \n the release \n &lt;b&gt;&lt;/b&gt;&quot;]
+  sign_off_for_finalizing_release --&gt; finalize_staging_ring[&quot;Finalize \n Staging Ring \n &lt;b&gt;&lt;/b&gt;&quot;]
+  sign_off_for_finalizing_release --&gt; publish_cit_validated_assets[&quot;Publish CTI \n validated assets \n &lt;b&gt;1h20m&lt;/b&gt;&quot;]
+  finalize_staging_ring --&gt; approve_publishing_dotnetcs_internal[&quot;Approve \n publishing to \n dotnetcsinternal \n &lt;b&gt;&lt;/b&gt;&quot;]
+  approve_publishing_dotnetcs_internal --&gt; handoff_publishing_ring[&quot;Handoff \n Publishing Ring \n (dotnetcsinternal) \n &lt;b&gt;&lt;/b&gt;&quot;]
+</code></pre>
+<h4 id="risks">Risks:</h4>
+<ol>
+<li>We are dissecting the staging pipeline, there is a chance we might be messing up publishing to correct storage containers.</li>
+<li>Since we will retire the old pipeline only after the new pipelines Stage-Dotnet-Prepare-Artifacts and Stage-Dotnet-Validate-Publish are up and running, there may be an extended period where we need to maintain extra pipelines.</li>
+</ol>
+<h4 id="additional-information">Additional information:</h4>
+<ol>
+<li>Verify we don't duplicate publishing of assets is tracked in (issue)[https://github.com/dotnet/arcade/issues/13025]</li>
+<li>Adding testing infra to Staging pipeline is tracked (here)[https://github.com/dotnet/arcade/issues/13462]</li>
+</ol>
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

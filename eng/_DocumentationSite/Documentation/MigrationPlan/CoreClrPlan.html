@@ -1,0 +1,530 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>.NET Core 3 Engineering transition plan (dotnet/coreclr) </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content=".NET Core 3 Engineering transition plan (dotnet/coreclr) ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="net-core-3-engineering-transition-plan-dotnetcoreclr">.NET Core 3 Engineering transition plan (dotnet/coreclr)</h1>
+
+<h2 id="overall-status">Overall status</h2>
+<p>Official builds and Dependency Flow are complete.  There are just a couple of issues around symbol
+publishing affecting ingestion by the upstream repos.</p>
+<p>CI is close, but we are tracking a number of issues preventing the Default-trigger jobs from running
+green against PRs.  External issues are labeled below.</p>
+<h2 id="primary-deliverable-breakdown-of-remaining-work">Primary Deliverable Breakdown of remaining work</h2>
+<h3 id="internal-builds-from-dnceng-overlaps-dependency-flow">Internal builds from dnceng (overlaps dependency flow)</h3>
+<p>Outstanding issues</p>
+<ul>
+<li><a href="https://github.com/dotnet/coreclr/issues/21897">Enable transport packages for core-setup</a></li>
+<li><a href="https://github.com/dotnet/coreclr/issues/21898">Symbol publishing issues in coreclr official build</a></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Estimate remaining (days)</th>
+<th>Estimate confidence (%)</th>
+<th>Priority 1</th>
+<th>Priority 2</th>
+<th>Done</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Decide what to do about native dependencies in official build</td>
+<td>0</td>
+<td>-</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+</tr>
+<tr>
+<td>Add signing to official product builds</td>
+<td>0.5</td>
+<td>90</td>
+<td>X</td>
+<td></td>
+<td>(Working through the last set of issues on this)</td>
+</tr>
+<tr>
+<td>Add red hat product build job</td>
+<td>0</td>
+<td>-</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+</tr>
+<tr>
+<td>Add linux-musl product build job</td>
+<td>0</td>
+<td>-</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+</tr>
+<tr>
+<td>Publish packages to blob feed (this is part of dependency flow requirement)</td>
+<td>1</td>
+<td>50</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+</tr>
+<tr>
+<td>Publish symbols</td>
+<td>1</td>
+<td>50</td>
+<td>X</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Update Build Assets Registry (this is part of dependency flow requirement)</td>
+<td>0.5</td>
+<td>60</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+</tr>
+<tr>
+<td>IBC and PGO data</td>
+<td>3</td>
+<td>30</td>
+<td></td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Validate output against buildpipeline official build</td>
+<td>1</td>
+<td>80</td>
+<td></td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Turn off buildpipeline official build and remove old scripts</td>
+<td>1</td>
+<td>80</td>
+<td></td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>8</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="engineering-dependency-flow-beyond-what-required-for-official-build">Engineering dependency flow (beyond what required for official build)</h3>
+<p>These Dependency Flow tasks are done, though they have only been lightly tested.  We won't be able
+to tell whether everything comes together until the Official Builds are published and we try to
+enable Dependency Flow end to end.</p>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Estimate remaining (days)</th>
+<th>Estimate confidence (%)</th>
+<th>Priority 1</th>
+<th>Priority 2</th>
+<th>Done</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Set up branches/channels/subscriptions</td>
+<td>0</td>
+<td>-</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+</tr>
+<tr>
+<td>Express package dependencies in new format</td>
+<td>0</td>
+<td>-</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>0</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="using-azure-devops-for-ci">Using Azure DevOps for CI</h3>
+<ul>
+<li><p><strong>[EXTERNAL]</strong> Alpine x64 don't have open queues</p>
+</li>
+<li><p>I will need to conditionalize the submission step in yaml and skip if there is no queue to submit.</p>
+</li>
+<li><p>No issue tracking this in core-eng</p>
+</li>
+<li><p>Will be disable in open until we have an open queue</p>
+</li>
+<li><p><strong>[EXTERNAL]</strong> RHEL 6 are missing ICU dependencies</p>
+</li>
+<li><p><a href="https://github.com/dotnet/core-eng/issues/4100">https://github.com/dotnet/core-eng/issues/4100</a></p>
+</li>
+<li><p>MattGal <a href="https://github.com/dotnet/core-eng/issues/4100#issuecomment-447912274">https://github.com/dotnet/core-eng/issues/4100#issuecomment-447912274</a> said @echesakovMSFT this being still broken is expected, we hope to have this rolled out for usage today. (today is 22 days ago)</p>
+</li>
+<li><p>jonfortescue is just assigned himself on this</p>
+</li>
+<li><p>If it's not resolved I will disable the queue temporary in open</p>
+</li>
+<li><p><strong>[EXTERNAL]</strong> Windows/arm32 and Windows/arm64 are missing VC component for building arm32 and arm64</p>
+</li>
+<li><p><a href="https://github.com/dotnet/core-eng/issues/4764#issuecomment-451274215">https://github.com/dotnet/core-eng/issues/4764#issuecomment-451274215</a></p>
+</li>
+<li><p>Last update from 5 days ago: We're blocked right now because of a problem with one of the queues (specifically, the Wasm queue), so we can't do the rollout we need. We're trying to figure out what workarounds we have available right now.</p>
+</li>
+<li><p>Can't get build/test jobs running without this</p>
+</li>
+<li><p>I tested Helix Windows arm32 arm64 manually though and there was no issue</p>
+</li>
+<li><p><strong>[EXTERNAL]</strong> We recently starting hitting this <em>Operation did not complete successfully because the file contains a virus or potentially unwanted software</em></p>
+</li>
+<li><p><a href="https://github.com/dotnet/core-eng/issues/4827">https://github.com/dotnet/core-eng/issues/4827</a> -- my issue was closed as dup</p>
+</li>
+<li><p><a href="https://github.com/dotnet/coreclr/issues/21843">https://github.com/dotnet/coreclr/issues/21843</a>  -- coreclr issue</p>
+</li>
+<li><p><a href="https://github.com/dotnet/core-eng/issues/4555">https://github.com/dotnet/core-eng/issues/4555</a> -- the issue core-eng are tracking</p>
+</li>
+<li><p>The issue with building coreclr on OSX.1013 which fails to run on OSX.1012</p>
+</li>
+<li><p><a href="https://github.com/dotnet/core-eng/issues/4856">https://github.com/dotnet/core-eng/issues/4856</a></p>
+</li>
+<li><p>Testing solution in <a href="https://github.com/dotnet/coreclr/pull/21816">https://github.com/dotnet/coreclr/pull/21816</a> (passing on OSX.1012 OSX.1013 - left to confirm OSX.1014)</p>
+</li>
+<li><p>Remove Windows.71.Amd64, Windows.10.Nano.Amd64 from testing in open since they are failing due to the following coreclr issues</p>
+</li>
+<li><p><a href="https://github.com/dotnet/coreclr/issues/21693">https://github.com/dotnet/coreclr/issues/21693</a> -- Nano hits an assertion in Checked build (no issue with Release though)</p>
+</li>
+<li><p><a href="https://github.com/dotnet/coreclr/issues/21796">https://github.com/dotnet/coreclr/issues/21796</a> -- IJW tests fail due to missing api-ms-core-win-* dll and even with these files in place they continue failing with some assertion</p>
+</li>
+<li><p>Failing on Debian.8.Amd64.Open</p>
+</li>
+<li><p><a href="https://github.com/dotnet/core-eng/issues/4807">https://github.com/dotnet/core-eng/issues/4807</a></p>
+</li>
+<li><p>Maybe we don't need this queue at all since the minimum supported version of Debian is 9. Need to confirm this and also need to add Debian.9 queue and test on it.</p>
+</li>
+<li><p>JIT.superpmi is broken by design</p>
+</li>
+<li><p><a href="https://github.com/dotnet/coreclr/issues/21698">https://github.com/dotnet/coreclr/issues/21698</a></p>
+</li>
+<li><p>Will disable</p>
+</li>
+<li><p>I am working on removing Python dependency in Helix running time right now</p>
+</li>
+<li><p>__TestEnv file is created on build agents (either via MSBuild or Python)</p>
+</li>
+<li><p>The command that is submitted to Helix will look like <code>%CORE_ROOT%\CoreRun.exe *</code></p>
+</li>
+<li><p>The idea is to make the test running as transparent as possible</p>
+</li>
+<li><p>And allow in the future using <em>stable</em> drop of net core to run tests (instead of CoreRun)</p>
+</li>
+</ul>
+<p>The above issues are required to get innerloop jobs running green and enable the AzDO testing against PRs.  Result visualization will be an ongoing task.
+We expect to tune things based on feedback as people start to use the new system.</p>
+<ul>
+<li>Still need to finish the visualization part of testing to get the new CI usable</li>
+<li>Made a prototype</li>
+<li>Need to discuss with core-eng and submit PR (or encourage them implementing this)</li>
+<li>This needed to be able to attach metadata to a test run to make it identifiable in AzDO Tests explorer</li>
+<li>There is also an issue opened by safern with his suggestions regarding AzDO Tests explorer improvements</li>
+<li><a href="https://github.com/dotnet/core-eng/issues/4929">https://github.com/dotnet/core-eng/issues/4929</a></li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Estimate remaining (days)</th>
+<th>Estimate confidence (%)</th>
+<th>Priority 1</th>
+<th>Priority 2</th>
+<th>Done</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Express test matrix with commented jobs for those not implemented</td>
+<td>0</td>
+<td>-</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+</tr>
+<tr>
+<td>Group test jobs into useful subsets--each with its own pipeline</td>
+<td>0</td>
+<td>-</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+</tr>
+<tr>
+<td>Add Formatting jobs</td>
+<td>1</td>
+<td>80</td>
+<td></td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Add IBC collection and consumption</td>
+<td>4</td>
+<td>30</td>
+<td></td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Add R2R jobs</td>
+<td>1</td>
+<td>80</td>
+<td></td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Add Perf Jobs</td>
+<td>4</td>
+<td>30</td>
+<td></td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Add SuperPMI jobs</td>
+<td>3</td>
+<td>50</td>
+<td></td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Run various test legs at job queue time</td>
+<td>1</td>
+<td>80</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+</tr>
+<tr>
+<td>Validate <del>mission control</del>AzDO reporting for xunit results with different test legs</td>
+<td>0</td>
+<td>-</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+</tr>
+<tr>
+<td>Set up a way to trigger certain test legs from github PRs</td>
+<td>0</td>
+<td>-</td>
+<td>X</td>
+<td></td>
+<td>X</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>14</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="using-shared-toolset-arcade-sdk">Using shared toolset (Arcade SDK)</h3>
+<p>CoreCLR made a conscious decision to deprioritize the Arcade transition in favor of getting the Official
+Build and CI working in the new system ASAP.  Keeping the Product Construction effort unblocked is our
+top priority.  We have accrued a lot of debt because of this and will need to clean it up at the same
+time we are bringing the rest of the test jobs over.</p>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Estimate remaining (days)</th>
+<th>Estimate confidence (%)</th>
+<th>Priority 1</th>
+<th>Priority 2</th>
+<th>Done</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Conform to their directory structure for build output (not sure we should do this)</td>
+<td>8</td>
+<td>20</td>
+<td></td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Factor our build to go through the arcade entry point project (not sure we should do this)</td>
+<td>8</td>
+<td>20</td>
+<td></td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Use arcade conventions for package directories and MSBuild imports</td>
+<td>2</td>
+<td>40</td>
+<td></td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Migrate our tests to SDK-style projects</td>
+<td>6</td>
+<td>30</td>
+<td></td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td>Remove config.json and run.exe from our build scripts (easiest once buildpipeline no longer uses them)</td>
+<td>4</td>
+<td>40</td>
+<td></td>
+<td>X</td>
+<td></td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>28</strong></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="delivery-dates">Delivery dates</h2>
+<table>
+<thead>
+<tr>
+<th>Priority</th>
+<th>Expected Delivery</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>12/14/2018</td>
+</tr>
+<tr>
+<td>2</td>
+<td>03/15/2019</td>
+</tr>
+</tbody>
+</table>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CMigrationPlan%5CCoreClrPlan.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CMigrationPlan%5CCoreClrPlan.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CMigrationPlan%5CCoreClrPlan.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

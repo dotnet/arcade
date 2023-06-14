@@ -1,0 +1,167 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Arcade </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Arcade ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="arcade">Arcade</h1>
+
+<h2 id="sharing-infrastructure-across-net-core">Sharing Infrastructure Across .NET Core</h2>
+<h3 id="overview--introduction">Overview / Introduction</h3>
+<p>We need well-understood and consistent mechanisms to consume, update, and share engineering infrastructure across the .NET Core team.</p>
+<p>The primary concept is to break the infrastructure into “pay for play” components, such that one piece of functionality can be consumed, with minimal dependencies.  The idea is to not force unnecessary dependencies, thus making it more reasonable to consume only what is needed.</p>
+<p>This approach publishes what amounts to “public surface area” for the shared engineering infrastructure.  These “contracts” then allow for the product teams to reason about how (or if) they participate and manage their engagement with the common infra over time.  In short, the product teams “pull” what is needed, when it’s needed.</p>
+<h3 id="methods-for-consuming-the-net-core-shared-infrastructure-components">Methods for Consuming the .NET Core Shared Infrastructure Components</h3>
+<ul>
+<li>MSBuild tasks/targets as NuGet packages</li>
+<li>Known &quot;entry points&quot; (repo API) in each repo to build, test, package, sign, and publish</li>
+<li>Azure DevOps extensions  (check the box in Azure DevOps)</li>
+<li>Hosted services with REST end points which are owned by the Engineering Services</li>
+<li>Toolsets (think compilers, training tools, etc) as binaries in their own setup or NuGet packages</li>
+<li>Machine (VM) images and/or Docker containers</li>
+<li>&quot;Resources&quot; as planned by Azure DevOps.</li>
+</ul>
+<h3 id="principles">Principles</h3>
+<ul>
+<li>Updates and changes should always be done with all the repos (not just yours) in mind.  This implies compromise by all to achieve a better common goal.</li>
+<li>Simplicity and austerity are our friends.  We want to avoid clever, magic, or fancy features.</li>
+<li>Incremental updates where ever humanly possible.  (avoid big changes with a &quot;switch&quot; when possible)</li>
+<li>When something needs to be done across multiple repos, the extra work required to put the feature in Arcade is worth it.</li>
+<li>Where appropriate, testing should be in one repo before &quot;graduating&quot; to Arcade.  This way we can learn more what's needed, thus minimizing churn.</li>
+<li>When making a breaking change, compat switches or branching is required.  (largely due to servicing)</li>
+</ul>
+<h3 id="business-value-to-remind-us-why-we-think-we-should-do-this">Business Value (to remind us why we think we should do this)</h3>
+<ul>
+<li>Build on the success of others.  Namely, being able to <em>reasonably</em> share functionality across teams and repos.</li>
+<li>Control and ownership.  Repo owners/devs can manage <em>what</em> tools are needed (and which aren't), as well as <em>when</em> they take it.  This includes not only new functionality, but almost more importantly, updates to existing.</li>
+<li>Dev work flow.  Allows devs to &quot;plug and play&quot; when modifying or bringing up new functionality in the build without having to re-invent the wheel.  In addition, the <em>how</em> of build tools is largely understood - even across repos.</li>
+</ul>
+<h3 id="toolset-nuget-package-requirements">Toolset NuGet Package Requirements</h3>
+<ul>
+<li>If used by the build, the tool should be packaged, deployed, and consumed as a NuGet package.  (compilers, training tools, etc are out of scope.  See above list)</li>
+<li>Every package must be versioned.  (Proposal: <a href="https://github.com/AArnott/Nerdbank.GitVersioning">https://github.com/AArnott/Nerdbank.GitVersioning</a>)</li>
+<li>There needs to be a clear and easy way to bootstrap (get started and/or add a package).  (Proposal: <a href="https://github.com/chcosta/roslyn-tools/blob/bootstrap/docs/Toolset-Bootstrap.md">https://github.com/chcosta/roslyn-tools/blob/bootstrap/docs/Toolset-Bootstrap.md</a>)</li>
+<li>A dev should be able to clone, then build without worrying about VM config or other prereqs.  (It's understood that this may not be 100% achievable today, but it should be the north star.)</li>
+<li>Each package is serviceable (forkable) itself, and can be easily used for servicing of the product.  The idea is that the common infra should “fork” with the product repo branch.  (see below for implementation notes/questions as this area is likely challenging to get right)</li>
+<li>Each package must carry key pieces of meta-data for auditing.  Example: source repo link and commit SHA</li>
+<li>Each contract represents a single area of work.  In other words, there is specific “intent” for each contract/package.  (contrasted with general “helper” stuff, or lumping several things together)</li>
+<li>New packages must be reviewed by the product teams in conjunction with Engineering Services.  (think API reviews…)</li>
+<li>Existing consumption of common infra will be migrated to this new approach, piecemeal over time as appropriate.  No giant “switch”….  (plus, some things don’t need to migrate)</li>
+<li>In addition to unit tests at the code level, end-to-end validation tests are required to ensure the contracts are still fulfilled.</li>
+<li>Each package should carry its own documentation that is updated when the tool/package is updated.</li>
+<li>Each contract includes telemetry publishing for both a) usage and errors, and b) visibility (like Mission Control)</li>
+<li>There is a &quot;core&quot; set of tool packages defined which every participating repo get.  Other packages produced by different product teams are also available, but these &quot;curated&quot; packages not automatically brought down by default.</li>
+<li>New toolset packages should generally be extensively used in one repo, then if warranted, promoted to become more generally available.</li>
+</ul>
+<h3 id="what-shared-tools-should-be-part-of-the-arcade-sdk-and-which-should-not">What shared tools should be part of the Arcade SDK and which should not?</h3>
+<ul>
+<li>If a tool provides functionality which is meant to be used by all of the <a href="TierOneRepos.html">Tier 1 Repos</a> then we should add it to the SDK.</li>
+<li>If the provided functionality will only work for a couple of repos then these won't be part of the SDK and will have to be manually referenced in a project.</li>
+<li>The SDK comes with props and targets files that are imported to any repository using the SDK, or invoked by common build infrastructure.</li>
+<li>These files automatically import required packages via <code>PackageReference</code> (e.g. Microsoft.DotNet.SignTool, MicroBuild.Core, etc.)</li>
+<li>The SDK allows the repository to opt-into additional packages as needed (VSIX authoring, XUnit testing etc)</li>
+</ul>
+<h3 id="arcade-building-repos-requirements">Arcade building repos Requirements</h3>
+<ul>
+<li>Arcade builds, tests, packages, signs, and publishes itself using itself and the shipping SDK/CLI</li>
+<li>Arcade itself must build from source.  This does not necessarily apply to the packages hosted by Arcade, but building from source should always be kept in mind.</li>
+<li>All tools bootstrapped in, getting as close as technically possible to 'clone and build' on a clean machine</li>
+<li>A repo level API is explicitly defined and implemented, not just implied</li>
+<li>Method exist to directly maintain and update Arcade in each participating repo</li>
+<li>Arcade (and its packages) is reasonably serviceable</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5COverview.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5COverview.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5COverview.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

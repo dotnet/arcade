@@ -1,0 +1,240 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>✔️ Introduction </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="✔️ Introduction ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="-introduction">✔️ Introduction</h1>
+
+<h2 id="requirements">Requirements</h2>
+<p>We want to create a REST API that allows users to find the frequency of a specific error string in a repository's Helix test logs. So we want to be able to query an endpoint with a <code>repository</code>, <code>error_string</code>, <code>start_date</code>, and <code>end_date</code> to get a list of all the error occurrences of the string in the build logs matching those arguments.</p>
+<h1 id="-implementation">🖥️ Implementation</h1>
+<h2 id="high-level-diagram">High-level diagram</h2>
+<img width="3007" alt="Project diagram" src="./Resources/ProjectDiagram.png">
+<h2 id="logic">Logic</h2>
+<ol>
+<li>Take and sanitize user input</li>
+<li>Execute Kusto query (filter by repository, date_ranges, fail status)</li>
+<li>Iterate through Kusto's results to retrieve log files' path in Azure Storage</li>
+<li>Read log file's content line by line using file stream</li>
+<li>Use string searching/matching to find error string in the lines.</li>
+<li>If match is found, keep track of it and increment occurrences found.</li>
+<li>Return the results found as a JSON object.</li>
+</ol>
+<h3 id="kusto-query">Kusto query</h3>
+<pre><code>Jobs 
+| where Repository == REPO_NAME 
+| project JobId, IsExternal 
+| join kind = inner WorkItems on JobId 
+| project JobId, FriendlyName, Status, Started, Finished, ConsoleUri, QueueName, Attempt, IsExternal 
+| where Status == 'Fail' 
+| where Started between(START_DATE .. END_DATE) | where IsExternal == 1&quot;;
+</code></pre>
+<h2 id="input">Input</h2>
+<ul>
+<li><p>Arguments</p>
+<ul>
+<li><code>repository</code></li>
+<li><code>error_string</code></li>
+<li><code>start_date</code></li>
+<li><code>end_date</code></li>
+</ul>
+</li>
+<li><p>Constraints</p>
+<ul>
+<li><code>repository</code> must be an existing, public repository. Its spelling must match the repo name exactly.</li>
+<li><code>error_string</code> should probably have some kind of limit on length.</li>
+<li>The duration between <code>start_date</code> and <code>end_date</code> should have a maximum of 7 days). If user input exceeds this value, one possible way of handling this is to just query jobs between our defined max number of months before the given <code>end_date</code> and alert the user that this was done instead of their original query.</li>
+</ul>
+</li>
+</ul>
+<h2 id="dependencies">Dependencies</h2>
+<ul>
+<li>Kusto</li>
+<li>Azure Account Storage</li>
+</ul>
+<h2 id="string-matching">String Matching</h2>
+<p>The three possible string matching methods ranked by speed/performance are:</p>
+<ol>
+<li>C# <code>String.contains</code>, <code>String.replace</code>, etc</li>
+<li>Boyer-Moore string searching algorithm</li>
+<li>Regex</li>
+</ol>
+<p>This ranking is based on the following articles:</p>
+<p><a href="http://www.blackbeltcoder.com/Articles/algorithms/fast-text-search-with-boyer-moore">Boyer-Moore VS String.contains</a></p>
+<p><strong>TLDR;</strong> Although Boyer-Moore is considered one of the fastest string-matching algorithms, C#'s <code>String.contains</code> method is faster as it uses assembly optimization. Although we might need a performance test since we will need to go line by line and load the strings from each log file if we use <code>String.contains</code> and that might take even longer.</p>
+<p><a href="https://theburningmonk.com/2012/05/performance-test-string-contains-vs-string-indexof-vs-regex-ismatch/#:%7E:text=As%20you%20can%20see%2C%20Regex.IsMatch%20is%20by%20far,turned%20out%20to%20be%20significantly%20faster%20than%20String.IndexOf.">String.contains VS Regex.isMatch</a></p>
+<p><strong>TLDR;</strong> Regex matching is way slower than String methods. It's only more useful if we want to pattern match as opposed to finding a fixed string. (Actually this raises the question - do we want to pattern match?)</p>
+<p>Also, this article <a href="https://cc.davelozinski.com/c-sharp/c-net-fastest-way-count-substring-occurrences-string">Fastest Ways to Count Substring Occurences in C#</a> compares the speeds of different methods of counting substring occurences.</p>
+<p><strong>TLDR;</strong> Using BCL was the fastest method for the following performance tests:</p>
+<blockquote>
+<p>Counting the number of times 1 string occurs in 5,000, 25,000, 100,000, and 1,000,000 million strings.</p>
+<p>Counting the number of times 100 strings occur in 5,000, 25,000, 100,000, and 1,000,000 million strings.</p>
+<p>Counting the number of times 1,000 strings occur in 5,000, 25,000, 100,000, and 1,000,000 million strings.</p>
+</blockquote>
+<p>It also corroborates the article saying Regex matching is very slow for long strings.</p>
+<p><strong>❕ Decision is to use <code>String.Contains</code> (BCL) for now and stick with fixed string matching. Notes were made in additional features section to possibly include pattern matching down the road.</strong></p>
+<h2 id="file-reading">File Reading</h2>
+<p>Since we will potentially need to be reading text from thousands of files, it's worth taking a look at fastest ways to read file input. The following article benchmarks the time it takes for different ways of reading file input.</p>
+<p><a href="https://cc.davelozinski.com/c-sharp/fastest-way-to-read-text-files">Fastest Ways to Read Text Files in C#</a></p>
+<p><strong>TLDR;</strong> There was no one fastest method found, but in general, reading line by line and storing each line into a string was fast, and should be sufficient for this program. We can also make it faster using parallel threads if needed.</p>
+<p><strong>❕ We want to read different log files async using some version of <code>Task.WhenAll</code> to read the files concurrently.</strong></p>
+<h2 id="output">Output</h2>
+<h4 id="possible-json-output">Possible JSON output:</h4>
+<pre><code>    {
+      &quot;filter&quot;: {
+        &quot;repository&quot;: &quot;...&quot;,
+        &quot;error_string&quot;: &quot;&quot;,
+        &quot;start_date&quot;: &quot;&quot;,
+        &quot;end_date&quot;: &quot;&quot;,
+        &quot;num_hits&quot;: 00,
+      },
+      &quot;hits&quot;: 
+      [
+        {
+          &quot;document_uri&quot;: &quot;uri to document&quot;,
+          &quot;job_id&quot;: &quot;helix guid&quot;
+          &quot;friendly_name&quot;: &quot;&quot;,
+          &quot;started&quot;: &quot;&quot;,
+          &quot;finished&quot;: &quot;&quot;,
+          &quot;queue_name&quot;: &quot;&quot;,
+        },
+        {
+          &quot;document_uri&quot;: &quot;uri to document&quot;,
+          &quot;job_id&quot;: &quot;helix guid&quot;
+          &quot;friendly_name&quot;: &quot;&quot;,
+          &quot;started&quot;: &quot;&quot;,
+          &quot;finished&quot;: &quot;&quot;,
+          &quot;queue_name&quot;: &quot;&quot;,
+        },
+        ...
+      ]
+    }
+</code></pre>
+<h1 id="-proof-of-concept">👓 Proof-of-Concept</h1>
+<p>The plan for now is reading log files line by line and using <code>String.Contains</code>. We also want to use <code>Tasks</code> to parse each log file in parallel. Currently, I’m taking the following steps to implement POC:</p>
+<ol>
+<li>Write code for parsing a file using a hardcoded URI and getting in the data we want to return</li>
+<li>Replace the hardcoded URI with the actual URIs retrieved from a Kusto Query and looping through multiple URIs (and eventually the thousands that are actually returned).</li>
+<li>Deploy the POC so that we can run it on the same data centre that the logs are stored so we can see the actual speed of the program</li>
+</ol>
+<ul>
+<li>Will test out string matching on a fixed number of log files first to see the speed on a local machine (and we also want to see the speed of actually running it on servers)</li>
+</ul>
+<h1 id="-additional-notes">📓 Additional Notes</h1>
+<h3 id="possible-additional-features">Possible additional features</h3>
+<ul>
+<li>Include line number and character index that a string match was found</li>
+<li>Allow user to pass either/or these 2 options as arguments:
+<ul>
+<li><code>repository</code>, <code>error_string</code>, <code>date_range</code></li>
+<li><code>build_id</code> list</li>
+</ul>
+</li>
+<li>Taking an optional parameter for context lines (e.g also return the 5 lines surrounding the hit line - think GDB)</li>
+<li>Allowing pattern matching using regex (currently only allow for fixed string matching)</li>
+<li>Allow user to pass token to authenticate and allow search in non-external jobs</li>
+<li>Include retries in the output (<code>Attempt</code> and <code>LocalIteration</code> columns from <code>Files</code> table)</li>
+</ul>
+<h3 id="issuesquestions-to-look-into-down-the-road">Issues/questions to look into down the road</h3>
+<ul>
+<li>Possibly use a profiler (like VS profiler) to look more into performance</li>
+<li>Eventually we want to deploy to use the same data centres as the logs in Azure</li>
+<li>Look more into handling failure cases like limiting user input i.e only 1 outstanding request allowed per person also “(limiting the input sizes, like only X total days, or Y total logs to scan), returning a partial result if we run out of time, a stateful server request, where you could ask &quot;hey, I started this query a bit ago, do you have the answer yet&quot;... Lots of exciting options!</li>
+<li>Keep in mind the constraints for date range input - for now we are using a 7 day max duration but this can be changed if it is actually faster than expected</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CHelixTestLogSearch%5Cone-pager.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CHelixTestLogSearch%5Cone-pager.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CHelixTestLogSearch%5Cone-pager.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

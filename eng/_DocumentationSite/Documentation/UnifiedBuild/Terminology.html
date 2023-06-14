@@ -1,0 +1,115 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>The Unified Build Almanac (TUBA) - Terminology </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="The Unified Build Almanac (TUBA) - Terminology ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="the-unified-build-almanac-tuba---terminology">The Unified Build Almanac (TUBA) - Terminology</h1>
+
+<p>This document contains terminology used in the Unified Build effort.</p>
+<ul>
+<li><strong>Build</strong> – The processes in which artifacts are produced, given a set of input resources (e.g. source code, packages, input libraries etc.) and an environment (e.g. docker host, VM, local machine).</li>
+<li><strong>Cloaking</strong> – Process of filtering files when copying/ingesting them into the VMR. This is better described in the document describing the Unified Build (part about source-mapping.json).</li>
+<li><strong>Development Repository</strong> - A repository which exists only a development area for a section of code. It does not produce official build artifacts.</li>
+<li><strong>Incoherency</strong> - A state of the traditional product build graph in which multiple versions of the same component are transitively referenced, and where the difference in those versions does or could have meaningful impact on product functionality. For instance, if two <code>dotnet/runtime</code> versions are referenced within the same SDK, one may be packaged with the SDK, but the other may have been what <code>dotnet/aspnetcore</code> was built against. If there are meaningful differences between those two runtimes, <code>dotnet/aspnetcore</code> may not operate as expected.</li>
+<li><strong>Publishing</strong> – The processes in which artifacts produced by the Build and information about the Build are propagated for consumption outside the build (e.g. publishing packages to a feed).</li>
+<li><strong>Source-Build</strong> – A set of sources and a process which allows to build the entire product end to end including all its dependencies in offline mode, excluding ambient dependencies.</li>
+<li><strong>Source-Buildable component</strong> – A component that can be built from source. Binary artifacts such as the build toolset which can also be built from source are allowed.</li>
+<li><strong>Source-Build patches</strong> – Set of git patches that are applied on top of the collected individual repositories to remove some problems with the Source-Build.</li>
+<li><strong>Upstream (captialized)</strong> - Repositories (especially the VMR), which serve as a common development location and community hub for .NET. For example, <a href="https://github.com/dotnet/dotnet">https://github.com/dotnet/dotnet</a>. Other repositories are typically downstream of Upstream, and pull new releases and code from Upstream.</li>
+<li><strong>Vendoring</strong> - The process by which a component is integrated as part of another, rather than integrated as a dependency. See <a href="https://medium.com/opsops/git-vendor-295db4bcec3a">How to vendor a git into another git by George Shuklin</a> for a good example.</li>
+<li><strong>VMR</strong> - <strong>V</strong>irtual <strong>M</strong>onolithic <strong>R</strong>epository. A monolithic projection of a set of individual repositories that build together as an aggregate to create a coherent product.</li>
+<li><strong>VMR-lite</strong> – A first MVP (minimum viable product) version of the full VMR that is read-only for regular developers (no back-flow to individual repositories but supports changes such as closed-door security patches) and supports source-building the product from itself.</li>
+</ul>
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

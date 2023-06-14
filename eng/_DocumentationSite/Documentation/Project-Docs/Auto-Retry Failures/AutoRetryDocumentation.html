@@ -1,0 +1,120 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Documentation for Auto Retry of Failures in Helix </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Documentation for Auto Retry of Failures in Helix ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="documentation-for-auto-retry-of-failures-in-helix">Documentation for Auto Retry of Failures in Helix</h1>
+
+<p>The following document shows the user documentation of the auto retry feature of test failures in helix according to the <a href="https://github.com/dotnet/arcade/blob/main/Documentation/Project-Docs/Auto-Retry%20Failures/Overview-Requirements.md">requirements</a>.</p>
+<h1 id="what-is-auto-retry">What is Auto Retry?</h1>
+<p>When a Test fails in Helix, Auto Retry feature provides the ability to automatically retry the test until it passes or crosses the number of retries specified by the user and communicate to the user that the test has passed only after retrying in Mission Control.</p>
+<h1 id="how-to-configure-auto-retry">How to configure Auto Retry?</h1>
+<p>By adding the optional property (MaxRetryCount) to the MSBuild definition of a repo is all that is needed to be done to turn Auto Retry on.
+For eg.
+For CoreFx, Add <code>&lt;MaxRetryCount&gt; (Value of allowable retries) &lt;/MaxRetryCount&gt;</code> under the <code>&lt;PropertyGroup&gt;</code> in <a href="https://github.com/dotnet/corefx/blob/master/src/upload-tests.proj#L11-L79">https://github.com/dotnet/corefx/blob/master/src/upload-tests.proj#L11-L79</a>. Once the build picks up the optional property, tests will automatically requeue failed work items to be retried until the MaxRetryCount is reached / the work item passes.</p>
+<h1 id="mission-control">Mission Control</h1>
+<p>In order to see the information in <a href="https://mc.dot.net/#/">Mission Control</a>, the user must <strong>Log in</strong>, otherwhise no information will be available.</p>
+<p>If a work item passed on a retry, the information will be displayed by default along with the count of items that had passed on retry.
+<img src="./Images/WorkItemAggregateSummary_Count.JPG?raw=true" alt=""></p>
+<p>Each Work Item that was passed on retry will display with a retry icon and tool tip showing <code>Intermittent Failures</code>
+<img src="./Images/WorkItemAggregateSummary_Icon.JPG?raw=true" alt=""></p>
+<p>Each attempt of retry details can be viewed from the Tests Details Page.
+<img src="./Images/Logs.JPG?raw=true" alt=""></p>
+<h1 id="how-to-give-feedback">How to give feedback?</h1>
+<p>Please create a new issue in the <a href="https://github.com/dotnet/core-eng">core-eng</a> repository.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CAuto-Retry%20Failures%5CAutoRetryDocumentation.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CAuto-Retry%20Failures%5CAutoRetryDocumentation.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CAuto-Retry%20Failures%5CAutoRetryDocumentation.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,163 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Driving technical debt principles: </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Driving technical debt principles: ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="driving-technical-debt-principles">Driving technical debt principles:</h1>
+
+<ol>
+<li>We must not add new technical debt.  (unless there’s an explicit business decision to do so)</li>
+<li>We must reduce our current debt – reasonably over time.</li>
+</ol>
+<p>It should be said that it’s easy to miss some of this stuff, so we should feel free to hold each other accountable in code reviews.  In fact, getting more active participation in code reviews across the board would be fantastic.</p>
+<h2 id="stop-increasing-technical-debt">Stop increasing technical debt:</h2>
+<p>We need do more than just say “don’t add debt”.  We don’t always know what this means, we have business pressures which make this difficult at times, and we don’t necessarily know where to start.  Actually doing this requires a combination of concrete changes in policy, and continued cultural changes.  (yes, they’re intertwined…)  But the good news is that we’re ready as a team to tackle this together.</p>
+<h3 id="policy--automation-of-checks-wherever-we-can-will-be-important-for-sustainability">Policy:  (automation of checks wherever we can will be important for sustainability)</h3>
+<ul>
+<li>The following need confirmation from another senior dev.  (see ‘ getting confirmation’ below for details)
+<ul>
+<li>New dependencies (for example, this leads to inconsistencies within the project – making for a mess)</li>
+<li>New end points or services</li>
+<li>Duplication of code</li>
+<li>New language or language version</li>
+<li>Use of a prelease service/library</li>
+</ul>
+</li>
+<li>Appropriate test coverage
+<ul>
+<li>Make it more obvious the extent of test coverage.  For example, show code coverage percentage as part of the PR results.</li>
+<li>An initial bar of at least 50% code coverage –80% better.  Exceptions can be given as appropriate.  (either up or down)  The point is to get the right coverage, not just get a number….  (For example, see here for our current code coverage)</li>
+</ul>
+</li>
+<li>Documentation should exist  (to say the obvious, we still need better clarity on how we document in general – but that’s outside the scope of this email)
+<ul>
+<li>It needs to be usable by the intended customer</li>
+<li>It needs to be discoverable</li>
+<li>Appropriate existing documentation updated  (remember this is debt as well)</li>
+</ul>
+</li>
+<li>Features need a design “one pager” and confirmation from another senior dev
+<ul>
+<li>Bug fixes and/or small items don’t need this</li>
+<li>For now, let’s put design into the epic itself so we can always find it</li>
+</ul>
+</li>
+</ul>
+<h3 id="cultural-changes">Cultural Changes</h3>
+<ul>
+<li>Brown bag at least once a year to recount war stories.  The goal is to keep the “why” top of mind.</li>
+<li>Retrospectives where/when appropriate.</li>
+<li>General management support (including active participation) for encouraging/enforcing this new policy on our PRs.  It’ll hurt some at times…</li>
+<li>Encourage conversations about how we keep our quality up, debt low, and general improve our technical offerings.</li>
+<li>Discuss in our monthly team meeting from time to time</li>
+</ul>
+<h3 id="getting-confirmation-for-a-changeproposal">Getting Confirmation for a change/proposal</h3>
+<ul>
+<li>Email ‘dnceng’ for broad awareness</li>
+<li>Get at least one other senior dev to ACK</li>
+<li>It should be noted that we’ll make mistakes.  We can only make decisions based on what we knew at the time.  The expectation is less about building zero debt, but rather changing our culture – e.g. the way we think about these things.</li>
+</ul>
+<h2 id="reduce-existing-technical-debt">Reduce existing technical debt:</h2>
+<p>It would be unreasonable to do nothing other than pay down our technical debt as we have a business to run as well.  However, we can focus on a specific area and make a big impact.</p>
+<h3 id="policy">Policy:</h3>
+<ul>
+<li>There should always be a business priority on the board that actively focuses on reducing technical debt.  (right this minute we have two, Helix, and Validation)</li>
+<li>We should limit debt reduction business priorities to one at a time.  This is to help stay away from “peanut butter” (spreading effort over a wide area) and make significant progress reducing debt in one area.  It’s sorta like choosing a credit card balance with the highest interest to pay down first.</li>
+<li>There may be times where the business dictates that we don’t have a debt reduction business priority on the board.  However, this should be the exception and requires M2 approval as it would go against one of our core principles.  For a review, remember to check out our guiding principles.</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CPolicy%5CTechnicalDebtPolicy.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CPolicy%5CTechnicalDebtPolicy.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CPolicy%5CTechnicalDebtPolicy.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

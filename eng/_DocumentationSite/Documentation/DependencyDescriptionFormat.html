@@ -1,0 +1,264 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Dependency Description Format </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Dependency Description Format ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="dependency-description-format">Dependency Description Format</h1>
+
+<p>This document describes the format by which dependencies are specified in a .NET Core Repository</p>
+<h2 id="requirements">Requirements</h2>
+<ul>
+<li>Support tool-able version query and alteration without the need to execute any code in the repository</li>
+<li>Support versioning of various assets referenced through MSBuild, including SDKs, packages, etc.</li>
+<li>Provide additional data for Darc and associated tools to query (SHA, repo)</li>
+<li>Separate out toolset and runtime dependencies.</li>
+</ul>
+<h2 id="existing-expressions-of-dependencies">Existing Expressions of Dependencies</h2>
+<p>Historically, there have been a few places where versioning shows up that we want to be tool-able.</p>
+<ul>
+<li><p><strong>NuGet (or asset) package versions ingested by the build</strong> - Most repositories handle these the same way, with a props file in or near the root of the repository. This props file is imported by projects and its properties are utilized by PackageReference elements. For example, this is from the CLI repo:</p>
+<pre><code>DependencyVersion.props
+
+&lt;PropertyGroup&gt;
+    &lt;MicrosoftExtensionsDependencyModelPackageVersion&gt;2.1.0-preview2-26314-02&lt;/MicrosoftExtensionsDependencyModelPackageVersion&gt;
+&lt;/PropertyGroup&gt;
+</code></pre>
+<pre><code>Microsoft.DotNet.Cli.Utils.csproj
+
+&lt;PackageReference Include=&quot;Microsoft.Extensions.DependencyModel&quot; Version=&quot;$(MicrosoftExtensionsDependencyModelPackageVersion)&quot; /&gt;
+</code></pre>
+</li>
+<li><p><strong>MSBuild SDKs</strong> - MSBuild SDKs are special packages that MSBuild will download, unpack and inject imports in project files that contain references to the SDK.  Version numbers for these SDKs can either live in global.json at the root of the repo, or alongside the SDK attribute on the Project element.  For purposes of .NET Core, we intend to support version dependency tracking/update of versions in global.json, but not in individual SDK directives in project files.</p>
+<pre><code>{
+    &quot;sdk&quot;: {
+        &quot;version&quot;: &quot;2.200.0&quot;
+    },
+    &quot;msbuild-sdks&quot;: {
+        &quot;Arcade.Sdk&quot;: &quot;1.0.0&quot;
+    }
+}
+</code></pre>
+</li>
+<li><p><strong>Bootstrapping files (e.g. BuildToolsVersion.txt, DotNetCLIVersion.txt, etc.)</strong> – We often need to pull in tools before we can invoke msbuild, run the dotnet command line tool, etc.  These files are typically ingested by scripts which pull an asset from a specific location based on the version.  For example, corefx has:</p>
+<pre><code>DotnetCLIVersion.txt
+
+2.1.2
+</code></pre>
+</li>
+<li><p><strong>Bootstrapping/Base Repository Scripts</strong> – Under Arcade (formerly RepoToolset), a set of scripts are committed to the repo which wrap basic functionality (e.g. build) as well as do initial tool acquisition (e.g. msbuild).  These scripts are wholesale copies from the Arcade repo.  These scripts have historically not been strictly versioned with the RepoToolset/Arcade SDK in global.json.  Going forward, we will push versions of the scripts when we push new versions of the repotoolset, and the scripts will come from the arcade repo at the point the RepoToolset/Arcade SDK was produced:</p>
+<pre><code>{
+    &quot;sdk&quot;: {
+        &quot;version&quot;: &quot;2.1.100-preview-007366&quot;
+    },
+    &quot;msbuild-sdks&quot;: {
+        // If build produced at SHA 12345, scripts in repo are obtained from SHA
+        // 12345
+        &quot;RoslynTools.RepoToolset&quot;: &quot;1.0.0-beta2-62628-01&quot;
+    }
+}
+</code></pre>
+</li>
+</ul>
+<h2 id="dependency-description-overview">Dependency Description Overview</h2>
+<p>The dependency description is comprised of two types of assets:</p>
+<ul>
+<li><p><strong>1 Dependency Details File</strong> - XML file containing a set of information for each input dependency:</p>
+<ul>
+<li>Dependency Name – Unique, typically the package name, but it is not required that individual packages be listed.  For example, a repo which ingests 10 assets with the same version could group all under a single dependency.</li>
+<li>Version – Version of dependency</li>
+<li>URL – URL of repository (typically) that produced the asset.</li>
+<li>SHA – Git SHA at which the dependency was produced</li>
+<li>Dependency Type – Either 'Toolset' or 'Product'.  'Toolset' dependencies are those that are used to produce the product, 'Product' dependencies are effectively everything else.  It is useful to differentiate between these so that we know how we are building (e.g. what CLI SDKs are in use across all repositories).  Defined another way, two successive builds of a Toolset dependency on the same SHA could produce two different tools (version-wise) with the same functionality.  Using either of the different toolset dependencies would produce no bit difference in the output product. <strong>Note that this set could be extended in the future if needed.  E.g. a set of test-only dependencies might be added</strong></li>
+<li>Pinned - if set to true, the dependency won't be automatically updated but will still be part of the graph. Is false or not defined it will be updated.</li>
+</ul>
+</li>
+<li><p><strong>N Dependency Expression Files</strong> - Places where dependencies are expressed.  These are well known locations and formats.  The version expressions are listed below.</p>
+<ul>
+<li><p>Version Props File – The props file, typically for dependencies acquired via NuGet and msbuild</p>
+</li>
+<li><p>Global Json – Global json file (e.g. CLI SDK version and native toolsets acquired outside of msbuild)</p>
+</li>
+<li><p>Arcade Version – MSBuild SDK in the global.json file and associated checked in scripting.</p>
+<p>Two additional values may be used in the interim when moving the core repositories off of buildtools</p>
+</li>
+<li><p>Build Tools Version – Build tools version text file and associated version in the props file</p>
+</li>
+<li><p>Dot Net CLI Version – CLI version text file and other associated versions.</p>
+</li>
+</ul>
+<p>The expression file corresponding to a dependency is implied by the dependency name.  Toolset or Product dependencies can have well known names, implying an expression in a specific form (e.g. global.json + repository scripting), or any other generic name, implying the version is expressed in the version.props file in the repository.  Examples:</p>
+<ul>
+<li>AspNetCoreAllVersion - Product input of aspnet, expressed in version.props</li>
+<li>DotNetSDKVersion – CLI SDK, expressed in global.json</li>
+<li>ArcadeSDKVersion – Arcade SDK, expressed global.json and repository scripting</li>
+<li>BuildToolsVersion – Legacy BuildToolsVersion.txt</li>
+<li>DotNetCLIVersion – Legacy DotNetCLIVersion.txt</li>
+</ul>
+</li>
+</ul>
+<h2 id="dependency-description-details">Dependency Description Details</h2>
+<h3 id="details-file">Details File</h3>
+<p><strong>Version.Details.xml(eng\Version.Details.xml)</strong></p>
+<pre><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;Dependencies&gt;
+    &lt;!-- Elements contains all product dependencies --&gt;
+    &lt;ProductDependencies&gt;
+        &lt;-- All product dependencies are contained in Version.Props --&gt;
+        &lt;Dependency Name=&quot;DependencyA&quot; Version=&quot;1.2.3-45&quot; Pinned=&quot;true&quot;&gt;
+            &lt;Uri&gt;https://github.com/dotnet/arepo&lt;/Uri&gt;
+            &lt;Sha&gt;23498123740982349182340981234&lt;/Sha&gt;
+        &lt;/Dependency&gt;
+        &lt;Dependency Name=&quot;DependencyB&quot; Version=&quot;1.2.3-45&quot;&gt;
+            &lt;Uri&gt;https://github.com/dotnet/arepo&lt;/Uri&gt;
+            &lt;Sha&gt;13242134123412341465&lt;/Sha&gt;
+        &lt;/Dependency&gt;
+        &lt;Dependency Name=&quot;DependencyC&quot; Version=&quot;1.2.3-45&quot; Pinned=&quot;false&quot;&gt;
+            &lt;Uri&gt;https://github.com/dotnet/arepo&lt;/Uri&gt;
+            &lt;Sha&gt;789789789789789789789789&lt;/Sha&gt;
+        &lt;/Dependency&gt;
+    &lt;/ProductDependencies&gt;
+
+    &lt;!-- Elements contains all toolset dependencies --&gt;
+    &lt;ToolsetDependencies&gt;
+        &lt;-- Non well-known dependency.  Expressed in Version.props --&gt;
+        &lt;Dependency Name=&quot;DependencyD&quot; Version=&quot;2.100.3-1234&quot;&gt;
+            &lt;Uri&gt;https://github.com/dotnet/atoolsrepo&lt;/Uri&gt;
+            &lt;Sha&gt;203409823586523490823498234&lt;/Sha&gt;
+            &lt;Expression&gt;VersionProps&lt;/Expression&gt;
+        &lt;/Dependency&gt;
+        &lt;-- Well-known dependency.  Expressed in global.json --&gt;
+        &lt;Dependency Name=&quot;DotNetSdkVersion&quot; Version=&quot;2.200.0&quot; Pinned=&quot;False&quot;&gt;
+            &lt;Uri&gt;https://github.com/dotnet/cli&lt;/Uri&gt;
+            &lt;Sha&gt;1234123412341234&lt;/Sha&gt;
+        &lt;/Dependency&gt;
+        &lt;-- Well-known dependency.  Expressed in global.json --&gt;
+        &lt;Dependency Name=&quot;Arcade.Sdk&quot; Version=&quot;1.0.0&quot;&gt;
+            &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+            &lt;Sha&gt;132412342341234234&lt;/Sha&gt;
+        &lt;/Dependency&gt;
+    &lt;/ToolsetDependencies&gt;
+&lt;/Dependencies&gt;
+</code></pre>
+<h3 id="expression-files">Expression Files</h3>
+<p><strong>Versions.props (eng\Versions.props)</strong></p>
+<pre><code>&lt;Project&gt;
+  &lt;PropertyGroup&gt;
+    &lt;!-- DependencyA, DependencyB, DependencyC substrings correspond to
+         DependencyName elements in Version.Details.xml file --&gt;
+    &lt;DependencyAPackageVersion&gt;1.2.3-45&lt;/DependencyAPackageVersion&gt;
+    &lt;DependencyBPackageVersion&gt;1.2.3-45&lt;/DependencyBPackageVersion&gt;
+    &lt;DependencyCPackageVersion&gt;1.2.3-45&lt;/DependencyCPackageVersion&gt;
+    &lt;DependencyDPackageVersion&gt;2.100.3-1234&lt;/DependencyCPackageVersion&gt;
+    ...
+  &lt;/PropertyGroup&gt;
+&lt;/Project&gt;
+</code></pre>
+<p><strong>Global.Json (global.json)</strong></p>
+<pre><code>{
+  &quot;sdk&quot;: {
+    &quot;version&quot;: &quot;2.200.0&quot;
+  },
+  &quot;msbuild-sdks&quot;: {
+    &quot;Arcade.Sdk&quot;: &quot;1.0.0&quot;
+  },
+  &quot;native-tools&quot;: {
+    &quot;cmake&quot;: &quot;3.11.1&quot;
+  }
+}
+</code></pre>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CDependencyDescriptionFormat.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CDependencyDescriptionFormat.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CDependencyDescriptionFormat.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

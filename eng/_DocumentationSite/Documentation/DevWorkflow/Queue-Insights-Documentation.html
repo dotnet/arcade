@@ -1,0 +1,144 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Queue Insights Documentation </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Queue Insights Documentation ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="queue-insights-documentation">Queue Insights Documentation</h1>
+
+<p>Please contact the <a href="https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/890/How-to-get-a-hold-of-Engineering-Servicing">.NET Engineering Services Team</a> with any questions about this service.</p>
+<p>Queue Insights is a GitHub check designed to show developers the current status of Helix, and information about what infrastructure a PR uses.</p>
+<p>It's important to note that Queue Insights data is specific to the context of the PR.</p>
+<h2 id="was-this-helpful">Was this helpful?</h2>
+<p>At the bottom of every Queue Insights check is a line of text stating <em>&quot;Was this helpful? 👍 👎&quot;</em>. Selecting either thumbs up/down will direct you to our feedback page.</p>
+<p>This feedback page <strong>captures context</strong> about where you clicked this button. We are able to see which PR this happened on, the time, etc. to help us diagnose and understand the event that caused your feedback.</p>
+<p>If you decide to not remain anonymous, and leave your GitHub username, <strong>We will follow-up with your feedback</strong>. In addition, negative feedback creates a GitHub issue in dotnet/arcade that we will track.</p>
+<h2 id="information-age">Information Age</h2>
+<p>The information shown in Queue Insights is cached, updating daily, and consists of information over the past 30 days. Any queue or build machine used by your repo against a specific target branch will be shown for 30 days.</p>
+<p>This means that if your repo stops using a given Helix queue, Queue Insights will show that queue for 30 days before it no longer appears in the check.</p>
+<h2 id="pipeline-predictions">Pipeline Predictions</h2>
+<p>Here, we show the lower, expected, and higher estimated times for a pipeline the PR uses to complete, not including time spent in queue waiting for a build machine.</p>
+<p>You should interpret this data as this pipeline should finish around the <em>expected</em> time but may finish as quick as the <em>lower</em> time or take as long as the <em>higher</em> time.</p>
+<p>This data is calculated from our build telemetry, and you may visit our <a href="../TeamProcess/One-Pagers/pipeline-machine-learning-arcade8824.html">one-pager</a> for how it works.</p>
+<h3 id="multi-modal-distributions">Multi-modal distributions</h3>
+<p>Some pipelines we cannot give an accurate prediction for. Typically, this is because the pipeline changes what stages run depending on the contents of the PR. Since we cannot account for this yet, you will experience an ❌ symbol in the place of a prediction.</p>
+<h3 id="known-issues">Known Issues</h3>
+<p>If a <a href="../Projects/Build%20Analysis/KnownIssues.html">Critical Known Issue</a> has been created, we will not show a prediction, and instead inform you that there is a critical known issue that could affect the estimated times.</p>
+<h3 id="not-enough-data">Not enough data</h3>
+<p>If your pipeline is brand new or changed definition id's for instance, we won't have enough data to create predictions for. Currently, we require <strong>30</strong> runs of your pipeline before we can create an accurate enough model.</p>
+<h1 id="highest-work-item-wait-times">Highest Work Item Wait Times</h1>
+<p>In this section, we show the top <strong>5</strong> (or less, depending on how many queues your PR uses) <em>work item wait times</em>. A work item is the smallest unit of work a queue can process in Helix. A Helix machine that processes work only runs one work item at a time.</p>
+<p><em>Work item wait time</em> is defined as the time a work item spends waiting to run. This is the amount of time the work item spends in queue waiting to run. A high work item wait time means that there are a lot of work items in that queue, and thus it might take longer to process work for that queue.</p>
+<h2 id="moving-average">Moving Average</h2>
+<p>In this column, we show the moving average of the work item wait time, over the period of <strong>24 hours</strong>. This can be used to gauge if there is a sudden high influx of work items to a specific queue, which should be investigated with our <em>Grafana dashboard</em></p>
+<h2 id="grafana-dashboard">Grafana dashboard</h2>
+<p>Each queue mentioned in the Queue Insights check is hyperlinked, and will direct you to our Grafana dashboard <strong>for that specific queue</strong>. Here, you can dive deep into our infrastructure and view data like:</p>
+<ul>
+<li>Queue depth (the amount of work items waiting in that queue)</li>
+<li>Work item wait time</li>
+<li>Work items queued by repository</li>
+<li>Machine status (Busy processing work, provisioning, spinning down)</li>
+</ul>
+<h1 id="queue-list">Queue List</h1>
+<p>In this section, we show you a list of queues that this PR will use. <strong>This is filtered by the queues the PR uses, not the overall repository.</strong>. This is further separated by two factors, <em>on-premises</em> queues and <em>Azure queues</em>.</p>
+<h2 id="-azure-hosted-queues">☁️ Azure-Hosted Queues</h2>
+<p>This list shows queues that are supported by Azure VMs. This means that the queue is powered by an Azure Virtual Machine Scale Set, meaning that we have the capacity to scale the work items the queue can process up and down depending on our budget and work items queued.</p>
+<h2 id="-off-prem-build-lab-queues">🏢 Off-Prem (build lab) Queues</h2>
+<p>This list are queues that are hosted in a data center managed by DDFUN. These queues have a fixed capacity and are typically always on, so there is the added benefit of no wait time to provision a new VM, with the issue of not being able to scale these machines.</p>
+<h1 id="build-pools">Build Pools</h1>
+<p>This section shows you what build pools are used, separated by 1ES Hosted and Microsoft Hosted. There are hyperlinks here to direct you to documentation about packages and software installed by default on these build machines.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CDevWorkflow%5CQueue-Insights-Documentation.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CDevWorkflow%5CQueue-Insights-Documentation.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CDevWorkflow%5CQueue-Insights-Documentation.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

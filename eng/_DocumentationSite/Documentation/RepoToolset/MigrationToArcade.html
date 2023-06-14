@@ -1,0 +1,262 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>RepoToolset 1.0.0-beta2-63103-01 </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="RepoToolset 1.0.0-beta2-63103-01 ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+
+<p>To migrate your repo to the latest Arcade SDK it’s recommended to first switch to the latest RepoToolset and then switch to Arcade SDK.
+If your repository contributes to .NET Core 3.0 stack build I’d also recommend first migrate to Arcade and then work on plugging the repo into the rest of .NET Core build infrastructure (Meastro, Helix, BAR, etc.)</p>
+<p>To get an idea what changes are needed to migrate to the latest Arcade SDK check out the following PRs and repos:</p>
+<ul>
+<li><a href="http://github.com/dotnet/roslyn-analyzers">http://github.com/dotnet/roslyn-analyzers</a>: <a href="https://github.com/dotnet/roslyn-analyzers/commit/b63e7bd97f9e9f73140a1858761f5373bf879259">move to RepoToolset 63103-01</a>, move to <a href="https://github.com/dotnet/roslyn-analyzers/commit/fb5890b88ff98cc346a060a18d86e7f0d0a1b270">Arcade</a></li>
+<li><a href="http://github.com/dotnet/roslyn-tools">http://github.com/dotnet/roslyn-tools</a>: <a href="https://github.com/dotnet/roslyn-tools/commit/e6bf1434af7dfa89f3574a1342dab47f875e7b43">move to Arcade</a></li>
+<li><a href="http://github.com/dotnet/interactive-window">http://github.com/dotnet/interactive-window</a></li>
+<li><a href="http://github.com/symreader">http://github.com/symreader</a></li>
+</ul>
+<p>Below is a list of changes required to migrate to Arcade.</p>
+<h2 id="repotoolset-100-beta2-63103-01">RepoToolset 1.0.0-beta2-63103-01</h2>
+<h3 id="shipping-vs-nonshipping-packages">Shipping vs NonShipping packages</h3>
+<ol>
+<li>Set <code>IsShipping</code> property according to the Arcade SDK <a href="https://github.com/dotnet/arcade/blob/master/Documentation/ArcadeSdk.md#isshipping-bool">guidelines</a></li>
+<li>Update package directory used by <code>NuGetPublisher@0</code> task in <code>.vsts-ci.yml</code>
+<ul>
+<li>Add <code>*Shipping</code> subdir, which will match <code>Shipping</code> and <code>NonShipping</code> like so:
+searchPattern: <code>artifacts\$(BuildConfiguration)\packages\*Shipping\*.nupkg</code></li>
+</ul>
+</li>
+<li>Remove PublishOutputToSymStore property from projects if your projects used it before.
+<ul>
+<li>By default Windows PDBs for all shipping projects are published to symbol server.</li>
+<li>PublishWindowsPdb property can be used to suppress publishing Windows PDB for the project.</li>
+</ul>
+</li>
+<li>Review usages of $(PackageOutputPath)
+Replace with <code>$(ArtifactsShippingPackagesDir)</code> or <code>$(ArtifactsNonShippingPackagesDir)</code>.</li>
+</ol>
+<h3 id="building-nuget-packages-with-hand-written-nuspec">Building NuGet packages with hand-written nuspec</h3>
+<ul>
+<li><code>_InitializeStandardNuspecProperties</code> target has been renamed to <code>InitializeStandardNuspecProperties</code></li>
+<li>This target flows <a href="https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Arcade.Sdk/tools/Workarounds.targets#L81-L97">a standard set of msbuild properties</a> to nuspec.</li>
+<li>Add non-standard custom properties to <code>NuspecProperty</code> item group, if needed</li>
+<li>PackageProjectUrl is now set automatically from <code>RepositoryUrl</code>, which is retrieved automatically from git remote origin by SourceLink.</li>
+</ul>
+<h3 id="new--publish-build-parameter">New <code>-publish</code> build parameter</h3>
+<p>A new option <code>-publish</code> was added to <code>build.ps1</code> script that needs to be set for CI builds. If the repo uses a custom <code>CIBuild.cmd</code> pass <code>-publish</code> when invoking <code>build.ps1</code>. See <a href="https://github.com/dotnet/symreader/blob/master/eng/common/CIBuild.cmd#L2">CIBuild.cmd</a>.</p>
+<h2 id="arcadesdk">Arcade.SDK</h2>
+<h3 id="globaljson">Global.json</h3>
+<pre><code>{
+  &quot;tools&quot;: {
+    &quot;dotnet&quot;: &quot;2.1.401&quot;,
+    &quot;vswhere&quot;: &quot;2.2.7&quot;    // Only present for repositories that require desktop msbuild to build their projects (shipped with VS)
+  },
+  &quot;msbuild-sdks&quot;: {
+    &quot;Microsoft.DotNet.Arcade.Sdk&quot;: &quot;1.0.0-beta.18476.3&quot; // Pick the latest
+  }
+}
+</code></pre>
+<h3 id="eng-directory">eng directory</h3>
+<ul>
+<li>If you had build scripts (build.ps1, Version.props, etc.) in build directory, rename the directory to eng.</li>
+</ul>
+<h3 id="ci-build">CI build</h3>
+<p>The following applies to CI build definition, not PR validation build definitions.</p>
+<ul>
+<li>YAML definition (<code>.vsts-ci.yml</code>)
+<ul>
+<li>repository participates in .NET Core build: <a href="https://github.com/dotnet/arcade/.vsts-ci.yml">https://github.com/dotnet/arcade/.vsts-ci.yml</a></li>
+<li>otherwise example to follow: <a href="https://github.com/dotnet/roslyn-analyzers/.vsts-ci.yml">https://github.com/dotnet/roslyn-analyzers/.vsts-ci.yml</a></li>
+</ul>
+</li>
+<li>pipeline variables (settable in build definition web UI)
+<ul>
+<li>Add SignType definition variable settable at queue time
+<img src="PipelineVariables.png" alt="Pipeline Variables"></li>
+<li>Link DotNet-Symbol-Server-Pats variable group. If you don’t see the group in the UI you might not have permissions. Let me know and I'll add it to your definition.
+<img src="VariableGroups.png" alt="Variable Groups"></li>
+</ul>
+</li>
+</ul>
+<h3 id="versioning-changes">Versioning changes</h3>
+<ul>
+<li>Arcade has a new versioning scheme for packages
+<ul>
+<li>SHA is included in the package version</li>
+<li>The version number is calculated differently, which means you need to rev the pre-release label (or major/minor/revision number) to avoid version conflicts and keep correct ordering. For example, if your PreReleaseVersionLabel was beta before and you wish to use SemVer2, set PreReleaseVersionIteration to '2'. If you are using SemVer1, set PreReleaseVersionLabel to beta2.</li>
+<li>By default Arcade uses SemVer2. It allows for opting for SemVer1</li>
+</ul>
+</li>
+<li>eng\Versions.props</li>
+<li>Update the PreReleaseVersionLabel and/or PreReleaseVersionIteration properties to avoid version number collisions</li>
+<li>Set SemanticVersioningV1 property to true if you want to continue using SemVer1.</li>
+</ul>
+<h3 id="xunit-updated">XUnit updated</h3>
+<ul>
+<li>Arcade uses XUnit 2.4.1 by default, which introduces new diagnostics that might fail the build.</li>
+<li>You can override the version in Version.props if absolutely necessary.</li>
+</ul>
+<h3 id="output-directory-layout-change">Output directory layout change</h3>
+<ul>
+<li>configuration\bin\project-name -&gt; bin\project-name\configuration</li>
+<li>Update <code>build.ps1</code>, <code>build.sh</code>
+<ul>
+<li>Usage of <code>$configuration</code> variable</li>
+</ul>
+</li>
+<li>Update YAML:</li>
+<li>TestResults
+<ul>
+<li><code>artifacts/$(BuildConfiguration)/TestResults/*.xml</code> -&gt; <code>artifacts/TestResults/$(BuildConfiguration)/*.xml</code></li>
+</ul>
+</li>
+<li>VS insertion</li>
+<li>NuGet publishing
+<ul>
+<li><code>artifacts\$(BuildConfiguration)\packages\Shipping\*.nupkg</code> -&gt; <code>artifacts\packages\$(BuildConfiguration)\Shipping\*.nupkg</code></li>
+</ul>
+</li>
+<li>Publish Artifacts
+<ul>
+<li><code>artifacts\$(BuildConfiguration)\xxx</code> -&gt; <code>artifacts\xxx\$(BuildConfiguration)</code></li>
+</ul>
+</li>
+<li>Update netci.groovy:</li>
+<li><code>addXUnitDotNETResults</code></li>
+<li><code>def filesToArchive = &quot;**/artifacts/${configName}/**&quot;</code> -&gt; <code>def filesToArchive = &quot;artifacts/**&quot;</code></li>
+</ul>
+<h3 id="signing">Signing</h3>
+<ul>
+<li><code>SignToolData.json</code> not needed anymore.</li>
+<li>All NuGet packages under <code>Artifacts\packages</code> are signed.</li>
+<li>All VSIX files under <code>Artifacts\VSSetup</code> are signed.</li>
+<li>All PE files contained in these packages are signed.</li>
+<li>Default certificates used for signing:
+<ul>
+<li>For managed PE files with PublicKeyToken=31bf3856ad364e35: MsSharedLib72 strong name and Microsoft400 certificates</li>
+<li>For native PE files: Microsoft400 certificate</li>
+</ul>
+</li>
+<li>If a file needs to be signed by non-default certificate, specify so in <code>eng\Versions.props</code> file like so:</li>
+</ul>
+<pre><code class="lang-xml">  &lt;ItemGroup&gt;
+    &lt;FileSignInfo Include=&quot;Microsoft.DiaSymReader.dll&quot; PublicKeyToken=&quot;31bf3856ad364e35&quot; TargetFramework=&quot;.NETFramework,Version=v2.0&quot; CertificateName=&quot;MicrosoftSHA1Win8WinBlue&quot;/&gt;
+    &lt;FileSignInfo Include=&quot;Microsoft.DiaSymReader.dll&quot; PublicKeyToken=&quot;31bf3856ad364e35&quot; TargetFramework=&quot;.NETStandard,Version=v1.1&quot; CertificateName=&quot;WindowsPhone623&quot;/&gt;
+  &lt;/ItemGroup&gt;
+</code></pre>
+<ul>
+<li><code>PublicKeyToken</code> and <code>TargetFramework</code> attributes are optional, allow to distinguish between multiple flavors of a multi-targeted file</li>
+<li>Sign tool is now a build task producing the following output to the binlog:
+<img src="SignToolLog.png" alt="Sign Tool Log"></li>
+<li>After switching double-check that the binaries are signed as expected.</li>
+</ul>
+<h3 id="nuget-packaging">NuGet packaging</h3>
+<ul>
+<li>Use <code>&lt;PackageDescription&gt;</code> in projects building nuget packages and <code>$PackageDescription$</code> in handwritten nuspec files, instead of <code>&lt;Description&gt;</code> and <code>$Description$</code>.</li>
+<li>The toolset no longer automatically triggers <code>publish</code> when building a package .NET Core. To work around add the following to the project that generates nuget package and needs publishing:</li>
+</ul>
+<pre><code class="lang-xml">&lt;PropertyGroup&gt;
+  &lt;TargetsForTfmSpecificContentInPackage&gt;_CorePublish;$(TargetsForTfmSpecificContentInPackage)&lt;/TargetsForTfmSpecificContentInPackage&gt; 
+&lt;/PropertyGroup&gt;
+
+&lt;Target Name=&quot;_CorePublish&quot; DependsOnTargets=&quot;Publish&quot; Condition=&quot;'$(TargetFrameworkIdentifier)' == '.NETCoreApp'&quot; /&gt;
+</code></pre>
+<h2 id="arcade-sdk-190551">Arcade SDK (19055.1)</h2>
+<ul>
+<li>MicroBuildSwixPlugin installation step not required anymore: <a href="https://github.com/dotnet/arcade/pull/1692">https://github.com/dotnet/arcade/pull/1692</a></li>
+<li>A project that generates pkgdef file but does not produce a VSIX container does <em>not</em> need to include the <code>Microsoft.VSSDK.BuildTools</code> PackageReference explicitly anymore.</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CRepoToolset%5CMigrationToArcade.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CRepoToolset%5CMigrationToArcade.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CRepoToolset%5CMigrationToArcade.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

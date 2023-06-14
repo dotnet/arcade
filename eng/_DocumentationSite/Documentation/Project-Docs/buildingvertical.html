@@ -1,0 +1,190 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Building a Vertical Implementation Details </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Building a Vertical Implementation Details ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="building-a-vertical-implementation-details">Building a Vertical Implementation Details</h1>
+
+<p><strong>Definitions</strong></p>
+<p><em>VerticalTargetGroup</em></p>
+<p><code>VerticalTargetGroup</code> - We need a property to define the vertical target group, but we don't want to set &quot;TargetGroup&quot; explicitly or we won't be able to build the &quot;&quot; TargetGroups for projects.
+If <code>VerticalTargetGroup != &quot;&quot;</code>, we import buildvertical.targets which will contain our additional targets.</p>
+<p><em>SupportedGroups</em></p>
+<p>For each ref project and src project, we define <code>SupportedGroups</code>. <code>SupportedGroups</code> is a tuple for the supported <code>TargetGroups</code> and <code>OSGroups</code>.</p>
+<p>ie</p>
+<p>ref\System.Runtime.csproj</p>
+<pre><code class="lang-MSBuild">&lt;PropertyGroup&gt;
+  &lt;SupportedGroups&gt;
+    netstandard1.7_Windows_NT;
+    netstandard1.7_OSX;
+    netstandard1.7_Linux;
+    netcoreapp1.1_Windows_NT;
+    netcoreapp1.1_OSX;
+    netcoreapp1.1_Linux
+  &lt;/SupportedGroups&gt;
+&lt;PropertyGroup&gt;
+</code></pre>
+<p><em>Contract Layer</em></p>
+<p>We have a contract layer (msbuild task).</p>
+<p>Inputs:</p>
+<pre><code>    SupportedGroups
+    VerticalTargetGroup
+    OSGroup
+</code></pre>
+<p>Output:</p>
+<pre><code>    VerticalTargets (ItemTask)
+        metadata: TargetGroup
+                  OSGroup
+</code></pre>
+<p>Given the supported target and OS groups, and the desired vertical target and OS groups, return the closest supported group or empty metadata items.
+How should we handle determining the target / os groups, fallback groups, etc...?  The simplest solution is to use the NuGet api's for targets.  We can use platforms\runtime.json for os groups, or try to use the already existent os group filtering instead of adding it to the contract layer.</p>
+<p>Options:</p>
+<ol>
+<li><p>Use NuGet API's</p>
+</li>
+<li><p>Make use of inormation we already have and develop our own resolution algorithm.</p>
+</li>
+</ol>
+<p>The current plan is to use the NuGet API's.  We know that there is an intrinsic problem with the NuGet API's, in that we (CoreFx) define the targets (tfm's), but NuGet contains the data / logic, so anytime we want to create a new tfm, we have to go make an update to NuGet.  This is an existent problem.  For now, it is much simpler to utilize NuGet instead of deriving a second solution.  When we break free of the NuGet dependency and wholly define our tfm graph, then we should utilize that solution for this work.</p>
+<p><strong>Building a vertical implementation steps</strong></p>
+<p>1 - Include all projects, we don't need to build the .builds files for each library, because we only want to build each project at most once for a given vertical.</p>
+<pre><code class="lang-MSBuild">&lt;ItemGroup&gt;
+  &lt;Project Include=&quot;**\ref\*proj&quot; /&gt;
+  &lt;Project Include=&quot;**\src\*proj&quot; /&gt;
+&lt;/ItemGroup&gt;
+</code></pre>
+<p>2 - Iterate all projects through the contract layer, removing (and logging) any projects which return null metadata (not supported).</p>
+<p>3 - Build <code>OutputPath</code> is set to drop all binaries into a single folder</p>
+<p>Current standard <code>OutputPath</code></p>
+<pre><code class="lang-MSBuild">&lt;OutputPath Condition=&quot;'$(OutputPath)'==''&quot;&gt;$(BaseOutputPath)$(OSPlatformConfig)/$(MSBuildProjectName)/$(TargetOutputRelPath)$(OutputPathSubfolder)&lt;/OutputPath&gt; 
+</code></pre>
+<p>Example: E:\gh\chcosta\corefx\bin/AnyOS.AnyCPU.Debug/System.Buffers/netcoreapp1.1/</p>
+<p>Proposed vertical <code>OutputPath</code></p>
+<pre><code class="lang-MSBuild">&lt;OutputPath Condition=&quot;'$(OutputPath)'==''&quot;&gt;$(BinDir)/$(VerticalTargetGroup)/$(OSPlatformConfig)&lt;/OutputPath&gt;
+</code></pre>
+<p>Example: E:\gh\chcosta\corefx\bin/netcoreapp1.7/AnyOS.AnyCPU.Debug</p>
+<p>Traditionally, the output path contains the <code>TargetGroup</code> as a part of the path.  The flat structure means we don't have to play games with the <code>TargetPath</code> to figure out when, for example, &quot;System.Buffers&quot; (&quot;netstandard1.1&quot;) is trying to find the &quot;System.Runtime&quot; reference (&quot;netstandard1.7&quot;), that there is no path for &quot;System.Runtime.dll&quot; containing the &quot;netstandard1.1&quot; target group.</p>
+<p>4 - Build all reference assemblies.  The reference assembly projects, which were not trimmed in step 2, are all built.  TBD, should we again use the contract layer during the build to determine the targets for the project, or should we capture that as metadata for the project in step 2?</p>
+<p>5 - Build all src assemblies into the &quot;OutputPath&quot;. The src assembly projects, which were not trimmed in step 2. are all built.</p>
+<p>6 - build packages, TBD</p>
+<p><strong>Building a library</strong></p>
+<p>In addition to the ability to build an entire vertical, we require the ability to build a single library.  This, single library build should utilize context to determine TargetGroup and OSGroup.  ie, If a vertical build completes, and you want to build an individual library, it should use the group values from the vertical build unless you specify otherwise.  If you specify otherwise, then those settings become the new settings.  If no context is available, then the library should be built with a set of commond default values.</p>
+<p>When building an individual library, or project, its P2P references must be queried to determine supported configurations for building that refernce and then the best configuration must be chosen.</p>
+<p><strong>Additional issues</strong></p>
+<ul>
+<li><p>building specific folders (filter by partition)?</p>
+</li>
+<li><p>building / running tests for a vertical</p>
+<ul>
+<li>building tests against packages</li>
+</ul>
+</li>
+<li><p>Official builds?</p>
+</li>
+<li><p>CI testing?</p>
+</li>
+<li><p>Validation</p>
+<ul>
+<li><p>Is it an error condition if any library does not contribute to the latest standard vertical?</p>
+</li>
+<li><p>Is it an error condition if a library does not contribute to any OS group? probably</p>
+</li>
+</ul>
+</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Cbuildingvertical.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Cbuildingvertical.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Cbuildingvertical.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

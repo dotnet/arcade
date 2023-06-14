@@ -1,0 +1,130 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Best Practices for .NET Engineering Services </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Best Practices for .NET Engineering Services ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="best-practices-for-net-engineering-services">Best Practices for .NET Engineering Services</h1>
+
+<p>The intent of this document is to help the team learn and grow by sharing best practices that we have found.</p>
+<h2 id="keeping-our-repos-healthy-and-ready-for-roll-out">Keeping Our Repos Healthy and Ready for Roll Out</h2>
+<ul>
+<li>Anyone who checks in a change still needs to monitor the next main run, in any repo.
+<ul>
+<li>PR validation is not the same as deployment to the staging environment and there will always be problems missed by PR validation unless we deploy an entire environment for every PR, which is not currently possible.</li>
+<li>The goal is to have a vendor monitoring our important pipelines - <a href="https://dnceng.visualstudio.com/internal/_wiki/wikis/DNCEng%20Services%20Wiki/952/Helix-Machine-Lifecycle-Processes?anchor=daily%3A">Helix Machine Lifecycle Daily Process</a> - but everyone on the team should still make sure we are able roll out at any time.</li>
+<li>It’s a good principle to ask people to look at the next main run, it’s an even better one to not allow oneself to be broken for days at a time unnecessarily.</li>
+</ul>
+</li>
+<li>Verify deployment and close issues you placed in the &quot;waiting for rollout&quot; column on our Project Board
+<ul>
+<li>This is especially true for anything associated with grafana alerts. We may miss new alerts as they are concatinated to an existing issue.</li>
+<li>It is not the responsiblity of the individuals performing deployments to verify your issue is complete and closed out.</li>
+</ul>
+</li>
+<li>The autoscaler is quite different from everything else in dotnet-helix-machines
+<ul>
+<li>It is the only service within this repo and it causes us to duplicate any efforts involving Service Fabric changes</li>
+</ul>
+</li>
+</ul>
+<h2 id="first-responderoperations-work">First Responder/Operations Work</h2>
+<ul>
+<li>The Operations v-team - including our vendor resource - is responsible for triaging any internal work that come in from S360 and other internal notifications (i.e. emails from security, policy notifications from PM, etc). Any work that they determine as meeting the First Responder bar will be tagged for FR and be addressed by that virtual team.</li>
+<li>Current First Responder responsibilities, best practices and how to documentation can be found at our <a href="https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/889/Home">Team Wiki</a></li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5CDevGuide%5CBestPractices.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5CDevGuide%5CBestPractices.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5CDevGuide%5CBestPractices.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

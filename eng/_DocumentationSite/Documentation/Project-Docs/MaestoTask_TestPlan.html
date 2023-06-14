@@ -1,0 +1,345 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title> </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content=" ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+
+<p><strong>Goals</strong></p>
+<p>Add test coverage for the Maestro.Task project with particular focus on the code that changed as part of the post-build signing changes. Each included method will have test coverage for the golden path(s) as well as interesting variations and missing/invalid input. I plan to start with the golden path and then use a combination of the VS code coverage tool and logic to identify the rest of the test cases for each method.</p>
+<p>Note that the specific test cases listed are an initial guess based on reading code that I am new to and are likely to change as my understanding of the code changes.</p>
+<p><strong>Methods to be covered (ones that were changed for post-sign build have a *** and will be the first to get coverage):</strong></p>
+<ul>
+<li>[ ]	***PushMetadataAsync (this will get tests late even enough it was changed because most of its logic is calling the other methods listed below, so I'm going to use Code Coverage to guide the test case creation)</li>
+<li>[ ]	GetBuildDefaultChannelAsync
+<ul>
+<li>[ ] Positive cases, validate that the correct subset of channels is returned
+<ul>
+<li>[ ]	Given all valid data (known good data set from a repo)</li>
+<li>[ ]	Given GitHub source data</li>
+<li>[ ]	Given AzDo source data</li>
+<li>[ ]	Given both GitHub &amp; AzDo source data</li>
+</ul>
+</li>
+<li>[ ] Negative cases, validate that the returned data is empty or a meaningful exception is thrown
+<ul>
+<li>[ ]	Given that both GitHub &amp; AzDo are empty</li>
+<li>[ ]	Given empty/null values in other properties that are logged/checked</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>[ ] GetBuildDependenciesAsync
+<ul>
+<li>[ ] Positive cases, validate that the correct subset of BuildRefs is returned
+<ul>
+<li>[ ] Given golden path (build is found and it has a set of dependencies that have all relevant values filled in)</li>
+<li>[ ] Given build that has product dependencies</li>
+<li>[ ] Given build that has tool dependencies</li>
+<li>[ ] Given a build with both product &amp; tool dependencies</li>
+<li>[ ] Given a build with non-required fields empty (should have no impact on the returned list)</li>
+<li>[ ] Given one dependency with no builds found (GetBuildId returns null &amp; this method logs then continues, return an empty list )</li>
+<li>[ ] Given a build with no dependencies (return an empty list)</li>
+</ul>
+</li>
+<li>[ ] Negative cases, expect a meaningful exception is thrown
+<ul>
+<li>[ ] Given an empty RepoRoot</li>
+<li>[ ] Given that the RepoRoot is not defined in the input file</li>
+<li>[ ] Given an incorrect (invalid) RepoRoot</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>[ ] GetBuildId
+<ul>
+<li>[ ] Positive cases, validate that the correct buildId is returned and that the correct assets have been added to the assetCache
+<ul>
+<li>[ ] Golden path (given assets have a matching commit, buildId has a value, and build has assets in it aren’t in the given list)</li>
+<li>[ ] Given assets are the only assets for build</li>
+</ul>
+</li>
+<li>[ ] Negative, expect a meaningful expection is thrown
+<ul>
+<li>[ ] Given assets don’t have a matching commit so no buildId is found (no exception, return null)</li>
+<li>[ ] Given assets are missing field values that are expected/used in logic</li>
+<li>[ ] Given null/empty arguments (if possible from caller)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>[ ] ***GetBuildManifestsMetadata
+<ul>
+<li>[ ] Positive cases, validate contents of returned values (buildsManifestMetadata, signingInfo, manifestBuildData)
+<ul>
+<li>[ ] Given a single manifest</li>
+<li>[ ] Given multiple manifests</li>
+<li>[ ] Given no manifests</li>
+</ul>
+</li>
+<li>[ ] Negative cases, expect a meaningful exception is thrown
+<ul>
+<li>[ ] Given a file that isn’t a manifest</li>
+<li>[ ] Given badly formatted XML</li>
+<li>[ ] Given an empty manifest file (valid XML formatting but with nothing in it)</li>
+<li>[ ] Given a set of manifests missing various pieces of expected data (examples below, not a complete matrix)
+<ul>
+<li>[ ] Manifest without any assets listed</li>
+<li>[ ] Manifest that has an asset that contains a package with no version set</li>
+<li>[ ] Manifest that does not contain any Blobs</li>
+<li>[ ] Manifest with a blob that does not have a version set</li>
+<li>[ ] Manifest with a blob that does not have any assets</li>
+</ul>
+</li>
+<li>[ ] Given two manifests that have different attributes (expect exception thrown in method)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>[ ] AddAsset
+<ul>
+<li>[ ] Positive cases, validate that the asset has been added to to the asset list
+<ul>
+<li>[ ] Given golden path with a combo of shipping and non-shipping assets</li>
+<li>[ ] Given empty string parameters</li>
+</ul>
+</li>
+<li>[ ] Negative cases, expect a meaningful exception is thrown
+<ul>
+<li>[ ] Given null parameters (if allowed by caller)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>[ ] MergeBuildManifests
+<ul>
+<li>[ ] Positive cases, validate the contents of the merged manifest BuildData
+<ul>
+<li>[ ] Given the golden path (two BuildData objects with compatible manifests in GitHub)</li>
+<li>[ ] Given the golden path with a mirrored repo</li>
+<li>[ ] Given three compatible BuildDatas</li>
+<li>[ ] Given compatible BuildDatas with null/empty assets</li>
+<li>[ ] Given compatible BuildDatas with existent but partially empty/invalid assets</li>
+</ul>
+</li>
+<li>[ ] Negative cases, expect a meaningful exception is throwm
+<ul>
+<li>[ ] Given two incompatible BuildDatas</li>
+<li>[ ] Given compatible BuildDatas with duplicated assets</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>[ ] ***MergeSigningInfo
+<ul>
+<li>[ ] Positive cases, validate the content of the merged SigningInformation
+<ul>
+<li>[ ] Given two SigningInformation objects that are compatible and contain different information</li>
+<li>[ ] Given two duplicate SigningInformation objects</li>
+<li>[ ] Given two SigningInformation objects where one is missing some values</li>
+</ul>
+</li>
+<li>[ ] Negative cases, expect a meaningful exception
+<ul>
+<li>[ ] Given two SigningInformation objects that are not compatible (exception thrown by method)</li>
+<li>[ ] Given null/empty arguments (if possible from caller)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>[ ] LookingForMatchingGitHubRepository
+<ul>
+<li>[ ] Positive cases, validate that the BuildData is updated with the correct infomration
+<ul>
+<li>[ ] Given a BuildData that is based on GitHub (non-mirrored repo)</li>
+<li>[ ] Given a BuildData that is based on AzDo (mirrored repo) where GitHub is the current mirror</li>
+<li>[ ] Given a BuildData that is based on AzDo (mirrored repo) where AzDo is the current mirror</li>
+</ul>
+</li>
+<li>[ ] Negative cases, expect a meaningful exception
+<ul>
+<li>[ ] Given a BuildData with an invalid url for the AzureDevOpsRepository value</li>
+<li>[ ] Given null/empty arguments (if possible from caller)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>[ ] ***GetManifestAsAsset
+<ul>
+<li>[ ] Positive cases, validate the contents of the AssetData and that it has been added to blobSet
+<ul>
+<li>[ ] Given a list of AssetData with a location string and a manifest file that exists</li>
+<li>[ ] Given a list of AssetData with a location string and a manifest file that does not exist</li>
+<li>[ ] Given a golden path where the AssetVersion is set</li>
+<li>[ ] Given a golden path where the AssetVersion is not set, but there is a non-shipping asset with a version</li>
+<li>[ ] Given a golden path where the AssetVersion is not set and there is not a non-shipping asset with a version</li>
+<li>[ ] Given an empty list of AssetData (expect an empty list returned)</li>
+<li>[ ] Given a null location</li>
+</ul>
+</li>
+<li>[ ] Negative cases, expect a meaningful exception
+<ul>
+<li>[ ] Given other null/empty arguments (if allowed by caller)</li>
+<li>[ ] Given blobSet that already has a key with the same name as an asset (if possible to get into that state)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>[ ] ***CreateAndPushMergedManifest
+<ul>
+<li>[ ] Positive cases, validate content of manifest file
+<ul>
+<li>[ ] Given a list of compatible assets with SigningInformation &amp; ManifestBuildData within expected values</li>
+<li>[ ] Given assets that are blobSet</li>
+<li>[ ] Given assets that are not in blobSet</li>
+<li>[ ] Given assets where some are in blobSet and some are not</li>
+<li>[ ] Given assets that are non-shipping</li>
+<li>[ ] Given assets that are shipping</li>
+<li>[ ] Given other empty/null arguments (as allowed by caller)</li>
+<li>[ ] Given a mergedManifestPath that does not exist</li>
+<li>[ ] Given a mergedManifestPath that already contains a file with the same name</li>
+</ul>
+</li>
+<li>[ ] Negative cases, expect a meaningful exception
+<ul>
+<li>[ ] Given null SigningInformation</li>
+<li>[ ] Given SigningInfo that has some null/empty values</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>[ ] ***SigningInfoToXml (this is going to be a fine line between testing our logic and testing XDocument, so these test cases are very likely to evolve as I write them)
+<ul>
+<li>[ ] Positive cases, validate content of the returned XElement
+<ul>
+<li>[ ] Given a SigningInformation with a single one of each of the types parsed and all values filled in</li>
+<li>[ ] Given a SigningInformation with multiple of the types parsed, all of which contain the expected values</li>
+</ul>
+</li>
+<li>[ ] Negative cases, expect a meaningful exception
+<ul>
+<li>[ ] Given a SigningInformation missing various top level values that are assumed present (if allowed from caller)</li>
+<li>[ ] Given a SigningInformation with nested values missing</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>[ ] Scenario Tests
+<ul>
+<li>[ ] Positive cases, validate that the BAR database has been updated with the correct information and that the new build exists
+<ul>
+<li>[ ] All values and input are valid throughout the pipeline</li>
+</ul>
+</li>
+<li>[ ] Negative cases, a user friendly error message is returned
+<ul>
+<li>[ ] RepoRoot is null or empty</li>
+<li>[ ] AssetVersion is null or empty</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><strong>Non-Goals</strong>
+Test coverage for any code outside of the Maestro.task project.</p>
+<p><strong>Methods to be excluded:</strong></p>
+<ul>
+<li>“GetXYZ” methods where it only returns a string from the environment or calls an outside function without applying interesting logic.</li>
+</ul>
+<p><strong>Risk</strong>
+This is fairly low risk, since it’s going to be based on the other existing test projects. There are some changes required in the product code to allow for DI and mocking attachment points, that’s the biggest risk in this set of changes.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CMaestoTask_TestPlan.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CMaestoTask_TestPlan.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CMaestoTask_TestPlan.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

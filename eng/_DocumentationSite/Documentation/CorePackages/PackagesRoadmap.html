@@ -1,0 +1,187 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Packages Roadmap </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Packages Roadmap ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="packages-roadmap">Packages Roadmap</h1>
+
+<p>The goal of this document is to provide guidance on the definition and implementation of the &quot;Core&quot; packages that should be in the
+Arcade SDK and that should be consumed by the <a href="..%5CTierOneRepos.md">tier 1 repositories</a></p>
+<h2 id="packages-that-should-belong-in-the-arcade-sdk">Packages that should belong in the Arcade SDK</h2>
+<p>The following list provides a summary of the state of each package. For more information, the work is being tracked under the Epic <a href="https://github.com/dotnet/arcade/issues/46">Publish core &quot;set&quot; of shared packages</a> where every issue is marked according to the package it belongs.</p>
+<p><strong>Note:</strong> As we start allocating resources to work on the different packages, specific issues/documentation will be created for each package.</p>
+<h3 id="versioning">Versioning</h3>
+<ul>
+<li><strong>Goal</strong>: Have a consistent and reliable way of versioning .NET Core 3.0 repositories assets.</li>
+<li><strong>Where we are</strong>:
+<ul>
+<li>Most of the work is completed.</li>
+<li>There is documentation about it.</li>
+<li>Already included in the Arcade SDK.</li>
+</ul>
+</li>
+<li><strong>Principal TODOs</strong>:
+<ul>
+<li>Finish implementing what is described in the <a href="Versioning.html">documentation</a>.</li>
+</ul>
+</li>
+<li><strong>When could start being consumed by other repositories</strong>: S139 =&gt; 8/10</li>
+</ul>
+<h3 id="signing">Signing</h3>
+<ul>
+<li><strong>Goal</strong>: Sign .NET Core 3.0 binaries in a uniform, consistent and reliable way</li>
+<li><strong>Where we are</strong>:
+<ul>
+<li>Signing plan <a href="SigningPlan.html">here</a>.</li>
+<li>Signtool from Reprotoolset ported to Arcade and it is part of the Arcade SDK.</li>
+<li>SignTool can be consumed as an MsBuild task.</li>
+<li>Arcade is consuming SingTool to sign its binaries.</li>
+</ul>
+</li>
+<li><strong>Principal TODOs</strong>:
+<ul>
+<li>Implement the ability to pass an ItemGroup to SignTool, instead of using SingToolData.json.</li>
+<li>Extract the certificates and strong names from the metadata files.</li>
+<li>Add documentation on how to consume the SignTool.</li>
+</ul>
+</li>
+<li><strong>When could start being consumed by other repositories</strong>: S140 =&gt; 8/31</li>
+</ul>
+<h3 id="publishing">Publishing</h3>
+<ul>
+<li><strong>Goal</strong>: Standardized the way to publish packages and symbols to the respective channels for all .NET Core 3.0 repositories.</li>
+<li><strong>Where we are</strong>:
+<ul>
+<li>Publishing plan <a href="PublishingPlan.md">here</a></li>
+<li>Arcade is consuming the Publishing package.</li>
+<li>Transport feeds from Buildtools is now in Arcade.</li>
+</ul>
+</li>
+<li><strong>Principal TODOs</strong>:
+<ul>
+<li>Send information to Darc/Maestro.</li>
+<li>Add documentation to Arcade.</li>
+</ul>
+</li>
+<li><strong>When could start being consumed by other repositories</strong>: S141 =&gt; 9/21</li>
+</ul>
+<h3 id="packaging">Packaging</h3>
+<ul>
+<li><strong>Goal</strong>: Pack the binaries produced by the .NET Core 3.0 repositories in a unified way.</li>
+<li><strong>Where we are</strong>: Initial code is already part of Arcade SDK =&gt; only for NuGet packages.</li>
+<li><strong>Principal TODOs</strong>:
+<ul>
+<li>Make sure what we currently have will work for most repositories. Refactor where necessary.</li>
+<li>Add documentation.</li>
+</ul>
+</li>
+<li><strong>When could start being consumed by other repositories</strong>: S141 =&gt; 9/21</li>
+</ul>
+<h3 id="telemetry">Telemetry</h3>
+<ul>
+<li><strong>Goal</strong>: Provide telemetry about every task executed as part of building .NET Core 3.0.</li>
+<li><strong>Where we are</strong>: Scripts to consume the Telemetry infrastructure are already in Arcade =&gt; eng/common</li>
+<li><strong>Principal TODOs</strong>:
+<ul>
+<li>Make sure what we currently have will work for most repositories. Refactor where necessary.</li>
+<li>Add documentation.</li>
+</ul>
+</li>
+<li><strong>When could start being consumed by other repositories</strong>: S141 =&gt; 9/21</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CCorePackages%5CPackagesRoadmap.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CCorePackages%5CPackagesRoadmap.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CCorePackages%5CPackagesRoadmap.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

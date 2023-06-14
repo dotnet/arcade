@@ -1,0 +1,167 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Types of Engineering Services Change Communication </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Types of Engineering Services Change Communication ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="types-of-engineering-services-change-communication">Types of Engineering Services Change Communication</h1>
+
+<h2 id="goals-and-success-criteria">Goals and Success Criteria</h2>
+<p>The primary goal is to communicate updates, new features, and anything of note that is changing.  Success looks like:</p>
+<ul>
+<li>No surprises</li>
+<li>New value is known</li>
+<li>Breaking changes are expected, and proper runway is given to mitigate</li>
+<li>All changes (big or small) available to help with transparency that enables easy diagnosability</li>
+</ul>
+<h2 id="areas-to-communicate-changes">Areas to Communicate Changes</h2>
+<p>There are several areas around which communication will occur.  The nature of these updates remain the same for each of these areas.</p>
+<ul>
+<li>DNCeng Services (Helix, Darc, etc)</li>
+<li>Shared Tools (Arcade SDK, Signing, etc)</li>
+<li>Backing Resources (Azure storage, ScaleSets, Microbuild, etc)</li>
+<li>Guidance and best practices</li>
+</ul>
+<h2 id="classes-of-updates-to-communicate">Classes of Updates to Communicate</h2>
+<ul>
+<li><strong>Breaking</strong> - Breaks something.  This type is the most severe and should be a rare occurrence</li>
+<li><strong>Disruptive</strong> - Change doesn’t break, but either adds debt with the product teams OR is considered risky
+<ul>
+<li>Examples: release pipelines, licensing, cert removal</li>
+</ul>
+</li>
+<li><strong>Minimal risk</strong> - Some risk, but likely will be fine (these might also be called “updates of note”)
+<ul>
+<li>Examples: new feature, notable bug fix, etc.</li>
+</ul>
+</li>
+<li><strong>Minor, low risk</strong> - Very low risk, and most folks won't care.
+<ul>
+<li>Most changes are these last two bullets.</li>
+<li>Examples: security update, minor bug fixes, etc</li>
+</ul>
+</li>
+</ul>
+<h2 id="engineering-services-policy-for-updates">Engineering Services Policy for Updates</h2>
+<ul>
+<li>.NET Core Product release schedules are published and kept &quot;top of mind&quot; for the team</li>
+<li>Tools will <strong>not</strong> automatically flow to release/shipping branches (only to master/dev)</li>
+<li>No updates to shared services during stabilization period (often a week) leading up to release</li>
+<li>Published bar for when we’ll take changes <a href="ChangeBar.html">Arcade Change Bar</a></li>
+<li>Published bar used for determining class of update/change <a href="ChangeBar.html">Arcade Change Bar</a></li>
+</ul>
+<h2 id="communication-mechanicsmethods">Communication Mechanics/Methods</h2>
+<ul>
+<li>Breaking changes follow procedure <a href="ChangesPolicy.html">Arcade Changes Policy document</a></li>
+<li>Disruptive changes follow procedure <a href="ChangesPolicy.html">Arcade Changes Policy document</a></li>
+<li>Release notes with “updates of note” (human crafted)
+<ul>
+<li>Done every time an update is deployed for our services</li>
+<li>Done at most weekly for tools (e.g. Arcade SDK)</li>
+<li>Done when items of note occur in one of our backing resources.  For example, public feeds for Azure Artifacts</li>
+</ul>
+</li>
+<li>Blog entry for larger features/updates of interest</li>
+</ul>
+<h2 id="automation">Automation</h2>
+<p>The intent is to provide access to a change log which contains all PR’s and the latest SHAs which is always available. (<em>NOTE: this is not yet implemented</em>)</p>
+<ul>
+<li>Log is auto generated and posted (not emailed)</li>
+<li>Is not always categorized by type of change because of automation, e.g. breaking etc  (add ML in the future?)</li>
+<li>Resource updates and 2nd party services are out of scope for this automation piece</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CPolicy%5CArcadeCommunications.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CPolicy%5CArcadeCommunications.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CPolicy%5CArcadeCommunications.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

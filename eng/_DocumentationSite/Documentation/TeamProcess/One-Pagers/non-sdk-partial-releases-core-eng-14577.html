@@ -1,0 +1,216 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Non-SDK Partial Releases for 6.0 </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Non-SDK Partial Releases for 6.0 ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="non-sdk-partial-releases-for-60">Non-SDK Partial Releases for 6.0</h1>
+
+<h2 id="summary">Summary</h2>
+<p>In general, we only have two types of releases: full releases (which consist of sdk, runtime, aspnetcore, and windows desktop artifacts) and sdk-only releases (which only consist of the sdk, and rely on previously released versions of runtime, aspnetcore and windows desktop). However, in the 6.0 timeframe, we now find ourselves requiring a non-sdk partial release (i.e. a runtime-only or runtime and aspnetcore-only release), due to requirements for MAUI. Specifically, we will need to publish all of the workload packs and packages for this process.</p>
+<h2 id="stakeholders">Stakeholders</h2>
+<ul>
+<li>.NET Core Engineering Services team (contact: @dnceng)</li>
+<li>.NET SDK team</li>
+<li>.NET MAUI team</li>
+<li>.NET Release team</li>
+</ul>
+<h2 id="risks">Risks</h2>
+<ul>
+<li><p>What are the unknowns?</p>
+<ul>
+<li>Today, it is unclear how to identify which files we will want to publish and how. Many are in the &quot;workloads&quot; directory for a given repo (runtime, emsdk), but the nupkgs are all in a flat directory structure. While we could publish all of the new nupkgs, it's unclear if we would actually want to. The safest option is to just publish all of the artifacts that are part of the release, rather than trying to pick and choose. This is what we should do, as it is simpler, safer, and gives us more flexibility for using this work in the future.</li>
+<li>We do not know how much of the infrastructure around releases relies on there being an actual sdk version associated with a release. Depending on how much we can work around, we may be able to work within the current infrastructure, but it also might require a full rewrite of some of the initialize release work, including that around linux signing, building the release layout, generating the release metadata (if we want to do that, which is also an unknown), etc.</li>
+<li>We do not know how much of the full release process we will require in a runtime-only release, and how that will interact with our scheduled releases. We want to make sure that we reuse and share as much of the current infrastructure and processes as we can; however, it may require some one off work that would only work for these non-sdk partial releases.</li>
+</ul>
+</li>
+<li><p>Are there any POCs (proofs of concept) that need to be built for this work?</p>
+<p>There is nothing particularly new that we should need to build for this work that doesn't already exist as part of the Stage-DotNet and Release-DotNet-5.x pipelines. While we will require some modifications to the current system that may necessitate a new pipeline on the release side, the staging pipeline should be able to be used mostly, if not completely, unchanged.</p>
+</li>
+<li><p>What dependencies will this work have? Are the dependencies currently in a state that the functionality in the work can consume them now, or will they need to be updated?</p>
+<p>This work depends on the work that the runtime, emsdk and other repositories have done to allow for releases of workloads (namely, the workloads directory that these repositories now produce). The work may also rely on a new naming schema for the workload nupkgs, if we decide we need to do that. Finally, the work relies on the Stage-DotNet and Release-DotNet-5.x pipelines that currently perform our releases, and the processes that those pipelines do today. These pipelines and/or processes will likely need to be updated in order to support this new type of release.</p>
+</li>
+<li><p>Will the new implementation of any existing functionality cause breaking changes for existing consumers?</p>
+<p>It should not. Wherever possible, we should add existing functionality that is exclusive to non-sdk partial releases under option flags that do not affect existing infrastructure.</p>
+</li>
+<li><p>Is there a goal to have this work completed by, and what is the risk of not hitting that date? (e.g. missed OKRs, increased pain-points for consumers, functionality is required for the next product release, et cetera)</p>
+<p>This work is required for MAUI to release pre-.NET 7. What will trigger the need for this work is a big runtime change that is too risky to immediately go into .NET 6 GA or servicing, but is required for MAUI. We will likely need this by early 2022. While this work is currently specifically for MAUI bring up today, it may likely be needed for shipping preview versions of servicing releases of .NET 6 with potentially risky changes.</p>
+</li>
+</ul>
+<h2 id="open-questions">Open Questions</h2>
+<ul>
+<li><p>What epic should this be part of?</p>
+<p>It is strongly recommended that this work go into its own epic</p>
+</li>
+<li><p>What needs to be updated?</p>
+<p>It's unclear, as the staging pipeline fails early (in linux signing), and everything later in the pipeline is gated on the signing stage. Once we have a clear picture of the staging pipeline, we can get a handle on what changes need to be done in the release pipeline.</p>
+</li>
+<li><p>Will this be treated differently than a full release or an sdk-only release?</p>
+<p>Probably, as we aren't going to be publishing everything from the drop, unlike what we do for full/sdk-only releases.</p>
+</li>
+</ul>
+<h2 id="components-to-change-with-orderestimates-of-work-to-do">Components to change, with order/estimates of work to do</h2>
+<h3 id="component-staging-pipeline">Component: Staging pipeline</h3>
+<p>The Staging pipeline does the work of preparing the release, including gathering the drop, signing the assets, validating the assets, and creating the final release layout. Most of the pipeline is pretty robust and seems to handle well builds that don't contain sdk assets, however some of the pipeline relies on a fully formed release config.json, which we will not have in these releases.</p>
+<h4 id="high-level-activities">High-level activities:</h4>
+<ul>
+<li>Update the config file generation to allow us to get runtime version info from the runtime assets (and aspnetcore version from the aspnetcore assets), not just the sdk dependencies. We would like to, as much as possible, automatically detect what kind of release the pipeline has been asked to perform.</li>
+<li>Update initialize-release to allow for config files that are missing versions for sdk, runtime, aspnetcore, etc.</li>
+<li>Determine if we actually need the release metadata, or if that will be unnecessary for this sort of release.</li>
+<li>Modify the yaml to skip anything that is unnecessary for these releases</li>
+<li>Find all the places where we use the sdk version in the yaml, and for these releases, use something else (runtime version, for example). Using the sdk version is currently breaking some publishing code, in addition to the release initialization infrastructure.</li>
+<li>Confirm that VS insertion continues to work properly for this scenario</li>
+</ul>
+<h3 id="component-release-pipeline">Component: Release pipeline</h3>
+<p>The release pipeline does the actual work of publishing the release, including creating additional metadata files, publishing nuget packages, publishing signed files to dotnetcli, updating aka.ms links, publishing symbols, publishing transport files to public locations, etc.</p>
+<h4 id="high-level-activities-1">High-level activities:</h4>
+<ul>
+<li>Walk through the entire pipeline to see what uses the config file, and how.</li>
+<li>Confirm that anything that uses the release layout (i.e., what we drop to NET_CORE on vsufile), can handle files being missing.</li>
+<li>Update whatever metadata file creation there is to accept a config file that is missing data that is not part of the release.</li>
+<li>Confirm that repo-propagation will handle missing versions gracefully.</li>
+<li>Determine how we will release only the workloads directory, rather than the entire drop.</li>
+<li>Determine how we will identify and publish only those nupkgs that we are interested in releasing for this process.</li>
+</ul>
+<h3 id="component-product-repositories">Component: Product repositories</h3>
+<p>The product repositories need to make sure that any workloads that need to be released as part of this process are published as part of the workloads directory. Many already do this today.</p>
+<h4 id="high-level-activities-2">High-level activities:</h4>
+<ul>
+<li>Make sure any repositories we need to be part of this work publish required assets to their workloads directories.</li>
+<li>Where possible, have assets put in a subdirectory that identifies the sdk release version the assets should be associated with</li>
+<li>Potentially rename required nupkgs to identify them as Workload packages, like we do the VS.* packages for other releases.</li>
+</ul>
+<h2 id="serviceability">Serviceability</h2>
+<ul>
+<li>How will the components that make up this epic be tested?</li>
+</ul>
+<p>Like the staging pipeline, we will have a test pipeline and BAR Build ID that we can run through the full pipeline for testing. This should be run prior to any main testing and will run on production rollouts. Additionally, all new functionality will have unit tests added to test that they're doing what they are supposed to and don't break prior behavior.</p>
+<ul>
+<li>How will we have confidence in the deployments/shipping of the components of this work?</li>
+</ul>
+<p>By using the test pipelines prior to deployment.</p>
+<h2 id="rollout-and-deployment">Rollout and Deployment</h2>
+<ul>
+<li>How will we roll this out safely into production?</li>
+</ul>
+<p>By using the test pipelines with known good builds.</p>
+<ul>
+<li>How often and with what means will we deploy this?</li>
+</ul>
+<p>Weekly, along with the rest of dotnet-release, or as needed, if weekly is too frequent.</p>
+<ul>
+<li>What needs to be deployed and where?</li>
+</ul>
+<p>Any code related to the staging and release pipelines. We will deploy to the production branch (and potentially later, the release/6.0 branch) from main.</p>
+<ul>
+<li>What are the risks when deploying?</li>
+</ul>
+<p>We may break the main pipeline for full releases if we do not do enough testing. With two/three different scenarios that require testing, we may need to run the full test pipeline for each of these types of releases. Instructions for validating any changes made to the pipeline can be found <a href="https://github.com/dotnet/arcade/blob/main/Documentation/Staging-Pipeline/making-and-validating-changes.md">here</a>.</p>
+<h2 id="fr-handoff">FR Handoff</h2>
+<ul>
+<li>What documantion/information needs to be provided to FR so the team as a whole is successful in maintaining these changes?</li>
+</ul>
+<p>Changes to the staging pipeline are already documented in the Staging-Pipeline docs, however, we will likely want to add additional information about the new scenarios.</p>
+<h2 id="useful-release-related-documentation-and-links">Useful Release-Related Documentation and Links</h2>
+<ul>
+<li><a href="https://dev.azure.com/dnceng/internal/_build?definitionId=792">Stage-DotNet</a></li>
+<li><a href="https://dev.azure.com/dnceng/internal/_build?definitionId=984">Release-DotNet-5.x</a></li>
+<li><a href="https://github.com/dotnet/arcade/blob/main/Documentation/Staging-Pipeline/running-the-pipeline.md">Running the Staging Pipeline</a></li>
+<li><a href="https://github.com/dotnet/arcade/blob/main/Documentation/ReleaseRingsPlan.md">Original Release Rings Plan</a></li>
+<li><a href="https://github.com/dotnet/core/blob/main/release-notes/6.0/releases.json">releases.json</a></li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cnon-sdk-partial-releases-core-eng-14577.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cnon-sdk-partial-releases-core-eng-14577.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cnon-sdk-partial-releases-core-eng-14577.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

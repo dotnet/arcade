@@ -1,0 +1,152 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Toolset Principles and Guidance </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Toolset Principles and Guidance ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="toolset-principles-and-guidance">Toolset Principles and Guidance</h1>
+
+<p>For purposes of this document, 'Toolset' refers to tools which create and/or modify the shipping product.</p>
+<h2 id="principles">Principles</h2>
+<ul>
+<li><strong>Consistent and serviceable across the stack:</strong> The minimum number of tool versions should be used with the ideal being one (serviceable) version per tool for the entire .NET Core product.</li>
+<li><strong>Visible:</strong> It must be obvious which tool is being used in which situation.</li>
+<li><strong>For tools MSFT owns, the latest shipping version is used to build .NET Core:</strong> Our product/s should be built using the last shipping version of our toolsets.</li>
+</ul>
+<h2 id="policy--guidance">Policy / Guidance</h2>
+<h3 id="general">General</h3>
+<ul>
+<li>Which tool version used across the stack should be determined in one place.  For more comments on this, see farther below.</li>
+<li>The latest shipped version of a tool should be used.  This implies ongoing diligence of the product teams to update toolset dependencies.</li>
+<li>As needed, dependencies can be taken on brand new, non-shipping versions of a toolset, and conversely, older versions too - so long as tactics approves.</li>
+<li>Tools should be bootstrapped into the build where ever possible.  It is recognized that this is not always reasonable (or even the best approach), but is still desireable as we try and get as close as possible to 'clone and build'.  NOTE: There will still need to be provision for source-build to build &quot;offline&quot;.</li>
+</ul>
+<h3 id="servicing-lts">Servicing (LTS)</h3>
+<ul>
+<li>All toolsets should be the latest RTM (serviceable) version for LTS.</li>
+<li>Toolsets should only change as needed, and with explicit consent of tactics.</li>
+</ul>
+<h3 id="vc-toolset">VC toolset</h3>
+<ul>
+<li>VC tools are brought in via Visual Studio, preferably via the build sku.  Given the install limitations of VS and the Windows SDK, VC tools are provided via VM images which make up our build/test pools.</li>
+<li>Tools from the latest public preview of VS are available via a machine pool.  Private previews of VS are not widely available and are used for targeting testing only.</li>
+<li>The guidance is to build against the latest RTM'd version of VC, and do testing on the latest public preview versions of VS, such that upgrades can be done with confidence.</li>
+</ul>
+<h3 id="net-sdk--managed-toolset">.NET SDK / Managed toolset</h3>
+<ul>
+<li>Arcade SDK (shared infra for .NET Core) must always reference the latest preview version of the .NET Core SDK at a minimum. Immediately after shipping a preview, Arcade will update its .NET Core SDK reference.</li>
+<li>In cases where a newer version of the .NET Core SDK is needed, a non-shipping (newer) version can be referenced by the Arcade SDK with approval from tactics.</li>
+<li>In cases where an older version of .NET (and by implication Roslyn) is needed, exceptions are supported via Arcade, but should be approved by tactics and considered highly temporary.</li>
+<li>Roslyn version is brought in as a dependency via the Arcade SDK.  It is not recommended for any build to take a direct dependency on Roslyn</li>
+</ul>
+<h3 id="linux-native-toolsets">Linux native toolsets</h3>
+<ul>
+<li>The native *nix build tools are mostly managed via Docker containers.</li>
+<li>Where possible, the Docker containers should be shared across the teams.</li>
+</ul>
+<h3 id="mac-native-toolsets">Mac native toolsets</h3>
+<ul>
+<li>Mac tools are managed via O/S itself.  Here too we have both hosted and private machine pools.</li>
+</ul>
+<h3 id="other">Other</h3>
+<ul>
+<li>Any other tools not directly called out should be managed via Arcade, and preferably bootstrapped in as part of the build.</li>
+<li>All toolset updates will be communicated in advance by the engineering services team.</li>
+<li>The implication here is that product teams should expect to deal with the toolsets updating on a relatively high cadence.  However, this in turn means that the delta will be much smaller for each update.</li>
+<li>The latest version principle does not apply to .net runtimes and refpacks when used for compat testing</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CPolicy%5CToolsetPolicy.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CPolicy%5CToolsetPolicy.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CPolicy%5CToolsetPolicy.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

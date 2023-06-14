@@ -1,0 +1,136 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Guidance for Testing MSBuild functionality </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Guidance for Testing MSBuild functionality ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="guidance-for-testing-msbuild-functionality">Guidance for Testing MSBuild functionality</h1>
+
+<p>We are currently working on ways to improve our testability of Arcade, including the MSBuild projects and tasks. As we implement functionality to make that easier for folks contributing to Arcade, here is some guidance for validating changes made to MSBuild functionality in the interim:</p>
+<ul>
+<li>Since it is known how to create mocks and work with dependency injection in C# code, please move as much logic out of MSBuild proj files and into the C# tasks (or related classes) so that it can be unit tested.</li>
+<li>Use mocks and dependency injection where applicable when writing unit tests for the MSBuild tasks in C#. If the code does not have an entry point to implement the ASP.NET Core Dependency Injection framework, use the Setter Injection pattern.</li>
+<li>Implement scenario tests for MSBuild projects in <a href="https://github.com/dotnet/arcade-validation/">Arcade Validation</a>. Validate your changes by <a href="#how-to-validate-a-private-build">running a private build</a> of Arcade in Arcade Validation. Include a link of the Arcade Validation run on your Arcade PR.</li>
+<li>Also see .NET Engineering Services' <a href="https://github.com/dotnet/arcade/blob/main/Documentation/Validation/README.md">Validation Principles and Policy</a></li>
+</ul>
+<h2 id="long-term-solutions">Long-Term Solutions</h2>
+<ul>
+<li>We are currently <a href="https://github.com/dotnet/core-eng/issues/11271">investigating</a> how to unit tests MSBuild projects.</li>
+<li>We plan to <a href="https://github.com/dotnet/core-eng/issues/11273">implement a process</a> that will run Arcade Validation as a part of Arcade PRs in the future. The guidance in this document is in place until that work is completed.</li>
+<li>We want to provide the ability to bootstrap dependency injection into MSBuild tasks through <a href="https://github.com/dotnet/arcade/issues/6580">inheritence</a>.</li>
+</ul>
+<h2 id="how-to-validate-a-private-build">How to Validate a Private Build</h2>
+<ol>
+<li>Run a build of your Arcade branch on the <a href="https://dnceng.visualstudio.com/internal/_build?definitionId=6">arcade-official-ci</a> Azure DevOps Pipeline</li>
+<li><a href="../Darc.html#add-build-to-channel">Promote your build</a> to the &quot;General Testing&quot; Maestro channel.</li>
+<li>Create a branch of <a href="https://github.com/dotnet/arcade-validation">Arcade Validation</a></li>
+<li>Using darc, run <code>update-dependencies</code> (<a href="../Darc.html#updating-dependencies-in-your-local-repository">update-dependencies documentation</a>) on your Arcade Validation branch to use the build of Arcade you just created in the previous steps.</li>
+<li>Push your branch up to Azure DevOps Arcade Validation repository and run a build of your branch on the <a href="https://dnceng.visualstudio.com/internal/_build?definitionId=282">dotnet-arcade-validation-official</a> to verify your changes.</li>
+<li>It's not necessary to merge your Arcade Validation branch into the repo's main branch, so feel free to delete it when you're done validating your changes.</li>
+</ol>
+<p>If you want to also validate your private build of Arcade using a repository other than Arcade Validation, follow these steps.</p>
+<ol>
+<li>Provided you have done at least steps 1 and 2 above to create your private build of Arcade and have it published to the &quot;General Testing&quot; channel...</li>
+<li>Create a branch in the repository you wish to validate your private build of Arcade with.</li>
+<li>Add the <code>general-testing</code> feed to your <code>NuGet.config</code>:
+<pre><code class="lang-xml">&lt;add key=&quot;general-testing&quot; value=&quot;https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json&quot; /&gt;
+</code></pre>
+Your private build of Arcade will be pushed to that feed when you publish it to the <code>General Testing</code> channel.</li>
+<li>Using darc, run <code>update-dependencies</code> (<a href="../Darc.html#updating-dependencies-in-your-local-repository">update-dependencies documentation</a>) on your branch to use the build of Arcade you just created in the previous steps.</li>
+<li>Build your project and run the project's unit tests locally, and/or build your branch with your project's Azure DevOps pipeline. Ensure that the build pipeline excutes any tests (unit, integration, scenario, et cetera).</li>
+</ol>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CPolicy%5CTestingMSBuildGuidance.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CPolicy%5CTestingMSBuildGuidance.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CPolicy%5CTestingMSBuildGuidance.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

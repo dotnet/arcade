@@ -1,0 +1,190 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Staged release process </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Staged release process ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="staged-release-process">Staged release process</h1>
+
+<h2 id="goal">Goal</h2>
+<p>Today, the release process is all baked into a single release definition, including validation checks, manual steps, etc.
+Also, it requires some pre-work by the PM to download the bits, order them and making sure they are available for the overall
+process. With the data in BAR and commands supported by <code>darc</code> we can automate some of things.</p>
+<p>Also, we would like to introduce the concept of &quot;promotion&quot;. In order for a build to be shipped it would need to go
+through several <strong>rings</strong>. Each ring has different types of validations. A build is only promoted if it passes all the
+validation checks.</p>
+<h2 id="release-rings">Release Rings</h2>
+<h3 id="prep-ring">Prep Ring</h3>
+<ul>
+<li>Generate the file share by running <code>darc gather-drop</code></li>
+<li>Notarize and replace PKGs</li>
+</ul>
+<p><strong>Promotion:</strong></p>
+<ul>
+<li>Contract is valid</li>
+<li>Version is coherent</li>
+<li>Release Team approval</li>
+</ul>
+<h3 id="source-validation-ring">Source Validation Ring</h3>
+<ul>
+<li>Run SDL validation on each repo+sha from the candidate build generated in the Prep Ring</li>
+</ul>
+<p><strong>Promotion:</strong></p>
+<ul>
+<li>All legs succeed (we'll provide a manual override in case legs fail but failures are known and/or
+we don't want to block the pipeline due to this errors)</li>
+</ul>
+<h3 id="build-validation-ring-candidate-validation-channel"><a href="https://dnceng.visualstudio.com/internal/_git/dotnet-release?path=%2Fdocumentation%2Frelease-validation.md">Build Validation Ring (Candidate Validation channel)</a></h3>
+<ul>
+<li>BinSkim validation</li>
+<li>Packages validation</li>
+<li>Symbols validation</li>
+<li>Sourcelink validation</li>
+<li>Checksum validation</li>
+<li>Asset validation</li>
+<li>Signing validation</li>
+</ul>
+<p>When all the above have succeeded, we'll do:</p>
+<ul>
+<li>VS Insertion
+<ul>
+<li>VAL Build</li>
+</ul>
+</li>
+<li>CTI Validation</li>
+</ul>
+<p><strong>Promotion:</strong></p>
+<ul>
+<li>Contract is valid</li>
+<li>CTI sign off</li>
+<li>VAL build is green</li>
+<li>Individual teams sign off</li>
+<li>Tactics approval</li>
+</ul>
+<h3 id="staging-ring-release-staging-channel">Staging Ring (Release Staging channel)</h3>
+<ul>
+<li>No build required</li>
+<li>Antares: set of zips used to deploy to Azure App Services for the SDK, Runtime and ASP. SDK and Runtime are generated by a
+post-build script. Zips are validated by the ASP team against an App Services test environment</li>
+<li>Create SDK tarball</li>
+<li>Mac + Linux signing</li>
+<li>Create release notes</li>
+<li>Aggregate checksums</li>
+<li>Create release metadata</li>
+</ul>
+<p><strong>Promotion:</strong></p>
+<ul>
+<li>Contract is valid</li>
+<li>Each task's validation passes</li>
+<li>Tactics approve this version</li>
+</ul>
+<h3 id="final-releasepublish-ring-publish-release-channel">Final Release/Publish Ring (Publish Release channel)</h3>
+<ul>
+<li>Create Git Tags</li>
+<li>Publish and validate to CDN</li>
+<li>Publish signed bits to blob storage</li>
+<li>Publish aggregated checksums to blob storage</li>
+<li>Publish and validate to NuGet</li>
+<li>Publish and validate NuGet symbols</li>
+<li>Publish SNAP</li>
+<li>Publish and validate Linux distributions</li>
+<li>Antares deployment*</li>
+<li>Publish and validate Docker</li>
+<li>Publish signed bits to dot.net</li>
+<li>Publish release notes and metadata to GitHub</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CReleaseRingsPlan.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CReleaseRingsPlan.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CReleaseRingsPlan.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

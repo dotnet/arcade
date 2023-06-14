@@ -1,0 +1,281 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Onboarding Azure DevOps </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Onboarding Azure DevOps ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="onboarding-azure-devops">Onboarding Azure DevOps</h1>
+
+<ul>
+<li><a href="#onboarding-azure-devops">Onboarding Azure DevOps</a>
+<ul>
+<li><a href="#project-guidance">Project Guidance</a></li>
+<li><a href="#github-to-dnceng-internal-mirror">GitHub to DncEng Internal mirror</a></li>
+<li><a href="#azure-devops-pull-request-and-ci-builds">Azure DevOps Pull Request and CI builds</a></li>
+<li><a href="#azure-devops-service-connection">Azure DevOps service connection</a>
+<ul>
+<li><a href="#github-connections">GitHub connections</a>
+<ul>
+<li><a href="#switching-service-connections">Switching service connections</a></li>
+</ul>
+</li>
+<li><a href="#git-internal-connections">Git (internal) connections</a></li>
+</ul>
+</li>
+<li><a href="#agent-queues">Agent queues</a></li>
+<li><a href="#ci-badge-link">CI badge link</a></li>
+<li><a href="#signed-builds">Signed Builds</a></li>
+<li><a href="#security">Security</a></li>
+<li><a href="#notes-about-yaml">Notes about Yaml</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a>
+<ul>
+<li><a href="#known-issues">Known issues</a></li>
+<li><a href="#queuing-builds">Queuing builds</a>
+<ul>
+<li><a href="#yaml">YAML</a></li>
+<li><a href="#resource-authorization">Resource authorization</a>
+<ul>
+<li><a href="#unauthorized-service-endpoints-and-resources">Unauthorized service endpoints and resources</a></li>
+<li><a href="#unauthorized-agent-pools">Unauthorized agent pools</a></li>
+</ul>
+</li>
+<li><a href="#self-references-endpoint">Self references endpoint</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2 id="project-guidance">Project Guidance</h2>
+<p><a href="AzureDevOpsGuidance.html">Project guidance</a> - Covers guidance on naming conventions, folder structure, projects, Pipelines, etc...</p>
+<h2 id="github-to-dnceng-internal-mirror">GitHub to DncEng Internal mirror</h2>
+<p>If your repository has internal builds (that is, the repo Authenticode signs its outputs), you will need to set up a DncEng Internal mirror. This is <em>required</em> for internal builds; if your repository only does PR or public CI builds, you can skip this step.</p>
+<p>Instructions for setting up the GitHub to dev.azure.com/dnceng/internal mirror are available in the <a href="internal-mirror.html">dev.azure.com/dnceng internal mirror documentation</a></p>
+<h2 id="azure-devops-pull-request-and-ci-builds">Azure DevOps Pull Request and CI builds</h2>
+<p>Azure DevOps has detailed documentation on how to create builds that are linked from GitHub repositories which can be found <a href="https://docs.microsoft.com/en-us/azure/devops/build-release/actions/ci-build-github?view=vsts">here</a>; however, before going through those steps, keep in mind that our process differs from the steps in the official documentation in a few key places:</p>
+<ul>
+<li>The YAML tutorial links to a .NET Core sample repository for an example of a simple <code>azure-pipelines.yml</code> file. Instead of using that repository, use <a href="https://github.com/dotnet/arcade-validation">our sample repository</a>.</li>
+</ul>
+<h2 id="azure-devops-service-connection">Azure DevOps service connection</h2>
+<h3 id="github-connections">GitHub connections</h3>
+<p>When creating an Azure DevOps build definition with a GitHub source, you will need a GitHub Service Endpoint to communicate with GitHub and setup web hooks.  Teams should use the &quot;dotnet&quot; GitHub app service connection to manage the GitHub &lt;-&gt; Azure DevOps pipeline connection.</p>
+<p>The Azure Pipelines app (&quot;dotnet&quot; connection) will work for repos that are a member of the dotnet organization.  If you have a repo that should be supported but does not show up, you will need to work with @dnceng to update repository access for the app.</p>
+<p>The &quot;dotnet&quot; service connection is the only dnceng supported connection.  Other available connections may be removed and we strongly encourage devs to create OAuth connections only when needed and to clean them up when they are no longer necessary.</p>
+<h4 id="switching-service-connections">Switching service connections</h4>
+<p>There is no way to update an existing build definition to use a different service connection.  Instead, you will need to deprecate your current build definition (disable triggers, change the name), and create a new build definition with the same properties.  You should then delete your deprecated definition when you are convinced the new definition works as expected.</p>
+<h3 id="git-internal-connections">Git (internal) connections</h3>
+<p>See the <a href="https://github.com/dotnet/arcade/blob/main/Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.md#dotnet-bot-github-service-endpoint">dotnet-bot-github-service-endpoint documentation</a></p>
+<h2 id="agent-queues">Agent queues</h2>
+<p>We now use Azure Pool Providers supplied by 1ES ('One' Engineering System) to deploy VMs as build agents. Workflows defined in yaml that still use the &quot;phases&quot; syntax will not able to take advantage of this feature.  See <a href="https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/PhaseToJobSchemaChange.md">this document</a> for details how to migrate if you are in this scenario.</p>
+<p>To use an Azure Pool provider, you need to specify both the name of the pool provider and the Helix Queue it uses.  This looks something like:</p>
+<pre><code class="lang-yaml">  pool:
+    name: NetCore1ESPool-Internal
+    demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
+</code></pre>
+<h3 id="dncenginternal-pools">dnceng/internal pools:</h3>
+<ul>
+<li>NetCore1ESPool-Internal : &quot;regular&quot; internal builds for official builds; has a Managed Service Identity for authenticating Microbuild Azure DevOps tasks.</li>
+<li>NetCore1ESPool-Svc-Internal : Same as NetCore1ESPool-Internal, but for release branch builds</li>
+<li>NetCore1ESPool-Internal-NoMSI : Same as NetCore1ESPool-Internal but no managed service identity; allows tools like Az CLI to authenticate using stored secrets.</li>
+</ul>
+<h3 id="dncengpublic-pools">dnceng/public pools:</h3>
+<ul>
+<li>NetCore-Public : &quot;regular&quot; public builds for public CI</li>
+<li>NetCore-Svc-Public : Public CI for release branches of .NET products</li>
+</ul>
+<p>For a 'live' list of available images for a given pool provider, see <a href="https://helix.dot.net/#1esPools">https://helix.dot.net/#1esPools</a></p>
+<p>A couple of notes:</p>
+<ul>
+<li><p><a href="https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=vsts&amp;tabs=yaml">Hosted pool</a> capabilities</p>
+<ul>
+<li>For official builds (with the exception of MacOS builds), hosted images should be avoided.  Contact @dnceng if you are in doubt about this.</li>
+<li>&quot;1ES approved&quot; versions of existing hosted images are included in all pool providers noted and are listed under  <a href="https://helix.dot.net/#1esPools">https://helix.dot.net/#1esPools</a>.  E.g. <code>1es-ubuntu-1804</code> is a more locked-down version of the existing hosted image <code>ubuntu-1804</code></li>
+</ul>
+</li>
+</ul>
+<h2 id="ci-badge-link">CI badge link</h2>
+<p>The <a href="https://docs.microsoft.com/en-us/azure/devops/pipelines/get-started-yaml?view=vsts#get-the-status-badge">Azure DevOps CI Build guidance</a> describes how to determine the CI build badge link.</p>
+<p>It is recommended that you restrict the CI build status to a particular branch.  This will prevent the badge from reporting Pull Request build status.  Restrict to a branch by adding the <code>branchName</code> parameter to your query string.</p>
+<p>Example:</p>
+<pre><code class="lang-Text">https://dev.azure.com/dnceng/public/_build?definitionId=208&amp;branchName=master
+</code></pre>
+<h2 id="signed-builds">Signed Builds</h2>
+<p>dev.azure.com/dnceng now has support for signed builds.  Code should be mirrored to dev.azure.com/dnceng/internal as outlined in the <a href="AzureDevOpsGuidance.html#projects">Azure DevOps Guidance</a>.  See <a href="MovingFromDevDivToDncEng.html">MovingFromDevDivToDncEng.md</a> for information about moving signed builds from DevDiv to DncEng.</p>
+<h2 id="security">Security</h2>
+<p><a href="https://docs.microsoft.com/en-us/azure/devops/build-release/actions/ci-build-github?view=vsts#security-considerations">Security documentation</a></p>
+<p>It is recommended that you do <strong>NOT</strong> enable the checkbox labeled &quot;Make secrets available to builds of forks&quot;.</p>
+<h2 id="notes-about-yaml">Notes about Yaml</h2>
+<ul>
+<li><p>Code reuse</p>
+<p>For <em>most</em> teams, it is recommended that you author your yaml to use the <a href="WritingBuildDefinitions.html">same yaml files for internal, CI, and Pull Request builds</a>.  See <a href="https://github.com/dotnet/arcade/blob/master/azure-pipelines.yml">https://github.com/dotnet/arcade/blob/master/azure-pipelines.yml</a>, for how this is being done in Arcade with build steps conditioned on &quot;build reason&quot;.</p>
+</li>
+<li><p>Shared templates</p>
+<p>Arcade currently provides a handful for <a href="https://github.com/dotnet/arcade/tree/master/eng/common/templates">shared templates</a>.</p>
+<ul>
+<li><a href="https://github.com/dotnet/arcade/blob/master/eng/common/templates/phases/base.yml">base.yml</a> defines docker variables, and enables telemetry to be sent for non-CI builds.</li>
+</ul>
+</li>
+<li><p>Variable groups</p>
+<p>Build definitions using variable groups in the DevDiv Organization must first be authorized by manually queuing a build and following instructions presented in the portal. Without authorization, the variables will not be set in the build environment. See <a href="https://docs.microsoft.com/en-us/azure/devops/pipelines/library/variable-groups">Variable groups for Azure Pipelines</a> for more information.</p>
+</li>
+</ul>
+<p>Notes about templates:</p>
+<ul>
+<li><p>Additional info about templates - <a href="https://docs.microsoft.com/en-us/azure/devops/pipelines/process/templates?view=vsts">https://docs.microsoft.com/en-us/azure/devops/pipelines/process/templates?view=vsts</a></p>
+</li>
+<li><p>Currently, Azure DevOps has a problem with multiple levels of templates where it will change the order of build steps you provide.  That means, for now, use templates judiciously, don't layer templates within templates, and always validate the step order via a CI build.</p>
+</li>
+</ul>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<h3 id="known-issues">Known issues</h3>
+<p>For a list of known Azure DevOps issues we are tracking, please go <a href="https://dev.azure.com/dnceng/internal/_queries/query/7275f17c-c42f-44b8-9798-9c2426bf8395/">here</a></p>
+<h3 id="queuing-builds">Queuing builds</h3>
+<h4 id="yaml">YAML</h4>
+<ul>
+<li><p>YAML: &quot;The array must contain at least one element. Parameter name: jobs&quot;</p>
+<p>If your template doesn't compile, then it may prevent any of your &quot;job&quot; elements from surfacing which leads to this error.  This error hides what the real error in the template is.  You can work around this error by providing a default job.</p>
+<pre><code class="lang-YAML">jobs:
+- job: foo
+  steps:
+  - script: echo foo
+</code></pre>
+<p>With a default job provided, when you queue a build, Azure DevOps will now tell you the actual error you care about.  Azure DevOps is hotfixing this issue so that the lower-level issue is surfaced.</p>
+</li>
+</ul>
+<h4 id="resource-authorization">Resource authorization</h4>
+<p>If you made some change to a resource or changed resources, but everything else <em>appears</em> correct (from a permissions / authorization point of view), and you're seeing &quot;resource not authorized&quot; when you try to queue a build; it's possible that the resource is fine, but the build pipeline is not authorized to use it.  Edit the build pipeline and make some minor change, then save.  This will force the pipeline to re-authorize and you can undo whatever minor change you made.</p>
+<p>Note that <a href="https://docs.microsoft.com/en-us/azure/devops/pipelines/process/resources?view=vsts#resource-authorization">resource authorization</a> happens on Push, not for Pull Requests.  If you have some changes to resources that you want to make and submit via a PR.  You must (currently) authorize the Pipeline first (otherwise the PR will fail).</p>
+<h5 id="unauthorized-service-endpoints-and-resources">Unauthorized service endpoints and resources</h5>
+<ul>
+<li><p>&quot;Resource not authorized&quot; or &quot;The service endpoint does not exist or has not been authorized for use&quot;</p>
+<ol>
+<li>Push your changes to a branch of the dnceng repository (not your fork)</li>
+<li>Edit the Pipeline</li>
+<li>Take note of the &quot;Default branch for manual and scheduled builds&quot;</li>
+<li>Change &quot;Default branch for manual and scheduled builds&quot; to the branch you just pushed</li>
+<li>Save the Pipeline.  This will force reauthorization of the &quot;default&quot; branch resources.</li>
+<li>Edit the Pipeline</li>
+<li>Change the &quot;default branch for manual and scheduled builds&quot; back to the value you noted in step 3.</li>
+<li>Save the Pipeline</li>
+<li>Now the resources should be authorized and you can submit your changes via a PR or direct push</li>
+</ol>
+</li>
+</ul>
+<h5 id="unauthorized-agent-pools">Unauthorized agent pools</h5>
+<ol>
+<li>Push your changes to a branch of the dnceng repository (not your fork)</li>
+<li>Edit the Pipeline</li>
+<li>Take note of the &quot;Default branch for manual and scheduled builds&quot;</li>
+<li>Change &quot;Default branch for manual and scheduled builds&quot; to the branch you just pushed</li>
+<li>Take note of the &quot;Default agent pool&quot;</li>
+<li>Change the &quot;Default agent pool&quot; to the pool that is unauthorized.</li>
+<li>Save the Pipeline.  This will force reauthorization of the &quot;default&quot; branch resources.</li>
+<li>Edit the Pipeline</li>
+<li>Change the &quot;default branch for manual and scheduled builds&quot; back to the value you noted in step 3 and the default agent pool back to the value you noted in step 4 (or search for previous values in the Pipeline &quot;History&quot; tab.</li>
+<li>Save the Pipeline</li>
+<li>Now the resources should be authorized and you can submit your changes via a PR or direct push</li>
+</ol>
+<h4 id="self-references-endpoint">Self references endpoint</h4>
+<ul>
+<li><p>&quot;Repository self references endpoint&quot;</p>
+<p>If you see an error like this</p>
+<p><code>An error occurred while loading the YAML Pipeline. Repository self references endpoint 6510879c-eddc-458b-b083-f8150e06ada5 which does not exist or is not authorized for use</code></p>
+<p>The problem is the yaml file had a parse error when the definition was originally created. When the definition is created, parse errors are saved with the definition and are supposed to be shown in the definition editor. That regressed in the UI. Azure DevOps is also making a change so that even if there are errors parsing the file, they go ahead and save the repository endpoint as authorized.  In the mean time, you have to track down your YAML parse error.</p>
+</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CAzureDevOps%5CAzureDevOpsOnboarding.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CAzureDevOps%5CAzureDevOpsOnboarding.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CAzureDevOps%5CAzureDevOpsOnboarding.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

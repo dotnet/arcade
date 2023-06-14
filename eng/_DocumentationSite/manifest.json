@@ -1,0 +1,4279 @@
+{
+  "homepages": [],
+  "source_base_path": "C:/Users/t-jelipscomb/arcade/eng",
+  "xrefmap": "xrefmap.yml",
+  "files": [
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/3xReleaseShutdownTasks.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/3xReleaseShutdownTasks.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/ArcadeConventions.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/ArcadeConventions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/ArcadeSdk.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/ArcadeSdk.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/AzureDevOps/AzureDevOpsGuidance.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/AzureDevOps/AzureDevOpsGuidance.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/AzureDevOps/AzureDevOpsOnboarding.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/AzureDevOps/AzureDevOpsOnboarding.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/AzureDevOps/MovingFromDevDivToDncEng.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/AzureDevOps/MovingFromDevDivToDncEng.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/AzureDevOps/PhaseToJobSchemaChange.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/AzureDevOps/PhaseToJobSchemaChange.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/AzureDevOps/SendingJobsToHelix.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/AzureDevOps/SendingJobsToHelix.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/AzureDevOps/TemplateSchema.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/AzureDevOps/TemplateSchema.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/AzureDevOps/TestReportingData.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/AzureDevOps/TestReportingData.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/AzureDevOps/TestReportingQueries.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/AzureDevOps/TestReportingQueries.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/AzureDevOps/WritingBuildDefinitions.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/AzureDevOps/WritingBuildDefinitions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/AzureDevOps/internal-mirror.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/AzureDevOps/internal-mirror.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/BranchesChannelsAndSubscriptions.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/BranchesChannelsAndSubscriptions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/ChoosingAMachinePool.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/ChoosingAMachinePool.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/CodeQLGuidance.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/CodeQLGuidance.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/CorePackages/PackagesRoadmap.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/CorePackages/PackagesRoadmap.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/CorePackages/Packaging.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/CorePackages/Packaging.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/CorePackages/PostBuildSigning.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/CorePackages/PostBuildSigning.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/CorePackages/Publishing.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/CorePackages/Publishing.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/CorePackages/Signing.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/CorePackages/Signing.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/CorePackages/SigningPlan.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/CorePackages/SigningPlan.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/CorePackages/Telemetry.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/CorePackages/Telemetry.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/CorePackages/Versioning.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/CorePackages/Versioning.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Darc.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Darc.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/DependenciesFlowPlan.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/DependenciesFlowPlan.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/DependencyDescriptionFormat.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/DependencyDescriptionFormat.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/DependencyFlowOnboarding.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/DependencyFlowOnboarding.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/DependencyFlowOnboardingWithoutArcade.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/DependencyFlowOnboardingWithoutArcade.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/DevWorkflow/Design/Dev-Design-Infra-Known-Issues.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/DevWorkflow/Design/Dev-Design-Infra-Known-Issues.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/DevWorkflow/Design/Dev-Design-Test-Configuration-Json.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/DevWorkflow/Design/Dev-Design-Test-Configuration-Json.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/DevWorkflow/Design/Dev-Design-Test-Data-Storage.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/DevWorkflow/Design/Dev-Design-Test-Data-Storage.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/DevWorkflow/Design/Dev-Design-Work-Item-Retry.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/DevWorkflow/Design/Dev-Design-Work-Item-Retry.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/DevWorkflow/Design/GitHub-Check-Mockup/Build-Failure-In-Target-Branch.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/DevWorkflow/Design/GitHub-Check-Mockup/Build-Failure-In-Target-Branch.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/DevWorkflow/Design/GitHub-Check-Mockup/Build-Failure-Known-Issues.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/DevWorkflow/Design/GitHub-Check-Mockup/Build-Failure-Known-Issues.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/DevWorkflow/Design/GitHub-Check-Mockup/Build-Failure-Pass-On-Retry.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/DevWorkflow/Design/GitHub-Check-Mockup/Build-Failure-Pass-On-Retry.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/DevWorkflow/Design/GitHub-Check-Mockup/Known-Issue.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/DevWorkflow/Design/GitHub-Check-Mockup/Known-Issue.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/DevWorkflow/Design/GitHub-Check-Mockup/Test-Failure-In-Target-Branch.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/DevWorkflow/Design/GitHub-Check-Mockup/Test-Failure-In-Target-Branch.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/DevWorkflow/Design/GitHub-Check-Mockup/Test-Pass-On-Retry.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/DevWorkflow/Design/GitHub-Check-Mockup/Test-Pass-On-Retry.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/DevWorkflow/Design/GitHub-Check-Mockup/Unique-Build-Failure.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/DevWorkflow/Design/GitHub-Check-Mockup/Unique-Build-Failure.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/DevWorkflow/Design/GitHub-Check-Mockup/Unique-Test-Failure.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/DevWorkflow/Design/GitHub-Check-Mockup/Unique-Test-Failure.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/DevWorkflow/Queue-Insights-Documentation.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/DevWorkflow/Queue-Insights-Documentation.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/DocumentationPrinciples.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/DocumentationPrinciples.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Dumps/Dumps.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Dumps/Dumps.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/FAQ.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/FAQ.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Helix.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Helix.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/HowToAddPerfTestingToPipeline.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/HowToAddPerfTestingToPipeline.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/HowToAddSDLRunToPipeline.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/HowToAddSDLRunToPipeline.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/HowToCreatePackages.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/HowToCreatePackages.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/HowToRenameARepo.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/HowToRenameARepo.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/InfrastructureEcosystemOverview.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/InfrastructureEcosystemOverview.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Maestro.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Maestro.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Maestro/BuildAssetRegistry.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Maestro/BuildAssetRegistry.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Maestro/deploy.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Maestro/deploy.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Maestro/web-hooks.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Maestro/web-hooks.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Mechanics/MSBuildTaskDependencyInjection.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Mechanics/MSBuildTaskDependencyInjection.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/MigrationPlan/CoreClrPlan.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/MigrationPlan/CoreClrPlan.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/MigrationPlan/CoreFxPlan.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/MigrationPlan/CoreFxPlan.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/MigrationPlan/MyGetFeeds.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/MigrationPlan/MyGetFeeds.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/MigrationPlan/TemplatingAndWebSdkPlan.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/MigrationPlan/TemplatingAndWebSdkPlan.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/MigrationPlan/VisualFSharp.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/MigrationPlan/VisualFSharp.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/MigrationPlan/roslyn.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/MigrationPlan/roslyn.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/MirroringPackages.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/MirroringPackages.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/NativeToolBootstrapping.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/NativeToolBootstrapping.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/NativeToolsOnMachine.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/NativeToolsOnMachine.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Net5BuildTImeReductionStatus.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Net5BuildTImeReductionStatus.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Net5Builds.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Net5Builds.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Net5ServicingReadinessStatus.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Net5ServicingReadinessStatus.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/NetCore2122ServicingFlow.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/NetCore2122ServicingFlow.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/NetCore3EngineeringRepoStatus.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/NetCore3EngineeringRepoStatus.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/NetCore3ReleasePipelinesMoveStatus.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/NetCore3ReleasePipelinesMoveStatus.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Onboarding.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Onboarding.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/OneLocBuild.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/OneLocBuild.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Operations/Helix-Machine-Management/Helix-Machine-Lifecycle-Processes.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Operations/Helix-Machine-Management/Helix-Machine-Lifecycle-Processes.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Operations/Templates/process-info-template.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Operations/Templates/process-info-template.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Operations/dnceng-operational-responsibilities.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Operations/dnceng-operational-responsibilities.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Overview.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Overview.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Policy/ArcadeCommunications.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Policy/ArcadeCommunications.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Policy/ArcadeContributorGuidance.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Policy/ArcadeContributorGuidance.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Policy/ArcadeServicing.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Policy/ArcadeServicing.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Policy/AskModeTellModeTemplate.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Policy/AskModeTellModeTemplate.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Policy/AskTellMode.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Policy/AskTellMode.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Policy/ChangeBar.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Policy/ChangeBar.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Policy/ChangesPolicy.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Policy/ChangesPolicy.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Policy/DefaultsGuidance.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Policy/DefaultsGuidance.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Policy/DeploymentPolicy.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Policy/DeploymentPolicy.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Policy/GrafanaAlertsPolicy.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Policy/GrafanaAlertsPolicy.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Policy/PowershellBestPractices.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Policy/PowershellBestPractices.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Policy/TeamProcessPolicy.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Policy/TeamProcessPolicy.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Policy/TechnicalDebtPolicy.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Policy/TechnicalDebtPolicy.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Policy/TestingMSBuildGuidance.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Policy/TestingMSBuildGuidance.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Policy/ToolsetPolicy.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Policy/ToolsetPolicy.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Policy/VS2019SupportPolicy.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Policy/VS2019SupportPolicy.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/ProductKPIs.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/ProductKPIs.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/Auto-Retry Failures/AutoRetryDocumentation.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/Auto-Retry Failures/AutoRetryDocumentation.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/Auto-Retry Failures/AutoRetryTelemetry.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/Auto-Retry Failures/AutoRetryTelemetry.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/Auto-Retry Failures/Overview-Requirements.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/Auto-Retry Failures/Overview-Requirements.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/AutoScaler/AutoScalerInvestigateIssues.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/AutoScaler/AutoScalerInvestigateIssues.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/Core Reduction/Automated_MaxScale_Updates.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/Core Reduction/Automated_MaxScale_Updates.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/Dependency Flow/improved-dependency-flow.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/Dependency Flow/improved-dependency-flow.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/Dev WF Actionable PRs/Capabilities and Data.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/Dev WF Actionable PRs/Capabilities and Data.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/Dev Workflow/Failure Guessing - arcade5963.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/Dev Workflow/Failure Guessing - arcade5963.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/Dev Workflow/Known Issues - arcade5963.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/Dev Workflow/Known Issues - arcade5963.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/Dev Workflow/Passed On Rerun Data.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/Dev Workflow/Passed On Rerun Data.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/Dev Workflow/Retry Builds - arcade5963.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/Dev Workflow/Retry Builds - arcade5963.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/Dev Workflow/Retry Tests - arcade5963.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/Dev Workflow/Retry Tests - arcade5963.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/HelixTestLogSearch/instructions.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/HelixTestLogSearch/instructions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/HelixTestLogSearch/one-pager.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/HelixTestLogSearch/one-pager.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/HelixTestLogSearch/poc-summary.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/HelixTestLogSearch/poc-summary.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/MaestoTask_TestPlan.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/MaestoTask_TestPlan.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/OS Onboarding/Requirements.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/OS Onboarding/Requirements.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/OneLocBuild/one-pager.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/OneLocBuild/one-pager.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/RepositoriesInTheirOwnSubscription.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/RepositoriesInTheirOwnSubscription.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/SBOM Generation/one-pager.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/SBOM Generation/one-pager.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/SDL/arcade-services-fall-2020-one-pager.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/SDL/arcade-services-fall-2020-one-pager.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/Secret Management/one-pager.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/Secret Management/one-pager.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/Servicing Guidelines.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/Servicing Guidelines.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/ServicingJobRedirection/1ESManagedPoolsDesign.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/ServicingJobRedirection/1ESManagedPoolsDesign.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/ServicingJobRedirection/DesignDocs.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/ServicingJobRedirection/DesignDocs.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/ServicingJobRedirection/One-Pager.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/ServicingJobRedirection/One-Pager.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/Toolset/Overview.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/Toolset/Overview.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/Toolset/PublishConsumeContract.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/Toolset/PublishConsumeContract.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/Toolset/TaskPackages.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/Toolset/TaskPackages.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/V3 Publishing/one-pager.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/V3 Publishing/one-pager.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/VSTS/helix-job-sender.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/VSTS/helix-job-sender.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/VSTS/pipebuild-feature-history.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/VSTS/pipebuild-feature-history.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/VSTS/signed-dnceng.visualstudio.com-builds.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/VSTS/signed-dnceng.visualstudio.com-builds.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/VSTS/vsts-preview-versus-pipebuild.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/VSTS/vsts-preview-versus-pipebuild.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/VSTS/vsts-windows-connection-instructions.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/VSTS/vsts-windows-connection-instructions.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/agentless-helix.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/agentless-helix.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/build-failure-buckets.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/build-failure-buckets.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/buildingvertical.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/buildingvertical.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/cmake-design.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/cmake-design.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/cmake-scenarios.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/cmake-scenarios.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/custom-auto-scaling.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/custom-auto-scaling.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/docker-image-usage-improvements.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/docker-image-usage-improvements.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/fetch-internal-tooling.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/fetch-internal-tooling.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/helix-metrics.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/helix-metrics.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/ibcmerge.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/ibcmerge.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/improve-arcade-reliability.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/improve-arcade-reliability.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/one-pager-template.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/one-pager-template.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/security-builds.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/security-builds.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/source-build-orchestration.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/source-build-orchestration.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Project-Docs/vestigial-objects-onepager.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Project-Docs/vestigial-objects-onepager.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Projects/Build Analysis/BuildRetryOnboard.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Projects/Build Analysis/BuildRetryOnboard.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Projects/Build Analysis/Introduction.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Projects/Build Analysis/Introduction.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Projects/Build Analysis/KnownIssueJsonStepByStep.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Projects/Build Analysis/KnownIssueJsonStepByStep.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Projects/Build Analysis/KnownIssues.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Projects/Build Analysis/KnownIssues.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Projects/Build Analysis/LandingPage.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Projects/Build Analysis/LandingPage.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Projects/Build Analysis/Specifics.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Projects/Build Analysis/Specifics.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Projects/Build Analysis/Test Retry Documentation.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Projects/Build Analysis/Test Retry Documentation.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Projects/DevOps/CI/NET-Core-Telemetry-Reports.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Projects/DevOps/CI/NET-Core-Telemetry-Reports.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Projects/DevOps/CI/Roadmap.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Projects/DevOps/CI/Roadmap.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Projects/DevOps/CI/Telemetry-Guidance.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Projects/DevOps/CI/Telemetry-Guidance.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Projects/DevOps/Tasks/OnePager.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Projects/DevOps/Tasks/OnePager.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Projects/M2MRenaming/Master-to-Main-renaming-guide.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Projects/M2MRenaming/Master-to-Main-renaming-guide.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Projects/NativeDependencies/NativeDependencyBootstrappingPhase1.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Projects/NativeDependencies/NativeDependencyBootstrappingPhase1.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Projects/PKPIs/LongestBuildPath.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Projects/PKPIs/LongestBuildPath.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Projects/PKPIs/Roadmap.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Projects/PKPIs/Roadmap.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Projects/PKPIs/Triage-Design.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Projects/PKPIs/Triage-Design.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Projects/Signing/SigningPlan.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Projects/Signing/SigningPlan.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/PublishConsumeContract.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/PublishConsumeContract.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/ReleaseRingsPlan.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/ReleaseRingsPlan.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/RepoToolset/MigrationToArcade.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/RepoToolset/MigrationToArcade.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/RestoreSourcesUpdateStatus.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/RestoreSourcesUpdateStatus.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Roadmap.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Roadmap.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/SBOMGenerationGuidance.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/SBOMGenerationGuidance.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/SeePackagesLatestVersion.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/SeePackagesLatestVersion.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/ServiceKPIs.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/ServiceKPIs.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Servicing.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Servicing.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Staging-Pipeline/making-and-validating-changes.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Staging-Pipeline/making-and-validating-changes.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Staging-Pipeline/running-the-pipeline.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Staging-Pipeline/running-the-pipeline.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/StartHere.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/StartHere.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TaskPackages.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TaskPackages.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/DevGuide/BestPractices.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/DevGuide/BestPractices.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/DevGuide/IssueTrackingGuidance.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/DevGuide/IssueTrackingGuidance.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/DevGuide/availability.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/DevGuide/availability.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/DevGuide/azdoworkitemguidance.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/DevGuide/azdoworkitemguidance.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/DevGuide/documentationguidelines.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/DevGuide/documentationguidelines.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/DevGuide/happyhour.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/DevGuide/happyhour.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/DevGuide/hybridcollab.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/DevGuide/hybridcollab.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/DevGuide/hybridprinciples.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/DevGuide/hybridprinciples.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/DevGuide/hybridtriage.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/DevGuide/hybridtriage.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/DevGuide/meetings.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/DevGuide/meetings.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/DevGuide/readme.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/DevGuide/readme.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/DevGuide/standup.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/DevGuide/standup.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/IncreaseVisibilityHelixQueues/design-mockup-justin-impl.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/IncreaseVisibilityHelixQueues/design-mockup-justin-impl.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/IncreaseVisibilityHelixQueues/design-mockup.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/IncreaseVisibilityHelixQueues/design-mockup.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/artifact-maintenance-core-eng-14605.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/artifact-maintenance-core-eng-14605.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/async-triage-core-eng13288.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/async-triage-core-eng13288.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/automated-image-generation13997.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/automated-image-generation13997.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/bcm-emergency-staging-pipeline-optimizations-12261.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/bcm-emergency-staging-pipeline-optimizations-12261.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/core-eng-repository-migration-15084.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/core-eng-repository-migration-15084.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/improved-container-image-lifecycle-arcade-10349.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/improved-container-image-lifecycle-arcade-10349.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/increase-visibility-helix-queues-arcade8824.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/increase-visibility-helix-queues-arcade8824.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/moving-daily-builds-off-dotnetcli-arcade5757.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/moving-daily-builds-off-dotnetcli-arcade5757.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/native-tools-bootstrapping-security15522.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/native-tools-bootstrapping-security15522.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/non-sdk-partial-releases-core-eng-14577.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/non-sdk-partial-releases-core-eng-14577.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/pipeline-machine-learning-arcade8824.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/pipeline-machine-learning-arcade8824.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/pr-failure-tagging-one-pager-core-eng-12136.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/pr-failure-tagging-one-pager-core-eng-12136.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/retrying-stages-staging-pipeline.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/retrying-stages-staging-pipeline.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/secret-sweep-and-clean-core-eng-13551.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/secret-sweep-and-clean-core-eng-13551.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/stateless-pools-cost-analysis.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/stateless-pools-cost-analysis.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/telemetry-monitoring-for-android-and-apple-platforms-13607.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/telemetry-monitoring-for-android-and-apple-platforms-13607.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/validation-notifications-arcade7299.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/validation-notifications-arcade7299.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/One-Pagers/zenhub-migration-core-eng-15084.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/One-Pagers/zenhub-migration-core-eng-15084.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/README.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/README.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Rollout_Scorer_Automation_Proposal.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Rollout_Scorer_Automation_Proposal.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Rollout_Scorer_Proposal.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Rollout_Scorer_Proposal.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-07-24.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-07-24.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-08-14.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-08-14.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-09-04.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-09-04.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-09-25.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-09-25.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-10-02.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-10-02.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-10-16.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-10-16.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-10-30.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-10-30.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-11-13.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-11-13.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-12-04.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-12-04.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-12-11.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2019-12-11.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-01-09.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-01-09.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-01-23.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-01-23.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-01-29.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-01-29.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-02-05.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-02-05.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-02-12.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-02-12.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-02-19.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-02-19.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-03-18.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-03-18.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-03-25.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-03-25.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-04-01.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-04-01.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-04-06.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-04-06.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-04-08.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-04-08.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-04-15.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-04-15.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-04-22.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-04-22.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-04-29.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-04-29.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-05-06.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-05-06.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-05-13.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-05-13.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-05-20.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-05-20.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-05-27.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-05-27.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-06-03.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-06-03.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-06-10.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-06-10.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-06-17.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-06-17.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-06-25.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-06-25.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-07-01.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-07-01.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-07-08.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-07-08.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-07-15.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-07-15.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-07-22.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-07-22.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-07-29.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-07-29.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-08-05.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-08-05.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-08-12.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-08-12.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-08-19.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-08-19.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-08-21.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-08-21.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-08-26.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-08-26.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-09-02.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-09-02.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-09-09.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-09-09.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-09-16.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-09-16.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-09-17.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-09-17.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-09-23.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-09-23.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-09-24.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-09-24.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-09-30.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-09-30.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-10-07.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-10-07.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-10-14.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-10-14.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-10-21.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-10-21.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-10-28.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-10-28.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-11-04.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-11-04.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-11-10.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-11-10.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-11-11.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-11-11.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-11-19.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-11-19.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-12-02.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-12-02.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-12-09.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-12-09.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-12-16.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2020-12-16.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-01-06.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-01-06.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-01-13.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-01-13.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-01-20.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-01-20.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-01-27.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-01-27.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-02-03.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-02-03.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-02-10.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-02-10.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-02-17.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-02-17.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-02-24.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-02-24.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-03-03.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-03-03.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-03-05.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-03-05.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-03-10.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-03-10.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-03-17.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-03-17.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-03-24.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-03-24.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-03-31.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-03-31.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-04-07.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-04-07.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-04-14.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-04-14.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-04-21.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-04-21.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-04-28.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-04-28.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-05-05.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-05-05.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-05-12.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-05-12.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-05-19.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-05-19.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-05-26.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-05-26.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-06-02.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-06-02.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-06-09.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-06-09.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-06-16.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-06-16.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-06-23.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-06-23.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-06-24.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-06-24.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-06-25.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-06-25.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-06-30.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-06-30.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-07-07.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-07-07.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-07-15.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-07-15.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-07-21.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-07-21.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-07-22.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-07-22.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-07-28.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-07-28.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-08-02.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-08-02.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-08-04.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-08-04.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-08-10.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-08-10.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-08-11.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-08-11.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-08-18.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-08-18.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-08-25.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-08-25.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-08-27.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-08-27.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-09-01.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-09-01.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-09-02.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-09-02.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-09-08.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-09-08.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-09-14.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-09-14.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-09-15.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-09-15.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-09-22.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-09-22.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-09-29.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-09-29.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-10-06.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-10-06.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-10-13.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-10-13.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-10-20.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-10-20.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-10-23.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-10-23.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-10-27.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-10-27.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-11-03.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-11-03.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-11-10.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-11-10.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-11-17.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-11-17.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-11-30.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-11-30.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-12-01.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-12-01.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-12-08.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-12-08.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-12-15.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2021-12-15.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-01-05.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-01-05.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-01-12.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-01-12.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-01-19.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-01-19.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-01-26.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-01-26.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-02-02.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-02-02.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-02-09.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-02-09.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-02-17.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-02-17.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-02-21.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-02-21.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-03-02.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-03-02.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-03-09.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-03-09.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-03-16.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-03-16.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-03-23.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-03-23.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-03-30.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-03-30.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-04-06.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-04-06.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-04-13.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-04-13.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-04-20.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-04-20.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-04-27.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-04-27.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-05-03.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-05-03.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-05-04.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-05-04.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-05-11.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-05-11.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-05-19.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-05-19.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-07-13.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-07-13.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-07-20.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-07-20.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-07-27.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-07-27.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-08-03.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-08-03.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-08-10.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-08-10.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-08-17.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-08-17.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-08-24.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-08-24.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-08-31.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-08-31.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-09-07.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-09-07.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-09-14.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-09-14.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-09-21.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-09-21.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-09-28.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-09-28.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-09-30.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-09-30.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-10-05.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-10-05.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-10-12.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-10-12.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-10-19.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-10-19.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-10-26.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-10-26.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-11-02.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-11-02.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-11-09.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-11-09.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-11-16.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-11-16.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-11-30.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-11-30.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-12-01.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-12-01.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-12-07.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2022-12-07.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-01-11.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-01-11.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-03-08.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-03-08.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-03-15.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-03-15.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-03-22.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-03-22.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-03-29.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-03-29.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-04-05.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-04-05.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-04-12.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-04-12.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-04-19.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-04-19.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-04-27.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-04-27.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-05-10.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TeamProcess/Rollout-Scorecards/Scorecard_2023-05-10.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Temporary-Quarantine.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Temporary-Quarantine.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/TierOneRepos.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/TierOneRepos.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Toolsets.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Toolsets.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/UnifiedBuild/Foundational-Concepts.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/UnifiedBuild/Foundational-Concepts.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/UnifiedBuild/History.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/UnifiedBuild/History.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/UnifiedBuild/Overview.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/UnifiedBuild/Overview.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/UnifiedBuild/README.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/UnifiedBuild/README.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/UnifiedBuild/Roadmap.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/UnifiedBuild/Roadmap.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/UnifiedBuild/Scenario-Testing.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/UnifiedBuild/Scenario-Testing.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/UnifiedBuild/TFM-Trimming-And-Targeting.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/UnifiedBuild/TFM-Trimming-And-Targeting.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/UnifiedBuild/Terminology.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/UnifiedBuild/Terminology.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/UnifiedBuild/VMR-Code-And-Build-Workflow.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/UnifiedBuild/VMR-Code-And-Build-Workflow.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/UnifiedBuild/VMR-Design-And-Operation.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/UnifiedBuild/VMR-Design-And-Operation.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/UnifiedBuild/VMR-Managing-SDK-Bands.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/UnifiedBuild/VMR-Managing-SDK-Bands.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/UnifiedBuild/VMR-Strategy-For-External-Source.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/UnifiedBuild/VMR-Strategy-For-External-Source.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/UnifiedBuild/VMR-Upstream-Downstream.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/UnifiedBuild/VMR-Upstream-Downstream.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/V3StatusUpdate.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/V3StatusUpdate.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Validation.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Validation.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Validation/DeploymentProcess.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Validation/DeploymentProcess.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Validation/HealthMonitoring.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Validation/HealthMonitoring.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Validation/HelixValidation.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Validation/HelixValidation.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Validation/OSOBValidation.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Validation/OSOBValidation.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Validation/Overview.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Validation/Overview.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Validation/README.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Validation/README.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/Validation/TestingGuidance.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/Validation/TestingGuidance.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/VersionQueryingAndUpdating.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/VersionQueryingAndUpdating.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "log_codes": [
+        "InvalidFileLink"
+      ],
+      "type": "Conceptual",
+      "source_relative_path": "../Documentation/YamlStagesRepoStatus.md",
+      "output": {
+        ".html": {
+          "relative_path": "Documentation/YamlStagesRepoStatus.html"
+        }
+      },
+      "version": ""
+    }
+  ],
+  "version_info": {},
+  "groups": [
+    {
+      "xrefmap": "xrefmap.yml"
+    }
+  ]
+}

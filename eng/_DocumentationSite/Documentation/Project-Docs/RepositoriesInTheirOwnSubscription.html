@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Repositories working on their own azure subscription </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Repositories working on their own azure subscription ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="repositories-working-on-their-own-azure-subscription">Repositories working on their own azure subscription</h1>
+
+<p>In order to meet our SLA and to limit our azure spending, there are repositories that need to run on their own subscription<sup>1</sup>.</p>
+<p>There are some guidelines to decide when a repository needs to be transferred to their own subscription. This is going to be shared later.</p>
+<h2 id="how-do-i-transfer-a-repository-to-its-own-subscription">How do I transfer a repository to its own subscription?</h2>
+<p>To transfer a repository to their own subscription we will go through the following process:</p>
+<ol>
+<li><p>Work with DDFun<sup>2</sup> to create a new Azure Subscription. You will need to provide the number of cores that you need, for which <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/regions">region</a> and which <a href="https://docs.microsoft.com/en-us/azure/virtual-machines/sizes">VM type</a> you need. The process of creating the new subscription takes around 1-2 weeks.</p>
+</li>
+<li><p>Identify the Helix queues this repository needs. A repository usually only uses a subset of the available Helix queues, so it is important to identify the ones that will be duplicated.</p>
+</li>
+<li><p>Create the description of the subscription on subscriptions.yaml:</p>
+<ul>
+<li>Subscription - Name of the subscription.</li>
+<li>TeamName - Name that is going to identify the queues for this subscription.</li>
+<li>Repositories - The repository/repositories you want to migrate.</li>
+</ul>
+</li>
+<li><p>Add the list of queues to the corresponding yaml definition files. The name should be of the form <code>&lt;QueueName&gt;.&lt;TeamName&gt;</code>. The <strong>QueueName</strong> is the name of the queue you are duplicating and the <strong>TeamName</strong> is the one defined in the step above for that subscription.</p>
+</li>
+<li><p>The last step is to let the AutoScaler and the Core Rebalancer know about the new subscription. This should be done in <a href="https://dev.azure.com/dnceng/internal/_git/dotnet-helix-machines?path=%2Fsrc%2FServiceFabric%2FProcessAutoScaleService%2FConfigs%2FAutoScaleQuotaConfigProd.json&amp;version=GBmaster&amp;_a=contents"><em>AutoScaleQuotaConfigProd.json</em></a> where the subscriptionId and the quota for the subscription needs to be added.
+One important thing to keep in mind is that in most cases the cores added to the new subscription account for our overall core consumption in other words the cores for the new subscription needs to be subtracted from another subscription most likely HelixProd.</p>
+</li>
+</ol>
+<h2 id="how-this-works">How this works</h2>
+<p><img src="./assets/RedirectJobsWorkflow.png" alt=""></p>
+<ol>
+<li><p>The user sends the Job to the <em>Queue</em> and as part of the job information the user includes the <em>Repository</em>.</p>
+</li>
+<li><p>The Helix JobController gets a list of all the queues under that repository and if the <code>*Queue*</code> exists as part of that list a new queue is assigned for that job, the new queue is going to be <code>*Queue.TeamName*</code>.</p>
+</li>
+</ol>
+<p>If there is not any match the queue doesn't change, which in most case means that this is going to be processed by HelixProd. This could happen for queues that the repository doesn't usage on a significant way, but if this start happening in queues in which the impact is notable for HelixProd, we should create a specific queue for the repository.</p>
+<p>Internally <em>Queue</em> and <em>Queue.TeamName</em> lives on different subscription so as soon as we send the job to another queue, we are sending that job to another subscription.</p>
+<p>It's important to keep in mind that we are maintaining all these new queues and these queues works on the same way that the rest. This means that as soon as a job has been redirected this jobs is going to wait for a machine on that queue (until the queue scales up), retry work items on that queue if the work item fails and if there is any problem we need to handle that problem on the <em>Queue.TeamName</em> queue.</p>
+<h1 id="how-many-cores-should-i-assign-to-the-new-subscription">How many cores should I assign to the new subscription</h1>
+<p>Our service is authorized to consume a specific number of cores so even after splitting the queues to a new subscription we should stay under that authorized limit. For example, HelixProd can have 6500 cores authorized and we plan to have a new subscription (splitting it from HelixProd) we could end having HelixProd with 4500 and the new subscriptions with 2000, having in total the 6500 cores.</p>
+<p>After identifying which are the queues you are going to duplicate you need to know the number of cores that are used by that repository, for that you can do the following steps, for every queue:</p>
+<ol>
+<li>Get the <code>total number of cores</code> consumed by that queue during a timespan.</li>
+<li>In the same timespan, identify what <code>percentage</code> of the jobs that are sent to that queue belongs to the repositories that you are creating a new subscription for.</li>
+<li>Compute the number of cores that the repository is consuming in that queue, based on the <code>percentage</code> and the <code>total number of cores</code> (<code>total number of cores</code> * <code>percentage</code>)</li>
+</ol>
+<p>Once the total cores needed per queue is calculated, sum up the total cores for the queues in question to get an idea on how many cores is needed for that repository. <strong>Suggestion:</strong> Give 5% more to the total cores that you calculated.</p>
+<h1 id="section"></h1>
+<h6 id="1unit-of-azure-billing-and-organization"><sup>1</sup>Unit of Azure Billing and organization</h6>
+<h6 id="2-reach-out-to-"><sup>2</sup> Reach out to @ilyas1974</h6>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CRepositoriesInTheirOwnSubscription.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CRepositoriesInTheirOwnSubscription.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CRepositoriesInTheirOwnSubscription.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

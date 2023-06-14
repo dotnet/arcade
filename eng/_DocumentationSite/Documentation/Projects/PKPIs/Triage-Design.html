@@ -1,0 +1,146 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Triage design for CI failures </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Triage design for CI failures ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="triage-design-for-ci-failures">Triage design for CI failures</h1>
+
+<h2 id="problem">Problem</h2>
+<p><a href="../DevOps/CI/Telemetry-Guidance.html">Telemetry categorization</a> has allowed us to bucket Azure DevOps failures.  Improvements to telemetry categorization (mostly) only affect future builds.  There is no method to fix categorization for builds that have already completed or which were improperly categorized.</p>
+<h2 id="proposed-solution">Proposed solution</h2>
+<p><img src="./Triage-Design.png" alt="Chart"></p>
+<h3 id="sql-table">Sql table</h3>
+<ul>
+<li>Create a table that contains BuildId / RecordId, category, GitHub issue link</li>
+</ul>
+<h3 id="powerbi">PowerBI</h3>
+<ul>
+<li><p>Link to Sql table, latest row in Sql table  for a given BuildId / RecordId supersede existing categorization</p>
+</li>
+<li><p>Add column which contains links that will create GitHub issues if no GitHub issue is already present for a given BuildId / RecordId</p>
+<ul>
+<li>Example: <a href="https://github.com/dotnet/core-eng/issues/new?title=%5BTriage%5D+Fix+categoization+of+123456&amp;body=BuildId%3D123456%0D%0ABuildUrl%3Dhttps%3A%2F%2Fdev.azure.com%2Fdnceng%2Fpublic%2F_build%2Fresults%3FbuildId%3D420677%26view%3Dresults%0D%0A%0D%0AThe+job+running+on+agent+Azure+Pipelines+42+ran+longer+than+the+maximum+time+of+60+minutes.+For+more+information%2C+see+https%3A%2F%2Fgo.microsoft.com%2Ffwlink%2F%3Flinkid%3D2077134%0D%0A%0D%0A%5BCategory%3DTimeout%5D">https://github.com/dotnet/core-eng/issues/new?title=%5BTriage%5D+Fix+categoization+of+123456&amp;body=BuildId%3D123456%0D%0ABuildUrl%3Dhttps%3A%2F%2Fdev.azure.com%2Fdnceng%2Fpublic%2F_build%2Fresults%3FbuildId%3D420677%26view%3Dresults%0D%0A%0D%0AThe+job+running+on+agent+Azure+Pipelines+42+ran+longer+than+the+maximum+time+of+60+minutes.+For+more+information%2C+see+https%3A%2F%2Fgo.microsoft.com%2Ffwlink%2F%3Flinkid%3D2077134%0D%0A%0D%0A%5BCategory%3DTimeout%5D</a></li>
+</ul>
+</li>
+<li><p>Add column which contains links for rows that already have a GitHub issue entry present in the Sql table</p>
+</li>
+</ul>
+<h3 id="github-bot">GitHub bot</h3>
+<ul>
+<li><p>for created issues (if it's a triage issue)</p>
+<ul>
+<li><p>Determines if an issue already exists</p>
+<ul>
+<li><p>if yes, then add a link and close</p>
+</li>
+<li><p>if no, then add an entry into the sql table with github link and category=Triage</p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>for closed issues (if it's a triage issue)</p>
+<ul>
+<li><p>Find last comment with some metadata like &quot;category=Build&quot;, add row to table with category and GitHub link</p>
+</li>
+<li><p>If no triage category is specified, then [TBD]</p>
+</li>
+</ul>
+</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CPKPIs%5CTriage-Design.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CPKPIs%5CTriage-Design.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CPKPIs%5CTriage-Design.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,283 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Build Retry </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Build Retry ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="build-retry">Build Retry</h1>
+
+<h2 id="how-it-works">How it works?</h2>
+<p><img src="./Resources/BuildRetryWorkflow.png?raw=true" alt=""></p>
+<p>The build retry feature is composed of two parts.</p>
+<p>The first one is having the build configuration file as part of the build artifacts. In order to have this in place it is necessary to follow the <a href="#how-to-onboard">onboarding process</a>.</p>
+<p>The second part is what is done by the Build Result Analysis. When the build finishes, it starts getting processed. If it failed, the build is analyzed to see if it can be retried. In order to be retried, at least one of the rules specified in a build configuration file needs to be met.</p>
+<h2 id="how-to-onboard">How to onboard?</h2>
+<ol>
+<li><p>In order to use the Build Retry feature it's necessary to have the <code>.NET Helix</code> GitHub application installed in the repo in which you intend to use the feature. <br>
+If you want to get the application installed, you can contact the <a href="https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/How-to-get-a-hold-of-Engineering-Servicing">.NET Core Engineering Services team</a></p>
+</li>
+<li><p>Create the <a href="#Build-configuration-file-structure">build configuration file</a>. The name of the file should be: <code>build-configuration.json</code> and you can create the file inside any folder. That folder is the one that you are going to publish. <br>
+Ex. \eng\BuildConfiguration\build-configuration.json</p>
+</li>
+<li><p><a href="https://docs.microsoft.com/en-us/azure/devops/pipelines/artifacts/pipeline-artifacts">Publish an artifact having the <code>build-configuration.json</code> file to Azure Pipeline</a> in the repo that you are expecting to get retry. The name of the artifact should be: <code>BuildConfiguration</code></p>
+<p>Ex.</p>
+<pre><code> - publish: $(Build.SourcesDirectory)\eng\BuildConfiguration
+   artifact: BuildConfiguration
+</code></pre>
+</li>
+</ol>
+<h2 id="build-configuration-file-structure">Build configuration file structure</h2>
+<pre><code class="lang-json">{
+   &quot;RetryCountLimit&quot;:1,
+   &quot;RetryByAnyError&quot;:false,
+   &quot;RetryByErrors&quot;:[
+      {
+         &quot;ErrorRegex&quot;:&quot;Regex&quot;
+      }
+   ],
+   &quot;RetryByPipeline&quot;:{
+      &quot;RetryJobs&quot;:[
+         {
+            &quot;JobName&quot;:&quot;JobName&quot;
+         }
+      ],
+      &quot;RetryStages&quot;:[
+         {
+            &quot;StageName&quot;:&quot;StageName&quot;
+         }
+    ],
+    &quot;RetryJobsInStage&quot;:[
+      {
+        &quot;StageName&quot;:&quot;StageName&quot;,
+        &quot;JobsNames&quot;:[&quot;JobName&quot;]
+      }
+    ]
+  },
+  &quot;RetryByErrorsInPipeline&quot;:{
+    &quot;ErrorInPipelineByStage&quot;:[
+      {
+        &quot;StageName&quot;:&quot;StageName&quot;,
+        &quot;ErrorRegex&quot;:&quot;Regex&quot;
+      }
+    ],
+    &quot;ErrorInPipelineByJobs&quot;:[
+      {
+        &quot;JobsNames&quot;:[&quot;JobName&quot;],
+        &quot;ErrorRegex&quot;:&quot;Regex&quot;
+      }
+    ],
+    &quot;ErrorInPipelineByJobsInStage&quot;:[
+      {
+        &quot;StageName&quot;:&quot;StageName&quot;,
+        &quot;JobsNames&quot;:[&quot;JobName&quot;],
+        &quot;ErrorRegex&quot;:&quot;Regex&quot;
+      }
+      ]
+   }
+}
+</code></pre>
+<ul>
+<li><p><strong>RetryCountLimit:</strong> Number of retries that can be done on your build. <br>
+Ex. &quot;RetryCountLimit&quot;: 1 means is going to be retried 1 time by the Build Result Analysis giving a total of 2 executions. <br>
+Default value: 0. Max internal value: 10.</p>
+</li>
+<li><p><strong>RetryByAnyError:</strong> The build is going to be retried independently of which was the reason of the failure. <br>
+Default value: False.</p>
+</li>
+<li><p><strong>RetryByErrors:</strong> List of 'ErrorRegex' (.NET flavor) that will look for a match on the build pipeline errors. In case there is an error matching the regex the build is going to be retried.</p>
+<p>Ex.<br>
+In order to retry a build with the following pipeline errors
+<img src="./Resources/PipelineErrorsExample.png?raw=true" alt="">
+you could have a file with the following information:</p>
+<pre><code class="lang-json">{
+   &quot;RetryCountLimit&quot;:1,
+   &quot;RetryByErrors&quot;:[
+      {
+         &quot;ErrorRegex&quot;:&quot;Vstest failed with error.*&quot;
+      }
+   ]
+}
+</code></pre>
+</li>
+<li><p><strong>RetryByPipeline:</strong> The retry by pipeline is expecting a list of Jobs or/and Stages names which in case on fail should cause a retry by the Build Result Analysis.</p>
+<p>The job names reference are the ones on the pipeline:<br>
+Ex.
+<img src="./Resources/JobNameErrorsExample.png?raw=true" alt=""></p>
+<pre><code class="lang-json">{
+   &quot;RetryCountLimit&quot;:1,
+   &quot;RetryByPipeline&quot;:{
+      &quot;RetryJobs&quot;:[
+         {
+            &quot;JobName&quot;:&quot;Validate_Test_Failing&quot;
+         }
+      ]
+   }
+}
+</code></pre>
+<p>The stage name references are the ones on the yaml <br>
+Ex.
+<img src="./Resources/StageNameExample.png?raw=true" alt=""></p>
+<pre><code class="lang-json">{
+   &quot;RetryCountLimit&quot;:1,
+   &quot;RetryByPipeline&quot;:{
+      &quot;RetryStages&quot;:[
+         {
+            &quot;StageName&quot;:&quot;StageName&quot;
+         }
+      ]
+    }
+}
+</code></pre>
+<p>If you want to retry jobs under a specific stage, you can do that by defining the stage name and then the jobs that you want to retry that are under that stage. You will need to define each stage separately.</p>
+<pre><code class="lang-json">{
+    &quot;RetryCountLimit&quot;:1,
+    &quot;RetryByPipeline&quot;:{
+       &quot;RetryJobsInStage&quot;:[
+          {
+             &quot;StageName&quot;:&quot;StageName&quot;,
+             &quot;JobsNames&quot;:[ &quot;JobNameA&quot;, &quot;JobNameB&quot; ]
+          }
+       ]
+    }
+}
+</code></pre>
+</li>
+<li><p><strong>RetryByErrorsInPipeline:</strong> This is a combination of retry by error and retry by pipeline, in which you will be able to retry a build base on errors found in specific places on the pipeline. <br><br>
+This gives you a more granular control on which error do you want that get retried.<br><br>
+For example, imagine that you have an error: &quot;Vstest failed with error.&quot;  that most of the time happens in StageA, when it happens on StageA and you retry the build it usually finishes successfully. Unfortunately, the same error could happen on StageB and when that happens it is unusual. So, if you want the build only gets retried when the error happens in StageA you can define that:</p>
+<pre><code class="lang-json">{
+    &quot;RetryCountLimit&quot;:1,
+    &quot;RetryByErrorsInPipeline&quot;:{
+       &quot;ErrorInPipelineByStage&quot;:[
+          {
+          &quot;StageName&quot;:&quot;StageA&quot;,
+          &quot;ErrorRegex&quot;:&quot;Vstest failed with error.*&quot;
+          }
+       ]
+    }
+}
+</code></pre>
+<p>This same principle can be applied to errors under specific job names:</p>
+<pre><code class="lang-json">{
+  &quot;RetryCountLimit&quot;:1,
+  &quot;RetryByErrorsInPipeline&quot;:{
+    &quot;ErrorInPipelineByJobs&quot;:[
+      {
+        &quot;JobsNames&quot;:[&quot;JobNameA&quot;,&quot;JobNameB&quot;],
+        &quot;ErrorRegex&quot;:&quot;Regex&quot;
+      }
+    ]
+  }
+}
+</code></pre>
+<p>and errors for Jobs under a specific Stage:</p>
+<pre><code class="lang-json">{
+  &quot;RetryCountLimit&quot;:1,
+  &quot;RetryByErrorsInPipeline&quot;:{
+    &quot;ErrorInPipelineByJobsInStage&quot;:[
+      {
+        &quot;StageName&quot;:&quot;StageName&quot;,
+        &quot;JobsNames&quot;:[&quot;JobNameA&quot;, &quot;JobNameB&quot;],
+        &quot;ErrorRegex&quot;:&quot;Regex&quot;
+           }
+        ]
+      }
+  }
+</code></pre>
+</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CBuildRetryOnboard.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CBuildRetryOnboard.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CBuildRetryOnboard.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

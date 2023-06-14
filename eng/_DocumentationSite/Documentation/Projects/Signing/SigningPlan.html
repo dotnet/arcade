@@ -1,0 +1,225 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Signing plan </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Signing plan ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="signing-plan">Signing plan</h1>
+
+<h2 id="goals">Goals</h2>
+<ul>
+<li><p>Design a build system which supports our goal of a two hour build time</p>
+</li>
+<li><p>Minimize the differences between official and PR builds, thus increasing the reliability of official builds</p>
+</li>
+<li><p>Minimize the impact of unreliable systems such as signing</p>
+</li>
+</ul>
+<h2 id="overview">Overview</h2>
+<p>Signing is a requirement for artifacts that are officially available for our end customers. It is not required for artifacts that exist solely as an intermediate stage in our official build process. Signing is also not required immediately on artifacts which will eventually be available to customers but instead merely needs to be done before we advertise / push the artifact to a channel that we communicate to customers as a supported channel.</p>
+<p>Removing signing as an intermediate step is both important for the throughput of our builds as well as reliability. Presently the time variance of signing for dotnet/runtime is over one and a half hours. That means a normal variance in our signing process guarantees the two hour build goal will not be met. Giving us flexibility in when signing occurs, and mostly making it an asynchronous process, is required for us to be successful.</p>
+<p>Going forward the expectation is that most repositories will remove signing from their official builds. This will be a hard requirement for any repository on the critical build path of .NET. For other repositories it will be strongly recommended but not required.  Signing will be done at the end of the product build instead of during the build pipeline.</p>
+<p>Moving signing to a promotion ring will improve reliablity, and improve signing times by allowing us to flow dependencies faster and sign asynchronously from testing.</p>
+<h2 id="signing-in-repositories">Signing in repositories</h2>
+<p>The responsibility of individual repository builds is to produce artifacts that either ship to customers (shipping repository) or are consumed by other repositories for their own builds (dependency flow repositories).</p>
+<h3 id="participating-repositories">Participating repositories</h3>
+<ul>
+<li><p>will not real sign</p>
+</li>
+<li><p>will disable signing validation (if they have fully stopped producing signed assemblies)</p>
+</li>
+<li><p>will publish a build manifest to Azure Artifacts which includes signing information</p>
+</li>
+<li><p>will publish to a different (unsigned) artifact feed</p>
+</li>
+<li><p>will change their subscriptions to consume from the unsigned feed</p>
+</li>
+</ul>
+<h3 id="signing-via-promotion">Signing via promotion</h3>
+<ul>
+<li><p>a repository may choose to promote a build to be signed.</p>
+</li>
+<li><p>*will real sign shipping packages, MSI's, debs, rpm's, etc... by extracting the contents, signing binaries, and re-packaging.</p>
+</li>
+<li><p>signed builds will be published to the signed feed</p>
+</li>
+<li><p>the signing process will use darc to determine what additional assets are required from other builds and need to be signed</p>
+</li>
+<li><p>we will not sign NonShipping packages</p>
+</li>
+<li><p>we will perform signing validation on promoted builds.</p>
+</li>
+</ul>
+<p>* <em>Initial investigation and exploration has shown that it <strong>should</strong> be possible to extract an MSI's contents, sign, and repackage them.  The current plan is contingent upon being able to repackage installers.  We have begun a proof of concept on repackaging MSI's, but that work is still in progress. If that proves not to be possible, then we will scrap this plan and pursue other options (such as a queue/await model) to reduce sign times during official builds.</em></p>
+<h2 id="moving-in-stages">Moving in stages</h2>
+<p>Repositories may choose to opt in to the signing promotion model.  If a repository does not opt in, they will continue to sign via current methods.</p>
+<p>Repositories targeted for signing promotion model are:</p>
+<ul>
+<li><p>runtime</p>
+</li>
+<li><p>winforms</p>
+</li>
+<li><p>wpf</p>
+</li>
+<li><p>wpf-int</p>
+</li>
+<li><p>windowsdesktop</p>
+</li>
+<li><p>aspnetcore</p>
+</li>
+<li><p>aspnetcore-tooling</p>
+</li>
+<li><p>sdk</p>
+</li>
+<li><p>core-sdk</p>
+</li>
+</ul>
+<p>Stage 1:</p>
+<ul>
+<li><p>Switch repos to consume / publish to unsigned feed and publish to signed feed</p>
+</li>
+<li><p>Validate repackaging MSI's is viable via a full proof of concept</p>
+</li>
+<li><p>Produce a build manifest</p>
+</li>
+<li><p>Disable signing validation in repo</p>
+</li>
+</ul>
+<p>Stage 2:</p>
+<ul>
+<li>Enable MSI signing via signing promotion</li>
+</ul>
+<p>While, currently, there are less blockers to moving package signing to core-sdk than moving MSI signing, this entire plan is dependent on the ability to repackage / sign MSI's in core-sdk, so moving packages first may result in throw away work.</p>
+<p>Stage 3:</p>
+<ul>
+<li><p>Enable package signing via signing promotion</p>
+</li>
+<li><p>Disable publish to signed feeds</p>
+</li>
+<li><p>Modify signing validation to support process changes.</p>
+<ul>
+<li>Enable signing validation in promoted build</li>
+</ul>
+</li>
+</ul>
+<p>Stage 4:</p>
+<ul>
+<li><p>Move RPM / deb / etc signing into signing promotion</p>
+</li>
+<li><p>Enable signing validation of test signed bits in repo builds.</p>
+</li>
+</ul>
+<h2 id="notes">Notes</h2>
+<ul>
+<li><p>The ability to repack MSI's is the biggest risk to this plan.  If this does not prove to be possible, then we will provide another plan which adjusts accordingly.</p>
+</li>
+<li><p>TBD: With respect to signing validation, what does this mean for repos which are producing more than just nupkg's but aren't signing nupkgs?</p>
+<ul>
+<li><p>Do we need to modify signing validation to support validating some (not all) artifacts?</p>
+</li>
+<li><p>Do we just modify people's builds to publish signed artifacts to one Azure DevOps build artifact and unsigned to another?</p>
+</li>
+</ul>
+</li>
+<li><p>Investigation into signing MSI's is underway</p>
+</li>
+<li><p>We have not begun exploring signing RPM's, Deb's, etc... yet but it is not expected that is a high risk part of the plan.</p>
+</li>
+<li><p>Mac notarization is not yet automated, after it is automated, we should add that process to the signing promotion stage.</p>
+</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CSigning%5CSigningPlan.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CSigning%5CSigningPlan.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CSigning%5CSigningPlan.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

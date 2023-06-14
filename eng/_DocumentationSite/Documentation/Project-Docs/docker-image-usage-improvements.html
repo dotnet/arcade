@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Background </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Background ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="background">Background</h1>
+
+<p>Several of the .NET Core repositories utilize Docker images within their official build definitions for the supported Linux distros.  Utilizing Docker allows a single Linux configuration to be used on all of the build agents yet the product can be built on all of the supported distros.  Using Docker also allows the product teams to easily manage the build prereqs because they specified within the Dockerfiles and don't require VSO service engineers in order to change them.</p>
+<p>The following is a summary of the prescribed process currently being used for adding/updating the Docker images.</p>
+<ol>
+<li>Add a new or update the existing <a href="https://devdiv.visualstudio.com/DevDiv/_git/DotNetCore?path=%2Fdockerfiles&amp;version=GBmaster&amp;_a=contents">DockerFiles</a> as necessary.</li>
+<li>Build the new/modified Dockerfiles locally.  Tag the image using the following naming schema <code>&lt;DistroName&amp;Version&gt;_prereqs_v&lt;ImageVersion&gt;</code> (e.g. <code>ubuntu1610_prereqs_v3</code>)</li>
+<li>Verify the new/modified image works as expected.</li>
+<li>Get someone with the appropriate access to push the new/modified image to <a href="https://hub.docker.com/r/chcosta/dotnetcore/">Docker Hub</a>.</li>
+<li>Update the appropriate build pipelines to reference the new Docker images (e.g. <a href="https://github.com/dotnet/corefx/blob/94780d59037393369d22def54466b2e13d81c435/buildpipeline/pipeline.json">CoreFx build pipeline</a>)</li>
+</ol>
+<h1 id="problems">Problems</h1>
+<h2 id="out-of-date-or-missing-dockerfiles">Out of Date or Missing Dockerfiles</h2>
+<p>Some of the images we are currently using within our build definitions do not have the corresponding Dockerfiles they were generated from checked into SCC.</p>
+<ol>
+<li>Some images were created by running a base OS image and then manipulating it as necessary in order to add the required tools and dependencies.  The resulting images were then captured using the <a href="https://docs.docker.com/engine/reference/commandline/commit/">docker commit</a> command.</li>
+<li>Some images were created via Dockerfiles that were never checked into SCC.</li>
+<li>Some Dockerfiles were updated to produce newer versions of images but the updated Dockerfiles were never checked into SCC.</li>
+</ol>
+<p>Because we do not have the Dockerfiles for the images we are building with today, we don't really know with certainty what dependencies and toolsets we are building the product with.  You can gather this information by inspecting the images we are building with but it is a time intensive process and prone to oversight.  More importantly it is possible for the images on Docker Hub to be accidentally replaced or deleted.  If this were to happen we would be in a very bad situation and would have to scramble to get the Docker images recreated.</p>
+<h2 id="docker-image-versioning">Docker Image Versioning</h2>
+<p>Nothing in the process used today enforces versioning of the Docker images.  As described earlier, it is up to the individuals that have access to the Docker Hub repository to increment the Docker image version whenever an update is made.  Hopefully this is being followed but it is susceptible to human judgement and error.</p>
+<p>If this process is not being followed, it is possible that updating an image without incrementing the version (e.g. changing the tag) would break the various builds that utilize the shared images.  This issue may not surface itself immediately. For example it may only get surfaced at the time a previous release is serviced.  Tracking down issues like this can be very time consuming and wasteful.</p>
+<h2 id="docker-image-traceability">Docker Image Traceability</h2>
+<p>There is no way to trace back from a Docker image to the Dockerfile it was generated with.  For example, suppose we release version 1.0 of a product that was built with version 4 of a particular Docker image.  A couple months pass and a service patch is needed for the release.  For this particular service fix, a new version of a tool is needed.  How do we correlate a Docker image back to the specific version of the Dockerfile it was generated from in order to update the required tool?  There isn't a way to correlate a Docker image tag/version to a specific Dockerfile without manually inspecting what is installed on the image in relation to the file history of the Dockerfile.</p>
+<p>Another problem that has surfaced with our Dockerfiles is that they do not reference a static OS base image.  The base OS images do get revised overtime with service patches.  This has causes issues such as <a href="https://github.com/dotnet/core-setup/pull/1149">dotnet/core-setup#1149</a>.  We should be explicitly making these changes and verifying the changes prior to rolling them into production.</p>
+<h2 id="docker-hub-repository">Docker Hub Repository</h2>
+<p>Currently the Docker images being used are stored in Chris Costa's personal <a href="https://hub.docker.com/r/chcosta/dotnetcore/">Docker Hub repository</a>.  Relying on personally owned artifacts is not a good practice to use.  Chris could leave the team, company or worse, which may lead to issues in administering these artifacts.</p>
+<h2 id="docker-toolset">Docker Toolset</h2>
+<p>The Docker toolset being used by the builds is not captured anywhere.  Docker may introduce breaking changes or behavior changes over time that could be detrimental if introduced onto the build agents.  Docker has been known to do this in the past (e.g. <a href="https://github.com/docker/docker/issues/20818">Regression in LTTng behavior on Docker 1.10.2</a>).   When the product is built, it should be using an explicit version of the Docker toolset so that we can ensure repeatability and reliability.</p>
+<h1 id="proposed-changes">Proposed Changes</h1>
+<h2 id="automated-builds">Automated Builds</h2>
+<p>Introducing automated builds would a great way to ensure we will always have the source Dockerfiles for the Docker images we use.  The only way to update a Docker image would be to update the corresponding Dockerfile.  When a Dockerfile change is merged in, a build would get kicked off automatically that would build the Docker image and upload it to Docker Hub.  The build definition would use a service account to upload images to Docker Hub.  This service account would be the only account that would have access to upload images.  Therefore the only way to update the Docker images would be to make a change to the checked-in Dockerfiles.</p>
+<p>VSTF build definitions would provide the necessary functionality and flexibility to meet our requirements.  Key vault should be utilized to store the credentials so that they are stored in a centralized place for servicing.  If needed in a pinch, the credentials could be used manually to upload an image.</p>
+<h2 id="tagging-scheme">Tagging Scheme</h2>
+<p>In order to provide traceability between a Docker image tag and the Dockerfile it was produced with, we should utilize a tagging scheme similar to the following:</p>
+<p><code>&lt;OSName&gt;.&lt;OSVersion&gt;-&lt;ImageVariant&gt;-&lt;Timestamp&gt;-&lt;CommitSha&gt;</code></p>
+<p><strong>Examples</strong></p>
+<ul>
+<li><code>opensuse.42.1-20170118-c760fcc</code></li>
+<li><code>Ubuntu.14.04-crossbuild-20161210-b04b497</code></li>
+</ul>
+<p>The automated builds would be capable of generating the tag from the Dockerfile location in SCC and the commit that triggered the build.  A timestamp is suggested in addition to a commit sha simply as a means to quickly tell how old an image is and compare two tags in order to tell which one is older.</p>
+<h2 id="docker-repository">Docker Repository</h2>
+<p>A new Docker repository should be used for our Docker images that is owned by an organization (e.g. <code>microsoft</code>).  This will ensure that the dotnet organization will always have control over the repository as team members come and go.  If we continue to use Docker Hub, we don't want a repository that could distract users from the official .NET Docker repository (e.g. <code>microsoft/dotnet</code>).  Something like <code>microsoft/dotnet-buildtools-prereqs</code> could do that. If we wanted to obfuscate it more in order to avoid having the general public find it when looking for the real dotnet images, we could name it <code>microsoft/dnbpr</code> which would stand for <code>dotnet build prereqs</code>.  This becomes a little unnatural.  Couple this naming issue with the desire we have to be able to build the product without taking a dependency on non-MSFT services, we should use a private Docker registry.  Azure currently has beta support for a <a href="https://azure.microsoft.com/en-us/services/container-registry/">container registry</a> which would meet our needs.</p>
+<p>Using a custom Docker registry is pretty easy. You don't use the Azure CLI, you still use the Docker CLI. The differences are that first you must explicitly login to the private registry (<code>docker login dotnetcore-microsoft.azurecr.io -u *** -p ***</code>). Second you must include the registry name in all of the image requests such as run, pull, etc. (<code>docker pull dotnetcore-microsoft.azurecr.io/build_prereqs:ubuntu.14.04</code>)</p>
+<h2 id="reference-base-images-via-digest">Reference Base Images via Digest</h2>
+<p>In order to solve the issues with the base images changing overtime due to service fixes, we should be <a href="https://docs.docker.com/engine/reference/builder/#/from">referencing the base images via digest</a>.  This change makes the Dockerfile less readable by itself therefore it is recommended that we add a comment that clearly states what the base image is and the date it was produced.</p>
+<h2 id="versioned-docker-toolset">Versioned Docker Toolset</h2>
+<p>The solution for capturing the Docker toolset required by our builds and the mechanisms used to automatically acquire them are being covered by the work Matt Mitchell (Versionable Environments) and Ravi Eda (<a href="https://github.com/dotnet/arcade/blob/main/Documentation/Project-Docs/cmake-scenarios.md">Cmake versioning</a>) are defining.  It is sufficient for the scope of this document to say that whatever pattern comes out of this work should be applied to the Docker toolset.</p>
+<h2 id="move-dockerfiles-to-open">Move Dockerfiles to Open</h2>
+<p>Work has been going on recently to check-in the build definitions into the product repositories (e.g. <a href="https://github.com/dotnet/corefx/tree/master/buildpipeline">corefx</a>).  These build definitions reference our Docker images.  Because of this, it would be beneficial to move the Dockerfiles from the <a href="https://devdiv.visualstudio.com/DevDiv/_git/DotNetCore?path=%2Fdockerfiles&amp;version=GBmaster&amp;_a=contents">private repository</a> into the open.  There are no trade secrets and they could be useful for others to see.  A natural place to put these shared Dockerfiles would be within the <a href="https://github.com/dotnet/buildtools">buildtools repo</a>.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Cdocker-image-usage-improvements.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Cdocker-image-usage-improvements.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Cdocker-image-usage-improvements.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

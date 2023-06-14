@@ -1,0 +1,680 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Plan-Of-Record for discontinuing our use of MyGet </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Plan-Of-Record for discontinuing our use of MyGet ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="plan-of-record-for-discontinuing-our-use-of-myget">Plan-Of-Record for discontinuing our use of MyGet</h1>
+
+<h2 id="summary">Summary</h2>
+<p>Now that our primary dependency is on Azure DevOps feeds for .NET Core 3.x, it's time to finish the work so that we can completely discontinue our use of MyGet.  The main business driver is senior management's strong desire to take our mission critical dependencies on end points we own, which in this case is AzDO over MyGet.</p>
+<h2 id="scope-and-impact">Scope and Impact</h2>
+<ul>
+<li>We will be shutting down dotnet.myget.org.</li>
+<li>Based on a quick audit, the following are the primary folks still pushing.  (e.g. impacted)
+<ul>
+<li>Fsharp, Roslyn, Tomas, UWP, Corefxlab, NuGet, MSBuild</li>
+</ul>
+</li>
+<li>See Appendix A for the audit results.  (NOTE: there are likely some feeds which we don't have visibility to, but these won't be public of course)</li>
+</ul>
+<h2 id="plan-overview">Plan Overview</h2>
+<ol>
+<li>Investigate and broadly socialize this plan with product teams to both set expectations, and catch any gaps.  (end of Jan 2020)</li>
+<li>Make all MyGet feeds read-only (first part of Feb)</li>
+<li>Bulk load a new ‘legacy’ feed in Azure DevOps from the existing MyGet feeds (end of Feb)</li>
+<li>Turn off MyGet (first week of March)</li>
+<li>Finish cleaning up (April)</li>
+</ol>
+<h2 id="details">Details</h2>
+<h3 id="investigation-and-socialization">Investigation and Socialization</h3>
+<ul>
+<li>The scope includes all feeds on dotnet.myget.org which includes servicing.</li>
+<li>We will need to communicate to our community about this change.</li>
+<li>This migration will be disruptive, so setting clear expectations, and giving us plenty of time to adjust will be key to our success.</li>
+<li>There are a variety of partner teams which depend on MyGet today to get updates to .NET Core.  These consumers need to be identified as part of the investigation/socialization effort so that they can move their dependencies.</li>
+<li>Further investigation is needed to determine the best approach for other types of packages, e.g. VSIX.  Universal packages might work...</li>
+</ul>
+<h3 id="make-myget-feeds-read-only">Make MyGet Feeds Read-Only</h3>
+<ul>
+<li>This prevents the publishing of new packages which gives a stable &quot;snapshot&quot; to migrate.</li>
+<li>Before this happens, it's very important that partner teams are aware that new packages can only be published to the Azure DevOps feeds.</li>
+<li>There will likely be some fallout from this step.  Once it's done however, our confidence will be higher that we have functional understanding of who the consumers of our feeds are.</li>
+</ul>
+<h3 id="bulk-load-a-legacy-feed">Bulk Load a &quot;Legacy&quot; Feed</h3>
+<ul>
+<li>MyGet is backed by our own Azure storage location.  The idea is to bulk load a new &quot;legacy&quot; feed in Azure DevOps with all of our existing packages in MyGet.</li>
+<li>This should allow our servicing builds to simply add a new feed to their nuget.config.</li>
+<li>It's very important however, that no new packages be published to this legacy feed.  The eventual idea is that we can simply &quot;turn off&quot; the legacy feed once the usage is either gone or minimal.</li>
+</ul>
+<h3 id="turn-off-myget-and-clean-up">Turn off MyGet (and clean up)</h3>
+<ul>
+<li>The two main factors which should make this transition reasonable are:
+<ul>
+<li>We don't have that many dependencies on MyGet left in our 3.x builds (relatively speaking)</li>
+<li>There will be a &quot;legacy&quot; feed for existing packages.</li>
+<li>The migration is being staged over time</li>
+</ul>
+</li>
+<li>It is understood that this transition will be noisy and the engineering servicing team is committed to doing whatever is necessary to help out where and as needed.</li>
+</ul>
+<h3 id="appendix-a---donetmyget-feed-audit-from-121819-courtesy-of-matt-mitchell">Appendix A - donet.myget feed audit (from 12/18/19 courtesy of Matt Mitchell)</h3>
+<table>
+<thead>
+<tr>
+<th>Feed</th>
+<th>Team</th>
+<th>Last Push</th>
+<th>Teams who recently pushed?</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>dotnet-core-svc</td>
+<td>runtime</td>
+<td>4 years ago</td>
+<td></td>
+<td>Looks like some packages were replaced in-place about a year ago</td>
+</tr>
+<tr>
+<td>aspnet-1-0-4-patch</td>
+<td>aspnet</td>
+<td>3 years ago</td>
+<td></td>
+<td>Looks like some packages were replaced in-place about a year ago</td>
+</tr>
+<tr>
+<td>aspnet-1-0-5-may2017-patch</td>
+<td>aspnet</td>
+<td>3 years ago</td>
+<td></td>
+<td>Looks like some packages were replaced in-place about a year ago</td>
+</tr>
+<tr>
+<td>aspnet-1-0-5-may2017-patch-public</td>
+<td>aspnet</td>
+<td>3 years ago</td>
+<td></td>
+<td>Looks like some packages were replaced in-place about a year ago</td>
+</tr>
+<tr>
+<td>aspnet-1-0-6-september2017-patch</td>
+<td>aspnet</td>
+<td>2 years ago</td>
+<td></td>
+<td>Looks like some packages were replaced in-place about a year ago</td>
+</tr>
+<tr>
+<td>aspnet-1-1-0-rtm</td>
+<td>aspnet</td>
+<td>3 years ago</td>
+<td></td>
+<td>Looks like some packages were replaced in-place about a year ago</td>
+</tr>
+<tr>
+<td>aspnet-1-1-1-patch</td>
+<td>aspnet</td>
+<td>3 years ago</td>
+<td></td>
+<td>Looks like some packages were replaced in-place about a year ago</td>
+</tr>
+<tr>
+<td>aspnet-1-1-2-may2017-patch</td>
+<td>aspnet</td>
+<td>3 years ago</td>
+<td></td>
+<td>Looks like some packages were replaced in-place about a year ago</td>
+</tr>
+<tr>
+<td>aspnet-1-1-2-may2017-patch-public</td>
+<td>aspnet</td>
+<td>3 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>aspnet-1-1-3-september2017-patch</td>
+<td>aspnet</td>
+<td>2 years ago</td>
+<td></td>
+<td>Looks like some packages were replaced in-place about a year ago</td>
+</tr>
+<tr>
+<td>aspnet-2-0-2-october2017-patch</td>
+<td>aspnet</td>
+<td>2 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>aspnet-2-0-2-october2017-patch-public</td>
+<td>aspnet</td>
+<td>2 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>aspnet-2018-feb-patch-public</td>
+<td>aspnet</td>
+<td>2 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>aspnet-feb2017-patch</td>
+<td>aspnet</td>
+<td>3 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>aspnet-signalr</td>
+<td>aspnet</td>
+<td>8 months ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>aspnetcore-2-0-0-preview1-no-timestamp</td>
+<td>aspnet</td>
+<td>3 years ago</td>
+<td></td>
+<td>Looks like some packages were replaced in-place about a year ago</td>
+</tr>
+<tr>
+<td>aspnetcore-tools</td>
+<td>aspnet</td>
+<td>10 months ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>aspnetcore-dev</td>
+<td>aspnet</td>
+<td>1 week ago</td>
+<td>aspnet</td>
+<td>Some 5.0 npm packages, 2.2 servicing</td>
+</tr>
+<tr>
+<td>aspnetcore-feature-work</td>
+<td>aspnet</td>
+<td>2 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>aspnetcore-master</td>
+<td>aspnet</td>
+<td>2 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>aspnetcore-patch</td>
+<td>aspnet</td>
+<td>2 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>aspnetcore-rel-1-0-3</td>
+<td>aspnet</td>
+<td>3 years ago</td>
+<td></td>
+<td>Looks like some packages were replaced in-place about a year ago</td>
+</tr>
+<tr>
+<td>aspnetcore-release</td>
+<td>aspnet</td>
+<td>2 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>aspnetwebhooks</td>
+<td>aspnet</td>
+<td>2 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>aspnetwebstack-dev</td>
+<td>aspnet</td>
+<td>1 year ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>blazor-dev</td>
+<td>aspnet</td>
+<td>7 months ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>dotnet-1-0-3-rtm</td>
+<td>runtime</td>
+<td>3 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>dotnet-2-0-0-preview2-final</td>
+<td>runtime</td>
+<td>2 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>dotnet-2-0-0-rtm</td>
+<td>runtime</td>
+<td>2 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>katana-dev</td>
+<td>aspnet</td>
+<td>1 month ago</td>
+<td>builds of aspnet/AspNetKatana. Chris Ross</td>
+<td></td>
+</tr>
+<tr>
+<td>javascriptservices-dev</td>
+<td>aspnet</td>
+<td>3 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>msbuildtools</td>
+<td>aspnet</td>
+<td>3 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>open-xml-sdk</td>
+<td>office?</td>
+<td>1 day ago</td>
+<td>Office</td>
+<td></td>
+</tr>
+<tr>
+<td>roslyn-for-vs-for-mac</td>
+<td>roslyn</td>
+<td>2 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>roslyn</td>
+<td>roslyn</td>
+<td>1 day ago</td>
+<td>Roslyn, Fsharp, VS Project system</td>
+<td></td>
+</tr>
+<tr>
+<td>buildxl-selfhost</td>
+<td>buildxl</td>
+<td>3 month ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>dotnet-2017-09-servicing</td>
+<td>runtime</td>
+<td>2 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>dotnet-buildtools</td>
+<td>runtime</td>
+<td>5 months ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>dotnet-cli</td>
+<td>sdk</td>
+<td>1 year ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>dotnet-core</td>
+<td>various</td>
+<td>1 day ago</td>
+<td>NuGet (only Nuget.Build.Tasks.Pack), UWP6.0, Framework?</td>
+<td>Some System.ServiceModel.Duplex 4.5.4 packges)</td>
+</tr>
+<tr>
+<td>dotnet-core-dev-api</td>
+<td>runtime</td>
+<td>3 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>dotnet-core-dev-defaultintf</td>
+<td>runtime</td>
+<td>3 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>dotnet-core-dev-eng</td>
+<td>runtime</td>
+<td>2 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>dotnet-core-rel</td>
+<td>runtime</td>
+<td>4 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>dotnet-core-test</td>
+<td>runtime</td>
+<td>10 months ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>dotnet-coreclr</td>
+<td>runtime</td>
+<td>5 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>dotnet-corefxlab</td>
+<td>corefxlab</td>
+<td>5 days ago</td>
+<td>Corefxlab folks</td>
+<td></td>
+</tr>
+<tr>
+<td>dotnet-stage</td>
+<td>aspnet</td>
+<td>3 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>msbuild</td>
+<td>msbuild</td>
+<td>5 days ago</td>
+<td>msbuild</td>
+<td>Disabled publishing by default in August</td>
+</tr>
+<tr>
+<td>windows-sdk-beta</td>
+<td>uwp</td>
+<td>10 months ago</td>
+<td>uwp</td>
+<td></td>
+</tr>
+<tr>
+<td>rx</td>
+<td>aspnet</td>
+<td>5 months ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>nuget-beta</td>
+<td>nuget</td>
+<td>3 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>nuget-build</td>
+<td>nuget</td>
+<td>5 months ago</td>
+<td>Looks like custom dev branches</td>
+<td></td>
+</tr>
+<tr>
+<td>nuget-volatile</td>
+<td>nuget</td>
+<td>8 months ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>aspnetcoremodule</td>
+<td>aspnet</td>
+<td>2 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>format</td>
+<td>runtime</td>
+<td>1 day ago</td>
+<td>Builds of dotnet/format.  Almost every update just an arcade update</td>
+<td></td>
+</tr>
+<tr>
+<td>metadata-tools</td>
+<td>roslyn (tmat)</td>
+<td>1 year ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>sourcelink</td>
+<td>tmat</td>
+<td>1 month ago</td>
+<td>tmat</td>
+<td></td>
+</tr>
+<tr>
+<td>symstore</td>
+<td>tmat</td>
+<td>4 months ago</td>
+<td>tmat</td>
+<td></td>
+</tr>
+<tr>
+<td>symreader</td>
+<td>tmat</td>
+<td>1 year ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>symreader-native</td>
+<td>tmat</td>
+<td>1 year ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>symreader-converter</td>
+<td>tmat</td>
+<td>2 months ago</td>
+<td>tmat</td>
+<td></td>
+</tr>
+<tr>
+<td>symreader-portable</td>
+<td>tmat</td>
+<td>1 year ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>orleans-ci</td>
+<td>orleans</td>
+<td>1 week ago</td>
+<td>orleans</td>
+<td></td>
+</tr>
+<tr>
+<td>dotnet-apiport</td>
+<td>dotnet fundamentals</td>
+<td>1 month ago</td>
+<td>dotnet fundamentals</td>
+<td></td>
+</tr>
+<tr>
+<td>dotnet-web</td>
+<td>mono</td>
+<td>10 months ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>temp-projfiletools</td>
+<td>roslyn?</td>
+<td>3 years ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>templating</td>
+<td>templating</td>
+<td>10 months ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>uwpcommunitytoolkit</td>
+<td>uwp</td>
+<td>1 week ago</td>
+<td>uwp folks, I think</td>
+<td></td>
+</tr>
+<tr>
+<td>fsharp</td>
+<td>fsharp</td>
+<td>1 day ago</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>interactive-window</td>
+<td>tmat</td>
+<td>2 months ago</td>
+<td>tmat</td>
+<td></td>
+</tr>
+<tr>
+<td>roslyn-analyzers</td>
+<td>roslyn</td>
+<td>1 day ago</td>
+<td>roslyn</td>
+<td></td>
+</tr>
+<tr>
+<td>roslyn-tools</td>
+<td>roslyn</td>
+<td>1 day ago</td>
+<td>roslyn</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CMigrationPlan%5CMyGetFeeds.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CMigrationPlan%5CMyGetFeeds.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CMigrationPlan%5CMyGetFeeds.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

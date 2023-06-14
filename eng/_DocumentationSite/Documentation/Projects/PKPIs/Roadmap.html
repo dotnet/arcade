@@ -1,0 +1,322 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>PKPI Overview / Roadmap </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="PKPI Overview / Roadmap ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="pkpi-overview--roadmap">PKPI Overview / Roadmap</h1>
+
+<p><a href="https://github.com/dotnet/arcade/issues/2778">PKPI Epic</a></p>
+<ul>
+<li><p><a href="#scope">Scope</a></p>
+</li>
+<li><p><a href="#workstreams">Workstreams</a></p>
+</li>
+<li><p><a href="#phase-1---build-health">Phase 1 (official build health) roadmap</a></p>
+</li>
+<li><p><a href="#phase-2---build-state">Phase 2 (build state) roadmap</a></p>
+</li>
+<li><p><a href="#features">Features</a></p>
+</li>
+<li><p><a href="#working-groups">Working groups</a></p>
+</li>
+</ul>
+<p>The PKPI roadmap involves accomplishing key deliverables in two separate phases.</p>
+<p>In phase 1, we will provide PKPI data about official build health.  Official build health includes indicators about official build health (timing / reliability), and dependency update health (are dependencies flowing? how often? etc...).</p>
+<p>In phase 2, we will provide PKPI data about official build state.  Official build state includes indicators about dependency staleness, dependency flow, and subscriptions.</p>
+<p><a href="#phase-1---build-health">Phase 1</a> completion date: 10/21</p>
+<p><a href="#phase-2---build-state">Phase 2</a> completion date: [TBD]</p>
+<h2 id="scope">Scope</h2>
+<ul>
+<li><p>Provide visualizations of PKPIs for all B.A.R. Channels with the specific focus on the &quot;.NET 5 Dev Channel&quot;</p>
+</li>
+<li><p>Provide per repo insight into official build health.  Overall product health metrics are not specifically a goal of this epic but may become available metrics as a result of achieving goals that are in scope.</p>
+</li>
+<li><p>Branch update based dependency flow (maestro updates) is not yet implemented.  We can't plan for dependency flow via branch updates so this roadmap only includes features which are applicable to PR based dependency flow.</p>
+</li>
+<li><p>PKPIs are based on data available from the &quot;dnceng&quot; account.  Some repos are still producing official builds and flowing dependencies from &quot;devdiv&quot;.  Acquiring data from accounts other than &quot;dnceng&quot; is outside the scope of this work.</p>
+</li>
+</ul>
+<h2 id="workstreams">Workstreams</h2>
+<p>The PKPI epic involves five different workstreams.  A &quot;workstream&quot; identifies a grouping for an area of work which contributes the PKPIs.</p>
+<p>See the <a href="#../../ProductKPIs.md">ProductKPIs</a> document for specific information about the PKPI workstreams.</p>
+<h2 id="phase-1---build-health">Phase 1 - Build health</h2>
+<p>This phase deals with understanding historical data of official builds to identify trends in build reliability, timing, and dependency update trends.</p>
+<p><strong><code>Build health</code> consists of the <code>official build</code> and <code>dependency updates</code> workstreams.</strong></p>
+<p>At the end of phase 1, you should be able to answer questions like, &quot;how long is my repo taking to build?&quot;, &quot;what is the reliability of my official build?&quot;, &quot;how often are dependencies seamlessly updating in my repo?&quot;, &quot;how often are dependency updates failing in my repo?&quot;, etc...</p>
+<p>See <a href="#features">features</a> for which features are being delivered in phase 1.</p>
+<h3 id="phase-1-key-dates">Phase 1 key dates</h3>
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Deliverable</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>9/13</td>
+<td>PKPI Roadmap available</td>
+<td></td>
+</tr>
+<tr>
+<td>9/25</td>
+<td>Checkpoint* for phase 1</td>
+<td>Visualizations for dependency updates should be ready for review</td>
+</tr>
+<tr>
+<td>10/10</td>
+<td>LT review**</td>
+<td></td>
+</tr>
+<tr>
+<td>10/28</td>
+<td>Address LT review issues</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>Complete</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>* Checkpoint - meeting between WG and key stakeholders (Chris Bohm / Matt Mitchell / Jared Parsons) to review progress, acquire feedback, adjust course</p>
+<p>** LT review - demonstrate phase 1 deliverables to LTS team (Mark Wilkie, Chris Bohm, Shawn Rothlisberger, etc...)</p>
+<h3 id="phase-1-delivered">Phase 1 Delivered</h3>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/dotnet/arcade/issues/4014">Dependency updates that fail to flow seamlessly</a></td>
+<td>Available in power bi dashboard</td>
+</tr>
+<tr>
+<td><a href="https://github.com/dotnet/arcade/issues/3907">Number of dependency updates per given time frame</a></td>
+<td>Available in power bi dashboard</td>
+</tr>
+<tr>
+<td><a href="https://github.com/dotnet/arcade/issues/2787">Official build pass rate</a></td>
+<td>Available in power bi dashboard</td>
+</tr>
+<tr>
+<td><a href="https://github.com/dotnet/arcade/issues/2786">Official build time</a></td>
+<td>Available in power bi dashboard</td>
+</tr>
+<tr>
+<td><a href="https://github.com/dotnet/arcade/issues/2782">Dependency staleness</a></td>
+<td>Available in barviz</td>
+</tr>
+<tr>
+<td><a href="https://github.com/dotnet/arcade/issues/3905">Existence of product dependency cycles</a></td>
+<td>Available in barviz</td>
+</tr>
+</tbody>
+</table>
+<h3 id="phase-1-issues-resulting-from-lt-review">Phase 1 issues resulting from LT review</h3>
+<p>These issues are based on feedback from LT review and are in varying states of completion.</p>
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Deliverable</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><del>10/21</del> <del>10/28</del> 11/5</td>
+<td><a href="https://github.com/dotnet/arcade/issues/4101">Official build time goal lines</a></td>
+<td>Add ability to define per repo goal lines for build time</td>
+</tr>
+<tr>
+<td></td>
+<td><a href="https://github.com/dotnet/arcade/issues/4077">PKPI documentation</a></td>
+<td></td>
+</tr>
+<tr>
+<td>10/18</td>
+<td><a href="https://github.com/dotnet/arcade/issues/4103">Official build time worst case scenario</a></td>
+<td>done</td>
+</tr>
+<tr>
+<td>10/24</td>
+<td><a href="https://github.com/dotnet/arcade/issues/4116">Update official build time report to use buildchannel insert time as end time</a></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h2 id="phase-2---build-state">Phase 2 - Build state</h2>
+<p>This phase deals with understanding the current state of a repo so that we can identify potential health concerns.  These indicators are genereally interesting to repo owners, but particularly interesting during a release cycle.</p>
+<p><strong><code>Build state</code> consists of the <code>dependency staleness</code>, <code>dependency flow</code>, and <code>subscriptions</code> workstreams.</strong></p>
+<p>See <a href="#features">features</a> for which features are being delivered in phase 2.</p>
+<h3 id="phase-2-key-dates">Phase 2 key dates</h3>
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Deliverable</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>11/6</td>
+<td>Checkpoint</td>
+<td>Review phase 2 deliverables with stakeholders</td>
+</tr>
+<tr>
+<td>11/14</td>
+<td>LT review</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="phase-2-feature-dates">Phase 2 feature dates</h3>
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Issue</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Done</td>
+<td><a href="https://github.com/dotnet/arcade/issues/2782">Dependency staleness</a></td>
+<td>Available in barviz</td>
+</tr>
+<tr>
+<td>Done</td>
+<td><a href="https://github.com/dotnet/arcade/issues/3905">Existence of product dependency cycles</a></td>
+<td>Available in barviz</td>
+</tr>
+<tr>
+<td>10/18</td>
+<td><a href="https://github.com/dotnet/arcade/issues/4023">Disabled subscriptions</a></td>
+<td>done</td>
+</tr>
+<tr>
+<td>11/19</td>
+<td><a href="https://github.com/dotnet/arcade/issues/4071">Longest build path visualization</a></td>
+<td>Michelle McDaniel on FR 11/4-11/15</td>
+</tr>
+<tr>
+<td>~11/1~ ~11/6~ 11/22</td>
+<td><a href="https://github.com/dotnet/arcade/issues/4138">Split subscriptions view into product and toolset</a></td>
+<td></td>
+</tr>
+<tr>
+<td>~11/6~ 11/22</td>
+<td><a href="https://github.com/dotnet/arcade/issues/3906">Superfluous input subscriptions</a></td>
+<td></td>
+</tr>
+<tr>
+<td>~11/13~ ~11/6~ 11/22</td>
+<td><a href="https://github.com/dotnet/arcade/issues/2801">Conflicting input subscriptions</a></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CPKPIs%5CRoadmap.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CPKPIs%5CRoadmap.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CPKPIs%5CRoadmap.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

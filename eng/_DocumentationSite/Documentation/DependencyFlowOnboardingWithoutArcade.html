@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Dependency Flow Onboarding for Repos Not on Arcade </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Dependency Flow Onboarding for Repos Not on Arcade ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="dependency-flow-onboarding-for-repos-not-on-arcade">Dependency Flow Onboarding for Repos Not on Arcade</h1>
+
+<h2 id="overview">Overview</h2>
+<p>Dependency flow is the method by which .NET repos consume other product repo's assets.  In order to participate in dependency flow, a repo must produce a <a href="#generate-a-manifest">manifest</a> of what assets / packages that repo produces and then publish that manifest to the Build Asset Registry (B.A.R.).  This document is intended to provide guidance for repos which are not using the Arcade Sdk but still need to participate in dependency flow. The end goal is that the repo is able to produce a manifest and publish that to B.A.R.</p>
+<p>To do so, a repo follows almost the same process as <a href="DependencyFlowOnboarding.html">normal arcade publishing</a>. The repo directly uses the <a href="https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/src/PushToAzureDevOpsArtifacts.cs"><code>PushToAzureDevOpsArtifacts</code></a> task in the <a href="https://github.com/dotnet/arcade/tree/master/src/Microsoft.DotNet.Build.Tasks.Feed">Microsoft.DotNet.Build.Tasks.Feed</a> package (available from the dotnet-eng feed - <code>https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json</code>). This task uploads the artifacts to build storage and generates a manifest describing the build. The manifest is the used to publish the new build to the build asset registry (BAR).</p>
+<h2 id="creating-a-manifest">Creating a manifest</h2>
+<p>To create a manifest, use the PushToAzureDevOpsArtifacts, providing the feed that packages pushed to. The below target performs this task.</p>
+<pre><code>&lt;UsingTask TaskName=&quot;Microsoft.DotNet.Build.Tasks.Feed.PushToAzureDevOpsArtifacts&quot; AssemblyFile=&quot;$(MicrosoftDotNetBuildTasksFeedFilePath)&quot; /&gt;
+
+&lt;Target Name=&quot;PublishToBuildAssetRegistry&quot;&gt;
+  &lt;PropertyGroup&gt;
+    &lt;AssetManifestFileName&gt;Assets.xml&lt;/AssetManifestFileName&gt;
+    &lt;AssetManifestPath&gt;$(ArtifactsLogDir)AssetManifest\$(AssetManifestFileName)&lt;/AssetManifestPath&gt;
+  &lt;/PropertyGroup&gt;
+
+  &lt;Error Condition=&quot;!Exists($(NuGetClientNupkgsDirectoryPath))&quot; Text=&quot;The package directory path '$(NuGetClientNupkgsDirectoryPath)' does not exist.&quot; /&gt;
+  &lt;Error Condition=&quot;Exists($(AssetManifestPath))&quot; Text=&quot;The manifest file '$(AssetManifestPath)' already exists.&quot; /&gt;
+
+  &lt;CreateItem Include=&quot;$([System.IO.Path]::Combine($(NuGetClientNupkgsDirectoryPath), '*.nupkg'))&quot;&gt;
+    &lt;Output TaskParameter=&quot;Include&quot; ItemName=&quot;ItemsToPush&quot; /&gt;
+  &lt;/CreateItem&gt;
+
+  &lt;Error Condition=&quot;'@(ItemsToPush)' == ''&quot; Text=&quot;No packages to push.&quot; /&gt;
+
+  &lt;Error Condition=&quot;'$(BUILD_BUILDNUMBER)' == ''&quot; Text=&quot;The BUILD_BUILDNUMBER property is required.&quot; /&gt;
+  &lt;Error Condition=&quot;'$(ArtifactsLogDir)' == ''&quot; Text=&quot;The ArtifactsLogDir property is required.&quot; /&gt;
+  &lt;Error Condition=&quot;'$(BUILD_SOURCEBRANCH)' == ''&quot; Text=&quot;The BUILD_SOURCEBRANCH property is required.&quot; /&gt;
+  &lt;Error Condition=&quot;'$(BUILD_SOURCEVERSION)' == ''&quot; Text=&quot;The BUILD_SOURCEVERSION property is required.&quot; /&gt;
+  &lt;Error Condition=&quot;'$(BUILD_REPOSITORY_URI)' == ''&quot; Text=&quot;The BUILD_REPOSITORY_URI property is required.&quot; /&gt;
+  &lt;Error Condition=&quot;'$(MaestroAccessToken)' == ''&quot; Text=&quot;The MaestroAccessToken property is required.&quot; /&gt;
+  &lt;Error Condition=&quot;'$(MaestroApiEndpoint)' == ''&quot; Text=&quot;The MaestroApiEndpoint property is required.&quot; /&gt;
+  &lt;Error Condition=&quot;'$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)' == ''&quot; Text=&quot;The SYSTEM_TEAMFOUNDATIONCOLLECTIONURI property is required.&quot; /&gt;
+  &lt;Error Condition=&quot;'$(SYSTEM_TEAMPROJECT)' == ''&quot; Text=&quot;The SYSTEM_TEAMPROJECT property is required.&quot; /&gt;
+  &lt;Error Condition=&quot;'$(BUILD_BUILDID)' == ''&quot; Text=&quot;The BUILD_BUILDID property is required.&quot; /&gt;
+  &lt;Error Condition=&quot;'$(SYSTEM_DEFINITIONID)' == ''&quot; Text=&quot;The SYSTEM_DEFINITIONID property is required.&quot; /&gt;
+
+  &lt;Message Text=&quot;Publishing %(ItemsToPush.Identity)&quot; Importance=&quot;normal&quot; /&gt;
+
+  &lt;ItemGroup&gt;
+    &lt;ManifestBuildData Include=&quot;InitialAssetsLocation=https://dev.azure.com/url/to/my/feed/index.json&quot; /&gt;
+    &lt;ManifestBuildData Include=&quot;AzureDevOpsBuildId=$(BUILD_BUILDID)&quot; /&gt;
+    &lt;ManifestBuildData Include=&quot;AzureDevOpsBuildDefinitionId=$(SYSTEM_DEFINITIONID)&quot; /&gt;
+    &lt;ManifestBuildData Include=&quot;AzureDevOpsProject=$(SYSTEM_TEAMPROJECT)&quot; /&gt;
+    &lt;ManifestBuildData Include=&quot;AzureDevOpsBuildNumber=$(BUILD_BUILDNUMBER)&quot; /&gt;
+    &lt;ManifestBuildData Include=&quot;AzureDevOpsRepository=$(BUILD_REPOSITORY_URI)&quot; /&gt;
+    &lt;ManifestBuildData Include=&quot;AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)&quot; /&gt;
+  &lt;/ItemGroup&gt;
+
+  &lt;PushToAzureDevOpsArtifacts
+    ItemsToPush=&quot;@(ItemsToPush)&quot;
+    ManifestBuildData=&quot;@(ManifestBuildData)&quot;
+    ManifestRepoUri=&quot;$(BUILD_REPOSITORY_NAME)&quot;
+    ManifestBranch=&quot;$(BUILD_SOURCEBRANCH)&quot;
+    ManifestBuildId=&quot;$(BUILD_BUILDNUMBER)&quot;
+    ManifestCommit=&quot;$(BUILD_SOURCEVERSION)&quot;
+    AssetManifestPath=&quot;$(AssetManifestPath)&quot;
+    PublishingVersion=&quot;3&quot; /&gt;
+&lt;/Target&gt;
+</code></pre>
+<h2 id="publish-the-manifest-to-bar">Publish the manifest to BAR</h2>
+<h3 id="publishing-a-single-manifest">Publishing a single manifest</h3>
+<p>If you only have one Azure DevOps job that publishes assets, then you can add this <a href="https://github.com/dotnet/arcade/blob/de44b15e79b9d124d04c16458bead2a1d7ea02ef/eng/common/templates/job/publish-build-assets.yml#L47">task</a> into your build steps.</p>
+<p>Publish manifest to BAR</p>
+<blockquote>
+<p><code>powershell -ExecutionPolicy Bypass -Command &quot;eng\common\sdk-task.ps1 -task PublishBuildAssets -restore -msbuildEngine dotnet /p:ManifestsPath='$(Build.StagingDirectory)/Download/AssetManifests' /p:BuildAssetRegistryToken=$(MaestroAccessToken) /p:MaestroApiEndpoint=https://maestro-prod.westus2.cloudapp.azure.com&quot;</code></p>
+</blockquote>
+<p><code>MaestroAccessToken</code> is available by referencing the &quot;Publish-Build-Assets&quot; <a href="https://github.com/dotnet/arcade/blob/de44b15e79b9d124d04c16458bead2a1d7ea02ef/eng/common/templates/job/publish-build-assets.yml#L36">variable group</a> in dnceng/internal.</p>
+<h3 id="publishing-multiple-manifests">Publishing multiple manifests</h3>
+<p>If you have multiple jobs that publish assets, then you need to publish the generated manifests from each of those legs.  In Arcade, this is done by publishing each of the manifests as Artifacts to Azure DevOps and then having a <a href="https://github.com/dotnet/arcade/blob/de44b15e79b9d124d04c16458bead2a1d7ea02ef/eng/common/templates/job/publish-build-assets.yml">final job</a> that runs and downloads the manifests / publishes them all to BAR</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CDependencyFlowOnboardingWithoutArcade.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CDependencyFlowOnboardingWithoutArcade.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CDependencyFlowOnboardingWithoutArcade.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

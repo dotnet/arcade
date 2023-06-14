@@ -1,0 +1,152 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Writing Azure DevOps Build Pipelines </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Writing Azure DevOps Build Pipelines ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="writing-azure-devops-build-pipelines">Writing Azure DevOps Build Pipelines</h1>
+
+<p>The purpose of this document is to detail how Azure DevOps YAML Pipelines should be written to integrate into the .NET Core Ecosystem and take advantage of the scaffolding available in the Arcade repository.</p>
+<h2 id="general-goals-for-pipelines">General Goals For Pipelines</h2>
+<p>Pipelines for the .NET Core Ecosystem should be written with the following goals in mind:</p>
+<ul>
+<li><p><strong>A Pipeline integrates with telemetry systems</strong></p>
+<ul>
+<li>Builds should integrate with telemetry systems to enable a number of scenarios important to building a more effective .NET Core infrastructure ecosystem, including:
+<ul>
+<li>Enable build status tracking.</li>
+<li>Enable pass/failure analysis.</li>
+<li>Enable test failure analysis.</li>
+<li>Enable efficient product code flow via Maestro# and Speculative Package Flow.</li>
+<li>Enable efficient asset tracking.</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p><strong>A Pipeline can be used for both OSS and internal development</strong> - To reduce the cost of developing in both the open and closed worlds, sharing the same pipeline logic is ideal.  A definition should be able to be run in both OSS and internal contexts and produce results accordingly (e.g. an internal run signs, an OSS run doesn't).  The definition should also be usable in both CI and Official builds (open or closed).</p>
+</li>
+<li><p><strong>Pipeline results are easy to reproduce locally</strong> - Pipelines, especially when being viewed through the context of a recent build log, should be able to be reproduced locally (if possible).  Ambient state dependencies should be minimized where possible.</p>
+</li>
+<li><p><strong>A Pipeline can be serviced and altered globally to maintain consistency across the .NET Core ecosystem</strong> - The number of pipelines is large, and making extensive changes across the ecosystem must be efficient.  For example, changes or rollout of new telemetry should be relatively painless.</p>
+</li>
+<li><p><strong>A Pipeline change must be testable in an isolated environment</strong> - A pipeline change should be testable without altering the state of other in-progress changes.</p>
+</li>
+<li><p><strong>A Pipeline should branch with the code it serves and maintain its functionality over the servicing lifetime of the code</strong> - Ensure that not only does the Pipeline not drift from the source it serves, but also does not become non-functional over time due to changes in external systems.</p>
+</li>
+</ul>
+<h2 id="general-rules">General Rules</h2>
+<ul>
+<li><p><strong>A pipeline is defined in code (YAML)</strong> - Defining as much Pipeline configuration in source ensures a testable, serviceable, and versionable infrastructure ecosystem.</p>
+</li>
+<li><p><strong>A pipeline does not rely on input variables in the environment</strong> - Environment variables cause lots of issues in pipelines and should be avoided as a means of passing input to a build where possible.</p>
+<ul>
+<li>They may not be obvious to readers of logs.</li>
+<li>Case-insensitivity differences between operating systems and tools is a cause of issues.</li>
+<li>Environment block size limits can occasionally be a problem.</li>
+<li>Reproducing results can be more difficult.</li>
+</ul>
+</li>
+<li><p><strong>A pipeline utilizes provided templates where possible</strong> - Utilizing templates gives infrastructure developers extension points or abstraction layers to alter or extend behavior.  For example, templates can:</p>
+<ul>
+<li>Ensure the right telemetry systems are contacted during key points in the build.</li>
+<li>Allow usage of EOL operating systems to be removed or at least identified more easily.</li>
+<li>Simultaneously roll out new changes to repo scripting and pipeline logic.</li>
+<li>Update older servicing branches to ensure their pipelines are not broken by changes in external systems.</li>
+</ul>
+</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CAzureDevOps%5CWritingBuildDefinitions.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CAzureDevOps%5CWritingBuildDefinitions.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CAzureDevOps%5CWritingBuildDefinitions.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

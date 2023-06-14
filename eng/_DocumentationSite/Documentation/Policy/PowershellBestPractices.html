@@ -1,0 +1,197 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>PowerShell Scripting Best Practices </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="PowerShell Scripting Best Practices ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="powershell-scripting-best-practices">PowerShell Scripting Best Practices</h1>
+
+<p>This document is intended as guidance for how all PowerShell scripts should be written for security, functionality, and consistency.</p>
+<p>To help enforce these rules during your dev process, consider using <a href="https://github.com/PowerShell/PSScriptAnalyzer">PSScriptAnalyzer</a>. Each of the sections below contains the rule code for enabling the corresponding check in PSScriptAnalyzer where one exists. Additionally, the analyzer is built in as a linter in the <a href="https://marketplace.visualstudio.com/items?itemName=ms-vscode.PowerShell">PowerShell VSCode extension</a>. We have created a <a href="/eng/common/PSScriptAnalyzer.psd1">settings file</a> to be used with this linter.</p>
+<h2 id="do-not-use-invoke-expression-or-script-blocks-built-with-string-concatenation">Do not use Invoke-Expression or script blocks built with string concatenation</h2>
+<p><em>PSScriptAnalyzer Rule: AvoidUsingInvokeExpression</em></p>
+<p>Invoke-Expression and non-parameterized script blocks are both vulnerable to injection.</p>
+<h3 id="invoke-expression-injection">Invoke-Expression injection</h3>
+<p>Invoke-Expression executes a specified string, which is vulnerable to injection attacks. As an example:</p>
+<pre><code class="lang-powershell">$function = &quot;Write-Host&quot;
+$argument = &quot;hello; Write-Host injected&quot;
+
+Invoke-Expression &quot;$function $argument&quot;
+</code></pre>
+<p>will return:</p>
+<pre><code class="lang-console">hello
+injected
+</code></pre>
+<p>While the following script:</p>
+<pre><code class="lang-powershell">$function = &quot;Write-Host&quot;
+$argument = &quot;hello; Write-Host injected&quot;
+
+&amp; $function $argument
+</code></pre>
+<p>will return:</p>
+<pre><code class="lang-console">hello; Write-Host injected
+</code></pre>
+<p>as would be expected.</p>
+<p>In general, this guidance can be summarized as <strong>don't use Invoke-Expression</strong>.</p>
+<h3 id="script-block-injection">Script-block injection</h3>
+<p>Similarly, the following script block is also vulnerable to injection.</p>
+<pre><code class="lang-powershell">$UserInputVar = &quot;hello; Write-Host injected&quot;
+$DynamicScript = &quot;Write-Host $UserInputVar&quot;
+$ScriptBlock = [ScriptBlock]::Create($DynamicScript)
+Invoke-Command $ScriptBlock
+</code></pre>
+<p>This returns:</p>
+<pre><code class="lang-console">hello
+injected
+</code></pre>
+<p>While this script:</p>
+<pre><code class="lang-powershell">$UserInputVar = &quot;hello; Write-Host injected&quot;
+[ScriptBlock]$ScriptBlock = {
+        Param($SafeUserInput)
+        Write-Host $SafeUserInput
+}
+Invoke-Command -ScriptBlock $ScriptBlock -ArgumentList @($UserInputVar)
+</code></pre>
+<p>correctly outputs:</p>
+<pre><code class="lang-console">hello; Write-Host injected
+</code></pre>
+<p>In general, this guidance can be summarized as <strong>don't use [ScriptBlock]::Create</strong>.</p>
+<h2 id="prefix-script-and-executable-calls-with-">Prefix script and executable calls with &amp;</h2>
+<p>When a script/executable is prefixed with an ampersand (<code>&amp;</code>), the command which follows can be in quotation marks or include variables. This is not the case when the ampersand is not included. Thus, we recommend always including an ampersand.</p>
+<h2 id="check-lastexitcode-after-calling">Check $LASTEXITCODE after calling</h2>
+<p>Relatedly, <code>$LASTEXITCODE</code> should always be checked after running an executable to ensure that the script fails (or at least responds appropriately) to the executable failing.</p>
+<p>Combining this with the previous piece of advice, the way to call <code>git add .</code> from a script would be:</p>
+<pre><code class="lang-powershell">&amp; git add .
+if ($LASTEXITCODE -ne 0) {
+  # behavior in case of error
+}
+</code></pre>
+<p>To set it in a PowerShell script, e.g. to ensure a known value at the start of a script, reference the variable in the global scope.</p>
+<pre><code class="lang-powershell">$global:LASTEXITCODE = 0
+</code></pre>
+<h2 id="set-strictmode-and-erroractionpreference-at-the-top-of-every-file">Set StrictMode and ErrorActionPreference at the top of every file</h2>
+<p>Scripts should always include the following just below the parameter definition block:</p>
+<pre><code class="lang-powershell">Set-StrictMode -Version 2.0
+$ErrorActionPreference = &quot;Stop&quot;
+</code></pre>
+<p>This will ensure PowerShell uses the proper version and that encountered errors cause the script to fail.</p>
+<h2 id="do-not-use-aliases-in-scripts">Do not use aliases in scripts</h2>
+<p><em>PSScriptAnalyzer Rule: AvoidUsingCmdletAliases</em></p>
+<p>Cmdlet aliases (such as <code>ls</code> for <code>Get-ChildItem</code> and <code>echo</code> for <code>Write-Output</code>) are not universal across all machines and all installs of PowerShell. Furthermore, aliases can cause confusion as the cmdlets frequently behave entirely differently from the commands the aliases are named for, e.g. cmd's <code>dir</code> vs. <code>Get-ChildItem</code> or bash's <code>wget</code> and <code>curl</code> vs. <code>Invoke-WebRequest</code>. Always use the actual cmdlet name.</p>
+<p>To determine what cmdlet an alias points to, simply run:</p>
+<p><strong>Exceptions</strong>: <code>%</code> and <code>?</code> are aliases for <code>ForEach-Object</code> and <code>Where-Object</code>, respectively. These aliases can be left in code and warnings related to them can be ignored.</p>
+<pre><code class="lang-powershell">Get-Alias $alias
+</code></pre>
+<p>e.g.</p>
+<pre><code class="lang-powershell">Get-Alias ls
+</code></pre>
+<p>returns:</p>
+<pre><code class="lang-console">CommandType     Name                                               Version    Source
+-----------     ----                                               -------    ------
+Alias           ls -&gt; Get-ChildItem
+</code></pre>
+<h2 id="use-cim-cmdlets-rather-than-wmi-ones">Use CIM cmdlets rather than WMI ones</h2>
+<p><em>PSScriptAnalyzer Rule: AvoidUsingWMICmdlet</em></p>
+<p>PowerShell recommends avoiding all the WMI cmdlets (<code>Get-WmiObject</code>, <code>Remove-WmiObject</code>, <code>Invoke-WmiObject</code>, <code>Register-WmiEvent</code>, <code>Set-WmiInstance</code>) and instead using the CIM ones (respectively, <code>Get-CimInstance</code>, <code>Remove-CimInstance</code>, <code>Invoke-CimMethod</code>, <code>Register-CimIndicationEvent</code>, <code>Set-CimInstance</code>).</p>
+<h2 id="disable-positional-binding-for-your-parameters">Disable positional binding for your parameters</h2>
+<p><em>PSScriptAnalyzer Rule: AvoidUsingPositionalParameters</em></p>
+<p>Positional parameters cause problems for code maintenance, as adding new parameters later down the line can break previous invocations. Instead, parameters should always be called explicitly. Setting:</p>
+<pre><code class="lang-powershell">[CmdletBinding(PositionalBinding=$false)]
+</code></pre>
+<p>will force this behavior.</p>
+<p><em>Note: This rule will check for the usage of positional parameters rather than forcing binding to turn them off.</em></p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CPolicy%5CPowershellBestPractices.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CPolicy%5CPowershellBestPractices.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CPolicy%5CPowershellBestPractices.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

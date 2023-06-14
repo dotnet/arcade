@@ -1,0 +1,151 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Overview </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Overview ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="overview">Overview</h1>
+
+<p>This document provides Kusto Queries to pull telemetry data from Kusto DB for Auto-Retry of Test Failures.</p>
+<h2 id="workitems-that-belong-to-jobs-that-have-total-pass-and-has-items--tests-that-passed-on-retry">WorkItems that belong to Jobs that have total pass and has items / tests that passed on retry:</h2>
+<pre><code>let jobs = Jobs
+| where Source == [source_name]
+| where TestsFail == 0 and ItemsPassedOnRetry &gt; 0 and TestsPassedOnRetry &gt; 0 
+| project JobId;
+WorkItems
+| where Status == 'PassOnRetry'        
+| where JobId in (jobs)
+| summarize count(WorkItemId) by FriendlyName
+| project FriendlyName, count_WorkItemId 
+</code></pre>
+<h2 id="tests-passed-on-retry-summarized-by-type-and-date">Tests Passed on Retry summarized by type and date:</h2>
+<pre><code>Jobs
+| where Source == [source_name]
+| summarize count(TestsPassedOnRetry) by Type, format_datetime(Finished,&quot;yyyy-MM-dd&quot;)
+</code></pre>
+<h2 id="tests-passed-on-retry-summarized-by-type-and-month">Tests Passed on Retry summarized by type and Month:</h2>
+<pre><code>Jobs
+| where Source == [source_name]
+| summarize count(TestsPassedOnRetry) by Type, format_datetime(Finished,&quot;yyyy-MM&quot;)
+</code></pre>
+<h2 id="test-results-for-a-specific-workitemfriendlyname-type-method-arguments-if-the-test-had-failed-and-passed-on-retry">Test Results for a specific WorkItemFriendlyName, Type, Method, Arguments, if the test had failed and passed on retry.</h2>
+<p>Test Results table has huge amount of data so getting pass on retry data for entire set of tests/workitems will break the DB’s back, hence the need to filter by a specific test.</p>
+<pre><code>TestResults
+| where WorkItemFriendlyName == [WorkItemFriendlyName]
+    and Type == [Type]
+    and Method == [Method]
+    and Arguments == [Arguments]
+    and Result != 'Pass'
+| summarize arg_max(toint(Attempt), *) by WorkItemId, Type, Method, Arguments, ArgumentHash
+| join kind = leftouter(
+          TestResults
+          | where WorkItemFriendlyName == [WorkItemFriendlyName]
+   	    and Type == [Type]
+    	    and Method == [Method]
+            and Arguments == [Arguments]
+            and Result == 'Pass'
+          ) on WorkItemId, Type, Method, Arguments, ArgumentHash
+| extend PassOnRetry = isnotnull(WorkItemId1)
+| summarize count() by Type, Method, Arguments, Result = iif(PassOnRetry, 'PassOnRetry', Result)   
+</code></pre>
+<h3 id="sample-value-for-parameters">Sample Value for Parameters:</h3>
+<p>[source_name] : 'official/corefx/master/'</p>
+<p>[WorkItemFriendlyName] : 'System.Net.Http.WinHttpHandler.Functional.Tests'</p>
+<p>[Type] : 'System.Net.Http.WinHttpHandlerFunctional.Tests.WinHttpHandlerTest'</p>
+<p>[Method] : 'SendAsync_SlowServerAndCancel_ThrowsTaskCanceledException'</p>
+<p>[Arguments] : ''</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CAuto-Retry%20Failures%5CAutoRetryTelemetry.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CAuto-Retry%20Failures%5CAutoRetryTelemetry.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CAuto-Retry%20Failures%5CAutoRetryTelemetry.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

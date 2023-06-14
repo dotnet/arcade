@@ -1,0 +1,348 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>.NET Core 3 Engineering transition status </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content=".NET Core 3 Engineering transition status ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="net-core-3-engineering-transition-status">.NET Core 3 Engineering transition status</h1>
+
+<h2 id="primary-deliverables--work-streams">Primary Deliverables / Work Streams</h2>
+<ol>
+<li>Using Azure DevOps for CI  (no Jenkins)</li>
+<li>Arcade SDK Adoption (build uses supported tools/infra)</li>
+<li>Engineering dependency flow (requirement product construction)</li>
+<li>Internal builds from dnceng (signing)</li>
+</ol>
+<p>Target completion date for these workstreams is 12/14/2018.</p>
+<h2 id="status-overview">Status Overview</h2>
+<table>
+<thead>
+<tr>
+<th>Repo</th>
+<th>Owner</th>
+<th>Status</th>
+<th style="text-align: left;">Risk Assessment</th>
+<th>Plan</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Arcade</td>
+<td>mawilkie</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>aspnet-AspNetCore</td>
+<td>namc</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td></td>
+<td>Not building using Arcade SDK</td>
+</tr>
+<tr>
+<td>aspnet-AspNetCore-Tooling</td>
+<td>namc</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>aspnet-EntityFrameworkCore</td>
+<td>namc</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>aspnet-Extensions</td>
+<td>namc</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td></td>
+<td>Not building using Arcade SDK</td>
+</tr>
+<tr>
+<td>CLI</td>
+<td>licavalc</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>CLICommandLineParser</td>
+<td>licavalc</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>CLI-Migrate</td>
+<td>licavalc</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>CoreClr</td>
+<td>russellk</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td><a href="MigrationPlan/CoreClrPlan.html">plan</a></td>
+<td>CI using Azure DevOps and Jenkins (outerloop), not building using the Arcade SDK</td>
+</tr>
+<tr>
+<td>CoreFx</td>
+<td>danmose</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td><a href="https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/CoreFxPlan.md">plan</a></td>
+<td></td>
+</tr>
+<tr>
+<td>Core-SDK</td>
+<td>licavalc</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td><a href="https://github.com/dotnet/cli/blob/master/Documentation/MigrationPlan/CLISDKPlan.md">plan</a></td>
+<td></td>
+</tr>
+<tr>
+<td>Core-Setup</td>
+<td>dleeapho</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td><a href="https://microsoft.sharepoint.com/teams/dotNETDeployment/_layouts/15/WopiFrame.aspx?sourcedoc=%7B55410205-ac38-469b-81b0-9a93cc71b07c%7D&amp;action=edit&amp;wd=target%28Syncs.one%7C0a903b24-10b7-4c18-918c-5a380ba66433%2FCore-Setup%20%20pipebuild%20to%20yaml%7C4fb71b1d-1f36-41ee-8438-f1ea531c99e2%2F%29">plan</a></td>
+<td>Not building using Arcade SDK</td>
+</tr>
+<tr>
+<td>MSBuild</td>
+<td>licavalc</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td></td>
+<td>Official builds are still building out of devdiv</td>
+</tr>
+<tr>
+<td>Roslyn</td>
+<td>jaredpar</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td><a href="https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/roslyn.md">plan</a></td>
+<td>Official builds are still building out of devdiv</td>
+</tr>
+<tr>
+<td>SDK</td>
+<td>licavalc</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>Standard</td>
+<td>danmose</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td><a href="https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/CoreFxPlan.md">plan</a></td>
+<td></td>
+</tr>
+<tr>
+<td>SymReader</td>
+<td>tmat</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td><a href="https://github.com/dotnet/symreader/issues/157">plan</a></td>
+<td></td>
+</tr>
+<tr>
+<td>SymReader-Portable</td>
+<td>tmat</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td><a href="https://github.com/dotnet/symreader-portable/issues/144">plan</a></td>
+<td></td>
+</tr>
+<tr>
+<td>Templating</td>
+<td>vramak</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td><a href="https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/TemplatingAndWebSdkPlan.md">plan</a></td>
+<td></td>
+</tr>
+<tr>
+<td>Test-Templates</td>
+<td>sasin</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td><a href="https://github.com/dotnet/arcade/blob/master/Documentation/NetCore3EngineeringRepoStatus.md#test-templates">plan</a></td>
+<td></td>
+</tr>
+<tr>
+<td>Toolset</td>
+<td>licavalc</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td><a href="https://github.com/dotnet/cli/blob/master/Documentation/MigrationPlan/CLISDKPlan.md">plan</a></td>
+<td></td>
+</tr>
+<tr>
+<td>Visual FSharp</td>
+<td>brettfo</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td><a href="https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/VisualFSharp.md">plan</a></td>
+<td>Not using Arcade SDK, official builds are being produced out of devdiv.</td>
+</tr>
+<tr>
+<td>WebSDK</td>
+<td>vramak</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td><a href="https://github.com/dotnet/arcade/blob/master/Documentation/MigrationPlan/TemplatingAndWebSdkPlan.md">plan</a></td>
+<td></td>
+</tr>
+<tr>
+<td>WinForms</td>
+<td>mmcgaw</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td></td>
+<td>Also building out of dotnet-trusted</td>
+</tr>
+<tr>
+<td>WPF</td>
+<td>vatsan-madhavan</td>
+<td>Complete</td>
+<td style="text-align: left;"><img src="https://findicons.com/files/icons/767/wp_woothemes_ultimate/16/checkmark.png" alt="done"></td>
+<td></td>
+<td>Also building out of dotnet-trusted</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Complete</td>
+<td>All work streams are complete</td>
+</tr>
+<tr>
+<td>On track</td>
+<td>Work streams are on track for completion by the target completion date or exceptions are understood / acceptable</td>
+</tr>
+<tr>
+<td>At risk</td>
+<td>One or more work streams are not on track to be completed by the target completion date and may impact business decisions</td>
+</tr>
+</tbody>
+</table>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CNetCore3EngineeringRepoStatus.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CNetCore3EngineeringRepoStatus.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CNetCore3EngineeringRepoStatus.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

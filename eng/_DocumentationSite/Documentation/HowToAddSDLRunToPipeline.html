@@ -1,0 +1,265 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Automate SDL tools run in AzDO Pipelines </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Automate SDL tools run in AzDO Pipelines ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="automate-sdl-tools-run-in-azdo-pipelines">Automate SDL tools run in AzDO Pipelines</h1>
+
+<h2 id="sdl-scripts">SDL Scripts</h2>
+<p>SDL scripts are a set of powershell scripts that provide the ability to run SDL tools. The scripts are located <a href="../eng/common/sdl/">here</a></p>
+<h2 id="how-to-add-the-sdl-scripts-to-pipeline">How to add the SDL scripts to pipeline</h2>
+<p>The pre-reqs needed to run the SDL scripts are defined with default values in a template - <a href="../eng/common/templates/job/execute-sdl.yml">execute-sdl.yml</a>. The template is added part of <a href="../eng/common/templates/post-build/post-build.yml">post-build.yml</a> and is turned-off by default and can be enabled by setting the parameter <a href="../eng/common/templates/post-build/post-build.yml#L6">SDLValidationParameters.enable</a>.</p>
+<h2 id="arguments">Arguments</h2>
+<p>All arguments that are not repo specific have default values specified to them, so only provide values for them if there is a need to override.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>GuardianPackageName</td>
+<td>string</td>
+<td>the name of guardian CLI package. Default is provided in post-build.yml.</td>
+</tr>
+<tr>
+<td>NugetPackageDirectory</td>
+<td>Dir Path</td>
+<td>directory where NuGet packages are installed . The default is provided in post-build.yml.</td>
+</tr>
+<tr>
+<td>Repository</td>
+<td>string</td>
+<td>the name of the repository (e.g. dotnet/arcade). The default is populated from the current build.</td>
+</tr>
+<tr>
+<td>BranchName</td>
+<td>string</td>
+<td>name of branch or version of gdn settings; The default is populated from the current build.</td>
+</tr>
+<tr>
+<td>SourceDirectory</td>
+<td>Dir Path</td>
+<td>the directory where source files are located. The default is populated from the current build.</td>
+</tr>
+<tr>
+<td>ArtifactsDirectory</td>
+<td>Dir Path</td>
+<td>the directory where build artifacts are located. The default is populated from the current build.</td>
+</tr>
+<tr>
+<td>AzureDevOpsAccessToken</td>
+<td>string</td>
+<td>access token to access internal AzDO repo which maintains the baseline data</td>
+</tr>
+<tr>
+<td><strong>SourceToolsList</strong></td>
+<td>Array</td>
+<td>list of SDL tools to run on source code</td>
+</tr>
+<tr>
+<td><strong>ArtifactToolsList</strong></td>
+<td>Array</td>
+<td>list of SDL tools to run on build artifacts</td>
+</tr>
+<tr>
+<td>TsaPublish</td>
+<td>bool</td>
+<td>true will publish results to TSA; only set to true after onboarding to TSA; TSA is the automated framework used to upload test results as bugs.</td>
+</tr>
+<tr>
+<td>TsaBranchName</td>
+<td>string</td>
+<td>TSA Parameter; The default is populated from the current build</td>
+</tr>
+<tr>
+<td>TsaRepositoryName</td>
+<td>string</td>
+<td>TSA Parameter; The default is populated from the current build</td>
+</tr>
+<tr>
+<td>BuildNumber</td>
+<td>string</td>
+<td>TSA Parameter; The default is populated from the current build</td>
+</tr>
+<tr>
+<td>UpdateBaseline</td>
+<td>bool</td>
+<td>default value is false; if true, will update the baseline in the repository; should only be run after fixing any issues which need to be fixed</td>
+</tr>
+<tr>
+<td>TsaOnboard</td>
+<td>bool</td>
+<td>TSA Parameter; default value is false; if true, will onboard the repository to TSA; should only be run once</td>
+</tr>
+<tr>
+<td><strong>TsaInstanceUrl</strong></td>
+<td>string</td>
+<td>TSA Parameter; the instance-url registered with TSA;</td>
+</tr>
+<tr>
+<td><strong>TsaCodebaseName</strong></td>
+<td>string</td>
+<td>TSA Parameter; the name of the codebase registered with TSA;</td>
+</tr>
+<tr>
+<td><strong>TsaProjectName</strong></td>
+<td>string</td>
+<td>TSA Parameter; the name of the project registered with TSA;</td>
+</tr>
+<tr>
+<td><strong>TsaNotificationEmail</strong></td>
+<td>string</td>
+<td>TSA Parameter; the email(s) which will receive notifications of TSA bug filings (e.g. alias@microsoft.com);</td>
+</tr>
+<tr>
+<td><strong>TsaCodebaseAdmin</strong></td>
+<td>string</td>
+<td>TSA Parameter; the aliases which are admins of the TSA codebase (e.g. DOMAIN\alias);</td>
+</tr>
+<tr>
+<td><strong>TsaIterationPath</strong></td>
+<td>string</td>
+<td>TSA Parameter; the area path where TSA will file bugs in AzDO;</td>
+</tr>
+<tr>
+<td>GuardianLoggerLevel</td>
+<td>string</td>
+<td>TSA Parameter; the iteration path where TSA will file bugs in AzDO;</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Note:</strong></p>
+<ul>
+<li>Items in bold are repo specific and do not carry a default.</li>
+<li>All TSA parameters are needed only if <code>TsaPublish</code> and / or <code>TsaOnBoard</code> is set to true.</li>
+</ul>
+<h2 id="usage-examples">Usage Examples</h2>
+<h3 id="arcade">Arcade</h3>
+<p>Arcade has enabled SDL runs in official-ci builds.</p>
+<ul>
+<li><a href="https://github.com/dotnet/arcade/blob/master/azure-pipelines.yml#L192">azure-pipeline.yml</a></li>
+<li><a href="https://dev.azure.com/dnceng/internal/_build/results?buildId=236348&amp;view=logs&amp;s=3df7d716-4c9c-5c26-9f45-11f62216640d&amp;j=7d9eef18-6720-5c1f-4d30-89d7b76728e9">Build</a></li>
+</ul>
+<pre><code class="lang-yml">    SDLValidationParameters:
+        enable: true
+        params: ' -SourceToolsList @(&quot;xyz&quot;,&quot;abc&quot;)
+        -ArtifactToolsList @(&quot;def&quot;)
+        -TsaInstanceURL &quot;https://devdiv.visualstudio.com/&quot;
+        -TsaProjectName &quot;DEVDIV&quot;
+        -TsaNotificationEmail &quot;xxx@microsoft.com&quot;
+        -TsaCodebaseAdmin &quot;aa\bb&quot;
+        -TsaBugAreaPath &quot;DevDiv\NET Core &quot;
+        -TsaIterationPath &quot;DevDiv&quot;
+        -TsaRepositoryName &quot;Arcade&quot;
+        -TsaCodebaseName &quot;Arcade&quot;
+        -TsaPublish $True'
+</code></pre>
+<h2 id="sdl-run-failures-filed-as-bugs">SDL run failures filed as bugs</h2>
+<p>If <code>TsaPublish</code> is set to true, the output of the SDL tool runs for every build will be published to the account specified under <code>TsaInstanceURL</code> and <code>TsaProjectName</code>.</p>
+<p>If <code>TsaNotificationEmail</code> is set, a notification email will be sent out with a link to the bugs filed for each tool run.</p>
+<p><a href="https://devdiv.visualstudio.com/DevDiv/_queries/query/?wiql=%20%20%20%20SELECT%20ID%2CSeverity%2CState%2C%5BAssigned%20To%5D%2CTitle%20FROM%20WorkItem%20WHERE%20Tags%20Contains%27TSA%23178337-Arcade-PoliCheck-12345.6%27%20%20%20%20">Here</a> is the link to bugs filed after a test run for Arcade.</p>
+<h2 id="see-also">See Also</h2>
+<ul>
+<li><a href="https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/442/ArcadeSecurityControlFlowDocumentation">SDL Control Flow Document</a></li>
+<li><a href="https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/443/IntroToGuardianAndTSA">Introduction to Guardian and TSA</a></li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CHowToAddSDLRunToPipeline.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CHowToAddSDLRunToPipeline.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CHowToAddSDLRunToPipeline.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

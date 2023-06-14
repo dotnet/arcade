@@ -1,0 +1,395 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Automate Performance testing run in AzDO Pipelines </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Automate Performance testing run in AzDO Pipelines ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="automate-performance-testing-run-in-azdo-pipelines">Automate Performance testing run in AzDO Pipelines</h1>
+
+<p>This document is meant to help repo owners onboard to performance testing. Currently, following these steps to add performance testing to your repo will allow you to run per-commit performance testing on physical hardware for internal builds. It is also set up to allow per-PR testing to run on virtual machines for functional testing of performance assets, in addition to the ability to run PR performance testing on physical hardware. Performance testing run on internal builds will generate and upload performance data that will be able to be viewed in the performance visualization tool that is being developed by the perf team.</p>
+<h2 id="motivation">Motivation</h2>
+<p>The motivation for these scripts is to allow finer granularity in performance testing. While we test performance out of the dotnet/performance repo frequently, this testing is done at the full stack level. Running performance testing at each level of the stack (i.e. coreclr, corefx, etc.) can help us pinpoint where regressions or improvements originated, improving our ability to understand regressions and improvements.</p>
+<h2 id="performance-scripts">Performance scripts</h2>
+<p>The performance scripts are a powershell and shell script that set up the environment variables necessary for running performance testing. Scripts can be found <a href="../eng/common/performance">here</a>.</p>
+<h2 id="how-to-add-performance-testing-to-a-pipeline">How to add performance testing to a pipeline</h2>
+<p>The pre-reqs for running performance testing are defined in the template -- <a href="../eng/common/templates/job/performance.yml">performance.yml</a>. The template will need to be added as a job to any repository that wishes to run performance testing. The only required parameters are jobName and pool. If no other parameters are supplied, the testing will pull down the performance repository and run the performance testing against the latest dotnet sdk.</p>
+<p>Additional template parameters are:</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>displayName</td>
+<td>string</td>
+<td>The name to display in the Azure Pipeline</td>
+</tr>
+<tr>
+<td>steps</td>
+<td>array</td>
+<td>Any additional steps that need to be run before running the performance testing (i.e. pulling down the build artifacts, building, etc.)</td>
+</tr>
+<tr>
+<td>container</td>
+<td>object</td>
+<td>The container to run in (if the build machine is linux)</td>
+</tr>
+<tr>
+<td>extraSetupParameters</td>
+<td>string</td>
+<td>Extra parameters to send to the performance scripts</td>
+</tr>
+<tr>
+<td>frameworks</td>
+<td>array</td>
+<td>Dotnet frameworks to run against (i.e. netcoreapp3.0, netcoreapp2.2, etc)</td>
+</tr>
+<tr>
+<td>continueOnError</td>
+<td>string</td>
+<td>Determines whether to continue the build if the step errors</td>
+</tr>
+<tr>
+<td>dependsOn</td>
+<td>object</td>
+<td>Jobs that the performance testing depends on (i.e. Previous build jobs whose artifacts the performance testing job will use)</td>
+</tr>
+<tr>
+<td>timeoutInMinutes</td>
+<td>int</td>
+<td>How long to wait before timing out</td>
+</tr>
+<tr>
+<td>enableTelemetry</td>
+<td>bool</td>
+<td>If we should enable telemetry</td>
+</tr>
+</tbody>
+</table>
+<h2 id="performance-script-arguments">Performance Script Arguments</h2>
+<p>All parameters that have default values are based off of Azure Pipelines pre-defined variables should only be specified if there is a specific need.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>SourceDirectory</td>
+<td>string</td>
+<td>The path to the root of the source directory. Default: $env:BUILD_SOURCESDIRECTORY</td>
+</tr>
+<tr>
+<td>CoreRootDirectory</td>
+<td>string</td>
+<td>Path to the core root directory. To be used when testing against a built corerun</td>
+</tr>
+<tr>
+<td>BaselineCoreRootDirectory</td>
+<td>string</td>
+<td>Path to the baseline core root directory. To be used when running PR testing to compare current work against a baseline</td>
+</tr>
+<tr>
+<td>Architecture</td>
+<td>string</td>
+<td>Architecture of the build to be tested (i.e. x64, x86, arm64). Default: x64</td>
+</tr>
+<tr>
+<td>Framework</td>
+<td>string</td>
+<td>Dotnet sdk framework to install. To be specified when testing against older frameworks. Default: netcoreapp3.0</td>
+</tr>
+<tr>
+<td>CompilationMode</td>
+<td>string</td>
+<td>CompilationMode to use when jitting. Default: Tiered</td>
+</tr>
+<tr>
+<td>Repository</td>
+<td>string</td>
+<td>Repository that is running perf testing. Default: $env:BUILD_REPOSITORY_NAME</td>
+</tr>
+<tr>
+<td>Branch</td>
+<td>string</td>
+<td>Branch that is running perf testing. Default: $env:BUILD_SOURCEBRANCH</td>
+</tr>
+<tr>
+<td>CommitSha</td>
+<td>string</td>
+<td>Sha1 of the current branch. Default: $env:BUILD_SOURCEVERSION</td>
+</tr>
+<tr>
+<td>BuildNumber</td>
+<td>string</td>
+<td>Build number of the run in Azure Pipeline. Default: $env:BUILD_BUILDNUMBER</td>
+</tr>
+<tr>
+<td>RunCategories</td>
+<td>string</td>
+<td>Space separated list of test categories to run against. Should match the categories used by the csproj. Default: &quot;coreclr corefx&quot;</td>
+</tr>
+<tr>
+<td>Csproj</td>
+<td>string</td>
+<td>Relative path from the performance repository root to the csproj to run against. Default: src\benchmarks\micro\MicroBenchmarks.csproj</td>
+</tr>
+<tr>
+<td>Kind</td>
+<td>string</td>
+<td>Short identifier for the csproj. Should match csproj. Default: micro</td>
+</tr>
+<tr>
+<td>Internal</td>
+<td>switch</td>
+<td>If this is an official build</td>
+</tr>
+<tr>
+<td>Configurations</td>
+<td>string</td>
+<td>Space separated list of key=value pairs to describe the build (i.e. &quot;OptimizationLevel=PGO CompilationMode=Tiered&quot;). Default: CompilationMode=$CompilationMode</td>
+</tr>
+<tr>
+<td>Compare</td>
+<td>switch</td>
+<td>Run comparison. To be used when running PR testing to compare against a baseline. Will tell the helix job to run a baseline run, the test run, and then run ResultsComparer to compare the two</td>
+</tr>
+</tbody>
+</table>
+<p>Note: These parameters should be passed to the yml template in the extraSetupParameters parameter.</p>
+<h2 id="usage-examples">Usage Examples</h2>
+<h3 id="performance-repository">Performance Repository</h3>
+<p>The performance repository is a special case of perf testing, where we do not need to 1) first pull down the performance repo, and 2) do not run against a corerun, so do not need to supply extra steps.</p>
+<pre><code class="lang-yml"># Windows 10 x64 micro benchmarks
+- template: /eng/common/templates/job/performance.yml	
+  parameters:	
+    jobName: windows_10_x64_micro
+    displayName: Windows 10 x64 micro
+    extraSetupParameters: -Architecture x64
+    pool: 
+      name: Hosted VS2017
+    ${{ if eq(variables['System.TeamProject'], 'public') }}:
+      frameworks:
+        - netcoreapp3.0  
+        - netcoreapp2.2
+        - netcoreapp3.1
+        - net461
+
+# Ubuntu 1604 x64 ml benchmarks		
+- template: /eng/common/templates/job/performance.yml	
+  parameters:	
+    jobName: ubuntu_1604_x64_ml
+    displayName: Ubuntu 1604 x64 mlnet
+    pool:
+      name: Hosted Ubuntu 1604	
+    container: ubuntu_x64_build_container	
+    extraSetupParameters: --architecture x64 --csproj src/benchmarks/real-world/Microsoft.ML.Benchmarks/Microsoft.ML.Benchmarks.csproj --kind mlnet --runcategories mldotnet
+    frameworks: 
+      - netcoreapp3.0	
+</code></pre>
+<h3 id="coreclr">CoreClr</h3>
+<p>Performance testing has been fully tested in coreclr. Coreclr, corefx and other repos will need to supply a coreroot directory so that testing is done against new bits. This code will pull down the Windows_NT x64 Release build, performed by a previous job, copy the files to a specified location, build the core_root directory, and then run the steps specified in performance.yml to run performance testing in Helix.</p>
+<pre><code class="lang-yml">- template: /eng/common/templates/job/performance.yml
+  parameters:
+    jobName: perfbuild_windows_x64
+    displayName: Windows x64 Performance
+    pool: 
+        name: NetCore-Public
+        queue: Build.Windows.10.Amd64.VS2017.Open
+
+    # Test job depends on the corresponding build job
+    dependsOn: build_Windows_NT_x64_Release
+    extraSetupParameters: -CoreRootDirectory $(Build.SourcesDirectory)\bin\tests\Windows_NT.x64.Release\Tests\Core_Root -Architecture x64
+
+    steps:
+    # Download product build
+    - task: DownloadBuildArtifacts@0
+      displayName: Download product build
+      inputs:
+        buildType: current
+        downloadType: single
+        artifactName: Windows_NT_x64_Release_build
+        downloadPath: $(System.ArtifactsDirectory)
+
+    # Populate Product directory
+    - task: CopyFiles@2
+      displayName: Populate Product directory
+      inputs:
+        sourceFolder: $(System.ArtifactsDirectory)/Windows_NT_x64_Release_build
+        contents: '**'
+        targetFolder: $(Build.SourcesDirectory)/bin/Product/Windows_NT.x64.Release
+
+    # Create Core_Root
+    - script: build-test.cmd Release x64 skipmanaged skipnative
+      displayName: Create Core_Root
+</code></pre>
+<h2 id="pr-comparison-support">PR Comparison Support</h2>
+<p>The performance template also supplies support for running PRs on physical hardware to compare the current change against a baseline. The template has two parameters that will enable PR testing:</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>BaselineCoreRootDirectory</td>
+<td>string</td>
+<td>Path to the baseline core root directory. To be used when running PR testing to compare current work against a baseline</td>
+</tr>
+<tr>
+<td>Compare</td>
+<td>switch</td>
+<td>Run comparison. To be used when running PR testing to compare against a baseline. Will tell the helix job to run a baseline run, the test run, and then run ResultsComparer to compare the two</td>
+</tr>
+</tbody>
+</table>
+<p>For PR testing, the Compare switch is required. It does the following:</p>
+<ul>
+<li>Changes the helix queue to be Windows.10.Amd64.19H1.Tiger.Perf.Open or Ubuntu.1804.Amd64.Tiger.Perf.Open (i.e. physical perf hardware).</li>
+<li>Sets up all perf parameters to match a normal perf run</li>
+<li>Sets FailOnTestFailure to false in the helix project, so that regressions do not fail the run</li>
+<li>Tells helix to run the baseline as a precommand</li>
+<li>Tells helix to run ResultsComparer to compare the baseline and diff</li>
+</ul>
+<p>The BaselineCoreRootDirectory is similar to the CoreRootDirectory. It causes the baseline CoreRun to be moved to the payload directory so it can be pushed to the Helix machine, and then adds the --corerun option to the baseline command. It is not required, though strongly recommended, to run a compare PR. If it is not supplied, the baseline will be the most recent dotnet sdk, which may be several commits behind the master of your repository, and could obfuscate actual performance regressions or improvements.</p>
+<h2 id="available-parameter-values">Available parameter values</h2>
+<p>In general, we expect most repositories to test against the default tests and configurations (Microbenchmarks.csproj, coreclr corefx run categories, x64). However, some users may want to to extend their performance testing by testing on additional benchmark suites, or with additional architectures. Below is listed the available options for various parameters.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Options</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Architecture</td>
+<td>x64, x86 (Windows only), arm64 (linux only)</td>
+</tr>
+<tr>
+<td>Framework</td>
+<td>netcoreapp3.0, netcoreapp2.2, netcoreapp3.1, net461 (windows only)</td>
+</tr>
+<tr>
+<td>CompilationMode</td>
+<td>Tiered, NoTiering, FullyJittedNoTiering, MinOpt</td>
+</tr>
+<tr>
+<td>Csproj</td>
+<td>src\benchmarks\micro\MicroBenchmarks.csproj <br> src\benchmarks\real-world\Microsoft.ML.Benchmarks\Microsoft.ML.Benchmarks.csproj <br> src\benchmarks\real-world\Roslyn\CompilerBenchmarks.csproj</td>
+</tr>
+<tr>
+<td>RunCategories</td>
+<td>For micro benchmarks: coreclr, corefx <br> For ML benchmarks: mldotnet <br> For Roslyn benchmarks: roslyn</td>
+</tr>
+<tr>
+<td>Kind</td>
+<td>For microbenchmarks: micro <br> For ML benchmarks: mlnet <br> For Roslyn benchmarks: roslyn</td>
+</tr>
+</tbody>
+</table>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CHowToAddPerfTestingToPipeline.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CHowToAddPerfTestingToPipeline.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CHowToAddPerfTestingToPipeline.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

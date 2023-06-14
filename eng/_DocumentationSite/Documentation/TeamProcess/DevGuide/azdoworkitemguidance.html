@@ -1,0 +1,125 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Creating Azure Boards WorkItems </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Creating Azure Boards WorkItems ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="creating-azure-boards-workitems">Creating Azure Boards WorkItems</h1>
+
+<p>For some issues, we will need to open Azure Boards workitems, rather than github issues. These include:</p>
+<ul>
+<li>Security related changes (see <a href="IssueTrackingGuidance.html">issue tracking guidance</a>)</li>
+<li>Any work for non-open source projects</li>
+</ul>
+<p>In these instances, we still want to have issues, and we still want to link them to Epics that are in arcade.</p>
+<h2 id="opening-an-azure-boards-workitem">Opening an Azure Boards WorkItem</h2>
+<ul>
+<li>WorkItems should be opened in the <a href="https://dev.azure.com/dnceng/internal/_workitems/">internal Azure DevOps project</a></li>
+<li>When creating a new work item, create the work item as a <a href="https://dev.azure.com/dnceng/internal/_workitems/create/Task">task</a></li>
+<li>Set Area to internal\Dotnet-Core-Engineering</li>
+<li>Give it a meaningful title and description</li>
+<li>Update the GitHub Friendly Title and GitHub Friendly Description with information that can be shared on GitHub (in the public).</li>
+<li>Add a link to the GitHub epic in the Epic Issue field.</li>
+<li>After <a href="https://github.com/dotnet/arcade/issues/8567">#8567</a> is complete, an issue linking your newly created Azure Boards work item will be created and added to the Projects (beta) board
+<ul>
+<li>The epic issue field will be filled out if the GitHub link was supplied</li>
+<li>If the GitHub Friendly Title is set, the created github issue will use it. Otherwise, will use &quot;Azure Boards Issue #[Issue Number]&quot;.</li>
+<li>If the GitHub Friendly Description is set, it will be used and a link to the Azure Boards work item will be added. Otherwise, the issue will only have a link to the Azure Boards work item.</li>
+</ul>
+</li>
+</ul>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5CDevGuide%5Cazdoworkitemguidance.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5CDevGuide%5Cazdoworkitemguidance.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5CDevGuide%5Cazdoworkitemguidance.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

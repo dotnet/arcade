@@ -1,0 +1,178 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Test Retry and Quarantine Configuration </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Test Retry and Quarantine Configuration ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="test-retry-and-quarantine-configuration">Test Retry and Quarantine Configuration</h1>
+
+<p>In order to drive behavior in test execution, we need a way to specify that behavior at a test level.
+It is also necessary that this information be machine readable/modifyable, in order for all the desired
+tooling to be written.</p>
+<p>As such, the current plan is for a file to be locate at &quot;eng/test-configuration.json&quot; that contains this information.</p>
+<h2 id="sample-format">Sample format</h2>
+<pre><code class="lang-json">{
+  &quot;version&quot; : 2,
+  &quot;defaultOnFailure&quot;: &quot;fail&quot;,
+  &quot;localRerunCount&quot; : 2,
+  &quot;remoteRerunCount&quot; : 1,
+  &quot;retryOnRules&quot;: [
+    {&quot;testName&quot;: {&quot;regex&quot;: &quot;^System\\.Networking\\..*&quot;}},
+    {&quot;testAssembly&quot;: {&quot;wildcard&quot;: &quot;System.SomethingElse.*&quot; }},
+    {&quot;failureMessage&quot;: &quot;network disconnected&quot; },
+  ],
+  &quot;failOnRules&quot;: [
+  ],
+  &quot;quarantineRules&quot;: [
+  ]
+}
+</code></pre>
+<h2 id="description">Description</h2>
+<h3 id="version">version</h3>
+<p>Schema version for compatibility</p>
+<h3 id="defaultonfailure">defaultOnFailure</h3>
+<ul>
+<li>default: &quot;fail&quot;</li>
+</ul>
+<p>One of &quot;fail&quot; or &quot;rerun&quot;</p>
+<dl>
+<dt>fail</dt><dd>If a test fails, the default behavior if no rules match is to fail the test immediate</dd>
+<dt>rerun</dt><dd>If a test fails, the default behavior is no rules match is to rerun the test according to the localRerun/remoteRerun counts</dd>
+</dl>
+<h2 id="localreruncount">localRerunCount</h2>
+<ul>
+<li>default: 1</li>
+</ul>
+<p>This number indicates the number of times a test that needs to be &quot;rerun&quot; should be rerun on the local computer immediately.
+This is the fastest rerun option, because the payloads don't need to be redownloaded, so it always the first attempted re-execution method.</p>
+<p>In the example, with a value of &quot;2&quot;, that means that the test will need to fail 3 times before being marks as failed (1 intial failure, and 2 rerun failures).</p>
+<h2 id="remotereruncount">remoteRerunCount</h2>
+<ul>
+<li>default: 0</li>
+<li>required version: 2</li>
+</ul>
+<p>If all &quot;localRerun&quot; values have been attempted, and the test is still failing, this number being non-zero means that additional
+rerun attempts will be queued on a different machine. This requires redownloading all the payloads a second time, so is significantly slower
+than local reruns, and should only be used when suspected machine state corruption is the cause of test failures.</p>
+<h2 id="rules">rules</h2>
+<p>The three &quot;rules&quot; entries are lists of rules that will be used to match test to determin desired behavior. In the case of multiple rule matches:</p>
+<ul>
+<li>if a quarantine rule matches, the test is quarantined</li>
+<li>if the default behavior is &quot;rerun&quot; and a &quot;fail&quot; rule matches, the test is failed</li>
+<li>if the default bheavior is &quot;fail&quot; and a &quot;rerun&quot; rule matches, the test is rerun</li>
+<li>default behavior is used</li>
+</ul>
+<p>A &quot;rule&quot; consists of a property, and then a rule object</p>
+<h3 id="properties">Properties</h3>
+<dl>
+<dt>testName</dt><dd>The name of the test, including namespace, class name, and method name</dd>
+<dt>testAssembly</dt><dd>The name of the assembly containing the test</dd>
+<dt>failureMessage</dt><dd>The failure message logged by the test</dd>
+<dt>callstack (multiline)</dt><dd>The callstack reported by the test execution</dd>
+</dl>
+<h3 id="rule-object">Rule object</h3>
+<p>For all rules, if a property is designated &quot;multiline&quot;, then the rule must match a line, otherwise the entire value is used.</p>
+<p>All comparisons are case-insensitive</p>
+<h4 id="raw-string-eg-rule-string">Raw string (e.g. &quot;rule string&quot;)</h4>
+<p>True if the property value exactly matches the string</p>
+<h4 id="contains-value">{&quot;contains&quot;: &quot;value&quot;}</h4>
+<p>True if the property contains (case-insensitive) the value string</p>
+<h4 id="wildcard-value-with--wildcard">{&quot;wildcard&quot;: &quot;value with * wildcard&quot;}</h4>
+<p>The same as a raw string, but &quot;*&quot; can match any number of characters, and &quot;?&quot; can match one character</p>
+<h4 id="regex-value-with--regex">{&quot;regex&quot;: &quot;value with .* regex&quot;}</h4>
+<p>true if the propety matches the regular expression</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CDevWorkflow%5CDesign%5CDev-Design-Test-Configuration-Json.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CDevWorkflow%5CDesign%5CDev-Design-Test-Configuration-Json.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CDevWorkflow%5CDesign%5CDev-Design-Test-Configuration-Json.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

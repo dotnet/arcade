@@ -1,0 +1,518 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>.NET Core Ecosystem v2 - Versioning </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content=".NET Core Ecosystem v2 - Versioning ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="net-core-ecosystem-v2---versioning">.NET Core Ecosystem v2 - Versioning</h1>
+
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Note</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10/03/2018</td>
+<td>The implementation doesn't include the SHA on the version strings anymore, because: 1) The chaining of targets to plug that into SemVer1 strings were causing generation of incorrect NuSpec files and no clear path to fix it was found and, 2) VS CoreXT build system doesn't support it.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="versioning-plan">Versioning Plan</h2>
+<p>.NET Core repositories should use <a href="https://semver.org">SemVer2</a> for their asset versioning scheme. Package versions take the general form of:</p>
+<pre><code>MAJOR.MINOR.PATCH-PRERELEASE+BUILDMETADATA
+</code></pre>
+<p>MAJOR, MINOR, and PATCH versions are rigid in their requirements.  Please refer to the <a href="https://semver.org">SemVer2 documentation</a> for details. PRERELEASE and BUILD are optional and leave a fair bit of room for organizations to implement what they want. The only caveat is that build metadata cannot be used to differentiate two different packages. Build metadata should not be used when determining version precedence. There are two primary questions:</p>
+<ul>
+<li>What goes in the PRERELEASE and BUILD fields and when are they used?</li>
+<li>Should we use date agnostic versioning vs. date varying versioning?</li>
+</ul>
+<h2 id="date-agnostic-vs-date-varying-build-versioning">Date Agnostic vs. Date-Varying Build Versioning</h2>
+<p>In the context of the .NET Core product, a build version number is date agnostic if successive builds of the same commit produce the same build version numbers. Historically, .NET Core has had repositories that implement date agnostic versioning through build numbers that increment based on commit depth, as well as repositories that base their build number off of the date and number of builds prior on the day (date based versioning).</p>
+<p>Both types of versioning have advantages and disadvantages:</p>
+<h3 id="date-agnostic-versioning">Date Agnostic Versioning</h3>
+<p><strong>PROS:</strong></p>
+<ul>
+<li>Assets with identical version metadata can be reproduced without outside input (e.g. providing a build id)</li>
+<li>Parallel, independent legs of the same build do not require parent orchestration and will generate coherent versioning.  Separate parts of the build can potentially be respun as required.</li>
+<li>We already have 'date agnostic' versioning at the end of a product cycle.</li>
+<li>Build metadata typically includes SHA, which makes identification of the source of bits easy.</li>
+</ul>
+<p><strong>CONS:</strong></p>
+<ul>
+<li>Some related infrastructure systems may not support the ingestion of multiple assets with the same name/version.  For example, MyGet, NuGet, or VSTS support overwriting to varying degrees. You're left to deal with these scenarios on a case-by-case basis.  For example:
+<ul>
+<li>Introduce a new meaningless commit to bump the version number</li>
+<li>Successive builds of the same SHA, if they were to have different outputs (e.g. a checked vs. debug build) may require a clean of the cache.</li>
+<li>Temporarily unlock a feed to enable re-publishing (may not be possible, and bad practice)</li>
+<li>Add logic into all processes to gracefully understand and handle overwrite cases (e.g. are bits the same? then okay)</li>
+<li>Telemetry systems must understand reruns of the same build.</li>
+</ul>
+</li>
+<li>Most of the .NET Core builds aren't bit-for-bit identical at the same commit given the same inputs.  If they were, then a partial-respin can gracefully handle dealing with overwrites.</li>
+<li>Date agnostic version doesn't encode inputs (e.g. checked build vs. release build).  This can make it tricky to run 'non-standard' build scenarios if they interact with external systems.</li>
+<li>Generating the same package version in multiple builds with different outputs bits means that package caches must be cleared.</li>
+</ul>
+<h3 id="date-varying-versioning">Date-Varying Versioning</h3>
+<p><strong>PROS:</strong></p>
+<ul>
+<li>Respins are easier.  No overwriting except for release versions at the end of the product cycle.  Release versions at the end of the cycle typically avoid external overwrite-averse systems.</li>
+<li>Non-standard builds (e.g. different input parameters) do not collide with standard builds at the same SHA when dealing with external systems.</li>
+<li>File versions must be ever increasing to correctly layout new files for servicing (MSI requirement)</li>
+<li>Does not affect the determinism of the build. Input dates are just another build parameter (e.g. OfficialBuildId) and rerunning a build with the same input date should produce equivalent binaries.</li>
+</ul>
+<p><strong>CONS:</strong></p>
+<ul>
+<li>Requires orchestration to produce a coherent set of versions across multiple build legs</li>
+<li>More difficult to reproduce version identical bits (need to know input parameters)</li>
+<li>Source SHA not easily identifiable based on asset version.</li>
+</ul>
+<h3 id="conclusion">Conclusion</h3>
+<p>Date agnostic versioning is more hassle than it's worth, though having the SHA in the output version number is also useful.  We should combine a SHA in the build metadata with the build date+revision (short data + number of builds so far today) to generate a date-varying, unique, identifiable build.</p>
+<h2 id="build-determinism">Build Determinism</h2>
+<p>There is often concern around build determinism when date-varying versioning is used. It is important to note that date-varying versioning does not affect the ability to have deterministic builds in either the local dev or official build lab scenarios.  The date is either a provided parameter or obtained from git information, meaning that setting it to a specific value at a specific commit can enable the production of the same outputs over and over again.  Date varying versioning only says that <strong>by default</strong> this input varies from build to build.</p>
+<h2 id="build-kind">Build kind</h2>
+<p><em>Build kind</em> is determined based on global build properties <code>ContinuousIntegrationBuild</code>, <code>OfficialBuildId</code> and <code>DotNetFinalVersionKind</code>.</p>
+<table>
+<thead>
+<tr>
+<th><code>ContinuousIntegrationBuild</code></th>
+<th><code>OfficialBuildId</code></th>
+<th><code>DotNetFinalVersionKind</code></th>
+<th>Build kind</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><em>false</em></td>
+<td>&quot;&quot;</td>
+<td>&quot;&quot;</td>
+<td>Local developer build</td>
+</tr>
+<tr>
+<td><em>true</em></td>
+<td>&quot;&quot;</td>
+<td>&quot;&quot;</td>
+<td>PR validation build</td>
+</tr>
+<tr>
+<td><em>true</em></td>
+<td><code>yyyymmdd.r</code></td>
+<td>&quot;&quot;</td>
+<td>Daily official build</td>
+</tr>
+<tr>
+<td><em>true</em></td>
+<td><code>yyyymmdd.r</code></td>
+<td>&quot;prerelease&quot;</td>
+<td>Final pre-release official build</td>
+</tr>
+<tr>
+<td><em>true</em></td>
+<td><code>yyyymmdd.r</code></td>
+<td>&quot;release&quot;</td>
+<td>Release official build</td>
+</tr>
+</tbody>
+</table>
+<h2 id="version-parts-specified-by-repository">Version parts specified by repository</h2>
+<p>The repository specifies a 3-part version prefix in <code>VersionPrefix</code> build property (<strong>MAJOR</strong>.<strong>MINOR</strong>.<strong>PATCH</strong>),
+or 2 parts using <code>MajorVersion</code> and <code>MinorVersion</code> properties (the patch number defaults to 0 in such case).
+If neither of these properties are specified the default is 1.0.0.</p>
+<p>The versioning scheme defined below imposes the following limits on these version parts:</p>
+<ul>
+<li><strong>MAJOR</strong> version is in range [0-65535]</li>
+<li><strong>MINOR</strong> version is in range [0-654]</li>
+<li><strong>PATCH</strong> version is in range [0-9999]</li>
+</ul>
+<h2 id="package-version">Package Version</h2>
+<p><em>Package Version</em> comprises of a three-part version number (<strong>PACKAGE_MAJOR</strong>, <strong>PACKAGE_MINOR</strong>, <strong>PACKAGE_PATCH</strong>) and optional pre-release labels.</p>
+<p>The pre-release label is determined based on the following table:</p>
+<table>
+<thead>
+<tr>
+<th>Build kind</th>
+<th>Pre-release labels</th>
+<th>Package Version example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Local developer build default</td>
+<td>&quot;dev&quot;</td>
+<td>&quot;1.2.3-dev&quot;</td>
+</tr>
+<tr>
+<td>PR validation build</td>
+<td>&quot;ci&quot;</td>
+<td>&quot;1.2.3-ci&quot;</td>
+</tr>
+<tr>
+<td>Daily official build</td>
+<td><strong>PRERELEASE_LABELS</strong>.<strong>SHORT_DATE</strong>.<strong>REVISION</strong></td>
+<td>&quot;1.2.3-preview.1.12345.1&quot;</td>
+</tr>
+<tr>
+<td>Final pre-release official build</td>
+<td><strong>PRERELEASE_LABELS</strong>.&quot;final&quot;</td>
+<td>&quot;1.2.3-beta.1.final&quot;</td>
+</tr>
+<tr>
+<td>Release official build</td>
+<td>&quot;&quot;</td>
+<td>&quot;1.2.3&quot;</td>
+</tr>
+</tbody>
+</table>
+<p>In official builds, the value of <strong>PRERELEASE_LABELS</strong> is derived as in the following way:</p>
+<ul>
+<li>If <code>SemanticVersioningV1</code> is set to true, it will be <code>PreReleaseVersionLabel</code> with <code>PreReleaseVersionIteration</code> appended. <code>PreReleaseVersionIteration</code> may be empty</li>
+<li>If <code>SemanticVersioningV1</code> is not set to true, and <code>PreReleaseVersionIteration</code> is empty, it will be <code>PreReleaseVersionLabel</code></li>
+<li>If <code>SemanticVersioningV1</code> is not set to true, and <code>PreReleaseVersionIteration</code> is non empty, it will be <code>PreReleaseVersionLabel</code>.<code>PreReleaseVersionIteration</code></li>
+</ul>
+<p>In official builds the values of <strong>SHORT_DATE</strong> and <strong>REVISION</strong> are derived from build parameter <code>OfficialBuildId</code> with format <code>20yymmdd.r</code> like so:</p>
+<ul>
+<li><strong>REVISION</strong> is set to <code>r</code> component of <code>OfficialBuildId</code> build property.</li>
+<li><strong>SHORT_DATE</strong> is set to <code>yy</code> * 1000 + 50 * <code>mm</code> + <code>dd</code>. In year 2018 the value is in range [18051, 18631].</li>
+</ul>
+<p>In PR validation and local developer builds <strong>SHORT_DATE</strong> and <strong>REVISION</strong> are not included in the package version,
+unless <code>DotNetUseShippingVersion</code> is <em>true</em>, in which case the values of <code>yy</code>, <code>mm</code> and <code>dd</code> are derived from the current date
+and <code>r</code> = 1. Note that non-official builds with <code>DotNetUseShippingVersion</code> set to <em>true</em> are non-deterministic.</p>
+<p>If a package is designated to be a <em>release-only</em> package (<code>PreReleaseVersionLabel</code> is empty) its package version does not include
+any pre-release labels when produced by an official build. Every official build of such package must produce a unique <strong>PATCH_NUMBER</strong>.
+This versioning policy is not applied to developer and PR validation builds as it relies on the availability of a unique <code>OfficialBuildId</code>.</p>
+<p>Some projects want to remain producing pre-release packages even if the repository is running a final stable build because
+they don't ship or aren't ready to ship stable. Those projects can set <code>SuppressFinalPackageVersion</code> property to <code>true</code>.</p>
+<p><strong>PATCH_NUMBER</strong> is defined as (<strong>SHORT_DATE</strong> - <code>VersionBaseShortDate</code>) * 100 + <code>r</code>, where <code>VersionBaseShortDate</code> is <code>19000</code> unless
+set in <code>eng/Version.props</code>.
+Repository shall only change the value of <code>VersionBaseShortDate</code> at the same time as it increments <strong>MAJOR</strong> or <strong>MINOR</strong> version.</p>
+<p>The three-part package version is based on the value of <code>VersionPrefix</code> property:</p>
+<table>
+<thead>
+<tr>
+<th>Package version part</th>
+<th>Value</th>
+<th>Condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PACKAGE_MAJOR</strong></td>
+<td><strong>MAJOR</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>PACKAGE_MINOR</strong></td>
+<td><strong>MINOR</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>PACKAGE_PATCH</strong></td>
+<td><strong>PATCH</strong></td>
+<td><code>PreReleaseVersionLabel</code> is non-empty</td>
+</tr>
+<tr>
+<td></td>
+<td><strong>PATCH_NUMBER</strong></td>
+<td>otherwise</td>
+</tr>
+</tbody>
+</table>
+<h2 id="assembly-version">Assembly Version</h2>
+<p><em>Assembly Version</em> is a four-part version number (<strong>ASSEMBLY_MAJOR</strong>, <strong>ASSEMBLY_MINOR</strong>, <strong>ASSEMBLY_PATCH</strong>, <strong>ASSEMBLY_REVISION</strong>).</p>
+<p><strong>PATCH_NUMBER_HI</strong> is defined as <strong>PATCH_NUMBER</strong> / 50000.</p>
+<p><strong>PATCH_NUMBER_LO</strong> is defined as <strong>PATCH_NUMBER</strong> % 50000.</p>
+<table>
+<thead>
+<tr>
+<th>Assembly version part</th>
+<th>Value</th>
+<th>Condition</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>ASSEMBLY_MAJOR</strong></td>
+<td><strong>MAJOR</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>ASSEMBLY_MINOR</strong></td>
+<td><strong>MINOR</strong></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>ASSEMBLY_PATCH</strong></td>
+<td><strong>PATCH</strong></td>
+<td><code>AutoGenerateAssemblyVersion</code> is <em>false</em></td>
+</tr>
+<tr>
+<td></td>
+<td><strong>PATCH_NUMBER_HI</strong></td>
+<td>otherwise</td>
+</tr>
+<tr>
+<td><strong>ASSEMBLY_REVISION</strong></td>
+<td>0</td>
+<td><code>AutoGenerateAssemblyVersion</code> is <em>false</em></td>
+</tr>
+<tr>
+<td></td>
+<td><strong>PATCH_NUMBER_LO</strong></td>
+<td>otherwise</td>
+</tr>
+</tbody>
+</table>
+<h2 id="file-version">File Version</h2>
+<p><em>File Version</em> is a four-part version number (<strong>FILE_MAJOR</strong>.<strong>FILE_MINOR</strong>.<strong>FILE_PATCH</strong>.<strong>FILE_REVISION</strong>) and
+must increase every official build. This is especially important when building MSIs.</p>
+<p>If build property <code>AutoGenerateAssemblyVersion</code> is <em>true</em> then <em>File Version</em> is the same as <em>Assembly Version</em>, otherwise:</p>
+<table>
+<thead>
+<tr>
+<th>File version part</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>FILE_MAJOR</strong></td>
+<td><strong>MAJOR</strong></td>
+</tr>
+<tr>
+<td><strong>FILE_MINOR</strong></td>
+<td><strong>MINOR</strong> * 100 + <strong>PATCH</strong> / 100</td>
+</tr>
+<tr>
+<td><strong>FILE_PATCH</strong></td>
+<td>(<strong>PATCH</strong> % 100) * 100 + <code>yy</code></td>
+</tr>
+<tr>
+<td><strong>FILE_REVISION</strong></td>
+<td>(50 * <code>mm</code> + <code>dd</code>) * 100 + <code>r</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="recommended-settings">Recommended Settings</h2>
+<p>It is recommended for <strong>global tools</strong> projects to build assemblies with auto-generated assembly version and pack as <em>release-only</em> packages,
+i.e. set <code>AutoGenerateAssemblyVersion</code> to <em>true</em> and clear <code>PreReleaseVersionLabel</code>.</p>
+<p>It is recommended for <strong>msbuild task</strong> projects and projects building <strong>analyzers</strong> to build assemblies with auto-generated assembly version,
+i.e. set <code>AutoGenerateAssemblyVersion</code> to <em>true</em>.</p>
+<p>Library projects that target .NET Standard or .NET Framework shall keep <code>AutoGenerateAssemblyVersion</code> set to <em>false</em> to avoid the need for updating binding redirects of the consuming .NET Framework apps every time a new build is consumed.</p>
+<h2 id="semver1-fallback">SemVer1 Fallback</h2>
+<p>In cases where SemVer2 cannot be used (e.g. old versions of NuGet), we can fall back to <a href="https://semver.org/spec/v1.0.0.html">SemVer1</a>.
+In SemVer1, there is no built in build metadata, and the pre-release field may only contain <code>[0-9A-Za-z-]</code>. To comply, cases where <code>+</code> or <code>.</code>
+are used in SemVer2's prerelease field are replaced with <code>-</code>.</p>
+<p>The repository opts into SemVer1 fallback by setting <code>SemanticVersioningV1</code> property to <em>true</em>.</p>
+<p>Examples of SemVer1 package versions:</p>
+<p>&quot;1.2.3-dev&quot;, &quot;1.2.3-ci&quot;, &quot;1.2.3-beta-12345-01&quot;, &quot;1.2.3-beta-final&quot;, &quot;1.2.3&quot;.</p>
+<p>Note that the number in <code>-01</code> suffix is zero-padded to two characters.</p>
+<h2 id="assembly-informational-version-generation">Assembly Informational Version Generation</h2>
+<p>Assembly informational version is generated by .NET SDK. If the project references SourceLink package (added by Arcade SDK by default) the assembly informational version will include the full commit SHA. An example of a version string that the assembly will include:</p>
+<pre><code class="lang-csharp">[AssemblyInformationalVersion(&quot;1.2.3-beta.12345.1+fe80f83075d723eddd6e26582c75f27f242c69c4&quot;)]
+</code></pre>
+<h2 id="nuget-package-repository-information">NuGet Package Repository Information</h2>
+<p>Packages produced by projects that reference SourceLink package and use standard NuGet Pack target for packaging will include repository URL and commit SHA metadata in their nuspec files:</p>
+<pre><code class="lang-xml">&lt;repository type=&quot;git&quot; url=&quot;https://github.com/dotnet/roslyn&quot; commit=&quot;d37ac834f69e1a771626813da3b820502309462d&quot; /&gt;
+</code></pre>
+<h2 id="implementation">Implementation</h2>
+<p>The Arcade SDK implements <a href="../../src/Microsoft.DotNet.Arcade.Sdk/tools/Version.targets">here</a> the Versioning schema described in this document. This section provides a brief outline of how to use the implementation and how it works. More documentation is available in the respective <a href="../../src/Microsoft.DotNet.Arcade.Sdk/tools/Version.targets">.target/.props</a> file.</p>
+<p>Arcade onboarded repos use this implementation automatically by using the Arcade SDK. <em>If you use the SDK you won't have to do anything else to use the format strings described in the proposal.</em></p>
+<p>Below is a list of the main parameters that control the logic.</p>
+<h3 id="parameters">Parameters</h3>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Scope</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OfficialBuildId</td>
+<td>Arcade</td>
+<td>ID of current build. The accepted format is <code>yyyyMMdd.r</code>. Should be passed to build in YAML official build definition.</td>
+</tr>
+<tr>
+<td>SemanticVersioningV1</td>
+<td>Arcade</td>
+<td>Set to <code>true</code> in <code>Versions.props</code> file to use versions compatible with SemVer 1.0.</td>
+</tr>
+<tr>
+<td>DotNetUseShippingVersions</td>
+<td>Arcade</td>
+<td>Set to <code>true</code> to produce shipping version strings in non-official builds. I.e., instead of fixed values like <code>42.42.42.42</code> for <code>AssemblyVersion</code>.</td>
+</tr>
+<tr>
+<td>DotNetFinalVersionKind</td>
+<td>Arcade</td>
+<td>Specify the kind of version being generated: <code>release</code>, <code>prerelease</code> or empty.</td>
+</tr>
+<tr>
+<td>PreReleaseVersionLabel</td>
+<td>Arcade</td>
+<td>Pre-release label to be used on the string. E.g., <code>beta</code>, <code>prerelease</code>, etc. <code>ci</code> and <code>dev</code> are reserved for non-official CI builds and dev builds, respectively.</td>
+</tr>
+<tr>
+<td>PreReleaseVersionIteration</td>
+<td>Arcade</td>
+<td>Numeric pre-release iteration to be used on the pre-release suffix string. E.g., <code>1</code>, <code>2</code>, etc. If set, and SemVer2 is in use, appends to the prerelease version label, separated by a <code>.</code>. If SemVer1 is in use, then it is appended without a separator.</td>
+</tr>
+<tr>
+<td>VersionPrefix</td>
+<td>.NET</td>
+<td>Specify the leading part of the version string. If empty and both <code>MajorVersion</code> and <code>MinorVersion</code> are set, initialized to <code>$(MajorVersion).$(MinorVersion).0</code>.</td>
+</tr>
+<tr>
+<td>MajorVersion</td>
+<td>Arcade</td>
+<td>Major version to use in <code>VersionPrefix</code>.</td>
+</tr>
+<tr>
+<td>MinorVersion</td>
+<td>Arcade</td>
+<td>Minor version to use in <code>VersionPrefix</code>.</td>
+</tr>
+<tr>
+<td>ContinuousIntegrationBuild</td>
+<td>.NET</td>
+<td>Specify whether the build is happening on a CI server (PR build or official build).</td>
+</tr>
+</tbody>
+</table>
+<h2 id="output">Output</h2>
+<p>This is the list of properties set by Arcade SDK versioning implementation. The values are available only after <code>GetAssemblyVersion</code> target has been executed.</p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Scope</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OfficialBuild</td>
+<td>Arcade</td>
+<td>Boolean indicating that the current build is official. Set to <code>true</code> if <code>OfficialBuildId</code> is non-empty.</td>
+</tr>
+<tr>
+<td>AssemblyVersion</td>
+<td>.NET</td>
+<td>Set to <code>42.42.42.42</code> if not set in the project, the build is not official and <code>DotNetUseShippingVersions</code> is not <code>true</code>.</td>
+</tr>
+<tr>
+<td>FileVersion</td>
+<td>.NET</td>
+<td>Set to <code>42.42.42.42424</code> if the build is not official and <code>DotNetUseShippingVersions</code> is not <code>true</code>.</td>
+</tr>
+<tr>
+<td>VersionPrefix</td>
+<td>.NET</td>
+<td>Initialized to <code>$(MajorVersion).$(MinorVersion).0</code> if not set by the project.</td>
+</tr>
+<tr>
+<td>VersionSuffix</td>
+<td>.NET</td>
+<td>The suffix part of the version string, including the pre-release portion.</td>
+</tr>
+</tbody>
+</table>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CCorePackages%5CVersioning.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CCorePackages%5CVersioning.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CCorePackages%5CVersioning.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

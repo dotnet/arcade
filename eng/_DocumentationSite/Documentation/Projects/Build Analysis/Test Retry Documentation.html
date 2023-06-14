@@ -1,0 +1,138 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Automatic Test Retry </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Automatic Test Retry ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="automatic-test-retry">Automatic Test Retry</h1>
+
+<p>Automatic Test Retry allows you to retry <strong>helix-based tests</strong>. The retry occur at an assembly level and the number of retries is configurable.</p>
+<p>It's important to know that all the reruns happen on the same machine and that the machines are not cleaned between reruns, this has an important implication: <strong>tests should be idempotent on the same machine.</strong></p>
+<p>Ex. if you are uploading to any fixed URLs, those need to check if that process was completed, and if copying files on the hard drive, it should be resilient to the same copy command having previously ran.</p>
+<h2 id="how-to-get-on-board">How to get on board</h2>
+<p>As a first step you should <a href="https://github.com/dotnet/arcade/tree/main/src/Microsoft.DotNet.Helix/Sdk#test-retry">configure the test-configuration.json</a> file. This file should be allocated at <code>eng/test-configuration.json</code> and it will be <a href="https://github.com/dotnet/arcade/blob/b4fd1cc3817e0e85213dcc219ff7f7252761659f/src/Microsoft.DotNet.Helix/Sdk/tools/Microsoft.DotNet.Helix.Sdk.MonoQueue.targets#L8">automatically picked up</a>, no further changes are needed.</p>
+<p>There are a couple of rules that your test should meet:</p>
+<ol>
+<li>Using Helix</li>
+<li>Using Azure Reporter - if your tests are already reported on azure this means that is all good</li>
+<li>Tests should be idempotent on the same machine</li>
+<li>Helix workitem exit code is zero for non-exceptional cases: normal execution, even with test failures, should return exit code 0</li>
+</ol>
+<p><strong>NOTE</strong>: If your tests are not using the Helix SDK, you will need to replicate parts of Helix to ensure that the <code>test-configuration.json</code> file is uploaded with the payload.</p>
+<h2 id="how-to-know-if-a-test-was-retried">How to know if a test was retried</h2>
+<p>There are a couple of ways in which you can confirm if a test was rerun, we are going to divide then in failed and succeeded tests:</p>
+<h3 id="test-failed">Test failed</h3>
+<p>When your test failed, and you want to verify if it was retried or want to see the errors of every retry you can do the following:</p>
+<ol>
+<li><p>AzDO Artifacts tab: Navigate to your Tests tab, select the test that you want to verify and then select your artifacts tab</p>
+<p><img src="./Resources/AzureDevOpsArtifactsTab.PNG?raw=true" alt=""></p>
+<p>The Artifact tab now has the necessary context to know if a test was rerun, this will be easily recognizable by two things:</p>
+<ul>
+<li>On the title you will see <code>multiple executions</code> message</li>
+<li><code>Previous executions</code> will be listed</li>
+</ul>
+<p><img src="./Resources/ArtifactsTab.png?raw=true" alt=""></p>
+</li>
+<li><p><strong>Looking at the logs:</strong> In there you will notice that you have 2 console.*.log files (one for each execution), furthermore in the run_client.log, will be some lines about the rerun:
+<code>Test configuration for test set indicates 'RERUN', re-executing workitem...</code></p>
+</li>
+</ol>
+<h3 id="test-succeeded">Test Succeeded</h3>
+<p>When you want to know which test succeeded after a rerun you should go to the AzDO Tests tab of your build and filter the test that &quot;Passed on rerun&quot;.</p>
+<p>As can be appreciated in the image below:</p>
+<p><img src="./Resources/AzureDevOpsPassedOnRerun.PNG?raw=true" alt=""></p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CTest%20Retry%20Documentation.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CTest%20Retry%20Documentation.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CTest%20Retry%20Documentation.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

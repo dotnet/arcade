@@ -1,0 +1,160 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Allow for waiting for helix to use agentless tasks </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Allow for waiting for helix to use agentless tasks ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="allow-for-waiting-for-helix-to-use-agentless-tasks">Allow for waiting for helix to use agentless tasks</h1>
+
+<h2 id="overview">Overview</h2>
+<p>We want to reduce wasted compute caused by build jobs waiting for helix tests to complete. To do this we can use the &quot;agentless job&quot; feature in azure pipelines to remove the machine that waits for the helix job to be finished.</p>
+<h2 id="stakeholders">Stakeholders</h2>
+<ul>
+<li>Our Budget</li>
+<li>Customers who want to retry test jobs without having to rebuild</li>
+</ul>
+<h2 id="pros">Pros</h2>
+<ul>
+<li>Build machine time is no longer wasted on waiting for helix jobs</li>
+<li>Test job retry doesn't require rebuilding the tests</li>
+</ul>
+<h2 id="cons">Cons</h2>
+<ul>
+<li>Msbuild no longer waits for the helix jobs, so code written in msbuild to process job results needs to either go away or be rewritten server side.</li>
+</ul>
+<h2 id="current-workflow">Current Workflow</h2>
+<p>The current build jobs that run helix work do the following:</p>
+<ol>
+<li>Acquire build agent from pool</li>
+<li>Compile code and create helix payloads and job list</li>
+<li>Start azure pipelines test runs</li>
+<li>Send Job to Helix via rest api</li>
+<li>Poll rest api periodically to check status</li>
+<li>Once job reports finished, verify results and finalize test runs</li>
+<li>Return build agent to pool</li>
+</ol>
+<p>This workflow holds on to a build agent for a long period where it is doing nothing but polling a rest api for status, this period can be removed.</p>
+<h2 id="new-workflow">New Workflow</h2>
+<p>Using agentless jobs, we can change this flow to the following:</p>
+<ol>
+<li>Acquire build agent from pool</li>
+<li>Compile code and create helix payloads and job list</li>
+<li>Save job information to output variable</li>
+<li>Return build agent to pool</li>
+<li>In agentless job:
+<ol>
+<li>Read output variable from previous job/stage and send request to helix api using <a href="https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/utility/http-rest-api?view=azure-devops">Invoke Rest Api</a></li>
+<li>Using the &quot;Callback&quot; completion mode agentless job waits for notifications from helix service</li>
+</ol>
+</li>
+<li>In Helix Service
+<ol>
+<li>Receive request from agentless job and store information</li>
+<li>Start test runs</li>
+<li>Start helix job execution</li>
+<li>Wait for job completion - send progress logs back to azure pipelines</li>
+<li>Report test results for workitem statuses</li>
+<li>Finish test runs and check for job pass/fail status</li>
+<li>Report task completion to azure pipelines</li>
+</ol>
+</li>
+<li>Agentless job finishes after receiving notification from helix service</li>
+</ol>
+<p>This workflow gives back the build agent to the pool shortly after finishing the build, and allows the helix jobs to run without requiring a build agent to be listening.
+The agentless job can also be retried to re-run the helix job(s) without requiring a rebuild.</p>
+<h2 id="proof-of-concept">Proof of Concept</h2>
+<p>I have a proof of concept in this PR <a href="https://github.com/dotnet/arcade/pull/10342">https://github.com/dotnet/arcade/pull/10342</a>. The agentless job can be seen running here <a href="https://dev.azure.com/dnceng-public/public/_build/results?buildId=55561&amp;view=logs&amp;j=830c6850-7aa7-5384-6c90-1a1a71217f4b">https://dev.azure.com/dnceng-public/public/_build/results?buildId=55561&amp;view=logs&amp;j=830c6850-7aa7-5384-6c90-1a1a71217f4b</a>.</p>
+<h2 id="implementation-details">Implementation details</h2>
+<p>This solution requires a web api endpoint on our server that handles the request from the agentless job, then a service running inside our cluster that starts and monitors jobs based on these requests. This service will need to fixup the job payloads with test run information, then monitor execution and report status back to azdo.</p>
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

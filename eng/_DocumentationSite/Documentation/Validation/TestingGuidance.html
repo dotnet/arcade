@@ -1,0 +1,156 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Testing Guidance </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Testing Guidance ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="testing-guidance">Testing Guidance</h1>
+
+<h2 id="requirements">Requirements</h2>
+<h3 id="fluentassertions"><a href="https://fluentassertions.com/introduction">FluentAssertions</a></h3>
+<p>We are using FluentAssertions for all testing assertions.
+The main benefit specific to this repository is that this allows us to use the same assertion library regardless of execution frameworks (XUnit or NUnit),
+so that a developer only needs to learn how to write and read a single assertion library to be productive.
+Other benefits are outlined well in the documentation on the <a href="https://fluentassertions.com/introduction">FluentAssertions site</a>.</p>
+<h3 id="nunit"><a href="https://docs.nunit.org/articles/nunit/intro.html">NUnit</a></h3>
+<p>We are going to use NUnit as the testing framework, but <em>not</em> the assertion library.
+This means using the attributes, like <code>[Test]</code>, but not the <code>Assert</code> class.
+This is because we have a lot of integration testing, where each test can take a long time,
+and having fine grained control of the parallelism of execution is critical so that these tests can finish in a reasonable amount of time.
+With XUnit, this requires putting every test in a separate class or &quot;Test Collection&quot;,
+which impacts maintainability more than using NUnit.</p>
+<h2 id="tips">Tips</h2>
+<p>There are a lot of good guides on the internet about how to write good tests.</p>
+<p>I highly recommend watching this training day video as well
+<a href="https://msit.microsoftstream.com/video/93e9a3ff-0400-a936-f58b-f1eaa13859f9">Unit Tests that Don't Suck - by Graham Wheele</a></p>
+<p>Here are some good articles I read on the subject that align with our testing usage.</p>
+<ul>
+<li><a href="https://www.toptal.com/qa/how-to-write-testable-code-and-why-it-matters">Unit Tests, How to Write Testable Code and Why it Matters - Sergey Kolodiy</a></li>
+<li><a href="https://medium.com/better-programming/13-tips-for-writing-useful-unit-tests-ca20706b5368">13 Tips for Writing Useful Unit Tests - Nick Hodges</a></li>
+<li><a href="https://stackify.com/unit-testing-basics-best-practices/">You Still Don’t Know How to Do Unit Testing (and Your Secret is Safe with Me) - Erik Dietrich</a></li>
+</ul>
+<h3 id="takeaways">Takeaways</h3>
+<h4 id="avoid-stateful-classes">Avoid stateful classes</h4>
+<p>In general, <code>[SetUp]</code> and <code>[TearDown]</code> (or constructor/Dipose) methods should be avoided.
+And <code>[SetUp]</code>/<code>[TearDown]</code> in base classes is especially bad.
+Not only does this mean that to understand a test you need to go spelunking in multiple files to attempt to track down what's happening,
+it also means that the behavior of your test is tightly coupled to the test infrastructure.</p>
+<p>In general you get a lot more control by having a class that encapsulates the data your tests need.
+In various reading, this is often called an &quot;Object Mother&quot; (example here <a href="https://reflectoring.io/objectmother-fluent-builder/">https://reflectoring.io/objectmother-fluent-builder/</a>).
+A test method calls the required methods in the beginning of the test method,
+and, if necessary, can &quot;using&quot; any of the returned objects that need to be disposed.
+The benefits of this are that everything the test does is done in the test itself
+(or methods called directly by the tests, so you can F12 your way into them if necessary).</p>
+<h4 id="be-verbose">Be verbose</h4>
+<p>In tests, it is especially helpful for things to be named verbosely.
+Test methods, variable names, any test factory methods that are called,
+adding string to assertions that might otherwise be unclear
+(if you are asserting multiple properties in a method, it is helpful to say which property each assert is for,
+so, it is not &quot;expected: 2, actual: 4&quot; but &quot;property exampleProperty.Length, expected: 2, actual: 4&quot;.)</p>
+<p>Often developers will have only the name of the method and the assert message to go on,
+and then might be unfamiliar with the code that is failing (if they were, they likely wouldn't have broken it, after all).
+The more information that you can put as close to the failure as possible, the more likely the problem can be addressed quickly and correctly).</p>
+<h4 id="use-dependency-injection-even-for-small-things-like-now">Use <a href="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-3.1">Dependency Injection</a>, even for small things, like &quot;Now&quot;</h4>
+<p>The dependency injection we use for all our code is <code>Microsoft.Extensions.DependencyInjection</code>.
+It's relatively lightweight, built in to ASP.NET Core, and can be used with little effort to solve a large host of problems.
+And it can greatly simplify testing and sharing code.</p>
+<p>If you find yourself calling some static, stateful method if instead an injected Singleton class/interface might improve the ability to test.
+Even innocuous things, like <code>DateTime.UtcNow</code>, can almost singlehandedly make testing a function impossible.
+Inject an <code>ISystemClock</code> instead.</p>
+<p>If you find that your class is injecting a large number of dependencies, it's likely a sign the class is trying to do too much
+(and at the very least, will be difficult to test since every dependency needs to be accounted for in a test).</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CValidation%5CTestingGuidance.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CValidation%5CTestingGuidance.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CValidation%5CTestingGuidance.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

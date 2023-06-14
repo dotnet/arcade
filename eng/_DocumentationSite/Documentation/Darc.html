@@ -1,0 +1,2852 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Darc </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Darc ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="darc">Darc</h1>
+
+<p>Darc is a tool for managing and querying the relationships between repositories
+in the .NET Core ecosystem. This document describes various scenarios and how to
+use darc to achieve them, as well as a general reference guide to darc commands.</p>
+<h2 id="index">Index</h2>
+<ul>
+<li><p><a href="#scenarios">Scenarios</a></p>
+<ul>
+<li><a href="#setting-up-your-darc-client">Setting up your darc client</a></li>
+<li><a href="#adding-dependencies-to-a-repository">Adding dependencies to a repository</a></li>
+<li><a href="#updating-dependencies-in-your-local-repository">Updating dependencies in your local repository</a></li>
+<li><a href="#removing-dependencies-from-a-repository">Removing dependencies from a repository</a></li>
+<li><a href="#changing-a-dependencys-type">Changing a dependency's type</a></li>
+<li><a href="#pinning-dependencies-so-they-do-not-update">'Pinning' dependencies so they do not
+update</a></li>
+<li><a href="#coherent-parent-dependencies">Coherent parent dependencies</a></li>
+<li><a href="#adding-dependency-flow">Adding dependency flow</a></li>
+<li><a href="#halting-and-restarting-dependency-flow">Halting and restarting dependency flow</a></li>
+<li><a href="#viewing-the-dependency-graph">Viewing the dependency graph</a></li>
+<li><a href="#gathering-a-build-drop">Gathering a build drop</a></li>
+<li><a href="#assigning-an-individual-build-to-a-channel">Assigning an individual build to a channel</a></li>
+<li><a href="#locating-the-bar-build-id-for-a-build">Locating the BAR build ID for a build</a></li>
+<li><a href="#checking-merge-policies-on-github">Checking Merge Policies on Github</a></li>
+</ul>
+</li>
+<li><p><a href="#command-reference">Command Reference</a></p>
+<ul>
+<li><a href="#common-parameters">Common Parameters</a></li>
+<li><a href="#add-channel">add-channel</a> - Creates a new channel.</li>
+<li><a href="#add-dependency">add-dependency</a> - Add a new dependency to Version.Details.xml.</li>
+<li><a href="#add-default-channel">add-default-channel</a> - Add a channel that a build of a branch+repository is automatically applied to.</li>
+<li><a href="#add-subscription">add-subscription</a> - Add a new subscription.</li>
+<li><a href="#add-build-to-channel">add-build-to-channel</a> - Adds an existing build to a channel</li>
+<li><a href="#authenticate">authenticate</a> - Stores the Azure DevOps and GitHub tokens
+required for remote operations.</li>
+<li><a href="#clone">clone</a> - Clone a remote repo and all of its dependency repos.</li>
+<li><a href="#default-channel-status">default-channel-status</a> - Enables or disables a default channel association.</li>
+<li><a href="#delete-channel">delete-channel</a> - Deletes an existing channel.</li>
+<li><a href="#delete-default-channel">delete-default-channel</a> - Remove a default channel association.</li>
+<li><a href="#delete-subscription">delete-subscription</a> - Remove a subscription.</li>
+<li><a href="#gather-drop">gather-drop</a> - Gather a drop of the outputs for a build.</li>
+<li><a href="#get-asset">get-asset</a> - Get information about an asset.</li>
+<li><a href="#get-build">get-build</a> - Retrieves a specific build of a repository,</li>
+<li><a href="#get-channels">get-channels</a> - Get a list of channels.</li>
+<li><a href="#get-default-channels">get-default-channels</a> - Gets a list of repo+branch combinations and their associated default channels for builds.</li>
+<li><a href="#get-dependencies">get-dependencies</a> - Get local dependencies.</li>
+<li><a href="#get-dependency-graph">get-dependency-graph</a> - Build repository dependency
+graph.</li>
+<li><a href="#get-flow-graph">get-flow-graph</a> - Get dependency flow graph.</li>
+<li><a href="#get-health">get-health</a> - Evaluate health.</li>
+<li><a href="#get-latest-build">get-latest-build</a> - Retrieves the latest builds matching
+the specified criteria. If more than one build matches then multiple builds
+are returned.</li>
+<li><a href="#get-repository-policies">get-repository-policies</a> - Retrieves information about repository merge policies.</li>
+<li><a href="#get-subscriptions">get-subscriptions</a> - Get information about
+subscriptions.</li>
+<li><a href="#set-repository-policies">set-repository-policies</a> - Set merge policies for
+the specific repository and branch.</li>
+<li><a href="#subscription-status">subscription-status</a> - Enables or disables a subscription matching the id.</li>
+<li><a href="#trigger-subscriptions">trigger-subscriptions</a> - Trigger a subscription or set of subscriptions matching criteria.</li>
+<li><a href="#update-dependencies">update-dependencies</a> - Update local dependencies from
+a channel.</li>
+<li><a href="#update-subscription">update-subscription</a> - Update an existing subscription.</li>
+<li><a href="#verify">verify</a> - Verify that the dependency information in the repository is correct.</li>
+<li><a href="#set-goal">set-goal</a> - Sets goal for a Definition in a Channel.</li>
+<li><a href="#get-goal">get-goal</a> - Gets the goal for a Definition in a Channel.</li>
+</ul>
+</li>
+</ul>
+<h2 id="scenarios">Scenarios</h2>
+<h3 id="setting-up-your-darc-client">Setting up your darc client</h3>
+<p>The darc client is a .NET Core global tool.  It requires that a .NET Core SDK be
+installed globally on the machine. The client can be installed using the
+eng\common\darc-init.ps1 script located under any arcade enabled repository.
+The version number is currently baked into the install script, so ensuring you
+have the latest arcade is a good idea.</p>
+<h4 id="step-1-ensure-youre-part-of-the-arcade-contrib-team">Step 1: Ensure you're part of the <strong>arcade-contrib</strong> team:</h4>
+<ul>
+<li>If not you'll get 'Forbidden' errors when trying to use darc</li>
+<li>Go to <a href="https://github.com/orgs/dotnet/teams/arcade-contrib/members">https://github.com/orgs/dotnet/teams/arcade-contrib/members</a></li>
+<li>Click on &quot;Request to join&quot;</li>
+</ul>
+<h4 id="step-2-install-the-darc-client">Step 2: Install the darc client:</h4>
+<pre><code>PS C:\enlistments\arcade&gt; .\eng\common\darc-init.ps1
+
+Tool 'microsoft.dotnet.darc' (version '1.1.0-beta.19057.9') was successfully uninstalled.
+Installing Darc CLI version 1.1.0-beta.19081.1...
+You may need to restart your command window if this is the first dotnet tool you have installed.
+  Restoring packages for C:\Users\mmitche\AppData\Local\Temp\jlbo0wgo.ki2\restore.csproj...
+  Installing Microsoft.DotNet.Darc 1.1.0-beta.19081.1.
+  Restore completed in 13.12 sec for C:\Users\mmitche\AppData\Local\Temp\jlbo0wgo.ki2\restore.csproj.
+You can invoke the tool using the following command: darc
+Tool 'microsoft.dotnet.darc' (version '1.1.0-beta.19081.1') was successfully installed.
+</code></pre>
+<p>If you get a <code>SecurityError</code> saying that <code>\eng\common\darc-init.ps1 cannot be loaded because running scripts is disabled on this system</code> , you can relax your <code>ExecutionPolicy</code> for this script:</p>
+<pre><code>powershell -ExecutionPolicy ByPass -File .\darc-init.ps1
+</code></pre>
+<p>After your client is installed, you should be able to launch it by typing 'darc'
+on the command line.  If this is the first global tool you've installed, you may
+need to first restart your command window.</p>
+<pre><code>PS C:\enlistments\arcade&gt; darc
+Microsoft.DotNet 1.1.0-beta.19081.1+270fa76db13d4c103a6dec2b03f1fd79730ff429
+c Microsoft Corporation. All rights reserved.
+ERROR(S):
+No verb selected.
+
+  add-channel                  Creates a new channel.
+
+  add-dependency               Add a new dependency to Version.Details.xml.
+
+  add-default-channel          Add a channel that a build of a branch+repository is automatically applied to.
+
+  add-subscription             Add a new subscription.
+
+  authenticate                 Stores the VSTS and GitHub tokens required for remote operations.
+
+  delete-channel               Deletes an existing channel.
+
+  delete-default-channel       Remove a default channel association.
+
+...
+</code></pre>
+<h4 id="step-3-set-additional-pats-for-azure-devops-and-github-operations">Step 3: Set additional PATs for Azure DevOps and GitHub operations</h4>
+<p>When executing most operations, the client needs to make some remote queries.
+These remote queries require authentication in most circumstances. There are 3
+PATs that may be used:</p>
+<ul>
+<li>A GitHub PAT for downloading files from GitHub (e.g. eng/Version.Details.xml or
+arcade script files.  Required scopes: None</li>
+<li>An Azure DevOps PAT for downloading files from Azure DevOps. (e.g.
+eng/Version.Details.xml)  Required scopes: Code-Read, Build-Read &amp; Execute, Packaging Read</li>
+<li>A Build Asset Registry (BAR) password for interacting with Maestro++/BAR (e.g.
+obtaining build information needed for a drop).</li>
+</ul>
+<p>These tokens can either be passed on the command line using parameters (see <a href="#common-parameters">Common parameters</a>), or
+cached locally on the machine using the <a href="#authenticate"><code>darc authenticate</code></a> command.</p>
+<p>After supplying your secrets, a simple <code>darc get-channels</code> operations should succeed.</p>
+<pre><code>PS C:\enlistments\arcade&gt; darc get-channels
+.NET Tools - Latest
+.NET Engineering Services - Int
+.NET Engineering Services - Prod
+.NET Tools - Validation
+.NET Core 3 Release
+.NET Core 3.1 Dev
+.NET Core 3.1 Release
+.NET 5 Dev
+.NET Core 3.0 Internal Servicing
+.NET 3 Tools
+.NET 3 Tools - Validation
+</code></pre>
+<h3 id="adding-dependencies-to-a-repository">Adding dependencies to a repository</h3>
+<p>Adding a new dependency to a repository means adding a dependency that is
+tracked by the Maestro++/darc system. This dependency's version can then be automatically updated,
+along with its sha and repository uri. It can contribute to the repository
+dependency graph, and the build producing it will be included in a drop.</p>
+<p>Dependencies are tracked in eng/Version.Details.xml, along with the following
+information about each one:</p>
+<ul>
+<li>Name</li>
+<li>Source sha</li>
+<li>Source repository</li>
+<li>Is the dependency version pinned (can be it automatically updated?)</li>
+<li>Dependency type (toolset or product)</li>
+</ul>
+<p>The <a href="#add-dependency"><code>darc add-dependency</code></a> command adds a new dependency.  It takes a number of
+parameters, though only <code>--name</code> and <code>--type</code> are initially required.  It is
+highly recommended at least the <code>--repo</code> parameter be provided so that the
+sha/version data can be filled in using <a href="#update-dependencies"><code>darc update-dependencies</code></a>. See <a href="#toolset-vs-product-dependencies">Toolset
+vs. Product Dependencies</a> below for
+information on type. For example:</p>
+<pre><code>darc add-dependency --name 'Microsoft.NETCore.App' --type 'product' --repo https://github.com/dotnet/core-setup
+</code></pre>
+<p>This will add a new dependency called 'Microsoft.NETCore.App' to eng/Version.Details.xml under the
+product section. The version, repo, and sha information will be left blank.  A
+corresponding PropertyGroup entry in eng/Versions.props will be added, with the same
+version number. The property name is derived off of the dependency name, with
+the .'s and -'s removed and &quot;PackageVersion&quot; added onto the end. <em>Note: If
+eng/Versions.props's existing version property names end with the suffix
+'Version', darc will append that instead.</em></p>
+<p>eng/Versions.props after add command.</p>
+<pre><code>&lt;MicrosoftNETCoreAppPackageVersion&gt;&lt;/MicrosoftNETCoreAppPackageVersion&gt;
+</code></pre>
+<p>After doing this, you can use the generated <code>MicrosoftNETCoreAppPackageVersion</code>
+property as inputs to a PackageReference element or wherever else may need a
+version number.</p>
+<p>After adding, it is recommended that you use darc to fill out the missing
+dependency information.  The information can also be filled in after committing by Maestro++
+using dependency flow, but passing your CI without a filled-in version number
+may be difficult. See <a href="#updating-dependencies-in-your-local-repository">Updating dependencies in your local repository</a></p>
+<h4 id="toolset-vs-product-dependencies">Toolset vs. Product Dependencies</h4>
+<p>There are two types of dependencies: 'Product' and 'Toolset'. Choosing between
+them involves answering the question:</p>
+<p>&quot;Does my repository repackage the input dependency's binaries, or information
+about those binaries in the outputs it creates for the product?&quot; If so, that
+dependency is 'Product', otherwise, it's 'Toolset'.</p>
+<p>Some examples:</p>
+<h5 id="toolset">Toolset</h5>
+<ul>
+<li><strong>Arcade SDK or other arcade packages</strong> - These packages are not customer
+facing and do not ship as part of the product.</li>
+<li><strong>dotnet/corefx's dependency on Microsoft.NETCore.App</strong> - This is a circular
+dependency for testing purposes.</li>
+</ul>
+<h5 id="product">Product</h5>
+<ul>
+<li><strong>dotnet/core-setup's dependency on dotnet/coreclr's runtime packages</strong> - Even though
+these packages are not 'shipped' to nuget.org, they are repackaged by dotnet/core-setup.</li>
+<li><strong>dotnet/core-sdk's dependency on dotnet/core-setup</strong> - The SDK repackages
+information about Microsoft.NETCore.App.</li>
+<li><strong>dotnet/winforms's dependency on dotnet/corefx's outputs</strong> - Winforms repackages
+information about the dotnet/corefx api surface area, and thus those dotnet/corefx binaries
+should be 'shipped'.  While we wouldn't necessarily want to ship multiple
+versions of the same binary in a release, we would ensure that the same dotnet/corefx
+version is coherent across the stack.</li>
+</ul>
+<h3 id="updating-dependencies-in-your-local-repository">Updating dependencies in your local repository</h3>
+<p>Sometimes it may be useful to update the dependency state of your local
+repository against the latest builds. This might be useful when:</p>
+<ul>
+<li>Manually updating to create a new PR.</li>
+<li>Filling out missing information (e.g. version and sha) in Version.Details.xml
+prior to committing a new dependency.</li>
+<li>Updating to the latest binaries on a different channel for testing.</li>
+</ul>
+<p>darc reads the Version.Details.xml file and notes the dependency name and
+repository uri of each dependency.  Then, given an input channel, it looks up
+the latest build of each dependency's repository that has been applied to the
+channel. It then updates the Version.Details.xml and other version files (e.g.
+Versions.props) based on the newest information.</p>
+<p>Continuing with the example from <a href="#Adding-dependencies-to-a-repository">Adding dependencies to a
+repository</a>, let's say I just added a
+dependency on Microsoft.NETCore.App out of core-setup. I want to fill in the
+missing information prior to check-in.  I know that the channel that .NET 5
+day to day development for core-setup targeting is '.NET 5 Dev', so by
+doing:</p>
+<pre><code>PS C:\enlistments\arcade&gt; darc update-dependencies --channel &quot;.NET 5 Dev&quot; --name &quot;Microsoft.Netcore.app&quot;
+
+Updating 'Microsoft.NETCore.App': '' =&gt; '3.0.0-preview-27401-3' (from build '20190201.3' of 'https://github.com/dotnet/core-setup')
+  Dependency name normalized to 'Microsoft.NETCore.App'
+Local dependencies updated from channel '.NET 5 Dev'.
+
+PS C:\enlistments\arcade&gt; git diff
+diff --git a/eng/Version.Details.xml b/eng/Version.Details.xml
+index edadff27..516e8e6e 100644
+--- a/eng/Version.Details.xml
++++ b/eng/Version.Details.xml
+@@ -1,6 +1,11 @@
+ &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+ &lt;Dependencies&gt;
+-  &lt;ProductDependencies&gt;&lt;/ProductDependencies&gt;
++  &lt;ProductDependencies&gt;
++    &lt;Dependency Name=&quot;Microsoft.NETCore.App&quot; Version=&quot;3.0.0-preview-27401-3&quot;&gt;
++      &lt;Uri&gt;https://github.com/dotnet/core-setup&lt;/Uri&gt;
++      &lt;Sha&gt;b50554ac9a96fedc8580fa6090b6e9e75a23193b&lt;/Sha&gt;
++    &lt;/Dependency&gt;
++  &lt;/ProductDependencies&gt;
+   &lt;ToolsetDependencies&gt;
+     &lt;Dependency Name=&quot;Microsoft.DotNet.Arcade.Sdk&quot; Version=&quot;1.0.0-beta.19080.6&quot;&gt;
+       &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+diff --git a/eng/Versions.props b/eng/Versions.props
+index a1d683c1..dbf3fe0e 100644
+--- a/eng/Versions.props
++++ b/eng/Versions.props
+@@ -60,6 +60,7 @@
+     &lt;MicrosoftDiaSymReaderConverterVersion&gt;1.1.0-beta1-62810-01&lt;/MicrosoftDiaSymReaderConverterVersion&gt;
+     &lt;MicrosoftDiaSymReaderNativeVersion&gt;1.7.0&lt;/MicrosoftDiaSymReaderNativeVersion&gt;
++    &lt;MicrosoftNETCoreAppVersion&gt;3.0.0-preview-27401-3&lt;/MicrosoftNETCoreAppVersion&gt;
+   &lt;/PropertyGroup&gt;
+   &lt;PropertyGroup&gt;
+     &lt;RestoreSources&gt;
+@@ -69,4 +70,8 @@
+       https://dotnet.myget.org/F/symreader/api/v3/index.json
+     &lt;/RestoreSources&gt;
+   &lt;/PropertyGroup&gt;
++  &lt;!--Package names--&gt;
++  &lt;PropertyGroup&gt;
++    &lt;MicrosoftNETCoreAppPackage&gt;Microsoft.NETCore.App&lt;/MicrosoftNETCoreAppPackage&gt;
++  &lt;/PropertyGroup&gt;
+ &lt;/Project&gt;
+
+</code></pre>
+<p>Alternately, let's say I'm working on updating to the latest arcade, which has a
+change I need to react to.  I check out a branch locally off of master, then run
+update-dependencies against the tools channel ('.NET Tools - Latest') to pull in the latest script files:</p>
+<pre><code>PS C:\enlistments\core-setup&gt; darc update-dependencies --channel &quot;.NET Tools - Latest&quot;
+Updating 'Microsoft.DotNet.Arcade.Sdk': '1.0.0-beta.19080.6' =&gt; '1.0.0-beta.19081.3' (from build '20190131.3' of 'https://github.com/dotnet/arcade')
+Local dependencies updated from channel '.NET Tools - Latest'.
+
+PS C:\enlistments\core-setup&gt; git diff
+diff --git a/eng/Version.Details.xml b/eng/Version.Details.xml
+index 2b845202..1fb125a0 100644
+--- a/eng/Version.Details.xml
++++ b/eng/Version.Details.xml
+@@ -21,9 +21,9 @@
+     &lt;/Dependency&gt;
+   &lt;/ProductDependencies&gt;
+   &lt;ToolsetDependencies&gt;
+-    &lt;Dependency Name=&quot;Microsoft.DotNet.Arcade.Sdk&quot; Version=&quot;1.0.0-beta.19080.6&quot;&gt;
++    &lt;Dependency Name=&quot;Microsoft.DotNet.Arcade.Sdk&quot; Version=&quot;1.0.0-beta.19081.3&quot;&gt;
+       &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+-      &lt;Sha&gt;14d1133b6074b463784a7adbbf385df0462f4010&lt;/Sha&gt;
++      &lt;Sha&gt;1e859f1c17fffbe9c4fb6bbfc0fc71cd0c56563b&lt;/Sha&gt;
+     &lt;/Dependency&gt;
+   &lt;/ToolsetDependencies&gt;
+ &lt;/Dependencies&gt;
+diff --git a/eng/common/darc-init.ps1 b/eng/common/darc-init.ps1
+index 96cad844..57db185d 100644
+--- a/eng/common/darc-init.ps1
++++ b/eng/common/darc-init.ps1
+@@ -19,7 +19,7 @@ function InstallDarcCli ($darcVersion) {
+   # Until we can anonymously query the BAR API for the latest arcade-services
+   # build applied to the PROD channel, this is hardcoded.
+   if (-not $darcVersion) {
+-    $darcVersion = '1.1.0-beta.19057.9'
++    $darcVersion = '1.1.0-beta.19081.1'
+   }
+
+   $arcadeServicesSource = 'https://dotnetfeed.blob.core.windows.net/dotnet-arcade/index.json'
+diff --git a/global.json b/global.json
+index 8e5dab10..ede83435 100644
+--- a/global.json
++++ b/global.json
+@@ -3,6 +3,6 @@
+     &quot;dotnet&quot;: &quot;2.1.300&quot;
+   },
+   &quot;msbuild-sdks&quot;: {
+-    &quot;Microsoft.DotNet.Arcade.Sdk&quot;: &quot;1.0.0-beta.19080.6&quot;
++    &quot;Microsoft.DotNet.Arcade.Sdk&quot;: &quot;1.0.0-beta.19081.3&quot;
+   }
+ }
+</code></pre>
+<h3 id="removing-dependencies-from-a-repository">Removing dependencies from a repository</h3>
+<p>Removing a dependency from a repository involves simply removing the appropriate
+<code>Dependency</code> block from eng/Version.Details.xml and committing. At that point, neither darc nor
+Maestro++ will know anything about it any longer.</p>
+<h3 id="changing-a-dependencys-type">Changing a dependency's type</h3>
+<p>To change a dependency's type, move the <code>Dependency</code> element from the
+parent <code>ProductDependencies</code> element into <code>ToolsetDependencies</code> (or vice versa)
+and commit.  See <a href="#toolset-vs-product-dependencies">Toolset
+vs. Product Dependencies</a></p>
+<h3 id="pinning-dependencies-so-they-do-not-update">'Pinning' dependencies so they do not update.</h3>
+<p>By default on each operation (e.g. subscription updates or <code>darc update-dependencies</code>), darc and Maestro will update all applicable dependencies
+in eng/Version.Details.xml and associated files.  For instance, if a
+subscription from core-setup's '.NET 5 Dev' channel to core-sdk's master
+branch produces 3 outputs, Maestro will attempt to update any matching inputs in
+core-sdk's eng/Version.Details.xml file. In some cases, it may be necessary to
+pin dependencies so they do not move (e.g. if a breaking change requires
+extended work).</p>
+<p>This is possible by adding a Pinned=&quot;true&quot; attribute to the dependency
+information.  If Pinned is not supplied, the default is &quot;false&quot;.</p>
+<pre><code>PS C:\enlistments\arcade&gt; cat .\eng\Version.Details.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;Dependencies&gt;
+  &lt;ProductDependencies&gt;
+    &lt;Dependency Name=&quot;Microsoft.NETCore.App&quot; Version=&quot;3.0.0-preview-27401-3&quot; Pinned=&quot;true&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/core-setup&lt;/Uri&gt;
+      &lt;Sha&gt;b50554ac9a96fedc8580fa6090b6e9e75a23193b&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+  &lt;/ProductDependencies&gt;
+  &lt;ToolsetDependencies&gt;
+    &lt;Dependency Name=&quot;Microsoft.DotNet.Arcade.Sdk&quot; Version=&quot;1.0.0-beta.19080.6&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+      &lt;Sha&gt;14d1133b6074b463784a7adbbf385df0462f4010&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;Microsoft.DotNet.Build.Tasks.Feed&quot; Version=&quot;2.2.0-beta.19080.6&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+      &lt;Sha&gt;14d1133b6074b463784a7adbbf385df0462f4010&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;Microsoft.DotNet.Maestro.Tasks&quot; Version=&quot;1.0.0-beta.19060.8&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+      &lt;Sha&gt;67384d20d310611afc1c2b4dd3b953fda182def4&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;Microsoft.DotNet.SignTool&quot; Version=&quot;1.0.0-beta.19080.6&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+      &lt;Sha&gt;14d1133b6074b463784a7adbbf385df0462f4010&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;Microsoft.DotNet.Helix.Sdk&quot; Version=&quot;2.0.0-beta.19080.6&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+      &lt;Sha&gt;14d1133b6074b463784a7adbbf385df0462f4010&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+  &lt;/ToolsetDependencies&gt;
+&lt;/Dependencies&gt;
+</code></pre>
+<h3 id="coherent-parent-dependencies">Coherent parent dependencies</h3>
+<p>Coherent parent dependencies are a way to relate two dependencies within your
+repository. A dependency with a coherent parent will update its version based on
+the version of the dependency that appears within the subtree of the coherent
+parent. This essentially keeps the dependency from moving 'ahead' of another
+dependency in your repo.</p>
+<p><img src="CoherentParent.png" alt="Coherent Parent Diagram"></p>
+<p>This is most typically used when referencing corefx, coreclr, and core-setup
+outputs. Microsoft.NETCore.App encodes information about the corefx and
+coreclr runtime binaries that it has as dependencies itself.  Repositories
+downstream may need to take dependencies on both Microsoft.NETCore.App as well
+as specific corefx packages. If the corefx packages move ahead of what is
+referenced in Microsoft.NETCore.App, issues may occur. Specifying a coherent
+parent that ties the corefx dependencies to Microsoft.NETCore.App will avoid
+this.</p>
+<p>The <em>subtree of the coherent parent</em> is the tree of builds that the parent
+depends on, including transitive dependencies. To perform a coherent parent
+update, Darc searches the assets in the subtree to find the newest-built asset
+matching the dependency that declared the coherent parent. Darc then assigns
+that version to the dependency.</p>
+<h3 id="strict-coherency">Strict Coherency</h3>
+<p>This current default model of coherency (find the newest-built asset) has some severe
+drawbacks:</p>
+<ul>
+<li><strong>Build information is required</strong> - The current algorithm picks the newest build asset
+in the subtree. This means that a build lookup is required for each every build in the tree.
+This is not only time consuming, it is also fragile. Loss of BAR data would mean that
+CPD constraints could not be satisfied.</li>
+<li><strong>Newest may not be the desired choice</strong> - More than one version of the asset may appear
+within the subtree. While newest is chosen, this does not mean that newest is the correct
+choice. Consider the following:
+<ul>
+<li>dotnet/efcore ties dependency Foo to Bar, coming from dotnet/extensions. Foo is produced
+out of dotnet/core-setup.</li>
+<li>dotnet/extensions has Foo pinned to version 1.0.0, but also has dependencies on
+another, newer dotnet/core-setup build that also produced Foo at 1.0.1.</li>
+<li>CPD will choose Foo to be 1.0.1. This may be what the repo owner wished, but they may
+also simply have wanted 1.0.0.</li>
+</ul>
+</li>
+<li><strong>Incremental servicing can cause version regressions</strong> - This is perhaps the biggest drawback
+of the current algorithm. Consider the following:
+<ul>
+<li>dotnet/efcore ties dependency Foo to Bar, coming from dotnet/extensions. Foo is produced
+out of dotnet/core-setup, but only when it has changes for an upcoming release.</li>
+<li>dotnet/extensions does not have a direct dependency on Foo.</li>
+<li>dotnet/extensions has a dependency on another incrementally-serviced package produced out of
+dotnet/core-setup. This package has not been serviced recently, but when it was, Foo was also serviced,
+producing 1.0.3.</li>
+<li>dotnet/core-setup just serviced Foo @ 1.0.10, but for the next release it is not producing that
+package.</li>
+<li>When dotnet/core-setup build is ingested into dotnet/efcore and dotnet/extensions
+for the next release, the CPD algorithm will no longer find Foo @ 1.0.10 in the build asset
+graph. It has simply disappeared because there is no longer a reference to any build
+that produced Foo @ 1.0.10. Instead, it will find 1.0.3, as this reference still exists.</li>
+</ul>
+</li>
+</ul>
+<p>Strict coherency eliminates these problems by doing the following: If dependency Foo is tied to
+coherent parent Bar, and Bar comes from dotnet/extensions @ 12345, then dotnet/extensions @ 12345
+must have a <strong>direct</strong> dependency on Foo. The version of Foo is directly copied from the version
+at dotnet/extensions @ 12345. This ensures the following:</p>
+<ul>
+<li>No build information is utilized and the CPD evaluation only involves a single version file
+lookup.</li>
+<li>There is no choice to make. There is only one possible version for Foo, since a dependency
+can only appear once within a Version.Details.xml file.</li>
+</ul>
+<p>The downside of CPD strict is that dependencies that are not directly utilized within a
+repo are often required to appear in their Version.Details.xml files. Overall, this is
+a small tradeoff for better performance and predictable behavior. Rollout of CPD strict
+as the default behavior is pending addition of new dependencies in various repos in the 3.x
+branches.</p>
+<p>To try CPD strict on a repo, run the following command:</p>
+<pre><code>darc update-dependencies --strict-coherency --coherency-only
+</code></pre>
+<h4 id="specifying-a-coherent-parent">Specifying a coherent parent</h4>
+<p>To specify a coherent parent, add &quot;CoherentParentDependency&quot; attributes in your
+Version.Details.xml file, as shown below:</p>
+<pre><code>PS D:\enlistments\extensions\eng&gt; cat .\Version.Details.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;!--
+
+  This file is used by automation to update Versions.props and may be used for other purposes, such as
+  static analysis to determine the repo dependency graph.  It should only be modified manually when adding
+  or removing dependencies. Updating versions should be done using the `darc` command line tool.
+
+  See https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md for instructions on using darc.
+
+--&gt;
+&lt;Dependencies&gt;
+  &lt;ProductDependencies&gt;
+    &lt;Dependency Name=&quot;Microsoft.Win32.Registry&quot; Version=&quot;4.6.0-preview6.19279.8&quot; CoherentParentDependency=&quot;Microsoft.NETCore.App&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/corefx&lt;/Uri&gt;
+      &lt;Sha&gt;e23119d577e644d2c2a25419c88c1181681358e0&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;System.ComponentModel.Annotations&quot; Version=&quot;4.6.0-preview6.19279.8&quot; CoherentParentDependency=&quot;Microsoft.NETCore.App&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/corefx&lt;/Uri&gt;
+      &lt;Sha&gt;e23119d577e644d2c2a25419c88c1181681358e0&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;System.Data.SqlClient&quot; Version=&quot;4.7.0-preview6.19279.8&quot; CoherentParentDependency=&quot;Microsoft.NETCore.App&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/corefx&lt;/Uri&gt;
+      &lt;Sha&gt;e23119d577e644d2c2a25419c88c1181681358e0&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;System.Diagnostics.DiagnosticSource&quot; Version=&quot;4.6.0-preview6.19279.8&quot; CoherentParentDependency=&quot;Microsoft.NETCore.App&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/corefx&lt;/Uri&gt;
+      &lt;Sha&gt;e23119d577e644d2c2a25419c88c1181681358e0&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;System.Diagnostics.EventLog&quot; Version=&quot;4.6.0-preview6.19279.8&quot; CoherentParentDependency=&quot;Microsoft.NETCore.App&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/corefx&lt;/Uri&gt;
+      &lt;Sha&gt;e23119d577e644d2c2a25419c88c1181681358e0&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;System.IO.Pipelines&quot; Version=&quot;4.6.0-preview6.19279.8&quot; CoherentParentDependency=&quot;Microsoft.NETCore.App&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/corefx&lt;/Uri&gt;
+      &lt;Sha&gt;e23119d577e644d2c2a25419c88c1181681358e0&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;System.Reflection.Metadata&quot; Version=&quot;1.7.0-preview6.19279.8&quot; CoherentParentDependency=&quot;Microsoft.NETCore.App&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/corefx&lt;/Uri&gt;
+      &lt;Sha&gt;e23119d577e644d2c2a25419c88c1181681358e0&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;System.Runtime.CompilerServices.Unsafe&quot; Version=&quot;4.6.0-preview6.19279.8&quot; CoherentParentDependency=&quot;Microsoft.NETCore.App&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/corefx&lt;/Uri&gt;
+      &lt;Sha&gt;e23119d577e644d2c2a25419c88c1181681358e0&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;System.Security.Cryptography.Cng&quot; Version=&quot;4.6.0-preview6.19279.8&quot; CoherentParentDependency=&quot;Microsoft.NETCore.App&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/corefx&lt;/Uri&gt;
+      &lt;Sha&gt;e23119d577e644d2c2a25419c88c1181681358e0&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;System.Security.Cryptography.Xml&quot; Version=&quot;4.6.0-preview6.19279.8&quot; CoherentParentDependency=&quot;Microsoft.NETCore.App&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/corefx&lt;/Uri&gt;
+      &lt;Sha&gt;e23119d577e644d2c2a25419c88c1181681358e0&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;System.ServiceProcess.ServiceController&quot; Version=&quot;4.6.0-preview6.19279.8&quot; CoherentParentDependency=&quot;Microsoft.NETCore.App&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/corefx&lt;/Uri&gt;
+      &lt;Sha&gt;e23119d577e644d2c2a25419c88c1181681358e0&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;System.Text.Encodings.Web&quot; Version=&quot;4.6.0-preview6.19279.8&quot; CoherentParentDependency=&quot;Microsoft.NETCore.App&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/corefx&lt;/Uri&gt;
+      &lt;Sha&gt;e23119d577e644d2c2a25419c88c1181681358e0&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;System.Text.Json&quot; Version=&quot;4.6.0-preview6.19279.8&quot; CoherentParentDependency=&quot;Microsoft.NETCore.App&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/corefx&lt;/Uri&gt;
+      &lt;Sha&gt;e23119d577e644d2c2a25419c88c1181681358e0&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;Microsoft.NETCore.App&quot; Version=&quot;3.0.0-preview6-27730-01&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/core-setup&lt;/Uri&gt;
+      &lt;Sha&gt;63abc77da6d99470caa5bfa0465afe244105e595&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;NETStandard.Library.Ref&quot; Version=&quot;2.1.0-preview6-27730-01&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/core-setup&lt;/Uri&gt;
+      &lt;Sha&gt;63abc77da6d99470caa5bfa0465afe244105e595&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+  &lt;/ProductDependencies&gt;
+  &lt;ToolsetDependencies&gt;
+    &lt;Dependency Name=&quot;Microsoft.DotNet.Arcade.Sdk&quot; Version=&quot;1.0.0-beta.19302.2&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+      &lt;Sha&gt;e6a5d5f970bb872451c6310ae34eda31041fb552&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;Microsoft.DotNet.GenAPI&quot; Version=&quot;1.0.0-beta.19302.2&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+      &lt;Sha&gt;e6a5d5f970bb872451c6310ae34eda31041fb552&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;Microsoft.DotNet.Helix.Sdk&quot; Version=&quot;2.0.0-beta.19302.2&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+      &lt;Sha&gt;e6a5d5f970bb872451c6310ae34eda31041fb552&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;Microsoft.NETCore.Platforms&quot; Version=&quot;3.0.0-preview6.19279.8&quot; CoherentParentDependency=&quot;Microsoft.NETCore.App&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/corefx&lt;/Uri&gt;
+      &lt;Sha&gt;e23119d577e644d2c2a25419c88c1181681358e0&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+  &lt;/ToolsetDependencies&gt;
+&lt;/Dependencies&gt;
+</code></pre>
+<h3 id="adding-dependency-flow">Adding dependency flow</h3>
+<p>Dependency flow is the automatic movement of dependency information between
+repositories. This is done by Maestro++ keeping track of new builds in each
+repository and opening PRs in other repositories when those repositories' input
+dependencies in eng/Version.Details.xml match the outputs of the new builds.</p>
+<p>These updates are selective and based on 'subscriptions'. A subscription describes an update
+operation for a specific repository+branch combination, mapping outputs of a
+repository that have been applied to a channel (virtual branch) onto matching
+inputs of the target repository+branch.</p>
+<p>For example, a build of dotnet/corefx might be applied to the &quot;.NET 5 Dev&quot;
+channel. dotnet/core-setup maps new outputs of dotnet/corefx on the &quot;.NET 5 Dev&quot;
+channel onto its master branch.</p>
+<p>A subscription has a few parts:</p>
+<ul>
+<li>Mapping of source repo + source channel =&gt; target repo + target branch</li>
+<li>An update rate (e.g. every day, every build, not at all)</li>
+<li>Whether a subscription is batchable or not. If batchable, all batchable
+subscriptions targeting the same repo+branch combination will share a PR.
+<em>Note: Batchable subscriptions is currently only supported by the REST API.
+Please contact @dnceng to set up batchable subscriptions.</em></li>
+<li>A set of auto merge policies, if the subscription is not batchable.  If batchable,
+merge policies are set on a repository level rather than a per-subscription
+level, as they end up shared between several subscriptions. <em>Note: repository
+merge policies are currently unsupported in darc. Please contact @dnceng to
+set up repository merge policies.</em></li>
+</ul>
+<p>For additional information and samples, see <a href="#add-subscription">add-subscription</a></p>
+<h4 id="when-should-a-subscription-be-used-to-update-my-repositorys-inputs">When should a subscription be used to update my repository's inputs?</h4>
+<p>Whenever you want regular dependency flow between two repositories. For example,
+every day (when there is a new source build) or on every new build.</p>
+<h4 id="what-input-channel-should-be-used">What input channel should be used?</h4>
+<p>There are generally two channels for day to day use in .NET 5:</p>
+<ul>
+<li>'.NET 5 Dev' - Day to day builds of .NET 5 repositories are placed on
+this channel.</li>
+<li>'.NET Tools - Latest' - Arcade releases are placed on this channel.</li>
+</ul>
+<p>So, if you're not adding a dependency on the <a href="https://github.com/dotnet/arcade">https://github.com/dotnet/arcade</a>
+repo, the source channel should be '.NET 5 Dev'. If you have other specific
+needs, contact @dnceng.</p>
+<h3 id="halting-and-restarting-dependency-flow">Halting and restarting dependency flow</h3>
+<p>Sometimes it's necessary to halt dependency flow into or out of a repository for
+a period of time. While there are lots of cases where this might be done, here
+are some typical examples:</p>
+<ul>
+<li><strong>Shutting down changes for a release</strong> - The 'last' build of a repository
+like corefx has been produced, and now needs to propagate to the many places
+in the repository graph it is referenced.</li>
+<li><strong>A change in another repository has a breaking change</strong> - Because Maestro++
+can auto-merge PRs, a breaking change that isn't caught by CI might be
+continually propagated as it is the 'latest' build.</li>
+<li><strong>A specific, isolated dependency of a specific repository needs to be kept at
+a specific version</strong> - A few dependencies of a repository should be kept at a
+specific version, while the rest are allowed to update.</li>
+</ul>
+<p>darc and Maestro++ have a few mechanisms to enable such scenarios:</p>
+<ul>
+<li><p><strong>Disabling or deleting a default channel association</strong> - By disabling a
+default channel association for a repo, no new builds of that repo will be
+automatically assigned to the targeted channel.  This effectively halts
+dependency flow without altering all the subscriptions sourcing from that
+repository.  Furthermore, if a selective fix needs to be flowed, the build
+containing that fix can be selectively assigned to correct channel and the
+existing subscriptions will flow as normal.</p>
+<p>Today this can only be done by either deleting or disabling an existing
+default channel association. Examples:</p>
+<p>Pausing new flow from aspnet/Extensions:</p>
+<pre><code># Disable by repo+branch+channel
+
+darc default-channel-status --disable --repo https://github.com/aspnet/Extensions --branch refs/heads/master --channel &quot;.NET 5 Dev&quot;
+
+# Disable by id.
+# Use get-default-channels to get the ID of the default channel association,
+then use default-channel-status to disable.
+
+darc get-default-channels
+
+# Find id of association in list
+(63)   https://github.com/aspnet/Extensions @ refs/heads/master -&gt; .NET 5 Dev
+
+darc default-channel-status --disable --id 63
+</code></pre>
+<p>Resuming flow from aspnet/Extensions:</p>
+<pre><code></code></pre>
+</li>
+<li><p><strong>Disabling or deleting a subscription</strong> - By disabling or deleting a
+subscription, flow between two specific points can be halted.  For instance,
+if arcade has a breaking change that passed core-setup's CI, then it may be
+necessary to remove flow temporarily while the issue is dealt with.  Today,
+this is only possible via the command line tool by deleting the subscription,
+then recreating it when normal flow should be resumed:</p>
+<p>Pausing new flow from arcade to core-setup</p>
+<pre><code>PS C:\enlistments\arcade&gt; darc get-subscriptions --source-repo arcade --target-repo core-setup
+
+https://github.com/dotnet/arcade (.NET Tools - Latest) ==&gt; 'https://github.com/dotnet/core-setup' ('master')
+- Id: 21e611eb-ab71-410e-ca98-08d61f236c94
+- Update Frequency: everyDay
+- Merge Policies:
+  AllChecksSuccessful
+    ignoreChecks =
+                   [
+                     &quot;WIP&quot;,
+                     &quot;license/cla&quot;
+                   ]
+- Last Build: N/A
+
+PS C:\enlistments\arcade&gt; darc delete-subscription --id 21e611eb-ab71-410e-ca98-08d61f236c94
+Successfully deleted subscription with id '21e611eb-ab71-410e-ca98-08d61f236c94'
+</code></pre>
+<p>Resuming flow:</p>
+<pre><code>PS C:\enlistments\arcade&gt; darc add-subscription --channel '.NET Tools - Latest' --target-repo https://github.com/dotnet/core-setup
+                          --target-branch master --update-frequency everyDay --all-checks-passed
+                          --source-repo https://github.com/dotnet/arcade --ignore-checks 'WIP,license/cli'
+
+Successfully created new subscription with id '689a946e-2c12-4b0c-ccf6-08d688804ce4'.
+</code></pre>
+</li>
+<li><p><strong>Pinning specific dependencies</strong> - Specific dependencies can be pinned when
+they should not move.  This keeps the dependency from moving without altering
+subscriptions or channels. This is useful when only a <strong>subset</strong> of a
+specific repos dependencies should not move.</p>
+<p>To do this, add a <code>Pinned=&quot;true&quot;</code> attribute to the dependency that should not
+move.</p>
+<pre><code>PS C:\enlistments\arcade&gt; cat .\eng\Version.Details.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;Dependencies&gt;
+  &lt;ProductDependencies&gt;
+    &lt;Dependency Name=&quot;Microsoft.NETCore.App&quot; Version=&quot;3.0.0-preview-27401-3&quot; Pinned=&quot;true&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/core-setup&lt;/Uri&gt;
+      &lt;Sha&gt;b50554ac9a96fedc8580fa6090b6e9e75a23193b&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+  &lt;/ProductDependencies&gt;
+</code></pre>
+<p>Resume flow by removing the attribute or setting its value to &quot;false&quot;.
+'</p>
+</li>
+</ul>
+<h3 id="viewing-the-dependency-graph">Viewing the dependency graph</h3>
+<p>The dependency graph is the transitive set of dependencies defined by the data in Version.Details.xml.
+Each dependency listed contains information on the source of the dependency,
+specifically which repository and sha it was generated from. Visiting that repository
+at the specified sha will yield another set of dependencies. Transitively
+visiting these repository+sha combinations will build up a repository graph. The
+graph may have cycles, and the transitive walk is stopped at those nodes.  It
+may also be stopped at any toolset dependency unless those are specifically
+included with <code>--include-toolset</code>.</p>
+<p>For detailed information on generating the dependency graph, see
+<a href="#get-dependency-graph"><code>get-dependency-graph</code></a>.</p>
+<h4 id="how-to-interpret-incoherencies">How to interpret incoherencies</h4>
+<p>Incoherencies in the graph are places where the same repo appears twice with
+different shas, or the same dependency appears twice at different versions (even
+if it was sourced from the same sha).  Incoherencies are caused by multiple
+paths to the root node that run through the same repository, combined with
+different flow rates between repositories, varying graph depth, build breaks, etc.</p>
+<p>Incoherencies aren't necessarily bad. During most of the development cycle, the
+graph is highly incoherent.  What matters is whether those incoherencies will
+produce semantic differences in behavior. This is something that can generally only be
+interpreted by developers/product owners by looking at the substantive
+differences.  The default position for day to day development is that
+incoherencies are not a big deal, but the default position for a shipping
+product is that non-toolset incoherencies should be removed.  This can be done
+by halting dependency flow after &quot;final&quot; builds are done of incoherent repos.
+See <a href="#halting-and-restarting-dependency-flow">Halting and restarting dependency
+flow</a> for some options here.</p>
+<p>For a rough example, let's say that at the end of the shipping cycle core-setup
+flows its 'last' build to core-sdk and other repos.  The graph stabilizes.
+Then, at the last moment, they make a test only fix and check it in.  It flows
+to core-sdk quickly, but gets held up in the other repos that pull
+Microsoft.NETCore.App due to them not taking any new PRs.  This certainly counts
+as an incoherency, but because there is no semantic product difference between
+the two versions in the graph there may be no harm in shipping with that
+incoherency.</p>
+<h3 id="gathering-a-build-drop">Gathering a build drop</h3>
+<p>Gathering a drop of the product or subpiece part of the product is a typical
+activity done by developers, release automation, etc.  The darc tool can do this
+using the Build Asset Registry information alongside the dependency graph
+information.</p>
+<p>A build drop is a gathering of all the outputs of a specific build that were
+reported to the Build Asset Registry into a local location. Optionally, this
+build drop may also include any builds that were inputs to this build, based on
+the dependency information in Version.Details.xml. Builds produce various
+outputs that go to various locations. For example, they may produce NuGet
+packages, zips, MSIs, etc. These may be available in the build artifacts, or may
+be located in various storage accounts.  Gather-drop mines the Build Asset
+Registry for these locations and downloads them all to the local directory.</p>
+<p>The drop is generally divided into two sections: shipping and non-shipping.
+Shipping dependencies are those that must be visible to customers.  Non-shipping
+dependencies are those that generally serve as inter-repo transport.  Some
+examples:</p>
+<ul>
+<li>Packages shipping to nuget.org - Shipping</li>
+<li>Coreclr transport packages - Nonshipping, since they get repackaged by
+core-setup</li>
+<li>Symbols - Shipping, since they go to symbol servers</li>
+</ul>
+<h4 id="what-can-i-gather-a-drop-for">What can I gather a drop for?</h4>
+<p>You can gather either an isolated or full (includes dependencies) drop for any
+build in the repository graph. Since the major components of the .NET Core stack
+are rooted at 3 different repositories, gathering a drop of those repositories
+will generate a drop for those 3 components and any of their inputs if <code>--full</code>
+is supplied.</p>
+<ul>
+<li><a href="https://github.com/dotnet/core-sdk">https://github.com/dotnet/core-sdk</a> - SDK</li>
+<li><a href="https://github.com/aspnet/AspNetCore">https://github.com/aspnet/AspNetCore</a> - ASP.NET Core</li>
+<li><a href="https://github.com/dotnet/core-setup">https://github.com/dotnet/core-setup</a> - Runtime.</li>
+</ul>
+<h4 id="how-do-i-find-the-root-build-for-a-drop">How do I find the root build for a drop?</h4>
+<p><code>gather-drop</code> must be able to find a root build. This root build today is
+identified by either a repo+sha combo or a direct BAR build ID. For most
+repositories that build on every commit, providing the repo uri and latest sha
+will generate a drop:</p>
+<pre><code>PS C:\enlistments\core-sdk&gt; git rev-parse HEAD
+465a336c7a5ca3af2f6cf5172ddc0ebde620803b
+PS C:\enlistments\core-sdk&gt; darc gather-drop --repo https://github.com/dotnet/core-sdk
+                            --commit 465a336c7a5ca3af2f6cf5172ddc0ebde620803b --output-dir C:\scratch\drop
+...
+</code></pre>
+<p>If no build exists at that drop, darc will show an error. In this case, you
+might try other recent shas, or use the BAR swagger API
+(<a href="https://maestro-prod.westus2.cloudapp.azure.com/swagger">https://maestro-prod.westus2.cloudapp.azure.com/swagger</a>) to look up a build
+id. Remember to authenticate using a token from
+<a href="https://maestro-prod.westus2.cloudapp.azure.com/">https://maestro-prod.westus2.cloudapp.azure.com/</a>.  Better methods of obtaining
+the root build are coming soon.</p>
+<p>The root build can then be provided using --id</p>
+<pre><code>PS C:\enlistments\core-sdk&gt; darc gather-drop --id 1234 --output-dir C:\scratch\drop
+</code></pre>
+<h3 id="assigning-an-individual-build-to-a-channel">Assigning an individual build to a channel</h3>
+<p>Builds are assigned to channels in one of two ways:</p>
+<ul>
+<li>A default channel</li>
+<li>Manually adding the build to the channel</li>
+</ul>
+<p>A default channel is a note that says that every build of a repo on a specific branch should apply
+to that channel. This is useful because repositories generally do not change the purpose of some of their
+branches over time. For instance, core-setup's release/3.1 branch will like apply to servicing releases
+of .NET Core 3.1 forever. When a default channel is present, the necessary publishing steps will take place
+at the end of the build and assignment to the channel will take place once those are successful. Default
+channels can be added with the <a href="#add-default-channel">add-default-channel</a> command.</p>
+<p>There is also a way to assign one-off builds to a channel. This can be useful if builds only ocassionally
+apply to a channel, or if a default channel assocation was missed prior to a build being launched. This command
+launches a pipeline which performs the standard publishing steps using the build's artifact inputs, and then
+assigns the build to the specified channel. To run this command you need your darc client configured with an AzDO
+PAT which can launch builds, as well as the standard GitHub PATs.  See
+<a href="#setting-up-your-darc-client">Setting up your darc client</a> for more information.</p>
+<p>The default use case is shown below. The ID is the BAR build ID, which can be found in the Publish Build Assets
+task of the &quot;Publish to Build Asset Registry&quot; job in your build. See
+<a href="#locating-the-bar-build-id-for-a-build">Locating the BAR build ID for a build</a>.</p>
+<pre><code>darc add-build-to-channel --id 46856 --channel &quot;.NET Core SDK 3.1.3xx&quot;
+</code></pre>
+<p>There are a few interesting non-standard scenarios:</p>
+<ul>
+<li>If you don't want to publish you can pass: <code>--skip-assets-publishing</code>. The build will immediately apply
+to the new channel. You should only do this if you know the assets from this build are already available
+to downstream builds.</li>
+<li>By default, the publishing pipeline will use the same version of arcade that was referenced in the build
+you wish to assign. This may not be desirable if your repo is missing a required arcade fix. You can ask
+for the automation to use a different arcade version by passing <code>--source-branch</code> and <code>--source-sha</code>. These
+are the source branch and sha of arcade, not your repo. For instance, the following command will use arcade
+at sha <code>09bb9d929120b402348c9a0e9c8c951e824059aa</code> in context of branch master (this is required by AzDO, but not
+particularly material to the functionality.)
+<pre><code>darc add-build-to-channel --id 46856 --channel &quot;.NET Core SDK 3.1.3xx&quot; --source-branch master
+  --source-sha 09bb9d929120b402348c9a0e9c8c951e824059aa
+</code></pre>
+</li>
+</ul>
+<h3 id="locating-the-bar-build-id-for-a-build">Locating the BAR build ID for a build</h3>
+<p>To locate the BAR build ID for a build</p>
+<ol>
+<li>Look for the <strong>Publish to Build Asset Registry</strong> job in your build.</li>
+<li>Find the Publish Build Assets task</li>
+<li>Look in the logs for that task, and note the build id:</li>
+</ol>
+<pre><code>D:\a\1\s\.dotnet\sdk\5.0.100-preview.1.20154.9\MSBuild.dll /nologo -maxcpucount /m -verbosity:m ...
+  You are using a preview version of .NET Core. See: https://aka.ms/dotnet-core-preview
+  Starting build metadata push to the Build Asset Registry...
+  Getting a collection of dependencies from 'eng/Version.Details.xml' in repo 'D:\a\1\s\'...
+  Reading 'eng/Version.Details.xml' in repo 'D:\a\1\s\' and branch ''...
+  Reading 'eng/Version.Details.xml' from repo 'D:\a\1\s\' and branch '' succeeded!
+  Calculated Dependencies:
+      47406, IsProduct: True
+      46268, IsProduct: True
+      28178, IsProduct: True
+      46393, IsProduct: True
+      45658, IsProduct: True
+      46931, IsProduct: True
+      47770, IsProduct: True
+      46613, IsProduct: True
+      47380, IsProduct: True
+      47391, IsProduct: True
+      41865, IsProduct: True
+      47632, IsProduct: False
+  Metadata has been pushed. Build id in the Build Asset Registry is '47814'
+  Found the following default channels:
+      https://github.com/dotnet/installer@master =&gt; (131) .NET Core 5 Dev
+  Determined build will be added to the following channels: [131]
+</code></pre>
+<ol start="4">
+<li>The BAR build ID is <code>47814</code></li>
+</ol>
+<h3 id="checking-merge-policies-on-github">Checking Merge Policies on Github</h3>
+<p>You will find them on the <code>Checks</code> tab of each updates PRs created by maestro. Depending on the merge policies set for the repository, you will find one or multiple check(s) (in a failed or successful state).</p>
+<p><img src="ChecksMergePolicies.png" alt="Checks Merge Policies"></p>
+<h2 id="command-reference">Command Reference</h2>
+<h3 id="common-parameters"><strong><code>Common parameters</code></strong></h3>
+<p>There are a few common parameters available on every command:</p>
+<ul>
+<li><code>-p, --password</code> - Build Asset Registry password.  You can obtain this
+password by going to <a href="https://maestro-prod.westus2.cloudapp.azure.com/">https://maestro-prod.westus2.cloudapp.azure.com/</a>, logging
+in using the link in the top right, then generating a token using the menu in
+the top right.  This setting overrides whatever BAR password was provided through <code>darc authenticate</code>.</li>
+<li><code>--github-pat</code> - Personal access token used to authenticate GitHub. This is a GitHub PAT used
+to avoid rate limiting when accessing github to download arcade script files
+or version files. You only need a GitHub PAT with <strong>no</strong> authorization scopes
+checked. This setting overrides whatever GitHub PAT was provided through
+<code>darc authenticate</code>.</li>
+<li><code>--azdev-pat</code> - Personal access token used to authenticate to Azure DevOps.
+This token should have Code Read permissions. This setting overrides whatever
+Azure DevOps PAT was provided through <code>darc authenticate</code>.</li>
+<li><code>--bar-uri</code> - URI of the build asset registry service to use.  Typically left
+as its default (<a href="https://maestro-prod.westus2.cloudapp.azure.com">https://maestro-prod.westus2.cloudapp.azure.com</a>) This setting
+overrides the Build Asset Registry URI provided through <code>darc authenticate</code>.</li>
+<li><code>--verbose</code> - Turn on additional output.</li>
+<li><code>--debug</code> - Turn on debug output</li>
+<li><code>--help</code> - Display help</li>
+<li><code>--version</code> - Display version of darc.</li>
+</ul>
+<p>Individual darc commands are described below.</p>
+<h3 id="add-channel"><strong><code>add-channel</code></strong></h3>
+<p>Add a new channel. This creates a new tag that builds can be applied to.</p>
+<p><em>This is not a typical operation and you should consult with the (<code>@dnceng</code>)
+engineering team before doing so.</em></p>
+<p><strong>Sample</strong>:</p>
+<pre><code>PS D:\enlistments\arcade&gt; darc add-channel --name &quot;Foo&quot;
+
+Successfully created new channel with name 'Foo'.
+</code></pre>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>-n, --name</code> -  <strong>(Required)</strong>. Name of channel to create.</li>
+<li><code>-c, --classification</code> - Classification of channel. Defaults to 'dev'.  Today,
+this classification does not affect any functionality</li>
+<li><code>-i, --internal</code> - Channel is internal only. This option is currently
+non-functional</li>
+</ul>
+<p><strong>See also</strong>:</p>
+<ul>
+<li><a href="#delete-channel">delete-channel</a></li>
+<li><a href="#get-channels">get-channels</a></li>
+</ul>
+<h3 id="set-goal"><strong><code>set-goal</code></strong></h3>
+<p>Sets a goal build time for the definition per channel in minutes. Only dnceng is in scope. This is captured for the <a href="https://dev.azure.com/dnceng/public/_dashboards/dashboard/40ac4990-3498-4b3a-85dd-2ffde961d672">Power BI dashboard</a>.</p>
+<p><strong>Sample</strong>:</p>
+<pre><code>PS D:\enlistments\arcade&gt; darc set-goal --minutes 38 --definition-id 6 --channel &quot;.Net 5 Dev&quot;
+
+38
+</code></pre>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>-c, --channel</code> - <strong>(Required)</strong> Name of the channel.</li>
+<li><code>-d, --definition-id</code> - <strong>(Required)</strong> Azure DevOps Definition Id.</li>
+<li><code>-m, --minutes</code> - <strong>(Required)</strong> Goal time in minutes.</li>
+</ul>
+<h3 id="get-goal"><strong><code>get-goal</code></strong></h3>
+<p>Get the goal build time for a definition per channel in minutes. Only dnceng is in scope. This is captured for the <a href="https://dev.azure.com/dnceng/public/_dashboards/dashboard/40ac4990-3498-4b3a-85dd-2ffde961d672">Power BI dashboard</a></p>
+<p><strong>Sample</strong>:</p>
+<pre><code>PS D:\enlistments\arcade&gt; darc get-goal --definition-id 6 --channel &quot;.Net 5 Dev&quot;
+
+38
+</code></pre>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>-c, --channel</code> - <strong>(Required)</strong> Name of the channel.</li>
+<li><code>-d, --definition-id</code> - <strong>(Required)</strong> Azure DevOps Definition Id.</li>
+</ul>
+<h3 id="add-dependency"><strong><code>add-dependency</code></strong></h3>
+<p>Add a new tracked dependency to the Version.Detail.xml file in your local repo.
+This dependency is also added to eng/Versions.props as well as global.json (for certain
+dependencies, such as the Arcade SDK). This new dependency can then be updated using
+<a href="#update-dependencies">update-dependencies</a>. After merging the changes into
+the remote github or AzDO repository, the dependency can be updated by Maestro++
+if there is a corresponding subscription targeting that repo.</p>
+<p>When adding a new dependency, only name and type are required.  For a detailed
+discussion on adding new dependencies to a repository, see <a href="#adding-dependencies-to-a-repository">Adding dependencies to a repository</a></p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li>-n, --name - <strong>(Required)</strong> Name of dependency to add. This is the name of the
+package you wish to track.  For example, this might be &quot;Microsoft.NETCore.App&quot;
+or 'System.Security.Cryptography.Cng'</li>
+<li>-t, --type - <strong>(Required)</strong> 'toolset' or 'product'. See <a href="#adding-dependencies-to-a-repository">Adding dependencies
+to a repository</a> for a discussion on
+dependency types.</li>
+<li>-v, --version - Dependency version.</li>
+<li>-r, --repo - Repository where the dependency was built.</li>
+<li>-c, --commit - SHA at which the dependency was produced.</li>
+</ul>
+<p><strong>Sample</strong></p>
+<p><em>eng\Version.Details.xml</em> before running add:</p>
+<pre><code>PS D:\enlistments\arcade&gt; cat .\eng\Version.Details.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;Dependencies&gt;
+  &lt;ProductDependencies&gt;&lt;/ProductDependencies&gt;
+  &lt;ToolsetDependencies&gt;
+    &lt;Dependency Name=&quot;Microsoft.DotNet.Arcade.Sdk&quot; Version=&quot;1.0.0-beta.19080.6&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+      &lt;Sha&gt;14d1133b6074b463784a7adbbf385df0462f4010&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;Microsoft.DotNet.Build.Tasks.Feed&quot; Version=&quot;2.2.0-beta.19080.6&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+      &lt;Sha&gt;14d1133b6074b463784a7adbbf385df0462f4010&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;Microsoft.DotNet.Maestro.Tasks&quot; Version=&quot;1.0.0-beta.19060.8&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+      &lt;Sha&gt;67384d20d310611afc1c2b4dd3b953fda182def4&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;Microsoft.DotNet.SignTool&quot; Version=&quot;1.0.0-beta.19080.6&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+      &lt;Sha&gt;14d1133b6074b463784a7adbbf385df0462f4010&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;Microsoft.DotNet.Helix.Sdk&quot; Version=&quot;2.0.0-beta.19080.6&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+      &lt;Sha&gt;14d1133b6074b463784a7adbbf385df0462f4010&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+  &lt;/ToolsetDependencies&gt;
+&lt;/Dependencies&gt;
+</code></pre>
+<p>Running add-dependency</p>
+<pre><code>PS D:\enlistments\arcade&gt; darc add-dependency --name &quot;Microsoft.NETCore.App&quot; --type &quot;product&quot; --version 1
+                          --commit 2 --repo https://github.com/dotnet/core-setup
+</code></pre>
+<p><em>eng\Version.Details.xml</em> after add-dependency:</p>
+<pre><code>PS D:\enlistments\arcade&gt; cat .\eng\Version.Details.xml
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;Dependencies&gt;
+  &lt;ProductDependencies&gt;
+    &lt;Dependency Name=&quot;Microsoft.NETCore.App&quot; Version=&quot;1&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/core-setup&lt;/Uri&gt;
+      &lt;Sha&gt;2&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+  &lt;/ProductDependencies&gt;
+  &lt;ToolsetDependencies&gt;
+    &lt;Dependency Name=&quot;Microsoft.DotNet.Arcade.Sdk&quot; Version=&quot;1.0.0-beta.19080.6&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+      &lt;Sha&gt;14d1133b6074b463784a7adbbf385df0462f4010&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;Microsoft.DotNet.Build.Tasks.Feed&quot; Version=&quot;2.2.0-beta.19080.6&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+      &lt;Sha&gt;14d1133b6074b463784a7adbbf385df0462f4010&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;Microsoft.DotNet.Maestro.Tasks&quot; Version=&quot;1.0.0-beta.19060.8&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+      &lt;Sha&gt;67384d20d310611afc1c2b4dd3b953fda182def4&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;Microsoft.DotNet.SignTool&quot; Version=&quot;1.0.0-beta.19080.6&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+      &lt;Sha&gt;14d1133b6074b463784a7adbbf385df0462f4010&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+    &lt;Dependency Name=&quot;Microsoft.DotNet.Helix.Sdk&quot; Version=&quot;2.0.0-beta.19080.6&quot;&gt;
+      &lt;Uri&gt;https://github.com/dotnet/arcade&lt;/Uri&gt;
+      &lt;Sha&gt;14d1133b6074b463784a7adbbf385df0462f4010&lt;/Sha&gt;
+    &lt;/Dependency&gt;
+  &lt;/ToolsetDependencies&gt;
+&lt;/Dependencies&gt;
+</code></pre>
+<p><strong>See also</strong>:</p>
+<ul>
+<li><a href="#update-dependencies">update-dependencies</a></li>
+<li><a href="#adding-dependencies-to-a-repository">Adding dependencies to a repository</a></li>
+</ul>
+<h3 id="add-default-channel"><strong><code>add-default-channel</code></strong></h3>
+<p>Adds a new default channel mapping.  A default channel maps each new build of a specific
+branch of a repository onto a specific channel. While builds can be selectively
+and manually applied to channels, this is generally inconvenient for day to day development
+in most cases.  In general, until release shutdown, each build of a branch
+should always be applied to its &quot;normal&quot; channel.</p>
+<p><em><strong>Note that the branch specified should almost always be
+&quot;refs/heads/{branchName}&quot;, unless you explicitly know otherwise</strong></em>.</p>
+<p>This is because the BAR reporting functionality pulls the branch name from the
+Azure DevOps built in pipeline variables, which specify refs/heads/foo vs. foo.
+If your repository is manually reporting to BAR without using the Arcade
+templates, then this name may be different.</p>
+<p>Default channel mappings can be deleted with <a href="#delete-default-channel">delete-default-channel</a>.</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>--channel</code> - <strong>(Required)</strong> Name of channel that a build of 'branch' and 'repo' should be applied to.</li>
+<li><code>--branch</code> - <strong>(Required)</strong> Build of 'repo' on this branch will be
+automatically applied to 'channel'.  Should generally be &quot;refs/heads/branchName&quot;</li>
+<li><code>--repo</code> - <strong>(Required)</strong> Build of this repo on 'branch' will be automatically applied to 'channel'</li>
+</ul>
+<p><strong>Sample</strong></p>
+<pre><code>PS D:\enlistments\arcade&gt; darc add-default-channel --channel &quot;.Net 5 Dev&quot; --branch refs/heads/master --repo https://github.com/dotnet/arcade
+</code></pre>
+<p><strong>See also</strong>:</p>
+<ul>
+<li><a href="#get-channels">get-channels</a></li>
+<li><a href="#get-default-channels">get-default-channels</a></li>
+<li><a href="#delete-default-channel">delete-default-channel</a></li>
+<li><a href="#set-goal">set-goal</a></li>
+<li><a href="#get-goal">get-goal</a></li>
+</ul>
+<h3 id="add-subscription"><strong><code>add-subscription</code></strong></h3>
+<p>Adds a new subscription to Maestro++.</p>
+<p>A subscription describes an update
+operation for a specific repository+branch combination, mapping outputs of a
+repository that have been applied to a channel (virtual branch) onto matching
+inputs of the target repository+branch.</p>
+<p>For example, a build of dotnet/corefx might be applied to the &quot;.NET 5 Dev&quot;
+channel. dotnet/core-setup maps new outputs of corefx on the &quot;.NET 5 Dev&quot;
+channel onto its master branch.</p>
+<p>A subscription has a few parts:</p>
+<ul>
+<li>Mapping of source repo + source channel =&gt; target repo + target branch</li>
+<li>An update rate (e.g. every day, every build, not at all)</li>
+<li>Whether a subscription is batchable or not. If batchable, all batchable
+subscriptions targeting the same repo+branch combination will share a PR.
+<em>Note: Batchable subscriptions are currently unsupported in darc</em></li>
+<li>A set of auto merge policies, if the subscription is not batchable.  If batchable,
+merge policies are set on a repository level rather than a per-subscription
+level, as they end up shared between several subscriptions. <em>Note: repository
+merge policies are currently unsupported in darc</em></li>
+</ul>
+<p><code>add-subscription</code> has two modes of operation:</p>
+<ul>
+<li>Interactive mode (default) - Interactive mode will take whatever input parameters were
+provided on the command line (if any) and pop an editor where the user can
+provide the subscription input parameters.</li>
+<li>Command-line only mode (<code>-q</code>) - In this mode, the full set of input options must be
+supplied.</li>
+</ul>
+<p>Upon saving and closing the editor, or running the darc command if in command
+line mode (<code>-q</code>), the darc tool submits the new subscription to Maestro++. If
+successful, the id of the new subscription is returned.</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>-channel</code> - <strong>(Required if -q is passed)</strong> Name of channel that is the source of the subscription. For a
+list of channels, see <a href="#get-channels">get-channels</a></li>
+<li><code>--source-repo</code> - <strong>(Required if -q is passed)</strong> Source repository for the subscription.  Builds of this
+repository that appear on the specified <code>--channel</code> will have matching outputs
+applied to the inputs (specified in eng/Version.Details.xml) of <code>--target-repo</code> and <code>--target-branch</code>.</li>
+<li><code>--target-repo</code> - <strong>(Required if -q is passed)</strong> Target repository for the subscription.  Builds of
+<code>--source-repo</code> that appear on the specified <code>--channel</code> will have matching
+outputs applied to the inputs (specified in eng/Version.Details.xml) of this
+repo's <code>--target-branch</code></li>
+<li><code>--target-branch</code> - <strong>(Required if -q is passed)</strong> Target branch for the subscription. Builds of
+<code>--source-repo</code> that appear on the specified <code>--channel</code> will have matching
+outputs applied to the inputs (specified in eng/Version.Details.xml) on this
+branch of <code>--target-repo</code>.</li>
+<li><code>--update-frequency</code> - <strong>(Required if -q is passed)</strong> Frequency of updates. Valid values are: 'none',
+'everyDay', or 'everyBuild'.  everyDay is applied at 5am.  Subscriptions with
+'none' frequency can still be triggered using <a href="#trigger-subscriptions">trigger-subscriptions</a></li>
+<li><code>--all-checks-passed</code> - Merge policy. A PR is automatically merged by Maestro++ if there is at least one
+check and all are passed. Optionally provide a comma separated list of
+ignored check with --ignore-checks.</li>
+<li><code>--ignore-checks</code> - Merge policy. For use with --all-checks-passed. A set of checks that are
+ignored. Typically, in github repos the &quot;WIP&quot; and &quot;license/cla&quot; checks are ignored.</li>
+<li><code>--no-extra-commits</code> - Merge policy. A PR is automatically merged if no non-bot
+commits exist in the PR.</li>
+<li><code>--no-requested-changes</code> - Merge policy.  A PR is automatically merged as long
+as no changes are requested on the PR.</li>
+<li><code>--standard-automerge</code> - Merge policy. A PR is automatically merged if all
+checks are passed and no changes are requested.</li>
+<li><code>-q, --quiet</code> - Non-interactive mode (requires all elements to be passed on the command line).</li>
+</ul>
+<p><strong>Sample</strong>:</p>
+<pre><code>PS D:\enlistments\arcade-services&gt; darc add-subscription --channel &quot;.NET Tools - Latest&quot;
+                                   --source-repo https://github.com/dotnet/arcade
+                                   --target-repo https://dev.azure.com/dnceng/internal/_git/dotnet-optimization
+                                   --target-branch master --update-frequency everyDay --all-checks-passed -q
+
+Successfully created new subscription with id '4f300f68-8800-4b14-328e-08d68308fe30'.
+</code></pre>
+<p><strong>Available merge policies</strong></p>
+<ul>
+<li><p>Standard - This is the recommended merge policy. It encompasses two existing
+merge policies:</p>
+<ul>
+<li>All PR checks must be successful, ignoring typical checks in GitHub in AzDO
+that do not indicate the quality of the PR (e.g. the WIP check) as well as a
+check that no changes have been requested on the PR.</li>
+</ul>
+<p>YAML format for interactive mode:</p>
+<pre><code>- Name: Standard
+</code></pre>
+</li>
+<li><p>AllChecksSuccessful - All PR checks must be successful, potentially ignoring a
+specified set of checks. Checks might be ignored if they are unrelated to PR
+validation. The check name corresponds to the string that shows up in GitHub/Azure DevOps.</p>
+<p>YAML format for interactive mode:</p>
+<pre><code>- Name: AllChecksSuccessful
+   Properties:
+     ignoreChecks:
+     - WIP
+     - license/cla
+     - &lt;other check names&gt;
+</code></pre>
+</li>
+<li><p>RequireChecks - Require that a specific set of checks pass. The check name
+corresponds to the string that shows up in GitHub/Azure DevOps.</p>
+<p>YAML format for interactive mode:</p>
+<pre><code>- Name: RequireChecks
+   Properties:
+     checks:
+     - MyCIValidation
+     - CI
+     - &lt;other check names&gt;
+</code></pre>
+</li>
+<li><p>NoExtraCommits - If additional non-bot commits appear in the PR, the PR should not be merged.</p>
+<p>YAML format for interactive mode:</p>
+<pre><code>- Name: NoExtraCommits
+</code></pre>
+</li>
+</ul>
+<p><strong>See also</strong>:</p>
+<ul>
+<li><a href="#delete-subscription">delete-subscription</a></li>
+<li><a href="#get-subscriptions">get-subscriptions</a></li>
+<li><a href="#trigger-subscriptions">trigger-subscriptions</a></li>
+<li><a href="#get-channels">get-channels</a></li>
+</ul>
+<h3 id="add-build-to-channel"><strong><code>add-build-to-channel</code></strong></h3>
+<p>Adds an existing build to a channel.</p>
+<p>Much of the time, builds are automatically added to channels with default
+channel associations (See <a href="#add-default-channel">add-default-channel</a>).
+Occasionally, automatic assignment is turned off for various reasons but we may
+still need to assign a specific build to a channel.</p>
+<p>This can be done with the <code>add-build-to-channel</code> command.  It takes two
+parameters:</p>
+<ul>
+<li>Name of the channel you want to assign a build to</li>
+<li>BAR build id of the build to assign to the specified channel. This can be
+found by looking at the &quot;Publish to Build Asset Registry&quot; leg of an official build.</li>
+</ul>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>--id</code> - <strong>(Required)</strong>. BAR id of build to assign to channel.</li>
+<li><code>--channel</code> - <strong>(Required)</strong>. Channel to assign build to.</li>
+<li><code>--publish-installers-and-checksums</code> <strong>(Required)</strong> Whether installers and checksums should be published. All the installers and checksums usually go to the same storage account. By setting this to true we are agreeing to republish them everytime a new channel is added. This has to be set to true at all times.</li>
+<li><code>--publishing-infra-version</code> - Version of publishing, for single stage <a href="https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md#what-is-v3-publishing-how-is-it-different-from-v2">publishing infrastructure use 3</a> else for multi stage publishing infra with each stage representing available channel(s) use 2. Default is 2.</li>
+<li><code>--signing-validation-parameters</code> - Additional (MSBuild) properties to be passed to signing validation</li>
+<li><code>--symbol-publishing-parameters</code> -Additional (MSBuild) properties to be passed to symbol publishing</li>
+<li><code>--default-channels</code> - Assign build to the default channel(s). Required if --channel is not specified.</li>
+<li><code>--source-branch</code> - Branch that should be used as base for the promotion build.</li>
+<li><code>--source-sha</code> - SHA that should be used as base for the promotion build.</li>
+<li><code>--validate-signing</code> - Perform signing validation.</li>
+<li><code>--validate-nuget</code> - Perform NuGet metadata validation.</li>
+<li><code>--validate-sourcelink</code> - Perform SourceLink validation.</li>
+<li><code>--validate-SDL</code> - Perform SDL validation.</li>
+<li><code>--sdl-validation-parameters</code> - Custom parameters for SDL validation.</li>
+<li><code>--sdl-validation-continue-on-error</code> - Ignore SDL validation errors.</li>
+<li><code>--skip-assets-publishing</code> - Add the build to the channel without publishing assets to the
+channel's feeds.</li>
+<li><code>--no-wait</code> - If set, Darc won't wait for the asset publishing and channel assignment.
+The operation continues asynchronously in AzDO.</li>
+</ul>
+<p><strong>Sample</strong>
+<strong>If using --publishing-infra-version 2</strong></p>
+<pre><code>
+darc add-build-to-channel --id 13078 --channel &quot;.NET Core 3 Release&quot; --publish-installers-and-checksums
+Assigning the following build to channel '.NET Core 3 Release':
+
+Repository:    https://github.com/dotnet/core-setup
+Branch:        refs/heads/release/3.0
+Commit:        e4e28a834dcbf63b8ef098b32996a35bbb9f3699
+Build Number:  20190603.02
+Date Produced: 6/3/2019 10:09 AM
+Build Link:    https://dev.azure.com/dnceng/internal/_build/results?buildId=209556
+BAR Build Id:  13078
+Channels:
+The following repos/branches will apply this build immediately:
+  https://github.com/dotnet/core-sdk @ release/3.0.1xx
+  https://github.com/aspnet/Extensions @ release/3.0-preview6
+  https://github.com/dotnet/toolset @ release/3.0.1xx
+  https://github.com/dotnet/winforms-datavisualization @ release/3.0
+The following repos/branches will apply this change at a later time, or not by default.
+To flow immediately, run the specified command
+  https://github.com/dotnet/winforms @ release/3.0 (update freq: None)
+    darc trigger-subscriptions --id 22859ac6-b4a6-4fce-54c7-08d6c734018a
+If the above example build doesn't happen to be the latest in a channel but you want trigger-subscriptions to use it:
+    darc trigger-subscriptions --id 22859ac6-b4a6-4fce-54c7-08d6c734018a --build 13078
+</code></pre>
+<p><strong>If using --publishing-infra-version 3</strong></p>
+<pre><code>
+darc add-build-to-channel --id 65256 --channel &quot;.NET 6 Dev&quot; --publishing-infra-version 3 --publish-installers-and-checksums
+
+Waiting '60' seconds for promotion build to complete.
+
+Build '65199' was successfully added to the target channel(s).
+Assigning build '65199' to the following channel(s):
+	.NET 6 Dev
+
+Repository:    https://github.com/dotnet/runtime
+Branch:        master
+Commit:        0e30f6fdc3ba5e1ef7ffb952fcb4762e5041c491
+Build Number:  20200921.2
+Date Produced: 9/21/2020 1:08 PM
+Build Link:    https://dev.azure.com/dnceng/internal/_build/results?buildId=823133
+BAR Build Id:  65199
+Released:      False
+Channels:
+The following repos/branches will apply this build immediately:
+  https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int @ master
+The following repos/branches will apply this change at a later time, or not by default.
+To flow immediately, run the specified command
+  https://github.com/dotnet/ef6 @ master (update freq: EveryDay)
+    darc trigger-subscriptions --id 9e51514d-a37b-46b2-d464-08d76e1d3434
+
+</code></pre>
+<h3 id="authenticate"><strong><code>authenticate</code></strong></h3>
+<p>Set up your darc client so that the PAT or password inputs do not need to be
+passed on each command invocation.  This command opens up an editor form with
+various password settings. These values are overridden by the <code>--password</code>,
+<code>--bar-uri</code>, <code>--azdev-pat</code> and <code>--github-pat</code> settings common to all commands.</p>
+<p>See <a href="#setting-up-your-darc-client">Setting up Your Darc Client</a> for more
+information.</p>
+<p><strong>Parameters</strong></p>
+<p>None.</p>
+<p><strong>Sample</strong></p>
+<pre><code>PS D:\enlistments\arcade&gt; darc authenticate
+
+(opens in editor)
+
+# Create new BAR tokens at https://maestro-prod.westus2.cloudapp.azure.com/Account/Tokens
+bar_password=***
+# Create new GitHub personal access tokens at https://github.com/settings/tokens (no auth scopes needed)
+github_token=***
+# Create new Azure Dev Ops tokens at https://dev.azure.com/dnceng/_details/security/tokens (code read scope needed)
+azure_devops_token=***
+build_asset_registry_base_uri=https://maestro-prod.westus2.cloudapp.azure.com/
+
+# Storing the required settings...
+# Set elements above depending on what you need
+
+</code></pre>
+<h3 id="clone"><strong><code>clone</code></strong></h3>
+<p>Clone a remote repo and all of its dependency repos. This is typically used for source build purposes.</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>--repo</code> - Remote repository to start the clone operation at.  If none specified, clone all that the current repo depends on.</li>
+<li><code>-v, --version</code> - Branch, commit or tag to start at in the remote repository.  Required if repo is specified.</li>
+<li><code>--repos-folder</code> - Full path to folder where all the repos will be cloned to, e.g. C:\repos.  Default: current directory.</li>
+<li><code>--git-dir-folder</code> - Advanced: Full path to folder where .git folders will be stored, e.g. C:\myrepos.git\modules.  Default: each repo's folder.</li>
+<li><code>--include-toolset</code> - Include toolset dependencies.</li>
+<li><code>--ignore-repos</code> - Semicolon-separated list of repo URIs to ignore.  e.g. 'https://dev.azure.com/devdiv/DevDiv/_git/DotNet-Trusted;https://github.com/dotnet/arcade-services'</li>
+<li><code>-d, --depth</code> - (Default: 4294967295) Depth to clone the repos to.  Defaults to infinite.</li>
+</ul>
+<h3 id="default-channel-status"><strong><code>default-channel-status</code></strong></h3>
+<p>Enables or disables a default channel association. Default channels associations
+that are disabled will not apply to new builds. This effectively turns off flow
+out of the repository. Builds may still be applied manually to any channel.
+using <a href="#add-build-to-channel">add-build-to-channel</a>.</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>-e, --enable</code> - Enable default channel.</li>
+<li>'-d, --disable` - Disable default channel.</li>
+<li>'--id` - (Default: -1) Existing default channel id</li>
+<li>'--channel` - Existing default channel association target channel name.</li>
+<li>'--branch` - Existing default channel association source branch name.</li>
+<li>'--repo` - Existing default channel association source repository name.</li>
+</ul>
+<p><strong>Sample</strong>:</p>
+<pre><code>PS D:\enlistments\websdk&gt; darc get-default-channels --source-repo core-setup --branch release/3.0
+(192)  https://github.com/dotnet/core-setup @ refs/heads/release/3.0 -&gt; .NET Core 3 Release
+
+PS D:\enlistments\websdk&gt; darc default-channel-status --disable --id 192
+Default channel association has been disabled.
+
+PS D:\enlistments\websdk&gt; darc default-channel-status --enable --id 192
+Default channel association has been enabled.
+</code></pre>
+<p><strong>See also</strong>:</p>
+<ul>
+<li><a href="#add-build-to-channel">add-build-to-channel</a></li>
+<li><a href="#add-default-channel">add-default-channel</a></li>
+<li><a href="#delete-default-channel">delete-default-channel</a></li>
+<li><a href="#get-default-channels">get-default-channels</a></li>
+<li><a href="#set-goal">set-goal</a></li>
+<li><a href="#get-goal">get-goal</a></li>
+</ul>
+<h3 id="delete-channel"><strong><code>delete-channel</code></strong></h3>
+<p>Delete a channel. This channel must not be in use by any subscriptions.</p>
+<p><em>This is not a typical operation and you should consult with the (<code>@dnceng</code>)
+engineering team before doing so.</em></p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>-n, --name</code> - <strong>(Required)</strong> Name of channel to delete.</li>
+</ul>
+<p><strong>Sample</strong>:</p>
+<pre><code>PS D:\enlistments\arcade&gt; darc delete-channel --name &quot;Foo&quot;
+
+Successfully deleted channel 'Foo'.
+</code></pre>
+<p><strong>See also</strong>:</p>
+<ul>
+<li><a href="#add-channel">add-channel</a></li>
+<li><a href="#get-channels">get-channels</a></li>
+</ul>
+<h3 id="delete-default-channel"><strong><code>delete-default-channel</code></strong></h3>
+<p>Deletes a default channel mapping. Deleting will not affect any existing builds,
+but new builds of the specified repos will not be applied to the target
+channel.</p>
+<p>You can obtain a list of current default channel mappings with
+<a href="#get-default-channels">get-default-channels</a></p>
+<ul>
+<li><code>--channel</code> - <strong>(Required)</strong> Name of channel that builds of 'repository' and 'branch' should not apply to.</li>
+<li><code>--branch</code> - <strong>(Required)</strong> Repository that should have its default association removed.</li>
+<li><code>--repo</code> - <strong>(Required)</strong> Branch that should have its default association
+removed.</li>
+</ul>
+<p><strong>Sample</strong></p>
+<pre><code>PS D:\enlistments\arcade&gt; darc delete-default-channel --channel &quot;.Net 5 Dev&quot; --branch refs/heads/master
+                          --repo https://github.com/dotnet/arcade
+</code></pre>
+<p><strong>See also</strong>:</p>
+<ul>
+<li><a href="#add-default-channel">add-default-channel</a></li>
+<li><a href="#get-default-channels">get-default-channels</a></li>
+</ul>
+<h3 id="delete-subscription"><strong><code>delete-subscription</code></strong></h3>
+<p>Deletes a specified subscription by its id. This removes the subscription from
+Maestro and no new updates based on the subscription will be created. Any
+updates currently in progress will not be closed, but will not auto-merge.  To
+obtain the id of a subscription to be deleted, see <a href="#get-subscriptions">get-subscriptions</a>.</p>
+<p><strong>Sample</strong>:</p>
+<pre><code>PS D:\enlistments\arcade-services&gt; darc delete-subscription --id 4f300f68-8800-4b14-328e-08d68308fe30
+
+Successfully deleted subscription with id '4f300f68-8800-4b14-328e-08d68308fe30'
+</code></pre>
+<p><strong>See also</strong>:</p>
+<ul>
+<li><a href="#add-subscription">add-subscription</a></li>
+<li><a href="#get-subscriptions">get-subscriptions</a></li>
+<li><a href="#trigger-subscriptions">trigger-subscriptions</a></li>
+</ul>
+<h3 id="gather-drop"><strong><code>gather-drop</code></strong></h3>
+<p>Gathers a build drop of a repository into a local directory.</p>
+<p>A build drop is a gathering of all the outputs of a specific build that were
+reported to the Build Asset Registry into a local location. Optionally, this
+build drop may also include any builds that were inputs to this build, based on
+the dependency information in Version.Details.xml. Builds produce various
+outputs that go to various locations. For example, they may produce NuGet
+packages, zips, MSIs, etc. These may be available in the build artifacts, or may
+be located in various storage accounts.  Gather-drop mines the Build Asset
+Registry for these locations and downloads them all to the local directory.</p>
+<p><code>gather-drop</code> operates in two modes: normal and full.  In normal mode, only the
+outputs for the desired build (the 'root' build) are downloaded.  In full mode,
+the tool will then look up the dependency version information for the sha that
+was built, then find the builds that created those inputs. The same is done
+until all potential nodes are visited. Traversal will break when a cycle is
+reached, when a node has no additional dependencies, or when the dependencies it
+has are only toolset and <code>--include-toolset</code> has not been supplied.</p>
+<p>The output directory structure is as follows:</p>
+<ul>
+<li>All outputs will be downloaded under the root folder, in either a 'shipping'
+or 'nonshipping' folder  (if <code>--nonshipping</code>
+is passed and the build contains non-shipping binaries). Under these
+folders will be two additional folders: 'assets' and 'packages'. Assets
+contains all non-package outputs, while 'packages' contains all NuGet packages.</li>
+<li>Each repository in the build structure will be placed in a separate directory,
+with the ID of the build under that directory. Under each build will be a
+'shipping' folder and potentially a 'nonshipping' folder (if <code>--nonshipping</code>
+is passed and the build contains non-shipping binaries). Under these
+folders will be two additional folders: 'assets' and 'packages'. Assets
+contains all non-package outputs, while 'packages' contains all NuGet
+packages.</li>
+<li>A publish_files directory will contain the layout required for the .NET Core release publishing pipeline to publish nuget packages.</li>
+<li>A manifest file will be generated under the root folder containing information about all gathered builds</li>
+</ul>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>-i, --id</code>- BAR ID(s) of the root build(s) that we want to gather. comma separated.</li>
+<li><code>-r, --repo</code> - Gather a build drop for a build of this repo. Requires --commit or --channel.</li>
+<li><code>-c, --commit</code> - Commit to gather a drop for.</li>
+<li><code>-o, --output-dir</code> - Required. Output directory to place build drop.</li>
+<li><code>--max-downloads</code> - (Default: 4) Maximum concurrent downloads.</li>
+<li><code>--download-timeout</code> - (Default: 30) Timeout in seconds for downloading each asset.</li>
+<li><code>-f, --full</code> - Gather the full drop (build and all input builds).</li>
+<li><code>--release-name</code>- (Default: 3.0.0-previewN) Name of release to use when generating release json.</li>
+<li><code>--continue-on-error</code> - Continue on error rather than halting.</li>
+<li><code>--non-shipping</code>- Include non-shipping assets.</li>
+<li>`--overwrite- Overwrite existing files at the destination.</li>
+<li><code>--dry-run</code> - Do not actually download files, but print what we would do.</li>
+<li><code>--include-toolset</code>- Include toolset dependencies.</li>
+<li><code>--channel</code> - Download the latest from this channel. Matched on substring.</li>
+<li><code>--no-workarounds</code> - Do not allow workarounds when gathering the drop.</li>
+<li><code>--skip-existing</code> - Skip files that already exist at the destination.</li>
+<li><code>--include-released</code> - Include builds that are marked as released</li>
+<li><code>--latest-location</code> - Download assets from their latest known location.</li>
+<li><code>--sas-suffixes</code> - List of potential uri suffixes that can be used if anonymous access to a blob uri fails.                               Appended directly to the end of the URI (use full SAS suffix starting with '?'.</li>
+<li><code>--asset-filter</code> - Only download assets matching the given regex filter</li>
+</ul>
+<p><strong>Sample</strong>:</p>
+<p>Isolated drop:</p>
+<pre><code>PS C:\enlistments\core-sdk&gt; darc gather-drop --output-dir C:\scratch\core-sdk-drop\
+                            --commit 465a336c7a5ca3af2f6cf5172ddc0ebde620803b
+                            --repo https://github.com/dotnet/core-sdk
+
+Determining what builds to download...
+Looking up builds of https://github.com/dotnet/core-sdk@465a336c7a5ca3af2f6cf5172ddc0ebde620803b
+Root build - Build number 20190201.2 of https://github.com/dotnet/core-sdk @ 465a336c7a5ca3af2f6cf5172ddc0ebde620803b
+
+Gathering drop for build 20190201.2 of https://github.com/dotnet/core-sdk
+  Downloading asset Sdk/3.0.100-preview-010204/dotnet-sdk-3.0.100-preview-010204-osx-x64.pkg.sha
+  https://dotnetclichecksums.blob.core.windows.net/dotnet/Sdk/3.0.100-preview-010204/dotnet-sdk-3.0.100-preview-010204-osx-x64.pkg.sha =&gt; C:\scratch\core-sdk-drop\shipping\assets\Sdk/3.0.100-preview-010204/dotnet-sdk-3.0.100-preview-010204-osx-x64.pkg.sha...Done
+  Downloading asset Sdk/3.0.100-preview-010204/dotnet-sdk-3.0.100-preview-010204-win-x64.zip.sha
+  https://dotnetclichecksums.blob.core.windows.net/dotnet/Sdk/3.0.100-preview-010204/dotnet-sdk-3.0.100-preview-010204-win-x64.zip.sha =&gt; C:\scratch\core-sdk-drop\shipping\assets\Sdk/3.0.100-preview-010204/dotnet-sdk-3.0.100-preview-010204-win-x64.zip.sha...Done
+  Downloading asset Sdk/3.0.100-preview-010204/dotnet-sdk-3.0.100-preview-010204-win-x64.wixpdb.sha
+  https://dotnetclichecksums.blob.core.windows.net/dotnet/Sdk/3.0.100-preview-010204/dotnet-sdk-3.0.100-preview-010204-win-x64.wixpdb.sha =&gt; C:\scratch\core-sdk-drop\shipping\assets\Sdk/3.0.100-preview-010204/dotnet-sdk-3.0.100-preview-010204-win-x64.wixpdb.sha...Done
+
+...
+</code></pre>
+<p>Full drop:</p>
+<pre><code>PS C:\enlistments\core-sdk&gt; darc gather-drop --output-dir C:\scratch\core-sdk-drop
+                            --commit 465a336c7a5ca3af2f6cf5172ddc0ebde620803b
+                            --repo https://github.com/dotnet/core-sdk --full
+
+Determining what builds to download...
+Looking up builds of https://github.com/dotnet/core-sdk@465a336c7a5ca3af2f6cf5172ddc0ebde620803b
+Root build - Build number 20190201.2 of https://github.com/dotnet/core-sdk @ 465a336c7a5ca3af2f6cf5172ddc0ebde620803b
+Getting dependencies of root build...
+Filtering toolset dependencies from the graph...
+Building graph of all dependencies under root build...
+There are 164 unique dependencies in the graph.
+Finding builds for all dependencies...
+Finding build for Microsoft.WindowsDesktop.App@3.0.0-preview-27331-15...
+Looking up Microsoft.WindowsDesktop.App@3.0.0-preview-27331-15 in Build Asset Registry...
+Looking up build 2123 in Build Asset Registry...
+Finding build for Microsoft.NETCore.App@3.0.0-preview-27331-3...
+Looking up Microsoft.NETCore.App@3.0.0-preview-27331-3 in Build Asset Registry...
+Looking up build 2156 in Build Asset Registry...
+Finding build for Microsoft.AspNetCore.App@3.0.0-preview-19080-0484...
+Looking up Microsoft.AspNetCore.App@3.0.0-preview-19080-0484 in Build Asset Registry...
+Looking up build 2083 in Build Asset Registry...
+Finding build for dotnet-ef@3.0.0-preview.19081.2...
+Looking up dotnet-ef@3.0.0-preview.19081.2 in Build Asset Registry...
+Looking up build 2114 in Build Asset Registry...
+Finding build for Microsoft.DotNet.Common.ItemTemplates@1.0.2-beta5.19066.2...
+Looking up Microsoft.DotNet.Common.ItemTemplates@1.0.2-beta5.19066.2 in Build Asset Registry...
+Looking up build 1542 in Build Asset Registry...
+Finding build for Microsoft.Dotnet.Toolset.Internal@3.0.100-preview.19080.2...
+Looking up Microsoft.Dotnet.Toolset.Internal@3.0.100-preview.19080.2 in Build Asset Registry...
+Looking up build 2038 in Build Asset Registry...
+Finding build for Microsoft.DotNet.Cli.Runtime@3.0.100-preview.19075.1...
+Looking up Microsoft.DotNet.Cli.Runtime@3.0.100-preview.19075.1 in Build Asset Registry...
+Looking up build 1946 in Build Asset Registry...
+Finding build for Microsoft.NET.Sdk@3.0.100-preview.19075.2...
+Looking up Microsoft.NET.Sdk@3.0.100-preview.19075.2 in Build Asset Registry...
+Looking up build 1931 in Build Asset Registry...
+Finding build for Microsoft.Build@16.0.0-preview.386...
+Looking up Microsoft.Build@16.0.0-preview.386 in Build Asset Registry...
+Looking up build 2010 in Build Asset Registry...
+Finding build for Microsoft.NETCore.Compilers@3.0.0-beta3-19067-14...
+Looking up Microsoft.NETCore.Compilers@3.0.0-beta3-19067-14 in Build Asset Registry...
+Looking up build 1598 in Build Asset Registry...
+Finding build for Microsoft.NET.Sdk.Razor@3.0.0-preview-19079-02...
+Looking up Microsoft.NET.Sdk.Razor@3.0.0-preview-19079-02 in Build Asset Registry...
+Looking up build 2015 in Build Asset Registry...
+Finding build for Microsoft.NET.Sdk.WindowsDesktop@3.0.0-preview-27329-5...
+Looking up Microsoft.NET.Sdk.WindowsDesktop@3.0.0-preview-27329-5 in Build Asset Registry...
+Looking up build 2021 in Build Asset Registry...
+Finding build for Microsoft.NET.Sdk.Web@3.0.100-preview.19064.1...
+Looking up Microsoft.NET.Sdk.Web@3.0.100-preview.19064.1 in Build Asset Registry...
+Looking up build 1414 in Build Asset Registry...
+Finding build for Microsoft.Private.Winforms@1.0.0-preview.19074.2...
+Looking up Microsoft.Private.Winforms@1.0.0-preview.19074.2 in Build Asset Registry...
+Looking up build 1892 in Build Asset Registry...
+Finding build for runtime.win-x64.Microsoft.DotNet.Wpf.Private@4.8.0-prerelease.19064.4...
+Looking up runtime.win-x64.Microsoft.DotNet.Wpf.Private@4.8.0-prerelease.19064.4 in Build Asset Registry...
+Looking up build 1434 in Build Asset Registry...
+Finding build for Microsoft.Private.CoreFx.NETCoreApp@4.6.0-preview.19073.11...
+Looking up Microsoft.Private.CoreFx.NETCoreApp@4.6.0-preview.19073.11 in Build Asset Registry...
+Looking up build 1847 in Build Asset Registry...
+Finding build for Microsoft.Private.PackageBaseline@4.6.0-preview.19073.11...
+Finding build for Microsoft.NETCore.Platforms@3.0.0-preview.19073.11...
+Finding build for Microsoft.Windows.Compatibility@2.1.0-preview.19073.11...
+Finding build for System.Windows.Extensions@4.6.0-preview.19073.11...
+Finding build for Microsoft.NETCore.Runtime.CoreCLR@3.0.0-preview-27322-72...
+Looking up Microsoft.NETCore.Runtime.CoreCLR@3.0.0-preview-27322-72 in Build Asset Registry...
+Looking up build 1761 in Build Asset Registry...
+Finding build for Microsoft.NETCore.DotNetHost@3.0.0-preview-27324-5...
+Looking up Microsoft.NETCore.DotNetHost@3.0.0-preview-27324-5 in Build Asset Registry...
+Looking up build 1869 in Build Asset Registry...
+Finding build for Microsoft.NETCore.DotNetHostPolicy@3.0.0-preview-27324-5...
+Finding build for Microsoft.NETCore.App@3.0.0-preview-27324-5...
+Finding build for Microsoft.Win32.Registry@4.6.0-preview.19073.11...
+Finding build for System.Configuration.ConfigurationManager@4.6.0-preview.19073.11...
+Finding build for System.Drawing.Common@4.6.0-preview.19073.11...
+Finding build for Microsoft.Win32.SystemEvents@4.6.0-preview.19073.11...
+Finding build for System.Security.Cryptography.Cng@4.6.0-preview.19073.11...
+Finding build for System.CodeDom@4.6.0-preview.19073.11...
+Finding build for System.Security.Permissions@4.6.0-preview.19073.11...
+Finding build for Microsoft.Extensions.CommandLineUtils.Sources@3.0.0-preview.19078.2...
+Looking up Microsoft.Extensions.CommandLineUtils.Sources@3.0.0-preview.19078.2 in Build Asset Registry...
+Looking up build 2006 in Build Asset Registry...
+Finding build for Microsoft.Extensions.HashCodeCombiner.Sources@3.0.0-preview.19078.2...
+Finding build for Microsoft.Extensions.NonCapturingTimer.Sources@3.0.0-preview.19078.2...
+Finding build for System.Diagnostics.DiagnosticSource@4.6.0-preview.19073.11...
+Finding build for System.Text.Encodings.Web@4.6.0-preview.19073.11...
+Finding build for Microsoft.Extensions.DependencyModel@3.0.0-preview-27324-5...
+Finding build for System.ComponentModel.Annotations@4.6.0-preview.19073.11...
+Finding build for System.Data.SqlClient@4.7.0-preview.19073.11...
+Finding build for System.Diagnostics.EventLog@4.6.0-preview.19073.11...
+Finding build for System.IO.Pipelines@4.6.0-preview.19073.11...
+Finding build for System.Reflection.Metadata@1.7.0-preview.19073.11...
+Finding build for System.Runtime.CompilerServices.Unsafe@4.6.0-preview.19073.11...
+Finding build for System.Security.Cryptography.Xml@4.6.0-preview.19073.11...
+Finding build for Microsoft.TemplateEngine.Cli@1.0.2-beta5.19066.2...
+Finding build for Microsoft.DotNet.Cli.CommandLine@1.0.0-preview.19074.1...
+Looking up Microsoft.DotNet.Cli.CommandLine@1.0.0-preview.19074.1 in Build Asset Registry...
+Looking up build 1887 in Build Asset Registry...
+Finding build for Microsoft.CSharp@4.6.0-preview.19080.5...
+Looking up Microsoft.CSharp@4.6.0-preview.19080.5 in Build Asset Registry...
+Looking up build 2090 in Build Asset Registry...
+Finding build for Microsoft.Extensions.Caching.Memory@3.0.0-preview.19079.8...
+Looking up Microsoft.Extensions.Caching.Memory@3.0.0-preview.19079.8 in Build Asset Registry...
+Looking up build 2044 in Build Asset Registry...
+Finding build for Microsoft.Extensions.Configuration.Abstractions@3.0.0-preview.19079.8...
+Finding build for Microsoft.Extensions.Configuration.EnvironmentVariables@3.0.0-preview.19079.8...
+Finding build for Microsoft.Extensions.Configuration.Json@3.0.0-preview.19079.8...
+Finding build for Microsoft.Extensions.Configuration@3.0.0-preview.19079.8...
+Finding build for Microsoft.Extensions.DependencyInjection@3.0.0-preview.19079.8...
+Finding build for Microsoft.Extensions.DependencyModel@3.0.0-preview-27330-4...
+Looking up Microsoft.Extensions.DependencyModel@3.0.0-preview-27330-4 in Build Asset Registry...
+Looking up build 2086 in Build Asset Registry...
+Finding build for Microsoft.Extensions.HostFactoryResolver.Sources@3.0.0-preview.19079.8...
+Finding build for Microsoft.Extensions.Logging@3.0.0-preview.19079.8...
+Finding build for System.Collections.Immutable@1.6.0-preview.19080.5...
+Finding build for System.ComponentModel.Annotations@4.6.0-preview.19080.5...
+Finding build for System.Data.SqlClient@4.7.0-preview.19080.5...
+Finding build for System.Diagnostics.DiagnosticSource@4.6.0-preview.19080.5...
+Finding build for Microsoft.AspNetCore.Razor.Language@3.0.0-preview-19074-06...
+Looking up Microsoft.AspNetCore.Razor.Language@3.0.0-preview-19074-06 in Build Asset Registry...
+Looking up build 1903 in Build Asset Registry...
+Finding build for Microsoft.AspNetCore.Mvc.Razor.Extensions@3.0.0-preview-19074-06...
+Finding build for Microsoft.CodeAnalysis.Razor@3.0.0-preview-19074-06...
+Finding build for Microsoft.NET.Sdk.Razor@3.0.0-preview-19074-06...
+Finding build for dotnet-ef@3.0.0-preview.19074.3...
+Looking up dotnet-ef@3.0.0-preview.19074.3 in Build Asset Registry...
+Looking up build 1880 in Build Asset Registry...
+Finding build for Microsoft.EntityFrameworkCore.InMemory@3.0.0-preview.19074.3...
+Finding build for Microsoft.EntityFrameworkCore.Relational@3.0.0-preview.19074.3...
+Finding build for Microsoft.EntityFrameworkCore.Sqlite@3.0.0-preview.19074.3...
+
+...
+
+Finding build for Microsoft.NETCore.Runtime.CoreCLR@3.0.0-preview-27331-71...
+Looking up Microsoft.NETCore.Runtime.CoreCLR@3.0.0-preview-27331-71 in Build Asset Registry...
+Looking up build 2103 in Build Asset Registry...
+Finding build for Microsoft.NETCore.DotNetHost@3.0.0-preview-27331-2...
+Looking up Microsoft.NETCore.DotNetHost@3.0.0-preview-27331-2 in Build Asset Registry...
+Looking up build 2116 in Build Asset Registry...
+Finding build for Microsoft.NETCore.DotNetHostPolicy@3.0.0-preview-27331-2...
+Finding build for Microsoft.NETCore.App@3.0.0-preview-27331-2...
+Finding build for Microsoft.Win32.Registry@4.6.0-preview.19079.11...
+Looking up Microsoft.Win32.Registry@4.6.0-preview.19079.11 in Build Asset Registry...
+Looking up build 2032 in Build Asset Registry...
+Finding build for System.Configuration.ConfigurationManager@4.6.0-preview.19079.11...
+Finding build for System.Drawing.Common@4.6.0-preview.19079.11...
+Finding build for Microsoft.Win32.SystemEvents@4.6.0-preview.19079.11...
+Finding build for System.Security.Cryptography.Cng@4.6.0-preview.19079.11...
+Finding build for System.CodeDom@4.6.0-preview.19079.11...
+Finding build for System.Security.Permissions@4.6.0-preview.19079.11...
+Finding build for System.Windows.Extensions@4.6.0-preview.19079.11...
+Full set of builds in graph:
+  Build - 20190201.2 of https://github.com/dotnet/core-sdk @ 465a336c7a5ca3af2f6cf5172ddc0ebde620803b
+  Build - 20190131.15 of https://devdiv.visualstudio.com/DevDiv/_git/DotNet-Trusted @ adcdf504ddb283fa0160d4f3291cc372fbce496e
+  Build - 20190131.3 of https://github.com/dotnet/core-setup @ 75ccdb6828e3706930ad49f061230e9e0fd24d18
+  Build - 3.0.0-preview-19080-0484 of https://github.com/aspnet/AspNetCore @ 7d21ee1a5a5f4caf64900e601b011be264964bbb
+  Build - 20190131.2 of https://github.com/aspnet/EntityFrameworkCore @ 5fecaf002ee8fe67aa10be7efd0b2a080ec66a2a
+  Build - 20190116.2 of https://github.com/dotnet/templating @ ac8f12b90238542dfd2ea596178ae24ea20a0f55
+  Build - 20190130.2 of https://github.com/dotnet/toolset @ 536d6a237f4de7b248e75b63256b75c1798e1bd7
+  Build - 20190125.1 of https://github.com/dotnet/cli @ 511071e1e199c8ccd8fad072cc31327db0737577
+  Build - 20190125.2 of https://github.com/dotnet/sdk @ 010b0fb362878d3eb8dfff7f521fc0db6b7e3a50
+  Build - 20190129.3 of https://github.com/Microsoft/msbuild @ a1e757f759060f131c2145f8898ce6a1bcbdd454
+  Build - 20190117.14 of https://github.com/dotnet/roslyn @ 359844cc9c32a5b4c1ba72a6e73a32989bd5daeb
+  Build - 20190129.2 of https://github.com/aspnet/AspNetCore-Tooling @ 99938c9b7e62896060b7d6f8a225cceb28da2c8d
+  Build - 20190129.5 of https://devdiv.visualstudio.com/DevDiv/_git/DotNet-Trusted @ 0a15bac8cd4f0646642dcd40ddebd0513a2de5d3
+  Build - 20190114.1 of https://github.com/aspnet/websdk @ c92b1354da7d7290ec63984cf445a4d2cc9667e8
+  Build - 20190124.2 of https://github.com/dotnet/winforms @ 63c7e76b747e67819a00b153b2d9dea6d9045d7b
+  Build - 20190114.4 of https://github.com/dotnet/wpf @ dbd3bd96849f6bca8c0ca0275de36895bd77a835
+  Build - 20190123.11 of https://github.com/dotnet/corefx @ 351ca391579740ae8af8a5405cffa16d152ad6b2
+  Build - 20190122.72 of https://github.com/dotnet/coreclr @ b9e88989458e24fa9764e045917b141e3338eae7
+  Build - 20190124.5 of https://github.com/dotnet/core-setup @ 63a01b08e5d1d1a6b8544f598b3d3bda76e6e424
+  Build - 20190128.02 of https://github.com/aspnet/Extensions @ a58a80bdf5ad971167f73e501661131c3e34a901
+  Build - 20190124.1 of https://github.com/dotnet/cliCommandLineParser @ d8f545b1995fb62fd5c64f794491afbfcf6a84ca
+  Build - 20190130.5 of https://github.com/dotnet/corefx @ 9e074e4a3f3626fa953f36ab79e3cd3e6db1c9de
+  Build - 20190129.8 of https://github.com/aspnet/Extensions @ f41cfded3c12eec0efea89ece1dafe43afa9c6b8
+  Build - 20190130.4 of https://github.com/dotnet/core-setup @ 373df9c049aaa6daa967f0bea3bac44c065051f0
+  Build - 20190124.6 of https://github.com/aspnet/AspNetCore-Tooling @ bd7fc9ddf67dec0d582168bcd3d1d4681747f81a
+  Build - 20190124.3 of https://github.com/aspnet/EntityFrameworkCore @ 3d1e08eb08789a9dde3ac20851d3c82fdf9272e5
+  Build - 20190124.02 of https://github.com/aspnet/Extensions @ 0de62ae930da31048ba7e54c8cd0c6c0bcbd9095
+  Build - 20190130.4 of https://github.com/dotnet/winforms @ f3aaf4d671390a7b81f0bec15a2cd2b3c94b11cd
+  Build - 20190131.1 of https://github.com/dotnet/corefx @ 4e7ce8acfae39beab8c30053d3da95417b5a16dc
+  Build - 20190131.71 of https://github.com/dotnet/coreclr @ 10ba67ac50a2152464981db11f2a893b87f8deee
+  Build - 20190131.2 of https://github.com/dotnet/core-setup @ 75ccdb6828e3706930ad49f061230e9e0fd24d18
+  Build - 20190129.11 of https://github.com/dotnet/corefx @ 673fe7880790e79549266cea25a385af82917b6e
+
+Gathering drop for build 20190201.2 of https://github.com/dotnet/core-sdk
+...
+</code></pre>
+<p><strong>See also</strong>:</p>
+<ul>
+<li><a href="#get-dependency-graph">get-dependency-graph</a></li>
+</ul>
+<h3 id="get-asset"><strong><code>get-asset</code></strong></h3>
+<p>Get information about an asset. Given an asset name and optional version,
+channel, and maximum age, find out general information about the asset.</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li>'--name` - <strong>(Required)</strong>. Name of asset to look up. This is typically a
+package name.</li>
+<li>'--version` - Look up specific version of an asset.</li>
+<li>'--channel` - Look up the asset produced from builds applied to this channel.</li>
+<li>'--max-age` - (Default: 30) Show builds with a max age of this many days.</li>
+</ul>
+<p><strong>Sample</strong>:</p>
+<pre><code>PS D:\enlistments\websdk&gt; darc get-asset --name 'Microsoft.Extensions.Logging.Abstractions' --channel &quot;3 Rel&quot; --max-age 1
+Looking up assets with name 'Microsoft.Extensions.Logging.Abstractions' on channel '.NET Core 3 Release' in the last 1 days
+Microsoft.Extensions.Logging.Abstractions @ 3.0.0-preview6.19304.6
+Repository:    https://github.com/aspnet/Extensions
+Branch:        refs/heads/release/3.0-preview6
+Commit:        54d51a340698b6883dd3e47be372c07e0acf75bc
+Build Number:  20190604.6
+Date Produced: 6/4/2019 12:31 PM
+Build Link:    https://dev.azure.com/dnceng/internal/_build/results?buildId=211715
+BAR Build Id:  13260
+Channels:
+- .NET Core 3 Release
+</code></pre>
+<p><strong>See also</strong>:</p>
+<p>None.</p>
+<h3 id="get-build"><strong><code>get-build</code></strong></h3>
+<p>Retrieves a specific build of a repository. Find the BAR build ID of a new build
+in the logs of the &quot;Publish Build Assets&quot; step of the  &quot;Publish to Build Asset
+Registry&quot; leg of an official build.</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li>'--id` - <strong>(Required)</strong>. Build id.</li>
+</ul>
+<p><strong>Sample</strong>:</p>
+<pre><code># Looking at logs of the &quot;Publish Build Assets&quot; step of the
+# &quot;Publish to Build Asset Registry&quot; leg of a recent build:
+
+D:\a\1\s\.dotnet\sdk\3.0.100-preview4-011223\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.RuntimeIdentifierInference.targets(151,5): message NETSDK1057: You are using a preview version of .NET Core. See: https://aka.ms/dotnet-core-preview [D:\a\1\s\.packages\microsoft.dotnet.arcade.sdk\1.0.0-beta.19263.3\tools\SdkTasks\PublishBuildAssets.proj]
+  Starting build metadata push to the Build Asset Registry...
+  Getting a collection of dependencies from 'eng/Version.Details.xml' in repo 'D:\a\1\s\'...
+  Reading 'eng/Version.Details.xml' in repo 'D:\a\1\s\' and branch ''...
+  Reading 'eng/Version.Details.xml' from repo 'D:\a\1\s\' and branch '' succeeded!
+  Calculated Dependencies:
+      13325, IsProduct: True
+      13337, IsProduct: True
+      13225, IsProduct: True
+      13379, IsProduct: True
+      13298, IsProduct: True
+      13331, IsProduct: True
+      13167, IsProduct: True
+      13184, IsProduct: True
+      11261, IsProduct: False
+  Metadata has been pushed. Build id in the Build Asset Registry is '13386'
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+PS D:\enlistments\websdk&gt; darc get-build --id 13386
+Repository:    https://github.com/dotnet/core-sdk
+Branch:        refs/heads/master
+Commit:        7996f7e53ffdf42feec5f1344df29ba53fcdf9ed
+Build Number:  20190605.3
+Date Produced: 6/5/2019 7:12 AM
+Build Link:    https://dev.azure.com/dnceng/internal/_build/results?buildId=212972
+BAR Build Id:  13386
+Channels:
+- .NET 5 Dev
+</code></pre>
+<p><strong>See also</strong>:</p>
+<ul>
+<li><a href="#get-asset">get-asset</a></li>
+</ul>
+<h3 id="get-channels"><strong><code>get-channels</code></strong></h3>
+<p>Retrieves a list of channels. Channels are something like a virtual cross
+repository branch. They are a tag that is applied to a build which indicates the
+purpose of the outputs of that build. Channels are used as sources in a
+subscription, indicating that the repository wants dependency updates from
+builds meant for the purpose associated with the channel.</p>
+<p>For instance, there is a channel called <code>.NET 5 Dev</code>. Builds that appear on
+this channel are intended for day to day .NET 5 development. Repositories
+may have dependencies on other .NET Core repositories when building their own
+part of the .NET 5 stack. By subscribing to that repository's <code>.NET 5 Dev</code> channel, they map .NET 5 daily development outputs onto their own
+target branch.</p>
+<p><strong>Parameters</strong></p>
+<p>None.</p>
+<p><strong>Sample</strong>:</p>
+<pre><code>PS D:\enlistments\arcade&gt; darc get-channels
+
+.NET Tools - Latest
+.NET Engineering Services - Int
+.NET Engineering Services - Prod
+.NET Tools - Validation
+.NET Core 3 Release
+.NET Core 3.1 Dev
+.NET Core 3.1 Release
+.NET 5 Dev
+.NET Core 3.0 Internal Servicing
+.NET 3 Tools
+.NET 3 Tools - Validation
+</code></pre>
+<p><strong>See also</strong>:</p>
+<ul>
+<li><a href="#get-dependency-graph">add-channel</a></li>
+</ul>
+<h3 id="get-default-channels"><strong><code>get-default-channels</code></strong></h3>
+<p>Retrieves a list of default channel mappings. A default channel maps each new build of a specific
+branch of a repository onto a specific channel. While builds can be selectively
+and manually applied to channels, this is generally inconvenient for day to day development
+in most cases.  In general, until release shutdown, each build of a branch
+should always be applied to its &quot;normal&quot; channel. The internal ID of the default
+channel association is also presented for convenience with other operations like
+<a href="#default-channel-status">default-channel-status</a>.</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>--source-repo</code> - Filter by a specific source repository. Matches on substring.</li>
+<li><code>--branch</code> - Filter by a branch. Matches on substring.</li>
+<li><code>--channel</code> - Filter by a channel name. Matches on substring.</li>
+</ul>
+<p><strong>Sample</strong></p>
+<pre><code>PS D:\enlistments\websdk&gt; darc get-default-channels --channel &quot;.NET Core 3 release&quot;
+(201)  https://dev.azure.com/dnceng/internal/_git/dotnet-optimization @ refs/heads/release/3.0 -&gt; .NET Core 3 Release
+(140)  https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int @ refs/heads/release/3.0 -&gt; .NET Core 3 Release
+(242)  https://github.com/aspnet/AspNetCore @ refs/heads/release/3.0-preview6 -&gt; .NET Core 3 Release
+(251)  https://github.com/aspnet/AspNetCore-Tooling @ refs/heads/release/3.0-preview6 -&gt; .NET Core 3 Release
+(248)  https://github.com/aspnet/Blazor @ refs/heads/release/0.10.0-preview6 -&gt; .NET Core 3 Release
+(250)  https://github.com/aspnet/EntityFramework6 @ refs/heads/release/6.3-preview6 -&gt; .NET Core 3 Release
+(249)  https://github.com/aspnet/EntityFrameworkCore @ refs/heads/release/3.0-preview6 -&gt; .NET Core 3 Release
+(252)  https://github.com/aspnet/Extensions @ refs/heads/release/3.0-preview6 -&gt; .NET Core 3 Release
+(89)   https://github.com/aspnet/websdk @ refs/heads/release/3.0.1xx -&gt; .NET Core 3 Release
+(78)   https://github.com/dotnet/cli @ refs/heads/release/3.0.1xx -&gt; .NET Core 3 Release
+(80)   https://github.com/dotnet/CliCommandLineParser @ refs/heads/master -&gt; .NET Core 3 Release
+(170)  https://github.com/dotnet/coreclr @ refs/heads/release/3.0 -&gt; .NET Core 3 Release
+(193)  https://github.com/dotnet/corefx @ refs/heads/release/3.0 -&gt; .NET Core 3 Release
+(77)   https://github.com/dotnet/core-sdk @ refs/heads/release/3.0.1xx -&gt; .NET Core 3 Release
+(192)  https://github.com/dotnet/core-setup @ refs/heads/release/3.0 -&gt; .NET Core 3 Release
+(247)  https://github.com/dotnet/roslyn @ refs/heads/release/dev16.1-vs-deps -&gt; .NET Core 3 Release
+(81)   https://github.com/dotnet/sdk @ refs/heads/release/3.0.1xx -&gt; .NET Core 3 Release
+(186)  https://github.com/dotnet/standard @ refs/heads/release/3.0 -&gt; .NET Core 3 Release
+(83)   https://github.com/dotnet/symreader @ refs/heads/master -&gt; .NET Core 3 Release
+(84)   https://github.com/dotnet/symreader-portable @ refs/heads/master -&gt; .NET Core 3 Release
+(90)   https://github.com/dotnet/templating @ refs/heads/release/3.0 -&gt; .NET Core 3 Release
+(92)   https://github.com/dotnet/toolset @ refs/heads/release/3.0.1xx -&gt; .NET Core 3 Release
+(194)  https://github.com/dotnet/winforms @ refs/heads/release/3.0 -&gt; .NET Core 3 Release
+(243)  https://github.com/dotnet/wpf @ refs/heads/release/3.0 -&gt; .NET Core 3 Release
+(88)   https://github.com/Microsoft/msbuild @ refs/heads/vs16.0 -&gt; .NET Core 3 Release
+</code></pre>
+<p><strong>See also</strong>:</p>
+<ul>
+<li><a href="#add-default-channel">add-default-channel</a></li>
+<li><a href="#delete-default-channel">delete-default-channel</a></li>
+<li><a href="#default-channel-status">default-channel-status</a></li>
+<li><a href="#get-channels">get-channels</a></li>
+</ul>
+<h3 id="get-dependencies"><strong><code>get-dependencies</code></strong></h3>
+<p>Retrieves the dependencies listed in the local repo. This command reads the
+Version.Details.xml file from the local repository and prints out the relevant
+information.  By default, the command lists all dependencies.</p>
+<p>For information on toolset vs. product dependencies, see <a href="#toolset-vs-product-dependencies">Toolset vs. Product
+Dependencies</a></p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>n, --name</code> - Name of dependency to query for.</li>
+</ul>
+<p><strong>Sample</strong></p>
+<pre><code>PS C:\enlistments\arcade-services&gt; darc get-dependencies
+
+Name:    Microsoft.DotNet.Arcade.Sdk
+Version: 1.0.0-beta.19081.3
+Repo:    https://github.com/dotnet/arcade
+Commit:  1e859f1c17fffbe9c4fb6bbfc0fc71cd0c56563b
+Type:    Toolset
+
+Name:    Microsoft.DotNet.SignTool
+Version: 1.0.0-beta.19081.3
+Repo:    https://github.com/dotnet/arcade
+Commit:  1e859f1c17fffbe9c4fb6bbfc0fc71cd0c56563b
+Type:    Toolset
+
+Name:    Microsoft.DotNet.Build.Tasks.Feed
+Version: 2.2.0-beta.19081.3
+Repo:    https://github.com/dotnet/arcade
+Commit:  1e859f1c17fffbe9c4fb6bbfc0fc71cd0c56563b
+Type:    Toolset
+
+Name:    Microsoft.DotNet.Maestro.Tasks
+Version: 1.0.0-beta.19060.8
+Repo:    https://github.com/dotnet/arcade
+Commit:  67384d20d310611afc1c2b4dd3b953fda182def4
+Type:    Toolset
+</code></pre>
+<p><strong>See Also</strong></p>
+<ul>
+<li><a href="#get-dependency-graph">get-dependency-graph</a></li>
+</ul>
+<h3 id="get-dependency-graph"><strong><code>get-dependency-graph</code></strong></h3>
+<p>Given a starting repository and sha, builds the full repository dependency
+graph.</p>
+<p>The dependency graph is defined by the dependencies in Version.Details.xml.
+Each dependency listed contains information on the source of the dependency,
+specifically which repository and sha it was generated from. Visiting that repository
+at the specified sha will yield another set of dependencies. Transitively
+visiting these repository+sha combinations will build up a repository graph. The
+graph may have cycles, and the transitive walk is stopped at those nodes.  It
+may also be stopped at any toolset dependency unless those are specifically
+included with <code>--include-toolset</code>.</p>
+<p>The graph output comes in 3 forms:</p>
+<ul>
+<li>(Default) A full textual graph representation indicating all involved repositories,
+their input dependencies, and the repositories that created those input
+dependencies.</li>
+<li>A 'flat' graph where only unique repository+sha combinations are shown. The
+individual package dependencies are ignored.</li>
+<li>A graph-viz text format that can be used to generate a visual presentation of
+the graph.</li>
+</ul>
+<p>In flat and full modes, after printing the graph, a set of &quot;incoherencies&quot; and
+the paths to those incoherences are displayed. Incoherencies are cases where either:</p>
+<ul>
+<li><p>The same repository exists in the graph at two different shas</p>
+</li>
+<li><p>The same input dependency exists in the graph at two different versions.
+While generally this also leads to the same repository existing multiple times
+in the graph at different shas, it's also possible for the same sha to be
+built more than once, producing different package versions.</p>
+<p>While by default, this command uses remote resources to generate the graph,
+it's possible to generate if you have all potential input repositories
+available in a folder with all the necessary shas downloaded.  In this mode,
+starting from the root repository, darc will scan the folder for git repos
+that contain the input shas to that repository. It will then build up the
+dependency graph based on that information.</p>
+<p>By default, if no parameters are passed, the head sha of the current
+repository is used as the starting point.</p>
+</li>
+</ul>
+<p><strong>Parameters</strong>'</p>
+<ul>
+<li><code>-l, --local</code> - Get the graph using only local information.  Requires that repos-folder be passed.</li>
+<li><code>--repo</code> - If set, gather dependency information from the remote repository. Requires --version.</li>
+<li><code>-v, --version</code> - Branch, commit or tag to look up if looking up version information remotely.</li>
+<li><code>--asset-name</code> - Get the graph based on a single asset and not the whole Version.Details.xml contents.</li>
+<li><code>--repos-folder</code> - Full path to folder where all the repos are locally stored. i.e. C:\repos</li>
+<li><code>--remotes-map</code> - ';' separated key value pair defining the remote to local path mapping.</li>
+<li><code>-f, --flat</code> - Returns a unique set of repository+sha combination.</li>
+<li><code>--graphviz</code> - Writes the repository graph in GraphViz (dot) form, into the specified file.</li>
+<li><code>--output-file</code> - Writes the non-GraphViz (dot) output to the specified file into the specified file.</li>
+<li><code>--include-toolset</code> - Include toolset dependencies.</li>
+<li><code>--skip-builds</code> - Do not look up build information.</li>
+<li><code>--delta-from</code> - (Default: newest-in-graph) Determine the delta of each node
+in the graph from a target. Valid values: [none, newest-in-channel,
+newest-in-graph]</li>
+<li><code>--coherency</code> - Report coherency information.</li>
+</ul>
+<p><strong>Sample</strong></p>
+<p>Full mode:</p>
+<pre><code>PS C:\enlistments\core-setup&gt; darc get-dependency-graph
+Getting root dependencies from local repository...
+Building repository dependency graph...
+Removing toolset dependencies...
+Repositories:
+  - Repo:    C:/enlistments/core-setup/.git
+    Commit:  b50554ac9a96fedc8580fa6090b6e9e75a23193b
+    Dependencies:
+    - Name:    Microsoft.Private.CoreFx.NETCoreApp
+      Version: 4.6.0-preview.19073.11
+    - Name:    Microsoft.NETCore.Platforms
+      Version: 3.0.0-preview.19073.11
+    - Name:    Microsoft.NETCore.Runtime.CoreCLR
+      Version: 3.0.0-preview-27322-72
+    Input Repositories:
+    - Repo:    https://github.com/dotnet/corefx
+      Commit:  351ca391579740ae8af8a5405cffa16d152ad6b2
+    - Repo:    https://github.com/dotnet/coreclr
+      Commit:  b9e88989458e24fa9764e045917b141e3338eae7
+</code></pre>
+<p>Flat mode:</p>
+<pre><code>PS C:\enlistments\core-setup&gt; darc get-dependency-graph --flat
+Getting root dependencies from local repository...
+Building repository dependency graph...
+Removing toolset dependencies...
+Repositories:
+  - Repo:     C:/enlistments/core-setup/.git
+    Commit:   b50554ac9a96fedc8580fa6090b6e9e75a23193b
+  - Repo:     https://github.com/dotnet/corefx
+    Commit:   351ca391579740ae8af8a5405cffa16d152ad6b2
+  - Repo:     https://github.com/dotnet/coreclr
+    Commit:   b9e88989458e24fa9764e045917b141e3338eae7
+</code></pre>
+<p><strong>See Also</strong></p>
+<ul>
+<li><a href="#gather-drop">gather-drop</a></li>
+<li><a href="#get-flow-graph">get-flow-graph</a></li>
+</ul>
+<h3 id="get-flow-graph"><strong><code>get-flow-graph</code></strong></h3>
+<p>Get dependency flow graph in graphviz form. This graph represents inter-repository flow vs.
+<a href="#get-dependency-graph">get-dependency-graph</a> which represents current
+repository inter-dependencies. This visualization can be useful to understand
+the flow of changes in between repositories. Pictorial graphs can be generated
+using dot.exe or other GraphViz tools.</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>--graphviz</code> - Writes the flow graph in GraphViz (dot) form, into the specified file.</li>
+<li><code>--include-disabled-subscriptions</code> - Include edges that have disabled subscriptions</li>
+<li><code>--frequencies</code> - (Default: everyWeek twiceDaily everyDay everyBuild none) Include only subscriptions with the specific update frequencies in the graph.</li>
+<li><code>--channel</code> - Only include nodes/edges with flow on this channel.</li>
+</ul>
+<p><strong>Sample</strong></p>
+<pre><code>PS D:\enlistments\websdk&gt; darc get-flow-graph --channel &quot;3 Rel&quot;
+digraph repositoryGraph {
+    node [shape=record]
+    arcademaster[label=&quot;arcade\nmaster&quot;];
+    CliCommandLineParsermaster[label=&quot;CliCommandLineParser\nmaster&quot;];
+    symreadermaster[label=&quot;symreader\nmaster&quot;];
+    symreaderportablemaster[label=&quot;symreader-portable\nmaster&quot;];
+    coresdkrelease301xx[label=&quot;core-sdk\nrelease/3.0.1xx&quot;];
+    clirelease301xx[label=&quot;cli\nrelease/3.0.1xx&quot;];
+    sdkrelease301xx[label=&quot;sdk\nrelease/3.0.1xx&quot;];
+    msbuildvs160[label=&quot;msbuild\nvs16.0&quot;];
+    websdkrelease301xx[label=&quot;websdk\nrelease/3.0.1xx&quot;];
+    templatingrelease30[label=&quot;templating\nrelease/3.0&quot;];
+    toolsetrelease301xx[label=&quot;toolset\nrelease/3.0.1xx&quot;];
+    dotnetwpfintrelease30[label=&quot;dotnet-wpf-int\nrelease/3.0&quot;];
+    coreclrrelease30[label=&quot;coreclr\nrelease/3.0&quot;];
+    standardrelease30[label=&quot;standard\nrelease/3.0&quot;];
+    coresetuprelease30[label=&quot;core-setup\nrelease/3.0&quot;];
+    corefxrelease30[label=&quot;corefx\nrelease/3.0&quot;];
+    winformsrelease30[label=&quot;winforms\nrelease/3.0&quot;];
+    dotnetoptimizationrelease30[label=&quot;dotnet-optimization\nrelease/3.0&quot;];
+    AspNetCorerelease30preview6[label=&quot;AspNetCore\nrelease/3.0-preview6&quot;];
+    wpfrelease30[label=&quot;wpf\nrelease/3.0&quot;];
+    roslynreleasedev161vsdeps[label=&quot;roslyn\nrelease/dev16.1-vs-deps&quot;];
+    Blazorrelease0100preview6[label=&quot;Blazor\nrelease/0.10.0-preview6&quot;];
+    EntityFrameworkCorerelease30preview6[label=&quot;EntityFrameworkCore\nrelease/3.0-preview6&quot;];
+    EntityFramework6release63preview6[label=&quot;EntityFramework6\nrelease/6.3-preview6&quot;];
+    AspNetCoreToolingrelease30preview6[label=&quot;AspNetCore-Tooling\nrelease/3.0-preview6&quot;];
+    Extensionsrelease30preview6[label=&quot;Extensions\nrelease/3.0-preview6&quot;];
+    arcademaster -&gt; arcademaster [style=dashed]
+    arcademaster -&gt; sdkrelease301xx [style=dotted]
+    arcademaster -&gt; toolsetrelease301xx [style=dotted]
+    arcademaster -&gt; websdkrelease301xx [style=dotted]
+    arcademaster -&gt; clirelease301xx [style=dotted]
+    arcademaster -&gt; winformsrelease30 [style=dotted]
+    arcademaster -&gt; wpfrelease30 [style=dotted]
+    arcademaster -&gt; coreclrrelease30 [style=dotted]
+    arcademaster -&gt; coresdkrelease301xx [style=dotted]
+    arcademaster -&gt; templatingrelease30 [style=dotted]
+    arcademaster -&gt; msbuildvs160 [style=dotted]
+    arcademaster -&gt; corefxrelease30 [style=dotted]
+    arcademaster -&gt; coresetuprelease30 [style=dotted]
+    arcademaster -&gt; standardrelease30 [style=dotted]
+    arcademaster -&gt; dotnetwpfintrelease30 [style=dotted]
+    arcademaster -&gt; Blazorrelease0100preview6 [style=dotted]
+    arcademaster -&gt; EntityFrameworkCorerelease30preview6 [style=dotted]
+    arcademaster -&gt; AspNetCorerelease30preview6 [style=dotted]
+    arcademaster -&gt; AspNetCoreToolingrelease30preview6 [style=dotted]
+    arcademaster -&gt; dotnetoptimizationrelease30 [style=dotted]
+    arcademaster -&gt; Extensionsrelease30preview6 [style=dotted]
+    arcademaster -&gt; EntityFramework6release63preview6 [style=dotted]
+    subgraph cluster_NETCore3Release {
+        label = &quot;.NET Core 3 Release&quot;
+        CliCommandLineParsermaster
+        symreadermaster
+        symreaderportablemaster
+        coresdkrelease301xx
+        clirelease301xx
+        sdkrelease301xx
+        msbuildvs160
+        websdkrelease301xx
+        templatingrelease30
+        toolsetrelease301xx
+        dotnetwpfintrelease30
+        coreclrrelease30
+        standardrelease30
+        coresetuprelease30
+        corefxrelease30
+        winformsrelease30
+        dotnetoptimizationrelease30
+        AspNetCorerelease30preview6
+        wpfrelease30
+        roslynreleasedev161vsdeps
+        Blazorrelease0100preview6
+        EntityFrameworkCorerelease30preview6
+        EntityFramework6release63preview6
+        AspNetCoreToolingrelease30preview6
+        Extensionsrelease30preview6
+    clirelease301xx -&gt; toolsetrelease301xx [style=bold]
+    roslynreleasedev161vsdeps -&gt; toolsetrelease301xx [style=bold]
+    sdkrelease301xx -&gt; toolsetrelease301xx [style=bold]
+    toolsetrelease301xx -&gt; coresdkrelease301xx [style=bold]
+    websdkrelease301xx -&gt; toolsetrelease301xx [style=bold]
+    CliCommandLineParsermaster -&gt; clirelease301xx [style=bold]
+    coreclrrelease30 -&gt; corefxrelease30 [style=bold]
+    coresetuprelease30 -&gt; coresdkrelease301xx [style=bold]
+    templatingrelease30 -&gt; coresdkrelease301xx [style=bold]
+    AspNetCoreToolingrelease30preview6 -&gt; toolsetrelease301xx [style=bold]
+    AspNetCorerelease30preview6 -&gt; coresdkrelease301xx [style=bold]
+    corefxrelease30 -&gt; coresetuprelease30 [style=bold]
+    sdkrelease301xx -&gt; clirelease301xx [style=bold]
+    coreclrrelease30 -&gt; coresetuprelease30 [style=bold]
+    msbuildvs160 -&gt; toolsetrelease301xx [style=bold]
+    corefxrelease30 -&gt; coreclrrelease30 [style=dotted]
+    coresetuprelease30 -&gt; corefxrelease30 [style=dotted]
+    standardrelease30 -&gt; coresetuprelease30 [style=bold]
+    templatingrelease30 -&gt; clirelease301xx [style=bold]
+    wpfrelease30 -&gt; dotnetwpfintrelease30 [style=bold]
+    clirelease301xx -&gt; coresdkrelease301xx [style=bold]
+    winformsrelease30 -&gt; wpfrelease30 [style=bold]
+    AspNetCorerelease30preview6 -&gt; websdkrelease301xx [style=bold]
+    dotnetoptimizationrelease30 -&gt; coreclrrelease30 [style=dotted]
+    dotnetoptimizationrelease30 -&gt; corefxrelease30 [style=dotted]
+    coresetuprelease30 -&gt; wpfrelease30 [style=dotted]
+    coresetuprelease30 -&gt; coreclrrelease30 [style=dotted]
+    sdkrelease301xx -&gt; coresdkrelease301xx [style=bold]
+    corefxrelease30 -&gt; standardrelease30 [style=dotted]
+    coresetuprelease30 -&gt; dotnetwpfintrelease30 [style=dotted]
+    coresetuprelease30 -&gt; winformsrelease30 [style=dotted]
+    standardrelease30 -&gt; corefxrelease30 [style=bold]
+    EntityFrameworkCorerelease30preview6 -&gt; AspNetCorerelease30preview6 [style=bold]
+    coresetuprelease30 -&gt; EntityFramework6release63preview6 [style=bold]
+    coresetuprelease30 -&gt; toolsetrelease301xx [style=bold]
+    dotnetwpfintrelease30 -&gt; coresetuprelease30 [style=bold]
+    AspNetCoreToolingrelease30preview6 -&gt; AspNetCorerelease30preview6 [style=bold]
+    Blazorrelease0100preview6 -&gt; AspNetCorerelease30preview6 [style=bold]
+    dotnetwpfintrelease30 -&gt; wpfrelease30 [style=dotted]
+    Extensionsrelease30preview6 -&gt; EntityFrameworkCorerelease30preview6 [style=bold]
+    Extensionsrelease30preview6 -&gt; AspNetCoreToolingrelease30preview6 [style=bold]
+    coresetuprelease30 -&gt; Extensionsrelease30preview6 [style=bold]
+
+    }
+    subgraph cluster1 {
+        rankdir=RL;
+        label = &quot;Legend&quot;
+        shape = rectangle;
+        color = black;
+        a[style = invis];
+        b[style = invis];
+        c[style = invis];
+        d[style = invis];
+        e[style = invis];
+        f[style = invis];
+        c-&gt;d[label = &quot;Updated Every Build&quot;, style = bold];
+        a-&gt;b[label = &quot;Updated Every Day&quot;, style = dashed];
+        e-&gt;f[label = &quot;Disabled/Updated On-demand&quot;, style = dotted];
+    }
+}
+</code></pre>
+<p><strong>See Also</strong></p>
+<ul>
+<li><a href="#get-subscriptions">get-subscriptions</a></li>
+<li><a href="#trigger-subscriptions">trigger-subscriptions</a></li>
+<li><a href="#get-dependency-graph">get-dependency-graph</a></li>
+</ul>
+<h3 id="get-health"><strong><code>get-health</code></strong></h3>
+<p>Evaluate the dependency flow-related health of the .NET Core repositories,
+channels, etc. <code>get-health</code> evaluates a number of metrics (e.g. cycles in
+dependency flow).  Each metric either passes, fails, or generates warnings.</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>--repo</code> - Narrow health checkups by this repository.</li>
+<li><code>--channel</code> - Narrow health checkups by this channel.</li>
+</ul>
+<p><strong>Sample</strong></p>
+<pre><code>PS D:\enlistments\arcade-services&gt; darc get-health --channel &quot;.NET Core 3 Release&quot;
+Evaluating the following channels:
+  .NET Core 3 Release
+Evaluating the following repositories:
+  https://github.com/dotnet/sdk
+  https://github.com/dotnet/cli
+  https://github.com/dotnet/standard
+  https://github.com/dotnet/arcade
+  https://github.com/dotnet/winforms
+  https://github.com/dotnet/wpf
+  https://github.com/Microsoft/msbuild
+  https://github.com/Microsoft/vstest
+  https://github.com/dotnet/CliCommandLineParser
+  https://github.com/dotnet/symreader
+  https://github.com/dotnet/symreader-portable
+  https://github.com/aspnet/websdk
+  https://github.com/dotnet/toolset
+  https://github.com/dotnet/test-templates
+  https://github.com/aspnet/AspNetCore-Tooling
+  https://github.com/aspnet/AspNetCore
+  https://github.com/aspnet/EntityFrameworkCore
+  https://github.com/dotnet/coreclr
+  https://github.com/dotnet/core-setup
+  https://github.com/dotnet/core-sdk
+  https://github.com/aspnet/Extensions
+  https://github.com/dotnet/roslyn
+  https://github.com/dotnet/templating
+  https://github.com/dotnet/corefx
+  https://github.com/dotnet/format
+  https://github.com/dotnet/roslyn-sdk
+  https://github.com/Microsoft/visualfsharp
+  https://github.com/dotnet/arcade-validation
+  https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int
+  https://github.com/aspnet/EntityFramework6
+  https://github.com/dotnet/source-build-reference-packages
+  https://github.com/mono/linker
+  https://github.com/dotnet/iot
+  https://dev.azure.com/dnceng/internal/_git/dotnet-optimization
+  https://github.com/mono/mono
+  https://github.com/aspnet/Blazor
+
+warn: Microsoft.DotNet.Darc.Operations.Operation[0]
+      https://github.com/nuget/nuget.client@27af96bdb7ba8d6d7ea9ad53fc76cd1d1aa80703 does not have an eng/Version.Details.xml.
+warn: Microsoft.DotNet.Darc.Operations.Operation[0]
+      https://github.com/microsoft/vstest@
+       does not have an eng/Version.Details.xml.
+warn: Microsoft.DotNet.Darc.Operations.Operation[0]
+      https://github.com/nuget/nuget.client@27af96bdb7ba8d6d7ea9ad53fc76cd1d1aa80703 does not have an eng/Version.Details.xml.
+warn: Microsoft.DotNet.Darc.Operations.Operation[0]
+      https://github.com/microsoft/vstest@
+       does not have an eng/Version.Details.xml.
+Subscription health for https://github.com/dotnet/toolset @ release/3.0.1xx - (Failed)
+
+  Dependencies missing subscriptions:
+    NuGet.Build.Tasks
+    Microsoft.NET.Test.Sdk
+    ILLink.Tasks
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+  Subscriptions that do not have any effect:
+    https://github.com/nuget/nuget.client (.NET Core 3 Release) ==&gt; 'https://github.com/dotnet/toolset' ('release/3.0.1xx') (1ffcc88a-b02a-4b5a-2812-08d690bc5860)
+    https://github.com/microsoft/vstest (.NET Core 3 Release) ==&gt; 'https://github.com/dotnet/toolset' ('release/3.0.1xx') (4be36948-e631-40b6-b4ea-08d6910bdae0)
+    https://github.com/mono/linker (.NET Core 3 Release) ==&gt; 'https://github.com/dotnet/toolset' ('release/3.0.1xx') (3013901c-3f64-4351-50e3-08d6c516cc75)
+
+Subscription health for https://github.com/dotnet/core-sdk @ release/3.0.1xx - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+  Subscriptions that do not have any effect:
+    https://github.com/dotnet/test-templates (.NET Core 3 Release) ==&gt; 'https://github.com/dotnet/core-sdk' ('release/3.0.1xx') (2fb6d4f8-61cf-4278-94da-08d690bc143a)
+
+Subscription health for https://github.com/dotnet/cli @ release/3.0.1xx - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+
+Subscription health for https://github.com/dotnet/corefx @ release/3.0 - (Failed)
+
+  Dependencies missing subscriptions:
+    Microsoft.NETCore.Platforms
+    runtime.native.System.IO.Ports
+    optimization.windows_nt-x64.IBC.CoreFx
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.NETCore.App
+    Microsoft.NETCore.DotNetHost
+    Microsoft.NETCore.DotNetHostPolicy
+    Microsoft.DotNet.Arcade.Sdk
+    Microsoft.DotNet.Helix.Sdk
+    Microsoft.DotNet.ApiCompat
+    Microsoft.DotNet.GenAPI
+    Microsoft.DotNet.GenFacades
+    Microsoft.DotNet.XUnitExtensions
+    Microsoft.DotNet.XUnitConsoleRunner
+    Microsoft.DotNet.Build.Tasks.Packaging
+    Microsoft.DotNet.CodeAnalysis
+    Microsoft.DotNet.RemoteExecutor
+    Microsoft.DotNet.Build.Tasks.Configuration
+    Microsoft.DotNet.Build.Tasks.Feed
+    Microsoft.DotNet.VersionTools.Tasks
+  Subscriptions that do not have any effect:
+    https://dev.azure.com/dnceng/internal/_git/dotnet-optimization (.NET Core 3 Release) ==&gt; 'https://github.com/dotnet/corefx' ('release/3.0') (fc000152-53a0-4a98-0b3e-08d6bc6f2d11)
+
+Subscription health for https://github.com/dotnet/core-setup @ release/3.0 - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+
+Subscription health for https://github.com/dotnet/coreclr @ release/3.0 - (Failed)
+
+  Dependencies missing subscriptions:
+    optimization.IBC.CoreCLR
+    optimization.PGO.CoreCLR
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+    Microsoft.DotNet.Helix.Sdk
+    Microsoft.DotNet.Build.Tasks.Feed
+    Microsoft.DotNet.Build.Tasks.Packaging
+    Microsoft.Private.CoreFx.NETCoreApp
+    Microsoft.NETCore.Platforms
+    Microsoft.Bcl.AsyncInterfaces
+    Microsoft.NETCore.App
+  Subscriptions that do not have any effect:
+    https://dev.azure.com/dnceng/internal/_git/dotnet-optimization (.NET Core 3 Release) ==&gt; 'https://github.com/dotnet/coreclr' ('release/3.0') (2b95475b-d147-4b39-6306-08d6bc51899c)
+
+Subscription health for https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int @ release/3.0 - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+    Microsoft.NETCore.App
+
+Subscription health for https://github.com/dotnet/wpf @ release/3.0 - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.NETCore.App
+    Microsoft.DotNet.Arcade.Sdk
+    Microsoft.DotNet.CodeAnalysis
+    Microsoft.DotNet.Wpf.DncEng
+
+Subscription health for https://github.com/aspnet/websdk @ release/3.0.1xx - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+  Subscriptions that do not have any effect:
+    https://github.com/aspnet/xdt (.NET Core 3 Release) ==&gt; 'https://github.com/aspnet/websdk' ('release/3.0.1xx') (28d0cfb5-71e0-4e27-8453-08d6c4e800ae)
+
+Subscription health for https://github.com/dotnet/standard @ release/3.0 - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+    Microsoft.DotNet.ApiCompat
+    Microsoft.DotNet.Build.Tasks.Packaging
+    Microsoft.DotNet.CodeAnalysis
+    Microsoft.DotNet.GenAPI
+    Microsoft.DotNet.GenFacades
+    System.Reflection.Emit
+    System.Reflection.Emit.ILGeneration
+    System.Reflection.Emit.Lightweight
+
+Subscription health for https://github.com/dotnet/winforms @ release/3.0 - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.NETCore.App
+    Microsoft.DotNet.Arcade.Sdk
+    Microsoft.DotNet.GenFacades
+    Microsoft.DotNet.Helix.Sdk
+    Microsoft.DotNet.XUnitExtensions
+
+Subscription health for https://github.com/aspnet/AspNetCore @ release/3.0-preview6 - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.GenAPI
+    Microsoft.DotNet.Arcade.Sdk
+    Microsoft.DotNet.Helix.Sdk
+
+Subscription health for https://github.com/aspnet/EntityFramework6 @ release/6.3-preview6 - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+
+Subscription health for https://github.com/aspnet/EntityFrameworkCore @ release/3.0-preview6 - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+
+Subscription health for https://github.com/aspnet/AspNetCore-Tooling @ release/3.0-preview6 - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+
+Subscription health for https://github.com/aspnet/Extensions @ release/3.0-preview6 - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+    Microsoft.DotNet.GenAPI
+    Microsoft.DotNet.Helix.Sdk
+
+Subscription health for https://github.com/dotnet/CliCommandLineParser @ master - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+
+Subscription health for https://github.com/dotnet/sdk @ release/3.0.1xx - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+    Microsoft.DotNet.SignTool
+
+Subscription health for https://github.com/dotnet/symreader @ master - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+
+Subscription health for https://github.com/dotnet/symreader-portable @ master - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+
+Subscription health for https://github.com/Microsoft/msbuild @ vs16.0 - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+    Microsoft.DotNet.SignTool
+
+Subscription health for https://github.com/dotnet/templating @ release/3.0 - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+
+Subscription health for https://dev.azure.com/dnceng/internal/_git/dotnet-optimization @ release/3.0 - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+    Microsoft.DotNet.Build.Tasks.Feed
+
+Subscription health for https://github.com/dotnet/roslyn @ release/dev16.1-vs-deps - (Failed)
+
+  Dependencies missing subscriptions:
+    Microsoft.DotNet.Arcade.Sdk
+
+Subscription health for https://github.com/aspnet/Blazor @ release/0.10.0-preview6 - (Warning)
+
+  Dependencies that do not flow automatically (disabled or frequency=none):
+    Microsoft.DotNet.Arcade.Sdk
+
+Product dependency cycle health for https://github.com/dotnet/toolset @ release/3.0.1xx - (Passed)
+Product dependency cycle health for https://github.com/dotnet/core-sdk @ release/3.0.1xx - (Passed)
+Product dependency cycle health for https://github.com/dotnet/cli @ release/3.0.1xx - (Passed)
+Product dependency cycle health for https://github.com/dotnet/corefx @ release/3.0 - (Passed)
+Product dependency cycle health for https://github.com/dotnet/core-setup @ release/3.0 - (Passed)
+Product dependency cycle health for https://github.com/dotnet/coreclr @ release/3.0 - (Passed)
+Product dependency cycle health for https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int @ release/3.0 - (Passed)
+Product dependency cycle health for https://github.com/dotnet/wpf @ release/3.0 - (Passed)
+Product dependency cycle health for https://github.com/aspnet/websdk @ release/3.0.1xx - (Passed)
+Product dependency cycle health for https://github.com/dotnet/standard @ release/3.0 - (Passed)
+Product dependency cycle health for https://github.com/dotnet/winforms @ release/3.0 - (Passed)
+Product dependency cycle health for https://github.com/aspnet/AspNetCore @ release/3.0-preview6 - (Passed)
+Product dependency cycle health for https://github.com/aspnet/EntityFramework6 @ release/6.3-preview6 - (Passed)
+Product dependency cycle health for https://github.com/aspnet/EntityFrameworkCore @ release/3.0-preview6 - (Passed)
+Product dependency cycle health for https://github.com/aspnet/AspNetCore-Tooling @ release/3.0-preview6 - (Passed)
+Product dependency cycle health for https://github.com/aspnet/Extensions @ release/3.0-preview6 - (Passed)
+Product dependency cycle health for https://github.com/dotnet/CliCommandLineParser @ master - (Passed)
+Product dependency cycle health for https://github.com/dotnet/sdk @ release/3.0.1xx - (Passed)
+Product dependency cycle health for https://github.com/dotnet/symreader @ master - (Passed)
+Product dependency cycle health for https://github.com/dotnet/symreader-portable @ master - (Passed)
+Product dependency cycle health for https://github.com/Microsoft/msbuild @ vs16.0 - (Passed)
+Product dependency cycle health for https://github.com/dotnet/templating @ release/3.0 - (Passed)
+Product dependency cycle health for https://dev.azure.com/dnceng/internal/_git/dotnet-optimization @ release/3.0 - (Passed)
+Product dependency cycle health for https://github.com/dotnet/roslyn @ release/dev16.1-vs-deps - (Passed)
+Product dependency cycle health for https://github.com/aspnet/Blazor @ release/0.10.0-preview6 - (Passed)
+</code></pre>
+<p><strong>See Also</strong></p>
+<p>None.</p>
+<h3 id="get-latest-build"><strong><code>get-latest-build</code></strong></h3>
+<p>Retrieves the latest builds matching the specified criteria. If more than one
+build matches then multiple builds are returned. This is useful for a quick
+check of what the latest build of a repository is, especially if it has not been assigned to a channel.</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>--repo</code> - <strong>(Required)</strong>. Name of repository to determine the latest build for. Match on substring</li>
+<li><code>--channel</code> - Name of channel to query for the latest build on. Match on substring</li>
+</ul>
+<p><strong>Sample</strong>:</p>
+<pre><code>PS D:\enlistments\arcade-services&gt; darc get-latest-build --repo core-setup --channel &quot;.NET 5 Dev&quot;
+Repository:    https://github.com/dotnet/core-setup
+Branch:        refs/heads/master
+Commit:        9042fe6c81aa3b47f58ccd94ff02e42f9f7a4e46
+Build Number:  20190916.2
+Date Produced: 9/16/2019 9:19 AM
+Build Link:    https://dev.azure.com/dnceng/internal/_build/results?buildId=356253
+BAR Build Id:  28440
+Channels:
+- .NET 5 Dev
+</code></pre>
+<p><strong>See also</strong>:</p>
+<p>None.</p>
+<h3 id="get-repository-policies"><strong><code>get-repository-policies</code></strong></h3>
+<p>Retrieves information about repository merge policies. Merge policies dictate
+the checks that must be satisfied for a pull request to be automatically merged.
+These merge policies come from two sources:</p>
+<ul>
+<li>Non-batchable subscriptions specify their own merge policies.</li>
+<li>Batchable subscriptions share a merge policy per repo+branch combination.</li>
+</ul>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>--repo</code> - Name of repository to get repository merge policies for. Match on substring</li>
+<li><code>--branch</code> - Name of repository to get repository merge policies for. Match on substring</li>
+<li><code>--all</code> - List all repositories. Otherwise, branches not targeted by a batchable subscription are not listed.</li>
+</ul>
+<p><strong>Sample</strong>:</p>
+<pre><code>S D:\enlistments\websdk&gt; darc get-repository-policies --repo extensions
+Filtered 3 policies for branches not targeted by an active batchable subscription. To include, pass --all.
+
+https://github.com/aspnet/Extensions @ master
+- Merge Policies:
+  Standard
+https://github.com/aspnet/Extensions @ release/3.0-preview6
+- Merge Policies:
+  Standard
+</code></pre>
+<p><strong>See also</strong>:</p>
+<ul>
+<li><a href="#get-subscriptions">get-subscriptions</a></li>
+<li><a href="#set-repository-policies">set-repository-policies</a></li>
+<li><a href="#add-subscription">add-subscription</a></li>
+</ul>
+<h3 id="get-subscriptions"><strong><code>get-subscriptions</code></strong></h3>
+<p>Retrieves information about existing subscriptions. This command is generally
+useful to determine what kind of dependency flow will happen on new builds, or
+to obtain the id of a subscription for use in
+<a href="#delete-subscription">delete-subscription</a>.</p>
+<p>The top line of the listing shows the subscription mapping and is read:</p>
+<pre><code>https://github.com/aspnet/AspNetCore (.NET 5 Dev) ==&gt; 'https://github.com/dotnet/core-sdk' ('master')
+
+Builds of https://github.com/aspnet/AspNetCore that have been applied to channel &quot;.NET 5 Dev&quot; will be applied to the master branch of https://github.com/dotnet/core-sdk.
+</code></pre>
+<p><strong>Parameters</strong></p>
+<p>If no parameters are specified, <code>get-subscriptions</code> will show a full list of
+Maestro++ subscriptions. This list can be filtered by various input parameters
+to be more useful.</p>
+<ul>
+<li><code>--target-repo</code> - Filter by target repo (matches substring unless --exact or --regex is passed).</li>
+<li><code>--source-repo</code> - Filter by source repo (matches substring unless --exact or --regex is passed).</li>
+<li><code>--channel</code> - Filter by source channel (matches substring unless --exact or --regex is passed).</li>
+<li><code>--target-branch</code> - Filter by target branch (matches substring unless --exact or --regex is passed).</li>
+<li><code>--exact</code> - Match subscription parameters exactly (cannot be used with --regex).</li>
+<li><code>--regex</code> - Match subscription parameters using regex (cannot be used with --exact).</li>
+</ul>
+<p><strong>Sample</strong>:</p>
+<pre><code>PS D:\enlistments\arcade-services&gt; darc get-subscriptions --target-repo core-sdk --source-repo aspnet
+
+https://github.com/aspnet/AspNetCore (.NET 5 Dev) ==&gt; 'https://github.com/dotnet/core-sdk' ('master')
+  - Id: 510286a9-8cd5-47bd-a259-08d68641480a
+  - Update Frequency: EveryBuild
+  - Enabled: True
+  - Batchable: False
+  - Merge Policies:
+    Standard
+https://github.com/aspnet/AspNetCore (.NET Core 3 Release) ==&gt; 'https://github.com/dotnet/core-sdk' ('release/3.0.1xx')
+  - Id: 0a2d0ca4-5d87-4bfd-2808-08d690bc5860
+  - Update Frequency: EveryBuild
+  - Enabled: True
+  - Batchable: False
+  - Merge Policies:
+    Standard
+https://github.com/aspnet/AspNetCore (.NET Core 3.1 Dev) ==&gt; 'https://github.com/dotnet/core-sdk' ('release/3.1.1xx')
+  - Id: 7fc4cbba-590c-4071-5029-08d727dabd66
+  - Update Frequency: EveryBuild
+  - Enabled: True
+  - Batchable: False
+  - Merge Policies:
+    Standard
+</code></pre>
+<p><strong>See also</strong>:</p>
+<ul>
+<li><a href="#add-subscription">add-subscription</a></li>
+<li><a href="#get-subscriptions">get-subscriptions</a></li>
+<li><a href="#trigger-subscriptions">trigger-subscriptions</a></li>
+</ul>
+<h3 id="set-repository-policies"><strong><code>set-repository-policies</code></strong></h3>
+<p>Set merge policies for the specific repository and branch. These policies only
+apply to batchable subscriptions. When all repository policies are satisfied,
+the dependency update pull request is automatically merged.</p>
+<p>If -q is not passed, the command pops up a edit dialog so that the repository
+policies may be edited.</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>--repo</code> - Name of repository to set repository merge policies for.</li>
+<li><code>--branch</code> - Name of repository to get repository merge policies for.</li>
+<li><code>--standard-automerge</code> - Use standard auto-merge policies. GitHub ignores WIP
+and license/cla checks,Azure DevOps ignores comment, reviewer and work item
+linking. Neither will auto-merge if changes are requested.</li>
+<li><code>--all-checks-passed</code> - PR is automatically merged if there is at least one
+check and all are passed. Optionally provide a comma separated list of ignored
+checks with --ignore-checks.</li>
+<li><code>--ignore-checks</code> - For use with --all-checks-passed. A set of checks that are ignored.</li>
+<li><code>--no-requested-changes</code> - PR is not merged if there are changes requested or the PR has been rejected.</li>
+<li><code>--no-extra-commits</code> - PR is automatically merged if no non-bot commits exist in the PR.</li>
+<li><code>-q, --quiet</code>- Non-interactive mode (requires all elements to be passed on the command line).</li>
+</ul>
+<p><strong>Sample</strong>:</p>
+<pre><code>PS D:\enlistments\websdk&gt; darc set-repository-policies --repo https://github.com/dotnet/corefx --branch master --standard-automerge -q
+Successfully updated merge policies for https://github.com/dotnet/corefx@master.
+
+PS D:\enlistments\websdk&gt; darc get-repository-policies --repo https://github.com/dotnet/corefx --branch master --all
+https://github.com/dotnet/corefx @ master
+- Merge Policies:
+  Standard
+https://github.com/dotnet/corefxlab @ master
+- Merge Policies: []
+</code></pre>
+<p><strong>See also</strong>:</p>
+<ul>
+<li><a href="#get-repository-policies">get-repository-policies</a></li>
+<li><a href="#get-subscriptions">get-subscriptions</a></li>
+<li><a href="#add-subscription">add-subscription</a></li>
+</ul>
+<h3 id="subscription-status"><strong><code>subscription-status</code></strong></h3>
+<p>Enables or disables a subscription matching the id. You can find out whether a
+subscription is disabled or enabled using get-subscriptions.</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>--id</code> - <strong>(Required)</strong>. Subscription's id.</li>
+<li><code>-e, --enable</code> - Enable subscription. Either --enable or --disable is required.</li>
+<li><code>-d, --disable</code> - Disable subscription. Either --enable or --disable is required.</li>
+</ul>
+<p><strong>Sample</strong>:</p>
+<pre><code>PS D:\enlistments\websdk&gt; darc subscription-status --id 1abbb4c1-19d8-4912-fab8-08d6a19aff91 --disable
+Successfully disabled subscription with id '1abbb4c1-19d8-4912-fab8-08d6a19aff91'.
+
+PS D:\enlistments\websdk&gt; darc get-subscriptions --source-repo aspnetcore --target-repo websdk --channel Dev
+https://github.com/aspnet/AspNetCore (.NET 5 Dev) ==&gt; 'https://github.com/aspnet/websdk' ('master')
+  - Id: 1abbb4c1-19d8-4912-fab8-08d6a19aff91
+  - Update Frequency: EveryDay
+  - Enabled: False
+  - Batchable: False
+  - Merge Policies:
+    Standard
+
+PS D:\enlistments\websdk&gt; darc subscription-status --id 1abbb4c1-19d8-4912-fab8-08d6a19aff91 --enable
+Successfully enabled subscription with id '1abbb4c1-19d8-4912-fab8-08d6a19aff91'.
+
+PS D:\enlistments\websdk&gt; darc get-subscriptions --source-repo aspnetcore --target-repo websdk --channel Dev
+https://github.com/aspnet/AspNetCore (.NET 5 Dev) ==&gt; 'https://github.com/aspnet/websdk' ('master')
+  - Id: 1abbb4c1-19d8-4912-fab8-08d6a19aff91
+  - Update Frequency: EveryDay
+  - Enabled: True
+  - Batchable: False
+  - Merge Policies:
+    Standard
+</code></pre>
+<p><strong>See also</strong>:</p>
+<ul>
+<li><a href="#get-subscriptions">get-subscriptions</a></li>
+</ul>
+<h3 id="trigger-subscriptions"><strong><code>trigger-subscriptions</code></strong></h3>
+<p>Triggers one or more subscriptions. For each subscription triggered, Maestro++ will create a new PR or update an existing one into the repo to update to the latest build (or specified build, if one is provided), regardless if the build had been applied previously or not.</p>
+<p>This update is not asynchronous and usually takes a few minutes, as Maestro++ needs
+to do a fair bit of work in the background.  New PRs created by
+trigger-subscriptions have <code>dotnet-maestro[bot]</code> as their author.</p>
+<p>Like get-subscriptions, <code>trigger-subscriptions</code> takes a number of input parameters
+to filter the available subscriptions to the desired set, though at least one
+input must be specified. Unless <code>-q, --quiet</code> is specified, darc will ask for
+confirmation before sending the trigger request.</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>--id</code> - Trigger subscription by id.  Not compatible with other filtering parameters.</li>
+<li><code>--build</code> - If specified, selects a specific BAR build id to use; otherwise will use the latest available from the supplied <code>--source-repo</code> id.</li>
+<li><code>--target-repo</code> - Filter by target repo (matches substring unless --exact or --regex is passed).</li>
+<li><code>--source-repo</code> - Filter by source repo (matches substring unless --exact or --regex is passed).</li>
+<li><code>--channel</code> - Filter by source channel (matches substring unless --exact or --regex is passed).</li>
+<li><code>--target-branch</code> - Filter by target branch (matches substring unless --exact or --regex is passed).</li>
+<li><code>--exact</code> - Match subscription parameters exactly (cannot be used with --regex).</li>
+<li><code>--regex</code> - Match subscription parameters using regex (cannot be used with
+--exact).</li>
+<li><code>-q, --quiet</code> - Trigger subscriptions without confirmation.  Be careful!</li>
+</ul>
+<p><strong>Sample</strong>:</p>
+<pre><code>PS D:\enlistments\arcade&gt; darc trigger-subscriptions --source-repo arcade --target-repo arcade-services
+
+Will trigger the following 1 subscriptions...
+  https://github.com/dotnet/arcade (.NET Tools - Latest) ==&gt; 'https://github.com/dotnet/arcade-services' ('master')
+Continue? (y/n) y
+Triggering 1 subscriptions...done
+
+PS D:\enlistments\arcade&gt; darc trigger-subscriptions --source-repo arcade --target-repo arcade-services --build 123
+Subscription updates will use Build # 123 instead of latest available
+Will trigger the following 1 subscriptions...
+  https://github.com/dotnet/arcade (.NET Tools - Latest) ==&gt; 'https://github.com/dotnet/arcade-services' ('master')
+Continue? (y/n) y
+Triggering 1 subscriptions...done
+</code></pre>
+<p><strong>See also</strong>:</p>
+<ul>
+<li><a href="#add-subscription">add-subscription</a></li>
+<li><a href="#get-subscriptions">get-subscriptions</a></li>
+<li><a href="#trigger-subscriptions">trigger-subscriptions</a></li>
+</ul>
+<h3 id="update-dependencies"><strong><code>update-dependencies</code></strong></h3>
+<p>Updates the local repository's dependencies against a channel.</p>
+<p>This operation is similar to what a Maestro++ subscription does, only local.
+darc reads the Version.Details.xml file and notes the dependency name and
+repository uri of each dependency.  Then, given an input channel, it looks up
+the latest build of each dependency's repository that has been applied to the
+channel. It then updates the Version.Details.xml and other version files (e.g.
+Versions.props) based on the newest information.</p>
+<p>This command has two additional non-default modes:</p>
+<ul>
+<li>Use a local package folder as input, avoiding a remote call to the
+build asset registry (--packages-folder)</li>
+<li>Update a specific dependency to a new version (--name and --version)</li>
+</ul>
+<p>This command is especially useful after adding new dependencies to a repository.
+See <a href="#updating-dependencies-in-your-local-repository">Updating dependencies in your local
+repository</a> for more
+information.</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>-c, --channel</code> - Channel to pull dependencies from.</li>
+<li><code>-n, --name</code> - Optional name of dependency to update.  Otherwise all dependencies existing on 'channel' are updated.</li>
+<li><code>-v, --version</code> - The new version of dependency with the name specified by --name.</li>
+<li><code>--source-repo</code> - Only update dependencies whose source uri contains this string.</li>
+<li><code>--packages-folder</code> - An optional path to a folder which contains the NuGet packages whose versions will be used to update existing dependencies.</li>
+<li><code>--dry-run</code> - Show what will be updated, but make no changes.</li>
+</ul>
+<p><strong>Sample</strong></p>
+<pre><code>PS C:\enlistments\core-setup&gt; darc update-dependencies --channel &quot;.NET 5 Dev&quot;
+
+Looking up latest build of https://github.com/dotnet/corefx on .NET 5 Dev
+Looking up latest build of https://github.com/dotnet/standard on .NET 5 Dev
+Looking up latest build of https://github.com/dotnet/coreclr on .NET 5 Dev
+Looking up latest build of https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int on .NET 5 Dev
+Looking up latest build of https://github.com/dotnet/arcade on .NET 5 Dev
+Looking up latest build of https://github.com/dotnet/sourcelink on .NET 5 Dev
+Updating 'System.Windows.Extensions': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'System.CodeDom': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'Microsoft.NETCore.Platforms': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'Microsoft.NETCore.Targets': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'Microsoft.Private.CoreFx.NETCoreApp': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'Microsoft.Win32.Registry': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'Microsoft.Win32.SystemEvents': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'Microsoft.Windows.Compatibility': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'System.Configuration.ConfigurationManager': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'System.Resources.Extensions': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'System.Security.AccessControl': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'System.Security.Cryptography.Cng': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'System.Security.Cryptography.Pkcs': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'System.Security.Cryptography.ProtectedData': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'System.Security.Cryptography.Xml': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'System.Security.Permissions': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'System.Security.Principal.Windows': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'System.Text.Encodings.Web': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'System.Text.Json': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'System.Threading.AccessControl': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'System.Diagnostics.EventLog': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'System.DirectoryServices': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'System.Drawing.Common': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'System.IO.FileSystem.AccessControl': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'System.IO.Packaging': '5.0.0-alpha1.19462.7' =&gt; '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
+Updating 'Microsoft.NETCore.Runtime.CoreCLR': '5.0.0-alpha1.19462.1' =&gt; '5.0.0-alpha1.19466.3' (from build '20190916.3' of 'https://github.com/dotnet/coreclr')
+Updating 'Microsoft.DotNet.Wpf.DncEng': '5.0.0-alpha1.19462.37' =&gt; '5.0.0-alpha1.19467.8' (from build '20190917.8' of 'https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int')
+Updating 'NETStandard.Library': '2.2.0-prerelease.19462.3' =&gt; '2.2.0-prerelease.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/standard')
+Checking for coherency updates...
+Updating 'Microsoft.Private.Winforms': '5.0.0-alpha1.19462.11' =&gt; '5.0.0-alpha1.19467.4' to ensure coherency with Microsoft.DotNet.Wpf.DncEng@5.0.0-alpha1.19467.8
+Updating 'Microsoft.DotNet.Wpf.GitHub': '5.0.0-alpha1.19462.16' =&gt; '5.0.0-alpha1.19467.4' to ensure coherency with Microsoft.DotNet.Wpf.DncEng@5.0.0-alpha1.19467.8
+Local dependencies updated from channel '.NET 5 Dev'.
+</code></pre>
+<p><strong>See Also</strong>:</p>
+<ul>
+<li><a href="#add">add</a></li>
+<li><a href="#get-dependencies">get-dependencies</a></li>
+<li><a href="#get-channels">get-channels</a></li>
+</ul>
+<h3 id="update-subscription"><strong><code>update-subscription</code></strong></h3>
+<p>Update an existing subscription. Opens an editor so that some properties of a
+subscription may be altered. Because of the way that Maestro++ tracks pull
+requests, the <em>target</em> parameters of a subscription (target repository and
+target branch) may not be edited.</p>
+<p><strong>Parameters</strong></p>
+<ul>
+<li><code>--id</code> - <strong>(Required)</strong>. Subscription's id.</li>
+</ul>
+<p><strong>Sample</strong>:</p>
+<pre><code>PS D:\enlistments\websdk&gt; darc get-subscriptions --source-repo aspnetcore --target-repo websdk --channel Dev
+https://github.com/aspnet/AspNetCore (.NET 5 Dev) ==&gt; 'https://github.com/aspnet/websdk' ('master')
+  - Id: 1abbb4c1-19d8-4912-fab8-08d6a19aff91
+  - Update Frequency: EveryDay
+  - Enabled: True
+  - Batchable: False
+  - Merge Policies:
+    AllChecksSuccessful
+      ignoreChecks = []
+
+PS D:\enlistments\websdk&gt; darc update-subscription --id 1abbb4c1-19d8-4912-fab8-08d6a19aff91
+Successfully updated subscription with id '1abbb4c1-19d8-4912-fab8-08d6a19aff91'.
+
+PS D:\enlistments\websdk&gt; darc get-subscriptions --source-repo aspnetcore --target-repo websdk --channel Dev
+https://github.com/aspnet/AspNetCore (.NET 5 Dev) ==&gt; 'https://github.com/aspnet/websdk' ('master')
+  - Id: 1abbb4c1-19d8-4912-fab8-08d6a19aff91
+  - Update Frequency: EveryDay
+  - Enabled: True
+  - Batchable: False
+  - Merge Policies:
+    Standard
+</code></pre>
+<p><strong>See also</strong>:</p>
+<ul>
+<li><a href="#get-subscriptions">get-subscriptions</a></li>
+<li><a href="#add-subscription">add-subscription</a></li>
+</ul>
+<h3 id="verify"><strong><code>verify</code></strong></h3>
+<p>Verifies the local repository state is valid.  This checks that:</p>
+<ul>
+<li>The Version.Details.xml file is readable and in the expected format.</li>
+<li>The Versions.props file is in an appropriate xml format.</li>
+<li>The global.json file is in the expected format.</li>
+<li>Dependencies in the Version.Details.xml files are utilized in the
+Versions.props or global.json files.</li>
+<li>Version numbers match between Version.Details.xml and corresponding
+expression of those dependencies in Versions.props/global.json</li>
+</ul>
+<p><strong>Parameters</strong></p>
+<p>None.</p>
+<p><strong>Sample</strong></p>
+<pre><code>PS C:\enlistments\core-setup&gt; darc verify
+Dependency verification succeeded.
+</code></pre>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CDarc.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CDarc.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CDarc.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

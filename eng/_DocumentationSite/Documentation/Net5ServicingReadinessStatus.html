@@ -1,0 +1,251 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>.NET 5 Servicing Readiness Status </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content=".NET 5 Servicing Readiness Status ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="net-5-servicing-readiness-status">.NET 5 Servicing Readiness Status</h1>
+
+<p>Repo owners are asked to do the following:</p>
+<ul>
+<li>Prepare or flow ‘RTM’ code changes and build of each repo that has stable branding (5.0.0) – For those core repos that have shipping packages, prepare code changes with StabilizePackageVersion set to ‘true’ and build. <strong>Do not assign the build to a channel.</strong> See <a href="https://github.com/dotnet/runtime/blob/master/eng/Versions.props#L15-L16">https://github.com/dotnet/runtime/blob/master/eng/Versions.props#L15-L16</a> for the typical location where this lives. Verify that branding looks correct in all produced assets (do the correct packages have stable branding?) This applies to the following repos:
+<ul>
+<li>Runtime</li>
+<li>Aspnetcore</li>
+<li>Windowsdesktop</li>
+<li>Extensions</li>
+<li>Efcore</li>
+<li>installer</li>
+<li>winforms</li>
+<li>wpf</li>
+<li>templating</li>
+</ul>
+</li>
+<li>Prepare ‘RTM+1’ changes+build (5.0.1) - For those repos with incremental servicing (extensions, runtime, windowsdesktop, aspnetcore), prepare code changes and a build on top of the RTM change that ship some minimal set of packages that would be expected on month to month. <strong>Do not assign the build to a channel.</strong> The runtime, aspnetcore, and windowsdesktop repos should not produce a targeting pack. For those repos that incrementally service some packages outside the shared framework, increment a patch version for one package and ship it. This applies to the following repos:
+<ul>
+<li>runtime</li>
+<li>extensions</li>
+<li>windowsdesktop</li>
+<li>aspnetcore</li>
+</ul>
+</li>
+<li>Prepare a targeting pack fix (5.0.2) – For those repos that produce targeting packs, make a “fake” servicing fix to the targeting pack and prepare code changes that would have this fix. Create a build with these changes. <strong>Do not assign the build to a channel.</strong> This applies to the following repos:
+<ul>
+<li>aspnetcore</li>
+<li>runtime</li>
+<li>windowsdesktop</li>
+</ul>
+</li>
+</ul>
+<p>For those repos that really only change a single patch number per-release (efcore, sdk, etc.), please prepare the following:</p>
+<ul>
+<li>A branding update for 5.0.1, and 5.0.2. You do not need to build this. This applies to:
+<ul>
+<li>sdk</li>
+<li>wpf</li>
+<li>wpf-int</li>
+<li>winforms</li>
+<li>efcore</li>
+</ul>
+</li>
+</ul>
+<h2 id="overall-status-of-each-exercise">Overall Status of each exercise</h2>
+<ul>
+<li>[X] Internal Dependency Flow</li>
+<li>[ ] RTM</li>
+<li>[ ] RTM+1</li>
+<li>[ ] RTM+2</li>
+</ul>
+<h2 id="status-of-exercises-per-repo">Status of exercises per repo:</h2>
+<ul>
+<li>❌ - Not started</li>
+<li>🚧 - Results not verified</li>
+<li>✔️ - Results verified. Good to go!</li>
+<li>N/A - Not applicable for this repo (e.g. no changes to make for RTM+1 or 2)</li>
+</ul>
+<p>This table represents the status of the .NET 5 Servicing Readiness Test on a Per-Repo basis</p>
+<table>
+<thead>
+<tr>
+<th>Repo</th>
+<th>Owner</th>
+<th>RTM Build</th>
+<th>RTM+1</th>
+<th>RTM+2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>aspnetcore</td>
+<td>kevinpi</td>
+<td>✔️</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>efcore</td>
+<td>kevinpi</td>
+<td>✔️ (63748)</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>extensions</td>
+<td>ericstj</td>
+<td>🚧 (63770)</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>installer</td>
+<td>marcpop</td>
+<td>❌</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>sdk</td>
+<td>marcpop</td>
+<td>🚧</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>runtime</td>
+<td>jaredpar</td>
+<td>✔️ (64198)</td>
+<td>✔️ (64197)</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>winforms</td>
+<td>mmcgaw</td>
+<td>✔️ (64378)</td>
+<td>✔️ (64375)</td>
+<td>✔️ (64376)</td>
+</tr>
+<tr>
+<td>wpf-int</td>
+<td>fabiant</td>
+<td>N/A</td>
+<td>N/A</td>
+<td>N/A</td>
+</tr>
+<tr>
+<td>wpf</td>
+<td>fabiant</td>
+<td>✔️ (64391)</td>
+<td>✔️ (64389)</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>windowsdesktop</td>
+<td>fabiant</td>
+<td>✔️ (64407)</td>
+<td>🚧 (64428)</td>
+<td>❌</td>
+</tr>
+<tr>
+<td>templating</td>
+<td>joaguila</td>
+<td>✔️</td>
+<td>❌</td>
+<td>❌</td>
+</tr>
+</tbody>
+</table>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CNet5ServicingReadinessStatus.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CNet5ServicingReadinessStatus.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CNet5ServicingReadinessStatus.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

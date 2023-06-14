@@ -1,0 +1,248 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Arcade Servicing </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Arcade Servicing ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="arcade-servicing">Arcade Servicing</h1>
+
+<p>This document is intended to describe Arcade servicing workflow and policies.
+Our goal is to ensure that supported versions of the .NET Core product remain
+serviceable over time. As the Engineering Services team, we will need to make
+major changes to Arcade and our services over time to support new versions of
+.NET Core, while still supporting older versions.</p>
+<p>Mechanically, this is done in two ways:</p>
+<ul>
+<li>Branch our tools (Arcade) with the product.</li>
+<li>Rev the APIs of our services as needed.</li>
+</ul>
+<p><strong>For those inserting into Visual Studio, careful consideration should be given to which Arcade to take a dependency on.  If latest features are needed, then 'n' (or main) might make sense, otherwise 'n-1' (servicing) will be more stable and have much less churn.</strong></p>
+<p><strong>It's important to note that we <em>must</em> continue to validate any supported versions
+of Arcade or services.</strong></p>
+<h2 id="details">Details</h2>
+<h3 id="where-do-we-do-work-on-arcade-sdk">Where do we do work on Arcade SDK?</h3>
+<ul>
+<li><code>main</code> for future releases</li>
+<li><code>release/&lt;NET Core Major Version Number&gt;</code> for servicing</li>
+</ul>
+<h3 id="how-do-i-get-my-servicing-fix-into-main">How do I get my servicing fix into main?</h3>
+<ul>
+<li>Fixes that apply to both main as well as servicing releases must be first checked into
+main and then cherry picked into the appropriate servicing branches.</li>
+<li>Code flow happens from servicing branches back into main for the purposes of completeness,
+but developers must <strong>not</strong> rely on this to get fixes into main.</li>
+</ul>
+<h3 id="when-do-we-branch">When do we branch?</h3>
+<ul>
+<li>Major releases of .NET Core, not minor</li>
+</ul>
+<h3 id="what-do-we-branch">What do we 'branch'?</h3>
+<ul>
+<li><strong>Yes</strong>: Arcade repo (templates, SDK, etc.)</li>
+<li><strong>As Needed</strong>: Services should 'branch' as needed via API versioning to maintain
+compatibility for versions used in various servicing releases.</li>
+<li><strong>No</strong>: OSOB images do not branch, but old images must be able to be resurrected.</li>
+</ul>
+<h3 id="what-is-the-bar-for-changes-in-servicing-branches-of-arcade">What is the bar for changes in servicing branches of Arcade?</h3>
+<ul>
+<li>Uses same bar as product servicing, where our customers are the repositories.
+<ul>
+<li>Security</li>
+<li>Exceptionally high impact issues reported by customers.</li>
+<li>External dependencies change.</li>
+</ul>
+</li>
+<li>See <a href="ChangeBar.html">Change Bar</a> and <a href="ChangesPolicy.html">Changes Policy</a> for
+additional details on change bars and communication policies.</li>
+</ul>
+<h3 id="when-can-arcade-servicing-changes-be-merged">When can Arcade servicing changes be merged?</h3>
+<p>Arcade servicing changes may be merged when product branches are open. When product branches are not open, they may be merged in very special cases (e.g. targeted fixes for specific repositories, non-aligned servicing schedules, etc.). Otherwise, they should wait in PR until the product branches open for the next round of serivcing fixes.</p>
+<h3 id="how-do-arcade-servicing-changes-flow-to-repositories">How do Arcade servicing changes flow to repositories</h3>
+<p>Arcade servicing changes flow like any other product change, through dependency flow. These subscriptions shall have two states:</p>
+<ul>
+<li>Only triggered on demand</li>
+<li>Triggered on every build of arcade.
+After branches open for a servicing release, servicing subscriptions shall be set to flow every build. This ensures that any set of changes checked in that timeframe will flow as quickly to repositories as possible. When branches close for the stabilization and coherency process, those subscriptions shall be set to flow only on demand to reduce risk that an accidental merge to the servicing branch can reset the coherency process. The coherency QB may choose to flow changes selectively (e.g. ones approved in tactics to get build ready) during this timeframe.</li>
+</ul>
+<p>It is the repsonsibility of the coherency QB to ensure that the correct changes are merged, the correct updates flow, and the subscriptions are in the correct state.</p>
+<h3 id="what-is-the-bar-for-changes-affecting-non-current-not-latest-apis-in-engineering-services">What is the bar for changes affecting non-current (not latest) APIs in engineering services?</h3>
+<ul>
+<li>Uses same bar as product servicing, where our customers are the repositories.
+<ul>
+<li>Security</li>
+<li>Exceptionally high impact issues reported by customers.</li>
+<li>External dependencies change.</li>
+</ul>
+</li>
+<li>See <a href="ChangeBar.html">Change Bar</a> and <a href="ChangesPolicy.html">Changes Policy</a> for
+additional details on change bars and communication policies.</li>
+</ul>
+<h2 id="mechanics-of-branching-arcade-and-services">Mechanics of branching Arcade and services?</h2>
+<p>The mechanics of 'branching' our services tends to be service specific, but
+generally involves generating new API versions for breaking changes. For Arcade,
+the mechanics are a little more complex. The following is the process by
+which Arcade can be branched for major release 'N' of .NET Core.  Examples are given from the branching of the .NET Core 7.0 Arcade version.</p>
+<ol>
+<li>Create a new branch named <code>release/&lt;N&gt;</code> off of the <code>main</code> branch of <code>dotnet/arcade</code>, and push it to the public repository. Ensure the pool provider names in all yaml of this branch are updated to their &quot;-Svc&quot; versions.</li>
+<li>Create a new branch named <code>release/&lt;N&gt;</code> off of the <code>main</code> branch of <code>dotnet/arcade-validation</code>, and push it to the public repository. Ensure the pool provider names in all yaml of this branch are updated to their &quot;-Svc&quot; versions.</li>
+<li>Create and merge a pull request to update the package version numbers in the main branch to match the next major version of .NET (N+1). (<a href="https://github.com/dotnet/arcade/pull/10666/files">example</a>)</li>
+<li><a href="https://github.com/dotnet/arcade/blob/main/Documentation/Darc.md#add-channel">Add new channels</a>
+for the new branches, classified (<code>-c</code>) as <code>tools</code>.  Make a note of these channel ids, as they will be used later in updating the publishing constants used by Arcade for these channels.
+<ul>
+<li><code>.NET &lt;N or next version&gt; Eng</code></li>
+<li><code>.NET &lt;N or next version&gt; Eng - Validation</code>
+Example:</li>
+</ul>
+</li>
+</ol>
+<pre><code>darc add-channel --name &quot;.NET 7 Eng - Validation&quot; -c &quot;Tools&quot;
+Successfully created new channel with name '.NET 7 Eng - Validation' and id 3115
+
+darc add-channel --name &quot;.NET 7 Eng&quot; -c &quot;Tools&quot;
+Successfully created new channel with name '.NET 7 Eng' and id 3114.
+</code></pre>
+<ol start="5">
+<li><a href="https://github.com/dotnet/arcade/blob/main/Documentation/Darc.md#add-default-channel">Add default channel associations</a>
+for Arcade <code>release/&lt;N&gt;</code> to point to <code>.NET &lt;N&gt; Eng - Validation</code>
+Example:</li>
+</ol>
+<pre><code>darc add-default-channel --channel &quot;.NET 7 Eng - Validation&quot; --branch release/7.0 --repo https://github.com/dotnet/arcade
+</code></pre>
+<ol start="6">
+<li><a href="https://github.com/dotnet/arcade/blob/main/Documentation/Darc.md#add-subscription">Create a subscription</a> from <code>arcade</code>  to <code>arcade-validation</code> (branch <code>release/&lt;N&gt;</code>) to take changes from the <code>.NET &lt;N&gt; Eng - Validation</code> channel.</li>
+</ol>
+<p>Example from .NET 7 Subscription: (this in the text editor popped by <code>darc add-subscription</code>)</p>
+<pre><code>Channel: &quot;.NET 7 Eng - Validation&quot;
+Source Repository URL: https://github.com/dotnet/arcade
+Target Repository URL: https://github.com/dotnet/arcade-validation
+Target Branch: release/7.0
+Update Frequency: everyBuild
+Batchable: False
+Merge Policies:
+- Name: Standard
+Pull Request Failure Notification Tags: ''
+</code></pre>
+<ol start="7">
+<li><p>Modify the new release branch  <code>release/&lt;N&gt;</code> of arcade-validation to promote builds
+to <code>.NET &lt;N&gt; Eng</code>. (<a href="https://github.com/dotnet/arcade-validation/commit/f47dd86319803143a410b7deeb802ad93a8f2480#diff-7915b9b726a397ae7ba6af7b9703633d21c031ebf21682f3ee7e6a4ec52837a5">example of below changes</a>)</p>
+<p>In the update-channel.ps1 remove calls to:</p>
+<ul>
+<li>Get-AzDO-Build</li>
+<li>Get-AzDOHeaders</li>
+<li>Get-LatestBuildResult</li>
+<li>Remove the reference to bellweather repos runtime, aspnetcore, installer, and the for loop in the same file.</li>
+</ul>
+<p>In azure-pipelines.yml</p>
+<ul>
+<li>Include the new release branch under trigger <code>release/&lt;N.x&gt;</code>.</li>
+<li>Update the branch name to <code>refs/heads/release/&lt;N&gt;</code> for the Validate_Publishing condition.</li>
+<li>Update the display name from <code>Promote Arcade to '.NET Eng - Latest' channel</code> to <code>Promote Arcade to 'Net &lt;N&gt; Eng' channel</code></li>
+<li>Update the display name from  <code>Promote Arcade to 'Latest' channel</code> to <code>Promote Arcade to 'Net &lt;N&gt; Eng' channel</code></li>
+</ul>
+</li>
+<li><p>Create and merge a pull request to update <a href="https://github.com/dotnet/arcade/blob/main/src/Microsoft.DotNet.Build.Tasks.Feed/src/model/PublishingConstants.cs">PublishingConstants.cs</a>
+in Arcade's <code>main</code> branch for new channels (<a href="https://github.com/dotnet/arcade/pull/10666/files">example</a>). Use the channel ids generated in step 4 above.  Note that this will take some time before builds of dotnet-arcade can publish to these channels. Specifically, this pull request must merge, then arcade-validation's main branch must take the change, then the build must be &quot;promoted&quot;.  Before this, you will get errors like <code>error : Channel with ID 'XXXX' is not configured to be published to.</code> After this, official arcade builds of this branch will publish to the appropriate channels.</p>
+</li>
+<li><p>Reset arcade Maestro++ subscriptions targeting .NET release branches to source from <code>.NET &lt;N&gt; Eng</code>.  The simplest way to do this is to get the subscription ids from <code>darc get-subscriptions</code> filtered to source-repo <code>https://github.com/dotnet/arcade</code>, channel <code>.NET Eng - Latest</code>, and the target branch names of the release being branched.  The <code>--exact</code> argument allows filtering out values like &quot;release/7.0-rc1&quot; which you will typically not want to set up any permanent subscriptions for.</p>
+</li>
+</ol>
+<p>Example from .NET 7:</p>
+<pre><code>darc get-subscriptions --source-repo https://github.com/dotnet/arcade --channel &quot;.NET Eng - Latest&quot; --target-branch &quot;release/7.0&quot; --exact
+darc get-subscriptions --source-repo https://github.com/dotnet/arcade --channel &quot;.NET Eng - Latest&quot; --target-branch &quot;release/7.0.1xx&quot; --exact
+</code></pre>
+<p>For each of these subscriptions, call <code>darc update-subscription --id &lt;GUID id of Subscription&gt; --no-trigger</code>, updating the channel to <code>.NET &lt;N or next version&gt; Eng</code>.  Once completed, the above two commands should show no subscriptions, while adjusting the commands for <code>.NET &lt;N&gt; Eng</code> should show all the ones from the initial versions of the command.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CPolicy%5CArcadeServicing.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CPolicy%5CArcadeServicing.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CPolicy%5CArcadeServicing.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

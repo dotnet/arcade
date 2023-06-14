@@ -1,0 +1,131 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Custom Auto-Scaler v2 </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Custom Auto-Scaler v2 ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="custom-auto-scaler-v2">Custom Auto-Scaler v2</h1>
+
+<p>The goal of this project is to build a reliable and cost-efficient scaling system to manage Azure Scale sets for Helix VMs.</p>
+<h2 id="telemetry-processor">Telemetry processor</h2>
+<p>Telemetry processor collects the following data:</p>
+<ul>
+<li>From service bus, the number of workitems in the queue</li>
+<li>From the heartbeats table, the number of machines that have had a heartbeat in the last minute
+It is implemented as a service in service fabric, runs every 30 seconds and sends the collected data to AppInsights.</li>
+</ul>
+<p><img src="./assets/Telemetry.png" alt=""></p>
+<p>This replaces ProcessTelemetry Azure function in Custom Auto-Scaler v1</p>
+<h2 id="alerting">Alerting</h2>
+<p>The system uses Grafana to create alerts when Helix queues aren’t scaling, it will create a GitHub issue when there has been work in a queue waiting for more than 30 minutes and no machines have showed up in the heartbeats table. Grafana doesn’t query the heartbeats table directly, instead it reads the data from AppInsights to tell how long the work items have been waiting for a machine.</p>
+<p><img src="./assets/GrafanaAlert.png" alt=""></p>
+<p>At first, the Auto Scaler team monitors these alerts but after the stabilization phase FR will investigate these alerts.</p>
+<h2 id="scale-in">Scale in</h2>
+<p>Custom Auto-Scale v2 scales to any capacity the service requires.
+For scaling in, the service uses Helix API to take machines offline and then deletes the machine from the corresponding scale set. It will delete the oldest idle machine in the queue trying to keep the machines as fresh as possible, it uses the information in the heartbeats table to get the creation date of each machine.</p>
+<p><img src="./assets/MachinesOffline.png" alt=""></p>
+<h2 id="telemetry">Telemetry</h2>
+<p>The service sends to AppInsights the following telemetry</p>
+<ul>
+<li>Time it took for a queue to scale to the desirable capacity</li>
+<li>State of the queue and the desired capacity for this state</li>
+</ul>
+<p>Core-eng uses this data to make adjustment in the scaling rules</p>
+<h2 id="multiple-subscriptions">Multiple subscriptions</h2>
+<p>Every team, that requires it, has its own queues for their work reducing the noise caused by using shared queries, giving information of how much money is being spent running their jobs and allowing to modify their scaling rules as needed.</p>
+<p><img src="./assets/MultipleSubs.png" alt=""></p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Ccustom-auto-scaling.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Ccustom-auto-scaling.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Ccustom-auto-scaling.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

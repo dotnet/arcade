@@ -1,0 +1,425 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Phase to Job Schema Change </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Phase to Job Schema Change ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="phase-to-job-schema-change">Phase to Job Schema Change</h1>
+
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#definitions">Definitions</a></li>
+<li><a href="#azure-devops-schemas">Schemas reference</a></li>
+<li>Arcade's templates
+<ul>
+<li><a href="#why">Why use Arcade's templates</a></li>
+<li><a href="#what">What are Arcade's templates</a></li>
+<li><a href="#how">How do you transition to the new templates</a></li>
+</ul>
+</li>
+</ul>
+<hr>
+<h2 id="overview">Overview</h2>
+<p>The Azure DevOps schema originally defined a schema which included <a href="#phase">phase</a> and <a href="#queue">queue</a> objects.  Azure DevOps modified their schema and replaced the <a href="#phase">phase</a> object with the <a href="https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=vsts&amp;tabs=schema#job">job</a> object, and the <a href="#queue">queue</a> with a <a href="https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=vsts&amp;tabs=schema#pool">pool</a>.  This change is not a direct one-to-one change as &quot;queue&quot; was a member of &quot;phase&quot; but now &quot;pool&quot; is not a member of &quot;job&quot;. Additionally, a &quot;matrix&quot; is no longer a part of the &quot;queue/pool&quot; object, it is now a member of the &quot;job&quot; (defined as a <a href="https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=vsts&amp;tabs=schema#strategies">strategy</a>).</p>
+<hr>
+<h2 id="definitions">Definitions</h2>
+<p><a href="#phase-schema">Phase schema</a> - The Azure pipeline schema originally included <a href="#phase">phase</a> and <a href="#queue">queue</a> objects.  That schema which refers to a &quot;phase&quot; object is called the &quot;phase schema&quot;.</p>
+<p><a href="#job-schema">Job schema</a> - Azure DevOps replaced the &quot;phase&quot; object with a &quot;job&quot; object and changed the members of that object.  Authoring yaml which refer to a job object instead of a phase object is referred to as the &quot;job schema&quot;.  &quot;Job&quot; and &quot;phase&quot; are not interchangeable objects, they are mutually exclusive.</p>
+<hr>
+<h2 id="why">Why</h2>
+<h3 id="--why-use-arcades-templates">- Why use Arcade's templates</h3>
+<ul>
+<li><p>Using Arcade's templates allows you to write &quot;cleaner&quot; pipeline files by conditionally adding tasks depending on the context your build is running in.  You can use the same yaml file for both PR and official builds.  ie, the templates will add the &quot;install Microbuild plugin&quot; step if you are running in an official build context.</p>
+</li>
+<li><p>Arcade's templates enable sending telemetry so that we can gather information about build reliability and we can use that information to target what areas should be improved to help our customers be impacted by infrastructure less often.</p>
+</li>
+<li><p>Arcade's templates simplify using Helix</p>
+</li>
+<li><p>Arcade's templates simplify enabling dependency flow</p>
+</li>
+</ul>
+<h3 id="--why-change-from-phase-to-job-schema">- Why change from phase to job schema</h3>
+<ul>
+<li><p>Azure DevOps no longer supports the phase schema</p>
+</li>
+<li><p>BYOC (scalable agent pools) is not supported by the phase schema</p>
+</li>
+</ul>
+<hr>
+<h2 id="what">What</h2>
+<h3 id="--what-is-the-engcommontemplatesjobjobyml-template">- What is the eng\common\templates\job\job.yml template</h3>
+<p>job.yml is the base.yml replacement which uses the &quot;job&quot; schema instead of the &quot;phase&quot; schema.</p>
+<p>See the <a href="https://github.com/dotnet/arcade/blob/master/eng/common/templates/job/job.yml">job</a> template.</p>
+<p>Example:</p>
+<p>In the main pipeline you would reference the template like this...</p>
+<pre><code class="lang-yaml">jobs:
+- template: /eng/common/templates/job/job.yml
+  parameters:
+    enableMicrobuild: true
+    enablePublishBuildArtifacts: true
+    name: Windows_NT_Job
+    pool: dotnet-external-temp
+    steps:
+    - script: echo Hello World!
+- template: /eng/common/templates/job/job.yml
+  parameters:
+    enableMicrobuild: true
+    enablePublishBuildArtifacts: true
+    name: Linux_Job
+    pool: dnceng-linux-external-temp
+    steps:
+    - script: echo Hello World!
+</code></pre>
+<p>Additional example of the <a href="#phase-to-job-schema-transition">phase to job schema transition</a></p>
+<h3 id="--what-is-the-engcommontemplatesjobsjobsyml-template">- What is the eng\common\templates\jobs\jobs.yml template</h3>
+<p>The &quot;jobs&quot; template wraps the &quot;<a href="https://github.com/dotnet/arcade/blob/93b39c3209a5929662190c7e85b43b4f2a32bab1/eng/common/templates/jobs/jobs.yml#L48">job</a>&quot; template, providing all of the functionality of the <a href="https://github.com/dotnet/arcade/blob/93b39c3209a5929662190c7e85b43b4f2a32bab1/eng/common/templates/jobs/job">&quot;job&quot; template</a>, but additionally adding a dependent job; the <a href="https://github.com/dotnet/arcade/blob/93b39c3209a5929662190c7e85b43b4f2a32bab1/eng/common/templates/jobs/jobs.yml#L63">publish-build-assets</a> job.  Previously, repos participating in Arcade's dependency flow model had to explicitly add this <a href="https://github.com/dotnet/arcade/blob/991182ca723410c7f4898368a67744943e7891fb/.vsts-ci.yml#L67">job</a> to their yml file and define its dependencies.  If you're referencing the <code>jobs.yml</code> template, you can just specify <a href="https://github.com/dotnet/arcade/blob/21cea9cd115a1efa1955d44ebbc5248a318de00f/azure-pipelines.yml#L15">enablePublishBuildAssets</a> as &quot;true&quot; and that job will be included in your build.</p>
+<p>If you are participating in dependency flow (publishing assets), it is recommended that you use the &quot;jobs&quot; template.</p>
+<p>See the <a href="https://github.com/dotnet/arcade/blob/master/eng/common/templates/jobs/jobs.yml">jobs</a> template.</p>
+<p>Example:</p>
+<p>In the main pipeline you would reference the template like this...</p>
+<pre><code class="lang-yaml">jobs:
+- template: /eng/common/templates/jobs/jobs.yml
+  parameters:
+    enableMicrobuild: true
+    enablePublishBuildArtifacts: true
+    jobs:
+    - job: Windows_NT_Job
+      pool: dotnet-external-temp
+      steps:
+      - script: echo Hello World!
+    - job: Linux_Job
+      pool: dnceng-linux-external-temp
+      steps:
+      - script: echo Hello World!
+</code></pre>
+<p>Additional example of the <a href="#phase-to-jobs-schema-transition">phase to jobs schema transition</a></p>
+<hr>
+<h2 id="how">How</h2>
+<h3 id="phase-to-job-schema-transition">Phase to job schema transition</h3>
+<ul>
+<li><p>The &quot;job&quot; template makes use of variable array syntax.  The array syntax is the only way to reference &quot;variable groups&quot; in yaml and so, that is the supported way to list variables in yaml.</p>
+<p>Sample array syntax:</p>
+<pre><code class="lang-yaml">variables:
+# Create a &quot;foo&quot; variable
+- name: foo
+  value: bar
+# Reference a variable group
+- group: myvargroup
+</code></pre>
+<p>If your variables are defined using the object syntax, they will <strong>not</strong> work with <code>job.yml</code>/<code>jobs.yml</code>.</p>
+<p>Sample object syntax (not valid when referencing <code>job.yml</code> or <code>jobs.yml</code>):</p>
+<pre><code class="lang-yaml"># will not evaluate properly if you're using the job.yml or jobs.yml templates
+variables:
+  foo: bar
+</code></pre>
+</li>
+<li><p>There are a couple of parameters which <code>job.yml</code> supports that <code>base.yml</code> did not.</p>
+<ul>
+<li><p><a href="https://github.com/dotnet/arcade/blob/93b39c3209a5929662190c7e85b43b4f2a32bab1/eng/common/templates/job/job.yml#L35">enablePublishBuildArtifacts</a> - Adds the &quot;PublishBuildArtifacts&quot; task to your steps.</p>
+</li>
+<li><p><a href="https://github.com/dotnet/arcade/blob/93b39c3209a5929662190c7e85b43b4f2a32bab1/eng/common/templates/job/job.yml#L38">enablePublishTestResults</a> - Adds the &quot;PublishTestResults&quot; task to your steps.</p>
+</li>
+<li><p><a href="https://github.com/dotnet/arcade/blob/93b39c3209a5929662190c7e85b43b4f2a32bab1/eng/common/templates/job/job.yml#L51">helixRepo</a> - defines your source repo and is used to automatically determine the <code>_HelixSource</code> variable</p>
+</li>
+<li><p><a href="https://github.com/dotnet/arcade/blob/93b39c3209a5929662190c7e85b43b4f2a32bab1/eng/common/templates/job/job.yml#L51">helixType</a> - define the helix telemetry type, ie. build/product/</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>Transition example:</p>
+<p>Original yaml referencing <code>eng\common\templates\phases\base.yml</code>.</p>
+<p>azure-pipelines.yml</p>
+<pre><code class="lang-yml">variables:
+  Build.Repository.Clean: true
+  _HelixType: build/product/
+  _HelixSource: pr/dotnet/arcade-minimalci-sample/$(Build.SourceBranch)
+
+trigger:
+- master
+pr:
+- master
+
+phases:
+- template: /eng/common/templates/phases/base.yml
+  parameters:
+    name: Windows_NT
+    enableTelemetry: true
+    queue:
+      name: dotnet-external-temp
+      parallel: 99
+      matrix:
+        debug_configuration:
+          _BuildConfig: Debug
+        release_configuration:
+          _BuildConfig: Release
+    steps:
+    - script: eng\common\cibuild.cmd
+        -configuration $(_BuildConfig)
+        -prepareMachine
+      name: Build
+      displayName: Build
+      condition: succeeded()
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Logs to VSTS
+      inputs:
+        PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
+        PublishLocation: Container
+        ArtifactName: $(Agent.Os)_$(Agent.JobName)
+      continueOnError: true
+      condition: always()
+    variables:
+      _HelixBuildConfig: $(_BuildConfig)
+</code></pre>
+<p>Updated yaml referencing <code>eng\common\templates\job\job.yml</code>.</p>
+<p>azure-pipelines.yml</p>
+<pre><code class="lang-yml">trigger:
+- master
+pr:
+- master
+
+jobs:
+- template: /eng/common/templates/job/job.yml
+  parameters:
+    name: Windows_NT
+    enableTelemetry: true
+    # Allow job.yml to add the &quot;PublishBuildArtifacts&quot; step - https://github.com/dotnet/arcade/blob/93b39c3209a5929662190c7e85b43b4f2a32bab1/eng/common/templates/job/job.yml#L38
+    enablePublishBuildArtifacts: true
+    helixRepo: dotnet/arcade-minimalci-sample
+    pool:
+      name: dotnet-external-temp
+    strategy:
+      matrix:
+        debug_configuration:
+          _BuildConfig: Debug
+        release_configuration:
+          _BuildConfig: Release
+    steps:
+    - checkout: self
+      clean: true
+    - script: eng\common\cibuild.cmd
+        -configuration $(_BuildConfig)
+        -prepareMachine
+      name: Build
+      displayName: Build
+      condition: succeeded()
+</code></pre>
+<h3 id="phase-to-jobs-schema-transition">Phase to jobs schema transition</h3>
+<p>Transition example:</p>
+<p>Original yaml referencing <code>eng\common\templates\phases\base.yml</code>.</p>
+<p>azure-pipelines.yml</p>
+<pre><code class="lang-yml">variables:
+  Build.Repository.Clean: true
+  _HelixType: build/product/
+  _HelixSource: pr/dotnet/arcade-minimalci-sample/$(Build.SourceBranch)
+
+trigger:
+- master
+pr:
+- master
+
+phases:
+- template: /eng/common/templates/phases/base.yml
+  parameters:
+    name: Windows_NT
+    enableTelemetry: true
+    queue:
+      name: dotnet-external-temp
+      parallel: 99
+      matrix:
+        debug_configuration:
+          _BuildConfig: Debug
+        release_configuration:
+          _BuildConfig: Release
+    steps:
+    - script: eng\common\cibuild.cmd
+        -configuration $(_BuildConfig)
+        -prepareMachine
+      name: Build
+      displayName: Build
+      condition: succeeded()
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Logs to VSTS
+      inputs:
+        PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
+        PublishLocation: Container
+        ArtifactName: $(Agent.Os)_$(Agent.JobName)
+      continueOnError: true
+      condition: always()
+    variables:
+      _HelixBuildConfig: $(_BuildConfig)
+</code></pre>
+<p>Updated yaml referencing <code>eng\common\templates\jobs\jobs.yml</code>.</p>
+<p>azure-pipelines.yml</p>
+<pre><code class="lang-yml">trigger:
+- master
+pr:
+- master
+
+jobs:
+- template: /eng/common/templates/jobs/jobs.yml
+  parameters:
+    enableTelemetry: true
+    enablePublishBuildArtifacts: true
+    # Add a dependent job which publishes build assets for dependency flow
+    enablePublishBuildAssets: true
+    helixRepo: dotnet/arcade-minimalci-sample
+    # define jobs in the jobs object
+    jobs:
+    - job: Windows_NT
+      pool:
+        name: dotnet-external-temp
+      strategy:
+        matrix:
+          debug_configuration:
+            _BuildConfig: Debug
+          release_configuration:
+            _BuildConfig: Release
+      steps:
+      - checkout: self
+        clean: true
+      - script: eng\common\cibuild.cmd
+          -configuration $(_BuildConfig)
+          -prepareMachine
+        name: Build
+        displayName: Build
+        condition: succeeded()
+</code></pre>
+<p>Notes:</p>
+<ul>
+<li><p>The <code>jobs.yml</code> template, unlike <code>job.yml</code>, does not have support for handling explicit templates.</p>
+<p>Example:</p>
+<pre><code class="lang-yaml">jobs:
+- template: /eng/common/templates/jobs/jobs.yml
+  parameters:
+    jobs:
+    - job: Windows_NT
+      steps:
+      - script: echo Hello world!
+    # This won't work, you can't pass a template as a job to jobs.yml
+    - template: sayhi.yml
+</code></pre>
+<p>If you need to reference a template, then you should use <code>job.yml</code> to wrap each individual job rather than using <code>jobs.yml</code> to wrap all jobs.</p>
+</li>
+<li><p>See <a href="https://github.com/dotnet/arcade">https://github.com/dotnet/arcade</a> for an example of a repo that uses the &quot;jobs&quot; template.</p>
+</li>
+</ul>
+<h2 id="azure-devops-schemas">Azure DevOps schemas</h2>
+<h3 id="phase-schema">Phase schema</h3>
+<h4 id="phase">phase</h4>
+<p>The phase schema is no longer supported or documented.  Including the schema format here for reference.</p>
+<pre><code class="lang-yaml">- phase: string # name
+  displayName: string
+  dependsOn: string | [ string ]
+  condition: string
+  continueOnError: true | false
+  queue: string | queue
+  server: true | server
+  variables: { string: string } | [ variable ]
+  steps: [ script | bash | powershell | checkout | task | templateReference ]
+</code></pre>
+<h4 id="queue">queue</h4>
+<pre><code class="lang-yaml">name: string
+demands: string | [ string ] # Supported by private pools
+timeoutInMinutes: number
+cancelTimeoutInMinutes: number
+parallel: number
+matrix: { string: { string: string } }
+</code></pre>
+<h3 id="job-schema">Job schema</h3>
+<h4 id="job">job</h4>
+<p>The job schema has replaced the phase schema and is publicly <a href="https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=vsts&amp;tabs=schema#job">documented</a></p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CAzureDevOps%5CPhaseToJobSchemaChange.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CAzureDevOps%5CPhaseToJobSchemaChange.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CAzureDevOps%5CPhaseToJobSchemaChange.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

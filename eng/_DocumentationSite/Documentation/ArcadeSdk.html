@@ -1,0 +1,930 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Arcade SDK </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Arcade SDK ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="arcade-sdk">Arcade SDK</h1>
+
+<p>Arcade SDK is a set of msbuild props and targets files and packages that provide common build features used across multiple repos, such as CI integration, packaging, VSIX and VS setup authoring, testing, and signing via Microbuild.</p>
+<p>The infrastructure of each <a href="TierOneRepos.html">repository that contributes to .NET Core 3.0 stack</a> is built on top of Arcade SDK. This allows us to orchestrate the build of the entire stack as well as build the stack from source. These repositories are expected to be on the latest version of the Arcade SDK.</p>
+<p>Repositories that do not participate in .NET Core 3.0 build may also use Arcade SDK in order to take advantage of the common infrastructure.</p>
+<p>The goals are</p>
+<ul>
+<li>to reduce the number of copies of the same or similar props, targets and script files across repos</li>
+<li>enable cross-platform build that relies on a standalone dotnet cli (downloaded during restore) as well as desktop msbuild based build</li>
+<li>be as close to the latest shipping .NET Core SDK as possible, with minimal overrides and tweaks</li>
+<li>be modular and flexible, not all repos need all features; let the repo choose subset of features to import</li>
+<li>unify common operations and structure across repos</li>
+<li>unify Azure DevOps Build Pipelines used to produce official builds</li>
+</ul>
+<p>The toolset has four kinds of features and helpers:</p>
+<ul>
+<li>Common conventions applicable to all repos using the toolset.</li>
+<li>Infrastructure required for Azure DevOps CI builds, MicroBuild and build from source.</li>
+<li>Workarounds for bugs in shipping tools (dotnet SDK, VS SDK, msbuild, VS, NuGet client, etc.).
+Will be removed once the bugs are fixed in the product and the toolset moves to the new version of the tool.</li>
+<li>Abstraction of peculiarities of VSSDK and VS insertion process that are not compatible with dotnet SDK.</li>
+</ul>
+<p>The toolset has following requirements on the repository layout.</p>
+<h2 id="single-build-output">Single build output</h2>
+<p>All build outputs are located under a single directory called <code>artifacts</code>.
+The Arcade SDK defines the following output structure:</p>
+<pre><code class="lang-text">artifacts
+  bin
+    $(MSBuildProjectName)
+      $(Configuration)
+  packages
+    $(Configuration)
+      Shipping
+        $(MSBuildProjectName).$(PackageVersion).nupkg
+      NonShipping
+        $(MSBuildProjectName).$(PackageVersion).nupkg
+      Release
+      PreRelease
+  TestResults
+    $(Configuration)
+      $(MSBuildProjectName)_$(TargetFramework)_$(TestArchitecture).(xml|html|log|error.log)
+  VSSetup
+    $(Configuration)
+      Insertion
+        $(VsixPackageId).json
+        $(VsixPackageId).vsmand
+        $(VsixContainerName).vsix
+        $(VisualStudioInsertionComponent).vsman
+      DevDivPackages
+        $(MSBuildProjectName).$(PackageVersion).nupkg
+      $(VsixPackageId).json
+      $(VsixContainerName).vsix
+  VSSetup.obj
+    $(Configuration)
+      $(VisualStudioInsertionComponent)
+  SymStore
+    $(Configuration)
+      $(MSBuildProjectName)
+  log
+    $(Configuration)
+      Build.binlog
+  tmp
+    $(Configuration)
+  obj
+    $(MSBuildProjectName)
+      $(Configuration)
+  toolset
+</code></pre>
+<p>Having a common output directory structure makes it possible to unify MicroBuild definitions.</p>
+<table>
+<thead>
+<tr>
+<th>directory</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>bin</td>
+<td>Build output of each project.</td>
+</tr>
+<tr>
+<td>obj</td>
+<td>Intermediate directory for each project.</td>
+</tr>
+<tr>
+<td>packages</td>
+<td>NuGet packages produced by all projects in the repo.</td>
+</tr>
+<tr>
+<td>VSSetup</td>
+<td>Packages produced by VSIX projects in the repo. These packages are experimental and can be used for dogfooding.</td>
+</tr>
+<tr>
+<td>VSSetup/Insertion</td>
+<td>Willow manifests and VSIXes to be inserted into VS.</td>
+</tr>
+<tr>
+<td>VSSetup.obj</td>
+<td>Temp files produced by VSIX build.</td>
+</tr>
+<tr>
+<td>SymStore</td>
+<td>Storage for converted Windows PDBs</td>
+</tr>
+<tr>
+<td>log</td>
+<td>Build binary log and other logs.</td>
+</tr>
+<tr>
+<td>tmp</td>
+<td>Temp files generated during build.</td>
+</tr>
+<tr>
+<td>toolset</td>
+<td>Files generated during toolset restore.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="build-scripts-and-extensibility-points">Build scripts and extensibility points</h2>
+<h3 id="build-scripts">Build scripts</h3>
+<p>Arcade provides common build scripts in the <a href="https://github.com/dotnet/arcade/tree/master/eng/common">eng/common</a> folder:</p>
+<ul>
+<li><p>eng/common/<a href="https://github.com/dotnet/arcade/tree/master/eng/common/build.ps1">build.ps1</a>|<a href="https://github.com/dotnet/arcade/tree/master/eng/common/build.sh">build.sh</a></p>
+<p>The scripts are designed to be used by repos that need a single <code>MSBuild</code> invocation to restore, build, package and test all projects in the repo. These scripts are thin wrappers calling into functions defined in <code>eng/common/tools.ps1|sh</code>. If the repository needs to run additional builds or commands it is recommended to create <code>eng/build.ps1|sh</code> scripts in the repository using <code>eng/common/build.ps1|sh</code> as a template and customize the implementation as necessary. These custom scripts should use common helpers and global variables defined in <code>eng/common/tools.ps1|sh</code> and provide command line switches that are a superset of the ones provided by <code>eng/common/build.ps1|sh</code>.</p>
+</li>
+<li><p>eng/common/<a href="https://github.com/dotnet/arcade/tree/master/eng/common/tools.ps1">tools.ps1</a>|<a href="https://github.com/dotnet/arcade/tree/master/eng/common/tools.sh">tools.sh</a></p>
+<p>Defines global variables and functions used in all builds scripts. This includes helpers that install .NET SDK, invoke MSBuild, locate Visual Studio, report build telemetry, etc.</p>
+</li>
+<li><p>eng/common/<a href="https://github.com/dotnet/arcade/tree/master/eng/common/CIBuild.cmd">CIBuild.cmd</a>|<a href="https://github.com/dotnet/arcade/tree/master/eng/common/cibuild.sh">cibuild.sh</a></p>
+<p>Repositories that use <code>eng/common/build.ps1|sh</code> (as opposed to a customized <code>eng/build.ps1|sh</code>) should use this build script for the main build step in their pipeline definition. Repositories with custom <code>eng/build.ps1|sh</code> should also add the corresponding <code>eng/CIBuild.cmd|cibuild.sh</code> for use in their pipeline definition.</p>
+</li>
+</ul>
+<blockquote>
+<p>Since YAML pipeline definition is only executable in CI and not locally on a dev machine the repositories shall minimize the logic implemented in their pipeline definition. Instead of adding more build steps to the pipeline definition that follow <code>eng/common/CIBuild.cmd</code> repositories should opt for using the customized build scripts (<code>eng/build.ps1|sh</code>) and add the logic there.</p>
+</blockquote>
+<p>Repos may also provide a few convenience build scripts in the repository root that dispatch to either <code>eng/common/build.ps1|sh</code> or <code>eng/build.ps1|sh</code> (if repo uses customized build scripts) but do not implement any logic:</p>
+<ul>
+<li><a href="https://github.com/dotnet/arcade/blob/master/Build.cmd">Build.cmd</a> | <a href="https://github.com/dotnet/arcade/blob/master/build.sh">build.sh</a> - default wrapper script for building and restoring the repo.</li>
+<li><a href="https://github.com/dotnet/arcade/blob/master/Restore.cmd">Restore.cmd</a> | <a href="https://github.com/dotnet/arcade/blob/master/restore.sh">restore.sh</a> - default wrapper script for restoring the repo.</li>
+<li><a href="https://github.com/dotnet/arcade/blob/master/Test.cmd">Test.cmd</a> | <a href="https://github.com/dotnet/arcade/blob/master/test.sh">test.sh</a> - default wrapper script for running tests in the repo.</li>
+</ul>
+<p>Since the default scripts pass along additional arguments, you could restore, build, and test a repo by running <code>Build.cmd -test</code>.</p>
+<p>You should feel free to create more repo specific scripts as appropriate to meet common dev scenarios for your repo.</p>
+<h3 id="engcommon">/eng/common/*</h3>
+<p>The Arcade SDK requires bootstrapper scripts to be present in the repo.</p>
+<p>The scripts in this directory shall be present and the same across all repositories using Arcade SDK.</p>
+<h3 id="engbuildprops">/eng/Build.props</h3>
+<p>Provide repo specific Build properties such as the list of projects to build.</p>
+<h4 id="arcade-project-building">Arcade project building</h4>
+<p>By default, Arcade builds solutions in the root of the repo.  Overriding the default build behavior may be done by either of these methods.</p>
+<ul>
+<li><p>Provide the project list on the command-line. This will override any list of projects set in <code>eng/Build.props</code>.</p>
+<p>Example: <code>build.cmd -projects MyProject.proj</code></p>
+<p>See <a href="https://github.com/dotnet/arcade/blob/440b2dae3a206b28f6aba727b7818873358fcc0a/eng/common/build.ps1#L53">source code</a></p>
+</li>
+<li><p>Provide a list of projects or solutions in <code>eng/Build.props</code>.</p>
+<p>Example:</p>
+<pre><code class="lang-xml">&lt;Project ToolsVersion=&quot;4.0&quot; xmlns=&quot;http://schemas.microsoft.com/developer/msbuild/2003&quot;&gt;
+  &lt;ItemGroup&gt;
+    &lt;ProjectToBuild Include=&quot;$(MSBuildThisFileDirectory)..\MyProject.proj&quot; /&gt;
+  &lt;/ItemGroup&gt;
+&lt;/Project&gt;
+</code></pre>
+</li>
+</ul>
+<p>Note: listing both project files formats (such as .csproj) and solution files (.sln) at the same time is not currently supported.</p>
+<h4 id="example-specifying-a-solution-to-build">Example: specifying a solution to build</h4>
+<p>This is often required for repos which have multiple .sln files in the root directory.</p>
+<pre><code class="lang-xml">&lt;!-- eng/Build.props --&gt;
+&lt;Project&gt;
+  &lt;ItemGroup&gt;
+    &lt;ProjectToBuild Include=&quot;$(RepoRoot)MySolution1.sln&quot; /&gt;
+  &lt;/ItemGroup&gt;
+&lt;/Project&gt;
+</code></pre>
+<h4 id="example-building-project-files-instead-of-solutions">Example: building project files instead of solutions</h4>
+<p>You can also specify a list of projects to build instead of building .sln files.</p>
+<pre><code class="lang-xml">&lt;!-- eng/Build.props --&gt;
+&lt;Project&gt;
+  &lt;ItemGroup&gt;
+    &lt;ProjectToBuild Include=&quot;$(RepoRoot)src\**\*.csproj&quot; /&gt;
+  &lt;/ItemGroup&gt;
+&lt;/Project&gt;
+</code></pre>
+<h4 id="example-conditionally-specifying-which-projects-to-build">Example: conditionally specifying which projects to build</h4>
+<p>You can use custom MSBuild properties to control the list of projects which build.</p>
+<pre><code class="lang-xml">&lt;!-- eng/Build.props --&gt;
+&lt;Project&gt;
+  &lt;ItemGroup&gt;
+    &lt;!-- Usage: build.cmd /p:BuildMyOptionalGroupOfStuff=true --&gt;
+    &lt;ProjectToBuild Condition=&quot;'$(BuildMyOptionalGroupOfStuff)' == 'true&quot;
+                    Include=&quot;$(RepoRoot)src\feature1\**\*.csproj&quot; /&gt;
+
+    &lt;!-- Only build some projects when building on Windows  --&gt;
+    &lt;ProjectToBuild Condition=&quot;'$(OS)' == 'Windows_NT&quot;
+                    Include=&quot;$(RepoRoot)src\**\*.vcxproj&quot; /&gt;
+
+    &lt;!-- You can also use MSBuild Include/Exclude syntax --&gt;
+    &lt;ProjectToBuild Include=&quot;$(RepoRoot)src\**\*.csproj&quot;
+                    Exclude=&quot;$(RepoRoot)src\samples\**\*.csproj&quot; /&gt;
+  &lt;/ItemGroup&gt;
+&lt;/Project&gt;
+</code></pre>
+<h4 id="example-custom-implementations-of-restore">Example: custom implementations of 'Restore'</h4>
+<p>By default, Arcade assumes that the 'Restore' target on projects is implemented using NuGet's restore. If that is not the case, you can opt-out of some Arcade
+optimizations by setting 'RestoreUsingNuGetTargets' to false.</p>
+<pre><code class="lang-xml">&lt;!-- eng/Build.props --&gt;
+&lt;Project&gt;
+  &lt;PropertyGroup&gt;
+    &lt;RestoreUsingNuGetTargets&gt;false&lt;/RestoreUsingNuGetTargets&gt;
+  &lt;/PropertyGroup&gt;
+  &lt;ItemGroup&gt;
+    &lt;ProjectToBuild Include=&quot;$(RepoRoot)src\dir.proj&quot; /&gt;
+  &lt;/ItemGroup&gt;
+&lt;/Project&gt;
+</code></pre>
+<p>CoreFx does not use the default build projects in its repo - <a href="https://github.com/dotnet/corefx/blob/66392f577c7852092f668876822b6385bcafbd44/eng/Build.props">example</a>.</p>
+<h3 id="engversionsprops-a-single-file-listing-component-versions-and-used-tools">/eng/Versions.props: A single file listing component versions and used tools</h3>
+<p>The file is present in the repo and defines versions of all dependencies used in the repository, the NuGet feeds they should be restored from and the version of the components produced by the repo build.</p>
+<pre><code class="lang-xml">&lt;Project&gt;
+  &lt;PropertyGroup&gt;
+    &lt;!-- Base three-part version used for all outputs of the repo (assemblies, packages, vsixes) --&gt;
+    &lt;VersionPrefix&gt;1.0.0&lt;/VersionPrefix&gt;
+    &lt;!-- Package pre-release label not including build number or the pre-release iteration--&gt;
+    &lt;PreReleaseVersionLabel&gt;rc&lt;/PreReleaseVersionLabel&gt;
+    &lt;!-- Package pre-release version iteration. Combines with the label to produce a final pre-release suffix. --&gt;
+    &lt;PreReleaseVersionIteration&gt;2&lt;/PreReleaseVersionIteration&gt;
+    &lt;!-- Optional: base short date used for calculating version numbers of release-only packages (e.g. global tools) --&gt;
+    &lt;VersionBaseShortDate&gt;19000&lt;/VersionBaseShortDate&gt;
+
+    &lt;!-- Opt-in repo features --&gt;
+    &lt;UsingToolVSSDK&gt;true&lt;/UsingToolVSSDK&gt;
+    &lt;UsingToolIbcOptimization&gt;true&lt;/UsingToolIbcOptimization&gt;
+
+    &lt;!-- Opt-out repo features --&gt;
+    &lt;UsingToolXliff&gt;false&lt;/UsingToolXliff&gt;
+  
+    &lt;!-- Versions of other dependencies --&gt;   
+    &lt;MyPackageVersion&gt;1.2.3-beta&lt;/MyPackageVersion&gt;
+  &lt;/PropertyGroup&gt;
+&lt;/Project&gt;
+</code></pre>
+<p>The toolset defines a set of tools (or features) that each repo can opt into or opt out. Since different repos have different needs the set of tools that will be imported from the toolset can be controlled by <code>UsingTool{tool-name}</code> properties, where <em>tool-name</em> is e.g. <code>Xliff</code>, <code>SourceLink</code>, <code>XUnit</code>, <code>VSSDK</code>, <code>IbcOptimization</code>, etc. These properties shall be set in the Versions.props file.</p>
+<p>The toolset also defines default versions for various tools and dependencies, such as MicroBuild, XUnit, VSSDK, etc. These defaults can be overridden in the Versions.props file.</p>
+<p>See <a href="https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Arcade.Sdk/tools/DefaultVersions.props">DefaultVersions</a> for a list of <em>UsingTool</em> properties and default versions.</p>
+<h3 id="engtoolsprops-optional">/eng/Tools.props (optional)</h3>
+<p>Specify package references to additional tools that are needed for the build.
+These tools are only used for build operations performed outside of the repository solution (such as additional packaging, signing, publishing, etc.).</p>
+<h3 id="engsigningprops-optional">/eng/Signing.props (optional)</h3>
+<p>Customization of Authenticode signing process.</p>
+<p>Configurable item groups:</p>
+<ul>
+<li><code>ItemsToSign</code>
+List of files to sign in-place, during the build. May list individual files to sign (e.g. .dll, .exe, .ps1, etc.) as well as container files (.nupkg, .vsix, .zip, etc.). All files embedded in a container file are signed (recursively) unless specified otherwise.</li>
+<li><code>ItemsToSignPostBuild</code>
+List of file names (without paths) to sign in post build release pipeline. May only contain files that are published. All files embedded in a container file are signed (recursively) unless specified otherwise.</li>
+<li><code>FileSignInfo</code>
+Specifies Authenticode certificate to use to sign files with given file name.</li>
+<li><code>FileExtensionSignInfo</code>
+Specifies Authenticode certificate to use to sign files with given extension.</li>
+<li><code>CertificatesSignInfo</code>
+Specifies Authenticode certificate properties, such as whether a certificate allows dual signing.</li>
+<li><code>StrongNameSignInfo</code>
+Strong Name key to use to sign a specific managed assembly.</li>
+</ul>
+<p>Properties:</p>
+<ul>
+<li><code>AllowEmptySignList</code>
+True to allow ItemsToSign to be empty (the repository doesn't have any file to sign in-build).</li>
+<li><code>AllowEmptyPostBuildSignList</code>
+True to allow ItemsToSignPostBuild to be empty (the repository doesn't have any file to sign post-build).</li>
+<li><code>PostBuildSign</code>
+If true
+<ul>
+<li><code>ItemsToSignPostBuild</code> is tracked during the publishing process and these files will be signed during post-build.</li>
+<li><code>ItemsToSignPostBuild</code> is populated with the default arcade <code>ItemsToSign</code>.</li>
+</ul>
+</li>
+</ul>
+<p>See <a href="https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Signing.md#arguments-metadata">Signing.md</a> for details.</p>
+<p>To change the key used for strong-naming assemblies see <code>StrongNameKeyId</code> property.</p>
+<h3 id="engpublishingprops-optional">/eng/Publishing.props (optional)</h3>
+<p>Customization of publishing process.</p>
+<h3 id="engaftersolutionbuildtargets-optional">/eng/AfterSolutionBuild.targets (optional)</h3>
+<p>Targets executed in a step right after the solution is built.</p>
+<h3 id="engaftersigningtargets-optional">/eng/AfterSigning.targets (optional)</h3>
+<p>Targets executed in a step right after artifacts has been signed.</p>
+<h3 id="globaljson">/global.json</h3>
+<p><code>/global.json</code> file is present and specifies the version of the dotnet and <code>Microsoft.DotNet.Arcade.Sdk</code> SDKs.</p>
+<p>For example,</p>
+<pre><code class="lang-json">{
+  &quot;tools&quot;: {
+    &quot;dotnet&quot;: &quot;2.1.400-preview-009088&quot;
+  },
+  &quot;msbuild-sdks&quot;: {
+    &quot;Microsoft.DotNet.Arcade.Sdk&quot;: &quot;1.0.0-prerelease-63208-02&quot;
+  }
+}
+</code></pre>
+<p>Include <code>vs</code> entry under <code>tools</code> if the repository should be built via <code>msbuild</code> from Visual Studio installation instead of dotnet cli:</p>
+<pre><code class="lang-json">{
+  &quot;tools&quot;: {
+    &quot;vs&quot;: {
+      &quot;version&quot;: &quot;15.9&quot;
+    }
+  }
+}
+</code></pre>
+<p>Optionally, a list of Visual Studio <a href="https://docs.microsoft.com/en-us/visualstudio/install/workload-component-id-vs-enterprise">workload component ids</a> may be specified under <code>vs</code>:</p>
+<pre><code class="lang-json">&quot;vs&quot;: {
+  &quot;version&quot;: &quot;15.9&quot;,
+  &quot;components&quot;: [&quot;Microsoft.VisualStudio.Component.VSSDK&quot;]
+}
+</code></pre>
+<p>If the build runs on a Windows machine that does not have the required Visual Studio version installed the <code>build.ps1</code> script attempts to use xcopy-deployable MSBuild package <a href="https://dotnet.myget.org/feed/roslyn-tools/package/nuget/RoslynTools.MSBuild"><code>RoslynTools.MSBuild</code></a>. This package will allow the build to run on desktop msbuild but it may not provide all tools that the repository needs to build all projects and/or run all tests.</p>
+<p>The version of <code>RoslynTools.MSBuild</code> package can be specified in <code>global.json</code> file under <code>tools</code> like so:</p>
+<pre><code class="lang-json">{
+  &quot;tools&quot;: {
+    &quot;vs&quot;: {
+      &quot;version&quot;: &quot;16.0&quot;
+    },
+    &quot;xcopy-msbuild&quot;: &quot;16.0.0-rc1-alpha&quot;
+  }
+}
+</code></pre>
+<p>If it is not specified the build script attempts to find <code>RoslynTools.MSBuild</code> version <code>{VSMajor}.{VSMinor}.0-alpha</code> where <code>VSMajor.VSMinor</code> is the value of <code>tools.vs.version</code>.</p>
+<p>If the fallback behavior to use xcopy-deployable MSBuild package is not desirable, then a version of <code>none</code> should be indicated in <code>global.json</code>, like this:</p>
+<pre><code class="lang-json">{
+  &quot;tools&quot;: {
+    &quot;vs&quot;: {
+      &quot;version&quot;: &quot;16.4&quot;
+    },
+    &quot;xcopy-msbuild&quot;: &quot;none&quot;
+  }
+}
+</code></pre>
+<h4 id="example-restoring-multiple-net-core-runtimes-for-running-tests">Example: Restoring multiple .NET Core Runtimes for running tests</h4>
+<p>In /global.json, specify a <code>runtimes</code> section and list the <a href="https://dotnet.microsoft.com/download/dotnet-core">shared runtime versions</a> you want installed.</p>
+<p>Schema:</p>
+<pre><code class="lang-text">{
+  &quot;tools&quot;: {
+    &quot;dotnet&quot;: &quot;&lt;version&gt;&quot;,                                           // define CLI SDK version
+    &quot;runtimes&quot;: {                                                    // optional runtimes section
+      &quot;&lt;runtime&gt;&quot;: [ &quot;&lt;version&gt;&quot;, ..., &quot;&lt;version&gt;&quot; ],
+      ...,
+      &quot;&lt;runtime&gt;/&lt;architecture&gt;&quot;: [ &quot;&lt;version&gt;&quot;, ..., &quot;&lt;version&gt;&quot; ]
+    }
+  }
+}
+</code></pre>
+<p><code>&lt;runtime&gt;</code> - One of the supported &quot;runtime&quot; values for the <a href="https://github.com/dotnet/cli/blob/dddac220ba5b6994e297752bebd9acffa3e72342/scripts/obtain/dotnet-install.ps1#L43">dotnet-install</a> script.</p>
+<p><code>&lt;architecture&gt;</code> - Optionally include <code>/&lt;architecture&gt;</code> when defining the runtime to specify an explicit architecture where &quot;architecture&quot; is one of the supported values for the <a href="https://github.com/dotnet/cli/blob/dddac220ba5b6994e297752bebd9acffa3e72342/scripts/obtain/dotnet-install.ps1#L32">dotnet-install</a> script.  Defaults to &quot;auto&quot; if not specified.</p>
+<pre><code class="lang-json">{
+  &quot;tools&quot;: {
+    &quot;dotnet&quot;: &quot;3.0.100-preview3-010431&quot;,
+    &quot;runtimes&quot;: {
+      &quot;dotnet/x64&quot;: [ &quot;2.1.7&quot; ],
+      &quot;aspnetcore/x64&quot;: [ &quot;3.0.0-build-20190219.1&quot; ]
+    }
+  }
+}
+</code></pre>
+<p>You may also use any of the properties defined in <code>eng/Versions.props</code> to define a version.</p>
+<p>Example</p>
+<pre><code class="lang-json">{
+  &quot;tools&quot;: {
+    &quot;dotnet&quot;: &quot;3.0.100-preview3-010431&quot;,
+    &quot;runtimes&quot;: {
+      &quot;dotnet/x64&quot;: [ &quot;2.1.7&quot;, &quot;$(MicrosoftNetCoreAppVersion)&quot; ]
+    }
+  }
+}
+</code></pre>
+<p>Note: defining <code>runtimes</code> in your global.json will signal to Arcade to install a local version of the SDK for the runtimes to use rather than depending on a matching global SDK.</p>
+<h3 id="nugetconfig">/NuGet.config</h3>
+<p><code>/NuGet.config</code> file is present and specifies the MyGet feed to retrieve Arcade SDK from and other feeds required by the repository like so:</p>
+<pre><code class="lang-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;configuration&gt;
+  &lt;packageSources&gt;
+    &lt;clear /&gt;
+    &lt;!-- Feed to use to restore the Arcade SDK from --&gt;  
+    &lt;add key=&quot;dotnet-eng&quot; value=&quot;https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json&quot; /&gt;
+    &lt;!-- Feeds to use to restore dependent packages from --&gt;  
+    &lt;add key=&quot;my-feed&quot; value=&quot;https://dotnet.myget.org/F/myfeed/api/v3/index.json&quot; /&gt;
+  &lt;/packageSources&gt;
+  &lt;disabledPackageSources&gt;
+    &lt;clear /&gt;
+  &lt;/disabledPackageSources&gt;
+&lt;/configuration&gt;
+</code></pre>
+<h3 id="directorybuildprops">/Directory.Build.props</h3>
+<p><code>Directory.Build.props</code> shall import Arcade SDK as shown below. The <code>Sdk.props</code> file sets various properties and item groups to default values. It is recommended to perform any customizations <em>after</em> importing the SDK.</p>
+<p>It is a common practice to specify properties applicable to all (most) projects in the repository in <code>Directory.Build.props</code>, e.g. public keys for <code>InternalsVisibleTo</code> project items.</p>
+<pre><code class="lang-xml">&lt;Project&gt;
+  &lt;Import Project=&quot;Sdk.props&quot; Sdk=&quot;Microsoft.DotNet.Arcade.Sdk&quot; /&gt;    
+  &lt;PropertyGroup&gt; 
+    &lt;!-- Public keys used by InternalsVisibleTo project items --&gt;
+    &lt;MoqPublicKey&gt;00240000048000009400...&lt;/MoqPublicKey&gt; 
+
+    &lt;!-- 
+      Specify license used for packages produced by the repository.
+      Use PackageLicenseExpressionInternal for closed-source licenses.
+    --&gt;
+    &lt;PackageLicenseExpression&gt;MIT&lt;/PackageLicenseExpression&gt;
+    
+    &lt;!--
+      Specify an id of the key used to generate strong names of assemblies built from this repo.
+    --&gt;
+    &lt;StrongNameKeyId&gt;Microsoft&lt;/StrongNameKeyId&gt;
+  &lt;/PropertyGroup&gt;
+&lt;/Project&gt;
+</code></pre>
+<h3 id="directorybuildtargets">/Directory.Build.targets</h3>
+<p><code>Directory.Build.targets</code> shall import Arcade SDK. It may specify additional targets applicable to all source projects.</p>
+<pre><code class="lang-xml">&lt;Project&gt;
+  &lt;Import Project=&quot;Sdk.targets&quot; Sdk=&quot;Microsoft.DotNet.Arcade.Sdk&quot; /&gt;
+&lt;/Project&gt;
+</code></pre>
+<h3 id="licensetxt">/License.txt</h3>
+<p>The root of the repository shall include a license file named <code>license.txt</code>, <code>license.md</code> or <code>license</code> (any casing is allowed).
+It is expected that all packages built from the repository have the same license, which is the license declared in the repository root license file.</p>
+<p>If the repository uses open source license it shall specify the license name globally using <code>PackageLicenseExpression</code> property, e.g. in <a href="https://github.com/dotnet/arcade/blob/master/Documentation/ArcadeSdk.md#directorybuildprops">Directory.Build.props</a>.
+If the repository uses a closed source license it shall specify the license name using <code>PackageLicenseExpressionInternal</code> property. In this case the closed source license file is automatically added to any package build by the repository.</p>
+<p>If <code>PackageLicenseExpression(Internal)</code> property is set Arcade SDK validates that the content of the license file in the repository root matches the content of
+the <a href="https://github.com/dotnet/arcade/tree/master/src/Microsoft.DotNet.Arcade.Sdk/tools/Licenses">well-known license file</a> that corresponds to the value of the license expression.
+This validation can be suppressed by setting <code>SuppressLicenseValidation</code> to <code>true</code> if necessary (not recommended).</p>
+<p>See <a href="https://docs.microsoft.com/en-us/nuget/reference/msbuild-targets#packing-a-license-expression-or-a-license-file">NuGet documentation</a> for details.</p>
+<h3 id="source-projects">Source Projects</h3>
+<p>Projects are located under <code>src</code> directory under root repo, in any subdirectory structure appropriate for the repo.</p>
+<p>Projects shall use <code>Microsoft.NET.Sdk</code> SDK like so:</p>
+<pre><code class="lang-xml">&lt;Project Sdk=&quot;Microsoft.NET.Sdk&quot;&gt;
+    ...
+&lt;/Project&gt;
+</code></pre>
+<h3 id="project-name-conventions">Project name conventions</h3>
+<ul>
+<li>Unit test project file names shall end with <code>.UnitTests</code> or <code>.Tests</code>, e.g. <code>MyProject.UnitTests.csproj</code> or <code>MyProject.Tests.csproj</code>.</li>
+<li>Integration test project file names shall end with <code>.IntegrationTests</code>, e.g. <code>MyProject.IntegrationTests.vbproj</code>.</li>
+<li>Performance test project file names shall end with <code>.PerformanceTests</code>, e.g. <code>MyProject.PerformanceTests.csproj</code>.</li>
+<li>If <code>source.extension.vsixmanifest</code> is present next to the project file the project is by default considered to be a VSIX producing project.</li>
+</ul>
+<h2 id="other-projects">Other Projects</h2>
+<p>It might be useful to create other top-level directories containing projects that are not standard C#/VB/F# projects. For example, projects that aggregate outputs of multiple projects into a single NuGet package or Willow component. These projects should also be included in the main solution so that the build driver includes them in build process, but their <code>Directory.Build.*</code> may be different from source projects. Hence the different root directory.</p>
+<h2 id="building-source-packages">Building source packages</h2>
+<p>Arcade SDK provides targets for building source packages.</p>
+<p>Set <code>IsSourcePackage</code> to <code>true</code> to indicate that the project produces a source package (along with <code>IsPackable</code>, <code>PackageDescription</code> and other package properties).</p>
+<p>If the project does not have an explicitly provided <code>.nuspec</code> file (<code>NuspecFile</code> property is empty) setting <code>IsSourcePackage</code> to <code>true</code> will trigger a target that
+puts sources contained in the project directory to the <code>contentFiles</code> directory of the source package produced by the project.</p>
+<p>In addition a <code>build/$(PackageId).targets</code> file will be auto-generated that links the sources contained in the package to the source server via a Source Link target.
+If your package already has a <code>build/$(PackageId).targets</code> file set <code>SourcePackageSourceLinkTargetsFileName</code> property to a different file name (e.g. <code>SourceLink.targets</code>)
+and import the file from <code>build/$(PackageId).targets</code>.</p>
+<p>If the project is packaged using a custom <code>.nuspec</code> file then the source and targets files must be listed in the <code>.nuspec</code> file. The path to the generated Source Link
+targets file will be available within the <code>.nuspec</code> file via variable <code>$SourceLinkTargetsFilePath$</code>.</p>
+<h2 id="building-vsix-packages-optional">Building VSIX packages (optional)</h2>
+<p>Building Visual Studio components is an opt-in feature of the Arcade SDK. Property <code>UsingToolVSSDK</code> needs to be set to <code>true</code> in the <code>Versions.props</code> file.  You need to build using framework MSBuild when building VSIX packages.  To build using framework MSBuild, <a href="https://github.com/dotnet/arcade/blob/0916e2d4f072d0a87db15803ce5572ff687354d4/eng/common/build.ps1#L68">specify the MSBuild engine</a> as VS when building.</p>
+<p>Set <code>VSSDKTargetPlatformRegRootSuffix</code> property to specify the root suffix of the VS hive to deploy to.</p>
+<p>If <code>source.extension.vsixmanifest</code> is present next to a project file the project is by default considered to be a VSIX producing project (<code>IsVsixProject</code> property is set to true).
+A package reference to <code>Microsoft.VSSDK.BuildTools</code> is automatically added to such project.</p>
+<p>Arcade SDK include build target for generating VS Template VSIXes. Adding <code>VSTemplate</code> items to project will trigger the target.</p>
+<p><code>source.extension.vsixmanifest</code> shall specify <code>Experimental=&quot;true&quot;</code> attribute in <code>Installation</code> section. The experimental flag will be stripped from VSIXes inserted into Visual Studio.</p>
+<p>VSIX packages are built to <code>VSSetup</code> directory.</p>
+<h2 id="visual-studio-insertion-components-optional">Visual Studio Insertion components (optional)</h2>
+<p>Repository that builds VS insertion components must set <code>VisualStudioDropName</code> global property (see <a href="#common-steps-in-azure-devops-pipeline">Common steps in Azure DevOps pipeline</a>)</p>
+<p>To include the output VSIX of a project in Visual Studio insertion, set the <code>VisualStudioInsertionComponent</code> property.
+Multiple VSIXes can specify the same component name, in which case their manifests will be merged into a single insertion unit.</p>
+<p>The Visual Studio insertion manifests and VSIXes are generated during Pack task into <code>VSSetup\Insertion</code> directory, where they are picked up by MicroBuild Azure DevOps publishing task during official builds.</p>
+<p>Arcade SDK also enables building VS Setup Components from .swr files (as opposed to components comprised of one or more VSIXes).
+Projects that set <code>VisualStudioInsertionComponent</code> but do not have <code>source.extension.vsixmanifest</code> are considered to be <em>swix projects</em> (<code>IsSwixProject</code> property is set to true).</p>
+<p>Use <code>SwrProperty</code> and <code>SwrFile</code> items to define a property that will be substituted in .swr files for given value and the set of .swr files, respectively.</p>
+<p>For example,</p>
+<pre><code class="lang-xml">&lt;Project Sdk=&quot;Microsoft.NET.Sdk&quot;&gt;
+   &lt;PropertyGroup&gt;
+    &lt;TargetFramework&gt;net46&lt;/TargetFramework&gt;
+    &lt;VisualStudioInsertionComponent&gt;Microsoft.VisualStudio.ProjectSystem.Managed&lt;/VisualStudioInsertionComponent&gt;
+  &lt;/PropertyGroup&gt;
+  &lt;ItemGroup&gt;
+    &lt;SwrProperty Include=&quot;Version=$(VsixVersion)&quot; /&gt;
+    &lt;SwrProperty Include=&quot;VisualStudioXamlRulesDir=$(VisualStudioXamlRulesDir)&quot; /&gt;
+  &lt;/ItemGroup&gt;
+  &lt;ItemGroup&gt;
+    &lt;SwrFile Include=&quot;*.swr&quot; /&gt;
+  &lt;/ItemGroup&gt;
+&lt;/Project&gt;
+</code></pre>
+<p>Where .swr file is:</p>
+<pre><code class="lang-text">use vs
+
+package name=Microsoft.VisualStudio.ProjectSystem.Managed.CommonFiles
+        version=$(Version)
+
+vs.localizedResources
+  vs.localizedResource language=en-us
+                       title=&quot;Microsoft VisualStudio Managed Project System Common Files&quot;
+                       description=&quot;Microsoft VisualStudio ProjectSystem for C#/VB/F#(Managed) Projects&quot;
+
+folder &quot;InstallDir:MSBuild\Microsoft\VisualStudio\Managed&quot;
+  file source=&quot;$(VisualStudioXamlRulesDir)Microsoft.CSharp.DesignTime.targets&quot;
+  file source=&quot;$(VisualStudioXamlRulesDir)Microsoft.VisualBasic.DesignTime.targets&quot;
+  file source=&quot;$(VisualStudioXamlRulesDir)Microsoft.FSharp.DesignTime.targets&quot;
+  file source=&quot;$(VisualStudioXamlRulesDir)Microsoft.Managed.DesignTime.targets&quot;
+</code></pre>
+<p><strong>NOTE:</strong> By defining <code>VisualStudioInsertionComponent</code> in your project you are implicitly opting-in to having all of the assemblies included in that package marked for <code>NGEN</code>.  If this is not something you want for a given component you may add <code>&lt;Ngen&gt;false&lt;/Ngen&gt;</code>.</p>
+<p>example:</p>
+<pre><code class="lang-xml">&lt;Project Sdk=&quot;Microsoft.NET.Sdk&quot;&gt;
+  &lt;PropertyGroup&gt;
+    &lt;TargetFramework&gt;net472&lt;/TargetFramework&gt;
+    &lt;VisualStudioInsertionComponent&gt;MyVisualStudioInsertionComponent&lt;/VisualStudioInsertionComponent&gt;
+    &lt;Ngen&gt;false&lt;/Ngen&gt;
+  &lt;/PropertyGroup&gt;
+&lt;/Project&gt;
+</code></pre>
+<h2 id="common-steps-in-azure-devops-pipeline">Common steps in Azure DevOps pipeline</h2>
+<p>The steps below assume the following variables to be defined:</p>
+<ul>
+<li><code>SignType</code> - the signing type: &quot;real&quot; (default) or &quot;test&quot;</li>
+<li><code>BuildConfiguration</code> - the build configuration &quot;Debug&quot; or &quot;Release&quot;</li>
+<li><code>OperatingSystemName</code> - &quot;Windows&quot;, &quot;Linux&quot;, etc.</li>
+<li><code>VisualStudioDropName</code> - VS insertion component drop name (if the repository builds these), usually <code>Products/$(System.TeamProject)/$(Build.Repository.Name)/$(Build.SourceBranchName)/$(Build.BuildNumber)</code></li>
+</ul>
+<h3 id="signing-plugin-installation">Signing plugin installation</h3>
+<pre><code class="lang-yml">- task: MicroBuildSigningPlugin@3
+  displayName: Install Signing Plugin
+  inputs:
+    signType: real
+    esrpSigning: true
+  condition: and(succeeded(), ne(variables['SignType'], ''))
+</code></pre>
+<h3 id="restoring-internal-tools">Restoring internal tools</h3>
+<p>The following task restores tools that are only available from internal feeds.</p>
+<pre><code class="lang-yml">  - task: NuGetCommand@2
+    displayName: Restore internal tools
+    inputs:
+      command: restore
+      feedsToUse: config
+      restoreSolution: 'eng\common\internal\Tools.csproj'
+      nugetConfigPath: 'NuGet.config'
+      restoreDirectory: '$(Build.SourcesDirectory)\.packages'
+</code></pre>
+<p><a href="https://github.com/dotnet/arcade/blob/master/eng/common/internal/Tools.csproj">The tools</a> are restored conditionally based on which Arcade SDK features the repository uses (these are specified via <code>UsingToolXxx</code> properties).</p>
+<h3 id="official-build-script">Official build script</h3>
+<pre><code class="lang-yml">- script: eng\common\CIBuild.cmd 
+          -configuration $(BuildConfiguration)
+          /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+          /p:VisualStudioDropName=$(VisualStudioDropName) # required if repository builds VS insertion components
+          /p:DotNetSignType=$(SignType)
+          /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+          /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
+  displayName: Build
+</code></pre>
+<p>The Build Pipeline needs to link the following variable group:</p>
+<ul>
+<li>DotNet-Symbol-Server-Pats
+<ul>
+<li><code>microsoft-symbol-server-pat</code></li>
+<li><code>symweb-symbol-server-pat</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="publishing-test-results">Publishing test results</h3>
+<pre><code class="lang-yml">- task: PublishTestResults@2
+  displayName: Publish Test Results
+  inputs:
+    testRunner: XUnit
+    testResultsFiles: 'artifacts/$(BuildConfiguration)/TestResults/*.xml'
+    mergeTestResults: true
+    testRunTitle: 'Unit Tests'
+  condition: always()
+</code></pre>
+<h3 id="publishing-logs">Publishing logs</h3>
+<pre><code class="lang-yml">- task: PublishBuildArtifacts@1
+    displayName: Publish Logs
+    inputs:
+      PathtoPublish: '$(Build.SourcesDirectory)\artifacts\log\$(BuildConfiguration)'
+      ArtifactName: '$(OperatingSystemName) $(BuildConfiguration)'
+    continueOnError: true
+    condition: not(succeeded())
+</code></pre>
+<h3 id="publishing-vs-insertion-artifacts-to-a-drop">Publishing VS insertion artifacts to a drop</h3>
+<p>This step is required for repositories that build VS insertion components.</p>
+<pre><code class="lang-yml">- task: ms-vseng.MicroBuildTasks.4305a8de-ba66-4d8b-b2d1-0dc4ecbbf5e8.MicroBuildUploadVstsDropFolder@1
+  displayName: Upload VSTS Drop
+  inputs:
+    DropName: $(VisualStudioDropName)
+    DropFolder: 'artifacts\VSSetup\$(BuildConfiguration)\Insertion'
+  condition: succeeded()
+</code></pre>
+<h2 id="ibc-optimization-data-embedding">IBC Optimization Data Embedding</h2>
+<p>The Arcade SDK includes targets that enable IBC optimization data to be embedded to assemblies produced by the repository.</p>
+<p>To enable this functionality set <code>UsingToolIbcOptimization</code> to <code>true</code> in <code>/eng/Versions.props</code>.</p>
+<p>Typically, not all projects in a repository need IBC data embedded. Set <code>ApplyNgenOptimization</code>
+to <code>partial</code> or <code>full</code> in a project to indicate that the assemblies produced by the project should get IBC data embedded.</p>
+<p>Use <code>EnableNgenOptimization</code> property to control when IBC data embedding is gonna be performed.
+Unless specified otherwise, <code>EnableNgenOptimization</code> is set to <code>true</code> if <code>Configuration</code> is <code>Release</code>
+and <code>OfficialBuild</code> is <code>true</code>.</p>
+<p>The IBC data embedding is performed by an internal tool <code>ibcmerge.exe</code> provided by <code>Microsoft.Dotnet.IbcMerge</code>
+package from an internal Azure DevOps feed. The repository build definition thus must invoke Azure DevOps task
+that restores internal tools in order for IBC data embedding to work. See <a href="#restoring-internal-tools">Restoring internal tools</a>.</p>
+<p>Unless the repository is using an IBC data acquisition mechanism built into the Arcade SDK (such as
+<a href="#visual-studio-ibc-data-acquisition">Visual Studio IBC Data Acquisition</a>) the repository must set the value of
+<code>IbcOptimizationDataDir</code> property and its build must ensure that IBC data are present at the location specified
+by this property before the <code>Build</code> target is executed. It is recommended that such logic is implemented in
+<code>/eng/Tools.props</code> via a target chained after the <code>Restore</code> target.</p>
+<p><code>IbcOptimizationDataDir</code> specifies the directory that contains optimization data (must end with a directory separator).
+The optimization data directory is expected to have the following structure:</p>
+<pre><code>$(IbcOptimizationDataDir)path1\{AssemblyFileName1}\{AssemblyFileName1}
+$(IbcOptimizationDataDir)path1\{AssemblyFileName1}\Scenario1.ibc
+$(IbcOptimizationDataDir)path1\{AssemblyFileName1}\Scenario2.ibc
+$(IbcOptimizationDataDir)path2\{AssemblyFileName2}\{AssemblyFileName2}
+$(IbcOptimizationDataDir)path2\{AssemblyFileName2}\Scenario1.ibc
+$(IbcOptimizationDataDir)path2\{AssemblyFileName2}\Scenario2.ibc
+...
+</code></pre>
+<p>The assemblies must be exactly those that were used in the training run that produced the IBC data files.
+One assembly might be present in multiple copies in different subdirectories. These copies must be identical
+(an assembly is identified by name only). <code>ApplyOptimizations</code> target aggregates all IBC data files present
+next to the assembly and all of its  copies. Multiple flavors of an assembly with the same names
+(e.g. assemblies produced by a multi-targeted project) are currently not supported. If necessary in future,
+it is possible to update the target to group assemblies by MVID instead of file name.</p>
+<p>During the build IBC data embedding is performed by <code>ApplyOptimizations</code> target, which invokes <code>ibcmerge.exe</code> tool.
+The target runs when <code>EnableNgenOptimization</code> is <code>true</code> and the project sets <code>ApplyNgenOptimization</code>
+to <code>partial</code> or <code>full</code>. The target consumes item group <code>OptimizeAssembly</code>, whose items are full paths to the assemblies to have
+IBC data embedded. The assemblies are updated in-place. By default, <code>OptimizeAssembly</code> is initialized with
+the path of the intermediate assembly compiled by the project (this is the file the <code>CoreCompile</code> target builds
+to <code>obj</code> directory). The project may update <code>OptimizeAssembly</code> item group before <code>ApplyOptimizations</code> target is
+executed if it needs to embed IBC data to other assemblies.</p>
+<h2 id="visual-studio-ibc-training">Visual Studio IBC Training</h2>
+<p>Visual Studio Engineering provides an Azure DevOps Release Pipeline that performs IBC training for assemblies
+shipped with Visual Studio. Arcade SDK enables repositories to retrieve and embed IBC data this system produces
+as well as generate inputs for the training.</p>
+<p>To enable this functionality set <code>UsingToolVisualStudioIbcTraining</code> to <code>true</code> in <code>/eng/Versions.props</code>.</p>
+<h3 id="visual-studio-ibc-data-acquisition">Visual Studio IBC Data Acquisition</h3>
+<p>Set <code>EnableNgenOptimization</code> property globally or in <code>/eng/Tools.props</code> to control when IBC data should be acquired.</p>
+<p>The IBC data acquisition is performed by an internal tool <code>drop.exe</code> provided by <code>Drop.App</code> package from an internal Azure
+DevOps feed. The repository build definition thus must invoke Azure DevOps task that restores internal tools in order for
+IBC data embedding to work. See <a href="#restoring-internal-tools">Restoring internal tools</a>.</p>
+<p>To retrieve the data the tool needs to authenticate to the VS drop storage. The access token necessary for the authentication
+is passed via <code>VisualStudioDropAccessToken</code> property. If the account the official build of the repository is running on has
+an access to the VS drop storage, the build definition can pass <code>/p:VisualStudioDropAccessToken=$(System.AccessToken)</code> to
+the <code>/eng/common/CIBuild.cmd</code> script.</p>
+<p>The IBC data drop produced by a training run is identified by the name of the repository, the branch and the build number
+the trained binaries came from, and a training run id. An example of IBC data identifier is
+<code>OptimizationData/dotnet/roslyn/master-vs-deps/20190210.1/935479/1</code>, where <code>dotnet/roslyn</code> is the repository name,
+<code>master-vs-deps</code> is the branch name, <code>20190210.1</code> is the build number and <code>935479/1</code> is training run id.
+The IBC data acquisition implementation in Arcade SDK requires <code>RepositoryName</code> and <code>VisualStudioIbcSourceBranchName</code>
+properties to be set globally or in <code>/eng/Tools.props</code> file. These properties specify the repository name and
+the branch name to use to find the IBC data to acquire. Set <code>VisualStudioIbcDropId</code> to the combination of build number
+and training run id (e.g. <code>20190210.1/935479/1</code>) to indicate the exact IBC data drop to acquire. If <code>VisualStudioIbcDropId</code>
+is not specified the most recent IBC data published from the specified repository and branch are acquired.</p>
+<p>The IBC data are downloaded to <code>IbcOptimizationDataDir</code>, which is initialized to <code>.tools/IbcData</code>.</p>
+<h3 id="visual-studio-training-inputs-generation">Visual Studio Training Inputs Generation</h3>
+<p>The training process requires:</p>
+<ol>
+<li>List of scenarios (tests) to run and binaries to train in each scenario</li>
+<li>VS Bootstrapper that installs a specific build of Visual Studio and the VS insertion components built by the repository
+official build</li>
+<li>Test settings (<code>Training.runsettings</code> file)</li>
+</ol>
+<p>The scenarios are expected to be listed in file <code>/eng/config/OptProf.json</code> in the repository. Arcade SDK reads this file and
+generates corresponding input files to the training process.</p>
+<p>The VS Bootstrapper is built by an Azure DevOps task provided by MicroBuild.</p>
+<p>The <code>Training.runsettings</code> file is generated by Arcade SDK task <code>VisualStudio.BuildIbcTrainingSettings</code>.</p>
+<p>The following build definition steps are required for successful generation of all training inputs (in the listed order):</p>
+<pre><code class="lang-yml">  variables:
+    VisualStudio.MajorVersion: 16                         # specify applicable value
+    VisualStudio.ChannelName: 'int.d16.0stg'              # specify applicable value 
+    VisualStudio.IbcSourceBranchName: 'master-vs-deps'    # specify applicable value 
+    VisualStudio.DropName: Products/$(System.TeamProject)/$(Build.Repository.Name)/$(Build.SourceBranchName)/$(Build.BuildNumber)
+
+  # ...
+
+  - script: eng\cibuild.cmd
+    -configuration $(BuildConfiguration)
+    # ... 
+    /p:RepositoryName=$(Build.Repository.Name)
+    /p:VisualStudioIbcSourceBranchName=$(VisualStudio.IbcSourceBranchName)
+    /p:VisualStudioDropAccessToken=$(System.AccessToken)
+    /p:VisualStudioDropName=$(VisualStudio.DropName)      # required by VS insertion component manifest generator
+
+  # ...
+
+  # Publish OptProf configuration files
+  - task: ms-vscs-artifact.build-tasks.artifactDropTask-1.artifactDropTask@0
+    inputs:
+      dropServiceURI: 'https://devdiv.artifacts.visualstudio.com'
+      buildNumber: 'ProfilingInputs/DevDiv/$(Build.Repository.Name)/$(Build.SourceBranchName)/$(Build.BuildNumber)'
+      sourcePath: '$(Build.SourcesDirectory)\artifacts\OptProf\$(BuildConfiguration)\Data'
+      toLowerCase: false
+      usePat: false
+    displayName: 'OptProf - Publish to Artifact Services - ProfilingInputs'
+    condition: succeeded()
+
+  # Build VS bootstrapper
+  # Generates $(Build.StagingDirectory)\MicroBuild\Output\BootstrapperInfo.json
+  - task: ms-vseng.MicroBuildTasks.0e9d0d4d-71ec-4e4e-ae40-db9896f1ae74.MicroBuildBuildVSBootstrapper@2
+    inputs:
+      vsMajorVersion: $(VisualStudio.MajorVersion)
+      channelName: $(VisualStudio.ChannelName)
+      manifests: $(VisualStudio.SetupManifestList)
+      outputFolder: '$(Build.SourcesDirectory)\artifacts\VSSetup\$(BuildConfiguration)\Insertion'
+    displayName: 'OptProf - Build VS bootstrapper'
+    condition: succeeded()
+
+  # Publish run settings
+  - task: PowerShell@2
+    inputs:
+      filePath: eng\common\sdk-task.ps1
+      arguments: -configuration $(BuildConfiguration)
+                 -task VisualStudio.BuildIbcTrainingSettings
+                 /p:VisualStudioDropName=$(VisualStudio.DropName)
+                 /p:BootstrapperInfoPath=$(Build.StagingDirectory)\MicroBuild\Output\BootstrapperInfo.json
+    displayName: 'OptProf - Build IBC training settings'
+    condition: succeeded()
+
+  # Publish bootstrapper info
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: $(Build.StagingDirectory)\MicroBuild\Output
+      ArtifactName: MicroBuildOutputs
+      ArtifactType: Container
+    displayName: 'OptProf - Publish Artifact: MicroBuildOutputs'
+    condition: succeeded()
+</code></pre>
+<h3 id="testing-locally">Testing Locally</h3>
+<p>To test IBC data embedding and IBC training inputs generation locally:</p>
+<ol>
+<li>Restore <a href="#restoring-internal-tools">internal tools</a>:</li>
+</ol>
+<pre><code>nuget.exe restore eng\common\internal\Tools.csproj
+</code></pre>
+<p>NuGet.exe may ask for credentials. Note: You need a <a href="https://docs.microsoft.com/en-us/azure/devops/artifacts/nuget/nuget-exe?view=azure-devops#download-the-credential-provider-directly">credential provider</a> for NuGet to be able to successfully authenticate.</p>
+<ol start="2">
+<li>Run build with the following arguments (choose values of <code>RepositoryName</code> and <code>VisualStudioIbcSourceBranchName</code> as appropriate):</li>
+</ol>
+<pre><code>build -configuration Release -restore -ci /p:EnableNgenOptimization=true /p:RepositoryName=dotnet/roslyn /p:VisualStudioIbcSourceBranchName=dev16.0-vs-deps
+</code></pre>
+<h2 id="project-properties-defined-by-the-sdk">Project Properties Defined by the SDK</h2>
+<h3 id="semanticversioningv1-bool"><code>SemanticVersioningV1</code> (bool)</h3>
+<p><code>true</code> if <code>Version</code> needs to respect SemVer 1.0. Default is <code>false</code>, which means format following SemVer 2.0.</p>
+<h3 id="strongnamekeyid-string"><code>StrongNameKeyId</code> (string)</h3>
+<p>The id of the key used to generate assembly strong name for signed assemblies (<code>SignAssembly</code> is <code>true</code>).
+By default, <code>SignAssembly</code> is set to <code>true</code> and <code>StrongNameKeyId</code> is set to <code>MicrosoftShared</code>.
+Available values are listed in <a href="https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Arcade.Sdk/tools/StrongName.targets">StrongName.targets</a>.</p>
+<p><code>AssemblyOriginatorKeyFile</code>, <code>PublicKey</code>, <code>PublicKeyToken</code>, <code>DelaySign</code>, <code>PublicSign</code> properties are set based on the value of <code>StrongNameKeyId</code>.</p>
+<h3 id="isshipping-isshippingassembly-isshippingpackage-isshippingvsix-bool"><code>IsShipping</code>, <code>IsShippingAssembly</code>, <code>IsShippingPackage</code>, <code>IsShippingVsix</code> (bool)</h3>
+<p><code>IsShipping-</code> properties are project properties that determine which (if any) assets produced by the project are <em>shipping</em>. An asset is considered <em>shipping</em> if it is intended to be delivered to customers via an official channel. This channel can be NuGet.org, an official installer, etc. Setting this flag to <code>true</code> does not guarantee that the asset will actually ship in the next release of the product. It might be decided after the build is complete that although the artifact is ready for shipping it won't be shipped this release cycle.</p>
+<p>By default all assets produced by a project are considered <em>shipping</em>. Set <code>IsShipping</code> to <code>false</code> if none of the assets produced by the project are <em>shipping</em>. Test projects (<code>IsTestProject</code> is <code>true</code>) set <code>IsShipping</code> to <code>false</code> automatically.</p>
+<p>Setting <code>IsShipping</code> property is sufficient for most projects. Projects that produce both <em>shipping</em> and <em>non-shipping</em> assets need a finer grained control. Set <code>IsShippingAssembly</code>, <code>IsShippingPackage</code> or <code>IsShippingVsix</code> to <code>false</code> if the assembly, package, or VSIX produced by the project is not <em>shipping</em>, respectively.</p>
+<p>Build targets shall not directly use <code>IsShipping</code>. Instead they shall use <code>IsShippingAssembly</code>, <code>IsShippingPackage</code> and <code>IsShippingVsix</code> depending on the asset they are dealing with.</p>
+<p>Examples of usage:</p>
+<ul>
+<li><p>Set <code>IsShipping</code> property to <code>false</code> in test/build/automation utility projects.</p>
+</li>
+<li><p>Set <code>IsShipping</code> property to <code>false</code> in projects that produce VSIX packages that are only used only within the repository (e.g. to facilitate integration tests or VS F5) and not expected to be installed by customers.</p>
+</li>
+<li><p>Set <code>IsShippingPackage</code> property to <code>false</code> in projects that package  <em>shipping</em> assemblies in packages that facilitate transport of assets from one repository to another one, which extracts the assemblies and <em>ships</em> them in a  <em>shipping</em> container.</p>
+</li>
+</ul>
+<p>All assemblies, packages and VSIXes are signed by default, regardless of whether they are <em>shipping</em> or not.</p>
+<p>By default, Portable and Embedded PDBs produced by <em>shipping</em> projects are converted to Windows PDBs and published to Microsoft symbol servers.</p>
+<p>By default, all <em>shipping</em> libraries are localized.</p>
+<p>When <code>UsingToolNuGetRepack</code> is true <em>shipping</em> packages are repackaged as release/pre-release packages to <code>artifacts\packages\$(Configuration)\Release</code> and <code>artifacts\packages\$(Configuration)\PreRelease</code> directories, respectively.</p>
+<h3 id="isvisualstudiobuildpackage-bool"><code>IsVisualStudioBuildPackage</code> (bool)</h3>
+<p>Set to <code>true</code> in projects that build Visual Studio Build (CoreXT) packages. These packages are non-shipping, but their content is shipping. They are inserted into and referenced from the internal DevDiv <code>VS</code> repository.</p>
+<h3 id="publishwindowspdb-bool"><code>PublishWindowsPdb</code> (bool)</h3>
+<p><code>true</code> (default) if the PDBs produced by the project should be converted to Windows PDB and published to Microsoft symbol servers.
+Set to <code>false</code> to override the default (uncommon).</p>
+<h3 id="applyngenoptimization-partial-full-or-empty"><code>ApplyNgenOptimization</code> (<code>partial</code>, <code>full</code> or empty)</h3>
+<p>Set to <code>partial</code> or <code>full</code> in a shipping project to require IBC optimization data to be available for the project and embed them into the binary during official build. The value of <code>partial</code> indicates partial NGEN, whereas <code>full</code> means full NGEN optimization.</p>
+<h3 id="netcurrentnetpreviousnetminimumnetframeworkminimum"><code>NetCurrent/NetPrevious/NetMinimum/NetFrameworkMinimum</code></h3>
+<p>Properties that define TargetFramework for use by projects so their targeting easily aligns with the current .NET version in development as well as those that are supported. Arcade will update these properties to match the current supported .NET versions, as well as the release being currently developed.</p>
+<ul>
+<li>NetCurrent - The TFM of the major release of .NET that the Arcade SDK aligns with.</li>
+<li>NetPrevious - The previously released version of .NET (e.g. this would be net7 if NetCurrent is net8)</li>
+<li>NetMinimum - Lowest supported version of .NET the time of the release of NetCurrent. E.g. if NetCurrent is net8, then NetMinimum is net6</li>
+<li>NetFrameworkMinimum - Lowest supported version of .NET Framework the time of the release of NetCurrent. E.g. if NetCurrent is net8, then NetFrameworkMinimum is net462</li>
+</ul>
+<h3 id="skiptests-bool"><code>SkipTests</code> (bool)</h3>
+<p>Set to <code>true</code> in a test project to skip running tests.</p>
+<h3 id="testarchitectures-list-of-strings"><code>TestArchitectures</code> (list of strings)</h3>
+<p>List of test architectures (<code>x64</code>, <code>x86</code>) to run tests on.
+If not specified by the project defaults to the value of <code>PlatformTarget</code> property, or <code>x64</code> if <code>Platform</code> is <code>AnyCPU</code> or unspecified.</p>
+<p>For example, a project that targets <code>AnyCPU</code> can opt-into running tests using both 32-bit and 64-bit test runners on .NET Framework by setting <code>TestArchitectures</code> to <code>x64;x86</code>.</p>
+<h3 id="testresultslogdir-string"><code>TestResultsLogDir</code> (string)</h3>
+<p>An alternative path where to save test standard output logs (e.g., <code>MyProject.Tests_tfm_arch.log</code>). If not specified, these logs will be saved under the path specified in <code>$(ArtifactsLogDir)</code> variable.</p>
+<h3 id="testtargetframeworks-list-of-strings"><code>TestTargetFrameworks</code> (list of strings)</h3>
+<p>By default, the test runner will run tests for all frameworks a test project targets. Use <code>TestTargetFrameworks</code> to reduce the set of frameworks to run against.</p>
+<p>For example, consider a project that has <code>&lt;TargetFrameworks&gt;netcoreapp3.1;net472&lt;/TargetFrameworks&gt;</code>. To only run .NET Core tests run</p>
+<pre><code class="lang-text">msbuild Project.UnitTests.csproj /t:Test /p:TestTargetFrameworks=netcoreapp3.1
+</code></pre>
+<p>To specify multiple target frameworks on command line quote the property value like so:</p>
+<pre><code class="lang-text">msbuild Project.UnitTests.csproj /t:Test /p:TestTargetFrameworks=&quot;netcoreapp3.1;net472&quot;
+</code></pre>
+<h3 id="testruntime-string"><code>TestRuntime</code> (string)</h3>
+<p>Runtime to use for running tests. Currently supported values are: <code>Core</code> (.NET Core), <code>Full</code> (.NET Framework) and <code>Mono</code> (Mono runtime).</p>
+<p>For example, the following runs .NET Framework tests using Mono runtime:</p>
+<pre><code class="lang-text">msbuild Project.UnitTests.csproj /t:Test /p:TestTargetFrameworks=net472 /p:TestRuntime=Mono
+</code></pre>
+<h3 id="testrunneradditionalarguments-string"><code>TestRunnerAdditionalArguments</code> (string)</h3>
+<p>Additional command line arguments passed to the test runner (e.g. <code>xunit.console.exe</code>).</p>
+<h3 id="testruntimeadditionalarguments-string"><code>TestRuntimeAdditionalArguments</code> (string)</h3>
+<p>Additional command line arguments passed to the test runtime (i.e. <code>dotnet</code> or <code>mono</code>). Applicable only when <code>TestRuntime</code> is <code>Core</code> or <code>Mono</code>.</p>
+<p>For example, to invoke Mono with debug flags <code>--debug</code> (to get stack traces with line number information), set <code>TestRuntimeAdditionalArguments</code> to <code>--debug</code>.
+To override the default Shared Framework version that is selected based on the test project TFM, set <code>TestRuntimeAdditionalArguments</code> to <code>--fx-version x.y.z</code>.</p>
+<h3 id="testtimeout-int"><code>TestTimeout</code> (int)</h3>
+<p>Timeout to apply to an individual invocation of the test runner (e.g. <code>xunit.console.exe</code>) for a single configuration. Integer number of milliseconds.</p>
+<h3 id="generateresxsource-bool"><code>GenerateResxSource</code> (bool)</h3>
+<p>When set to <code>true</code>, Arcade will generate a class source for all embedded .resx files.</p>
+<p>If source should only be generated for some .resx files, this can be turned on for individual files like this:</p>
+<pre><code class="lang-xml">&lt;ItemGroup&gt;
+   &lt;EmbeddedResource Update=&quot;MyResources.resx&quot; GenerateSource=&quot;true&quot; /&gt;
+&lt;/ItemGroup&gt;
+</code></pre>
+<p>The contents of the generated source can be fine-tuned with these additional settings.</p>
+<h4 id="generateresxsourceemitformatmethods-bool"><code>GenerateResxSourceEmitFormatMethods</code> (bool)</h4>
+<p>When a string in the resx file has argument placeholders, generate a <code>.FormatXYZ(...)</code> method with parameters for each placeholder in the string.</p>
+<p>Example: if the resx file contains a string &quot;This has {0} and {1} placeholders&quot;, this method will be generated:</p>
+<pre><code class="lang-c#">class Resources
+{
+  // ...
+  public static string FormatMyString(object p0, object p1) { /* ..uses string.Format()... */ }
+}
+</code></pre>
+<h4 id="generateresxsourceincludedefaultvalues-bool"><code>GenerateResxSourceIncludeDefaultValues</code> (bool)</h4>
+<p>If set to <code>true</code> calls to GetResourceString receive a default resource string value.</p>
+<h4 id="generateresxsourceomitgetresourcestring-bool"><code>GenerateResxSourceOmitGetResourceString</code> (bool)</h4>
+<p>If set to <code>true</code> the GetResourceString method is not included in the generated class and must be specified in a separate source file.</p>
+<h4 id="flagnetstandard1xdependencies-bool"><code>FlagNetStandard1XDependencies</code> (bool)</h4>
+<p>If set to <code>true</code> the <code>FlagNetStandard1xDependencies</code> target validates that the dependency graph doesn't contain any netstandard1.x packages.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CArcadeSdk.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CArcadeSdk.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CArcadeSdk.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

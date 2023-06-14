@@ -1,0 +1,157 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>CodeQL Guidance </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="CodeQL Guidance ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="codeql-guidance">CodeQL Guidance</h1>
+
+<h2 id="background">Background</h2>
+<p>CodeQL is a code analysis platform owned by Semmle, now a subsidary of GitHub. It provides value by using extractors to construct a database representing the codebase, then providing a query language to perform sematic analysis. CodeQL instruments the build of compiled languages, and directly analyzes source code for interpreted languages.</p>
+<p>CodeQL is required as part of Microsoft's Security Developent Lifecycle (SDL) requirements. .NET Engineering Services supports CodeQL via the Guardian toolset with scan results published to Trust Services Automation (TSA).</p>
+<p>CodeQL adds a significant time to builds. We therefore recommend creating a new, seperate pipeline instead of incorporating CodeQL scans into existing PR or testing pipelines.</p>
+<h2 id="tldr-quickstart">TL;DR: Quickstart</h2>
+<h3 id="codeql-3000">CodeQL 3000:</h3>
+<ol>
+<li>Ensure your repository has the latest Arcade version</li>
+<li>Copy Arcade's CodeQL pipeline definition file <a href="https://github.dev/dotnet/arcade/blob/main/azure-pipelines-codeql.yml"><code>azure-pipelines-codeql.yml</code></a> to your repository</li>
+<li>Modify the pipeline definition to work for your repository's needs.  For projects using compiled languages, like C#, update the section between 'CodeQL Initialize' and 'CodeQL Finalize' to execute your build.  The CodeQL engine executes these in an instrumented environment to enable analysis. Note that if not provided, the engine may use heuristics to build.</li>
+<li>CodeQL 3000 requires a specific configuration file to convey TSA Bug Filing configuration. To use TSA Bug Filing, copy Arcade's <a href="https://github.com/dotnet/arcade/blob/main/.config/tsaoptions.json"><code>tsaoptions.json</code></a>, updating the <code>areaPath</code>, <code>notificationAliases</code>, <code>repositoryName</code> and <code>codebaseName</code> to values appropriate for your repository. Note that your repository is likely already using TSA for other compliance tooling, and those values may be used here.</li>
+<li>Create a new Pipeline executing this newly-created definition.</li>
+<li>Ensure this pipeline runs on some cadence (weekly suggested) and successfully submits results (see output of the 'Finalize' task, which will link to results)</li>
+</ol>
+<p>See <a href="https://aka.ms/codeql3000">https://aka.ms/codeql3000</a> for documentation.  Users with builds in the dnceng/internal org may now stand up a pipeline using the CodeQL 3000 tasks installed at the organization level</p>
+<p>Since this involves wrapping the user's specific build with Azure Pipelines tasks, the Arcade repo does not provide a template for this; however, an example of how this is done in dotnet/arcade can be seen at <a href="https://github.com/dotnet/arcade/blob/main/azure-pipelines-codeql.yml">https://github.com/dotnet/arcade/blob/main/azure-pipelines-codeql.yml</a>.</p>
+<pre><code class="lang-yaml">
+variables:
+- name: Codeql.Enabled
+  value: true
+- name: Codeql.Cadence
+  value: 0
+- name: Codeql.TSAEnabled
+  value: true
+
+# then in the pipeline:
+
+  - task: CodeQL3000Init@0
+    displayName: CodeQL Initialize
+
+  # ... build as normal
+
+  - task: CodeQL3000Finalize@0
+    displayName: CodeQL Finalize
+
+</code></pre>
+<h2 id="use-with-arcade">Use with Arcade</h2>
+<p><strong>NOTE</strong>: Arcade previously provided a Guardian-based job and step template that executed CodeQL using the Guardian toolset. This does not meet the requirements for CodeQL reporting and should not be used, as while it may produce scans it does not satisfy organizational requirements for CodeQL execution.</p>
+<p>Much of <a href="https://github.dev/dotnet/arcade/blob/main/azure-pipelines-codeql.yml">https://github.dev/dotnet/arcade/blob/main/azure-pipelines-codeql.yml</a> can be copied and used as-is for most repositories. With CodeQL3000, as long as the build completes and exercises the codebase to be scanned, all languages should be reported by the same tasks at the same time.</p>
+<h2 id="alert-suppression">Alert suppression</h2>
+<p>Suppression may be done using inline comments (in whatever comment form is appropriate for the language). The comment must appear on the same line as the alert, or the first line if the alert spans multiple lines.</p>
+<p>A suppression comment is made of:</p>
+<ol>
+<li>The string &quot;lgtm[^1]&quot; (case insensitive)</li>
+<li>A query ID surrounded by square brackets</li>
+<li>A justification string of at least 25 characters</li>
+</ol>
+<p>For example, in C#,</p>
+<pre><code class="lang-cs">// lgtm [cs/weak-crypto] Algorithm needed per standard and contained safely here
+</code></pre>
+<p>Language-specific examples and some variations may be found in LGTM's <a href="https://lgtm.com/help/lgtm/alert-suppression">Alert Suppression</a> document.</p>
+<p>[^1]: At the time of this writing, tools expect <code>lgtm</code> instead of <code>codeql</code>. This may change as versions evolve and the new name propagates.</p>
+<h2 id="further-reading">Further Reading</h2>
+<p>GitHub's official CodeQL documentation: <a href="https://codeql.github.com/docs">CodeQL documentation</a></p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CCodeQLGuidance.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CCodeQLGuidance.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CCodeQLGuidance.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,250 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Improved Dependency Flow for .NET 5 </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Improved Dependency Flow for .NET 5 ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="improved-dependency-flow-for-net-5">Improved Dependency Flow for .NET 5</h1>
+
+<h2 id="goals">Goals</h2>
+<ul>
+<li><p>Eliminate the need for opening Pull Requests for inter-repository dependency
+updates in channels where breaking changes are the exception, in order to
+reduce the total time it takes to achieve a full product build by skipping PR
+validation builds.</p>
+</li>
+<li><p>Keep the existing dependency flow PR functionality in place for channels and
+repos that won't benefit from the new flow.</p>
+</li>
+</ul>
+<h2 id="non-goals">Non-Goals</h2>
+<ul>
+<li><p>We are not looking to optimize dependency flow for channels and repos that are
+in active development. Constant commits to the target branches for
+subscriptions will result in the new flow not being able to automatically
+merge changes, and will instead result in delays opening the dependency update
+PRs.</p>
+</li>
+<li><p>We won't thoroughly validate builds that result from applying dependency
+updates with the new flow. Since we will only run the official builds for the
+target repositories, any testing that is performed during PRs will be skipped,
+and any failures during CI builds won't have an associated PR that caused the
+break.</p>
+</li>
+</ul>
+<h2 id="overview">Overview</h2>
+<p>In order to reduce the number of dependency update PRs that flow across the
+stack, we will attempt to apply dependency updates directly on the branches that
+subscriptions are targetting. In order to accomplish this, Maestro++ will
+dynamically create branches to apply dependency updates to, run an official
+build for the repo, and if both the build succeeds, and a fast-forward merge to
+the target branch is possible, it will directly merge the dependency updates. In
+cases where there's an error in the build that takes the new dependencies, or in
+cases where a fast-forward merge is not possible, we will fall back to opening a
+PR just like it happens today.</p>
+<p>This flow will ensure that dependency updates are seamlessly flowing across the
+stack without manual intervention, especially for release channels, where
+breaking changes are the exception, and dependency update commits make up the
+brunt of the branch's history. This means that PR validation builds are
+constantly increasing the times required to flow depenencies.</p>
+<p><img src="release-branch-history.png" alt="release-branch-history-example"></p>
+<h2 id="repository-requirements">Repository Requirements</h2>
+<p>We would like to keep the changes that product repositories need to perform to a
+minimum. However, some configuration will need to be performed for repos that
+wish to participate.</p>
+<ul>
+<li><p>Since we will depend on running an official build of the repo from a branch
+that is created and deleted once the dependeny flow process finishes, we will
+require that there are no unwanted side effects based on the branch name that
+runs the build. (For example, &quot;Unless running the build from the master
+branch, copy blobs from location A -&gt; B, and fail in other cases)</p>
+</li>
+<li><p>Branch policies need to be configured such that the bot account that will
+perform the merging of updates needs to have push permissions to any branch
+where this functionality is to be enabled.</p>
+</li>
+</ul>
+<h2 id="subscription-changes">Subscription Changes</h2>
+<ul>
+<li><p>We will introduce a new option for subscriptions to opt-in into the new direct
+merge behavior. This option will be provided for both existing and new
+subscriptions.</p>
+</li>
+<li><p>As Maestro++ will have to be able to monitor the official builds for a
+subscription's target repository, we will use the build information currently
+in the BAR to attempt to pre-populate the Azure DevOps mirror for the
+repository, along with the build definition that hosts its official build. In
+cases where it's not possible to infer, this information will need to be
+provided by the user when setting up or updating the subscription.</p>
+</li>
+</ul>
+<h2 id="maestro-service-changes">Maestro++ Service Changes</h2>
+<p>When processing dependency updates for a subscription that has the new option
+enabled, the Maestro++ service will:</p>
+<ol>
+<li><p>Create a branch in the internal target repository (internal AzDO mirror for
+GitHub repos, the base repo for Azure DevOps repos) based off the head of
+the target branch for the subscription in the format:
+<code>darc-flow-&lt;target-branch&gt;-&lt;shortened commit SHA for the HEAD commit for the target branch at the time of creation&gt;</code></p>
+</li>
+<li><p>Apply the version updates to the <code>darc-flow</code> branch, In the case of batched
+subscriptions, the service will wait some time for the various updates to
+come in and apply them to the same branch.</p>
+</li>
+<li><p>Trigger and monitor an official build of the repository for the <code>darc-flow</code>
+branch.</p>
+</li>
+<li><p>If the build is successful, attempt a fast-forward only merge into the
+target branch. If successful:</p>
+<ul>
+<li>Trigger the <a href="https://dnceng.visualstudio.com/internal/_build/results?buildId=550056&amp;view=results">Dnceng Build Promotion
+Pipeline</a>
+or the <a href="https://devdiv.visualstudio.com/DevDiv/_build?definitionId=12603&amp;_a=summary">DevDiv Build Promotion
+Pipeline</a>
+depending on which org hosts the official build pipeline for the repo to
+publish the build assets to the feeds and blob storage, and add the
+build to the target channel for the subscription. This will cause
+downstream dependency updates to trigger.</li>
+<li>Once merged into the main repository, the commit into the internal
+mirror will end up triggering another official build, which will for all
+intents and purposes produce identical assets as the ones produced in
+step 4. This build will be tagged to indicate it's a duplicate, and will
+be cancelled and deleted from the build pipeline's history.</li>
+</ul>
+</li>
+<li><p>If the fast-forward merge fails:</p>
+<ul>
+<li>Attempt to merge the version updates with a merge commit. The official
+build will be triggered by this commit once it gets mirrored to the
+internal repo, and this build will publish and be added to the channels
+automatically via the branch's default channel.</li>
+</ul>
+</li>
+<li><p>If there's a failure in the official build, or if there are merge conflicts
+when attempting to merge, the version updates will be re-applied against
+the HEAD of the target branch, and the existing flow model that opens Pull
+Requests in the target repo will kick in.</p>
+</li>
+<li><p>Clean up the <code>darc-flow</code> branch.</p>
+</li>
+</ol>
+<p><strong>Note:</strong> In cases where additional dependency updates targetting the same
+branch need to be processed after the official build has been triggered but
+before the commit has been merged into the taget branch, the new dependency
+update will be queued until the steps have finished for the current set of
+updates.</p>
+<h2 id="timeline-ingestion-changes">Timeline Ingestion Changes</h2>
+<p>In order to avoid skewing the data used for the various reports, we will modify
+the Telemetry application so that builds that have been tagged by Maestro++ as
+duplicates are ignored and not ingested into Kusto.</p>
+<h2 id="rollout-and-validation-plan">Rollout and Validation Plan</h2>
+<ol>
+<li>We will initially enable the functionality in the test repositories in the
+<a href="https://github.com/maestro-auth-test">maestro-auth-test</a> org and will only
+be exercised by the Scenario tests that run on every check-in of the
+arcade-services repository.</li>
+<li>Enable it in the Arcade-services and Arcade-Validation repositories. These
+repos won't need any only take dependency updates from Arcade at a
+predictable cadence and have stable official builds. We should see the new
+flow working most of the time. This will require some work to make sure that
+only the build stages of the Arcade-Services pipeline run, as to not actually
+deploy anything during the official build of the <code>darc-flow</code> branches.</li>
+<li>Once we are comfortable with the results of the controlled testing, we can
+start enabling the functionality in product repos for the .NET 5 preview
+channels.</li>
+</ol>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CDependency%20Flow%5Cimproved-dependency-flow.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CDependency%20Flow%5Cimproved-dependency-flow.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CDependency%20Flow%5Cimproved-dependency-flow.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

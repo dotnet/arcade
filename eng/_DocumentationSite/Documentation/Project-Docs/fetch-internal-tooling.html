@@ -1,0 +1,118 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Fetch Optional (Internal) Tooling </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Fetch Optional (Internal) Tooling ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="fetch-optional-internal-tooling">Fetch Optional (Internal) Tooling</h1>
+
+<p>This is an implementation plan for how to fetch sensitive internal tools during a .NET Core build.</p>
+<h2 id="uploading-a-new-tool">Uploading a new tool</h2>
+<p>The tool is put in a NuGet package and uploaded to a VSTS feed. VSTS feeds require authentication for any operation, and are secure.</p>
+<h2 id="fetching-during-the-build">Fetching during the build</h2>
+<p><strong>To fetch internal tooling in your local dev build, see the <a href="https://microsoft.sharepoint.com/teams/netfx/corefx/_layouts/OneNote.aspx?id=%2Fteams%2Fnetfx%2Fcorefx%2FDocuments%2FCoreFx%20Notes&amp;wd=target%28Engineering%2FNet%20Standard%202.0.one%7CD8792BD0-63D5-4D0F-8EF0-B0F8444F49CD%2FRunning%20CoreFx%20tests%20on%20UAP%20%28CoreCLR%20scenario%5C%29%7C48A101A6-5621-4131-A49C-DA95C155D126%2F%29">Running CoreFx tests on UAP (CoreCLR scenario) OneNote page</a></strong></p>
+<p>An <code>optional-tool-runtime/project.json</code> file in BuildTools specifies all required tooling that is only available from the internal VSTS feed. This is similar to <a href="https://github.com/dotnet/buildtools/blob/6a1400e631a097587246e973973e9fafe7ab6254/src/Microsoft.DotNet.Build.Tasks/PackageFiles/tool-runtime/project.json"><code>tool-runtime/project.json</code></a>.</p>
+<p>In the official build, three properties are set for the <code>sync</code> call:</p>
+<pre><code>OptionalToolSource=https://devdiv.pkgs.visualstudio.com/_packaging/dotnet-core-internal-tooling/nuget/v3/index.json
+OptionalToolSourceUser=dn-bot
+OptionalToolSourcePassword=******
+</code></pre>
+<p>A target in BuildTools runs before the main project package restore, detects that these properties are set, then restores <code>optional-tool-runtime/project.json</code> into the <code>packages</code> directory. Build steps that need an optional tool can find it using <code>PrereleaseResolveNuGetPackageAssets</code>.</p>
+<p>The path to the project file can be overridden to specify repo-specific tooling, like in CoreFX: <a href="https://github.com/dotnet/corefx/blob/30a0f7f753162b89ad110b4beba3fdeda434fe8c/dir.props#L303">dir.props#L303</a>, <a href="https://github.com/dotnet/corefx/blob/30a0f7f753162b89ad110b4beba3fdeda434fe8c/external/test-runtime/optional.json">optional.json</a>.</p>
+<p>Devs who have the optional tooling packages but don't have convenient access to the VSTS feed can set <code>OptionalToolSource</code> to a directory to use it as an optional tool package feed.</p>
+<p>If <code>OptionalToolSource</code> isn't set, no optional tooling is restored.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5Cfetch-internal-tooling.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5Cfetch-internal-tooling.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5Cfetch-internal-tooling.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

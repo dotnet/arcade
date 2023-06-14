@@ -1,0 +1,165 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>dotnet-helix-machines Artifact Maintenance </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="dotnet-helix-machines Artifact Maintenance ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="dotnet-helix-machines-artifact-maintenance">dotnet-helix-machines Artifact Maintenance</h1>
+
+<p>Epic: <a href="https://github.com/dotnet/core-eng/issues/14605">https://github.com/dotnet/core-eng/issues/14605</a></p>
+<p>The core of this issue is that we don't have a process for updating our helix-machines artifacts on a regular cadence of any kind.
+The purpose of this document is to lay out such a process for comment and ridicule.</p>
+<h2 id="goal">Goal</h2>
+<p>We want to create a process that a team of vendors can execute on a regular cadence to keep the artifacts we install on our machines up to date.
+No automation is planned as part of this process.</p>
+<p>There are two primary reasons for this work:</p>
+<ol>
+<li>Security – keeping old artifacts can lead to potential vulnerabilities as minor version updates frequently contain security updates.</li>
+<li>Stability – minor version updates often contain simple bugfixes that may require patching.</li>
+</ol>
+<h2 id="stakeholders">Stakeholders</h2>
+<p>Primarily the .NET Engineering Services team, but ultimately all customers using dotnet-helix-machines since not updating artifacts on a regular
+cadence can lead to security issues, and updating them to versions that have breaking changes can obviously cause issues for them as well.</p>
+<h2 id="problems">Problems</h2>
+<p>The following problems have been copied directly from the epic for reference.</p>
+<ul>
+<li>For some artifacts, we don't really know what version we get because we're asking a given source (Windows, package manager, etc) for the name directly; this is thus not logged at all.</li>
+<li>Given we copy many installers and packages to our own storage accounts, and these packages may require manual intervention, this copying is sometimes difficult to automate.</li>
+<li>Even when we do know there is a newer version, we often cannot just take major release updates to a component as this would be breaking/require a hefty re-write of the code using this dependency.</li>
+<li>When we can tolerate them, we need a strategy to deal with major version updates, involving making sure a validation plan is in place, and ensuring a process to communicate to product teams to let them know</li>
+</ul>
+<h3 id="necessary-ongoing-tasks">Necessary Ongoing Tasks</h3>
+<p>While automation can be improved to make this better, these sorts of things need to happen on a regular cadence:</p>
+<ul>
+<li>Check for the latest version available (will vary by OS) and compare what version we have.</li>
+<li>Proactively try to adopt newer versions of dependencies before required</li>
+<li>Teach helix machines to have more info about artifacts (such as &quot;where do we get this one?&quot;, &quot;reasons to avoid major version upgrades&quot;, simple update instructions, etc.). This could be as simple as a
+required text file in the artifact directory.</li>
+</ul>
+<h2 id="proposed-implementation">Proposed Implementation</h2>
+<p>I think that we should start treating artifacts in a way similar to how we now treat secrets. At a high level, this means:</p>
+<ul>
+<li>We should include metadata on updating them – every artifact should have an <code>README.md</code> document included alongside it (similar to the validation
+scripts we require today). Artifacts missing these will fail the build. This document will include detailed information on updating the artifact (e.g. where
+the artifact comes from, how to tell if there is an updated version, the major version to pull from, where to upload the artifact, what part of the YAML to update accordingly, etc.).</li>
+<li>The operations vendor team should have a scheduled monthly pass of all artifacts and follow the instructions laid out in the README.md.</li>
+<li>We should add as many assets to Component Governance as possible so that we receive updates on CVEs so we can do an immediate update. This could possibly be done via
+an automatically generated cgmanifest.json.</li>
+</ul>
+<h3 id="netcorenativeassets">netcorenativeassets</h3>
+<p>Currently, most of our artifacts are stored in the netcorenativeassets storage account and downloaded from there. This is a good model from a security
+perspective; however, we currently only update those artifacts on-demand. For these artifacts, the vendor will need to check the canonical
+source for these artifacts (e.g. python.org for python) for the most recent version of the artifact, upload it to netcorenativeassets, and then create
+a PR to dotnet-helix-machines with the update version. <strong>This will only be done once newly released artifacts are mature unless there is a CVE in our
+currently-used version</strong>. &quot;Mature&quot; in this case means the artifact has been released for over a month.</p>
+<h3 id="package-managers">Package managers</h3>
+<p>The north star here is to eventually pull everything from private Azure DevOps feeds.</p>
+<h4 id="pip">Pip</h4>
+<p>Pip should use internal feeds which upstream to public for now. Eventually, we should migrate to Terrapin. Once we're using Terrapin, we should stop verison
+pinning as using latest from our private feed will be more than adequate.</p>
+<h4 id="linux-packages">Linux packages</h4>
+<p>Currently, the accepted model for Linux packages is to use the standard package manager's repositories. Because we do not ask for specific versions
+of these packages, we make the (possibly dangerous) assumption that they are kept up-to-date. Presumably, these may eventually be moved to
+internally-controlled package repositories.</p>
+<h3 id="handling-major-version-updates">Handling Major Version Updates</h3>
+<p>As mentioned in the problems section, major version updates are a sticky problem to solve as they potentially have breaking changes for our customers
+and thus require manual review. At end-of-life for a major version, we should force an upgrade to a more recent version of the artifact and remove it
+from our machines. Otherwise, on requests for major versions, we can deploy them side-by-side with previous versions to reduce pain.</p>
+<h2 id="the-work">The Work</h2>
+<p>In addition to further documenting the process for maintaining artifacts, the primary work for this epic will actually be writing update
+docs for all of our currently-existing artifacts.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cartifact-maintenance-core-eng-14605.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cartifact-maintenance-core-eng-14605.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cartifact-maintenance-core-eng-14605.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

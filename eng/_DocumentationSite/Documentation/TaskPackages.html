@@ -1,0 +1,187 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Task Packages </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Task Packages ">
+      
+      <link rel="icon" href="../favicon.ico">
+      <link rel="stylesheet" href="../public/docfx.min.css">
+      <link rel="stylesheet" href="../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../public/main.js'
+    import { init } from './../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../index.html">
+            <img id="logo" class="svg" src="../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="task-packages">Task Packages</h1>
+
+<p>Task packages provides a set of commonly used MSBuild tasks that are not included in MSBuild itself.
+Each task package must be self-contained in that it cannot define dependencies on other task packages (see <a href="#no-dependencies">below</a>.)
+Task packages should avoid grouping too many tasks into the same place.</p>
+<h2 id="usage">Usage</h2>
+<p>Tasks packages are distributed as a NuGet package using existing NuGet mechanisms.
+Developers can use them in MSBuild projects in the following ways:</p>
+<h3 id="sdk-element-recommended">Sdk element (recommended)</h3>
+<p>Requires: MSBuild 15.6+</p>
+<p>Reference the package as an &quot;SDK&quot; in your MSBuild project. MSBuild will automatically restore and extract this package.</p>
+<pre><code class="lang-xml">&lt;Project&gt;
+    &lt;Sdk Name=&quot;Microsoft.DotNet.Build.Tasks.Banana&quot;/&gt;
+
+    &lt;Target Name=&quot;CustomStep&quot;&gt;
+        &lt;Peel Color=&quot;yellow&quot; /&gt;
+    &lt;/Target&gt;
+&lt;/Packages&gt;
+</code></pre>
+<pre><code class="lang-js">// global.json
+{
+   &quot;msbuild-sdks&quot;: {
+      &quot;Microsoft.DotNet.Build.Tasks.Banana&quot;: &quot;1.0.0&quot;
+   }
+}
+</code></pre>
+<p><strong>Best practice</strong>: although SDK versions can be specified in .proj files, it is recommended to use global.json to ensure the SDK version
+is consistent within a solution.</p>
+<h3 id="packagereference-pre-msbuild-156">PackageReference (pre MSBuild 15.6)</h3>
+<p>Reference the project as a PackageReference in csproj files. It is strongly recommended to set <code>PrivateAssets=&quot;All&quot;</code> to avoid this package ending up in generated nuspec files.</p>
+<pre><code class="lang-xml">&lt;Project Sdk=&quot;Microsoft.NET.Sdk&quot;&gt;
+    &lt;ItemGroup&gt;
+        &lt;PackageReference id=&quot;Microsoft.DotNet.Build.Tasks.Banana&quot; Version=&quot;1.0.0&quot; PrivateAssets=&quot;All&quot; /&gt;
+    &lt;/ItemGroup&gt;
+
+    &lt;Target Name=&quot;CustomStep&quot;&gt;
+        &lt;Peel Color=&quot;yellow&quot; /&gt;
+    &lt;/Target&gt;
+&lt;/Packages&gt;
+</code></pre>
+<h3 id="packagesconfig-nuget-2msbuild-14">packages.config (NuGet 2/MSBuild 14)</h3>
+<p>Use <code>NuGet.exe install packages.config</code> to download the package</p>
+<pre><code class="lang-xml">&lt;packages&gt;
+    &lt;package id=&quot;Microsoft.DotNet.Build.Tasks.Banana&quot; version=&quot;1.0.0&quot; /&gt;
+&lt;/packages&gt;
+</code></pre>
+<p>From your MSBuild project, import <code>Sdk.props</code> and <code>Sdk.targets</code> from the extract package location.</p>
+<pre><code class="lang-xml">&lt;Project ToolsVersion=&quot;14.0&quot; xmlns=&quot;http://schemas.microsoft.com/developer/msbuild/2003&quot;&gt;
+    &lt;Import Project=&quot;packages/Microsoft.DotNet.Build.Tasks.Banana/1.0.0/Sdk/Sdk.props&quot; /&gt;
+
+    &lt;Target Name=&quot;CustomStep&quot;&gt;
+        &lt;Peel Color=&quot;yellow&quot; /&gt;
+    &lt;/Target&gt;
+
+    &lt;Import Project=&quot;packages/Microsoft.DotNet.Build.Tasks.Banana/1.0.0/Sdk/Sdk.targets&quot; /&gt;
+&lt;/Project&gt;
+</code></pre>
+<h2 id="implementation-details">Implementation details</h2>
+<p>Task packages have this layout</p>
+<pre><code>(root)
+  - sdk/
+     + Sdk.props
+     + Sdk.targets
+  - build/
+    + $packageId.props
+    + $packageId.targets
+    - netstandard1.5/
+        + $taskAssembly.dll
+    - net46/
+        + $taskAssembly.dll
+</code></pre>
+<p>Packages have the following metadata in their nuspec.</p>
+<pre><code class="lang-xml">&lt;packageTypes&gt;
+    &lt;packageType name=&quot;MSBuildSdk&quot; /&gt;
+&lt;/packageTypes&gt;
+</code></pre>
+<h3 id="no-dependencies">No dependencies</h3>
+<p>MSBuild task packages cannot have dependencies (due to the current design of the NuGet SDK resolver: <a href="https://github.com/Microsoft/msbuild/issues/2803">https://github.com/Microsoft/msbuild/issues/2803</a>).</p>
+<pre><code class="lang-xml">&lt;package&gt;
+  &lt;metadata&gt;
+    &lt;dependencies&gt;
+        &lt;!-- Must be empty --&gt;
+    &lt;/dependencies&gt;
+  &lt;/metadata&gt;
+&lt;/package&gt;
+</code></pre>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CTaskPackages.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CTaskPackages.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CTaskPackages.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

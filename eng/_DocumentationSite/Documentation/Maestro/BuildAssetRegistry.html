@@ -1,0 +1,230 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Build Asset Registry </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Build Asset Registry ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="build-asset-registry">Build Asset Registry</h1>
+
+<p>The database containing build asset version information, channels, and subscriptions used by <a href="../Darc.html">DARC</a>, <a href="../Maestro.html">Maestro</a>, and <a href="https://mc.dot.net/">MC</a></p>
+<h2 id="requirements">Requirements</h2>
+<ul>
+<li><a href="#build">Build</a>s can be assigned to one or more <a href="#channel">Channel</a>(s)</li>
+<li><a href="#channel">Channel</a>s and <a href="#build">Build</a>s can be either private or public</li>
+<li>Public Repositories cannot subscribe to private <a href="#channel">Channel</a>s</li>
+<li>Private <a href="#build">Build</a>s cannot be assigned to a Public <a href="#channel">Channel</a></li>
+<li><a href="https://mc.dot.net/">MC</a> can get full dependency graph of a <a href="#build">Build</a></li>
+</ul>
+<h2 id="scenarios">Scenarios</h2>
+<ol>
+<li><a href="#query">Query</a></li>
+<li><a href="#add">Add</a></li>
+<li><a href="#update">Update</a></li>
+</ol>
+<h3 id="query">Query</h3>
+<ol>
+<li><p>Get latest <a href="#build">Build</a> of a repository for a channel</p>
+<ul>
+<li>Used by <a href="../Darc.html">Darc</a> to determine if a dependency needs to be updated</li>
+</ul>
+</li>
+<li><p>Get repositories that subscribe to updates from a [Repository] intended for a <a href="#channel">Channel</a></p>
+<ul>
+<li>Used by <a href="../Darc.html">Darc</a> to flow dependencies when a <a href="#build">Build</a> is assigned to a <a href="#channel">Channel</a></li>
+</ul>
+</li>
+<li><p>Get a Specific <a href="#build">Build</a></p>
+<ul>
+<li>Used by <a href="https://mc.dot.net/">MC</a></li>
+</ul>
+</li>
+<li><p>Get dependencies of a <a href="#build">Build</a></p>
+<ul>
+<li>Used by <a href="https://mc.dot.net/">MC</a> to show dependency tree for a <a href="#build">Build</a></li>
+</ul>
+</li>
+</ol>
+<h3 id="add">Add</h3>
+<ol>
+<li><p>Push new <a href="#asset">Asset</a> and <a href="#build">Build</a> information</p>
+<ul>
+<li>Used by repository build once new assets are ready for consumption</li>
+</ul>
+</li>
+<li><p>Create new <a href="#channel">Channel</a>(s) and <a href="#subscription">Subscription</a>(s)</p>
+<ul>
+<li>Used by <a href="../Maestro.html">Maestro</a> and <a href="../Darc.html">Darc</a> for product release, feature branch creation, and dev PR scenarios</li>
+</ul>
+</li>
+</ol>
+<h3 id="update">Update</h3>
+<ol>
+<li><p>Assign existing <a href="#build">Build</a> to a <a href="#channel">Channel</a></p>
+<ul>
+<li>Used by <a href="../Maestro.html">Maestro</a> based on repo policy</li>
+<li>Used by <a href="../Darc.html">Darc</a> when asked by devs</li>
+</ul>
+</li>
+<li><p>Create/Edit/Delete existing <a href="#subscription">Subscription</a>(s), <a href="#channel">Channel</a>(s) and <a href="#build">Build</a>(s)</p>
+<ul>
+<li>Used by users</li>
+</ul>
+</li>
+</ol>
+<h2 id="definitions">Definitions</h2>
+<h3 id="subscription">Subscription</h3>
+<p>Represents a specific repository branch's desire to receive updates from another repository on a specific <a href="#channel">Channel</a>.</p>
+<pre><code class="lang-csharp">class Subscription {
+    string ChannelName;
+    string SourceRepository;
+    string TargetRepository;
+    string TargetBranch;
+    SubscriptionPolicy Policy;
+}
+</code></pre>
+<h3 id="subscription-policy">Subscription Policy</h3>
+<p>Represents the policies that are applied to a <a href="#subscription">Subscription</a>.</p>
+<pre><code class="lang-csharp">class SubscriptionPolicy {
+    UpdateFrequency UpdateFrequency; // &quot;every day&quot;, &quot;every build&quot;, ...
+    MergePolicy MergePolicy; // &quot;when green&quot;, &quot;unit tests passed&quot;, &quot;never&quot;, ...
+}
+</code></pre>
+<h3 id="channel">Channel</h3>
+<p>A Channel contains a set of builds</p>
+<pre><code class="lang-csharp">class Channel {
+    string Name;
+    string Classification; // &quot;Official&quot;, &quot;DevBuild&quot;, &quot;PR Validation&quot;, ...
+}
+</code></pre>
+<h3 id="build">Build</h3>
+<p>Identifies a specific build of a repository.</p>
+<pre><code class="lang-csharp">class Build {
+    string Repository;
+    string Branch;
+    string Commit;
+    string BuildNumber;
+    DateTimeOffset DateProduced;
+    List&lt;Channel&gt; Channels;
+    List&lt;Asset&gt; Assets;
+    List&lt;Build&gt; Dependencies;
+}
+</code></pre>
+<h3 id="defaultchannel">DefaultChannel</h3>
+<p>Identifies a default channel that will be associated with new builds from a specific repository/branch.</p>
+<pre><code class="lang-csharp">class DefaultChannel {
+    string Repository;
+    string Branch;
+    Channel Channel;
+}
+</code></pre>
+<h3 id="asset">Asset</h3>
+<p>A specific Asset including when it was produced and where it can be found.</p>
+<pre><code class="lang-csharp">class Asset {
+  string Name;
+  string Version;
+  Build ProducedBy;
+  List&lt;AssetLocation&gt; Locations;
+}
+</code></pre>
+<h3 id="asset-location">Asset Location</h3>
+<p>A feed or other publish mechanism where a specific <a href="#asset">Asset</a> can be found.</p>
+<pre><code class="lang-csharp">class AssetLocation {
+    string Location;
+    LocationType Type; // &quot;NuGet Feed&quot;, &quot;Blob Container&quot;, ...
+}
+</code></pre>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CMaestro%5CBuildAssetRegistry.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CMaestro%5CBuildAssetRegistry.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CMaestro%5CBuildAssetRegistry.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

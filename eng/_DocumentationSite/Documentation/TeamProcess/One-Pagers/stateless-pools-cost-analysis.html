@@ -1,0 +1,487 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Stateless Pools - A Cost Analysis </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Stateless Pools - A Cost Analysis ">
+      
+      <link rel="icon" href="../../../favicon.ico">
+      <link rel="stylesheet" href="../../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../../public/main.js'
+    import { init } from './../../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../../index.html">
+            <img id="logo" class="svg" src="../../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="stateless-pools---a-cost-analysis">Stateless Pools - A Cost Analysis</h1>
+
+<h2 id="purpose">Purpose</h2>
+<p>In order to determine the costs of switching from stateful pools to stateless ones, the following study was conducted.
+Switching to stateless pools will resolve bug <a href="https://github.com/dotnet/core-eng/issues/14683">dotnet/core-eng#14683</a>, which
+involves machines running out of disk space due to multiple runs on the same machine. 1ES has informed us that the working
+directories on stateful machines will not be cleaned between runs and that we should switch to stateless pools in order to
+avoid this problem.</p>
+<h1 id="time-cost">Time Cost</h1>
+<h2 id="methodology">Methodology</h2>
+<p>Three pipelines were examined as part of this study: runtime (ID 686), runtime-dev-innerloop (ID 700), and runtime-staging (ID 924).
+These particular pipelines were picked because they could all be triggered via a single runtime PR.
+To determine a baseline for the stateful 1ES pools, runs between 8 Oct 2021 and 22 Oct 2021 in the TimelineBuilds table in Kusto were queried.
+Specifically, this this study only concerned itself with runs which met the following criteria:</p>
+<ul>
+<li><em>Successful</em>: in order to make sure builds were as similar as possible, all failing runs were excluded from the results</li>
+<li><em>Main</em>: once again for the purpose of consistency, only runs targeting the <code>main</code> branch were used</li>
+<li><em>Inlier</em>: builds which took longer than five hours to complete were excluded from the dataset in interest of eliminating outliers</li>
+</ul>
+<p>To acquire the data for the stateless pool, 10 runs of these pipelines were triggered manually targeting the
+NetCore-Public-Int pool, which was manually set to be stateless and capable of scaling out to 300 machines.
+The sample size for these runs is necessarily much smaller than the baseline due to time constraints. The runs were
+triggered on 22 Oct 2021 and 25 Oct 2021.</p>
+<p>BuildIds of stateless runs are as follows:</p>
+<ul>
+<li>runtime: <code>(1436605, 1436874, 1437134, 1439516, 1439517, 1439738, 1439739, 1439773, 1439774, 1439775)</code></li>
+<li>runtime-dev-innerloop: <code>(1436606, 1436862, 1437004, 1437087, 1439512, 1439618, 1439703, 1439745, 1439776, 1439777)</code></li>
+<li>runtime-staging: <code>(1436608, 1436875, 1437086, 1439514, 1439545, 1439779, 1439781, 1439782, 1439783, 1439784)</code></li>
+</ul>
+<h3 id="caveats-and-limitations">Caveats and Limitations</h3>
+<p>A few notable differences exist between our two samples:</p>
+<ul>
+<li>The sample size differs massively. A large sample size can be obtained for the baseline and it was, but the smaller sample
+size for the delta inherently makes conclusions from that data less reliable.</li>
+<li>The baseline data, while having a large sample size, contains runs over many different commits. While they are likely
+still similar enough to be useful for analysis, this differs from the delta data which contains runs over only a single
+commit.</li>
+<li>While many different jobs were being run all at once during the delta data, this still does not reflect realistic usage
+in prod.</li>
+<li>Not every run in the delta data was 100% successful -- while none presented a catastrophic failure, several had minor
+failures due to test flakiness.</li>
+<li>This study still only reflects the usage of one (albeit very large) repo.</li>
+</ul>
+<h3 id="queries-used">Queries Used</h3>
+<p>To determine average &amp; standard deviation:</p>
+<pre><code>TimelineBuilds
+| where DefinitionId == [def] and QueueTime &gt; datetime(10/8/2021) and QueueTime &lt; datetime(10/22/2021) and Result == &quot;succeeded&quot; and TargetBranch  == &quot;main&quot;
+| extend BuildTime =  StartTime - QueueTime
+| where BuildTime &lt; 5h
+| distinct *
+| summarize avg(BuildTime), totimespan(stdev(BuildTime))
+</code></pre>
+<p>To obtain count data bucketed in fifteen minute intervals:</p>
+<pre><code>TimelineBuilds
+| where DefinitionId == [def] and QueueTime &gt; datetime(10/8/2021) and QueueTime &lt; datetime(10/22/2021) and Result == &quot;succeeded&quot; and TargetBranch  == &quot;main&quot;
+| extend BuildTime =  StartTime - QueueTime
+| where BuildTime &lt; 5h
+| distinct *
+| summarize count() by bin(BuildTime, 15m)
+| order by BuildTime asc 
+</code></pre>
+<p>To obtain percentile data:</p>
+<pre><code>TimelineBuilds
+| where DefinitionId == [def] and QueueTime &gt; datetime(10/8/2021) and QueueTime &lt; datetime(10/22/2021) and Result == &quot;succeeded&quot; and TargetBranch  == &quot;main&quot;
+| extend BuildTime =  StartTime - QueueTime
+| where BuildTime &lt; 5h
+| distinct *
+| summarize count() by bin(BuildTime, 15m)
+| summarize percentilesw(BuildTime, count_, 50, 75, 95)
+</code></pre>
+<p>To obtain job start time:</p>
+<pre><code>TimelineBuilds
+| where DefinitionId == [def] and QueueTime &gt; datetime(10/8/2021) and QueueTime &lt; datetime(10/22/2021) and Result == &quot;succeeded&quot; and TargetBranch  == &quot;main&quot;
+| extend BuildTime =  FinishTime - QueueTime
+| where BuildTime &lt; 5h
+| distinct *
+| summarize arg_max(FinishTime, *) by BuildId
+| join kind=inner (TimelineRecords
+                    | where Order != 0
+                    | where strlen( Path ) == 11
+                    | where WorkerName has &quot;NetCore1ESPool&quot;
+                    | summarize arg_max(FinishTime, *) by RecordId, BuildId ) on BuildId
+| extend JobStartTime = StartTime1 - QueueTime
+| summarize count(), min(JobStartTime), avg(JobStartTime), totimespan(stdev(JobStartTime))
+</code></pre>
+<p>To obtain job percentile data:</p>
+<pre><code>TimelineBuilds
+| where DefinitionId == [def] and QueueTime &gt; datetime(10/8/2021) and QueueTime &lt; datetime(10/22/2021) and TargetBranch  == &quot;main&quot;
+| extend BuildTime =  FinishTime - QueueTime
+| where BuildTime &lt; 5h
+| summarize arg_max(FinishTime, *) by BuildId
+| join kind=inner (TimelineRecords
+                    | where Order != 0
+                    | where strlen( Path ) == 11
+                    | where WorkerName has &quot;NetCore1ESPool&quot;
+                    | summarize arg_max(FinishTime, *) by RecordId, BuildId ) on BuildId
+| distinct *
+| extend JobStartTime = StartTime1 - QueueTime
+| summarize count() by bin(JobStartTime, 1m)
+| summarize percentilesw(JobStartTime, count_, 50, 75, 95)
+</code></pre>
+<h2 id="results">Results</h2>
+<p>The percentiles indicate the percentage of builds that finish in less than the given time (bucketed in 15 minute increments for build times
+and one minute increments for job start times).</p>
+<h3 id="runtime">runtime</h3>
+<h4 id="build-times">Build Times</h4>
+<table>
+<thead>
+<tr>
+<th><strong>Metric</strong></th>
+<th><strong>Baseline</strong></th>
+<th><strong>Delta</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sample Size</td>
+<td>154</td>
+<td>10</td>
+</tr>
+<tr>
+<td>Mean</td>
+<td>1:52:48</td>
+<td>2:42:32</td>
+</tr>
+<tr>
+<td>StDev</td>
+<td>0:40:56</td>
+<td>0:32:48</td>
+</tr>
+<tr>
+<td>50th %ile</td>
+<td>1:45:00</td>
+<td>2:45:00</td>
+</tr>
+<tr>
+<td>75th %ile</td>
+<td>2:15:00</td>
+<td>3:15:00</td>
+</tr>
+<tr>
+<td>95th %ile</td>
+<td>3:30:00</td>
+<td>3:30:00</td>
+</tr>
+</tbody>
+</table>
+<h4 id="job-start-times">Job Start Times</h4>
+<table>
+<thead>
+<tr>
+<th><strong>Metric</strong></th>
+<th><strong>Baseline</strong></th>
+<th><strong>Delta</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sample Size</td>
+<td>11186</td>
+<td>1122</td>
+</tr>
+<tr>
+<td>Minimum</td>
+<td>0:02:17</td>
+<td>0:03:33</td>
+</tr>
+<tr>
+<td>Mean</td>
+<td>0:18:53</td>
+<td>0:29:03</td>
+</tr>
+<tr>
+<td>StDev</td>
+<td>0:15:12</td>
+<td>0:20:01</td>
+</tr>
+<tr>
+<td>50th %ile</td>
+<td>0:14:00</td>
+<td>0:17:00</td>
+</tr>
+<tr>
+<td>75th %ile</td>
+<td>0:31:00</td>
+<td>0:50:00</td>
+</tr>
+<tr>
+<td>95th %ile</td>
+<td>0:41:00</td>
+<td>1:00:00</td>
+</tr>
+</tbody>
+</table>
+<h3 id="runtime-dev-innerloop">runtime-dev-innerloop</h3>
+<h4 id="build-times-1">Build Times</h4>
+<table>
+<thead>
+<tr>
+<th><strong>Metric</strong></th>
+<th><strong>Baseline</strong></th>
+<th><strong>Delta</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sample Size</td>
+<td>552</td>
+<td>10</td>
+</tr>
+<tr>
+<td>Mean</td>
+<td>0:57:58</td>
+<td>1:02:09</td>
+</tr>
+<tr>
+<td>StDev</td>
+<td>0:09:11</td>
+<td>0:04:32</td>
+</tr>
+<tr>
+<td>50th %ile</td>
+<td>1:00:00</td>
+<td>1:15:00</td>
+</tr>
+<tr>
+<td>75th %ile</td>
+<td>1:15:00</td>
+<td>1:15:00</td>
+</tr>
+<tr>
+<td>95th %ile</td>
+<td>1:15:00</td>
+<td>1:15:00</td>
+</tr>
+</tbody>
+</table>
+<h4 id="job-start-times-1">Job Start Times</h4>
+<table>
+<thead>
+<tr>
+<th><strong>Metric</strong></th>
+<th><strong>Baseline</strong></th>
+<th><strong>Delta</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sample Size</td>
+<td>3865</td>
+<td>70</td>
+</tr>
+<tr>
+<td>Minimum</td>
+<td>0:00:19</td>
+<td>0:03:15</td>
+</tr>
+<tr>
+<td>Mean</td>
+<td>0:03:56</td>
+<td>0:11:33</td>
+</tr>
+<tr>
+<td>StDev</td>
+<td>0:04:14</td>
+<td>0:03:39</td>
+</tr>
+<tr>
+<td>50th %ile</td>
+<td>0:03:00</td>
+<td>0:12:00</td>
+</tr>
+<tr>
+<td>75th %ile</td>
+<td>0:06:00</td>
+<td>0:14:00</td>
+</tr>
+<tr>
+<td>95th %ile</td>
+<td>0:11:00</td>
+<td>0:18:00</td>
+</tr>
+</tbody>
+</table>
+<h3 id="runtime-staging">runtime-staging</h3>
+<h4 id="build-times-2">Build Times</h4>
+<table>
+<thead>
+<tr>
+<th><strong>Metric</strong></th>
+<th><strong>Baseline</strong></th>
+<th><strong>Delta</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sample Size</td>
+<td>196</td>
+<td>10</td>
+</tr>
+<tr>
+<td>Mean</td>
+<td>1:17:38</td>
+<td>3:15:24</td>
+</tr>
+<tr>
+<td>StDev</td>
+<td>0:49:57</td>
+<td>0:51:29</td>
+</tr>
+<tr>
+<td>50th %ile</td>
+<td>1:00:00</td>
+<td>3:30:00</td>
+</tr>
+<tr>
+<td>75th %ile</td>
+<td>2:15:00</td>
+<td>4:15:00</td>
+</tr>
+<tr>
+<td>95th %ile</td>
+<td>2:45:00</td>
+<td>4:15:00</td>
+</tr>
+</tbody>
+</table>
+<p>Unfortunately, runtime-staging might not be the most useful pipeline for drawing conclusions as the build time
+distribution appears bimodal which means the mean build time is not as helpful a measurement.</p>
+<h4 id="job-start-times-2">Job Start Times</h4>
+<table>
+<thead>
+<tr>
+<th><strong>Metric</strong></th>
+<th><strong>Baseline</strong></th>
+<th><strong>Delta</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sample Size</td>
+<td>746</td>
+<td>80</td>
+</tr>
+<tr>
+<td>Minimum</td>
+<td>0:01:46</td>
+<td>0:03:44</td>
+</tr>
+<tr>
+<td>Mean</td>
+<td>0:12:48</td>
+<td>0:20:43</td>
+</tr>
+<tr>
+<td>StDev</td>
+<td>0:04:19</td>
+<td>0:10:23</td>
+</tr>
+<tr>
+<td>50th %ile</td>
+<td>0:13:00</td>
+<td>0:13:00</td>
+</tr>
+<tr>
+<td>75th %ile</td>
+<td>0:16:00</td>
+<td>0:16:00</td>
+</tr>
+<tr>
+<td>95th %ile</td>
+<td>0:20:00</td>
+<td>0:19:00</td>
+</tr>
+</tbody>
+</table>
+<h2 id="conclusions">Conclusions</h2>
+<p>While it is difficult to fully attribute one hundred percent of the build time increases to the stateless pools (especially with the delta
+data having a larger standard deviation in the runtime job start data and both the runtime-staging data sets), there is still a marked
+increase in both the build time and the job queue time for all observed pipelines.</p>
+<p>Of particular note is the runtime-dev-innerloop pipeline, which has very tight data sets for both the baseline and the delta. With lower
+standard deviations for both builds and jobs, we saw mean build time increase by five minutes and mean job start time increase by
+<strong>nearly eight minutes</strong>. In worst-case scenario runs, such an increase would translate to very high increases in overall build time,
+which may be what is reflected in the runtime and runtime-staging mean build time increases.</p>
+<p>Given this data, it is the opinion of the author that stateless pools do not represent a reasonable alternative to stateful pools with
+workspace cleanup.</p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cstateless-pools-cost-analysis.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cstateless-pools-cost-analysis.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cstateless-pools-cost-analysis.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

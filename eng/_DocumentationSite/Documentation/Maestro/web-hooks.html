@@ -1,0 +1,125 @@
+﻿<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+      <title>Maestro GitHub web hooks </title>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="title" content="Maestro GitHub web hooks ">
+      
+      <link rel="icon" href="../../favicon.ico">
+      <link rel="stylesheet" href="../../public/docfx.min.css">
+      <link rel="stylesheet" href="../../public/main.css">
+      <meta name="docfx:navrel" content="">
+      <meta name="docfx:tocrel" content="">
+      
+      
+      
+      
+      
+  </head>
+
+  <script type="module">
+    import options from './../../public/main.js'
+    import { init } from './../../public/docfx.min.js'
+    init(options)
+  </script>
+
+  <script>
+    const theme = localStorage.getItem('theme') || 'auto'
+    document.documentElement.setAttribute('data-bs-theme', theme === 'auto' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme)
+  </script>
+
+
+  <body class="tex2jax_ignore" data-layout="" data-yaml-mime="">
+    <header class="bg-body border-bottom">
+      <nav id="autocollapse" class="navbar navbar-expand-md" role="navigation">
+        <div class="container-xxl flex-nowrap">
+          <a class="navbar-brand" href="../../index.html">
+            <img id="logo" class="svg" src="../../logo.svg" alt="">
+            
+          </a>
+          <button class="btn btn-lg d-md-none border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navpanel" aria-controls="navpanel" aria-expanded="false" aria-label="Toggle navigation">
+            <i class="bi bi-three-dots"></i>
+          </button>
+          <div class="collapse navbar-collapse" id="navpanel">
+            <div id="navbar">
+            </div>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="container-xxl">
+      <div class="toc-offcanvas">
+        <div class="offcanvas-md offcanvas-start" tabindex="-1" id="tocOffcanvas" aria-labelledby="tocOffcanvasLabel">
+          <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="tocOffcanvasLabel">Table of Contents</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" data-bs-target="#tocOffcanvas" aria-label="Close"></button>
+          </div>
+          <div class="offcanvas-body">
+            <nav class="toc" id="toc"></nav>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="actionbar">
+          <button class="btn btn-lg border-0 d-md-none" style="margin-top: -.65em; margin-left: -.8em" type="button" data-bs-toggle="offcanvas" data-bs-target="#tocOffcanvas" aria-controls="tocOffcanvas" aria-expanded="false" aria-label="Show table of contents">
+            <i class="bi bi-list"></i>
+          </button>
+
+          <nav id="breadcrumb"></nav>
+        </div>
+
+        <article data-uid="">
+<h1 id="maestro-github-web-hooks">Maestro GitHub web hooks</h1>
+
+<p>Some GitHub repositories have commit web hooks pointing at Maestro. The dotnet/versions commit hook is used for build-info change notifications, and individual repos can use commit hooks to trigger CI builds.</p>
+<p>For example, Core-Setup release/1.0.0 and release/1.1.0 pipebuilds. GitHub sends a commit callback to Maestro, then Maestro queues the VSTS build.</p>
+<h2 id="finding-web-hook-settings">Finding web hook settings</h2>
+<p>On the repository page, go to the <strong>Settings</strong> tab and click <strong>Webhooks</strong>. You may need to click on a dropdown to find <strong>Settings</strong> due to ZenHub.</p>
+<p><img src="assets/settings-with-zenhub.png" alt="settings with zenhub"></p>
+<hr>
+<p>If you don't see <strong>Settings</strong> anywhere, you don't have permission. Check <a href="https://repos.opensource.microsoft.com/DotNet/repos">https://repos.opensource.microsoft.com/DotNet/repos</a> to see who has admin permission.</p>
+<p>Example web hooks page url: <a href="https://github.com/dotnet/versions/settings/hooks/">https://github.com/dotnet/versions/settings/hooks/</a></p>
+<p><img src="assets/webhooks-list.png" alt="webhooks list"></p>
+<h2 id="web-hook-configuration">Web hook configuration</h2>
+<ul>
+<li>Payload URL: <code>https://maestro-prod.azurewebsites.net/CommitPushed</code></li>
+<li>Content Type: <code>application/json</code></li>
+<li>Secret: <a href="https://ms.portal.azure.com/#asset/Microsoft_Azure_KeyVault/Secret/https://engkeyvault.vault.azure.net/secrets/Maestro-WebhookSecretToken/e6b838f3a9ce420d8ef3f9bf97047020">Maestro-WebhookSecretToken on EngKeyVault</a>
+<ul>
+<li>to get read access, join the <strong>dncengkvread</strong> SG on IDWEB</li>
+</ul>
+</li>
+<li>&quot;Which events would you like to trigger this webhook?&quot;: <code>Just the push event.</code></li>
+<li>Active: checked</li>
+</ul>
+<p><img src="assets/webhook-manage.png" alt="webhook manage"></p>
+<!-- Begin Generated Content: Doc Feedback -->
+<p><sub>Was this helpful? <a href="https://helix.dot.net/f/p/5?p=Documentation%5CMaestro%5Cweb-hooks.md"><img src="https://helix.dot.net/f/ip/5?p=Documentation%5CMaestro%5Cweb-hooks.md" alt="Yes"></a> <a href="https://helix.dot.net/f/n/5?p=Documentation%5CMaestro%5Cweb-hooks.md"><img src="https://helix.dot.net/f/in" alt="No"></a></sub></p>
+<!-- End Generated Content-->
+</article>
+
+        <div class="contribution d-print-none">
+        </div>
+
+        <div class="next-article d-print-none border-top" id="nextArticle"></div>
+        
+      </div>
+
+      <div class="affix">
+        <nav id="affix"></nav>
+      </div>
+    </main>
+
+
+    <footer class="border-top">
+      <div class="container-xxl">
+        <div class="flex-fill">
+          <span>Made with <a href="https://dotnet.github.io/docfx">docfx</a></span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
