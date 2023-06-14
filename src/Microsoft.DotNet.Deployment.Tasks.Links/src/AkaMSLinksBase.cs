@@ -5,7 +5,6 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 
 namespace Microsoft.DotNet.Deployment.Tasks.Links
 {
