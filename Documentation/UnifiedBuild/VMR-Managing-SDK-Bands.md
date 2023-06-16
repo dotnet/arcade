@@ -17,13 +17,23 @@ This section presents more precise definitions of common terms used in this docu
 - **SDK branch** – A git branch related to a specific SDK band, e.g. `release/8.0.1xx`.
 - **Non-SDK branch** – A git branch common for all associated SDK bands, e.g. `release/8.0`.
 - **Build output packages** – Packaged build products of each of the individual repositories either built in their individual repo source-build or during the build of each individual repository component within the full VMR build. These are used during package flow between the VMR and the individual repositories, and in the VMR build itself.
+- **Shared component** - A component that is shared between multiple SDK bands. For example, the .NET runtime is shared between all SDK bands.
+- **Band-specific component** - The opposite of a *shared component*. A component whose version differs between SDK bands.
 - **Maestro** - a service used by the .NET team to manage dependency flow between repositories.
 
 ## SDK bands
 
 To align with new Visual Studio releases, .NET SDK updates sometimes include new features or new versions of components such as Roslyn or MSBuild. These new features or components may be incompatible with the versions that shipped in previous SDK updates for the same major or minor version. To differentiate such updates, the .NET SDK uses the concept of feature bands. While these bands differ in their feature set they share some common parts such as the .NET runtime.
 
-To best illustrate how this works in practice, let’s imagine the following timeline for repositories with SDK branches (e.g., `dotnet/sdk`):
+### Shared- vs band-specific components
+
+A shared component is a component that is shared between multiple SDK bands. For instance, the .NET runtime is a good example of a shared component while the Roslyn compiler would typically differ between bands.
+
+During the development cycle, it can happen that shared components require band-specific changes and they can become band-specific for some time. Usually, this is a point in time event and the component becomes shared again after some time. A good example of this is the Arcade repository which contains build tools/infrastructure. However, there are no strict rules about this and it is possible that a component remains band-specific.
+
+### Example
+
+To best illustrate how SDK bands are developer and released in practice, let’s imagine the following timeline for repositories with SDK branches (e.g., `dotnet/sdk`):
 
 ```mermaid
 %%{init: { 'gitGraph': {'showCommitLabel': false }}}%%
