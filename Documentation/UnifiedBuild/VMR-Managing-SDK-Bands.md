@@ -541,3 +541,7 @@ Both approaches seem to have pros and cons. To choose the best approach, we shou
 
 When doing so, we should take into account the product lifecycle. At first, the most active busy development happens in the preview time (on main branches). Only after the release, we move into servicing and only after then we branch out and snap the bands. We expect the servicing period to last very long but with less activity. During active development, we should prioritize **developer experience** and **code flow** as that has impact on product construction.  
 During servicing we need the system to be as frictionless as possible so that we’re able to react to external impulses fast and release fixes fast which hints at prioritizing **code flow**, **release**, and **maintenance complexity**. Some areas should be important in both periods such as **community impact**.
+
+## Conclusion
+
+From the above, it seems that the SDK branches proposal brings more flexibility and benefits over the side-by-side folders. It will mean much easier development experience for the developers and the community. It will also mean that we can keep the VMR size and performance better in check. The only area where the side-by-side folders seem to be better is the release process but that is not a high priority area. The implementation complexity for both code flow infrastructure as well as Source Build is much lower with SDK branches even though this is a one-time cost.
