@@ -43,11 +43,11 @@ There could be also variations of this such as this:
 
 The impact of the actual structure is not so important in the context of this design but it's an important detail to consider that will influence the usability of the VMR.
 
-This layout however doesn't comply with the requirement where the preview band is locked down to use the latest released runtime. To work around that, we'd have to make an adjustment. This adjustment would require a feature in Source Build where we could specify whether a components is built form source or restored from its intermediate package.
+This layout however doesn't comply with the requirement where the preview band is locked down to use the latest released runtime. To work around that, we'd have to make an adjustment. This adjustment would require a feature in Source Build where we could specify whether a components is built form source or restored from its build output package.
 This functionality actually already exists and each repository already references its dependencies via `eng/Version.Details.xml` so that it can build inside of its individual repository.
 
 Considering we have this capability, we'd then change the VMR contents so that the SDK-specific components of other bands than the first one (`1xx`) would not contain the sources of the shared components.
-Instead, they would reference intermediate packages that would be built from the `1xx` branch. This will give us more flexibility such as locking down the version of the shared components in the preview band to the last released version.
+Instead, they would reference build output packages that would be built from the `1xx` branch. This will give us more flexibility such as locking down the version of the shared components in the preview band to the last released version.
 
 The complete layout would then look like this:
 
@@ -55,10 +55,10 @@ The complete layout would then look like this:
 └── src
     ├── roslyn
     │   ├── 9.0.1xx
-    │   └── 9.0.2xx # references the runtime and arcade intermediates instead of sources
+    │   └── 9.0.2xx # references the runtime and arcade build output packages instead of sources
     ├── sdk
     │   ├── 9.0.1xx
-    │   └── 9.0.2xx # references the runtime and arcade intermediates instead of sources
+    │   └── 9.0.2xx # references the runtime and arcade build output packages instead of sources
     └── shared
         ├── arcade
         └── runtime
@@ -78,14 +78,14 @@ To summarize the characteristics:
     The preview time is when most of the development happens and the VMR would contain a single band only. It would be quite obvious what is in the VMR and how to work with the code as it would be very close to what we have in the VMR today - just a single folder per repository.
 
 - **Band preview time**  
-    The band that is created the latest and is to be released next is called the preview band. Except of the 1xx, each preview band is locked down to use the latest released version of the shared components for the time of development. This means that the band would have to depend on and use the intermediate packages instead of the sources. **This will be confusing as it won't be quite clear that this is happening.** Changing the sources of the shared components would not manifest during a rebuild of the preview band when working with the repository.
+    The band that is created the latest and is to be released next is called the preview band. Except of the 1xx, each preview band is locked down to use the latest released version of the shared components for the time of development. This means that the band would have to depend on and use the build output packages instead of the sources. **This will be confusing as it won't be quite clear that this is happening.** Changing the sources of the shared components would not manifest during a rebuild of the preview band when working with the repository.
 
 - **Band snap**  
     To create a new band, and for the ease, it would be the best to do the snap in the VMR from where it would be flown to the appropriate branches in the individual repositories:
 
     1. Create the new band folders by copying the sources of the latest band.  
        E.g. `src/sdk/9.0.1xx` to `src/sdk/9.0.2xx`
-    2. Adjust versions, point the new band to the new runtime intermediate package.
+    2. Adjust versions, point the new band to the new runtime build output package.
     3. Configure Maestro subscriptions between new VMR bands and their individual repository counterparts.
     4. Maestro flows the changes from the VMR and creates the appropriate branches in the individual repositories.
 
@@ -96,9 +96,9 @@ The proposed layout has some problematic implications. Let's consider the follow
 1. A developer wants to make a cross-repo change in a preview band and a shared component.
 2. Distro maintainer wants to build the latest band only.
 
-It might be counter-intuitive to build a commit only to find out that the non-1xx bands do not contain the runtime from that commit. For instance, when you change a sources of a shared component to rebuild a non-1xx band only for the change to not manifest. This is due to the fact that the band would restore the dependencies from the intermediate package instead. This is not ideal as it will be quite hard to test the branch against arbitrary code.
+It might be counter-intuitive to build a commit only to find out that the non-1xx bands do not contain the runtime from that commit. For instance, when you change a sources of a shared component to rebuild a non-1xx band only for the change to not manifest. This is due to the fact that the band would restore the dependencies from the build output package instead. This is not ideal as it will be quite hard to test the branch against arbitrary code.
 
-It seems that to make this work, we'd need to be able to tell Source Build to easily swap between using the sources and the intermediate packages of the shared components.
+It seems that to make this work, we'd need to be able to tell Source Build to easily swap between using the sources and the build output packages of the shared components.
 When someone would be interested in these flows, they would point Source Build to sources somewhere on their disk - either directly in the VMR (e.g. `src/runtime`) or in a full clone of the individual repository checked out outside of the VMR folder.
 
 ## Code flow
@@ -116,9 +116,9 @@ sequenceDiagram
 
     runtime->>runtime: Change in runtime
     runtime->>VMR: Flow of 📄 RUN_2
-    Note over VMR: 📦 Intermediate VMR_2 is built
+    Note over VMR: 📦 Build output package VMR_2 is built
 
-    par Parallel backflow of intermediates
+    par Parallel backflow of build output packages
         VMR->>SDK_1xx: Backflow of 📦 VMR_2
     and
         VMR->>SDK_2xx: Backflow of 📦 VMR_2
@@ -146,7 +146,7 @@ sequenceDiagram
     VMR->>VMR: Change is made to sdk, creating 📄 SDK_1.2, SDK_2.2
     deactivate VMR
 
-    Note over VMR: 📦 VMR_2 intermediates are built
+    Note over VMR: 📦 VMR_2 build output package is built
 
     par Parallel backflow
         VMR->>SDK_1xx: Backflow of 📄 SDK_1.2, 📦 VMR_2
@@ -160,9 +160,9 @@ The diagram shows:
 1. A change was made in `dotnet/runtime`.
 2. The change is flown to the VMR SDK branch where a PR with the source change is opened.
 3. Sources of both SDK bands are changed, PR is merged.  
-   Official VMR build publishes intermediate packages for each repository.  
+   Official VMR build publishes build output packages for each repository.  
    This triggers the next steps in parallel.
-4. New sources of both bands, together with the we new runtime intermediate package are flown back to `dotnet/sdk`.
+4. New sources of both bands, together with the we new runtime build output package are flown back to `dotnet/sdk`.
 5. Same as step `4.` but for the other SDK band.
 
 After the last step, both SDK branches have the same sources of `dotnet/runtime` which means they're coherent.
@@ -171,7 +171,7 @@ After the last step, both SDK branches have the same sources of `dotnet/runtime`
 
 The release has three main phases:
 
-1. **Figuring out what to release** - We need to make sure the SDK bands are coherent. This means that the preview bands do not restore shared components from intermediate packages anymore and that we can build and validate the whole VMR commit we're about to release.
+1. **Figuring out what to release** - We need to make sure the SDK bands are coherent. This means that the preview bands do not restore shared components from build output packages anymore and that we can build and validate the whole VMR commit we're about to release.
 
 2. **Compiling the binary release** - We need to collect the build products of the official VMR build of a commit that we're releasing. The staging pipeline would pull the artifacts from there which is very close to pulling it from installer today.
 
