@@ -288,7 +288,9 @@ The various situations can be summarized as follows:
 - For individual repository builds, the build process will restore the dependencies from build output packages.
 - For the VMR build shared components are built with the first band and put in a local NuGet feed. Other bands restore shared components from the feed.
 
-Upon inspection of the proposals, the above **doesn't differ for the given proposal which means the selected architecture doesn’t really affect the build** and we don’t need to consider it during evaluation. There will, however, be a change to the build process needed to accommodate for the new locations of the bands within the VMR.
+Upon inspection of the proposals, the above seems to work for both proposals as we'd be able to supply all of the sources. However, the difference lies in the build process itself.  
+For SDK branches, this does not really differ as the layout stays roughly the same. For side-by-side folders, the build would get more complicated than today as each component would have to know which SDK folder of its dependency it should use. It seems quite error prone and difficult to figure out where dependencies came from once we have built everything.  
+For this reason, the SDK branches solution wins but the impact on the final architecture is not as big as this would be a one-time cost.
 
 ### Code flow
 
@@ -511,7 +513,7 @@ The SDK folder solution is much closer to where we are these days as the layout 
 
 |                       Comparison area                       |     Preferred solution      | Impact on decision |
 |-------------------------------------------------------------|:---------------------------:|:------------------:|
-|     Build                                                   |         Side-by-side        |        low         |
+|     Build                                                   |         SDK branches        |        low         |
 |     Code flow                                               |         Side-by-side        |    low/medium\*    |
 |     Developer experience                                    |         SDK branches        |      **high**      |
 |     Community, 3rd parties & upstream/downstream story      |         SDK branches        |      **high**      |
