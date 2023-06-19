@@ -1,0 +1,10 @@
+{
+    "name": "Dotnet Engineering Services Documentation",
+    "version": "1.0.0",
+    "description": "Empty package.json to download enghubcontentpusher dependency",
+    "author": "t-jelipscomb",
+    "license": "ISC",
+    "dependencies": {
+      "@contentpush/enghubcontentpusher": "^1.0.24"
+    }
+  }

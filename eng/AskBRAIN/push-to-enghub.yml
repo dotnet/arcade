@@ -1,0 +1,50 @@
+trigger:
+- "t-jelipscomb/DocFX-Documentation"
+
+parameters:
+  - name: versionSpec
+    type: string
+    default: '16.16.0'
+  - name: checkLatest
+    type: boolean
+    default: false
+
+variables:
+  - group: "DncengDocumentationPipeline"
+  - name: contentid
+    value: 43019ac1-f7d2-442f-93d5-9953113cfcc6
+  - name: aadappid
+    value: 5e6c2a30-90a2-45e7-9c52-906af5af9556   
+jobs:
+  - job: build
+    pool: 
+      vmimage: windows-latest
+    steps:
+    - checkout: self
+    - task: npmAuthenticate@0
+      inputs:
+        workingFile: .npmrc
+        customEndpoint: https://msazure.pkgs.visualstudio.com/One/_packaging/PIE-AECore-EngineeringHub-Consumption/npm/registry/
+    - task: NodeTool@0
+      inputs:
+        versionSpec: $(versionSpec)
+        checkLatest: $(checkLatest)
+      displayName: 'Setup Node.js environment'
+    - script: |
+        npm install -g vsts-npm-auth
+        node creds.js
+        npm install
+        npm link
+        dir
+      env:
+        NPM_TOKEN: $(DocumentatiPipelineServicePrincipalSecret)
+    - script: |
+        choco install docfx --version=2.59.4 -y
+        docfx -v
+        if ($lastexitcode -ne 0){
+        throw ("Error installing docfx")
+        }
+      displayName: 'Install docfx'
+    - script: |
+        node "node_modules\@contentpush\enghubcontentpusher\dist\pushtoenghub.js" -c $(contentid) -i $(aadappid) -s $(DocumentatiPipelineServicePrincipalSecret) -h engineeringhub-api-prod.azurefd.net -a api://engineeringhubprod.ame.gbl/.default
+      displayName: 'Run enghub content pusher'
