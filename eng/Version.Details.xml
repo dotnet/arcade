@@ -3,6 +3,10 @@
   <ProductDependencies>
   </ProductDependencies>
   <ToolsetDependencies>
+    <Dependency Name="Microsoft.CodeAnalysis.CSharp" Version="4.6.0">
+      <Uri>https://github.com/dotnet/roslyn</Uri>
+      <Sha>c3cc1d0ceeab1a65da0217e403851a1e8a30086a</Sha>
+    </Dependency>
     <Dependency Name="Microsoft.SymbolUploader.Build.Task" Version="2.0.0-preview.1.21526.15">
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
       <Sha>62ceb439e80bf0814d0ffa17f022d4624ea4aa6c</Sha>
@@ -11,30 +15,30 @@
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
       <Sha>62ceb439e80bf0814d0ffa17f022d4624ea4aa6c</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="8.0.100-preview.5.23265.1">
+    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="8.0.100-preview.6.23319.1">
       <Uri>https://github.com/dotnet/templating</Uri>
-      <Sha>0ba927aa5b68987f5109310433f4017c35d47e0b</Sha>
+      <Sha>232674b12e175b70d20b694386888f953c11de10</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="8.0.0-beta.23268.1">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="8.0.0-beta.23316.6">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>f4269875971171c278c2cd695e9ef94b6516e4be</Sha>
+      <Sha>e2334b2be36919347923d0ec872a46acddb1e385</Sha>
       <SourceBuild RepoName="arcade" ManagedOnly="true" />
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="8.0.0-beta.23268.1">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="8.0.0-beta.23316.6">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>f4269875971171c278c2cd695e9ef94b6516e4be</Sha>
+      <Sha>e2334b2be36919347923d0ec872a46acddb1e385</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SignTool" Version="8.0.0-beta.23268.1">
+    <Dependency Name="Microsoft.DotNet.SignTool" Version="8.0.0-beta.23316.6">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>f4269875971171c278c2cd695e9ef94b6516e4be</Sha>
+      <Sha>e2334b2be36919347923d0ec872a46acddb1e385</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="8.0.0-beta.23268.1">
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="8.0.0-beta.23316.6">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>f4269875971171c278c2cd695e9ef94b6516e4be</Sha>
+      <Sha>e2334b2be36919347923d0ec872a46acddb1e385</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="8.0.0-beta.23268.1">
+    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="8.0.0-beta.23316.6">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>f4269875971171c278c2cd695e9ef94b6516e4be</Sha>
+      <Sha>e2334b2be36919347923d0ec872a46acddb1e385</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.21553.1">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
@@ -44,26 +48,26 @@
       <Uri>https://github.com/dotnet/arcade-services</Uri>
       <Sha>a5f3ed9d5f560555ff6d26b286acdcfbb7ce3b14</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="8.0.0-prerelease.23259.1">
+    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="8.0.0-prerelease.23312.1">
       <Uri>https://github.com/dotnet/xharness</Uri>
-      <Sha>86ee2687cca0a1a28adf67eb3451ca06f0e989b4</Sha>
+      <Sha>5dabb78620cf157a43de27e8d1b84786eb1baabc</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="4.5.2-3.23261.3">
+    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="4.5.2-3.23266.1">
       <Uri>https://github.com/dotnet/roslyn</Uri>
-      <Sha>870c38d673c4a2815af8bc74f2d2cd718b2ffe67</Sha>
+      <Sha>7cd773320dcccaaedb8f91c314aaa83dc7e171ce</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="6.0.100-1.22103.2">
       <Uri>https://github.com/dotnet/linker</Uri>
       <Sha>3efd231da430baa0fd670e278f6b5c3e62834bde</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.SourceLink.GitHub" Version="8.0.0-beta.23252.2">
+    <Dependency Name="Microsoft.SourceLink.GitHub" Version="8.0.0-beta.23314.2">
       <Uri>https://github.com/dotnet/sourcelink</Uri>
-      <Sha>54eb3b811c57f5e94617d31a102fc9cb664ccdd5</Sha>
+      <Sha>4d2c8bf58e8cb7900ec2d9077c155572e2d3cd88</Sha>
       <SourceBuild RepoName="sourcelink" ManagedOnly="true" />
     </Dependency>
-    <Dependency Name="Microsoft.SourceLink.AzureRepos.Git" Version="8.0.0-beta.23252.2">
+    <Dependency Name="Microsoft.SourceLink.AzureRepos.Git" Version="8.0.0-beta.23314.2">
       <Uri>https://github.com/dotnet/sourcelink</Uri>
-      <Sha>54eb3b811c57f5e94617d31a102fc9cb664ccdd5</Sha>
+      <Sha>4d2c8bf58e8cb7900ec2d9077c155572e2d3cd88</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DiaSymReader.Pdb2Pdb" Version="1.1.0-beta2-19575-01">
       <Uri>https://github.com/dotnet/symreader-converter</Uri>
@@ -73,29 +77,31 @@
       <Uri>https://github.com/dotnet/symreader-converter</Uri>
       <Sha>c5ba7c88f92e2dde156c324a8c8edc04d9fa4fe0</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="1.0.0-beta.23266.1">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="1.0.0-beta.23312.2">
       <Uri>https://github.com/dotnet/xliff-tasks</Uri>
-      <Sha>9e7fbcab4e5275f63c0cd37553ba426de9194309</Sha>
+      <Sha>4234ffac87e305da80597cb46dc0d4a87fc4f7c2</Sha>
     </Dependency>
-    <Dependency Name="NuGet.Packaging" Version="6.2.2">
-      <Uri>https://github.com/NuGet/NuGet.Client</Uri>
-      <Sha>027ca8b8ef4b4dc94995f87b9c441d2bcf742c1d</Sha>
+    <!-- Necessary for source-build. This allows the package to be retrieved from previously-source-built artifacts
+         and flow in as dependencies of the packages produced by arcade. -->
+    <Dependency Name="System.IO.Packaging" Version="7.0.0">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>d099f075e45d2aa6007a22b71b45a08758559f80</Sha>
     </Dependency>
-    <!-- Live version required by source-build. It is loaded in during built-time by
-      consumers of SharedFramework.Sdk (such as runtime), so we cannot use a ref pack for it -->
-    <Dependency Name="Microsoft.Extensions.DependencyModel" Version="8.0.0-preview.5.23259.1">
+    <!-- Latest preview version required by source-build. The dependency is loaded in during built-time
+      by consumers of SharedFramework.Sdk (such as runtime), so we cannot use a ref pack for it -->
+    <Dependency Name="Microsoft.Extensions.DependencyModel" Version="8.0.0-preview.4.23259.5">
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>547c506abe05e510bd43330fc8f6d4c5961e9223</Sha>
       <SourceBuild RepoName="runtime" ManagedOnly="false" />
     </Dependency>
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="8.0.0-alpha.1.23266.4">
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="8.0.0-alpha.1.23316.2">
       <Uri>https://github.com/dotnet/source-build-reference-packages</Uri>
-      <Sha>fd98754b692a1a8da2aaadd28ce3952578d9d9ad</Sha>
+      <Sha>3e92e7cead1e08476973f637007bb22cde7843ca</Sha>
       <SourceBuild RepoName="source-build-reference-packages" ManagedOnly="true" />
     </Dependency>
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-externals" Version="8.0.0-alpha.1.23266.1">
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-externals" Version="8.0.0-alpha.1.23315.1">
       <Uri>https://github.com/dotnet/source-build-externals</Uri>
-      <Sha>83daca78a3f4348999a3e4d81cb0bcc00e956d79</Sha>
+      <Sha>06913fc4c3fcb0065ee390d135fb766870d2c38a</Sha>
       <SourceBuild RepoName="source-build-externals" ManagedOnly="true" />
     </Dependency>
     <Dependency Name="Microsoft.Deployment.DotNet.Releases" Version="1.0.0-preview6.1.23159.4" CoherentParentDependency="Microsoft.NET.Sdk.WorkloadManifestReader">
