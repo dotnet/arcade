@@ -177,7 +177,7 @@
 
            We also use an atypical sed replacement delimiter (+), because the typical '/' would occur within paths
 
-           It is expected that when the inner clone goes away, this code goes away.
+           It is expected that when the inner clone goes away, this code goes away (see https://github.com/dotnet/source-build/issues/3072).
       -->
       <_GitSubmoduleCloneArgs>$(_GitSubmoduleCloneArgs) --dest &quot;%24(echo &quot;${toplevel}/&quot; | sed s+$(RepoRoot)+$(InnerSourceBuildRepoRoot)+)${sm_path}&quot;</_GitSubmoduleCloneArgs>
       <_GitSubmoduleCloneArgs Condition="'$(CopyWipIntoInnerSourceBuildRepo)' == 'true'">$(_GitSubmoduleCloneArgs) --copy-wip</_GitSubmoduleCloneArgs>
