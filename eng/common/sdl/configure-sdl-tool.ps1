@@ -17,7 +17,9 @@ Param(
   # Optional: Additional params to add to any tool using PoliCheck.
   [string[]] $PoliCheckAdditionalRunConfigParams,
   # Optional: Additional params to add to any tool using CodeQL/Semmle.
-  [string[]] $CodeQLAdditionalRunConfigParams
+  [string[]] $CodeQLAdditionalRunConfigParams,
+  # Optional: Additional params to add to any tool using Binskim.
+  [string[]] $BinskimLAdditionalRunConfigParams
 )
 
 $ErrorActionPreference = 'Stop'
@@ -85,6 +87,11 @@ try {
         $tool.Args += "`"SourceCodeDirectory < $TargetDirectory`""
       }
       $tool.Args += $CodeQLAdditionalRunConfigParams
+    } elseif ($tool.Name -eq 'binskim') {
+      if ($targetDirectory) {
+        $tool.Args += "`"Target < $TargetDirectory`""
+      }
+      $tool.Args += $BinskimLAdditionalRunConfigParams
     }
 
     # Create variable pointing to the args array directly so we can use splat syntax later.
