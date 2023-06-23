@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.Equal("Microsoft.NET.Workload.Mono.ToolChain,6.0.200,6.0.3,x64", MsiUtils.GetProviderKeyName(msiPath603));
             Assert.Equal("Microsoft.NET.Workload.Mono.ToolChain,6.0.200,6.0.4,x64", MsiUtils.GetProviderKeyName(msiPath604));
 
-            // WiX populuates the DefaultDir column using "short name | long name" pairs.
+            // WiX populates the DefaultDir column using "short name | long name" pairs.
             MsiUtils.GetAllDirectories(msiPath603).Should().Contain(d =>
                 d.Directory == "ManifestVersionDir" &&
                 d.DirectoryParent == "ManifestIdDir" &&
