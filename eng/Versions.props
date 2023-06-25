@@ -84,6 +84,7 @@
     <FluentAssertionsVersion>5.10.3</FluentAssertionsVersion>
     <HandlebarsNetVersion>1.11.5</HandlebarsNetVersion>
     <JetBrainsAnnotationsVersion>2018.2.1</JetBrainsAnnotationsVersion>
+    <LibGit2SharpVersion>0.27.2</LibGit2SharpVersion>
     <LZMA_SDKVersion>19.0.0</LZMA_SDKVersion>
     <McMasterExtensionsCommandLineUtils>2.3.0</McMasterExtensionsCommandLineUtils>
     <MicrosoftApplicationInsightsVersion>2.21.0</MicrosoftApplicationInsightsVersion>
