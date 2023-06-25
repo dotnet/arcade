@@ -19,7 +19,7 @@ public record FilePath(IFileSystem FileSystem, string FullPath)
     public static FilePath Create(IFileSystem fileSystem, string rawPath, string rootPath)
     {
         string fullPath = !Path.IsPathRooted(rawPath)
-               ? Path.GetFullPath(Path.Join(rootPath, rawPath))
+               ? Path.GetFullPath(Path.Combine(rootPath, rawPath))
                : Path.GetFullPath(rawPath);
 
         return new FilePath(fileSystem, fullPath);

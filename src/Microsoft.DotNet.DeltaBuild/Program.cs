@@ -101,13 +101,17 @@ public static class Program
                 .Union(affectedProjects.UpstreamTree)
                 .Where(i => i.Exists)
                 .Select(i => i.FullPath)
-                .Distinct().Order().ToList(),
+                .Distinct()
+                .OrderBy(i => i)
+                .ToList(),
             affectedProjects.DirectlyAffectedProjects
                 .Union(affectedProjects.UpstreamTree)
                 .Union(affectedProjects.DownstreamTree)
                 .Where(i => i.Exists)
                 .Select(i => i.FullPath)
-                .Distinct().Order().ToList());
+                .Distinct()
+                .OrderBy(i=>i)
+                .ToList());
 
         string outputJson = JsonSerializer.Serialize(output, JsonOptions);
 
