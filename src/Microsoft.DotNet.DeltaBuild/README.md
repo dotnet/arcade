@@ -37,7 +37,7 @@ Changed file: C:\__w\1\s\src\My.Component\My.Component.csproj
 }
 ```
 
-In this example, a change to `src\My.Component\My.Component.csproj` means we need to rebuild project, its test project, and analyzer that is a transitive dependency.
+In this example, a change to `src\My.Component\My.Component.csproj` means we need to rebuild the project itself, its test project, and the analyzer that is a transitive dependency.
 
 ## How to run
 
