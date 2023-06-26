@@ -1,6 +1,9 @@
 # DeltaBuild
 
-DeltaBuild is build tool for code bases that have many projects. By analyzing dependencies and Git history, DeltaBuild can determine subset of projects that need to be rebuilt and by doing so substantially decrease build time. This is especially useful on PR gates. Result are not bullet-proof, they are best-effort. Contributions are welcomed.
+DeltaBuild is a build tool for codebases that have many projects. By analyzing dependencies and Git history, DeltaBuild can determine a subset of projects that only need to be rebuilt for current changeset, and by doing so it allows to substantially decrease the solution build time. This is especially useful for pull-request. 
+While DeltaBuild has been battle-tested, the results are best-effort not not 100% bullet-proof. 
+
+Contributions are welcome.
 
 ## How it works
 
