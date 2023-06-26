@@ -17,5 +17,8 @@
       to the corresponding entry in Version.Details.xml -->
     <UsagePattern IdentityGlob="Microsoft.CodeAnalysis.*/*" />
 
+     <!-- This package is upgraded to latest versions in product build and can be baselined for 
+      the repo build. -->
+    <UsagePattern IdentityGlob="System.IO.Packaging/*7.0.0*" />
   </IgnorePatterns>
 </UsageData>
