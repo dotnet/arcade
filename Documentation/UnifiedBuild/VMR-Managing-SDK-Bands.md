@@ -33,7 +33,7 @@ During the development cycle, it can happen that shared components require band-
 
 ### Example
 
-To best illustrate how SDK bands are developer and released in practice, let’s imagine the following timeline for repositories with SDK branches (e.g., `dotnet/sdk`):
+To best illustrate how SDK bands are developed and released in practice, let’s imagine the following timeline for repositories with SDK branches (e.g., `dotnet/sdk`):
 
 ```mermaid
 %%{init: { 'gitGraph': {'showCommitLabel': false }}}%%
