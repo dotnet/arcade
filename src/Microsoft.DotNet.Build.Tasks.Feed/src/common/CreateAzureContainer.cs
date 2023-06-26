@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public bool IsPublic { get; set; } = false;
 
-        public abstract Task<AzureStorageUtils> CreateBlobStorageUtilsAsync();
+        public abstract Task<AzureStorageUtils> GetBlobStorageUtilsAsync(string accountName, string accountKey, string containerName);
 
         public override bool Execute()
         {
@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             try
             {
-                AzureStorageUtils blobUtils = await CreateBlobStorageUtilsAsync();
+                AzureStorageUtils blobUtils = await GetBlobStorageUtilsAsync(AccountName, AccountKey, ContainerName);
                 
                 PublicAccessType permissions = IsPublic ? PublicAccessType.Blob : PublicAccessType.None;
 

@@ -14,13 +14,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public bool FailIfExists { get; set; }
 
-        public override async Task<AzureStorageUtils> CreateBlobStorageUtilsAsync()
+        public override async Task<AzureStorageUtils> GetBlobStorageUtilsAsync(string accountName, string accountKey, string containerName)
         {
-            AzureStorageUtils blobUtils = new(AccountName, AccountKey, ContainerName);
+            AzureStorageUtils blobUtils = new(accountName, accountKey, containerName);
 
             if (FailIfExists && await blobUtils.CheckIfContainerExistsAsync())
             {
-                throw new System.InvalidOperationException($"Container {ContainerName} already exists in storage account {AccountName}.");
+                throw new System.InvalidOperationException($"Container {containerName} already exists in storage account {accountName}.");
             }
 
             return blobUtils;

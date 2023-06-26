@@ -6,21 +6,21 @@ using Microsoft.DotNet.Build.CloudTestTasks;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 { 
-    public class CreateUniqueAzureContainer : CreateAzureContainer
+    public class CreateNewAzureContainer : CreateAzureContainer
     {
-        public override async Task<AzureStorageUtils> CreateBlobStorageUtilsAsync()
+        public override async Task<AzureStorageUtils> GetBlobStorageUtilsAsync(string accountName, string accountKey, string containerName)
         {
             int version = 0;
-            string versionedContainerName = ContainerName;
+            string versionedContainerName = containerName;
 
             AzureStorageUtils blobUtils;
             bool needsUniqueName;
             do
             {
-                blobUtils = new AzureStorageUtils(AccountName, AccountKey, versionedContainerName);
+                blobUtils = new AzureStorageUtils(accountName, accountKey, versionedContainerName);
                 if (await blobUtils.CheckIfContainerExistsAsync())
                 {
-                    versionedContainerName = $"{ContainerName}-{++version}";
+                    versionedContainerName = $"{containerName}-{++version}";
                     needsUniqueName = true;
                 }
                 else
