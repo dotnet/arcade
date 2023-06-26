@@ -10,7 +10,7 @@ Contributions are welcome.
 DeltaBuild relies on information provided by MSBuild and Git. 
 
 1. Execute `dotnet restore /bl` to produce an MSBuild binary log for your feature branch and pass it to DeltaBuild.
-1. DeltaBuild performs `git diff` between your feature branch and the target branch (default: origin/main).
+1. DeltaBuild performs `git diff` between your feature branch and the target branch (default: `origin/main`).
 1. DeltaBuild creates cross-section between information contained in the binary log and the git-diff.
 
 To cover cases when projects are deleted, you will need to additionally provide a binary log for the target branch, i.e., you will have to execute `dotnet restore /bl` for that branch.
