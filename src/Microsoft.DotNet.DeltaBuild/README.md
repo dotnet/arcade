@@ -41,7 +41,7 @@ In this example, a change to `src\My.Component\My.Component.csproj` means we nee
 
 ## How to run
 
-To run DeltaBuild, you need to provide a binary log and specify the path to the repository:
+To run DeltaBuild you need to provide a binary log and specify the root path of the repository:
 ```
 dotnet-deltabuild --binlog msbuild.binlog --repository C:\_w\1\s
 ```
