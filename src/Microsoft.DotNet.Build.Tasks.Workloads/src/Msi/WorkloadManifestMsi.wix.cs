@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             {
                 candle.AddSourceFiles(jsonContentWxs);
                 candle.AddPreprocessorDefinition("IncludePackGroupJson", "true");
-                candle.AddPreprocessorDefinition("JsonSourceDir", jsonDirectory);                
+                candle.AddPreprocessorDefinition("JsonSourceDir", jsonDirectory);
             }
             else
             {
