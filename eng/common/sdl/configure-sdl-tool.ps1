@@ -85,7 +85,7 @@ try {
         }
         $tool.Args += $PoliCheckAdditionalRunConfigParams
       }
-      { 'semmle' -or 'codeql' } {
+      {$_ -in 'semmle', 'codeql'} {
         if ($targetDirectory) {
           $tool.Args += "`"SourceCodeDirectory < $TargetDirectory`""
         }
