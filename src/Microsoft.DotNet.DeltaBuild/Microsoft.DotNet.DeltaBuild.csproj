@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net7.0;$(NetCurrent)</TargetFramework>
+    <TargetFrameworks>net7.0;$(NetCurrent)</TargetFrameworks>
     <Description>Tool to determine projects affected by a change based on source control.</Description>
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
