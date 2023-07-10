@@ -33,11 +33,11 @@
     <!-- netstandard -->
     <NETStandardLibraryVersion>2.0.3</NETStandardLibraryVersion>
     <!-- nuget -->
-    <NuGetCommandsVersion>6.2.2</NuGetCommandsVersion>
-    <NuGetFrameworksVersion>6.2.2</NuGetFrameworksVersion>
-    <NuGetPackagingVersion>6.2.2</NuGetPackagingVersion>
-    <NuGetProjectModelVersion>6.2.2</NuGetProjectModelVersion>
-    <NuGetVersioningVersion>6.2.2</NuGetVersioningVersion>
+    <NuGetCommandsVersion>6.2.4</NuGetCommandsVersion>
+    <NuGetFrameworksVersion>6.2.4</NuGetFrameworksVersion>
+    <NuGetPackagingVersion>6.2.4</NuGetPackagingVersion>
+    <NuGetProjectModelVersion>6.2.4</NuGetProjectModelVersion>
+    <NuGetVersioningVersion>6.2.4</NuGetVersioningVersion>
     <!-- roslyn -->
     <MicrosoftCodeAnalysisCSharpVersion>4.6.0</MicrosoftCodeAnalysisCSharpVersion>
     <MicrosoftNetCompilersToolsetVersion>4.6.0</MicrosoftNetCompilersToolsetVersion>
