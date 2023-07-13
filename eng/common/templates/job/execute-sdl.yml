@@ -129,7 +129,6 @@ jobs:
       overrideGuardianVersion: ${{ parameters.overrideGuardianVersion }}
       executeAllSdlToolsScript: ${{ parameters.executeAllSdlToolsScript }}
       overrideParameters: ${{ parameters.overrideParameters }}
-      additionalParameters: -ArtifactsDirectory '$(Build.ArtifactStagingDirectory)\artifacts\**'
-        ${{ parameters.additionalParameters }}
+      additionalParameters: ${{ parameters.additionalParameters }}
       publishGuardianDirectoryToPipeline: ${{ parameters.publishGuardianDirectoryToPipeline }}
       sdlContinueOnError: ${{ parameters.sdlContinueOnError }}

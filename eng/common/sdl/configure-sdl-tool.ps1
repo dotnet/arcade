@@ -92,9 +92,6 @@ try {
         $tool.Args += $CodeQLAdditionalRunConfigParams
       }
       'binskim' {
-        if ($targetDirectory) {
-          $tool.Args += "`"Target < $TargetDirectory`""
-        }
         $tool.Args += $BinskimAdditionalRunConfigParams
       }
     }
