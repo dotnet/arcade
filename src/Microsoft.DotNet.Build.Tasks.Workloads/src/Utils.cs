@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
             string result = sb.ToString();
 
-            return result.Substring(0, 16);
+            return result.Substring(0, 32);
         }
 
         /// <summary>
