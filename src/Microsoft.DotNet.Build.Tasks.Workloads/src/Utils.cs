@@ -32,7 +32,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 sb.Append(b.ToString("x2"));
             }
 
-            return sb.ToString();
+            string result = sb.ToString();
+
+            return result.Substring(result.Length / 2);
         }
 
         /// <summary>
