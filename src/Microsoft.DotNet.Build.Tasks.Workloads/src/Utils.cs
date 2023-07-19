@@ -14,12 +14,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
     public class Utils
     {
         /// <summary>
-        /// Generate a hash for a string value using a given hash algorithm.
+        /// Generate a truncated hash (first 16 bytes) for a string value using a given hash algorithm.
         /// </summary>
         /// <param name="value">The value to hash.</param>
         /// <param name="hashName">The name of the <see cref="HashAlgorithm"/> to use.</param>
         /// <returns>A string containing the hash result.</returns>
-        public static string GetHash(string value, HashAlgorithmName hashName)
+        public static string GetTruncatedHash(string value, HashAlgorithmName hashName)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(value);
             HashAlgorithm algorithm = HashAlgorithm.Create(hashName.Name);
@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
             string result = sb.ToString();
 
-            return result.Substring(result.Length / 2);
+            return result.Substring(0, 32);
         }
 
         /// <summary>
