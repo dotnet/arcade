@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             bool result = createWorkloadTask.Execute();
 
             Assert.True(result);
-            ITaskItem manifestMsiItem = createWorkloadTask.Msis.Where(m => m.ItemSpec.ToLowerInvariant().Contains("8611bf463c6ff41092008be7191ad949-x64.msi")).FirstOrDefault();
+            ITaskItem manifestMsiItem = createWorkloadTask.Msis.Where(m => m.ItemSpec.ToLowerInvariant().Contains("ff575e3118bd60fedcf654569551f4b2-x64.msi")).FirstOrDefault();
             Assert.NotNull(manifestMsiItem);
 
             // Spot check one of the manifest MSIs. We have additional tests that cover MSI generation.
@@ -202,7 +202,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             bool result = createWorkloadTask.Execute();
 
             Assert.True(result);
-            ITaskItem manifestMsiItem = createWorkloadTask.Msis.Where(m => m.ItemSpec.ToLowerInvariant().Contains("8611bf463c6ff41092008be7191ad949-arm64.msi")).FirstOrDefault();
+            ITaskItem manifestMsiItem = createWorkloadTask.Msis.Where(m => m.ItemSpec.ToLowerInvariant().Contains("ff575e3118bd60fedcf654569551f4b2-arm64.msi")).FirstOrDefault();
             Assert.NotNull(manifestMsiItem);
 
             // Spot check one of the manifest MSIs. We have additional tests that cover MSI generation.

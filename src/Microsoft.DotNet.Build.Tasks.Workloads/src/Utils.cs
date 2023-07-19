@@ -32,7 +32,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 sb.Append(b.ToString("x2"));
             }
 
-            return sb.ToString();
+            string result = sb.ToString();
+
+            return result.Substring(result.Length / 2);
         }
 
         /// <summary>
@@ -51,7 +53,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// <param name="id">The identifier to convert to a safe identifier</param>
         /// <returns>The safe identifier.</returns>
         internal static string ToSafeId(string id, string suffix = null) =>
-            id.Replace("-", ".").Replace(" ", ".").Replace("_", ".")+
+            id.Replace("-", ".").Replace(" ", ".").Replace("_", ".") +
             (string.IsNullOrWhiteSpace(suffix) ? null : $".{suffix}");
 
         /// <summary>
