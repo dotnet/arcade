@@ -93,7 +93,7 @@ try {
       }
       'binskim' {
         if ($targetDirectory) {
-          # There is an issue with Binskim related to scanning specific PDBs. GitHub issue: https://github.com/microsoft/binskim/issues/924.
+          # Binskim crashes due to specific PDBs. GitHub issue: https://github.com/microsoft/binskim/issues/924.
           # We are excluding all `_.pdb` files from the scan.
           $tool.Args += "`"Target < $TargetDirectory\**;-:file|$TargetDirectory\**\_.pdb`""
         }
