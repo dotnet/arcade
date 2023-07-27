@@ -3,7 +3,7 @@
 
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
@@ -39,8 +39,9 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         private string _tenant;
         private string ApiTargeturl { get => $"{ApiBaseUrl}/1/{_tenant}"; }
         private ExponentialRetry RetryHandler;
-
         private Microsoft.Build.Utilities.TaskLoggingHelper _log;
+        private Lazy<IConfidentialClientApplication> _akamsLinksApp;
+       
 
         public AkaMSLinkManager(string clientId, string clientSecret, string tenant, Microsoft.Build.Utilities.TaskLoggingHelper log)
         {
@@ -48,6 +49,12 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
             _clientSecret = clientSecret;
             _tenant = tenant;
             _log = log;
+            _akamsLinksApp = new Lazy<IConfidentialClientApplication>(() => 
+                ConfidentialClientApplicationBuilder
+                    .Create(_clientId)
+                    .WithClientSecret(_clientSecret)
+                    .WithAuthority(Authority)
+                    .Build());
 
             RetryHandler = new ExponentialRetry
             {
@@ -246,7 +253,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 
             using (HttpClient client = await CreateClient())
             {
-                string newOrUpdatedLinksJson = 
+                string newOrUpdatedLinksJson =
                     GetCreateOrUpdateLinkJson(linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, update, links);
 
                 bool success = await RetryHandler.RunAsync(async attempt =>
@@ -389,16 +396,10 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 
         private async Task<HttpClient> CreateClient()
         {
-#if NETCOREAPP
-            var platformParameters = new PlatformParameters();
-#elif NETFRAMEWORK
-            var platformParameters = new PlatformParameters(PromptBehavior.Auto);
-#else
-#error "Unexpected TFM"
-#endif
-            AuthenticationContext authContext = new AuthenticationContext(Authority);
-            ClientCredential credential = new ClientCredential(_clientId, _clientSecret);
-            AuthenticationResult token = await authContext.AcquireTokenAsync(Endpoint, credential);
+            AuthenticationResult token = await _akamsLinksApp.Value
+                .AcquireTokenForClient(new[] { $"{Endpoint}/.default" })
+                .ExecuteAsync()
+                .ConfigureAwait(false);
 
             HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
             httpClient.DefaultRequestHeaders.Add("Authorization", token.CreateAuthorizationHeader());

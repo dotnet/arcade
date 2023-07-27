@@ -342,7 +342,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AzureDevOpsOrg = this.AzureDevOpsOrg,
                 UseStreamingPublishing = this.UseStreamingPublishing,
                 StreamingPublishingMaxClients = this.StreamingPublishingMaxClients,
-                NonStreamingPublishingMaxClients = this.NonStreamingPublishingMaxClients,
+                NonStreamingPublishingMaxClients = this.NonStreamingPublishingMaxClients
             };
         }
     }

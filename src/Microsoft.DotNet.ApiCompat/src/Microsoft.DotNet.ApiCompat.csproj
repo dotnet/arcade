@@ -4,7 +4,12 @@
     <TargetFrameworks>$(NetCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
     <IsPackable>true</IsPackable>
+    <NoWarn>$(NoWarn);0436</NoWarn>
+    <RollForward>Major</RollForward>
     <DefaultExcludesInProjectFolder>Microsoft.DotNet.ApiCompat.Core\**\*</DefaultExcludesInProjectFolder>
+    <!-- APICompat is used as both a CLI tool and an msbuild task via the same assembly. -->
+    <OutputType>Exe</OutputType>
+    <SkipSDKInboxPublishExcludes>true</SkipSDKInboxPublishExcludes>
   </PropertyGroup>
 
   <ItemGroup>
