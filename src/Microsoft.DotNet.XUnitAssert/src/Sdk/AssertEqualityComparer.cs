@@ -87,12 +87,12 @@ namespace Xunit.Sdk
 				return (bool)equalsMethod.Invoke(x, new object[] { y });
 #endif
 			}
+#endif // !XUNIT_AOT
 
 			// Implements IStructuralEquatable?
 			var structuralEquatable = x as IStructuralEquatable;
 			if (structuralEquatable != null && structuralEquatable.Equals(y, new TypeErasedEqualityComparer(innerComparer.Value)))
 				return true;
-#endif // !XUNIT_AOT
 
 			// Implements IComparable<T>?
 			var comparableGeneric = x as IComparable<T>;

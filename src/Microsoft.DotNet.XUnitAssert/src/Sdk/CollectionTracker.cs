@@ -257,12 +257,27 @@ namespace Xunit.Sdk
 			if (elementTypeX != elementTypeY)
 				return false;
 
+#if XUNIT_AOT
+			// Can't use MakeGenericType in AOT
+			return CompareUntypedSets(x.InnerEnumerable, y.InnerEnumerable);
+#else
 			var genericCompareMethod = openGenericCompareTypedSetsMethod.MakeGenericMethod(elementTypeX);
 #if XUNIT_NULLABLE
 			return (bool)genericCompareMethod.Invoke(null, new[] { x, y })!;
 #else
 			return (bool)genericCompareMethod.Invoke(null, new[] { x, y });
 #endif
+#endif // XUNIT_AOT
+		}
+
+		static bool CompareUntypedSets(
+			IEnumerable enumX,
+			IEnumerable enumY)
+		{
+			var setX = new HashSet<object>(enumX.Cast<object>());
+			var setY = new HashSet<object>(enumY.Cast<object>());
+
+			return setX.SetEquals(setY);
 		}
 
 		static bool CompareTypedSets<T>(

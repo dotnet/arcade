@@ -15,6 +15,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -63,16 +64,6 @@ namespace Xunit.Sdk
 		static readonly object[] EmptyObjects = new object[0];
 		static readonly Type[] EmptyTypes = new Type[0];
 
-#if XUNIT_NULLABLE
-		static PropertyInfo? tupleIndexer;
-		static Type? tupleInterfaceType;
-		static PropertyInfo? tupleLength;
-#else
-		static PropertyInfo tupleIndexer;
-		static Type tupleInterfaceType;
-		static PropertyInfo tupleLength;
-#endif
-
 		// List of intrinsic types => C# type names
 		static readonly Dictionary<TypeInfo, string> TypeMappings = new Dictionary<TypeInfo, string>
 		{
@@ -92,20 +83,6 @@ namespace Xunit.Sdk
 			{ typeof(ushort).GetTypeInfo(), "ushort" },
 			{ typeof(string).GetTypeInfo(), "string" },
 		};
-
-		static ArgumentFormatter()
-		{
-			tupleInterfaceType = Type.GetType("System.Runtime.CompilerServices.ITuple");
-
-			if (tupleInterfaceType != null)
-			{
-				tupleIndexer = tupleInterfaceType.GetRuntimeProperty("Item");
-				tupleLength = tupleInterfaceType.GetRuntimeProperty("Length");
-			}
-
-			if (tupleIndexer == null || tupleLength == null)
-				tupleInterfaceType = null;
-		}
 
 		/// <summary>
 		/// Gets the ellipsis value (three middle dots, aka U+00B7).
@@ -156,13 +133,7 @@ namespace Xunit.Sdk
 		/// </summary>
 		/// <param name="value">The value to be formatted</param>
 		/// <param name="depth">The optional printing depth (1 indicates a top-level value)</param>
-		public static string Format(
-#if XUNIT_NULLABLE
-			object? value,
-#else
-			object value,
-#endif
-			int depth = 1)
+		public static string Format<T>(T value, int depth = 1)
 		{
 			if (value == null)
 				return "null";
@@ -176,8 +147,8 @@ namespace Xunit.Sdk
 				if (value.GetType().GetTypeInfo().IsEnum)
 					return FormatEnumValue(value);
 
-				if (value is char)
-					return FormatCharValue((char)value);
+				if (value is char c)
+					return FormatCharValue(c);
 
 				if (value is float)
 					return FormatFloatValue(value);
@@ -205,8 +176,8 @@ namespace Xunit.Sdk
 				var type = value.GetType();
 				var typeInfo = type.GetTypeInfo();
 
-				if (tupleInterfaceType != null && type.GetTypeInfo().ImplementedInterfaces.Contains(tupleInterfaceType))
-					return FormatTupleValue(value, depth);
+				if (value is ITuple tuple)
+					return FormatTupleValue(tuple, depth);
 
 				if (typeInfo.IsValueType)
 					return FormatValueTypeValue(value, typeInfo);
@@ -268,7 +239,11 @@ namespace Xunit.Sdk
 		static string FormatComplexValue(
 			object value,
 			int depth,
-			Type type,
+			[DynamicallyAccessedMembers(
+				DynamicallyAccessedMemberTypes.PublicFields |
+				DynamicallyAccessedMemberTypes.NonPublicFields |
+				DynamicallyAccessedMemberTypes.PublicProperties |
+				DynamicallyAccessedMemberTypes.NonPublicProperties)] Type type,
 			bool isAnonymousType)
 		{
 			var typeName = isAnonymousType ? "" : $"{type.Name} ";
@@ -368,26 +343,18 @@ namespace Xunit.Sdk
 		}
 
 		static string FormatTupleValue(
-			object tupleParameter,
+			ITuple tupleParameter,
 			int depth)
 		{
 			var result = new StringBuilder("Tuple (");
-#if XUNIT_NULLABLE
-			var length = (int)tupleLength!.GetValue(tupleParameter)!;
-#else
-			var length = (int)tupleLength.GetValue(tupleParameter);
-#endif
+			var length = tupleParameter.Length;
 
 			for (var idx = 0; idx < length; ++idx)
 			{
 				if (idx != 0)
 					result.Append(", ");
 
-#if XUNIT_NULLABLE
-				var value = tupleIndexer!.GetValue(tupleParameter, new object[] { idx });
-#else
-				var value = tupleIndexer.GetValue(tupleParameter, new object[] { idx });
-#endif
+				var value = tupleParameter[idx];
 				result.Append(Format(value, depth + 1));
 			}
 
@@ -462,12 +429,12 @@ namespace Xunit.Sdk
 
 		static string FormatValueTypeValue(
 			object value,
-			TypeInfo typeInfo)
+			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicProperties)] TypeInfo typeInfo)
 		{
 			if (typeInfo.IsGenericType && typeInfo.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
 			{
-				var k = typeInfo.GetDeclaredProperty("Key")?.GetValue(value, null);
-				var v = typeInfo.GetDeclaredProperty("Value")?.GetValue(value, null);
+				var k = typeInfo.GetProperty("Key")?.GetValue(value, null);
+				var v = typeInfo.GetProperty("Value")?.GetValue(value, null);
 
 				return $"[{Format(k)}] = {Format(v)}";
 			}
