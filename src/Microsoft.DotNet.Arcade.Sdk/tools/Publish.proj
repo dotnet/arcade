@@ -71,7 +71,9 @@
       <PackagesToPublish Include="$(ArtifactsNonShippingPackagesDir)**/*.nupkg" IsShipping="false" />
       <PackagesToPublish Remove="@(ExistingSymbolPackages)" />
 
-      <PackagesToPublish Update="@(PackagesToPublish)" Condition="'$(AutoGenerateSymbolPackages)' == 'true'">
+      <!-- Do not generate symbol packages when building from source. The generate package for the source build intermediate
+           will simply contain the same, non-symbol content. -->
+      <PackagesToPublish Update="@(PackagesToPublish)" Condition="'$(AutoGenerateSymbolPackages)' == 'true' and '$(ArcadeBuildFromSource)' != 'true'">
         <SymbolPackageToGenerate Condition="!Exists('%(RootDir)%(Directory)%(Filename).symbols.nupkg')">$(SymbolPackagesDir)%(Filename).symbols.nupkg</SymbolPackageToGenerate>
       </PackagesToPublish>
 
