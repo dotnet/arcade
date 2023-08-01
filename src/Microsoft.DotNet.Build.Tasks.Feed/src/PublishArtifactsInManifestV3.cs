@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -92,15 +93,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 // of the assets being published so we can add a new location for them.
                 IMaestroApi client = ApiFactory.GetAuthenticated(MaestroApiEndpoint, BuildAssetRegistryToken);
                 Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
-                Dictionary<string, HashSet<Asset>> buildAssets = CreateBuildAssetDictionary(buildInformation);
+                ReadOnlyDictionary<string, Asset> buildAssets = CreateBuildAssetDictionary(buildInformation);
+
+                if (Log.HasLoggedErrors)
+                {
+                    return false;
+                }
 
                 foreach (var targetChannelId in targetChannelsIds.Distinct())
                 {
                     TargetChannelConfig targetChannelConfig = PublishingConstants.ChannelInfos
                         .Where(ci =>
                             ci.Id == targetChannelId &&
-                            (ci.PublishingInfraVersion == PublishingInfraVersion.All ||
-                             ci.PublishingInfraVersion == PublishingInfraVersion.Next))
+                            ci.PublishingInfraVersion == PublishingInfraVersion.Latest)
                         .FirstOrDefault();
 
                     // Invalid channel ID was supplied
