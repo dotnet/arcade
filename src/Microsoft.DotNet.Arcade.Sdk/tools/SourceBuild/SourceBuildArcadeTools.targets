@@ -36,11 +36,6 @@
             (('$(ArcadeBuildFromSource)' == 'true' and '$(ArcadeInnerBuildFromSource)' == 'true' and '@(SourceBuildIntermediateNupkgReference)' != '') or
               '$(SetUpSourceBuildIntermediateNupkgCache)' == 'true')"
           AfterTargets="Restore">
-    <PropertyGroup>
-      <SourceBuildNuGetSourceName>source-build-int-nupkg-cache</SourceBuildNuGetSourceName>
-      <SourceBuiltNupkgCacheDir>$([MSBuild]::NormalizeDirectory('$(ArtifactsObjDir)', 'source-built-upstream-cache'))</SourceBuiltNupkgCacheDir>
-    </PropertyGroup>
-
     <ItemGroup>
       <IntermediateNupkgSourceDir Include="$([MSBuild]::NormalizeDirectory(
         '$(NuGetPackageRoot)',
@@ -56,7 +51,7 @@
 
     <Copy
       SourceFiles="@(SourceBuiltNupkgFile)"
-      DestinationFiles="@(SourceBuiltNupkgFile -> '$(SourceBuiltNupkgCacheDir)%(Filename)%(Extension)')" />
+      DestinationFiles="@(SourceBuiltNupkgFile -> '$(CurrentRepoSourceBuiltNupkgCacheDir)%(Filename)%(Extension)')" />
 
     <!-- Remove the original source build intermediate directory. The extracted cached remains.
          This ensures that all sources of intermediates are in the nupkg cache dir, and tooling like CG can
@@ -66,12 +61,12 @@
 
     <AddSourceToNuGetConfig
       NuGetConfigFile="$(RestoreConfigFile)"
-      SourceName="$(SourceBuildNuGetSourceName)"
-      SourcePath="$(SourceBuiltNupkgCacheDir)" />
+      SourceName="$(CurrentRepoSourceBuildNuGetSourceName)"
+      SourcePath="$(CurrentRepoSourceBuiltNupkgCacheDir)" />
 
     <AddSourceMappingToNugetConfig
       NuGetConfigFile="$(RestoreConfigFile)"
-      SourceName="$(SourceBuildNuGetSourceName)" />
+      SourceName="$(CurrentRepoSourceBuildNuGetSourceName)" />
   </Target>
 
 </Project>

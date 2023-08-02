@@ -121,6 +121,8 @@ steps:
 
 # Manually inject component detection so that we can ignore the source build upstream cache, which contains
 # a nupkg cache of input packages (a local feed).
+# This path must match the upstream cache path in property 'CurrentRepoSourceBuiltNupkgCacheDir'
+# in src\Microsoft.DotNet.Arcade.Sdk\tools\SourceBuild\SourceBuildArcade.targets
 - task: ComponentGovernanceComponentDetection@0
   displayName: Component Detection (Exclude upstream cache)
   inputs:
