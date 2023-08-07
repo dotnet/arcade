@@ -3,8 +3,6 @@
 
 using System;
 using System.CommandLine;
-using System.CommandLine.Invocation;
-using System.CommandLine.Parsing;
 using Microsoft.DotNet.VersionTools.Automation;
 
 namespace Microsoft.DotNet.VersionTools.Cli;
@@ -15,35 +13,35 @@ class Program
     {
         //// Global options
 
-        RootCommand rootCommand = new("Microsoft.DotNet.VersionTools.Cli v" + Environment.Version.ToString(2))
+        CliRootCommand rootCommand = new("Microsoft.DotNet.VersionTools.Cli v" + Environment.Version.ToString(2))
         {
             TreatUnmatchedTokensAsErrors = true
         };
 
         // Package command
-        Option<string> assetsDirectoryOption = new("--assets-path",
-            "Path to the directory where the nuget assets are located")
+        CliOption<string> assetsDirectoryOption = new("--assets-path", "-p")
         {
-            Arity = ArgumentArity.ExactlyOne,
-            IsRequired = true,
+            Description = "Path to the directory where the nuget assets are located",
+            Required = true
         };
 
-        Option<string> searchPatternOption = new("--search-pattern",
-            "The search string to match against the names of subdirectories in --assets-path. See Directory.GetFiles for details.")
+        CliOption<string> searchPatternOption = new("--search-pattern", "-s")
         {
-            Arity = ArgumentArity.ExactlyOne,
+            Description = "The search string to match against the names of subdirectories in --assets-path. See Directory.GetFiles for details.",
+            DefaultValueFactory = _ => "*.nupkg"
         };
-        searchPatternOption.SetDefaultValue("*.nupkg");
 
-        Option<bool> recursiveOption = new("--recursive",
-            "Search for nuget assets recursively.");
-        recursiveOption.SetDefaultValue(true);
+        CliOption<bool> recursiveOption = new("--recursive", "-r")
+        {
+            Description = "Search for nuget assets recursively.",
+            DefaultValueFactory = _ => true
+        };
 
-        Command trimAssetVersion = new("trim-assets-version", "Trim the version for given nuget assets.");
-        trimAssetVersion.AddOption(assetsDirectoryOption);
-        trimAssetVersion.AddOption(searchPatternOption);
-        trimAssetVersion.AddOption(recursiveOption);
-        trimAssetVersion.SetHandler((InvocationContext context) =>
+        CliCommand trimAssetVersion = new("trim-assets-version", "Trim the version for given nuget assets.");
+        trimAssetVersion.Options.Add(assetsDirectoryOption);
+        trimAssetVersion.Options.Add(searchPatternOption);
+        trimAssetVersion.Options.Add(recursiveOption);
+        trimAssetVersion.SetAction(result =>
         {
             var operation = new VersionTrimmingOperation(
                 new VersionTrimmingOperation.Context
@@ -52,15 +50,14 @@ class Program
                     DirectoryProxy = new DirectoryProxy(),
                     FileProxy = new FileProxy(),
 
-                    AssetsDirectory = context.ParseResult.GetValueForOption(assetsDirectoryOption),
-                    SearchPattern = context.ParseResult.GetValueForOption(searchPatternOption),
-                    Recursive = context.ParseResult.GetValueForOption(recursiveOption)
+                    AssetsDirectory = result.GetValue(assetsDirectoryOption),
+                    SearchPattern = result.GetValue(searchPatternOption),
+                    Recursive = result.GetValue(recursiveOption)
                 });
-
-            context.ExitCode = (int)operation.Execute();
+            return (int)operation.Execute();
         });
 
-        rootCommand.AddCommand(trimAssetVersion);
-        return rootCommand.Invoke(args);
+        rootCommand.Subcommands.Add(trimAssetVersion);
+        return new CliConfiguration(rootCommand).Invoke(args);
     }
 }
