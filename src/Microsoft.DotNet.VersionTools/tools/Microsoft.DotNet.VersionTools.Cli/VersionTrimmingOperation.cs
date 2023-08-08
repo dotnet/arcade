@@ -4,6 +4,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using Microsoft.DotNet.VersionTools.Automation;
 
 namespace Microsoft.DotNet.VersionTools.Cli;
@@ -37,10 +38,17 @@ public class VersionTrimmingOperation : IOperation
             return IOperation.ExitCodes.ERROR_FILE_NOT_FOUND;
         }
 
-        foreach (var assetFileName in _context.DirectoryProxy.GetFiles(
+        var assets = _context.DirectoryProxy.GetFiles(
             _context.AssetsDirectory,
             _context.SearchPattern,
-            _context.Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly))
+            _context.Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+        if (assets.Any(a => Path.GetExtension(a) != ".nupkg"))
+        {
+            throw new NotImplementedException("Version trimming applies only to NuGet assets. " +
+                $"The search pattern `{_context.SearchPattern}` includes non-NuGet assets.");
+        }
+
+        foreach (var assetFileName in assets)
         {
             NupkgInfo info = null;
             try
