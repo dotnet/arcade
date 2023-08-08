@@ -5,11 +5,11 @@ namespace Microsoft.DotNet.VersionTools.Cli;
 
 public interface IOperation
 {
-    enum ExitCodes : int
+    enum ExitCode : int
     {
-        ERROR_SUCCESS = 0, // (0x0) The operation completed successfully.
-        ERROR_FILE_NOT_FOUND = 2, // (0x2) The system cannot find the file specified.
+        Success = 0, // (0x0) The operation completed successfully.
+        ErrorFileNotFount = 2, // (0x2) The system cannot find the file specified.
     }
 
-    ExitCodes Execute();
+    ExitCode Execute();
 }

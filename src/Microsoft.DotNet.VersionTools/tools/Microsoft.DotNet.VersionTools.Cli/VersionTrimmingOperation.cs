@@ -30,12 +30,12 @@ public class VersionTrimmingOperation : IOperation
 
     public VersionTrimmingOperation(Context context) => _context = context;
 
-    public IOperation.ExitCodes Execute()
+    public IOperation.ExitCode Execute()
     {
         if (!_context.DirectoryProxy.Exists(_context.AssetsDirectory))
         {
             Console.WriteLine($"{_context.AssetsDirectory} does not exist");
-            return IOperation.ExitCodes.ERROR_FILE_NOT_FOUND;
+            return IOperation.ExitCode.ErrorFileNotFount;
         }
 
         var assets = _context.DirectoryProxy.GetFiles(
@@ -57,7 +57,7 @@ public class VersionTrimmingOperation : IOperation
             }
             catch (InvalidDataException e)
             {
-                Console.WriteLine($"Asset {assetFileName} in not a valid nuget package: {e.Message}");
+                Console.Error.WriteLine($"Asset {assetFileName} in not a valid nuget package: {e.Message}");
                 continue;
             }
 
@@ -72,11 +72,11 @@ public class VersionTrimmingOperation : IOperation
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Version trimming of {assetFileName} failed: {e.Message}");
+                Console.Error.WriteLine($"Version trimming of {assetFileName} failed: {e.Message}");
                 continue;
             }
         }
 
-        return IOperation.ExitCodes.ERROR_SUCCESS;
+        return IOperation.ExitCode.Success;
     }
 }

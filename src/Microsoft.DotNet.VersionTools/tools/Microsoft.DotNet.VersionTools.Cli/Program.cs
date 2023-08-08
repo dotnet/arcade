@@ -19,9 +19,9 @@ class Program
         };
 
         // Package command
-        CliOption<string> assetsDirectoryOption = new("--assets-path", "-p")
+        CliOption<string> assetsDirectoryOption = new("--assets-path", "-d")
         {
-            Description = "Path to the directory where the nuget assets are located",
+            Description = "Path to the directory where the assets are located",
             Required = true
         };
 
@@ -33,15 +33,15 @@ class Program
 
         CliOption<bool> recursiveOption = new("--recursive", "-r")
         {
-            Description = "Search for nuget assets recursively.",
+            Description = "Search for assets recursively.",
             DefaultValueFactory = _ => true
         };
 
-        CliCommand trimAssetVersion = new("trim-assets-version", "Trim the version for given nuget assets.");
-        trimAssetVersion.Options.Add(assetsDirectoryOption);
-        trimAssetVersion.Options.Add(searchPatternOption);
-        trimAssetVersion.Options.Add(recursiveOption);
-        trimAssetVersion.SetAction(result =>
+        CliCommand trimAssetVersionCommand = new("trim-assets-version", "Trim versions from provided assets. Currently, only NuGet packages are supported.");
+        trimAssetVersionCommand.Options.Add(assetsDirectoryOption);
+        trimAssetVersionCommand.Options.Add(searchPatternOption);
+        trimAssetVersionCommand.Options.Add(recursiveOption);
+        trimAssetVersionCommand.SetAction(result =>
         {
             var operation = new VersionTrimmingOperation(
                 new VersionTrimmingOperation.Context
@@ -57,7 +57,7 @@ class Program
             return (int)operation.Execute();
         });
 
-        rootCommand.Subcommands.Add(trimAssetVersion);
+        rootCommand.Subcommands.Add(trimAssetVersionCommand);
         return new CliConfiguration(rootCommand).Invoke(args);
     }
 }

@@ -50,7 +50,7 @@ public class VersionTrimmingOperationTests
                 Recursive = true
             });
 
-        operation.Execute().Should().Be(IOperation.ExitCodes.ERROR_SUCCESS);
+        operation.Execute().Should().Be(IOperation.ExitCode.Success);
 
         fileProxy.Verify(v => v.Move(
                 ASSETS_DIRECTORY + @"\package.8.0.0-dev.nupkg",
@@ -81,7 +81,7 @@ public class VersionTrimmingOperationTests
                 Recursive = true
             });
 
-        operation.Execute().Should().Be(IOperation.ExitCodes.ERROR_FILE_NOT_FOUND);
+        operation.Execute().Should().Be(IOperation.ExitCode.ErrorFileNotFount);
     }
 
     [Fact]
@@ -109,7 +109,7 @@ public class VersionTrimmingOperationTests
                 Recursive = true
             });
 
-        operation.Execute().Should().Be(IOperation.ExitCodes.ERROR_SUCCESS);
+        operation.Execute().Should().Be(IOperation.ExitCode.Success);
 
         nupkgInfoFactory.Verify(v => v.CreateNupkgInfo(
                 ASSETS_DIRECTORY + @"\file.nupkg"), Times.Exactly(1));
