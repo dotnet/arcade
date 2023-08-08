@@ -164,6 +164,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             (TargetFeedContentType.Checksum, FeedStagingInternalForChecksums),
         };
 
+        private static TargetFeedSpecification[] DotNet9Feeds =
+        {
+            (TargetFeedContentType.Package, FeedDotNet9Shipping, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNet9Transport, AssetSelection.NonShippingOnly),
+            (InstallersAndSymbols, FeedStagingForInstallers),
+            (TargetFeedContentType.Checksum, FeedStagingForChecksums),
+        };
+
         private static TargetFeedSpecification[] DotNetEngFeeds =
         {
             (TargetFeedContentType.Package, FeedDotNetEng, AssetSelection.ShippingOnly),
