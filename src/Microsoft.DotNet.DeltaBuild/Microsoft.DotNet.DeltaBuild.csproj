@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>net7.0;$(NetCurrent)</TargetFrameworks>
+    <Description>Tool to determine projects affected by a change based on source control.</Description>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>dotnet-deltabuild</ToolCommandName>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <StrongNameKeyId>Open</StrongNameKeyId>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Microsoft.Arcade.Common\Microsoft.Arcade.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LibGit2Sharp" Version="$(LibGit2SharpVersion)" />
+    <PackageReference Include="MSBuild.StructuredLogger" Version="$(MSBuildStructuredLoggerVersion)" />
+    <PackageReference Include="System.CommandLine" Version="$(SystemCommandLineVersion)" />
+    <PackageReference Include="System.CommandLine.NamingConventionBinder" Version="$(SystemCommandLineVersion)" />
+  </ItemGroup>
+
+  <!--
+    Workaround for 'error : Invalid ELF BuildID '<null>' for tools/net8.0/any/runtimes/linux-musl-arm/native/libgit2-b7bad55.so'
+    See related: https://github.com/dotnet/symstore/issues/81
+    -->
+  <Target Name="_ExcludeAssembliesNuGetPackages" BeforeTargets="GenerateNuspec">
+    <ItemGroup>
+      <_PackageFilesToExclude Include="$(PublishDir)/runtimes/**/native/**/*.dll" />
+      <_PackageFilesToExclude Include="$(PublishDir)/runtimes/**/native/**/*.so" />
+    </ItemGroup>
+  </Target>
+
+</Project>
