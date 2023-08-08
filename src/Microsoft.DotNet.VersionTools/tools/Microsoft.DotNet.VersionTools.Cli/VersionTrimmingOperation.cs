@@ -20,6 +20,7 @@ public class VersionTrimmingOperation : IOperation
         public INupkgInfoFactory NupkgInfoFactory { get; set; }
         public IFileProxy FileProxy { get; set; }
         public IDirectoryProxy DirectoryProxy { get; set; }
+        public ILogger Logger { get; set; }
 
         public string AssetsDirectory { get; set; }
         public string SearchPattern { get; set; }
@@ -34,7 +35,7 @@ public class VersionTrimmingOperation : IOperation
     {
         if (!_context.DirectoryProxy.Exists(_context.AssetsDirectory))
         {
-            Console.WriteLine($"{_context.AssetsDirectory} does not exist");
+            _context.Logger.WriteError($"{_context.AssetsDirectory} does not exist");
             return IOperation.ExitCode.ErrorFileNotFount;
         }
 
@@ -57,14 +58,14 @@ public class VersionTrimmingOperation : IOperation
             }
             catch (InvalidDataException e)
             {
-                Console.Error.WriteLine($"Asset {assetFileName} in not a valid nuget package: {e.Message}");
+                _context.Logger.WriteError($"Asset {assetFileName} in not a valid nuget package: {e.Message}");
                 continue;
             }
 
             string newAssetFileName = assetFileName.Replace($".{info.Version}", null);
             if (assetFileName == newAssetFileName) continue;
 
-            Console.WriteLine($"Processing {assetFileName} ...");
+            _context.Logger.WriteMessage($"Processing {assetFileName} ...");
 
             try
             {
@@ -72,7 +73,7 @@ public class VersionTrimmingOperation : IOperation
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine($"Version trimming of {assetFileName} failed: {e.Message}");
+                _context.Logger.WriteError($"Version trimming of {assetFileName} failed: {e.Message}");
                 continue;
             }
         }

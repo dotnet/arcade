@@ -37,6 +37,7 @@ public class VersionTrimmingOperationTests
             .Returns(new string[] {
                 ASSETS_DIRECTORY + @"\package.8.0.0-dev.nupkg",
                 ASSETS_DIRECTORY + @"\SubDir\package.8.0.0-dev.nupkg" });
+        var logger = new Mock<ILogger>();
 
         var operation = new VersionTrimmingOperation(
             new VersionTrimmingOperation.Context
@@ -44,6 +45,7 @@ public class VersionTrimmingOperationTests
                 NupkgInfoFactory = nupkgInfoFactory.Object,
                 DirectoryProxy = directoryProxy.Object,
                 FileProxy = fileProxy.Object,
+                Logger = logger.Object,
 
                 AssetsDirectory = ASSETS_DIRECTORY,
                 SearchPattern = SEARCH_PATTERN,
@@ -69,12 +71,15 @@ public class VersionTrimmingOperationTests
         var directoryProxy = new Mock<IDirectoryProxy>();
         directoryProxy.Setup(m => m.Exists(ASSETS_DIRECTORY)).Returns(false);
 
+        var logger = new Mock<ILogger>();
+
         var operation = new VersionTrimmingOperation(
             new VersionTrimmingOperation.Context
             {
                 NupkgInfoFactory = nupkgInfoFactory.Object,
                 DirectoryProxy = directoryProxy.Object,
                 FileProxy = fileProxy.Object,
+                Logger = logger.Object,
 
                 AssetsDirectory = ASSETS_DIRECTORY,
                 SearchPattern = SEARCH_PATTERN,
@@ -97,12 +102,15 @@ public class VersionTrimmingOperationTests
         directoryProxy.Setup(m => m.GetFiles(ASSETS_DIRECTORY, "*.nupkg", SearchOption.AllDirectories))
             .Returns(new string[] { ASSETS_DIRECTORY + @"\file.nupkg" });
 
+        var logger = new Mock<ILogger>();
+
         var operation = new VersionTrimmingOperation(
             new VersionTrimmingOperation.Context
             {
                 NupkgInfoFactory = nupkgInfoFactory.Object,
                 DirectoryProxy = directoryProxy.Object,
                 FileProxy = fileProxy.Object,
+                Logger = logger.Object,
 
                 AssetsDirectory = ASSETS_DIRECTORY,
                 SearchPattern = "*.nupkg",
@@ -127,12 +135,15 @@ public class VersionTrimmingOperationTests
         directoryProxy.Setup(m => m.GetFiles(ASSETS_DIRECTORY, "*.json", SearchOption.AllDirectories))
             .Returns(new string[] { ASSETS_DIRECTORY + @"\file.json" });
 
+        var logger = new Mock<ILogger>();
+
         var operation = new VersionTrimmingOperation(
             new VersionTrimmingOperation.Context
             {
                 NupkgInfoFactory = nupkgInfoFactory.Object,
                 DirectoryProxy = directoryProxy.Object,
                 FileProxy = fileProxy.Object,
+                Logger = logger.Object,
 
                 AssetsDirectory = ASSETS_DIRECTORY,
                 SearchPattern = "*.json",

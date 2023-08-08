@@ -49,6 +49,7 @@ class Program
                     NupkgInfoFactory = new NupkgInfoFactory(new PackageArchiveReaderFactory()),
                     DirectoryProxy = new DirectoryProxy(),
                     FileProxy = new FileProxy(),
+                    Logger = new ConsoleLogger(),
 
                     AssetsDirectory = result.GetValue(assetsDirectoryOption),
                     SearchPattern = result.GetValue(searchPatternOption),
