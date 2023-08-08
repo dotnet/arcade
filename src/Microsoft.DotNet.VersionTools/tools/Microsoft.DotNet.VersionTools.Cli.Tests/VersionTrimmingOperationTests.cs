@@ -1,13 +1,14 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.DotNet.VersionTools.Automation;
-using NuGet.Packaging.Core;
 using FluentAssertions;
+using Microsoft.DotNet.VersionTools.Automation;
 using Moq;
-using Xunit;
-using System.IO;
+using NuGet.Packaging.Core;
 using NuGet.Versioning;
+using System.IO;
+using System;
+using Xunit;
 
 namespace Microsoft.DotNet.VersionTools.Cli.Tests;
 
@@ -84,11 +85,41 @@ public class VersionTrimmingOperationTests
     }
 
     [Fact]
-    public void TestInvalidInputs()
+    public void TestInvalidInputNuGetAsset()
     {
         var nupkgInfoFactory = new Mock<INupkgInfoFactory>();
         nupkgInfoFactory.Setup(m => m.CreateNupkgInfo(It.IsAny<string>())).Throws(new InvalidDataException()).Verifiable();
 
+        var fileProxy = new Mock<IFileProxy>();
+
+        var directoryProxy = new Mock<IDirectoryProxy>();
+        directoryProxy.Setup(m => m.Exists(ASSETS_DIRECTORY)).Returns(true);
+        directoryProxy.Setup(m => m.GetFiles(ASSETS_DIRECTORY, "*.nupkg", SearchOption.AllDirectories))
+            .Returns(new string[] { ASSETS_DIRECTORY + @"\file.nupkg" });
+
+        var operation = new VersionTrimmingOperation(
+            new VersionTrimmingOperation.Context
+            {
+                NupkgInfoFactory = nupkgInfoFactory.Object,
+                DirectoryProxy = directoryProxy.Object,
+                FileProxy = fileProxy.Object,
+
+                AssetsDirectory = ASSETS_DIRECTORY,
+                SearchPattern = "*.nupkg",
+                Recursive = true
+            });
+
+        operation.Execute().Should().Be(IOperation.ExitCodes.ERROR_SUCCESS);
+
+        nupkgInfoFactory.Verify(v => v.CreateNupkgInfo(
+                ASSETS_DIRECTORY + @"\file.nupkg"), Times.Exactly(1));
+    }
+
+
+    [Fact]
+    public void TestSeachPatternIncludesNonNuGetAssets()
+    {
+        var nupkgInfoFactory = new Mock<INupkgInfoFactory>();
         var fileProxy = new Mock<IFileProxy>();
 
         var directoryProxy = new Mock<IDirectoryProxy>();
@@ -108,9 +139,7 @@ public class VersionTrimmingOperationTests
                 Recursive = true
             });
 
-        operation.Execute().Should().Be(IOperation.ExitCodes.ERROR_SUCCESS);
-
-        nupkgInfoFactory.Verify(v => v.CreateNupkgInfo(
-                ASSETS_DIRECTORY + @"\file.json"), Times.Exactly(1));
+        Action shouldFail = () => operation.Execute();
+        shouldFail.Should().Throw<NotImplementedException>();
     }
 }
