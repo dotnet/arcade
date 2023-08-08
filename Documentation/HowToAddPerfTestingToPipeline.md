@@ -139,7 +139,8 @@ The performance template also supplies support for running PRs on physical hardw
 
 For PR testing, the Compare switch is required. It does the following:
 
-* Changes the helix queue to be Windows.10.Amd64.19H1.Tiger.Perf.Open or Ubuntu.1804.Amd64.Tiger.Perf.Open (i.e. physical perf hardware).
+<!-- Are Windows helix queues still in 19H1? -->
+* Changes the helix queue to be Windows.10.Amd64.19H1.Tiger.Perf.Open or Ubuntu.2204.Amd64.Tiger.Perf.Open (i.e. physical perf hardware).
 * Sets up all perf parameters to match a normal perf run
 * Sets FailOnTestFailure to false in the helix project, so that regressions do not fail the run
 * Tells helix to run the baseline as a precommand

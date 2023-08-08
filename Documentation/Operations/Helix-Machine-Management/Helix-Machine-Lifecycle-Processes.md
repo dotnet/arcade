@@ -179,9 +179,9 @@ Machines in the following queues need to be updated to their latest patch versio
 Linux machines (raspbian 9 iot devices should NOT get updated)
 
 - alpine.amd64.tiger.perf
-- ubuntu.1804.amd64.owl.perf
-- ubuntu.1804.amd64.tiger.perf
-- ubuntu.1804.amd64.tiger.perf.open
+- ubuntu.2204.amd64.owl.perf
+- ubuntu.2204.amd64.tiger.perf
+- ubuntu.2204.amd64.tiger.perf.open
 - ubuntu.1804.arm64.perf
 - ubuntu.1804.armarch
 - ubuntu.1804.armarch.open

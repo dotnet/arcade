@@ -19,7 +19,7 @@ Here's a list of the top 5 highest work item wait times:
 | Queue                              | Work Item Wait Time | Difference in Moving Avg |
 | ---------------------------------- | ------------------- | ------------------------ |
 | [`Windows.11.Amd64.Client.Open`]() | **43min 2s**        | *+12%* 📈                 |
-| [`Ubuntu.1804.Amd64.Open`]()       | **43min 2s**        | *-3.0%* 📉                |
+| [`Ubuntu.2204.Amd64.Open`]()       | **43min 2s**        | *-3.0%* 📉                |
 | [`Debian.11.Amd64.Open`]()         | **43min 2s**        | *+0.1%* 📈                |
 | [`Windows.11.Amd64.Client.Open`]() | **43min 2s**        | *+1%* 📈                  |
 | [`Windows.11.Amd64.Client.Open`]() | **43min 2s**        | *-7%* 📉                  |
@@ -80,9 +80,9 @@ For more in-depth information on the status of Helix, visit our [Grafana Dashboa
 * `Raspbian.10.Armv6.Open`              
 * `RedHat.7.Amd64.Open`                 
 * `SLES.15.Amd64.Open`               
-* `Ubuntu.1804.Amd64`                   
+* `Ubuntu.2204.Amd64`                   
 * `Ubuntu.1804.Amd64.Android.29.Open`   
-* `Ubuntu.1804.Amd64.Open`           
+* `Ubuntu.2204.Amd64.Open`           
 * `Ubuntu.1804.ArmArch.Open`            
 * `Ubuntu.2004.S390X.Experimental.Open` 
 * `Ubuntu.2110.Amd64.Open`           

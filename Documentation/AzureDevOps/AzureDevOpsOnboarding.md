@@ -65,7 +65,7 @@ To use an Azure Pool provider, you need to specify both the name of the pool pro
 ``` yaml
   pool:
     name: NetCore1ESPool-Internal
-    demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
+    demands: ImageOverride -equals Build.Ubuntu.2204.Amd64
 ```          
 
 ### dnceng/internal pools:
@@ -86,7 +86,7 @@ A couple of notes:
 - [Hosted pool](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=vsts&tabs=yaml) capabilities
 
   - For official builds (with the exception of MacOS builds), hosted images should be avoided.  Contact @dnceng if you are in doubt about this. 
-  - "1ES approved" versions of existing hosted images are included in all pool providers noted and are listed under  https://helix.dot.net/#1esPools.  E.g. `1es-ubuntu-1804` is a more locked-down version of the existing hosted image `ubuntu-1804`
+  - "1ES approved" versions of existing hosted images are included in all pool providers noted and are listed under  https://helix.dot.net/#1esPools.  E.g. `1es-ubuntu-2204` is a more locked-down version of the existing hosted image `ubuntu-2204`
 
 ## CI badge link
 

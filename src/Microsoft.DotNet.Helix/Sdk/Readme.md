@@ -163,7 +163,7 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
       The project is built once per entry in this list with <HelixTargetQueue> set to the current list element value.
       Note that all payloads sent need to be able to run on all variations included.
     -->
-    <HelixTargetQueues>Ubuntu.1804.Amd64.Open;Ubuntu.1604.Amd64.Open;(Alpine.39.Amd64)Ubuntu.1804.Amd64.Open@mcr.microsoft.com/dotnet-buildtools/prereqs:alpine-3.9-helix-bfcd90a-20200123191053</HelixTargetQueues>
+    <HelixTargetQueues>Ubuntu.2204.Amd64.Open;Ubuntu.1604.Amd64.Open;(Alpine.39.Amd64)Ubuntu.2204.Amd64.Open@mcr.microsoft.com/dotnet-buildtools/prereqs:alpine-3.9-helix-bfcd90a-20200123191053</HelixTargetQueues>
 
     <!-- 'true' to download dotnet cli and add it to the path for every workitem. Default 'false' -->
     <IncludeDotNetCli>true</IncludeDotNetCli>

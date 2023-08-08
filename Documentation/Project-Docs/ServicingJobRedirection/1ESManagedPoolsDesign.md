@@ -104,13 +104,13 @@ Example ARM template for 1ES hosted pool looks like following:
       }
     },
     {
-      "name": "BuildPool.Ubuntu.1804.Amd64.Open",
+      "name": "BuildPool.Ubuntu.2204.Amd64.Open",
       "type": "Microsoft.CloudTest/images",
       "apiVersion": "2020-05-07",
       "location": "westus2",
       "properties": {
         "imageType": "Gallery",
-        "resourceId": "/HelixImages/BuildPool.Ubuntu.1804.Amd64/2021.0503.000052"
+        "resourceId": "/HelixImages/BuildPool.Ubuntu.2204.Amd64/2021.0503.000052"
       }
     },
     // ...
@@ -119,7 +119,7 @@ Example ARM template for 1ES hosted pool looks like following:
       "type": "Microsoft.CloudTest/hostedpools",
       "dependsOn": [
         "[resourceId('Microsoft.CloudTest/images', 'BuildPool.Windows.10.Amd64.Open')]"
-        "[resourceId('Microsoft.CloudTest/images', 'BuildPool.Ubuntu.1804.Amd64.Open')]"
+        "[resourceId('Microsoft.CloudTest/images', 'BuildPool.Ubuntu.2204.Amd64.Open')]"
         // ...
       ],
       "apiVersion": "2020-05-07",
@@ -136,7 +136,7 @@ Example ARM template for 1ES hosted pool looks like following:
             "poolBufferPercentage": "*"
           },
           {
-            "imageName": "BuildPool.Ubuntu.1804.Amd64.Open",
+            "imageName": "BuildPool.Ubuntu.2204.Amd64.Open",
             "poolBufferPercentage": "*"
           }
           // ...
