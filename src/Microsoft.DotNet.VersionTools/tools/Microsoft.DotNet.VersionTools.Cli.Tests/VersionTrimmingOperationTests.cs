@@ -17,10 +17,6 @@ public class VersionTrimmingOperationTests
     private const string ASSETS_DIRECTORY = @"\assets\directory";
     private const string SEARCH_PATTERN = "*.nupkg";
 
-    public VersionTrimmingOperationTests()
-    {
-    }
-
     [Fact]
     public void TestRemoveVersionFromFileNames()
     {
@@ -38,6 +34,7 @@ public class VersionTrimmingOperationTests
                 ASSETS_DIRECTORY + @"\package.8.0.0-dev.nupkg",
                 ASSETS_DIRECTORY + @"\SubDir\package.8.0.0-dev.nupkg" });
         var logger = new Mock<ILogger>();
+        logger.Setup(m => m.WriteMessage(It.IsAny<string>())).Verifiable();
 
         var operation = new VersionTrimmingOperation(
             new VersionTrimmingOperation.Context
@@ -60,6 +57,7 @@ public class VersionTrimmingOperationTests
         fileProxy.Verify(v => v.Move(
                 ASSETS_DIRECTORY + @"\SubDir\package.8.0.0-dev.nupkg",
                 ASSETS_DIRECTORY + @"\SubDir\package.nupkg"), Times.Exactly(1));
+        logger.Verify(v => v.WriteMessage(It.IsAny<string>()), Times.Exactly(2));
     }
 
     [Fact]
@@ -72,6 +70,7 @@ public class VersionTrimmingOperationTests
         directoryProxy.Setup(m => m.Exists(ASSETS_DIRECTORY)).Returns(false);
 
         var logger = new Mock<ILogger>();
+        logger.Setup(m => m.WriteError(It.IsAny<string>())).Verifiable();
 
         var operation = new VersionTrimmingOperation(
             new VersionTrimmingOperation.Context
@@ -87,6 +86,7 @@ public class VersionTrimmingOperationTests
             });
 
         operation.Execute().Should().Be(IOperation.ExitCode.ErrorFileNotFount);
+        logger.Verify(v => v.WriteError(It.IsAny<string>()), Times.Exactly(1));
     }
 
     [Fact]
@@ -103,6 +103,7 @@ public class VersionTrimmingOperationTests
             .Returns(new string[] { ASSETS_DIRECTORY + @"\file.nupkg" });
 
         var logger = new Mock<ILogger>();
+        logger.Setup(m => m.WriteError(It.IsAny<string>())).Verifiable();
 
         var operation = new VersionTrimmingOperation(
             new VersionTrimmingOperation.Context
@@ -121,6 +122,7 @@ public class VersionTrimmingOperationTests
 
         nupkgInfoFactory.Verify(v => v.CreateNupkgInfo(
                 ASSETS_DIRECTORY + @"\file.nupkg"), Times.Exactly(1));
+        logger.Verify(v => v.WriteError(It.IsAny<string>()), Times.Exactly(1));
     }
 
 
