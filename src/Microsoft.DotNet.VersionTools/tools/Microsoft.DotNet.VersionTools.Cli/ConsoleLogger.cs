@@ -9,7 +9,7 @@ internal class ConsoleLogger : ILogger
 {
     public void WriteMessage(string message, params object[] values)
     {
-        WriteMessage(String.Format(message, values));
+        Console.WriteLine(String.Format(message, values));
     }
 
     public void WriteError(string message, params object[] values)
