@@ -1,6 +1,18 @@
+<#
+.SYNOPSIS
+Install and run the 'Microsoft.DotNet.VersionTools.Cli' tool with the 'trim-artifacts-version' command to trim the version from the NuGet assets file name.
+
+.PARAMETER InputPath
+Full path to directory where artifact packages are stored
+
+.PARAMETER Recursive
+Search for NuGet packages recursively
+
+#>
+
 Param(
-  [string] $InputPath,          # Full path to directory where artifact packages are stored
-  [bool] $Recursive = $true     # Search for NuGet packages recursively
+  [string] $InputPath,
+  [bool] $Recursive = $true
 )
 
 $CliToolName = "Microsoft.DotNet.VersionTools.Cli"
@@ -13,9 +25,7 @@ function Read-ToolSetVersion {
   )
 
   $globalJson = Get-Content -Raw -Path $GlobalJsonPath | ConvertFrom-Json
-  $toolsetVersion = $globalJson.'msbuild-sdks'.'Microsoft.DotNet.Arcade.Sdk'
-
-  return $toolsetVersion
+  return $globalJson.'msbuild-sdks'.'Microsoft.DotNet.Arcade.Sdk'
 }
 
 # -------------------------------------------------------------------
@@ -26,10 +36,9 @@ function Install-VersionTools-Cli {
   )
 
   Write-Host "Installing the package '$CliToolName' with a version of '$version' ..."
-  $feed = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json"
 
-  $argumentList = @("tool", "install", "--local", "$CliToolName", "--add-source $feed", "--no-cache", "--version $Version")
-  Start-Process dotnet -Verbose -ArgumentList $argumentList -NoNewWindow -Wait
+  $argumentList = @("tool", "install", "--local", "$CliToolName", "--no-cache", "--version $Version")
+  Start-Process "$dotnet" -Verbose -ArgumentList $argumentList -NoNewWindow -Wait
 }
 
 # -------------------------------------------------------------------
@@ -54,17 +63,20 @@ $ci = $true
 $globalJsonPath = "$PSScriptRoot\..\..\..\global.json"
 
 try {
+  $dotnetRoot = InitializeDotNetCli -install:$true
+  $dotnet = "$dotnetRoot\dotnet.exe"
+
   $toolsetVersion = Read-ToolSetVersion -GlobalJsonPath $globalJsonPath
   Install-VersionTools-Cli -Version $toolsetVersion
 
-  $cliToolFound = (dotnet tool list --local | Where-Object {$_.Split(' ')[0] -eq $CliToolName})
+  $cliToolFound = (& "$dotnet" tool list --local | Where-Object {$_.Split(' ')[0] -eq $CliToolName})
   if ($null -eq $cliToolFound) {
     Write-PipelineTelemetryError -Force -Category 'Sdl' -Message "The '$CliToolName' tool is not installed."
     ExitWithExitCode 1
   }
 
   Exec-BlockVerbosely {
-    & dotnet $CliToolName trim-assets-version `
+    & "$dotnet" $CliToolName trim-assets-version `
       --assets-path $InputPath `
       --recursive $Recursive
     Exit-IfNZEC "Sdl"
