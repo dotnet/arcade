@@ -19,7 +19,7 @@ $CliToolName = "Microsoft.DotNet.VersionTools.Cli"
 
 # -------------------------------------------------------------------
 
-function Read-ToolSetVersion {
+function Read-ArcadeSdkVersion {
   param(
       [Parameter(Mandatory=$true)][string]$GlobalJsonPath
   )
@@ -67,7 +67,7 @@ try {
   $dotnetRoot = InitializeDotNetCli -install:$true
   $dotnet = "$dotnetRoot\dotnet.exe"
 
-  $toolsetVersion = Read-ToolSetVersion -GlobalJsonPath $globalJsonPath
+  $toolsetVersion = Read-ArcadeSdkVersion -GlobalJsonPath $globalJsonPath
   Install-VersionTools-Cli -Version $toolsetVersion
 
   $cliToolFound = (& "$dotnet" tool list --local | Where-Object {$_.Split(' ')[0] -eq $CliToolName})
