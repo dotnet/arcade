@@ -17,19 +17,6 @@ Param(
 
 $CliToolName = "Microsoft.DotNet.VersionTools.Cli"
 
-# -------------------------------------------------------------------
-
-function Read-ArcadeSdkVersion {
-  param(
-      [Parameter(Mandatory=$true)][string]$GlobalJsonPath
-  )
-
-  $globalJson = Get-Content -Raw -Path $GlobalJsonPath | ConvertFrom-Json
-  return $globalJson.'msbuild-sdks'.'Microsoft.DotNet.Arcade.Sdk'
-}
-
-# -------------------------------------------------------------------
-
 function Install-VersionTools-Cli {
   param(
       [Parameter(Mandatory=$true)][string]$Version
@@ -61,13 +48,11 @@ $global:LASTEXITCODE = 0
 $ci = $true
 . $PSScriptRoot\..\tools.ps1
 
-$globalJsonPath = "$PSScriptRoot\..\..\..\global.json"
-
 try {
   $dotnetRoot = InitializeDotNetCli -install:$true
   $dotnet = "$dotnetRoot\dotnet.exe"
 
-  $toolsetVersion = Read-ArcadeSdkVersion -GlobalJsonPath $globalJsonPath
+  $toolsetVersion = Read-ArcadeSdkVersion
   Install-VersionTools-Cli -Version $toolsetVersion
 
   $cliToolFound = (& "$dotnet" tool list --local | Where-Object {$_.Split(' ')[0] -eq $CliToolName})
