@@ -35,6 +35,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         {
             Name = name;
             Version = version;
-        }        
+        }
     }
 }
