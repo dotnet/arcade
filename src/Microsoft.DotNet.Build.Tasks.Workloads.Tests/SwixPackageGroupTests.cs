@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             new TaskItem("Microsoft.NET.Workload.").WithMetadata("Replacement", ""),
         };
 
-        [Theory, MemberData(nameof(PackageGroupData))]
+        [WindowsOnlyTheory, MemberData(nameof(PackageGroupData))]
         public void ItGeneratesPackageGroupsForManifestPackages(string manifestPackageFilename, string destinationDirectory, Version msiVersion, ITaskItem[] shortNames,
             string expectedPackageId, Version expectedVersion, string expectedManifestDependency, string expectedFeatureBand)
         {
