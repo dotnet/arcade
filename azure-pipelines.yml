@@ -97,6 +97,13 @@ stages:
           fetchDepth: 0
           clean: true
         steps:
+        - ${{ if and(eq(variables._RunAsPublic, True), eq(variables['Build.Reason'], 'PullRequest')) }}:
+          - task: GitHubComment@0
+            inputs:
+              gitHubConnection: dotnet
+              repositoryName: '$(Build.Repository.Name)'
+              id: $(System.PullRequest.PullRequestNumber)
+              comment: 'Hello world'
         - script: eng\common\cibuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
