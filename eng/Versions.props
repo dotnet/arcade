@@ -12,8 +12,8 @@
     <MicrosoftDotNetSignToolVersion>8.0.0-beta.23417.3</MicrosoftDotNetSignToolVersion>
     <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>8.0.0-beta.23417.3</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
     <!-- arcade-services -->
-    <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.23417.1</MicrosoftDotNetMaestroClientVersion>
-    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.23417.1</MicrosoftDotNetMaestroTasksVersion>
+    <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.23418.3</MicrosoftDotNetMaestroClientVersion>
+    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.23418.3</MicrosoftDotNetMaestroTasksVersion>
     <!-- corefx -->
     <MicrosoftBclHashCodeVersion>1.1.1</MicrosoftBclHashCodeVersion>
     <SystemMemoryVersion>4.5.5</SystemMemoryVersion>
