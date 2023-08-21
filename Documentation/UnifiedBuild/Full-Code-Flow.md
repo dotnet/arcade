@@ -70,11 +70,21 @@ flowchart TD
 The only difference from the forward flow is that the VMR creates and publishes build output packages which **TODO**. These packages are then used by the individual repositories during their partial source-building and their versions must be updated in the individual repositories.  
 The last step is again described below ((#TODO))[#TODO].
 
-## Concurrent changes
+## Implementation plan
+
+Presently, the `DarcLib` library contains a set of simple commands which are used by the Maestro service to perform its tasks. Number of them can also be executed locally via the Darc CLI.  
+As an example, there is the `update-dependencies` command which locally updates the versions of dependencies of a repository. The same command is within Maestro to create the dependency flow PR.
+
+The Darc CLI currently contains a subset of VMR commands and is used to synchronize the present VMR-lite. The new backflow service should use a similar pattern and follow the existing non-VMR counterparts. For instance, a `darc vmr update-dependencies` command will be added.
+
+Once we have the set of commands that can forward/backflow the code locally, we can compose the service out of these.
+
+## Handling concurrent changes
 
 Once we start accepting changes in the VMR, the process of figuring out the diff between the last synchronized commit and the current commit in the VMR will become more complicated. We need to understand which changes come from being behind and which are new ones. This is especially important for the backflow case where we need to make sure that we don't overwrite changes that were made in the individual repository after the last synchronization.
 
 ```mermaid
-
+flowchart TD
+    TODO
 ```
 
