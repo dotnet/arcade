@@ -12,7 +12,25 @@ steps:
       Move-Item -Path $(Build.SourcesDirectory)/artifacts/log/Debug/* $(Build.SourcesDirectory)/PostBuildLogs/${{parameters.StageLabel}}/${{parameters.JobLabel}}/
   continueOnError: true
   condition: always()
-
+  
+- task: PowerShell@2
+  displayName: Redact Logs
+  inputs:
+    filePath: $(Build.SourcesDirectory)/eng/common/post-build/redact-logs.ps1
+    # For now this needs to have explicit list of all sensitive data. Taken from eng/publishing/v3/publish.yml
+    arguments: -InputPath '$(Build.SourcesDirectory)/PostBuildLogs'
+      '$(publishing-dnceng-devdiv-code-r-build-re)'
+      '$(MaestroAccessToken)'
+      '$(dn-bot-all-orgs-artifact-feeds-rw)'
+      '$(akams-client-id)'
+      '$(akams-client-secret)'
+      '$(nonexistent)'
+      '$(microsoft-symbol-server-pat)'
+      '$(symweb-symbol-server-pat)'
+      '$(dn-bot-all-orgs-build-rw-code-rw)'
+  continueOnError: true
+  condition: always()
+      
 - task: PublishBuildArtifacts@1
   displayName: Publish Logs
   inputs:
