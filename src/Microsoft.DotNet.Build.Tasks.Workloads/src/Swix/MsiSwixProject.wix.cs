@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
 
         public MsiSwixProject(ITaskItem msi, string baseIntermediateOutputPath, string baseOutputPath,
             ReleaseVersion sdkFeatureBand,
-            string chip = null, string machineArch = null, string productArch = null) : base(msi.GetMetadata(Metadata.SwixPackageId), new Version(msi.GetMetadata(Metadata.Version)), baseIntermediateOutputPath, baseOutputPath)
+            string chip = null, string machineArch = null, string productArch = null, bool outOfSupport = false) : base(msi.GetMetadata(Metadata.SwixPackageId), new Version(msi.GetMetadata(Metadata.Version)), baseIntermediateOutputPath, baseOutputPath, outOfSupport)
         {
             _msi = msi;
             Chip = chip;
@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
             // For drop publishing all the JSON manifests and payloads must reside in the same folder so we shorten the project names
             // and use a hashed filename to avoid path too long errors.
             string hashInputs = $"{Id},{Version.ToString(3)},{sdkFeatureBand},{Platform},{Chip},{machineArch}";
-            ProjectFile = $"{Utils.GetHash(hashInputs, HashAlgorithmName.MD5)}.swixproj"; // lgtm [cs/weak-crypto] Hash algorithm used only for determining file uniqueness
+            ProjectFile = $"{Utils.GetTruncatedHash(hashInputs, HashAlgorithmName.SHA256)}.swixproj";
 
             ReplacementTokens[SwixTokens.__VS_PAYLOAD_SOURCE__] = msi.GetMetadata(Metadata.FullPath);
         }
@@ -133,6 +133,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
             if (!string.IsNullOrEmpty(MachineArch))
             {
                 msiWriter.WriteLine($"        vs.package.machineArch={MachineArch}");
+            }
+
+            if (OutOfSupport)
+            {
+                msiWriter.WriteLine($"        vs.package.outOfSupport=yes");
             }
 
             msiWriter.WriteLine($"        vs.package.type=msi");

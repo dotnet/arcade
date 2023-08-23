@@ -5,8 +5,6 @@
     <SourceBuildManagedOnly>true</SourceBuildManagedOnly>
   </PropertyGroup>
 
-  <Import Project="TargetFrameworkDefaults.props" />
-
   <!--
     Some MSBuild files in this repo are copied as-is into the outputs, and contain hard-coded target
     framework names. For the Microsoft build, the target framework rarely (never?) changes, so it
@@ -35,7 +33,7 @@
     </ItemGroup>
 
     <Exec
-      Command="sed -i 's/netcoreapp3.1/$(TargetFrameworkForNETSDK)/g' '%(ToolMSBuildFileUsingTargetFramework.FullPath)'"
+      Command="sed -i 's/netcoreapp3.1/net6.0/g' '%(ToolMSBuildFileUsingTargetFramework.FullPath)'"
       WorkingDirectory="$(RepoRoot)"
       Condition="'@(ToolMSBuildFileUsingTargetFramework)' != ''" />
   </Target>
