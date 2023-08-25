@@ -3,18 +3,17 @@
 
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
+using Microsoft.Identity.Client;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
-using System.Net;
-using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 {
@@ -242,7 +241,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 
             using (HttpClient client = CreateClient())
             {
-                string newOrUpdatedLinksJson = 
+                string newOrUpdatedLinksJson =
                     GetCreateOrUpdateLinkJson(linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, update, links);
 
                 bool success = await RetryHandler.RunAsync(async attempt =>
@@ -379,16 +378,34 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 
         private HttpClient CreateClient()
         {
-#if NETCOREAPP
-            var platformParameters = new PlatformParameters();
-#elif NETFRAMEWORK
-            var platformParameters = new PlatformParameters(PromptBehavior.Auto);
-#else
+#if !(NETCOREAPP || NETFRAMEWORK)
 #error "Unexpected TFM"
 #endif
-            AuthenticationContext authContext = new AuthenticationContext(Authority);
-            ClientCredential credential = new ClientCredential(_clientId, _clientSecret);
-            AuthenticationResult token = authContext.AcquireTokenAsync(Endpoint, credential).Result;
+
+            var authContext = ConfidentialClientApplicationBuilder.Create(_clientId)
+                .WithAuthority(Authority)
+                // Old model (Active Directory Authentication Library for .NET, ADAL.NET) used a shared / static
+                // cache by default.
+                .WithCacheOptions(new CacheOptions { UseSharedCache = true })
+                .WithClientSecret(_clientSecret)
+                .Build();
+
+            /*
+            Documentation of new model (Microsoft Authentication Library for .NET, MSAL.NET) recommends caching
+            tokens to disk e.g.,
+            https://learn.microsoft.com/en-ca/azure/active-directory/develop/msal-net-migration-confidential-client?tabs=daemon
+            and
+            https://learn.microsoft.com/en-us/dotnet/api/microsoft.identity.client.cacheoptions.usesharedcache?view=msal-dotnet-latest#remarks
+
+            Specific requirements for relatively long-lived desktop apps (like this build task) are however unclear.
+            Disk cache appears to matter most when applications are restarted frequently i.e., it's about not losing
+            tokens when the app restarts.
+            ??? Reviewers: Thoughts on adding a disk cache at this time?
+            */
+
+            var token = authContext.AcquireTokenForClient(new[] { $"{Endpoint}/.default" })
+                .ExecuteAsync()
+                .Result;
 
             HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
             httpClient.DefaultRequestHeaders.Add("Authorization", token.CreateAuthorizationHeader());
