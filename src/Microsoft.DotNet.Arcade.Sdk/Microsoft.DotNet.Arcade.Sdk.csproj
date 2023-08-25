@@ -22,6 +22,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" />
+    <PackageReference Include="System.Security.Cryptography.Xml" />
     <PackageReference Include="NuGet.Versioning" />
   </ItemGroup>
 

@@ -68,6 +68,8 @@
     <SystemIOPackagingVersion>8.0.0-preview.4.23259.5</SystemIOPackagingVersion>
     <!-- Keep this version in sync with what msbuild / VS ships with. -->
     <SystemReflectionMetadataVersion>7.0.0</SystemReflectionMetadataVersion>
+    <!-- Do not move too far ahead of what Microsoft.Build.Tasks.Core depends on (currently >=6.0.0). -->
+    <SystemSecurityCryptographyXmlVersion>6.0.1</SystemSecurityCryptographyXmlVersion>
     <SystemTextEncodingsWebVersion>8.0.0-preview.4.23259.5</SystemTextEncodingsWebVersion>
     <SystemTextJsonVersion>8.0.0-preview.4.23259.5</SystemTextJsonVersion>
     <!-- sdk -->

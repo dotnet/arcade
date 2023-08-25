@@ -48,6 +48,7 @@
   <ItemGroup>
     <PackageDownload Include="Microsoft.NETCore.Platforms" Version="[$(MicrosoftNETCorePlatformsVersion)]" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" />
+    <PackageReference Include="System.Security.Cryptography.Xml" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="NuGet.Commands" />
     <PackageReference Include="NuGet.Packaging" />
@@ -71,7 +72,7 @@
     </PropertyGroup>
 
      <Error Condition="'$(_runtimeJsonPath)'==''" Text="Could not locate '$(_runtimeJsonPath)'." />
-     
+
      <ItemGroup>
        <None Include="$(_runtimeJsonPath)"
              CopyToOutputDirectory="PreserveNewest"

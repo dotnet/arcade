@@ -10,6 +10,7 @@
 
     <!-- Required for running the tests -->
     <PackageReference Include="Microsoft.Build.Tasks.Core" />
+    <PackageReference Include="System.Security.Cryptography.Xml" />
 
     <_testProjectHelper Include="TestProjects\**\*.csproj" />
     <_testProjectHelper Update="@(_testProjectHelper)">

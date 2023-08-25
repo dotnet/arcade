@@ -9,6 +9,7 @@
     <ProjectReference Include="..\Common\Microsoft.Arcade.Test.Common\Microsoft.Arcade.Test.Common.csproj" />
 
     <PackageReference Include="Microsoft.Build.Tasks.Core" />
+    <PackageReference Include="System.Security.Cryptography.Xml" />
     <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
 

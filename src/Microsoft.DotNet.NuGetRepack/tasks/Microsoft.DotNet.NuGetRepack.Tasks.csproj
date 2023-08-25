@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Tasks.Core" />
+    <PackageReference Include="System.Security.Cryptography.Xml" />
     <PackageReference Include="NuGet.Versioning" />
   </ItemGroup>
 
@@ -22,7 +23,7 @@
     <Reference Include="System.IO.Compression" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.DotNet.NuGetRepack.Tests" />
   </ItemGroup>
