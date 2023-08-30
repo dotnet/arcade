@@ -12,7 +12,9 @@ using System.Linq;
 using System.Data;
 using System.Diagnostics;
 
-#if !NET472
+#if NET472
+using System.IO.Packaging;
+#else
 using System.Formats.Tar;
 #endif
 
