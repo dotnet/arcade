@@ -68,9 +68,9 @@
       <Uri>https://github.com/dotnet/symreader-converter</Uri>
       <Sha>c5ba7c88f92e2dde156c324a8c8edc04d9fa4fe0</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="1.0.0-beta.23428.1">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="1.0.0-beta.23429.1">
       <Uri>https://github.com/dotnet/xliff-tasks</Uri>
-      <Sha>5a72300508ac3eb80b3cfa2aa9d7f073a0aa6464</Sha>
+      <Sha>c0f0e49e0fd8ef284b929a8c573620ac8174df16</Sha>
     </Dependency>
     <!-- Necessary for source-build. This allows the package to be retrieved from previously-source-built artifacts
          and flow in as dependencies of the packages produced by arcade. -->
