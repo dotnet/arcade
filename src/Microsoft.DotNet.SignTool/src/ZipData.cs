@@ -250,8 +250,8 @@ namespace Microsoft.DotNet.SignTool
         {
             var process = Process.Start(new ProcessStartInfo()
             {
-                FileName = tarToolPath,
-                Arguments = $@"""{srcPath}"" ""{dstPath}""",
+                FileName = "dotnet",
+                Arguments = $@"exec ""{tarToolPath}"" ""{srcPath}"" ""{dstPath}""",
                 UseShellExecute = false
             });
 

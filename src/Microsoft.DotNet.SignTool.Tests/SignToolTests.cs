@@ -254,7 +254,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             return Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "wix");
         }
 
-        private static string s_tarToolPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "tar", "Microsoft.Dotnet.Tar.exe");
+        private static string s_tarToolPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "tar", "Microsoft.Dotnet.Tar.dll");
 
         private string GetResourcePath(string name, string relativePath = null)
         {
@@ -1047,7 +1047,7 @@ $@"
             // List of files to be considered for signing
             var itemsToSign = new ITaskItem[]
             {
-                new TaskItem(GetResourcePath("test.tar.gz"))
+                new TaskItem(GetResourcePath("test.tgz"))
             };
 
             // Default signing information
@@ -1065,7 +1065,7 @@ $@"
                 "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
-                "File 'test.tar.gz' Certificate=''",
+                "File 'test.tgz' Certificate=''",
             }/*,
             Reenable after https://github.com/dotnet/arcade/issues/10293,
             expectedWarnings: new[]
