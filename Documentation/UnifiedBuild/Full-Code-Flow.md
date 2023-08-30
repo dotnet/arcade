@@ -72,8 +72,65 @@ The last step is again described below ((#TODO))[#TODO].
 
 ## Implementation plan
 
+### Backflow service
+
+For the purpose of flowing the code from/to the VMR, we will create a new service. This service will be called by Maestro when a VMR subscription is triggered. It will then perform the actual work of creating the PRs in the individual repositories or in the VMR.
+
+The following diagram roughly shows how these services will be composed (new components are in green):
+
+```mermaid
+flowchart
+  GitHub[GitHub event]
+  DarcCLI[darc CLI]
+  ScheduledTrigger[Scheduled subscription trigger]
+  EngCommon[Copy eng/common, update global.json..]
+  VersionFiles[Update Versions.props, Version.Details.xml]
+
+  GitHub--E.g. PR check finished, PR approved.. -->Maestro
+  DarcCLI--E.g. user calls trigger-subscription\nor build is added to a channel-->Maestro
+  ScheduledTrigger--E.g. weekly subscription is triggered-->Maestro
+  
+  CallBackflowService[Call backflow service]
+  GitHubPR[GitHub PR is opened/merged/updated/..]
+
+  subgraph Maestro service
+    Maestro{Maestro service processes the impuls\nbased on source/target repo}
+
+    Maestro--If source repo is arcade-->EngCommon
+    EngCommon-->VersionFiles
+    Maestro--If source repo is VMR-->CallBackflowService
+    Maestro--If target repo is VMR-->CallBackflowService
+    Maestro--Else-->VersionFiles
+  end
+
+  subgraph Backflow service
+    Backflow{Backflow service processes the impuls\nbased on from/to VMR}
+  end
+  
+  CallBackflowService-->Backflow
+  Backflow-->GitHubPR
+
+  VersionFiles-->GitHubPR
+  
+  classDef New fill:#00DD00,stroke:#006600,stroke-width:1px,color:#006600
+  class CallBackflowService,Backflow New
+  linkStyle 5,6,8,9 stroke-width:2px,fill:none,stroke:#00DD00
+```
+
+### Why new service?
+
+We have decided to not put the backflow functionality directly into Maestro for the following reasons:
+- The backflow service will need to clone the VMR and individual repositories. This will require a lot of disk space and we are not sure if Service Fabric can handle this.
+- The backflow service will be long living and persisting the cloned repositories to speed up the synchronization process. This is again something that might be difficult to achieve using Service Fabric actors.
+- The Maestro service is very stable and not receiving many changes so we will implement this new functionality in a separate service to avoid introducing new bugs into Maestro.
+- The local development workflow will be much easier if we can run the backflow service locally without having to run the whole Maestro service fabric cluster.
+- We plan to use a more modern technology such as Azure Container Apps. Once we have stabilized the Backflow service, whichever of these two technologies proves to be better, we will merge those. This should be fairly simple as both will use `DarcLib` to perform the actual work.
+- We expect that moving to ACA will be easier as Maestro itself doesn't have many complex requirements and once we have both, moving existing Maestro controllers and background services to ACA should be fairly simple. The other way might be harder because of the disk space limitations.
+
+### Composition of DarcLib commands
+
 Presently, the `DarcLib` library contains a set of simple commands which are used by the Maestro service to perform its tasks. Number of them can also be executed locally via the Darc CLI.  
-As an example, there is the `update-dependencies` command which locally updates the versions of dependencies of a repository. The same command is within Maestro to create the dependency flow PR.
+As an example, there is the `update-dependencies` command which locally updates the versions of dependencies of a repository. The same command is run within Maestro to create the dependency flow PR.
 
 The Darc CLI currently contains a subset of VMR commands and is used to synchronize the present VMR-lite. The new backflow service should use a similar pattern and follow the existing non-VMR counterparts. For instance, a `darc vmr update-dependencies` command will be added.
 
