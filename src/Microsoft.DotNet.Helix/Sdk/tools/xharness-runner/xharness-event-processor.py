@@ -161,6 +161,12 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
         retry = True
         return
 
+    if exit_code == 92: # TCP_CONNECTION_FAILED
+        print(f'    Failed to communicate using TCP connection')
+        retry = True
+        reboot = True
+        return
+
     if platform == "android":
         if exit_code == 81: # DEVICE_NOT_FOUND
             # This handles issues where emulators fail to start or devices go silent.
@@ -261,6 +267,12 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                 print(f'    Requested tethered Apple device not found')
                 reboot = True
                 retry = True
+                return
+
+            if exit_code == 78: # PACKAGE_INSTALLATION_FAILURE
+                print(f'    Encountered PACKAGE_INSTALLATION_FAILURE. This might be a transient issue with the device')
+                retry = True
+                reboot = True
                 return
 
         else:

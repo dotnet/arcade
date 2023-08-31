@@ -66,12 +66,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
                 ShortNames = shortNames,
                 WixToolsetPath = TestBase.WixToolsetPath,
                 WorkloadManifestPackageFiles = manifestsPackages,
+                IsOutOfSupportInVisualStudio = true
             };
 
             bool result = createWorkloadTask.Execute();
 
             Assert.True(result);
-            ITaskItem manifestMsiItem = createWorkloadTask.Msis.Where(m => m.ItemSpec.ToLowerInvariant().Contains("microsoft.net.workload.emscripten.manifest-6.0.200.6.0.4-x64.msi")).FirstOrDefault();
+            ITaskItem manifestMsiItem = createWorkloadTask.Msis.Where(m => m.ItemSpec.ToLowerInvariant().Contains("d96ba8044ad35589f97716ecbf2732fb-x64.msi")).FirstOrDefault();
             Assert.NotNull(manifestMsiItem);
 
             // Spot check one of the manifest MSIs. We have additional tests that cover MSI generation.
@@ -87,14 +88,28 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             using SummaryInfo si = new(manifestMsiItem.ItemSpec, enableWrite: false);
             Assert.Equal("x64;1033", si.Template);
 
-            // Verify the SWIX authoring for the component representing the workload in VS.
-            string componentSwr = File.ReadAllText(Path.Combine(baseIntermediateOutputPath, "src", "swix", "6.0.200", "microsoft.net.sdk.emscripten.5.6.7.8", "component.swr"));
+            // Verify the SWIX authoring for the component representing the workload in VS. The first should be a standard
+            // component. There should also be a second preview component.
+            string componentSwr = File.ReadAllText(
+                Path.Combine(Path.GetDirectoryName(
+                    createWorkloadTask.SwixProjects.FirstOrDefault(
+                        i => i.ItemSpec.Contains("microsoft.net.sdk.emscripten.5.6.swixproj")).ItemSpec), "component.swr"));
             Assert.Contains("package name=microsoft.net.sdk.emscripten", componentSwr);
+            string previewComponentSwr = File.ReadAllText(
+                Path.Combine(Path.GetDirectoryName(
+                    createWorkloadTask.SwixProjects.FirstOrDefault(
+                        i => i.ItemSpec.Contains("microsoft.net.sdk.emscripten.pre.5.6.swixproj")).ItemSpec), "component.swr"));
+            Assert.Contains("package name=microsoft.net.sdk.emscripten.pre", previewComponentSwr);
 
             // Emscripten is an abstract workload so it should be a component group.
             Assert.Contains("vs.package.type=component", componentSwr);
+            Assert.Contains("vs.package.outOfSupport=yes", componentSwr);
             Assert.Contains("isUiGroup=yes", componentSwr);
             Assert.Contains("version=5.6.7.8", componentSwr);
+
+            Assert.Contains("vs.package.type=component", previewComponentSwr);
+            Assert.Contains("isUiGroup=yes", previewComponentSwr);
+            Assert.Contains("version=5.6.7.8", previewComponentSwr);
 
             // Verify pack dependencies. These should map to MSI packages. The VS package IDs should be the non-aliased
             // pack IDs and version from the workload manifest. The actual VS packages will point to the MSIs generated from the
@@ -103,12 +118,18 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.Contains("vs.dependency id=Microsoft.Emscripten.Python.6.0.4", componentSwr);
             Assert.Contains("vs.dependency id=Microsoft.Emscripten.Sdk.6.0.4", componentSwr);
 
+            // Pack dependencies for preview components should be identical to the non-preview component.
+            Assert.Contains("vs.dependency id=Microsoft.Emscripten.Node.6.0.4", previewComponentSwr);
+            Assert.Contains("vs.dependency id=Microsoft.Emscripten.Python.6.0.4", previewComponentSwr);
+            Assert.Contains("vs.dependency id=Microsoft.Emscripten.Sdk.6.0.4", previewComponentSwr);
+
             // Verify the SWIX authoring for the VS package wrapping the manifest MSI
             string manifestMsiSwr = File.ReadAllText(Path.Combine(baseIntermediateOutputPath, "src", "swix", "6.0.200", "Emscripten.Manifest-6.0.200", "x64", "msi.swr"));
             Assert.Contains("package name=Emscripten.Manifest-6.0.200", manifestMsiSwr);
             Assert.Contains("vs.package.type=msi", manifestMsiSwr);
             Assert.Contains("vs.package.chip=x64", manifestMsiSwr);
             Assert.DoesNotContain("vs.package.machineArch", manifestMsiSwr);
+            Assert.DoesNotContain("vs.package.outOfSupport", manifestMsiSwr);
 
             // Verify that no arm64 MSI authoring for VS. EMSDK doesn't define RIDs for arm64, but manifests always generate
             // arm64 MSIs for the CLI based installs so we should not see that.
@@ -122,7 +143,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             string packMsiSwr = File.ReadAllText(Path.Combine(Path.GetDirectoryName(pythonPackSwixItem.ItemSpec), "msi.swr"));
             Assert.Contains("package name=Microsoft.Emscripten.Python.6.0.4", packMsiSwr);
             Assert.Contains("vs.package.chip=x64", packMsiSwr);
+            Assert.Contains("vs.package.outOfSupport=yes", packMsiSwr);
             Assert.DoesNotContain("vs.package.machineArch", packMsiSwr);
+
+            // Verify the swix project items for components. The project files names always contain the major.minor suffix, so we'll end up
+            // with microsoft.net.sdk.emscripten.5.6.swixproj and microsoft.net.sdk.emscripten.pre.5.6.swixproj
+            IEnumerable<ITaskItem> swixComponentProjects = createWorkloadTask.SwixProjects.Where(s => s.GetMetadata(Metadata.PackageType).Equals(DefaultValues.PackageTypeComponent));
+            Assert.All(swixComponentProjects, c => Assert.True(c.ItemSpec.Contains(".pre.") && c.GetMetadata(Metadata.IsPreview) == "true" ||
+                !c.ItemSpec.Contains(".pre.") && c.GetMetadata(Metadata.IsPreview) == "false"));
         }
 
         [WindowsOnlyFact]
@@ -180,7 +208,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             bool result = createWorkloadTask.Execute();
 
             Assert.True(result);
-            ITaskItem manifestMsiItem = createWorkloadTask.Msis.Where(m => m.ItemSpec.ToLowerInvariant().Contains("microsoft.net.workload.emscripten.manifest-6.0.200.6.0.4-arm64.msi")).FirstOrDefault();
+            ITaskItem manifestMsiItem = createWorkloadTask.Msis.Where(m => m.ItemSpec.ToLowerInvariant().Contains("d96ba8044ad35589f97716ecbf2732fb-arm64.msi")).FirstOrDefault();
             Assert.NotNull(manifestMsiItem);
 
             // Spot check one of the manifest MSIs. We have additional tests that cover MSI generation.
@@ -197,13 +225,18 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.Equal("Arm64;1033", si.Template);
 
             // Verify the SWIX authoring for the component representing the workload in VS.
-            string componentSwr = File.ReadAllText(Path.Combine(baseIntermediateOutputPath, "src", "swix", "6.0.200", "microsoft.net.sdk.emscripten.5.6.7.8", "component.swr"));
+            string componentSwr = File.ReadAllText(
+                Path.Combine(Path.GetDirectoryName(
+                    createWorkloadTask.SwixProjects.FirstOrDefault(
+                        i => i.ItemSpec.Contains("microsoft.net.sdk.emscripten.5.6.swixproj")).ItemSpec), "component.swr"));
             Assert.Contains("package name=microsoft.net.sdk.emscripten", componentSwr);
 
             // Emscripten is an abstract workload so it should be a component group.
             Assert.Contains("vs.package.type=component", componentSwr);
             Assert.Contains("isUiGroup=yes", componentSwr);
             Assert.Contains("version=5.6.7.8", componentSwr);
+            // Default setting should be off
+            Assert.Contains("vs.package.outOfSupport=no", componentSwr);
 
             // Verify pack dependencies. These should map to MSI packages. The VS package IDs should be the non-aliased
             // pack IDs and version from the workload manifest. The actual VS packages will point to the MSIs generated from the

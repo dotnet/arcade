@@ -4,6 +4,7 @@
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NuGet.Packaging.Core;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -37,10 +38,18 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
         [Required]
         public string OutputReportFile { get; set; }
 
-        public bool AllowTestProjectUsage { get; set; }
+        private readonly string _preBuiltDocMessage = "See https://aka.ms/dotnet/prebuilts " +
+            "for guidance on what pre-builts are and how to eliminate them.";
+
+        private readonly string _reviewRequestMessage = "Whenever altering this " +
+            "or other Source Build files, please include @dotnet/source-build-internal " +
+            "as a reviewer.";
 
         public override bool Execute()
         {
+            string ReviewRequestComment = $"<!-- {_reviewRequestMessage} -->{Environment.NewLine}";
+            string PreBuiltDocXmlComment = $"<!-- {_preBuiltDocMessage} -->{Environment.NewLine}";
+            
             var used = UsageData.Parse(XElement.Parse(File.ReadAllText(DataFile)));
 
             string baselineText = string.IsNullOrEmpty(BaselineDataFile)
@@ -52,10 +61,10 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
             UsageValidationData data = GetUsageValidationData(baseline, used);
 
             Directory.CreateDirectory(Path.GetDirectoryName(OutputBaselineFile));
-            File.WriteAllText(OutputBaselineFile, data.ActualUsageData.ToXml().ToString());
+            File.WriteAllText(OutputBaselineFile, ReviewRequestComment + PreBuiltDocXmlComment + Environment.NewLine + data.ActualUsageData.ToXml().ToString());
 
             Directory.CreateDirectory(Path.GetDirectoryName(OutputReportFile));
-            File.WriteAllText(OutputReportFile, data.Report.ToString());
+            File.WriteAllText(OutputReportFile, PreBuiltDocXmlComment + Environment.NewLine + data.Report.ToString());
 
             return !Log.HasLoggedErrors;
         }
@@ -80,9 +89,9 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
             {
                 tellUserToUpdateBaseline = true;
                 Log.LogError(
-                    $"{diff.Added.Length} new packages used not in baseline! See report " +
-                    $"at {OutputReportFile} for more information. Package IDs are:\n" +
-                    string.Join("\n", diff.Added.Select(u => u.ToString())));
+                    $"{diff.Added.Length} new pre-builts discovered! Detailed usage " +
+                    $"report can be found at {OutputReportFile}.{Environment.NewLine}{_preBuiltDocMessage}{Environment.NewLine}" +
+                    $"Package IDs are:{Environment.NewLine}" + string.Join(Environment.NewLine, diff.Added.Select(u => u.ToString())));
 
                 // In the report, list full usage info, not only identity.
                 report.Add(
@@ -108,26 +117,6 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
                 Log.LogMessage(
                     MessageImportance.High,
                     $"{diff.Unchanged.Length} packages used as expected in the baseline.");
-            }
-
-            if (!AllowTestProjectUsage)
-            {
-                Usage[] testProjectUsages = used.Usages
-                    .Where(WriteUsageReports.IsTestUsageByHeuristic)
-                    .ToArray();
-
-                if (testProjectUsages.Any())
-                {
-                    string[] projects = testProjectUsages
-                        .Select(u => u.AssetsFile)
-                        .Distinct()
-                        .ToArray();
-
-                    Log.LogError(
-                        $"{testProjectUsages.Length} forbidden test usages found in " +
-                        $"{projects.Length} projects:\n" +
-                        string.Join("\n", projects));
-                }
             }
 
             // Simplify the used data to what is necessary for a baseline, to reduce file size.

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Licensed to the .NET Foundation under one or more agreements.
 # The .NET Foundation licenses this file to you under the MIT license.
@@ -66,15 +66,23 @@ def generate_rules(config_data, template_dir):
     template = get_template(template_dir, FILE_RULES)
 
     ignored_dependency_packages = config_data.get("debian_ignored_dependencies", None)
+    ignored_libraries = config_data.get("debian_ignored_libraries", None)
     override_text = ""
 
+    if ignored_dependency_packages != None or ignored_libraries != None:
+        override_text = "override_dh_shlibdeps:\n\tdh_shlibdeps"
+
     if ignored_dependency_packages != None:
-        override_text = "override_dh_shlibdeps:\n\tdh_shlibdeps --dpkg-shlibdeps-params=\""
+        override_text += " --dpkg-shlibdeps-params=\""
 
         for package in ignored_dependency_packages:
             override_text += "-x{0} ".format(package)
 
         override_text += "\""
+        
+    if ignored_libraries != None:
+        for library in ignored_libraries:
+            override_text += " -X{0} ".format(library)
 
     return template.format(overrides=override_text)
 

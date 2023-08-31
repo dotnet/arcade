@@ -15,6 +15,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
     {
         private WorkloadPackPackage _package;
 
+        /// <inheritdoc />
+        protected override string BaseOutputName => _package.ShortName;
+
         public WorkloadPackMsi(WorkloadPackPackage package, string platform, IBuildEngine buildEngine, string wixToolsetPath,
             string baseIntermediatOutputPath) :
             base(MsiMetadata.Create(package), buildEngine, wixToolsetPath, platform, baseIntermediatOutputPath)
@@ -71,12 +74,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
                 throw new Exception(Strings.FailedToCompileMsi);
             }
 
-            // Add the platform to the MSI unless the package name already contains it.
-            string msiFileName = _package.PackageFileName.Contains(Platform) ?
-                Path.Combine(outputPath, _package.ShortName + ".msi") :
-                Path.Combine(outputPath, _package.ShortName + $"-{Platform}.msi");
-
-            ITaskItem msi = Link(candle.OutputPath, msiFileName, iceSuppressions);
+            ITaskItem msi = Link(candle.OutputPath, Path.Combine(outputPath, OutputName), iceSuppressions);
 
             AddDefaultPackageFiles(msi);
 

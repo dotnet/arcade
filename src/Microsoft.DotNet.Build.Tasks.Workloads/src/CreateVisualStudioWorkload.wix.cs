@@ -63,9 +63,29 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
+        /// When <see langword="true" />, manifest installers will generate a non-stable UpgradeCode
+        /// and a unique dependency provider key to ensure side-by-side installs.
+        /// </summary>
+        public bool EnableSideBySideManifests
+        {
+            get;
+            set;
+        } = false;
+
+        /// <summary>
         /// A set of Internal Consistency Evaluators (ICEs) to suppress.
         /// </summary>
         public ITaskItem[] IceSuppressions
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Determines whether the component (and related packs) should be flagged as
+        /// out-of-support in Visual Studio.
+        /// </summary>
+        public bool IsOutOfSupportInVisualStudio
         {
             get;
             set;
@@ -195,7 +215,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 // TODO: trim out duplicate manifests.
                 List<WorkloadManifestPackage> manifestPackages = new();
                 List<WorkloadManifestMsi> manifestMsisToBuild = new();
-                List<SwixComponent> swixComponents = new();
+                HashSet<SwixComponent> swixComponents = new();
+                HashSet<SwixPackageGroup> swixPackageGroups = new();
                 Dictionary<string, BuildData> buildData = new();
                 Dictionary<string, WorkloadPackGroupPackage> packGroupPackages = new();
 
@@ -206,7 +227,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 {
                     // 1. Process the manifest package and create a set of installers.
                     WorkloadManifestPackage manifestPackage = new(workloadManifestPackageFile, PackageRootDirectory,
-                        string.IsNullOrWhiteSpace(ManifestMsiVersion) ? null : new Version(ManifestMsiVersion), ShortNames, Log);
+                        string.IsNullOrWhiteSpace(ManifestMsiVersion) ? null : new Version(ManifestMsiVersion), ShortNames, Log, EnableSideBySideManifests);
                     manifestPackages.Add(manifestPackage);
 
                     if (!_supportsMachineArch.ContainsKey(manifestPackage.SdkFeatureBand))
@@ -225,9 +246,21 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     Dictionary<string, WorkloadManifestMsi> manifestMsisByPlatform = new();
                     foreach (string platform in SupportedPlatforms)
                     {
-                        var manifestMsi = new WorkloadManifestMsi(manifestPackage, platform, BuildEngine, WixToolsetPath, BaseIntermediateOutputPath);
+                        var manifestMsi = new WorkloadManifestMsi(manifestPackage, platform, BuildEngine, WixToolsetPath, BaseIntermediateOutputPath, EnableSideBySideManifests);
                         manifestMsisToBuild.Add(manifestMsi);
                         manifestMsisByPlatform[platform] = manifestMsi;
+                    }
+
+                    // If we're supporting SxS manifests, generate a package group to wrap the manifest VS packages
+                    // so we don't deal with unstable package IDs during VS insertions.
+                    if (EnableSideBySideManifests)
+                    {
+                        SwixPackageGroup packageGroup = SwixPackageGroup.Create(manifestPackage);
+
+                        if (!swixPackageGroups.Add(packageGroup))
+                        {
+                            Log.LogError(Strings.ManifestPackageGroupExists, manifestPackage.Id, packageGroup.Name);
+                        }
                     }
 
                     // 2. Process the manifest itself to determine the set of packs involved and create
@@ -262,7 +295,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                                 };
                                 packGroupJsonList.Add(packGroupJson);
                             }
-
 
                             foreach (WorkloadPackId packId in wd.Packs)
                             {
@@ -358,7 +390,21 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                             // Finally, add a component for the workload in Visual Studio.
                             SwixComponent component = SwixComponent.Create(manifestPackage.SdkFeatureBand, workload, manifest, packGroupId,
                                 ComponentResources, ShortNames);
-                            swixComponents.Add(component);
+                            // Create an additional component for shipping previews
+                            SwixComponent previewComponent = SwixComponent.Create(manifestPackage.SdkFeatureBand, workload, manifest, packGroupId,
+                                ComponentResources, ShortNames, "pre");
+
+                            // Check for duplicates, e.g. manifests that were copied without changing workload definition IDs and
+                            // provide a more usable error message so users can track down the duplication.
+                            if (!swixComponents.Add(component))
+                            {
+                                Log.LogError(Strings.WorkloadComponentExists, workload.Id, component.Name);
+                            }
+
+                            if (!swixComponents.Add(previewComponent))
+                            {
+                                Log.LogError(Strings.WorkloadComponentExists, workload.Id, previewComponent.Name);
+                            }
                         }
                     }
                 }
@@ -393,13 +439,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                             if (_supportsMachineArch[sdkFeatureBand] || !string.Equals(msiOutputItem.GetMetadata(Metadata.Platform), DefaultValues.arm64))
                             {
                                 MsiSwixProject swixProject = _supportsMachineArch[sdkFeatureBand] ?
-                                    new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, sdkFeatureBand, chip: null, machineArch: msiOutputItem.GetMetadata(Metadata.Platform)) :
-                                    new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, sdkFeatureBand, chip: msiOutputItem.GetMetadata(Metadata.Platform));
+                                    new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, sdkFeatureBand, chip: null, machineArch: msiOutputItem.GetMetadata(Metadata.Platform), outOfSupport: IsOutOfSupportInVisualStudio) :
+                                    new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, sdkFeatureBand, chip: msiOutputItem.GetMetadata(Metadata.Platform), outOfSupport: IsOutOfSupportInVisualStudio);
                                 string swixProj = swixProject.Create();
 
                                 ITaskItem swixProjectItem = new TaskItem(swixProj);
                                 swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{sdkFeatureBand}");
                                 swixProjectItem.SetMetadata(Metadata.PackageType, DefaultValues.PackageTypeMsiPack);
+                                swixProjectItem.SetMetadata(Metadata.IsPreview, "false");
 
                                 lock (swixProjectItems)
                                 {
@@ -441,13 +488,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                                 if (_supportsMachineArch[manifestPackage.SdkFeatureBand] || !string.Equals(msiOutputItem.GetMetadata(Metadata.Platform), DefaultValues.arm64))
                                 {
                                     MsiSwixProject swixProject = _supportsMachineArch[manifestPackage.SdkFeatureBand] ?
-                                        new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, manifestPackage.SdkFeatureBand, chip: null, machineArch: msiOutputItem.GetMetadata(Metadata.Platform)) :
-                                        new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, manifestPackage.SdkFeatureBand, chip: msiOutputItem.GetMetadata(Metadata.Platform));
+                                        new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, manifestPackage.SdkFeatureBand, chip: null, machineArch: msiOutputItem.GetMetadata(Metadata.Platform), outOfSupport: IsOutOfSupportInVisualStudio) :
+                                        new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, manifestPackage.SdkFeatureBand, chip: msiOutputItem.GetMetadata(Metadata.Platform), outOfSupport: IsOutOfSupportInVisualStudio);
                                     string swixProj = swixProject.Create();
 
                                     ITaskItem swixProjectItem = new TaskItem(swixProj);
                                     swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{manifestPackage.SdkFeatureBand}");
                                     swixProjectItem.SetMetadata(Metadata.PackageType, DefaultValues.PackageTypeMsiPack);
+                                    swixProjectItem.SetMetadata(Metadata.IsPreview, "false");
 
                                     lock (swixProjectItems)
                                     {
@@ -468,13 +516,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     // Don't generate a SWIX package if the MSI targets arm64 and VS doesn't support machineArch
                     if (_supportsMachineArch[msi.Package.SdkFeatureBand] || !string.Equals(msiOutputItem.GetMetadata(Metadata.Platform), DefaultValues.arm64))
                     {
-                        // Generate SWIX authoring for the MSI package.
+                        // Generate SWIX authoring for the MSI package. Do not flag manifest MSI packages for out-of-support.
+                        // These are typically pulled in through .NET SDK components.
                         MsiSwixProject swixProject = _supportsMachineArch[msi.Package.SdkFeatureBand] ?
                             new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, msi.Package.SdkFeatureBand, chip: null, machineArch: msiOutputItem.GetMetadata(Metadata.Platform)) :
                             new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, msi.Package.SdkFeatureBand, chip: msiOutputItem.GetMetadata(Metadata.Platform));
                         ITaskItem swixProjectItem = new TaskItem(swixProject.Create());
                         swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{((WorkloadManifestPackage)msi.Package).SdkFeatureBand}");
                         swixProjectItem.SetMetadata(Metadata.PackageType, DefaultValues.PackageTypeMsiManifest);
+                        swixProjectItem.SetMetadata(Metadata.IsPreview, "false");
 
                         lock (swixProjectItems)
                         {
@@ -497,16 +547,29 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 // artifacts.                
                 _ = Parallel.ForEach(swixComponents, swixComponent =>
                 {
-                    ComponentSwixProject swixComponentProject = new(swixComponent, BaseIntermediateOutputPath, BaseOutputPath);
+                    ComponentSwixProject swixComponentProject = new(swixComponent, BaseIntermediateOutputPath, BaseOutputPath, IsOutOfSupportInVisualStudio);
                     ITaskItem swixProjectItem = new TaskItem(swixComponentProject.Create());
                     swixProjectItem.SetMetadata(Metadata.SdkFeatureBand, $"{swixComponent.SdkFeatureBand}");
                     swixProjectItem.SetMetadata(Metadata.PackageType, DefaultValues.PackageTypeComponent);
+                    swixProjectItem.SetMetadata(Metadata.IsPreview, swixComponent.Name.EndsWith(".pre").ToString().ToLowerInvariant());
 
                     lock (swixProjectItems)
                     {
                         swixProjectItems.Add(swixProjectItem);
                     }
                 });
+
+                if (EnableSideBySideManifests)
+                {
+                    // Generate SWIX projects for the Visual Studio package groups.
+                    _ = Parallel.ForEach(swixPackageGroups, swixPackageGroup =>
+                    {
+                        lock (swixProjectItems)
+                        {
+                            swixProjectItems.Add(PackageGroupSwixProject.CreateProjectItem(swixPackageGroup, BaseIntermediateOutputPath, BaseOutputPath));
+                        }
+                    });
+                }
 
                 Msis = msiItems.ToArray();
                 SwixProjects = swixProjectItems.ToArray();

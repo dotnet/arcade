@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project InitialTargets="ErrorForMissingTestRunner">
 
@@ -16,7 +15,12 @@
     <TestRunnerName Condition="'$(TestRunnerName)' == ''">XUnit</TestRunnerName>
     <TestRunnerName Condition="'$(UsingToolXUnit)' == 'false'"></TestRunnerName>
 
-    <TestRunnerTargets>$(MSBuildThisFileDirectory)$(TestRunnerName)\$(TestRunnerName).targets</TestRunnerTargets>
+    <!--
+      Look for the specified test runner in the building repository first.
+      If we can't find it see if the requested test runner provided by the Arcade SDK.
+    -->
+    <TestRunnerTargets>$(RepositoryEngineeringDir)$(TestRunnerName)\$(TestRunnerName).targets</TestRunnerTargets>
+    <TestRunnerTargets Condition="!Exists($(TestRunnerTargets))">$(MSBuildThisFileDirectory)$(TestRunnerName)\$(TestRunnerName).targets</TestRunnerTargets>
   </PropertyGroup>
 
   <Target Name="ErrorForMissingTestRunner"
@@ -46,6 +50,9 @@
     <PropertyGroup>
       <_TestArchitecture>%(_TestArchitectureItems.Identity)</_TestArchitecture>
       <_ResultFileNameNoExt>$(MSBuildProjectName)_$(TargetFramework)_$(_TestArchitecture)</_ResultFileNameNoExt>
+
+      <!-- Send the logs into the default location, unless overriden by the consumer -->
+      <TestResultsLogDir Condition=" '$(TestResultsLogDir)' == '' ">$(ArtifactsLogDir)</TestResultsLogDir>
     </PropertyGroup>
 
     <ItemGroup>
@@ -61,7 +68,7 @@
         <ResultsXmlPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).xml</ResultsXmlPath>
         <ResultsTrxPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).trx</ResultsTrxPath>
         <ResultsHtmlPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).html</ResultsHtmlPath>
-        <ResultsStdOutPath>$(ArtifactsLogDir)$(_ResultFileNameNoExt).log</ResultsStdOutPath>
+        <ResultsStdOutPath>$(TestResultsLogDir)$(_ResultFileNameNoExt).log</ResultsStdOutPath>
         <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments)</TestRunnerAdditionalArguments>
       </TestToRun>
     </ItemGroup>
@@ -80,7 +87,7 @@
   </Target>
 
   <!-- Import specialized targets files of supported test runners -->
-  <Import Project="$(MSBuildThisFileDirectory)$(TestRunnerName)\$(TestRunnerName).targets" Condition="'$(IsTestProject)' == 'true' and '$(TestRunnerName)' != '' and Exists('$(MSBuildThisFileDirectory)$(TestRunnerName)\$(TestRunnerName).targets')"/>
+  <Import Project="$(TestRunnerTargets)" Condition="'$(IsTestProject)' == 'true' and '$(TestRunnerName)' != '' and Exists('$(TestRunnerTargets)')"/>
   
   <!-- Allow for repo specific Test targets such as rerunning tests -->
   <Import Project="$(RepositoryEngineeringDir)Tests.targets" Condition="Exists('$(RepositoryEngineeringDir)Tests.targets')" />

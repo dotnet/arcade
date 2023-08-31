@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Components must have define at lease on category..
+        ///   Looks up a localized string similar to Components must define at least one category..
         /// </summary>
         internal static string ComponentCategoryCannotBeNull {
             get {
@@ -160,11 +160,29 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Duplicate manifest ID: {0}. A SWIX package group, {1}, with the same ID already exists..
+        /// </summary>
+        internal static string ManifestPackageGroupExists {
+            get {
+                return ResourceManager.GetString("ManifestPackageGroupExists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to determine the version of the manifest installer. The {0} task should either provide  a value for the {1} parameter, or the {2} items should set the {3} metadata..
         /// </summary>
         internal static string NoManifestInstallerVersion {
             get {
                 return ResourceManager.GetString("NoManifestInstallerVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A SWIX package group must have at least one dependency, Id: {0}..
+        /// </summary>
+        internal static string PackageGroupsMustHaveAtLeastOneDependency {
+            get {
+                return ResourceManager.GetString("PackageGroupsMustHaveAtLeastOneDependency", resourceCulture);
             }
         }
         
@@ -219,6 +237,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads {
         internal static string UnknownWorkloadKind {
             get {
                 return ResourceManager.GetString("UnknownWorkloadKind", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate workload ID: {0}. A SWIX component, {1}, with the same workload ID already exists..
+        /// </summary>
+        internal static string WorkloadComponentExists {
+            get {
+                return ResourceManager.GetString("WorkloadComponentExists", resourceCulture);
             }
         }
         

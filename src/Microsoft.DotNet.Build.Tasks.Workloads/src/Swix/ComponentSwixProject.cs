@@ -24,8 +24,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
             get;
         }
 
-        public ComponentSwixProject(SwixComponent component, string baseIntermediateOutputPath, string baseOutputPath) :
-            base(component.Name, component.Version, baseIntermediateOutputPath, baseOutputPath)
+        public ComponentSwixProject(SwixComponent component, string baseIntermediateOutputPath, string baseOutputPath, bool outOfSupport = false) :
+            base(component.Name, component.Version, baseIntermediateOutputPath, baseOutputPath, outOfSupport)
         {
             _component = component;
             ValidateRelativePackagePath(GetRelativePackagePath());
@@ -37,12 +37,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
             }
 
             ProjectSourceDirectory = Path.Combine(SwixDirectory, $"{component.SdkFeatureBand}",
-                $"{component.Name}.{component.Version}");
+                $"{Path.GetRandomFileName()}");
 
             ReplacementTokens[SwixTokens.__VS_COMPONENT_TITLE__] = component.Title;
             ReplacementTokens[SwixTokens.__VS_COMPONENT_DESCRIPTION__] = component.Description;
             ReplacementTokens[SwixTokens.__VS_COMPONENT_CATEGORY__] = component.Category;
             ReplacementTokens[SwixTokens.__VS_IS_UI_GROUP__] = component.IsUiGroup ? "yes" : "no";
+            ReplacementTokens[SwixTokens.__VS_PACKAGE_OUT_OF_SUPPORT__] = OutOfSupport ? "yes" : "no";
         }
 
         /// <inheritdoc />
