@@ -100,7 +100,7 @@ stages:
         - ${{ if and(eq(variables._RunAsPublic, True), eq(variables['Build.Reason'], 'PullRequest')) }}:
           - task: GitHubComment@0
             inputs:
-              gitHubConnection: dotnet
+              gitHubConnection: dotnet-comment-bot-service-connection
               repositoryName: '$(Build.Repository.Name)'
               id: $(System.PullRequest.PullRequestNumber)
               comment: 'Hello world'
