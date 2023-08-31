@@ -104,7 +104,6 @@ stages:
               repositoryName: '$(Build.Repository.Name)'
               id: $(System.PullRequest.PullRequestNumber)
               comment: 'Hello world'
-        - script: set
         - script: eng\common\cibuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
