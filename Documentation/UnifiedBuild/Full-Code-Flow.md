@@ -140,8 +140,33 @@ Once we have the set of commands that can forward/backflow the code locally, we 
 
 Once we start accepting changes in the VMR, the process of figuring out the diff between the last synchronized commit and the current commit in the VMR will become more complicated. We need to understand which changes come from being behind and which are new ones. This is especially important for the backflow case where we need to make sure that we don't overwrite changes that were made in the individual repository after the last synchronization.
 
+Conflicts seem to need double resolutions at times:
+
 ```mermaid
-flowchart TD
-    TODO
+sequenceDiagram
+    autonumber
+
+    participant runtime as dotnet/runtime
+    participant VMR as VMR<br />src/runtime
+
+    Note over runtime, VMR: runtime and VMR are synchronized at 🔖001
+    runtime->>runtime: 📄 A.txt is deleted<br />🔖002
+    VMR->>VMR: 📄 A.txt is changed<br />🔖003
+
+    VMR-->>runtime: Backflow PR with 🔖003 is opened<br />base commit is 🔖001
+    activate runtime
+    Note over runtime: ❌ Backflow PR has a conflict with 🔖002
+    runtime->>runtime: ✔️ Conflict is manually resolved<br />A.txt is deleted
+    runtime->>runtime: PR is merged<br />🔖004
+    deactivate runtime
+
+    runtime-->>VMR: VMR is synchronized from 🔖002 to 🔖004<br />base commit is 🔖001
+    activate VMR
+    Note over VMR: ❌ Backflow PR has a conflict with 🔖003
+    VMR->>VMR: ✔️ Conflict is manually resolved<br />A.txt is deleted
+    deactivate VMR
 ```
 
+The problem is the conflict resolution, that was done in dotnet/runtime's PR, is lost after squashing of the PR.
+When the same conflict happens again in the VMR, the resolution needs to be done again.
+The question is, whether we shouldn't then first flow runtime to VMR before the backflow happens (step 3).
