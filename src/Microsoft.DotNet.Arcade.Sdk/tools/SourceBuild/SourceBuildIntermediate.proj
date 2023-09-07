@@ -54,6 +54,8 @@
           DependsOnTargets="
             GetCategorizedIntermediateNupkgContents;
             GetSupplementalIntermediateNupkgManifest;
+            CreateSymbolsList;
+            CreateSymbolsArchive;
             CreateNonShippingNupkgList"
           BeforeTargets="_GetPackageFiles">
     <ItemGroup>
@@ -77,6 +79,48 @@
       <!-- The list of supplemental package ids goes into the "main" intermediate nupkg. -->
       <Content Include="$(SupplementalIntermediateNupkgManifestFile)" PackagePath="." />
     </ItemGroup>
+  </Target>
+
+  <!-- Discover all repo's symbols that match **\obj\**\*.pdb, to be included in the "main" intermediate nupkg. -->
+  <Target Name="CreateSymbolsList" Condition="'$(SupplementalIntermediateNupkgCategory)' == ''">
+    <PropertyGroup>
+      <SymbolsRoot>$(CurrentRepoSourceBuildArtifactsDir)</SymbolsRoot>
+      <!-- Fall back to repo root for source-build-externals or repos that don't have the regular SymbolsRoot as defined above -->
+      <SymbolsRoot Condition="!Exists('$(SymbolsRoot)') or '$(GitHubRepositoryName)' != 'source-build-externals'">$(RepoRoot)</SymbolsRoot>
+      <SymbolsArchiveLocation>$(CurrentRepoSourceBuildArtifactsPackagesDir)</SymbolsArchiveLocation>
+      <SymbolsList>$(SymbolsArchiveLocation)\symbols.lst</SymbolsList>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <AbsoluteSymbolPath Include="$(SymbolsRoot)\**\obj\**\*.pdb" />
+      <RelativeSymbolPath Include="@(AbsoluteSymbolPath)" Condition="'@(AbsoluteSymbolPath)' != ''">
+        <RelativePath>$([MSBuild]::MakeRelative($(SymbolsRoot), %(AbsoluteSymbolPath.FullPath)))</RelativePath>
+      </RelativeSymbolPath>
+    </ItemGroup>
+
+    <WriteLinesToFile
+      File="$(SymbolsList)"
+      Lines="@(RelativeSymbolPath->'%(RelativePath)')"
+      Overwrite="true"
+      Condition="'@(RelativeSymbolPath)' != ''" />
+  </Target>
+
+  <Target Name="CreateSymbolsArchive" Condition="Exists($(SymbolsList))">
+    <PropertyGroup>
+      <SymbolsArchivePrefix>Symbols.</SymbolsArchivePrefix>
+      <SymbolsArchiveName>$(SymbolsArchiveLocation)$(SymbolsArchivePrefix)$(GitHubRepositoryName).tar.gz</SymbolsArchiveName>
+    </PropertyGroup>
+
+    <Exec Command="tar --numeric-owner -czf $(SymbolsArchiveName) --files-from=$(SymbolsList)"
+          WorkingDirectory="$(SymbolsRoot)" />
+    <Message Importance="High" Text="Packaged symbols to $(SymbolsArchiveName)" />
+
+    <ItemGroup>
+      <!-- Symbols archive goes into the "main" intermediate nupkg. -->
+      <Content Include="$(SymbolsArchiveName)" PackagePath="artifacts" />
+    </ItemGroup>
+
+    <Delete Files="$(SymbolsList)" />
   </Target>
 
   <!-- Create a list of non-shipping packages and include it in the intermediate package. -->
