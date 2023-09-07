@@ -80,23 +80,19 @@ The following diagram roughly shows how these services will be composed (new com
 
 ```mermaid
 flowchart
-  GitHub[GitHub event]
-  DarcCLI[darc CLI]
-  ScheduledTrigger[Scheduled subscription trigger]
+  SubscriptionTrigger[1. External subscription trigger]
   EngCommon[Copy eng/common, update global.json..]
   VersionFiles[Update Versions.props, Version.Details.xml]
 
-  GitHub--E.g. PR check finished, PR approved.. -->Maestro
-  DarcCLI--E.g. user calls trigger-subscription\nor build is added to a channel-->Maestro
-  ScheduledTrigger--E.g. weekly subscription is triggered-->Maestro
-  
-  CallBackflowService[Call backflow service]
+  SubscriptionTrigger--\nE.g. PR check finished, PR approved,\nuser calls trigger-subscription,\nbuild is added to a channel,\nweekly subscription is triggered... -->Maestro
+
+  CallBackflowService[3. Call backflow service]
   GitHubPR[GitHub PR is opened/merged/updated/..]
 
   subgraph Maestro service
-    Maestro{Maestro service processes the impuls\nbased on source/target repo}
-
+    Maestro{2. Maestro service processes the impuls}
     Maestro--If source repo is arcade-->EngCommon
+
     EngCommon-->VersionFiles
     Maestro--If source repo is VMR-->CallBackflowService
     Maestro--If target repo is VMR-->CallBackflowService
@@ -104,18 +100,32 @@ flowchart
   end
 
   subgraph Backflow service
-    Backflow{Backflow service processes the impuls\nbased on from/to VMR}
+    Backflow{4. Backflow service prepares\nthe content in a branch\nof the target repository}
+    Backflow--Maestro service is pinged back-->Maestro
   end
-  
+
   CallBackflowService-->Backflow
-  Backflow-->GitHubPR
 
   VersionFiles-->GitHubPR
-  
+  Maestro--5. If is a ping from the Backflow service-->GitHubPR
+
   classDef New fill:#00DD00,stroke:#006600,stroke-width:1px,color:#006600
-  class CallBackflowService,Backflow New
-  linkStyle 5,6,8,9 stroke-width:2px,fill:none,stroke:#00DD00
+  class CallBackflowService,Backflow,VmrChangesPushed New
+  linkStyle 3,4,6,7,9 stroke-width:2px,fill:none,stroke:#00DD00
 ```
+
+On the diagram we can see:
+1. An external trigger starts a process in Maestro which means a subscription needs to be handled.
+2. The logic for handling the trigger is mostly the same as today. Maestro checks the source and target repository and prepares the update:
+   - For the VMR, it will newly call a new service.
+   - Otherwise, it opens a regular dependency PR where for subscriptions originating in Arcade it also copies the `eng/common` folder and updates the `global.json` file.
+3. The call to the backflow service only pings it to start processing the request. The backflow service will then process the request on its own time. Meanwhile, Maestro will note down that it's waiting for the backflow service to finish.
+4. The backflow service will synchronize the new content and push it into a branch.
+   - If this is a branch of an already existing PR, the PR will be updated.
+   - If this is a branch for a new PR, the PR will be created by Maestro later.
+5. Maestro will process the ping and check what stage the PR is in or create a new one.
+   - The ping must also contain information about whether any new changes are even available.
+   - It's possible the PR got already merged or closed so Maestro will need to work with these cases.
 
 ### Why new service?
 
@@ -170,3 +180,11 @@ sequenceDiagram
 The problem is the conflict resolution, that was done in dotnet/runtime's PR, is lost after squashing of the PR.
 When the same conflict happens again in the VMR, the resolution needs to be done again.
 The question is, whether we shouldn't then first flow runtime to VMR before the backflow happens (step 3).
+
+
+## TODO
+
+- How Arcade (`eng/common`) will be distributed. What kind of flexibility will we provide (e.g. staying on older versions of Arcade).
+- How frequent will syncs be?
+- Who will we tag on the PRs?
+- 
