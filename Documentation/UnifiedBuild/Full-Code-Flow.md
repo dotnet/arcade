@@ -177,6 +177,33 @@ sequenceDiagram
     deactivate VMR
 ```
 
+```mermaid
+sequenceDiagram
+    autonumber
+
+    participant runtime as dotnet/runtime
+    participant VMR as VMR<br />src/runtime
+
+    Note over runtime, VMR: runtime and VMR are synchronized at 🔖001
+    runtime->>runtime: 📄 A.txt is deleted<br />🔖002
+    VMR->>VMR: 📄 A.txt is changed<br />🔖003
+
+    runtime-->>VMR: Backflow PR with 🔖003 is opened<br />base commit is 🔖001
+
+    activate VMR
+    Note over VMR: ❌ Backflow PR has a conflict with 🔖003
+    VMR->>VMR: ✔️ Conflict is manually resolved<br />A.txt is deleted
+    VMR->>VMR: PR is merged<br />🔖004
+    deactivate VMR
+
+    VMR-->>runtime: 🔖003, 🔖004 are synchronized<br />base commit is 🔖001
+    activate runtime
+    Note over runtime: ❌ Backflow PR has a conflict with 🔖002
+    runtime->>runtime: ✔️ Conflict is manually resolved<br />A.txt is deleted
+    deactivate runtime
+
+```
+
 The problem is the conflict resolution, that was done in dotnet/runtime's PR, is lost after squashing of the PR.
 When the same conflict happens again in the VMR, the resolution needs to be done again.
 The question is, whether we shouldn't then first flow runtime to VMR before the backflow happens (step 3).
