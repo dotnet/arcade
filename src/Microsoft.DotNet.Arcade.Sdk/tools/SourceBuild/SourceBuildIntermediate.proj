@@ -85,8 +85,9 @@
     <PropertyGroup>
       <SymbolsRoot>$(CurrentRepoSourceBuildArtifactsDir)</SymbolsRoot>
       <!-- Fall back to repo root for source-build-externals or repos that don't have the regular SymbolsRoot as defined above -->
-      <SymbolsRoot Condition="!Exists('$(SymbolsRoot)') or '$(GitHubRepositoryName)' != 'source-build-externals'">$(RepoRoot)</SymbolsRoot>
+      <SymbolsRoot Condition="!Exists('$(SymbolsRoot)') or '$(GitHubRepositoryName)' == 'source-build-externals'">$(RepoRoot)</SymbolsRoot>
       <SymbolsArchiveLocation>$(CurrentRepoSourceBuildArtifactsPackagesDir)</SymbolsArchiveLocation>
+      <SymbolsArchiveLocation Condition="'$(GitHubRepositoryName)' == 'nuget-client'">$(PackageOutputPath)</SymbolsArchiveLocation>
       <SymbolsList>$(SymbolsArchiveLocation)\symbols.lst</SymbolsList>
       <SymbolsArchivePrefix>Symbols.</SymbolsArchivePrefix>
       <SymbolsArchiveName>$(SymbolsArchiveLocation)$(SymbolsArchivePrefix)$(GitHubRepositoryName).tar.gz</SymbolsArchiveName>
