@@ -90,21 +90,22 @@
       <SymbolsArchiveLocation Condition="'$(GitHubRepositoryName)' == 'nuget-client'">$(PackageOutputPath)</SymbolsArchiveLocation>
       <SymbolsList>$(SymbolsArchiveLocation)\symbols.lst</SymbolsList>
       <SymbolsArchivePrefix>Symbols.</SymbolsArchivePrefix>
-      <SymbolsArchiveName>$(SymbolsArchiveLocation)$(SymbolsArchivePrefix)$(GitHubRepositoryName).tar.gz</SymbolsArchiveName>
+      <SymbolsArchiveSuffix>.$(Version).$(TargetRid)</SymbolsArchiveSuffix>
+      <SymbolsArchiveName>$(SymbolsArchiveLocation)$(SymbolsArchivePrefix)$(GitHubRepositoryName)$(SymbolsArchiveSuffix).tar.gz</SymbolsArchiveName>
     </PropertyGroup>
 
     <ItemGroup>
       <AbsoluteSymbolPath Include="$(SymbolsRoot)\**\obj\**\*.pdb" />
-      <RelativeSymbolPath Include="@(AbsoluteSymbolPath)" Condition="'@(AbsoluteSymbolPath)' != ''">
-        <RelativePath>$([MSBuild]::MakeRelative($(SymbolsRoot), %(AbsoluteSymbolPath.FullPath)))</RelativePath>
-      </RelativeSymbolPath>
+      <AbsoluteSymbolPath Update="@(AbsoluteSymbolPath)" Condition="'@(AbsoluteSymbolPath)' != ''">
+        <RelativePath>$([MSBuild]::MakeRelative($(SymbolsRoot), %(FullPath)))</RelativePath>
+      </AbsoluteSymbolPath>
     </ItemGroup>
 
     <WriteLinesToFile
       File="$(SymbolsList)"
-      Lines="@(RelativeSymbolPath->'%(RelativePath)')"
+      Lines="@(AbsoluteSymbolPath->'%(RelativePath)')"
       Overwrite="true"
-      Condition="'@(RelativeSymbolPath)' != ''" />
+      Condition="'@(AbsoluteSymbolPath)' != ''" />
 
     <Exec Command="tar --numeric-owner -czf $(SymbolsArchiveName) --files-from=$(SymbolsList)"
           WorkingDirectory="$(SymbolsRoot)" Condition="Exists($(SymbolsList))" />
