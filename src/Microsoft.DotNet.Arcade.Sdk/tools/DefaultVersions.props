@@ -54,12 +54,6 @@
       Repo can set this property to true if it needs to use a different version of the compiler than the one in the dotnet SDK.
     -->
     <UsingToolMicrosoftNetCompilers Condition="'$(UsingToolMicrosoftNetCompilers)' == ''">false</UsingToolMicrosoftNetCompilers>
-
-    <!--
-      Use IL linker from the Microsoft.NET.ILLink.Tasks package.
-      Repo can set this property to true if it needs to use a different version of the IL linker than the one in the dotnet SDK.
-    -->
-    <UsingToolMicrosoftNetILLinkTasks Condition="'$(UsingToolMicrosoftNetILLinkTasks)' == ''">false</UsingToolMicrosoftNetILLinkTasks>
   </PropertyGroup>
 
   <!--
