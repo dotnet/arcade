@@ -17,7 +17,7 @@
     <AzureIdentityVersion>1.8.0</AzureIdentityVersion>
     <AzureSecurityKeyVaultSecretsVersion>4.4.0</AzureSecurityKeyVaultSecretsVersion>
     <AzureStorageBlobsVersion>12.13.0</AzureStorageBlobsVersion>
-    <AzureDataTablesVersion>12.8.0</AzureDataTablesVersion>
+    <AzureDataTablesVersion>12.8.1</AzureDataTablesVersion>
     <FluentAssertionsVersion>5.10.3</FluentAssertionsVersion>
     <NETStandardLibraryVersion>1.6.1</NETStandardLibraryVersion>
     <MicrosoftApplicationInsightsVersion>2.16.0</MicrosoftApplicationInsightsVersion>
@@ -29,16 +29,13 @@
     <MicrosoftBuildFrameworkVersion>15.7.179</MicrosoftBuildFrameworkVersion>
     <MicrosoftBuildTasksCoreVersion>15.7.179</MicrosoftBuildTasksCoreVersion>
     <MicrosoftBuildUtilitiesCoreVersion>15.7.179</MicrosoftBuildUtilitiesCoreVersion>
-    <MicrosoftCodeAnalysisAnalyzersVersion>2.6.3</MicrosoftCodeAnalysisAnalyzersVersion>
     <MicrosoftCodeAnalysisCSharpVersion>2.9.0</MicrosoftCodeAnalysisCSharpVersion>
     <MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>3.8.0</MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>
     <GenAPIMicrosoftCodeAnalysisVersion>4.3.0-3.final</GenAPIMicrosoftCodeAnalysisVersion>
-    <MicrosoftIdentityModelClientsActiveDirectoryVersion>3.17.2</MicrosoftIdentityModelClientsActiveDirectoryVersion>
-    <MicrosoftRestClientRuntimeVersion>2.3.13</MicrosoftRestClientRuntimeVersion>
+    <MicrosoftIdentityClientVersion>4.55.0</MicrosoftIdentityClientVersion>
     <MicrosoftExtensionsDependencyModelVersion>2.1.0</MicrosoftExtensionsDependencyModelVersion>
     <MicrosoftExtensionsDependencyInjectionAbstractionsVersion>2.1.1</MicrosoftExtensionsDependencyInjectionAbstractionsVersion>
     <MicrosoftExtensionsDependencyInjectionVersion>2.1.1</MicrosoftExtensionsDependencyInjectionVersion>
-    <MicrosoftExtensionsFileSystemGlobbingVersion>2.0.0</MicrosoftExtensionsFileSystemGlobbingVersion>
     <MicrosoftExtensionsLoggingConsoleVersion>2.1.1</MicrosoftExtensionsLoggingConsoleVersion>
     <MicrosoftNETCorePlatformsVersion>2.1.0</MicrosoftNETCorePlatformsVersion>
     <MicrosoftNetCompilersToolsetVersion>4.4.0-3.22472.2</MicrosoftNetCompilersToolsetVersion>
@@ -48,13 +45,12 @@
     <MoqVersion>4.8.3</MoqVersion>
     <MonoOptionsVersion>5.3.0.1</MonoOptionsVersion>
     <McMasterExtensionsCommandLineUtils>2.3.0</McMasterExtensionsCommandLineUtils>
-    <NewtonsoftJsonVersion>13.0.1</NewtonsoftJsonVersion>
+    <NewtonsoftJsonVersion>13.0.3</NewtonsoftJsonVersion>
     <SystemTextJsonVersion>4.7.0</SystemTextJsonVersion>
-    <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
-    <NuGetVersion>6.2.2</NuGetVersion>
+    <NuGetVersioningVersion>6.7.0</NuGetVersioningVersion>
+    <NuGetVersion>$(NuGetVersioningVersion)</NuGetVersion>
     <OctokitVersion>0.32.0</OctokitVersion>
     <DotNetSleetLibVersion>2.2.143</DotNetSleetLibVersion>
-    <SwashbuckleAspNetCoreSwaggerVersion>3.0.0</SwashbuckleAspNetCoreSwaggerVersion>
     <SystemBuffersVersion>4.5.0</SystemBuffersVersion>
     <SystemCollectionsImmutableVersion>1.5.0</SystemCollectionsImmutableVersion>
     <SystemDiagnosticsTraceSourceVersion>4.0.0</SystemDiagnosticsTraceSourceVersion>
@@ -75,10 +71,6 @@
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
     <MicrosoftDotNetBuildTasksFeedVersion>7.0.0-beta.22426.8</MicrosoftDotNetBuildTasksFeedVersion>
     <MicrosoftDotNetSignToolVersion>7.0.0-beta.22426.8</MicrosoftDotNetSignToolVersion>
-    <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>
-    <MicrosoftDotNetGitHubIssueLabelerAssetsVersion>1.6.0</MicrosoftDotNetGitHubIssueLabelerAssetsVersion>
-    <MicrosoftMLVersion>1.0.0</MicrosoftMLVersion>
-    <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
     <MicrosoftDiaSymReaderPdb2PdbVersion>1.1.0-beta2-19575-01</MicrosoftDiaSymReaderPdb2PdbVersion>
     <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.21553.1</MicrosoftDotNetMaestroClientVersion>
     <MicrosoftSourceLinkGitHubVersion>1.2.0-beta-22429-01</MicrosoftSourceLinkGitHubVersion>
