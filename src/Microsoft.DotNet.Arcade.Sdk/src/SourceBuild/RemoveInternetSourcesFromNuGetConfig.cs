@@ -37,11 +37,9 @@ namespace Microsoft.DotNet.Build.Tasks
 
         public override bool Execute()
         {
-            string xml = File.ReadAllText(NuGetConfigFile);
-            string newLineChars = FileUtilities.DetectNewLineChars(xml);
-            XDocument d = XDocument.Parse(xml);
-            XElement packageSourcesElement = d.Root.Descendants().First(e => e.Name == "packageSources");
-            XElement disabledPackageSourcesElement = d.Root.Descendants().FirstOrDefault(e => e.Name == "disabledPackageSources");
+            XDocument document = XDocument.Load(NuGetConfigFile);
+            XElement packageSourcesElement = document.Root.Descendants().First(e => e.Name == "packageSources");
+            XElement disabledPackageSourcesElement = document.Root.Descendants().FirstOrDefault(e => e.Name == "disabledPackageSources");
 
             IEnumerable<XElement> local = packageSourcesElement.Descendants().Where(e =>
             {
@@ -75,9 +73,9 @@ namespace Microsoft.DotNet.Build.Tasks
             // Remove disabledPackageSources element so if any internal packages remain, they are used in source-build
             disabledPackageSourcesElement?.ReplaceNodes(new XElement("clear"));
 
-            using (var w = XmlWriter.Create(NuGetConfigFile, new XmlWriterSettings { NewLineChars = newLineChars, Indent = true }))
+            using (var fs = new FileStream(NuGetConfigFile, FileMode.Create, FileAccess.ReadWrite))
             {
-                d.Save(w);
+                document.Save(fs);
             }
 
             return true;
