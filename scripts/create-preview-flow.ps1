@@ -148,7 +148,6 @@ AddArcadeFlow https://github.com/dotnet/templating $SdkBranch
 Write-Host "Adding runtime -> runtime flow"
 AddFlow https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int $RuntimeChannel https://github.com/dotnet/wpf $RuntimeBranch EveryBuild
 AddBatchedFlow https://github.com/dotnet/efcore $RuntimeChannel https://github.com/dotnet/aspnetcore $RuntimeBranch EveryBuild
-AddBatchedFlow https://github.com/dotnet/emsdk $RuntimeChannel https://github.com/dotnet/aspnetcore $RuntimeBranch EveryBuild
 AddFlow https://github.com/dotnet/emsdk $RuntimeChannel https://github.com/dotnet/runtime $RuntimeBranch EveryBuild
 AddFlow https://github.com/dotnet/icu $RuntimeChannel https://github.com/dotnet/runtime $RuntimeBranch EveryBuild
 AddBatchedFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dotnet/aspnetcore $RuntimeBranch EveryBuild
