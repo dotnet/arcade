@@ -217,45 +217,41 @@ This is a very handy mechanism as we can react to incoming changes of every indi
 For the full codeflow, it's good to assume we'll want to take advantage of the same mechanism. This however means, that we either need to have a mapping file for each repository or we need to have a single mapping file that will be mapped to and shared with every repository. It's probably better to separate these and avoid unnecessary conflicts.  
 Furthermore, we will want to map additional files or cloak a different set of files when flowing the code back from the VMR. This means, we will need to have two sets of rules for every repository.
 
-> **TODO:** We will take the source configuration file always?
+> **❓❓❓:** We will take the source configuration file always?
 
 ### Arcade
 
-#### Arcade and `eng/common`
+#### Updating `eng/common`
 
 The `eng/common` folder is currently hosted in the `dotnet/arcade` repository and copied to other repositories when they receive dependency updates from `dotnet/arcade`.
 Since repositories will only accept dependency updates from the VMR, we will need to distribute this folder through there too.
 
-> **TODO:** Arcade still the home for this? From there it's mapped to VMR's root? Will we unmap installer and point Arcade there instead?
+> **❓❓❓:** Arcade still the home for this? From there it's mapped to VMR's root? Will we unmap installer and point Arcade there instead?
 
-> **TODO:** What happens when we want to change `eng/common` on VMR's side? Do we change Arcade and root `eng/common` together?
+> **❓❓❓:** What happens when we want to change `eng/common` on VMR's side? Do we change Arcade's and root's `eng/common` together?
 
-> **TODO:** Map `eng/common` by default but let people opt-out and receive Arcade updates via old flow still?
+> **❓❓❓:** Map `eng/common` by default but let people opt-out and receive Arcade updates via old flow still?
 
-#### Arcade and `global.json`
+#### Updating `global.json`
 
+Similar to `eng/common`, the repo will follow the `global.json` settings from the VMR with the option to opt-out. This is mainly because bumping the .NET SDK in repositories can take time or is not desirable.
 
+> **❓❓❓:** Should `eng/common` and `global.json` and other files be handled as additional mappings or `true/false` flags directly?
 
-### Proposal for the configuration
+### Proposal for the code flow configuration
 
 Proposed configuration:
 
 - Each repository gets an `eng/source-mappings.json` file.
 - This file has two sections, for forward and backflow, with identical schema.
   - Each section defines cloaking rules and additional mappings.
-  - > **TODO:** Section names?
+  - > **❓❓❓:** Section names?
 - This file is an override for defaults defined in the `src/source-mappings.json` file of the VMR (common for all repositories).
   - Default cloakings are similar to what we have today (`*.dll`, ...).
   - Default additional mappings is the `eng/common` folder (both ways).
-  - > **TODO:** Will we have VMR patches? Will those now be in their respective repositories? Can we have patches for the backflow too?
+  - > **❓❓❓:** Will we have VMR patches? Will those now be in their respective repositories? Can we have patches for the backflow too?
   - The `src/source-mappings.json` file is not mirrored to any individual repository and lives in the VMR solely.
 - When synchronizing code, the current contents of the `eng/source-mappings.json` from the source repository (individual repository for forwards flow, VMR for backflow) is used to configure the synchronization.
 
-> **TODO:** Version of `darc` used to do the synchronization? Currently it is in `Version.Details.xml` of `dotnet/installer`. Possibly, this should be driven by VMR's `Version.Details.xml` or `.dotnet-tools.json` and we'd flow Arcade Services into the VMR the usual way. **Because of this, we will need to mark VMR codeflow subscriptions with an extra flag. It's not enough to just tell by the target repo being the VMR.**
+> **❓❓❓:** Version of `darc` used to do the synchronization? Currently it is in `Version.Details.xml` of `dotnet/installer`. Possibly, this should be driven by VMR's `Version.Details.xml` or `.dotnet-tools.json` and we'd flow Arcade Services into the VMR the usual way. **Because of this, we will need to mark VMR codeflow subscriptions with an extra flag. It's not enough to just tell by the target repo being the VMR.**
 
-
-## TODOs
-
-- How frequent will syncs be?
-- Who will we tag on the PRs?
-- 
