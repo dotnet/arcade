@@ -208,7 +208,7 @@ The problem is the conflict resolution, that was done in dotnet/runtime's PR, is
 When the same conflict happens again in the VMR, the resolution needs to be done again.
 The question is, whether we shouldn't then first flow runtime to VMR before the backflow happens (step 3).
 
-## Synchronization configuration, cloaking, etc.
+## Synchronization configuration (cloaking, ...)
 
 Presently, in the VMR-lite, the rules affecting the code synchronization live in the `source-mappings.json` file. This file is located in the `dotnet/installer` repository and mapped into the `src/` directory of the VMR. That `dotnet/installer` repository is the only point from which we synchronize the code into the VMR.  
 When changes are made to installer's `source-mappings.json`, the first next synchronization takes them into account already.
@@ -228,7 +228,7 @@ Since repositories will only accept dependency updates from the VMR, we will nee
 
 > **❓❓❓:** Arcade still the home for this? From there it's mapped to VMR's root? Will we unmap installer and point Arcade there instead?
 
-> **❓❓❓:** What happens when we want to change `eng/common` on VMR's side? Do we change Arcade's and root's `eng/common` together?
+> **❓❓❓:** What happens when we want to change `eng/common` on VMR's side? Do we change Arcade's and root's `eng/common` together? Or do we just allow any `eng/common` in any repo to be changed and accept those changes?
 
 > **❓❓❓:** Map `eng/common` by default but let people opt-out and receive Arcade updates via old flow still?
 
@@ -236,13 +236,14 @@ Since repositories will only accept dependency updates from the VMR, we will nee
 
 Similar to `eng/common`, the repo will follow the `global.json` settings from the VMR with the option to opt-out. This is mainly because bumping the .NET SDK in repositories can take time or is not desirable.
 
-> **❓❓❓:** Should `eng/common` and `global.json` and other files be handled as additional mappings or `true/false` flags directly?
+> **❓❓❓:** Should `eng/common` and `global.json` and other files be handled as additional mappings or `true/false` feature flags directly (e.g. `synchronizeGlobalJson`)?
 
-### Proposal for the code flow configuration
+### Proposal for handling the configuration
 
 Proposed configuration:
 
-- Each repository gets an `eng/source-mappings.json` file.
+- Each repository gets an `eng/source-mapping.json` file.
+  > **❓❓❓:** Subject to change?
 - This file has two sections, for forward and backflow, with identical schema.
   - Each section defines cloaking rules and additional mappings.
   - > **❓❓❓:** Section names?
@@ -253,5 +254,26 @@ Proposed configuration:
   - The `src/source-mappings.json` file is not mirrored to any individual repository and lives in the VMR solely.
 - When synchronizing code, the current contents of the `eng/source-mappings.json` from the source repository (individual repository for forwards flow, VMR for backflow) is used to configure the synchronization.
 
-> **❓❓❓:** Version of `darc` used to do the synchronization? Currently it is in `Version.Details.xml` of `dotnet/installer`. Possibly, this should be driven by VMR's `Version.Details.xml` or `.dotnet-tools.json` and we'd flow Arcade Services into the VMR the usual way. **Because of this, we will need to mark VMR codeflow subscriptions with an extra flag. It's not enough to just tell by the target repo being the VMR.**
+> **❓❓❓:** Version of `darc` used to do the synchronization? Currently it is in `Version.Details.xml` of `dotnet/installer`. Possibly, this should be driven by VMR's `Version.Details.xml` or `.config/dotnet-tools.json` and we'd flow Arcade Services into the VMR the usual way. **Because of this, we will need to mark VMR codeflow subscriptions with an extra flag. It's not enough to just tell by the target repo being the VMR.**
 
+Example of `nuget/NuGet.Client`'s `source-mapping.json` (this repo doesn't use Arcade):
+
+```jsonc
+{
+  "name": "nuget-client", // name of VMR's src/ folder for this repository
+
+  // ❓❓❓: repoToVmr should be renamed to something better?
+  "repoToVmr": {
+    "exclude": [
+      "src/NuGet.Clients/NuGet.VisualStudio.Client"
+    ]
+  },
+
+  "vmrToRepo": {
+    // ❓❓❓: Should these just be one noToolingSynchronization flag?
+    "commonScripts": false, // no eng/common sync
+    "globalJson": false, // no global.json sync
+    "dotnetTools": false, // no .config/dotnet-tools.json sync
+  }
+}
+```
