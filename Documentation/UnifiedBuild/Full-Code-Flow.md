@@ -208,10 +208,54 @@ The problem is the conflict resolution, that was done in dotnet/runtime's PR, is
 When the same conflict happens again in the VMR, the resolution needs to be done again.
 The question is, whether we shouldn't then first flow runtime to VMR before the backflow happens (step 3).
 
+## Synchronization configuration, cloaking, etc.
 
-## TODO
+Presently, in the VMR-lite, the rules affecting the code synchronization live in the `source-mappings.json` file. This file is located in the `dotnet/installer` repository and mapped into the `src/` directory of the VMR. That `dotnet/installer` repository is the only point from which we synchronize the code into the VMR.  
+When changes are made to installer's `source-mappings.json`, the first next synchronization takes them into account already.
+This is a very handy mechanism as we can react to incoming changes of every individual repository right away. For instance, if a new commit of a repository brings in binaries, we can add the cloaking rules in the very same commit and the binaries will never reach the VMR.
 
-- How Arcade (`eng/common`) will be distributed. What kind of flexibility will we provide (e.g. staying on older versions of Arcade).
+For the full codeflow, it's good to assume we'll want to take advantage of the same mechanism. This however means, that we either need to have a mapping file for each repository or we need to have a single mapping file that will be mapped to and shared with every repository. It's probably better to separate these and avoid unnecessary conflicts.  
+Furthermore, we will want to map additional files or cloak a different set of files when flowing the code back from the VMR. This means, we will need to have two sets of rules for every repository.
+
+> **TODO:** We will take the source configuration file always?
+
+### Arcade
+
+#### Arcade and `eng/common`
+
+The `eng/common` folder is currently hosted in the `dotnet/arcade` repository and copied to other repositories when they receive dependency updates from `dotnet/arcade`.
+Since repositories will only accept dependency updates from the VMR, we will need to distribute this folder through there too.
+
+> **TODO:** Arcade still the home for this? From there it's mapped to VMR's root? Will we unmap installer and point Arcade there instead?
+
+> **TODO:** What happens when we want to change `eng/common` on VMR's side? Do we change Arcade and root `eng/common` together?
+
+> **TODO:** Map `eng/common` by default but let people opt-out and receive Arcade updates via old flow still?
+
+#### Arcade and `global.json`
+
+
+
+### Proposal for the configuration
+
+Proposed configuration:
+
+- Each repository gets an `eng/source-mappings.json` file.
+- This file has two sections, for forward and backflow, with identical schema.
+  - Each section defines cloaking rules and additional mappings.
+  - > **TODO:** Section names?
+- This file is an override for defaults defined in the `src/source-mappings.json` file of the VMR (common for all repositories).
+  - Default cloakings are similar to what we have today (`*.dll`, ...).
+  - Default additional mappings is the `eng/common` folder (both ways).
+  - > **TODO:** Will we have VMR patches? Will those now be in their respective repositories? Can we have patches for the backflow too?
+  - The `src/source-mappings.json` file is not mirrored to any individual repository and lives in the VMR solely.
+- When synchronizing code, the current contents of the `eng/source-mappings.json` from the source repository (individual repository for forwards flow, VMR for backflow) is used to configure the synchronization.
+
+> **TODO:** Version of `darc` used to do the synchronization? Currently it is in `Version.Details.xml` of `dotnet/installer`. Possibly, this should be driven by VMR's `Version.Details.xml` or `.dotnet-tools.json` and we'd flow Arcade Services into the VMR the usual way. **Because of this, we will need to mark VMR codeflow subscriptions with an extra flag. It's not enough to just tell by the target repo being the VMR.**
+
+
+## TODOs
+
 - How frequent will syncs be?
 - Who will we tag on the PRs?
 - 
