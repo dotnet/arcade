@@ -80,8 +80,12 @@
     </ItemGroup>
   </Target>
 
-  <!-- Create symbols archive and include it in the "main" intermediate nupkg. -->
-  <Target Name="GetSymbolsArchive" Condition="'$(SupplementalIntermediateNupkgCategory)' == ''">
+  <!--
+    Create symbols archive and include it in the "main" intermediate nupkg,
+    except for 'runtime' repo where "runtime" package is smaller and more appropriate.
+  -->
+  <Target Name="GetSymbolsArchive"
+    Condition="('$(GitHubRepositoryName)' != 'runtime' and '$(SupplementalIntermediateNupkgCategory)' == '') or ('$(GitHubRepositoryName)' == 'runtime' and '$(SupplementalIntermediateNupkgCategory)' == 'runtime')">
     <PropertyGroup>
       <SymbolsRoot>$(CurrentRepoSourceBuildArtifactsDir)</SymbolsRoot>
       <!-- Fall back to repo root for source-build-externals or repos that don't have the regular SymbolsRoot as defined above -->
