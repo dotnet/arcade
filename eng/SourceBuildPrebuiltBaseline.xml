@@ -17,6 +17,11 @@
       to the corresponding entry in Version.Details.xml -->
     <UsagePattern IdentityGlob="Microsoft.CodeAnalysis.*/*" />
 
+    <!-- This version is brought in transitively from NuGet.Packaging.6.2.4.
+         Once a newer version of NuGet.Packaging is referenced which has a
+         dependency on 13.0.3, this can be removed. -->
+    <UsagePattern IdentityGlob="Newtonsoft.Json/13.0.1" />
+
      <!-- This package is upgraded to latest versions in product build and can be baselined for 
       the repo build. -->
     <UsagePattern IdentityGlob="System.IO.Packaging/*7.0.0*" />
