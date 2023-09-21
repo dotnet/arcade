@@ -81,11 +81,13 @@
   </Target>
 
   <!--
-    Create symbols archive and include it in the "main" intermediate nupkg,
-    except for 'runtime' repo where "runtime" package is smaller and more appropriate.
+    Create symbols archive and include it in the main intermediate nupkg, by default.
+
+    Repos can select a different intermediate nupkg by defining 'SymbolsIntermediateNupkgCategory'
+    property in eng/SourceBuild.props.
   -->
   <Target Name="GetSymbolsArchive"
-    Condition="('$(GitHubRepositoryName)' != 'runtime' and '$(SupplementalIntermediateNupkgCategory)' == '') or ('$(GitHubRepositoryName)' == 'runtime' and '$(SupplementalIntermediateNupkgCategory)' == 'runtime')">
+    Condition="'$(SupplementalIntermediateNupkgCategory)' == '$(SymbolsIntermediateNupkgCategory)'">
     <PropertyGroup>
       <SymbolsRoot>$(CurrentRepoSourceBuildArtifactsDir)</SymbolsRoot>
       <!-- Fall back to repo root for source-build-externals or repos that don't have the regular SymbolsRoot as defined above -->
