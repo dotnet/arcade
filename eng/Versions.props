@@ -50,7 +50,7 @@
     <SystemTextJsonVersion>4.7.0</SystemTextJsonVersion>
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
     <NuGetVersion>5.6.0-preview.2.6489</NuGetVersion>
-    <OctokitVersion>0.32.0</OctokitVersion>
+    <OctokitVersion>5.0.4</OctokitVersion>
     <DotNetSleetLibVersion>2.2.143</DotNetSleetLibVersion>
     <SwashbuckleAspNetCoreSwaggerVersion>3.0.0</SwashbuckleAspNetCoreSwaggerVersion>
     <SystemBuffersVersion>4.5.0</SystemBuffersVersion>
