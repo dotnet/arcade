@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.SignTool
         internal string PublicKeyToken { get; }
         internal string TargetFramework { get; }
 
-        public PEInfo(bool isManaged) : this(isManaged, false, null, null, null) { }
+        public PEInfo(bool isManaged, string copyright) : this(isManaged, false, copyright, null, null) { }
 
         public PEInfo(bool isManaged, bool isCrossgened, string copyright, string publicKeyToken, string targetFramework)
         {

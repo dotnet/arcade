@@ -17,7 +17,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
     public class SetupTargetFeedConfigV3Tests
     {
-        private const string AzureStorageTargetFeedPAT = "AzureStorageTargetFeedPAT";
         private const string LatestLinkShortUrlPrefix = "LatestLinkShortUrlPrefix";
         private const string BuildQuality = "quality";
         private const string AzureDevOpsFeedsKey = "AzureDevOpsFeedsKey";
@@ -58,9 +57,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
         private static ITaskItem[] GetFeedKeys()
         {
-            var installersKey = new TaskItem(PublishingConstants.FeedForInstallers);
+            var installersKey = new TaskItem(PublishingConstants.FeedStagingForInstallers);
             installersKey.SetMetadata("Key", InstallersTargetStaticFeedKey);
-            var checksumsKey = new TaskItem(PublishingConstants.FeedForChecksums);
+            var checksumsKey = new TaskItem(PublishingConstants.FeedStagingForChecksums);
             checksumsKey.SetMetadata("Key", ChecksumsTargetStaticFeedKey);
             var azureDevops = new TaskItem("https://pkgs.dev.azure.com/dnceng");
             azureDevops.SetMetadata("Key", AzureDevOpsFeedsKey);
@@ -121,7 +120,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             expectedFeeds.Add(
                 new TargetFeedConfig(
                     TargetFeedContentType.Package,
-                    PublishingConstants.FeedDotNet5Transport,
+                    PublishingConstants.FeedDotNetEng,
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
                     latestLinkShortUrlPrefixes: new List<string>() { $"{LatestLinkShortUrlPrefix}/{BuildQuality}" },
@@ -143,8 +142,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     expectedFeeds.Add(
                         new TargetFeedConfig(
                             contentType,
-                            PublishingConstants.FeedForInstallers,
-                            FeedType.AzureStorageFeed,
+                            PublishingConstants.FeedStagingForInstallers,
+                            FeedType.AzureStorageContainer,
                             InstallersTargetStaticFeedKey,
                             latestLinkShortUrlPrefixes: new List<string>() { $"{LatestLinkShortUrlPrefix}/{BuildQuality}" },
                             assetSelection: AssetSelection.All,
@@ -157,8 +156,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 expectedFeeds.Add(
                     new TargetFeedConfig(
                         TargetFeedContentType.Checksum,
-                        PublishingConstants.FeedForChecksums,
-                        FeedType.AzureStorageFeed,
+                        PublishingConstants.FeedStagingForChecksums,
+                        FeedType.AzureStorageContainer,
                         ChecksumsTargetStaticFeedKey,
                         latestLinkShortUrlPrefixes: new List<string>() { $"{LatestLinkShortUrlPrefix}/{BuildQuality}" },
                         assetSelection: AssetSelection.All,
@@ -171,7 +170,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
 
             var buildEngine = new MockBuildEngine();
-            var channelConfig = PublishingConstants.ChannelInfos.First(c => c.Id == 131);
+            var channelConfig = PublishingConstants.ChannelInfos.First(c => c.Id == 2);
             var config = new SetupTargetFeedConfigV3(
                     channelConfig,
                     isInternalBuild,
@@ -204,7 +203,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             expectedFeeds.Add(new TargetFeedConfig(
                 TargetFeedContentType.Package,
-                PublishingConstants.FeedDotNet5Shipping,
+                PublishingConstants.FeedDotNetEng,
                 FeedType.AzDoNugetFeed,
                 AzureDevOpsFeedsKey,
                 latestLinkShortUrlPrefixes: new List<string>() { $"{LatestLinkShortUrlPrefix}/{BuildQuality}" },
@@ -217,7 +216,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             expectedFeeds.Add(new TargetFeedConfig(
                 TargetFeedContentType.Package,
-                PublishingConstants.FeedDotNet5Transport,
+                PublishingConstants.FeedDotNetEng,
                 FeedType.AzDoNugetFeed,
                 AzureDevOpsFeedsKey,
                 latestLinkShortUrlPrefixes: new List<string>() { $"{LatestLinkShortUrlPrefix}/{BuildQuality}" },
@@ -235,8 +234,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     expectedFeeds.Add(
                         new TargetFeedConfig(
                             contentType,
-                            PublishingConstants.FeedForInstallers,
-                            FeedType.AzureStorageFeed,
+                            PublishingConstants.FeedStagingForInstallers,
+                            FeedType.AzureStorageContainer,
                             InstallersTargetStaticFeedKey,
                             latestLinkShortUrlPrefixes: new List<string>() { $"{LatestLinkShortUrlPrefix}/{BuildQuality}" },
                             assetSelection: AssetSelection.All,
@@ -250,8 +249,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 expectedFeeds.Add(
                     new TargetFeedConfig(
                         TargetFeedContentType.Checksum,
-                        PublishingConstants.FeedForChecksums,
-                        FeedType.AzureStorageFeed,
+                        PublishingConstants.FeedStagingForChecksums,
+                        FeedType.AzureStorageContainer,
                         ChecksumsTargetStaticFeedKey,
                         latestLinkShortUrlPrefixes: new List<string>() { $"{LatestLinkShortUrlPrefix}/{BuildQuality}" },
                         assetSelection: AssetSelection.All,
@@ -267,8 +266,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 expectedFeeds.Add(
                     new TargetFeedConfig(
                         TargetFeedContentType.Symbols,
-                        PublishingConstants.FeedForInstallers,
-                        FeedType.AzureStorageFeed,
+                        PublishingConstants.FeedStagingForInstallers,
+                        FeedType.AzureStorageContainer,
                         InstallersTargetStaticFeedKey,
                         latestLinkShortUrlPrefixes: new List<string>() { $"{LatestLinkShortUrlPrefix}/{BuildQuality}" },
                         assetSelection: AssetSelection.All,
@@ -280,7 +279,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             }
 
             var buildEngine = new MockBuildEngine();
-            var channelConfig = PublishingConstants.ChannelInfos.First(c => c.Id == 131);
+            var channelConfig = PublishingConstants.ChannelInfos.First(c => c.Id == 2);
             var config = new SetupTargetFeedConfigV3(
                     channelConfig,
                     isInternalBuild: true,
@@ -312,7 +311,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             expectedFeeds.Add(
                 new TargetFeedConfig(
                     TargetFeedContentType.Package,
-                    PublishingConstants.FeedDotNet5Shipping,
+                    PublishingConstants.FeedDotNetEng,
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
                     latestLinkShortUrlPrefixes: new List<string>() { $"{LatestLinkShortUrlPrefix}/{BuildQuality}" },
@@ -326,7 +325,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             expectedFeeds.Add(
                 new TargetFeedConfig(
                     TargetFeedContentType.Package,
-                    PublishingConstants.FeedDotNet5Transport,
+                    PublishingConstants.FeedDotNetEng,
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
                     latestLinkShortUrlPrefixes: new List<string>() { $"{LatestLinkShortUrlPrefix}/{BuildQuality}" },
@@ -344,8 +343,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     expectedFeeds.Add(
                         new TargetFeedConfig(
                             contentType,
-                            PublishingConstants.FeedForInstallers,
-                            FeedType.AzureStorageFeed,
+                            PublishingConstants.FeedStagingForInstallers,
+                            FeedType.AzureStorageContainer,
                             InstallersTargetStaticFeedKey,
                             latestLinkShortUrlPrefixes: new List<string>() { $"{LatestLinkShortUrlPrefix}/{BuildQuality}" },
                             assetSelection: AssetSelection.All,
@@ -359,8 +358,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 expectedFeeds.Add(
                     new TargetFeedConfig(
                         TargetFeedContentType.Checksum,
-                        PublishingConstants.FeedForChecksums,
-                        FeedType.AzureStorageFeed,
+                        PublishingConstants.FeedStagingForChecksums,
+                        FeedType.AzureStorageContainer,
                         ChecksumsTargetStaticFeedKey,
                         latestLinkShortUrlPrefixes: new List<string>() { $"{LatestLinkShortUrlPrefix}/{BuildQuality}" },
                         assetSelection: AssetSelection.All,
@@ -375,8 +374,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 expectedFeeds.Add(
                     new TargetFeedConfig(
                         TargetFeedContentType.Symbols,
-                        PublishingConstants.FeedForInstallers,
-                        FeedType.AzureStorageFeed,
+                        PublishingConstants.FeedStagingForInstallers,
+                        FeedType.AzureStorageContainer,
                         InstallersTargetStaticFeedKey,
                         latestLinkShortUrlPrefixes: new List<string>() { $"{LatestLinkShortUrlPrefix}/{BuildQuality}" },
                         assetSelection: AssetSelection.All,
@@ -388,7 +387,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             }
 
             var buildEngine = new MockBuildEngine();
-            var channelConfig = PublishingConstants.ChannelInfos.First(c => c.Id == 131);
+            var channelConfig = PublishingConstants.ChannelInfos.First(c => c.Id == 2);
             var config = new SetupTargetFeedConfigV3(
                     channelConfig,
                     isInternalBuild: false,

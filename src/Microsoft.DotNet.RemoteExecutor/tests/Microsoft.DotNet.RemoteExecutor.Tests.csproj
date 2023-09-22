@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <TargetFrameworks>$(TargetFrameworkForNETSDK)</TargetFrameworks>
-    <LangVersion>Latest</LangVersion>
+    <TargetFramework>$(NetCurrent)</TargetFramework>
     <SignAssembly>false</SignAssembly>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\src\Microsoft.DotNet.RemoteExecutor.csproj" />
   </ItemGroup>

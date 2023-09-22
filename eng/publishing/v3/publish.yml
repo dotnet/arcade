@@ -4,6 +4,7 @@ parameters:
   BARBuildId: ''
   symbolPublishingAdditionalParameters: ''
   buildQuality: 'daily'
+  useServicingBuildPools: false
 
 stages:
   - stage: publish
@@ -16,8 +17,6 @@ stages:
         - group: DotNet-Symbol-Server-Pats
         - group: DotNetBuilds storage account tokens
         - group: AzureDevOps-Artifact-Feeds-Pats
-        - group: DotNet-Blob-Feed
-        - group: DotNet-DotNetCli-Storage
         - group: DotNet-MSRC-Storage
         - group: Publish-Build-Assets
           
@@ -34,10 +33,17 @@ stages:
         ${{ if eq(variables['System.TeamProject'], 'DevDiv') }}:
           name: VSEngSS-MicroBuild2022-1ES
           demands: Cmd
-        # If it's not devdiv, it's dnceng
-        ${{ if ne(variables['System.TeamProject'], 'DevDiv') }}:
+        # If it's not devdiv, it's dnceng: 
+        # Publishing cannot use /eng/common/templates/variables/pool-providers.yml since it always runs from 'main',
+        # including in the servicing build case.  Instead the 'useServicingBuildPools' parameter dictates this.
+        # If useServicingBuildPools = false, it's a main branch. 
+        ${{ if and(ne(variables['System.TeamProject'], 'DevDiv'), eq(parameters['useServicingBuildPools'], false)) }}:
           name: NetCore1ESPool-Internal
-          demands: ImageOverride -equals Build.Server.Amd64.VS2019
+          demands: ImageOverride -equals windows.vs2019.amd64
+        # If useServicingBuildPools = true, it's a release branch:
+        ${{ if and(ne(variables['System.TeamProject'], 'DevDiv'), eq(parameters['useServicingBuildPools'], true)) }}:
+          name: NetCore1ESPool-Svc-Internal
+          demands: ImageOverride -equals windows.vs2019.amd64
 
       steps:
         - task: PowerShell@2
@@ -147,7 +153,7 @@ stages:
           displayName: Enable cross-org publishing
           inputs:
             filePath: $(Build.SourcesDirectory)/eng/common/enable-cross-org-publishing.ps1
-            arguments: -token $(dn-bot-dnceng-artifact-feeds-rw)
+            arguments: -token $(dn-bot-all-orgs-artifact-feeds-rw)
 
         - task: PowerShell@2
           displayName: Publish packages, blobs and symbols
@@ -165,12 +171,7 @@ stages:
               /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
               /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts/'
               /p:PublishInstallersAndChecksums=true
-              /p:InstallersAzureAccountKey=$(dotnetcli-storage-key)
-              /p:InternalInstallersAzureAccountKey=$(dotnetclimsrc-access-key)
-              /p:ChecksumsAzureAccountKey=$(dotnetclichecksums-storage-key)
-              /p:InternalChecksumsAzureAccountKey=$(dotnetclichecksumsmsrc-storage-key)
-              /p:AzureDevOpsFeedsKey='$(dn-bot-dnceng-artifact-feeds-rw)'
-              /p:AzureStorageTargetFeedPAT='$(dotnetfeed-storage-access-key-1)'
+              /p:AzureDevOpsFeedsKey='$(dn-bot-all-orgs-artifact-feeds-rw)'
               /p:AkaMSClientId=$(akams-client-id)
               /p:AkaMSClientSecret=$(akams-client-secret)
               ${{ parameters.artifactsPublishingAdditionalParameters }}
@@ -192,6 +193,8 @@ stages:
               /p:DotNetBuildsPublicChecksumsUriBase64='$(dotnetbuilds-public-container-checksum-uri-base64)'
               /p:DotNetBuildsInternalUriBase64='$(dotnetbuilds-internal-container-uri-base64)'
               /p:DotNetBuildsInternalChecksumsUriBase64='$(dotnetbuilds-internal-container-checksum-uri-base64)'
+              /p:DotNetCliMsrcDotNetUriBase64='$(dotnetclimsrc-dotnet-container-uri-base64)'
+              /p:DotNetCliChecksumsMsrcDotNetUriBase64='$(dotnetclichecksumsmsrc-dotnet-container-uri-base64)'
         - template: /eng/common/templates/steps/publish-logs.yml
           parameters:
             StageLabel: '${{ parameters.stageName }}'

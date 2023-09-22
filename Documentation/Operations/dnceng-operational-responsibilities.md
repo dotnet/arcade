@@ -170,3 +170,8 @@ The DncDevOps team will be focused on 'predictable work' - stuff that doesn't ha
 ## Notes
 
 This is a draft: This list is currently a set of ideas, with no specific order. Primarily, I am trying to write down things that keep the system going that either don't have a clear ownership today, or for which ownership could be transferred.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5COperations%5Cdnceng-operational-responsibilities.md)](https://helix.dot.net/f/p/5?p=Documentation%5COperations%5Cdnceng-operational-responsibilities.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5COperations%5Cdnceng-operational-responsibilities.md)</sub>
+<!-- End Generated Content-->

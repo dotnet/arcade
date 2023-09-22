@@ -19,7 +19,7 @@ Specifically, this this study only concerned itself with runs which met the foll
 * _Inlier_: builds which took longer than five hours to complete were excluded from the dataset in interest of eliminating outliers
 
 To acquire the data for the stateless pool, 10 runs of these pipelines were triggered manually targeting the 
-NetCore1ESPool-Public-Int pool, which was manually set to be stateless and capable of scaling out to 300 machines.
+NetCore-Public-Int pool, which was manually set to be stateless and capable of scaling out to 300 machines.
 The sample size for these runs is necessarily much smaller than the baseline due to time constraints. The runs were
 triggered on 22 Oct 2021 and 25 Oct 2021. 
 
@@ -199,3 +199,7 @@ which may be what is reflected in the runtime and runtime-staging mean build tim
 
 Given this data, it is the opinion of the author that stateless pools do not represent a reasonable alternative to stateful pools with
 workspace cleanup.
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cstateless-pools-cost-analysis.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cstateless-pools-cost-analysis.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cstateless-pools-cost-analysis.md)</sub>
+<!-- End Generated Content-->

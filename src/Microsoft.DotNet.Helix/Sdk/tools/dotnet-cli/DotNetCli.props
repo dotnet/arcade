@@ -1,8 +1,8 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
   <PropertyGroup>
     <IncludeDotNetCli Condition=" '$(IncludeDotNetCli)' != 'true' ">false</IncludeDotNetCli>
-    <!-- TODO (https://github.com/dotnet/arcade/issues/7787): When bumping this, we should do #7787 -->
-    <AspNetCoreRuntimeVersion>7.0.0-preview.5.22303.8</AspNetCoreRuntimeVersion>
+    <AspNetCoreRuntimeVersion>8.0.0-rc.1.23421.29</AspNetCoreRuntimeVersion>
     <DotNetCliPackageType Condition=" '$(DotNetCliPackageType)' == '' ">runtime</DotNetCliPackageType>
     <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'runtime' ">$(BundledNETCoreAppPackageVersion)</DotNetCliVersion>
     <!-- TODO (https://github.com/dotnet/arcade/issues/7022): We are hardcoding this version to use the one tied to the SDK version from global.json -->
@@ -33,6 +33,11 @@
     <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('windows'))">
       <PropertyGroup>
         <DotNetCliRuntime>win-x64</DotNetCliRuntime>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('osx')) AND $(HelixTargetQueue.ToLowerInvariant().Contains('arm64'))">
+      <PropertyGroup>
+        <DotNetCliRuntime>osx-arm64</DotNetCliRuntime>
       </PropertyGroup>
     </When>
     <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('osx'))">

@@ -97,3 +97,8 @@ Every issue that arises as a result of a rollout must be filed on GitHub in dotn
 * Every service should have post-deployment checks/scenario tests to ensure the services are up and running taking work. If post-deployment checks/tests fail, changes need to be reverted/fixed via PR in Staging to ensure the deployed services in staging are not broken.
 * All exploratory / experimental changes need to be done on a dev branch. Any change that is known/expected to temproraily break staging, needs to be communicated to the team (dotnetes@microsoft.com) well in advance and be reasonably timeboxed (case-by-case). This communication should be sent out explaining the period of time in which we expect staging will be down/broken, and put back into a working state by kicking off a build/deploy from master at the appropriate time.
 * All merges to staging/master need to stop **two days** prior to the day of rollout for e.g. if the rollout is happening on a Wednesday, the last merge to staging/master should happen on EOD Sunday giving us 2 full days for stabilization. Only changes that unblock the staging build would go into staging/master during the stabilization period.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CPolicy%5CDeploymentPolicy.md)](https://helix.dot.net/f/p/5?p=Documentation%5CPolicy%5CDeploymentPolicy.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CPolicy%5CDeploymentPolicy.md)</sub>
+<!-- End Generated Content-->

@@ -13,7 +13,7 @@
     </ItemGroup>
 
     <PropertyGroup>
-      <HelixResultsDestinationDir Condition="'$(HelixResultsDestinationDir)' == '' AND '$(BUILD_SOURCESDIRECTORY)' != ''">$([MSBuild]::NormalizeDirectory($(BUILD_SOURCESDIRECTORY), 'artifacts', helixresults'))</HelixResultsDestinationDir>
+      <HelixResultsDestinationDir Condition="'$(HelixResultsDestinationDir)' == '' AND '$(BUILD_SOURCESDIRECTORY)' != ''">$([MSBuild]::NormalizeDirectory($(BUILD_SOURCESDIRECTORY), 'artifacts', 'helixresults'))</HelixResultsDestinationDir>
 
       <_shouldDownloadResults>false</_shouldDownloadResults>
       <_shouldDownloadResults Condition="'@(_workItemsWithDownloadMetadata)' != '' AND '$(HelixResultsDestinationDir)' != ''">true</_shouldDownloadResults>
@@ -23,8 +23,8 @@
 
     <DownloadFromResultsContainer
         Condition="$(_shouldDownloadResults) AND '%(SentJob.ResultsContainerUri)' != ''"
+        AccessToken="$(HelixAccessToken)"
         WorkItems="@(_workItemsWithDownloadMetadata)"
-        ResultsContainer="%(SentJob.ResultsContainerUri)"
         OutputDirectory="$(HelixResultsDestinationDir)"
         MetadataToWrite="@(HelixDownloadResultsMetadata)"
         JobId="%(SentJob.Identity)"

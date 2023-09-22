@@ -81,8 +81,8 @@ The autoscaler is not the only service that logs data on that App Insights, so y
 When looking for an error starting with the exceptions can give information faster, in most cases, you are going to need information about ProcessAutoScaleService and AutoScaleActorService having a query like the following one:
 
 	exceptions
-	| where cloud_RoleName == "fabric:/CustomAutoScale ProcessAutoScaleService"
-	or cloud_RoleName == "fabric:/CustomAutoScale/AutoScaleActorService"
+	| where cloud_RoleName == "fabric:/Helix/ProcessAutoScaleService"
+	or cloud_RoleName == "fabric:/Helix/AutoScaleActorService"
 	| sort by timestamp desc
 
 Remember to always use `Time range` to limit the information as much as you can.
@@ -154,3 +154,7 @@ To access the heartbeats table using Microsoft Azure Storage Explorer, follow th
 3. Find the storage account helixscripts2 or helixstagescripts2. 
 4. Open the Tables tab.
 5. Click on heartbeats.
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CAutoScaler%5CAutoScalerInvestigateIssues.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CAutoScaler%5CAutoScalerInvestigateIssues.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CAutoScaler%5CAutoScalerInvestigateIssues.md)</sub>
+<!-- End Generated Content-->

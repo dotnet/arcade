@@ -291,7 +291,7 @@ namespace Microsoft.Cci.Writers.CSharp
         }
 
         private int WriteTypeNameRecursive(ITypeReference type, NameFormattingOptions namingOptions,
-            string[] valueTupleNames, ref int valueTupleNameIndex, ref int nullableIndex, ref TypeNameRecursiveState state,
+            string[] valueTupleNames, scoped ref int valueTupleNameIndex, scoped ref int nullableIndex, ref TypeNameRecursiveState state,
             int typeDepth = 0, int genericParameterIndex = 0, bool isValueTupleParameter = false)
         {
             object dynamicAttributeArgument = state.DynamicAttributeArgument;

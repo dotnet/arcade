@@ -104,9 +104,15 @@ namespace Microsoft.DotNet.Arcade.Sdk
             if (uri.StartsWith(FileUriProtocol, StringComparison.Ordinal))
             {
                 var filePath = uri.Substring(FileUriProtocol.Length);
-                Log.LogMessage($"Copying '{filePath}' to '{DestinationPath}'");
-                File.Copy(filePath, DestinationPath, overwrite: true);
-                return true;
+
+                if (File.Exists(filePath)) {
+                    Log.LogMessage($"Copying '{filePath}' to '{DestinationPath}'");
+                    File.Copy(filePath, DestinationPath, overwrite: true);
+                    return true;
+                } else {
+                    Log.LogMessage($"'{filePath}' does not exist.");
+                    return false;
+                }
             }
 
             Log.LogMessage($"Downloading '{uri}' to '{DestinationPath}'");
@@ -160,7 +166,13 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                     return true;
                 }
-                catch (Exception e) when (e is HttpRequestException || e is IOException && !(e is DirectoryNotFoundException || e is PathTooLongException))
+                // Retry cases:
+                // 1. Plain Http error
+                // 2. IOExceptions that aren't definitely deterministic (such as antivirus was scanning the file)
+                // 3. HttpClient Timeouts - these surface as TaskCanceledExceptions that don't match our cancellation token source
+                catch (Exception e) when (e is HttpRequestException ||  
+                                          e is IOException && !(e is DirectoryNotFoundException || e is PathTooLongException) ||
+                                          e is Tasks.TaskCanceledException && ((Tasks.TaskCanceledException)e).CancellationToken != _cancellationSource.Token)
                 {
                     attempt++;
 

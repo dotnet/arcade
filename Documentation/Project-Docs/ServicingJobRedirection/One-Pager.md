@@ -39,3 +39,8 @@ We will add a new property to servicing jobs to mark them so they can query in K
 ## Monitoring
 S360 report will show us how our R&D bill goes down while the COGS bill increases.
 New Grafana charts will be created to show the subscription where the servicing runs are being executed and an alert, that gets triggered when a servicing job is executed in a R&D queue, will be added.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CServicingJobRedirection%5COne-Pager.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CServicingJobRedirection%5COne-Pager.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CServicingJobRedirection%5COne-Pager.md)</sub>
+<!-- End Generated Content-->

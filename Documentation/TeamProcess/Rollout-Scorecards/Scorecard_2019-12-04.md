@@ -25,3 +25,8 @@ Relevant GitHub issues: [#8460](https://github.com/dotnet/core-eng/issues/8460),
 | Rollbacks | 0 |
 | Service downtime | 00:00:00 |
 
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CScorecard_2019-12-04.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CScorecard_2019-12-04.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5CRollout-Scorecards%5CScorecard_2019-12-04.md)</sub>
+<!-- End Generated Content-->

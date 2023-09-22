@@ -14,38 +14,61 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
     public class Utils
     {
         /// <summary>
-        /// Generate a hash for a string value using a given hash algorithm.
+        /// Generate a truncated hash (first 16 bytes) for a string value using a given hash algorithm.
         /// </summary>
         /// <param name="value">The value to hash.</param>
         /// <param name="hashName">The name of the <see cref="HashAlgorithm"/> to use.</param>
         /// <returns>A string containing the hash result.</returns>
-        public static string GetHash(string value, string hashName)
+        public static string GetTruncatedHash(string value, HashAlgorithmName hashName)
         {
             byte[] bytes = Encoding.UTF8.GetBytes(value);
-            HashAlgorithm ha = HashAlgorithm.Create(hashName);
-            byte[] hash = ha.ComputeHash(bytes);
+#pragma warning disable SYSLIB0045 // Cryptographic factory methods accepting an algorithm name are obsolete. Use the parameterless Create factory method on the algorithm type instead.
+            HashAlgorithm algorithm = HashAlgorithm.Create(hashName.Name);
+#pragma warning restore SYSLIB0045
+            StringBuilder sb = new();
 
-            var sb = new StringBuilder();
-            foreach (byte b in hash)
+            foreach (byte b in algorithm.ComputeHash(bytes))
             {
                 sb.Append(b.ToString("x2"));
             }
 
-            return sb.ToString();
+            string result = sb.ToString();
+
+            return result.Substring(0, 32);
         }
 
-        internal static string ToSafeId(string id)
+        /// <summary>
+        /// Updates a string containing a path and ensures that it contains a single directory separator at the end.
+        /// </summary>
+        /// <param name="path">The original path value.</param>
+        /// <returns>The modified path.</returns>
+        internal static string EnsureTrailingSlash(string path)
         {
-            return id.Replace("-", ".").Replace(" ", ".").Replace("_", ".");
+            return path.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar;
         }
 
+        /// <summary>
+        /// Generates a safe SWIX ID by replacing "-", " ", and "_" with ".".
+        /// </summary>
+        /// <param name="id">The identifier to convert to a safe identifier</param>
+        /// <returns>The safe identifier.</returns>
+        internal static string ToSafeId(string id, string suffix = null) =>
+            id.Replace("-", ".").Replace(" ", ".").Replace("_", ".") +
+            (string.IsNullOrWhiteSpace(suffix) ? null : $".{suffix}");
+
+        /// <summary>
+        /// Replaces all the tokens in a file using the provided dictionary. The dictionary keys define the tokens and
+        /// their values the replacement strings.
+        /// </summary>
+        /// <param name="fileName">The file to modify.</param>
+        /// <param name="tokenReplacements">A dictionary containing the replacement tokens and values.</param>
+        /// <param name="encoding">The encoding to use when updating the file.</param>
         internal static void StringReplace(string fileName, Dictionary<string, string> tokenReplacements, Encoding encoding)
         {
             FileAttributes oldAttributes = File.GetAttributes(fileName);
             File.SetAttributes(fileName, oldAttributes & ~FileAttributes.ReadOnly);
 
             string content = File.ReadAllText(fileName);
-            string newContent = File.ReadAllText(fileName);
 
             foreach (string token in tokenReplacements.Keys)
             {
@@ -61,7 +84,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// </summary>
         /// <param name="name">The name of the parameter to check.</param>
         /// <param name="value">The value of the parameter.</param>
-        internal static void CheckNullOrEmpty(string name, string value)
+        internal static string CheckNullOrEmpty(string name, string value)
         {
             if (value is null)
             {
@@ -72,6 +95,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             {
                 throw new ArgumentException($"Parameter cannot be empty: ${name}");
             }
+
+            return value;
         }
 
         /// <summary>
@@ -89,7 +114,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             }
             else
             {
-                return String.Concat(escapedPattern, "$");
+                return string.Concat(escapedPattern, "$");
             }
         }
 
@@ -156,6 +181,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             return new Guid(hash);
         }
 
+        /// <summary>
+        /// Deletes the specified directory and all subdirectories if it exists.
+        /// </summary>
+        /// <param name="path">The directory to delete.</param>
         internal static void DeleteDirectory(string path)
         {
             if (Directory.Exists(path))

@@ -51,3 +51,8 @@ Once the total cores needed per queue is calculated, sum up the total cores for 
 #
 ###### <sup>1</sup>Unit of Azure Billing and organization
 ###### <sup>2</sup> Reach out to @ilyas1974
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CRepositoriesInTheirOwnSubscription.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CRepositoriesInTheirOwnSubscription.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CRepositoriesInTheirOwnSubscription.md)</sub>
+<!-- End Generated Content-->

@@ -134,7 +134,9 @@ PATs that may be used:
 - A GitHub PAT for downloading files from GitHub (e.g. eng/Version.Details.xml or
   arcade script files.  Required scopes: None
 - An Azure DevOps PAT for downloading files from Azure DevOps. (e.g.
-  eng/Version.Details.xml)  Required scopes: Code-Read, Build-Read & Execute, Packaging Read
+  eng/Version.Details.xml)  Required scopes: Code-Read, Build-Read & Execute, Packaging Read.
+  The recommended way of generating the PAT is using the [PatGeneratorTool](https://dev.azure.com/dnceng/public/_artifacts/feed/dotnet-eng/NuGet/Microsoft.DncEng.PatGeneratorTool),
+  with the `dotnet pat-generator --scopes build_execute code --organizations dnceng devdiv --expires-in 180` command
 - A Build Asset Registry (BAR) password for interacting with Maestro++/BAR (e.g.
   obtaining build information needed for a drop).
 
@@ -286,7 +288,6 @@ index a1d683c1..dbf3fe0e 100644
 --- a/eng/Versions.props
 +++ b/eng/Versions.props
 @@ -60,6 +60,7 @@
-     <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
      <MicrosoftDiaSymReaderConverterVersion>1.1.0-beta1-62810-01</MicrosoftDiaSymReaderConverterVersion>
      <MicrosoftDiaSymReaderNativeVersion>1.7.0</MicrosoftDiaSymReaderNativeVersion>
 +    <MicrosoftNETCoreAppVersion>3.0.0-preview-27401-3</MicrosoftNETCoreAppVersion>
@@ -2986,3 +2987,8 @@ None.
 PS C:\enlistments\core-setup> darc verify
 Dependency verification succeeded.
 ```
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CDarc.md)](https://helix.dot.net/f/p/5?p=Documentation%5CDarc.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CDarc.md)</sub>
+<!-- End Generated Content-->

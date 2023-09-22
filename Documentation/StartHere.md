@@ -73,7 +73,6 @@ some highlights
   - [The Arcade Build SDK](ArcadeSdk.md)
   - GitHub and Azure Repos
     - [Mirroring public projects](AzureDevOps/internal-mirror.md)
-    - [Git Sync Tools](GitSyncTools.md)
     - Bots and connectors
   - [Dependency Description Format](DependencyDescriptionFormat.md)
   - [How to See What's the Latest Version of an Arcade Package](SeePackagesLatestVersion.md)
@@ -112,3 +111,8 @@ dnceng@microsoft.com
 ## Frequently Asked Questions
 
 See the [FAQ](FAQ.md).
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CStartHere.md)](https://helix.dot.net/f/p/5?p=Documentation%5CStartHere.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CStartHere.md)</sub>
+<!-- End Generated Content-->

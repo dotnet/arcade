@@ -112,3 +112,8 @@ See [features](#features) for which features are being delivered in phase 2.
 | ~11/1~ ~11/6~ 11/22  | [Split subscriptions view into product and toolset](https://github.com/dotnet/arcade/issues/4138) ||
 | ~11/6~ 11/22  | [Superfluous input subscriptions](https://github.com/dotnet/arcade/issues/3906) ||
 | ~11/13~ ~11/6~ 11/22 | [Conflicting input subscriptions](https://github.com/dotnet/arcade/issues/2801) ||
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CPKPIs%5CRoadmap.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CPKPIs%5CRoadmap.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CPKPIs%5CRoadmap.md)</sub>
+<!-- End Generated Content-->

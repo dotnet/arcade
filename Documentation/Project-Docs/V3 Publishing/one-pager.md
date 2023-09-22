@@ -49,3 +49,7 @@ Customers are responsible for keeping their build green once the changes are rol
 
 ## FR Hand off
 Publishing FAQs are already in place here (https://github.com/dotnet/arcade/blob/main/Documentation/CorePackages/Publishing.md#frequently-asked-questions), this document can be updated incase of new errors. 
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProject-Docs%5CV3%20Publishing%5Cone-pager.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProject-Docs%5CV3%20Publishing%5Cone-pager.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProject-Docs%5CV3%20Publishing%5Cone-pager.md)</sub>
+<!-- End Generated Content-->

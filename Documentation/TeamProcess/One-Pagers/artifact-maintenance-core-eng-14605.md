@@ -71,3 +71,7 @@ from our machines. Otherwise, on requests for major versions, we can deploy them
 ## The Work
 In addition to further documenting the process for maintaining artifacts, the primary work for this epic will actually be writing update
 docs for all of our currently-existing artifacts.
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cartifact-maintenance-core-eng-14605.md)](https://helix.dot.net/f/p/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cartifact-maintenance-core-eng-14605.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CTeamProcess%5COne-Pagers%5Cartifact-maintenance-core-eng-14605.md)</sub>
+<!-- End Generated Content-->

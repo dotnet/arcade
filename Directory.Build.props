@@ -1,13 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Project>
-  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 
-  <Import Project="$(RepositoryEngineeringDir)TargetFrameworkDefaults.props" />
+  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 
   <PropertyGroup>
     <Copyright>$(CopyrightNetFoundation)</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DebugType>embedded</DebugType>
     <DebugSymbols>true</DebugSymbols>
     <LangVersion>Latest</LangVersion>
@@ -17,19 +15,5 @@
     -->
     <IsShipping>false</IsShipping>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(DotNetBuildOffline)' == 'true'">
-    <!--
-      Arcade has a special version prop for CodeAnalysis.CSharp in GenFacades
-      to try to match the version loaded by msbuild.  In the offline build, this
-      is simply the source-built version.
-    -->
-    <MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>$(MicrosoftCodeAnalysisCSharpVersion)</MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>
-  </PropertyGroup>
-
-  <!-- Don't let it restore lower versions of this package, which can come transitively from NetStandard package restores (CSProj only) -->
-  <ItemGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'" >
-    <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="$(SystemSecurityCryptographyX509CertificatesVersion)" />
-  </ItemGroup>
 
 </Project>

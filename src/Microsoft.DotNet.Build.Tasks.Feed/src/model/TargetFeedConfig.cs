@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 (ContentType == other.ContentType) &&
                 ((TargetURL is null && other.TargetURL is null) || TargetURL.Equals(other.TargetURL, StringComparison.OrdinalIgnoreCase)) &&
                 (Type == other.Type) &&
-                ((Token is null && other.Token is null) || Token.Equals(other.Token)) &&
+                ((Token is null && other.Token is null) || (Token != null && Token.Equals(other.Token))) &&
                 LatestLinkShortUrlPrefixes.SequenceEqual(other.LatestLinkShortUrlPrefixes) &&
                 (AssetSelection == other.AssetSelection) &&
                 (Isolated == other.Isolated) &&
@@ -165,12 +165,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
     }
 
     /// <summary>
-    /// Whether the target feed URL points to an Azure Feed or an Sleet Feed.
+    /// Whether the target feed URL points to an AzDO feed or a storage container
     /// </summary>
     public enum FeedType
     {
         AzDoNugetFeed,
-        AzureStorageFeed,
         AzureStorageContainer,
     }
 

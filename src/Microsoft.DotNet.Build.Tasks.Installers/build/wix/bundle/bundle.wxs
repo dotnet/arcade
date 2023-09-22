@@ -37,6 +37,7 @@
     <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.Foundation">
       <bal:WixStandardBootstrapperApplication
         LicenseFile="$(var.DotNetDummyEulaFile)"
+        SuppressDowngradeFailure="yes"
         ShowFilesInUse="yes"
         ShowVersion="yes" />
 

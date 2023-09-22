@@ -5,6 +5,22 @@ trigger:
     - main
     - release/3.x
     - release/5.0
+    - release/6.0
+    - release/7.0
+  paths:
+    include:
+      - '*'
+    exclude:
+      - .github/*
+      - Documentation/*
+      - Images/*
+      - CODE-OF-CONDUCT.md
+      - CONTRIBUTING.md
+      - LICENSE.TXT
+      - PATENTS.TXT
+      - README.md
+      - SECURITY.md
+      - THIRD-PARTY-NOTICES.TXT
 
 pr:
   branches:
@@ -12,15 +28,33 @@ pr:
     - main
     - release/3.x
     - release/5.0
+    - release/6.0
+    - release/7.0
     - templates
+  paths:
+    include:
+      - '*'
+    exclude:
+      - .github/*
+      - Documentation/*
+      - Images/*
+      - CODE-OF-CONDUCT.md
+      - CONTRIBUTING.md
+      - LICENSE.TXT
+      - PATENTS.TXT
+      - README.md
+      - SECURITY.md
+      - THIRD-PARTY-NOTICES.TXT
+
 
 variables:
-- template: eng/common-variables.yml
+- template: /eng/common-variables.yml
+- template: /eng/common/templates/variables/pool-providers.yml
 
 resources:
   containers:
   - container: LinuxContainer
-    image: mcr.microsoft.com/dotnet-buildtools/prereqs:centos-7-20210714125435-9b5bbc2
+    image: mcr.microsoft.com/dotnet-buildtools/prereqs:cbl-mariner-2.0-fpm
 
 stages:
 - stage: build
@@ -52,17 +86,15 @@ stages:
           ${{ if eq(variables._RunAsPublic, True) }}:
             vmImage: windows-latest
           ${{ if eq(variables._RunAsInternal, True) }}:
-            name: NetCore1ESPool-Internal
-            demands: ImageOverride -equals Build.Server.Amd64.VS2019
+            name: $(DncEngInternalBuildPool)
+            demands: ImageOverride -equals windows.vs2019.amd64
         strategy:
           matrix:
             Build_Release:
               _BuildConfig: Release
-            ${{ if eq(variables._RunAsPublic, True) }}:
-              Build_Debug:
-                _BuildConfig: Debug
         preSteps:
         - checkout: self
+          fetchDepth: 0
           clean: true
         steps:
         - script: eng\common\cibuild.cmd
@@ -71,6 +103,32 @@ stages:
             $(_InternalBuildArgs)
             /p:Test=false
           displayName: Windows Build / Publish
+
+        - ${{ if and(eq(variables._RunAsPublic, True), eq(variables['Build.Reason'], 'PullRequest')) }}:
+          - powershell: |
+              # Detects if current change contains change for which we need to run XHarness E2E tests
+              git fetch --all
+              $diff=$(git diff HEAD HEAD~ --name-only -- src/Microsoft.DotNet.Helix/Sdk 'tests/XHarness*')
+
+              if ($diff) {
+                Write-Host "Detected changes that will require running XHarness E2E tests. Changed files:"
+                Write-Host $diff
+                Write-Host "##vso[task.setvariable variable=RunXHarnessTests;isOutput=true]True"
+                exit 0
+              }
+
+              # Detects if Version.Details.xml or Versions.props changed (a version bump)
+              $fullDiff=$(git diff HEAD HEAD~ -- eng/Version.Details.xml eng/Versions.props)
+              if ($fullDiff -match 'Microsoft.DotNet.XHarness.CLI')
+              {
+                Write-Host "Detected a version bump of Microsoft.DotNet.XHarness.CLI, will run XHarness E2E tests"
+                Write-Host "##vso[task.setvariable variable=RunXHarnessTests;isOutput=true]True"
+                exit 0
+              }
+
+              Write-Host "No changes detected that will require running XHarness E2E tests"
+            name: XHarnessChangeDetection
+            displayName: Detect XHarness changes
 
       - ${{ if eq(variables._RunAsPublic, True) }}:
         - job: Linux
@@ -81,8 +139,6 @@ stages:
             matrix:
               Build_Debug:
                 _BuildConfig: Debug
-              Build_Release:
-                _BuildConfig: Release
           preSteps:
           - checkout: self
             clean: true
@@ -115,8 +171,6 @@ stages:
             matrix:
               Build_Release:
                 _BuildConfig: Release
-              Build_Debug:
-                _BuildConfig: Debug
           variables:
           - _Testing: Helix
           preSteps:
@@ -159,8 +213,6 @@ stages:
             matrix:
               Build_Debug:
                 _BuildConfig: Debug
-              Build_Release:
-                _BuildConfig: Release
           variables:
           - _Testing: Helix
           preSteps:
@@ -185,6 +237,7 @@ stages:
   - stage: Test_XHarness
     displayName: Test XHarness SDK
     dependsOn: build
+    condition: and(succeeded(), eq(dependencies.build.outputs['Windows_NT.Build_Release.XHarnessChangeDetection.RunXHarnessTests'], 'True'))
     jobs:
     - template: /eng/common/templates/jobs/jobs.yml
       parameters:
@@ -233,8 +286,8 @@ stages:
             vmimage: ubuntu-latest
           strategy:
             matrix:
-              Build_Release:
-                _BuildConfig: Release
+              Build_Debug:
+                _BuildConfig: Debug
           variables:
           - _Testing: XHarness_Apple_Device_Tests
           preSteps:
@@ -263,8 +316,8 @@ stages:
             vmimage: ubuntu-latest
           strategy:
             matrix:
-              Build_Release:
-                _BuildConfig: Release
+              Build_Debug:
+                _BuildConfig: Debug
           variables:
           - _Testing: XHarness_Android_Simulator_Tests
           preSteps:
@@ -272,7 +325,7 @@ stages:
             clean: true
           steps:
           - script: eng/common/build.sh
-              -configuration $(_BuildConfig) 
+              -configuration $(_BuildConfig)
               -prepareMachine
               -ci
               -restore
@@ -292,8 +345,8 @@ stages:
             vmimage: windows-latest
           strategy:
             matrix:
-              Build_Debug:
-                _BuildConfig: Debug
+              Build_Release:
+                _BuildConfig: Release
           variables:
           - _Testing: XHarness_Android_Device_Tests
           preSteps:
@@ -341,6 +394,7 @@ stages:
       # This is to enable SDL runs part of Post-Build Validation Stage
       SDLValidationParameters:
         enable: true
+        publishGdn: true
         continueOnError: false
         params: ' -SourceToolsList @("policheck","credscan")
         -TsaInstanceURL $(_TsaInstanceURL)

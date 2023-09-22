@@ -1,7 +1,8 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
   <Target Name="RunTests"
-          Outputs="%(TestToRun.ResultsStdOutPath)">
+          Outputs="%(TestToRun.ResultsStdOutPath)"
+          Condition="'$(SkipTests)' != 'true'">
     <PropertyGroup>
       <_TestEnvironment>%(TestToRun.EnvironmentDisplay)</_TestEnvironment>
       <_TestAssembly>%(TestToRun.Identity)</_TestAssembly>
@@ -27,7 +28,7 @@
       <!-- 
         Redirect std output of the runner.
       -->
-      <_TestRunnerCommand Condition="'$(TestCaptureOutput)' != 'false'">$(_TestRunnerCommand) > "%(TestToRun.ResultsStdOutPath)" 2>&amp;1</_TestRunnerCommand>
+      <_TestRunnerCommand Condition="'$(TestCaptureOutput)' != 'false'">$(_TestRunnerCommand) >> "%(TestToRun.ResultsStdOutPath)" 2>&amp;1</_TestRunnerCommand>
     </PropertyGroup>
 
     <ItemGroup>
@@ -39,6 +40,12 @@
     <MakeDir Directories="@(_OutputFiles->'%(RootDir)%(Directory)')"/>
     <Delete Files="@(_OutputFiles)" />
 
+    <!--
+      Add command line to the log.
+    -->
+    <Exec Command="echo === COMMAND LINE === > %(TestToRun.ResultsStdOutPath)
+                   echo $(_TestRunnerCommand) >> %(TestToRun.ResultsStdOutPath)" />
+
     <Message Text="Running tests: $(_TestAssembly) [$(_TestEnvironment)]" Importance="high"/>
     <Exec Command='$(_TestRunnerCommand)'
           LogStandardErrorAsError="false"
@@ -48,14 +55,6 @@
           ContinueOnError="WarnAndContinue">
       <Output TaskParameter="ExitCode" PropertyName="_TestErrorCode" />
     </Exec>
-
-    <!--
-      Add command line to the log.
-    -->
-    <WriteLinesToFile File="%(TestToRun.ResultsStdOutPath)" 
-                      Overwrite="false" 
-                      Lines=";=== COMMAND LINE ===;$(_TestRunnerCommand)"
-                      Condition="'$(TestCaptureOutput)' != 'false'" />
 
     <!--
       Report test status.

@@ -3,7 +3,7 @@
   <!-- Using locally built version of the helix sdk, normal projects replace the below Import and PropertyGroup with the SDK import above-->
   <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.props"/>
   <PropertyGroup>
-    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(Configuration)/net7.0/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
+    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(Configuration)/net8.0/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
     <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(Configuration)/net472/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
   </PropertyGroup>
 
@@ -14,6 +14,7 @@
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
 
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
+    <XUnitWorkitemTimeout>300</XUnitWorkitemTimeout>
   </PropertyGroup>
 
   <ItemGroup>
@@ -32,7 +33,7 @@
       <Command>echo 'done!'</Command>
       <PayloadDirectory>$(MSBuildThisFileDirectory)Trx</PayloadDirectory>
     </HelixWorkItem>
-  </ItemGroup>
+  </ItemGroup>  
   <ItemGroup>
     <AzurePipelinesExpectedTestFailure Include="HelixReporter.TRXTests.HelixReporter.TRXTests.Fail1"/>
     <AzurePipelinesExpectedTestFailure Include="HelixReporter.TRXTests.HelixReporter.TRX.Fail2"/>
@@ -58,9 +59,9 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
-    <HelixTargetQueue Include="RedHat.7.Amd64"/>
+    <HelixTargetQueue Include="(Centos.8.Amd64)Ubuntu.2204.Amd64@mcr.microsoft.com/dotnet-buildtools/prereqs:centos-stream8-helix"/>
     <HelixTargetQueue Include="Windows.10.Amd64"/>
-    <HelixTargetQueue Include="(Debian.10.Amd64)ubuntu.1804.amd64@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-10-helix-amd64-20210304164434-56c6673"/>
+    <HelixTargetQueue Include="(Debian.12.Amd64)ubuntu.2204.amd64@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-10-helix-amd64"/>
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
@@ -70,9 +71,9 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="RedHat.7.Amd64.Open"/>
+    <HelixTargetQueue Include="(Centos.8.Amd64.Open)Ubuntu.2204.Amd64.Open@mcr.microsoft.com/dotnet-buildtools/prereqs:centos-stream8-helix"/>
     <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
-    <HelixTargetQueue Include="(Debian.10.Amd64.Open)ubuntu.1804.amd64.open@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-10-helix-amd64-20210304164434-56c6673"/>
+    <HelixTargetQueue Include="(Debian.12.Amd64.Open)ubuntu.2204.amd64.open@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-10-helix-amd64"/>
   </ItemGroup>
 
   <PropertyGroup Condition="!$(HelixTargetQueue.StartsWith('Windows'))">
