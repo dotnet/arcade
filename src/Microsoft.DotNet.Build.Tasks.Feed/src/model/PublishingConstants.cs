@@ -971,7 +971,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             new TargetChannelConfig(
                 id: 4015,
                 isInternal: false,
-                publishingInfraVersion: PublishingInfraVersion.All,
+                publishingInfraVersion: PublishingInfraVersion.Latest,
                 akaMSChannelNames: new List<string>(),
                 targetFeeds: DotNetToolsFeeds,
                 symbolTargetType: PublicAndInternalSymbolTargets,
