@@ -969,7 +969,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 flatten: false),
             // VS 17.9,
             new TargetChannelConfig(
-                id: 3583,
+                id: 4015,
                 isInternal: false,
                 publishingInfraVersion: PublishingInfraVersion.All,
                 akaMSChannelNames: new List<string>(),
