@@ -1,12 +1,8 @@
-trigger: none
-
-schedules:
-- cron: 0 12 * * 1
-  displayName: Weekly Monday build
+trigger: 
+  batch: true
   branches:
     include:
     - main
-  always: true
 
 name: $(Date:yyyMMdd)$(Rev:rr)
 stages:
@@ -33,8 +29,10 @@ stages:
 
       - task: AzureCLI@2
         inputs:
-          azureSubscription: DotNet Eng Services Secret Manager
+          azureSubscription: Test DotNet Eng Services Secret Manager
           scriptType: ps
           scriptLocation: inlineScript
           inlineScript: |
+            az get-access-token
+            az account show
             Get-ChildItem .vault-config/*.yaml |% { dotnet secret-manager synchronize $_}
