@@ -1,6 +1,13 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+#if NETFRAMEWORK
+
+System.Console.Error.WriteLine("Not supported on .NET Framework");
+return 1;
+
+#else
+
 using System;
 using System.Formats.Tar;
 using System.IO;
@@ -42,3 +49,5 @@ catch (Exception e)
 }
 
 return 0;
+
+#endif
