@@ -669,6 +669,26 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 symbolTargetType: PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
+            // ".NET 9 Eng",
+            new TargetChannelConfig(
+                id: 3887,
+                isInternal: false,
+                publishingInfraVersion: PublishingInfraVersion.Latest,
+                akaMSChannelNames: new List<string>() { "eng/net9" },
+                targetFeeds: DotNetEngFeeds,
+                symbolTargetType: PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // .NET 9 Eng - Validation,
+            new TargetChannelConfig(
+                id: 3888,
+                isInternal: false,
+                publishingInfraVersion: PublishingInfraVersion.Latest,
+                akaMSChannelNames: new List<string>() { "eng/net9validation" },
+                targetFeeds: DotNetEngFeeds,
+                symbolTargetType: PublicAndInternalSymbolTargets,
+                flatten: false),
+
             // .NET 9.0.1xx SDK,
             new TargetChannelConfig(
                 id: 3884,
