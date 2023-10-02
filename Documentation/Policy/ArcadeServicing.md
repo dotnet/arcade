@@ -75,7 +75,7 @@ which Arcade can be branched for major release 'N' of .NET Core.  Examples are g
 
 1. Create a new branch named `release/<N>` off of the `main` branch of `dotnet/arcade`, and push it to the public repository. Ensure the pool provider names in all yaml of this branch are updated to their "-Svc" versions.
 2. Create a new branch named `release/<N>` off of the `main` branch of `dotnet/arcade-validation`, and push it to the public repository. Ensure the pool provider names in all yaml of this branch are updated to their "-Svc" versions.
-3. Create and merge a pull request to update the package version numbers in the main branch to match the next major version of .NET (N+1). ([example](https://github.com/dotnet/arcade/pull/10666/files))
+3. Create and merge a pull request to update the package version numbers in the main branch to match the next major version of .NET (N+1). ([example](https://github.com/dotnet/arcade/pull/7829/files))
 4. [Add new channels](https://github.com/dotnet/arcade/blob/main/Documentation/Darc.md#add-channel)
    for the new branches, classified (`-c`) as `tools`.  Make a note of these channel ids, as they will be used later in updating the publishing constants used by Arcade for these channels.
     - `.NET <N or next version> Eng`
