@@ -233,6 +233,49 @@ The rules for managing `eng/common`:
 - `eng/common` in the root of VMR is **read-only**, changes are only allowed in Arcade or `src/arcade` of VMR.
 - Repositories can opt-out from getting Arcade updates from the VMR by ignoring the `Microsoft.DotNet.Arcade.Sdk` package in their `src/source-mapping.json` file.
 
+A diagram of how the code flow including the `eng/common` folder looks like:
+
+```mermaid
+sequenceDiagram
+    autonumber
+
+    participant arcade as dotnet/arcade
+    participant runtime as dotnet/runtime
+    participant VMR as VMR
+
+    arcade->>arcade: eng/common is changed
+    arcade->>VMR: Forward flow to VMR
+    activate VMR
+    VMR->>VMR: eng/common is copied to:<br>src/arcade/eng/common<br>and eng/common
+    deactivate VMR
+
+    VMR->>runtime: Backflow<br />includes eng/common
+```
+
+A diagram of a similar code flow but the `eng/common` change would happen in the VMR:
+
+```mermaid
+sequenceDiagram
+    autonumber
+
+    participant arcade as dotnet/arcade
+    participant runtime as dotnet/runtime
+    participant VMR as VMR
+
+    VMR->>VMR: src/arcade/eng/common is changed
+
+    par Code flow
+    VMR->>arcade: Backflow to arcade
+    activate arcade
+    arcade->>arcade: eng/common is copied too
+    deactivate arcade
+    and
+    VMR->>runtime: Backflow<br />includes eng/common
+    end
+```
+
+> **❓❓❓:** `eng/common` would have to change in the VMR too?
+
 #### Updating `global.json`
 
 Similar to `eng/common`, the repo will follow the `global.json` settings from the VMR with the option to opt-out. This is mainly because bumping the .NET SDK in repositories can take time or is not desirable.
