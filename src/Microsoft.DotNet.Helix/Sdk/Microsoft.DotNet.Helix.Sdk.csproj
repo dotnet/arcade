@@ -8,10 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
-    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
-    <PackageReference Include="NuGet.Versioning" Version="$(NuGetVersioningVersion)" />
+    <PackageReference Include="Microsoft.Build.Framework" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="NuGet.Versioning" />
   </ItemGroup>
 
   <!-- Reference Microsoft.Data.Services.Client directly via PackageDownload+Reference to avoid its netstandard1.x dependencies. -->
@@ -21,7 +21,7 @@
                Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" />
     <Reference Include="$(NuGetPackageRoot)microsoft.data.services.client\$(MicrosoftDataServicesClientVersion)\lib\netstandard1.1\Microsoft.Data.Services.Client.dll"
                Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'" />
-    <PackageReference Include="Microsoft.Data.OData" Version="$(MicrosoftDataODataVersion)" />
+    <PackageReference Include="Microsoft.Data.OData" />
   </ItemGroup>
 
   <ItemGroup>
