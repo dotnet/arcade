@@ -59,7 +59,6 @@
     <SystemCompositionVersion>7.0.0</SystemCompositionVersion>
     <SystemIOPackagingVersion>7.0.0</SystemIOPackagingVersion>
     <SystemReflectionMetadataVersion>7.0.0</SystemReflectionMetadataVersion>
-    <SystemSecurityCryptographyX509CertificatesVersion>4.3.2</SystemSecurityCryptographyX509CertificatesVersion>
     <SystemTextEncodingsWebVersion>7.0.0</SystemTextEncodingsWebVersion>
     <SystemTextJsonVersion>7.0.2</SystemTextJsonVersion>
     <!-- sdk -->
@@ -75,8 +74,8 @@
     <!-- xliff-tasks -->
     <MicrosoftDotNetXliffTasksVersion>1.0.0-beta.23475.1</MicrosoftDotNetXliffTasksVersion>
     <!-- external -->
-    <AzureCoreVersion>1.34.0</AzureCoreVersion>
-    <AzureStorageBlobsVersion>12.16.0</AzureStorageBlobsVersion>
+    <AzureCoreVersion>1.35.0</AzureCoreVersion>
+    <AzureStorageBlobsVersion>12.18.0</AzureStorageBlobsVersion>
     <CommandLineParserVersion>2.5.0</CommandLineParserVersion>
     <CoverletCollectorVersion>1.0.1</CoverletCollectorVersion>
     <FluentAssertionsVersion>5.10.3</FluentAssertionsVersion>
