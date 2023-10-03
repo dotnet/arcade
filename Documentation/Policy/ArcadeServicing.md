@@ -109,13 +109,7 @@ Merge Policies:
 Pull Request Failure Notification Tags: ''
 ```
 7. Modify the new release branch  `release/<N>` of arcade-validation to promote builds
-   to `.NET <N> Eng`. ([example of below changes](https://github.com/dotnet/arcade-validation/commit/f47dd86319803143a410b7deeb802ad93a8f2480#diff-7915b9b726a397ae7ba6af7b9703633d21c031ebf21682f3ee7e6a4ec52837a5))
-
-   In the update-channel.ps1 remove calls to:
-   - Get-AzDO-Build 
-   - Get-AzDOHeaders 
-   - Get-LatestBuildResult
-   - Remove the reference to bellweather repos runtime, aspnetcore, installer, and the for loop in the same file.
+   to `.NET <N> Eng`. ([example of below changes](https://github.com/dotnet/arcade-validation/pull/3960/files))
 
    In azure-pipelines.yml 
    - Include the new release branch under trigger `release/<N.x>`.
