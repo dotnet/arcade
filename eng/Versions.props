@@ -100,6 +100,6 @@
     <NewtonsoftJsonVersion>13.0.3</NewtonsoftJsonVersion>
     <OctokitVersion>0.41.0</OctokitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
-    <XUnitVersion>2.4.2</XUnitVersion>
+    <XUnitVersion>2.5.1</XUnitVersion>
   </PropertyGroup>
 </Project>
