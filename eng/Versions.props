@@ -42,11 +42,11 @@
     <MicrosoftCodeAnalysisCSharpVersion>4.6.0</MicrosoftCodeAnalysisCSharpVersion>
     <MicrosoftNetCompilersToolsetVersion>4.6.0</MicrosoftNetCompilersToolsetVersion>
     <!-- runtime -->
-    <MicrosoftBclAsyncInterfacesVersion>8.0.0-rc.1.23419.4</MicrosoftBclAsyncInterfacesVersion>
-    <MicrosoftExtensionsDependencyInjectionAbstractionsVersion>8.0.0-rc.1.23419.4</MicrosoftExtensionsDependencyInjectionAbstractionsVersion>
-    <MicrosoftExtensionsDependencyInjectionVersion>8.0.0-rc.1.23419.4</MicrosoftExtensionsDependencyInjectionVersion>
-    <MicrosoftExtensionsDependencyModelVersion>8.0.0-rc.1.23419.4</MicrosoftExtensionsDependencyModelVersion>
-    <MicrosoftExtensionsLoggingConsoleVersion>8.0.0-rc.1.23419.4</MicrosoftExtensionsLoggingConsoleVersion>
+    <MicrosoftBclAsyncInterfacesVersion>8.0.0-preview.4.23259.5</MicrosoftBclAsyncInterfacesVersion>
+    <MicrosoftExtensionsDependencyInjectionAbstractionsVersion>8.0.0-preview.4.23259.5</MicrosoftExtensionsDependencyInjectionAbstractionsVersion>
+    <MicrosoftExtensionsDependencyInjectionVersion>8.0.0-preview.4.23259.5</MicrosoftExtensionsDependencyInjectionVersion>
+    <MicrosoftExtensionsDependencyModelVersion>8.0.0-preview.4.23259.5</MicrosoftExtensionsDependencyModelVersion>
+    <MicrosoftExtensionsLoggingConsoleVersion>8.0.0-preview.4.23259.5</MicrosoftExtensionsLoggingConsoleVersion>
     <MicrosoftNETCorePlatformsVersion>5.0.0</MicrosoftNETCorePlatformsVersion>
     <MicrosoftNETRuntimeEmscripten2023Nodewin_x64>6.0.4</MicrosoftNETRuntimeEmscripten2023Nodewin_x64>
     <MicrosoftNETRuntimeEmscripten2023Pythonwin_x64>6.0.4</MicrosoftNETRuntimeEmscripten2023Pythonwin_x64>
@@ -56,12 +56,12 @@
     <MicrosoftNETWorkloadMonoToolChainManifest_60200Version>6.0.3</MicrosoftNETWorkloadMonoToolChainManifest_60200Version>
     <MicrosoftNETWorkloadMonoToolChainManifest_60200Version_604>6.0.4</MicrosoftNETWorkloadMonoToolChainManifest_60200Version_604>
     <MicrosoftiOSTemplatesVersion>15.2.302-preview.14.122</MicrosoftiOSTemplatesVersion>
-    <SystemCollectionsImmutableVersion>8.0.0-rc.1.23419.4</SystemCollectionsImmutableVersion>
-    <SystemCompositionVersion>8.0.0-rc.1.23419.4</SystemCompositionVersion>
-    <SystemIOPackagingVersion>8.0.0-rc.1.23419.4</SystemIOPackagingVersion>
-    <SystemReflectionMetadataVersion>8.0.0-rc.1.23419.4</SystemReflectionMetadataVersion>
-    <SystemTextEncodingsWebVersion>8.0.0-rc.1.23419.4</SystemTextEncodingsWebVersion>
-    <SystemTextJsonVersion>8.0.0-rc.1.23419.4</SystemTextJsonVersion>
+    <SystemCollectionsImmutableVersion>8.0.0-preview.4.23259.5</SystemCollectionsImmutableVersion>
+    <SystemCompositionVersion>8.0.0-preview.4.23259.5</SystemCompositionVersion>
+    <SystemIOPackagingVersion>8.0.0-preview.4.23259.5</SystemIOPackagingVersion>
+    <SystemReflectionMetadataVersion>8.0.0-preview.4.23259.5</SystemReflectionMetadataVersion>
+    <SystemTextEncodingsWebVersion>8.0.0-preview.4.23259.5</SystemTextEncodingsWebVersion>
+    <SystemTextJsonVersion>8.0.0-preview.4.23259.5</SystemTextJsonVersion>
     <!-- sdk -->
     <MicrosoftNetSdkWorkloadManifestReaderVersion>8.0.100-preview.3.23178.3</MicrosoftNetSdkWorkloadManifestReaderVersion>
     <!-- symreader-converter -->
