@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.InstallationRecordKey, $"InstalledPacks");
 
             if (!candle.Execute())
-            {                
+            {
                 throw new Exception(Strings.FailedToCompileMsi);
             }
 
