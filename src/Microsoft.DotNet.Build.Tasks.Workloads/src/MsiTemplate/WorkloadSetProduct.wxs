@@ -21,7 +21,7 @@
 
     <Condition Message="A newer version of [ProductName] is alread installed.">
       NOT WIX_DOWNGRADE_DETECTED
-    </Condition>    
+    </Condition>
 
     <?if $(var.Platform)~=x64?>
     <CustomActionRef Id="Set_DOTNETHOME_NON_NATIVE_ARCHITECTURE" />
