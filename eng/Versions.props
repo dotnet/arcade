@@ -23,8 +23,6 @@
     <!-- dotnet-symuploader -->
     <MicrosoftSymbolUploaderBuildTaskVersion>2.0.0-preview.1.23470.14</MicrosoftSymbolUploaderBuildTaskVersion>
     <MicrosoftSymbolUploaderVersion>2.0.0-preview.1.23470.14</MicrosoftSymbolUploaderVersion>
-    <!-- linker -->
-    <MicrosoftNETILLinkTasksVersion>6.0.100-1.22103.2</MicrosoftNETILLinkTasksVersion>
     <!-- msbuild -->
     <MicrosoftBuildFrameworkVersion>17.3.2</MicrosoftBuildFrameworkVersion>
     <MicrosoftBuildTasksCoreVersion>17.3.2</MicrosoftBuildTasksCoreVersion>
