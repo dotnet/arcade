@@ -25,15 +25,15 @@
   <ItemGroup>
     <PackageDownload Include="Microsoft.Signed.Wix" Version="[$(MicrosoftSignedWixVersion)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.200" Version="[$(MicrosoftNETWorkloadMonoToolChainManifest_60200Version)];[$(MicrosoftNETWorkloadMonoToolChainManifest_60200Version_604)]" />
-    <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.300" Version="[6.0.21];[6.0.22]" />
-    <PackageDownload Include="Microsoft.iOS.Templates" Version="[$(MicrosoftiOSTemplatesVersion)];[16.0.527]" />
+    <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.300" Version="[$(MicrosoftNETWorkloadMonoToolChainManifest_60300Version_6021)];[$(MicrosoftNETWorkloadMonoToolChainManifest_60300Version_6022)]" />
+    <PackageDownload Include="Microsoft.iOS.Templates" Version="[$(MicrosoftiOSTemplatesVersion)];[$(MicrosoftiOSTemplatesVersion160527)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net6.Manifest-8.0.100-preview.6" Version="[$(MicrosoftNETWorkloadEmscriptenManifest_80100Preview6Version)]"/>
     <!-- We can only test the task properly by building an actual workload end-to-end. EMSDK is the tiniest one available -->
     <PackageDownload Include="Microsoft.NET.Workload.Emscripten.Manifest-6.0.200" Version="[$(MicrosoftNETWorkloadEmscriptenManifest_60200Version)]" />
     <PackageDownload Include="Microsoft.NET.Runtime.Emscripten.2.0.23.Node.win-x64" Version="[$(MicrosoftNETRuntimeEmscripten2023Nodewin_x64)]" />
     <PackageDownload Include="Microsoft.NET.Runtime.Emscripten.2.0.23.Python.win-x64" Version="[$(MicrosoftNETRuntimeEmscripten2023Pythonwin_x64)]" />
     <PackageDownload Include="Microsoft.NET.Runtime.Emscripten.2.0.23.Sdk.win-x64" Version="[$(MicrosoftNETRuntimeEmscripten2023Sdkwin_x64)]" />
-    <PackageDownload Include="Microsoft.NET.Workloads.9.0.100" Version="[9.0.100-baseline.1.23464.1]" />
+    <PackageDownload Include="Microsoft.NET.Workloads.9.0.100" Version="[$(MicrosoftNETWorkloadBaselineVersion)]" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
