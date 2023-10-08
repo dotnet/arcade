@@ -4,7 +4,7 @@
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
   <ItemGroup>
-    <PackageReference Include="vswhere" Version="$(VSWhereVersion)" IsImplicitlyDefined="true" GeneratePathProperty="true" />
+    <PackageReference Include="vswhere" IsImplicitlyDefined="true" GeneratePathProperty="true" />
   </ItemGroup>
 
   <PropertyGroup>
