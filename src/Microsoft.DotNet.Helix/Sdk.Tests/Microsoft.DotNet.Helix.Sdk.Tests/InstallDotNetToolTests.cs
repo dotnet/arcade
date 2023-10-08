@@ -222,10 +222,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             var hangingCommand = new Mock<ICommand>();
             hangingCommand
                 .Setup(x => x.Execute())
-                .Callback(() =>
+                .Callback(async () =>
                 {
                     hangingCommandCalled.SetResult(true);
-                    dotnetToolInstalled.Task.GetAwaiter().GetResult(); // stop here
+                    await dotnetToolInstalled.Task; // stop here
                 })
                 .Returns(new CommandResult(new ProcessStartInfo(), 0, "Tool installed", null));
 
