@@ -15,9 +15,9 @@
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
       <Sha>d617bc8ed2787c235a57cf0dcdfd087b86ff9521</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="8.0.100-rtm.23479.1">
+    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="8.0.100-rtm.23507.4">
       <Uri>https://github.com/dotnet/templating</Uri>
-      <Sha>4a9eb30212b51dc53c2f647843db6aad6c5426a8</Sha>
+      <Sha>9c9c9443df3a8c1ea48f5c5cff08582e8a415f31</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="9.0.0-beta.23508.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
