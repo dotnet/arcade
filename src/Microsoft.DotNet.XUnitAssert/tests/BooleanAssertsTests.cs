@@ -47,7 +47,7 @@ public class BooleanAssertsTests
 
 			Assert.NotNull(ex);
 			Assert.Equal(
-				"Custom User Message" + Environment.NewLine +
+				"Assert.Fail() Custom User Message" + Environment.NewLine +
 				"Expected: False" + Environment.NewLine +
 				"Actual:   True",
 				ex.Message
@@ -98,7 +98,7 @@ public class BooleanAssertsTests
 
 			Assert.NotNull(ex);
 			Assert.Equal(
-				"Custom User Message" + Environment.NewLine +
+				"Assert.Fail() Custom User Message" + Environment.NewLine +
 				"Expected: True" + Environment.NewLine +
 				"Actual:   False",
 				ex.Message
