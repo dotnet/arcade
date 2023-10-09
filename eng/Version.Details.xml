@@ -48,9 +48,9 @@
       <Uri>https://github.com/dotnet/arcade-services</Uri>
       <Sha>cf065fbe718f3661afe2ea221e55e1a5fe8ddc83</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="8.0.0-prerelease.23477.1">
+    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="8.0.0-prerelease.23505.1">
       <Uri>https://github.com/dotnet/xharness</Uri>
-      <Sha>2b1d423ce08e1ed78c0a821d0850e0f5ab3b193a</Sha>
+      <Sha>0672f8ce90040d589f29edc37d9e817d67cd4533</Sha>
     </Dependency>
     <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="4.5.2-3.23266.1">
       <Uri>https://github.com/dotnet/roslyn</Uri>
