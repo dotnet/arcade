@@ -15,42 +15,42 @@
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
       <Sha>d617bc8ed2787c235a57cf0dcdfd087b86ff9521</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="8.0.100-rtm.23479.1">
+    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="8.0.100-rtm.23507.4">
       <Uri>https://github.com/dotnet/templating</Uri>
-      <Sha>4a9eb30212b51dc53c2f647843db6aad6c5426a8</Sha>
+      <Sha>9c9c9443df3a8c1ea48f5c5cff08582e8a415f31</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="9.0.0-beta.23504.4">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="9.0.0-beta.23508.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>f1868a684ed9766d4247d672fd5f96bba4d4bb00</Sha>
+      <Sha>822f095b8c815dd7b9161140a9ff8151de593f82</Sha>
       <SourceBuild RepoName="arcade" ManagedOnly="true" />
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="9.0.0-beta.23504.4">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="9.0.0-beta.23508.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>f1868a684ed9766d4247d672fd5f96bba4d4bb00</Sha>
+      <Sha>822f095b8c815dd7b9161140a9ff8151de593f82</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SignTool" Version="9.0.0-beta.23504.4">
+    <Dependency Name="Microsoft.DotNet.SignTool" Version="9.0.0-beta.23508.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>f1868a684ed9766d4247d672fd5f96bba4d4bb00</Sha>
+      <Sha>822f095b8c815dd7b9161140a9ff8151de593f82</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="9.0.0-beta.23504.4">
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="9.0.0-beta.23508.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>f1868a684ed9766d4247d672fd5f96bba4d4bb00</Sha>
+      <Sha>822f095b8c815dd7b9161140a9ff8151de593f82</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="9.0.0-beta.23504.4">
+    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="9.0.0-beta.23508.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>f1868a684ed9766d4247d672fd5f96bba4d4bb00</Sha>
+      <Sha>822f095b8c815dd7b9161140a9ff8151de593f82</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.23504.3">
+    <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.23506.1">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>eceae13f0e6780b35f253d8ca16e961691260424</Sha>
+      <Sha>cf065fbe718f3661afe2ea221e55e1a5fe8ddc83</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.1.0-beta.23504.3">
+    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.1.0-beta.23506.1">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>eceae13f0e6780b35f253d8ca16e961691260424</Sha>
+      <Sha>cf065fbe718f3661afe2ea221e55e1a5fe8ddc83</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="8.0.0-prerelease.23477.1">
+    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="8.0.0-prerelease.23505.1">
       <Uri>https://github.com/dotnet/xharness</Uri>
-      <Sha>2b1d423ce08e1ed78c0a821d0850e0f5ab3b193a</Sha>
+      <Sha>0672f8ce90040d589f29edc37d9e817d67cd4533</Sha>
     </Dependency>
     <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="4.5.2-3.23266.1">
       <Uri>https://github.com/dotnet/roslyn</Uri>
@@ -64,9 +64,9 @@
       <Uri>https://github.com/dotnet/symreader-converter</Uri>
       <Sha>c5ba7c88f92e2dde156c324a8c8edc04d9fa4fe0</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="1.0.0-beta.23502.1">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="1.0.0-beta.23506.1">
       <Uri>https://github.com/dotnet/xliff-tasks</Uri>
-      <Sha>0f36b29fb7374379609c3ee6a0b70caf457d8a0e</Sha>
+      <Sha>9ea7eccc5d264af684633c1d757a6a5547a404e6</Sha>
     </Dependency>
     <!-- Latest preview version required by source-build. The dependency is loaded in during built-time
          by consumers of NuGetRepack.Tasks, so we cannot use a ref pack for it -->
