@@ -222,11 +222,13 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             var hangingCommand = new Mock<ICommand>();
             hangingCommand
                 .Setup(x => x.Execute())
-                .Callback(async () =>
+#pragma warning disable xUnit1031 // This deadlock is intentional
+                .Callback(() =>
                 {
                     hangingCommandCalled.SetResult(true);
-                    await dotnetToolInstalled.Task; // stop here
+                    dotnetToolInstalled.GetAwaiter().GetResult(); // stop here
                 })
+#pragma warning restore xUnit1031
                 .Returns(new CommandResult(new ProcessStartInfo(), 0, "Tool installed", null));
 
             var hangingCommandFactoryMock = new Mock<ICommandFactory>();
