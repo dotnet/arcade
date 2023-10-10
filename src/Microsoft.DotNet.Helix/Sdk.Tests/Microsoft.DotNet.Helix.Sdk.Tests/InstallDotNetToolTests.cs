@@ -226,7 +226,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 .Callback(() =>
                 {
                     hangingCommandCalled.SetResult(true);
-                    dotnetToolInstalled.GetAwaiter().GetResult(); // stop here
+                    dotnetToolInstalled.Task.GetAwaiter().GetResult(); // stop here
                 })
 #pragma warning restore xUnit1031
                 .Returns(new CommandResult(new ProcessStartInfo(), 0, "Tool installed", null));
