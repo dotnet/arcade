@@ -43,10 +43,10 @@ public class BooleanAssertsTests
 		[Fact]
 		public static void UserSuppliedMessage()
 		{
-			var ex = Record.Exception(() => Assert.False(true, "Custom User Message"));
+			var ex = Record.Exception(() => Assert.Fail("Custom User Message"));
 
 			Assert.NotNull(ex);
-			Assert.Equal("Custom User Message", ex.Message);
+			Assert.Equal("Assert.Fail(): Custom User Message", ex.Message);
 		}
 	}
 
@@ -89,10 +89,10 @@ public class BooleanAssertsTests
 		[Fact]
 		public static void UserSuppliedMessage()
 		{
-			var ex = Record.Exception(() => Assert.True(false, "Custom User Message"));
+			var ex = Record.Exception(() => Assert.Fail("Custom User Message"));
 
 			Assert.NotNull(ex);
-			Assert.Equal("Custom User Message", ex.Message);
+			Assert.Equal("Assert.Fail(): Custom User Message", ex.Message);
 		}
 	}
 }

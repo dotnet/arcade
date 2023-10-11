@@ -9,16 +9,16 @@
     <ProjectReference Include="..\Microsoft.DotNet.Build.Tasks.Workloads\src\Microsoft.DotNet.Build.Tasks.Workloads.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.XUnitExtensions\src\Microsoft.DotNet.XUnitExtensions.csproj" />
 
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
-    <PackageReference Include="Microsoft.Deployment.DotNet.Releases" Version="$(MicrosoftDeploymentDotNetReleasesVersion)" />
-    <PackageReference Include="Microsoft.NET.Sdk.WorkloadManifestReader" Version="$(MicrosoftNetSdkWorkloadManifestReaderVersion)" />
-    <PackageReference Include="Microsoft.Signed.Wix" Version="$(MicrosoftSignedWixVersion)" />
-    <PackageReference Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" />
+    <PackageReference Include="Microsoft.Deployment.DotNet.Releases" />
+    <PackageReference Include="Microsoft.NET.Sdk.WorkloadManifestReader" />
+    <PackageReference Include="Microsoft.Signed.Wix" />
+    <PackageReference Include="FluentAssertions" />
   </ItemGroup>
 
   <!-- The tests reference the MSBuild task assembly directly and therefore we need to add references that would normally be provided by MSBuild. -->
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
-    <PackageReference Include="NuGet.Packaging" Version="$(NuGetPackagingVersion)" />
+    <PackageReference Include="NuGet.Packaging" />
   </ItemGroup>
 
   <!-- Sample packages -->
@@ -26,6 +26,7 @@
     <PackageDownload Include="Microsoft.Signed.Wix" Version="[$(MicrosoftSignedWixVersion)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.200" Version="[$(MicrosoftNETWorkloadMonoToolChainManifest_60200Version)];[$(MicrosoftNETWorkloadMonoToolChainManifest_60200Version_604)]" />
     <PackageDownload Include="Microsoft.iOS.Templates" Version="[$(MicrosoftiOSTemplatesVersion)]" />
+    <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net6.Manifest-8.0.100-preview.6" Version="[$(MicrosoftNETWorkloadEmscriptenManifest_80100Preview6Version)]"/>
     <!-- We can only test the task properly by building an actual workload end-to-end. EMSDK is the tiniest one available -->
     <PackageDownload Include="Microsoft.NET.Workload.Emscripten.Manifest-6.0.200" Version="[$(MicrosoftNETWorkloadEmscriptenManifest_60200Version)]" />
     <PackageDownload Include="Microsoft.NET.Runtime.Emscripten.2.0.23.Node.win-x64" Version="[$(MicrosoftNETRuntimeEmscripten2023Nodewin_x64)]" />
@@ -34,7 +35,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
-    <PackageReference Include="System.Text.Json" Version="$(SystemTextJsonVersion)"  />
+    <PackageReference Include="System.Text.Json"  />
   </ItemGroup>
 
   <ItemGroup>
@@ -44,6 +45,7 @@
     <Content Include="$(NuGetPackageRoot)microsoft.net.workload.mono.toolchain.manifest-6.0.200\$(MicrosoftNETWorkloadMonoToolChainManifest_60200Version_604)\*.nupkg" Link="testassets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
     <Content Include="$(NuGetPackageRoot)microsoft.ios.templates\$(MicrosoftiOSTemplatesVersion)\*.nupkg" Link="testassets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
     <Content Include="$(NuGetPackageRoot)microsoft.net.workload.emscripten.manifest-6.0.200\$(MicrosoftNETWorkloadEmscriptenManifest_60200Version)\*.nupkg" Link="testassets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+    <Content Include="$(NuGetPackageRoot)microsoft.net.workload.emscripten.net6.manifest-8.0.100-preview.6\$(MicrosoftNETWorkloadEmscriptenManifest_80100Preview6Version)\*.nupkg" Link="testassets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
     <Content Include="$(NuGetPackageRoot)microsoft.net.runtime.emscripten.2.0.23.node.win-x64\$(MicrosoftNETRuntimeEmscripten2023Nodewin_x64)\*.nupkg" Link="testassets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
     <Content Include="$(NuGetPackageRoot)microsoft.net.runtime.emscripten.2.0.23.python.win-x64\$(MicrosoftNETRuntimeEmscripten2023Pythonwin_x64)\*.nupkg" Link="testassets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
     <Content Include="$(NuGetPackageRoot)microsoft.net.runtime.emscripten.2.0.23.sdk.win-x64\$(MicrosoftNETRuntimeEmscripten2023Sdkwin_x64)\*.nupkg" Link="testassets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
