@@ -45,11 +45,12 @@ namespace Xunit.Internal
 		static ConcurrentDictionary<Type, Dictionary<string, Func<object, object>>> gettersByType = new ConcurrentDictionary<Type, Dictionary<string, Func<object, object>>>();
 #endif
 
+		const string fileSystemInfoFqn = "System.IO.FileSystemInfo, System.Runtime";
 #if XUNIT_NULLABLE
-		static readonly Lazy<TypeInfo?> fileSystemInfoTypeInfo = new Lazy<TypeInfo?>(() => GetTypeInfo("System.IO.FileSystemInfo"));
+		static readonly Lazy<TypeInfo?> fileSystemInfoTypeInfo = new Lazy<TypeInfo?>(() => Type.GetType(fileSystemInfoFqn)?.GetTypeInfo());
 		static readonly Lazy<PropertyInfo?> fileSystemInfoFullNameProperty = new Lazy<PropertyInfo?>(() => fileSystemInfoTypeInfo.Value?.GetDeclaredProperty("FullName"));
 #else
-		static readonly Lazy<TypeInfo> fileSystemInfoTypeInfo = new Lazy<TypeInfo>(() => GetTypeInfo("System.IO.FileSystemInfo"));
+		static readonly Lazy<TypeInfo> fileSystemInfoTypeInfo = new Lazy<TypeInfo>(() => GetTypeInfo(fileSystemInfoFqn)?.GetTypeInfo());
 		static readonly Lazy<PropertyInfo> fileSystemInfoFullNameProperty = new Lazy<PropertyInfo>(() => fileSystemInfoTypeInfo.Value?.GetDeclaredProperty("FullName"));
 #endif
 
@@ -120,29 +121,6 @@ namespace Xunit.Internal
 						.Concat(propertyGetters)
 						.ToDictionary(g => g.name, g => g.getter);
 			});
-
-#if XUNIT_NULLABLE
-		static TypeInfo? GetTypeInfo(string typeName)
-#else
-		static TypeInfo GetTypeInfo(string typeName)
-#endif
-		{
-			try
-			{
-				foreach (var assembly in getAssemblies.Value)
-				{
-					var type = assembly.GetType(typeName);
-					if (type != null)
-						return type.GetTypeInfo();
-				}
-
-				return null;
-			}
-			catch (Exception ex)
-			{
-				throw new InvalidOperationException($"Fatal error: Exception occured while trying to retrieve type '{typeName}'", ex);
-			}
-		}
 
 		internal static string ShortenAndEncodeString(
 #if XUNIT_NULLABLE
