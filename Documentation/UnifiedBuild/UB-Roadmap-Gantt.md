@@ -41,7 +41,7 @@ gantt
     section ProdCon
         Backflow tooling: after net8-ga, 6w
         Release infra repo dependency investigation: after net8-ga, 6w
-        Dependency Flow Service: after net9-p1, 8w
+        Dependency Flow Service: after holiday, 8w
         Staging / Release Pipeline: after net9-p3, 4w
         Identify Repo Dependencies: after net9-p3, 4w
         Multi-band SDKs: after net9-p4, 4w
