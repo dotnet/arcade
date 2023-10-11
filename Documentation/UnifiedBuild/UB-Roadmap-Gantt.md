@@ -6,7 +6,7 @@ gantt
     axisFormat %b-%Y
     RC2: milestone, net8-rc2, 2023-10-10, 0
     GA: milestone, net8-ga, 2023-11-14, 0
-    Holiday Break: milestone, holiday, 2023-12-25, 0
+    Holiday Break - VB PoCs done: milestone, holiday, 2023-12-25, 0
     %% delta between Holiday and P1 is 7w
     P1 - Confidence Point in PoC: milestone, net9-p1, 2024-02-14, 0
     P2: milestone, net9-p2, 2024-03-14, 0
