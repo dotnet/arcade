@@ -8,7 +8,7 @@ gantt
     GA: milestone, net8-ga, 2023-11-14, 0
     Holiday Break: milestone, holiday, 2023-12-25, 0
     %% delta between Holiday and P1 is 7w
-    P1 - Confidence Poin in PoC: milestone, net9-p1, 2024-02-14, 0
+    P1 - Confidence Point in PoC: milestone, net9-p1, 2024-02-14, 0
     P2: milestone, net9-p2, 2024-03-14, 0
     P3 - Productize PoC: milestone, net9-p3, 2024-04-14, 0
     P4 - VMR Test Release: milestone, net9-p4, 2024-05-14, 0
@@ -19,7 +19,7 @@ gantt
     section Common
         UB Week: ub-week, 2023-10-02, 1w
 
-    section Vertical Build
+    section Product Teams
         Win VB PoC: after net8-ga, 6w
         Linux VB PoC: after net8-ga, 6w
         MacOS VB PoC: after net8-ga, 6w
