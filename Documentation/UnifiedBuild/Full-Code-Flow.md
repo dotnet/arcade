@@ -267,20 +267,6 @@ sequenceDiagram
 
 #### Updating `global.json`
 
-Similar to `eng/common`, the repo will follow the `global.json` settings from the VMR with the option to opt-out. This is mainly because bumping the .NET SDK in repositories can take time or is not desirable.
+Similar to `eng/common`, individual repos will follow the `global.json` settings from the VMR with the option to opt-out. This is mainly because bumping the .NET SDK in repositories can take time or is not desirable.
 
 Repositories can opt-out from getting Arcade updates from the VMR by ignoring the `Microsoft.DotNet.Arcade.Sdk` package in their codeflow setting.
-
-### Proposal for handling the configuration
-
-Proposed configuration:
-
-- Each repository gets a new `eng/source-mapping.json` file.
-- This file has two sections, for forward and backflow, with identical schema.
-  - Each section defines cloaking rules and additional mappings.
-- This file is an override for defaults defined in the `src/source-mappings.json` file of the VMR (common for all repositories).
-  - Default cloakings are similar to what we have today (`*.dll`, ...).have patches for the backflow too?
-  - The `src/source-mappings.json` file is not mirrored to any individual repository and lives in the VMR solely.
-- When synchronizing code, the current contents of the `eng/source-mappings.json` from the source repository (individual repository for forwards flow, VMR for backflow) is used to configure the synchronization.
-
-> **❓❓❓:** Version of `darc` used to do the synchronization? Currently it is in `Version.Details.xml` of `dotnet/installer`. Possibly, this should be driven by VMR's `Version.Details.xml` or `.config/dotnet-tools.json` and we'd flow Arcade Services into the VMR the usual way. Could be also in Arcade...
