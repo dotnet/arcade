@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="nsubstitute" Version="4.3.0" />
+    <PackageReference Include="nsubstitute" />
   </ItemGroup>
 
 </Project>

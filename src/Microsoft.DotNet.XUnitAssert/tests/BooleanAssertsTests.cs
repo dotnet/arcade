@@ -46,7 +46,7 @@ public class BooleanAssertsTests
 			var ex = Record.Exception(() => Assert.Fail("Custom User Message"));
 
 			Assert.NotNull(ex);
-			Assert.Equal("Assert.Fail(): Custom User Message", ex.Message);
+			Assert.Equal("Custom User Message", ex.Message);
 		}
 	}
 
@@ -92,7 +92,7 @@ public class BooleanAssertsTests
 			var ex = Record.Exception(() => Assert.Fail("Custom User Message"));
 
 			Assert.NotNull(ex);
-			Assert.Equal("Assert.Fail(): Custom User Message", ex.Message);
+			Assert.Equal("Custom User Message", ex.Message);
 		}
 	}
 }

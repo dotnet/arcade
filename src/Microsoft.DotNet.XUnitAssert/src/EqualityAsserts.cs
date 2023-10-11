@@ -553,7 +553,7 @@ namespace Xunit
 		/// <param name="expected">The expected object</param>
 		/// <param name="actual">The actual object</param>
 		/// <param name="comparer">The comparer used to examine the objects</param>
-		public static void NotEqual<T>(
+		public static void NotEqual<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] T>(
 #if XUNIT_NULLABLE
 			[AllowNull] T expected,
 			[AllowNull] T actual,
