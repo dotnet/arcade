@@ -145,35 +145,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
                 else
                 {
-                    ITaskItem[] symbolItems = ItemsToPush
-                        .Where(i => i.ItemSpec.Contains("symbols.nupkg"))
-                        .Select(i =>
-                        {
-                            string fileName = Path.GetFileName(i.ItemSpec);
-                            i.SetMetadata("RelativeBlobPath", $"{AssetsVirtualDir}symbols/{fileName}");
-                            return i;
-                        })
-                        .ToArray();
-
-                    ITaskItem[] packageItems = ItemsToPush
-                        .Where(i => !symbolItems.Contains(i))
-                        .ToArray();
-
-                    var packagePaths = packageItems.Select(i => i.ItemSpec);
-
-                    if(!blobFeedAction.PushToFeedAsync(packagePaths, pushOptions).Result)
-                    {
-                        return !Log.HasLoggedErrors;
-                    }
-
-                    await blobFeedAction.PublishToFlatContainerAsync(symbolItems, MaxClients, pushOptions);
-                    if (Log.HasLoggedErrors)
-                    {
-                        return !Log.HasLoggedErrors;
-                    }
-
-                    packageArtifacts = ConcatPackageArtifacts(packageArtifacts, packageItems);
-                    blobArtifacts = ConcatBlobArtifacts(blobArtifacts, symbolItems);
+                    throw new NotImplementedException("Sleet feeds no longer supported.");
                 }
 
                 if (!(MSBuildListSplitter.GetNamedProperties(ManifestBuildData).ContainsKey("Location") || 
