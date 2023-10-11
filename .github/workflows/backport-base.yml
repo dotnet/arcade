@@ -22,7 +22,7 @@ on:
 
 jobs:
   cleanup:
-    if: ${{ contains(format('{0},', inputs.repository_owners), format('{0},', github.repository_owner) && github.event_name == 'schedule' }}
+    if: ${{ contains(format('{0},', inputs.repository_owners), format('{0},', github.repository_owner)) && github.event_name == 'schedule' }}
     runs-on: ubuntu-latest
     permissions:
       actions: write
