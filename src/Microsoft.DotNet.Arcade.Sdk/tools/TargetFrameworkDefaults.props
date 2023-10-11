@@ -16,8 +16,8 @@
   -->
   <PropertyGroup>
     <!-- .NET -->
-    <NetCurrent>net8.0</NetCurrent>
-    <NetPrevious>net7.0</NetPrevious>
+    <NetCurrent>net9.0</NetCurrent>
+    <NetPrevious>net8.0</NetPrevious>
     <NetMinimum>net6.0</NetMinimum>
 
     <!-- .NET Framework -->
