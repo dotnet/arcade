@@ -39,7 +39,11 @@ namespace Xunit
 		/// <param name="value">The value to e validated</param>
 		/// <returns>The non-<c>null</c> value</returns>
 		/// <exception cref="NotNullException">Thrown when the value is null</exception>
+#if XUNIT_NULLABLE
+		public static T NotNull<T>([NotNull] T? value)
+#else
 		public static T NotNull<T>(T? value)
+#endif
 			where T : struct
 		{
 			if (!value.HasValue)

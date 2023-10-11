@@ -3,6 +3,7 @@
 #else
 // In case this is source-imported with global nullable enabled but no XUNIT_NULLABLE
 #pragma warning disable CS8600
+#pragma warning disable CS8601
 #pragma warning disable CS8603
 #pragma warning disable CS8604
 #pragma warning disable CS8621
@@ -45,6 +46,44 @@ namespace Xunit.Internal
 #endif
 
 #if XUNIT_NULLABLE
+		static readonly Lazy<TypeInfo?> fileSystemInfoTypeInfo = new Lazy<TypeInfo?>(() => GetTypeInfo("System.IO.FileSystemInfo"));
+		static readonly Lazy<PropertyInfo?> fileSystemInfoFullNameProperty = new Lazy<PropertyInfo?>(() => fileSystemInfoTypeInfo.Value?.GetDeclaredProperty("FullName"));
+#else
+		static readonly Lazy<TypeInfo> fileSystemInfoTypeInfo = new Lazy<TypeInfo>(() => GetTypeInfo("System.IO.FileSystemInfo"));
+		static readonly Lazy<PropertyInfo> fileSystemInfoFullNameProperty = new Lazy<PropertyInfo>(() => fileSystemInfoTypeInfo.Value?.GetDeclaredProperty("FullName"));
+#endif
+
+		static readonly Lazy<Assembly[]> getAssemblies = new Lazy<Assembly[]>(() =>
+		{
+#if NETSTANDARD1_1 || NETSTANDARD1_2 || NETSTANDARD1_3 || NETSTANDARD1_4 || NETSTANDARD1_5 || NETSTANDARD1_6
+			var appDomainType = Type.GetType("System.AppDomain");
+			if (appDomainType != null)
+			{
+				var currentDomainProperty = appDomainType.GetRuntimeProperty("CurrentDomain");
+				if (currentDomainProperty != null)
+				{
+					var getAssembliesMethod = appDomainType.GetRuntimeMethods().FirstOrDefault(m => m.Name == "GetAssemblies");
+					if (getAssembliesMethod != null)
+					{
+						var currentDomain = currentDomainProperty.GetValue(null);
+						if (currentDomain != null)
+						{
+							var getAssembliesArgs = getAssembliesMethod.GetParameters().Length == 1 ? new object[] { false } : new object[0];
+							var assemblies = getAssembliesMethod.Invoke(currentDomain, getAssembliesArgs) as Assembly[];
+							if (assemblies != null)
+								return assemblies;
+						}
+					}
+				}
+			}
+
+			return new Assembly[0];
+#else
+			return AppDomain.CurrentDomain.GetAssemblies();
+#endif
+		});
+
+#if XUNIT_NULLABLE
 		static Dictionary<string, Func<object?, object?>> GetGettersForType(Type type) =>
 #else
 		static Dictionary<string, Func<object, object>> GetGettersForType(Type type) =>
@@ -81,6 +120,29 @@ namespace Xunit.Internal
 						.Concat(propertyGetters)
 						.ToDictionary(g => g.name, g => g.getter);
 			});
+
+#if XUNIT_NULLABLE
+		static TypeInfo? GetTypeInfo(string typeName)
+#else
+		static TypeInfo GetTypeInfo(string typeName)
+#endif
+		{
+			try
+			{
+				foreach (var assembly in getAssemblies.Value)
+				{
+					var type = assembly.GetType(typeName);
+					if (type != null)
+						return type.GetTypeInfo();
+				}
+
+				return null;
+			}
+			catch (Exception ex)
+			{
+				throw new InvalidOperationException($"Fatal error: Exception occured while trying to retrieve type '{typeName}'", ex);
+			}
+		}
 
 		internal static string ShortenAndEncodeString(
 #if XUNIT_NULLABLE
@@ -189,7 +251,7 @@ namespace Xunit.Internal
 #endif
 			bool strict)
 		{
-			return VerifyEquivalence(expected, actual, strict, string.Empty, new HashSet<object>(), new HashSet<object>());
+			return VerifyEquivalence(expected, actual, strict, string.Empty, new HashSet<object>(), new HashSet<object>(), 1);
 		}
 
 #if XUNIT_NULLABLE
@@ -204,8 +266,13 @@ namespace Xunit.Internal
 			bool strict,
 			string prefix,
 			HashSet<object> expectedRefs,
-			HashSet<object> actualRefs)
+			HashSet<object> actualRefs,
+			int depth)
 		{
+			// Check for exceeded depth
+			if (depth == 50)
+				return EquivalentException.ForExceededDepth(50, prefix);
+
 			// Check for null equivalence
 			if (expected == null)
 				return
@@ -234,59 +301,76 @@ namespace Xunit.Internal
 			{
 				var expectedType = expected.GetType();
 				var expectedTypeInfo = expectedType.GetTypeInfo();
+				var actualType = actual.GetType();
+				var actualTypeInfo = actualType.GetTypeInfo();
 
 				// Primitive types, enums and strings should just fall back to their Equals implementation
 				if (expectedTypeInfo.IsPrimitive || expectedTypeInfo.IsEnum || expectedType == typeof(string))
 					return VerifyEquivalenceIntrinsics(expected, actual, prefix);
 
-				// IComparable value types should fall back to their CompareTo implementation
-				if (expectedTypeInfo.IsValueType)
-				{
-					// TODO: Should we support more than just IComparable? This feels like it was added solely
-					// to support DateTime (a built-in non-intrinsic value type). Should we support the full
-					// gamut of everything that we do in AssertEqualityComparer?
-					try
-					{
-						var expectedComparable = expected as IComparable;
-						if (expectedComparable != null)
-							return
-								expectedComparable.CompareTo(actual) == 0
-									? null
-									: EquivalentException.ForMemberValueMismatch(expected, actual, prefix);
-					}
-					catch (Exception ex)
-					{
-						return EquivalentException.ForMemberValueMismatch(expected, actual, prefix, ex);
-					}
+				// DateTime and DateTimeOffset need to be compared via IComparable (because of a circular
+				// reference via the Date property).
+				if (expectedType == typeof(DateTime) || expectedType == typeof(DateTimeOffset))
+					return VerifyEquivalenceDateTime(expected, actual, prefix);
 
-					try
-					{
-						var actualComparable = actual as IComparable;
-						if (actualComparable != null)
-							return
-								actualComparable.CompareTo(expected) == 0
-									? null
-									: EquivalentException.ForMemberValueMismatch(expected, actual, prefix);
-					}
-					catch (Exception ex)
-					{
-						return EquivalentException.ForMemberValueMismatch(expected, actual, prefix, ex);
-					}
-				}
+				// FileSystemInfo has a recursion problem when getting the root directory
+				if (fileSystemInfoTypeInfo.Value != null)
+					if (fileSystemInfoTypeInfo.Value.IsAssignableFrom(expectedTypeInfo) && fileSystemInfoTypeInfo.Value.IsAssignableFrom(actualTypeInfo))
+						return VerifyEquivalenceFileSystemInfo(expected, actual, strict, prefix, expectedRefs, actualRefs, depth);
 
 				// Enumerables? Check equivalence of individual members
 				var enumerableExpected = expected as IEnumerable;
 				var enumerableActual = actual as IEnumerable;
 				if (enumerableExpected != null && enumerableActual != null)
-					return VerifyEquivalenceEnumerable(enumerableExpected, enumerableActual, strict, prefix, expectedRefs, actualRefs);
+					return VerifyEquivalenceEnumerable(enumerableExpected, enumerableActual, strict, prefix, expectedRefs, actualRefs, depth);
 
-				return VerifyEquivalenceReference(expected, actual, strict, prefix, expectedRefs, actualRefs);
+				return VerifyEquivalenceReference(expected, actual, strict, prefix, expectedRefs, actualRefs, depth);
 			}
 			finally
 			{
 				expectedRefs.Remove(expected);
 				actualRefs.Remove(actual);
 			}
+		}
+
+#if XUNIT_NULLABLE
+		static EquivalentException? VerifyEquivalenceDateTime(
+#else
+		static EquivalentException VerifyEquivalenceDateTime(
+#endif
+			object expected,
+			object actual,
+			string prefix)
+		{
+			try
+			{
+				var expectedComparable = expected as IComparable;
+				if (expectedComparable != null)
+					return
+						expectedComparable.CompareTo(actual) == 0
+							? null
+							: EquivalentException.ForMemberValueMismatch(expected, actual, prefix);
+			}
+			catch (Exception ex)
+			{
+				return EquivalentException.ForMemberValueMismatch(expected, actual, prefix, ex);
+			}
+
+			try
+			{
+				var actualComparable = actual as IComparable;
+				if (actualComparable != null)
+					return
+						actualComparable.CompareTo(expected) == 0
+							? null
+							: EquivalentException.ForMemberValueMismatch(expected, actual, prefix);
+			}
+			catch (Exception ex)
+			{
+				return EquivalentException.ForMemberValueMismatch(expected, actual, prefix, ex);
+			}
+
+			throw new InvalidOperationException($"VerifyEquivalenceDateTime was given non-DateTime(Offset) objects; typeof(expected) = {ArgumentFormatter.FormatTypeName(expected.GetType())}, typeof(actual) = {ArgumentFormatter.FormatTypeName(actual.GetType())}");
 		}
 
 #if XUNIT_NULLABLE
@@ -299,7 +383,8 @@ namespace Xunit.Internal
 			bool strict,
 			string prefix,
 			HashSet<object> expectedRefs,
-			HashSet<object> actualRefs)
+			HashSet<object> actualRefs,
+			int depth)
 		{
 #if XUNIT_NULLABLE
 			var expectedValues = expected.Cast<object?>().ToList();
@@ -315,7 +400,7 @@ namespace Xunit.Internal
 			{
 				var actualIdx = 0;
 				for (; actualIdx < actualValues.Count; ++actualIdx)
-					if (VerifyEquivalence(expectedValue, actualValues[actualIdx], strict, "", expectedRefs, actualRefs) == null)
+					if (VerifyEquivalence(expectedValue, actualValues[actualIdx], strict, "", expectedRefs, actualRefs, depth) == null)
 						break;
 
 				if (actualIdx == actualValues.Count)
@@ -328,6 +413,34 @@ namespace Xunit.Internal
 				return EquivalentException.ForExtraCollectionValue(expectedValues, actualOriginalValues, actualValues, prefix);
 
 			return null;
+		}
+
+#if XUNIT_NULLABLE
+		static EquivalentException? VerifyEquivalenceFileSystemInfo(
+#else
+		static EquivalentException VerifyEquivalenceFileSystemInfo(
+#endif
+			object expected,
+			object actual,
+			bool strict,
+			string prefix,
+			HashSet<object> expectedRefs,
+			HashSet<object> actualRefs,
+			int depth)
+		{
+			if (fileSystemInfoFullNameProperty.Value == null)
+				throw new InvalidOperationException("Could not find 'FullName' property on type 'System.IO.FileSystemInfo'");
+
+			var expectedType = expected.GetType();
+			var actualType = actual.GetType();
+
+			if (expectedType != actualType)
+				return EquivalentException.ForMismatchedTypes(expectedType, actualType, prefix);
+
+			var fullName = fileSystemInfoFullNameProperty.Value.GetValue(expected);
+			var expectedAnonymous = new { FullName = fullName };
+
+			return VerifyEquivalenceReference(expectedAnonymous, actual, strict, prefix, expectedRefs, actualRefs, depth);
 		}
 
 #if XUNIT_NULLABLE
@@ -360,7 +473,8 @@ namespace Xunit.Internal
 			bool strict,
 			string prefix,
 			HashSet<object> expectedRefs,
-			HashSet<object> actualRefs)
+			HashSet<object> actualRefs,
+			int depth)
 		{
 			var prefixDot = prefix == string.Empty ? string.Empty : prefix + ".";
 
@@ -385,7 +499,7 @@ namespace Xunit.Internal
 				var expectedMemberValue = kvp.Value(expected);
 				var actualMemberValue = actualGetter(actual);
 
-				var ex = VerifyEquivalence(expectedMemberValue, actualMemberValue, strict, prefixDot + kvp.Key, expectedRefs, actualRefs);
+				var ex = VerifyEquivalence(expectedMemberValue, actualMemberValue, strict, prefixDot + kvp.Key, expectedRefs, actualRefs, depth + 1);
 				if (ex != null)
 					return ex;
 			}

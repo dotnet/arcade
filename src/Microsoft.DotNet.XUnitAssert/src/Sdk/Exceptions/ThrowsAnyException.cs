@@ -35,7 +35,7 @@ namespace Xunit.Sdk
 		/// </summary>
 		/// <param name="expected">The expected exception type</param>
 		/// <param name="actual">The actual exception</param>
-		internal static ThrowsAnyException ForIncorrectExceptionType(
+		public static ThrowsAnyException ForIncorrectExceptionType(
 			Type expected,
 			Exception actual) =>
 				new ThrowsAnyException(

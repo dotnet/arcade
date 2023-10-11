@@ -486,6 +486,7 @@ namespace Xunit.Sdk
 		static bool SafeToMultiEnumerate(IEnumerable collection) =>
 #endif
 			collection is Array ||
+			collection is BitArray ||
 			collection is IList ||
 			collection is IDictionary ||
 			GetSetElementType(collection) != null;

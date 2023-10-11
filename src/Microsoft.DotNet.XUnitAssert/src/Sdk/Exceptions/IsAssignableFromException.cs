@@ -29,7 +29,7 @@ namespace Xunit.Sdk
 		/// </summary>
 		/// <param name="expected">The expected type</param>
 		/// <param name="actual">The actual object value</param>
-		internal static IsAssignableFromException ForIncompatibleType(
+		public static IsAssignableFromException ForIncompatibleType(
 			Type expected,
 #if XUNIT_NULLABLE
 			object? actual) =>

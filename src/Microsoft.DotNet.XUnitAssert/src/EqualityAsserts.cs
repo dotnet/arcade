@@ -165,7 +165,7 @@ namespace Xunit
 
 					if (itemComparer != null)
 					{
-						if (CollectionTracker.AreCollectionsEqual(expectedTracker, actualTracker, itemComparer, out mismatchedIndex))
+						if (CollectionTracker.AreCollectionsEqual(expectedTracker, actualTracker, itemComparer, itemComparer == AssertEqualityComparer<T>.DefaultInnerComparer, out mismatchedIndex))
 							return;
 
 						var expectedStartIdx = -1;
@@ -614,7 +614,7 @@ namespace Xunit
 					if (itemComparer != null)
 					{
 						int? mismatchedIndex;
-						if (!CollectionTracker.AreCollectionsEqual(expectedTracker, actualTracker, itemComparer, out mismatchedIndex))
+						if (!CollectionTracker.AreCollectionsEqual(expectedTracker, actualTracker, itemComparer, itemComparer == AssertEqualityComparer<T>.DefaultInnerComparer, out mismatchedIndex))
 							return;
 
 						formattedExpected = expectedTracker?.FormatStart() ?? "null";
