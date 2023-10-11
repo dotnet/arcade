@@ -114,8 +114,7 @@ Pull Request Failure Notification Tags: ''
    In azure-pipelines.yml 
    - Include the new release branch under trigger `release/<N.x>`.
    - Update the branch name to `refs/heads/release/<N>` for the Validate_Publishing condition.
-   - Update the display name from `Promote Arcade to '.NET Eng - Latest' channel` to `Promote Arcade to 'Net <N> Eng' channel`
-   - Update the display name from  `Promote Arcade to 'Latest' channel` to `Promote Arcade to 'Net <N> Eng' channel`
+   - Update the target channel name for promotion for the update-channel.ps1 script call in the 'Promote Arcade' job
 
 9. Create and merge a pull request to update [PublishingConstants.cs](https://github.com/dotnet/arcade/blob/main/src/Microsoft.DotNet.Build.Tasks.Feed/src/model/PublishingConstants.cs)
    in Arcade's `main` branch for new channels ([example](https://github.com/dotnet/arcade/pull/10666/files)). Use the channel ids generated in step 4 above.  Note that this will take some time before builds of dotnet-arcade can publish to these channels. Specifically, this pull request must merge, then arcade-validation's main branch must take the change, then the build must be "promoted".  Before this, you will get errors like `error : Channel with ID 'XXXX' is not configured to be published to.` After this, official arcade builds of this branch will publish to the appropriate channels.
