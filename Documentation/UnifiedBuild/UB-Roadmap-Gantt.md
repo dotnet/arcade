@@ -25,8 +25,8 @@ gantt
         MacOS VB PoC: after net8-ga, 6w
         Workloads PoC: after net8-ga, 6w
         Identify Join Points: after net8-ga, 6w
-        Flush out Join Points: after holiday, 7w
-        Enable Vertical Builds: after holiday, 7w
+        Vertical Builds Design: after holiday, 7w
+        Enable Vertical Builds: after net9-p1, 8w
         Crossbuilds Design: after net8-ga, 13w
 
     section A&D
@@ -34,14 +34,13 @@ gantt
         Multi-band SDKs: after net9-p4, 4w
 
     section DncEng
-        Signing PoC: after net8-ga, 6w
         Signing Design: after holiday, 7w
-        Scenario tests in VMR: after net8-ga, 6w
+        Scenario tests in VMR: after net8-rc2, 10w
         PR Validation: after net9-p2, 4w
 
     section ProdCon
         Backflow tooling: after net8-ga, 6w
-        Release pipeline design: after net8-ga, 6w
+        Release infra repo dependency investigation: after net8-ga, 6w
         Dependency Flow Service: after net9-p1, 8w
         Staging / Release Pipeline: after net9-p3, 4w
         Identify Repo Dependencies: after net9-p3, 4w
