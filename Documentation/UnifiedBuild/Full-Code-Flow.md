@@ -43,11 +43,9 @@ The numbered steps are described in more detail below:
 1. This is the current normal process for making a change to an individual repository. Nothing changes.
 2. Currently, each official build of each repo publishes itself via darc which registers the commit and the set of built packages into the BAR and is assigned to zero or more channels. There is a lot of configuration effort in which repositories publish from which branches to which channels. We intend to keep this existing setup in place and piggy back on this. The only change to the current state is that we will subscribe to channels from the VMR. Possibly, these subscription will get a special flag to indicate that they are VMR subscriptions, e.g. `CodeFlow=true`.
 3. Maestro already listens to BAR events (to builds being added to channels) and triggers the appropriate subscriptions. For VMR subscriptions, it will call the backflow service which will process the request on its own time (e.g. stores requests in a queue and works through them). The initial call from Maestro should be just a quick ping that will enqueue the request.
-4. The backflow service will process the request by looking at the commit of the source repo that was synchronized to the VMR last by looking at the (`source-manifest.json` file)[https://github.com/dotnet/dotnet/blob/main/src/source-manifest.json]. It will then apply the diff between that commit and the one that is associated with the build information in BAR. The details of this step are described below in (#TODO)[#TODO].
+4. The backflow service will process the request by looking at the commit of the source repo that was synchronized to the VMR last by looking at the (`source-manifest.json` file)[https://github.com/dotnet/dotnet/blob/main/src/source-manifest.json]. It will then apply the diff between that commit and the one that is associated with the build information in BAR.
 
 From this, it is obvious that the changes needed in the Maestro changes and the BAR database are minimal. The new backflow service will be the main new component. It will, however, re-use a lot of already existing code from Maestro (namely (`DarcLib`)[https://github.com/dotnet/arcade-services/tree/main/src/Microsoft.DotNet.Darc/DarcLib]).
-
-> TODO: Consider baking the new functionality directly into Maestro. Pros: Less new infrastructure. Cons: Not sure Service Fabric can handle the disk space requirements of the VMR and that the computation model is a good fit for a long living service that needs to hold onto the already cloned repositories.
 
 ### Backflow
 
@@ -67,8 +65,7 @@ flowchart TD
     backflow--4. A PR in dotnet/runtime is opened and merged-->runtime
 ```
 
-The only difference from the forward flow is that the VMR creates and publishes build output packages which **TODO**. These packages are then used by the individual repositories during their partial source-building and their versions must be updated in the individual repositories.  
-The last step is again described below ((#TODO))[#TODO].
+The only difference from the forward flow is that the VMR creates and publishes build output packages which are then flown back to the original repositories.
 
 ## Implementation plan
 
@@ -157,23 +154,23 @@ sequenceDiagram
     autonumber
 
     participant runtime as dotnet/runtime
-    participant VMR as VMR<br />src/runtime
+    participant VMR as VMR<br>src/runtime
 
     Note over runtime, VMR: runtime and VMR are synchronized at 🔖001
-    runtime->>runtime: 📄 A.txt is deleted<br />🔖002
-    VMR->>VMR: 📄 A.txt is changed<br />🔖003
+    runtime->>runtime: 📄 A.txt is deleted<br>🔖002
+    VMR->>VMR: 📄 A.txt is changed<br>🔖003
 
-    VMR-->>runtime: Backflow PR with 🔖003 is opened<br />base commit is 🔖001
+    VMR-->>runtime: Backflow PR with 🔖003 is opened<br>base commit is 🔖001
     activate runtime
     Note over runtime: ❌ Backflow PR has a conflict with 🔖002
-    runtime->>runtime: ✔️ Conflict is manually resolved<br />A.txt is deleted
-    runtime->>runtime: PR is merged<br />🔖004
+    runtime->>runtime: ✔️ Conflict is manually resolved<br>A.txt is deleted
+    runtime->>runtime: PR is merged<br>🔖004
     deactivate runtime
 
-    runtime-->>VMR: VMR is synchronized from 🔖002 to 🔖004<br />base commit is 🔖001
+    runtime-->>VMR: VMR is synchronized from 🔖002 to 🔖004<br>base commit is 🔖001
     activate VMR
     Note over VMR: ❌ Backflow PR has a conflict with 🔖003
-    VMR->>VMR: ✔️ Conflict is manually resolved<br />A.txt is deleted
+    VMR->>VMR: ✔️ Conflict is manually resolved<br>A.txt is deleted
     deactivate VMR
 ```
 
@@ -182,24 +179,24 @@ sequenceDiagram
     autonumber
 
     participant runtime as dotnet/runtime
-    participant VMR as VMR<br />src/runtime
+    participant VMR as VMR<br>src/runtime
 
     Note over runtime, VMR: runtime and VMR are synchronized at 🔖001
-    runtime->>runtime: 📄 A.txt is deleted<br />🔖002
-    VMR->>VMR: 📄 A.txt is changed<br />🔖003
+    runtime->>runtime: 📄 A.txt is deleted<br>🔖002
+    VMR->>VMR: 📄 A.txt is changed<br>🔖003
 
-    runtime-->>VMR: Backflow PR with 🔖003 is opened<br />base commit is 🔖001
+    runtime-->>VMR: Backflow PR with 🔖003 is opened<br>base commit is 🔖001
 
     activate VMR
     Note over VMR: ❌ Backflow PR has a conflict with 🔖003
-    VMR->>VMR: ✔️ Conflict is manually resolved<br />A.txt is deleted
-    VMR->>VMR: PR is merged<br />🔖004
+    VMR->>VMR: ✔️ Conflict is manually resolved<br>A.txt is deleted
+    VMR->>VMR: PR is merged<br>🔖004
     deactivate VMR
 
-    VMR-->>runtime: 🔖003, 🔖004 are synchronized<br />base commit is 🔖001
+    VMR-->>runtime: 🔖003, 🔖004 are synchronized<br>base commit is 🔖001
     activate runtime
     Note over runtime: ❌ Backflow PR has a conflict with 🔖002
-    runtime->>runtime: ✔️ Conflict is manually resolved<br />A.txt is deleted
+    runtime->>runtime: ✔️ Conflict is manually resolved<br>A.txt is deleted
     deactivate runtime
 
 ```
@@ -208,16 +205,13 @@ The problem is the conflict resolution, that was done in dotnet/runtime's PR, is
 When the same conflict happens again in the VMR, the resolution needs to be done again.
 The question is, whether we shouldn't then first flow runtime to VMR before the backflow happens (step 3).
 
-## Synchronization configuration (cloaking, ...)
+## Synchronization configuration
 
 Presently, in the VMR-lite, the rules affecting the code synchronization live in the `source-mappings.json` file. This file is located in the `dotnet/installer` repository and mapped into the `src/` directory of the VMR. That `dotnet/installer` repository is the only point from which we synchronize the code into the VMR.  
 When changes are made to installer's `source-mappings.json`, the first next synchronization takes them into account already.
 This is a very handy mechanism as we can react to incoming changes of every individual repository right away. For instance, if a new commit of a repository brings in binaries, we can add the cloaking rules in the very same commit and the binaries will never reach the VMR.
 
-For the full codeflow, it's good to assume we'll want to take advantage of the same mechanism. This however means, that we either need to have a mapping file for each repository or we need to have a single mapping file that will be mapped to and shared with every repository. It's probably better to separate these and avoid unnecessary conflicts.  
-Furthermore, we will want to map additional files or cloak a different set of files when flowing the code back from the VMR. This means, we will need to have two sets of rules for every repository.
-
-Lastly, when performing the synchronization, we will always take the configuration file of the source so that we get flexibility when adding/changing the configuration. This proved beneficial in the VMR-lite as we could react to incoming changes right away.
+Going forward to the full code flow, we will remove the `source-mappings.json` file as it won't be needed anymore and we will follow a pattern from the current Maestro dependency flow. This means that we keep the configuration outside of what we synchronize - in the BAR database where subscriptions are defined.
 
 ### Arcade
 
@@ -230,7 +224,7 @@ The rules for managing `eng/common`:
 
 - `dotnet/arcade` stays the home for this folder as the contents are tied to the Arcade version often.
 - `eng/common` is mapped from Arcade into VMR's root (and also mirrored to `src/arcade/eng/common`).
-- `eng/common` in the root of VMR is **read-only**, changes are only allowed in Arcade or `src/arcade` of VMR.
+- Changes of `eng/common` in the VMR are only allowed when also changing Arcade's ❓❓❓.
 - Repositories can opt-out from getting Arcade updates from the VMR by ignoring the `Microsoft.DotNet.Arcade.Sdk` package in their `src/source-mapping.json` file.
 
 A diagram of how the code flow including the `eng/common` folder looks like:
@@ -249,7 +243,7 @@ sequenceDiagram
     VMR->>VMR: eng/common is copied to:<br>src/arcade/eng/common<br>and eng/common
     deactivate VMR
 
-    VMR->>runtime: Backflow<br />includes eng/common
+    VMR->>runtime: Backflow<br>includes eng/common
 ```
 
 A diagram of a similar code flow but the `eng/common` change would happen in the VMR:
@@ -262,25 +256,20 @@ sequenceDiagram
     participant runtime as dotnet/runtime
     participant VMR as VMR
 
-    VMR->>VMR: src/arcade/eng/common is changed
+    VMR->>VMR: eng/common or<br>src/arcade/eng/common is changed
 
     par Code flow
-    VMR->>arcade: Backflow to arcade
-    activate arcade
-    arcade->>arcade: eng/common is copied too
-    deactivate arcade
+    VMR->>arcade: Backflow to arcade<br>includes eng/common
     and
-    VMR->>runtime: Backflow<br />includes eng/common
+    VMR->>runtime: Backflow<br>includes eng/common
     end
 ```
-
-> **❓❓❓:** `eng/common` would have to change in the VMR too?
 
 #### Updating `global.json`
 
 Similar to `eng/common`, the repo will follow the `global.json` settings from the VMR with the option to opt-out. This is mainly because bumping the .NET SDK in repositories can take time or is not desirable.
 
-Repositories can opt-out from getting Arcade updates from the VMR by ignoring the `Microsoft.DotNet.Arcade.Sdk` package in their `src/source-mapping.json` file.
+Repositories can opt-out from getting Arcade updates from the VMR by ignoring the `Microsoft.DotNet.Arcade.Sdk` package in their codeflow setting.
 
 ### Proposal for handling the configuration
 
@@ -290,31 +279,8 @@ Proposed configuration:
 - This file has two sections, for forward and backflow, with identical schema.
   - Each section defines cloaking rules and additional mappings.
 - This file is an override for defaults defined in the `src/source-mappings.json` file of the VMR (common for all repositories).
-  - Default cloakings are similar to what we have today (`*.dll`, ...).
-  - > **❓❓❓:** Will we have VMR patches? Will those now be in their respective repositories? Can we have patches for the backflow too?
+  - Default cloakings are similar to what we have today (`*.dll`, ...).have patches for the backflow too?
   - The `src/source-mappings.json` file is not mirrored to any individual repository and lives in the VMR solely.
 - When synchronizing code, the current contents of the `eng/source-mappings.json` from the source repository (individual repository for forwards flow, VMR for backflow) is used to configure the synchronization.
 
 > **❓❓❓:** Version of `darc` used to do the synchronization? Currently it is in `Version.Details.xml` of `dotnet/installer`. Possibly, this should be driven by VMR's `Version.Details.xml` or `.config/dotnet-tools.json` and we'd flow Arcade Services into the VMR the usual way. Could be also in Arcade...
-
-Example of `nuget/NuGet.Client`'s `source-mapping.json` (this repo doesn't use Arcade):
-
-```jsonc
-{
-  "name": "nuget-client", // name of VMR's src/ folder for this repository
-
-  // ❓❓❓: repoToVmr name? Maybe egress/ingress? Would it be obvious which one applies?
-  "repoToVmr": {
-    "exclude": [
-      "src/NuGet.Clients/NuGet.VisualStudio.Client"
-    ]
-  },
-
-  "vmrToRepo": {
-    "ignoredPackages": [
-      // This opts out from getting Arcade and eng/common updates from the VMR
-      "Microsoft.DotNet.Arcade.Sdk"
-    ]
-  }
-}
-```
