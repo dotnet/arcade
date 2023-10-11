@@ -22,7 +22,7 @@ on:
 
 jobs:
   cleanup:
-    if: ${{ contains(inputs.repository_owners, github.repository_owner) && github.event_name == 'schedule' }}
+    if: ${{ contains(format('{0},', inputs.repository_owners), format('{0},', github.repository_owner) && github.event_name == 'schedule' }}
     runs-on: ubuntu-latest
     permissions:
       actions: write
@@ -62,7 +62,7 @@ jobs:
           }
 
   run_backport:
-    if: ${{ contains(inputs.repository_owners, github.repository_owner) && github.event.issue.pull_request != '' && contains(github.event.comment.body, '/backport to') }}
+    if: ${{ contains(format('{0},', inputs.repository_owners), format('{0},', github.repository_owner)) && github.event.issue.pull_request != '' && contains(github.event.comment.body, '/backport to') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
