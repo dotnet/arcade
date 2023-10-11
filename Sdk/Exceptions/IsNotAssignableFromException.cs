@@ -26,7 +26,7 @@ namespace Xunit.Sdk
 		/// </summary>
 		/// <param name="expected">The expected type</param>
 		/// <param name="actual">The actual object value</param>
-		internal static IsNotAssignableFromException ForCompatibleType(
+		public static IsNotAssignableFromException ForCompatibleType(
 			Type expected,
 			object actual) =>
 				new IsNotAssignableFromException(

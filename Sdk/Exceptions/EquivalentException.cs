@@ -46,6 +46,17 @@ namespace Xunit.Sdk
 
 		/// <summary>
 		/// Creates a new instance of <see cref="EquivalentException"/> which shows a message that indicates
+		/// that the maximum comparison depth was exceeded.
+		/// </summary>
+		/// <param name="depth">The depth reached</param>
+		/// <param name="memberName">The member access which caused the failure</param>
+		public static EquivalentException ForExceededDepth(
+			int depth,
+			string memberName) =>
+				new EquivalentException($"Assert.Equivalent() Failure: Exceeded the maximum depth {depth} with '{memberName}'; check for infinite recursion or circular references");
+
+		/// <summary>
+		/// Creates a new instance of <see cref="EquivalentException"/> which shows a message that indicates
 		/// that the list of available members does not match.
 		/// </summary>
 		/// <param name="expectedMemberNames">The expected member names</param>
@@ -143,6 +154,27 @@ namespace Xunit.Sdk
 					"Assert.Equivalent() Failure: Extra values found" + (memberName == string.Empty ? string.Empty : $" in member '{memberName}'") + Environment.NewLine +
 					"Expected: " + ArgumentFormatter.Format(expected) + Environment.NewLine +
 					"Actual:   " + ArgumentFormatter.Format(actualLeftovers) + " left over from " + ArgumentFormatter.Format(actual)
+				);
+
+		/// <summary>
+		/// Creates a new instance of <see cref="EquivalentException"/> which shows a message that indicates
+		/// that <paramref name="expectedType"/> does not match <paramref name="actualType"/>. This is typically
+		/// only used in special case comparison where it would be known that general comparison would fail
+		/// for other reasons, like two objects derived from <see cref="T:System.IO.FileSystemInfo"/> with
+		/// different concrete types.
+		/// </summary>
+		/// <param name="expectedType">The expected type</param>
+		/// <param name="actualType">The actual type</param>
+		/// <param name="memberName">The name of the member that was being inspected (may be an empty
+		/// string for a top-level comparison)</param>
+		public static EquivalentException ForMismatchedTypes(
+			Type expectedType,
+			Type actualType,
+			string memberName) =>
+				new EquivalentException(
+					"Assert.Equivalent() Failure: Types did not match" + (memberName == string.Empty ? string.Empty : $" in member '{memberName}'") + Environment.NewLine +
+					"Expected type: " + ArgumentFormatter.FormatTypeName(expectedType, fullTypeName: true) + Environment.NewLine +
+					"Actual type:   " + ArgumentFormatter.FormatTypeName(actualType, fullTypeName: true)
 				);
 	}
 }

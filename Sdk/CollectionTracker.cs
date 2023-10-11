@@ -61,6 +61,8 @@ namespace Xunit.Sdk
 		/// <param name="x">First value to compare</param>
 		/// <param name="y">Second value to comare</param>
 		/// <param name="itemComparer">The comparer used for individual item comparisons</param>
+		/// <param name="isDefaultItemComparer">Pass <c>true</c> if the <paramref name="itemComparer"/> is the default item
+		/// comparer from <see cref="AssertEqualityComparer{T}"/>; pass <c>false</c>, otherwise.</param>
 		/// <param name="mismatchedIndex">The output mismatched item index when the collections are not equal</param>
 		/// <returns>Returns <c>true</c> if the collections are equal; <c>false</c>, otherwise.</returns>
 		public static bool AreCollectionsEqual(
@@ -72,13 +74,14 @@ namespace Xunit.Sdk
 			CollectionTracker y,
 #endif
 			IEqualityComparer itemComparer,
+			bool isDefaultItemComparer,
 			out int? mismatchedIndex)
 		{
 			mismatchedIndex = null;
 
 			return
 				CheckIfDictionariesAreEqual(x, y, itemComparer) ??
-				CheckIfSetsAreEqual(x, y) ??
+				CheckIfSetsAreEqual(x, y, isDefaultItemComparer ? null : itemComparer) ??
 				CheckIfArraysAreEqual(x, y, itemComparer, out mismatchedIndex) ??
 				CheckIfEnumerablesAreEqual(x, y, itemComparer, out mismatchedIndex);
 		}
@@ -239,10 +242,12 @@ namespace Xunit.Sdk
 		static bool? CheckIfSetsAreEqual(
 #if XUNIT_NULLABLE
 			CollectionTracker? x,
-			CollectionTracker? y)
+			CollectionTracker? y,
+			IEqualityComparer? itemComparer)
 #else
 			CollectionTracker x,
-			CollectionTracker y)
+			CollectionTracker y,
+			IEqualityComparer itemComparer)
 #endif
 		{
 			if (x == null || y == null)
@@ -259,18 +264,29 @@ namespace Xunit.Sdk
 
 			var genericCompareMethod = openGenericCompareTypedSetsMethod.MakeGenericMethod(elementTypeX);
 #if XUNIT_NULLABLE
-			return (bool)genericCompareMethod.Invoke(null, new[] { x, y })!;
+			return (bool)genericCompareMethod.Invoke(null, new object?[] { x.InnerEnumerable, y.InnerEnumerable, itemComparer })!;
 #else
-			return (bool)genericCompareMethod.Invoke(null, new[] { x, y });
+			return (bool)genericCompareMethod.Invoke(null, new object[] { x.InnerEnumerable, y.InnerEnumerable, itemComparer });
 #endif
 		}
 
 		static bool CompareTypedSets<T>(
-			IEnumerable enumX,
-			IEnumerable enumY)
+			ISet<T> setX,
+			ISet<T> setY,
+#if XUNIT_NULLABLE
+			IEqualityComparer<T>? itemComparer)
+#else
+			IEqualityComparer<T> itemComparer)
+#endif
 		{
-			var setX = new HashSet<T>(enumX.Cast<T>());
-			var setY = new HashSet<T>(enumY.Cast<T>());
+			if (setX.Count != setY.Count)
+				return false;
+
+			if (itemComparer != null)
+			{
+				setX = new HashSet<T>(setX, itemComparer);
+				setY = new HashSet<T>(setY, itemComparer);
+			}
 
 			return setX.SetEquals(setY);
 		}
@@ -349,7 +365,7 @@ namespace Xunit.Sdk
 
 		/// <inheritdoc/>
 		public override void Dispose() =>
-			enumerator?.Dispose();
+			enumerator?.DisposeInternal();
 
 		/// <summary>
 		/// Formats the collection when you have a mismatched index. The formatted result will be the section of the
@@ -707,6 +723,9 @@ namespace Xunit.Sdk
 			public List<T> StartItems { get; } = new List<T>();
 
 			public void Dispose()
+			{ }
+
+			public void DisposeInternal()
 			{
 				innerEnumerator.Dispose();
 			}

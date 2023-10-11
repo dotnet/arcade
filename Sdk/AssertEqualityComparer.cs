@@ -27,8 +27,7 @@ namespace Xunit.Sdk
 	/// <typeparam name="T">The type that is being compared.</typeparam>
 	class AssertEqualityComparer<T> : IEqualityComparer<T>
 	{
-		static readonly IEqualityComparer DefaultInnerComparer = new AssertEqualityComparerAdapter<object>(new AssertEqualityComparer<object>());
-		static readonly TypeInfo NullableTypeInfo = typeof(Nullable<>).GetTypeInfo();
+		internal static readonly IEqualityComparer DefaultInnerComparer = new AssertEqualityComparerAdapter<object>(new AssertEqualityComparer<object>());
 
 		readonly Lazy<IEqualityComparer> innerComparer;
 
@@ -66,6 +65,18 @@ namespace Xunit.Sdk
 				return true;
 			if (x == null || y == null)
 				return false;
+
+#if !XUNIT_FRAMEWORK
+			// Collections?
+			using (var xTracker = x.AsNonStringTracker())
+			using (var yTracker = y.AsNonStringTracker())
+			{
+				int? _;
+
+				if (xTracker != null && yTracker != null)
+					return CollectionTracker.AreCollectionsEqual(xTracker, yTracker, InnerComparer, InnerComparer == DefaultInnerComparer, out _);
+			}
+#endif
 
 			// Implements IEquatable<T>?
 			var equatable = x as IEquatable<T>;
