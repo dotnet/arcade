@@ -1,7 +1,6 @@
+# Unified Build Roadmap
+
 ```mermaid
-%%---
-%%displayMode: compact
-%%---
 gantt
     title Unified Build Roadmap
     axisFormat %b-%Y
