@@ -258,7 +258,7 @@ sequenceDiagram
     participant runtime as dotnet/runtime
     participant VMR as VMR
 
-    VMR->>VMR: eng/common or<br>src/arcade/eng/common is changed
+    VMR->>VMR: eng/common and<br>src/arcade/eng/common are changed
 
     par Code flow
     VMR->>arcade: Backflow to arcade<br>includes eng/common
