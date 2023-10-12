@@ -56,10 +56,12 @@
     <MicrosoftNETWorkloadMonoToolChainManifest_60200Version>6.0.3</MicrosoftNETWorkloadMonoToolChainManifest_60200Version>
     <MicrosoftNETWorkloadMonoToolChainManifest_60200Version_604>6.0.4</MicrosoftNETWorkloadMonoToolChainManifest_60200Version_604>
     <MicrosoftiOSTemplatesVersion>15.2.302-preview.14.122</MicrosoftiOSTemplatesVersion>
-    <SystemCollectionsImmutableVersion>8.0.0-preview.4.23259.5</SystemCollectionsImmutableVersion>
+    <!-- Keep this version in sync with what msbuild / VS ships with. -->
+    <SystemCollectionsImmutableVersion>7.0.0</SystemCollectionsImmutableVersion>
     <SystemCompositionVersion>8.0.0-preview.4.23259.5</SystemCompositionVersion>
     <SystemIOPackagingVersion>8.0.0-preview.4.23259.5</SystemIOPackagingVersion>
-    <SystemReflectionMetadataVersion>8.0.0-preview.4.23259.5</SystemReflectionMetadataVersion>
+    <!-- Keep this version in sync with what msbuild / VS ships with. -->
+    <SystemReflectionMetadataVersion>7.0.2</SystemReflectionMetadataVersion>
     <SystemTextEncodingsWebVersion>8.0.0-preview.4.23259.5</SystemTextEncodingsWebVersion>
     <SystemTextJsonVersion>8.0.0-preview.4.23259.5</SystemTextJsonVersion>
     <!-- sdk -->
