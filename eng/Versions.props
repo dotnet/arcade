@@ -61,7 +61,7 @@
     <SystemCompositionVersion>8.0.0-preview.4.23259.5</SystemCompositionVersion>
     <SystemIOPackagingVersion>8.0.0-preview.4.23259.5</SystemIOPackagingVersion>
     <!-- Keep this version in sync with what msbuild / VS ships with. -->
-    <SystemReflectionMetadataVersion>7.0.2</SystemReflectionMetadataVersion>
+    <SystemReflectionMetadataVersion>7.0.0</SystemReflectionMetadataVersion>
     <SystemTextEncodingsWebVersion>8.0.0-preview.4.23259.5</SystemTextEncodingsWebVersion>
     <SystemTextJsonVersion>8.0.0-preview.4.23259.5</SystemTextJsonVersion>
     <!-- sdk -->
