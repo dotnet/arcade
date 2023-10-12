@@ -44,12 +44,12 @@ gantt
         Backflow tooling: after net8-ga, 6w
         Dependency Flow Service: after holiday, 7w
         Maestro Integration: after net9-p1, 8w
-        Identify Repo Dependencies: after net9-p3, 4w
         Multi-band SDKs: after net9-p4, 4w
         Dependency Flow Switch Preparation: after net9-p3, 8w
         Depenendency Flow Switch: after net9-p5, 4w
 
     section Release Infra
         Release infra investigation & design: after net8-ga, 6w
-        Staging / Release Pipeline: after net9-p3, 4w
+        Staging / Release Pipeline Update: after net9-p3, 4w
+        Identify Repo Dependencies: after net9-p3, 4w
 ```
