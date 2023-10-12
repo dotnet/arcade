@@ -35,7 +35,8 @@ flowchart TD
     runtime--1. A change is merged into dotnet/runtime,\nmirrored to AzDO and the official build starts-->runtimeCI
     runtimeCI--2. Build is added to the .NET 9 channel,\nsubscription from runtime to dotnet/dotnet triggered-->maestro
     maestro--3. Maestro notices a VMR subscription triggered,\ncalls the backflow service-->backflow
-    backflow--4. A PR in the VMR is opened and merged-->vmr
+    backflow--4. A branch with the appropriate code changes in dotnet/dotnet is created-->maestro
+    maestro--5. A PR in the VMR is opened and merged-->vmr
 ```
 
 The numbered steps are described in more detail below:
@@ -62,7 +63,8 @@ flowchart TD
     vmr--1. A change is made to dotnet/dotnet\nmirrored to AzDO and the official build starts-->vmrCI
     vmrCI--2. VMR is built, output packages produced\nand build is published to BAR-->maestro
     maestro--3. Maestro notices a VMR subscription triggered,\ncalls the backflow service-->backflow
-    backflow--4. A PR in dotnet/runtime is opened and merged-->runtime
+    backflow--4. A branch with the appropriate code changes in dotnet/runtime is created-->maestro
+    maestro--5. A PR in dotnet/runtime is opened and merged-->runtime
 ```
 
 The only difference from the forward flow is that the VMR creates and publishes build output packages which are then flown back to the original repositories.
@@ -240,7 +242,7 @@ sequenceDiagram
     arcade->>arcade: eng/common is changed
     arcade->>VMR: Forward flow to VMR
     activate VMR
-    VMR->>VMR: eng/common is copied to:<br>src/arcade/eng/common<br>and eng/common
+    Note over VMR: eng/common is copied to:<br>src/arcade/eng/common<br>and eng/common
     deactivate VMR
 
     VMR->>runtime: Backflow<br>includes eng/common
