@@ -235,16 +235,18 @@ Example of `nuget/NuGet.Client`'s `source-mapping.json` (this repo doesn't use A
 
 ```jsonc
 {
-  "name": "nuget-client", // name of VMR's src/ folder for this repository
+  // Name of VMR's src/ folder for this repository
+  "name": "nuget-client",
 
-  // ❓❓❓: repoToVmr name? Maybe egress/ingress? Would it be obvious which one applies?
-  "repoToVmr": {
+  // Configuration for code flowing out of this repository into the VMR
+  "out": {
     "exclude": [
       "src/NuGet.Clients/NuGet.VisualStudio.Client"
     ]
   },
 
-  "vmrToRepo": {
+  // Configuration for code flowing from the VMR into this repository
+  "in": {
     "ignoredPackages": [
       // This opts out from getting Arcade and eng/common updates from the VMR
       "Microsoft.DotNet.Arcade.Sdk"
