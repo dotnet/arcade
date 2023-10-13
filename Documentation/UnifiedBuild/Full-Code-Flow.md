@@ -210,10 +210,48 @@ The question is, whether we shouldn't then first flow runtime to VMR before the 
 ## Synchronization configuration
 
 Presently, in the VMR-lite, the rules affecting the code synchronization live in the `source-mappings.json` file. This file is located in the `dotnet/installer` repository and mapped into the `src/` directory of the VMR. That `dotnet/installer` repository is the only point from which we synchronize the code into the VMR.  
+
+### Configuration location
+
 When changes are made to installer's `source-mappings.json`, the first next synchronization takes them into account already.
 This is a very handy mechanism as we can react to incoming changes of every individual repository right away. For instance, if a new commit of a repository brings in binaries, we can add the cloaking rules in the very same commit and the binaries will never reach the VMR.
 
-Going forward to the full code flow, we will remove the `source-mappings.json` file as it won't be needed anymore and we will follow a pattern from the current Maestro dependency flow. This means that we keep the configuration outside of what we synchronize - in the BAR database where subscriptions are defined.
+For the full codeflow, it's good to assume we'll want to take advantage of the same mechanism. This however means, that we either need to have a mapping file for each repository or we need to have a single mapping file that will be mapped to and shared with every repository. It's probably better to separate these and avoid unnecessary conflicts.  
+Furthermore, we will want to map additional files or cloak a different set of files when flowing the code back from the VMR. This means, we will need to have two sets of rules for every repository.
+
+Lastly, when performing the synchronization, we will always take the configuration file of the source so that we get flexibility when adding/changing the configuration. This proved beneficial in the VMR-lite as we could react to incoming changes right away.
+
+#### Proposed configuration
+
+- Each repository gets a new `eng/source-mapping.json` file.
+- This file has two sections, for forward and backflow, with identical schema.
+  - Each section defines cloaking rules and additional mappings.
+- This file is an override for defaults defined in the `src/source-mappings.json` file of the VMR (common for all repositories).
+  - Default cloakings are similar to what we have today (`*.dll`, ...).
+  - The `src/source-mappings.json` file is not mirrored to any individual repository and lives in the VMR only.
+- When synchronizing code, the current contents of the `eng/source-mappings.json` from the source repository (individual repository for forwards flow, VMR for backflow) is used to configure the synchronization.
+
+Example of `nuget/NuGet.Client`'s `source-mapping.json` (this repo doesn't use Arcade):
+
+```jsonc
+{
+  "name": "nuget-client", // name of VMR's src/ folder for this repository
+
+  // ❓❓❓: repoToVmr name? Maybe egress/ingress? Would it be obvious which one applies?
+  "repoToVmr": {
+    "exclude": [
+      "src/NuGet.Clients/NuGet.VisualStudio.Client"
+    ]
+  },
+
+  "vmrToRepo": {
+    "ignoredPackages": [
+      // This opts out from getting Arcade and eng/common updates from the VMR
+      "Microsoft.DotNet.Arcade.Sdk"
+    ]
+  }
+}
+```
 
 ### Arcade
 
