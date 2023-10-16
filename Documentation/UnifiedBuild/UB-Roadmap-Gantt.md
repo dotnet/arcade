@@ -161,7 +161,7 @@ Preparation for switching from the existing multi-leayered product dependency fl
 
 **Depenendency Flow Switch**
 
-Swith to the new flat dependency flow between VMR and product repos.
+Switch to the new flat dependency flow between VMR and product repos.
 
 ## Release Infra area
 
