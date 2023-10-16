@@ -3,6 +3,11 @@ parameters:
   displayName: Visual Studio Build Tools Sku (ie, BuildTools, Enterprise, Professional, Community, etc...)
   type: string
   default: BuildTools
+  values:
+  - BuildTools
+  - Community
+  - Enterprise
+  - Professional
 - name: Channel
   displayName: Visual Studio Build Tools Channel (ie, pre, etc...)
   type: string
@@ -20,7 +25,8 @@ jobs:
 - job: Build
   displayName: Build xcopy-msbuild package
   pool: 
-    vmImage: windows-latest
+    name: NetCore-Public
+    demands: ImageOverride -equals 1es-windows-2022-open
   steps:
     - task: PowerShell@2
       displayName: Download Visual Studio Build Tools
