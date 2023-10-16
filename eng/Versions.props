@@ -35,7 +35,7 @@
     <McMasterExtensionsCommandLineUtils>2.3.0</McMasterExtensionsCommandLineUtils>
     <NewtonsoftJsonVersion>13.0.3</NewtonsoftJsonVersion>
     <SystemTextJsonVersion>4.7.0</SystemTextJsonVersion>
-    <NuGetVersioningVersion>6.7.0</NuGetVersioningVersion>
+    <NuGetVersioningVersion>6.0.5</NuGetVersioningVersion>
     <NuGetVersion>$(NuGetVersioningVersion)</NuGetVersion>
     <OctokitVersion>0.32.0</OctokitVersion>
     <DotNetSleetLibVersion>2.2.143</DotNetSleetLibVersion>
