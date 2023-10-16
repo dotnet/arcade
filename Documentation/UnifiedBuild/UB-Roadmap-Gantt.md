@@ -179,5 +179,5 @@ Identification of the dependencies between product repos and the layout used to 
 
 **Staging / Release Pipeline**
 
-Updates to the current release infrastructure, namely the staging and release pipelines to be able to base releases both off the current dependency flow for ..NET8 and the VMR for .NET9.
+Updates to the current release infrastructure, namely the staging and release pipelines to be able to base releases both off the current dependency flow for .NET8 and the VMR for .NET9.
 
