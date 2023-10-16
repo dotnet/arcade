@@ -125,7 +125,7 @@ Improvements of the VMR user experience. This includes, but is not limited to:
 
 **Multi-band SDKs**
 
-Implementing support for building multiple SDK bands sharing one binary copy of the runtime.
+Implementing support for building multiple SDK bands sharing one binary copy of shared components (e.g. runtime).
 
 ## Product Validation area
         
