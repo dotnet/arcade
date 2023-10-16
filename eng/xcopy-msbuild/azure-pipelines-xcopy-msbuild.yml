@@ -1,0 +1,48 @@
+parameters:
+- name: Sku
+  displayName: Visual Studio Build Tools Sku (ie, BuildTools, Enterprise, Professional, Community, etc...)
+  type: string
+  default: BuildTools
+- name: Channel
+  displayName: Visual Studio Build Tools Channel (ie, pre, etc...)
+  type: string
+  default: pre
+- name: Release
+  displayName: Visual Studio Build Tools Release (ie, 16, 17, etc...)
+  type: number
+
+
+trigger: none
+
+name: ${{ parameters.Sku }}_${{ parameters.Release }}_${{ parameters.Channel }}-$(Rev:r)
+
+jobs:
+- job: Build
+  displayName: Build xcopy-msbuild package
+  pool: 
+    vmImage: windows-latest
+  steps:
+    - task: PowerShell@2
+      displayName: Download Visual Studio Build Tools
+      inputs:
+        filePath: 'eng\xcopy-msbuild\build.ps1'
+        arguments: -sku "${{ parameters.sku }}" -channel "${{ parameters.channel }}" -release "${{ parameters.release }}" -outputDirectory "$(Build.ArtifactStagingDirectory)\install"
+
+    - task: PowerShell@2
+      displayName: Build Xcopy-MSBuild package
+      inputs:
+        filePath: 'eng\xcopy-msbuild\build-msbuild.ps1'
+        arguments: -buildToolsDir "$(Build.ArtifactStagingDirectory)\install" -outputDirectory "$(Build.ArtifactStagingDirectory)\package"
+
+    - task: CopyFiles@2
+      inputs:
+        SourceFolder: '$(Build.ArtifactStagingDirectory)\package'
+        Contents: '*.nupkg'
+        TargetFolder: '$(Build.ArtifactStagingDirectory)\publish'
+        OverWrite: true
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)\publish'
+        ArtifactName: 'package'
+        publishLocation: 'Container'
