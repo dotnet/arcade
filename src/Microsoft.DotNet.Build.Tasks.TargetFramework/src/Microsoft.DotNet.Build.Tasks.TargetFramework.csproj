@@ -19,8 +19,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Tasks.Core" />
-    <!-- Pinning transitive version -->
-    <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="NuGet.Packaging" />
   </ItemGroup>
 
