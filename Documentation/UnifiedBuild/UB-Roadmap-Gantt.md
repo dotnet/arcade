@@ -122,6 +122,7 @@ Improvements of the VMR user experience. This includes, but is not limited to:
   * Updating source-build to not modify source-controlled files
   * Design of appropriate controls and command line options
   * Source-build inner clone removal
+  * Incremental build improvements
 
 **Multi-band SDKs**
 
