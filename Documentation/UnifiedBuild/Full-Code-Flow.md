@@ -223,15 +223,15 @@ Lastly, when performing the synchronization, we will always take the configurati
 
 #### Proposed configuration
 
-- Each repository gets a new `eng/source-mapping.json` file.
+- Each repository gets a new `eng/vmr-synchronization.json` file.
 - This file has two sections, for forward and backflow, with identical schema.
   - Each section defines cloaking rules and additional mappings.
 - This file is an override for defaults defined in the `src/source-mappings.json` file of the VMR (common for all repositories).
   - Default cloakings are similar to what we have today (`*.dll`, ...).
   - The `src/source-mappings.json` file is not mirrored to any individual repository and lives in the VMR only.
-- When synchronizing code, the current contents of the `eng/source-mappings.json` from the source repository (individual repository for forwards flow, VMR for backflow) is used to configure the synchronization.
+- When synchronizing code, the current contents of the configuration file from the source repository (individual repository for forwards flow, VMR for backflow) is used to configure the synchronization.
 
-Example of `nuget/NuGet.Client`'s `source-mapping.json` (this repo doesn't use Arcade):
+Example of `nuget/NuGet.Client`'s `vmr-synchronization.json` (this repo doesn't use Arcade):
 
 ```jsonc
 {
@@ -239,14 +239,14 @@ Example of `nuget/NuGet.Client`'s `source-mapping.json` (this repo doesn't use A
   "name": "nuget-client",
 
   // Configuration for code flowing out of this repository into the VMR
-  "out": {
+  "vmr": {
     "exclude": [
       "src/NuGet.Clients/NuGet.VisualStudio.Client"
     ]
   },
 
   // Configuration for code flowing from the VMR into this repository
-  "in": {
+  "repo": {
     "ignoredPackages": [
       // This opts out from getting Arcade and eng/common updates from the VMR
       "Microsoft.DotNet.Arcade.Sdk"
@@ -267,7 +267,7 @@ The rules for managing `eng/common`:
 - `dotnet/arcade` stays the home for this folder as the contents are tied to the Arcade version often.
 - `eng/common` is mapped from Arcade into VMR's root (and also mirrored to `src/arcade/eng/common`).
 - Changes of `eng/common` in the VMR are only allowed when also changing Arcade's ❓❓❓.
-- Repositories can opt-out from getting Arcade updates from the VMR by ignoring the `Microsoft.DotNet.Arcade.Sdk` package in their `src/source-mapping.json` file.
+- Repositories can opt-out from getting Arcade updates from the VMR by ignoring the `Microsoft.DotNet.Arcade.Sdk` package in their `eng/vmr-synchronization.json` file.
 
 A diagram of how the code flow including the `eng/common` folder looks like:
 
