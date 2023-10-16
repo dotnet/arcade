@@ -15,9 +15,9 @@
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
       <Sha>d617bc8ed2787c235a57cf0dcdfd087b86ff9521</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="8.0.100-rtm.23507.4">
+    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="8.0.100-rtm.23515.3">
       <Uri>https://github.com/dotnet/templating</Uri>
-      <Sha>9c9c9443df3a8c1ea48f5c5cff08582e8a415f31</Sha>
+      <Sha>f0e678f0045f9ed8f31fbe35101a169dc640a61d</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="9.0.0-beta.23510.4">
       <Uri>https://github.com/dotnet/arcade</Uri>
@@ -40,17 +40,17 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>0e89c8d7ddbb54510d9d0a757fda5126021b79f0</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.23512.1">
+    <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.23513.2">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>05821d6c2d07c5eac4d6964bde5f774b80892392</Sha>
+      <Sha>bb88cc690c0de7df5987db4fa24ce5badbfbc4e5</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.1.0-beta.23512.1">
+    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.1.0-beta.23513.2">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>05821d6c2d07c5eac4d6964bde5f774b80892392</Sha>
+      <Sha>bb88cc690c0de7df5987db4fa24ce5badbfbc4e5</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="8.0.0-prerelease.23505.1">
+    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="8.0.0-prerelease.23516.1">
       <Uri>https://github.com/dotnet/xharness</Uri>
-      <Sha>0672f8ce90040d589f29edc37d9e817d67cd4533</Sha>
+      <Sha>02098f6cf81169134770ee47acc2aca0910635bb</Sha>
     </Dependency>
     <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="4.5.2-3.23266.1">
       <Uri>https://github.com/dotnet/roslyn</Uri>
