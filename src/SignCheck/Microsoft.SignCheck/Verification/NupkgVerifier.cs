@@ -37,7 +37,6 @@ namespace Microsoft.SignCheck.Verification
             IEnumerable<ISignatureVerificationProvider> providers = new ISignatureVerificationProvider[] {
                 new IntegrityVerificationProvider(),
                 new SignatureTrustAndValidityVerificationProvider(allowUntrustedRootList: null),
-                new AllowListVerificationProvider(allowList: null),
             };
             var packageSignatureVerifier = new PackageSignatureVerifier(providers);
 
