@@ -35,12 +35,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.Equal(@"Relative package path exceeds the maximum length (182): Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.100,version=6.0.0.0,chip=x64,productarch=neutral,machinearch=x64\Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.100.6.0.0-preview.7.21377.12-x64.msi.", e.Message);
         }
 
-        [WindowsOnlyTheory]
-        [InlineData("16.0.527")]
-        public void ItOnlyIncludesDefinedPropertiesForMsiPackages(string packageVersion)
+        [WindowsOnlyFact]
+        public void ItOnlyIncludesDefinedPropertiesForMsiPackages()
         {
             // Build to a different path to avoid any file read locks on the MSI from other tests
             // that can open it.
+            string packageVersion = "16.0.527";
             string PackageRootDirectory = Path.Combine(BaseIntermediateOutputPath, Path.GetRandomFileName());
             string packagePath = Path.Combine(TestAssetsPath, $"microsoft.ios.templates.{packageVersion}.nupkg");
 

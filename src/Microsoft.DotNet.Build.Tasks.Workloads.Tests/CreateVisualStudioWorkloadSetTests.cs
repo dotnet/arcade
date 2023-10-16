@@ -57,6 +57,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
                 r.Name == "ProductVersion" &&
                 r.Value == "12.8.45");
 
+            // Workload sets are SxS. Verify that we don't have an Upgrade table.
+            Assert.False(MsiUtils.HasTable(msi.ItemSpec, "Upgrade"));
+
             // Verify the SWIX authoring for one of the workload set MSIs. 
             ITaskItem workloadSetSwixItem = createWorkloadSetTask.SwixProjects.Where(s => s.ItemSpec.Contains(@"Microsoft.NET.Workloads.9.0.100.9.0.100-baseline.1.23464.1\x64")).FirstOrDefault();
             Assert.Equal(DefaultValues.PackageTypeMsiWorkloadSet, workloadSetSwixItem.GetMetadata(Metadata.PackageType));

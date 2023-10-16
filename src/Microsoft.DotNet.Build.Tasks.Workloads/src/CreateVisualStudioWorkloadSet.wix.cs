@@ -95,14 +95,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     }
                 });
 
-                _ = Parallel.ForEach(swixPackageGroups, swixPackageGroup =>
+                foreach (var swixPackageGroup in swixPackageGroups)
                 {
-                    lock (swixProjectItems)
-                    {
-                        swixProjectItems.Add(PackageGroupSwixProject.CreateProjectItem(swixPackageGroup, BaseIntermediateOutputPath, BaseOutputPath,
-                            DefaultValues.PackageTypeWorkloadSetPackageGroup));
-                    }
-                });
+                    swixProjectItems.Add(PackageGroupSwixProject.CreateProjectItem(swixPackageGroup, BaseIntermediateOutputPath, BaseOutputPath,
+                        DefaultValues.PackageTypeWorkloadSetPackageGroup));
+                }
             }
 
             Msis = msiItems.ToArray();

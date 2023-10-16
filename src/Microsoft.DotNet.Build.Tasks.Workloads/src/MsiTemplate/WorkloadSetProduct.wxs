@@ -7,22 +7,6 @@
 
     <Package InstallerVersion="$(var.InstallerVersion)" Compressed="yes" InstallScope="perMachine" />
 
-    <!-- MajorUpgrade element doesn't support setting the language attribute in the upgrade table -->
-    <Upgrade Id="$(var.UpgradeCode)">
-      <UpgradeVersion Maximum="$(var.ProductVersion)" MigrateFeatures="yes" IncludeMinimum="no" Property="WIX_UPGRADE_DETECTED" />
-      <UpgradeVersion Minimum="$(var.ProductVersion)" IncludeMinimum="no" OnlyDetect="yes" Property="WIX_DOWNGRADE_DETECTED" />
-    </Upgrade>
-
-    <!-- The new MSI is installed before the older version is removed. This is the fastest upgrade option. -->
-    <InstallExecuteSequence>
-      <!-- See https://docs.microsoft.com/en-us/windows/win32/msi/removeexistingproducts-action for other options -->
-      <RemoveExistingProducts After="InstallFinalize" />
-    </InstallExecuteSequence>
-
-    <Condition Message="A newer version of [ProductName] is alread installed.">
-      NOT WIX_DOWNGRADE_DETECTED
-    </Condition>
-
     <?if $(var.Platform)~=x64?>
     <CustomActionRef Id="Set_DOTNETHOME_NON_NATIVE_ARCHITECTURE" />
     <?endif?>

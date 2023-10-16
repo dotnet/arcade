@@ -206,5 +206,19 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
                 throw new ArgumentOutOfRangeException(string.Format(Strings.MsiProductVersionOutOfRange, nameof(version.Build), ushort.MaxValue));
             }
         }
+
+        /// <summary>
+        /// Determines if the MSI contains a specific table.
+        /// </summary>
+        /// <param name="packagePath">The path to the MSI package.</param>
+        /// <param name="tableName">The name of the table.</param>
+        /// <returns><see langword="true"/> if the table exists; <see langword="false"/> otherwise.</returns>
+        public static bool HasTable(string packagePath, string tableName)
+        {
+            using InstallPackage ip = new(packagePath, DatabaseOpenMode.ReadOnly);
+            using Database db = new(packagePath, DatabaseOpenMode.ReadOnly);
+
+            return db.Tables.Contains(tableName);
+        }
     }
 }
