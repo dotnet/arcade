@@ -276,9 +276,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
             foreach (var package in _packages.Keys)
             {
-                var contentItemGroups = new List<ContentItemGroup>();
-                _packages[package].PopulateItemGroups(_conventions.Patterns.RuntimeAssemblies, contentItemGroups);
-                resolvedAssets.Add(package, contentItemGroups);
+                resolvedAssets.Add(package,
+                    _packages[package].FindItemGroups(_conventions.Patterns.RuntimeAssemblies));
             }
 
             return resolvedAssets;
