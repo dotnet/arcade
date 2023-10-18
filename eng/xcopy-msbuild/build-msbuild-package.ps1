@@ -30,8 +30,8 @@ This is an xcopy version of MSBuild with the following version:
 
 This is built using the following tool:
 
-- Repo: https://github.com/dotnet/dnceng/eng/xcopy-msbuild
-- Source: https://github.com/dotnet/dnceng/eng/xcopy-msbuild/commit/$($sha)
+- Repo: https://github.com/dotnet/arcade/eng/xcopy-msbuild
+- Source: https://github.com/dotnet/arcade/eng/xcopy-msbuild/commit/$($sha)
 "
     return $text
 }
@@ -71,7 +71,7 @@ function Ensure-NuGet() {
     $nuget = Join-Path $outputDirectory "nuget.exe"
     if (-not (Test-Path $nuget)) {
         Create-Directory (Split-Path -parent $nuget)
-        $version = "4.7.0"
+        $version = "6.7.0"
         Write-Host "Downloading NuGet.exe $version"
         $webClient = New-Object -TypeName "System.Net.WebClient"
         $webClient.DownloadFile("https://dist.nuget.org/win-x86-commandline/v$version/NuGet.exe", $nuget)
@@ -99,10 +99,6 @@ try {
     
     $msbuildDir = Join-Path $buildToolsDir "MSBuild\Current\Bin"
     $msbuildExe = Join-Path $msbuildDir "msbuild.exe"
-
-    if (-not (Test-Path $buildToolsDir)) { 
-        New-Item -Path $buildToolsDir -ItemType Directory -Force| Out-Null
-    }
 
     if (-not (Test-Path $msbuildExe)) { 
         Write-Host "Did not find msbuild at $msbuildExe"

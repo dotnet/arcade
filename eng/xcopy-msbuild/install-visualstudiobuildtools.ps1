@@ -1,11 +1,12 @@
 [CmdletBinding(PositionalBinding=$false)]
 Param(
-  [Parameter(Mandatory=$true)][String][Alias('s')]$sku,
   [Parameter(Mandatory=$true)][String][Alias('c')]$channel,
   [Parameter(Mandatory=$true)][String][Alias('r')]$release,
   [Parameter(Mandatory=$true)][String][Alias('o')]$outputDirectory
 )
 # sku: BuildTools, Enterprise, Professional, Community
+# Setting sku explicitly to BuildTools for xcopy MSBuild generation
+$sku = "BuildTools"
 # channel: pre, etc..
 # release: 16, 17, etc..
 $downloadUrl = "https://visualstudio.microsoft.com/thank-you-downloading-visual-studio/?sku=$sku&ch=$channel&rel=$release"
@@ -20,7 +21,7 @@ if(-Not (Test-Path $destinationDir))
     New-Item -ItemType 'Directory' -Path "$destinationDir" -Force | Out-Null
 }
 # Query the page to get the download link
-$response = Invoke-WebRequest $downloadUrl # -OutFile "$installerPath"
+$response = Invoke-WebRequest $downloadUrl
 
 $regex = "downloadUrl: '(?<downloadUrl>[^']+)'"
 $response.Content -Match $regex | Out-Null
