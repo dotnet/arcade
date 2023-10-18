@@ -1,13 +1,4 @@
 parameters:
-- name: Sku
-  displayName: Visual Studio Build Tools Sku (ie, BuildTools, Enterprise, Professional, Community, etc...)
-  type: string
-  default: BuildTools
-  values:
-  - BuildTools
-  - Community
-  - Enterprise
-  - Professional
 - name: Channel
   displayName: Visual Studio Build Tools Channel (ie, pre == Preview, rel == Release, intpreview == Dogfood, etc...)
   type: string
