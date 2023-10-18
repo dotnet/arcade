@@ -15,7 +15,7 @@ parameters:
 trigger: none
 pr: none
 
-name: ${{ parameters.Sku }}_${{ parameters.Release }}_${{ parameters.Channel }}-$(Rev:r)
+name: BuildTools_${{ parameters.Release }}_${{ parameters.Channel }}-$(Rev:r)
 
 jobs:
 - job: Build
@@ -28,7 +28,7 @@ jobs:
       displayName: Download Visual Studio Build Tools
       inputs:
         filePath: 'eng\xcopy-msbuild\install-visualstudiobuildtools.ps1'
-        arguments: -sku "${{ parameters.sku }}" -channel "${{ parameters.channel }}" -release "${{ parameters.release }}" -outputDirectory "$(Build.ArtifactStagingDirectory)\install"
+        arguments: -channel "${{ parameters.channel }}" -release "${{ parameters.release }}" -outputDirectory "$(Build.ArtifactStagingDirectory)\install"
 
     - task: PowerShell@2
       displayName: Build Xcopy-MSBuild package
