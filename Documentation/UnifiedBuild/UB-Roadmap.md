@@ -24,7 +24,6 @@ gantt
         Linux VB PoC: after net8-rc2, 11w
         MacOS VB PoC: after net8-rc2, 11w
         Workloads PoC: after net8-ga, 6w
-        Identify Join Points: after net8-ga, 6w
         Vertical Builds Design: after holiday, 7w
         Enable Vertical Builds: after net9-p1, 8w
         Crossbuilds Design: after net8-ga, 13w
