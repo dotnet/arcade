@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.NotNull(msi604.GetMetadata(Metadata.WixObj));
         }
 
-        [WindowsOnlyFact]
+        [WindowsOnlyFact(Skip = "Flakey; see dotnet/arcade#14054")]
         public void ItCanBuildAManifestMsi()
         {
             string PackageRootDirectory = Path.Combine(BaseIntermediateOutputPath, "pkg");
