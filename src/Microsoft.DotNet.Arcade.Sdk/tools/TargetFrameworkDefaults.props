@@ -34,7 +34,9 @@
     <NetFrameworkToolCurrent>net472</NetFrameworkToolCurrent>
   </PropertyGroup>
 
-  <!-- Add known packs from the downlevel TFM until we are building with an SDK that supports the new TFM. -->
+  <!-- Add known packs from the downlevel TFM until we are building with an SDK that supports the new TFM.
+       Keep types of references and packs in sync with
+       https://github.com/dotnet/installer/blob/c5ce95b250cc405443c5d740841f387215b0e903/src/redist/targets/GenerateBundledVersions.targets#L476. -->
   <ItemGroup Condition="'$(SkipArcadeKnownFrameworkReferences)' != 'true'">
 
     <KnownFrameworkReference
