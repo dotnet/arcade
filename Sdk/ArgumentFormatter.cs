@@ -60,8 +60,10 @@ namespace Xunit.Sdk
 		/// </summary>
 		public const int MAX_STRING_LENGTH = 50;
 
+#pragma warning disable CA1825  // Can't use Array.Empty here because it's not available in .NET Standard 1.1
 		static readonly object[] EmptyObjects = new object[0];
 		static readonly Type[] EmptyTypes = new Type[0];
+#pragma warning restore CA1825
 
 #if XUNIT_NULLABLE
 		static PropertyInfo? tupleIndexer;
@@ -121,6 +123,9 @@ namespace Xunit.Sdk
 		/// <param name="s">The string value to be escaped</param>
 		public static string EscapeString(string s)
 		{
+			if (s == null)
+				throw new ArgumentNullException(nameof(s));
+
 			var builder = new StringBuilder(s.Length);
 			for (var i = 0; i < s.Length; i++)
 			{
@@ -133,7 +138,7 @@ namespace Xunit.Sdk
 				if (TryGetEscapeSequence(ch, out escapeSequence))
 					builder.Append(escapeSequence);
 				else if (ch < 32) // C0 control char
-					builder.AppendFormat(@"\x{0}", (+ch).ToString("x2"));
+					builder.AppendFormat(CultureInfo.InvariantCulture, @"\x{0}", (+ch).ToString("x2", CultureInfo.InvariantCulture));
 				else if (char.IsSurrogatePair(s, i)) // should handle the case of ch being the last one
 				{
 					// For valid surrogates, append like normal
@@ -143,7 +148,7 @@ namespace Xunit.Sdk
 				// Check for stray surrogates/other invalid chars
 				else if (char.IsSurrogate(ch) || ch == '\uFFFE' || ch == '\uFFFF')
 				{
-					builder.AppendFormat(@"\x{0}", (+ch).ToString("x4"));
+					builder.AppendFormat(CultureInfo.InvariantCulture, @"\x{0}", (+ch).ToString("x4", CultureInfo.InvariantCulture));
 				}
 				else
 					builder.Append(ch); // Append the char like normal

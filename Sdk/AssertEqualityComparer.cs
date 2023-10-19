@@ -25,7 +25,7 @@ namespace Xunit.Sdk
 	/// (except for collections, which are handled directly by the appropriate assertion methods).
 	/// </summary>
 	/// <typeparam name="T">The type that is being compared.</typeparam>
-	class AssertEqualityComparer<T> : IEqualityComparer<T>
+	sealed class AssertEqualityComparer<T> : IEqualityComparer<T>
 	{
 		internal static readonly IEqualityComparer DefaultInnerComparer = new AssertEqualityComparerAdapter<object>(new AssertEqualityComparer<object>());
 
@@ -177,9 +177,9 @@ namespace Xunit.Sdk
 		}
 
 #if XUNIT_NULLABLE
-		class FuncEqualityComparer : IEqualityComparer<T?>
+		sealed class FuncEqualityComparer : IEqualityComparer<T?>
 #else
-		class FuncEqualityComparer : IEqualityComparer<T>
+		sealed class FuncEqualityComparer : IEqualityComparer<T>
 #endif
 		{
 			readonly Func<T, T, bool> comparer;
@@ -220,7 +220,7 @@ namespace Xunit.Sdk
 			}
 		}
 
-		class TypeErasedEqualityComparer : IEqualityComparer
+		sealed class TypeErasedEqualityComparer : IEqualityComparer
 		{
 			readonly IEqualityComparer innerComparer;
 
