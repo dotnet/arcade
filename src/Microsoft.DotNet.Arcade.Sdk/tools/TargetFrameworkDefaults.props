@@ -1,28 +1,107 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
   <!-- Repositories using the arcade SDK can stay up to date with their target framework more easily using the properties in this file.
-       - NetCurrent - The TFM of the major release of .NET that the Arcade SDK aligns with.
-       - NetPrevious - The previously released version of .NET (e.g. this would be net7 if NetCurrent is net8)
-       - NetMinimum - Lowest supported version of .NET the time of the release of NetCurrent. E.g. if NetCurrent is net8, then NetMinimum is net6
-       - NetFrameworkMinimum - Lowest supported version of .NET Framework the time of the release of NetCurrent. E.g. if NetCurrent is net8, then NetFrameworkMinimum is net462
-       - NetFrameworkToolCurrent - The version of .NET Framework that tools (msbuild tasks) should target.
-       - NetFrameworkCurrent - The TFM of the latest version of .NET Framework.
+
+       - NetCurrent               The TFM of the major release of .NET that the Arcade SDK aligns with.
+       - NetPrevious              The previously released version of .NET. NetPrevious property is undefined whenever NetMinimum and
+                                  NetPrevious would evaluate to the same TFM. This is necessary as NuGet doesn't support duplicated TFM
+                                  values in the TargetFrameworks string.
+       - NetMinimum               Lowest supported version of .NET the time of the release of NetCurrent. E.g. if NetCurrent is net9.0,
+                                  then NetMinimum is net8.0.
+       - NetToolCurrent           The version of .NET that tools (msbuild tasks) should target.
+
+       - NetFrameworkCurrent      The TFM of the latest version of .NET Framework.
+       - NetFrameworkMinimum      Lowest supported version of .NET Framework the time of the release of NetCurrent. E.g. if NetCurrent is
+                                  net9.0, then NetFrameworkMinimum is net462
+       - NetFrameworkToolCurrent  The version of .NET Framework that tools (msbuild tasks) should target.
 
        Examples:
-
        <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
-       <TargetFrameworks>$(NetCurrent);net472</TargetFrameworks>
-       <TargetFrameworks>$(NetCurrent);$(NetPrevious);$(NetFrameworkMinimum);net472</TargetFrameworks>
+       <TargetFrameworks>$(NetCurrent);$(NetFrameworkCurrent)</TargetFrameworks>
+       <TargetFrameworks>$(NetCurrent);$(NetMinimum);netstandard2.0;$(NetFrameworkMinimum)</TargetFrameworks>
   -->
+
   <PropertyGroup>
     <!-- .NET -->
-    <NetCurrent>net8.0</NetCurrent>
-    <NetPrevious>net7.0</NetPrevious>
-    <NetMinimum>net6.0</NetMinimum>
+    <NetCurrent>net9.0</NetCurrent>
+    <NetPrevious />
+    <NetMinimum>net8.0</NetMinimum>
+    <NetToolCurrent>net8.0</NetToolCurrent>
 
     <!-- .NET Framework -->
+    <NetFrameworkCurrent>net481</NetFrameworkCurrent>
     <NetFrameworkMinimum>net462</NetFrameworkMinimum>
     <NetFrameworkToolCurrent>net472</NetFrameworkToolCurrent>
-    <NetFrameworkCurrent>net481</NetFrameworkCurrent>
   </PropertyGroup>
+
+  <!-- Add known packs from the downlevel TFM until we are building with an SDK that supports the new TFM. -->
+  <ItemGroup Condition="'$(SkipArcadeKnownFrameworkReferences)' != 'true'">
+
+    <KnownFrameworkReference
+      Include="@(KnownFrameworkReference->WithMetadataValue('Identity', 'Microsoft.NETCore.App')->WithMetadataValue('TargetFramework', '$(NetToolCurrent)'))"
+      TargetFramework="$(NetCurrent)"
+      Condition="@(KnownFrameworkReference->WithMetadataValue('Identity', 'Microsoft.NETCore.App')->WithMetadataValue('TargetFramework', '$(NetCurrent)')) == ''" />
+
+    <KnownAppHostPack
+      Include="@(KnownAppHostPack->WithMetadataValue('Microsoft.NETCore.App')->WithMetadataValue('TargetFramework', '$(NetToolCurrent)'))"
+      TargetFramework="$(NetCurrent)"
+      Condition="@(KnownAppHostPack->WithMetadataValue('Identity', 'Microsoft.NETCore.App')->WithMetadataValue('TargetFramework', '$(NetCurrent)')) == ''" />
+
+    <KnownCrossgen2Pack
+      Include="@(KnownCrossgen2Pack->WithMetadataValue('Microsoft.NETCore.App.Crossgen2')->WithMetadataValue('TargetFramework', '$(NetToolCurrent)'))"
+      TargetFramework="$(NetCurrent)"
+      Condition="@(KnownCrossgen2Pack->WithMetadataValue('Identity', 'Microsoft.NETCore.App.Crossgen2')->WithMetadataValue('TargetFramework', '$(NetCurrent)')) == ''" />
+
+    <KnownILCompilerPack
+      Include="@(KnownILCompilerPack->WithMetadataValue('Microsoft.DotNet.ILCompiler')->WithMetadataValue('TargetFramework', '$(NetToolCurrent)'))"
+      TargetFramework="$(NetCurrent)"
+      Condition="@(KnownILCompilerPack->WithMetadataValue('Identity', 'Microsoft.DotNet.ILCompiler')->WithMetadataValue('TargetFramework', '$(NetCurrent)')) == ''" />
+
+    <KnownRuntimePack
+      Include="@(KnownRuntimePack->WithMetadataValue('Identity', 'Microsoft.NETCore.App')->WithMetadataValue('RuntimePackLabels', 'NativeAOT')->WithMetadataValue('TargetFramework', '$(NetToolCurrent)'))"
+      TargetFramework="$(NetCurrent)"
+      Condition="@(KnownRuntimePack->WithMetadataValue('Identity', 'Microsoft.NETCore.App')->WithMetadataValue('RuntimePackLabels', 'NativeAOT')->WithMetadataValue('TargetFramework', '$(NetCurrent)')) == ''" />
+
+    <KnownILLinkPack
+      Include="@(KnownILLinkPack->WithMetadataValue('Identity', 'Microsoft.NET.ILLink.Tasks')->WithMetadataValue('TargetFramework', '$(NetToolCurrent)'))"
+      TargetFramework="$(NetCurrent)"
+      Condition="@(KnownILLinkPack->WithMetadataValue('Identity', 'Microsoft.NET.ILLink.Tasks')->WithMetadataValue('TargetFramework', '$(NetCurrent)')) == ''" />
+
+    <KnownWebAssemblySdkPack
+      Include="@(KnownWebAssemblySdkPack->WithMetadataValue('Identity', 'Microsoft.NET.Sdk.WebAssembly.Pack')->WithMetadataValue('TargetFramework', '$(NetToolCurrent)'))"
+      TargetFramework="$(NetCurrent)"
+      Condition="@(KnownWebAssemblySdkPack->WithMetadataValue('Identity', 'Microsoft.NET.Sdk.WebAssembly.Pack')->WithMetadataValue('TargetFramework', '$(NetCurrent)')) == ''" />
+
+    <KnownRuntimePack
+      Include="@(KnownRuntimePack->WithMetadataValue('Identity', 'Microsoft.NETCore.App')->WithMetadataValue('RuntimePackLabels', 'Mono')->WithMetadataValue('TargetFramework', '$(NetToolCurrent)'))"
+      TargetFramework="$(NetCurrent)"
+      Condition="@(KnownRuntimePack->WithMetadataValue('Identity', 'Microsoft.NETCore.App')->WithMetadataValue('RuntimePackLabels', 'Mono')->WithMetadataValue('TargetFramework', '$(NetCurrent)')) == ''" />
+
+    <KnownFrameworkReference
+      Include="@(KnownFrameworkReference->WithMetadataValue('Identity', 'Microsoft.WindowsDesktop.App')->WithMetadataValue('TargetFramework', '$(NetToolCurrent)'))"
+      TargetFramework="$(NetCurrent)"
+      Condition="@(KnownFrameworkReference->WithMetadataValue('Identity', 'Microsoft.WindowsDesktop.App')->WithMetadataValue('TargetFramework', '$(NetCurrent)')) == ''" />
+
+    <KnownFrameworkReference
+      Include="@(KnownFrameworkReference->WithMetadataValue('Identity', 'Microsoft.WindowsDesktop.App.WPF')->WithMetadataValue('TargetFramework', '$(NetToolCurrent)'))"
+      TargetFramework="$(NetCurrent)"
+      Condition="@(KnownFrameworkReference->WithMetadataValue('Identity', 'Microsoft.WindowsDesktop.App.WPF')->WithMetadataValue('TargetFramework', '$(NetCurrent)')) == ''" />
+
+    <KnownFrameworkReference
+      Include="@(KnownFrameworkReference->WithMetadataValue('Identity', 'Microsoft.WindowsDesktop.App.WindowsForms')->WithMetadataValue('TargetFramework', '$(NetToolCurrent)'))"
+      TargetFramework="$(NetCurrent)"
+      Condition="@(KnownFrameworkReference->WithMetadataValue('Identity', 'Microsoft.WindowsDesktop.App.WindowsForms')->WithMetadataValue('TargetFramework', '$(NetCurrent)')) == ''" />
+
+    <KnownFrameworkReference
+      Include="@(KnownFrameworkReference->WithMetadataValue('Identity', 'Microsoft.AspNetCore.App')->WithMetadataValue('TargetFramework', '$(NetToolCurrent)'))"
+      TargetFramework="$(NetCurrent)"
+      Condition="@(KnownFrameworkReference->WithMetadataValue('Identity', 'Microsoft.AspNetCore.App')->WithMetadataValue('TargetFramework', '$(NetCurrent)')) == ''" />
+
+    <KnownFrameworkReference
+      Include="@(KnownFrameworkReference->WithMetadataValue('Identity', 'Microsoft.Windows.SDK.NET.Ref')->WithMetadataValue('TargetFramework', '$(NetToolCurrent)'))"
+      TargetFramework="$(NetCurrent)"
+      Condition="@(KnownFrameworkReference->WithMetadataValue('Identity', 'Microsoft.Windows.SDK.NET.Ref')->WithMetadataValue('TargetFramework', '$(NetCurrent)')) == ''" />
+
+  </ItemGroup>
+
 </Project>
