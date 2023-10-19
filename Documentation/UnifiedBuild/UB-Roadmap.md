@@ -29,7 +29,10 @@ gantt
         Crossbuilds Design (JoS / SteveP): after net8-ga, 13w
 
     section Source-Build (MichaelS)
-        VMR UX Improvements: after net8-ga, 13w
+        Eliminate Src Edits During Build: after net8-ga, 8w
+        Parallel Build Support: after net9-p1, 2w
+        Remove Inner Clone: after net9-p2, 3w
+        Incremental Build Support: after net9-p3, 6w
         Multi-band SDKs: after net9-p4, 4w
 
     section Product Validation (RichaV)
