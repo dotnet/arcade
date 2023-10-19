@@ -26,7 +26,8 @@
     <NetCurrent>net9.0</NetCurrent>
     <NetPrevious />
     <NetMinimum>net8.0</NetMinimum>
-    <NetToolCurrent>net8.0</NetToolCurrent>
+    <NetToolCurrent Condition="'$(DotNetBuildFromSource)' != 'true'">net8.0</NetToolCurrent>
+    <NetToolCurrent Condition="'$(DotNetBuildFromSource)' == 'true'">$(NetCurrent)</NetToolCurrent>
 
     <!-- .NET Framework -->
     <NetFrameworkCurrent>net481</NetFrameworkCurrent>
