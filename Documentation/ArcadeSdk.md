@@ -4,7 +4,7 @@ Arcade SDK is a set of msbuild props and targets files and packages that provide
 
 The infrastructure of most repositories that contribute to the .NET stack is built on top of Arcade SDK. This allows us to orchestrate the build of the entire stack as well as build the stack from source. These repositories are expected to be on the latest version of the Arcade SDK.
 
-Repositories that do not participate in .NET Core 3.0 build may also use Arcade SDK in order to take advantage of the common infrastructure.
+Repositories that do not contribute to the .NET stack may also use Arcade SDK in order to take advantage of the common infrastructure.
 
 The goals are
 
