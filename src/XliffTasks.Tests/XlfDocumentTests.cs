@@ -455,7 +455,7 @@ namespace XliffTasks.Tests
 </xliff>";
 
             ISet<string> untranslatedResources = UntranslatedResources(xliff);
-            Assert.Equal(expected: 0, actual: untranslatedResources.Count);
+            Assert.Empty(untranslatedResources);
         }
 
         [Fact]

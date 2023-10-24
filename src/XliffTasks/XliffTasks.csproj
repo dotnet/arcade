@@ -4,7 +4,6 @@
     <TargetFrameworks>$(NetCurrent);$(NetFrameworkMinimum)</TargetFrameworks>
     <BuildOutputTargetFolder>tools</BuildOutputTargetFolder>
     <IsPackable>true</IsPackable>
-    <!-- NU5128: Some target frameworks declared in the dependencies group of the nuspec and the lib/ref folder do not have exact matches in the other location. -->
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <AssemblyName>Microsoft.DotNet.XliffTasks</AssemblyName>
     <RootNamespace>XliffTasks</RootNamespace>
