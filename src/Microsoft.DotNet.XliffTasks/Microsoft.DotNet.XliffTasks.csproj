@@ -5,7 +5,6 @@
     <BuildOutputTargetFolder>tools</BuildOutputTargetFolder>
     <IsPackable>true</IsPackable>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
-    <AssemblyName>Microsoft.DotNet.XliffTasks</AssemblyName>
     <RootNamespace>XliffTasks</RootNamespace>
   </PropertyGroup>
 
@@ -15,11 +14,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="XliffTasks.Tests" />
+    <InternalsVisibleTo Include="Microsoft.DotNet.XliffTasks.Tests" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" />
   </ItemGroup>
 
   <ItemGroup>
