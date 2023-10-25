@@ -1,0 +1,19 @@
+<Project>
+
+  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
+
+  <PropertyGroup>
+    <Copyright>$(CopyrightMicrosoft)</Copyright>
+    <StrongNameKeyId>MicrosoftAspNetCore</StrongNameKeyId>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <LangVersion>latest</LangVersion>
+    <CheckForOverflowUnderflow Condition="'$(Configuration)' == 'Debug'">true</CheckForOverflowUnderflow>
+  </PropertyGroup>
+
+  <!-- TODO: Remove when Arcades updates NetCurrent to net9.0. -->
+  <PropertyGroup>
+    <NetCurrent>net9.0</NetCurrent>
+  </PropertyGroup>
+
+</Project>

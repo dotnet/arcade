@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(NetCurrent);$(NetFrameworkMinimum)</TargetFrameworks>
+    <BuildOutputTargetFolder>tools</BuildOutputTargetFolder>
+    <IsPackable>true</IsPackable>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <RootNamespace>XliffTasks</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="build\*" Pack="true" PackagePath="build" />
+    <None Include="buildCrossTargeting\*" Pack="true" PackagePath="buildCrossTargeting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.DotNet.XliffTasks.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Utilities.Core" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Model\xliff-core-1.2-transitional.xsd" />
+    <EmbeddedResource Include="Model\xml.xsd" />
+  </ItemGroup>
+
+</Project>

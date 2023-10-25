@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(NetCurrent)</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.XliffTasks\Microsoft.DotNet.XliffTasks.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Upgrade xunit's transitive NETStandard.Library dependency to avoid .NET Standard 1.x dependencies. -->
+    <PackageReference Include="NETStandard.Library"
+                      IsImplicitlyDefined="false"
+                      PrivateAssets="all"
+                      ExcludeAssets="runtime"
+                      VersionOverride="2.0.3" />
+  </ItemGroup>
+
+</Project>
