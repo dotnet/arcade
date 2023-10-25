@@ -25,8 +25,8 @@ namespace XliffTasks.Model
             foreach (XElement? element in Document.Descendants())
             {
                 // first, let's check if the element has a descendent by the name of {elementLocalName.Description/DisplayName}
-                var descendentDisplayName = element.Descendants(XName.Get($"{element.Name.LocalName}.DisplayName", element.Name.NamespaceName)).FirstOrDefault();
-                var descendentDescription = element.Descendants(XName.Get($"{element.Name.LocalName}.Description", element.Name.NamespaceName)).FirstOrDefault();
+                var descendentDisplayName = element.Elements(XName.Get($"{element.Name.LocalName}.DisplayName", element.Name.NamespaceName)).FirstOrDefault();
+                var descendentDescription = element.Elements(XName.Get($"{element.Name.LocalName}.Description", element.Name.NamespaceName)).FirstOrDefault();
 
                 if (descendentDisplayName is not null)
                 {
@@ -55,7 +55,7 @@ namespace XliffTasks.Model
                     // we could have any number of descendent localizable properties
                     foreach (var localizableProperty in localizableProperties)
                     {
-                        if (element.Descendants(XName.Get($"{element.Name.LocalName}.{localizableProperty}", element.Name.NamespaceName)).FirstOrDefault() is { } descendentValue)
+                        if (element.Elements(XName.Get($"{element.Name.LocalName}.{localizableProperty}", element.Name.NamespaceName)).FirstOrDefault() is { } descendentValue)
                         {
                             yield return new TranslatableXmlElement(
                                 id: GenerateIdForPropertyMetadata(descendentValue),
@@ -77,7 +77,7 @@ namespace XliffTasks.Model
                             note: GetComment(element, XmlName(attribute)),
                             attribute: attribute);
                     }
-                    else if (AttributedName(element) == "SearchTerms" && (XmlName(attribute) == "Value" || element.Descendants(XName.Get($"{element.Name.LocalName}.Value", element.Name.NamespaceName)).FirstOrDefault() is { }))
+                    else if (AttributedName(element) == "SearchTerms" && (XmlName(attribute) == "Value" || element.Elements(XName.Get($"{element.Name.LocalName}.Value", element.Name.NamespaceName)).FirstOrDefault() is { }))
                     {
                         if (XmlName(attribute) == "Value")
                         {
@@ -88,7 +88,7 @@ namespace XliffTasks.Model
                                 attribute: attribute);
                         }
                         // else if we have a descendent in the form of {elementLocalName}.Value, we should translate that descendent
-                        else if (element.Descendants(XName.Get($"{element.Name.LocalName}.Value", element.Name.NamespaceName)).FirstOrDefault() is { } descendentValue)
+                        else if (element.Elements(XName.Get($"{element.Name.LocalName}.Value", element.Name.NamespaceName)).FirstOrDefault() is { } descendentValue)
                         {
                             yield return new TranslatableXmlElement(
                                 id: GenerateIdForPropertyMetadata(element),
