@@ -64,9 +64,9 @@
       <Uri>https://github.com/dotnet/symreader-converter</Uri>
       <Sha>c5ba7c88f92e2dde156c324a8c8edc04d9fa4fe0</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="1.0.0-beta.23523.1">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="1.0.0-beta.23525.3">
       <Uri>https://github.com/dotnet/xliff-tasks</Uri>
-      <Sha>83531fff1a39abe38de53e2e6b702bc1bb9c3bb4</Sha>
+      <Sha>4e5a9fe60da8d3bf3cbca7fdbac97a99882d2041</Sha>
     </Dependency>
     <!-- Latest preview version required by source-build. The dependency is loaded in during built-time
          by consumers of NuGetRepack.Tasks, so we cannot use a ref pack for it -->
