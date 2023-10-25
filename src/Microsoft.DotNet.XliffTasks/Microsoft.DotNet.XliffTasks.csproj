@@ -2,15 +2,14 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(NetCurrent);$(NetFrameworkMinimum)</TargetFrameworks>
-    <BuildOutputTargetFolder>tools</BuildOutputTargetFolder>
     <IsPackable>true</IsPackable>
-    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <RootNamespace>XliffTasks</RootNamespace>
+    <StrongNameKeyId>MicrosoftAspNetCore</StrongNameKeyId>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="build\*" Pack="true" PackagePath="build" />
-    <None Include="buildCrossTargeting\*" Pack="true" PackagePath="buildCrossTargeting" />
+    <None Include="README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
   <ItemGroup>
@@ -25,5 +24,7 @@
     <EmbeddedResource Include="Model\xliff-core-1.2-transitional.xsd" />
     <EmbeddedResource Include="Model\xml.xsd" />
   </ItemGroup>
+
+  <Import Project="$(RepositoryEngineeringDir)BuildTask.targets" />
 
 </Project>

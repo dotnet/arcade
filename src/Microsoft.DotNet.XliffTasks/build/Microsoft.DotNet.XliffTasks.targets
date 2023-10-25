@@ -2,7 +2,7 @@
 <Project>
 
   <PropertyGroup>
-    <XliffTasksDirectory Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\tools\net9.0\</XliffTasksDirectory>
+    <XliffTasksDirectory Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\tools\net8.0\</XliffTasksDirectory>
     <XliffTasksDirectory Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\tools\net462\</XliffTasksDirectory>
     <XliffTasksAssembly>$(XliffTasksDirectory)Microsoft.DotNet.XliffTasks.dll</XliffTasksAssembly>
   </PropertyGroup>
