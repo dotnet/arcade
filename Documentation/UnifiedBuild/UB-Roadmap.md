@@ -29,7 +29,10 @@ gantt
         Crossbuilds Design (JoS / SteveP): after net8-ga, 13w
 
     section Source-Build (MichaelS)
-        VMR UX Improvements: after net8-ga, 13w
+        Eliminate Src Edits During Build: after net8-ga, 8w
+        Parallel Build Support: after net9-p1, 2w
+        Remove Inner Clone: after net9-p2, 3w
+        Incremental Build Support: after net9-p3, 6w
         Multi-band SDKs: after net9-p4, 4w
 
     section Product Validation (RichaV)
@@ -115,20 +118,14 @@ Design for cross-arch or cross-platform builds and determine how to define cross
 
 ## Source-Build area
 
-**VMR UX Improvements**
-
-Improvements of the VMR user experience. This includes, but is not limited to:
-  * Updating source-build to not modify source-controlled files
-  * Design of appropriate controls and command line options
-  * Source-build inner clone removal
-  * Incremental build improvements
-
-**Multi-band SDKs**
-
-Implementing support for building multiple SDK bands sharing one binary copy of shared components (e.g. runtime).
+* [Eliminate Src Edits During Build](https://github.com/dotnet/source-build/issues/3664)
+* [Parallel Build Support](https://github.com/dotnet/source-build/issues/3072)
+* [Remove Inner Clone](https://github.com/dotnet/source-build/issues/3666)
+* [Incremental Build Support](https://github.com/dotnet/source-build/issues/3608)
+* [Multi-band SDKs](https://github.com/dotnet/source-build/issues/3667)
 
 ## Product Validation area
-        
+
 **Scenario tests in VMR**
 
 End-to-end scenario tests (such as `dotnet new console` or a running a Stage 2 Linux source-build of the SDK) of the .NET product.
