@@ -28,7 +28,7 @@ namespace XliffTasks.Tests
   </file>
 </xliff>";
 
-            Assert.Equal(expected, writer.ToString());
+            AssertEx.EqualIgnoringLineEndings(expected, writer.ToString());
         }
 
         [Fact]
