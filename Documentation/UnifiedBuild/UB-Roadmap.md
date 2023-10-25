@@ -38,6 +38,7 @@ gantt
     section Product Validation (RichaV)
         Scenario tests in VMR: after net8-rc2, 10w
         PR Validation: after net9-p2, 4w
+        Product Validation Tooling: after net9-p1, 16w
 
     section Product Construction (TomasK / MattM / PremekV)
         Backflow design: after net8-rc2, 5w
