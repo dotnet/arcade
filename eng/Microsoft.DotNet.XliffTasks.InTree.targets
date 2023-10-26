@@ -8,6 +8,7 @@
     <XliffTasksDirectory Condition="'$(MSBuildRuntimeType)' != 'Core'">$(XliffTasksBaseOutputDirectory)$(NetFrameworkToolCurrent)\</XliffTasksDirectory>
   </PropertyGroup>
 
+  <!-- Props files should ideally be imported from the project file or other props files but it doesn't matter in this case. -->
   <Import Project="$(XliffTasksProjectDirectory)build\Microsoft.DotNet.XliffTasks.props" />
   <Import Project="$(XliffTasksProjectDirectory)build\Microsoft.DotNet.XliffTasks.targets" Condition="'$(IsCrossTargetingBuild)' != 'true'" />
   <Import Project="$(XliffTasksProjectDirectory)buildCrossTargeting\Microsoft.DotNet.XliffTasks.targets" Condition="'$(IsCrossTargetingBuild)' == 'true'" />
