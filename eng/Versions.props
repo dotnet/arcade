@@ -13,7 +13,6 @@
     <MicrosoftDotNetBuildTasksFeedVersion>9.0.0-beta.23518.2</MicrosoftDotNetBuildTasksFeedVersion>
     <MicrosoftDotNetSignToolVersion>9.0.0-beta.23518.2</MicrosoftDotNetSignToolVersion>
     <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>9.0.0-beta.23518.2</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
-    <MicrosoftDotNetXliffTasksVersion>1.0.0-beta.23523.1</MicrosoftDotNetXliffTasksVersion>
     <!-- arcade-services -->
     <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.23523.4</MicrosoftDotNetMaestroClientVersion>
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.23523.4</MicrosoftDotNetMaestroTasksVersion>
