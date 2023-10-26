@@ -46,6 +46,8 @@
     <MicrosoftExtensionsDependencyInjectionAbstractionsVersion>8.0.0-preview.4.23259.5</MicrosoftExtensionsDependencyInjectionAbstractionsVersion>
     <MicrosoftExtensionsDependencyInjectionVersion>8.0.0-preview.4.23259.5</MicrosoftExtensionsDependencyInjectionVersion>
     <MicrosoftExtensionsDependencyModelVersion>8.0.0-preview.4.23259.5</MicrosoftExtensionsDependencyModelVersion>
+    <MicrosoftExtensionsFileProvidersAbstractionsVersion>8.0.0-preview.4.23259.5</MicrosoftExtensionsFileProvidersAbstractionsVersion>
+    <MicrosoftExtensionsFileSystemGlobbingVersion>8.0.0-preview.4.23259.5</MicrosoftExtensionsFileSystemGlobbingVersion>
     <MicrosoftExtensionsLoggingConsoleVersion>8.0.0-preview.4.23259.5</MicrosoftExtensionsLoggingConsoleVersion>
     <MicrosoftNETCorePlatformsVersion>5.0.0</MicrosoftNETCorePlatformsVersion>
     <MicrosoftNETRuntimeEmscripten2023Nodewin_x64>6.0.4</MicrosoftNETRuntimeEmscripten2023Nodewin_x64>
