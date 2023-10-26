@@ -104,6 +104,12 @@ function sign ()
     security cms -D -i "$provisioning_profile" > provision.plist
     /usr/libexec/PlistBuddy -x -c 'Print :Entitlements' provision.plist > entitlements.plist
 
+    # Sign all embedded shared libs
+    for shared_lib in $(find "$1" -name "*.dylib" -o -name "*.framework" 2>/dev/null); do
+      echo "Signing shared library $shared_lib"
+      /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements entitlements.plist "$shared_lib"
+    done
+
     # Sign the app
     /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements entitlements.plist "$1"
 }
