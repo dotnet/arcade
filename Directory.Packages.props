@@ -57,8 +57,6 @@
     <PackageVersion Include="System.Text.Json" Version="$(SystemTextJsonVersion)" />
     <!-- sdk -->
     <PackageVersion Include="Microsoft.NET.Sdk.WorkloadManifestReader" Version="$(MicrosoftNetSdkWorkloadManifestReaderVersion)" />
-    <!-- xliff-tasks -->
-    <PackageVersion Include="Microsoft.DotNet.XliffTasks" Version="$(MicrosoftDotNetXliffTasksVersion)" />
   </ItemGroup>
 
   <!-- external -->
