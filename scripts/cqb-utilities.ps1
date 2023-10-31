@@ -1,27 +1,28 @@
 # Set of utility functionality for coherency QBs
 
-Function Gen-Merge-Branch
-{
-  param (
-      [string]$BranchName
-  )
+<#
+.SYNOPSIS
+    Generate a public->internal merge PR
 
-  & git fetch --all -p
-  & git checkout internal/release/$BranchName
-  if (-not $?) {
-    return 1
-  }
-  & git merge azdo-dnceng-internal/internal/release/$BranchName
-  if (-not $?) {
-    return 1
-  }
-  & git checkout -B merge-internal/release/$BranchName
-  if (-not $?) {
-    return 1
-  }
-  & git merge upstream/release/$BranchName
-}
+.DESCRIPTION
+    Given the name of a release branch without the 'release/' prefix,
+    an AzureDevOps PAT, and an AzDO a repository name, generate a merge PR
+    from the release and internal/release branches.
 
+    This functionality is useful for quickly creating PRs to resolve internal/public merge
+    conflicts.
+
+.PARAMETER RepoName
+    AzDO repo name. E.g. dotnet-runtime
+.PARAMETER Org
+    AzDO org where the repo resides.
+.PARAMETER Project
+    AzDO project where the repo resides.
+.PARAMETER BranchName
+    Branch name, without 'release/' prefix of the branch to generate a internal merge PR for. E.g. '6.0'
+.PARAMETER AzDOPAT
+    PAT with Code R/W perms.
+#>
 Function Gen-Internal-Merge-PR
 {
   param (
@@ -55,6 +56,13 @@ Function Gen-Internal-Merge-PR
   }
 }
 
+<#
+.SYNOPSIS
+    Generate a REST API auth header for AzDO
+
+.PARAMETER AzDOPAT
+    PAT to generate a header for.
+#>
 Function Get-AzDO-Auth-Header
 {
   param (
@@ -65,6 +73,13 @@ Function Get-AzDO-Auth-Header
   return @{"Authorization"="Basic $base64authinfo"}
 }
 
+<#
+.SYNOPSIS
+    Given a manifest.json with builds, mark all of these as released.
+
+.PARAMETER Manifest
+    manifest.json file (from staging pipeline) with builds to release.
+#>
 Function Mark-All-In-Manifest-As-Released
 {
   param (
