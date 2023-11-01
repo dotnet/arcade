@@ -342,7 +342,7 @@ function InitializeBuildTool {
   _InitializeBuildTool="$_InitializeDotNetCli/dotnet"
   _InitializeBuildToolCommand="msbuild"
   # use override if it exists - commonly set by source-build
-  if [[ -z "${_OverrideArcadeInitializeBuildToolFramework}" ]]; then
+  if [[ "${_OverrideArcadeInitializeBuildToolFramework:-x}" == "x" ]]; then
     _InitializeBuildToolFramework="net8.0"
   else
     _InitializeBuildToolFramework="${_OverrideArcadeInitializeBuildToolFramework}"
