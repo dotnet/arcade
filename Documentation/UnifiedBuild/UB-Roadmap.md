@@ -20,7 +20,7 @@ gantt
         UB Week: ub-week, 2023-10-02, 1w
 
     section Vertical Build
-        Win VB PoC (TBD): after net8-ga, 6w
+        Win VB PoC (ViktorH (confirm with Jeff)): after net8-ga, 6w
         Linux VB PoC (SteveP): after net8-rc2, 11w
         MacOS VB PoC (SteveP): after net8-rc2, 11w
         Workloads PoC (SteveP): after net8-ga, 6w
@@ -38,6 +38,7 @@ gantt
     section Product Validation (RichaV)
         Scenario tests in VMR: after net8-rc2, 10w
         PR Validation: after net9-p2, 4w
+        Product Validation Tooling: after net9-p1, 16w
 
     section Product Construction (TomasK / MattM / PremekV)
         Backflow design: after net8-rc2, 5w
