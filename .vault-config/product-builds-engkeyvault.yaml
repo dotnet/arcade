@@ -281,3 +281,15 @@ secrets:
         location: dotnetbuildskeys
       permissions: rl
       container: public-checksums
+
+  #OneLocBuildVariables
+  dn-bot-ceapex-package-r:
+    type: azure-devops-access-token
+    parameters:
+      domainAccountName: dn-bot
+      domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+      name: dn-bot-ceapex-package-r
+      organizations: ceapex
+      scopes: packaging
