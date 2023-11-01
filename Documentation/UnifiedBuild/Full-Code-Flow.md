@@ -72,6 +72,12 @@ The above means that once we merge the forward flow PR, the contents of the repo
 
 ### Backflow commit
 
+The backflow commit will be created from a diff that best describes the delta of the VMR and the repository. Since the forward flow is the "checkpoint" that levels the repositories, we can compare the current state to the "snapshot" of the repository we were forward-flowing the last time. In the diagram this is visualized as the red diff between `9.` (current state) and `5.`. This diff correctly represents the delta because it contains the last known snapshot and all the other commits that happened in the VMR since then - the additional PR commit `6.` and the main branch changes `7.` and `9.`. The base commit of the backflow branch is then the base commit of the last forward flow as that's what we're applying the delta to.
+
+### Out-of-order synchronization
+
+Let's have a look at a situation where one direction of the flow is blocked and only the other flow is happening. This would result in more flows in one direction in a row.
+
 
 
 ## High-level overview
