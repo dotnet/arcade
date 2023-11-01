@@ -63,9 +63,15 @@ What is left to discuss is how we create the commits of the flow branches - `5.`
 
 ### Forward flow commit
 
-The forward flow commit (denoted as `5.` in the diagram) is created as an "xcopy" of the repository contents. This means that we take the snapshot of the repository contents (minus the cloakings) and create a commit that sets the contents to this snapshot.
+For the forward flow, we built on the principle that the source repository is the source of thruth and the VMR is a projection. The commit (`5.`) is created as an "xcopy" of the repository contents. This means that we take the snapshot of the repository contents (minus the cloaking) and create a commit that sets the contents to this snapshot.
+This effectively zeros the delta between the repositories. The forward flow then works as a "checkpoint" that levels the repositories and an anchor that we can come back to later in case we're trying to figure out the order of changes when for instance investigating a conflict.
+
+It is expected that the VMR PR build fails frequently and an additional commit (`6.`) is required in the PR. This is a common flow we already have today when PRs in the `dotnet/installer` repositories uncover integration issues in the Source Build. As our official build comes closer to the repository build, we expect this to happen less frequently. Regardless, we have to account for this.
+
+The above means that once we merge the forward flow PR, the contents of the repository is more or less the same to the VMR. The actual delta in this example is the commit `7.` and `.6.`. This is the delta we need to eventually flow back.
 
 ### Backflow commit
+
 
 
 ## High-level overview
