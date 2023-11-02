@@ -48,7 +48,6 @@
   <ItemGroup>
     <PackageDownload Include="Microsoft.NETCore.Platforms" Version="[$(MicrosoftNETCorePlatformsVersion)]" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" />
-    <PackageReference Include="System.Security.Cryptography.Xml" />
     <PackageReference Include="Newtonsoft.Json" />
     <PackageReference Include="NuGet.Commands" />
     <PackageReference Include="NuGet.Packaging" />

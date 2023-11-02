@@ -23,7 +23,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Tasks.Core" />
-    <PackageReference Include="System.Security.Cryptography.Xml" />
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" />
   </ItemGroup>
 

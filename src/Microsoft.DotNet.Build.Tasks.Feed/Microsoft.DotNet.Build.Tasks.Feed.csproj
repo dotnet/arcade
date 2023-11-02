@@ -13,7 +13,6 @@
     <PackageReference Include="Azure.Core" />
     <PackageReference Include="Azure.Storage.Blobs" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" />
-    <PackageReference Include="System.Security.Cryptography.Xml" />
 
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Microsoft.SymbolUploader" />

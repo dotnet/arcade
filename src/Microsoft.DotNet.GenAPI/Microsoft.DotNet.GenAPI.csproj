@@ -15,7 +15,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Tasks.Core" />
-    <PackageReference Include="System.Security.Cryptography.Xml" />
 
     <!-- Manually reference Microsoft.Cci.dll via a PackageDownload+Reference item instead of
          using a PackageReference to avoid bringing in the old dependency graph. -->

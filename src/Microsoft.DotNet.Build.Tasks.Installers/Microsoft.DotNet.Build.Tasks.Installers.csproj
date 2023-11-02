@@ -14,7 +14,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Utilities.Core" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" />
-    <PackageReference Include="System.Security.Cryptography.Xml" />
     <PackageReference Include="Microsoft.Build.Framework" />
     <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
