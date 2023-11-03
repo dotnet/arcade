@@ -326,14 +326,14 @@ Example of `nuget/NuGet.Client`'s `vmr-synchronization.json` (this repo doesn't 
   "name": "nuget-client",
 
   // Configuration for code flowing out of this repository into the VMR
-  "vmr": {
+  "out": {
     "exclude": [
       "src/NuGet.Clients/NuGet.VisualStudio.Client"
     ]
   },
 
   // Configuration for code flowing from the VMR into this repository
-  "repo": {
+  "in": {
     "ignoredPackages": [
       // This opts out from getting Arcade and eng/common updates from the VMR
       "Microsoft.DotNet.Arcade.Sdk"
