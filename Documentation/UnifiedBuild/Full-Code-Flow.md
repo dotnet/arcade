@@ -208,7 +208,7 @@ When we are forming the backflow commit (`13.`), we know that the only things th
 
 ### Last flow detection
 
-For the above to work correctly, we need to be able to tell which situation we're in and which direction the last flow happened.
+For the above to work correctly, we need to be able to tell which situation we're in and which direction the last flow happened. For this to work, we need to store the last SHA of the counterpart repository that we have synchronized from the last. In the present VMR, this information is already present in the `source-manifest.json` file. For flowing from the VMR into an individual repository, we will store this in the `Version.Details.xml` file.
 
 ![Detecting flow direction](images/flow-detection.png)
 
@@ -216,15 +216,41 @@ Let's assume we're at the point of wanting to open a flow PR from a given commit
 - Last points of synchronization in source and target repositories
 - Base commit in the target repository
 
-Let's assume 
+#### Detecting incoming flow
+
+Let's assume we want to open a forward flow PR from commit `sha4`. To create the PR, we need the find out that:
+1. `shaC` backflowed to `sha3`.
+2. No other flow happened after that.
+
+We can deduce this information easily from:
+1. `Version.Details.xml` in `sha4` (our starting point) contains `shaC` as the last synchronized commit from the VMR.
+2. `source-manifest.json` in the destination VMR commit contains a commit older than `sha3`.
+
+`shaC` will then be both the base commit of the PR branch and also the commit we will be creating the diff (shown in yellow) against as you can see if you compare this simplified diagram to the "Forward flow after backflow" one above.
+
+#### Detecting outgoing flow
+
+Now let's assume we're trying to backflow from `shaC`, creating `sha3`. This time, we need to find out that:
+1. `shaB` backflowed to `sha2`.
+2. No other flow happened after that.
+
+We can deduce this information easily from:
+1. `Version.Details.xml` in `sha2` (our destination point) has `shaB` as the last synchronized commit from the VMR.
+2. `source-manifest.json` in `shaC` (our starting point) VMR commit contains `sha2`.
+
+We will then use the `shaB`-`shaC` diff (in pink) as the diff for the PR while basing the PR branch off of `sha2` (last known place we backflowed into).
+
+#### Cases when SHA is not in the graph
+
+> ⚠️⚠️⚠️ TODO
 
 ### Conflicts
 
-⚠️⚠️⚠️ TODO
+> ⚠️⚠️⚠️ TODO
 
 ### Updating PRs
 
-⚠️⚠️⚠️ TODO
+> ⚠️⚠️⚠️ TODO
 
 ## Synchronization configuration
 
