@@ -210,6 +210,21 @@ When we are forming the backflow commit (`13.`), we know that the only things th
 
 For the above to work correctly, we need to be able to tell which situation we're in and which direction the last flow happened.
 
+![Detecting flow direction](images/flow-detection.png)
+
+Let's assume we're at the point of wanting to open a flow PR from a given commit. To do that, we need to find out:
+- Last points of synchronization in source and target repositories
+- Base commit in the target repository
+
+Let's assume 
+
+### Conflicts
+
+⚠️⚠️⚠️ TODO
+
+### Updating PRs
+
+⚠️⚠️⚠️ TODO
 
 ## Synchronization configuration
 
