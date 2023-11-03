@@ -20,29 +20,31 @@ This section presents more precise definitions of common terms used in this docu
 
 ## The codeflow algorithm
 
-This section describes the details of moving the code between product repositories and the VMR. The algorithm will work differently in each direction to achieve maximum fleuncy and minimize the amount of conflicts developers need to tend to.
+This section describes the details of moving the code between product repositories and the VMR. The algorithm will work differently in each direction to achieve maximum fleuncy and minimize the amount of conflicts developers need to tend to but also ensure that conflicting changes manifest as conflicts and changes are not overridden without a trace.
 
-There are several assumptions and principles we are basing this algorithm on:
-- Individual repositories are the source of thruth where most of the development happens. The VMR is a buildable projection of these and a vehicle for dependency flow.
-- Most of the volume of changes will occur in the product repositories where a high degree of PR validation is available. The VMR is suitable for changes that span multiple repositories and/or contain breaking changes between these.
-- **TODO - Anything else?**
+The algorithm will always consider the delta between the VMR and the repository and we will flow this delta via a pull request that will open in the counterpart repository. That being said, it is expected that there will be a forward flow and a backflow PR open at most times and the order in which the repositories will synchronize in can be random. As an example, a backflow might be blocked for an extended period of time because repo's validation, which will be more extensive than VMR's, might uncover some problematic changes done in the VMR that need fixing. While this is going, the forward flow can continue and the VMR can be updated with the latest changes from the repository. For this reason, we need to have a look at the algorithm with respect to its context - e.g. the last synchronization.
 
-The following diagram shows what a single forward and a single backward flow would look like:
+This means that we need to look at the following flow combinations:
+- Forward flow after backflow
+- Backflow after forward flow
+- Two flows in the same direction
 
-![Graphical patch notation](images/backflow-algorithm.png)
-[*[Editable version of the diagram]*](https://excalidraw.com/#json=OgvSmq2NyrD_IZQuvSeyf,dnhwsoUX-khmoAWX_7TarQ)
+The diagrams below visualize these flows and have some common features:
+- 🟠 The repository contains an example file (say `A.txt`). This file contains a single line of text. The content of the file transformations are denoted in orange. The file starts with the text `one` and ends with the text `five`.
+- 🟢 Green arrows denote the previous successful flow
+- 🔵 Blue arrows denote the flow we're interested in in the current diagram.
+- 🟣 In purple, we visualize the actual diff that we need to carry over to the counterpart repository.
+- ⚫ Greyed out commits denote commits that do not affect the `A.txt` file but contain an unrelated change done in the given repository.
+- We usually assume that some previous synchronization happened (points `1` <-> `2`) and the 🟢 green previous synchronization was done based on its previous synchronization.
+- The commits are numbered and happen in the order of the numbers. The numbers are used to refer to the commits in the text.
+- [An editable version of diagrams is here](https://excalidraw.com/#json=YviXIxeoODUi1qk_W4uwa,18vvlWfcN9ukPzpMZexjig)
 
-- We assume the repositories begin in a synchronized state, meaning code flow happened both ways and there were no additional changes (points `1` <-> `2`).
+![Backflow after forward flow](images/forward-backward-flow.png)
 
 On this diagram we see:
-- 🟠 The repository contains an example file (say `A.txt`). This file contains a single line of text. The content of the file transformations are denoted in orange. The file starts with the text `one` and ends with the text `five`.
-- 🟢 Green arrows denote forward flow
-- 🔵 Blue arrows denote backflow.
-- ⚫ Greyed out commits denote commits that do not affect the `A.txt` file but contain an unrelated change done in the given repository.
-- 🔴 In red, you can see an important diff that is explained below.
 
 The flow of changes in the diagram is as follows:  
-`1.` and `2.` The repository contents are matching the VMR.  
+`1.` and `2.` denote some previous synchronization point.
 `3.` Commit in the repository changes the contents of `A.txt` to `two`.  
 `4.` Commit in the repository changes the contents of `A.txt` to `three`. Forward flow also starts at that point (this is arbitrary).  
 `5.` A forward-flow branch (green) is created in the VMR. The branch is based on the commit of last synchronization (`2.`). The content on the commit is [described below](#forward-flow-commit). A PR from this branch is opened.  
@@ -55,30 +57,27 @@ The flow of changes in the diagram is as follows:
 `12.` A commit is made to the main branch of the repository, content is unrelated.  
 `13.` The PR is merged, effectively updating `A.txt` from `three` to `five`.
 
-From the flow you can notice several features:
-- No (git) conflicts appear. This is because this concrete example considers a single file that is chronologically changed from `one` to `five` in gradual steps.
+You can notice several features:
+- No (git) conflicts appear. This is because this concrete example considers a single file that is chronologically changed from `one` to `five` in gradual steps. In such case, we should not expect any conflicts and this is by design. In cases where most of the changes happen in the individual repository, we expect the code to flow fluently.
 - The whole flow is comparable to a dev working in a dev branch within a single repository - the dev branch being the VMR where the dev merges the main branch in between the work (this is the forward flow). The dev then opens a PR against the main branch (the repository in this case). Wherever there would be conflicts in a single repository case, we would get conflicts here too and this is by design.
 
-What is left to discuss is how we create the commits of the flow branches - `5.` and `10.`. Each one is created differently and the assymetry is intentional. This is due to some of the principles outlined above (repository being the source of thruth) and yields some interesting benefits.
+What is left to discuss is how we create the commit (`10.`) of the backflow branch. We know that we received the delta from the repository as part of the commit `8.` after the last forward flow PR was merged. We assume that a squash merge was used and commits `5.` and `6.` are no longer available.  
+The delta between the repositories when commit `9.` (which we will backflow) happens is technically commits `6.`, `7.` and `9.` is visualized as the purple diff between `9.` and `5.`. This diff correctly represents the delta because:
+- It contains the last known snapshot of the repository (`5.`)
+- All commits that happened in the VMR in the meantime (since the last commit) - the commit `7.`.
+- The other commits that happened in the VMR since the sync `9.`.
 
-### Forward flow commit
+The base commit of the backflow branch is then the base commit of the last forward flow as that's what we're applying the delta to. If commit `11.` or `12.` would change the contents of `A.txt`, we would get a conflict in the backflow PR which is desired.
 
-For the forward flow, we built on the principle that the source repository is the source of thruth and the VMR is a projection. The commit (`5.`) is created as an "xcopy" of the repository contents. This means that we take the snapshot of the repository contents (minus the cloaking) and create a commit that sets the contents to this snapshot.
-This effectively zeros the delta between the repositories. The forward flow then works as a "checkpoint" that levels the repositories and an anchor that we can come back to later in case we're trying to figure out the order of changes when for instance investigating a conflict.
+Similarly, we can look at the opposite direction which is symmetrical:
 
-It is expected that the VMR PR build fails frequently and an additional commit (`6.`) is required in the PR. This is a common flow we already have today when PRs in the `dotnet/installer` repositories uncover integration issues in the Source Build. As our official build comes closer to the repository build, we expect this to happen less frequently. Regardless, we have to account for this.
-
-The above means that once we merge the forward flow PR, the contents of the repository is more or less the same to the VMR. The actual delta in this example is the commit `7.` and `.6.`. This is the delta we need to eventually flow back.
-
-### Backflow commit
-
-The backflow commit will be created from a diff that best describes the delta of the VMR and the repository. Since the forward flow is the "checkpoint" that levels the repositories, we can compare the current state to the "snapshot" of the repository we were forward-flowing the last time. In the diagram this is visualized as the red diff between `9.` (current state) and `5.`. This diff correctly represents the delta because it contains the last known snapshot and all the other commits that happened in the VMR since then - the additional PR commit `6.` and the main branch changes `7.` and `9.`. The base commit of the backflow branch is then the base commit of the last forward flow as that's what we're applying the delta to.
-
-### Out-of-order synchronization
-
-Let's have a look at a situation where one direction of the flow is blocked and only the other flow is happening. This would result in more flows in one direction in a row.
+![Forward flow after backflow](images/backward-forward-flow.png)
 
 
+
+### Last flow detection
+
+⚠️⚠️⚠️ TODO
 
 ## High-level overview
 
