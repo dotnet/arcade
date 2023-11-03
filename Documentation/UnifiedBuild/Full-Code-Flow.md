@@ -188,7 +188,7 @@ The diagrams below visualize these flows and have some common features:
 - ⚫ Greyed out commits denote commits that do not affect the `A.txt` file but contain an unrelated change done in the given repository.
 - We usually assume that some previous synchronization happened (points `1` <-> `2`) and the 🟢 green previous synchronization was done based on its previous synchronization.
 - The commits are numbered and happen in the order of the numbers. The numbers are used to refer to the commits in the text.
-- [An editable version of diagrams is here](https://excalidraw.com/#json=YviXIxeoODUi1qk_W4uwa,18vvlWfcN9ukPzpMZexjig)
+- [An editable version of diagrams is here](https://excalidraw.com/#json=p-58wm7gtjkbqe4p-FIG0,NJNs9vTO4TIJ6zsn8_nXPA)
 
 ![Backflow after forward flow](images/forward-backward-flow.png)
 
