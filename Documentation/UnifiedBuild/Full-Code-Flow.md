@@ -1,5 +1,29 @@
 # Full VMR code flow
 
+- [Full VMR code flow](#full-vmr-code-flow)
+  - [Purpose](#purpose)
+  - [Terminology](#terminology)
+  - [High-level code flow](#high-level-code-flow)
+    - [Forward flow](#forward-flow)
+    - [Backflow](#backflow)
+  - [Implementation plan](#implementation-plan)
+    - [Backflow service](#backflow-service)
+    - [Why new service?](#why-new-service)
+    - [Composition of DarcLib commands](#composition-of-darclib-commands)
+  - [The codeflow algorithm](#the-codeflow-algorithm)
+    - [Last flow detection](#last-flow-detection)
+      - [Detecting incoming flow](#detecting-incoming-flow)
+      - [Detecting outgoing flow](#detecting-outgoing-flow)
+      - [Cases when SHA is not in the graph](#cases-when-sha-is-not-in-the-graph)
+    - [Conflicts](#conflicts)
+    - [Updating PRs](#updating-prs)
+  - [Synchronization configuration](#synchronization-configuration)
+    - [Configuration location](#configuration-location)
+      - [Proposed configuration](#proposed-configuration)
+    - [Arcade](#arcade)
+      - [Updating `eng/common`](#updating-engcommon)
+      - [Updating `global.json`](#updating-globaljson)
+
 ## Purpose
 
 This document describes the architecture of the full code flow between product repositories and the VMR.
@@ -171,30 +195,30 @@ The diagrams below visualize these flows and have some common features:
 On this diagram we see:
 
 The flow of changes in the diagram is as follows:  
-`1.` and `2.` denote some previous synchronization point.
-`3.` Commit in the repository changes the contents of `A.txt` to `two`.  
-`4.` Commit in the repository changes the contents of `A.txt` to `three`. Forward flow also starts at that point (this is arbitrary).  
-`5.` A forward-flow branch (green) is created in the VMR. The branch is based on the commit of last synchronization (`2.`). The content on the commit is [described below](#forward-flow-commit). A PR from this branch is opened.  
-`6.` An additional arbitrary commit is made in the forward flow PR which changes the contents of `A.txt` to `four` (i.e. fixing the build).  
-`7.` A commit is made to the main branch of the VMR, content is unrelated.  
-`8.` Forward flow PR is merged, effectively updating `A.txt` from `one` to `four`.  
-`9.` A commit is made to the main branch of the VMR, content is unrelated. Backflow starts at that point (this is arbitrary).  
-`10.` A backflow branch (blue) is created in the repository. The branch is based on the commit of last synchronization's (`2.`) base commit. The content on the commit is [described below](#backflow-commit). A PR from this branch is opened.  
-`11.` A commit is made to the main branch of the repository, content is unrelated.  
-`12.` A commit is made to the main branch of the repository, content is unrelated.  
-`13.` The PR is merged, effectively updating `A.txt` from `three` to `five`.
+`1` and `2` denote some previous synchronization point.
+`3` Commit in the repository changes the contents of `A.txt` to `two`.  
+`4` Commit in the repository changes the contents of `A.txt` to `three`. Forward flow also starts at that point (this is arbitrary).  
+`5` A forward-flow branch (green) is created in the VMR. The branch is based on the commit of last synchronization (`2`). The content on the commit is [described below](#forward-flow-commit). A PR from this branch is opened.  
+`6` An additional arbitrary commit is made in the forward flow PR which changes the contents of `A.txt` to `four` (i.e. fixing the build).  
+`7` A commit is made to the main branch of the VMR, content is unrelated.  
+`8` Forward flow PR is merged, effectively updating `A.txt` from `one` to `four`.  
+`9` A commit is made to the main branch of the VMR, content is unrelated. Backflow starts at that point (this is arbitrary).  
+`10` A backflow branch (blue) is created in the repository. The branch is based on the commit of last synchronization's (`2`) base commit. The content on the commit is [described below](#backflow-commit). A PR from this branch is opened.  
+`11` A commit is made to the main branch of the repository, content is unrelated.  
+`12` A commit is made to the main branch of the repository, content is unrelated.  
+`13` The PR is merged, effectively updating `A.txt` from `three` to `five`.
 
 You can notice several features:
 - No (git) conflicts appear. This is because this concrete example considers a single file that is chronologically changed from `one` to `five` in gradual steps. In such case, we should not expect any conflicts and this is by design. In cases where most of the changes happen in the individual repository, we expect the code to flow fluently.
 - The whole flow is comparable to a dev working in a dev branch within a single repository - the dev branch being the VMR where the dev merges the main branch in between the work (this is the forward flow). The dev then opens a PR against the main branch (the repository in this case). Wherever there would be conflicts in a single repository case, we would get conflicts here too and this is by design.
 
-What is left to discuss is how we create the commit (`10.`) of the backflow branch. We know that we received the delta from the repository as part of the commit `8.` after the last forward flow PR was merged. We assume that a squash merge was used and commits `5.` and `6.` are no longer available.  
-The delta between the repositories when commit `9.` (which we will backflow) happens is technically commits `6.`, `7.` and `9.` is visualized as the purple diff between `9.` and `5.`. This diff correctly represents the delta because:
-- It contains the last known snapshot of the repository (`5.`)
-- All commits that happened in the VMR in the meantime (since the last commit) - the commit `7.`.
-- The other commits that happened in the VMR since the sync `9.`.
+What is left to discuss is how we create the commit (`10`) of the backflow branch. We know that we received the delta from the repository as part of the commit `8` after the last forward flow PR was merged. We assume that a squash merge was used and commits `5` and `6` are no longer available.  
+The delta between the repositories when commit `9` (which we will backflow) happens is technically commits `6`, `7` and `9` is visualized as the purple diff between `9` and `5`. This diff correctly represents the delta because:
+- It contains the last known snapshot of the repository (`5`)
+- All commits that happened in the VMR in the meantime (since the last commit) - the commit `7`.
+- The other commits that happened in the VMR since the sync `9`.
 
-The base commit of the backflow branch is then the base commit of the last forward flow as that's what we're applying the delta to. If commit `11.` or `12.` would change the contents of `A.txt`, we would get a conflict in the backflow PR which is desired.
+The base commit of the backflow branch is then the base commit of the last forward flow as that's what we're applying the delta to. If commit `11` or `12` would change the contents of `A.txt`, we would get a conflict in the backflow PR which is desired.
 
 Similarly, we can look at the opposite direction which is symmetrical.
 
@@ -204,7 +228,7 @@ The situation changes when we have two flows in the same direction and things ar
 
 ![Two flows in the same direction](images/backward-backward-flow.png)
 
-When we are forming the backflow commit (`13.`), we know that the only things that happened since we last sent all our updates to the repository are the commits `11.` and `12.` which are equal to a simple diff of the branch we're flowing.
+When we are forming the backflow commit (`13`), we know that the only things that happened since we last sent all our updates to the repository are the commits `11` and `12` which are equal to a simple diff of the branch we're flowing.
 
 ### Last flow detection
 
@@ -242,15 +266,33 @@ We will then use the `shaB`-`shaC` diff (in pink) as the diff for the PR while b
 
 #### Cases when SHA is not in the graph
 
-> ⚠️⚠️⚠️ TODO
+It can happen that the SHA we find in the `Version.Details.xml` or `source-manifest.json` is not in the history of the current repository's branch tip. This can happen when we synchronize an off-branch commit or when the commit comes from a different repository entirely (e.g. internal fork).
+
+> ⚠️⚠️⚠️ TODO - document how it can happen and what to do about it? E.g. force overwriting or finding last common ancestor etc.
 
 ### Conflicts
 
-> ⚠️⚠️⚠️ TODO
+Conflicts will happen and the goal of the process is to:
+1. Make the conflicts visible in the flow PR so that developers need to resolve them.
+2. If a conflict occurs and gets resolved in one side, the next flow from that side should bring the resolution to the other side.
+3. The PR description / comments made by the system should point to the points of friction (e.g. conflicting commits) so that developers have an easier time resolving them.
+
+An example of a conflict that is quite problematic is shown here:
+
+![Conflicting changes](images/forward-forward-flow-with-conflict.png)
+
+In this diagram, the additional commit that was made in the first forward flow PR (`6`) conflicts with a commit made in the repository (`10`). Since there was no backflow, this information is inaccessible by the repository.  
+The follow-up forward flow is problematic because `10` and `11` cannot be applied on top of `8` so we are not able to even create the PR branch.  
+In such a case the only thing left to do is to base the PR branch on the last known good commit (`2`), re-apply `5` (which is technically `1`, `3` and `4`), apply `10` and `11` on top and create a PR branch that will be conflicting with the target branch because of the `6`/`10` conflict.  
+The user would then be instructed to merge the target branch (`9`) into the PR branch and resolve the conflict. The behaviour of git in this case is that the changes contained in `5` that are the same as the ones in `8`, will transparently match up and only the actual conflicting files will be left for resolution.  
+The next backflow will then bring this resolution over to the repository.  
+The downside is that before the target branch is merged into the PR branch, users will see changes in the PR that were previously only merged into the VMR as part of `8`. Those changes will disappear from the PR once the branch is merged.
+
+There are countless other examples of conflicts that can occur but these will usually manifest as conflicts in the PR. The example above is more interesting because the forward flow is unable to even create the PR branch. This is due to the fact that `8` (the previous forward flow commit) contains `6` which is something extra.
 
 ### Updating PRs
 
-> ⚠️⚠️⚠️ TODO
+> ⚠️⚠️⚠️ TODO - situations when a PR is open in one way and a PR in the other way gets merged. How to handle the now outdated original PR?
 
 ## Synchronization configuration
 
