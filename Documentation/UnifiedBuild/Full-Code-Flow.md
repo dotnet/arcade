@@ -10,7 +10,7 @@
     - [Backflow service](#backflow-service)
     - [Why new service?](#why-new-service)
     - [Composition of DarcLib commands](#composition-of-darclib-commands)
-  - [The codeflow algorithm](#the-codeflow-algorithm)
+  - [The code flow algorithm](#the-code-flow-algorithm)
     - [Last flow detection](#last-flow-detection)
       - [Detecting incoming flow](#detecting-incoming-flow)
       - [Detecting outgoing flow](#detecting-outgoing-flow)
@@ -169,7 +169,7 @@ The Darc CLI currently contains a subset of VMR commands and is used to synchron
 
 Once we have the set of commands that can forward/backflow the code locally, we can compose the service out of these.
 
-## The codeflow algorithm
+## The code flow algorithm
 
 This section describes the details of moving the code between product repositories and the VMR. The algorithm will work differently in each direction to achieve maximum fleuncy and minimize the amount of conflicts developers need to tend to but also ensure that conflicting changes manifest as conflicts and changes are not overridden without a trace.
 
