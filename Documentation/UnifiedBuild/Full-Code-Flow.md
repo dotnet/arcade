@@ -18,68 +18,7 @@ This section presents more precise definitions of common terms used in this docu
 - **Forward flow** – The process of moving changes from an individual repository to the VMR.
 - **Backflow** - The process of moving changes from the VMR to an individual repository.
 
-## The codeflow algorithm
-
-This section describes the details of moving the code between product repositories and the VMR. The algorithm will work differently in each direction to achieve maximum fleuncy and minimize the amount of conflicts developers need to tend to but also ensure that conflicting changes manifest as conflicts and changes are not overridden without a trace.
-
-The algorithm will always consider the delta between the VMR and the repository and we will flow this delta via a pull request that will open in the counterpart repository. That being said, it is expected that there will be a forward flow and a backflow PR open at most times and the order in which the repositories will synchronize in can be random. As an example, a backflow might be blocked for an extended period of time because repo's validation, which will be more extensive than VMR's, might uncover some problematic changes done in the VMR that need fixing. While this is going, the forward flow can continue and the VMR can be updated with the latest changes from the repository. For this reason, we need to have a look at the algorithm with respect to its context - e.g. the last synchronization.
-
-This means that we need to look at the following flow combinations:
-- Forward flow after backflow
-- Backflow after forward flow
-- Two flows in the same direction
-
-The diagrams below visualize these flows and have some common features:
-- 🟠 The repository contains an example file (say `A.txt`). This file contains a single line of text. The content of the file transformations are denoted in orange. The file starts with the text `one` and ends with the text `five`.
-- 🟢 Green arrows denote the previous successful flow
-- 🔵 Blue arrows denote the flow we're interested in in the current diagram.
-- 🟣 In purple, we visualize the actual diff that we need to carry over to the counterpart repository.
-- ⚫ Greyed out commits denote commits that do not affect the `A.txt` file but contain an unrelated change done in the given repository.
-- We usually assume that some previous synchronization happened (points `1` <-> `2`) and the 🟢 green previous synchronization was done based on its previous synchronization.
-- The commits are numbered and happen in the order of the numbers. The numbers are used to refer to the commits in the text.
-- [An editable version of diagrams is here](https://excalidraw.com/#json=YviXIxeoODUi1qk_W4uwa,18vvlWfcN9ukPzpMZexjig)
-
-![Backflow after forward flow](images/forward-backward-flow.png)
-
-On this diagram we see:
-
-The flow of changes in the diagram is as follows:  
-`1.` and `2.` denote some previous synchronization point.
-`3.` Commit in the repository changes the contents of `A.txt` to `two`.  
-`4.` Commit in the repository changes the contents of `A.txt` to `three`. Forward flow also starts at that point (this is arbitrary).  
-`5.` A forward-flow branch (green) is created in the VMR. The branch is based on the commit of last synchronization (`2.`). The content on the commit is [described below](#forward-flow-commit). A PR from this branch is opened.  
-`6.` An additional arbitrary commit is made in the forward flow PR which changes the contents of `A.txt` to `four` (i.e. fixing the build).  
-`7.` A commit is made to the main branch of the VMR, content is unrelated.  
-`8.` Forward flow PR is merged, effectively updating `A.txt` from `one` to `four`.  
-`9.` A commit is made to the main branch of the VMR, content is unrelated. Backflow starts at that point (this is arbitrary).  
-`10.` A backflow branch (blue) is created in the repository. The branch is based on the commit of last synchronization's (`2.`) base commit. The content on the commit is [described below](#backflow-commit). A PR from this branch is opened.  
-`11.` A commit is made to the main branch of the repository, content is unrelated.  
-`12.` A commit is made to the main branch of the repository, content is unrelated.  
-`13.` The PR is merged, effectively updating `A.txt` from `three` to `five`.
-
-You can notice several features:
-- No (git) conflicts appear. This is because this concrete example considers a single file that is chronologically changed from `one` to `five` in gradual steps. In such case, we should not expect any conflicts and this is by design. In cases where most of the changes happen in the individual repository, we expect the code to flow fluently.
-- The whole flow is comparable to a dev working in a dev branch within a single repository - the dev branch being the VMR where the dev merges the main branch in between the work (this is the forward flow). The dev then opens a PR against the main branch (the repository in this case). Wherever there would be conflicts in a single repository case, we would get conflicts here too and this is by design.
-
-What is left to discuss is how we create the commit (`10.`) of the backflow branch. We know that we received the delta from the repository as part of the commit `8.` after the last forward flow PR was merged. We assume that a squash merge was used and commits `5.` and `6.` are no longer available.  
-The delta between the repositories when commit `9.` (which we will backflow) happens is technically commits `6.`, `7.` and `9.` is visualized as the purple diff between `9.` and `5.`. This diff correctly represents the delta because:
-- It contains the last known snapshot of the repository (`5.`)
-- All commits that happened in the VMR in the meantime (since the last commit) - the commit `7.`.
-- The other commits that happened in the VMR since the sync `9.`.
-
-The base commit of the backflow branch is then the base commit of the last forward flow as that's what we're applying the delta to. If commit `11.` or `12.` would change the contents of `A.txt`, we would get a conflict in the backflow PR which is desired.
-
-Similarly, we can look at the opposite direction which is symmetrical:
-
-![Forward flow after backflow](images/backward-forward-flow.png)
-
-
-
-### Last flow detection
-
-⚠️⚠️⚠️ TODO
-
-## High-level overview
+## High-level code flow
 
 ### Forward flow
 
@@ -206,67 +145,71 @@ The Darc CLI currently contains a subset of VMR commands and is used to synchron
 
 Once we have the set of commands that can forward/backflow the code locally, we can compose the service out of these.
 
-## Handling concurrent changes
+## The codeflow algorithm
 
-Once we start accepting changes in the VMR, the process of figuring out the diff between the last synchronized commit and the current commit in the VMR will become more complicated. We need to understand which changes come from being behind and which are new ones. This is especially important for the backflow case where we need to make sure that we don't overwrite changes that were made in the individual repository after the last synchronization.
+This section describes the details of moving the code between product repositories and the VMR. The algorithm will work differently in each direction to achieve maximum fleuncy and minimize the amount of conflicts developers need to tend to but also ensure that conflicting changes manifest as conflicts and changes are not overridden without a trace.
 
-Conflicts seem to need double resolutions at times:
+The algorithm will always consider the delta between the VMR and the repository and we will flow this delta via a pull request that will open in the counterpart repository. That being said, it is expected that there will be a forward flow and a backflow PR open at most times and the order in which the repositories will synchronize in can be random. As an example, a backflow might be blocked for an extended period of time because repo's validation, which will be more extensive than VMR's, might uncover some problematic changes done in the VMR that need fixing. While this is going, the forward flow can continue and the VMR can be updated with the latest changes from the repository. For this reason, we need to have a look at the algorithm with respect to its context - e.g. the last synchronization.
 
-```mermaid
-sequenceDiagram
-    autonumber
+This means that we need to look at the following flow combinations:
+- Forward flow after backflow
+- Backflow after forward flow
+- Two flows in the same direction
 
-    participant runtime as dotnet/runtime
-    participant VMR as VMR<br>src/runtime
+The diagrams below visualize these flows and have some common features:
+- 🟠 The repository contains an example file (say `A.txt`). This file contains a single line of text. The content of the file transformations are denoted in orange. The file starts with the text `one` and ends with the text `five`.
+- 🟢 Green arrows denote the previous successful flow
+- 🔵 Blue arrows denote the flow we're interested in in the current diagram.
+- 🟣 In purple, we visualize the actual diff that we need to carry over to the counterpart repository.
+- ⚫ Greyed out commits denote commits that do not affect the `A.txt` file but contain an unrelated change done in the given repository.
+- We usually assume that some previous synchronization happened (points `1` <-> `2`) and the 🟢 green previous synchronization was done based on its previous synchronization.
+- The commits are numbered and happen in the order of the numbers. The numbers are used to refer to the commits in the text.
+- [An editable version of diagrams is here](https://excalidraw.com/#json=YviXIxeoODUi1qk_W4uwa,18vvlWfcN9ukPzpMZexjig)
 
-    Note over runtime, VMR: runtime and VMR are synchronized at 🔖001
-    runtime->>runtime: 📄 A.txt is deleted<br>🔖002
-    VMR->>VMR: 📄 A.txt is changed<br>🔖003
+![Backflow after forward flow](images/forward-backward-flow.png)
 
-    VMR-->>runtime: Backflow PR with 🔖003 is opened<br>base commit is 🔖001
-    activate runtime
-    Note over runtime: ❌ Backflow PR has a conflict with 🔖002
-    runtime->>runtime: ✔️ Conflict is manually resolved<br>A.txt is deleted
-    runtime->>runtime: PR is merged<br>🔖004
-    deactivate runtime
+On this diagram we see:
 
-    runtime-->>VMR: VMR is synchronized from 🔖002 to 🔖004<br>base commit is 🔖001
-    activate VMR
-    Note over VMR: ❌ Backflow PR has a conflict with 🔖003
-    VMR->>VMR: ✔️ Conflict is manually resolved<br>A.txt is deleted
-    deactivate VMR
-```
+The flow of changes in the diagram is as follows:  
+`1.` and `2.` denote some previous synchronization point.
+`3.` Commit in the repository changes the contents of `A.txt` to `two`.  
+`4.` Commit in the repository changes the contents of `A.txt` to `three`. Forward flow also starts at that point (this is arbitrary).  
+`5.` A forward-flow branch (green) is created in the VMR. The branch is based on the commit of last synchronization (`2.`). The content on the commit is [described below](#forward-flow-commit). A PR from this branch is opened.  
+`6.` An additional arbitrary commit is made in the forward flow PR which changes the contents of `A.txt` to `four` (i.e. fixing the build).  
+`7.` A commit is made to the main branch of the VMR, content is unrelated.  
+`8.` Forward flow PR is merged, effectively updating `A.txt` from `one` to `four`.  
+`9.` A commit is made to the main branch of the VMR, content is unrelated. Backflow starts at that point (this is arbitrary).  
+`10.` A backflow branch (blue) is created in the repository. The branch is based on the commit of last synchronization's (`2.`) base commit. The content on the commit is [described below](#backflow-commit). A PR from this branch is opened.  
+`11.` A commit is made to the main branch of the repository, content is unrelated.  
+`12.` A commit is made to the main branch of the repository, content is unrelated.  
+`13.` The PR is merged, effectively updating `A.txt` from `three` to `five`.
 
-```mermaid
-sequenceDiagram
-    autonumber
+You can notice several features:
+- No (git) conflicts appear. This is because this concrete example considers a single file that is chronologically changed from `one` to `five` in gradual steps. In such case, we should not expect any conflicts and this is by design. In cases where most of the changes happen in the individual repository, we expect the code to flow fluently.
+- The whole flow is comparable to a dev working in a dev branch within a single repository - the dev branch being the VMR where the dev merges the main branch in between the work (this is the forward flow). The dev then opens a PR against the main branch (the repository in this case). Wherever there would be conflicts in a single repository case, we would get conflicts here too and this is by design.
 
-    participant runtime as dotnet/runtime
-    participant VMR as VMR<br>src/runtime
+What is left to discuss is how we create the commit (`10.`) of the backflow branch. We know that we received the delta from the repository as part of the commit `8.` after the last forward flow PR was merged. We assume that a squash merge was used and commits `5.` and `6.` are no longer available.  
+The delta between the repositories when commit `9.` (which we will backflow) happens is technically commits `6.`, `7.` and `9.` is visualized as the purple diff between `9.` and `5.`. This diff correctly represents the delta because:
+- It contains the last known snapshot of the repository (`5.`)
+- All commits that happened in the VMR in the meantime (since the last commit) - the commit `7.`.
+- The other commits that happened in the VMR since the sync `9.`.
 
-    Note over runtime, VMR: runtime and VMR are synchronized at 🔖001
-    runtime->>runtime: 📄 A.txt is deleted<br>🔖002
-    VMR->>VMR: 📄 A.txt is changed<br>🔖003
+The base commit of the backflow branch is then the base commit of the last forward flow as that's what we're applying the delta to. If commit `11.` or `12.` would change the contents of `A.txt`, we would get a conflict in the backflow PR which is desired.
 
-    runtime-->>VMR: Backflow PR with 🔖003 is opened<br>base commit is 🔖001
+Similarly, we can look at the opposite direction which is symmetrical.
 
-    activate VMR
-    Note over VMR: ❌ Backflow PR has a conflict with 🔖003
-    VMR->>VMR: ✔️ Conflict is manually resolved<br>A.txt is deleted
-    VMR->>VMR: PR is merged<br>🔖004
-    deactivate VMR
+![Forward flow after backflow](images/backward-forward-flow.png)
 
-    VMR-->>runtime: 🔖003, 🔖004 are synchronized<br>base commit is 🔖001
-    activate runtime
-    Note over runtime: ❌ Backflow PR has a conflict with 🔖002
-    runtime->>runtime: ✔️ Conflict is manually resolved<br>A.txt is deleted
-    deactivate runtime
+The situation changes when we have two flows in the same direction and things are a bit easier than:
 
-```
+![Two flows in the same direction](images/backward-backward-flow.png)
 
-The problem is the conflict resolution, that was done in dotnet/runtime's PR, is lost after squashing of the PR.
-When the same conflict happens again in the VMR, the resolution needs to be done again.
-The question is, whether we shouldn't then first flow runtime to VMR before the backflow happens (step 3).
+When we are forming the backflow commit (`13.`), we know that the only things that happened since we last sent all our updates to the repository are the commits `11.` and `12.` which are equal to a simple diff of the branch we're flowing.
+
+### Last flow detection
+
+For the above to work correctly, we need to be able to tell which situation we're in and which direction the last flow happened.
+
 
 ## Synchronization configuration
 
