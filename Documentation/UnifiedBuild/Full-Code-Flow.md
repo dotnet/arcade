@@ -16,6 +16,7 @@
       - [Detecting outgoing flow](#detecting-outgoing-flow)
       - [Cases when SHA is not in the graph](#cases-when-sha-is-not-in-the-graph)
     - [Conflicts](#conflicts)
+    - [Parallel flows](#parallel-flows)
     - [Updating PRs](#updating-prs)
   - [Synchronization configuration](#synchronization-configuration)
     - [Configuration location](#configuration-location)
