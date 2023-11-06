@@ -188,7 +188,7 @@ The diagrams below visualize these flows and have some common features:
 - ⚫ Greyed out commits denote commits that do not affect the `A.txt` file but contain an unrelated change done in the given repository.
 - We usually assume that some previous synchronization happened (points `1` <-> `2`) and the 🟢 green previous synchronization was done based on its previous synchronization.
 - The commits are numbered and happen in the order of the numbers. The numbers are used to refer to the commits in the text.
-- [An editable version of diagrams is here](https://excalidraw.com/#json=p-58wm7gtjkbqe4p-FIG0,NJNs9vTO4TIJ6zsn8_nXPA)
+- [An editable version of diagrams is here](https://excalidraw.com/#json=58eVyMhBtwcln_dqK9uFy,bRsQrMAWe45h66y99GI0ag)
 
 ![Backflow after forward flow](images/forward-backward-flow.png)
 
@@ -290,9 +290,17 @@ The downside is that before the target branch is merged into the PR branch, user
 
 There are countless other examples of conflicts that can occur but these will usually manifest as conflicts in the PR. The example above is more interesting because the forward flow is unable to even create the PR branch. This is due to the fact that `8` (the previous forward flow commit) contains `6` which is something extra.
 
-### Updating PRs
+### Parallel flows
 
-> ⚠️⚠️⚠️ TODO - situations when a PR is open in one way and a PR in the other way gets merged. How to handle the now outdated original PR?
+Another usual situation is when we have PRs open for both flows at the same time and one of them merging while the other is still opened. We need to then make sure that the other flows is properly updated.
+
+A sample situation can be seen here (again events happening in the order of the numbers):
+
+![Parallel flows](images/parallel-merges.png)
+
+What we can see is that while the red forward flow PR was still open, the green backflow merged. The next backflow (blue) will then apply the same algorithm as before (shown in purple).  
+The resulting PR branch will be in conflict with repository's target branch because `5` will clash with `7` but a simple merge would resolve this transparently just as we've seen with the conflict scenario mentioned above.
+Outside of this, the purple diff contains all it needs (`8` and `10`) to bring the repository up to date. If additional changes were made in the forward flow PR (between `4` and `9`), those would be accounted for too - same as in the previous scenarios.
 
 ## Synchronization configuration
 
