@@ -302,6 +302,10 @@ What we can see is that while the red forward flow PR was still open, the green 
 The resulting PR branch will be in conflict with repository's target branch because `5` will clash with `7` but a simple merge would resolve this transparently just as we've seen with the conflict scenario mentioned above.
 Outside of this, the purple diff contains all it needs (`8` and `10`) to bring the repository up to date. If additional changes were made in the forward flow PR (between `4` and `9`), those would be accounted for too - same as in the previous scenarios.
 
+### Updating PRs
+
+> ⚠️⚠️⚠️ TODO - how should we handle cases when a new build is about to be flown and a PR is already opened. We should describe if all commits can be flown like this - e.g. it's easy to add a new sample commit on top of the PR when it applies cleanly but it can also clash with whatever happened in the PR already. Or it can be a flow commit from the other side which would need to rebuild the PR from ground up. So not all commits can be flown additionally.
+
 ## Synchronization configuration
 
 Presently, in the VMR-lite, the rules affecting the code synchronization live in the `source-mappings.json` file. This file is located in the `dotnet/installer` repository and mapped into the `src/` directory of the VMR. That `dotnet/installer` repository is the only point from which we synchronize the code into the VMR.  
