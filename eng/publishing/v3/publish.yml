@@ -17,7 +17,6 @@ stages:
         - group: DotNet-Symbol-Server-Pats
         - group: DotNetBuilds storage account tokens
         - group: AzureDevOps-Artifact-Feeds-Pats
-        - group: DotNet-Blob-Feed
         - group: DotNet-DotNetCli-Storage
         - group: DotNet-MSRC-Storage
         - group: Publish-Build-Assets
@@ -176,7 +175,6 @@ stages:
               /p:ChecksumsAzureAccountKey=$(dotnetclichecksums-storage-key)
               /p:InternalChecksumsAzureAccountKey=$(dotnetclichecksumsmsrc-storage-key)
               /p:AzureDevOpsFeedsKey='$(dn-bot-dnceng-artifact-feeds-rw)'
-              /p:AzureStorageTargetFeedPAT='$(dotnetfeed-storage-access-key-1)'
               /p:AkaMSClientId=$(akams-client-id)
               /p:AkaMSClientSecret=$(akams-client-secret)
               ${{ parameters.artifactsPublishingAdditionalParameters }}
