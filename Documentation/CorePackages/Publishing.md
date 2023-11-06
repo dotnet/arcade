@@ -160,9 +160,6 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
   ```YAML
     - _InternalBuildArgs: /p:DotNetSignType=$(_SignType) 
         /p:TeamName=$(_TeamName)
-        /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
-        /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl)
-        /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
         /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
         /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
         /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
@@ -176,9 +173,6 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
   ```YAML
     - _InternalBuildArgs: /p:DotNetSignType=$(_SignType) 
         /p:TeamName=$(_TeamName)
-        /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
-        /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl)
-        /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
         /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
         /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
         /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
