@@ -28,9 +28,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string AzureDevOpsFeedsKey { get; set; }
 
         [Required] 
-        public string AzureStorageTargetFeedKey { get; set; }
-
-        [Required] 
         public string InstallersFeedKey { get; set; }
 
         [Required] 
@@ -149,7 +146,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         BuildModel.Identity.IsStable,
                         BuildModel.Identity.Name,
                         BuildModel.Identity.Commit,
-                        AzureStorageTargetFeedKey,
                         PublishInstallersAndChecksums,
                         GetFeed(targetChannelConfig.InstallersFeed, InstallersFeedOverride),
                         targetChannelConfig.IsInternal ? InternalInstallersFeedKey : InstallersFeedKey,

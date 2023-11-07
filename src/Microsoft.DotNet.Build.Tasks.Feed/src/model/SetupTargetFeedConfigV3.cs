@@ -41,7 +41,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             bool isStableBuild,
             string repositoryName,
             string commitSha,
-            string azureStorageTargetFeedPAT,
             bool publishInstallersAndChecksums,
             string installersTargetStaticFeed,
             string installersAzureAccountKey,
@@ -59,7 +58,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string azureDevOpsPublicStaticSymbolsFeed = null,
             List<string> filesToExclude = null,
             bool flatten = true) 
-            : base(isInternalBuild, isStableBuild, repositoryName, commitSha, azureStorageTargetFeedPAT, publishInstallersAndChecksums, installersTargetStaticFeed, installersAzureAccountKey, checksumsTargetStaticFeed, checksumsAzureAccountKey, azureDevOpsStaticShippingFeed, azureDevOpsStaticTransportFeed, azureDevOpsStaticSymbolsFeed, latestLinkShortUrlPrefix, azureDevOpsFeedsKey)
+            : base(isInternalBuild, isStableBuild, repositoryName, commitSha, publishInstallersAndChecksums, installersTargetStaticFeed, installersAzureAccountKey, checksumsTargetStaticFeed, checksumsAzureAccountKey, azureDevOpsStaticShippingFeed, azureDevOpsStaticTransportFeed, azureDevOpsStaticSymbolsFeed, latestLinkShortUrlPrefix, azureDevOpsFeedsKey)
         {
             BuildEngine = buildEngine;
             StableSymbolsFeed = stableSymbolsFeed;
@@ -173,7 +172,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 symbolsFeed = PublishingConstants.LegacyDotNetBlobFeedURL;
                 symbolsFeedType = FeedType.AzureStorageFeed;
-                symbolsFeedSecret = AzureStorageTargetFeedPAT;
             }
 
             targetFeedConfigs.Add(

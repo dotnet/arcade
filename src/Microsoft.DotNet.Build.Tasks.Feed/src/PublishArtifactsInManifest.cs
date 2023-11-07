@@ -105,8 +105,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool PublishInstallersAndChecksums { get; set; } = false;
 
-        public string AzureStorageTargetFeedKey { get; set; }
-
         public bool AllowFeedOverrides { get; set; }
 
         public string ChecksumsFeedOverride { get; set; }
@@ -374,7 +372,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 CheckSumsFeedKey = this.ChecksumsFeedKey,
                 InternalCheckSumsFeedKey = this.InternalCheckSumsFeedKey,
                 InternalInstallersFeedKey = this.InternalInstallersFeedKey,
-                AzureStorageTargetFeedKey = this.AzureStorageTargetFeedKey,
                 PdbArtifactsBasePath = this.PdbArtifactsBasePath,
                 SymWebToken = this.SymWebToken,
                 MsdlToken = this.MsdlToken,

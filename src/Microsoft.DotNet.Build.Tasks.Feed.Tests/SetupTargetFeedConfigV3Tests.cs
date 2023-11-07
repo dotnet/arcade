@@ -13,7 +13,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
     public class SetupTargetFeedConfigV3Tests
     {
-        private const string AzureStorageTargetFeedPAT = "AzureStorageTargetFeedPAT";
         private const string LatestLinkShortUrlPrefix = "LatestLinkShortUrlPrefix";
         private const string BuildQuality = "quality";
         private const string AzureDevOpsFeedsKey = "AzureDevOpsFeedsKey";
@@ -149,7 +148,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isStableBuild: true,
                     repositoryName: "test-repo",
                     commitSha: "c0c0c0c0",
-                    AzureStorageTargetFeedPAT,
                     publishInstallersAndChecksums,
                     InstallersTargetStaticFeed,
                     InstallersTargetStaticFeedKey,
@@ -262,7 +260,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isStableBuild: false,
                     repositoryName: "test-repo",
                     commitSha: "c0c0c0c0",
-                    AzureStorageTargetFeedPAT,
                     publishInstallersAndChecksums,
                     InstallersTargetStaticFeed,
                     InstallersTargetStaticFeedKey,
@@ -329,7 +326,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     TargetFeedContentType.Symbols,
                     PublishingConstants.LegacyDotNetBlobFeedURL,
                     FeedType.AzureStorageFeed,
-                    AzureStorageTargetFeedPAT,
                     latestLinkShortUrlPrefix: string.Empty,
                     assetSelection: AssetSelection.All,
                     isolated: false,
@@ -372,7 +368,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isStableBuild: false,
                     repositoryName: "test-repo",
                     commitSha: "c0c0c0c0",
-                    AzureStorageTargetFeedPAT,
                     publishInstallersAndChecksums,
                     InstallersTargetStaticFeed,
                     InstallersTargetStaticFeedKey,
