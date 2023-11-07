@@ -172,7 +172,7 @@ Once we have the set of commands that can forward/backflow the code locally, we 
 
 ## The code flow algorithm
 
-This section describes the details of moving the code between product repositories and the VMR. The algorithm will work differently in each direction to achieve maximum fleuncy and minimize the amount of conflicts developers need to tend to but also ensure that conflicting changes manifest as conflicts and changes are not overridden without a trace.
+This section describes the details of moving the code between product repositories and the VMR. The algorithm will work differently in each direction to achieve maximum fluency and minimize the amount of conflicts developers need to tend to but also ensure that conflicting changes manifest as conflicts and changes are not overridden without a trace.
 
 The algorithm will always consider the delta between the VMR and the repository and we will flow this delta via a pull request that will open in the counterpart repository. That being said, it is expected that there will be a forward flow and a backflow PR open at most times and the order in which the repositories will synchronize in can be random. As an example, a backflow might be blocked for an extended period of time because repo's validation, which will be more extensive than VMR's, might uncover some problematic changes done in the VMR that need fixing. While this is going, the forward flow can continue and the VMR can be updated with the latest changes from the repository. For this reason, we need to have a look at the algorithm with respect to its context - e.g. the last synchronization.
 
