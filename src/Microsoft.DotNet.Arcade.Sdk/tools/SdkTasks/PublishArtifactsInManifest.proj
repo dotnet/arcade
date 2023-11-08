@@ -53,7 +53,6 @@
       - AzureStorageAccountKey
       - AzureDevOpsFeedsBaseUrl
       - ArtifactsCategory
-      - AzureStorageTargetFeedPAT               : PAT for accessing dotnetfeed Azure Storage
 
     Optional parameters for SetupTargetFeeds.proj
       - PublishInstallersAndChecksums   : This control whether installers & checksums should be published to public feeds on public builds
