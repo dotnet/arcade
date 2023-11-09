@@ -18,7 +18,7 @@
 
     <!-- Lowest supported version of .NET at the time of the release of NetCurrent.
          E.g. net6.0 when NetCurrent is net8.0. -->
-    <NetMinimum>net6.0</NetMinimum>
+    <NetMinimum>net8.0</NetMinimum>
 
     <!-- The TFM of the latest version of .NET Framework. -->
     <NetFrameworkCurrent>net481</NetFrameworkCurrent>
