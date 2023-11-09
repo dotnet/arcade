@@ -50,7 +50,7 @@
 
   <ItemGroup>
     <Compile Include="..\Common\Internal\AssemblyResolution.cs" Link="src\AssemblyResolution.cs" />
-    <Compile Remove="src\InstallDotNetCore.cs" Condition="'$(DotNetBuildFromSource)' == 'true' or '$(DotNetBuildVertical)' == 'true'" />
+    <Compile Remove="src\InstallDotNetCore.cs" />
   </ItemGroup>
 
   <ItemGroup>
