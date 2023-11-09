@@ -307,13 +307,13 @@ function GetDotNetInstallScript {
     # Use curl if available, otherwise use wget
     if command -v curl > /dev/null; then
       # first, try directly, if this fails we will retry with verbose logging
-      curl "$install_script_url" -sSL --retry 10 --create-dirs -o "$install_script" || {
+      curl -L "$install_script_url" -sSL --retry 10 --create-dirs -o "$install_script" || {
         if command -v openssl &> /dev/null; then
           echo "Curl failed; dumping some information about dotnet.microsoft.com for later investigation"
           echo | openssl s_client -showcerts -servername dotnet.microsoft.com  -connect dotnet.microsoft.com:443
         fi
         echo "Will now retry the same URL with verbose logging."
-        with_retries curl "$install_script_url" -sSL --verbose --retry 10 --create-dirs -o "$install_script" || {
+        with_retries curl -L "$install_script_url" -sSL --verbose --retry 10 --create-dirs -o "$install_script" || {
           local exit_code=$?
           Write-PipelineTelemetryError -category 'InitializeToolset' "Failed to acquire dotnet install script (exit code '$exit_code')."
           ExitWithExitCode $exit_code
