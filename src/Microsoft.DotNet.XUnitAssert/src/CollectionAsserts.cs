@@ -1,5 +1,10 @@
 #if XUNIT_NULLABLE
 #nullable enable
+#else
+// In case this is source-imported with global nullable enabled but no XUNIT_NULLABLE
+#pragma warning disable CS8603
+#pragma warning disable CS8604
+#pragma warning disable CS8625
 #endif
 
 using System;
@@ -55,11 +60,7 @@ namespace Xunit
 			GuardArgumentNotNull(nameof(collection), collection);
 			GuardArgumentNotNull(nameof(action), action);
 
-#if XUNIT_NULLABLE
-			var errors = new Stack<Tuple<int, object?, Exception>>();
-#else
-			var errors = new Stack<Tuple<int, object, Exception>>();
-#endif
+			var errors = new List<Tuple<int, string, Exception>>();
 			var idx = 0;
 
 			foreach (var item in collection)
@@ -70,18 +71,14 @@ namespace Xunit
 				}
 				catch (Exception ex)
 				{
-#if XUNIT_NULLABLE
-					errors.Push(new Tuple<int, object?, Exception>(idx, item, ex));
-#else
-					errors.Push(new Tuple<int, object, Exception>(idx, item, ex));
-#endif
+					errors.Add(new Tuple<int, string, Exception>(idx, ArgumentFormatter.Format(item), ex));
 				}
 
 				++idx;
 			}
 
 			if (errors.Count > 0)
-				throw new AllException(idx, errors.ToArray());
+				throw AllException.ForFailures(idx, errors);
 		}
 
 #if XUNIT_VALUETASK
@@ -118,11 +115,7 @@ namespace Xunit
 			GuardArgumentNotNull(nameof(collection), collection);
 			GuardArgumentNotNull(nameof(action), action);
 
-#if XUNIT_NULLABLE
-			var errors = new Stack<Tuple<int, object?, Exception>>();
-#else
-			var errors = new Stack<Tuple<int, object, Exception>>();
-#endif
+			var errors = new List<Tuple<int, string, Exception>>();
 			var idx = 0;
 
 			foreach (var item in collection)
@@ -133,18 +126,14 @@ namespace Xunit
 				}
 				catch (Exception ex)
 				{
-#if XUNIT_NULLABLE
-					errors.Push(new Tuple<int, object?, Exception>(idx, item, ex));
-#else
-					errors.Push(new Tuple<int, object, Exception>(idx, item, ex));
-#endif
+					errors.Add(new Tuple<int, string, Exception>(idx, ArgumentFormatter.Format(item), ex));
 				}
 
 				++idx;
 			}
 
 			if (errors.Count > 0)
-				throw new AllException(idx, errors.ToArray());
+				throw AllException.ForFailures(idx, errors.ToArray());
 		}
 #endif
 
@@ -163,23 +152,29 @@ namespace Xunit
 			GuardArgumentNotNull(nameof(collection), collection);
 			GuardArgumentNotNull(nameof(elementInspectors), elementInspectors);
 
-			var elements = collection.ToArray();
-			var expectedCount = elementInspectors.Length;
-			var actualCount = elements.Length;
-
-			if (expectedCount != actualCount)
-				throw new CollectionException(collection, expectedCount, actualCount);
-
-			for (var idx = 0; idx < actualCount; idx++)
+			using (var tracker = collection.AsTracker())
 			{
-				try
+				var index = 0;
+
+				foreach (var item in tracker)
 				{
-					elementInspectors[idx](elements[idx]);
+					try
+					{
+						if (index < elementInspectors.Length)
+							elementInspectors[index](item);
+					}
+					catch (Exception ex)
+					{
+						int? pointerIndent;
+						var formattedCollection = tracker.FormatIndexedMismatch(index, out pointerIndent);
+						throw CollectionException.ForMismatchedItem(ex, index, pointerIndent, formattedCollection);
+					}
+
+					index++;
 				}
-				catch (Exception ex)
-				{
-					throw new CollectionException(collection, expectedCount, actualCount, idx, ex);
-				}
+
+				if (tracker.IterationCount != elementInspectors.Length)
+					throw CollectionException.ForMismatchedItemCount(elementInspectors.Length, tracker.IterationCount, tracker.FormatStart());
 			}
 		}
 
@@ -199,22 +194,30 @@ namespace Xunit
 			GuardArgumentNotNull(nameof(collection), collection);
 			GuardArgumentNotNull(nameof(elementInspectors), elementInspectors);
 
-			var elements = collection.ToArray();
-			var expectedCount = elementInspectors.Length;
-			var actualCount = elements.Length;
+			using (var tracker = collection.AsTracker())
+			{
+				var index = 0;
 
-			if (expectedCount != actualCount)
-				throw new CollectionException(collection, expectedCount, actualCount);
+				foreach (var item in tracker)
+				{
+					try
+					{
+						if (index < elementInspectors.Length)
+							await elementInspectors[index](item);
+					}
+					catch (Exception ex)
+					{
+						int? pointerIndent;
+						var formattedCollection = tracker.FormatIndexedMismatch(index, out pointerIndent);
+						throw CollectionException.ForMismatchedItem(ex, index, pointerIndent, formattedCollection);
+					}
 
-			for (var idx = 0; idx < actualCount; idx++)
-				try
-				{
-					await elementInspectors[idx](elements[idx]);
+					index++;
 				}
-				catch (Exception ex)
-				{
-					throw new CollectionException(collection, expectedCount, actualCount, idx, ex);
-				}
+
+				if (tracker.IterationCount != elementInspectors.Length)
+					throw CollectionException.ForMismatchedItemCount(elementInspectors.Length, tracker.IterationCount, tracker.FormatStart());
+			}
 		}
 #endif
 
@@ -231,25 +234,13 @@ namespace Xunit
 		{
 			GuardArgumentNotNull(nameof(collection), collection);
 
-			// If an equality comparer is not explicitly provided, call into ICollection<T>.Contains or
-			// IReadOnlyCollection<T>.Contains which may use the collection's equality comparer for types
-			// like HashSet and Dictionary. HashSet and Dictionary are normally handled explicitly, but
-			// the developer may end up in the IEnumerable<> override because the variable is not an explicit
-			// enough type.
-			var readWriteCollection = collection as ICollection<T>;
-			if (readWriteCollection != null)
-			{
-				if (readWriteCollection.Contains(expected))
-					return;
-			}
+			// We special case HashSet<T> because it has a custom Contains implementation that is based on the comparer
+			// passed into their constructors, which we don't have access to.
+			var hashSet = collection as HashSet<T>;
+			if (hashSet != null)
+				Contains(expected, hashSet);
 			else
-			{
-				var readOnlyCollection = collection as IReadOnlyCollection<T>;
-				if (readOnlyCollection != null && readOnlyCollection.Contains(expected))
-					return;
-			}
-
-			Contains(expected, collection, GetEqualityComparer<T>());
+				Contains(expected, collection, GetEqualityComparer<T>());
 		}
 
 		/// <summary>
@@ -268,10 +259,9 @@ namespace Xunit
 			GuardArgumentNotNull(nameof(collection), collection);
 			GuardArgumentNotNull(nameof(comparer), comparer);
 
-			if (collection.Contains(expected, comparer))
-				return;
-
-			throw new ContainsException(expected, collection);
+			using (var tracker = collection.AsTracker())
+				if (!tracker.Contains(expected, comparer))
+					throw ContainsException.ForCollectionItemNotFound(ArgumentFormatter.Format(expected), tracker.FormatStart());
 		}
 
 		/// <summary>
@@ -288,11 +278,14 @@ namespace Xunit
 			GuardArgumentNotNull(nameof(collection), collection);
 			GuardArgumentNotNull(nameof(filter), filter);
 
-			foreach (var item in collection)
-				if (filter(item))
-					return;
+			using (var tracker = collection.AsTracker())
+			{
+				foreach (var item in tracker)
+					if (filter(item))
+						return;
 
-			throw new ContainsException("(filter expression)", collection);
+				throw ContainsException.ForCollectionFilterNotMatched(tracker.FormatStart());
+			}
 		}
 
 		/// <summary>
@@ -300,7 +293,7 @@ namespace Xunit
 		/// </summary>
 		/// <typeparam name="T">The type of the object to be compared</typeparam>
 		/// <param name="collection">The collection to be inspected</param>
-		/// <exception cref="ContainsDuplicateException">Thrown when an object is present inside the container more than once</exception>
+		/// <exception cref="DistinctException">Thrown when an object is present inside the collection more than once</exception>
 		public static void Distinct<T>(IEnumerable<T> collection) =>
 			Distinct<T>(collection, EqualityComparer<T>.Default);
 
@@ -310,7 +303,7 @@ namespace Xunit
 		/// <typeparam name="T">The type of the object to be compared</typeparam>
 		/// <param name="collection">The collection to be inspected</param>
 		/// <param name="comparer">The comparer used to equate objects in the collection with the expected object</param>
-		/// <exception cref="ContainsDuplicateException">Thrown when an object is present inside the container more than once</exception>
+		/// <exception cref="DistinctException">Thrown when an object is present inside the collection more than once</exception>
 		public static void Distinct<T>(
 			IEnumerable<T> collection,
 			IEqualityComparer<T> comparer)
@@ -318,11 +311,14 @@ namespace Xunit
 			GuardArgumentNotNull(nameof(collection), collection);
 			GuardArgumentNotNull(nameof(comparer), comparer);
 
-			var set = new HashSet<T>(comparer);
+			using (var tracker = collection.AsTracker())
+			{
+				var set = new HashSet<T>(comparer);
 
-			foreach (var x in collection)
-				if (!set.Add(x))
-					throw new ContainsDuplicateException(x, collection);
+				foreach (var item in tracker)
+					if (!set.Add(item))
+						throw DistinctException.ForDuplicateItem(ArgumentFormatter.Format(item), tracker.FormatStart());
+			}
 		}
 
 		/// <summary>
@@ -338,25 +334,13 @@ namespace Xunit
 		{
 			GuardArgumentNotNull(nameof(collection), collection);
 
-			// If an equality comparer is not explicitly provided, call into ICollection<T>.Contains or
-			// IReadOnlyCollection<T>.Contains which may use the collection's equality comparer for types
-			// like HashSet and Dictionary. HashSet and Dictionary are normally handled explicitly, but
-			// the developer may end up in the IEnumerable<> override because the variable is not an explicit
-			// enough type.
-			var readWriteCollection = collection as ICollection<T>;
-			if (readWriteCollection != null)
-			{
-				if (readWriteCollection.Contains(expected))
-					throw new DoesNotContainException(expected, collection);
-			}
+			// We special case HashSet<T> because it has a custom Contains implementation that is based on the comparer
+			// passed into their constructors, which we don't have access to.
+			var hashSet = collection as HashSet<T>;
+			if (hashSet != null)
+				DoesNotContain(expected, hashSet);
 			else
-			{
-				var readOnlyCollection = collection as IReadOnlyCollection<T>;
-				if (readOnlyCollection != null && readOnlyCollection.Contains(expected))
-					throw new DoesNotContainException(expected, collection);
-			}
-
-			DoesNotContain(expected, collection, GetEqualityComparer<T>());
+				DoesNotContain(expected, collection, GetEqualityComparer<T>());
 		}
 
 		/// <summary>
@@ -366,7 +350,7 @@ namespace Xunit
 		/// <param name="expected">The object that is expected not to be in the collection</param>
 		/// <param name="collection">The collection to be inspected</param>
 		/// <param name="comparer">The comparer used to equate objects in the collection with the expected object</param>
-		/// <exception cref="DoesNotContainException">Thrown when the object is present inside the container</exception>
+		/// <exception cref="DoesNotContainException">Thrown when the object is present inside the collection</exception>
 		public static void DoesNotContain<T>(
 			T expected,
 			IEnumerable<T> collection,
@@ -375,10 +359,28 @@ namespace Xunit
 			GuardArgumentNotNull(nameof(collection), collection);
 			GuardArgumentNotNull(nameof(comparer), comparer);
 
-			if (!collection.Contains(expected, comparer))
-				return;
+			using (var tracker = collection.AsTracker())
+			{
+				var index = 0;
 
-			throw new DoesNotContainException(expected, collection);
+				foreach (var item in tracker)
+				{
+					if (comparer.Equals(item, expected))
+					{
+						int? pointerIndent;
+						var formattedCollection = tracker.FormatIndexedMismatch(index, out pointerIndent);
+
+						throw DoesNotContainException.ForCollectionItemFound(
+							ArgumentFormatter.Format(expected),
+							index,
+							pointerIndent,
+							formattedCollection
+						);
+					}
+
+					++index;
+				}
+			}
 		}
 
 		/// <summary>
@@ -387,7 +389,7 @@ namespace Xunit
 		/// <typeparam name="T">The type of the object to be compared</typeparam>
 		/// <param name="collection">The collection to be inspected</param>
 		/// <param name="filter">The filter used to find the item you're ensuring the collection does not contain</param>
-		/// <exception cref="DoesNotContainException">Thrown when the object is present inside the container</exception>
+		/// <exception cref="DoesNotContainException">Thrown when the object is present inside the collection</exception>
 		public static void DoesNotContain<T>(
 			IEnumerable<T> collection,
 			Predicate<T> filter)
@@ -395,9 +397,27 @@ namespace Xunit
 			GuardArgumentNotNull(nameof(collection), collection);
 			GuardArgumentNotNull(nameof(filter), filter);
 
-			foreach (var item in collection)
-				if (filter(item))
-					throw new DoesNotContainException("(filter expression)", collection);
+			using (var tracker = collection.AsTracker())
+			{
+				var index = 0;
+
+				foreach (var item in tracker)
+				{
+					if (filter(item))
+					{
+						int? pointerIndent;
+						var formattedCollection = tracker.FormatIndexedMismatch(index, out pointerIndent);
+
+						throw DoesNotContainException.ForCollectionFilterMatched(
+							index,
+							pointerIndent,
+							formattedCollection
+						);
+					}
+
+					++index;
+				}
+			}
 		}
 
 		/// <summary>
@@ -410,16 +430,10 @@ namespace Xunit
 		{
 			GuardArgumentNotNull(nameof(collection), collection);
 
-			var enumerator = collection.GetEnumerator();
-			try
-			{
+			using (var tracker = collection.AsTracker())
+			using (var enumerator = tracker.GetEnumerator())
 				if (enumerator.MoveNext())
-					throw new EmptyException(collection);
-			}
-			finally
-			{
-				(enumerator as IDisposable)?.Dispose();
-			}
+					throw EmptyException.ForNonEmptyCollection(tracker.FormatStart());
 		}
 
 		/// <summary>
@@ -459,6 +473,25 @@ namespace Xunit
 				Equal(expected, actual, GetEqualityComparer<IEnumerable<T>>(new AssertEqualityComparerAdapter<T>(comparer)));
 
 		/// <summary>
+		/// Verifies that two collections are equal, using a comparer function against
+		/// items in the two collections.
+		/// </summary>
+		/// <typeparam name="T">The type of the objects to be compared</typeparam>
+		/// <param name="expected">The expected value</param>
+		/// <param name="actual">The value to be compared against</param>
+		/// <param name="comparer">The function to compare two items for equality</param>
+		public static void Equal<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] T>(
+#if XUNIT_NULLABLE
+			IEnumerable<T>? expected,
+			IEnumerable<T>? actual,
+#else
+			IEnumerable<T> expected,
+			IEnumerable<T> actual,
+#endif
+			Func<T, T, bool> comparer) =>
+				Equal(expected, actual, AssertEqualityComparer<T>.FromComparer(comparer));
+
+		/// <summary>
 		/// Verifies that a collection is not empty.
 		/// </summary>
 		/// <param name="collection">The collection to be inspected</param>
@@ -472,7 +505,7 @@ namespace Xunit
 			try
 			{
 				if (!enumerator.MoveNext())
-					throw new NotEmptyException();
+					throw NotEmptyException.ForNonEmptyCollection();
 			}
 			finally
 			{
@@ -515,6 +548,25 @@ namespace Xunit
 #endif
 			IEqualityComparer<T> comparer) =>
 				NotEqual(expected, actual, GetEqualityComparer<IEnumerable<T>>(new AssertEqualityComparerAdapter<T>(comparer)));
+
+		/// <summary>
+		/// Verifies that two collections are not equal, using a comparer function against
+		/// items in the two collections.
+		/// </summary>
+		/// <typeparam name="T">The type of the objects to be compared</typeparam>
+		/// <param name="expected">The expected value</param>
+		/// <param name="actual">The value to be compared against</param>
+		/// <param name="comparer">The function to compare two items for equality</param>
+		public static void NotEqual<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] T>(
+#if XUNIT_NULLABLE
+			IEnumerable<T>? expected,
+			IEnumerable<T>? actual,
+#else
+			IEnumerable<T> expected,
+			IEnumerable<T> actual,
+#endif
+			Func<T, T, bool> comparer) =>
+				NotEqual(expected, actual, AssertEqualityComparer<T>.FromComparer(comparer));
 
 		/// <summary>
 		/// Verifies that the given collection contains only a single
@@ -593,39 +645,52 @@ namespace Xunit
 			GuardArgumentNotNull(nameof(collection), collection);
 			GuardArgumentNotNull(nameof(predicate), predicate);
 
-			return GetSingleResult(collection, predicate, "(filter expression)");
+			return GetSingleResult(collection, predicate, "(predicate expression)");
 		}
 
 		static T GetSingleResult<T>(
 			IEnumerable<T> collection,
 #if XUNIT_NULLABLE
 			Predicate<T>? predicate,
-			string? expectedArgument)
+			string? expected)
 #else
 			Predicate<T> predicate,
-			string expectedArgument)
+			string expected)
 #endif
 		{
 			var count = 0;
+			var index = 0;
+			var matchIndices = new List<int>();
 			var result = default(T);
 
-			foreach (var item in collection)
-				if (predicate == null || predicate(item))
-					if (++count == 1)
-						result = item;
-
-			switch (count)
+			using (var tracker = collection.AsTracker())
 			{
-				case 0:
-					throw SingleException.Empty(expectedArgument);
-				case 1:
+				foreach (var item in tracker)
+				{
+					if (predicate == null || predicate(item))
+					{
+						if (++count == 1)
+							result = item;
+						if (predicate != null)
+							matchIndices.Add(index);
+					}
+
+					++index;
+				}
+
+				switch (count)
+				{
+					case 0:
+						throw SingleException.Empty(expected, tracker.FormatStart());
+					case 1:
 #if XUNIT_NULLABLE
-					return result!;
+						return result!;
 #else
-					return result;
+						return result;
 #endif
-				default:
-					throw SingleException.MoreThanOne(count, expectedArgument);
+					default:
+						throw SingleException.MoreThanOne(count, expected, tracker.FormatStart(), matchIndices);
+				}
 			}
 		}
 	}

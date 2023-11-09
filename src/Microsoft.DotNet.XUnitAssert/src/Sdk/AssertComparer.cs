@@ -1,5 +1,8 @@
 #if XUNIT_NULLABLE
 #nullable enable
+#else
+// In case this is source-imported with global nullable enabled but no XUNIT_NULLABLE
+#pragma warning disable CS8767
 #endif
 
 using System;
@@ -15,7 +18,7 @@ namespace Xunit.Sdk
 	/// Default implementation of <see cref="IComparer{T}"/> used by the xUnit.net range assertions.
 	/// </summary>
 	/// <typeparam name="T">The type that is being compared.</typeparam>
-	class AssertComparer<T> : IComparer<T>
+	sealed class AssertComparer<T> : IComparer<T>
 		where T : IComparable
 	{
 		/// <inheritdoc/>

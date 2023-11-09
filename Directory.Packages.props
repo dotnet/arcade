@@ -13,7 +13,6 @@
     <!-- Keep Microsoft.Data.Services.Client package version in sync with Microsoft.Data.OData -->
     <MicrosoftDataServicesClientVersion>5.8.4</MicrosoftDataServicesClientVersion>
     <MicrosoftSignedWixVersion>1.0.0-v3.14.0.5722</MicrosoftSignedWixVersion>
-    <XUnitVersion>2.5.1</XUnitVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -44,20 +43,21 @@
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCSharpVersion)" />
     <!-- runtime -->
     <PackageVersion Include="Microsoft.Bcl.AsyncInterfaces" Version="$(MicrosoftBclAsyncInterfacesVersion)" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsDependencyInjectionVersion)" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(MicrosoftExtensionsDependencyInjectionAbstractionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsDependencyInjectionVersion)" />
     <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="$(MicrosoftExtensionsDependencyModelVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.FileProviders.Abstractions" Version="$(MicrosoftExtensionsFileProvidersAbstractionsVersion)" />
+    <PackageVersion Include="Microsoft.Extensions.FileSystemGlobbing" Version="$(MicrosoftExtensionsFileSystemGlobbingVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionsLoggingConsoleVersion)" />
     <PackageVersion Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
     <PackageVersion Include="System.Composition" Version="$(SystemCompositionVersion)" />
     <PackageVersion Include="System.IO.Packaging" Version="$(SystemIOPackagingVersion)" />
     <PackageVersion Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
+    <PackageVersion Include="System.Security.Cryptography.Xml" Version="$(SystemSecurityCryptographyXmlVersion)" />
     <PackageVersion Include="System.Text.Encodings.Web" Version="$(SystemTextEncodingsWebVersion)" />
     <PackageVersion Include="System.Text.Json" Version="$(SystemTextJsonVersion)" />
     <!-- sdk -->
     <PackageVersion Include="Microsoft.NET.Sdk.WorkloadManifestReader" Version="$(MicrosoftNetSdkWorkloadManifestReaderVersion)" />
-    <!-- xliff-tasks -->
-    <PackageVersion Include="Microsoft.DotNet.XliffTasks" Version="$(MicrosoftDotNetXliffTasksVersion)" />
   </ItemGroup>
 
   <!-- external -->
@@ -83,12 +83,13 @@
     <PackageVersion Include="Mono.Options" Version="5.3.0.1" />
     <PackageVersion Include="Moq" Version="4.18.4" />
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageVersion Include="Octokit" Version="0.41.0" />
+    <PackageVersion Include="Octokit" Version="7.1.0" />
     <PackageVersion Include="System.CommandLine" Version="2.0.0-beta4.23307.1" />
     <PackageVersion Include="xunit" Version="$(XUnitVersion)" />
     <PackageVersion Include="xunit.abstractions" Version="2.0.3" />
     <PackageVersion Include="xunit.extensibility.core" Version="$(XUnitVersion)" />
     <PackageVersion Include="xunit.extensibility.execution" Version="$(XUnitVersion)" />
+    <PackageVersion Include="nsubstitute" Version="5.1.0" />
   </ItemGroup>
 
 </Project>

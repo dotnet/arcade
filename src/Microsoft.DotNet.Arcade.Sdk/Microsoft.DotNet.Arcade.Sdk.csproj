@@ -50,7 +50,6 @@
 
   <ItemGroup>
     <Compile Include="..\Common\Internal\AssemblyResolution.cs" Link="src\AssemblyResolution.cs" />
-    <Compile Remove="src\InstallDotNetCore.cs" Condition="'$(DotNetBuildFromSource)' == 'true'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -67,7 +66,7 @@
     <ArcadeSdkVersion>$(PackageVersion)</ArcadeSdkVersion>
     <MicrosoftNetCompilersToolsetVersion>$(MicrosoftNetCompilersToolsetVersion)</MicrosoftNetCompilersToolsetVersion>
     <MicrosoftDiaSymReaderPdb2PdbVersion>$(MicrosoftDiaSymReaderPdb2PdbVersion)</MicrosoftDiaSymReaderPdb2PdbVersion>
-    <MicrosoftDotNetXliffTasksVersion>$(MicrosoftDotNetXliffTasksVersion)</MicrosoftDotNetXliffTasksVersion>
+    <MicrosoftDotNetXliffTasksVersion>$(PackageVersion)</MicrosoftDotNetXliffTasksVersion>
     <MicrosoftDotNetMaestroTasksVersion>$(MicrosoftDotNetMaestroTasksVersion)</MicrosoftDotNetMaestroTasksVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion>$(MicrosoftSymbolUploaderBuildTaskVersion)</MicrosoftSymbolUploaderBuildTaskVersion>
     <MicrosoftTemplateEngineAuthoringTasksVersion>$(MicrosoftTemplateEngineAuthoringTasksVersion)</MicrosoftTemplateEngineAuthoringTasksVersion>
