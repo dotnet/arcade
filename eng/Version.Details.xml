@@ -81,6 +81,14 @@
       <Sha>547c506abe05e510bd43330fc8f6d4c5961e9223</Sha>
       <SourceBuild RepoName="runtime" ManagedOnly="false" />
     </Dependency>
+    <Dependency Name="Microsoft.Extensions.FileProviders.Abstractions" Version="8.0.0-preview.4.23259.5">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>547c506abe05e510bd43330fc8f6d4c5961e9223</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.Extensions.FileSystemGlobbing" Version="8.0.0-preview.4.23259.5">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>547c506abe05e510bd43330fc8f6d4c5961e9223</Sha>
+    </Dependency>
     <Dependency Name="System.Text.Encodings.Web" Version="8.0.0-preview.4.23259.5">
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>547c506abe05e510bd43330fc8f6d4c5961e9223</Sha>
