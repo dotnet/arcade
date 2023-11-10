@@ -1,15 +1,21 @@
 param(
   [Parameter(Mandatory=$true)][string] $InputPath,
+  [Parameter(Mandatory=$false)][string] $DotnetPath,
   [Parameter(ValueFromRemainingArguments=$true)][String[]]$tokensToRedact
 )
 
 try {
   . $PSScriptRoot\post-build-utils.ps1
 
-  $packageName = 'MSBuild.BinlogRedactor.CLI'
+  $packageName = 'binlogtool'
 
-  $dotnetRoot = InitializeDotNetCli -install:$true
-  $dotnet = "$dotnetRoot\dotnet.exe"
+  $dotnet = $DotnetPath
+
+  if(!$dotnet) {
+    $dotnetRoot = InitializeDotNetCli -install:$true
+    $dotnet = "$dotnetRoot\dotnet.exe"
+  }
+  
   $toolList = & "$dotnet" tool list -g
 
   if ($toolList -like "*$packageName*") {
@@ -29,27 +35,26 @@ try {
     Write-Host "Installing Binlog redactor CLI..."
     Write-Host "'$dotnet' new tool-manifest"
     & "$dotnet" new tool-manifest
-    Write-Host "'$dotnet' tool install $packageName --prerelease --add-source '$packageFeed' -v $verbosity"
-    & "$dotnet" tool install $packageName --local --prerelease --add-source "$packageFeed" -v $verbosity
+    Write-Host "'$dotnet' tool install $packageName --add-source '$packageFeed' -v $verbosity"
+    & "$dotnet" tool install $packageName --local --add-source "$packageFeed" -v $verbosity
   
 
     $optionalParams = [System.Collections.ArrayList]::new()
   
     Foreach ($p in $tokensToRedact)
     {
-	  if($p -match '^\$\(.*\)$')
-	  {
-		Write-Host ("Ignoring token {0} as it is probably unexpanded AzDO variable"  -f $p)
-	  }		  
-	  elseif($p)
-	  {
-        $optionalParams.Add("-p") | Out-Null
-	    $optionalParams.Add($p) | Out-Null
-	  }
+      if($p -match '^\$\(.*\)$')
+      {
+        Write-Host ("Ignoring token {0} as it is probably unexpanded AzDO variable"  -f $p)
+      }          
+      elseif($p)
+      {
+        $optionalParams.Add("-p:" + $p) | Out-Null
+      }
     }
 
-    & $dotnet redact-binlog -f -r -i $InputPath `
-	  @optionalParams
+    & $dotnet binlogtool redact --input:$InputPath --recurse --in-place `
+      @optionalParams
 
     if ($LastExitCode -ne 0) {
       Write-Host "Problems using Redactor tool. But ingoring them now."
