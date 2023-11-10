@@ -19,6 +19,8 @@ steps:
     packageType: sdk
     version: 7.0.x
     installationPath: $(Agent.TempDirectory)/dotnet
+  continueOnError: true
+  condition: always()
     
 - task: PowerShell@2
   displayName: Redact Logs
