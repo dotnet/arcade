@@ -12,13 +12,14 @@
     <!-- The TFM of the major release of .NET that the Arcade SDK aligns with. -->
     <NetCurrent>net9.0</NetCurrent>
 
-    <!-- The previously released version of .NET.
-         Undefined when NetMinimum and NetPrevious are identical. -->
-    <NetPrevious>net8.0</NetPrevious>
-
     <!-- Lowest supported version of .NET at the time of the release of NetCurrent.
          E.g. net6.0 when NetCurrent is net8.0. -->
     <NetMinimum>net8.0</NetMinimum>
+
+    <!-- The previously released version of .NET.
+         Undefined when NetMinimum and NetPrevious are identical. -->
+    <NetPrevious>net8.0</NetPrevious>
+    <NetPrevious Condition="'$(NetMinimum)' == '$(NetPrevious)'" />
 
     <!-- The TFM of the latest version of .NET Framework. -->
     <NetFrameworkCurrent>net481</NetFrameworkCurrent>
