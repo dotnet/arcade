@@ -1,5 +1,6 @@
+[CmdletBinding(PositionalBinding=$False)]
 param(
-  [Parameter(Mandatory=$true)][string] $InputPath,
+  [Parameter(Mandatory=$true, Position=0)][string] $InputPath,
   [Parameter(Mandatory=$false)][string] $DotnetPath,
   [Parameter(ValueFromRemainingArguments=$true)][String[]]$tokensToRedact
 )
@@ -52,6 +53,9 @@ try {
         $optionalParams.Add("-p:" + $p) | Out-Null
       }
     }
+
+    # Make sure we can run on higher runtime in CI
+    $Env:DOTNET_ROLL_FORWARD = "Major"
 
     & $dotnet binlogtool redact --input:$InputPath --recurse --in-place `
       @optionalParams
