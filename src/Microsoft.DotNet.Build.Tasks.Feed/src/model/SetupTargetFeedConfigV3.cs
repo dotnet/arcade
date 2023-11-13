@@ -154,7 +154,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             // This is pretty uncommon though, as non-stable internal builds are quite rare.
             string symbolsFeed;
             FeedType symbolsFeedType;
-            string symbolsFeedSecret;
+            string symbolsFeedSecret = string.Empty;
 
             if (IsInternalBuild)
             {

@@ -326,6 +326,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     TargetFeedContentType.Symbols,
                     PublishingConstants.LegacyDotNetBlobFeedURL,
                     FeedType.AzureStorageFeed,
+                    InstallersTargetStaticFeedKey,
                     latestLinkShortUrlPrefix: string.Empty,
                     assetSelection: AssetSelection.All,
                     isolated: false,
