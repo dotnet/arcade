@@ -114,9 +114,9 @@ function sign ()
       if [ "$file_extension" = "app" ] || [ "$file_extension" = "framework" ] || [ ! -z "${is_macho}" ]; then
         echo "Signing file $file_in_bundle"
         if [ "$file_extension" = "app" ]; then
-            /usr/bin/codesign -v --force --sign "$sign_identity" --keychain "$keychain_name" --entitlements entitlements.plist "$file_in_bundle"
+            /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements entitlements.plist "$file_in_bundle"
         else
-            /usr/bin/codesign -v --force --sign "$sign_identity" --keychain "$keychain_name" --preserve-metadata\=identifier,entitlements,flags "$file_in_bundle"
+            /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --preserve-metadata=identifier,entitlements,flags "$file_in_bundle"
         fi
       fi
     done
