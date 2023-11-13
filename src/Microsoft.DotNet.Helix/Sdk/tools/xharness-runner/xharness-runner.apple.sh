@@ -72,7 +72,7 @@ function die ()
 
 function sign ()
 {
-    echo "Signing $1"
+    echo "Signing bundle $1"
 
     provisioning_profile="$1/embedded.mobileprovision"
     if [ ! -f "$provisioning_profile" ]; then
@@ -104,14 +104,22 @@ function sign ()
     security cms -D -i "$provisioning_profile" > provision.plist
     /usr/libexec/PlistBuddy -x -c 'Print :Entitlements' provision.plist > entitlements.plist
 
-    # Sign all embedded shared libs
-    for shared_lib in $(find "$1" -name "*.dylib" -o -name "*.framework" 2>/dev/null); do
-      echo "Signing shared library $shared_lib"
-      /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements entitlements.plist "$shared_lib"
-    done
+    # Perform deep signing - sign all .app, .framework and Mach-O files by respecting bundle hierarchy (deepest files are signed first)
+    for file_in_bundle in $(find "$1" -d 2>/dev/null); do
 
-    # Sign the app
-    /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements entitlements.plist "$1"
+      file_name=$(basename -- "$file_in_bundle")
+      file_extension="${file_name##*.}"
+      is_macho=$(file -b $file_in_bundle | grep Mach-O)
+
+      if [ "$file_extension" = "app" ] || [ "$file_extension" = "framework" ] || [ ! -z "${is_macho}" ]; then
+        echo "Signing file $file_in_bundle"
+        if [ "$file_extension" = "app" ]; then
+            /usr/bin/codesign -v --force --sign "$sign_identity" --keychain "$keychain_name" --entitlements entitlements.plist "$file_in_bundle"
+        else
+            /usr/bin/codesign -v --force --sign "$sign_identity" --keychain "$keychain_name" --preserve-metadata\=identifier,entitlements,flags "$file_in_bundle"
+        fi
+      fi
+    done
 }
 
 if [ -z "$app" ]; then
