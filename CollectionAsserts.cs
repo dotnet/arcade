@@ -11,11 +11,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Xunit.Sdk;
-
-#if XUNIT_VALUETASK
 using System.Threading.Tasks;
-#endif
+using Xunit.Sdk;
 
 namespace Xunit
 {
@@ -80,7 +77,6 @@ namespace Xunit
 				throw AllException.ForFailures(idx, errors);
 		}
 
-#if XUNIT_VALUETASK
 		/// <summary>
 		/// Verifies that all items in the collection pass when executed against
 		/// action.
@@ -89,9 +85,9 @@ namespace Xunit
 		/// <param name="collection">The collection</param>
 		/// <param name="action">The action to test each item against</param>
 		/// <exception cref="AllException">Thrown when the collection contains at least one non-matching element</exception>
-		public static async ValueTask AllAsync<T>(
+		public static async Task AllAsync<T>(
 			IEnumerable<T> collection,
-			Func<T, ValueTask> action)
+			Func<T, Task> action)
 		{
 			GuardArgumentNotNull(nameof(collection), collection);
 			GuardArgumentNotNull(nameof(action), action);
@@ -107,9 +103,9 @@ namespace Xunit
 		/// <param name="collection">The collection</param>
 		/// <param name="action">The action to test each item against</param>
 		/// <exception cref="AllException">Thrown when the collection contains at least one non-matching element</exception>
-		public static async ValueTask AllAsync<T>(
+		public static async Task AllAsync<T>(
 			IEnumerable<T> collection,
-			Func<T, int, ValueTask> action)
+			Func<T, int, Task> action)
 		{
 			GuardArgumentNotNull(nameof(collection), collection);
 			GuardArgumentNotNull(nameof(action), action);
@@ -134,7 +130,6 @@ namespace Xunit
 			if (errors.Count > 0)
 				throw AllException.ForFailures(idx, errors.ToArray());
 		}
-#endif
 
 		/// <summary>
 		/// Verifies that a collection contains exactly a given number of elements, which meet
@@ -177,7 +172,6 @@ namespace Xunit
 			}
 		}
 
-#if XUNIT_VALUETASK
 		/// <summary>
 		/// Verifies that a collection contains exactly a given number of elements, which meet
 		/// the criteria provided by the element inspectors.
@@ -186,9 +180,9 @@ namespace Xunit
 		/// <param name="collection">The collection to be inspected</param>
 		/// <param name="elementInspectors">The element inspectors, which inspect each element in turn. The
 		/// total number of element inspectors must exactly match the number of elements in the collection.</param>
-		public static async ValueTask CollectionAsync<T>(
+		public static async Task CollectionAsync<T>(
 			IEnumerable<T> collection,
-			params Func<T, ValueTask>[] elementInspectors)
+			params Func<T, Task>[] elementInspectors)
 		{
 			GuardArgumentNotNull(nameof(collection), collection);
 			GuardArgumentNotNull(nameof(elementInspectors), elementInspectors);
@@ -218,7 +212,6 @@ namespace Xunit
 					throw CollectionException.ForMismatchedItemCount(elementInspectors.Length, tracker.IterationCount, tracker.FormatStart());
 			}
 		}
-#endif
 
 		/// <summary>
 		/// Verifies that a collection contains a given object.
@@ -430,9 +423,11 @@ namespace Xunit
 			GuardArgumentNotNull(nameof(collection), collection);
 
 			using (var tracker = collection.AsTracker())
-			using (var enumerator = tracker.GetEnumerator())
+			{
+				var enumerator = tracker.GetEnumerator();
 				if (enumerator.MoveNext())
 					throw EmptyException.ForNonEmptyCollection(tracker.FormatStart());
+			}
 		}
 
 		/// <summary>

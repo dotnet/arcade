@@ -136,7 +136,7 @@ namespace Xunit.Internal
 			}
 			catch (Exception ex)
 			{
-				throw new InvalidOperationException($"Fatal error: Exception occured while trying to retrieve type '{typeName}'", ex);
+				throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Fatal error: Exception occurred while trying to retrieve type '{0}'", typeName), ex);
 			}
 		}
 
@@ -285,10 +285,10 @@ namespace Xunit.Internal
 
 			// Prevent circular references
 			if (expectedRefs.Contains(expected))
-				return EquivalentException.ForCircularReference($"{nameof(expected)}.{prefix}");
+				return EquivalentException.ForCircularReference(string.Format(CultureInfo.CurrentCulture, "{0}.{1}", nameof(expected), prefix));
 
 			if (actualRefs.Contains(actual))
-				return EquivalentException.ForCircularReference($"{nameof(actual)}.{prefix}");
+				return EquivalentException.ForCircularReference(string.Format(CultureInfo.CurrentCulture, "{0}.{1}", nameof(actual), prefix));
 
 			expectedRefs.Add(expected);
 			actualRefs.Add(actual);
@@ -366,7 +366,14 @@ namespace Xunit.Internal
 				return EquivalentException.ForMemberValueMismatch(expected, actual, prefix, ex);
 			}
 
-			throw new InvalidOperationException($"VerifyEquivalenceDateTime was given non-DateTime(Offset) objects; typeof(expected) = {ArgumentFormatter.FormatTypeName(expected.GetType())}, typeof(actual) = {ArgumentFormatter.FormatTypeName(actual.GetType())}");
+			throw new InvalidOperationException(
+				string.Format(
+					CultureInfo.CurrentCulture,
+					"VerifyEquivalenceDateTime was given non-DateTime(Offset) objects; typeof(expected) = {0}, typeof(actual) = {1}",
+					ArgumentFormatter.FormatTypeName(expected.GetType()),
+					ArgumentFormatter.FormatTypeName(actual.GetType())
+				)
+			);
 		}
 
 #if XUNIT_NULLABLE
