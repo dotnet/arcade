@@ -58,7 +58,7 @@ try {
       @optionalParams
 
     if ($LastExitCode -ne 0) {
-      Write-Host "Problems using Redactor tool. But ingoring them now."
+      Write-PipelineTelemetryError -Category 'Redactor' -Type 'warning' -Message "Problems using Redactor tool (exit code: $LastExitCode). But ingoring them now."
     }
   }
   finally {
@@ -69,6 +69,6 @@ try {
 } 
 catch {
   Write-Host $_
-  Write-PipelineTelemetryError -Category 'Redactor' -Message "There was an error while trying to redact logs."
+  Write-PipelineTelemetryError -Category 'Redactor' -Message "There was an error while trying to redact logs. Error: $_"
   ExitWithExitCode 1
 }
