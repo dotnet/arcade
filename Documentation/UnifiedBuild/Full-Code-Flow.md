@@ -115,12 +115,11 @@ flowchart
 
   subgraph Maestro service
     Maestro{2. Maestro service processes the impuls}
-    Maestro--If source repo is arcade-->EngCommon
 
     EngCommon-->VersionFiles
-    Maestro--If source repo is VMR-->CallBackflowService
-    Maestro--If target repo is VMR-->CallBackflowService
-    Maestro--Else-->VersionFiles
+    Maestro--a. If source or target repo is VMR-->CallBackflowService
+    Maestro--b. If source repo is arcade-->EngCommon
+    Maestro--c. Else-->VersionFiles
   end
 
   subgraph Backflow service
@@ -135,7 +134,7 @@ flowchart
 
   classDef New fill:#00DD00,stroke:#006600,stroke-width:1px,color:#006600
   class CallBackflowService,Backflow,VmrChangesPushed New
-  linkStyle 3,4,6,7,9 stroke-width:2px,fill:none,stroke:#00DD00
+  linkStyle 2,5,6,8 stroke-width:2px,fill:none,stroke:#00DD00,color:#00DD00
 ```
 
 On the diagram we can see:
