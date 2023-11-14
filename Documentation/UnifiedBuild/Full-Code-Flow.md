@@ -189,7 +189,7 @@ The diagrams below visualize these flows and have some common features:
 - ⚫ Greyed out commits denote commits that do not affect the `A.txt` file but contain an unrelated change done in the given repository.
 - We usually assume that some previous synchronization happened (points `1` <-> `2`) and the 🟢 green previous synchronization was done based on its previous synchronization.
 - The commits are numbered and happen in the order of the numbers. The numbers are used to refer to the commits in the text.
-- [An editable version of diagrams is here](https://excalidraw.com/#json=58eVyMhBtwcln_dqK9uFy,bRsQrMAWe45h66y99GI0ag)
+- [An editable version of diagrams is here](https://excalidraw.com/#json=WV6gvcK9wKYg0UKEkYp5N,3d5vscemGiqIE8P4FwJJUg)
 
 ![Backflow after forward flow](images/forward-backward-flow.png)
 
@@ -203,7 +203,7 @@ The flow of changes in the diagram is as follows:
 `6` An additional arbitrary commit is made in the forward flow PR which changes the contents of `A.txt` to `four` (i.e. fixing the build).  
 `7` A commit is made to the main branch of the VMR, content is unrelated.  
 `8` Forward flow PR is merged, effectively updating `A.txt` from `one` to `four`.  
-`9` A commit is made to the main branch of the VMR, content is unrelated. Backflow starts at that point (this is arbitrary).  
+`9` A commit is made to the main branch of the VMR, changing content from `four` to `five`. Backflow starts at that point (this is arbitrary).  
 `10` A backflow branch (blue) is created in the repository. The branch is based on the commit of last synchronization's (`2`) base commit. The content on the commit is [described below](#backflow-commit). A PR from this branch is opened.  
 `11` A commit is made to the main branch of the repository, content is unrelated.  
 `12` A commit is made to the main branch of the repository, content is unrelated.  
