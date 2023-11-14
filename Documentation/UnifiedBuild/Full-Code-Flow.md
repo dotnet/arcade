@@ -198,7 +198,7 @@ The flow of changes in the diagram is as follows:
 `1` and `2` denote some previous synchronization point.
 `3` Commit in the repository changes the contents of `A.txt` to `two`.  
 `4` Commit in the repository changes the contents of `A.txt` to `three`. Forward flow also starts at that point (this is arbitrary).  
-`5` A forward-flow branch (green) is created in the VMR. The branch is based on the commit of last synchronization (`2`). The content on the commit is [described below](#forward-flow-commit). A PR from this branch is opened.  
+`5` A forward-flow branch (green) is created in the VMR. The branch is based on the commit of last synchronization (`2`). How this forward flow is created is not the subject of this diagram. Here, we are interested in the following flow.  
 `6` An additional arbitrary commit is made in the forward flow PR which changes the contents of `A.txt` to `four` (i.e. fixing the build).  
 `7` A commit is made to the main branch of the VMR, content is unrelated.  
 `8` Forward flow PR is merged, effectively updating `A.txt` from `one` to `four`.  
