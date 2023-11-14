@@ -58,7 +58,7 @@ try {
       @optionalParams
 
     if ($LastExitCode -ne 0) {
-      Write-PipelineTelemetryError -Category 'Redactor' -Type 'warning' -Message "Problems using Redactor tool (exit code: $LastExitCode). But ingoring them now."
+      Write-PipelineTelemetryError -Category 'Redactor' -Type 'warning' -Message "Problems using Redactor tool (exit code: $LastExitCode). But ignoring them now."
     }
   }
   finally {
