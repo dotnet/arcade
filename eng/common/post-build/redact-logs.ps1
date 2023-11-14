@@ -54,9 +54,6 @@ try {
       }
     }
 
-    # Make sure we can run on higher runtime in CI
-    $Env:DOTNET_ROLL_FORWARD = "Major"
-
     & $dotnet binlogtool redact --input:$InputPath --recurse --in-place `
       @optionalParams
 
