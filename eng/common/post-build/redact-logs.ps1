@@ -36,8 +36,8 @@ try {
     Write-Host "Installing Binlog redactor CLI..."
     Write-Host "'$dotnet' new tool-manifest"
     & "$dotnet" new tool-manifest
-    Write-Host "'$dotnet' tool install $packageName --add-source '$packageFeed' -v $verbosity"
-    & "$dotnet" tool install $packageName --local --add-source "$packageFeed" -v $verbosity
+    Write-Host "'$dotnet' tool install $packageName --local --add-source '$packageFeed' -v $verbosity --version 1.0.8"
+    & "$dotnet" tool install $packageName --local --add-source "$packageFeed" -v $verbosity --version 1.0.8
   
 
     $optionalParams = [System.Collections.ArrayList]::new()
