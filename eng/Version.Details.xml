@@ -19,26 +19,26 @@
       <Uri>https://github.com/dotnet/templating</Uri>
       <Sha>5b4d563fff058b86f739a62c4e86bb3a05533c45</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="9.0.0-beta.23565.1">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="9.0.0-beta.23567.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>0f16479e1811ef3b5c9fc251563c6181f9083c34</Sha>
+      <Sha>b6801170e6ca8bf12bdff1f10d410c5e01660681</Sha>
       <SourceBuild RepoName="arcade" ManagedOnly="true" />
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="9.0.0-beta.23565.1">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="9.0.0-beta.23567.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>0f16479e1811ef3b5c9fc251563c6181f9083c34</Sha>
+      <Sha>b6801170e6ca8bf12bdff1f10d410c5e01660681</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SignTool" Version="9.0.0-beta.23565.1">
+    <Dependency Name="Microsoft.DotNet.SignTool" Version="9.0.0-beta.23567.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>0f16479e1811ef3b5c9fc251563c6181f9083c34</Sha>
+      <Sha>b6801170e6ca8bf12bdff1f10d410c5e01660681</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="9.0.0-beta.23565.1">
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="9.0.0-beta.23567.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>0f16479e1811ef3b5c9fc251563c6181f9083c34</Sha>
+      <Sha>b6801170e6ca8bf12bdff1f10d410c5e01660681</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="9.0.0-beta.23565.1">
+    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="9.0.0-beta.23567.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>0f16479e1811ef3b5c9fc251563c6181f9083c34</Sha>
+      <Sha>b6801170e6ca8bf12bdff1f10d410c5e01660681</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.23566.4">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
