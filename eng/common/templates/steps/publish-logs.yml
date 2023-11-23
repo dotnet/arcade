@@ -2,6 +2,8 @@ parameters:
   StageLabel: ''
   JobLabel: ''
   CustomSensitiveDataList: ''
+  # A default - in case value from eng/common/templates/post-build/common-variables.yml is not passed
+  BinlogToolVersion: '1.0.8'
 
 steps:
 - task: Powershell@2
@@ -18,8 +20,12 @@ steps:
   displayName: Redact Logs
   inputs:
     filePath: $(Build.SourcesDirectory)/eng/common/post-build/redact-logs.ps1
-    # For now this needs to have explicit list of all sensitive data. Taken from eng/publishing/v3/publish.yml
-    arguments: -InputPath '$(Build.SourcesDirectory)/PostBuildLogs'
+    arguments: -InputPath '$(Build.SourcesDirectory)/PostBuildLogs' 
+      -BinlogToolVersion ${{parameters.BinlogToolVersion}}
+      # If the file exists - sensitive data for redaction will be sourced from it
+      # (single entry per line, lines starting with '# ' are considered comments and skipped)
+      -TokensFilePath '$(Build.SourcesDirectory)/eng/BinlogSecretsRedactionFile.txt'
+      # For now this needs to have explicit list of all sensitive data. Taken from eng/publishing/v3/publish.yml
       '$(publishing-dnceng-devdiv-code-r-build-re)'
       '$(MaestroAccessToken)'
       '$(dn-bot-all-orgs-artifact-feeds-rw)'

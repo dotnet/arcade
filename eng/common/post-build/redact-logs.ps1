@@ -1,8 +1,13 @@
 [CmdletBinding(PositionalBinding=$False)]
 param(
   [Parameter(Mandatory=$true, Position=0)][string] $InputPath,
+  [Parameter(Mandatory=$true)][string] $BinlogToolVersion,
   [Parameter(Mandatory=$false)][string] $DotnetPath,
-  [Parameter(ValueFromRemainingArguments=$true)][String[]]$tokensToRedact
+  [Parameter(Mandatory=$false)][string] $PackageFeed = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json',
+  # File with strings to redact - separated by newlines.
+  #  For comments start the line with '# ' - such lines are ignored 
+  [Parameter(Mandatory=$false)][string] $TokensFilePath,
+  [Parameter(ValueFromRemainingArguments=$true)][String[]]$TokensToRedact
 )
 
 try {
@@ -12,7 +17,7 @@ try {
 
   $dotnet = $DotnetPath
 
-  if(!$dotnet) {
+  if (!$dotnet) {
     $dotnetRoot = InitializeDotNetCli -install:$true
     $dotnet = "$dotnetRoot\dotnet.exe"
   }
@@ -23,9 +28,7 @@ try {
     & "$dotnet" tool uninstall $packageName -g
   }
 
-  $packageFeed = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json'
-
-  $toolPath  = "$TempDir\logredactor\$(New-Guid)"
+  $toolPath  = "$PSScriptRoot\..\..\..\.tools"
   $verbosity = 'minimal'
   
   New-Item -ItemType Directory -Force -Path $toolPath
@@ -36,13 +39,17 @@ try {
     Write-Host "Installing Binlog redactor CLI..."
     Write-Host "'$dotnet' new tool-manifest"
     & "$dotnet" new tool-manifest
-    Write-Host "'$dotnet' tool install $packageName --local --add-source '$packageFeed' -v $verbosity --version 1.0.8"
-    & "$dotnet" tool install $packageName --local --add-source "$packageFeed" -v $verbosity --version 1.0.8
-  
+    Write-Host "'$dotnet' tool install $packageName --local --add-source '$PackageFeed' -v $verbosity --version $BinlogToolVersion"
+    & "$dotnet" tool install $packageName --local --add-source "$PackageFeed" -v $verbosity --version $BinlogToolVersion
+
+    if (Test-Path $TokensFilePath) {
+        Write-Host "Adding additional sensitive data for redaction from file: " $TokensFilePath
+        $TokensToRedact += Get-Content -Path $TokensFilePath | Foreach {$_.Trim()} | Where { $_ -notmatch "^# " }
+    }
 
     $optionalParams = [System.Collections.ArrayList]::new()
   
-    Foreach ($p in $tokensToRedact)
+    Foreach ($p in $TokensToRedact)
     {
       if($p -match '^\$\(.*\)$')
       {
