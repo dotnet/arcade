@@ -331,7 +331,20 @@ function delta_flow($sha, $source_repo, $target_repo):
     # It will be stored in Version.Details.xml
     let last_source_sha = "read VMR SHA from $repo_path/eng/Version.Details.xml"
 
+  # Now we diff the current state of the source repo and the last flown state of the counterpart repo
+  # Please note that an inter-repo diff can't be used as cloaking rules might need to apply
+  # Instead, we remove repo contents and copy the counterpart repo contents into it
+  delete_working_tree($source_repo)
   
+  if ($source_repo is VMR):
+    copy_content($target_repo:$last_source_sha, $source_repo)
+  else:
+    copy_content($target_repo:$last_source_sha, $source_repo, cloak_files: true)
+
+  diff = git diff $source_repo
+  create_branch($target_repo, $last_source_sha, 'pr-branch')
+  apply_diff($target_repo, $diff)
+  commit_push_open_pr($target_repo, 'pr-branch')
 
 
 # The implementation is described below, in "Previous flow direction detection"
