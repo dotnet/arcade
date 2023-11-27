@@ -11,8 +11,8 @@
     - [Why new service?](#why-new-service)
     - [Composition of DarcLib commands](#composition-of-darclib-commands)
   - [The code flow algorithm](#the-code-flow-algorithm)
-    - [Pseudo-code](#pseudo-code)
     - [Algorithm visualization](#algorithm-visualization)
+    - [Pseudo-code](#pseudo-code)
     - [Previous flow direction detection](#previous-flow-direction-detection)
       - [Detecting incoming flow](#detecting-incoming-flow)
       - [Detecting outgoing flow](#detecting-outgoing-flow)
@@ -182,70 +182,11 @@ This means that we need to look at the following flow combinations:
 - Backflow after forward flow
 - Two flows in the same direction
 
-### Pseudo-code
+| Previous / Current direction | Backward | Forward |
+|------------------------------|:--------:|:-------:|
+| Backward                     | ![Two flows in the same direction](images/backward-backward-flow.png) | ![Forward flow after backflow](images/backward-forward-flow.png) |
+| Forward                      | ![Backflow after forward flow](images/forward-backward-flow.png) | ![Two flows in the same direction](images/forward-forward-flow.png) |
 
-For simplicity, let's consider the following:
-- There is only one target individual repository and it is known in advance. In reality, we would need to figure out all target repositories for which the files in the VMR changed but this is trivial and unimportant for what we want to show - the way we will create the diffs and patches for the changes within a single repository.
-- There was a previous successful code flow in the past. The repositories will be synchronized in the already existing VMR-lite and the first code flow will be manually triggered. The algorithm describes how the code will flow after that.
-- The last SHA of the counterpart repository that we have synchronized from is stored in the VMR/individual repository. In the present VMR, this information is already in the `source-manifest.json` file. For backflow, we will store the source VMR SHA in the `Version.Details.xml` file.
-- The algorithm works symmetrically in both directions with the exception of some of the files being cloaked on the way to the VMR. The cloaking mechanism is described [here](./VMR-Design-And-Operation.md#repository-source-mappings).
-- The algorithm won't contain steps for opening a pull request but rather focuses on preparing the commits locally.
-- The code doesn't take into account the case that a PR might already exists and we are updating it. This situation is described in the [Updating PRs](#updating-prs) section below.
-
-The pseudo-code of the algorithm is as follows:
-
-```bash
-# Inputs
-let vmr_path; # Path to the cloned VMR
-let repo_path; # Path to the cloned individual repository
-let repo_name; # Name of the repository we are synchronizing, e.g. 'runtime'
-
-# Flowing individual repository commit 'sha' into the VMR
-function forward_flow(sha):
-  if previous_flow() == back:
-    simple_diff_flow(sha, $repo_path, $vmr_path)
-  else:
-    delta_flow(sha, $repo_path, $vmr_path)
-
-# Flowing VMR commit 'sha' into the individual repository
-function backflow(sha):
-  if previous_flow() == back:
-    simple_diff_flow(sha, $vmr_path, $repo_path)
-  else:
-    delta_flow(sha, $vmr_path, $repo_path)
-    
-  update_dependencies(sha)
-
-# Describes a case when there was no in-flow since the last out-flow
-# In this case, we only flow the new delta that happened in the source repo
-# This can be seen lower in 🖼️ Images 3, 4 and 5
-function simple_diff_flow(sha, source_repo, target_repo):
-  let target_repo_sha = git -C $target_repo rev-parse HEAD
-
-  if $source_repo is VMR:
-    # Last SHA of the VMR repository that we have synchronized from
-    # It will be stored in Version.Details.xml
-    let last_source_sha = read VMR SHA from $repo_path/eng/Version.Details.xml
-  else:
-    # Last SHA of the source repository that we have synchronized from
-    # It is part of the source-manifest.json file in the VMR
-    let last_source_sha = read SHA of $repo_name from $vmr_path/src/source-manifest.json
-
-  diff = get_git_diff($source_repo, $last_source_sha, HEAD)
-  create_branch($target_repo, $last_target_sha, 'pr-branch')
-
-  try:
-    apply_diff($diff)
-  catch:
-    # Changes in the target repo conflict, we have to create the branch from the previous point
-    # This is shown in the "Conflicts" section below (🖼️ Image 6)
-    ⚠️⚠️⚠️ TODO
-
-  commit_push_open_pr($target_repo, 'pr-branch')
-
-# The implementation is described below, in "Previous flow direction detection"
-function get_previous_flow_direction();
-```
 
 ### Algorithm visualization
 
@@ -315,6 +256,87 @@ or the opposite direction:
 </p>
 
 When we are forming the backflow commit (`13`), we know that the only things that happened since we last sent all our updates to the repository are the commits `11` and `12` which are equal to a simple diff of the branch we're flowing.
+
+### Pseudo-code
+
+For simplicity, let's consider the following:
+- There is only one target individual repository and it is known in advance. In reality, we would need to figure out all target repositories for which the files in the VMR changed but this is trivial and unimportant for what we want to show - the way we will create the diffs and patches for the changes within a single repository.
+- There was a previous successful code flow in the past. The repositories will be synchronized in the already existing VMR-lite and the first code flow will be manually triggered. The algorithm describes how the code will flow after that.
+- The last SHA of the counterpart repository that we have synchronized from is stored in the VMR/individual repository. In the present VMR, this information is already in the `source-manifest.json` file. For backflow, we will store the source VMR SHA in the `Version.Details.xml` file.
+- The algorithm works symmetrically in both directions with the exception of some of the files being cloaked on the way to the VMR. The cloaking mechanism is described [here](./VMR-Design-And-Operation.md#repository-source-mappings).
+- The algorithm won't contain steps for opening a pull request but rather focuses on preparing the commits locally.
+- The code doesn't take into account the case that a PR might already exists and we are updating it. This situation is described in the [Updating PRs](#updating-prs) section below.
+
+The pseudo-code of the algorithm is as follows:
+
+```bash
+# Inputs
+let vmr_path; # Path to the cloned VMR
+let repo_path; # Path to the cloned individual repository
+let repo_name; # Name of the repository we are synchronizing, e.g. 'runtime'
+
+# Flowing individual repository commit 'sha' into the VMR
+function forward_flow($sha):
+  if get_previous_flow_direction() == forward:
+    simple_diff_flow($sha, $repo_path, $vmr_path)
+  else:
+    delta_flow($sha, $repo_path, $vmr_path)
+
+# Flowing VMR commit 'sha' into the individual repository
+function backflow($sha):
+  if get_previous_flow_direction() == back:
+    simple_diff_flow($sha, $vmr_path, $repo_path)
+  else:
+    delta_flow($sha, $vmr_path, $repo_path)
+
+  # Bumps intermediate package versions in the individual repo
+  # These are packages built in the VMR build that we are flowing
+  update_dependencies($sha)
+
+# Activated in a case when there was no in-flow since the last out-flow
+# In this case, we only flow the new delta that happened in the source repo
+# This can be seen lower in 🖼️ Images 3, 4 and 5
+function simple_diff_flow($sha, $source_repo, $target_repo):
+  if $source_repo is VMR:
+    # Last SHA of the VMR repository that we have synchronized from
+    # It will be stored in Version.Details.xml
+    let last_source_sha = "read VMR SHA from $repo_path/eng/Version.Details.xml"
+  else:
+    # Last SHA of the source repository that we have synchronized from
+    # It is part of the source-manifest.json file in the VMR
+    let last_source_sha = "read SHA of $repo_name from $vmr_path/src/source-manifest.json"
+
+  create_branch($target_repo, $last_target_sha, 'pr-branch')
+  diff = git diff $source_repo:$last_source_sha..$source_repo:HEAD
+
+  try:
+    apply_diff($target_repo, $diff)
+  catch:
+    # Changes in the target repo conflict, we have to create the branch from the previous point
+    # This is shown in the "Conflicts" section below (🖼️ Image 6)
+    ⚠️⚠️⚠️ TODO - pseudocode for Image 6
+
+  commit_push_open_pr($target_repo, 'pr-branch')
+
+# Activated in a case when the last flow was an in-flow
+# It reconstructs the delta between what was in-flown the last and what is in the source repo now
+# This can be seen lower in 🖼️ Images 1 and 2
+function delta_flow($sha, $source_repo, $target_repo):
+  if $source_repo is VMR:
+    # Last SHA of the source repository that we have synchronized from
+    # It is part of the source-manifest.json file in the VMR
+    let last_source_sha = "read SHA of $repo_name from $vmr_path/src/source-manifest.json"
+  else:
+    # Last SHA of the VMR repository that we have synchronized from
+    # It will be stored in Version.Details.xml
+    let last_source_sha = "read VMR SHA from $repo_path/eng/Version.Details.xml"
+
+  
+
+
+# The implementation is described below, in "Previous flow direction detection"
+function get_previous_flow_direction();
+```
 
 ### Previous flow direction detection
 
