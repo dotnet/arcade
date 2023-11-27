@@ -11,7 +11,9 @@
     - [Why new service?](#why-new-service)
     - [Composition of DarcLib commands](#composition-of-darclib-commands)
   - [The code flow algorithm](#the-code-flow-algorithm)
-    - [Last flow detection](#last-flow-detection)
+    - [Pseudo-code](#pseudo-code)
+    - [Algorithm visualization](#algorithm-visualization)
+    - [Previous flow direction detection](#previous-flow-direction-detection)
       - [Detecting incoming flow](#detecting-incoming-flow)
       - [Detecting outgoing flow](#detecting-outgoing-flow)
       - [Cases when SHA is not in the graph](#cases-when-sha-is-not-in-the-graph)
@@ -173,24 +175,95 @@ Once we have the set of commands that can forward/backflow the code locally, we 
 
 This section describes the details of moving the code between product repositories and the VMR. The algorithm will work differently in each direction to achieve maximum fluency and minimize the amount of conflicts developers need to tend to but also ensure that conflicting changes manifest as conflicts and changes are not overridden without a trace.
 
-The algorithm will always consider the delta between the VMR and the repository and we will flow this delta via a pull request that will open in the counterpart repository. That being said, it is expected that there will be a forward flow and a backflow PR open at most times and the order in which the repositories will synchronize in can be random. As an example, a backflow might be blocked for an extended period of time because repo's validation, which will be more extensive than VMR's, might uncover some problematic changes done in the VMR that need fixing. While this is going, the forward flow can continue and the VMR can be updated with the latest changes from the repository. For this reason, we need to have a look at the algorithm with respect to its context - e.g. the last synchronization.
+The algorithm will always consider the delta between the VMR and the repository and we will flow this delta via a pull request that will open in the counterpart repository. It is expected that there will be a forward flow and a backflow PR open at most times and the order in which the repositories will synchronize in can be random. As an example, a backflow might be blocked for an extended period of time because repo's validation, which will be more extensive than VMR's, might uncover some problematic changes done in the VMR that need fixing. While this is going, the forward flow can continue and the VMR can be updated with the latest changes from the repository. For this reason, we need to have a look at the algorithm with respect to its context - e.g. the direction of the last synchronization.
 
 This means that we need to look at the following flow combinations:
 - Forward flow after backflow
 - Backflow after forward flow
 - Two flows in the same direction
 
-The diagrams below visualize these flows and have some common features:
+### Pseudo-code
+
+For simplicity, let's consider the following:
+- There is only one target individual repository and it is known in advance. In reality, we would need to figure out all target repositories for which the files in the VMR changed but this is trivial and unimportant for what we want to show - the way we will create the diffs and patches for the changes within a single repository.
+- There was a previous successful code flow in the past. The repositories will be synchronized in the already existing VMR-lite and the first code flow will be manually triggered. The algorithm describes how the code will flow after that.
+- The last SHA of the counterpart repository that we have synchronized from is stored in the VMR/individual repository. In the present VMR, this information is already in the `source-manifest.json` file. For backflow, we will store the source VMR SHA in the `Version.Details.xml` file.
+- The algorithm works symmetrically in both directions with the exception of some of the files being cloaked on the way to the VMR. The cloaking mechanism is described [here](./VMR-Design-And-Operation.md#repository-source-mappings).
+- The algorithm won't contain steps for opening a pull request but rather focuses on preparing the commits locally.
+- The code doesn't take into account the case that a PR might already exists and we are updating it. This situation is described in the [Updating PRs](#updating-prs) section below.
+
+The pseudo-code of the algorithm is as follows:
+
+```bash
+# Inputs
+let vmr_path; # Path to the cloned VMR
+let repo_path; # Path to the cloned individual repository
+let repo_name; # Name of the repository we are synchronizing, e.g. 'runtime'
+
+# Flowing individual repository commit 'sha' into the VMR
+function forward_flow(sha):
+  if previous_flow() == back:
+    simple_diff_flow(sha, $repo_path, $vmr_path)
+  else:
+    delta_flow(sha, $repo_path, $vmr_path)
+
+# Flowing VMR commit 'sha' into the individual repository
+function backflow(sha):
+  if previous_flow() == back:
+    simple_diff_flow(sha, $vmr_path, $repo_path)
+  else:
+    delta_flow(sha, $vmr_path, $repo_path)
+    
+  update_dependencies(sha)
+
+# Describes a case when there was no in-flow since the last out-flow
+# In this case, we only flow the new delta that happened in the source repo
+# This can be seen lower in 🖼️ Images 3, 4 and 5
+function simple_diff_flow(sha, source_repo, target_repo):
+  let target_repo_sha = git -C $target_repo rev-parse HEAD
+
+  if $source_repo is VMR:
+    # Last SHA of the VMR repository that we have synchronized from
+    # It will be stored in Version.Details.xml
+    let last_source_sha = read VMR SHA from $repo_path/eng/Version.Details.xml
+  else:
+    # Last SHA of the source repository that we have synchronized from
+    # It is part of the source-manifest.json file in the VMR
+    let last_source_sha = read SHA of $repo_name from $vmr_path/src/source-manifest.json
+
+  diff = get_git_diff($source_repo, $last_source_sha, HEAD)
+  create_branch($target_repo, $last_target_sha, 'pr-branch')
+
+  try:
+    apply_diff($diff)
+  catch:
+    # Changes in the target repo conflict, we have to create the branch from the previous point
+    # This is shown in the "Conflicts" section below (🖼️ Image 6)
+    ⚠️⚠️⚠️ TODO
+
+  commit_push_open_pr($target_repo, 'pr-branch')
+
+# The implementation is described below, in "Previous flow direction detection"
+function get_previous_flow_direction();
+```
+
+### Algorithm visualization
+
+The diagrams below visualize the algorithm and show which diffs are used to create the PRs. The diagrams use the following common notation:
 - 🟠 The repository contains an example file (say `A.txt`). This file contains a single line of text. The content of the file transformations are denoted in orange. The file starts with the text `one` and ends with the text `five`.
-- 🟢 Green arrows denote the previous successful flow
+- 🟢 Green arrows denote the previous successful flow.
 - 🔵 Blue arrows denote the flow we're interested in in the current diagram.
 - 🟣 In purple, we visualize the actual diff that we need to carry over to the counterpart repository.
 - ⚫ Greyed out commits denote commits that do not affect the `A.txt` file but contain an unrelated change done in the given repository.
 - We usually assume that some previous synchronization happened (points `1` <-> `2`) and the 🟢 green previous synchronization was done based on its previous synchronization.
 - The commits are numbered and happen in the order of the numbers. The numbers are used to refer to the commits in the text.
-- [An editable version of diagrams is here](https://excalidraw.com/#json=WV6gvcK9wKYg0UKEkYp5N,3d5vscemGiqIE8P4FwJJUg)
+- Editable source version of diagrams is [here](https://excalidraw.com/#json=2QlCyifI87WwEdysg_Ybg,ZPCAufuEmT1SybVB1ooSWA).
+
 
 ![Backflow after forward flow](images/forward-backward-flow.png)
+<p align="center">
+  🖼️ Image #1 - Backflow after forward flow
+</p>
 
 On this diagram we see:
 
@@ -223,18 +296,34 @@ The base commit of the backflow branch is then the base commit of the last forwa
 Similarly, we can look at the opposite direction which is symmetrical.
 
 ![Forward flow after backflow](images/backward-forward-flow.png)
+<p align="center">
+  🖼️ Image #2 - Forward flow after a backflow
+</p>
 
 The situation changes when we have two flows in the same direction and things are a bit easier than:
 
 ![Two flows in the same direction](images/backward-backward-flow.png)
+<p align="center">
+  🖼️ Image #3 - Two backwflows in a row
+</p>
+
+or the opposite direction:
+
+![Two flows in the same direction](images/forward-forward-flow.png)
+<p align="center">
+  🖼️ Image #4 - Two forward flows in a row
+</p>
 
 When we are forming the backflow commit (`13`), we know that the only things that happened since we last sent all our updates to the repository are the commits `11` and `12` which are equal to a simple diff of the branch we're flowing.
 
-### Last flow detection
+### Previous flow direction detection
 
 For the above to work correctly, we need to be able to tell which situation we're in and which direction the last flow happened. For this to work, we need to store the last SHA of the counterpart repository that we have synchronized from the last. In the present VMR, this information is already present in the `source-manifest.json` file. For flowing from the VMR into an individual repository, we will store this in the `Version.Details.xml` file.
 
 ![Detecting flow direction](images/flow-detection.png)
+<p align="center">
+  🖼️ Image #5 - Detecting flow direction
+</p>
 
 Let's assume we're at the point of wanting to open a flow PR from a given commit. To do that, we need to find out:
 - Last points of synchronization in source and target repositories
@@ -280,6 +369,9 @@ Conflicts will happen and the goal of the process is to:
 An example of a conflict that is quite problematic is shown here:
 
 ![Conflicting changes](images/forward-forward-flow-with-conflict.png)
+<p align="center">
+  🖼️ Image #6 - Two flow in a row with a conflict
+</p>
 
 In this diagram, the additional commit that was made in the first forward flow PR (`6`) conflicts with a commit made in the repository (`10`). Since there was no backflow, this information is inaccessible by the repository.  
 The follow-up forward flow is problematic because `10` and `11` cannot be applied on top of `8` so we are not able to even create the PR branch.  
