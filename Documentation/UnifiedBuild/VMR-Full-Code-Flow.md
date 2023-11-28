@@ -182,11 +182,12 @@ This means that we need to look at the following flow combinations:
 - Backflow after forward flow
 - Two flows in the same direction
 
-| Previous / Current direction | Backward | Forward |
-|------------------------------|:--------:|:-------:|
-| Backward                     | ![Two flows in the same direction](images/backward-backward-flow.png) | ![Forward flow after backflow](images/backward-forward-flow.png) |
-| Forward                      | ![Backflow after forward flow](images/forward-backward-flow.png) | ![Two flows in the same direction](images/forward-forward-flow.png) |
+The diagrams for these four situations can be seen here:
 
+| Previous flow / Current flow | Backward | Forward |
+|------------------------------|:--------:|:-------:|
+| Backward                     | ![Two backflows in a row](images/backward-backward-flow.png) | ![Forward flow after backflow](images/backward-forward-flow.png) |
+| Forward                      | ![Backflow after forward flow](images/forward-backward-flow.png) | ![Two forward flows in a row](images/forward-forward-flow.png) |
 
 ### Algorithm visualization
 
@@ -264,10 +265,22 @@ For simplicity, let's consider the following:
 - There was a previous successful code flow in the past. The repositories will be synchronized in the already existing VMR-lite and the first code flow will be manually triggered. The algorithm describes how the code will flow after that.
 - The last SHA of the counterpart repository that we have synchronized from is stored in the VMR/individual repository. In the present VMR, this information is already in the `source-manifest.json` file. For backflow, we will store the source VMR SHA in the `Version.Details.xml` file.
 - The algorithm works symmetrically in both directions with the exception of some of the files being cloaked on the way to the VMR. The cloaking mechanism is described [here](./VMR-Design-And-Operation.md#repository-source-mappings).
-- The algorithm won't contain steps for opening a pull request but rather focuses on preparing the commits locally.
-- The code doesn't take into account the case that a PR might already exists and we are updating it. This situation is described in the [Updating PRs](#updating-prs) section below.
+- The algorithm won't contain steps for opening a pull request but rather focuses on preparing the commits/PR branches locally.
+- The code doesn't take into account the case that a PR might already exists and we are updating it. This situation is described in the [Updating PRs](#updating-prs) section.
 
-The pseudo-code of the algorithm is as follows:
+A high-level pseudo-code of the algorithm would go as follows:
+
+1. Detect the direction of the last flow.
+2. If last flow was in the in-flow direction:
+    1. Diff the state flown from the target repo on the last sync and the current head.
+    2. Apply the diff on top of the last flown commit of the target repo.
+3. If last flow was in the out-flow direction, flow the new changes in the source repo:
+    1. Create a diff of the current HEAD commit and the last flown commit of the source repo.
+    2. Try to apply the diff on top of the last flown commit in the target repo.
+    3. If the diff does not apply cleanly, recreate the last flown state before merging and apply the diff on top.
+4. If we are flowing to an individual repo, flow intermediate package versions.
+
+More detailed low-level pseudo-code of the algorithm is as follows:
 
 ```bash
 let vmr_path; # Path to the cloned VMR
@@ -292,6 +305,7 @@ function backflow($sha):
   # Bumps intermediate package versions in the individual repo
   # These are packages built in the VMR build that we are flowing
   update_dependencies($sha)
+  commit($repo_path)
 
 # Activated in a case when there was no in-flow since the last out-flow
 # In this case, we only flow the new delta that happened in the source repo
@@ -315,11 +329,15 @@ function simple_diff_flow($sha, $source_repo, $target_repo):
   catch:
     # Changes in the target repo conflict, we have to create the branch from the previous point
     # This is shown in the "Conflicts" section below (🖼️ Image 6)
-    # We basically recreate the last flown state, apply new diff on top and create a PR
+    # We recreate the last flown state, apply new diff on top and create a PR
     # The changes that were already merged before will be transparently hidden by git
-    forward_flow($last_source_sha)
+    if $source_repo is VMR:
+      forward_flow($last_source_sha)
+    else:
+      backflow($last_source_sha)
+
     apply_diff($target_repo, $diff)
-    commit()
+    commit($target_repo)
 
 # Activated in a case when the last flow was an in-flow
 # It reconstructs the delta between what was in-flown the last and what is in the source repo now
@@ -347,7 +365,7 @@ function delta_flow($sha, $source_repo, $target_repo):
   diff = git diff $source_repo # diff of the working tree and index
   create_branch($target_repo, $last_source_sha, 'pr-branch')
   apply_diff($target_repo, $diff)
-  commit()
+  commit($target_repo)
 
 
 function get_previous_flow_direction();
