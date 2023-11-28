@@ -366,9 +366,6 @@ function delta_flow($sha, $source_repo, $target_repo):
   create_branch($target_repo, $last_source_sha, 'pr-branch')
   apply_diff($target_repo, $diff)
   commit($target_repo)
-
-
-function get_previous_flow_direction();
 ```
 
 ### Previous flow direction detection
