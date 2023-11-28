@@ -287,7 +287,7 @@ let vmr_path; # Path to the cloned VMR
 let repo_path; # Path to the cloned individual repository
 let repo_name; # Name of the repository we are synchronizing, e.g. 'runtime'
 
-# Flowing individual repository commit 'sha' into the VMR
+# First of the entrypoints of the algorithm that flows an individual repository commit into the VMR
 function forward_flow($sha):
   # The implementation of get_previous_flow_direction is described "Previous flow direction detection"
   if get_previous_flow_direction() == forward:
@@ -295,7 +295,7 @@ function forward_flow($sha):
   else:
     delta_flow($sha, $repo_path, $vmr_path)
 
-# Flowing VMR commit 'sha' into the individual repository
+# Second of the entrypoints of the algorithm that flows a VMR commit into an individual repository
 function backflow($sha):
   if get_previous_flow_direction() == back:
     simple_diff_flow($sha, $vmr_path, $repo_path)
@@ -330,7 +330,8 @@ function simple_diff_flow($sha, $source_repo, $target_repo):
     # Changes in the target repo conflict, we have to create the branch from the previous point
     # This is shown in the "Conflicts" section below (🖼️ Image 6)
     # We recreate the last flown state, apply new diff on top and create a PR
-    # The changes that were already merged before will be transparently hidden by git
+    # The changes that were already merged before (the previously flown state)
+    # will be transparently hidden when resolving the conflict in the new PR
     if $source_repo is VMR:
       forward_flow($last_source_sha)
     else:
@@ -367,6 +368,11 @@ function delta_flow($sha, $source_repo, $target_repo):
   apply_diff($target_repo, $diff)
   commit($target_repo)
 ```
+
+As you can see, the algorithm chooses between two strategies - `simple_diff_flow` and `delta_flow`. These match the two different situations we've seen in the diagrams above.
+You can also notice that the algorithm is recursive in an edge case when it cannot construct the PR branch in the first place. This situation is explained the [Conflicts section](#conflicts).
+Theoretically, it could happen, that each of the previous flows had a conflicting change made in the flow PR. In such case, the algorithm would recurse all the way to the first flow and technically
+recreate the whole source branch in the target repository. However, this would also mean there was no flow in the ingoing direction so this situation is not expected to happen.
 
 ### Previous flow direction detection
 
