@@ -472,36 +472,27 @@ Lastly, when performing the synchronization, we will always take the configurati
 
 #### Proposed configuration
 
-- Each repository gets a new `eng/vmr-synchronization.json` file.
-- This file has two sections, for forward and backflow, with identical schema.
-  - Each section defines cloaking rules and additional mappings.
+- Each repository gets a new section in its `eng/Version.Details.xml` file.
+- This file has two sections, for forward and backflow. Each section defines cloaking rules and additional mappings.
 - This file is an override for defaults defined in the `src/source-mappings.json` file of the VMR (common for all repositories).
   - Default cloakings are similar to what we have today (`*.dll`, ...).
   - The `src/source-mappings.json` file is not mirrored to any individual repository and lives in the VMR only.
 - When synchronizing code, the current contents of the configuration file from the source repository (individual repository for forwards flow, VMR for backflow) is used to configure the synchronization.
 
-Example of `nuget/NuGet.Client`'s `vmr-synchronization.json` (this repo doesn't use Arcade):
+Example configuration of the `nuget/NuGet.Client` repository (this repo doesn't use Arcade):
 
-```jsonc
-{
-  // Name of VMR's src/ folder for this repository
-  "name": "nuget-client",
-
-  // Configuration for code flowing out of this repository into the VMR
-  "out": {
-    "exclude": [
-      "src/NuGet.Clients/NuGet.VisualStudio.Client"
-    ]
-  },
-
-  // Configuration for code flowing from the VMR into this repository
-  "in": {
-    "ignoredPackages": [
-      // This opts out from getting Arcade and eng/common updates from the VMR
-      "Microsoft.DotNet.Arcade.Sdk"
-    ]
-  }
-}
+```xml
+<!-- Name of VMR's src/ folder for this repository -->
+<VmrCodeflow Name="nuget-client">
+  <Outflow>
+    <!-- Configuration for code flowing out of this repository into the VMR -->
+    <Exclude>src/NuGet.Clients/NuGet.VisualStudio.Client</Exclude>
+  </Outflow>
+  <Inflow>
+    <!-- This opts out from getting Arcade and eng/common updates from the VMR -->
+    <IgnoredPackages>Microsoft.DotNet.Arcade.Sdk</IgnoredPackages>
+  </Inflow>
+</VmrCodeflow>
 ```
 
 ### Arcade
