@@ -71,9 +71,9 @@ The numbered steps are described in more detail below:
 1. This is the current normal process for making a change to an individual repository. Nothing changes.
 2. Currently, each official build of each repo publishes itself via darc which registers the commit and the set of built packages into the BAR and is assigned to zero or more channels. There is a lot of configuration effort in which repositories publish from which branches to which channels. We intend to keep this existing setup in place and piggy back on this. The only change to the current state is that we will subscribe to channels from the VMR. Possibly, these subscription will get a special flag to indicate that they are VMR subscriptions, e.g. `CodeFlow=true`.
 3. Maestro already listens to BAR events (to builds being added to channels) and triggers the appropriate subscriptions. For VMR subscriptions, it will call the backflow service which will process the request on its own time (e.g. stores requests in a queue and works through them). The initial call from Maestro should be just a quick ping that will enqueue the request.
-4. The backflow service will process the request by looking at the commit of the source repo that was synchronized to the VMR last by looking at the (`source-manifest.json` file)[https://github.com/dotnet/dotnet/blob/main/src/source-manifest.json]. It will then apply the diff between that commit and the one that is associated with the build information in BAR.
+4. The backflow service will process the request by looking at the commit of the source repo that was synchronized to the VMR last by looking at the [`source-manifest.json` file](https://github.com/dotnet/dotnet/blob/main/src/source-manifest.json). It will then apply the diff between that commit and the one that is associated with the build information in BAR.
 
-From this, it is obvious that the changes needed in the Maestro changes and the BAR database are minimal. The new backflow service will be the main new component. It will, however, re-use a lot of already existing code from Maestro (namely (`DarcLib`)[https://github.com/dotnet/arcade-services/tree/main/src/Microsoft.DotNet.Darc/DarcLib]).
+From this, it is obvious that the changes needed in the Maestro changes and the BAR database are minimal. The new backflow service will be the main new component. It will, however, re-use a lot of already existing code from Maestro (namely [`DarcLib`](https://github.com/dotnet/arcade-services/tree/main/src/Microsoft.DotNet.Darc/DarcLib)).
 
 ### Backflow
 
@@ -270,13 +270,13 @@ For simplicity, let's consider the following:
 The pseudo-code of the algorithm is as follows:
 
 ```bash
-# Inputs
 let vmr_path; # Path to the cloned VMR
 let repo_path; # Path to the cloned individual repository
 let repo_name; # Name of the repository we are synchronizing, e.g. 'runtime'
 
 # Flowing individual repository commit 'sha' into the VMR
 function forward_flow($sha):
+  # The implementation of get_previous_flow_direction is described "Previous flow direction detection"
   if get_previous_flow_direction() == forward:
     simple_diff_flow($sha, $repo_path, $vmr_path)
   else:
@@ -311,12 +311,15 @@ function simple_diff_flow($sha, $source_repo, $target_repo):
 
   try:
     apply_diff($target_repo, $diff)
+    commit()
   catch:
     # Changes in the target repo conflict, we have to create the branch from the previous point
     # This is shown in the "Conflicts" section below (🖼️ Image 6)
-    ⚠️⚠️⚠️ TODO - pseudocode for Image 6
-
-  commit_push_open_pr($target_repo, 'pr-branch')
+    # We basically recreate the last flown state, apply new diff on top and create a PR
+    # The changes that were already merged before will be transparently hidden by git
+    forward_flow($last_source_sha)
+    apply_diff($target_repo, $diff)
+    commit()
 
 # Activated in a case when the last flow was an in-flow
 # It reconstructs the delta between what was in-flown the last and what is in the source repo now
@@ -341,13 +344,12 @@ function delta_flow($sha, $source_repo, $target_repo):
   else:
     copy_content($target_repo:$last_source_sha, $source_repo, cloak_files: true)
 
-  diff = git diff $source_repo
+  diff = git diff $source_repo # diff of the working tree and index
   create_branch($target_repo, $last_source_sha, 'pr-branch')
   apply_diff($target_repo, $diff)
-  commit_push_open_pr($target_repo, 'pr-branch')
+  commit()
 
 
-# The implementation is described below, in "Previous flow direction detection"
 function get_previous_flow_direction();
 ```
 
