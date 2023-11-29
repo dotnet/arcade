@@ -143,12 +143,12 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// Number of containers to repack in parallel.
         /// </summary>
-        public int RepackParallelism { get; set; }
+        public int RepackParallelism { get; set; } = 16;
 
         /// <summary>
         /// Maximum size in MB that a file may be before it is repacked serially.
         /// </summary>
-        public int MaximumParallelFileSize { get; set; }
+        public int MaximumParallelFileSize { get; set; } = 128;
 
         /// <summary>
         /// Directory to write log to.
