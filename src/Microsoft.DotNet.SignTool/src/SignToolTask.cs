@@ -141,6 +141,16 @@ namespace Microsoft.DotNet.SignTool
         public string TarToolPath { get; set; }
 
         /// <summary>
+        /// Number of containers to repack in parallel.
+        /// </summary>
+        public int RepackParallelism { get; set; }
+
+        /// <summary>
+        /// Maximum size in MB that a file may be before it is repacked serially.
+        /// </summary>
+        public int MaximumParallelFileSize { get; set; }
+
+        /// <summary>
         /// Directory to write log to.
         /// </summary>
         [Required]
@@ -259,7 +269,16 @@ namespace Microsoft.DotNet.SignTool
 
                 if (Log.HasLoggedErrors) return;
 
-                var util = new BatchSignUtil(BuildEngine, Log, signTool, ParsedSigningInput, ItemsToSkipStrongNameCheck?.Select(i => i.ItemSpec).ToArray(), configuration._hashToCollisionIdMap, telemetry: telemetry);
+                var util = new BatchSignUtil(
+                    BuildEngine,
+                    Log,
+                    signTool,
+                    ParsedSigningInput,
+                    ItemsToSkipStrongNameCheck?.Select(i => i.ItemSpec).ToArray(),
+                    configuration._hashToCollisionIdMap,
+                    repackParallelism: RepackParallelism,
+                    maximumParallelFileSizeInBytes: MaximumParallelFileSize * 1024 * 1024,
+                    telemetry: telemetry);
 
                 util.SkipZipContainerSignatureMarkerCheck = this.SkipZipContainerSignatureMarkerCheck;
 
