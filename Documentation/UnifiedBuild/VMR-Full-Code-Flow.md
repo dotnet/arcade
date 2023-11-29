@@ -488,9 +488,10 @@ Example configuration of the `nuget/NuGet.Client` repository (this repo doesn't 
     <!-- Configuration for code flowing out of this repository into the VMR -->
     <Exclude>src/NuGet.Clients/NuGet.VisualStudio.Client</Exclude>
   </Outflow>
-  <Inflow>
+  <!-- Information about the last in-flow -->
+  <Inflow Uri="https://github.com/dotnet/dotnet" Sha="86ba5fba7c39323011c2bfc6b713142affc76171">
     <!-- This opts out from getting Arcade and eng/common updates from the VMR -->
-    <IgnoredPackages>Microsoft.DotNet.Arcade.Sdk</IgnoredPackages>
+    <IgnoredPackage>Microsoft.DotNet.Arcade.Sdk</IgnoredPackage>
   </Inflow>
 </VmrCodeflow>
 ```
