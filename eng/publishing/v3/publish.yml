@@ -27,7 +27,6 @@ stages:
           value: $(MaestroAccessToken)
         - name: MaestroApiVersion
           value: "2020-02-20"
-        - template: /eng/common/templates/post-build/common-variables.yml
 
       pool:
         # We don't use the collection uri here because it might vary (.visualstudio.com vs. dev.azure.com)
@@ -200,4 +199,3 @@ stages:
           parameters:
             StageLabel: '${{ parameters.stageName }}'
             JobLabel: 'AssetsPublishing'
-            BinlogToolVersion: $(BinlogToolVersion)
