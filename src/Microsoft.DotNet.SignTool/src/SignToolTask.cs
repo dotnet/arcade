@@ -141,14 +141,14 @@ namespace Microsoft.DotNet.SignTool
         public string TarToolPath { get; set; }
 
         /// <summary>
-        /// Number of containers to repack in parallel.
+        /// Number of containers to repack in parallel. Zero will default to the processor count
         /// </summary>
-        public int RepackParallelism { get; set; } = 16;
+        public int RepackParallelism { get; set; } = 0;
 
         /// <summary>
-        /// Maximum size in MB that a file may be before it is repacked serially.
+        /// Maximum size in MB that a file may be before it is repacked serially. 0 will default to 2GB / repack parallelism
         /// </summary>
-        public int MaximumParallelFileSize { get; set; } = 128;
+        public int MaximumParallelFileSize { get; set; } = 0;
 
         /// <summary>
         /// Directory to write log to.
