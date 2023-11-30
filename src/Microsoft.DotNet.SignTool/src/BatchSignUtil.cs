@@ -34,8 +34,8 @@ namespace Microsoft.DotNet.SignTool
             BatchSignInput batchData,
             string[] itemsToSkipStrongNameCheck,
             Dictionary<SignedFileContentKey, string> hashToCollisionIdMap,
-            int repackParallelism,
-            long maximumParallelFileSizeInBytes,
+            int repackParallelism = 0,
+            long maximumParallelFileSizeInBytes = 0,
             Telemetry telemetry = null)
         {
             _signTool = signTool;
@@ -45,8 +45,9 @@ namespace Microsoft.DotNet.SignTool
             _itemsToSkipStrongNameCheck = itemsToSkipStrongNameCheck ?? Array.Empty<string>();
             _telemetry = telemetry;
             _hashToCollisionIdMap = hashToCollisionIdMap;
-            _repackParallelism = repackParallelism;
-            _maximumParallelFileSizeInBytes = maximumParallelFileSizeInBytes;
+            _repackParallelism = repackParallelism != 0 ? repackParallelism : Environment.ProcessorCount;
+            _maximumParallelFileSizeInBytes = maximumParallelFileSizeInBytes != 0 ?
+                maximumParallelFileSizeInBytes : 2048 / _repackParallelism * 1024 * 1024;
         }
 
         internal void Go(bool doStrongNameCheck)
