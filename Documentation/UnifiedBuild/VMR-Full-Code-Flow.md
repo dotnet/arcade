@@ -328,10 +328,10 @@ function same_direction_flow($sha, $last_flow, $source_repo, $target_repo):
   create_branch($target_repo, $last_flow.target_sha, 'pr-branch')
 
   if $source_repo is VMR:
-    diff = diff($source_repo, $last_flow.source_sha, HEAD, src/$repo_name)
+    diff = diff($source_repo, $last_flow.source_sha, $sha, src/$repo_name)
     target_path = $target_repo
   else
-    diff = diff($source_repo, $last_flow.source_sha, HEAD, /, .. cloaking_rules ..)
+    diff = diff($source_repo, $last_flow.source_sha, $sha, /, .. cloaking_rules ..)
     target_path = $target_repo/src/$repo_name
 
   try:
@@ -361,10 +361,10 @@ function opposite_flow($sha, $last_flow, $source_repo, $target_repo):
   delete_working_tree($target_repo)
 
   if $source_repo is VMR:
-    diff = diff($source_repo, EMPTY_COMMIT, HEAD, src/$repo_name)
+    diff = diff($source_repo, EMPTY_COMMIT, $sha, src/$repo_name)
     target_path = $target_repo
   else
-    diff = diff($source_repo, EMPTY_COMMIT, HEAD, /, .. cloaking_rules ..)
+    diff = diff($source_repo, EMPTY_COMMIT, $sha, /, .. cloaking_rules ..)
     target_path = $target_repo/src/$repo_name
 
   # Effectively copies the contents of the counterpart repo into the target repo (with cloaking rules applied)
