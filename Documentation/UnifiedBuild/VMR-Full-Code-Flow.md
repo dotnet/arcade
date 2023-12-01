@@ -283,93 +283,98 @@ A high-level pseudo-code of the algorithm would go as follows:
 More detailed low-level pseudo-code of the algorithm is as follows:
 
 ```bash
-let vmr_path; # Path to the cloned VMR
-let repo_path; # Path to the cloned individual repository
-let repo_name; # Name of the repository we are synchronizing, e.g. 'runtime'
+# Main entrypoint of the algorithm - input comes from Maestro subscription trigger
+# $source_repo is where the build comes from (repository or VMR)
+# $target_repo is the subscribed one (repository or VMR)
+# The final effect is that there will be a branch in the target repo with the changes
+function flow($source_repo, $target_repo, $sha):
+  if $source_repo is VMR:
+    backflow($sha, $source_repo, $target_repo)
+  else
+    forwardflow($sha, $source_repo, $target_repo)
 
-# First of the entrypoints of the algorithm that flows an individual repository commit into the VMR
-function forward_flow($sha):
-  # The implementation of get_previous_flow_direction is described "Previous flow direction detection"
-  if get_previous_flow_direction() == forward:
-    simple_diff_flow($sha, $repo_path, $vmr_path)
-  else:
-    delta_flow($sha, $repo_path, $vmr_path)
 
-# Second of the entrypoints of the algorithm that flows a VMR commit into an individual repository
-function backflow($sha):
-  if get_previous_flow_direction() == back:
-    simple_diff_flow($sha, $vmr_path, $repo_path)
+# Direction repo -> VMR
+function forwardflow($sha, $vmr_path, $repo_path):
+  # The implementation of get_previous_flow is described "Previous flow direction detection"
+  # It contains source/target SHAs
+  let last_flow = get_previous_flow()
+
+  if $last_flow is forward:
+    same_direction_flow($sha, $last_flow, $target_repo, $vmr_path)
   else:
-    delta_flow($sha, $vmr_path, $repo_path)
+    opposite_flow($sha, $last_flow, $target_repo, $vmr_path)
+
+
+# Direction VMR -> repo
+function backflow($sha, $vmr_path, $repo_path):
+  let last_flow = get_previous_flow()
+
+  if $last_flow is backward:
+    same_direction_flow($sha, $last_flow, $vmr_path, $repo_path)
+  else:
+    opposite_flow($sha, $last_flow, $vmr_path, $repo_path)
 
   # Bumps intermediate package versions in the individual repo
   # These are packages built in the VMR build that we are flowing
-  update_dependencies($sha)
-  commit($repo_path)
+  update_dependencies($sha, $target_repo)
+  commit($target_repo)
+
 
 # Activated in a case when there was no in-flow since the last out-flow
 # In this case, we only flow the new delta that happened in the source repo
 # This can be seen lower in 🖼️ Images 3, 4 and 5
-function simple_diff_flow($sha, $source_repo, $target_repo):
-  if $source_repo is VMR:
-    # Last SHA of the VMR repository that we have synchronized from
-    # It will be stored in Version.Details.xml
-    let last_source_sha = "read VMR SHA from $repo_path/eng/Version.Details.xml"
-  else:
-    # Last SHA of the source repository that we have synchronized from
-    # It is part of the source-manifest.json file in the VMR
-    let last_source_sha = "read SHA of $repo_name from $vmr_path/src/source-manifest.json"
+function same_direction_flow($sha, $last_flow, $source_repo, $target_repo):
+  # We diff all changes in source_repo since the last flow
+  create_branch($target_repo, $last_flow.target_sha, 'pr-branch')
 
-  create_branch($target_repo, $last_target_sha, 'pr-branch')
-  diff = git diff $source_repo:$last_source_sha..$source_repo:HEAD
+  if $source_repo is VMR:
+    diff = diff($source_repo, $last_flow.source_sha, HEAD, src/$repo_name)
+    target_path = $target_repo
+  else
+    diff = diff($source_repo, $last_flow.source_sha, HEAD, /, .. cloaking_rules ..)
+    target_path = $target_repo/src/$repo_name
 
   try:
-    apply_diff($target_repo, $diff)
-    commit()
-  catch:
+    apply_diff($target_path, $diff)
+  catch PatchDoesNotApply:
     # Changes in the target repo conflict, we have to create the branch from the previous point
     # This is shown in the "Conflicts" section below (🖼️ Image 6)
     # We recreate the last flown state, apply new diff on top and create a PR
     # The changes that were already merged before (the previously flown state)
     # will be transparently hidden when resolving the conflict in the new PR
-    if $source_repo is VMR:
-      forward_flow($last_source_sha)
-    else:
-      backflow($last_source_sha)
+    flow($last_flow.source_sha, $source_repo, $target_repo)
+    # Diff should now apply as it follows the history of the source repo
+    apply_diff($target_path, $diff)
 
-    apply_diff($target_repo, $diff)
-    commit($target_repo)
+  commit($target_repo)
+
 
 # Activated in a case when the last flow was an in-flow
 # It reconstructs the delta between what was in-flown the last and what is in the source repo now
 # This can be seen lower in 🖼️ Images 1 and 2
-function delta_flow($sha, $source_repo, $target_repo):
-  if $source_repo is VMR:
-    # Last SHA of the source repository that we have synchronized from
-    # It is part of the source-manifest.json file in the VMR
-    let last_source_sha = "read SHA of $repo_name from $vmr_path/src/source-manifest.json"
-  else:
-    # Last SHA of the VMR repository that we have synchronized from
-    # It will be stored in Version.Details.xml
-    let last_source_sha = "read VMR SHA from $repo_path/eng/Version.Details.xml"
+function opposite_flow($sha, $last_flow, $source_repo, $target_repo):
+  # We diff all changes in source_repo since the last flow
+  create_branch($target_repo, $last_flow.target_sha, 'pr-branch')
 
   # Now we diff the current state of the source repo and the last flown state of the counterpart repo
   # Please note that an inter-repo diff can't be used as cloaking rules might need to apply
   # Instead, we remove repo contents and copy the counterpart repo contents into it
-  delete_working_tree($source_repo)
-  
-  if ($source_repo is VMR):
-    copy_content($target_repo:$last_source_sha, $source_repo)
-  else:
-    copy_content($target_repo:$last_source_sha, $source_repo, cloak_files: true)
+  delete_working_tree($target_repo)
 
-  diff = git diff $source_repo # diff of the working tree and index
-  create_branch($target_repo, $last_source_sha, 'pr-branch')
-  apply_diff($target_repo, $diff)
+  if $source_repo is VMR:
+    diff = diff($source_repo, EMPTY_COMMIT, HEAD, src/$repo_name)
+    target_path = $target_repo
+  else
+    diff = diff($source_repo, EMPTY_COMMIT, HEAD, /, .. cloaking_rules ..)
+    target_path = $target_repo/src/$repo_name
+
+  # Effectively copies the contents of the counterpart repo into the target repo (with cloaking rules applied)
+  apply_diff($target_path, $diff)
   commit($target_repo)
 ```
 
-As you can see, the algorithm chooses between two strategies - `simple_diff_flow` and `delta_flow`. These match the two different situations we've seen in the diagrams above.
+As you can see, the algorithm chooses between two strategies - `same_direction_flow` and `opposite_flow`. These match the two different situations we've seen in the diagrams above.
 You can also notice that the algorithm is recursive in an edge case when it cannot construct the PR branch in the first place. This situation is explained the [Conflicts section](#conflicts).
 Theoretically, it could happen, that each of the previous flows had a conflicting change made in the flow PR. In such case, the algorithm would recurse all the way to the first flow and technically
 recreate the whole source branch in the target repository. However, this would also mean there was no flow in the ingoing direction so this situation is not expected to happen.
