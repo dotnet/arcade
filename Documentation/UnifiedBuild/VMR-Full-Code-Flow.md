@@ -325,7 +325,6 @@ function backflow($sha, $vmr_path, $repo_path):
 # In this case, we only flow the new delta that happened in the source repo
 # This can be seen lower in 🖼️ Images 3, 4 and 5
 function same_direction_flow($sha, $last_flow, $source_repo, $target_repo):
-  # We diff all changes in source_repo since the last flow
   create_branch($target_repo, $last_flow.target_sha, 'pr-branch')
 
   if $source_repo is VMR:
@@ -354,8 +353,7 @@ function same_direction_flow($sha, $last_flow, $source_repo, $target_repo):
 # It reconstructs the delta between what was in-flown the last and what is in the source repo now
 # This can be seen lower in 🖼️ Images 1 and 2
 function opposite_flow($sha, $last_flow, $source_repo, $target_repo):
-  # We diff all changes in source_repo since the last flow
-  create_branch($target_repo, $last_flow.target_sha, 'pr-branch')
+  create_branch($target_repo, $last_flow.source_sha, 'pr-branch')
 
   # Now we diff the current state of the source repo and the last flown state of the counterpart repo
   # Please note that an inter-repo diff can't be used as cloaking rules might need to apply
