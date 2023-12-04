@@ -328,10 +328,10 @@ function same_direction_flow($sha, $last_flow, $source_repo, $target_repo):
   create_branch($target_repo, $last_flow.target_sha, 'pr-branch')
 
   if $source_repo is VMR:
-    diff = diff($source_repo, $last_flow.source_sha, $sha, src/$repo_name)
+    diff = diff($source_repo, $last_flow.source_sha, $sha, path: src/$repo_name, cloaking: [submodules])
     target_path = $target_repo
   else
-    diff = diff($source_repo, $last_flow.source_sha, $sha, /, .. cloaking_rules ..)
+    diff = diff($source_repo, $last_flow.source_sha, $sha, path: /, cloaking: [submodules + cloaking rules])
     target_path = $target_repo/src/$repo_name
 
   try:
@@ -358,13 +358,13 @@ function opposite_flow($sha, $last_flow, $source_repo, $target_repo):
   # Now we diff the current state of the source repo and the last flown state of the counterpart repo
   # Please note that an inter-repo diff can't be used as cloaking rules might need to apply
   # Instead, we remove repo contents and copy the counterpart repo contents into it
-  delete_working_tree($target_repo)
-
   if $source_repo is VMR:
-    diff = diff($source_repo, EMPTY_COMMIT, $sha, src/$repo_name)
+    delete_working_tree($target_repo, exclude: [submodules + cloaking rules])
+    diff = diff($source_repo, EMPTY_COMMIT, $sha, src/$repo_name, cloaking: [submodules])
     target_path = $target_repo
   else
-    diff = diff($source_repo, EMPTY_COMMIT, $sha, /, .. cloaking_rules ..)
+    delete_working_tree($target_repo, exclude: [submodules])
+    diff = diff($source_repo, EMPTY_COMMIT, $sha, /, cloaking: [submodules + cloaking rules])
     target_path = $target_repo/src/$repo_name
 
   # Effectively copies the contents of the counterpart repo into the target repo (with cloaking rules applied)
