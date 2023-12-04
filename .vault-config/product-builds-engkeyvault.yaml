@@ -283,3 +283,8 @@ secrets:
       name: dn-bot-ceapex-package-r
       organizations: ceapex
       scopes: packaging
+
+  App-DotNetCoreESRP-Secret:
+    type: text
+    parameters:
+      description: Secret for the DotNetCoreESRP app. Used for the ESRP CodeSign service connection
