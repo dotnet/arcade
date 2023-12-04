@@ -287,7 +287,7 @@ More detailed low-level pseudo-code of the algorithm is as follows:
 # $source_repo is where the build comes from (repository or VMR)
 # $target_repo is the subscribed one (repository or VMR)
 # The final effect is that there will be a branch in the target repo with the changes
-function flow($source_repo, $target_repo, $sha):
+function flow($sha, $source_repo, $target_repo):
   if $source_repo is VMR:
     backflow($sha, $source_repo, $target_repo)
   else
