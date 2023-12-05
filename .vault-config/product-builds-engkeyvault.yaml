@@ -159,7 +159,7 @@ secrets:
           name: dn-bot-account-redmond
       name: microsoft-symbol-server-pat
       organizations: microsoftpublicsymbols
-      scopes: symbols_write  
+      scopes: symbols_write
 
   symweb-symbol-server-pat:
     type: azure-devops-access-token
@@ -282,4 +282,18 @@ secrets:
           name: dn-bot-account-redmond
       name: dn-bot-ceapex-package-r
       organizations: ceapex
+      scopes: packaging
+
+  # Guardian packaging read for service connection
+  # Update the following with the new PAT when it expires:
+  # https://dev.azure.com/dnceng/internal/_settings/adminservices?resourceId=d2604fd5-04f1-4957-afe3-3d3ea81a665b
+  dn-bot-guardianconnect-dnceng-package-r:
+    type: azure-devops-access-token
+    parameters:
+      domainAccountName: dn-bot
+      domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+      name: dn-bot-guardianconnect-dnceng-package-r
+      organizations: SecurityTools
       scopes: packaging
