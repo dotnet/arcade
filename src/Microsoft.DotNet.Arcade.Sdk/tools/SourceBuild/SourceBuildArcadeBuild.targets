@@ -73,8 +73,8 @@
       <!-- Track that this is the inner build to prevent infinite recursion. -->
       <InnerBuildArgs>$(InnerBuildArgs) /p:ArcadeInnerBuildFromSource=true</InnerBuildArgs>
       <!-- Turn on DotNetBuildFromSource or DotNetBuildVertical in the inner build -->
-      <InnerBuildArgs Condition="'$(ArcadeBuildFromSource)' == 'true')">$(InnerBuildArgs) /p:DotNetBuildFromSource=true</InnerBuildArgs>
-      <InnerBuildArgs Condition="'$(ArcadeBuildVertical)' == 'true')">$(InnerBuildArgs) /p:DotNetBuildVertical=true</InnerBuildArgs>
+      <InnerBuildArgs Condition="'$(ArcadeBuildFromSource)' == 'true'">$(InnerBuildArgs) /p:DotNetBuildFromSource=true</InnerBuildArgs>
+      <InnerBuildArgs Condition="'$(ArcadeBuildVertical)' == 'true'">$(InnerBuildArgs) /p:DotNetBuildVertical=true</InnerBuildArgs>
       <!-- Use a fresh clone of the repo so that source-build modifications are isolated. -->
       <InnerBuildArgs>$(InnerBuildArgs) /p:RepoRoot=$(InnerSourceBuildRepoRoot)</InnerBuildArgs>
       <!-- Override the artifacts dir to cleanly separate the inner build from outer build. -->
@@ -88,7 +88,7 @@
       <InnerBuildArgs>$(InnerBuildArgs) /p:SourceBuildOutputDir=$(SourceBuildOutputDir)</InnerBuildArgs>
       <InnerBuildArgs>$(InnerBuildArgs) /p:SourceBuiltBlobFeedDir=$(SourceBuiltBlobFeedDir)</InnerBuildArgs>
 
-      <InnerBuildArgs Condition="'$(ArcadeBuildVertical)' != 'true')">$(InnerBuildArgs) /p:DotNetBuildOffline=true</InnerBuildArgs>
+      <InnerBuildArgs Condition="'$(ArcadeBuildVertical)' != 'true'">$(InnerBuildArgs) /p:DotNetBuildOffline=true</InnerBuildArgs>
       <InnerBuildArgs Condition=" '$(DotNetPackageVersionPropsPath)' != '' ">$(InnerBuildArgs) /p:DotNetPackageVersionPropsPath=$(DotNetPackageVersionPropsPath)</InnerBuildArgs>
 
       <InnerBuildArgs>$(InnerBuildArgs) /p:FullAssemblySigningSupported=$(FullAssemblySigningSupported)</InnerBuildArgs>
@@ -97,7 +97,7 @@
     <ItemGroup>
       <!-- Override package cache to separate source-built packages from upstream. -->
       <InnerBuildEnv Include="NUGET_PACKAGES=$(CurrentRepoSourceBuildPackageCache)" />
-      <InnerBuildEnv Include="DotNetTargetFrameworkFilter=$(SourceBuildTargetFrameworkFilter)" Condition="'$(ArcadeBuildVertical)' != 'true')" />
+      <InnerBuildEnv Include="DotNetTargetFrameworkFilter=$(SourceBuildTargetFrameworkFilter)" Condition="'$(ArcadeBuildVertical)' != 'true'" />
     </ItemGroup>
   </Target>
 
