@@ -59,6 +59,7 @@ scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 restore=false
 build=false
 source_build=false
+vertical_build=false
 rebuild=false
 test=false
 integration_test=false
