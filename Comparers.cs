@@ -19,10 +19,6 @@ namespace Xunit
 #endif
 	partial class Assert
 	{
-		static IComparer<T> GetComparer<T>()
-			where T : IComparable =>
-				new AssertComparer<T>();
-
 #if XUNIT_NULLABLE
 		static IEqualityComparer<T?> GetEqualityComparer<T>(IEqualityComparer? innerComparer = null) =>
 			new AssertEqualityComparer<T?>(innerComparer);
@@ -30,5 +26,9 @@ namespace Xunit
 		static IEqualityComparer<T> GetEqualityComparer<T>(IEqualityComparer innerComparer = null) =>
 			new AssertEqualityComparer<T>(innerComparer);
 #endif
+
+		static IComparer<T> GetRangeComparer<T>()
+			where T : IComparable =>
+				new AssertRangeComparer<T>();
 	}
 }
