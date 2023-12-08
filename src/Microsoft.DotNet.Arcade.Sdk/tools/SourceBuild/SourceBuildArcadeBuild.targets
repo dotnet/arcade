@@ -40,7 +40,7 @@
   -->
   <Target Name="HookExecuteInnerSourceBuild"
           Condition="
-            '('$(ArcadeBuildFromSource)' == 'true' or '$(ArcadeBuildVertical)' == 'true') and
+            ('$(ArcadeBuildFromSource)' == 'true' or '$(ArcadeBuildVertical)' == 'true') and
             '$(ArcadeInnerBuildFromSource)' == 'true'"
           DependsOnTargets="ExecuteInnerSourceBuild"
           BeforeTargets="Execute"/>
