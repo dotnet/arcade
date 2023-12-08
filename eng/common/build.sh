@@ -129,6 +129,12 @@ while [[ $# > 0 ]]; do
       restore=true
       pack=true
       ;;
+    -verticalbuild|-vb)
+      build=true
+      vertical_build=true
+      restore=true
+      pack=true
+      ;;
     -test|-t)
       test=true
       ;;
@@ -220,6 +226,7 @@ function Build {
     /p:Restore=$restore \
     /p:Build=$build \
     /p:ArcadeBuildFromSource=$source_build \
+    /p:ArcadeBuildVertical=$vertical_build \
     /p:Rebuild=$rebuild \
     /p:Test=$test \
     /p:Pack=$pack \
