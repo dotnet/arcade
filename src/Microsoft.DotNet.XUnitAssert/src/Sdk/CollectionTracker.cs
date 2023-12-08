@@ -86,7 +86,7 @@ namespace Xunit.Sdk
 			mismatchedIndex = null;
 
 			return
-				CheckIfDictionariesAreEqual(x, y, itemComparer) ??
+				CheckIfDictionariesAreEqual(x, y) ??
 				CheckIfSetsAreEqual(x, y, isDefaultItemComparer ? null : itemComparer) ??
 				CheckIfArraysAreEqual(x, y, itemComparer, isDefaultItemComparer, out mismatchedIndex) ??
 				CheckIfEnumerablesAreEqual(x, y, itemComparer, isDefaultItemComparer, out mismatchedIndex);
@@ -150,12 +150,11 @@ namespace Xunit.Sdk
 		static bool? CheckIfDictionariesAreEqual(
 #if XUNIT_NULLABLE
 			CollectionTracker? x,
-			CollectionTracker? y,
+			CollectionTracker? y)
 #else
 			CollectionTracker x,
-			CollectionTracker y,
+			CollectionTracker y)
 #endif
-			IEqualityComparer itemComparer)
 		{
 			if (x == null || y == null)
 				return null;
@@ -171,6 +170,9 @@ namespace Xunit.Sdk
 
 			var dictionaryYKeys = new HashSet<object>(dictionaryY.Keys.Cast<object>());
 
+			// We don't pass along the itemComparer from AreCollectionsEqual because we aren't directly
+			// comparing the KeyValuePair<> objects. Instead we rely on Contains() on the dictionary to
+			// match up keys, and then create type-appropriate comparers for the values.
 			foreach (var key in dictionaryX.Keys.Cast<object>())
 			{
 				if (!dictionaryYKeys.Contains(key))
@@ -179,7 +181,17 @@ namespace Xunit.Sdk
 				var valueX = dictionaryX[key];
 				var valueY = dictionaryY[key];
 
-				if (!itemComparer.Equals(valueX, valueY))
+				if (valueX == null)
+				{
+					if (valueY == null)
+						continue;
+					return false;
+				}
+				if (valueY == null)
+					return false;
+
+				var comparer = AssertEqualityComparer.GetDefaultComparer(valueX.GetType());
+				if (!comparer.Equals(valueX, valueY))
 					return false;
 
 				dictionaryYKeys.Remove(key);

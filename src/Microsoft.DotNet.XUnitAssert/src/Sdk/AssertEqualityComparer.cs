@@ -15,6 +15,8 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Reflection;
 
 #if XUNIT_NULLABLE
@@ -23,13 +25,73 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Xunit.Sdk
 {
+	static class AssertEqualityComparer
+	{
+		static readonly ConcurrentDictionary<Type, IEqualityComparer> cachedDefaultComparers = new ConcurrentDictionary<Type, IEqualityComparer>();
+		static readonly ConcurrentDictionary<Type, IEqualityComparer> cachedDefaultInnerComparers = new ConcurrentDictionary<Type, IEqualityComparer>();
+#if XUNIT_NULLABLE
+		static readonly object?[] singleNullObject = new object?[] { null };
+#else
+		static readonly object[] singleNullObject = new object[] { null };
+#endif
+
+		/// <summary>
+		/// Gets the default comparer to be used for the provided <paramref name="type"/> when a custom one
+		/// has not been provided. Creates an instance of <see cref="AssertEqualityComparer{T}"/> wrapped
+		/// by <see cref="AssertEqualityComparerAdapter{T}"/>.
+		/// </summary>
+		/// <param name="type">The type to be compared</param>
+		internal static IEqualityComparer GetDefaultComparer(Type type) =>
+			cachedDefaultComparers.GetOrAdd(type, itemType =>
+			{
+				var comparerType = typeof(AssertEqualityComparer<>).MakeGenericType(itemType);
+				var comparer = Activator.CreateInstance(comparerType, singleNullObject);
+				if (comparer == null)
+					throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Could not create instance of AssertEqualityComparer<{0}>", itemType.FullName ?? itemType.Name));
+
+				var wrapperType = typeof(AssertEqualityComparerAdapter<>).MakeGenericType(itemType);
+				var result = Activator.CreateInstance(wrapperType, new object[] { comparer }) as IEqualityComparer;
+				if (result == null)
+					throw new InvalidOperationException(string.Format(CultureInfo.InvariantCulture, "Could not create instance of AssertEqualityComparerAdapter<{0}>", itemType.FullName ?? itemType.Name));
+
+				return result;
+			});
+
+		/// <summary>
+		/// Gets the default comparer to be used as an inner comparer for the provided <paramref name="type"/>
+		/// when a custom one has not been provided. For non-collections, this defaults to an <see cref="object"/>-based
+		/// comparer; for collections, this creates an inner comparer based on the item type in the collection.
+		/// </summary>
+		/// <param name="type">The type to create an inner comparer for</param>
+		internal static IEqualityComparer GetDefaultInnerComparer(Type type) =>
+			cachedDefaultInnerComparers.GetOrAdd(type, t =>
+			{
+				var innerType = typeof(object);
+
+				// string is enumerable, but we don't treat it like a collection
+				if (t != typeof(string))
+				{
+					var enumerableOfT =
+						t.GetTypeInfo()
+							.ImplementedInterfaces
+							.Select(i => i.GetTypeInfo())
+							.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+
+					if (enumerableOfT != null)
+						innerType = enumerableOfT.GenericTypeArguments[0];
+				}
+
+				return GetDefaultComparer(innerType);
+			});
+	}
+
 	/// <summary>
 	/// Default implementation of <see cref="IEqualityComparer{T}"/> used by the xUnit.net equality assertions.
 	/// </summary>
 	/// <typeparam name="T">The type that is being compared.</typeparam>
 	sealed class AssertEqualityComparer<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] T> : IEqualityComparer<T>
 	{
-		internal static readonly IEqualityComparer DefaultInnerComparer = new AssertEqualityComparerAdapter<object>(new AssertEqualityComparer<object>());
+		internal static readonly IEqualityComparer DefaultInnerComparer = AssertEqualityComparer.GetDefaultInnerComparer(typeof(T));
 
 		static readonly ConcurrentDictionary<Type, TypeInfo> cacheOfIComparableOfT = new ConcurrentDictionary<Type, TypeInfo>();
 		static readonly ConcurrentDictionary<Type, TypeInfo> cacheOfIEquatableOfT = new ConcurrentDictionary<Type, TypeInfo>();
@@ -185,9 +247,29 @@ namespace Xunit.Sdk
 				yType.IsConstructedGenericType &&
 				yType.GetGenericTypeDefinition() == typeKeyValuePair)
 			{
-				return
-					innerComparer.Value.Equals(xType.GetRuntimeProperty("Key")?.GetValue(x), yType.GetRuntimeProperty("Key")?.GetValue(y)) &&
-					innerComparer.Value.Equals(xType.GetRuntimeProperty("Value")?.GetValue(x), yType.GetRuntimeProperty("Value")?.GetValue(y));
+				var xKey = xType.GetRuntimeProperty("Key")?.GetValue(x);
+				var yKey = yType.GetRuntimeProperty("Key")?.GetValue(y);
+
+				if (xKey == null)
+				{
+					if (yKey != null)
+						return false;
+				}
+				else
+				{
+					var keyComparer = AssertEqualityComparer.GetDefaultComparer(xKey.GetType());
+					if (!keyComparer.Equals(xKey, yKey))
+						return false;
+				}
+
+				var xValue = xType.GetRuntimeProperty("Value")?.GetValue(x);
+				var yValue = yType.GetRuntimeProperty("Value")?.GetValue(y);
+
+				if (xValue == null)
+					return yValue == null;
+
+				var valueComparer = AssertEqualityComparer.GetDefaultComparer(xValue.GetType());
+				return valueComparer.Equals(xValue, yValue);
 			}
 
 			// Last case, rely on object.Equals
