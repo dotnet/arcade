@@ -161,7 +161,7 @@
       <_GitCloneToDirScriptFile>$(MSBuildThisFileDirectory)git-clone-to-dir.sh</_GitCloneToDirScriptFile>
     </PropertyGroup>
 
-    <Exec Command="powershell $(_GitCloneToDirScriptFile) $(_GitCloneToDirArgs)" />
+    <Exec Command="powershell -ExecutionPolicy Unrestricted -NoProfile -File  $(_GitCloneToDirScriptFile) $(_GitCloneToDirArgs)" />
 
     <!--
       If the repo has submodules, use 'git clone' on each submodule to put it in the inner repo. We
