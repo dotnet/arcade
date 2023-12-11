@@ -21,8 +21,6 @@
     - [Parallel flows](#parallel-flows)
     - [Updating PRs](#updating-prs)
   - [Synchronization configuration](#synchronization-configuration)
-    - [Configuration location](#configuration-location)
-      - [Proposed configuration](#proposed-configuration)
     - [Arcade](#arcade)
       - [Updating `eng/common`](#updating-engcommon)
       - [Updating `global.json`](#updating-globaljson)
