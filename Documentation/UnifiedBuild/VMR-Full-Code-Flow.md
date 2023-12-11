@@ -184,10 +184,10 @@ This means that we need to look at the following flow combinations:
 
 The diagrams for these four situations can be seen here:
 
-| Previous flow / Current flow | Backward | Forward |
-|------------------------------|:--------:|:-------:|
-| Backward                     | ![Two backflows in a row](images/backward-backward-flow.png) | ![Forward flow after backflow](images/backward-forward-flow.png) |
-| Forward                      | ![Backflow after forward flow](images/forward-backward-flow.png) | ![Two forward flows in a row](images/forward-forward-flow.png) |
+| Previous flow / Current flow | Then backward | Then forward |
+|------------------------------|:-------------:|:------------:|
+| Backward first               | ![Two backflows in a row](images/backward-backward-flow.png) | ![Forward flow after backflow](images/backward-forward-flow.png) |
+| Forward first                | ![Backflow after forward flow](images/forward-backward-flow.png) | ![Two forward flows in a row](images/forward-forward-flow.png) |
 
 ### Algorithm visualization
 
