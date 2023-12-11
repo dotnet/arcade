@@ -457,47 +457,22 @@ Outside of this, the purple diff contains all it needs (`8` and `10`) to bring t
 
 ### Updating PRs
 
-> ⚠️⚠️⚠️ TODO - how should we handle cases when a new build is about to be flown and a PR is already opened. We should describe if all commits can be flown like this - e.g. it's easy to add a new sample commit on top of the PR when it applies cleanly but it can also clash with whatever happened in the PR already. Or it can be a flow commit from the other side which would need to rebuild the PR from ground up. So not all commits can be flown additionally.
+Once a code flow PR is opened, if a new build from the source repository is produced, we need to update the PR with the new changes.
+The code flow algorithm should handle this situation seamlessly as it will detect the previous flow, which it made to create the PR, and apply the new changes on top of it.
+
+It could happen that developers pushed additional commits into the PR branch to fix some issues. These can get in conflict with the new updates. In such a case, the algorithm should not invoke the recursive flow like discussed in the [Conflicts section](#conflicts) but rather just post a comment on the PR that the flow in this direction is paused until the PR is merged.
 
 ## Synchronization configuration
 
-Presently, in the VMR-lite, the rules affecting the code synchronization live in the `source-mappings.json` file. This file is located in the `dotnet/installer` repository and mapped into the `src/` directory of the VMR. That `dotnet/installer` repository is the only point from which we synchronize the code into the VMR.  
+Presently, in the VMR-lite, the rules affecting the code synchronization live in the `source-mappings.json` file. This file is located in the `dotnet/installer` repository and mapped into the `src/` directory of the VMR. That `dotnet/installer` repository is the only point from which we synchronize the code into the VMR.
 
-### Configuration location
-
-When changes are made to installer's `source-mappings.json`, the first next synchronization takes them into account already.
-This is a very handy mechanism as we can react to incoming changes of every individual repository right away. For instance, if a new commit of a repository brings in binaries, we can add the cloaking rules in the very same commit and the binaries will never reach the VMR.
-
-For the full codeflow, it's good to assume we'll want to take advantage of the same mechanism. This however means, that we either need to have a mapping file for each repository or we need to have a single mapping file that will be mapped to and shared with every repository. It's probably better to separate these and avoid unnecessary conflicts.  
-Furthermore, we will want to map additional files or cloak a different set of files when flowing the code back from the VMR. This means, we will need to have two sets of rules for every repository.
-
-Lastly, when performing the synchronization, we will always take the configuration file of the source so that we get flexibility when adding/changing the configuration. This proved beneficial in the VMR-lite as we could react to incoming changes right away.
-
-#### Proposed configuration
-
-- Each repository gets a new section in its `eng/Version.Details.xml` file.
-- This file has two sections, for forward and backflow. Each section defines cloaking rules and additional mappings.
-- This file is an override for defaults defined in the `src/source-mappings.json` file of the VMR (common for all repositories).
-  - Default cloakings are similar to what we have today (`*.dll`, ...).
-  - The `src/source-mappings.json` file is not mirrored to any individual repository and lives in the VMR only.
-- When synchronizing code, the current contents of the configuration file from the source repository (individual repository for forwards flow, VMR for backflow) is used to configure the synchronization.
-
-Example configuration of the `nuget/NuGet.Client` repository (this repo doesn't use Arcade):
+Since we will now also have to store information in the repo about the last time the code has flown there from the VMR, we will utilize the `Version.Details.xml` file and support a new tag:
 
 ```xml
-<!-- Name of VMR's src/ folder for this repository -->
-<VmrCodeflow Name="nuget-client">
-  <Outflow>
-    <!-- Configuration for code flowing out of this repository into the VMR -->
-    <Exclude>src/NuGet.Clients/NuGet.VisualStudio.Client</Exclude>
-  </Outflow>
-  <!-- Information about the last in-flow -->
-  <Inflow Uri="https://github.com/dotnet/dotnet" Sha="86ba5fba7c39323011c2bfc6b713142affc76171">
-    <!-- This opts out from getting Arcade and eng/common updates from the VMR -->
-    <IgnoredPackage>Microsoft.DotNet.Arcade.Sdk</IgnoredPackage>
-  </Inflow>
-</VmrCodeflow>
+<Source Uri="https://github.com/dotnet/dotnet" Sha="86ba5fba7c39323011c2bfc6b713142affc76171" />
 ```
+
+The tag will store the last SHA that was flown from the VMR into the repository. This information will be used to detect the direction of the last flow.
 
 ### Arcade
 
