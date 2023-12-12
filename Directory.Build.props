@@ -10,6 +10,9 @@
     <DebugSymbols>true</DebugSymbols>
     <LangVersion>Latest</LangVersion>
 
+    <!-- Remove when Arcade.Sdk updated NetCurrent to net9.0. -->
+    <NetCurrent>net9.0</NetCurrent>
+
     <!--
       Tools and packages produced by this repository support infrastructure and are not shipping on NuGet or via any other official channel.
     -->
