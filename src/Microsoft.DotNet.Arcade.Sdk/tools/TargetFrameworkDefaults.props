@@ -32,7 +32,7 @@
     <!-- The current version of .NET that tools (i.e. msbuild) target.
          MSBuild tasks and tools should use this version to target the latest TFM that is supported by tooling.
          Identical with NetCurrent when building from source. -->
-    <NetToolCurrent Condition="'$(DotNetBuildFromSource)' != 'true'">net8.0</NetToolCurrent>
+    <NetToolCurrent Condition="'$(DotNetBuildFromSource)' != 'true'">net9.0</NetToolCurrent>
     <NetToolCurrent Condition="'$(DotNetBuildFromSource)' == 'true'">$(NetCurrent)</NetToolCurrent>
 
     <!-- Lowest version of .NET at the time of the release of NetCurrent that is supported by tooling.
