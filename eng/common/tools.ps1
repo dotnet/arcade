@@ -676,7 +676,7 @@ function Read-ArcadeSdkVersion() {
 }
 
 function InitializeToolset() {
-  # For Unified Build PoC/Source-build support, check whether the environment variable is
+  # For Unified Build/Source-build support, check whether the environment variable is
   # set. If it is, then use this as the toolset build project.
   if ($env:_InitializeToolset -ne $null) {
     return $global:_InitializeToolset = $env:_InitializeToolset
