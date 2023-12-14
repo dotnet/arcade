@@ -18,6 +18,7 @@
   <Import Project="$(RepositoryEngineeringDir)SourceBuild.props" Condition="Exists('$(RepositoryEngineeringDir)SourceBuild.props')" />
 
   <PropertyGroup>
+    <!-- Using abbreviations for source-build, self, and src to shrink path from 33 to 18 chars. See https://github.com/dotnet/source-build/issues/3791 -->
     <SourceBuildOutputDir Condition="'$(SourceBuildOutputDir)' == ''">$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'sb'))</SourceBuildOutputDir>
     <SourceBuildSelfDir>$([MSBuild]::NormalizeDirectory('$(SourceBuildOutputDir)', 's'))</SourceBuildSelfDir>
     <CurrentRepoSourceBuildSourceDir>$([MSBuild]::NormalizeDirectory('$(SourceBuildSelfDir)', 's'))</CurrentRepoSourceBuildSourceDir>
