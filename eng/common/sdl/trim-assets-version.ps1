@@ -62,7 +62,7 @@ try {
   }
 
   # Remove the ROLL FORWARD env var with a future Arcade.Sdk update in Arcade.
-  $env:DOTNET_ROLL_FORWARD=Major
+  $env:DOTNET_ROLL_FORWARD = "Major"
   Exec-BlockVerbosely {
     & "$dotnet" $CliToolName trim-assets-version `
       --assets-path $InputPath `
