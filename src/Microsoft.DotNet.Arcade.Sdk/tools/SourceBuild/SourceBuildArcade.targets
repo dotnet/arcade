@@ -21,7 +21,7 @@
     <!-- Prefer abbreviations to avoid long paths (breaks on Windows) -->
     <SourceBuildOutputDir Condition="'$(SourceBuildOutputDir)' == ''">$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'sb'))</SourceBuildOutputDir>
     <SourceBuildSelfDir>$([MSBuild]::NormalizeDirectory('$(SourceBuildOutputDir)', 's'))</SourceBuildSelfDir>
-    <CurrentRepoSourceBuildSourceDir>$([MSBuild]::NormalizeDirectory('$(SourceBuildSelfDir)', 's'))</CurrentRepoSourceBuildSourceDir>
+    <CurrentRepoSourceBuildSourceDir>$([MSBuild]::NormalizeDirectory('$(SourceBuildSelfDir)', 'src'))</CurrentRepoSourceBuildSourceDir>
     <CurrentRepoSourceBuildPackageCache>$([MSBuild]::NormalizeDirectory('$(SourceBuildSelfDir)', 'package-cache'))</CurrentRepoSourceBuildPackageCache>
     <SourceBuildSelfPrebuiltReportDir>$([MSBuild]::NormalizeDirectory('$(SourceBuildSelfDir)', 'prebuilt-report'))</SourceBuildSelfPrebuiltReportDir>
 
