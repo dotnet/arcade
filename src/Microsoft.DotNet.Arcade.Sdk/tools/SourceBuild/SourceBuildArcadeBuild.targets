@@ -75,8 +75,9 @@
       <!-- Turn on DotNetBuildFromSource or DotNetBuildVertical in the inner build -->
       <InnerBuildArgs Condition="'$(ArcadeBuildFromSource)' == 'true'">$(InnerBuildArgs) /p:DotNetBuildFromSource=true</InnerBuildArgs>
       <InnerBuildArgs Condition="'$(ArcadeBuildVertical)' == 'true'">$(InnerBuildArgs) /p:DotNetBuildVertical=true</InnerBuildArgs>
-      <!-- Use a fresh clone of the repo so that source-build modifications are isolated. -->
-      <InnerBuildArgs>$(InnerBuildArgs) /p:RepoRoot="$(InnerSourceBuildRepoRoot.TrimEnd('\'))"</InnerBuildArgs>
+      <!-- Use a fresh clone of the repo so that source-build modifications are isolated.
+           Don't trim the trailing directors separator for Windows as Arcade depends on it being pasesd in. -->
+      <InnerBuildArgs>$(InnerBuildArgs) /p:RepoRoot=$(InnerSourceBuildRepoRoot)</InnerBuildArgs>
       <!-- Override the artifacts dir to cleanly separate the inner build from outer build. -->
       <InnerBuildArgs>$(InnerBuildArgs) /p:ArtifactsDir="$(CurrentRepoSourceBuildArtifactsDir.TrimEnd('\'))"</InnerBuildArgs>
       <!-- Set a custom binlog location to avoid clashing over the currenly specified file. -->
@@ -143,8 +144,8 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="$([MSBuild]::IsOSPlatform(Windows))">
-      <_GitCloneToDirArgs>$(_GitCloneToDirArgs) -Source "$(RepoRoot.TrimEnd('\'))"</_GitCloneToDirArgs>
-      <_GitCloneToDirArgs>$(_GitCloneToDirArgs) -Dest "$(InnerSourceBuildRepoRoot.TrimEnd('\'))"</_GitCloneToDirArgs>
+      <_GitCloneToDirArgs>$(_GitCloneToDirArgs) -Source '$(RepoRoot)'</_GitCloneToDirArgs>
+      <_GitCloneToDirArgs>$(_GitCloneToDirArgs) -Dest '$(InnerSourceBuildRepoRoot)'</_GitCloneToDirArgs>
       <_GitCloneToDirArgs Condition="'$(CopyWipIntoInnerSourceBuildRepo)' == 'true'">$(_GitCloneToDirArgs) -CopyWip</_GitCloneToDirArgs>
       <_GitCloneToDirArgs Condition="'$(CleanInnerSourceBuildRepoRoot)' == 'true'">$(_GitCloneToDirArgs) -Clean</_GitCloneToDirArgs>
 
