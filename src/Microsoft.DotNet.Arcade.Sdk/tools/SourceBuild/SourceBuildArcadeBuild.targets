@@ -80,7 +80,7 @@
       <InnerBuildArgs Condition="'$(ArcadeBuildVertical)' == 'true'">$(InnerBuildArgs) /p:DotNetBuildVertical=true</InnerBuildArgs>
       <!-- Use a fresh clone of the repo so that source-build modifications are isolated. -->
       <InnerBuildArgs>$(InnerBuildArgs) /p:RepoRoot="$(InnerSourceBuildRepoRoot)$(_DirSeparatorEscapedCharForExecArg)"</InnerBuildArgs>
-      <!-- Override the artifacts dir to cleanly separate the inner build from outer build.  -->
+      <!-- Override the artifacts dir to cleanly separate the inner build from outer build. -->
       <InnerBuildArgs>$(InnerBuildArgs) /p:ArtifactsDir="$(CurrentRepoSourceBuildArtifactsDir)$(_DirSeparatorEscapedCharForExecArg)"</InnerBuildArgs>
       <!-- Set a custom binlog location to avoid clashing over the currenly specified file. -->
       <InnerBuildArgs>$(InnerBuildArgs) /bl:"$(CurrentRepoSourceBuildBinlogFile)"</InnerBuildArgs>
