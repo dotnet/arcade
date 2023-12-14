@@ -61,8 +61,9 @@ try {
     ExitWithExitCode 1
   }
 
+  # Remove the ROLL FORWARD env var with a future Arcade.Sdk update in Arcade.
   Exec-BlockVerbosely {
-    & "$dotnet" $CliToolName trim-assets-version `
+    & set "DOTNET_ROLL_FORWARD=Major" && "$dotnet" $CliToolName trim-assets-version `
       --assets-path $InputPath `
       --recursive $Recursive
     Exit-IfNZEC "Sdl"
