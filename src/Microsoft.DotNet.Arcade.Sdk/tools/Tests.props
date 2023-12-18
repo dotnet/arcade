@@ -29,7 +29,8 @@
     <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(IsTestProject)' == 'true' and '$(ExcludeMicrosoftNetTestSdk)' != 'true'">
+  <!-- BenchmarkDotNet doesn't need the Microsoft.NET.Test.Sdk -->
+  <ItemGroup Condition="'$(IsTestProject)' == 'true' and ('$(ExcludeMicrosoftNetTestSdk)' != 'true' or '$(TestRunnerName)' != 'BenchmarkDotNet')">
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" IsImplicitlyDefined="true" />
   </ItemGroup>
 
