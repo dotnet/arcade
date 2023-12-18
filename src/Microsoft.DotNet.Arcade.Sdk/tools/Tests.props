@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <!-- BenchmarkDotNet doesn't need the Microsoft.NET.Test.Sdk -->
-  <ItemGroup Condition="'$(IsTestProject)' == 'true' and ('$(ExcludeMicrosoftNetTestSdk)' != 'true' or '$(TestRunnerName)' != 'BenchmarkDotNet')">
+  <ItemGroup Condition="'$(IsTestProject)' == 'true' and '$(ExcludeMicrosoftNetTestSdk)' != 'true' and '$(TestRunnerName)' != 'BenchmarkDotNet'">
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" IsImplicitlyDefined="true" />
   </ItemGroup>
 
