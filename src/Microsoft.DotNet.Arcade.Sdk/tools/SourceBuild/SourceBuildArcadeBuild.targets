@@ -182,9 +182,6 @@
     <PropertyGroup>
       <CloneSubmodulesToInnerSourceBuildRepo Condition="'$(CloneSubmodulesToInnerSourceBuildRepo)' == ''">true</CloneSubmodulesToInnerSourceBuildRepo>
 
-      <Error Text="Submodule cloning not available on Windows at this time"
-             Condition="'$(CloneSubmodulesToInnerSourceBuildRepo)' == 'true' and '$(OS)' == 'Windows_NT'" />
-
       <_GitSubmoduleCloneArgs />
       <_GitSubmoduleCloneArgs>$(_GitSubmoduleCloneArgs) --source .</_GitSubmoduleCloneArgs>
       <!-- The destination is set using a bit of bash and msbuild logic that takes the root directory of innermost repository
@@ -203,6 +200,9 @@
       <_GitSubmoduleCloneArgs Condition="'$(CopyWipIntoInnerSourceBuildRepo)' == 'true'">$(_GitSubmoduleCloneArgs) --copy-wip</_GitSubmoduleCloneArgs>
       <_GitSubmoduleCloneArgs Condition="'$(CleanInnerSourceBuildRepoRoot)' == 'true'">$(_GitSubmoduleCloneArgs) --clean</_GitSubmoduleCloneArgs>
     </PropertyGroup>
+
+    <Error Text="Submodule cloning not available on Windows at this time"
+           Condition="'$(CloneSubmodulesToInnerSourceBuildRepo)' == 'true' and '$(OS)' == 'Windows_NT'" />
 
     <Exec
       Condition="'$(CloneSubmodulesToInnerSourceBuildRepo)' == 'true'"
