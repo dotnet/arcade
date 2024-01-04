@@ -66,6 +66,7 @@ jobs:
     - checkout: self
       fetchDepth: 0
       clean: true
+      
     - task: DownloadBuildArtifacts@0
       displayName: Download artifact
       inputs:
