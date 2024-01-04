@@ -66,90 +66,90 @@ jobs:
     - checkout: self
       fetchDepth: 0
       clean: true
-      
-    - task: DownloadBuildArtifacts@0
-      displayName: Download artifact
-      inputs:
-        artifactName: AssetManifests
-        downloadPath: '$(Build.StagingDirectory)/Download'
-        checkDownloadedFiles: true
-      condition: ${{ parameters.condition }}
-      continueOnError: ${{ parameters.continueOnError }}
+
+    # - task: DownloadBuildArtifacts@0
+    #   displayName: Download artifact
+    #   inputs:
+    #     artifactName: AssetManifests
+    #     downloadPath: '$(Build.StagingDirectory)/Download'
+    #     checkDownloadedFiles: true
+    #   condition: ${{ parameters.condition }}
+    #   continueOnError: ${{ parameters.continueOnError }}
     
-    - task: NuGetAuthenticate@1
+    # - task: NuGetAuthenticate@1
 
-    - task: PowerShell@2
-      displayName: Publish Build Assets
-      inputs:
-        filePath: eng\common\sdk-task.ps1
-        arguments: -task PublishBuildAssets -restore -msbuildEngine dotnet
-          /p:ManifestsPath='$(Build.StagingDirectory)/Download/AssetManifests'
-          /p:BuildAssetRegistryToken=$(MaestroAccessToken)
-          /p:MaestroApiEndpoint=https://maestro.dot.net
-          /p:PublishUsingPipelines=${{ parameters.publishUsingPipelines }}
-          /p:OfficialBuildId=$(Build.BuildNumber)
-      condition: ${{ parameters.condition }}
-      continueOnError: ${{ parameters.continueOnError }}
+    # - task: PowerShell@2
+    #   displayName: Publish Build Assets
+    #   inputs:
+    #     filePath: eng\common\sdk-task.ps1
+    #     arguments: -task PublishBuildAssets -restore -msbuildEngine dotnet
+    #       /p:ManifestsPath='$(Build.StagingDirectory)/Download/AssetManifests'
+    #       /p:BuildAssetRegistryToken=$(MaestroAccessToken)
+    #       /p:MaestroApiEndpoint=https://maestro.dot.net
+    #       /p:PublishUsingPipelines=${{ parameters.publishUsingPipelines }}
+    #       /p:OfficialBuildId=$(Build.BuildNumber)
+    #   condition: ${{ parameters.condition }}
+    #   continueOnError: ${{ parameters.continueOnError }}
     
-    - task: powershell@2
-      displayName: Create ReleaseConfigs Artifact
-      inputs:
-        targetType: inline
-        script: |
-          Add-Content -Path "$(Build.StagingDirectory)/ReleaseConfigs.txt" -Value $(BARBuildId)
-          Add-Content -Path "$(Build.StagingDirectory)/ReleaseConfigs.txt" -Value "$(DefaultChannels)"
-          Add-Content -Path "$(Build.StagingDirectory)/ReleaseConfigs.txt" -Value $(IsStableBuild)
+    # - task: powershell@2
+    #   displayName: Create ReleaseConfigs Artifact
+    #   inputs:
+    #     targetType: inline
+    #     script: |
+    #       Add-Content -Path "$(Build.StagingDirectory)/ReleaseConfigs.txt" -Value $(BARBuildId)
+    #       Add-Content -Path "$(Build.StagingDirectory)/ReleaseConfigs.txt" -Value "$(DefaultChannels)"
+    #       Add-Content -Path "$(Build.StagingDirectory)/ReleaseConfigs.txt" -Value $(IsStableBuild)
     
-    - task: PublishBuildArtifacts@1
-      displayName: Publish ReleaseConfigs Artifact
-      inputs:
-        PathtoPublish: '$(Build.StagingDirectory)/ReleaseConfigs.txt'
-        PublishLocation: Container
-        ArtifactName: ReleaseConfigs
+    # - task: PublishBuildArtifacts@1
+    #   displayName: Publish ReleaseConfigs Artifact
+    #   inputs:
+    #     PathtoPublish: '$(Build.StagingDirectory)/ReleaseConfigs.txt'
+    #     PublishLocation: Container
+    #     ArtifactName: ReleaseConfigs
 
-    - task: powershell@2
-      displayName: Check if SymbolPublishingExclusionsFile.txt exists
-      inputs:
-        targetType: inline
-        script: |
-          $symbolExclusionfile = "$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt"
-          if(Test-Path -Path $symbolExclusionfile)
-          {
-            Write-Host "SymbolExclusionFile exists"
-            Write-Host "##vso[task.setvariable variable=SymbolExclusionFile]true"
-          }
-          else{
-           Write-Host "Symbols Exclusion file does not exists"
-           Write-Host "##vso[task.setvariable variable=SymbolExclusionFile]false"
-          }
+    # - task: powershell@2
+    #   displayName: Check if SymbolPublishingExclusionsFile.txt exists
+    #   inputs:
+    #     targetType: inline
+    #     script: |
+    #       $symbolExclusionfile = "$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt"
+    #       if(Test-Path -Path $symbolExclusionfile)
+    #       {
+    #         Write-Host "SymbolExclusionFile exists"
+    #         Write-Host "##vso[task.setvariable variable=SymbolExclusionFile]true"
+    #       }
+    #       else{
+    #        Write-Host "Symbols Exclusion file does not exists"
+    #        Write-Host "##vso[task.setvariable variable=SymbolExclusionFile]false"
+    #       }
 
-    - task: PublishBuildArtifacts@1
-      displayName: Publish SymbolPublishingExclusionsFile Artifact
-      condition: eq(variables['SymbolExclusionFile'], 'true') 
-      inputs:
-        PathtoPublish: '$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
-        PublishLocation: Container
-        ArtifactName: ReleaseConfigs
+    # - task: PublishBuildArtifacts@1
+    #   displayName: Publish SymbolPublishingExclusionsFile Artifact
+    #   condition: eq(variables['SymbolExclusionFile'], 'true') 
+    #   inputs:
+    #     PathtoPublish: '$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
+    #     PublishLocation: Container
+    #     ArtifactName: ReleaseConfigs
 
-    - ${{ if eq(parameters.publishAssetsImmediately, 'true') }}:
-      - template: /eng/common/templates/post-build/setup-maestro-vars.yml
-        parameters:
-          BARBuildId: ${{ parameters.BARBuildId }}
-          PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
+    # - ${{ if eq(parameters.publishAssetsImmediately, 'true') }}:
+    #   - template: /eng/common/templates/post-build/setup-maestro-vars.yml
+    #     parameters:
+    #       BARBuildId: ${{ parameters.BARBuildId }}
+    #       PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
 
-      - task: PowerShell@2
-        displayName: Publish Using Darc
-        inputs:
-          filePath: $(Build.SourcesDirectory)/eng/common/post-build/publish-using-darc.ps1
-          arguments: -BuildId $(BARBuildId) 
-            -PublishingInfraVersion 3
-            -AzdoToken '$(publishing-dnceng-devdiv-code-r-build-re)'
-            -MaestroToken '$(MaestroApiAccessToken)'
-            -WaitPublishingFinish true
-            -ArtifactsPublishingAdditionalParameters '${{ parameters.artifactsPublishingAdditionalParameters }}'
-            -SymbolPublishingAdditionalParameters '${{ parameters.symbolPublishingAdditionalParameters }}'
+    #   - task: PowerShell@2
+    #     displayName: Publish Using Darc
+    #     inputs:
+    #       filePath: $(Build.SourcesDirectory)/eng/common/post-build/publish-using-darc.ps1
+    #       arguments: -BuildId $(BARBuildId) 
+    #         -PublishingInfraVersion 3
+    #         -AzdoToken '$(publishing-dnceng-devdiv-code-r-build-re)'
+    #         -MaestroToken '$(MaestroApiAccessToken)'
+    #         -WaitPublishingFinish true
+    #         -ArtifactsPublishingAdditionalParameters '${{ parameters.artifactsPublishingAdditionalParameters }}'
+    #         -SymbolPublishingAdditionalParameters '${{ parameters.symbolPublishingAdditionalParameters }}'
 
-    - ${{ if eq(parameters.enablePublishBuildArtifacts, 'true') }}:
-      - template: /eng/common/templates/steps/publish-logs.yml
-        parameters:
-          JobLabel: 'Publish_Artifacts_Logs'     
+    # - ${{ if eq(parameters.enablePublishBuildArtifacts, 'true') }}:
+    #   - template: /eng/common/templates/steps/publish-logs.yml
+    #     parameters:
+    #       JobLabel: 'Publish_Artifacts_Logs'     
