@@ -1,6 +1,7 @@
 # Unified Build Roadmap
 
 ```mermaid
+
 gantt
     title Unified Build Roadmap
     axisFormat %b-%Y
@@ -8,6 +9,7 @@ gantt
     GA: milestone, net8-ga, 2023-11-14, 0
     Holiday Break - VB PoCs done: milestone, holiday, 2023-12-25, 0
     %% delta between Holiday and P1 is 7w
+    %% the release dates are all 14th so that the task lengths can be expressed in whole weeks and still match the preview points
     P1 - Confidence Point in PoC: milestone, net9-p1, 2024-02-14, 0
     P2: milestone, net9-p2, 2024-03-14, 0
     P3 - Productize PoC: milestone, net9-p3, 2024-04-14, 0
@@ -15,7 +17,10 @@ gantt
     P5 - VMR Release: milestone, net9-p5, 2024-06-14, 0
     P6: milestone, net9-p6, 2024-07-14, 0
     P7: milestone, net9-p7, 2024-08-14, 0
- 
+    RC1: milestone, net9-rc1, 2024-09-14, 0
+    RC2: milestone, net9-rc2, 2024-10-14, 0
+    GA: milestone, net9-ga, 2024-11-14, 0
+
     section Common
         UB Week: ub-week, 2023-10-02, 1w
 
@@ -25,7 +30,7 @@ gantt
         MacOS VB PoC (JoS, JacksonS): after net8-rc2, 11w
         Workloads PoC (AlexK, AnkitJ): after net8-ga, 6w
         Vertical Builds Design: after holiday, 7w
-        Enable Vertical Builds: after net9-p1, 8w
+        Enable Vertical Builds: after net9-p1, 30w
         Crossbuilds Design (JoS / SteveP): after net8-ga, 13w
 
     section Source-Build (MichaelS)
@@ -45,10 +50,9 @@ gantt
         Backflow tooling: after net8-ga, 6w
         Dependency Flow Service: after holiday, 7w
         Maestro Integration: after net9-p1, 8w
-
         Multi-band SDKs: after net9-p4, 4w
-        Dependency Flow Switch Preparation: after net9-p3, 8w
-        Depenendency Flow Switch: after net9-p5, 4w
+        %Dependency Flow Switch Preparation: after net9-p3, 8w
+        %Depenendency Flow Switch: after net9-p5, 4w
 
     section Release Infra (TomasK)
         Release infra investigation & design: after net8-ga, 6w
