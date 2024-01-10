@@ -29,11 +29,9 @@
       i.e. for specific repos, like source-build-externals.
     -->
     <UseInnerClone Condition="'$(UseInnerClone)' == '' and '$(DotNetBuildFromSourceFlavor)' != 'Product'">true</UseInnerClone>
-    <UseInnerClone Condition="'$(UseInnerClone)' == '' and '$(DotNetBuildFromSourceFlavor)' == 'Product'">false</UseInnerClone>
 
     <!-- Do not create intermediate package in full product source-build. -->
     <CreateIntermediatePackage Condition="'$(DotNetBuildFromSourceFlavor)' != 'Product'">true</CreateIntermediatePackage>
-    <CreateIntermediatePackage Condition="'$(DotNetBuildFromSourceFlavor)' == 'Product'">false</CreateIntermediatePackage>
 
     <!--
       Keep artifacts/ inside source dir so that ancestor-based file lookups find the inner repo, not
@@ -43,7 +41,7 @@
       Inner-clone removal - in VMR use regular artifacts dir.
     -->
     <CurrentRepoSourceBuildArtifactsDir>$([MSBuild]::NormalizeDirectory('$(CurrentRepoSourceBuildSourceDir)', 'artifacts'))</CurrentRepoSourceBuildArtifactsDir>
-    <CurrentRepoSourceBuildArtifactsDir Condition="'$(UseInnerClone)' == 'false'">$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)'))</CurrentRepoSourceBuildArtifactsDir>
+    <CurrentRepoSourceBuildArtifactsDir Condition="'$(UseInnerClone)' != 'true'">$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)'))</CurrentRepoSourceBuildArtifactsDir>
     <CurrentRepoSourceBuildArtifactsPackagesDir>$([MSBuild]::NormalizeDirectory('$(CurrentRepoSourceBuildArtifactsDir)', 'packages', '$(Configuration)'))</CurrentRepoSourceBuildArtifactsPackagesDir>
 
     <CurrentRepoSourceBuildNuGetSourceName>source-build-int-nupkg-cache</CurrentRepoSourceBuildNuGetSourceName>
