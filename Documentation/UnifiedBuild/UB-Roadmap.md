@@ -34,25 +34,28 @@ gantt
         Crossbuilds Design (JoS / SteveP): after net8-ga, 13w
 
     section Source-Build (MichaelS)
-        Eliminate Src Edits During Build: after net8-ga, 8w
+        Eliminate Src Edits During Build: after net8-ga, 6w
+        Eliminate Src Edits During Build: after net9-p2, 4w
         Parallel Build Support: after net9-p1, 2w
-        Remove Inner Clone: after net9-p2, 3w
+        Remove Inner Clone: after holiday, 3w
         Incremental Build Support: after net9-p3, 6w
         Multi-band SDKs: after net9-p4, 4w
+        Distro Partners Support (sparse): after holidays, 44w
+
 
     section Product Validation (RichaV)
         Scenario tests in VMR: after net8-rc2, 10w
         PR Validation: after net9-p2, 4w
-        Product Validation Tooling: after net9-p1, 16w
+        Product Validation Tooling (sparse): after net9-p1, 16w
 
     section Product Construction (TomasK / MattM / PremekV)
         Backflow design: after net8-rc2, 5w
         Backflow tooling: after net8-ga, 6w
         Dependency Flow Service: after holiday, 7w
-        Maestro Integration: after net9-p1, 8w
+        Maestro Integration: after net9-p1, 10w
         Multi-band SDKs: after net9-p4, 4w
-        %Dependency Flow Switch Preparation: after net9-p3, 8w
-        %Depenendency Flow Switch: after net9-p5, 4w
+        Dependency Flow Switch Preparation: after net9-p4, 2w
+        Depenendency Flow Switch: after net9-rc2, 4w
 
     section Release Infra (TomasK)
         Release infra investigation & design: after net8-ga, 6w
