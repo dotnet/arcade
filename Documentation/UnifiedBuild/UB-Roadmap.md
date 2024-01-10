@@ -35,13 +35,12 @@ gantt
 
     section Source-Build (MichaelS)
         Eliminate Src Edits During Build: after net8-ga, 6w
-        Eliminate Src Edits During Build: after net9-p2, 4w
-        Parallel Build Support: after net9-p1, 2w
         Remove Inner Clone: after holiday, 3w
+        Parallel Build Support: after net9-p1, 2w
+        Eliminate Src Edits During Build: after net9-p2, 4w
         Incremental Build Support: after net9-p3, 6w
         Multi-band SDKs: after net9-p4, 4w
         Distro Partners Support (sparse): after holidays, 44w
-
 
     section Product Validation (RichaV)
         Scenario tests in VMR: after net8-rc2, 10w
