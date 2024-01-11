@@ -163,11 +163,9 @@
   <!--
     Create source-build intermediate NuGet package and supplemental intermediate NuGet packages (if
     necessary) for dependency transport to downstream repos.
-
-    In VMR build we do not use the intermediate nupkgs, so we skip this step.
   -->
   <Target Name="PackSourceBuildIntermediateNupkgs"
-          Condition="'$(DotNetBuildFromSourceFlavor)' != 'Product'"
+          Condition="'$(CreateIntermediatePackage)' == 'true'"
           DependsOnTargets="
             CopyIntermediateNupkgProjToProjectDirectory;
             GetLicenseFileForIntermediateNupkgPack;
