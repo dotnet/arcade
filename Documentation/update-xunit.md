@@ -4,6 +4,5 @@ This document aims to establish the necessary actions to update the xunit versio
 2. Update `XUnitVersion`, `XUnitAnalyzersVersion` and `XUnitRunnerVisualStudioVersion` properties in [Arcade SDK's DefaultVersions.props](/src/Microsoft.DotNet.Arcade.Sdk/tools/DefaultVersions.props) to the desired values. Make sure to use a coherent version of `xunit.analyzers`.
 3. Update other hardcoded values of `XUnitVersion` inside the Arcade repository (i.e. in [SendingJobsToHelix.md](/Documentation/AzureDevOps/SendingJobsToHelix.md), [Directory.Packages.props](/Directory.Packages.props) and others).
 4. Update Microsoft.DotNet.XUnitAssert which is an AOT compatible fork of the xunit.assert library by following [the instructions](/src/Microsoft.DotNet.XUnitAssert/README.md). It's likely that a new XUnit version introduces AOT incompatibilities which will caues the compiler (AOT analyzer) to fail. Connsult with @agocke's team if you need help.
-5. Update the source-build compatible xunit fork in the https://github.com/dotnet/source-build-externals repository by following [the instructions](https://github.com/dotnet/source-build-externals?tab=readme-ov-file#updating-an-external-component-to-a-newer-version).
-
-Tag @ViktorHofer as a reviewer in the Pull Request.
+5. Submit a Pull request with these changes to [dotnet/arcade](https://github.com/dotnet/arcade) and tag @ViktorHofer as a reviewer.
+6. Update the source-build compatible xunit fork in the [dotnet/source-build-externals](https://github.com/dotnet/source-build-externals) repository by following [the instructions](https://github.com/dotnet/source-build-externals?tab=readme-ov-file#updating-an-external-component-to-a-newer-version) and submit a Pull Request.
