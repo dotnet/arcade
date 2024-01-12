@@ -22,6 +22,9 @@ usage()
   echo "  --sourceBuild              Source-build the solution (short: -sb)"
   echo "                             Will additionally trigger the following actions: --restore, --build, --pack"
   echo "                             If --configuration is not set explicitly, will also set it to 'Release'"
+  echo "  --dotnetBuild              Build the solution in the way it will be built in the full .NET product (VMR) build (short: -db)"
+  echo "                             Will additionally trigger the following actions: --restore, --build, --pack"
+  echo "                             If --configuration is not set explicitly, will also set it to 'Release'"
   echo "  --rebuild                  Rebuild solution"
   echo "  --test                     Run all unit tests in the solution (short: -t)"
   echo "  --integrationTest          Run all integration tests in the solution"
@@ -60,6 +63,7 @@ restore=false
 build=false
 source_build=false
 vertical_build=false
+dotnet_build=false
 rebuild=false
 test=false
 integration_test=false
@@ -127,6 +131,12 @@ while [[ $# > 0 ]]; do
     -sourcebuild|-sb)
       build=true
       source_build=true
+      restore=true
+      pack=true
+      ;;
+    -dotnetBuild|-db)
+      build=true
+      dotnet_build=true
       restore=true
       pack=true
       ;;
@@ -226,6 +236,7 @@ function Build {
     /p:RepoRoot="$repo_root" \
     /p:Restore=$restore \
     /p:Build=$build \
+    /p:DotNetBuildRepo=$dotnet_build \
     /p:ArcadeBuildFromSource=$source_build \
     /p:ArcadeBuildVertical=$vertical_build \
     /p:Rebuild=$rebuild \
