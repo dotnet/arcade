@@ -27,8 +27,8 @@
             RunInnerSourceBuildCommand;
             PackSourceBuildTarball"
           Condition="
-            ('$(ArcadeBuildFromSource)' == 'true' or '$(ArcadeBuildVertical)' == 'true') and
-            '$(ArcadeInnerBuildFromSource)' != 'true' and '$(DotNetBuildInnerRepo)' != 'true'"
+            (('$(ArcadeBuildFromSource)' == 'true' or '$(ArcadeBuildVertical)' == 'true') and '$(ArcadeInnerBuildFromSource)' != 'true') or 
+            '$(DotNetBuildPhase)' == 'Repo'"
           BeforeTargets="Execute" />
 
   <!--
@@ -43,8 +43,8 @@
   -->
   <Target Name="HookExecuteInnerSourceBuild"
           Condition="
-            ('$(ArcadeBuildFromSource)' == 'true' or '$(ArcadeBuildVertical)' == 'true') and
-            ('$(ArcadeInnerBuildFromSource)' == 'true' or '$(DotNetBuildInnerRepo)' == 'true')"
+            (('$(ArcadeBuildFromSource)' == 'true' or '$(ArcadeBuildVertical)' == 'true') and '$(ArcadeInnerBuildFromSource)' == 'true') or
+            '$(DotNetBuildPhase)' == 'InnerRepo'"
           DependsOnTargets="ExecuteInnerSourceBuild"
           BeforeTargets="Execute"/>
 
