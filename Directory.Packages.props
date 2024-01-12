@@ -13,6 +13,8 @@
     <!-- Keep Microsoft.Data.Services.Client package version in sync with Microsoft.Data.OData -->
     <MicrosoftDataServicesClientVersion>5.8.4</MicrosoftDataServicesClientVersion>
     <MicrosoftSignedWixVersion>1.0.0-v3.14.0.5722</MicrosoftSignedWixVersion>
+    <!-- Overwrite XUnitVersion that comes from the Arcade SDK to be in sync as Arcade doesn't use a live Arcade SDK. -->
+    <XUnitVersion>2.6.1</XUnitVersion>
   </PropertyGroup>
 
   <ItemGroup>
