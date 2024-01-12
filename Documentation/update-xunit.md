@@ -6,4 +6,4 @@ This document aims to establish the necessary actions to update the xunit versio
 4. Update Microsoft.DotNet.XUnitAssert which is an AOT compatible fork of the xunit.assert library by following [the instructions](https://github.com/dotnet/arcade/blob/main/src/Microsoft.DotNet.XUnitAssert/README.md). It's likely that a new XUnit version introduces AOT incompatibilities which will caues the compiler (AOT analyzer) to fail. Connsult with @agocke's team if you need help.
 5. Update the source-build compatible xunit fork in the https://github.com/dotnet/source-build-externals repository by following [the instructions](https://github.com/dotnet/source-build-externals?tab=readme-ov-file#updating-an-external-component-to-a-newer-version).
 
-Tag @ViktorHofer as a reviewer in the PRs.
+Tag @ViktorHofer as a reviewer in the Pull Request.
