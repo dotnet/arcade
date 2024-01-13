@@ -16,7 +16,7 @@
           DependsOnTargets="
             ReportPrebuiltUsage;
             PackSourceBuildIntermediateNupkgs;
-            CopyRepoArtifacts" />
+            CreateRepoManifest" />
 
   <Target Name="WritePrebuiltUsageData">
     <ItemGroup>
@@ -118,46 +118,32 @@
       DestinationFiles="$(SourceBuildIntermediateNupkgLicenseFile)" />
   </Target>
 
-  <!-- In VMR build we copy repo artifacts directly, without using the intermediate nupkgs. -->
-  <Target Name="CopyRepoArtifacts"
+  <!--
+    In VMR build we create repo manifest.
+    SB orchestrator will parse the manifest and copy the artifacts to the right locations.
+  -->
+  <Target Name="CreateRepoManifest"
           Condition="'$(DotNetBuildFromSourceFlavor)' == 'Product'"
           DependsOnTargets="
             GetCategorizedIntermediateNupkgContents;
             CreateRepoSymbolsArchive">
 
     <PropertyGroup>
-      <_NupkgsDestination>$(CurrentSourceBuiltPackagesDir)</_NupkgsDestination>
-      <_NupkgsDestination Condition="'$(GitHubRepositoryName)' == 'source-build-reference-packages'">$(ReferencePackagesDir)</_NupkgsDestination>
+      <RepoManifestFile>$(ArtifactsDir)RepoManifest.xml</RepoManifestFile>
     </PropertyGroup>
 
     <ItemGroup>
-      <_AssetsToCopy Include="@(IntermediateNupkgFile)" Condition="'%(Extension)' != '.nupkg'" />
-      <_NugetPackagesToCopy Include="@(IntermediateNupkgFile)" Condition="'%(Extension)' == '.nupkg'"/>
+      <Line Include='&lt;Build&gt;' />
+      <Line Include='&lt;Artifact Path="%(IntermediateNupkgFile.Identity)" /&gt;' />
+      <Line Include='&lt;/Build&gt;' />
     </ItemGroup>
 
-    <!-- Copy non-shipping package list -->
-    <Copy
-      Condition="'$(NonShippingPackagesList)' != ''"
-      SourceFiles="$(NonShippingPackagesList)"
-      DestinationFolder="$(PackageListsDir)" />
+    <WriteLinesToFile
+      File="$(RepoManifestFile)"
+      Lines="@(Line)"
+      Overwrite="true"
+      />
 
-    <!-- Building SBRP: At this point the References directory contains the previously-source-built SBRPs,
-         clear it before copying the current SBRPs.  This ensures n-1 SBRPs aren't required to build the product repos. -->
-    <RemoveDir
-      Condition="'$(GitHubRepositoryName)' == 'source-build-reference-packages'"
-      Directories="$(ReferencePackagesDir)" />
-
-    <!-- Copy nupkgs -->
-    <Copy
-      Condition="'@(_NugetPackagesToCopy)' != ''"
-      SourceFiles="@(_NugetPackagesToCopy)"
-      DestinationFolder="$(_NupkgsDestination)" />
-
-    <!-- Copy assets -->
-    <Copy
-      Condition="'@(_AssetsToCopy)' != ''"
-      SourceFiles="@(_AssetsToCopy)"
-      DestinationFolder="$(SourceBuiltAssetsDir)" />
   </Target>
 
   <!--
