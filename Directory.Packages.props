@@ -13,9 +13,11 @@
     <!-- Keep Microsoft.Data.Services.Client package version in sync with Microsoft.Data.OData -->
     <MicrosoftDataServicesClientVersion>5.8.4</MicrosoftDataServicesClientVersion>
     <MicrosoftSignedWixVersion>1.0.0-v3.14.0.5722</MicrosoftSignedWixVersion>
-    <!-- Overwrite XUnitVersion that comes from the Arcade SDK to be in sync as Arcade doesn't use a live Arcade SDK.
-         Keep in sync with XUnitVersion in DefaultVersions.props. -->
-    <XUnitVersion>2.6.1</XUnitVersion>
+    <!-- Overwrite XUnitVersion/XUnitAnalyzersVersion/XUnitAnalyzersVersion that comes from the Arcade SDK to be in sync as Arcade doesn't use a live Arcade SDK.
+         Keep in sync with DefaultVersions.props. -->
+    <XUnitVersion>2.6.6</XUnitVersion>
+    <XUnitAnalyzersVersion>1.10.0</XUnitAnalyzersVersion>
+    <XUnitRunnerVisualStudioVersion>2.5.6</XUnitRunnerVisualStudioVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -92,6 +94,7 @@
     <PackageVersion Include="xunit.abstractions" Version="2.0.3" />
     <PackageVersion Include="xunit.extensibility.core" Version="$(XUnitVersion)" />
     <PackageVersion Include="xunit.extensibility.execution" Version="$(XUnitVersion)" />
+    <PackageVersion Include="xunit.runner.reporters" Version="$(XUnitVersion)" />
     <PackageVersion Include="nsubstitute" Version="5.1.0" />
   </ItemGroup>
 
