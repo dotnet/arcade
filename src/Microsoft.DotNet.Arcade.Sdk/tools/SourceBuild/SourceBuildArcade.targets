@@ -18,12 +18,6 @@
   <Import Project="$(RepositoryEngineeringDir)SourceBuild.props" Condition="Exists('$(RepositoryEngineeringDir)SourceBuild.props')" />
 
   <PropertyGroup>
-    <!-- Prefer abbreviations to avoid long paths (breaks on Windows) -->
-    <SourceBuildOutputDir Condition="'$(SourceBuildOutputDir)' == ''">$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'sb'))</SourceBuildOutputDir>
-    <CurrentRepoSourceBuildSourceDir>$([MSBuild]::NormalizeDirectory('$(SourceBuildOutputDir)', 'src'))</CurrentRepoSourceBuildSourceDir>
-    <CurrentRepoSourceBuildPackageCache>$([MSBuild]::NormalizeDirectory('$(SourceBuildOutputDir)', 'package-cache'))</CurrentRepoSourceBuildPackageCache>
-    <SourceBuildSelfPrebuiltReportDir>$([MSBuild]::NormalizeDirectory('$(SourceBuildOutputDir)', 'prebuilt-report'))</SourceBuildSelfPrebuiltReportDir>
-
     <!--
       Do not use inner-clone in full product source-build, unless explicitly requested,
       i.e. for specific repos, like source-build-externals.
@@ -32,6 +26,13 @@
 
     <!-- Do not create intermediate package in full product source-build. -->
     <CreateIntermediatePackage Condition="'$(DotNetBuildFromSourceFlavor)' != 'Product'">true</CreateIntermediatePackage>
+
+    <!-- Prefer abbreviations to avoid long paths (breaks on Windows) -->
+    <SourceBuildOutputDir Condition="'$(SourceBuildOutputDir)' == ''">$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'sb'))</SourceBuildOutputDir>
+    <CurrentRepoSourceBuildSourceDir>$([MSBuild]::NormalizeDirectory('$(SourceBuildOutputDir)', 'src'))</CurrentRepoSourceBuildSourceDir>
+    <CurrentRepoSourceBuildSourceDir Condition="'$(UseInnerClone)' != 'true'">$(RepoRoot)</CurrentRepoSourceBuildSourceDir>
+    <CurrentRepoSourceBuildPackageCache>$([MSBuild]::NormalizeDirectory('$(SourceBuildOutputDir)', 'package-cache'))</CurrentRepoSourceBuildPackageCache>
+    <SourceBuildSelfPrebuiltReportDir>$([MSBuild]::NormalizeDirectory('$(SourceBuildOutputDir)', 'prebuilt-report'))</SourceBuildSelfPrebuiltReportDir>
 
     <!--
       Keep artifacts/ inside source dir so that ancestor-based file lookups find the inner repo, not
