@@ -88,16 +88,17 @@
     property in eng/SourceBuild.props.
   -->
   <Target Name="GetSymbolsArchive"
-    Condition="'$(SupplementalIntermediateNupkgCategory)' == '$(SymbolsIntermediateNupkgCategory)' and '$(SymbolsArchiveName)' != ''">
+    Condition="'$(SupplementalIntermediateNupkgCategory)' == '$(SymbolsIntermediateNupkgCategory)' and '$(SymbolsArchiveFile)' != ''">
 
-    <ItemGroup Condition="Exists($(SymbolsArchiveName))">
-      <Content Include="$(SymbolsArchiveName)" PackagePath="artifacts" />
+    <ItemGroup Condition="Exists($(SymbolsArchiveFile))">
+      <Content Include="$(SymbolsArchiveFile)" PackagePath="artifacts" />
     </ItemGroup>
   </Target>
 
   <!-- Create a list of non-shipping packages and include it in the intermediate package. -->
   <Target Name="GetNonShippingNupkgList"
-          Condition="'$(NonShippingPackagesList)' != ''">
+          Condition="'$(NonShippingPackagesList)' != ''"
+          DependsOnTargets="GetCategorizedIntermediateNupkgContents">
     <ItemGroup>
       <!-- The list of non-shipping packages goes into the "main" intermediate nupkg. -->
       <Content Include="$(NonShippingPackagesList)" PackagePath="." />

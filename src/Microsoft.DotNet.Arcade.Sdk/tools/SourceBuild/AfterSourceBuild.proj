@@ -121,29 +121,29 @@
   <!--
     In VMR build we create repo manifest.
     SB orchestrator will parse the manifest and copy the artifacts to the right locations.
+
+    This can be removed once we enable standard repo assets manifests and SB orchestrator
+    starts using it - https://github.com/dotnet/source-build/issues/3970
   -->
   <Target Name="CreateRepoManifest"
           Condition="'$(DotNetBuildFromSourceFlavor)' == 'Product'"
           DependsOnTargets="
             GetCategorizedIntermediateNupkgContents;
             CreateRepoSymbolsArchive">
-
     <PropertyGroup>
       <RepoManifestFile>$(ArtifactsDir)RepoManifest.xml</RepoManifestFile>
     </PropertyGroup>
 
     <ItemGroup>
-      <Line Include='&lt;Build&gt;' />
-      <Line Include='&lt;Artifact Path="%(IntermediateNupkgFile.Identity)" /&gt;' />
-      <Line Include='&lt;/Build&gt;' />
+      <RepoManifestLine Include='&lt;Build&gt;' />
+      <RepoManifestLine Include='&lt;Artifact Path="%(IntermediateNupkgFile.Identity)" /&gt;' />
+      <RepoManifestLine Include='&lt;/Build&gt;' />
     </ItemGroup>
 
     <WriteLinesToFile
       File="$(RepoManifestFile)"
-      Lines="@(Line)"
-      Overwrite="true"
-      />
-
+      Lines="@(RepoManifestLine)"
+      Overwrite="true" />
   </Target>
 
   <!--
