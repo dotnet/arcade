@@ -124,7 +124,7 @@ function Build {
     /p:Deploy=$deploy `
     /p:Test=$test `
     /p:Pack=$pack `
-    /p:DotNetBuildRepo=$dotnetBuild `
+    /p:DotNetBuildRepo=$($dotnetBuild -or $verticalBuild) `
     /p:ArcadeBuildVertical=$verticalBuild `
     /p:IntegrationTest=$integrationTest `
     /p:PerformanceTest=$performanceTest `
