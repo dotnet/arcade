@@ -11,6 +11,8 @@
     Configuration                   Build configuration: "Debug", "Release", etc.
 
     DotNetBuildRepo                 Build the repo as part of the entire .NET stack.
+    DotNetBuildInnerRepo            Build the repo as part of the entire .NET stack. This switch is used on the inner repo invocation and should not be passed by the user.
+    DotNetBuildOrchestrator         Build the entire .NET stack.
     DotNetBuildFromSource           Building the entire stack from source with no external dependencies.
     DotNetBuildVertical             Building the entire stack in "Vertical" PoC mode. This is a superset of DotNetBuildFromSource.
     DotNetOutputBlobFeedDir         Directory to publish Source Build assets to (packages, symbol packages, installers, etc.).

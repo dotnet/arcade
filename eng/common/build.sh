@@ -144,7 +144,6 @@ while [[ $# > 0 ]]; do
     -verticalbuild|-vb)
       build=true
       vertical_build=true
-      dotnet_build=true
       restore=true
       pack=true
       ;;
