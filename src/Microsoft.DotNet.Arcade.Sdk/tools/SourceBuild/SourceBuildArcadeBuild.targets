@@ -73,11 +73,18 @@
   -->
   <Target Name="GetSourceBuildCommandConfiguration">
     <PropertyGroup>
-      <!-- Track that this is the inner build to prevent infinite recursion. -->
-      <InnerBuildArgs>$(InnerBuildArgs) /p:ArcadeInnerBuildFromSource=true /p:DotNetBuildInnerRepo=true</InnerBuildArgs>
-      <!-- Turn on DotNetBuildFromSource or DotNetBuildVertical in the inner build -->
-      <InnerBuildArgs Condition="'$(ArcadeBuildFromSource)' == 'true'">$(InnerBuildArgs) /p:DotNetBuildFromSource=true</InnerBuildArgs>
-      <InnerBuildArgs Condition="'$(ArcadeBuildVertical)' == 'true'">$(InnerBuildArgs) /p:DotNetBuildVertical=true</InnerBuildArgs>
+      <!-- Based on the build mode, turn on the appropriate switches in the inner build:
+           ArcadeBuildFromSource
+           - ArcadeInnerBuildFromSource - Mark inner build, turn on key inner build infra.
+           - DotNetBuildFromSource - Build from source only.
+           ArcadeBuildVertical (PoC switch, to be removed eventually)
+           - ArcadeInnerBuildFromSource - Mark inner build, turn on key inner build infra.
+           - DotNetBuildVertical -   Vertical build PoC.
+           DotNetBuildRepo
+           - DotNetBuildInnerRepo - Mark inner build, turn on key inner build infra. -->
+      <InnerBuildArgs Condition="'$(DotNetBuildRepo)' == 'true'">$(InnerBuildArgs) /p:DotNetBuildInnerRepo=true</InnerBuildArgs>
+      <InnerBuildArgs Condition="'$(ArcadeBuildFromSource)' == 'true'">$(InnerBuildArgs) /p:ArcadeInnerBuildFromSource=true /p:DotNetBuildFromSource=true</InnerBuildArgs>
+      <InnerBuildArgs Condition="'$(ArcadeBuildVertical)' == 'true'">$(InnerBuildArgs) /p:ArcadeInnerBuildFromSource=true /p:DotNetBuildVertical=true</InnerBuildArgs>
       <!-- Use a fresh clone of the repo so that source-build modifications are isolated. -->
       <InnerBuildArgs>$(InnerBuildArgs) /p:RepoRoot="$(InnerSourceBuildRepoRoot)$(_DirSeparatorEscapedCharForExecArg)"</InnerBuildArgs>
       <!-- Override the artifacts dir to cleanly separate the inner build from outer build. -->
@@ -98,7 +105,7 @@
     <ItemGroup>
       <!-- Override package cache to separate source-built packages from upstream. -->
       <InnerBuildEnv Include="NUGET_PACKAGES=$(CurrentRepoSourceBuildPackageCache)" />
-      <InnerBuildEnv Include="DotNetTargetFrameworkFilter=$(SourceBuildTargetFrameworkFilter)" Condition="'$(ArcadeBuildVertical)' != 'true'" />
+      <InnerBuildEnv Include="DotNetTargetFrameworkFilter=$(SourceBuildTargetFrameworkFilter)" Condition="'$(ArcadeBuildFromSource)' == 'true'" />
     </ItemGroup>
   </Target>
 
