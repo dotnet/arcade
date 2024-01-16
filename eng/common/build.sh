@@ -22,7 +22,7 @@ usage()
   echo "  --sourceBuild              Source-build the solution (short: -sb)"
   echo "                             Will additionally trigger the following actions: --restore, --build, --pack"
   echo "                             If --configuration is not set explicitly, will also set it to 'Release'"
-  echo "  --dotnetBuild              Build the solution in the way it will be built in the full .NET product (VMR) build (short: -db)"
+  echo "  --dotnetBuild              Build the solution in the way it will be built in the full .NET product (VMR) build (short: -dnb)"
   echo "                             Will additionally trigger the following actions: --restore, --build, --pack"
   echo "                             If --configuration is not set explicitly, will also set it to 'Release'"
   echo "  --rebuild                  Rebuild solution"
@@ -135,7 +135,7 @@ while [[ $# > 0 ]]; do
       restore=true
       pack=true
       ;;
-    -dotnetBuild|-db)
+    -dotnetBuild|-dnb)
       build=true
       dotnet_build=true
       restore=true

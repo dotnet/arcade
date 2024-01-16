@@ -200,9 +200,6 @@
       <_GitSubmoduleCloneArgs Condition="'$(CleanInnerSourceBuildRepoRoot)' == 'true'">$(_GitSubmoduleCloneArgs) --clean</_GitSubmoduleCloneArgs>
     </PropertyGroup>
 
-    <Error Text="Submodule cloning not available on Windows at this time"
-           Condition="'$(CloneSubmodulesToInnerSourceBuildRepo)' == 'true' and '$(OS)' == 'Windows_NT'" />
-
     <Exec
       Condition="'$(CloneSubmodulesToInnerSourceBuildRepo)' == 'true'"
       Command="git submodule foreach --recursive '$(_GitCloneToDirScriptFile) $(_GitSubmoduleCloneArgs)'"
