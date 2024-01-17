@@ -20,7 +20,7 @@ Param(
   [switch] $publish,
   [switch] $clean,
   [switch] $verticalBuild,
-  [switch][Alias('dnb')]$dotnetBuild,
+  [switch][Alias('pb')]$productBuild,
   [switch][Alias('bl')]$binaryLog,
   [switch][Alias('nobl')]$excludeCIBinarylog,
   [switch] $ci,
@@ -61,7 +61,7 @@ function Print-Usage() {
   Write-Host "  -publish                Publish artifacts (e.g. symbols)"
   Write-Host "  -clean                  Clean the solution"
   Write-Host "  -verticalBuild          Run in 'vertical build' infra mode."
-  Write-Host "  -dotnetBuild            Build the solution in the way it will be built in the full .NET product (VMR) build (short: -dnb)"
+  Write-Host "  -productBuild           Build the solution in the way it will be built in the full .NET product (VMR) build (short: -pb)"
   Write-Host ""
 
   Write-Host "Advanced settings:"
@@ -124,7 +124,7 @@ function Build {
     /p:Deploy=$deploy `
     /p:Test=$test `
     /p:Pack=$pack `
-    /p:DotNetBuildRepo=$($dotnetBuild -or $verticalBuild) `
+    /p:DotNetBuildRepo=$($productBuild -or $verticalBuild) `
     /p:ArcadeBuildVertical=$verticalBuild `
     /p:IntegrationTest=$integrationTest `
     /p:PerformanceTest=$performanceTest `
