@@ -3,7 +3,7 @@
   <ProductDependencies>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.CodeAnalysis.CSharp" Version="4.6.0">
+    <Dependency Name="Microsoft.CodeAnalysis.CSharp" Version="4.8.0">
       <Uri>https://github.com/dotnet/roslyn</Uri>
       <Sha>c3cc1d0ceeab1a65da0217e403851a1e8a30086a</Sha>
     </Dependency>
