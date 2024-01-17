@@ -124,18 +124,18 @@
       <SourceBuild RepoName="sdk" ManagedOnly="true" />
     </Dependency>
     <!-- Transitive dependency needed for source build. -->
-    <Dependency Name="System.Collections.Immutable" Version="8.0.0">
+    <Dependency Name="System.Collections.Immutable" Version="7.0.0">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>5535e31a712343a63f5d7d796cd874e563e5ac14</Sha>
+      <Sha>d099f075e45d2aa6007a22b71b45a08758559f80</Sha>
     </Dependency>
     <Dependency Name="System.CommandLine" Version="2.0.0-beta4.23307.1">
       <Uri>https://github.com/dotnet/command-line-api</Uri>
       <Sha>02fe27cd6a9b001c8feb7938e6ef4b3799745759</Sha>
     </Dependency>
     <!-- Transitive dependency needed for source build. -->
-    <Dependency Name="System.Reflection.Metadata" Version="8.0.0">
+    <Dependency Name="System.Reflection.Metadata" Version="7.0.0">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>5535e31a712343a63f5d7d796cd874e563e5ac14</Sha>
+      <Sha>d099f075e45d2aa6007a22b71b45a08758559f80</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>

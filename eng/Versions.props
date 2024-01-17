@@ -63,11 +63,11 @@
     <MicrosoftiOSTemplatesVersion>15.2.302-preview.14.122</MicrosoftiOSTemplatesVersion>
     <MicrosoftiOSTemplatesVersion160527>16.0.527</MicrosoftiOSTemplatesVersion160527>
     <!-- Keep this version in sync with what msbuild / VS ships with. -->
-    <SystemCollectionsImmutableVersion>8.0.0</SystemCollectionsImmutableVersion>
+    <SystemCollectionsImmutableVersion>7.0.0</SystemCollectionsImmutableVersion>
     <SystemCompositionVersion>9.0.0-alpha.1.24059.2</SystemCompositionVersion>
     <SystemIOPackagingVersion>9.0.0-alpha.1.24059.2</SystemIOPackagingVersion>
     <!-- Keep this version in sync with what msbuild / VS ships with. -->
-    <SystemReflectionMetadataVersion>8.0.0</SystemReflectionMetadataVersion>
+    <SystemReflectionMetadataVersion>7.0.0</SystemReflectionMetadataVersion>
     <!-- Do not move too far ahead of what Microsoft.Build.Tasks.Core depends on (currently >=6.0.0). -->
     <SystemSecurityCryptographyXmlVersion>6.0.1</SystemSecurityCryptographyXmlVersion>
     <SystemTextEncodingsWebVersion>9.0.0-alpha.1.24059.2</SystemTextEncodingsWebVersion>
