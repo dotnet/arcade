@@ -39,8 +39,8 @@
     <NuGetProjectModelVersion>6.7.0</NuGetProjectModelVersion>
     <NuGetVersioningVersion>6.7.0</NuGetVersioningVersion>
     <!-- roslyn -->
-    <MicrosoftCodeAnalysisCSharpVersion>4.6.0</MicrosoftCodeAnalysisCSharpVersion>
-    <MicrosoftNetCompilersToolsetVersion>4.6.0</MicrosoftNetCompilersToolsetVersion>
+    <MicrosoftCodeAnalysisCSharpVersion>4.8.0</MicrosoftCodeAnalysisCSharpVersion>
+    <MicrosoftNetCompilersToolsetVersion>4.8.0</MicrosoftNetCompilersToolsetVersion>
     <!-- runtime -->
     <MicrosoftBclAsyncInterfacesVersion>9.0.0-alpha.1.24059.2</MicrosoftBclAsyncInterfacesVersion>
     <MicrosoftExtensionsDependencyInjectionAbstractionsVersion>9.0.0-alpha.1.24059.2</MicrosoftExtensionsDependencyInjectionAbstractionsVersion>
