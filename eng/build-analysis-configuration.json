@@ -1,0 +1,4 @@
+{
+    "Description":"If PipelinesToAnalyze is empty, all pipelines will be analyzed. Check documentation: https://github.com/dotnet/arcade/blob/main/Documentation/Projects/Build%20Analysis/FilteringPipelines.md",
+    "PipelinesToAnalyze":[ ]
+}
