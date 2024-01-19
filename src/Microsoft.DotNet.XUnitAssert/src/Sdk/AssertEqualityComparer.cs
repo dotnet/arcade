@@ -64,8 +64,8 @@ namespace Xunit.Sdk
 		/// comparer; for collections, this creates an inner comparer based on the item type in the collection.
 		/// </summary>
 		/// <param name="type">The type to create an inner comparer for</param>
-		internal static IEqualityComparer GetDefaultInnerComparer<T>() =>
-			cachedDefaultInnerComparers.GetOrAdd(typeof(T), ([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] Type t) =>
+		internal static IEqualityComparer GetDefaultInnerComparer(Type type) =>
+			cachedDefaultInnerComparers.GetOrAdd(type, t =>
 			{
 				var innerType = typeof(object);
 
