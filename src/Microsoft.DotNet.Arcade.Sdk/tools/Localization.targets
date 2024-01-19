@@ -28,7 +28,7 @@
 
 
   <!-- TemplateLocalizer for localizing 'dotnet new' templates -->
-  <PropertyGroup Condition="'$(UsingToolTemplateLocalizer)' == 'true' AND '$(DotNetBuildFromSource)' != 'true' AND '$(DotNetBuildSourceOnly)' != 'true'">
+  <PropertyGroup Condition="'$(UsingToolTemplateLocalizer)' == 'true' and '$(DotNetBuildFromSource)' != 'true' and '$(DotNetBuildSourceOnly)' != 'true'">
     <!-- Run localizer when building on dev machine. -->
     <LocalizeTemplates Condition="'$(ContinuousIntegrationBuild)' != 'true'">true</LocalizeTemplates>
   </PropertyGroup>
