@@ -120,7 +120,7 @@ namespace Xunit.Sdk
 #if XUNIT_AOT
 		internal static readonly IEqualityComparer DefaultInnerComparer = new AssertEqualityComparerAdapter<object>(new AssertEqualityComparer<object>());
 #else
-		internal static readonly IEqualityComparer DefaultInnerComparer = AssertEqualityComparer.GetDefaultInnerComparer<T>();
+		internal static readonly IEqualityComparer DefaultInnerComparer = AssertEqualityComparer.GetDefaultInnerComparer(typeof(T));
 #endif
 
 		static readonly ConcurrentDictionary<Type, TypeInfo> cacheOfIComparableOfT = new ConcurrentDictionary<Type, TypeInfo>();
@@ -225,6 +225,12 @@ namespace Xunit.Sdk
 				}
 			}
 #endif // !XUNIT_AOT
+
+#if !XUNIT_FRAMEWORK
+			// Special case collections (before IStructuralEquatable because arrays implement that in a way we don't want to call)
+			if (xTracker != null && yTracker != null)
+				return CollectionTracker.AreCollectionsEqual(xTracker, yTracker, InnerComparer, InnerComparer == DefaultInnerComparer, out mismatchedIndex);
+#endif
 
 #if !XUNIT_FRAMEWORK
 			// Special case collections (before IStructuralEquatable because arrays implement that in a way we don't want to call)
@@ -377,8 +383,12 @@ namespace Xunit.Sdk
 
 			public FuncEqualityComparer(Func<T, T, bool> comparer)
 			{
+#if NET6_0_OR_GREATER
+				ArgumentNullException.ThrowIfNull(comparer);
+#else
 				if (comparer == null)
 					throw new ArgumentNullException(nameof(comparer));
+#endif
 
 				this.comparer = comparer;
 			}
