@@ -1,11 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
+    <TargetFrameworks>$(NetToolMinimum);$(NetFrameworkToolCurrent)</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <RootNamespace>XliffTasks</RootNamespace>
     <StrongNameKeyId>MicrosoftAspNetCore</StrongNameKeyId>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+
+    <!-- The subdirectory name is the value of $(MSBuildRuntimeType). -->
+    <BuildTaskTargetTfmSpecificFolder>tools/Core</BuildTaskTargetTfmSpecificFolder>
+    <BuildTaskTargetTfmSpecificFolder Condition="'$(TargetFramework)' == '$(NetFrameworkToolCurrent)'">tools/Full</BuildTaskTargetTfmSpecificFolder>
   </PropertyGroup>
 
   <ItemGroup>
