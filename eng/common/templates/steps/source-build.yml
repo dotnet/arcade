@@ -95,6 +95,7 @@ steps:
       /p:SourceBuildNonPortable=${{ parameters.platform.nonPortable }} \
       /p:ArcadeBuildFromSource=true \
       /p:DotNetBuildRepo=true \
+      /p:DotNetBuildSourceOnly=true \
       /p:AssetManifestFileName=$assetManifestFileName
   displayName: Build
 
