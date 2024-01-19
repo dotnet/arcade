@@ -13,6 +13,7 @@ namespace XliffTasks
         public const string XlfLanguage = nameof(XlfLanguage);
         public const string XlfSource = nameof(XlfSource);
         public const string XlfSourceFormat = nameof(XlfSourceFormat);
+        public const string XlfPreserveFileName = nameof(XlfPreserveFileName);
         public const string XlfTranslatedFilename = nameof(XlfTranslatedFilename);
         public const string XlfTranslatedFullPath = nameof(XlfTranslatedFullPath);
     }
