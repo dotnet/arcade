@@ -35,7 +35,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.TemplateEngine.Authoring.Tasks" Version="$(MicrosoftTemplateEngineAuthoringTasksVersion)" PrivateAssets="all"
-      IsImplicitlyDefined="true" Condition="'$(UsingToolTemplateLocalizer)' == 'true' AND '$(DotNetBuildFromSource)' != 'true' AND '$(DotNetBuildSourceOnly)' != 'true'" />
+      IsImplicitlyDefined="true" Condition="'$(UsingToolTemplateLocalizer)' == 'true' and '$(DotNetBuildFromSource)' != 'true' and '$(DotNetBuildSourceOnly)' != 'true'" />
   </ItemGroup>
 
 </Project>
