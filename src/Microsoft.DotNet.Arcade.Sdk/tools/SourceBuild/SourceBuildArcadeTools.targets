@@ -45,7 +45,7 @@
          - If building in DotNetBuild mode and we're in the inner repo and this is a source-only build -->
   <Target Name="SetUpSourceBuildIntermediateNupkgCache"
           Condition="
-            '$(DotNetBuildFromSourceFlavor)' != 'Product' and '$(DotNetBuildOrchestrator)' != 'true'
+            '$(DotNetBuildFromSourceFlavor)' != 'Product' and '$(DotNetBuildOrchestrator)' != 'true' and
             ('$(SetUpSourceBuildIntermediateNupkgCache)' == 'true' or
               ('@(SourceBuildIntermediateNupkgReference)' != '' and
                 (('$(ArcadeBuildFromSource)' == 'true' and '$(ArcadeInnerBuildFromSource)' == 'true') or

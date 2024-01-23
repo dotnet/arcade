@@ -128,10 +128,10 @@
       <_CommonProps Include="VersionsPropsPath=$(VersionsPropsPath)"/>
 
       <!--
-        When building from source we suppress restore for projects that set ExcludeFromSourceBuild=true or ExcludeFromVerticalBuild.
+        When building in source-only or product scenarios, some projects may have set ExcludeFromSourceBuild=true, ExcludeFromVerticalBuild, or ExcludeFromDotNetBuild.
         NuGet Restore task reports a warning for such projects, which we suppress here.
       -->
-      <_CommonProps Include="DisableWarnForInvalidRestoreProjects=true" Condition="'$(DotNetBuildFromSource)' == 'true' or '$(DotNetBuildVertical)' == 'true'"/>
+      <_CommonProps Include="DisableWarnForInvalidRestoreProjects=true" Condition="'$(DotNetBuildFromSource)' == 'true' or '$(DotNetBuildVertical)' == 'true' or '$(DotNetBuild)' == 'true'"/>
 
       <!--
         C++ projects expect VCTargetsPath property to be set. MSBuild generates this property to solution
