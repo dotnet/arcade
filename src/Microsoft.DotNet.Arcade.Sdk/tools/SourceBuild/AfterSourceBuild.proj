@@ -74,7 +74,7 @@
       OutputBaselineFile="$(SourceBuildSelfPrebuiltReportDir)generated-new-baseline.xml"
       OutputReportFile="$(SourceBuildSelfPrebuiltReportDir)baseline-comparison.xml"
       ContinueOnError="$(ContinueOnPrebuiltBaselineError)"
-      Condition="'$(DotNetBuildFromSourceFlavor)' != 'Product' and 
+      Condition="'$(DotNetBuildFromSourceFlavor)' != 'Product' and '$(DotNetBuildOrchestrator)' != 'true' and
         ('$(ArcadeBuildFromSource)' == 'true' or '$(DotNetBuildSourceOnly)' == 'true')" />
   </Target>
 
@@ -126,7 +126,7 @@
     starts using it - https://github.com/dotnet/source-build/issues/3970
   -->
   <Target Name="CreateRepoManifest"
-          Condition="'$(DotNetBuildFromSourceFlavor)' == 'Product'"
+          Condition="'$(DotNetBuildFromSourceFlavor)' == 'Product' or '$(DotNetBuildOrchestrator)' == 'true'"
           DependsOnTargets="
             GetCategorizedIntermediateNupkgContents;
             CreateRepoSymbolsArchive">
