@@ -32,7 +32,14 @@
     <PackageReference Include="Microsoft.DotNet.NuGetRepack.Tasks" Version="$(MicrosoftDotnetNuGetRepackTasksVersion)" Condition="'$(UsingToolNuGetRepack)' == 'true'" IsImplicitlyDefined="true" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
+  <!-- These package references should only be excluded when doing inner builds, and outer-builds from the orchestrator in source only build
+       configurations. non-source only build configurations should always restore these packages.
+
+       Switches are separated by legacy vs. new.
+  -->
+
+  <ItemGroup Condition="('$(ArcadeBuildVertical)' == 'true' or ($(ArcadeInnerBuildFromSource)' != 'true' and '$(DotNetBuildFromSourceFlavor)' != 'Product')) and 
+                        ('$(DotNetBuildSourceOnly)' != 'true' or ('$(DotNetBuildPhase)' == 'Inner' and '$(DotNetBuildOrchestrator)' != 'true'))">
     <!-- Copy of 'sn.exe' in form of NuGet package. -->
     <PackageReference Include="sn" Version="$(SNVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)"  IsImplicitlyDefined="true" />
