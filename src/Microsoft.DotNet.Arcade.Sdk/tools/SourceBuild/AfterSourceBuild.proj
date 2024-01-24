@@ -25,7 +25,7 @@
     AfterSourceBuild should only create the manifest in product build.
   -->
   <Target Name="GetProductSourceBuildManifest"
-          Condition="'$(DotNetBuildFromSourceFlavor)' == 'Product'"
+          Condition="'$(DotNetBuildFromSourceFlavor)' == 'Product' or '$(DotNetBuildOrchestrator)' == 'true'"
           DependsOnTargets="CreateRepoManifest" />
 
   <Target Name="WritePrebuiltUsageData">
