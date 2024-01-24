@@ -49,7 +49,7 @@
   <PropertyGroup>
     <_ImportOrUseTooling>false</_ImportOrUseTooling>
     <_ImportOrUseTooling Condition="('$(ArcadeBuildVertical)' == 'true' or ($(ArcadeInnerBuildFromSource)' != 'true' and '$(DotNetBuildFromSourceFlavor)' != 'Product')) and 
-                                    ('$(DotNetBuildSourceOnly)' != 'true' or ('$(DotNetBuildPhase)' == 'Inner' and '$(DotNetBuildOrchestrator)' != 'true'))">true</ImportOrUseTooling>
+                                    ('$(DotNetBuildSourceOnly)' != 'true' or ('$(DotNetBuildPhase)' == 'Inner' and '$(DotNetBuildOrchestrator)' != 'true'))">true</_ImportOrUseTooling>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(_ImportOrUseTooling)' == 'true'">
