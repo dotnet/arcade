@@ -18,6 +18,12 @@
             PackSourceBuildIntermediateNupkgs;
             GetProductSourceBuildManifest" />
 
+  <!--
+    Repo build creates the manifest in SourceBuildIntermediate.proj,
+    however AfterSourceBuild runs in both repo and product builds.
+
+    AfterSourceBuild should only create the manifest in product build.
+  -->
   <Target Name="GetProductSourceBuildManifest"
           Condition="'$(DotNetBuildFromSourceFlavor)' == 'Product'"
           DependsOnTargets="CreateRepoManifest" />
