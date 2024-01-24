@@ -97,7 +97,6 @@
 
   <!-- Include .NET Framework build outputs in the package under $(BuildTaskTargetTfmSpecificFolder) directory. -->
   <Target Name="_AddBuildOutputToPackageDesktop" Condition="'$(TargetFrameworkIdentifier)' != '.NETCoreApp'">
-    <ItemGroup>
     <PropertyGroup>
       <BuildTaskTargetTfmSpecificFolder Condition="'$(BuildTaskTargetTfmSpecificFolder)' == ''">$(BuildTaskTargetFolder)/($TargetFramework)</BuildTaskTargetTfmSpecificFolder>
     </PropertyGroup>
