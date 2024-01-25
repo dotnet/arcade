@@ -12,7 +12,6 @@
     <StrongNameKeyId>MicrosoftAspNetCore</StrongNameKeyId>
     <PackageReadmeFile>README.md</PackageReadmeFile>
 
-    <!-- The subdirectory name is the value of $(MSBuildRuntimeType). -->
     <BuildTaskTargetTfmSpecificFolder>tools/net</BuildTaskTargetTfmSpecificFolder>
     <BuildTaskTargetTfmSpecificFolder Condition="'$(TargetFramework)' == '$(NetFrameworkToolCurrent)'">tools/netframework</BuildTaskTargetTfmSpecificFolder>
   </PropertyGroup>
