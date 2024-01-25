@@ -5,6 +5,7 @@
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
     <PackageType>MSBuildSdk</PackageType>
     <IsPackable>true</IsPackable>
+    <IsBuildTaskProject>true</IsBuildTaskProject>
     <PackageDescription>An msbuild task to generate code for the API surface of an assembly.</PackageDescription>
     <NoWarn>$(NoWarn);0436</NoWarn>
   </PropertyGroup>
@@ -25,7 +26,5 @@
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj" />
   </ItemGroup>
-
-  <Import Project="$(RepositoryEngineeringDir)BuildTask.targets" />
 
 </Project>
