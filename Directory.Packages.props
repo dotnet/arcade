@@ -62,7 +62,7 @@
   </ItemGroup>
 
   <!-- Build tasks targeting .NET Framework can only use versions that ship with msbuild -->
-  <ItemGroup Condition="'$(TargetFramework)' != 'net472'" >
+  <ItemGroup Condition="'$(TargetFramework)' != 'net472' or '$(IsBuildTaskProject)' != 'true'" >
     <PackageVersion Include="System.Text.Json" Version="$(SystemTextJsonVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionsLoggingConsoleVersion)" />
     <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="$(MicrosoftExtensionsDependencyModelVersion)" />
@@ -70,7 +70,7 @@
     <PackageVersion Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'" >
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472' and '$(IsBuildTaskProject)' == 'true'" >
     <PackageVersion Include="System.Text.Json" Version="7.0.1" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
     <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="7.0.0" />
