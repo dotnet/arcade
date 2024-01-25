@@ -56,26 +56,14 @@
     <PackageVersion Include="System.IO.Packaging" Version="$(SystemIOPackagingVersion)" />
     <PackageVersion Include="System.Security.Cryptography.Xml" Version="$(SystemSecurityCryptographyXmlVersion)" />
     <PackageVersion Include="System.Text.Encodings.Web" Version="$(SystemTextEncodingsWebVersion)" />
-
-    <!-- sdk -->
-    <PackageVersion Include="Microsoft.NET.Sdk.WorkloadManifestReader" Version="$(MicrosoftNetSdkWorkloadManifestReaderVersion)" />
-  </ItemGroup>
-
-  <!-- Build tasks targeting .NET Framework can only use versions that ship with msbuild -->
-  <ItemGroup Condition="'$(TargetFramework)' != 'net472' or '$(IsBuildTaskProject)' != 'true'" >
     <PackageVersion Include="System.Text.Json" Version="$(SystemTextJsonVersion)" />
     <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionsLoggingConsoleVersion)" />
     <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="$(MicrosoftExtensionsDependencyModelVersion)" />
     <PackageVersion Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
     <PackageVersion Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472' and '$(IsBuildTaskProject)' == 'true'" >
-    <PackageVersion Include="System.Text.Json" Version="7.0.1" />
-    <PackageVersion Include="Microsoft.Extensions.Logging.Console" Version="7.0.0" />
-    <PackageVersion Include="Microsoft.Extensions.DependencyModel" Version="7.0.0" />
-    <PackageVersion Include="System.Collections.Immutable" Version="7.0.0" />
-    <PackageVersion Include="System.Reflection.Metadata" Version="7.0.0" />
+    
+    <!-- sdk -->
+    <PackageVersion Include="Microsoft.NET.Sdk.WorkloadManifestReader" Version="$(MicrosoftNetSdkWorkloadManifestReaderVersion)" />
   </ItemGroup>
 
   <!-- external -->
