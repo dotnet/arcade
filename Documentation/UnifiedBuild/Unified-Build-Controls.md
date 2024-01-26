@@ -151,7 +151,7 @@ These controls may be used for **infrastructure or product purposes**.
 
 | **Name** | **Values** | **Default** | **Description** |
 | -------- | -------- | -------- | -------- |
-| DotNetBuildOffline | "true", "false", "" | "true" when `SourceOnly` switch is active. | When "true", remove non-local input sources. Infrastructure switch only. This switch is only exposed at the orchestrator level.</br>This replaces the existing `DotNetBuildOffline` switch. |
+| DotNetBuildWithOnlineSources | "true", "false", "" | "false" by default when `SourceOnly` switch is active. | When "true", do not remove non-local input sources. Infrastructure switch only. This switch is only exposed at the orchestrator level.</br>This replaces the existing `DotNetBuildOffline` switch. |
 | DotNetBuildSourceOnly | "true", "false", "" | "" | When "true", build only from source. Online sources may remain unless `DotNetBuildOffline` is set to true. This is both an infrastructure and a product switch.<br/>This is roughly equivalent to `DotNetBuildFromSource` in the current infrastructure, though other controls may be better suited. |
 
 ### Output Controls
@@ -165,8 +165,7 @@ In addition to these default high level controls, there may be additional compon
 | BuildOS | "linux", "osx", "freebsd", "netbsd", "illumos", "solaris", "haiku", "windows", ... | Defaults to the OS of the build environment | The operating system of the machine that is built on. Lower-case string. |
 | HostOS | Same as `BuildOS` | Defaults to `BuildOS` | The operating system of the machine that will run the produced tool (i.e. compiler) to generate the binary for the target operating system. |
 | TargetOS | Same as `BuildOS` | Defaults to `BuildOS` | The operating system of the machine that will run the binary -> the end user’s machine. |
-| BuildArchitecture | "x64", "x86", "arm", "arm64", ... | Defaults to the architecture of the build environment | The architecture of the machine that is built on.
-Lower-case string. |
+| BuildArchitecture | "x64", "x86", "arm", "arm64", ... | Defaults to the architecture of the build environment | The architecture of the machine that is built on. Lower-case string. |
 | HostArchitecture | Same as `BuildArchitecture` | Defaults to `BuildArchitecture` | The architecture of the machine that will run the produced tool (i.e. compiler) to generate the binary for the target architecture |
 | TargetArchitecture | Same as `BuildArchitecture` | Defaults to `BuildArchitecture` | The architecture of the machine that will run the binary -> the end user's machine. |
 | Configuration | Debug, Release | Release | Defaults on producing a shipping product. |
