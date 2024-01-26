@@ -1,4 +1,5 @@
 <Project>
+
   <Import Project="BuildTask.Packages.props"/>
 
   <PropertyGroup>
