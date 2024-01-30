@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XUnitExtensions
 {
     internal sealed class XunitParallelTheoryTestCase : XunitTheoryTestCase
     {
-        // Required for deserialization
+        [Obsolete("Requried for deserialization")]
         public XunitParallelTheoryTestCase()
             : base()
         {
