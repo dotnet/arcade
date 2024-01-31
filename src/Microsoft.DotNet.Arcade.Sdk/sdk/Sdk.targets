@@ -24,7 +24,7 @@
     </ItemGroup>
   </Target>
 
-  <Import Project="..\tools\Imports.targets" Condition="!$(_SuppressSdkImports) and !$(_SuppressAllTargets)" />
-  <Import Project="..\tools\Empty.targets" Condition="!$(_SuppressSdkImports) and $(_SuppressAllTargets)"/>
+  <Import Project="..\tools\Imports.targets" Condition="'$(_SuppressSdkImports)' != 'true' and '$(_SuppressAllTargets)' != 'true'" />
+  <Import Project="..\tools\Empty.targets" Condition="'$(_SuppressSdkImports)' == 'true' and '$(_SuppressAllTargets)' == 'true'" />
 
 </Project>
