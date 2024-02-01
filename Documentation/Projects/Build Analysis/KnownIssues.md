@@ -80,15 +80,14 @@ This section describes how to specify multiple error messages / error patterns t
 
 - To use the feature, you need to pass a list of strings as part of the JSON.
 
-    For example:
+    For example, an ErrorMessage will look like this:
     ```json
     {
     "ErrorMessage": ["Assert.True() Failure", "Actual:   False"]
     }
     ```
 
-    or 
-
+    And an ErrorPattern will look like this:
 
     ```json
     {
@@ -99,7 +98,7 @@ This section describes how to specify multiple error messages / error patterns t
 - The list works as an AND and they must be in order. Every issue in the list will try to match a line.
 - The first issue in the list will be searched first, and then if the first issue matches, the second issue will be searched in the subsequent lines.
 - In order to count as a match, all issues in the list must match.
-- This works for ErrorMessage and ErrorPattern, but they should not be mixed. If you use ErrorMessage, then all issues in the list must match the ErrorMessage, and the same for ErrorPattern.
+- **This works for ErrorMessage and ErrorPattern, but they should not be mixed. If you use ErrorMessage, then all issues in the list must match the ErrorMessage, and the same for ErrorPattern.**
 
 
 *Note that every pattern/message will be searched per line, NOT multiple lines.*
@@ -111,14 +110,14 @@ Consider the following error message:
 ```
 Assert.True() Failure
 Expected: True
-Actual:   False
+Actual: False
 ```
 
 In order to match this error message, you can use the following JSON:
 
 ```json
 {
-  "ErrorMessage": ["Assert.True() Failure", "Actual:   False"]
+  "ErrorMessage": ["Assert.True() Failure", "Actual: False"]
 }
 ```
 Even though we didn't put the `Expected: True` line, the other lines are in there and in the right order, so it will match.
@@ -126,7 +125,7 @@ Even though we didn't put the `Expected: True` line, the other lines are in ther
 However, if we use the following JSON:
 ```json
 {
-  "ErrorMessage": ["Assert.True() Failure", "Actual:   True"]
+  "ErrorMessage": ["Assert.True() Failure", "Actual: True"]
 }
 ```
 The last line doesn’t match, so it will not match the error message.
