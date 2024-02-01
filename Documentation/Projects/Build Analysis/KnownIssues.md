@@ -110,14 +110,14 @@ Consider the following error message:
 ```
 Assert.True() Failure
 Expected: True
-Actual: False
+Actual:   False
 ```
 
 In order to match this error message, you can use the following JSON:
 
 ```json
 {
-  "ErrorMessage": ["Assert.True() Failure", "Actual: False"]
+  "ErrorMessage": ["Assert.True() Failure", "Actual:   False"]
 }
 ```
 Even though we didn't put the `Expected: True` line, the other lines are in there and in the right order, so it will match.
