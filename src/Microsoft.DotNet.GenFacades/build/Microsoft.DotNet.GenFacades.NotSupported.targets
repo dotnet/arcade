@@ -47,7 +47,7 @@
   </Target>
 
   <Target Name="AddGenFacadeNotSupportedCompileItem"
-          DependsOnTargets="_GetGenFacadeNotSupportedCompileInputs;_GetGenFacadesRoslynAssembliesPath"
+          DependsOnTargets="_GetGenFacadeNotSupportedCompileInputs;GetGenFacadesRoslynAssembliesPath"
           AfterTargets="ResolveProjectReferences"
           Condition="'$(GeneratePlatformNotSupportedAssemblyMessage)' != ''"
           Inputs="@(GenFacadeNotSupportedCompileInput)"
