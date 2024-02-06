@@ -6,7 +6,7 @@
     <GenFacadesTargetAssemblyPath Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\tools\net472\Microsoft.DotNet.GenFacades.dll</GenFacadesTargetAssemblyPath>
   </PropertyGroup>
 
-  <Target Name="_GetRoslynAssembliesPath">
+  <Target Name="GetGenFacadesRoslynAssembliesPath">
     <PropertyGroup Condition="'$(GenFacadesRoslynAssembliesPath)' == ''">
       <!-- If a custom roslyn assemblies path isn't provided, the opt-in switch 'GenFacadesUseRoslynToolsetPackagePath' is set to true and
            the roslyn toolset package is referenced, use the assemblies from that package. -->
