@@ -1,8 +1,9 @@
-﻿// See https://aka.ms/new-console-template for more information
+﻿// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
 
-public class PackageDiffTask : Microsoft.Build.Utilities.ToolTask
+public class PackageDiff: Microsoft.Build.Utilities.ToolTask
 {
     [Required]
     public string BaselinePackage {get; set;} = "";
@@ -12,9 +13,12 @@ public class PackageDiffTask : Microsoft.Build.Utilities.ToolTask
 
     protected override string ToolName { get; } = $"PackageDiff" + (System.Environment.OSVersion.Platform == PlatformID.Unix ? "" : ".exe");
 
+    protected override MessageImportance StandardOutputLoggingImportance => MessageImportance.High;
+    protected override bool HandleTaskExecutionErrors() => true;
+
     protected override string GenerateFullPathToTool()
     {
-        return Path.Combine(typeof(PackageDiffTask).Assembly.Location, ToolName);
+        return Path.Combine(Path.GetDirectoryName(typeof(PackageDiff).Assembly.Location)!, "..", "..", "tools", ToolName);
     }
 
     protected override string GenerateCommandLineCommands()
