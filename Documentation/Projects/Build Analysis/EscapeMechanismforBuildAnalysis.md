@@ -1,6 +1,6 @@
 ## Escape Mechanism for Build Analysis
 
-There may be scenarios where it is desirable to change the status of a build analysis to a green state, particularly if there are reasons to merge the pull request and you are confident that it is necessary and safe to do so.
+There may be scenarios where it is desirable to change the status of a failed build analysis to a passing state, particularly if there are reasons to merge the pull request and you are confident that it is necessary and safe to do so.
 
 This can be achieved by adding a comment to the pull request with the following content:
 
