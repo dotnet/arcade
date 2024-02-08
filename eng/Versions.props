@@ -82,5 +82,7 @@
     <MicrosoftNetTestSdkVersion>17.5.0</MicrosoftNetTestSdkVersion>
     <!-- xharness -->
     <MicrosoftDotNetXHarnessCLIVersion>9.0.0-prerelease.24077.1</MicrosoftDotNetXHarnessCLIVersion>
+    <MicrosoftNETILLinkTasksVersion>
+    </MicrosoftNETILLinkTasksVersion>
   </PropertyGroup>
 </Project>
