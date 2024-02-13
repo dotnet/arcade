@@ -145,6 +145,7 @@ stages:
               -projects $(Build.SourcesDirectory)\tests\UnitTests.proj
               /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.binlog
               /p:RestoreUsingNuGetTargets=false
+              /p:IncludeDotNetCli=true
             displayName: Run Helix Tests
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
