@@ -57,7 +57,7 @@
       <PayloadDirectory>$(MSBuildThisFileDirectory)XUnit</PayloadDirectory>
     </HelixWorkItem>
   </ItemGroup>
-  <!-- Exercise Helix failure reporting path for Xunit --> 
+  <!-- Exercise Helix failure reporting path for Xunit -->
   <ItemGroup>
     <AzurePipelinesExpectedTestFailure Include="XunitReportingTests.ExerciseXunitCharacterFilteringFailurePath"/>
   </ItemGroup>
@@ -98,7 +98,7 @@
 
   <!-- Yields an existing archive that will fail if ArchivePayload doesn't work -->
   <Target Name="ZipPrexistingArchive" BeforeTargets="Build">
-      <MakeDir Directories="$(IntermediateOutputPath)\correlationarchivepayload" /> 
+      <MakeDir Directories="$(IntermediateOutputPath)\correlationarchivepayload" />
       <WriteLinesToFile
            File="$(IntermediateOutputPath)\correlationarchivepayload\testArchivePayload.txt"
            Lines="I am a test Archive Payload"
@@ -123,4 +123,5 @@
       <PayloadDirectory>$(MSBuildThisFileDirectory)\AspNetVersionCheck</PayloadDirectory>
     </HelixWorkItem>
   </ItemGroup>
+
 </Project>
