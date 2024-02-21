@@ -117,7 +117,7 @@ initDistroRidGlobal()
 
         # Check for musl-based distros (e.g. Alpine Linux, Void Linux).
         if "${rootfsDir}/usr/bin/ldd" --version 2>&1 | grep -q musl ||
-             ( [ -n "$STRINGS" ] && "$STRINGS" "${rootfsDir}/usr/bin/ldd" 2>&1 | grep -q musl ); then
+                 ( [ -n "$STRINGS" ] && "$STRINGS" "${rootfsDir}/usr/bin/ldd" 2>&1 | grep -q musl ); then
             __PortableTargetOS="linux-musl"
         fi
     fi
