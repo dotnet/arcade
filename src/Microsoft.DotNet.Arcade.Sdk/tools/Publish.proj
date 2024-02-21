@@ -97,6 +97,10 @@
     <MakeDir Condition="'@(SymbolPackagesToGenerate)' != ''" Directories="$(SymbolPackagesDir)" />
     <Copy SourceFiles="@(SymbolPackagesToGenerate->'%(OriginalPackage)')" DestinationFiles="@(SymbolPackagesToGenerate)" />
 
+    <PropertyGroup>
+      <ProducesDotNetReleaseShippingAssets Condition="'$(ProducesDotNetReleaseShippingAssets)'==''">false</ProducesDotNetReleaseShippingAssets>
+    </PropertyGroup>
+
     <ItemGroup>
       <!--
         These packages from Arcade-Services include some native libraries that
@@ -107,7 +111,8 @@
       <SymbolPackagesToGenerate Remove="$(SymbolPackagesDir)**/Microsoft.DotNet.Maestro.Tasks.*" />
       
       <ItemsToPushToBlobFeed Include="@(PackagesToPublish);@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)">
-        <ManifestArtifactData Condition="'%(IsShipping)' != 'true'">NonShipping=true</ManifestArtifactData>
+        <ManifestArtifactData Condition="'%(IsShipping)' != 'true'">NonShipping=true;DotNetReleaseShipping=false</ManifestArtifactData>
+        <ManifestArtifactData Condition="'%(IsShipping)' == 'true'">DotNetReleaseShipping=$(ProducesDotNetReleaseShippingAssets)</ManifestArtifactData>
       </ItemsToPushToBlobFeed>
 
       <PackagesToPublish Remove="@(PackagesToPublish)" />
