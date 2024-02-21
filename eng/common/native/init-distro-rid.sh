@@ -48,7 +48,7 @@ getNonPortableDistroRid()
         nonPortableRid="android.$__android_sdk_version-${targetArch}"
     elif [ "$targetOs" = "illumos" ]; then
         __uname_version=$(uname -v)
-        case $__uname_version in
+        case "$__uname_version" in
             omnios-*)
                 __omnios_major_version=$(echo "$__uname_version" | cut -c9-10)
                 nonPortableRid="omnios.$__omnios_major_version-${targetArch}"
