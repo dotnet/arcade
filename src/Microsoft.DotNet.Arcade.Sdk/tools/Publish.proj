@@ -38,6 +38,8 @@
     <!-- If `IsReleaseOnlyPackageVersion` is set to true, package safety checks can be skipped-->
     <IsReleaseOnlyPackageVersion>false</IsReleaseOnlyPackageVersion>
     <IsReleaseOnlyPackageVersion Condition ="('$(SkipPackagePublishingVersionChecks)' == 'true') or ('$(PreReleaseVersionLabel)' == '' and '$(AutoGenerateAssemblyVersion)' == 'true')">true</IsReleaseOnlyPackageVersion>
+
+    <ProducesDotNetReleaseShippingAssets Condition="'$(ProducesDotNetReleaseShippingAssets)'==''">false</ProducesDotNetReleaseShippingAssets>
     
     <!-- If `AutoGenerateSymbolPackages` is not set we default it to true. -->
     <!-- Do not generate symbol packages if in outer source build mode, to avoid creating copies of the intermediates. -->
@@ -96,10 +98,6 @@
     -->
     <MakeDir Condition="'@(SymbolPackagesToGenerate)' != ''" Directories="$(SymbolPackagesDir)" />
     <Copy SourceFiles="@(SymbolPackagesToGenerate->'%(OriginalPackage)')" DestinationFiles="@(SymbolPackagesToGenerate)" />
-
-    <PropertyGroup>
-      <ProducesDotNetReleaseShippingAssets Condition="'$(ProducesDotNetReleaseShippingAssets)'==''">false</ProducesDotNetReleaseShippingAssets>
-    </PropertyGroup>
 
     <ItemGroup>
       <!--
