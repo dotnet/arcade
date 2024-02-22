@@ -38,8 +38,6 @@
     <!-- If `IsReleaseOnlyPackageVersion` is set to true, package safety checks can be skipped-->
     <IsReleaseOnlyPackageVersion>false</IsReleaseOnlyPackageVersion>
     <IsReleaseOnlyPackageVersion Condition ="('$(SkipPackagePublishingVersionChecks)' == 'true') or ('$(PreReleaseVersionLabel)' == '' and '$(AutoGenerateAssemblyVersion)' == 'true')">true</IsReleaseOnlyPackageVersion>
-
-    <ProducesDotNetReleaseShippingAssets Condition="'$(ProducesDotNetReleaseShippingAssets)'==''">false</ProducesDotNetReleaseShippingAssets>
     
     <!-- If `AutoGenerateSymbolPackages` is not set we default it to true. -->
     <!-- Do not generate symbol packages if in outer source build mode, to avoid creating copies of the intermediates. -->
@@ -109,8 +107,8 @@
       <SymbolPackagesToGenerate Remove="$(SymbolPackagesDir)**/Microsoft.DotNet.Maestro.Tasks.*" />
       
       <ItemsToPushToBlobFeed Include="@(PackagesToPublish);@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)">
-        <ManifestArtifactData Condition="'%(IsShipping)' != 'true'">NonShipping=true;DotNetReleaseShipping=false</ManifestArtifactData>
-        <ManifestArtifactData Condition="'%(IsShipping)' == 'true'">DotNetReleaseShipping=$(ProducesDotNetReleaseShippingAssets)</ManifestArtifactData>
+        <ManifestArtifactData Condition="'%(IsShipping)' != 'true'">NonShipping=true</ManifestArtifactData>
+        <ManifestArtifactData Condition="'%(IsShipping)' == 'true' And '$(ProducesDotNetReleaseShippingAssets)' == 'true'">DotNetReleaseShipping=true</ManifestArtifactData>
       </ItemsToPushToBlobFeed>
 
       <PackagesToPublish Remove="@(PackagesToPublish)" />
