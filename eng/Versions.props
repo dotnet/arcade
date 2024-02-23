@@ -43,7 +43,7 @@
     <SystemTextJsonVersion>4.7.0</SystemTextJsonVersion>
     <NuGetVersioningVersion>6.4.2</NuGetVersioningVersion>
     <NuGetVersion>$(NuGetVersioningVersion)</NuGetVersion>
-    <OctokitVersion>0.32.0</OctokitVersion>
+    <OctokitVersion>10.0.0</OctokitVersion>
     <DotNetSleetLibVersion>2.2.143</DotNetSleetLibVersion>
     <SystemBuffersVersion>4.5.0</SystemBuffersVersion>
     <SystemCollectionsImmutableVersion>1.5.0</SystemCollectionsImmutableVersion>
