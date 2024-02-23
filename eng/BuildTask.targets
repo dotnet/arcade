@@ -1,5 +1,7 @@
 <Project>
 
+  <Import Project="BuildTask.Packages.props"/>
+
   <PropertyGroup>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <IsPackable>true</IsPackable>
@@ -58,6 +60,7 @@
     <PackageReference Update="System.Reflection.Metadata" Publish="false" />
     <PackageReference Update="System.Reflection.MetadataLoadContext" Publish="false" />
     <PackageReference Update="System.Runtime.CompilerServices.Unsafe" Publish="false" />
+    <PackageReference Update="System.Security.Cryptography.Xml" Publish="false" />
     <PackageReference Update="System.Text.Encodings.Web" Publish="false" />
     <PackageReference Update="System.Text.Json" Publish="false" />
     <PackageReference Update="System.Threading.Tasks.Dataflow" Publish="false" />
@@ -82,19 +85,25 @@
     <Reference Update="@(Reference)"
                Pack="false" />
   </ItemGroup>
-  
+
   <!-- Publish .NET Core assets and include them in the package under $(BuildTaskTargetFolder) directory. -->
   <Target Name="_AddBuildOutputToPackageCore" DependsOnTargets="Publish" Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
+    <PropertyGroup>
+      <BuildTaskTargetTfmSpecificFolder Condition="'$(BuildTaskTargetTfmSpecificFolder)' == ''">$(TargetFramework)</BuildTaskTargetTfmSpecificFolder>
+    </PropertyGroup>
     <ItemGroup>
-      <TfmSpecificPackageFile Include="$(PublishDir)**" 
-                              PackagePath="$(BuildTaskTargetFolder)/$(TargetFramework)/%(RecursiveDir)%(FileName)%(Extension)"/>
+      <TfmSpecificPackageFile Include="$(PublishDir)**"
+                              PackagePath="$(BuildTaskTargetFolder)/$(BuildTaskTargetTfmSpecificFolder)/%(RecursiveDir)%(FileName)%(Extension)"/>
     </ItemGroup>
   </Target>
 
   <!-- Include .NET Framework build outputs in the package under $(BuildTaskTargetFolder) directory. -->
   <Target Name="_AddBuildOutputToPackageDesktop" Condition="'$(TargetFrameworkIdentifier)' != '.NETCoreApp'">
+    <PropertyGroup>
+      <BuildTaskTargetTfmSpecificFolder Condition="'$(BuildTaskTargetTfmSpecificFolder)' == ''">$(TargetFramework)</BuildTaskTargetTfmSpecificFolder>
+    </PropertyGroup>
     <ItemGroup>
-      <TfmSpecificPackageFile Include="$(OutputPath)**" PackagePath="$(BuildTaskTargetFolder)/$(TargetFramework)/%(RecursiveDir)%(FileName)%(Extension)"/>
+      <TfmSpecificPackageFile Include="$(OutputPath)**" PackagePath="$(BuildTaskTargetFolder)/$(BuildTaskTargetTfmSpecificFolder)/%(RecursiveDir)%(FileName)%(Extension)"/>
     </ItemGroup>
   </Target>
 

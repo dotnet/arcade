@@ -2,7 +2,7 @@
 #nullable enable
 #else
 // In case this is source-imported with global nullable enabled but no XUNIT_NULLABLE
-#pragma warning disable CS8600
+#pragma warning disable CS8601
 #pragma warning disable CS8603
 #pragma warning disable CS8604
 #pragma warning disable CS8605
@@ -15,6 +15,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+
+#if XUNIT_NULLABLE
+using System.Diagnostics.CodeAnalysis;
+#endif
 
 namespace Xunit.Sdk
 {
@@ -36,8 +40,12 @@ namespace Xunit.Sdk
 		/// <exception cref="ArgumentNullException"></exception>
 		protected CollectionTracker(IEnumerable innerEnumerable)
 		{
+#if NET6_0_OR_GREATER
+			ArgumentNullException.ThrowIfNull(innerEnumerable);
+#else
 			if (innerEnumerable == null)
 				throw new ArgumentNullException(nameof(innerEnumerable));
+#endif
 
 			InnerEnumerable = innerEnumerable;
 		}
@@ -82,7 +90,11 @@ namespace Xunit.Sdk
 			mismatchedIndex = null;
 
 			return
+#if XUNIT_AOT
 				CheckIfDictionariesAreEqual(x, y, itemComparer) ??
+#else
+				CheckIfDictionariesAreEqual(x, y) ??
+#endif
 				CheckIfSetsAreEqual(x, y, isDefaultItemComparer ? null : itemComparer) ??
 				CheckIfArraysAreEqual(x, y, itemComparer, isDefaultItemComparer, out mismatchedIndex) ??
 				CheckIfEnumerablesAreEqual(x, y, itemComparer, isDefaultItemComparer, out mismatchedIndex);
@@ -146,12 +158,16 @@ namespace Xunit.Sdk
 		static bool? CheckIfDictionariesAreEqual(
 #if XUNIT_NULLABLE
 			CollectionTracker? x,
-			CollectionTracker? y,
+			CollectionTracker? y
 #else
 			CollectionTracker x,
-			CollectionTracker y,
+			CollectionTracker y
 #endif
-			IEqualityComparer itemComparer)
+#if XUNIT_AOT
+			, IEqualityComparer itemComparer)
+#else
+		)
+#endif
 		{
 			if (x == null || y == null)
 				return null;
@@ -167,6 +183,11 @@ namespace Xunit.Sdk
 
 			var dictionaryYKeys = new HashSet<object>(dictionaryY.Keys.Cast<object>());
 
+#if !XUNIT_AOT
+			// We don't pass along the itemComparer from AreCollectionsEqual because we aren't directly
+			// comparing the KeyValuePair<> objects. Instead we rely on Contains() on the dictionary to
+			// match up keys, and then create type-appropriate comparers for the values.
+#endif
 			foreach (var key in dictionaryX.Keys.Cast<object>())
 			{
 				if (!dictionaryYKeys.Contains(key))
@@ -175,8 +196,26 @@ namespace Xunit.Sdk
 				var valueX = dictionaryX[key];
 				var valueY = dictionaryY[key];
 
-				if (!itemComparer.Equals(valueX, valueY))
+				if (valueX == null)
+				{
+					if (valueY != null)
+						return false;
+				}
+				else if (valueY == null)
 					return false;
+				else
+				{
+					var valueXType = valueX.GetType();
+					var valueYType = valueY.GetType();
+
+#if XUNIT_AOT
+					var comparer = itemComparer;
+#else
+					var comparer = AssertEqualityComparer.GetDefaultComparer(valueXType == valueYType ? valueXType : typeof(object));
+#endif
+					if (!comparer.Equals(valueX, valueY))
+						return false;
+				}
 
 				dictionaryYKeys.Remove(key);
 			}
@@ -316,6 +355,37 @@ namespace Xunit.Sdk
 		public abstract void Dispose();
 
 		/// <summary>
+		/// Formats the collection when you have a mismatched index. The formatted result will be the section of the
+		/// collection surrounded by the mismatched item.
+		/// </summary>
+		/// <param name="mismatchedIndex">The index of the mismatched item</param>
+		/// <param name="pointerIndent">How many spaces into the output value the pointed-to item begins at</param>
+		/// <param name="depth">The optional printing depth (1 indicates a top-level value)</param>
+		/// <returns>The formatted collection</returns>
+		public abstract string FormatIndexedMismatch(
+			int? mismatchedIndex,
+			out int? pointerIndent,
+			int depth = 1);
+
+		/// <summary>
+		/// Formats the collection when you have a mismatched index. The formatted result will be the section of the
+		/// collection from <paramref name="startIndex"/> to <paramref name="endIndex"/>. These indices are usually
+		/// obtained by calling <see cref="GetMismatchExtents"/>.
+		/// </summary>
+		/// <param name="startIndex">The start index of the collection to print</param>
+		/// <param name="endIndex">The end index of the collection to print</param>
+		/// <param name="mismatchedIndex">The mismatched item index</param>
+		/// <param name="pointerIndent">How many spaces into the output value the pointed-to item begins at</param>
+		/// <param name="depth">The optional printing depth (1 indicates a top-level value)</param>
+		/// <returns>The formatted collection</returns>
+		public abstract string FormatIndexedMismatch(
+			int startIndex,
+			int endIndex,
+			int? mismatchedIndex,
+			out int? pointerIndent,
+			int depth = 1);
+
+		/// <summary>
 		/// Formats the beginning part of the collection.
 		/// </summary>
 		/// <param name="depth">The optional printing depth (1 indicates a top-level value)</param>
@@ -323,11 +393,39 @@ namespace Xunit.Sdk
 		public abstract string FormatStart(int depth = 1);
 
 		/// <summary>
+		/// Gets the extents to print when you find a mismatched index, in the form of
+		/// a <paramref name="startIndex"/> and <paramref name="endIndex"/>. If the mismatched
+		/// index is <c>null</c>, the extents will start at index 0.
+		/// </summary>
+		/// <param name="mismatchedIndex">The mismatched item index</param>
+		/// <param name="startIndex">The start index that should be used for printing</param>
+		/// <param name="endIndex">The end index that should be used for printing</param>
+		public abstract void GetMismatchExtents(
+			int? mismatchedIndex,
+			out int startIndex,
+			out int endIndex);
+
+		/// <summary>
 		/// Gets a safe version of <see cref="IEnumerator"/> that prevents double enumeration and does all
 		/// the necessary tracking required for collection formatting. Should should be the same value
 		/// returned by <see cref="CollectionTracker{T}.GetEnumerator"/>, except non-generic.
 		/// </summary>
-		protected abstract IEnumerator GetSafeEnumerator();
+		protected internal abstract IEnumerator GetSafeEnumerator();
+
+		/// <summary>
+		/// Gets the full name of the type of the element at the given index, if known.
+		/// Since this uses the item cache produced by enumeration, it may return <c>null</c>
+		/// when we haven't enumerated enough to see the given element, or if we enumerated
+		/// so much that the item has left the cache, or if the item at the given index
+		/// is <c>null</c>. It will also return <c>null</c> when the <paramref name="index"/>
+		/// is <c>null</c>.
+		/// </summary>
+		/// <param name="index">The item index</param>
+#if XUNIT_NULLABLE
+		public abstract string? TypeAt(int? index);
+#else
+		public abstract string TypeAt(int? index);
+#endif
 
 		/// <summary>
 		/// Wraps an untyped enumerable in an object-based <see cref="CollectionTracker{T}"/>.
@@ -347,7 +445,12 @@ namespace Xunit.Sdk
 #else
 	public
 #endif
-	sealed class CollectionTracker<T> : CollectionTracker, IEnumerable<T>
+	sealed class CollectionTracker<[DynamicallyAccessedMembers(
+					DynamicallyAccessedMemberTypes.PublicFields
+					| DynamicallyAccessedMemberTypes.NonPublicFields
+					| DynamicallyAccessedMemberTypes.PublicProperties
+					| DynamicallyAccessedMemberTypes.NonPublicProperties
+					| DynamicallyAccessedMemberTypes.PublicMethods)] T> : CollectionTracker, IEnumerable<T>
 	{
 		const int MAX_ENUMERABLE_LENGTH_HALF = ArgumentFormatter.MAX_ENUMERABLE_LENGTH / 2;
 
@@ -368,8 +471,12 @@ namespace Xunit.Sdk
 			IEnumerable<T> castCollection) :
 				base(collection)
 		{
+#if NET6_0_OR_GREATER
+			ArgumentNullException.ThrowIfNull(castCollection);
+#else
 			if (castCollection == null)
 				throw new ArgumentNullException(nameof(castCollection));
+#endif
 
 			this.collection = castCollection;
 		}
@@ -390,15 +497,8 @@ namespace Xunit.Sdk
 		public override void Dispose() =>
 			enumerator?.DisposeInternal();
 
-		/// <summary>
-		/// Formats the collection when you have a mismatched index. The formatted result will be the section of the
-		/// collection surrounded by the mismatched item.
-		/// </summary>
-		/// <param name="mismatchedIndex">The index of the mismatched item</param>
-		/// <param name="pointerIndent">How many spaces into the output value the pointed-to item begins at</param>
-		/// <param name="depth">The optional printing depth (1 indicates a top-level value)</param>
-		/// <returns>The formatted collection</returns>
-		public string FormatIndexedMismatch(
+		/// <inheritdoc/>
+		public override string FormatIndexedMismatch(
 			int? mismatchedIndex,
 			out int? pointerIndent,
 			int depth = 1)
@@ -429,18 +529,8 @@ namespace Xunit.Sdk
 			);
 		}
 
-		/// <summary>
-		/// Formats the collection when you have a mismatched index. The formatted result will be the section of the
-		/// collection from <paramref name="startIndex"/> to <paramref name="endIndex"/>. These indices are usually
-		/// obtained by calling <see cref="GetMismatchExtents"/>.
-		/// </summary>
-		/// <param name="startIndex">The start index of the collection to print</param>
-		/// <param name="endIndex">The end index of the collection to print</param>
-		/// <param name="mismatchedIndex">The mismatched item index</param>
-		/// <param name="pointerIndent">How many spaces into the output value the pointed-to item begins at</param>
-		/// <param name="depth">The optional printing depth (1 indicates a top-level value)</param>
-		/// <returns>The formatted collection</returns>
-		public string FormatIndexedMismatch(
+		/// <inheritdoc/>
+		public override string FormatIndexedMismatch(
 			int startIndex,
 			int endIndex,
 			int? mismatchedIndex,
@@ -655,18 +745,11 @@ namespace Xunit.Sdk
 			GetEnumerator();
 
 		/// <inheritdoc/>
-		protected override IEnumerator GetSafeEnumerator() =>
+		protected internal override IEnumerator GetSafeEnumerator() =>
 			GetEnumerator();
 
-		/// <summary>
-		/// Gets the extents to print when you find a mismatched index, in the form of
-		/// a <paramref name="startIndex"/> and <paramref name="endIndex"/>. If the mismatched
-		/// index is <c>null</c>, the extents will start at index 0.
-		/// </summary>
-		/// <param name="mismatchedIndex">The mismatched item index</param>
-		/// <param name="startIndex">The start index that should be used for printing</param>
-		/// <param name="endIndex">The end index that should be used for printing</param>
-		public void GetMismatchExtents(
+		/// <inheritdoc/>
+		public override void GetMismatchExtents(
 			int? mismatchedIndex,
 			out int startIndex,
 			out int endIndex)
@@ -686,19 +769,11 @@ namespace Xunit.Sdk
 			startIndex = Math.Max(0, endIndex - ArgumentFormatter.MAX_ENUMERABLE_LENGTH + 1);
 		}
 
-		/// <summary>
-		/// Gets the full name of the type of the element at the given index, if known.
-		/// Since this uses the item cache produced by enumeration, it may return <c>null</c>
-		/// when we haven't enumerated enough to see the given element, or if we enumerated
-		/// so much that the item has left the cache, or if the item at the given index
-		/// is <c>null</c>. It will also return <c>null</c> when the <paramref name="index"/>
-		/// is <c>null</c>.
-		/// </summary>
-		/// <param name="index">The item index</param>
+		/// <inheritdoc/>
 #if XUNIT_NULLABLE
-		public string? TypeAt(int? index)
+		public override string? TypeAt(int? index)
 #else
-		public string TypeAt(int? index)
+		public override string TypeAt(int? index)
 #endif
 		{
 			if (enumerator == null || !index.HasValue)
@@ -709,7 +784,7 @@ namespace Xunit.Sdk
 #else
 			T item;
 #endif
-			if (!enumerator.CurrentItems.TryGetValue(index.Value, out item))
+			if (!enumerator.TryGetCurrentItemAt(index.Value, out item))
 				return null;
 
 			return item?.GetType().FullName;
@@ -724,6 +799,8 @@ namespace Xunit.Sdk
 
 		sealed class Enumerator : IEnumerator<T>
 		{
+			int currentItemsLastInsertionIndex = -1;
+			T[] currentItemsRingBuffer = new T[ArgumentFormatter.MAX_ENUMERABLE_LENGTH];
 			readonly IEnumerator<T> innerEnumerator;
 
 			public Enumerator(IEnumerator<T> innerEnumerator)
@@ -743,7 +820,32 @@ namespace Xunit.Sdk
 
 			public int CurrentIndex { get; private set; } = -1;
 
-			public Dictionary<int, T> CurrentItems { get; } = new Dictionary<int, T>();
+			public Dictionary<int, T> CurrentItems
+			{
+				get
+				{
+					var result = new Dictionary<int, T>();
+
+					if (CurrentIndex > -1)
+					{
+						var itemIndex = Math.Max(0, CurrentIndex - ArgumentFormatter.MAX_ENUMERABLE_LENGTH + 1);
+
+						var indexInRingBuffer = (currentItemsLastInsertionIndex - CurrentIndex + itemIndex) % ArgumentFormatter.MAX_ENUMERABLE_LENGTH;
+						if (indexInRingBuffer < 0)
+							indexInRingBuffer += ArgumentFormatter.MAX_ENUMERABLE_LENGTH;
+
+						while (itemIndex <= CurrentIndex)
+						{
+							result[itemIndex] = currentItemsRingBuffer[indexInRingBuffer];
+
+							++itemIndex;
+							indexInRingBuffer = (indexInRingBuffer + 1) % ArgumentFormatter.MAX_ENUMERABLE_LENGTH;
+						}
+					}
+
+					return result;
+				}
+			}
 
 			public List<T> StartItems { get; } = new List<T>();
 
@@ -768,19 +870,42 @@ namespace Xunit.Sdk
 				if (CurrentIndex <= ArgumentFormatter.MAX_ENUMERABLE_LENGTH)
 					StartItems.Add(current);
 
-				// Keep the most recent MAX_ENUMERABLE_LENGTH in the dictionary,
+				// Keep a ring buffer filled with the most recent MAX_ENUMERABLE_LENGTH items
 				// so we can print out the items when we've found a bad index
-				CurrentItems[CurrentIndex] = current;
-
-				if (CurrentIndex >= ArgumentFormatter.MAX_ENUMERABLE_LENGTH)
-					CurrentItems.Remove(CurrentIndex - ArgumentFormatter.MAX_ENUMERABLE_LENGTH);
+				currentItemsLastInsertionIndex = (currentItemsLastInsertionIndex + 1) % ArgumentFormatter.MAX_ENUMERABLE_LENGTH;
+				currentItemsRingBuffer[currentItemsLastInsertionIndex] = current;
 
 				return true;
 			}
 
 			public void Reset()
 			{
-				throw new InvalidOperationException("This enumerator does not support resetting");
+				innerEnumerator.Reset();
+
+				CurrentIndex = -1;
+				currentItemsLastInsertionIndex = -1;
+				StartItems.Clear();
+			}
+
+			public bool TryGetCurrentItemAt(
+				int index,
+#if XUNIT_NULLABLE
+				[MaybeNullWhen(false)] out T item)
+#else
+				out T item)
+#endif
+			{
+				item = default(T);
+
+				if (index < 0 || index <= CurrentIndex - ArgumentFormatter.MAX_ENUMERABLE_LENGTH || index > CurrentIndex)
+					return false;
+
+				var indexInRingBuffer = (currentItemsLastInsertionIndex - CurrentIndex + index) % ArgumentFormatter.MAX_ENUMERABLE_LENGTH;
+				if (indexInRingBuffer < 0)
+					indexInRingBuffer += ArgumentFormatter.MAX_ENUMERABLE_LENGTH;
+
+				item = currentItemsRingBuffer[indexInRingBuffer];
+				return true;
 			}
 		}
 	}

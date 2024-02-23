@@ -131,8 +131,8 @@ No verb selected.
 When executing most operations, the client needs to make some remote queries.
 These remote queries require authentication in most circumstances. There are 3
 PATs that may be used:
-- A GitHub PAT for downloading files from GitHub (e.g. eng/Version.Details.xml or
-  arcade script files.  Required scopes: None
+- A GitHub PAT for downloading files from GitHub (e.g. `eng/Version.Details.xml` or
+  arcade script files. No scopes required but token must be [SSO enabled](https://docs.github.com/en/enterprise-cloud@latest/authentication/authenticating-with-saml-single-sign-on/authorizing-a-personal-access-token-for-use-with-saml-single-sign-on) for all organizations for which repositories `darc` will be used.
 - An Azure DevOps PAT for downloading files from Azure DevOps. (e.g.
   eng/Version.Details.xml)  Required scopes: Code-Read, Build-Read & Execute, Packaging Read.
   The recommended way of generating the PAT is using the [PatGeneratorTool](https://dev.azure.com/dnceng/public/_artifacts/feed/dotnet-eng/NuGet/Microsoft.DncEng.PatGeneratorTool),
@@ -850,9 +850,9 @@ PS C:\enlistments\core-sdk> darc gather-drop --repo https://github.com/dotnet/co
 
 If no build exists at that drop, darc will show an error. In this case, you
 might try other recent shas, or use the BAR swagger API
-(https://maestro-prod.westus2.cloudapp.azure.com/swagger) to look up a build
+(https://maestro.dot.net/swagger) to look up a build
 id. Remember to authenticate using a token from
-https://maestro-prod.westus2.cloudapp.azure.com/.  Better methods of obtaining
+https://maestro.dot.net/.  Better methods of obtaining
 the root build are coming soon.
 
 The root build can then be provided using --id
@@ -951,7 +951,7 @@ You will find them on the `Checks` tab of each updates PRs created by maestro. D
 There are a few common parameters available on every command:
 
 - `-p, --password` - Build Asset Registry password.  You can obtain this
-  password by going to https://maestro-prod.westus2.cloudapp.azure.com/, logging
+  password by going to https://maestro.dot.net/, logging
   in using the link in the top right, then generating a token using the menu in
   the top right.  This setting overrides whatever BAR password was provided through `darc authenticate`.
 - `--github-pat` - Personal access token used to authenticate GitHub. This is a GitHub PAT used
@@ -963,7 +963,7 @@ There are a few common parameters available on every command:
   This token should have Code Read permissions. This setting overrides whatever
   Azure DevOps PAT was provided through `darc authenticate`.
 - `--bar-uri` - URI of the build asset registry service to use.  Typically left
-  as its default (https://maestro-prod.westus2.cloudapp.azure.com) This setting
+  as its default (https://maestro.dot.net) This setting
   overrides the Build Asset Registry URI provided through `darc authenticate`.
 - `--verbose` - Turn on additional output.
 - `--debug` - Turn on debug output
@@ -1415,13 +1415,13 @@ PS D:\enlistments\arcade> darc authenticate
 
 (opens in editor)
 
-# Create new BAR tokens at https://maestro-prod.westus2.cloudapp.azure.com/Account/Tokens
+# Create new BAR tokens at https://maestro.dot.net/Account/Tokens
 bar_password=***
 # Create new GitHub personal access tokens at https://github.com/settings/tokens (no auth scopes needed)
 github_token=***
 # Create new Azure Dev Ops tokens at https://dev.azure.com/dnceng/_details/security/tokens (code read scope needed)
 azure_devops_token=***
-build_asset_registry_base_uri=https://maestro-prod.westus2.cloudapp.azure.com/
+build_asset_registry_base_uri=https://maestro.dot.net/
 
 # Storing the required settings...
 # Set elements above depending on what you need

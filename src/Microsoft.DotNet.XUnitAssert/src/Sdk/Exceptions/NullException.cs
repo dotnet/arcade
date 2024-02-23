@@ -6,6 +6,8 @@
 #endif
 
 using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 
 namespace Xunit.Sdk
 {
@@ -29,14 +31,24 @@ namespace Xunit.Sdk
 		/// </summary>
 		/// <param name="type">The inner type of the value</param>
 		/// <param name="actual">The actual non-<c>null</c> value</param>
-		public static Exception ForNonNullStruct<T>(
+		public static Exception ForNonNullStruct<[DynamicallyAccessedMembers(
+					DynamicallyAccessedMemberTypes.PublicFields
+					| DynamicallyAccessedMemberTypes.NonPublicFields
+					| DynamicallyAccessedMemberTypes.PublicProperties
+					| DynamicallyAccessedMemberTypes.NonPublicProperties
+					| DynamicallyAccessedMemberTypes.PublicMethods)] T>(
 			Type type,
 			T? actual)
 				where T : struct =>
 					new NullException(
-						$"Assert.Null() Failure: Value of type 'Nullable<{ArgumentFormatter.FormatTypeName(Assert.GuardArgumentNotNull(nameof(type), type))}>' has a value" + Environment.NewLine +
-						"Expected: null" + Environment.NewLine +
-						"Actual:   " + ArgumentFormatter.Format(actual)
+						string.Format(
+							CultureInfo.CurrentCulture,
+							"Assert.Null() Failure: Value of type 'Nullable<{0}>' has a value{1}Expected: null{2}Actual:   {3}",
+							ArgumentFormatter.FormatTypeName(Assert.GuardArgumentNotNull(nameof(type), type)),
+							Environment.NewLine,
+							Environment.NewLine,
+							ArgumentFormatter.Format(actual)
+						)
 					);
 
 		/// <summary>
@@ -44,11 +56,22 @@ namespace Xunit.Sdk
 		/// when the given value was unexpectedly not null.
 		/// </summary>
 		/// <param name="actual">The actual non-<c>null</c> value</param>
-		public static NullException ForNonNullValue(object actual) =>
+		[UnconditionalSuppressMessage("ReflectionAnalysis", "IL2019:Mismatched constraints",
+						Justification = "Assert.GuardArgumentNotNull returns the same type passed in, so the annotations on the T type parameter will work")]
+		public static NullException ForNonNullValue<[DynamicallyAccessedMembers(
+					DynamicallyAccessedMemberTypes.PublicFields
+					| DynamicallyAccessedMemberTypes.NonPublicFields
+					| DynamicallyAccessedMemberTypes.PublicProperties
+					| DynamicallyAccessedMemberTypes.NonPublicProperties
+					| DynamicallyAccessedMemberTypes.PublicMethods)] T>(T actual) =>
 			new NullException(
-				"Assert.Null() Failure: Value is not null" + Environment.NewLine +
-				"Expected: null" + Environment.NewLine +
-				"Actual:   " + ArgumentFormatter.Format(Assert.GuardArgumentNotNull(nameof(actual), actual))
+				string.Format(
+					CultureInfo.CurrentCulture,
+					"Assert.Null() Failure: Value is not null{0}Expected: null{1}Actual:   {2}",
+					Environment.NewLine,
+					Environment.NewLine,
+					ArgumentFormatter.Format(Assert.GuardArgumentNotNull(nameof(actual), actual))
+				)
 			);
 	}
 }

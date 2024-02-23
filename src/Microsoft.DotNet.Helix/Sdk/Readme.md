@@ -54,8 +54,8 @@ In order to run them, one has to publish the SDK locally so that the unit tests 
     ```
 3. Publish Arcade SDK and Helix SDK
     ```sh
-    dotnet publish -f net8.0 src/Microsoft.DotNet.Arcade.Sdk/Microsoft.DotNet.Arcade.Sdk.csproj
-    dotnet publish -f net8.0 src/Microsoft.DotNet.Helix/Sdk/Microsoft.DotNet.Helix.Sdk.csproj
+    dotnet publish -f net9.0 src/Microsoft.DotNet.Arcade.Sdk/Microsoft.DotNet.Arcade.Sdk.csproj
+    dotnet publish -f net9.0 src/Microsoft.DotNet.Helix/Sdk/Microsoft.DotNet.Helix.Sdk.csproj
     ```
 4. Pick one of the test `.proj` files, set some env variables and build it  
     Bash
@@ -228,7 +228,7 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
     <!-- TargetFramework of the xunit.runner.dll to use when running the tests -->
     <XUnitRuntimeTargetFramework>netcoreapp2.0</XUnitRuntimeTargetFramework>
     <!-- PackageVersion of xunit.runner.console to use -->
-    <XUnitRunnerVersion>2.5.3</XUnitRunnerVersion>
+    <XUnitRunnerVersion>2.6.7-pre.5</XUnitRunnerVersion>
     <!-- Additional command line arguments to pass to xunit.console.exe -->
     <XUnitArguments></XUnitArguments>
   </PropertyGroup>

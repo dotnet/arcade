@@ -20,16 +20,26 @@ namespace Xunit
 #endif
 	partial class Assert
 	{
-		static IComparer<T> GetComparer<T>()
-			where T : IComparable =>
-				new AssertComparer<T>();
-
 #if XUNIT_NULLABLE
-		static IEqualityComparer<T?> GetEqualityComparer<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] T>(IEqualityComparer? innerComparer = null) =>
+		static IEqualityComparer<T?> GetEqualityComparer<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces |
+				DynamicallyAccessedMemberTypes.PublicFields |
+				DynamicallyAccessedMemberTypes.NonPublicFields |
+				DynamicallyAccessedMemberTypes.PublicProperties |
+				DynamicallyAccessedMemberTypes.NonPublicProperties |
+				DynamicallyAccessedMemberTypes.PublicMethods)] T>(IEqualityComparer? innerComparer = null) =>
 			new AssertEqualityComparer<T?>(innerComparer);
 #else
-		static IEqualityComparer<T> GetEqualityComparer<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] T>(IEqualityComparer innerComparer = null) =>
+		static IEqualityComparer<T> GetEqualityComparer<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces |
+				DynamicallyAccessedMemberTypes.PublicFields |
+				DynamicallyAccessedMemberTypes.NonPublicFields |
+				DynamicallyAccessedMemberTypes.PublicProperties |
+				DynamicallyAccessedMemberTypes.NonPublicProperties |
+				DynamicallyAccessedMemberTypes.PublicMethods)] T>(IEqualityComparer innerComparer = null) =>
 			new AssertEqualityComparer<T>(innerComparer);
 #endif
+
+		static IComparer<T> GetRangeComparer<T>()
+			where T : IComparable =>
+				new AssertRangeComparer<T>();
 	}
 }

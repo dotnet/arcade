@@ -1,9 +1,11 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
+
   <PropertyGroup>
-    <XUnitPublishTargetFramework Condition="'$(XUnitPublishTargetFramework)' == ''">net8.0</XUnitPublishTargetFramework>
+    <XUnitPublishTargetFramework Condition="'$(XUnitPublishTargetFramework)' == ''">net9.0</XUnitPublishTargetFramework>
     <XUnitRuntimeTargetFramework Condition="'$(XUnitRuntimeTargetFramework)' == ''">netcoreapp2.0</XUnitRuntimeTargetFramework>
 
-    <XUnitRunnerVersion Condition="'$(XUnitRunnerVersion)' == ''">2.5.3</XUnitRunnerVersion>
+    <XUnitRunnerVersion Condition="'$(XUnitRunnerVersion)' == ''">2.6.7-pre.5</XUnitRunnerVersion>
 
     <_XUnitPublishTargetsPath>$(MSBuildThisFileDirectory)XUnitPublish.targets</_XUnitPublishTargetsPath>
 

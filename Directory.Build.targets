@@ -1,16 +1,7 @@
 <Project>
 
   <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
-
-  <ItemGroup>
-    <!-- Upgrade xunit's transitive NETStandard.Library dependency to avoid .NET Standard 1.x dependencies. -->
-    <PackageReference Include="NETStandard.Library"
-                      IsImplicitlyDefined="false"
-                      PrivateAssets="all"
-                      ExcludeAssets="runtime"
-                      VersionOverride="2.0.3"
-                      Condition="'$(TargetFrameworkIdentifier)' != '.NETStandard' and
-                                 $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netstandard2.0'))" />
-  </ItemGroup>
+  <Import Project="$(RepositoryEngineeringDir)Microsoft.DotNet.XliffTasks.InTree.targets" Condition="'$(UsingInTreeToolXliff)' == 'true'" />
+  <Import Project="$(RepositoryEngineeringDir)BuildTask.targets" Condition="'$(IsBuildTaskProject)' == 'true'" />
 
 </Project>

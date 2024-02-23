@@ -2,14 +2,17 @@
   
   <!-- Most of the code has been ported from https://devdiv.visualstudio.com/DevDiv/_git/CoreFxTools repo.-->
   <PropertyGroup>
-    <TargetFramework>$(NetCurrent)</TargetFramework>
+    <TargetFramework>$(NetToolCurrent)</TargetFramework>
     <OutputType>Exe</OutputType>
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>dotnet-asmdiff</ToolCommandName>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <ExcludeFromSourceOnlyBuild>true</ExcludeFromSourceOnlyBuild>
     <StrongNameKeyId>Open</StrongNameKeyId>
     <UsingToolXliff>true</UsingToolXliff>
+    <!-- Use xliff localization. -->
+    <UsingInTreeToolXliff>true</UsingInTreeToolXliff>
   </PropertyGroup>
   
   <ItemGroup>
@@ -26,8 +29,6 @@
   
   <ItemGroup>
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" />
-    <!-- Arcade only makes shipping assemblies localizable by default, we'd like to localize this tool without treating it as "shipping". -->
-    <PackageReference Include="Microsoft.DotNet.XliffTasks" PrivateAssets="all" />
 
     <!-- Manually reference Microsoft.Cci.dll via a PackageDownload+Reference item instead of
          using a PackageReference to avoid bringing in the old dependency graph. -->

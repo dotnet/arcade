@@ -23,6 +23,10 @@ using Xunit.Sdk;
 using System.Diagnostics.CodeAnalysis;
 #endif
 
+#if NETCOREAPP3_0_OR_GREATER
+using System.Threading.Tasks;
+#endif
+
 namespace Xunit.Internal
 {
 	internal static class AssertHelper
@@ -49,7 +53,7 @@ namespace Xunit.Internal
 		const string fileSystemInfoFqn = "System.IO.FileSystemInfo, System.Runtime";
 #if XUNIT_NULLABLE
 		static readonly Lazy<TypeInfo?> fileSystemInfoTypeInfo = new Lazy<TypeInfo?>(() => Type.GetType(fileSystemInfoFqn)?.GetTypeInfo());
-		static readonly Lazy<PropertyInfo?> fileSystemInfoFullNameProperty = new Lazy<PropertyInfo?>(() => fileSystemInfoTypeInfo.Value?.GetDeclaredProperty("FullName"));
+		static readonly Lazy<PropertyInfo?> fileSystemInfoFullNameProperty = new Lazy<PropertyInfo?>(() => Type.GetType(fileSystemInfoFqn)?.GetTypeInfo().GetDeclaredProperty("FullName"));
 #else
 		static readonly Lazy<TypeInfo> fileSystemInfoTypeInfo = new Lazy<TypeInfo>(() => GetTypeInfo(fileSystemInfoFqn)?.GetTypeInfo());
 		static readonly Lazy<PropertyInfo> fileSystemInfoFullNameProperty = new Lazy<PropertyInfo>(() => fileSystemInfoTypeInfo.Value?.GetDeclaredProperty("FullName"));
@@ -85,10 +89,19 @@ namespace Xunit.Internal
 #endif
 		});
 
+		[UnconditionalSuppressMessage("ReflectionAnalysis", "IL2111: Method 'lambda expression' with parameters or return value with `DynamicallyAccessedMembersAttribute` is accessed via reflection. Trimmer can't guarantee availability of the requirements of the method.", Justification = "The lambda will only be called by the value in the type parameter, which has the same requirements.")]
 #if XUNIT_NULLABLE
-		static Dictionary<string, Func<object?, object?>> GetGettersForType(Type type) =>
+		static Dictionary<string, Func<object?, object?>> GetGettersForType([DynamicallyAccessedMembers(
+					DynamicallyAccessedMemberTypes.PublicFields
+					| DynamicallyAccessedMemberTypes.NonPublicFields
+					| DynamicallyAccessedMemberTypes.PublicProperties
+					| DynamicallyAccessedMemberTypes.NonPublicProperties)] Type type) =>
 #else
-		static Dictionary<string, Func<object, object>> GetGettersForType(Type type) =>
+		static Dictionary<string, Func<object, object>> GetGettersForType([DynamicallyAccessedMembers(
+					DynamicallyAccessedMemberTypes.PublicFields
+					| DynamicallyAccessedMemberTypes.NonPublicFields
+					| DynamicallyAccessedMemberTypes.PublicProperties
+					| DynamicallyAccessedMemberTypes.NonPublicProperties)] Type type) =>
 #endif
 			gettersByType.GetOrAdd(type,
 				([DynamicallyAccessedMembers(
@@ -122,6 +135,34 @@ namespace Xunit.Internal
 						.Concat(propertyGetters)
 						.ToDictionary(g => g.name, g => g.getter);
 			});
+
+#if !XUNIT_AOT
+#if XUNIT_NULLABLE
+		static TypeInfo? GetTypeInfo(string typeName)
+#else
+		static TypeInfo GetTypeInfo(string typeName)
+#endif
+		{
+			try
+			{
+				foreach (var assembly in getAssemblies.Value)
+				{
+					var type = assembly.GetType(typeName);
+					if (type != null)
+						return type.GetTypeInfo();
+				}
+
+				return null;
+			}
+			catch (Exception ex)
+			{
+				throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Fatal error: Exception occurred while trying to retrieve type '{0}'", typeName), ex);
+			}
+		}
+#endif
+
+		internal static bool IsCompilerGenerated(Type type) =>
+			type.GetTypeInfo().CustomAttributes.Any(a => a.AttributeType.FullName == "System.Runtime.CompilerServices.CompilerGeneratedAttribute");
 
 		internal static string ShortenAndEncodeString(
 #if XUNIT_NULLABLE
@@ -206,6 +247,33 @@ namespace Xunit.Internal
 			return ShortenAndEncodeString(value, (value?.Length - 1) ?? 0, out pointerIndent);
 		}
 
+#if NETCOREAPP3_0_OR_GREATER
+
+#if XUNIT_NULLABLE
+		[return: NotNullIfNotNull(nameof(data))]
+		internal static IEnumerable<T>? ToEnumerable<T>(IAsyncEnumerable<T>? data) =>
+#else
+		internal static IEnumerable<T> ToEnumerable<T>(IAsyncEnumerable<T> data) =>
+#endif
+			data == null ? null : ToEnumerableImpl(data);
+
+		static IEnumerable<T> ToEnumerableImpl<T>(IAsyncEnumerable<T> data)
+		{
+			var enumerator = data.GetAsyncEnumerator();
+
+			try
+			{
+				while (WaitForValueTask(enumerator.MoveNextAsync()))
+					yield return enumerator.Current;
+			}
+			finally
+			{
+				WaitForValueTask(enumerator.DisposeAsync());
+			}
+		}
+
+#endif
+
 		static bool TryConvert(
 			object value,
 			Type targetType,
@@ -234,13 +302,31 @@ namespace Xunit.Internal
 		}
 
 #if XUNIT_NULLABLE
-		static EquivalentException? VerifyEquivalence(
-			object? expected,
-			object? actual,
+		static EquivalentException? VerifyEquivalence<[DynamicallyAccessedMembers(
+					DynamicallyAccessedMemberTypes.PublicFields
+					| DynamicallyAccessedMemberTypes.NonPublicFields
+					| DynamicallyAccessedMemberTypes.PublicProperties
+					| DynamicallyAccessedMemberTypes.NonPublicProperties)] T,
+			[DynamicallyAccessedMembers(
+					DynamicallyAccessedMemberTypes.PublicFields
+					| DynamicallyAccessedMemberTypes.NonPublicFields
+					| DynamicallyAccessedMemberTypes.PublicProperties
+					| DynamicallyAccessedMemberTypes.NonPublicProperties)] U>(
+			T? expected,
+			U? actual,
 #else
-		static EquivalentException VerifyEquivalence(
-			object expected,
-			object actual,
+		static EquivalentException VerifyEquivalence<[DynamicallyAccessedMembers(
+					DynamicallyAccessedMemberTypes.PublicFields
+					| DynamicallyAccessedMemberTypes.NonPublicFields
+					| DynamicallyAccessedMemberTypes.PublicProperties
+					| DynamicallyAccessedMemberTypes.NonPublicProperties)] T,
+			[DynamicallyAccessedMembers(
+					DynamicallyAccessedMemberTypes.PublicFields
+					| DynamicallyAccessedMemberTypes.NonPublicFields
+					| DynamicallyAccessedMemberTypes.PublicProperties
+					| DynamicallyAccessedMemberTypes.NonPublicProperties)] U>(
+			T expected,
+			U actual,
 #endif
 			bool strict,
 			string prefix,
@@ -268,10 +354,10 @@ namespace Xunit.Internal
 
 			// Prevent circular references
 			if (expectedRefs.Contains(expected))
-				return EquivalentException.ForCircularReference($"{nameof(expected)}.{prefix}");
+				return EquivalentException.ForCircularReference(string.Format(CultureInfo.CurrentCulture, "{0}.{1}", nameof(expected), prefix));
 
 			if (actualRefs.Contains(actual))
-				return EquivalentException.ForCircularReference($"{nameof(actual)}.{prefix}");
+				return EquivalentException.ForCircularReference(string.Format(CultureInfo.CurrentCulture, "{0}.{1}", nameof(actual), prefix));
 
 			expectedRefs.Add(expected);
 			actualRefs.Add(actual);
@@ -349,7 +435,14 @@ namespace Xunit.Internal
 				return EquivalentException.ForMemberValueMismatch(expected, actual, prefix, ex);
 			}
 
-			throw new InvalidOperationException($"VerifyEquivalenceDateTime was given non-DateTime(Offset) objects; typeof(expected) = {ArgumentFormatter.FormatTypeName(expected.GetType())}, typeof(actual) = {ArgumentFormatter.FormatTypeName(actual.GetType())}");
+			throw new InvalidOperationException(
+				string.Format(
+					CultureInfo.CurrentCulture,
+					"VerifyEquivalenceDateTime was given non-DateTime(Offset) objects; typeof(expected) = {0}, typeof(actual) = {1}",
+					ArgumentFormatter.FormatTypeName(expected.GetType()),
+					ArgumentFormatter.FormatTypeName(actual.GetType())
+				)
+			);
 		}
 
 #if XUNIT_NULLABLE
@@ -442,6 +535,7 @@ namespace Xunit.Internal
 			return result ? null : EquivalentException.ForMemberValueMismatch(expected, actual, prefix);
 		}
 
+		[UnconditionalSuppressMessage("ReflectionAnalysis", "IL2072", Justification = "We need to use the runtime type for getting the getters as we can't recursively preserve them. Any members that are trimmed were not touched by the test and likely are not important for equivalence.")]
 #if XUNIT_NULLABLE
 		static EquivalentException? VerifyEquivalenceReference(
 #else
@@ -487,5 +581,29 @@ namespace Xunit.Internal
 
 			return null;
 		}
+
+#if NETCOREAPP3_0_OR_GREATER
+
+		static void WaitForValueTask(ValueTask valueTask)
+		{
+			var valueTaskAwaiter = valueTask.GetAwaiter();
+			if (valueTaskAwaiter.IsCompleted)
+				return;
+
+			// Let the task complete on a thread pool thread while we block the main thread
+			Task.Run(valueTask.AsTask).GetAwaiter().GetResult();
+		}
+
+		static T WaitForValueTask<T>(ValueTask<T> valueTask)
+		{
+			var valueTaskAwaiter = valueTask.GetAwaiter();
+			if (valueTaskAwaiter.IsCompleted)
+				return valueTaskAwaiter.GetResult();
+
+			// Let the task complete on a thread pool thread while we block the main thread
+			return Task.Run(valueTask.AsTask).GetAwaiter().GetResult();
+		}
+
+#endif
 	}
 }

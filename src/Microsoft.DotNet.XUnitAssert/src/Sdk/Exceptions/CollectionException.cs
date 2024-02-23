@@ -3,6 +3,7 @@
 #endif
 
 using System;
+using System.Globalization;
 using System.Linq;
 
 namespace Xunit.Sdk
@@ -17,6 +18,8 @@ namespace Xunit.Sdk
 #endif
 	partial class CollectionException : XunitException
 	{
+		static readonly char[] crlfSeparators = new[] { '\r', '\n' };
+
 		CollectionException(string message) :
 			base(message)
 		{ }
@@ -26,7 +29,7 @@ namespace Xunit.Sdk
 			var lines =
 				innerException
 					.Message
-					.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+					.Split(crlfSeparators, StringSplitOptions.RemoveEmptyEntries)
 					.Select((value, idx) => idx > 0 ? "            " + value : value);
 
 			return string.Join(Environment.NewLine, lines);
@@ -51,9 +54,9 @@ namespace Xunit.Sdk
 			var message = "Assert.Collection() Failure: Item comparison failure";
 
 			if (failurePointerIndent.HasValue)
-				message += $"{Environment.NewLine}            {new string(' ', failurePointerIndent.Value)}↓ (pos {indexFailurePoint})";
+				message += string.Format(CultureInfo.CurrentCulture, "{0}            {1}\u2193 (pos {2})", Environment.NewLine, new string(' ', failurePointerIndent.Value), indexFailurePoint);
 
-			message += $"{Environment.NewLine}Collection: {formattedCollection}{Environment.NewLine}Error:      {FormatInnerException(exception)}";
+			message += string.Format(CultureInfo.CurrentCulture, "{0}Collection: {1}{2}Error:      {3}", Environment.NewLine, formattedCollection, Environment.NewLine, FormatInnerException(exception));
 
 			return new CollectionException(message);
 		}
@@ -70,10 +73,16 @@ namespace Xunit.Sdk
 			int actualCount,
 			string formattedCollection) =>
 				new CollectionException(
-					"Assert.Collection() Failure: Mismatched item count" + Environment.NewLine +
-					"Collection:     " + Assert.GuardArgumentNotNull(nameof(formattedCollection), formattedCollection) + Environment.NewLine +
-					"Expected count: " + expectedCount + Environment.NewLine +
-					"Actual count:   " + actualCount
+					string.Format(
+						CultureInfo.CurrentCulture,
+						"Assert.Collection() Failure: Mismatched item count{0}Collection:     {1}{2}Expected count: {3}{4}Actual count:   {5}",
+						Environment.NewLine,
+						Assert.GuardArgumentNotNull(nameof(formattedCollection), formattedCollection),
+						Environment.NewLine,
+						expectedCount,
+						Environment.NewLine,
+						actualCount
+					)
 				);
 	}
 }

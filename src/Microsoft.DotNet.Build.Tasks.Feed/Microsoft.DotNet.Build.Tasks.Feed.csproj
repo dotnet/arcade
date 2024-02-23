@@ -1,12 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(NetCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
+    <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
     <Description>This package provides support for publishing assets to a NuGet protocol based feed.</Description>
     <DevelopmentDependency>true</DevelopmentDependency>
+    <IsBuildTaskProject>true</IsBuildTaskProject>
     <PackageType>MSBuildSdk</PackageType>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <ExcludeFromSourceOnlyBuild>true</ExcludeFromSourceOnlyBuild>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,9 +20,18 @@
     <PackageReference Include="Microsoft.SymbolUploader" />
   </ItemGroup>
 
+  <!-- Upgrade SymbolUploader's transitive NETStandard.Library dependency to avoid .NET Standard 1.x dependencies. -->
+  <ItemGroup>
+    <PackageReference Include="NETStandard.Library"
+                      IsImplicitlyDefined="false"
+                      PrivateAssets="all"
+                      ExcludeAssets="runtime"
+                      VersionOverride="2.0.3" />
+  </ItemGroup>
+
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
-    <!-- Maestro.Client stopped supporting .NET 4.7.2 long ago. 
-         This functionality should eventually be moved into an arcade-services package, 
+    <!-- Maestro.Client stopped supporting .NET 4.7.2 long ago.
+         This functionality should eventually be moved into an arcade-services package,
          but for users consuming other functionality we'll still support 4.7.2 by ifdefing it out. -->
     <PackageReference Include="Microsoft.DotNet.Maestro.Client" />
   </ItemGroup>
@@ -38,7 +49,5 @@
   <ItemGroup>
     <Compile Include="..\Common\Internal\EnumExtensions.cs" />
   </ItemGroup>
-
-  <Import Project="$(RepositoryEngineeringDir)BuildTask.targets" />
 
 </Project>

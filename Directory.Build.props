@@ -8,12 +8,12 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DebugType>embedded</DebugType>
     <DebugSymbols>true</DebugSymbols>
-    <LangVersion>Latest</LangVersion>
-
-    <!--
-      Tools and packages produced by this repository support infrastructure and are not shipping on NuGet or via any other official channel.
-    -->
+    <LangVersion>latest</LangVersion>
+    <!-- Tools and packages produced by this repository support infrastructure and are not shipping on NuGet or via any other official channel. -->
     <IsShipping>false</IsShipping>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <RepositoryUrl>https://github.com/dotnet/arcade</RepositoryUrl>
   </PropertyGroup>
 
 </Project>

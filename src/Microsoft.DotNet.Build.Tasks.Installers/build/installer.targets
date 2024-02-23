@@ -1,4 +1,6 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
+
   <Target Name="_GetCurrentProjectServicingConfiguration">
     <ItemGroup>
       <CurrentProjectServicingConfiguration
@@ -25,7 +27,7 @@
   -->
   <Target Name="SetLastReleasedVersionForSourceBuild"
           Condition="
-            '$(DotNetBuildFromSource)' == 'true' and
+            ('$(DotNetBuildFromSource)' == 'true' or '$(DotNetBuildSourceOnly)' == 'true') and
             '$(SkipSetLastReleasedVersionForSourceBuild)' != 'true'"
           BeforeTargets="GetProductVersions"
           DependsOnTargets="_GetCurrentProjectServicingConfiguration">
@@ -155,4 +157,5 @@
           Condition="'$(MSBuildProjectExtension)' != '.bundleproj' and '$(GenerateInstallers)' == 'true' and '$(InstallerRuntimeIdentifier)' == ''" />
   <Import Project="$(MSBuildThisFileDirectory)bundle.targets"
           Condition="'$(MSBuildProjectExtension)' == '.bundleproj'" />
+
 </Project>

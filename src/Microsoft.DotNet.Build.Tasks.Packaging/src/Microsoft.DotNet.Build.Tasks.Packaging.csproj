@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(NetCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
+    <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
     <IsPackable>true</IsPackable>
+    <IsBuildTaskProject>true</IsBuildTaskProject>
     <PackageType>MSBuildSdk</PackageType>
     <Title>Packaging Targets and Tasks used by Dotnet repos</Title>
     <PackageDescription>This package provides the following MSBuild tasks:
@@ -71,7 +72,7 @@
     </PropertyGroup>
 
      <Error Condition="'$(_runtimeJsonPath)'==''" Text="Could not locate '$(_runtimeJsonPath)'." />
-     
+
      <ItemGroup>
        <None Include="$(_runtimeJsonPath)"
              CopyToOutputDirectory="PreserveNewest"
@@ -79,7 +80,5 @@
              PackagePath="build\runtime.json" />
      </ItemGroup>
   </Target>
-
-  <Import Project="$(RepositoryEngineeringDir)BuildTask.targets" />
 
 </Project>

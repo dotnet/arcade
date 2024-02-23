@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
+using Xunit.Internal;
 using Xunit.Sdk;
 
 #if XUNIT_NULLABLE
@@ -72,7 +73,13 @@ namespace Xunit
 		/// <param name="expected">The expected value</param>
 		/// <param name="actual">The value to be compared against</param>
 		/// <exception cref="EqualException">Thrown when the objects are not equal</exception>
-		public static void Equal<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] T>(
+		public static void Equal<[DynamicallyAccessedMembers(
+					DynamicallyAccessedMemberTypes.Interfaces
+					| DynamicallyAccessedMemberTypes.PublicFields
+					| DynamicallyAccessedMemberTypes.NonPublicFields
+					| DynamicallyAccessedMemberTypes.PublicProperties
+					| DynamicallyAccessedMemberTypes.NonPublicProperties
+					| DynamicallyAccessedMemberTypes.PublicMethods)] T>(
 #if XUNIT_NULLABLE
 			[AllowNull] T expected,
 			[AllowNull] T actual) =>
@@ -89,7 +96,13 @@ namespace Xunit
 		/// <param name="expected">The expected value</param>
 		/// <param name="actual">The value to be compared against</param>
 		/// <param name="comparer">The comparer used to compare the two objects</param>
-		public static void Equal<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] T>(
+		public static void Equal<[DynamicallyAccessedMembers(
+					DynamicallyAccessedMemberTypes.Interfaces
+					| DynamicallyAccessedMemberTypes.PublicFields
+					| DynamicallyAccessedMemberTypes.NonPublicFields
+					| DynamicallyAccessedMemberTypes.PublicProperties
+					| DynamicallyAccessedMemberTypes.NonPublicProperties
+					| DynamicallyAccessedMemberTypes.PublicMethods)] T>(
 #if XUNIT_NULLABLE
 			[AllowNull] T expected,
 			[AllowNull] T actual,
@@ -108,7 +121,13 @@ namespace Xunit
 		/// <param name="actual">The value to be compared against</param>
 		/// <param name="comparer">The comparer used to compare the two objects</param>
 		/// <exception cref="EqualException">Thrown when the objects are not equal</exception>
-		public static void Equal<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] T>(
+		public static void Equal<[DynamicallyAccessedMembers(
+					DynamicallyAccessedMemberTypes.Interfaces
+					| DynamicallyAccessedMemberTypes.PublicFields
+					| DynamicallyAccessedMemberTypes.NonPublicFields
+					| DynamicallyAccessedMemberTypes.PublicProperties
+					| DynamicallyAccessedMemberTypes.NonPublicProperties
+					| DynamicallyAccessedMemberTypes.PublicMethods)] T>(
 #if XUNIT_NULLABLE
 			[AllowNull] T expected,
 			[AllowNull] T actual,
@@ -125,6 +144,7 @@ namespace Xunit
 
 			var expectedTracker = expected.AsNonStringTracker();
 			var actualTracker = actual.AsNonStringTracker();
+			var exception = default(Exception);
 
 			try
 			{
@@ -135,8 +155,17 @@ namespace Xunit
 
 				if (!haveCollections)
 				{
-					if (!comparer.Equals(expected, actual))
-						throw EqualException.ForMismatchedValues(expected, actual);
+					try
+					{
+						if (comparer.Equals(expected, actual))
+							return;
+					}
+					catch (Exception ex)
+					{
+						exception = ex;
+					}
+
+					throw EqualException.ForMismatchedValuesWithError(expected, actual, exception);
 				}
 				else
 				{
@@ -166,8 +195,23 @@ namespace Xunit
 
 					if (itemComparer != null)
 					{
-						if (CollectionTracker.AreCollectionsEqual(expectedTracker, actualTracker, itemComparer, itemComparer == AssertEqualityComparer<T>.DefaultInnerComparer, out mismatchedIndex))
-							return;
+						try
+						{
+							bool result;
+
+							// Call AssertEqualityComparer.Equals because it checks for IEquatable<> before using CollectionTracker
+							if (aec != null)
+								result = aec.Equals(expected, expectedTracker, actual, actualTracker, out mismatchedIndex);
+							else
+								result = CollectionTracker.AreCollectionsEqual(expectedTracker, actualTracker, itemComparer, itemComparer == AssertEqualityComparer<T>.DefaultInnerComparer, out mismatchedIndex);
+
+							if (result)
+								return;
+						}
+						catch (Exception ex)
+						{
+							exception = ex;
+						}
 
 						var expectedStartIdx = -1;
 						var expectedEndIdx = -1;
@@ -199,38 +243,33 @@ namespace Xunit
 					}
 					else
 					{
-						if (comparer.Equals(expected, actual))
-							return;
+						try
+						{
+							if (comparer.Equals(expected, actual))
+								return;
+						}
+						catch (Exception ex)
+						{
+							exception = ex;
+						}
 
 						formattedExpected = ArgumentFormatter.Format(expected);
 						formattedActual = ArgumentFormatter.Format(actual);
 					}
 
 #if XUNIT_NULLABLE
-					string? collectionDisplay = null;
+					string? collectionDisplay = GetCollectionDisplay(expected, actual);
 #else
-					string collectionDisplay = null;
+					string collectionDisplay = GetCollectionDisplay(expected, actual);
 #endif
 
 					var expectedType = expected?.GetType();
-					var expectedTypeDefinition = SafeGetGenericTypeDefinition(expectedType);
-					var expectedInterfaceTypeDefinitions = expectedType?.GetTypeInfo().ImplementedInterfaces.Where(i => i.GetTypeInfo().IsGenericType).Select(i => i.GetGenericTypeDefinition());
-
 					var actualType = actual?.GetType();
-					var actualTypeDefinition = SafeGetGenericTypeDefinition(actualType);
-					var actualInterfaceTypeDefinitions = actualType?.GetTypeInfo().ImplementedInterfaces.Where(i => i.GetTypeInfo().IsGenericType).Select(i => i.GetGenericTypeDefinition());
-
-					if (expectedTypeDefinition == typeofDictionary && actualTypeDefinition == typeofDictionary)
-						collectionDisplay = "Dictionaries";
-					else if (expectedTypeDefinition == typeofHashSet && actualTypeDefinition == typeofHashSet)
-						collectionDisplay = "HashSets";
-					else if (expectedInterfaceTypeDefinitions != null && actualInterfaceTypeDefinitions != null && expectedInterfaceTypeDefinitions.Contains(typeofSet) && actualInterfaceTypeDefinitions.Contains(typeofSet))
-						collectionDisplay = "Sets";
 
 					if (expectedType != actualType)
 					{
-						var expectedTypeName = expectedType == null ? "" : ArgumentFormatter.FormatTypeName(expectedType) + " ";
-						var actualTypeName = actualType == null ? "" : ArgumentFormatter.FormatTypeName(actualType) + " ";
+						var expectedTypeName = expectedType == null ? "" : (AssertHelper.IsCompilerGenerated(expectedType) ? "<generated> " : ArgumentFormatter.FormatTypeName(expectedType) + " ");
+						var actualTypeName = actualType == null ? "" : (AssertHelper.IsCompilerGenerated(actualType) ? "<generated> " : ArgumentFormatter.FormatTypeName(actualType) + " ");
 
 						var typeNameIndent = Math.Max(expectedTypeName.Length, actualTypeName.Length);
 
@@ -243,7 +282,7 @@ namespace Xunit
 							actualPointer += typeNameIndent;
 					}
 
-					throw EqualException.ForMismatchedCollections(mismatchedIndex, formattedExpected, expectedPointer, expectedItemType, formattedActual, actualPointer, actualItemType, collectionDisplay);
+					throw EqualException.ForMismatchedCollectionsWithError(mismatchedIndex, formattedExpected, expectedPointer, expectedItemType, formattedActual, actualPointer, actualItemType, exception, collectionDisplay);
 				}
 			}
 			finally
@@ -251,6 +290,39 @@ namespace Xunit
 				expectedTracker?.Dispose();
 				actualTracker?.Dispose();
 			}
+		}
+
+		[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(ISet<>))]
+		[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(Dictionary<,>))]
+		[DynamicDependency(DynamicallyAccessedMemberTypes.All, typeof(HashSet<>))]
+		[UnconditionalSuppressMessage("ReflectionAnalysis", "IL2072", Justification = "We only check for the types listed above.")]
+		[UnconditionalSuppressMessage("ReflectionAnalysis", "IL2075", Justification = "We only check for the types listed above.")]
+#if XUNIT_NULLABLE
+		private static string? GetCollectionDisplay(object? expected, object? actual)
+#else
+		private static string GetCollectionDisplay(object expected, object actual)
+#endif
+		{
+#if XUNIT_NULLABLE
+			string? collectionDisplay = null;
+#else
+			string collectionDisplay = null;
+#endif
+			var expectedType = expected?.GetType();
+			var actualType = actual?.GetType();
+			var expectedTypeDefinition = SafeGetGenericTypeDefinition(expectedType);
+			var expectedInterfaceTypeDefinitions = expectedType?.GetTypeInfo().ImplementedInterfaces.Where(i => i.GetTypeInfo().IsGenericType).Select(i => i.GetGenericTypeDefinition());
+
+			var actualTypeDefinition = SafeGetGenericTypeDefinition(actualType);
+			var actualInterfaceTypeDefinitions = actualType?.GetTypeInfo().ImplementedInterfaces.Where(i => i.GetTypeInfo().IsGenericType).Select(i => i.GetGenericTypeDefinition());
+
+			if (expectedTypeDefinition == typeofDictionary && actualTypeDefinition == typeofDictionary)
+				collectionDisplay = "Dictionaries";
+			else if (expectedTypeDefinition == typeofHashSet && actualTypeDefinition == typeofHashSet)
+				collectionDisplay = "HashSets";
+			else if (expectedInterfaceTypeDefinitions != null && actualInterfaceTypeDefinitions != null && expectedInterfaceTypeDefinitions.Contains(typeofSet) && actualInterfaceTypeDefinitions.Contains(typeofSet))
+				collectionDisplay = "Sets";
+			return collectionDisplay;
 		}
 
 		/// <summary>
@@ -270,9 +342,9 @@ namespace Xunit
 
 			if (!object.Equals(expectedRounded, actualRounded))
 				throw EqualException.ForMismatchedValues(
-					$"{expectedRounded:G17} (rounded from {expected:G17})",
-					$"{actualRounded:G17} (rounded from {actual:G17})",
-					$"Values are not within {precision} decimal place{(precision == 1 ? "" : "s")}"
+					string.Format(CultureInfo.CurrentCulture, "{0:G17} (rounded from {1:G17})", expectedRounded, expected),
+					string.Format(CultureInfo.CurrentCulture, "{0:G17} (rounded from {1:G17})", actualRounded, actual),
+					string.Format(CultureInfo.CurrentCulture, "Values are not within {0} decimal place{1}", precision, precision == 1 ? "" : "s")
 				);
 		}
 
@@ -296,9 +368,9 @@ namespace Xunit
 
 			if (!object.Equals(expectedRounded, actualRounded))
 				throw EqualException.ForMismatchedValues(
-					$"{expectedRounded:G17} (rounded from {expected:G17})",
-					$"{actualRounded:G17} (rounded from {actual:G17})",
-					$"Values are not within {precision} decimal place{(precision == 1 ? "" : "s")}"
+					string.Format(CultureInfo.CurrentCulture, "{0:G17} (rounded from {1:G17})", expectedRounded, expected),
+					string.Format(CultureInfo.CurrentCulture, "{0:G17} (rounded from {1:G17})", actualRounded, actual),
+					string.Format(CultureInfo.CurrentCulture, "Values are not within {0} decimal place{1}", precision, precision == 1 ? "" : "s")
 				);
 		}
 
@@ -321,7 +393,7 @@ namespace Xunit
 				throw EqualException.ForMismatchedValues(
 					expected.ToString("G17", CultureInfo.CurrentCulture),
 					actual.ToString("G17", CultureInfo.CurrentCulture),
-					$"Values are not within tolerance {tolerance:G17}"
+					string.Format(CultureInfo.CurrentCulture, "Values are not within tolerance {0:G17}", tolerance)
 				);
 		}
 
@@ -342,9 +414,9 @@ namespace Xunit
 
 			if (!object.Equals(expectedRounded, actualRounded))
 				throw EqualException.ForMismatchedValues(
-					$"{expectedRounded:G9} (rounded from {expected:G9})",
-					$"{actualRounded:G9} (rounded from {actual:G9})",
-					$"Values are not within {precision} decimal place{(precision == 1 ? "" : "s")}"
+					string.Format(CultureInfo.CurrentCulture, "{0:G9} (rounded from {1:G9})", expectedRounded, expected),
+					string.Format(CultureInfo.CurrentCulture, "{0:G9} (rounded from {1:G9})", actualRounded, actual),
+					string.Format(CultureInfo.CurrentCulture, "Values are not within {0} decimal place{1}", precision, precision == 1 ? "" : "s")
 				);
 		}
 
@@ -368,9 +440,9 @@ namespace Xunit
 
 			if (!object.Equals(expectedRounded, actualRounded))
 				throw EqualException.ForMismatchedValues(
-					$"{expectedRounded:G9} (rounded from {expected:G9})",
-					$"{actualRounded:G9} (rounded from {actual:G9})",
-					$"Values are not within {precision} decimal place{(precision == 1 ? "" : "s")}"
+					string.Format(CultureInfo.CurrentCulture, "{0:G9} (rounded from {1:G9})", expectedRounded, expected),
+					string.Format(CultureInfo.CurrentCulture, "{0:G9} (rounded from {1:G9})", actualRounded, actual),
+					string.Format(CultureInfo.CurrentCulture, "Values are not within {0} decimal place{1}", precision, precision == 1 ? "" : "s")
 				);
 		}
 
@@ -393,7 +465,7 @@ namespace Xunit
 				throw EqualException.ForMismatchedValues(
 					expected.ToString("G9", CultureInfo.CurrentCulture),
 					actual.ToString("G9", CultureInfo.CurrentCulture),
-					$"Values are not within tolerance {tolerance:G9}"
+					string.Format(CultureInfo.CurrentCulture, "Values are not within tolerance {0:G9}", tolerance)
 				);
 		}
 
@@ -413,7 +485,10 @@ namespace Xunit
 			var actualRounded = Math.Round(actual, precision);
 
 			if (expectedRounded != actualRounded)
-				throw EqualException.ForMismatchedValues($"{expectedRounded} (rounded from {expected})", $"{actualRounded} (rounded from {actual})");
+				throw EqualException.ForMismatchedValues(
+					string.Format(CultureInfo.CurrentCulture, "{0} (rounded from {1})", expectedRounded, expected),
+					string.Format(CultureInfo.CurrentCulture, "{0} (rounded from {1})", actualRounded, actual)
+				);
 		}
 
 		/// <summary>
@@ -444,7 +519,7 @@ namespace Xunit
 			{
 				var actualValue =
 					ArgumentFormatter.Format(actual) +
-					(precision == TimeSpan.Zero ? "" : $" (difference {difference} is larger than {precision})");
+					(precision == TimeSpan.Zero ? "" : string.Format(CultureInfo.CurrentCulture, " (difference {0} is larger than {1})", difference, precision));
 
 				throw EqualException.ForMismatchedValues(expected, actualValue);
 			}
@@ -478,7 +553,7 @@ namespace Xunit
 			{
 				var actualValue =
 					ArgumentFormatter.Format(actual) +
-					(precision == TimeSpan.Zero ? "" : $" (difference {difference} is larger than {precision})");
+					(precision == TimeSpan.Zero ? "" : string.Format(CultureInfo.CurrentCulture, " (difference {0} is larger than {1})", difference, precision));
 
 				throw EqualException.ForMismatchedValues(expected, actualValue);
 			}
@@ -519,7 +594,12 @@ namespace Xunit
 		/// <param name="expected">The expected object</param>
 		/// <param name="actual">The actual object</param>
 		/// <exception cref="NotEqualException">Thrown when the objects are equal</exception>
-		public static void NotEqual<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] T>(
+		public static void NotEqual<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces |
+				DynamicallyAccessedMemberTypes.PublicFields |
+				DynamicallyAccessedMemberTypes.NonPublicFields |
+				DynamicallyAccessedMemberTypes.PublicProperties |
+				DynamicallyAccessedMemberTypes.NonPublicProperties |
+				DynamicallyAccessedMemberTypes.PublicMethods)] T>(
 #if XUNIT_NULLABLE
 			[AllowNull] T expected,
 			[AllowNull] T actual) =>
@@ -536,7 +616,12 @@ namespace Xunit
 		/// <param name="expected">The expected object</param>
 		/// <param name="actual">The actual object</param>
 		/// <param name="comparer">The comparer used to examine the objects</param>
-		public static void NotEqual<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] T>(
+		public static void NotEqual<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces |
+				DynamicallyAccessedMemberTypes.PublicFields |
+				DynamicallyAccessedMemberTypes.NonPublicFields |
+				DynamicallyAccessedMemberTypes.PublicProperties |
+				DynamicallyAccessedMemberTypes.NonPublicProperties |
+				DynamicallyAccessedMemberTypes.PublicMethods)] T>(
 #if XUNIT_NULLABLE
 			[AllowNull] T expected,
 			[AllowNull] T actual,
@@ -555,7 +640,12 @@ namespace Xunit
 		/// <param name="actual">The actual object</param>
 		/// <param name="comparer">The comparer used to examine the objects</param>
 		public static void NotEqual<
-			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces)] T>(
+			[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces |
+				DynamicallyAccessedMemberTypes.PublicFields |
+				DynamicallyAccessedMemberTypes.NonPublicFields |
+				DynamicallyAccessedMemberTypes.PublicProperties |
+				DynamicallyAccessedMemberTypes.NonPublicProperties |
+				DynamicallyAccessedMemberTypes.PublicMethods)] T>(
 #if XUNIT_NULLABLE
 			[AllowNull] T expected,
 			[AllowNull] T actual,
@@ -569,6 +659,7 @@ namespace Xunit
 
 			var expectedTracker = expected.AsNonStringTracker();
 			var actualTracker = actual.AsNonStringTracker();
+			var exception = default(Exception);
 
 			try
 			{
@@ -579,26 +670,35 @@ namespace Xunit
 
 				if (!haveCollections)
 				{
-					if (comparer.Equals(expected, actual))
+					try
 					{
-						var formattedExpected = ArgumentFormatter.Format(expected);
-						var formattedActual = ArgumentFormatter.Format(actual);
-
-						var expectedIsString = expected is string;
-						var actualIsString = actual is string;
-						var isStrings =
-							(expectedIsString && actual == null) ||
-							(actualIsString && expected == null) ||
-							(expectedIsString && actualIsString);
-
-						if (isStrings)
-							throw NotEqualException.ForEqualCollections(formattedExpected, formattedActual, "Strings");
-						else
-							throw NotEqualException.ForEqualValues(formattedExpected, formattedActual);
+						if (!comparer.Equals(expected, actual))
+							return;
 					}
+					catch (Exception ex)
+					{
+						exception = ex;
+					}
+
+					var formattedExpected = ArgumentFormatter.Format(expected);
+					var formattedActual = ArgumentFormatter.Format(actual);
+
+					var expectedIsString = expected is string;
+					var actualIsString = actual is string;
+					var isStrings =
+						(expectedIsString && actual == null) ||
+						(actualIsString && expected == null) ||
+						(expectedIsString && actualIsString);
+
+					if (isStrings)
+						throw NotEqualException.ForEqualCollectionsWithError(null, formattedExpected, null, formattedActual, null, exception, "Strings");
+					else
+						throw NotEqualException.ForEqualValuesWithError(formattedExpected, formattedActual, exception);
 				}
 				else
 				{
+					int? mismatchedIndex = null;
+
 					// If we have "known" comparers, we can ignore them and instead do our own thing, since we know
 					// we want to be able to consume the tracker, and that's not type compatible.
 					var itemComparer = default(IEqualityComparer);
@@ -611,58 +711,92 @@ namespace Xunit
 
 					string formattedExpected;
 					string formattedActual;
+					int? expectedPointer = null;
+					int? actualPointer = null;
 
 					if (itemComparer != null)
 					{
-						int? mismatchedIndex;
-						if (!CollectionTracker.AreCollectionsEqual(expectedTracker, actualTracker, itemComparer, itemComparer == AssertEqualityComparer<T>.DefaultInnerComparer, out mismatchedIndex))
-							return;
+						try
+						{
+							bool result;
 
-						formattedExpected = expectedTracker?.FormatStart() ?? "null";
-						formattedActual = actualTracker?.FormatStart() ?? "null";
+							// Call AssertEqualityComparer.Equals because it checks for IEquatable<> before using CollectionTracker
+							if (aec != null)
+								result = aec.Equals(expected, expectedTracker, actual, actualTracker, out mismatchedIndex);
+							else
+								result = CollectionTracker.AreCollectionsEqual(expectedTracker, actualTracker, itemComparer, itemComparer == AssertEqualityComparer<T>.DefaultInnerComparer, out mismatchedIndex);
+
+							if (!result)
+								return;
+
+							// For NotEqual that doesn't throw, pointers are irrelevant, because
+							// the values are considered to be equal
+							formattedExpected = expectedTracker?.FormatStart() ?? "null";
+							formattedActual = actualTracker?.FormatStart() ?? "null";
+						}
+						catch (Exception ex)
+						{
+							exception = ex;
+
+							// When an exception was thrown, we want to provide a pointer so the user knows
+							// which item was being inspected when the exception was thrown
+							var expectedStartIdx = -1;
+							var expectedEndIdx = -1;
+							expectedTracker?.GetMismatchExtents(mismatchedIndex, out expectedStartIdx, out expectedEndIdx);
+
+							var actualStartIdx = -1;
+							var actualEndIdx = -1;
+							actualTracker?.GetMismatchExtents(mismatchedIndex, out actualStartIdx, out actualEndIdx);
+
+							expectedPointer = null;
+							formattedExpected = expectedTracker?.FormatIndexedMismatch(expectedStartIdx, expectedEndIdx, mismatchedIndex, out expectedPointer) ?? ArgumentFormatter.Format(expected);
+
+							actualPointer = null;
+							formattedActual = actualTracker?.FormatIndexedMismatch(actualStartIdx, actualEndIdx, mismatchedIndex, out actualPointer) ?? ArgumentFormatter.Format(actual);
+						}
 					}
 					else
 					{
-						if (!comparer.Equals(expected, actual))
-							return;
+						try
+						{
+							if (!comparer.Equals(expected, actual))
+								return;
+						}
+						catch (Exception ex)
+						{
+							exception = ex;
+						}
 
 						formattedExpected = ArgumentFormatter.Format(expected);
 						formattedActual = ArgumentFormatter.Format(actual);
 					}
 
 #if XUNIT_NULLABLE
-					string? collectionDisplay = null;
+					string? collectionDisplay = GetCollectionDisplay(expected, actual);
 #else
-					string collectionDisplay = null;
+					string collectionDisplay = GetCollectionDisplay(expected, actual);
 #endif
 
 					var expectedType = expected?.GetType();
-					var expectedTypeDefinition = SafeGetGenericTypeDefinition(expectedType);
-					var expectedInterfaceTypeDefinitions = expectedType?.GetTypeInfo().ImplementedInterfaces.Where(i => i.GetTypeInfo().IsGenericType).Select(i => i.GetGenericTypeDefinition());
-
 					var actualType = actual?.GetType();
-					var actualTypeDefinition = SafeGetGenericTypeDefinition(actualType);
-					var actualInterfaceTypeDefinitions = actualType?.GetTypeInfo().ImplementedInterfaces.Where(i => i.GetTypeInfo().IsGenericType).Select(i => i.GetGenericTypeDefinition());
-
-					if (expectedTypeDefinition == typeofDictionary && actualTypeDefinition == typeofDictionary)
-						collectionDisplay = "Dictionaries";
-					else if (expectedTypeDefinition == typeofHashSet && actualTypeDefinition == typeofHashSet)
-						collectionDisplay = "HashSets";
-					else if (expectedInterfaceTypeDefinitions != null && actualInterfaceTypeDefinitions != null && expectedInterfaceTypeDefinitions.Contains(typeofSet) && actualInterfaceTypeDefinitions.Contains(typeofSet))
-						collectionDisplay = "Sets";
 
 					if (expectedType != actualType)
 					{
-						var expectedTypeName = expectedType == null ? "" : ArgumentFormatter.FormatTypeName(expectedType) + " ";
-						var actualTypeName = actualType == null ? "" : ArgumentFormatter.FormatTypeName(actualType) + " ";
+						var expectedTypeName = expectedType == null ? "" : (AssertHelper.IsCompilerGenerated(expectedType) ? "<generated> " : ArgumentFormatter.FormatTypeName(expectedType) + " ");
+						var actualTypeName = actualType == null ? "" : (AssertHelper.IsCompilerGenerated(actualType) ? "<generated> " : ArgumentFormatter.FormatTypeName(actualType) + " ");
 
 						var typeNameIndent = Math.Max(expectedTypeName.Length, actualTypeName.Length);
 
 						formattedExpected = expectedTypeName.PadRight(typeNameIndent) + formattedExpected;
 						formattedActual = actualTypeName.PadRight(typeNameIndent) + formattedActual;
+
+						if (expectedPointer != null)
+							expectedPointer += typeNameIndent;
+						if (actualPointer != null)
+							actualPointer += typeNameIndent;
 					}
 
-					throw NotEqualException.ForEqualCollections(formattedExpected, formattedActual, collectionDisplay);
+					throw NotEqualException.ForEqualCollectionsWithError(mismatchedIndex, formattedExpected, expectedPointer, formattedActual, actualPointer, exception, collectionDisplay);
 				}
 			}
 			finally
@@ -689,9 +823,9 @@ namespace Xunit
 
 			if (object.Equals(expectedRounded, actualRounded))
 				throw NotEqualException.ForEqualValues(
-					$"{expectedRounded:G17} (rounded from {expected:G17})",
-					$"{actualRounded:G17} (rounded from {actual:G17})",
-					$"Values are within {precision} decimal places"
+					string.Format(CultureInfo.CurrentCulture, "{0:G17} (rounded from {1:G17})", expectedRounded, expected),
+					string.Format(CultureInfo.CurrentCulture, "{0:G17} (rounded from {1:G17})", actualRounded, actual),
+					string.Format(CultureInfo.CurrentCulture, "Values are within {0} decimal places", precision)
 				);
 		}
 
@@ -715,9 +849,9 @@ namespace Xunit
 
 			if (object.Equals(expectedRounded, actualRounded))
 				throw NotEqualException.ForEqualValues(
-					$"{expectedRounded:G17} (rounded from {expected:G17})",
-					$"{actualRounded:G17} (rounded from {actual:G17})",
-					$"Values are within {precision} decimal places"
+					string.Format(CultureInfo.CurrentCulture, "{0:G17} (rounded from {1:G17})", expectedRounded, expected),
+					string.Format(CultureInfo.CurrentCulture, "{0:G17} (rounded from {1:G17})", actualRounded, actual),
+					string.Format(CultureInfo.CurrentCulture, "Values are within {0} decimal places", precision)
 				);
 		}
 
@@ -740,7 +874,7 @@ namespace Xunit
 				throw NotEqualException.ForEqualValues(
 					expected.ToString("G17", CultureInfo.CurrentCulture),
 					actual.ToString("G17", CultureInfo.CurrentCulture),
-					$"Values are within tolerance {tolerance:G17}"
+					string.Format(CultureInfo.CurrentCulture, "Values are within tolerance {0:G17}", tolerance)
 				);
 		}
 
@@ -761,9 +895,9 @@ namespace Xunit
 
 			if (object.Equals(expectedRounded, actualRounded))
 				throw NotEqualException.ForEqualValues(
-					$"{expectedRounded:G9} (rounded from {expected:G9})",
-					$"{actualRounded:G9} (rounded from {actual:G9})",
-					$"Values are within {precision} decimal places"
+					string.Format(CultureInfo.CurrentCulture, "{0:G9} (rounded from {1:G9})", expectedRounded, expected),
+					string.Format(CultureInfo.CurrentCulture, "{0:G9} (rounded from {1:G9})", actualRounded, actual),
+					string.Format(CultureInfo.CurrentCulture, "Values are within {0} decimal places", precision)
 				);
 		}
 
@@ -787,9 +921,9 @@ namespace Xunit
 
 			if (object.Equals(expectedRounded, actualRounded))
 				throw NotEqualException.ForEqualValues(
-					$"{expectedRounded:G9} (rounded from {expected:G9})",
-					$"{actualRounded:G9} (rounded from {actual:G9})",
-					$"Values are within {precision} decimal places"
+					string.Format(CultureInfo.CurrentCulture, "{0:G9} (rounded from {1:G9})", expectedRounded, expected),
+					string.Format(CultureInfo.CurrentCulture, "{0:G9} (rounded from {1:G9})", actualRounded, actual),
+					string.Format(CultureInfo.CurrentCulture, "Values are within {0} decimal places", precision)
 				);
 		}
 
@@ -812,7 +946,7 @@ namespace Xunit
 				throw NotEqualException.ForEqualValues(
 					expected.ToString("G9", CultureInfo.CurrentCulture),
 					actual.ToString("G9", CultureInfo.CurrentCulture),
-					$"Values are within tolerance {tolerance:G9}"
+					string.Format(CultureInfo.CurrentCulture, "Values are within tolerance {0:G9}", tolerance)
 				);
 		}
 
@@ -833,8 +967,8 @@ namespace Xunit
 
 			if (expectedRounded == actualRounded)
 				throw NotEqualException.ForEqualValues(
-					$"{expectedRounded} (rounded from {expected})",
-					$"{actualRounded} (rounded from {actual})"
+					string.Format(CultureInfo.CurrentCulture, "{0} (rounded from {1})", expectedRounded, expected),
+					string.Format(CultureInfo.CurrentCulture, "{0} (rounded from {1})", actualRounded, actual)
 				);
 		}
 
@@ -844,7 +978,12 @@ namespace Xunit
 		/// <typeparam name="T">The type of the objects to be compared</typeparam>
 		/// <param name="expected">The expected object</param>
 		/// <param name="actual">The actual object</param>
-		public static void NotStrictEqual<T>(
+		public static void NotStrictEqual<[DynamicallyAccessedMembers(
+					DynamicallyAccessedMemberTypes.PublicFields
+					| DynamicallyAccessedMemberTypes.NonPublicFields
+					| DynamicallyAccessedMemberTypes.PublicProperties
+					| DynamicallyAccessedMemberTypes.NonPublicProperties
+					| DynamicallyAccessedMemberTypes.PublicMethods)] T>(
 #if XUNIT_NULLABLE
 			[AllowNull] T expected,
 			[AllowNull] T actual)
@@ -868,7 +1007,12 @@ namespace Xunit
 		/// <typeparam name="T">The type of the objects to be compared</typeparam>
 		/// <param name="expected">The expected value</param>
 		/// <param name="actual">The value to be compared against</param>
-		public static void StrictEqual<T>(
+		public static void StrictEqual<[DynamicallyAccessedMembers(
+					DynamicallyAccessedMemberTypes.PublicFields
+					| DynamicallyAccessedMemberTypes.NonPublicFields
+					| DynamicallyAccessedMemberTypes.PublicProperties
+					| DynamicallyAccessedMemberTypes.NonPublicProperties
+					| DynamicallyAccessedMemberTypes.PublicMethods)] T>(
 #if XUNIT_NULLABLE
 			[AllowNull] T expected,
 			[AllowNull] T actual)

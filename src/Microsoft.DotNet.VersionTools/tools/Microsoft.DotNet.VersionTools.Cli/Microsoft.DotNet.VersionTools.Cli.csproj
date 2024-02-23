@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(NetCurrent)</TargetFrameworks>
+    <TargetFramework>$(NetToolCurrent)</TargetFramework>
     <OutputType>Exe</OutputType>
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
-    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <RollForward>Major</RollForward>
     <Description>This package provides a CLI interface to the Microsoft.DotNet.VersionTools library.</Description>
   </PropertyGroup>
 
