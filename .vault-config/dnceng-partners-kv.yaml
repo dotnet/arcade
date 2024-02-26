@@ -77,7 +77,7 @@ secrets:
       requiredScopes: content
       description: "This pat is under the beta fine-grained tokens using dotnet as owner and repository specific for vscode-csharp and roslyn. The permissions are: Content - Read and write."
 
-  dn-bot-devdiv-build-r-release-r-code-r:
+  roslyn-dn-bot-devdiv-build-r-release-r-code-r:
     type: azure-devops-access-token
     parameters:
       description: Created for roslyn-tools pr-tagger
@@ -88,7 +88,7 @@ secrets:
         name: dn-bot-account-redmond
         location: helixkv
 
-  dn-bot-dnceng-build-r:
+  roslyn-dn-bot-dnceng-build-r:
     type: azure-devops-access-token
     parameters:
       description: Created for roslyn-tools pr-tagger
@@ -104,7 +104,7 @@ secrets:
   # - dotnet/roslyn
   # - dotnet/razor
   # - dotnet/fsharp
-  dotnet-bot-roslyn-issue-w-pat:
+  roslyn-dotnet-bot-issue-w-pat:
     type: github-access-token
     parameters:
       description: Created for roslyn-tools pr-tagger
