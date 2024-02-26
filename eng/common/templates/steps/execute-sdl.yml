@@ -77,12 +77,3 @@ steps:
       contents: '**/*.sarif'
       targetFolder: $(Build.SourcesDirectory)/CodeAnalysisLogs
     condition: succeededOrFailed()
-
-  # Use PublishBuildArtifacts because the SARIF extension only checks this case
-  # see microsoft/sarif-azuredevops-extension#4
-  - task: PublishBuildArtifacts@1
-    displayName: Publish SARIF files to CodeAnalysisLogs container
-    inputs:
-      pathToPublish:  $(Build.SourcesDirectory)/CodeAnalysisLogs
-      artifactName: CodeAnalysisLogs
-    condition: succeededOrFailed()
