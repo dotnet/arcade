@@ -1,3 +1,11 @@
+parameters:
+  - name: _RunAsPublic
+    default: True
+    type: boolean
+  - name: _RunAsInternal
+    default: False
+    type: boolean
+
 stages:
 - stage: build
   displayName: Build
@@ -25,9 +33,9 @@ stages:
       - job: Windows_NT
         timeoutInMinutes: 90
         pool:
-          ${{ if eq(variables._RunAsPublic, True) }}:
+          ${{ if eq(parameters._RunAsPublic, True) }}:
             vmImage: windows-latest
-          ${{ if eq(variables._RunAsInternal, True) }}:
+          ${{ if eq(parameters._RunAsInternal, True) }}:
             name: $(DncEngInternalBuildPool)
             demands: ImageOverride -equals windows.vs2019.amd64
         strategy:
@@ -46,7 +54,7 @@ stages:
             /p:Test=false
           displayName: Windows Build / Publish
 
-        - ${{ if and(eq(variables._RunAsPublic, True), eq(variables['Build.Reason'], 'PullRequest')) }}:
+        - ${{ if and(eq(parameters._RunAsPublic, True), eq(variables['Build.Reason'], 'PullRequest')) }}:
           - powershell: |
               # Detects if current change contains change for which we need to run XHarness E2E tests
               git fetch --all
@@ -72,7 +80,7 @@ stages:
             name: XHarnessChangeDetection
             displayName: Detect XHarness changes
 
-      - ${{ if eq(variables._RunAsPublic, True) }}:
+      - ${{ if eq(parameters._RunAsPublic, True) }}:
         - job: Linux
           container: LinuxContainer
           pool:
@@ -91,7 +99,7 @@ stages:
               /p:Test=false
             displayName: Unix Build / Publish
 
-- ${{ if eq(variables._RunAsPublic, True) }}:
+- ${{ if eq(parameters._RunAsPublic, True) }}:
   - stage: Test
     dependsOn: build
     jobs:
@@ -310,7 +318,7 @@ stages:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
 
-- ${{ if eq(variables._RunAsInternal, True) }}:
+- ${{ if eq(parameters._RunAsInternal, True) }}:
   - stage: ValidateSdk
     displayName: Validate Arcade SDK
     dependsOn: build
