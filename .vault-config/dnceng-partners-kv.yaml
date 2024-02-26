@@ -82,7 +82,7 @@ secrets:
     parameters:
       description: Created for roslyn-tools pr-tagger
       organizations: devdiv
-      scopes: build relese code
+      scopes: build release code
       domainAccountName: dn-bot
       domainAccountSecret:
         name: dn-bot-account-redmond
