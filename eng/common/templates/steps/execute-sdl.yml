@@ -62,11 +62,6 @@ steps:
         i
     condition: succeededOrFailed()
 
-  - publish: $(Agent.BuildDirectory)/.gdn
-    artifact: GuardianConfiguration
-    displayName: Publish GuardianConfiguration
-    condition: succeededOrFailed()
-
   # Publish the SARIF files in a container named CodeAnalysisLogs to enable integration
   # with the "SARIF SAST Scans Tab" Azure DevOps extension
   - task: CopyFiles@2
