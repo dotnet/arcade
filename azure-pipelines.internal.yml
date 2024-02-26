@@ -72,4 +72,4 @@ extends:
       image: AzurePipelinesWindows2022compliantGPT
 
     stages:
-    - template: eng\azure-pipelines.core.yml
+    - template: azure-pipelines.template.yml

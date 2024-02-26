@@ -55,4 +55,4 @@ resources:
     image: mcr.microsoft.com/dotnet-buildtools/prereqs:cbl-mariner-2.0-fpm
 
 stages:
-- template: eng\azure-pipelines.core.yml
+- template: azure-pipelines.template.yml
