@@ -48,7 +48,7 @@ steps:
       ${{ if ne(parameters.properties, '') }}:
         properties: ${{ parameters.properties }}
 - ${{ if not(parameters.runAsInternal) }}:
-  - task: PublishPipelineArtifacts@1
+  - task: PublishBuildArtifacts@1
     displayName: ${{ parameters.displayName }}
     condition: ${{ coalesce( parameters.mainCondition, 'succeeded()') }}
     ${{ if eq(parameters.continueOnError, true) }}:
@@ -61,5 +61,4 @@ steps:
         PathToPublish: ${{ parameters.PathToPublish }}
       ${{ if eq(parameters.PathToPublish, '') }}:
         PathToPublish: $(Build.ArtifactStagingDirectory)
-      ${{ if ne(parameters.properties, '') }}:
-        properties: ${{ parameters.properties }}
+
