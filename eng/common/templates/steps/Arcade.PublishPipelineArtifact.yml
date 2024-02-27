@@ -9,6 +9,7 @@ parameters:
 
 - name: mainCondition
   type: string
+  default: ''
 
 - name: artifactName
   type: string
