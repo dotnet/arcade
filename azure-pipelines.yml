@@ -56,3 +56,5 @@ resources:
 
 stages:
 - template: azure-pipelines.template.yml
+  parameters:
+    _RunAsPublic: True

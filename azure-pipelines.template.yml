@@ -1,6 +1,6 @@
 parameters:
   - name: _RunAsPublic
-    default: True
+    default: False
     type: boolean
   - name: _RunAsInternal
     default: False
