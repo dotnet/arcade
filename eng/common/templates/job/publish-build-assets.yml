@@ -103,7 +103,7 @@ jobs:
       - template: /eng/common/templates/steps/Arcade.PublishPipelineArtifact.yml@self
         parameters:
           displayName: 'Publish SymbolPublishingExclusionsFile Artifact'
-          msinCondition: eq(variables['SymbolExclusionFile'], 'true')
+          mainCondition: eq(variables['SymbolExclusionFile'], 'true')
           targetPath: '$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
           publishLocation: Container
           artifactName: ReleaseConfigs
