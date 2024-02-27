@@ -65,8 +65,8 @@ resources:
 extends:
   template: azure-pipelines/MicroBuild.1ES.Official.yml@MicroBuildTemplate
   parameters:
-    sdl:
-      sourceAnalysisPool: <AgentPoolPlaceHolder>
+#    sdl:
+#      sourceAnalysisPool: <AgentPoolPlaceHolder>
     pool:
       name: $(DncEngInternalBuildPool)
       image: 1es-windows-2022-pt
