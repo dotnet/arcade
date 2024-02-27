@@ -1,5 +1,6 @@
 <Project>
 
+  <!-- Don't go higher than binding redirects entries in the toolset MSBuild.exe.config file. --> 
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
     <PackageVersion Update="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
     <PackageVersion Update="System.Collections.Immutable" Version="8.0.0" />
