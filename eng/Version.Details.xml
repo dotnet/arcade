@@ -171,5 +171,17 @@
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>2874d26cb343fc55be295a628b3ee474e19ff95e</Sha>
     </Dependency>
+    <Dependency Name="System.Formats.Asn1" Version="9.0.0-alpha.1.24059.2">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>2874d26cb343fc55be295a628b3ee474e19ff95e</Sha>
+    </Dependency>
+    <Dependency Name="System.Security.Cryptography.Pkcs" Version="9.0.0-alpha.1.24059.2">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>2874d26cb343fc55be295a628b3ee474e19ff95e</Sha>
+    </Dependency>
+    <Dependency Name="System.Security.Cryptography.Xml" Version="9.0.0-alpha.1.24059.2">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>2874d26cb343fc55be295a628b3ee474e19ff95e</Sha>
+    </Dependency>
   </ToolsetDependencies>
 </Dependencies>
