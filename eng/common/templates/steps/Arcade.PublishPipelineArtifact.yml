@@ -63,6 +63,6 @@ steps:
       publishLocation: ${{ parameters.publishLocation }}
       ${{ if ne(parameters.targetPath, '') }}:
         PathToPublish: ${{ parameters.targetPath }}
-      ${{ if eq(parameters.PathToPublish, '') }}:
+      ${{ if eq(parameters.targetPath, '') }}:
         PathToPublish: $(Build.ArtifactStagingDirectory)
 
