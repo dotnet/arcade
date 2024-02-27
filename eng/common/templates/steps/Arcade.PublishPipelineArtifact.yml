@@ -60,10 +60,9 @@ steps:
       continueOnError: ${{ coalesce(parameters.continueOnError, '') }}
     inputs:
       artifactName: ${{ parameters.artifactName }}
-      targetPath: '${{ parameters.targetPath }}'
       publishLocation: ${{ parameters.publishLocation }}
-      ${{ if ne(parameters.PathToPublish, '') }}:
-        PathToPublish: ${{ parameters.PathToPublish }}
+      ${{ if ne(parameters.targetPath, '') }}:
+        PathToPublish: ${{ parameters.targetPath }}
       ${{ if eq(parameters.PathToPublish, '') }}:
         PathToPublish: $(Build.ArtifactStagingDirectory)
 
