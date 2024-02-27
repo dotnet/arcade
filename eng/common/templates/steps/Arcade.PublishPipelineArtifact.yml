@@ -5,6 +5,7 @@ parameters:
 
 - name: target
   type: string
+  default: 'container: host'
 
 - name: mainCondition
   type: string
