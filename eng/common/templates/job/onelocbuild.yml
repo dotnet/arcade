@@ -45,20 +45,6 @@ jobs:
       ${{ if ne(variables['System.TeamProject'], 'DevDiv') }}:
         name: $(DncEngInternalBuildPool)
         demands: ImageOverride -equals windows.vs2019.amd64
-  templateContext:
-    outputs:
-    - output: pipelineArtifact
-      displayName: 'Publish Localization Files'
-      condition: ${{ parameters.condition }}
-      targetPath: '$(Build.ArtifactStagingDirectory)/loc'
-      publishLocation: Container
-      artifactName: Loc
-    - output: pipelineArtifact
-      displayName: 'Publish LocProject.json'
-      condition: ${{ parameters.condition }}
-      targetPath: '$(Build.SourcesDirectory)/eng/Localize/'
-      publishLocation: Container
-      artifactName: Loc
   steps:
   - ${{ if ne(parameters.SkipLocProjectJsonGeneration, 'true') }}:
     - task: Powershell@2
@@ -93,3 +79,19 @@ jobs:
         mirrorRepo: ${{ parameters.MirrorRepo }}
         mirrorBranch: ${{ parameters.MirrorBranch }}
     condition: ${{ parameters.condition }}
+    - template: /eng/common/templates/steps/Arcade.PublishPipelineArtifact.yml@self
+      parameters:
+        displayName: 'Publish Localization Files'
+        mainCondition: ${{ parameters.condition }}
+        targetPath: '$(Build.ArtifactStagingDirectory)/loc'
+        publishLocation: Container
+        artifactName: Loc
+        runAsInternal: ${{ ne(variables['System.TeamProject'], 'public') }}
+    - template: /eng/common/templates/steps/Arcade.PublishPipelineArtifact.yml@self
+      parameters:
+        displayName: 'Publish LocProject.json'
+        mainCondition: ${{ parameters.condition }}
+        targetPath: '$(Build.SourcesDirectory)/eng/Localize/'
+        publishLocation: Container
+        artifactName: Loc    
+        runAsInternal: ${{ ne(variables['System.TeamProject'], 'public') }}

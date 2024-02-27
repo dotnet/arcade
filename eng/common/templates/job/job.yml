@@ -86,33 +86,6 @@ jobs:
     - group: DotNet-HelixApi-Access
   ${{ if ne(parameters.workspace, '') }}:
     workspace: ${{ parameters.workspace }}
-  templateContext:
-    outputs:
-    - ${{ if ne(parameters.artifacts.publish, '') }}:
-      - output: pipelineArtifact
-        displayName: 'Publish pipeline artifacts'
-        condition: always()
-        targetPath: '$(Build.ArtifactStagingDirectory)/artifacts'
-        publishLocation: Container
-        artifactName: ${{ coalesce(parameters.artifacts.publish.artifacts.name , 'Artifacts_$(Agent.Os)_$(_BuildConfig)') }}
-    - ${{ if and(ne(parameters.artifacts.publish.logs, 'false'), ne(parameters.artifacts.publish.logs, '')) }}:
-      - output: pipelineArtifact
-        displayName: 'Publish logs'
-        condition: always()
-        targetPath: artifacts/log
-        artifactName: ${{ coalesce(parameters.artifacts.publish.logs.name, 'Logs_Build_$(Agent.Os)_$(_BuildConfig)') }}
-    - ${{ if ne(parameters.enablePublishBuildArtifacts, 'false') }}:
-      - output: pipelineArtifact
-        displayName: 'Publish Logs'
-        condition: always()
-        targetPath: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
-        publishLocation: Container
-        artifactName: ${{ coalesce(parameters.enablePublishBuildArtifacts.artifactName, '$(Agent.Os)_$(Agent.JobName)' ) }}
-    - ${{ if eq(parameters.enableBuildRetry, 'true') }}:
-      - output: pipelineArtifact
-        displayName: 'Publish build retry configuration'
-        targetPath: $(Build.SourcesDirectory)\eng\common\BuildConfiguration
-        artifactName: BuildConfiguration
   steps:
   - ${{ if ne(parameters.preSteps, '') }}:
     - ${{ each preStep in parameters.preSteps }}:
@@ -212,3 +185,36 @@ jobs:
         BuildDropPath: ${{ parameters.buildDropPath }}
         IgnoreDirectories: ${{ parameters.componentGovernanceIgnoreDirectories }}
   - ${{ if eq(parameters.enableBuildRetry, 'true') }}: []
+  - ${{ if ne(parameters.artifacts.publish, '') }}:
+    - template: /eng/common/templates/steps/Arcade.PublishPipelineArtifact.yml@self
+      parameters:
+        displayName: 'Publish pipeline artifacts'
+        mainCondition: always()
+        targetPath: '$(Build.ArtifactStagingDirectory)/artifacts'
+        publishLocation: Container
+        artifactName: ${{ coalesce(parameters.artifacts.publish.artifacts.name , 'Artifacts_$(Agent.Os)_$(_BuildConfig)') }}
+        runAsInternal: ${{ ne(variables['System.TeamProject'], 'public') }}
+  - ${{ if and(ne(parameters.artifacts.publish.logs, 'false'), ne(parameters.artifacts.publish.logs, '')) }}:
+    - template: /eng/common/templates/steps/Arcade.PublishPipelineArtifact.yml@self
+      parameters:
+        displayName: 'Publish logs'
+        mainCondition: always()
+        targetPath: artifacts/log
+        artifactName: ${{ coalesce(parameters.artifacts.publish.logs.name, 'Logs_Build_$(Agent.Os)_$(_BuildConfig)') }}
+        runAsInternal: ${{ ne(variables['System.TeamProject'], 'public') }}
+  - ${{ if ne(parameters.enablePublishBuildArtifacts, 'false') }}:
+    - template: /eng/common/templates/steps/Arcade.PublishPipelineArtifact.yml@self
+      parameters:
+        displayName: 'Publish Logs'
+        mainCondition: always()
+        targetPath: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
+        publishLocation: Container
+        artifactName: ${{ coalesce(parameters.enablePublishBuildArtifacts.artifactName, '$(Agent.Os)_$(Agent.JobName)' ) }}
+        runAsInternal: ${{ ne(variables['System.TeamProject'], 'public') }}
+  - ${{ if eq(parameters.enableBuildRetry, 'true') }}:
+    - template: /eng/common/templates/steps/Arcade.PublishPipelineArtifact.yml@self
+      parameters:
+        displayName: 'Publish build retry configuration'
+        targetPath: $(Build.SourcesDirectory)\eng\common\BuildConfiguration
+        artifactName: BuildConfiguration
+        runAsInternal: ${{ ne(variables['System.TeamProject'], 'public') }}

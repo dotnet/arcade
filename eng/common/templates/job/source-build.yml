@@ -22,14 +22,15 @@ jobs:
     pool: ${{ parameters.platform.pool }}
   workspace:
     clean: all
-  templateContext:
-    outputs:
-    - output: pipelineArtifact
-      displayName: 'Publish BuildLogs'
-      condition: succeededOrFailed()
-      targetPath: '$(Build.StagingDirectory)/BuildLogs'
-      artifactName: BuildLogs_SourceBuild_${{ parameters.platform.name }}_Attempt$(System.JobAttempt)
+
   steps:
   - template: /eng/common/templates/steps/source-build.yml@self
     parameters:
       platform: ${{ parameters.platform }}
+  - template: /eng/common/templates/steps/Arcade.PublishPipelineArtifact.yml@self
+    parameters:
+      displayName: 'Publish BuildLogs'
+      mainCondition: succeededOrFailed()
+      targetPath: '$(Build.StagingDirectory)/BuildLogs'
+      artifactName: BuildLogs_SourceBuild_${{ parameters.platform.name }}_Attempt$(System.JobAttempt)
+      runAsInternal: ${{ ne(variables['System.TeamProject'], 'public') }}

@@ -1,0 +1,54 @@
+parameters:
+- name: displayName
+  type: string
+  default: 'Publishing Pipeline Artifacts'
+
+- name: target
+  type: string
+
+- name: mainCondition
+  type: string
+
+- name: artifactName
+  type: string
+
+- name: targetPath
+  type: string
+
+- name: properties
+  type: string
+  default: ''
+
+- name: continueOnError
+  type: boolean
+  default: false
+
+- name: runAsInternal
+  default: False
+  type: boolean
+
+steps:
+- ${{ if(parameters.runAsInternal) }}:
+  - task: 1ES.PublishPipelineArtifact@1
+    displayName: ${{ parameters.displayName }}
+    target: ${{ parameters.target }}
+    condition: ${{ coalesce( parameters.mainCondition, 'succeeded()') }}
+    ${{ if eq(parameters.continueOnError, true) }}:
+      continueOnError: ${{ coalesce(parameters.continueOnError, '') }}
+    inputs:
+      artifactName: ${{ parameters.artifactName }}
+      targetPath: '${{ parameters.targetPath }}'
+      ${{ if ne(parameters.properties, '') }}:
+        properties: ${{ parameters.properties }}
+- ${{ not(if(parameters.runAsInternal)) }}:
+  - task: PublishPipelineArtifact@1
+    displayName: ${{ parameters.displayName }}
+    target: ${{ parameters.target }}
+    condition: ${{ coalesce( parameters.mainCondition, 'succeeded()') }}
+    ${{ if eq(parameters.continueOnError, true) }}:
+      continueOnError: ${{ coalesce(parameters.continueOnError, '') }}
+    inputs:
+      artifactName: ${{ parameters.artifactName }}
+      targetPath: '${{ parameters.targetPath }}'
+      ${{ if ne(parameters.properties, '') }}:
+        properties: ${{ parameters.properties }}

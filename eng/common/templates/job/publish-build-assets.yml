@@ -32,27 +32,7 @@ jobs:
     - name: runCodesignValidationInjection
       value: false
     - template: /eng/common/templates/post-build/common-variables.yml@self
-  templateContext:
-    outputs:
-    - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-      - output: pipelineArtifact
-        displayName: 'Publish ReleaseConfigs Artifact'
-        targetPath: '$(Build.StagingDirectory)/ReleaseConfigs.txt'
-        publishLocation: Container
-        artifactName: ReleaseConfigs
-    - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-      - output: pipelineArtifact
-        displayName: 'Publish SymbolPublishingExclusionsFile Artifact'
-        condition: eq(variables['SymbolExclusionFile'], 'true')
-        targetPath: '$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
-        publishLocation: Container
-        artifactName: ReleaseConfigs
-    - output: pipelineArtifact
-      displayName: 'Publish Logs'
-      condition: always()
-      targetPath: '$(Build.SourcesDirectory)/PostBuildLogs'
-      publishLocation: Container
-      artifactName: PostBuildLogs
+
   steps:
   - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - checkout: self
@@ -111,3 +91,28 @@ jobs:
       - template: /eng/common/templates/steps/publish-logs.yml@self
         parameters:
           JobLabel: 'Publish_Artifacts_Logs'
+    - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+      - template: /eng/common/templates/steps/Arcade.PublishPipelineArtifact.yml@self
+        parameters:
+          displayName: 'Publish ReleaseConfigs Artifact'
+          targetPath: '$(Build.StagingDirectory)/ReleaseConfigs.txt'
+          publishLocation: Container
+          artifactName: ReleaseConfigs
+          runAsInternal: ${{ ne(variables['System.TeamProject'], 'public') }}
+    - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+      - template: /eng/common/templates/steps/Arcade.PublishPipelineArtifact.yml@self
+        parameters:
+          displayName: 'Publish SymbolPublishingExclusionsFile Artifact'
+          msinCondition: eq(variables['SymbolExclusionFile'], 'true')
+          targetPath: '$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
+          publishLocation: Container
+          artifactName: ReleaseConfigs
+          runAsInternal: ${{ ne(variables['System.TeamProject'], 'public') }}          
+    - template: /eng/common/templates/steps/Arcade.PublishPipelineArtifact.yml@self
+      parameters:
+        displayName: 'Publish Logs'
+        mainCondition: always()
+        targetPath: '$(Build.SourcesDirectory)/PostBuildLogs'
+        publishLocation: Container
+        artifactName: PostBuildLogs
+        runAsInternal: ${{ ne(variables['System.TeamProject'], 'public') }}        
