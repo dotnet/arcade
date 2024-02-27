@@ -27,12 +27,17 @@ parameters:
   default: False
   type: boolean
 
+- name: publishLocation
+  default: 'pipeline'
+  type: string
+
 steps:
 - ${{ if(parameters.runAsInternal) }}:
   - task: 1ES.PublishPipelineArtifact@1
     displayName: ${{ parameters.displayName }}
     target: ${{ parameters.target }}
     condition: ${{ coalesce( parameters.mainCondition, 'succeeded()') }}
+    publishLocation: ${{ parameters.publishLocation }}
     ${{ if eq(parameters.continueOnError, true) }}:
       continueOnError: ${{ coalesce(parameters.continueOnError, '') }}
     inputs:
@@ -45,6 +50,7 @@ steps:
     displayName: ${{ parameters.displayName }}
     target: ${{ parameters.target }}
     condition: ${{ coalesce( parameters.mainCondition, 'succeeded()') }}
+    publishLocation: ${{ parameters.publishLocation }}
     ${{ if eq(parameters.continueOnError, true) }}:
       continueOnError: ${{ coalesce(parameters.continueOnError, '') }}
     inputs:
