@@ -50,14 +50,12 @@ steps:
 - ${{ if not(parameters.runAsInternal) }}:
   - task: PublishPipelineArtifact@1
     displayName: ${{ parameters.displayName }}
-    target: 
-      container: host
     condition: ${{ coalesce( parameters.mainCondition, 'succeeded()') }}
-    publishLocation: ${{ parameters.publishLocation }}
     ${{ if eq(parameters.continueOnError, true) }}:
       continueOnError: ${{ coalesce(parameters.continueOnError, '') }}
     inputs:
       artifactName: ${{ parameters.artifactName }}
       targetPath: '${{ parameters.targetPath }}'
+      publishLocation: ${{ parameters.publishLocation }}
       ${{ if ne(parameters.properties, '') }}:
         properties: ${{ parameters.properties }}
