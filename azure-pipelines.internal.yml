@@ -68,9 +68,9 @@ extends:
     sdl:
       sourceAnalysisPool: <AgentPoolPlaceHolder>
     pool:
-      name: AzurePipelines-EO
-      image: AzurePipelinesWindows2022compliantGPT
-
+      name: $(DncEngInternalBuildPool)
+      image: 1es-windows-2022-pt
+      os: windows
     stages:
     - template: azure-pipelines.template.yml
       parameters:
