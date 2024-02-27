@@ -33,7 +33,7 @@ parameters:
   type: string
 
 steps:
-- ${{ if(parameters.runAsInternal) }}:
+- ${{ if parameters.runAsInternal }}:
   - task: 1ES.PublishPipelineArtifact@1
     displayName: ${{ parameters.displayName }}
     target: 
@@ -47,7 +47,7 @@ steps:
       targetPath: '${{ parameters.targetPath }}'
       ${{ if ne(parameters.properties, '') }}:
         properties: ${{ parameters.properties }}
-- ${{ not(if(parameters.runAsInternal)) }}:
+- ${{ if not(parameters.runAsInternal) }}:
   - task: PublishPipelineArtifact@1
     displayName: ${{ parameters.displayName }}
     target: 
