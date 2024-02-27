@@ -43,10 +43,10 @@ steps:
     target: 
       container: host
     condition: ${{ coalesce( parameters.mainCondition, 'succeeded()') }}
-    publishLocation: ${{ parameters.publishLocation }}
     ${{ if eq(parameters.continueOnError, true) }}:
       continueOnError: ${{ coalesce(parameters.continueOnError, '') }}
     inputs:
+      publishLocation: ${{ parameters.publishLocation }}
       artifactName: ${{ parameters.artifactName }}
       targetPath: '${{ parameters.targetPath }}'
       ${{ if ne(parameters.properties, '') }}:
