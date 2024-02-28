@@ -3,7 +3,7 @@
     <IncludeDotNetCli Condition=" '$(IncludeDotNetCli)' != 'true' ">false</IncludeDotNetCli>
     <AspNetCoreRuntimeVersion>7.0.0</AspNetCoreRuntimeVersion>
     <DotNetCliPackageType Condition=" '$(DotNetCliPackageType)' == '' ">runtime</DotNetCliPackageType>
-    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'runtime' ">$(BundledNETCoreAppPackageVersion)</DotNetCliVersion>
+    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'runtime' ">7.0.116</DotNetCliVersion>
     <!-- TODO (https://github.com/dotnet/arcade/issues/7022): We are hardcoding this version to use the one tied to the SDK version from global.json -->
     <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'aspnetcore-runtime' ">$(AspNetCoreRuntimeVersion)</DotNetCliVersion>
     <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'sdk' ">$(NETCoreSdkVersion)</DotNetCliVersion>
