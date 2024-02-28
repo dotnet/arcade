@@ -7,6 +7,7 @@
     <!-- TODO (https://github.com/dotnet/arcade/issues/7022): We are hardcoding this version to use the one tied to the SDK version from global.json -->
     <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'aspnetcore-runtime' ">$(AspNetCoreRuntimeVersion)</DotNetCliVersion>
     <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'sdk' ">$(NETCoreSdkVersion)</DotNetCliVersion>
+    <DotNetCliVersion></DotNetCliVersion>
     <DotNetCliChannel Condition=" '$(DotNetCliChannel)' == '' ">Current</DotNetCliChannel>
     <DotNetCliDestination>dotnet-cli</DotNetCliDestination>
     <_HelixMonoQueueTargets>$(_HelixMonoQueueTargets);$(MSBuildThisFileDirectory)DotNetCli.targets</_HelixMonoQueueTargets>
