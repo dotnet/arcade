@@ -104,7 +104,7 @@ stages:
         # We don't use the collection uri here because it might vary (.visualstudio.com vs. dev.azure.com)
         ${{ if eq(variables['System.TeamProject'], 'DevDiv') }}:
           name: AzurePipelines-EO
-          image: 1ESPT-WINDOWS2022
+          image: 1ESPT-Windows2022
           demands: Cmd
           os: windows
         # If it's not devdiv, it's dnceng
@@ -144,7 +144,7 @@ stages:
         # We don't use the collection uri here because it might vary (.visualstudio.com vs. dev.azure.com)
         ${{ if eq(variables['System.TeamProject'], 'DevDiv') }}:
           name: AzurePipelines-EO
-          image: 1ESPT-WINDOWS2022
+          image: 1ESPT-Windows2022
           demands: Cmd
           os: windows
         # If it's not devdiv, it's dnceng
@@ -202,7 +202,7 @@ stages:
         # We don't use the collection uri here because it might vary (.visualstudio.com vs. dev.azure.com)
         ${{ if eq(variables['System.TeamProject'], 'DevDiv') }}:
           name: AzurePipelines-EO
-          image: 1ESPT-WINDOWS2022
+          image: 1ESPT-Windows2022
           demands: Cmd
           os: windows
         # If it's not devdiv, it's dnceng
@@ -256,7 +256,7 @@ stages:
         # We don't use the collection uri here because it might vary (.visualstudio.com vs. dev.azure.com)
         ${{ if eq(variables['System.TeamProject'], 'DevDiv') }}:
           name: AzurePipelines-EO
-          image: 1ESPT-WINDOWS2022
+          image: 1ESPT-Windows2022
           demands: Cmd
           os: windows
         # If it's not devdiv, it's dnceng
