@@ -165,11 +165,15 @@ In addition to these default high level controls, there may be additional compon
 | BuildOS | "linux", "osx", "freebsd", "netbsd", "illumos", "solaris", "haiku", "windows", ... | Defaults to the OS of the build environment | The operating system of the machine that is built on. Lower-case string. |
 | HostOS | Same as `BuildOS` | Defaults to `BuildOS` | The operating system of the machine that will run the produced tool (i.e. compiler) to generate the binary for the target operating system. |
 | TargetOS | Same as `BuildOS` | Defaults to `BuildOS` | The operating system of the machine that will run the binary -> the end user’s machine. |
+| BuildRid | Valid RIDs | RID of the the currently executing runtime | The RID of the runtime that is running the build |
+| HostRid | Valid RIDs | Build Rid | The RID of the runtime that will run the produced tool (i.e. compiler) to generate the binary for the target operating system. |
+| TargetRid | Valid RIDs | When building non-portable, defaults to the OS of build Rid + TargetArchitecture. When building portable, defaults to TargetOS-TargetArchitecture. | The RID of the runtime that will run the binary -> the end user’s machine. |
 | BuildArchitecture | "x64", "x86", "arm", "arm64", ... | Defaults to the architecture of the build environment | The architecture of the machine that is built on. Lower-case string. |
 | TargetArchitecture | Same as `BuildArchitecture` | Defaults to `BuildArchitecture` | The architecture of the machine that will run the binary -> the end user's machine. |
 | HostArchitecture | Same as `BuildArchitecture` | Defaults to `TargetArchitecture` | The architecture of the machine that will run the produced tool (i.e. compiler) to generate the binary for the target architecture |
 | Configuration | Debug, Release | Release | Defaults on producing a shipping product. |
 | DotNetBuildTests | "true", "false", "" | "" is the default. | When "true", the build should include test projects.<br/>Not "true" is essentially the default behavior for source build today. This is essentially equivalent to ExcludeFromBuild being set to true when `DotNetBuildTests` == false and Arcade’s `IsTestProject` or `IsTestUtilityProject`` is true. |
+| ShortStack | "true", "false", "" | "" | If true, the build is a 'short stack' (runtime and its dependencies only). Other repo builds are skipped. |
 | ExcludeFromDotNetBuild | "true", "false", "" | "" | When "true" and `DotNetBuild` == "true", the project is not built.<br/>This is equivalent to `ExcludeFromBuild` being set to true when `DotNetBuild` == "true".<br/>This control applies to project properties. |
 | ExcludeFromSourceOnlyBuild | "true", "false", "" | "" | When "true" and `DotNetBuild` == "true" and `DotNetBuildSourceOnly` == "true" the project is not built.<br/>This is equivalent to `ExcludeFromBuild` being set to true when `DotNetBuild` == "true". Same as `ExcludeFromSourceBuild` today.<br/>This control applies to project properties. |
 
