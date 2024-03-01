@@ -1,5 +1,5 @@
 {
-  // Please refer to the following wiki for more information about the .NET SDK configuration file and it's use cases.
+  // Please refer to the following wiki for more information about the global.json configuration file and it's use cases.
   // https://github.com/dotnet/arcade/blob/main/Documentation/ArcadeSdk.md
   "sdk": {
     "version": "7.0.116",
