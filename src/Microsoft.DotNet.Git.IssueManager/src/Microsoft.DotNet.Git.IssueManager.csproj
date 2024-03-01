@@ -1,16 +1,20 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;$(TargetFrameworkForNETSDK)</TargetFrameworks>
+    <TargetFrameworks>$(NetMinimum);$(NetFrameworkMinimum)</TargetFrameworks>
     <SignAssembly>false</SignAssembly>
     <IsPackable>true</IsPackable>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <ExcludeFromSourceOnlyBuild>true</ExcludeFromSourceOnlyBuild>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
-    <PackageReference Include="Octokit" Version="$(OctokitVersion)" />
-    <PackageReference Include="System.Net.Http" Version="$(SystemNetHttpVersion)" />
-    <PackageReference Include="NETStandard.Library" Version="$(NETStandardLibraryVersion)" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="Octokit" />
   </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
 </Project>

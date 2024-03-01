@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
 
@@ -43,14 +42,6 @@
       </ItemGroup>
     </When>
   </Choose>
-
-  <!--
-    Workaround for a race condition https://github.com/Microsoft/msbuild/issues/1479.
-  -->
-  <PropertyGroup>
-    <TargetFrameworkMonikerAssemblyAttributesPath>$(IntermediateOutputPath)$(TargetFrameworkMoniker).AssemblyAttributes$(DefaultLanguageSourceExtension)</TargetFrameworkMonikerAssemblyAttributesPath>
-    <TargetFrameworkMonikerAssemblyAttributesFileClean>true</TargetFrameworkMonikerAssemblyAttributesFileClean>
-  </PropertyGroup>
 
   <!--
      Portable PDBs are not included in .nupkg by default. Include them unless the project produces symbol packages.
@@ -202,4 +193,5 @@
       <TfmSpecificPackageFile Include="@(_File)" PackagePath="%(_File.TargetDir)/%(_File.RecursiveDir)%(_File.FileName)%(_File.Extension)"/>
     </ItemGroup>
   </Target>
+
 </Project>

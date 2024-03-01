@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
+
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
     <StrongNameKeyId>MicrosoftShared</StrongNameKeyId>
@@ -91,7 +91,8 @@
     <!-- C# specific settings -->
     <When Condition="'$(Language)' == 'C#'">
       <PropertyGroup>
-        <NoWarn>$(NoWarn);1701;1702;1705;1591</NoWarn>
+        <NoWarn>$(NoWarn);1701;1702;1705</NoWarn>
+        <NoWarn Condition="'$(SkipArcadeNoWarnCS1591)' != 'true'">$(NoWarn);1591</NoWarn>
       </PropertyGroup>
     </When>
 
@@ -131,4 +132,5 @@
   <ItemGroup Condition="'$(EnableRichCodeNavigation)' == 'true'">
     <PackageReference Include="RichCodeNav.EnvVarDump" Version="$(RichCodeNavPackageVersion)" IsImplicitlyDefined="true" PrivateAssets="all" />
   </ItemGroup>
+
 </Project>

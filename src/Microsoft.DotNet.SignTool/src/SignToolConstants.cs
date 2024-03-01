@@ -6,7 +6,23 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.SignTool
 {
-    public enum SigningToolErrorCode { SIGN001, SIGN002, SIGN003 };
+    public enum SigningToolErrorCode
+    {
+        /// <summary>
+        /// Signing a Microsoft library with a 3rd party cert
+        /// </summary>
+        SIGN001,
+        /// <summary>
+        /// Unable to determine a certificate for a file that should be signed
+        /// </summary>
+        SIGN002,
+        /// <summary>
+        /// No files to sign.
+        /// </summary>
+        SIGN003,
+        // Signing a 3rd party library with a Microsoft cert.
+        SIGN004
+    };
         
     internal static class SignToolConstants
     {

@@ -1,5 +1,5 @@
 # Contributor Guidance for Arcade
-Over and above the [.NET Core contributor guidelines](https://github.com/dotnet/coreclr/blob/master/Documentation/project-docs/contributing.md) (which are important), there are some principles and guidelines that are specific to Arcade as well.
+Over and above the [.NET Core contributor guidelines](https://github.com/dotnet/runtime/blob/main/CONTRIBUTING.md) (which are important), there are some principles and guidelines that are specific to Arcade as well.
 
 For the most part, contributions to Arcade are straightforward and relatively smooth.  However, from time to time, getting changes in can be challenging, and even frustrating.  The very nature of Arcade is that it's shared across multiple teams.  This document attempts to clarify some of the expectations as well as provide some 'advice' for success when contributing to Arcade.
 
@@ -20,8 +20,6 @@ For the most part, contributions to Arcade are straightforward and relatively sm
 
 ### Ownership
 The current owner for dotnet/arcade is Mark Wilkie <mawilkie@microsoft.com>.  The current point persons are:
-- Alex Perovich @alexperovich / <Alex.Perovich@microsoft.com>
-- Jon Fortescue @jonfortescue  / <Jonathan.Fortescue@microsoft.com>
 - Michael Stuckey @garath / <Michael.Stuckey@microsoft.com>
 - Ricardo Arenas @riarenas / <riarenas@microsoft.com>
 
@@ -72,3 +70,8 @@ Time and again differences get worked out when these items occur.  To be sure, i
 * Refrain (where possible) from relying solely on GH comments to find resolution to a particular tricky disagreement.  Face-to-face when possible, or at the very least, voice conversations are much higher bandwidth and thus, dramatically more effective.
 * Initially, leave your own personal 'principles' at the door.  Instead work with others to find the right pragmatic next step, but then circle back around and use your principles to help you push for the right longer term solution/approach over time.
 * Take the opportunity to learn from others.  We're all learning together, and the skills required to reconcile differences are very valuable in every venue.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CPolicy%5CArcadeContributorGuidance.md)](https://helix.dot.net/f/p/5?p=Documentation%5CPolicy%5CArcadeContributorGuidance.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CPolicy%5CArcadeContributorGuidance.md)</sub>
+<!-- End Generated Content-->

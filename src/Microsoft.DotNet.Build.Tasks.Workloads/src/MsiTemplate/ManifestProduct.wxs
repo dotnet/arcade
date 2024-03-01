@@ -26,9 +26,13 @@
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="$(var.ProgramFilesFolder)">
         <Directory Id="DOTNETHOME" Name="dotnet">
-          <Directory Id="ManifestDir" Name="sdk-manifests">
-            <Directory Id="VersionDir" Name="$(var.SdkFeatureBandVersion)">
-              <Directory Id="ManifestIdDir" Name="$(var.ManifestId)" />
+          <Directory Id="SdkManifestsDir" Name="sdk-manifests">
+            <Directory Id="SdkFeatureBandVersionDir" Name="$(var.SdkFeatureBandVersion)">
+              <Directory Id="ManifestIdDir" Name="$(var.ManifestId)">
+                <?ifdef ManifestVersion ?>
+                <Directory Id="ManifestVersionDir" Name="$(var.ManifestVersion)" />
+                <?endif?>
+              </Directory>
             </Directory>
           </Directory>
         </Directory>
@@ -45,11 +49,15 @@
     <Property Id="PackageId" Value="$(var.PackageId)" />
     <Property Id="PackageVersion" Value="$(var.PackageVersion)" />
 
-    <Feature Id="F_PackageContent">
-      <ComponentGroupRef Id="CG_PackageContent"/>
+    <Feature Id="F_PackageContents">
+      <ComponentGroupRef Id="CG_PackageContents"/>
+      <?if $(var.IncludePackGroupJson) = "true" ?>
+      <ComponentGroupRef Id="CG_PackGroupJson"/>
+      <?endif?>
     </Feature>
 
     <FeatureRef Id="F_DependencyProvider" />
+    <FeatureRef Id="F_RegistryKeys" />
 
     <WixVariable Id="WixUILicenseRtf" Value="$(var.EulaRtf)" />
     <UIRef Id="WixUI_Minimal"/>

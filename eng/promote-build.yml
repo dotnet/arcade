@@ -7,24 +7,24 @@ parameters:
     default: 3
     values:
       - 3
-      
+
   - name: BARBuildId
     displayName: "Maestro ID of the build to be promoted:"
     type: number
 
   - name: PromoteToChannelIds
     displayName: Which Maestro channels' IDs should the build be promoted to? (comma separated)
-    type: string 
+    type: string
     default: ' '
 
   - name: SymbolPublishingAdditionalParameters
     displayName: Additional (MSBuild) properties for symbol publishing
-    type: string 
+    type: string
     default: ' '
 
   - name: ArtifactsPublishingAdditionalParameters
     displayName: Additional (MSBuild) properties for general asset publishing
-    type: string 
+    type: string
     default: ' '
 
   # The parameters below here are legacy. They are passed by add-build-to-channel
@@ -33,27 +33,27 @@ parameters:
 
   - name: EnableSourceLinkValidation
     displayName: Should Sourcelink validation be performed?
-    type: boolean 
+    type: boolean
     default: false
-    
+
   - name: EnableNugetValidation
     displayName: Should NuGet metadata validation be performed?
-    type: boolean 
+    type: boolean
     default: false
-    
+
   - name: EnableSigningValidation
     displayName: Should signing validation be performed?
-    type: boolean 
+    type: boolean
     default: false
-       
+
   - name: PublishInstallersAndChecksums
     displayName: Should installers and checksums be published?
-    type: boolean 
+    type: boolean
     default: true
-    
+
   - name: SigningValidationAdditionalParameters
     displayName: Additional (MSBuild) properties for signing validation
-    type: string 
+    type: string
     default: ' '
 
 trigger: none

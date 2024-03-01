@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;$(TargetFrameworkForNETSDK)</TargetFrameworks>
+    <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -10,13 +10,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="testassets\**">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
+    <Content Include="testassets\**"
+             CopyToOutputDirectory="Always" />
   </ItemGroup>
 
   <ItemGroup>
     <None Remove="testassets\Directory.Build.props.malformedbraces.in" />
     <None Remove="testassets\Directory.Build.props.nobraces.in" />
   </ItemGroup>
+
 </Project>

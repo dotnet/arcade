@@ -98,6 +98,8 @@ namespace Microsoft.DotNet.SignTool
 
         private Telemetry _telemetry;
 
+        private string _tarToolPath;
+
         public Configuration(
             string tempDir,
             ITaskItem[] itemsToSign,
@@ -105,6 +107,7 @@ namespace Microsoft.DotNet.SignTool
             Dictionary<ExplicitCertificateKey, string> fileSignInfo,
             Dictionary<string, List<SignInfo>> extensionSignInfo,
             ITaskItem[] dualCertificates,
+            string tarToolPath,
             TaskLoggingHelper log,
             bool useHashInExtractionPath = false,
             Telemetry telemetry = null)
@@ -132,6 +135,7 @@ namespace Microsoft.DotNet.SignTool
             _wixPacks = _itemsToSign.Where(w => WixPackInfo.IsWixPack(w.ItemSpec))?.Select(s => new WixPackInfo(s.ItemSpec)).ToList();
             _hashToCollisionIdMap = new Dictionary<SignedFileContentKey, string>();
             _telemetry = telemetry;
+            _tarToolPath = tarToolPath;
         }
 
         internal BatchSignInput GenerateListOfFiles()
@@ -390,9 +394,9 @@ namespace Microsoft.DotNet.SignTool
                 fileSpec = matchedNameTokenFramework ? $" (PublicKeyToken = {peInfo.PublicKeyToken}, Framework = {peInfo.TargetFramework})" :
                         matchedNameToken ? $" (PublicKeyToken = {peInfo.PublicKeyToken})" : string.Empty;
             }
-            else if (FileSignInfo.IsNupkg(file.FullPath) || FileSignInfo.IsVsix(file.FullPath))
+            else if (FileSignInfo.IsPackage(file.FullPath))
             {
-                isAlreadySigned = VerifySignatures.IsSignedContainer(file.FullPath);
+                isAlreadySigned = VerifySignatures.IsSignedContainer(file.FullPath, _pathToContainerUnpackingDirectory, _tarToolPath);
                 if(!isAlreadySigned)
                 {
                     _log.LogMessage(MessageImportance.Low, $"Container {file.FullPath} does not have a signature marker.");
@@ -460,21 +464,34 @@ namespace Microsoft.DotNet.SignTool
                     return new FileSignInfo(file, signInfo.WithIsAlreadySigned(isAlreadySigned), wixContentFilePath: wixContentFilePath);
                 }
 
-                // TODO: implement this check for native PE files as well:
-                // extract copyright from native resource (.rsrc section) 
-                if (signInfo.ShouldSign && peInfo != null && peInfo.IsManaged)
+                if (signInfo.ShouldSign && peInfo != null)
                 {
                     bool isMicrosoftLibrary = IsMicrosoftLibrary(peInfo.Copyright);
                     bool isMicrosoftCertificate = !IsThirdPartyCertificate(signInfo.Certificate);
                     if (isMicrosoftLibrary != isMicrosoftCertificate)
                     {
+                        string warning;
+                        SigningToolErrorCode code;
                         if (isMicrosoftLibrary)
                         {
-                            LogWarning(SigningToolErrorCode.SIGN001, $"Signing Microsoft library '{file.FullPath}' with 3rd party certificate '{signInfo.Certificate}'. The library is considered Microsoft library due to its copyright: '{peInfo.Copyright}'.");
+                            code = SigningToolErrorCode.SIGN001;
+                            warning = $"Signing Microsoft library '{file.FullPath}' with 3rd party certificate '{signInfo.Certificate}'. The library is considered Microsoft library due to its copyright: '{peInfo.Copyright}'.";
                         }
                         else
                         {
-                            LogWarning(SigningToolErrorCode.SIGN001, $"Signing 3rd party library '{file.FullPath}' with Microsoft certificate '{signInfo.Certificate}'. The library is considered 3rd party library due to its copyright: '{peInfo.Copyright}'.");
+                            code = SigningToolErrorCode.SIGN004;
+                            warning = $"Signing 3rd party library '{file.FullPath}' with Microsoft certificate '{signInfo.Certificate}'. The library is considered 3rd party library due to its copyright: '{peInfo.Copyright}'.";
+                        }
+
+                        // https://github.com/dotnet/arcade/issues/10293
+                        // Turn the else into a warning (and hoist into the if above) after issue is complete.
+                        if (peInfo.IsManaged)
+                        {
+                            LogWarning(code, warning);
+                        }
+                        else
+                        {
+                            _log.LogMessage(MessageImportance.High, $"{code.ToString()}: {warning}");
                         }
                     }
                 }
@@ -514,7 +531,7 @@ namespace Microsoft.DotNet.SignTool
         /// Copyright used for binary assets (assemblies and packages) built by Microsoft must be Microsoft copyright.
         /// </summary>
         private static bool IsMicrosoftLibrary(string copyright)
-            => copyright.Contains("Microsoft");
+            => copyright != null && copyright.Contains("Microsoft");
 
         private static bool IsThirdPartyCertificate(string name)
             => name.Equals("3PartyDual", StringComparison.OrdinalIgnoreCase) ||
@@ -526,17 +543,31 @@ namespace Microsoft.DotNet.SignTool
 
             if (!isManaged)
             {
-                return new PEInfo(isManaged);
+                return new PEInfo(isManaged, GetNativeLegalCopyright(fullPath));
             }
 
             bool isCrossgened = ContentUtil.IsCrossgened(fullPath);
             string publicKeyToken = ContentUtil.GetPublicKeyToken(fullPath);
 
-            GetTargetFrameworkAndCopyright(fullPath, out string targetFramework, out string copyright);
+            GetManagedTargetFrameworkAndCopyright(fullPath, out string targetFramework, out string copyright);
             return new PEInfo(isManaged, isCrossgened, copyright, publicKeyToken, targetFramework);
         }
 
-        private static void GetTargetFrameworkAndCopyright(string filePath, out string targetFramework, out string copyright)
+        /// <summary>
+        /// Retrieves the copyright info from the file version info resource structure.
+        /// This is used as a backup method, in cases of non-managed binaries as well as managed
+        /// binaries in some cases (crossgen)
+        /// </summary>
+        /// <param name="filePath"></param>
+        /// <returns></returns>
+        private static string GetNativeLegalCopyright(string filePath)
+        {
+            var fileVersionInfo = FileVersionInfo.GetVersionInfo(filePath);
+            // Native assets have a space rather than an empty string if there is not a legal copyright available.
+            return fileVersionInfo.LegalCopyright?.Trim();
+        }
+
+        private static void GetManagedTargetFrameworkAndCopyright(string filePath, out string targetFramework, out string copyright)
         {
             targetFramework = string.Empty;
             copyright = string.Empty;
@@ -562,6 +593,12 @@ namespace Microsoft.DotNet.SignTool
                         }
                     }
                 }
+            }
+
+            // If there is no copyright available, it's possible this was a r2r binary. Get the native info instead.
+            if (string.IsNullOrEmpty(copyright))
+            {
+                copyright = GetNativeLegalCopyright(filePath);
             }
         }
 
@@ -636,71 +673,61 @@ namespace Microsoft.DotNet.SignTool
 
             try
             {
-                using (var archive = new ZipArchive(File.OpenRead(archivePath), ZipArchiveMode.Read))
+                var nestedParts = new Dictionary<string, ZipPart>();
+                
+                foreach (var (relativePath, contentStream, contentSize) in ZipData.ReadEntries(archivePath, _pathToContainerUnpackingDirectory, _tarToolPath))
                 {
-                    var nestedParts = new Dictionary<string, ZipPart>();
-
-
-                    foreach (ZipArchiveEntry entry in archive.Entries)
+                    if (contentStream == null)
                     {
-                        string relativePath = entry.FullName; // lgtm [cs/zipslip] Archive from trusted source
+                        continue;
+                    }
+                    
+                    using var entryMemoryStream = new MemoryStream((int)contentSize);
+                    contentStream.CopyTo(entryMemoryStream);
+                    entryMemoryStream.Position = 0;
+                    ImmutableArray<byte> contentHash = ContentUtil.GetContentHash(entryMemoryStream);
 
-                        // `entry` might be just a pointer to a folder. We skip those.
-                        if (relativePath.EndsWith("/") && entry.Name == "")
-                        {
-                            continue;
-                        }
+                    var fileUniqueKey = new SignedFileContentKey(contentHash, Path.GetFileName(relativePath));
 
-                        using (var entryStream = entry.Open())
-                        using (MemoryStream entryMemoryStream = new MemoryStream((int)entry.Length))
-                        {
-                            entryStream.CopyTo(entryMemoryStream);
-                            entryMemoryStream.Position = 0;
-                            ImmutableArray<byte> contentHash = ContentUtil.GetContentHash(entryMemoryStream);
-
-                            var fileUniqueKey = new SignedFileContentKey(contentHash, Path.GetFileName(relativePath));
-
-                            if (!_whichPackagesTheFileIsIn.TryGetValue(fileUniqueKey, out var packages))
-                            {
-                                packages = new HashSet<string>();
-                            }
-
-                            packages.Add(Path.GetFileName(archivePath));
-
-                            _whichPackagesTheFileIsIn[fileUniqueKey] = packages;
-
-                            // if we already encountered file that has the same content we can reuse its signed version when repackaging the container.
-                            var fileName = Path.GetFileName(relativePath);
-                            if (!_filesByContentKey.TryGetValue(fileUniqueKey, out var fileSignInfo))
-                            {
-                                string extractPathRoot = _useHashInExtractionPath ? fileUniqueKey.StringHash : _filesByContentKey.Count().ToString();
-                                string tempPath = Path.Combine(_pathToContainerUnpackingDirectory, extractPathRoot, relativePath);
-                                _log.LogMessage($"Extracting file '{fileName}' from '{archivePath}' to '{tempPath}'.");
-
-                                Directory.CreateDirectory(Path.GetDirectoryName(tempPath));
-
-                                entryMemoryStream.Position = 0;
-                                using (var tempFileStream = File.OpenWrite(tempPath))
-                                {
-                                    entryMemoryStream.CopyTo(tempFileStream);
-                                }
-
-                                _hashToCollisionIdMap.TryGetValue(fileUniqueKey, out string collisionPriorityId);
-                                PathWithHash nestedFile = new PathWithHash(tempPath, contentHash);
-                                fileSignInfo = TrackFile(nestedFile, zipFileSignInfo.File, collisionPriorityId);
-                            }
-
-                            if (fileSignInfo.ShouldTrack)
-                            {
-                                nestedParts.Add(relativePath, new ZipPart(relativePath, fileSignInfo));
-                            }
-                        }
+                    if (!_whichPackagesTheFileIsIn.TryGetValue(fileUniqueKey, out var packages))
+                    {
+                        packages = new HashSet<string>();
                     }
 
-                    zipData = new ZipData(zipFileSignInfo, nestedParts.ToImmutableDictionary());
+                    packages.Add(Path.GetFileName(archivePath));
 
-                    return true;
+                    _whichPackagesTheFileIsIn[fileUniqueKey] = packages;
+
+                    // if we already encountered file that has the same content we can reuse its signed version when repackaging the container.
+                    var fileName = Path.GetFileName(relativePath);
+                    if (!_filesByContentKey.TryGetValue(fileUniqueKey, out var fileSignInfo))
+                    {
+                        string extractPathRoot = _useHashInExtractionPath ? fileUniqueKey.StringHash : _filesByContentKey.Count().ToString();
+                        string tempPath = Path.Combine(_pathToContainerUnpackingDirectory, extractPathRoot, relativePath);
+                        _log.LogMessage($"Extracting file '{fileName}' from '{archivePath}' to '{tempPath}'.");
+
+                        Directory.CreateDirectory(Path.GetDirectoryName(tempPath));
+
+                        entryMemoryStream.Position = 0;
+                        using (var tempFileStream = File.OpenWrite(tempPath))
+                        {
+                            entryMemoryStream.CopyTo(tempFileStream);
+                        }
+
+                        _hashToCollisionIdMap.TryGetValue(fileUniqueKey, out string collisionPriorityId);
+                        PathWithHash nestedFile = new PathWithHash(tempPath, contentHash);
+                        fileSignInfo = TrackFile(nestedFile, zipFileSignInfo.File, collisionPriorityId);
+                    }
+
+                    if (fileSignInfo.ShouldTrack)
+                    {
+                        nestedParts.Add(relativePath, new ZipPart(relativePath, fileSignInfo));
+                    }
                 }
+
+                zipData = new ZipData(zipFileSignInfo, nestedParts.ToImmutableDictionary());
+
+                return true;
             }
             catch (Exception e)
             {

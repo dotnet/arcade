@@ -30,6 +30,11 @@ namespace Microsoft.Cci.Writers.CSharp
                 WriteVisibility(field.Visibility);
                 WriteCustomModifiers(field.CustomModifiers);
 
+                if (field.Attributes.HasRequiredMemberAttribute())
+                {
+                    WriteKeyword("required");
+                }
+
                 if (field.Type.IsUnsafeType())
                     WriteKeyword("unsafe");
 

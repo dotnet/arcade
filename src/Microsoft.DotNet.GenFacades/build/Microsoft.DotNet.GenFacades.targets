@@ -2,11 +2,31 @@
 <Project>
 
   <PropertyGroup>
-    <GenFacadesTargetAssemblyPath Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\tools\net7.0\Microsoft.DotNet.GenFacades.dll</GenFacadesTargetAssemblyPath>
+    <GenFacadesTargetAssemblyPath Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\tools\net9.0\Microsoft.DotNet.GenFacades.dll</GenFacadesTargetAssemblyPath>
     <GenFacadesTargetAssemblyPath Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\tools\net472\Microsoft.DotNet.GenFacades.dll</GenFacadesTargetAssemblyPath>
   </PropertyGroup>
 
-  <Import Project="Microsoft.DotNet.GenPartialFacadeSource.targets" Condition="'$(IsPartialFacadeAssembly)' == 'true'" />
-  <Import Project="Microsoft.DotNet.GenFacadesNotSupported.targets" Condition="'$(GeneratePlatformNotSupportedAssembly)' == 'true' or
-                                                                               '$(GeneratePlatformNotSupportedAssemblyMessage)' != ''" />
+  <Target Name="GetGenFacadesRoslynAssembliesPath">
+    <PropertyGroup Condition="'$(GenFacadesRoslynAssembliesPath)' == ''">
+      <!-- If a custom roslyn assemblies path isn't provided, the opt-in switch 'GenFacadesUseRoslynToolsetPackagePath' is set to true and
+           the roslyn toolset package is referenced, use the assemblies from that package. -->
+      <_UseRoslynToolsetPackageForGenFacades Condition="'$(GenFacadesUseRoslynToolsetPackagePath)' == 'true' and '@(PackageReference->AnyHaveMetadataValue('Identity', 'Microsoft.Net.Compilers.Toolset'))' == 'true'">true</_UseRoslynToolsetPackageForGenFacades>
+
+      <!-- CSharpCoreTargetsPath and VisualBasicCoreTargetsPath point to the same location, Microsoft.CodeAnalysis.CSharp and Microsoft.CodeAnalysis.VisualBasic
+           are on the same directory as Microsoft.CodeAnalysis. So there is no need to distinguish between csproj or vbproj. -->
+      <GenFacadesRoslynAssembliesPath Condition="'$(_UseRoslynToolsetPackageForGenFacades)' == 'true'">$([System.IO.Path]::GetDirectoryName('$(CSharpCoreTargetsPath)'))</GenFacadesRoslynAssembliesPath>
+      
+      <!-- Otherwise, default to the roslyn compiler provided by the SDK / Visual Studio. -->
+      <GenFacadesRoslynAssembliesPath Condition="'$(_UseRoslynToolsetPackageForGenFacades)' != 'true'">$(RoslynTargetsPath)</GenFacadesRoslynAssembliesPath>
+
+      <!-- The SDK stores the roslyn assemblies in the 'bincore' subdirectory. -->
+      <GenFacadesRoslynAssembliesPath Condition="'$(MSBuildRuntimeType)' == 'Core'">$([System.IO.Path]::Combine('$(RoslynAssembliesPath)', 'bincore'))</GenFacadesRoslynAssembliesPath>
+    </PropertyGroup>
+  </Target>
+
+  <Import Project="Microsoft.DotNet.GenFacades.ClearVersion.targets" Condition="'$(GenFacadesForceZeroVersionSeeds)' == 'true'" />
+  <Import Project="Microsoft.DotNet.GenFacades.NotSupported.targets" Condition="'$(GeneratePlatformNotSupportedAssembly)' == 'true' or
+                                                                                '$(GeneratePlatformNotSupportedAssemblyMessage)' != ''" />
+  <Import Project="Microsoft.DotNet.GenFacades.PartialFacadeSource.targets" Condition="'$(IsPartialFacadeAssembly)' == 'true'" />
+
 </Project>

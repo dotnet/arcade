@@ -1,7 +1,8 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<Project>
 
   <PropertyGroup>
-    <XunitConsoleNetCore21AppPath>$(MSBuildThisFileDirectory)..\tools\net7.0\xunit.console.dll</XunitConsoleNetCore21AppPath>
+    <XunitConsoleNetCore21AppPath>$(MSBuildThisFileDirectory)..\tools\net9.0\xunit.console.dll</XunitConsoleNetCore21AppPath>
   </PropertyGroup>
 
 </Project>

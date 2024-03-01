@@ -18,3 +18,8 @@ After approximagely two weeks, we will in-place update the existing images as pa
 
 ## Policy for supporting VS 2019 – Private Preview Versions
 There is currently no Engineering Services support for providing VS private preview queues.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CPolicy%5CVS2019SupportPolicy.md)](https://helix.dot.net/f/p/5?p=Documentation%5CPolicy%5CVS2019SupportPolicy.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CPolicy%5CVS2019SupportPolicy.md)</sub>
+<!-- End Generated Content-->

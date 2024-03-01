@@ -16,28 +16,27 @@ stages:
         - group: DotNet-Symbol-Server-Pats
         - group: DotNetBuilds storage account tokens
         - group: AzureDevOps-Artifact-Feeds-Pats
-        - group: DotNet-Blob-Feed
-        - group: DotNet-DotNetCli-Storage
         - group: DotNet-MSRC-Storage
         - group: Publish-Build-Assets
-          
+
         # Default Maestro++ API Endpoint and API Version
         - name: MaestroApiEndPoint
-          value: "https://maestro-prod.westus2.cloudapp.azure.com"
+          value: "https://maestro.dot.net"
         - name: MaestroApiAccessToken
           value: $(MaestroAccessToken)
         - name: MaestroApiVersion
           value: "2020-02-20"
+        - template: /eng/common/templates/post-build/common-variables.yml
 
       pool:
         # We don't use the collection uri here because it might vary (.visualstudio.com vs. dev.azure.com)
         ${{ if eq(variables['System.TeamProject'], 'DevDiv') }}:
           name: VSEngSS-MicroBuild2022-1ES
           demands: Cmd
-        # If it's not devdiv, it's dnceng
-        ${{ if ne(variables['System.TeamProject'], 'DevDiv') }}:
-          name: NetCore1ESPool-Internal
-          demands: ImageOverride -equals Build.Server.Amd64.VS2019
+        # If it's not devdiv, it's dnceng:
+        ${{ else }}:
+          name: NetCore1ESPool-Publishing-Internal
+          demands: ImageOverride -equals windows.vs2019.amd64
 
       steps:
         - task: PowerShell@2
@@ -74,7 +73,7 @@ stages:
 
                     $channelNames += "'$($channelInfo.name)'"
                   }
-                  
+
                   $azureDevOpsBuildNumber = $buildInfo.azureDevOpsBuildNumber
                   $azureDevOpsRepository = "Unknown"
                   $lastIndexOfSlash = $buildInfo.azureDevOpsRepository.LastIndexOf('/')
@@ -94,7 +93,7 @@ stages:
                     $buildNumberName = $buildNumberName.Substring(0, 255)
                   }
 
-                  # Set tags on publishing for visibility 
+                  # Set tags on publishing for visibility
 
                   Write-Host "##vso[build.updatebuildnumber]$buildNumberName"
                   Write-Host "##vso[build.addbuildtag]Channel(s) - $channelNames"
@@ -140,14 +139,14 @@ stages:
           displayName: 'Install NuGet.exe'
 
         # This is necessary whenever we want to publish/restore to an AzDO private feed
-        - task: NuGetAuthenticate@0
+        - task: NuGetAuthenticate@1
           displayName: 'Authenticate to AzDO Feeds'
 
         - task: PowerShell@2
           displayName: Enable cross-org publishing
           inputs:
             filePath: $(Build.SourcesDirectory)/eng/common/enable-cross-org-publishing.ps1
-            arguments: -token $(dn-bot-dnceng-artifact-feeds-rw)
+            arguments: -token $(dn-bot-all-orgs-artifact-feeds-rw)
 
         - task: PowerShell@2
           displayName: Publish packages, blobs and symbols
@@ -165,14 +164,9 @@ stages:
               /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
               /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts/'
               /p:PublishInstallersAndChecksums=true
-              /p:InstallersAzureAccountKey=$(dotnetcli-storage-key)
-              /p:InternalInstallersAzureAccountKey=$(dotnetclimsrc-access-key)
-              /p:ChecksumsAzureAccountKey=$(dotnetclichecksums-storage-key)
-              /p:InternalChecksumsAzureAccountKey=$(dotnetclichecksumsmsrc-storage-key)
-              /p:AzureDevOpsFeedsKey='$(dn-bot-dnceng-artifact-feeds-rw)'
-              /p:AzureStorageTargetFeedPAT='$(dotnetfeed-storage-access-key-1)'
-              /p:AkaMSClientId=$(akams-client-id)
-              /p:AkaMSClientSecret=$(akams-client-secret)
+              /p:AzureDevOpsFeedsKey='$(dn-bot-all-orgs-artifact-feeds-rw)'
+              /p:AkaMSClientId=$(akams-app-id)
+              /p:AkaMSClientSecret=$(akams-app-secret)
               ${{ parameters.artifactsPublishingAdditionalParameters }}
               /p:PDBArtifactsBasePath='$(Build.ArtifactStagingDirectory)/PDBArtifacts/'
               /p:SymbolPublishingExclusionsFile='$(Build.ArtifactStagingDirectory)/ReleaseConfigs/SymbolPublishingExclusionsFile.txt'
@@ -192,7 +186,10 @@ stages:
               /p:DotNetBuildsPublicChecksumsUriBase64='$(dotnetbuilds-public-container-checksum-uri-base64)'
               /p:DotNetBuildsInternalUriBase64='$(dotnetbuilds-internal-container-uri-base64)'
               /p:DotNetBuildsInternalChecksumsUriBase64='$(dotnetbuilds-internal-container-checksum-uri-base64)'
+              /p:DotNetCliMsrcDotNetUriBase64='$(dotnetclimsrc-dotnet-container-uri-base64)'
+              /p:DotNetCliChecksumsMsrcDotNetUriBase64='$(dotnetclichecksumsmsrc-dotnet-container-uri-base64)'
         - template: /eng/common/templates/steps/publish-logs.yml
           parameters:
             StageLabel: '${{ parameters.stageName }}'
             JobLabel: 'AssetsPublishing'
+            BinlogToolVersion: $(BinlogToolVersion)

@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
 
@@ -23,18 +22,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.XliffTasks" Version="$(MicrosoftDotNetXliffTasksVersion)" PrivateAssets="all" IsImplicitlyDefined="true" Condition="'$(UsingToolXliff)' == 'true' and '$(IsShippingAssembly)' == 'true'" />
+    <PackageReference Include="Microsoft.DotNet.XliffTasks" Version="$(MicrosoftDotNetXliffTasksVersion)" PrivateAssets="all" IsImplicitlyDefined="true"
+      Condition="'$(UsingToolXliff)' == 'true' and '$(IsShippingAssembly)' == 'true'" />
   </ItemGroup>
 
 
   <!-- TemplateLocalizer for localizing 'dotnet new' templates -->
-  <PropertyGroup Condition="'$(UsingToolTemplateLocalizer)' == 'true'">
+  <PropertyGroup Condition="'$(UsingToolTemplateLocalizer)' == 'true' and '$(DotNetBuildFromSource)' != 'true' and '$(DotNetBuildSourceOnly)' != 'true'">
     <!-- Run localizer when building on dev machine. -->
     <LocalizeTemplates Condition="'$(ContinuousIntegrationBuild)' != 'true'">true</LocalizeTemplates>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.TemplateEngine.Tasks" Version="$(MicrosoftTemplateEngineTasksVersion)" PrivateAssets="all" IsImplicitlyDefined="true" Condition="'$(UsingToolTemplateLocalizer)' == 'true'" />
+    <PackageReference Include="Microsoft.TemplateEngine.Authoring.Tasks" Version="$(MicrosoftTemplateEngineAuthoringTasksVersion)" PrivateAssets="all"
+      IsImplicitlyDefined="true" Condition="'$(UsingToolTemplateLocalizer)' == 'true' and '$(DotNetBuildFromSource)' != 'true' and '$(DotNetBuildSourceOnly)' != 'true'" />
   </ItemGroup>
 
 </Project>

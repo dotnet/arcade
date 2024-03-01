@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -77,7 +80,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.CmdLine
                 MissingArgument(nameof(output));
             }
 
-            ILogger logger = new LoggerFactory().AddConsole().CreateLogger("dotnet-swaggergen");
+            ILogger logger = LoggerFactory.Create(builder => builder.AddSimpleConsole()).CreateLogger("dotnet-swaggergen");
 
             var (diagnostic, document) = await GetSwaggerDocument(input);
             if (diagnostic.Errors.Any())

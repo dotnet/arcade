@@ -99,9 +99,6 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
   ```YAML
     - _InternalBuildArgs: /p:DotNetSignType=$(_SignType) 
         /p:TeamName=$(_TeamName)
-        /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
-        /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl)
-        /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
         /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
         /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
         /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
@@ -115,9 +112,6 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
   ```YAML
     - _InternalBuildArgs: /p:DotNetSignType=$(_SignType) 
         /p:TeamName=$(_TeamName)
-        /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
-        /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl)
-        /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
         /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
         /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
         /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
@@ -196,7 +190,6 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
 
    Sample: 
      ```XML
-      <?xml version="1.0" encoding="utf-8"?>
         <Project>
            <PropertyGroup>
               <PublishingVersion>3</PublishingVersion>
@@ -219,12 +212,35 @@ Since the post-build stages will only trigger during builds that run in the inte
 1. Create a branch on the Azure DevOps internal mirror of the repo that includes the pipeline changes.
 1. Set up the "General Testing Channel" as a default channel for the internal repo + branch combination using Darc.
 
-    ``` Powershell
+    ```powershell
     darc add-default-channel --channel "General Testing" --branch "<my_new_branch>" --repo "https://dev.azure.com/dnceng/internal/_git/<repo_name>"
     ```
 
 1. Queue a build for your test branch
 1. Once the Build and Validate Build Assets stages complete, the *Publish Using Darc* stage should execute and publish the packages to the feed during the `Publish Using Darc` job. [Maestro Promotion Pipeline](https://dnceng.visualstudio.com/internal/_build?definitionId=750) is a pipeline used to publish the packages to the target channel. The job informs that a new build has been triggered in the promotion pipeline, and once it succeeds the build will be in the channel. The `Publish Using Darc` job calls [`darc add-build-to-channel`](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-build-to-channel) which waits until a build of the promotion pipeline publishes the assets.
+
+:warning: It is possible that even if you add a default channel, and the build artifacts will get published to the Build Asset Registry, the artifacts won't get published to the NuGet feed. 
+
+```
+// Publish Build Assets step
+  ...
+  Metadata has been pushed. Build id in the Build Asset Registry is '183022'
+  Found the following default channels:
+      https://dev.azure.com/dnceng/internal/_git/dotnet-arcade@deltabuild => (529) General Testing
+  Determined build will be added to the following channels: [529]
+
+// Publish Using Darc step
+  ...
+  Build '183022' is already on all target channel(s).
+```
+
+This is to do with the Maestro having some logic in it that preferences the repo URI to be "public", if the commit built is public.
+
+In situation like this, you can publish the artifacts to the desired NuGet feed by running the following command and waiting for it to complete:
+
+```powershell
+darc add-build-to-channel --channel "General Testing" --id <BAR ID>
+```
 
 ### Checksum generation
 
@@ -232,13 +248,13 @@ Arcade also includes support for automatically generating checksum files. To opt
 
 Example:
 
-    ```XML
-    <ItemGroup>
-      <GenerateChecksumItems Include="@(OutputFile)">
-        <DestinationPath>%(FullPath).Sha512</OutputPath>
-      </GenerateChecksumItems>
-    </ItemGroup>
-    ```
+```XML
+<ItemGroup>
+  <GenerateChecksumItems Include="@(OutputFile)">
+    <DestinationPath>%(FullPath).Sha512</OutputPath>
+  </GenerateChecksumItems>
+</ItemGroup>
+```
 
 Ensure that you do not set `publishInstallersAndChecksums=false` in your call to the `post-build.yml` template.
 
@@ -272,75 +288,6 @@ Repositories that make direct use of tasks in Tasks.Feed to publish assets durin
 However, if for some reason the infra in the default publishing stages don't meet you requirements you can create additional stages and make them dependent on the default ones. That way, it will at least be clear that the build does custom operations.
 
 **Note:** We strongly suggest that you discuss with the *.Net Engineering* team the intended use case for this before starting your work. We might be able to give other options.
-
-### Moving away from the legacy PushToBlobFeed task
-
-If you use the legacy `PushToBlobFeed` task from the `Microsoft.DotNet.Build.Tasks.Feed` package, you should change your code to use a new task called [PushToAzureDevOpsArtifacts](https://github.com/dotnet/arcade/blob/main/src/Microsoft.DotNet.Build.Tasks.Feed/src/PushToAzureDevOpsArtifacts.cs). This new task is also in the Tasks.Feed package and should act as a drop-in replacement for the previous one.
-
-`PushToAzureDevOpsArtifacts` generates an appropriately populated Build Asset Manifest and registers the build assets as Azure DevOps build artifacts. This will guarantee that the default publishing stages will be able to access the build assets.
-
-A conversion to `PushToAzureDevOpsArtifacts` for repos that are using the `PushToBlobFeed` task inside their build would look like this:
-
-1. Replace the `PushToBlobFeed` task with `PushToAzureDevOpsArtifacts`:
-
-    ```XML
-    <PropertyGroup>
-      <AssetManifestFileName>ManifestFileName.xml</AssetManifestFileName>
-      <AssetManifestPath>$(ArtifactsLogDir)AssetManifest\$(AssetManifestFileName)</AssetManifestPath>
-    </PropertyGroup>
-    
-    <PushToBlobFeed
-      ExpectedFeedUrl="$(FeedURL)"
-      AccountKey="$(FeedKey)"
-      ItemsToPush="@(ItemsToPush)"
-      ManifestBuildData="Location=$(FeedURL)"
-      ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
-      ManifestBranch="$(BUILD_SOURCEBRANCH)"
-      ManifestBuildId="$(BUILD_BUILDNUMBER)"
-      ManifestCommit="$(BUILD_SOURCEVERSION)"
-      AssetManifestPath="$(AssetManifestPath)"
-      PublishFlatContainer="$(PublishFlatContainer)" />
-    ```
-
-    becomes
-
-    ```XML
-    <PropertyGroup>
-      <AssetManifestFileName>ManifestFileName</AssetManifestFileName>
-      <AssetManifestPath>$(ArtifactsLogDir)AssetManifest\$(SdkAssetManifestFileName)</AssetManifestPath>
-    
-      <!-- Create a temporary directory to store the generated asset manifest by the task -->
-      <TempWorkingDirectory>$(ArtifactsDir)\..\AssetsTmpDir\$([System.Guid]::NewGuid())</TempWorkingDirectory>
-    </PropertyGroup>
-    
-    <MakeDir Directories="$(TempWorkingDirectory)"/>
-    
-    <!-- Generate the asset manifest using the PushToAzureDevOpsArtifacts task -->
-    <PushToAzureDevOpsArtifacts
-      ItemsToPush="@(ItemsToPush)"
-      ManifestBuildData="Location=$(FeedURL)"
-      ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
-      ManifestBranch="$(BUILD_SOURCEBRANCH)"
-      ManifestBuildId="$(BUILD_BUILDNUMBER)"
-      ManifestCommit="$(BUILD_SOURCEVERSION)"
-      PublishFlatContainer="$(PublishFlatContainer)"
-      AssetManifestPath="$(AssetManifestPath)"
-      AssetsTemporaryDirectory="$(TempWorkingDirectory)"
-      PublishingVersion="3" />
-    
-    <!-- Copy the generated manifest to the build's artifacts -->
-    <Copy
-      SourceFiles="$(AssetManifestPath)"
-      DestinationFolder="$(TempWorkingDirectory)\$(AssetManifestFileName)" />
-    
-    <Message
-      Text="##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]$(TempWorkingDirectory)/$(AssetManifestFileName)"
-      Importance="high" />
-    ```
-
-    This will do something similar to what the SDK does for its default publishing pipeline, as seen in [publish.proj](https://github.com/dotnet/arcade/blob/main/src/Microsoft.DotNet.Arcade.Sdk/tools/Publish.proj). 
-
-    **Note:** the usage of a temporary directory for placing the assets while uploading them is needed to guarantee that nothing interferes with the upload since it occurs asynchronously. See [this issue](https://github.com/dotnet/arcade/issues/2197) for context.
 
 ## PublishingUsingPipelines & Deprecated Properties
 
@@ -470,7 +417,7 @@ Publishing to General Testing channel : General Testing
             new TargetChannelConfig(
                 529,
                 false,
-                PublishingInfraVersion.All,
+                PublishingInfraVersion.Latest,
                 "generaltesting",
                 GeneralTestingFeeds,
                 PublicAndInternalSymbolTargets),
@@ -533,3 +480,26 @@ Eg:
   tools/x64_arm64/mscordbi.dll 
 
 During publishing, arcade will pick up SymbolPublishingExclusionsFile.txt and exclude the symbols mentioned in it.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CCorePackages%5CPublishing.md)](https://helix.dot.net/f/p/5?p=Documentation%5CCorePackages%5CPublishing.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CCorePackages%5CPublishing.md)</sub>
+<!-- End Generated Content-->
+
+
+### How do I publish stable packages?
+
+Stable packages are not published by Arcade except for dependency flow and testing purposes. Stable packages go to isolated feeds (to enable rebuilds), then repo owners push these packages to Nuget.org manually. Then these packages flow to dotnet-public feed via the mirroring process
+
+```mermaid
+flowchart LR
+  Packages[Built Packages]-->ArcadePublishing{Arcade Publishing}
+  ArcadePublishing-->|Non-Stable|PermanantFeeds[Permanant Feeds]
+  ArcadePublishing-->|Stable|IsolatedFeeds[Isolated Feeds]
+  IsolatedFeeds-->DogFoodingAndDepFlow{Dog-Fooding and dependency flow}
+  PermanantFeeds-->DogFoodingAndDepFlow
+  Packages-->|Release final stable packages on NuGet.org|NuGet[NuGet.Org]
+  NuGet-->|Mirroring|DotnetPublic[dotnet-public feed]
+  DotnetPublic-->RepoUse[Repository use]
+  DogFoodingAndDepFlow-->RepoUse
+  

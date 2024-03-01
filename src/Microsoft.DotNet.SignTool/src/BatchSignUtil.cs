@@ -23,6 +23,8 @@ namespace Microsoft.DotNet.SignTool
         private readonly string[] _itemsToSkipStrongNameCheck;
         private readonly Dictionary<SignedFileContentKey, string> _hashToCollisionIdMap;
         private Telemetry _telemetry;
+        private readonly int _repackParallelism;
+        private readonly long _maximumParallelFileSizeInBytes;
 
         internal bool SkipZipContainerSignatureMarkerCheck { get; set; }
 
@@ -32,6 +34,8 @@ namespace Microsoft.DotNet.SignTool
             BatchSignInput batchData,
             string[] itemsToSkipStrongNameCheck,
             Dictionary<SignedFileContentKey, string> hashToCollisionIdMap,
+            int repackParallelism = 0,
+            long maximumParallelFileSizeInBytes = 0,
             Telemetry telemetry = null)
         {
             _signTool = signTool;
@@ -41,6 +45,9 @@ namespace Microsoft.DotNet.SignTool
             _itemsToSkipStrongNameCheck = itemsToSkipStrongNameCheck ?? Array.Empty<string>();
             _telemetry = telemetry;
             _hashToCollisionIdMap = hashToCollisionIdMap;
+            _repackParallelism = repackParallelism != 0 ? repackParallelism : Environment.ProcessorCount;
+            _maximumParallelFileSizeInBytes = maximumParallelFileSizeInBytes != 0 ?
+                maximumParallelFileSizeInBytes : 2048 / _repackParallelism * 1024 * 1024;
         }
 
         internal void Go(bool doStrongNameCheck)
@@ -214,32 +221,74 @@ namespace Microsoft.DotNet.SignTool
                 var repackList = files.Where(w => toRepackSet.Contains(w.FullPath)).ToList();
 
                 repackCount = repackList.Count();
-                if(repackCount == 0)
+
+                if (repackCount == 0)
                 {
                     return;
                 }
                 _log.LogMessage(MessageImportance.High, $"Repacking {repackCount} containers.");
 
                 ParallelOptions parallelOptions = new ParallelOptions();
-                parallelOptions.MaxDegreeOfParallelism = 16;
-                Parallel.ForEach(repackList, parallelOptions, file =>
+                parallelOptions.MaxDegreeOfParallelism = _repackParallelism;
+
+                // It's possible that there are large containers within this set that, if
+                // repacked in parallel, could cause OOMs. To avoid this, we set a limit on the size of containers
+                // that we will repack in parallel based on the parallelism degree and a 2GB limit.
+                // Repack these in serial later.
+                var largeRepackList = new List<FileSignInfo>();
+                var smallRepackList = new List<FileSignInfo>();
+
+                foreach (var file in repackList)
                 {
-                    if (file.IsZipContainer())
+                    FileInfo fileInfo = new FileInfo(file.FullPath);
+                    if (fileInfo.Length > _maximumParallelFileSizeInBytes)
                     {
-                        _log.LogMessage($"Repacking container: '{file.FileName}'");
-                        _batchData.ZipDataMap[file.FileContentKey].Repack(_log);
-                    }
-                    else if (file.IsWixContainer())
-                    {
-                        _log.LogMessage($"Packing wix container: '{file.FileName}'");
-                        _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath);
+                        largeRepackList.Add(file);
                     }
                     else
                     {
-                        _log.LogError($"Don't know how to repack file '{file.FullPath}'");
+                        smallRepackList.Add(file);
                     }
+                }
+
+                _log.LogMessage(MessageImportance.High, $"Repacking {smallRepackList.Count} containers in parallel.");
+
+                Parallel.ForEach(smallRepackList, parallelOptions, file =>
+                {
+                    repackContainer(file);
                     toRepackSet.Remove(file.FullPath);
                 });
+
+                if (largeRepackList.Count == 0)
+                {
+                    return;
+                }
+
+                _log.LogMessage(MessageImportance.High, $"Repacking {largeRepackList.Count} large containers in serial.");
+
+                foreach (var file in largeRepackList)
+                {
+                    repackContainer(file);
+                    toRepackSet.Remove(file.FullPath);
+                }
+            }
+
+            void repackContainer(FileSignInfo file)
+            {
+                if (file.IsZipContainer())
+                {
+                    _log.LogMessage($"Repacking container: '{file.FileName}'");
+                    _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath, _signTool.TarToolPath);
+                }
+                else if (file.IsWixContainer())
+                {
+                    _log.LogMessage($"Packing wix container: '{file.FileName}'");
+                    _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath, _signTool.TarToolPath);
+                }
+                else
+                {
+                    _log.LogError($"Don't know how to repack file '{file.FullPath}'");
+                }
             }
 
             // Is this file ready to be signed or repackaged? That is are all of the items that it depends on already
@@ -513,32 +562,27 @@ namespace Microsoft.DotNet.SignTool
                 var zipData = _batchData.ZipDataMap[file.FileContentKey];
                 bool signedContainer = false;
 
-                using (var archive = new ZipArchive(File.OpenRead(file.FullPath), ZipArchiveMode.Read))
+                foreach (var (relativeName, _, _) in ZipData.ReadEntries(file.FullPath, _signTool.TempDir, _signTool.TarToolPath, ignoreContent: true))
                 {
-                    foreach (ZipArchiveEntry entry in archive.Entries)
+                    if (!SkipZipContainerSignatureMarkerCheck)
                     {
-                        string relativeName = entry.FullName;
-
-                        if (!SkipZipContainerSignatureMarkerCheck)
+                        if (file.IsNupkg() && _signTool.VerifySignedNugetFileMarker(relativeName))
                         {
-                            if (file.IsNupkg() && _signTool.VerifySignedNugetFileMarker(relativeName))
-                            {
-                                signedContainer = true;
-                            }
-                            else if (file.IsVsix() && _signTool.VerifySignedVSIXFileMarker(relativeName))
-                            {
-                                signedContainer = true;
-                            }
+                            signedContainer = true;
                         }
-
-                        var zipPart = zipData.FindNestedPart(relativeName);
-                        if (!zipPart.HasValue)
+                        else if (file.IsVsix() && _signTool.VerifySignedVSIXFileMarker(relativeName))
                         {
-                            continue;
+                            signedContainer = true;
                         }
-
-                        VerifyAfterSign(zipPart.Value.FileSignInfo);
                     }
+
+                    var zipPart = zipData.FindNestedPart(relativeName);
+                    if (!zipPart.HasValue)
+                    {
+                        continue;
+                    }
+
+                    VerifyAfterSign(zipPart.Value.FileSignInfo);
                 }
 
                 if (!SkipZipContainerSignatureMarkerCheck)

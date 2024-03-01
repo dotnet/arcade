@@ -1,5 +1,11 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project DefaultTargets="Publish">
+
+  <PropertyGroup>
+    <!-- Disable target framework filtering for top level projects -->
+    <NoTargetFrameworkFiltering>true</NoTargetFrameworkFiltering>
+  </PropertyGroup>
+
   <!--
     Documentation for publishing is available here:
       - https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md
@@ -21,6 +27,9 @@
   <PropertyGroup>
     <PublishToSourceBuildStorage>false</PublishToSourceBuildStorage>
     <PublishToSourceBuildStorage Condition="'$(DotNetOutputBlobFeedDir)' != ''">true</PublishToSourceBuildStorage>
+
+    <!-- Default publishing target is 3. -->
+    <PublishingVersion Condition="'$(PublishingVersion)' == ''">3</PublishingVersion>
     
     <!-- Globally set property. -->
     <IsStableBuild>false</IsStableBuild>
@@ -31,7 +40,10 @@
     <IsReleaseOnlyPackageVersion Condition ="('$(SkipPackagePublishingVersionChecks)' == 'true') or ('$(PreReleaseVersionLabel)' == '' and '$(AutoGenerateAssemblyVersion)' == 'true')">true</IsReleaseOnlyPackageVersion>
     
     <!-- If `AutoGenerateSymbolPackages` is not set we default it to true. -->
-    <AutoGenerateSymbolPackages Condition="'$(AutoGenerateSymbolPackages)' == ''">true</AutoGenerateSymbolPackages>
+    <!-- Do not generate symbol packages if in outer source build mode, to avoid creating copies of the intermediates. -->
+    <AutoGenerateSymbolPackages Condition="'$(AutoGenerateSymbolPackages)' == '' and
+      (('$(ArcadeBuildFromSource)' != 'true' or '$(ArcadeInnerBuildFromSource)' == 'true') or 
+       ('$(DotNetBuild)' != 'true' or '$(DotNetBuildPhase)' == 'InnerRepo'))">true</AutoGenerateSymbolPackages>
 
     <AssetManifestOS Condition="'$(AssetManifestOS)' == ''">$(OS)</AssetManifestOS>
 
@@ -62,6 +74,8 @@
       <PackagesToPublish Include="$(ArtifactsNonShippingPackagesDir)**/*.nupkg" IsShipping="false" />
       <PackagesToPublish Remove="@(ExistingSymbolPackages)" />
 
+      <!-- Do not generate symbol packages when building from source. The generate package for the source build intermediate
+           will simply contain the same, non-symbol content. -->
       <PackagesToPublish Update="@(PackagesToPublish)" Condition="'$(AutoGenerateSymbolPackages)' == 'true'">
         <SymbolPackageToGenerate Condition="!Exists('%(RootDir)%(Directory)%(Filename).symbols.nupkg')">$(SymbolPackagesDir)%(Filename).symbols.nupkg</SymbolPackageToGenerate>
       </PackagesToPublish>
@@ -94,6 +108,7 @@
       
       <ItemsToPushToBlobFeed Include="@(PackagesToPublish);@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)">
         <ManifestArtifactData Condition="'%(IsShipping)' != 'true'">NonShipping=true</ManifestArtifactData>
+        <ManifestArtifactData Condition="'%(IsShipping)' == 'true' and '$(ProducesDotNetReleaseShippingAssets)' == 'true'">DotNetReleaseShipping=true</ManifestArtifactData>
       </ItemsToPushToBlobFeed>
 
       <PackagesToPublish Remove="@(PackagesToPublish)" />
@@ -274,6 +289,9 @@
     <FileSignInfo Update="@(FileSignInfo->WithMetadataValue('CertificateName','Microsoft400'))" CertificateName="$(DotNetCertificateName)" />
   </ItemGroup>
 
-  <Import Project="SourceBuild/SourceBuildArcadePublish.targets" Condition="'$(ArcadeBuildFromSource)' == 'true'" />
+  <!-- Import the publish targets when in the inner or outer repo builds. -->
+  <Import Project="SourceBuild/SourceBuildArcadePublish.targets" Condition="'$(ArcadeBuildFromSource)' == 'true' or 
+                                                                            '$(ArcadeBuildVertical)' == 'true' or 
+                                                                            '$(DotNetBuildRepo)' == 'true'" />
 
 </Project>

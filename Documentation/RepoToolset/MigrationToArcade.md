@@ -130,3 +130,8 @@ The following applies to CI build definition, not PR validation build definition
 
 - MicroBuildSwixPlugin installation step not required anymore: https://github.com/dotnet/arcade/pull/1692
 - A project that generates pkgdef file but does not produce a VSIX container does _not_ need to include the `Microsoft.VSSDK.BuildTools` PackageReference explicitly anymore.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CRepoToolset%5CMigrationToArcade.md)](https://helix.dot.net/f/p/5?p=Documentation%5CRepoToolset%5CMigrationToArcade.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CRepoToolset%5CMigrationToArcade.md)</sub>
+<!-- End Generated Content-->

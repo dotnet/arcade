@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         {
             RuntimeGraph runtimeGraph = null;
 
-            if (!String.IsNullOrEmpty(runtimeFile))
+            if (!string.IsNullOrEmpty(runtimeFile))
             {
                 runtimeGraph = JsonRuntimeFormat.ReadRuntimeGraph(runtimeFile);
             }
@@ -270,14 +270,16 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             return resolvedAssets;
         }
 
+        [Obsolete]
         public IReadOnlyDictionary<string, IEnumerable<ContentItemGroup>> GetAllRuntimeItems()
         {
             Dictionary<string, IEnumerable<ContentItemGroup>> resolvedAssets = new Dictionary<string, IEnumerable<ContentItemGroup>>();
 
             foreach (var package in _packages.Keys)
             {
-                resolvedAssets.Add(package,
-                    _packages[package].FindItemGroups(_conventions.Patterns.RuntimeAssemblies));
+                var contentItemGroups = new List<ContentItemGroup>();
+                _packages[package].PopulateItemGroups(_conventions.Patterns.RuntimeAssemblies, contentItemGroups);
+                resolvedAssets.Add(package, contentItemGroups);
             }
 
             return resolvedAssets;

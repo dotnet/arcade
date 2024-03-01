@@ -46,3 +46,8 @@ Target completion date is 8/13/2019.
 | Complete ✔️| All work streams are complete |
 | On track ➖| Work streams are on track for completion by the target completion date or exceptions are understood / acceptable |
 | At risk  ❌| One or more work streams are not on track to be completed by the target completion date and may impact business decisions |
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CYamlStagesRepoStatus.md)](https://helix.dot.net/f/p/5?p=Documentation%5CYamlStagesRepoStatus.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CYamlStagesRepoStatus.md)</sub>
+<!-- End Generated Content-->

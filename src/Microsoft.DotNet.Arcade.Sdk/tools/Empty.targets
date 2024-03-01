@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project DefaultTargets="Build">
+
   <!--
     Import this file to suppress all targets while allowing the project to participate in the build.
     Workaround for https://github.com/dotnet/sdk/issues/2071.
@@ -13,7 +13,10 @@
     <ImportNuGetBuildTasksPackTargetsFromSdk>false</ImportNuGetBuildTasksPackTargetsFromSdk>
   </PropertyGroup>
 
-  <Target Name="_IsProjectRestoreSupported"/>
+  <!-- We don't want to create this target if the before common targets hook is in use.
+       If we are using the hook, then we avoid creation of the target altogether, which is more
+       compatible with static graph restores -->
+  <Import Project="..\tools\EmptyIsProjectRestoreSupportedTarget.targets" Condition="!$(_BeforeCommonTargetsHookUsed)"/>
   <Target Name="Restore"/>
   <Target Name="Build"/>
   <Target Name="Test"/>

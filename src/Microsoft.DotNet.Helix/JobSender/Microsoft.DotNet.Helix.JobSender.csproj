@@ -1,18 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <!-- Treat this as a tooling library. -->
+    <TargetFrameworks>$(NetToolCurrent);netstandard2.0;$(NetFrameworkToolCurrent)</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <RootNamespace>Microsoft.DotNet.Helix.Client</RootNamespace>
     <Description>This package provides a simple API for constructing and sending jobs to the Helix Api</Description>
-    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Storage.Blobs" Version="$(AzureStorageBlobsVersion)" /> 
-    <PackageReference Include="Microsoft.Data.OData" Version="$(MicrosoftDataODataVersion)" />
-    <PackageReference Include="System.IO.Compression" Version="$(SystemIOCompressionVersion)" />
-    <PackageReference Include="System.ValueTuple" Version="$(SystemValueTupleVersion)" />
+    <PackageReference Include="Azure.Storage.Blobs" /> 
+    <PackageReference Include="Microsoft.Data.OData" />
   </ItemGroup>
 
   <ItemGroup>
@@ -20,8 +18,15 @@
     <ProjectReference Include="..\Client\CSharp\Microsoft.DotNet.Helix.Client.csproj" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
+    <Reference Include="System.IO.Compression" />
+  </ItemGroup>
+
   <ItemGroup>
     <None Include="$(RepoRoot)LICENSE.TXT;$(RepoRoot)THIRD-PARTY-NOTICES.TXT" Pack="true" PackagePath="%(Filename)%(Extension)" />
   </ItemGroup>
+
+  <!-- This project is a build task dependency and needs to follow desktop version requirements. -->
+  <Import Project="$(RepositoryEngineeringDir)BuildTask.Packages.props" />
 
 </Project>

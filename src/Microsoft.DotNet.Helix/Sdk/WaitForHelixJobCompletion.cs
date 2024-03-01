@@ -1,11 +1,13 @@
-using Microsoft.Build.Framework;
-using Microsoft.DotNet.Helix.Client;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Build.Framework;
+using Microsoft.DotNet.Helix.Client;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -35,7 +37,12 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
-            Log.LogMessage(MessageImportance.High, $"Waiting for completion of job {jobName} on {queueName}");
+
+            // Only include the link to the Helix API "Details" page if we're using anonymous access.
+            // If a user must manually edit the URL with an Access Token, there is limited value in including it in build logging.
+            string detailsUrlWhereApplicable = HelixApi.Options.Credentials == null ? $" (Details: {HelixApi.Options.BaseUri}api/jobs/{jobName}/details?api-version=2019-06-17 )" : string.Empty;
+
+            Log.LogMessage(MessageImportance.High, $"Waiting for completion of job {jobName} on {queueName}{detailsUrlWhereApplicable}");
 
             int iterationCount = 0;
             try

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(TargetFrameworkForNETSDK)</TargetFramework>
+    <TargetFramework>$(NetToolCurrent)</TargetFramework>
     <DefaultItemExcludes>$(DefaultItemExcludes);testassets\**\*</DefaultItemExcludes>
   </PropertyGroup>
 
@@ -13,15 +13,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentAssertions" Version="5.10.3" />
-    <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
-    <PackageReference Include="Moq" Version="4.8.3" />
+    <PackageReference Include="Microsoft.Build" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" />
+    <PackageReference Include="Moq" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(RepoRoot)eng\common\**\*" LinkBase="testassets\boilerplate\eng\common\" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="$(RepositoryEngineeringDir)common\**\*" LinkBase="testassets\boilerplate\eng\common\" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(RepoRoot)build.sh" LinkBase="testassets\boilerplate\" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(RepoRoot)Build.cmd" LinkBase="testassets\boilerplate\" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>

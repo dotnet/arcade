@@ -45,3 +45,7 @@ Test failure data also includes the following:
     - *History*: History panel
     - *Artifacts*: Artifacts panel
 - Link to the whole Azure DevOps test results (useful if more tests have failed than we are able to display on the GitHub check)
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CSpecifics.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CSpecifics.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CBuild%20Analysis%5CSpecifics.md)</sub>
+<!-- End Generated Content-->

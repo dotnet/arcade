@@ -1,9 +1,11 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
+
   <PropertyGroup>
-    <XUnitPublishTargetFramework Condition="'$(XUnitPublishTargetFramework)' == ''">net7.0</XUnitPublishTargetFramework>
+    <XUnitPublishTargetFramework Condition="'$(XUnitPublishTargetFramework)' == ''">net9.0</XUnitPublishTargetFramework>
     <XUnitRuntimeTargetFramework Condition="'$(XUnitRuntimeTargetFramework)' == ''">netcoreapp2.0</XUnitRuntimeTargetFramework>
 
-    <XUnitRunnerVersion Condition="'$(XUnitRunnerVersion)' == ''">2.4.2-pre.9</XUnitRunnerVersion>
+    <XUnitRunnerVersion Condition="'$(XUnitRunnerVersion)' == ''">2.6.7-pre.5</XUnitRunnerVersion>
 
     <_XUnitPublishTargetsPath>$(MSBuildThisFileDirectory)XUnitPublish.targets</_XUnitPublishTargetsPath>
 
@@ -12,7 +14,7 @@
 
   <ItemGroup Condition="'@(XUnitProject)' != ''">
     <HelixCorrelationPayload Include="xunit-runner">
-      <Uri>https://pkgs.dev.azure.com/dnceng/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_packaging/1a5f89f6-d8da-4080-b15f-242650c914a8/nuget/v3/flat2/xunit.runner.console/$(XUnitRunnerVersion)/xunit.runner.console.$(XUnitRunnerVersion).nupkg</Uri>
+      <Uri>https://pkgs.dev.azure.com/dnceng/9ee6d478-d288-47f7-aacc-f6e6d082ae6d/_packaging/dotnet-public/nuget/v3/flat2/xunit.runner.console/$(XUnitRunnerVersion)/xunit.runner.console.$(XUnitRunnerVersion).nupkg</Uri>
       <Destination>xunit-runner</Destination>
     </HelixCorrelationPayload>
   </ItemGroup>

@@ -27,8 +27,7 @@ areas:
 
 ## Does my repository need to be involved?
 
-Generally, if your repo is shipping in .NET, yes.  For ['Tier
-1'](TierOneRepos.md) repos a full transition is required.  While there exist
+Generally, if your repo is shipping in .NET, yes.  For core functionality repos a full transition is required.  While there exist
 some special cases (e.g. repos used as submodules in aspnet/universe), we're
 striving to move as many people towards the new infrastructure as possible.
 - If you use .NET CI (ci.dot.net, ci2.dot.net, ci3.dot.net) you'll need to move
@@ -73,7 +72,6 @@ some highlights
   - [The Arcade Build SDK](ArcadeSdk.md)
   - GitHub and Azure Repos
     - [Mirroring public projects](AzureDevOps/internal-mirror.md)
-    - [Git Sync Tools](GitSyncTools.md)
     - Bots and connectors
   - [Dependency Description Format](DependencyDescriptionFormat.md)
   - [How to See What's the Latest Version of an Arcade Package](SeePackagesLatestVersion.md)
@@ -112,3 +110,8 @@ dnceng@microsoft.com
 ## Frequently Asked Questions
 
 See the [FAQ](FAQ.md).
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CStartHere.md)](https://helix.dot.net/f/p/5?p=Documentation%5CStartHere.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CStartHere.md)</sub>
+<!-- End Generated Content-->

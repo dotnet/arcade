@@ -1,15 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(TargetFrameworkForNETSDK)</TargetFrameworks>
+    <TargetFramework>$(NetToolCurrent)</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsDependencyInjectionVersion)" />
-    <!-- This is here so that we agree with the project's transitive references to NewtonSoft.Json -->
-    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
-    <PackageReference Include="NuGet.Frameworks" Version="$(NuGetVersion)" />
+    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <!-- This unifies the transitive references coming from Microsoft.DotNet.VersionTools.csproj and Microsoft.TestPlatform.ObjectModel/17.5.0. -->
+    <PackageReference Include="NuGet.Frameworks" />
   </ItemGroup>
 
   <ItemGroup>

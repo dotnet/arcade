@@ -1,30 +1,39 @@
-﻿<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   
   <!-- Most of the code has been ported from https://devdiv.visualstudio.com/DevDiv/_git/CoreFxTools repo.-->
   <PropertyGroup>
+    <TargetFramework>$(NetToolCurrent)</TargetFramework>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>$(TargetFrameworkForNETSDK)</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>dotnet-asmdiff</ToolCommandName>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <ExcludeFromSourceOnlyBuild>true</ExcludeFromSourceOnlyBuild>
     <StrongNameKeyId>Open</StrongNameKeyId>
     <UsingToolXliff>true</UsingToolXliff>
+    <!-- Use xliff localization. -->
+    <UsingInTreeToolXliff>true</UsingInTreeToolXliff>
   </PropertyGroup>
   
   <ItemGroup>
     <Compile Include="..\Common\Internal\DisposeAction.cs" Link="Internal\DisposeAction.cs" />
-    <ProjectReference Include="..\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="$(McMasterExtensionsCommandLineUtils)" />
-    <!-- Arcade only makes shipping assemblies localizable by default, we'd like to localize this tool without treating it as "shipping". -->
-    <PackageReference Include="Microsoft.DotNet.XliffTasks" Version="$(MicrosoftDotNetXliffTasksVersion)" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Update="Resources.resx" GenerateSource="true" />
   </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" />
+
+    <!-- Manually reference Microsoft.Cci.dll via a PackageDownload+Reference item instead of
+         using a PackageReference to avoid bringing in the old dependency graph. -->
+    <PackageDownload Include="Microsoft.Cci" Version="[$(MicrosoftCciVersion)]" />
+    <Reference Include="$(NuGetPackageRoot)microsoft.cci\$(MicrosoftCciVersion)\lib\netstandard1.3\Microsoft.Cci.dll" />
+  </ItemGroup>
+
 </Project>

@@ -9,7 +9,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using Xunit;
 using IOPath = System.IO.Path;
 
 namespace Microsoft.DotNet.RemoteExecutor
@@ -46,6 +45,11 @@ namespace Microsoft.DotNet.RemoteExecutor
 
         static RemoteExecutor()
         {
+            if (!IsSupported)
+            {
+                return;
+            }
+
             string processFileName = Process.GetCurrentProcess().MainModule?.FileName;
             if (processFileName == null)
             {
@@ -103,8 +107,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             !RuntimeInformation.IsOSPlatform(OSPlatform.Create("MACCATALYST")) &&
             !RuntimeInformation.IsOSPlatform(OSPlatform.Create("WATCHOS")) &&
             !RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER")) &&
-            // The current RemoteExecutor design is not compatible with single file
-            !string.IsNullOrEmpty(typeof(RemoteExecutor).Assembly.Location) &&
+            !RuntimeInformation.IsOSPlatform(OSPlatform.Create("WASI")) &&
             Environment.GetEnvironmentVariable("DOTNET_REMOTEEXECUTOR_SUPPORTED") != "0";
 
         /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
@@ -118,6 +121,7 @@ namespace Microsoft.DotNet.RemoteExecutor
 
         /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
         /// <param name="method">The method to invoke.</param>
+        /// <param name="arg">The argument to pass to the method.</param>
         /// <param name="options">Options to use for the invocation.</param>
         public static RemoteInvokeHandle Invoke(Action<string> method, string arg, RemoteInvokeOptions options = null)
         {
@@ -126,6 +130,8 @@ namespace Microsoft.DotNet.RemoteExecutor
 
         /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
         /// <param name="method">The method to invoke.</param>
+        /// <param name="arg1">The first argument to pass to the method.</param>
+        /// <param name="arg2">The second argument to pass to the method.</param>
         /// <param name="options">Options to use for the invocation.</param>
         public static RemoteInvokeHandle Invoke(Action<string, string> method, string arg1, string arg2,
             RemoteInvokeOptions options = null)
@@ -135,6 +141,9 @@ namespace Microsoft.DotNet.RemoteExecutor
 
         /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
         /// <param name="method">The method to invoke.</param>
+        /// <param name="arg1">The first argument to pass to the method.</param>
+        /// <param name="arg2">The second argument to pass to the method.</param>
+        /// <param name="arg3">The third argument to pass to the method.</param>
         /// <param name="options">Options to use for the invocation.</param>
         public static RemoteInvokeHandle Invoke(Action<string, string, string> method, string arg1, string arg2,
             string arg3, RemoteInvokeOptions options = null)
@@ -144,11 +153,29 @@ namespace Microsoft.DotNet.RemoteExecutor
 
         /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
         /// <param name="method">The method to invoke.</param>
+        /// <param name="arg1">The first argument to pass to the method.</param>
+        /// <param name="arg2">The second argument to pass to the method.</param>
+        /// <param name="arg3">The third argument to pass to the method.</param>
+        /// <param name="arg4">The fourth argument to pass to the method.</param>
         /// <param name="options">Options to use for the invocation.</param>
         public static RemoteInvokeHandle Invoke(Action<string, string, string, string> method, string arg1,
             string arg2, string arg3, string arg4, RemoteInvokeOptions options = null)
         {
             return Invoke(GetMethodInfo(method), new[] { arg1, arg2, arg3, arg4 }, options);
+        }
+
+        /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
+        /// <param name="method">The method to invoke.</param>
+        /// <param name="arg1">The first argument to pass to the method.</param>
+        /// <param name="arg2">The second argument to pass to the method.</param>
+        /// <param name="arg3">The third argument to pass to the method.</param>
+        /// <param name="arg4">The fourth argument to pass to the method.</param>
+        /// <param name="arg5">The fifth argument to pass to the method.</param>
+        /// <param name="options">Options to use for the invocation.</param>
+        public static RemoteInvokeHandle Invoke(Action<string, string, string, string, string> method, string arg1,
+            string arg2, string arg3, string arg4, string arg5, RemoteInvokeOptions options = null)
+        {
+            return Invoke(GetMethodInfo(method), new[] { arg1, arg2, arg3, arg4, arg5 }, options);
         }
 
         /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
@@ -194,6 +221,33 @@ namespace Microsoft.DotNet.RemoteExecutor
 
         /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
         /// <param name="method">The method to invoke.</param>
+        /// <param name="arg1">The first argument to pass to the method.</param>
+        /// <param name="arg2">The second argument to pass to the method.</param>
+        /// <param name="arg3">The third argument to pass to the method.</param>
+        /// <param name="arg4">The fourth argument to pass to the method.</param>
+        /// <param name="options">Options to use for the invocation.</param>
+        public static RemoteInvokeHandle Invoke(Func<string, string, string, string, Task<int>> method, string arg1,
+            string arg2, string arg3, string arg4, RemoteInvokeOptions options = null)
+        {
+            return Invoke(GetMethodInfo(method), new[] { arg1, arg2, arg3, arg4 }, options);
+        }
+
+        /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
+        /// <param name="method">The method to invoke.</param>
+        /// <param name="arg1">The first argument to pass to the method.</param>
+        /// <param name="arg2">The second argument to pass to the method.</param>
+        /// <param name="arg3">The third argument to pass to the method.</param>
+        /// <param name="arg4">The fourth argument to pass to the method.</param>
+        /// <param name="arg5">The fifth argument to pass to the method.</param>
+        /// <param name="options">Options to use for the invocation.</param>
+        public static RemoteInvokeHandle Invoke(Func<string, string, string, string, string, Task<int>> method, string arg1,
+            string arg2, string arg3, string arg4, string arg5, RemoteInvokeOptions options = null)
+        {
+            return Invoke(GetMethodInfo(method), new[] { arg1, arg2, arg3, arg4, arg5 }, options);
+        }
+
+        /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
+        /// <param name="method">The method to invoke.</param>
         /// <param name="options">Options to use for the invocation.</param>
         public static RemoteInvokeHandle Invoke(Func<Task> method, RemoteInvokeOptions options = null)
         {
@@ -231,6 +285,33 @@ namespace Microsoft.DotNet.RemoteExecutor
             string arg2, string arg3, RemoteInvokeOptions options = null)
         {
             return Invoke(GetMethodInfo(method), new[] { arg1, arg2, arg3 }, options);
+        }
+
+        /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
+        /// <param name="method">The method to invoke.</param>
+        /// <param name="arg1">The first argument to pass to the method.</param>
+        /// <param name="arg2">The second argument to pass to the method.</param>
+        /// <param name="arg3">The third argument to pass to the method.</param>
+        /// <param name="arg4">The fourth argument to pass to the method.</param>
+        /// <param name="options">Options to use for the invocation.</param>
+        public static RemoteInvokeHandle Invoke(Func<string, string, string, string, Task> method, string arg1,
+            string arg2, string arg3, string arg4, RemoteInvokeOptions options = null)
+        {
+            return Invoke(GetMethodInfo(method), new[] { arg1, arg2, arg3, arg4 }, options);
+        }
+
+        /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
+        /// <param name="method">The method to invoke.</param>
+        /// <param name="arg1">The first argument to pass to the method.</param>
+        /// <param name="arg2">The second argument to pass to the method.</param>
+        /// <param name="arg3">The third argument to pass to the method.</param>
+        /// <param name="arg4">The fourth argument to pass to the method.</param>
+        /// <param name="arg5">The fifth argument to pass to the method.</param>
+        /// <param name="options">Options to use for the invocation.</param>
+        public static RemoteInvokeHandle Invoke(Func<string, string, string, string, string, Task> method, string arg1,
+            string arg2, string arg3, string arg4, string arg5, RemoteInvokeOptions options = null)
+        {
+            return Invoke(GetMethodInfo(method), new[] { arg1, arg2, arg3, arg4, arg5 }, options);
         }
 
         /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
@@ -329,11 +410,20 @@ namespace Microsoft.DotNet.RemoteExecutor
 
             // Verify the specified method returns an int (the exit code) or nothing,
             // and that if it accepts any arguments, they're all strings.
-            Assert.True(method.ReturnType == typeof(void)
-                || method.ReturnType == typeof(int)
-                || method.ReturnType == typeof(Task)
-                || method.ReturnType == typeof(Task<int>));
-            Assert.All(method.GetParameters(), pi => Assert.Equal(typeof(string), pi.ParameterType));
+            if (method.ReturnType != typeof(void)
+                && method.ReturnType != typeof(int)
+                && method.ReturnType != typeof(Task)
+                && method.ReturnType != typeof(Task<int>))
+            {
+                throw new ArgumentException($"Invalid return type: {method.ReturnType}. Expected void, int, or Task", nameof(method));
+            }
+            foreach (var param in method.GetParameters())
+            {
+                if (param.ParameterType != typeof(string))
+                {
+                    throw new ArgumentException($"Invalid parameter type: {param.ParameterType}. Expected string", nameof(method));
+                }
+            }
 
             // And make sure it's in this assembly.  This isn't critical, but it helps with deployment to know
             // that the method to invoke is available because we're already running in this assembly.
@@ -347,8 +437,8 @@ namespace Microsoft.DotNet.RemoteExecutor
             if (!options.EnableProfiling)
             {
                 // Profilers / code coverage tools doing coverage of the test process set environment
-                // variables to tell the targeted process what profiler to load.  We don't want the child process 
-                // to be profiled / have code coverage, so we remove these environment variables for that process 
+                // variables to tell the targeted process what profiler to load.  We don't want the child process
+                // to be profiled / have code coverage, so we remove these environment variables for that process
                 // before it's started.
                 psi.Environment.Remove("Cor_Profiler");
                 psi.Environment.Remove("Cor_Enable_Profiling");
@@ -396,7 +486,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             }
 
             string args = "exec";
-            
+
             string runtimeConfigPath = GetRuntimeConfigPath(options, out toDispose);
             if (runtimeConfigPath != null)
             {
@@ -499,9 +589,14 @@ namespace Microsoft.DotNet.RemoteExecutor
                 // may need to be revised in the future as the compiler changes, as this relies on the specifics of
                 // actually how the compiler handles lifted fields for lambdas.
                 Type targetType = d.Target.GetType();
-                Assert.All(
-                    targetType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly),
-                    fi => Assert.True(fi.Name.IndexOf('<') != -1, $"Field marshaling is not supported by {nameof(Invoke)}: {fi.Name}"));
+                foreach (var fi in targetType.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly))
+                {
+                    if (fi.Name.IndexOf('<') == -1)
+                    {
+                        throw new ArgumentException($"Field marshaling is not supported by {nameof(Invoke)}: {fi.Name}");
+
+                    }
+                }
             }
 
             return d.GetMethodInfo();

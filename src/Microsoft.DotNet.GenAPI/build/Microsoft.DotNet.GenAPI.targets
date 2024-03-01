@@ -2,8 +2,8 @@
 <Project>
 
   <PropertyGroup>
-    <GenAPIAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)\..\tools\net7.0\Microsoft.DotNet.GenAPI.dll</GenAPIAssembly>
-    <GenAPIAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)\..\tools\net472\Microsoft.DotNet.GenAPI.exe</GenAPIAssembly>
+    <GenAPIAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)\..\tools\net9.0\Microsoft.DotNet.GenAPI.dll</GenAPIAssembly>
+    <GenAPIAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)\..\tools\net472\Microsoft.DotNet.GenAPI.dll</GenAPIAssembly>
 
     <!-- Hook onto the TargetsTriggeredByCompilation target which only runs when the compiler is invoked. -->
     <TargetsTriggeredByCompilation Condition="'$(GenerateReferenceAssemblySource)' == 'true'">
@@ -49,6 +49,8 @@
       Assembly="$(GenAPIInputAssembly)"
       LibPath="$(GenAPILibPath)"
       ApiList="$(GenAPIApiList)"
+      ConditionalTypeLists="@(GenAPIConditionalTypeLists)"
+      DefaultCondition="$(GenAPIDefaultCondition)"
       OutputPath="$(GenAPITargetPath)"
       HeaderFile="$(GenAPIHeaderFile)"
       WriterType="$(GenAPIWriterType)"

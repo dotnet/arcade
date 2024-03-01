@@ -3,13 +3,15 @@ trigger:
   branches:
     include:
     - main
-    - release/3.x
-    - release/5.0
+    - release/6.0
+    - release/7.0
+    - release/8.0
 
 pr: none
 
 variables:
-- template: eng/common-variables.yml
+- template: /eng/common-variables.yml
+- template: /eng/common/templates/variables/pool-providers.yml
 
 stages:
 - stage: build
@@ -24,8 +26,8 @@ stages:
       - job: Windows_NT
         timeoutInMinutes: 90
         pool:
-          name: NetCore1ESPool-Public
-          demands: ImageOverride -equals Build.Server.Amd64.VS2019.Open
+          name: $(DncEngPublicBuildPool)
+          demands: ImageOverride -equals windows.vs2019.amd64.open
         preSteps:
         - checkout: self
           clean: true

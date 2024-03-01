@@ -23,8 +23,6 @@ namespace Microsoft.DotNet.Arcade.Sdk.SourceBuild
 
         /// <summary>
         /// The intermediate nupkg RID to use if any RID-specific intermediate nupkgs are required.
-        /// If this parameter isn't specified, RID-specific intermediate nupkgs can't be used and
-        /// this task fails.
         /// </summary>
         public string SourceBuildIntermediateNupkgRid { get; set; }
 
@@ -74,10 +72,10 @@ namespace Microsoft.DotNet.Arcade.Sdk.SourceBuild
 
                     string dependencyName = d.Attribute("Name")?.Value ?? string.Empty;
 
-                    if (string.IsNullOrEmpty(dependencyName))
+                    if (!dependencyName.Contains(SourceBuildIntermediateNupkgPrefix))
                     {
-                        // Log name missing as FYI, but this is not an error case for source-build.
-                        Log.LogMessage($"Dependency Name null or empty in '{VersionDetailsXmlFile}' element {d}");
+                        Log.LogError($"Dependency Name does not contain '{SourceBuildIntermediateNupkgPrefix}' in '{VersionDetailsXmlFile}' element {d}. Only place <SourceBuild> elements on source-build intermediate nupkgs.");
+                        return null;
                     }
 
                     string dependencyVersion = d.Attribute("Version")?.Value;
@@ -100,19 +98,8 @@ namespace Microsoft.DotNet.Arcade.Sdk.SourceBuild
                         sourceBuildElement.Attribute("ManagedOnly")?.Value,
                         out bool managedOnly);
 
-                    // If RID-specific, add the RID to the end of the identity.
                     if (!managedOnly)
                     {
-                        if (string.IsNullOrEmpty(SourceBuildIntermediateNupkgRid))
-                        {
-                            Log.LogError(
-                                $"Parameter {nameof(SourceBuildIntermediateNupkgRid)} was " +
-                                "not specified, indicating this project depends only on managed " +
-                                "inputs. However, source-build element is not ManagedOnly: " +
-                                sourceBuildElement);
-                            return null;
-                        }
-
                         identity += "." + SourceBuildIntermediateNupkgRid;
                     }
 

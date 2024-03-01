@@ -1,16 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(TargetFrameworkForNETSDK);net472</TargetFrameworks>
-    <IsPackable>false</IsPackable>
+    <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
-    <PackageReference Include="NuGet.Frameworks" Version="$(NuGetVersion)" />
-    <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersion)" />
-    <!-- Remove when targeting >= net5.0. -->
-    <PackageReference Include="System.Reflection.Metadata" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" />
+    <PackageReference Include="NuGet.Frameworks" />
+  </ItemGroup>
+
+  <!-- The tests reference the MSBuild task assembly directly and therefore we need to add references that would normally be provided by MSBuild. -->
+  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
+    <PackageReference Include="NuGet.Packaging" />
   </ItemGroup>
 
   <ItemGroup>

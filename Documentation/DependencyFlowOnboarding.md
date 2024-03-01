@@ -69,7 +69,7 @@ More about [Channels, Branches, and Subscriptions](https://github.com/dotnet/arc
 
 Once you are part of the `arcade-contrib` team
 
-1. Go to https://maestro-prod.westus2.cloudapp.azure.com/
+1. Go to https://maestro.dot.net/
 2. Click "Sign in" in the upper right of the page
 3. Give consent to "DotNet Maestro"
 4. Click on your name and then on "Tokens"
@@ -203,3 +203,8 @@ To validate that created subscriptions and channels work as expected you'd need 
    - Last Build: N/A
    ```
 2. Incase of any errors contact @dnceng. 
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CDependencyFlowOnboarding.md)](https://helix.dot.net/f/p/5?p=Documentation%5CDependencyFlowOnboarding.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CDependencyFlowOnboarding.md)</sub>
+<!-- End Generated Content-->

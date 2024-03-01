@@ -1,5 +1,6 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
+
   <Import Project="BuildStep.props" />
 
   <!-- Properties requires by NuGet.targets to restore PackageReferences -->
@@ -31,7 +32,27 @@
     <PackageReference Include="Microsoft.DotNet.NuGetRepack.Tasks" Version="$(MicrosoftDotnetNuGetRepackTasksVersion)" Condition="'$(UsingToolNuGetRepack)' == 'true'" IsImplicitlyDefined="true" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
+  <!-- These package references should only be excluded when doing inner builds, and outer-builds from the orchestrator in source only build
+       configurations. non-source only build configurations should always restore these packages.
+
+       Switches are separated by legacy vs. new.
+
+       This looks complicated right now, but will get simpler as legacy switches disappear:
+       - ArcadeBuildVertical/DotNetBuildVertical disappears:
+         ($(ArcadeInnerBuildFromSource)' != 'true' and '$(DotNetBuildFromSourceFlavor)' != 'Product')) and 
+         ('$(DotNetBuildSourceOnly)' != 'true' or ('$(DotNetBuildPhase)' == 'Repo' and '$(DotNetBuildOrchestrator)' != 'true')
+
+       - ArcadeInnerBuildFromSource/DotNetBuildFromSource disappear:
+         ('$(DotNetBuildSourceOnly)' != 'true' or ('$(DotNetBuildPhase)' == 'Repo' and '$(DotNetBuildOrchestrator)' != 'true')
+  -->
+
+  <PropertyGroup>
+    <_ImportOrUseTooling>false</_ImportOrUseTooling>
+    <_ImportOrUseTooling Condition="('$(ArcadeBuildVertical)' == 'true' or ('$(ArcadeInnerBuildFromSource)' != 'true' and '$(DotNetBuildFromSourceFlavor)' != 'Product')) and 
+                                    ('$(DotNetBuildSourceOnly)' != 'true' or ('$(DotNetBuildPhase)' == 'Repo' and '$(DotNetBuildOrchestrator)' != 'true'))">true</_ImportOrUseTooling>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(_ImportOrUseTooling)' == 'true'">
     <!-- Copy of 'sn.exe' in form of NuGet package. -->
     <PackageReference Include="sn" Version="$(SNVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)"  IsImplicitlyDefined="true" />
@@ -40,6 +61,7 @@
     <PackageReference Include="Microsoft.Signed.Wix" Version="$(MicrosoftSignedWixVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.DotNet.SignTool" Version="$(MicrosoftDotNetSignToolVersion)" IsImplicitlyDefined="true" />
+    <PackageReference Include="Microsoft.DotNet.Tar" Version="$(MicrosoftDotNetTarVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.SymbolUploader.Build.Task" Version="$(MicrosoftSymbolUploaderBuildTaskVersion)" Condition="'$(PublishToSymbolServer)' == 'true'" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.VisualStudio" Version="$(MicrosoftDotNetBuildTasksVisualStudioVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" IsImplicitlyDefined="true" />
   </ItemGroup>
@@ -48,19 +70,32 @@
     <_RepoToolManifest>$([MSBuild]::NormalizePath('$(RepoRoot)', '.config', 'dotnet-tools.json'))</_RepoToolManifest>
   </PropertyGroup>
 
+  <!-- When doing source-only build, we should not use these in the inner or orchestrated builds. -->
   <Target Name="RestoreRepoTools"
-          Condition="'$(DotNetBuildFromSource)' != 'true' and Exists('$(_RepoToolManifest)')"
+          Condition="'$(_ImportOrUseTooling)' == 'true' and Exists('$(_RepoToolManifest)')"
           BeforeTargets="Restore">
 
     <Exec Command='"$(DotNetTool)" tool restore' WorkingDirectory="$(RepoRoot)" />
   </Target>
 
-  <Import Project="SourceBuild/SourceBuildArcadeTools.targets" Condition="'$(ArcadeBuildFromSource)' == 'true' or '$(SetUpSourceBuildIntermediateNupkgCache)' == 'true'" />
+  <!-- Set as DependsOnTargets when internal tools (e.g. IBC data, optprof) is required -->
+  <Target Name="RestoreInternalTooling">
+    <MSBuild Projects="$(RepoRoot)eng/common/internal/Tools.csproj"
+        Targets="Restore"
+        Properties="@(_RestoreToolsProps);_NETCORE_ENGINEERING_TELEMETRY=Restore"
+        Condition="'$(Restore)' == 'true'"/>
+  </Target>
+
+  <Import Project="SourceBuild/SourceBuildArcadeTools.targets" Condition="'$(ArcadeBuildFromSource)' == 'true' or
+                                                                          '$(ArcadeBuildVertical)' == 'true' or
+                                                                          '$(DotNetBuildRepo)' == 'true' or
+                                                                          '$(SetUpSourceBuildIntermediateNupkgCache)' == 'true'" />
 
   <!-- Repository extensibility point -->
   <Import Project="$(RepositoryEngineeringDir)Tools.props" Condition="Exists('$(RepositoryEngineeringDir)Tools.props')" />
 
-  <Import Project="InstallDotNetCore.targets" Condition="'$(DotNetBuildFromSource)' != 'true'" />
+  <Import Project="InstallDotNetCore.targets" Condition="'$(_ImportOrUseTooling)' == 'true'" />
 
   <Import Project="VisualStudio.AcquireOptimizationData.targets" Condition="'$(UsingToolVisualStudioIbcTraining)' == 'true'" />
+
 </Project>

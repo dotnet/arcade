@@ -136,6 +136,21 @@ namespace Microsoft.DotNet.SignTool
         public string SNBinaryPath { get; set; }
 
         /// <summary>
+        /// Path to Microsoft.DotNet.Tar.dll. Required for signing tar files on .NET Framework.
+        /// </summary>
+        public string TarToolPath { get; set; }
+
+        /// <summary>
+        /// Number of containers to repack in parallel. Zero will default to the processor count
+        /// </summary>
+        public int RepackParallelism { get; set; } = 0;
+
+        /// <summary>
+        /// Maximum size in MB that a file may be before it is repacked serially. 0 will default to 2GB / repack parallelism
+        /// </summary>
+        public int MaximumParallelFileSize { get; set; } = 0;
+
+        /// <summary>
         /// Directory to write log to.
         /// </summary>
         [Required]
@@ -226,22 +241,23 @@ namespace Microsoft.DotNet.SignTool
 
             if (Log.HasLoggedErrors) return;
 
-            var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir, enclosingDir, SNBinaryPath, WixToolsPath);
+            var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir, enclosingDir, SNBinaryPath, WixToolsPath, TarToolPath);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs, Log) : (SignTool)new RealSignTool(signToolArgs, Log);
 
             Telemetry telemetry = new Telemetry();
             try
             {
                 Configuration configuration = new Configuration(
-                TempDir,
-                ItemsToSign.OrderBy(i => i.GetMetadata(SignToolConstants.CollisionPriorityId)).ToArray(),
-                strongNameInfo,
-                fileSignInfo,
-                extensionSignInfo,
-                dualCertificates,
-                Log,
-                useHashInExtractionPath: UseHashInExtractionPath,
-                telemetry: telemetry);
+                    TempDir,
+                    ItemsToSign.OrderBy(i => i.GetMetadata(SignToolConstants.CollisionPriorityId)).ToArray(),
+                    strongNameInfo,
+                    fileSignInfo,
+                    extensionSignInfo,
+                    dualCertificates,
+                    TarToolPath,
+                    Log,
+                    useHashInExtractionPath: UseHashInExtractionPath,
+                    telemetry: telemetry);
 
                 if (ReadExistingContainerSigningCache)
                 {
@@ -253,7 +269,16 @@ namespace Microsoft.DotNet.SignTool
 
                 if (Log.HasLoggedErrors) return;
 
-                var util = new BatchSignUtil(BuildEngine, Log, signTool, ParsedSigningInput, ItemsToSkipStrongNameCheck?.Select(i => i.ItemSpec).ToArray(), configuration._hashToCollisionIdMap, telemetry: telemetry);
+                var util = new BatchSignUtil(
+                    BuildEngine,
+                    Log,
+                    signTool,
+                    ParsedSigningInput,
+                    ItemsToSkipStrongNameCheck?.Select(i => i.ItemSpec).ToArray(),
+                    configuration._hashToCollisionIdMap,
+                    repackParallelism: RepackParallelism,
+                    maximumParallelFileSizeInBytes: MaximumParallelFileSize * 1024 * 1024,
+                    telemetry: telemetry);
 
                 util.SkipZipContainerSignatureMarkerCheck = this.SkipZipContainerSignatureMarkerCheck;
 

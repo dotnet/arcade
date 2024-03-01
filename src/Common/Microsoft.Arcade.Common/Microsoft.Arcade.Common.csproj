@@ -1,26 +1,25 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;netstandard2.0</TargetFrameworks>
+    <!-- Treat this as a tooling library as it references msbuild. -->
+    <TargetFrameworks>$(NetToolCurrent);netstandard2.0;$(NetFrameworkToolCurrent)</TargetFrameworks>
     <IsPackable>true</IsPackable>
+    <DefaultExcludesInProjectFolder Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETFramework'">**/*.Desktop.*</DefaultExcludesInProjectFolder>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsDependencyInjectionVersion)" />
-    <PackageReference Include="System.Net.Http" Version="$(SystemNetHttpVersion)" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
     <Compile Include="..\Internal\AssemblyResolver.cs" />
-  </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' != 'net472'">
-    <Compile Remove="MSBuildTaskBase.Desktop.cs" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
     <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Net.Http" />
   </ItemGroup>
+
+  <!-- This project is a build task dependency and needs to follow desktop version requirements. -->
+  <Import Project="$(RepositoryEngineeringDir)BuildTask.Packages.props" />
 
 </Project>

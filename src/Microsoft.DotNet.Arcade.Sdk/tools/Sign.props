@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
+
   <ItemGroup>
     <!--
       This is intended to hold information about the certificates used for signing.
@@ -41,6 +41,7 @@
     <FileExtensionSignInfo Include=".nupkg" CertificateName="NuGet" />
     <FileExtensionSignInfo Include=".vsix" CertificateName="VsixSHA2" />
     <FileExtensionSignInfo Include=".zip" CertificateName="None" />
+    <FileExtensionSignInfo Include=".tgz" CertificateName="None" />
   </ItemGroup>
 
   <!-- The name of the .NET specific certificate, which is a general replacement for Microsoft400
@@ -65,6 +66,15 @@
     <NETCORE_ENGINEERING_TELEMETRY>Signing</NETCORE_ENGINEERING_TELEMETRY>
   </PropertyGroup>
 
+  <!-- Sign tool parallelism limits. These may be overridden by a repo. -->
+  <PropertyGroup>
+    <!-- Number of containers to repack in parallel -->
+    <SignToolRepackParallelism>16</SignToolRepackParallelism>
+    <!-- Maximum size in MB that a file may be before it is repacked serially -->
+    <SignToolRepackMaximumParallelFileSize>128</SignToolRepackMaximumParallelFileSize>
+  </PropertyGroup>
+
   <!-- Allow repository to customize signing configuration -->
   <Import Project="$(RepositoryEngineeringDir)Signing.props" Condition="Exists('$(RepositoryEngineeringDir)Signing.props')" />
+
 </Project>

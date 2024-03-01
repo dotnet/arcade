@@ -1,4 +1,6 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
+
   <PropertyGroup>
     <!-- Azure Pipelines requires waiting for work item completion -->
     <WaitForWorkItemCompletion>true</WaitForWorkItemCompletion>
@@ -33,8 +35,7 @@
   <Target Name="StopTestRuns"
           AfterTargets="CoreTest"
           Outputs="%(HelixTargetQueue.Identity)">
-    <Message Text="Stopping Azure Pipelines Test Run %(HelixTargetQueue.TestRunName)" Importance="High"/>
-    <StopAzurePipelinesTestRun TestRunId="%(HelixTargetQueue.TestRunId)"/>
+    <StopAzurePipelinesTestRun TestRunId="%(HelixTargetQueue.TestRunId)" TestRunName="%(HelixTargetQueue.TestRunName)"/>
   </Target>
 
   <Target Name="CheckTestResults"
@@ -47,4 +48,5 @@
       WorkItems="@(CompletedWorkItem)"
     />
   </Target>
+
 </Project>

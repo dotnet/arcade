@@ -376,15 +376,17 @@ namespace Microsoft.Cci.Writers.CSharp
 
             switch (typeName)
             {
-                case "System.Runtime.CompilerServices.FixedBufferAttribute": return true;
                 case "System.ParamArrayAttribute": return true;
-                case "System.Reflection.DefaultMemberAttribute": return true;
-                case "System.Reflection.AssemblyKeyFileAttribute": return true;
                 case "System.Reflection.AssemblyDelaySignAttribute": return true;
-                case "System.Runtime.CompilerServices.ExtensionAttribute": return true;
+                case "System.Reflection.AssemblyKeyFileAttribute": return true;
+                case "System.Reflection.DefaultMemberAttribute": return true;
+                case "System.Runtime.CompilerServices.CompilerFeatureRequiredAttribute": return true;
                 case "System.Runtime.CompilerServices.DynamicAttribute": return true;
+                case "System.Runtime.CompilerServices.ExtensionAttribute": return true;
+                case "System.Runtime.CompilerServices.FixedBufferAttribute": return true;
                 case "System.Runtime.CompilerServices.IsByRefLikeAttribute": return true;
                 case "System.Runtime.CompilerServices.IsReadOnlyAttribute": return true;
+                case "System.Runtime.CompilerServices.RequiredMemberAttribute": return true;
                 case "System.Runtime.CompilerServices.TupleElementNamesAttribute": return true;
                 case "System.ObsoleteAttribute":
                     {
@@ -393,7 +395,8 @@ namespace Microsoft.Cci.Writers.CSharp
                         if (arg?.Value is string)
                         {
                             string argValue = (string)arg.Value;
-                            if (argValue == "Types with embedded references are not supported in this version of your compiler.")
+                            if (argValue is "Types with embedded references are not supported in this version of your compiler."
+                                         or "Constructors of types with required members are not supported in this version of your compiler.")
                             {
                                 return true;
                             }

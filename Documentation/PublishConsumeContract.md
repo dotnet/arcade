@@ -53,7 +53,7 @@ We will evaluate guidance for these scenarios when they arise.
 
 ## Onboarding
 
-Onboarding a repo to the toolset will be a [simple process](https://github.com/dotnet/arcade/tree/main/Documentation/Project-Docs/buildtools-bootstrap.md).
+Onboarding a repo to the toolset will be a [simple process](https://github.com/dotnet/dnceng/tree/main/Documentation/ProjectDocs/buildtools-bootstrap.md).
 
 We will provide links to zips / tarballs to acquire the basic pieces necessary for bootstrapping the core tools SDK on a supported platform.
 
@@ -106,7 +106,7 @@ The standard package layout *supports* (not required) consuming packages as [MSB
 
 - Utilities, exe's, scripts, etc which are part of the package functionality must be usable via MSBuild properties / targets.  You should not have a collection of executable files in your package which do not include MSBuild entry points for using them.
 
-- Additional package guidelines are outlined [here](https://github.com/dotnet/arcade/tree/main/Documentation/Project-Docs/Toolshed/TaskPackages.md#implementation-details)
+- Additional package guidelines are outlined [here](https://github.com/dotnet/dnceng/tree/main/Documentation/ProjectDocs/Toolshed/TaskPackages.md#implementation-details)
 
 - Packages need to include accountability information in the nuspec.  At a minimum, source repository link and commit SHA.
 
@@ -181,3 +181,8 @@ Example of tools as SDK's usage (less common usage)
   </PropertyGroup>
 </PropertyGroup>
 ```
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CPublishConsumeContract.md)](https://helix.dot.net/f/p/5?p=Documentation%5CPublishConsumeContract.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CPublishConsumeContract.md)</sub>
+<!-- End Generated Content-->

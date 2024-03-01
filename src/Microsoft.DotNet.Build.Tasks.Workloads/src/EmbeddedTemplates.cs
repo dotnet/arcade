@@ -4,32 +4,40 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
     internal class EmbeddedTemplates
     {
-        internal static TaskLoggingHelper Log;
+        private static readonly Dictionary<string, string> s_templateResources = new();
 
-        private static readonly string s_namespace = "";
-
-        private static readonly Dictionary<string, string> _templateResources = new();
-
+        /// <summary>
+        /// Extracts the specified filename from the embedded template resource into the destination folder and
+        /// returns the full path of the file.
+        /// </summary>
+        /// <param name="filename">The name of the template file to extract.</param>
+        /// <param name="destinationFolder">The directory where the file will be extracted.</param>
+        /// <returns>The full path of the extracted file.</returns>
         public static string Extract(string filename, string destinationFolder)
         {
             return Extract(filename, destinationFolder, filename);
         }
 
+        /// <summary>
+        /// Extracts the specified filename from the embedded template resource into the destination folder using
+        /// the specified filename and return the full path of the file.
+        /// </summary>
+        /// <param name="filename">The name of the template file to extract.</param>
+        /// <param name="destinationFolder">The directory where the file will be extracted.</param>
+        /// <returns>The full path of the extracted file.</returns>
         public static string Extract(string filename, string destinationFolder, string destinationFilename)
         {
-            if (!_templateResources.TryGetValue(filename, out string resourceName))
+            if (!s_templateResources.TryGetValue(filename, out string resourceName))
             {
-                throw new KeyNotFoundException($"No template for '{filename}' exists.");
+                throw new KeyNotFoundException(string.Format(Strings.TemplateNotFound, filename));
             }
 
-            // Clean out stale files, just to be safe.
+            // Clean out stale files just to be safe.
             string destinationPath = Path.Combine(destinationFolder, destinationFilename);
             if (File.Exists(destinationPath))
             {
@@ -43,42 +51,43 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             using Stream rs = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
             using FileStream fs = new(destinationPath, FileMode.Create, FileAccess.Write);
 
-            if (rs != null)
+            if (rs == null)
             {
-                rs.CopyTo(fs);
-                Log?.LogMessage(MessageImportance.Low, $"Resource '{resourceName}' extracted to '{destinationPath}");
+                throw new IOException(string.Format(Strings.TemplateResourceNotFound, resourceName));
             }
-            else
-            {
-                Log?.LogMessage(MessageImportance.Low, $"Unable to find resource: {resourceName}");
-            }
+
+            rs.CopyTo(fs);
 
             return destinationPath;
         }
 
         static EmbeddedTemplates()
         {
-            s_namespace = MethodBase.GetCurrentMethod().DeclaringType.Namespace;
+            string ns = MethodBase.GetCurrentMethod().DeclaringType.Namespace;
 
-            _templateResources = new()
+            s_templateResources = new()
             {
-                { "DependencyProvider.wxs", $"{s_namespace}.MsiTemplate.DependencyProvider.wxs" },
-                { "Directories.wxs", $"{s_namespace}.MsiTemplate.Directories.wxs" },
-                { "dotnethome_x64.wxs", $"{s_namespace}.MsiTemplate.dotnethome_x64.wxs" },
-                { "ManifestProduct.wxs", $"{s_namespace}.MsiTemplate.ManifestProduct.wxs" },
-                { "Product.wxs", $"{s_namespace}.MsiTemplate.Product.wxs" },
-                { "Registry.wxs", $"{s_namespace}.MsiTemplate.Registry.wxs" },
-                { "Variables.wxi", $"{s_namespace}.MsiTemplate.Variables.wxi" },
+                { "DependencyProvider.wxs", $"{ns}.MsiTemplate.DependencyProvider.wxs" },
+                { "Directories.wxs", $"{ns}.MsiTemplate.Directories.wxs" },
+                { "dotnethome_x64.wxs", $"{ns}.MsiTemplate.dotnethome_x64.wxs" },
+                { "ManifestProduct.wxs", $"{ns}.MsiTemplate.ManifestProduct.wxs" },
+                { "WorkloadSetProduct.wxs", $"{ns}.MsiTemplate.WorkloadSetProduct.wxs" },
+                { "Product.wxs", $"{ns}.MsiTemplate.Product.wxs" },
+                { "Registry.wxs", $"{ns}.MsiTemplate.Registry.wxs" },
+                { "Variables.wxi", $"{ns}.MsiTemplate.Variables.wxi" },
 
-                { $"msi.swr", $"{s_namespace}.SwixTemplate.msi.swr" },
-                { $"msi.swixproj", $"{s_namespace}.SwixTemplate.msi.swixproj"},
-                { $"component.swr", $"{s_namespace}.SwixTemplate.component.swr" },
-                { $"component.res.swr", $"{s_namespace}.SwixTemplate.component.res.swr" },
-                { $"component.swixproj", $"{s_namespace}.SwixTemplate.component.swixproj" },
-                { $"manifest.vsmanproj", $"{s_namespace}.SwixTempalte.manifest.vsmanproj"},
+                { $"msi.swr", $"{ns}.SwixTemplate.msi.swr" },
+                { $"msi.swixproj", $"{ns}.SwixTemplate.msi.swixproj" },
+                { $"component.swr", $"{ns}.SwixTemplate.component.swr" },
+                { $"component.res.swr", $"{ns}.SwixTemplate.component.res.swr" },
+                { $"component.swixproj", $"{ns}.SwixTemplate.component.swixproj" },
+                { $"manifest.vsmanproj", $"{ns}.SwixTempalte.manifest.vsmanproj" },
+                { $"packageGroup.swr", $"{ns}.SwixTemplate.packageGroup.swr" },
+                { $"packageGroup.swixproj", $"{ns}.SwixTemplate.packageGroup.swixproj" },
 
-                { "Icon.png", $"{s_namespace}.Misc.Icon.png"},
-                { "LICENSE.TXT", $"{s_namespace}.Misc.LICENSE.TXT"}
+                { "Icon.png", $"{ns}.Misc.Icon.png" },
+                { "LICENSE.TXT", $"{ns}.Misc.LICENSE.TXT" },
+                { "msi.csproj", $"{ns}.Misc.msi.csproj" }
             };
         }
     }

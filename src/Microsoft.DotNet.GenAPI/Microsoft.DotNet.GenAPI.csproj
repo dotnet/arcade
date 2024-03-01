@@ -1,13 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(TargetFrameworkForNETSDK);net472</TargetFrameworks>
+    <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <ExcludeFromSourceOnlyBuild>true</ExcludeFromSourceOnlyBuild>
     <PackageType>MSBuildSdk</PackageType>
     <IsPackable>true</IsPackable>
+    <IsBuildTaskProject>true</IsBuildTaskProject>
     <PackageDescription>An msbuild task to generate code for the API surface of an assembly.</PackageDescription>
     <NoWarn>$(NoWarn);0436</NoWarn>
-    <RollForward>Major</RollForward>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,16 +16,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" Publish="false" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" Publish="false" />
-    <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="4.0.0" />
-    <PackageReference Include="System.Diagnostics.TraceSource" Version="4.0.0" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" />
+
+    <!-- Manually reference Microsoft.Cci.dll via a PackageDownload+Reference item instead of
+         using a PackageReference to avoid bringing in the old dependency graph. -->
+    <PackageDownload Include="Microsoft.Cci" Version="[$(MicrosoftCciVersion)]" />
+    <Reference Include="$(NuGetPackageRoot)microsoft.cci\$(MicrosoftCciVersion)\lib\netstandard1.3\Microsoft.Cci.dll" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj" />
   </ItemGroup>
-
-  <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 
 </Project>

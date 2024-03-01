@@ -1,4 +1,15 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
+
+  <PropertyGroup>
+    <BuildDependsOn>
+      $(BuildDependsOn);
+      _GetSkipArchivesBuildProps;
+      _CreateArchive;
+      _CreateSymbolsArchive
+    </BuildDependsOn>
+  </PropertyGroup>
+
   <Target Name="_GetCurrentProjectServicingConfiguration">
     <ItemGroup>
       <CurrentProjectServicingConfiguration
@@ -25,7 +36,7 @@
   -->
   <Target Name="SetLastReleasedVersionForSourceBuild"
           Condition="
-            '$(DotNetBuildFromSource)' == 'true' and
+            ('$(DotNetBuildFromSource)' == 'true' or '$(DotNetBuildSourceOnly)' == 'true') and
             '$(SkipSetLastReleasedVersionForSourceBuild)' != 'true'"
           BeforeTargets="GetProductVersions"
           DependsOnTargets="_GetCurrentProjectServicingConfiguration">
@@ -72,8 +83,7 @@
       <_OutputPathRoot>$(IntermediateOutputPath)output/</_OutputPathRoot>
       <_ArchiveFileName>$(ArchiveName)-$(Version)</_ArchiveFileName>
       <_ArchiveFileName Condition="'$(RuntimeIdentifier)' != ''">$(ArchiveName)-$(Version)-$(RuntimeIdentifier)</_ArchiveFileName>
-      <_DestinationFileName Condition="$([MSBuild]::IsOSPlatform(Windows))">$(PackageOutputPath)/$(_ArchiveFileName).zip</_DestinationFileName>
-      <_DestinationFileName Condition="!$([MSBuild]::IsOSPlatform(Windows))">$(PackageOutputPath)/$(_ArchiveFileName).tar.gz</_DestinationFileName>
+      <_DestinationFileName>$(PackageOutputPath)/$(_ArchiveFileName).$(ArchiveFormat)</_DestinationFileName>
     </PropertyGroup>
     <MSBuild Projects="$(MSBuildProjectFullPath)"
              Targets="PublishToDisk"
@@ -83,11 +93,11 @@
     <ZipDirectory SourceDirectory="$(_OutputPathRoot)"
                   Overwrite="true"
                   DestinationFile="$(_DestinationFileName)"
-                  Condition="$([MSBuild]::IsOSPlatform(Windows))"/>
+                  Condition="'$(ArchiveFormat)' == 'zip'"/>
     <Exec Command="tar -C '$(_OutputPathRoot)' -czf $(_DestinationFileName) ."
           IgnoreExitCode="true"
           IgnoreStandardErrorWarningFormat="true"
-          Condition="!$([MSBuild]::IsOSPlatform(Windows))"/>
+          Condition="'$(ArchiveFormat)' == 'tar.gz'"/>
 
     <Message Text="$(_OutputPathRoot) -> $(_DestinationFileName)" Importance="high" />
   </Target>
@@ -98,8 +108,7 @@
       <_SymbolsOutputPathRoot>$(IntermediateOutputPath)symbols/</_SymbolsOutputPathRoot>
       <_ArchiveFileName>$(SymbolsArchiveName)-$(Version)</_ArchiveFileName>
       <_ArchiveFileName Condition="'$(RuntimeIdentifier)' != ''">$(SymbolsArchiveName)-$(RuntimeIdentifier)-$(Version)</_ArchiveFileName>
-      <_DestinationFileName Condition="$([MSBuild]::IsOSPlatform(Windows))">$(PackageOutputPath)/$(_ArchiveFileName).zip</_DestinationFileName>
-      <_DestinationFileName Condition="!$([MSBuild]::IsOSPlatform(Windows))">$(PackageOutputPath)/$(_ArchiveFileName).tar.gz</_DestinationFileName>
+      <_DestinationFileName>$(PackageOutputPath)/$(_ArchiveFileName).$(ArchiveFormat)</_DestinationFileName>
     </PropertyGroup>
     <MSBuild Projects="$(MSBuildProjectFullPath)"
              Targets="PublishSymbolsToDisk"
@@ -109,21 +118,13 @@
     <ZipDirectory SourceDirectory="$(_SymbolsOutputPathRoot)"
                   Overwrite="true"
                   DestinationFile="$(_DestinationFileName)"
-                  Condition="$([MSBuild]::IsOSPlatform(Windows))"/>
+                  Condition="'$(ArchiveFormat)' == 'zip'"/>
     <Exec Command="tar -C '$(_SymbolsOutputPathRoot)' -czf $(_DestinationFileName) ."
           IgnoreExitCode="true"
           IgnoreStandardErrorWarningFormat="true"
-          Condition="!$([MSBuild]::IsOSPlatform(Windows))"/>
+          Condition="'$(ArchiveFormat)' == 'tar.gz'"/>
 
     <Message Text="$(_SymbolsOutputPathRoot) -> $(_DestinationFileName)" Importance="high" />
   </Target>
 
-  <PropertyGroup>
-    <BuildDependsOn>
-      $(BuildDependsOn);
-      _GetSkipArchivesBuildProps;
-      _CreateArchive;
-      _CreateSymbolsArchive
-    </BuildDependsOn>
-  </PropertyGroup>
 </Project>
