@@ -1,24 +1,14 @@
 {
+  // Please refer to the following wiki for more information about the .NET SDK configuration file and it's use cases.
+  // https://github.com/dotnet/arcade/blob/main/Documentation/ArcadeSdk.md
   "sdk": {
-    "_comment": [
-      "THESE ARE DOTNET.EXE PROPERTIES. These settings are used by dotnet.exe and are not used by arcade.",
-      "We need to explicitly specify the SDK used by dotnet.exe so it matches the setting used by arcade",
-      "because the default behavior of dotnet.exe will pick the latest version of the SDK installed regardless",
-      "of the setting used by arcade. This can happen if the build box has multiple versions of the SDK installed."
-    ],
     "version": "7.0.116",
     "rollForward": "latestFeature"
   },
   "tools": {
-    "_comment": [
-      "THESE ARE ARCADE.EXE PROPERTIES. These settings are used by arcade."
-    ],
     "dotnet": "7.0.116"
   },
   "msbuild-sdks": {
-    "_comment": [
-      "THESE ARE ARCADE.EXE PROPERTIES. These settings are used by arcade."
-    ],
     "Microsoft.DotNet.Arcade.Sdk": "7.0.0-beta.22426.8",
     "Microsoft.DotNet.Helix.Sdk": "7.0.0-beta.22426.8"
   }
