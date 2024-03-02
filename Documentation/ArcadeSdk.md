@@ -425,16 +425,7 @@ Example
 
 Note: defining `runtimes` in your global.json will signal to Arcade to install a local version of the SDK for the runtimes to use rather than depending on a matching global SDK.
 
-**Servicing Support Notes:**
-
-Arcade uses dotnet.exe to specify the target .Net Core SDK. However dotnet.exe has it's own property settings in global.json and does not 
-obey the arcade tools.dotnet JSON specification. Dotnet.exe's default behavior is to use the latest version of the .Net Core SDK. As products 
-move to servicing life cycles, CI build machine may have multiple versions of the SDK installed and arcade will point to an old version. When 
-that occurs dotnet.exe by default will still use the latest version of the SDK which will lead to Validation failures in our CI builds do to 
-version mismatches between Asp.Net and .Net Core SDKs. To resolve this issue we must add explicit property setting to the global.json file
-that will force dotnet.exe to target the same version that arcade targets
-
-Settings to ensure arcade and dotnet.exe target the same .Net Core SDK version:
+We include tools/dotnet to install the SDK version requested (that's all that section does in this case) and sdk to ensure that SDK (or a slightly newer one) is what's used in builds. we want that alignment to avoid unexpected issues, especially in servicing.
 
 ```json
 {
