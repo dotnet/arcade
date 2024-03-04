@@ -425,7 +425,7 @@ Example
 
 Note: defining `runtimes` in your global.json will signal to Arcade to install a local version of the SDK for the runtimes to use rather than depending on a matching global SDK.
 
-We include tools/dotnet to install the SDK version requested (that's all that section does in this case) and sdk to ensure that SDK (or a slightly newer one) is what's used in builds. we want that alignment to avoid unexpected issues, especially in servicing.
+We include `tools/dotnet` to install the SDK version requested and `sdk` to ensure that SDK (or a slightly newer one) is what's used in builds. we want that alignment to avoid unexpected issues, especially in servicing.
 
 ```json
 {
