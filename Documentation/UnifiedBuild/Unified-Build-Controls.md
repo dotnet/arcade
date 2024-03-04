@@ -163,11 +163,11 @@ In addition to these default high level controls, there may be additional compon
 | **Name** | **Values** | **Default** | **Description** |
 | -------- | -------- | -------- | -------- |
 | BuildOS | "linux", "osx", "freebsd", "netbsd", "illumos", "solaris", "haiku", "windows", ... | OS of the build environment | The operating system of the machine that is built on. Lower-case string. |
-| HostOS | Same as `BuildOS` | `BuildOS` | The operating system of the machine that will run the produced tool (i.e. compiler) to generate the binary for the target operating system. |
 | TargetOS | Same as `BuildOS` | `BuildOS` | The operating system of the machine that will run the binary -> the end user’s machine. |
+| HostOS | Same as `BuildOS` | `TargetOS` | The operating system of the machine that will run the produced tool (i.e. compiler) to generate the binary for the target operating system. |
 | BuildRid | Valid RIDs | RID of the the currently executing runtime | The RID of the runtime that is running the build |
-| HostRid | Valid RIDs | `TargetRid` | The RID of the runtime that will run the produced tool (i.e. compiler) to generate the binary for the target operating system. |
 | TargetRid | Valid RIDs | When building non-portable, the OS of build Rid + TargetArchitecture. When building portable, `TargetOS-TargetArchitecture`. | The RID of the runtime that will run the binary -> the end user’s machine. |
+| HostRid | Valid RIDs | `TargetRid` | The RID of the runtime that will run the produced tool (i.e. compiler) to generate the binary for the target operating system. |
 | BuildArchitecture | "x64", "x86", "arm", "arm64", ... | The architecture of the build environment | The architecture of the machine that is built on. Lower-case string. |
 | TargetArchitecture | Same as `BuildArchitecture` | `BuildArchitecture` | The architecture of the machine that will run the binary -> the end user's machine. |
 | HostArchitecture | Same as `BuildArchitecture` | `TargetArchitecture` | The architecture of the machine that will run the produced tool (i.e. compiler) to generate the binary for the target architecture |
