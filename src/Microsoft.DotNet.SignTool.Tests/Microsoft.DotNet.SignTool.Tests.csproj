@@ -8,7 +8,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.ApplicationInsights" Version="$(MicrosoftApplicationInsightsVersion)" />
     <PackageReference Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
-    <PackageReference Include="Microsoft.Signed.Wix" Version="$(MicrosoftSignedWixVersion)" />
+    <PackageReference Include="Microsoft.Signed.Wix" Version="$(MicrosoftSignedWixVersion)" GeneratePathProperty="true" />
     <PackageReference Include="System.IO.Packaging" Version="$(SystemIOPackagingVersion)" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
     <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" />
@@ -24,7 +24,7 @@
     <Content Include="Resources\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="$(PkgWix)\tools\**">
+    <Content Include="$(PkgMicrosoft_Signed_Wix)\tools\**">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <Link>tools\wix\%(RecursiveDir)%(Filename)%(Extension)</Link>
     </Content>
