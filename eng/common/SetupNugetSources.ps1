@@ -25,7 +25,7 @@
 [CmdletBinding()]
 param (
     [Parameter(Mandatory = $true)][string]$ConfigFile,
-    [Parameter(Mandatory = $true)][SecureString]$Password
+    [Parameter(Mandatory = $true)][string]$Password
 )
 
 $ErrorActionPreference = "Stop"
@@ -35,7 +35,7 @@ Set-StrictMode -Version 2.0
 . $PSScriptRoot\tools.ps1
 
 # Add source entry to PackageSources
-function AddPackageSource($sources, $SourceName, $SourceEndPoint, [SecureString] $creds, $Username, [SecureString] $Password) {
+function AddPackageSource($sources, $SourceName, $SourceEndPoint, $creds, $Username, $pwd) {
     $packageSource = $sources.SelectSingleNode("add[@key='$SourceName']")
     
     if ($packageSource -eq $null)
@@ -49,11 +49,11 @@ function AddPackageSource($sources, $SourceName, $SourceEndPoint, [SecureString]
         Write-Host "Package source $SourceName already present."
     }
     
-    AddCredential -Creds $creds -Source $SourceName -Username $Username -Password $Password
+    AddCredential -Creds $creds -Source $SourceName -Username $Username -Password $pwd
 }
 
 # Add a credential node for the specified source
-function AddCredential([SecureString] $creds, $source, $username, [SecureString] $password) {
+function AddCredential($creds, $source, $username, $pwd) {
     # Looks for credential configuration for the given SourceName. Create it if none is found.
     $sourceElement = $creds.SelectSingleNode($Source)
     if ($sourceElement -eq $null)
@@ -82,17 +82,17 @@ function AddCredential([SecureString] $creds, $source, $username, [SecureString]
         $passwordElement.SetAttribute("key", "ClearTextPassword")
         $sourceElement.AppendChild($passwordElement) | Out-Null
     }
-    $passwordElement.SetAttribute("value", $Password)
+    $passwordElement.SetAttribute("value", $pwd)
 }
 
-function InsertMaestroPrivateFeedCredentials($Sources, [SecureString] $Creds, $Username, [SecureString] $Password) {
+function InsertMaestroPrivateFeedCredentials($Sources, $Creds, $Username, $pwd) {
     $maestroPrivateSources = $Sources.SelectNodes("add[contains(@key,'darc-int')]")
 
     Write-Host "Inserting credentials for $($maestroPrivateSources.Count) Maestro's private feeds."
     
     ForEach ($PackageSource in $maestroPrivateSources) {
         Write-Host "`tInserting credential for Maestro's feed:" $PackageSource.Key
-        AddCredential -Creds $creds -Source $PackageSource.Key -Username $Username -Password $Password
+        AddCredential -Creds $creds -Source $PackageSource.Key -Username $Username -Password $pwd
     }
 }
 
