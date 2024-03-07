@@ -16,6 +16,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="LZMA-SDK" Version="19.0.0" />
+    <PackageReference Include="Microsoft.Signed.Wix" Version="$(MicrosoftSignedWixVersion)" />
     <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="7.10.6071" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageReference Include="NuGet.Common" Version="$(NuGetVersioningVersion)" />
@@ -24,7 +25,6 @@
     <PackageReference Include="NuGet.Packaging.Core" Version="$(NuGetVersioningVersion)" />
     <PackageReference Include="NuGet.Versioning" Version="$(NuGetVersioningVersion)" />
     <PackageReference Include="System.IO.Packaging" Version="4.5.0" />
-    <PackageReference Include="WiX" Version="3.11.1" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Resources.dll" />
