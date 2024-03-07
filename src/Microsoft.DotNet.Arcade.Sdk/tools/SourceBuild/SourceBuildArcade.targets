@@ -69,6 +69,7 @@
     <_DefaultNetFrameworkFilter>netstandard2.0%3bnetstandard2.1%3bnetcoreapp2.1%3bnetcoreapp3.1%3bnet5.0%3bnet6.0%3bnet7.0%3bnet8.0%3bnet9.0</_DefaultNetFrameworkFilter>
     <SourceBuildTargetFrameworkFilter Condition="'$(SourceBuildTargetFrameworkFilter)' == ''">$(_DefaultNetFrameworkFilter)</SourceBuildTargetFrameworkFilter>
     <RepoManifestFile>$(ArtifactsDir)RepoManifest.xml</RepoManifestFile>
+    <CreateRepoSymbolsArchiveDependsOn Condition="'$(CreateIntermediatePackage)' == 'true'">GetCategorizedIntermediateNupkgContents</CreateRepoSymbolsArchiveDependsOn>
   </PropertyGroup>
 
   <Target Name="GetSourceBuildIntermediateNupkgNameConvention">
@@ -159,12 +160,12 @@
   -->
   <Target Name="CreateRepoSymbolsArchive"
           Condition="'$(OS)' != 'Windows_NT' and ('$(DotNetBuildFromSourceFlavor)' == 'Product' or '$(DotNetBuildOrchestrator)' == 'true' or '$(SupplementalIntermediateNupkgCategory)' == '$(SymbolsIntermediateNupkgCategory)')"
-          DependsOnTargets="GetCategorizedIntermediateNupkgContents">
+          DependsOnTargets="$(CreateRepoSymbolsArchiveDependsOn)">
     <PropertyGroup>
       <SymbolsRoot>$(CurrentRepoSourceBuildArtifactsDir)</SymbolsRoot>
       <!-- Fall back to repo root for source-build-externals or repos that don't have the regular SymbolsRoot as defined above -->
       <SymbolsRoot Condition="!Exists('$(SymbolsRoot)') or '$(GitHubRepositoryName)' == 'source-build-externals'">$(RepoRoot)</SymbolsRoot>
-      <SymbolsArchiveLocation>$(CurrentRepoSourceBuildArtifactsPackagesDir)</SymbolsArchiveLocation>
+      <SymbolsArchiveLocation>$(CurrentRepoSourceBuildArtifactsPackagesDir)NonShipping/</SymbolsArchiveLocation>
       <SymbolsArchiveLocation Condition="'$(GitHubRepositoryName)' == 'nuget-client' and '$(PackageOutputPath)' != ''">$([MSBuild]::EnsureTrailingSlash('$(PackageOutputPath)'))</SymbolsArchiveLocation>
       <SymbolsList>$([MSBuild]::NormalizePath('$(SymbolsArchiveLocation)', 'symbols.lst'))</SymbolsList>
       <SymbolsArchivePrefix>Symbols.</SymbolsArchivePrefix>

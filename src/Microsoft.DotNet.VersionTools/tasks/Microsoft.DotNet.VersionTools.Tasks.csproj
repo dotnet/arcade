@@ -7,6 +7,12 @@
     <PackageType>MSBuildSdk</PackageType>
   </PropertyGroup>
 
+  <!-- Don't include VersionTools.Tasks in source-build until we find a reason to use it. -->
+  <PropertyGroup>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <ExcludeFromSourceOnlyBuild>true</ExcludeFromSourceOnlyBuild>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Tasks.Core" />
   </ItemGroup>

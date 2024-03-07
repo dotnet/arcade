@@ -41,9 +41,10 @@
     
     <!-- If `AutoGenerateSymbolPackages` is not set we default it to true. -->
     <!-- Do not generate symbol packages if in outer source build mode, to avoid creating copies of the intermediates. -->
+    <!-- Also do not generate symbol packages if in inner source build, in product build. -->
     <AutoGenerateSymbolPackages Condition="'$(AutoGenerateSymbolPackages)' == '' and
-      (('$(ArcadeBuildFromSource)' != 'true' or '$(ArcadeInnerBuildFromSource)' == 'true') or 
-       ('$(DotNetBuild)' != 'true' or '$(DotNetBuildPhase)' == 'InnerRepo'))">true</AutoGenerateSymbolPackages>
+       ('$(DotNetBuildSourceOnly)' != 'true' or
+       ('$(ArcadeInnerBuildFromSource)' == 'true' and '$(DotNetBuildFromSourceFlavor)' != 'Product'))">true</AutoGenerateSymbolPackages>
 
     <AssetManifestOS Condition="'$(AssetManifestOS)' == ''">$(OS)</AssetManifestOS>
 
@@ -85,6 +86,13 @@
         <IsShipping>%(PackagesToPublish.IsShipping)</IsShipping>
       </SymbolPackagesToGenerate>
 
+      <!-- Include Symbols.<repo>.tar.gz, if running in inner source-only build -->
+      <UnifiedSymbolsPackage Include="$(ArtifactsPackagesDir)**/Symbols*.tar.gz" IsShipping="false" />
+      <PackagesToPublish Condition="'$(DotNetBuildSourceOnly)' == 'true' and '$(DotNetBuildInnerRepo)' == 'true'" Include="@(UnifiedSymbolsPackage)">
+        <PublishFlatContainer>true</PublishFlatContainer>
+        <RelativeBlobPath>%(Filename)%(Extension)</RelativeBlobPath>
+      </PackagesToPublish>
+
       <!-- If PostBuildSign is true, then we need to include newly generated packages in ItemsToSignPostBuild. -->
       <ItemsToSignPostBuild Include="@(SymbolPackagesToGenerate->'%(Filename)%(Extension)')" Condition="'$(PostBuildSign)' == 'true'" />
     </ItemGroup>
@@ -105,8 +113,11 @@
       -->
       <SymbolPackagesToGenerate Remove="$(SymbolPackagesDir)**/Microsoft.DotNet.Darc.*" />
       <SymbolPackagesToGenerate Remove="$(SymbolPackagesDir)**/Microsoft.DotNet.Maestro.Tasks.*" />
-      
-      <ItemsToPushToBlobFeed Include="@(PackagesToPublish);@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)">
+
+      <!-- Exclude all existing *.symbols.nupkg in source-only build - we create a unified symbols archive instead. -->
+      <ExistingSymbolPackages Remove="@(ExistingSymbolPackages)" Condition="'$(DotNetBuildSourceOnly)' == 'true'"/>
+
+      <ItemsToPushToBlobFeed Include="@(PackagesToPublish);@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)" Exclude="@(ItemsToPushToBlobFeed)">
         <ManifestArtifactData Condition="'%(IsShipping)' != 'true'">NonShipping=true</ManifestArtifactData>
         <ManifestArtifactData Condition="'%(IsShipping)' == 'true' and '$(ProducesDotNetReleaseShippingAssets)' == 'true'">DotNetReleaseShipping=true</ManifestArtifactData>
       </ItemsToPushToBlobFeed>
@@ -145,6 +156,11 @@
       <PDBsToPublishTempLocation>$(ArtifactsTmpDir)PDBsToPublish/</PDBsToPublishTempLocation>
     </PropertyGroup>
     
+    <!-- In VMR inner-build copy to local storage, do not push to AzDO -->
+    <PropertyGroup Condition="'$(ArcadeInnerBuildFromSource)' == 'true' or '$(DotNetBuildPhase)' == 'InnerRepo'">
+      <PushToLocalStorage>true</PushToLocalStorage>
+    </PropertyGroup>
+
     <!--
       The new Maestro/BAR build model keeps separate Azure DevOps and GitHub build information.
       The GitHub information will be extracted based on the Azure DevOps repository.
@@ -163,7 +179,7 @@
     <!--
       The user can set `PublishingVersion` via eng\Publishing.props
     -->
-    <PushToAzureDevOpsArtifacts
+    <PushToBuildStorage
       AzureDevOpsCollectionUri="$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)"
       AzureDevOpsProject="$(SYSTEM_TEAMPROJECT)"
       AzureDevOpsBuildId="$(BUILD_BUILDID)"
@@ -181,7 +197,12 @@
       IsStableBuild="$(IsStableBuild)"
       PublishingVersion="$(PublishingVersion)"
       AssetManifestPath="$(AssetManifestFilePath)" 
-      IsReleaseOnlyPackageVersion="$(IsReleaseOnlyPackageVersion)" />
+      IsReleaseOnlyPackageVersion="$(IsReleaseOnlyPackageVersion)"
+      PushToLocalStorage="$(PushToLocalStorage)"
+      AssetsLocalStorageDir="$(SourceBuiltAssetsDir)"
+      ShippingPackagesLocalStorageDir="$(SourceBuiltShippingPackagesDir)"
+      NonShippingPackagesLocalStorageDir="$(SourceBuiltNonShippingPackagesDir)"
+      AssetManifestsLocalStorageDir="$(SourceBuiltAssetManifestsDir)" />
 
     <!-- 
         Publish Windows PDBs produced by SymStore.targets (by default, only shipping PDBs are placed there).
