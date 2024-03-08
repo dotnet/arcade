@@ -70,7 +70,7 @@ jobs:
     timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
 
   ${{ if ne(parameters.templateContext, '') }}:
-    timeoutInMinutes: ${{ parameters.templateContext }}
+    templateContext: ${{ parameters.templateContext }}
 
   variables:
   - ${{ if ne(parameters.enableTelemetry, 'false') }}:
