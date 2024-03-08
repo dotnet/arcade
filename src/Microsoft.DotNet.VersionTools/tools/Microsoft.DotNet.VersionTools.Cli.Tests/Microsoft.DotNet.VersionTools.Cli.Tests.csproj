@@ -4,12 +4,6 @@
     <TargetFramework>$(NetToolCurrent)</TargetFramework>
   </PropertyGroup>
 
-  <!-- Don't include VersionTools.Cli.Tests in source-build until we find a reason to use it. -->
-  <PropertyGroup>
-    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
-    <ExcludeFromSourceOnlyBuild>true</ExcludeFromSourceOnlyBuild>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Moq" />
     <PackageReference Include="FluentAssertions" />

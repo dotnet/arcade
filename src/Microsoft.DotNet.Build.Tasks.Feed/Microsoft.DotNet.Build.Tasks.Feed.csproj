@@ -28,7 +28,8 @@
                       IsImplicitlyDefined="false"
                       PrivateAssets="all"
                       ExcludeAssets="runtime"
-                      VersionOverride="2.0.3" />
+                      VersionOverride="2.0.3"
+                      Condition="'$(DotNetBuildSourceOnly)' != 'true'" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(DotNetBuildSourceOnly)' != 'true'">
