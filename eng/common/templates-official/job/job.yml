@@ -36,7 +36,7 @@ parameters:
   runAsPublic: false
 # Sbom related params
   enableSbom: true
-  PackageVersion: 9.0.0
+  PackageVersion: 7.0.0
   BuildDropPath: '$(Build.SourcesDirectory)/artifacts'
 
 jobs:
