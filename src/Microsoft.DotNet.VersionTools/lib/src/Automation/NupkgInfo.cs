@@ -22,8 +22,8 @@ namespace Microsoft.DotNet.VersionTools.Automation
 
     public class PackageIdentity
     {
-        private readonly string _id;
-        private readonly string _version;
+        public string Id { get; init; }
+        public string Version { get; init; }
 
         public PackageIdentity(string id, string version)
         {
@@ -32,18 +32,8 @@ namespace Microsoft.DotNet.VersionTools.Automation
                 throw new ArgumentNullException(nameof(id));
             }
 
-            _id = id;
-            _version = version;
-        }
-
-        public string Id
-        {
-            get { return _id; }
-        }
-
-        public string Version
-        {
-            get { return _version; }
+            Id = id;
+            Version = version;
         }
     }
 }
