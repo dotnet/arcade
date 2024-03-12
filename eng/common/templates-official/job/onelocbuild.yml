@@ -41,7 +41,7 @@ jobs:
     - ${{ if eq(parameters.UseCheckedInLocProjectJson, 'true') }}:
       - name: _GenerateLocProjectArguments
         value: ${{ variables._GenerateLocProjectArguments }} -UseCheckedInLocProjectJson
-    - template: /eng/common/templates/variables/pool-providers.yml
+    - template: /eng/common/templates-official/variables/pool-providers.yml
 
   ${{ if ne(parameters.pool, '') }}:
     pool: ${{ parameters.pool }}
@@ -49,12 +49,15 @@ jobs:
     pool:
       # We don't use the collection uri here because it might vary (.visualstudio.com vs. dev.azure.com)
       ${{ if eq(variables['System.TeamProject'], 'DevDiv') }}:
-        name: VSEngSS-MicroBuild2022-1ES
+        name: AzurePipelines-EO
+        image: 1ESPT-Windows2022
         demands: Cmd
+        os: windows
       # If it's not devdiv, it's dnceng
       ${{ if ne(variables['System.TeamProject'], 'DevDiv') }}:
         name: $(DncEngInternalBuildPool)
-        demands: ImageOverride -equals windows.vs2019.amd64
+        image: 1es-windows-2022
+        os: windows
 
   steps:
     - ${{ if ne(parameters.SkipLocProjectJsonGeneration, 'true') }}:
@@ -92,7 +95,7 @@ jobs:
           mirrorBranch: ${{ parameters.MirrorBranch }}
       condition: ${{ parameters.condition }}
 
-    - task: PublishBuildArtifacts@1
+    - task: 1ES.PublishBuildArtifacts@1
       displayName: Publish Localization Files
       inputs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)/loc'
@@ -100,7 +103,7 @@ jobs:
         ArtifactName: Loc
       condition: ${{ parameters.condition }}
 
-    - task: PublishBuildArtifacts@1
+    - task: 1ES.PublishBuildArtifacts@1
       displayName: Publish LocProject.json
       inputs:
         PathtoPublish: '$(Build.SourcesDirectory)/eng/Localize/'

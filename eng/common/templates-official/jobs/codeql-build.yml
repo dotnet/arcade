@@ -7,7 +7,7 @@ parameters:
   overrideGuardianVersion: ''
 
 jobs:
-- template: /eng/common/templates/jobs/jobs.yml
+- template: /eng/common/templates-official/jobs/jobs.yml
   parameters:
     enableMicrobuild: false
     enablePublishBuildArtifacts: false
