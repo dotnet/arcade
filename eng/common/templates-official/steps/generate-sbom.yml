@@ -35,7 +35,7 @@ steps:
       PackageVersion: ${{ parameters.packageVersion }}
       ManifestDirPath: ${{ parameters.manifestDirPath }}
 
-- task: PublishPipelineArtifact@1
+- task: 1ES.PublishPipelineArtifact@1
   displayName: Publish SBOM manifest
   continueOnError: ${{parameters.sbomContinueOnError}}
   inputs:

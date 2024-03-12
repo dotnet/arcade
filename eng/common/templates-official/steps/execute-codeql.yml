@@ -21,7 +21,7 @@ parameters:
   sdlContinueOnError: false
 
 steps:
-- template: /eng/common/templates/steps/execute-sdl.yml
+- template: /eng/common/templates-official/steps/execute-sdl.yml
   parameters:
     overrideGuardianVersion: ${{ parameters.overrideGuardianVersion }}
     executeAllSdlToolsScript: ${{ parameters.executeAllSdlToolsScript }}
