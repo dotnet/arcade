@@ -160,6 +160,8 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </summary>
         public int MaxRetryCount { get; set; }
 
+        public bool StageOnly { get; set; } = false;
+
         private CommandPayload _commandPayload;
 
         protected override async Task ExecuteCore(CancellationToken cancellationToken)
@@ -264,18 +266,48 @@ namespace Microsoft.DotNet.Helix.Sdk
                     return;
                 }
 
-                Log.LogMessage(MessageImportance.High, $"Sending Job to {TargetQueue}...");
                 cancellationToken.ThrowIfCancellationRequested();
                 // LogMessageFromText will take any string formatted as a canonical error or warning and convert the type of log to this
-                ISentJob job = await def.SendAsync(msg => Log.LogMessageFromText(msg, MessageImportance.Normal), cancellationToken);
-                JobCorrelationId = job.CorrelationId;
-                JobCancellationToken = job.HelixCancellationToken;
-                ResultsContainerUri = job.ResultsContainerUri;
-                ResultsContainerReadSAS = job.ResultsContainerReadSAS;
+                if (StageOnly)
+                {
+                    Log.LogMessage(MessageImportance.High, $"Preparing Job for {TargetQueue}...");
+                    var requestUrl = await def.StageForSendingAsync(msg => Log.LogMessageFromText(msg, MessageImportance.Normal), cancellationToken);
+                    var helixJobInfo = JsonConvert.SerializeObject(new
+                    {
+                        CreationRequest = requestUrl,
+                        JobName = GetEnvironmentVariable("SYSTEM_JOBNAME"),
+                        JobAttempt = GetEnvironmentVariable("SYSTEM_JOBATTEMPT"),
+                        PhaseName = GetEnvironmentVariable("SYSTEM_PHASENAME"),
+                        PhaseAttempt = GetEnvironmentVariable("SYSTEM_PHASEATTEMPT"),
+                        StageName = GetEnvironmentVariable("SYSTEM_STAGENAME"),
+                        StageAttempt = GetEnvironmentVariable("SYSTEM_STAGEATTEMPT"),
+                    });
+                    Log.LogMessage(MessageImportance.High, $"##vso[task.setvariable variable={Guid.NewGuid():N}.HelixJobInformation;isoutput=true]{helixJobInfo}");
+                }
+                else
+                {
+                    Log.LogMessage(MessageImportance.High, $"Sending Job to {TargetQueue}...");
+                    ISentJob job = await def.SendAsync(msg => Log.LogMessageFromText(msg, MessageImportance.Normal), cancellationToken);
+                    JobCorrelationId = job.CorrelationId;
+                    JobCancellationToken = job.HelixCancellationToken;
+                    ResultsContainerUri = job.ResultsContainerUri;
+                    ResultsContainerReadSAS = job.ResultsContainerReadSAS;
+                }
                 cancellationToken.ThrowIfCancellationRequested();
             }
 
             cancellationToken.ThrowIfCancellationRequested();
+        }
+
+        protected string GetEnvironmentVariable(string name)
+        {
+            var result = Environment.GetEnvironmentVariable(name);
+            if (string.IsNullOrEmpty(result))
+            {
+                throw new InvalidOperationException($"Required environment variable {name} not set.");
+            }
+
+            return result;
         }
 
         private IJobDefinition AddBuildVariableProperty(IJobDefinition def, string key, string azdoVariableName)

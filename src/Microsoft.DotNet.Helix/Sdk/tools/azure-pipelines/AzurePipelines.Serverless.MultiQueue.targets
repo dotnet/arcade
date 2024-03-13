@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <!-- Serverless Mode Implies not waiting for work item completion -->
+    <WaitForWorkItemCompletion>false</WaitForWorkItemCompletion>
+  </PropertyGroup>
+</Project>
