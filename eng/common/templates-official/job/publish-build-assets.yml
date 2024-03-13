@@ -107,7 +107,7 @@ jobs:
     - task: 1ES.PublishBuildArtifacts@1
       displayName: Publish ReleaseConfigs Artifact
       inputs:
-        PathtoPublish: '$(Build.StagingDirectory)/ReleaseConfigs.txt'
+        PathtoPublish: '$(Build.StagingDirectory)/ReleaseConfigs'
         PublishLocation: Container
         ArtifactName: ReleaseConfigs
 
