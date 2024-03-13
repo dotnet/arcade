@@ -21,6 +21,15 @@
   -->
 
   <Import Project="BuildStep.props" />
+
+  <!--
+    In VMR inner-build copy to local storage, do not push to AzDO.
+    Define this property before importing repo Publishing.props, to have it control any repo-specific publishing.
+  -->
+  <PropertyGroup Condition="'$(DotNetBuildInnerRepo)' == 'true' and '$(DotNetBuildOrchestrator)' == 'true'">
+    <PushToLocalStorage>true</PushToLocalStorage>
+  </PropertyGroup>
+
   <!-- Allow for repo specific Publish properties such as add additional files to be published -->
   <Import Project="$(RepositoryEngineeringDir)Publishing.props" Condition="Exists('$(RepositoryEngineeringDir)Publishing.props')" />
 
@@ -86,15 +95,17 @@
         <IsShipping>%(PackagesToPublish.IsShipping)</IsShipping>
       </SymbolPackagesToGenerate>
 
-      <!-- Include Symbols.<repo>.tar.gz, if running in inner source-only build -->
-      <UnifiedSymbolsPackage Include="$(ArtifactsPackagesDir)**/Symbols*.tar.gz" IsShipping="false" />
-      <PackagesToPublish Condition="'$(DotNetBuildSourceOnly)' == 'true' and '$(DotNetBuildInnerRepo)' == 'true'" Include="@(UnifiedSymbolsPackage)">
-        <PublishFlatContainer>true</PublishFlatContainer>
-        <RelativeBlobPath>%(Filename)%(Extension)</RelativeBlobPath>
-      </PackagesToPublish>
-
       <!-- If PostBuildSign is true, then we need to include newly generated packages in ItemsToSignPostBuild. -->
       <ItemsToSignPostBuild Include="@(SymbolPackagesToGenerate->'%(Filename)%(Extension)')" Condition="'$(PostBuildSign)' == 'true'" />
+    </ItemGroup>
+
+    <!-- Include Symbols.<repo>.tar.gz, if running in inner source-only build -->
+    <ItemGroup Condition="'$(DotNetBuildSourceOnly)' == 'true' and '$(DotNetBuildInnerRepo)' == 'true'">
+      <UnifiedSymbolsPackage Include="$(ArtifactsNonShippingPackagesDir)Symbols.*.tar.gz" IsShipping="false" />
+      <PackagesToPublish Include="@(UnifiedSymbolsPackage)">
+        <PublishFlatContainer>true</PublishFlatContainer>
+        <RelativeBlobPath>Symbols/%(Filename)%(Extension)</RelativeBlobPath>
+      </PackagesToPublish>
     </ItemGroup>
 
     <!--
@@ -156,11 +167,6 @@
       <PDBsToPublishTempLocation>$(ArtifactsTmpDir)PDBsToPublish/</PDBsToPublishTempLocation>
     </PropertyGroup>
     
-    <!-- In VMR inner-build copy to local storage, do not push to AzDO -->
-    <PropertyGroup Condition="'$(ArcadeInnerBuildFromSource)' == 'true' or '$(DotNetBuildPhase)' == 'InnerRepo'">
-      <PushToLocalStorage>true</PushToLocalStorage>
-    </PropertyGroup>
-
     <!--
       The new Maestro/BAR build model keeps separate Azure DevOps and GitHub build information.
       The GitHub information will be extracted based on the Azure DevOps repository.

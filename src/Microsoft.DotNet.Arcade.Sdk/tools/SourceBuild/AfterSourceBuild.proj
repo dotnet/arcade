@@ -14,7 +14,14 @@
   <Target Name="AfterSourceBuildInnerBuild"
           Condition="('$(ArcadeInnerBuildFromSource)' == 'true' or '$(DotNetBuildInnerRepo)' == 'true') and
                      '$(DotNetBuildOrchestrator)' == 'true'"
-          DependsOnTargets="CreateRepoSymbolsArchive" />
+          DependsOnTargets="CreateRepoSymbolsArchive;ClearPreviousSBRP" />
+
+  <Target Name="ClearPreviousSBRP"
+          Condition="'$(GitHubRepositoryName)' == 'source-build-reference-packages'">
+    <!-- Building SBRP: At this point the References directory contains the previously-source-built SBRPs,
+         clear it before publishing current SBRPs.  This ensures n-1 SBRPs aren't required to build the product repos. -->
+    <RemoveDir Directories="$(ReferencePackageNupkgCacheDir)" />
+  </Target>
 
   <Target Name="AfterSourceBuild"
           Condition="'$(ArcadeInnerBuildFromSource)' != 'true' and '$(DotNetBuildInnerRepo)' != 'true'"

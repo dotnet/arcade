@@ -78,9 +78,7 @@ namespace Microsoft.DotNet.VersionTools.Automation
 
         private static XElement GetSingleElement(XElement el, string name)
         {
-            return el.Descendants()
-                .Where(c => c.Name.LocalName.ToString() == name)
-                .ToArray().First();
+            return el.Descendants().First(c => c.Name.LocalName.ToString() == name);
         }
     }
 }
