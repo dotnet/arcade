@@ -61,7 +61,7 @@ extends:
         os: linux
       ${{ else }}:
         name: NetCore1ESPool-Publishing-Internal
-        image: windows-2022
+        image: windows.vs2022.amd64
         os: windows
     customBuildTags:
     - ES365AIMigrationTooling
