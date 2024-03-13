@@ -17,7 +17,6 @@ stages:
     - group: AzureDevOps-Artifact-Feeds-Pats
     - group: DotNet-MSRC-Storage
     - group: Publish-Build-Assets
-# Default Maestro++ API Endpoint and API Version
     - name: MaestroApiEndPoint
       value: "https://maestro.dot.net"
     - name: MaestroApiAccessToken
