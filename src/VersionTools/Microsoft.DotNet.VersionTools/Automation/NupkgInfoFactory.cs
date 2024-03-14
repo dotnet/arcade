@@ -39,7 +39,6 @@ namespace Microsoft.DotNet.VersionTools.Automation
                 {
                     if (entry.Name.EndsWith(".nuspec"))
                     {
-                        Directory.CreateDirectory(Path.GetDirectoryName(nuspecFile));
                         using Stream nuspecFileStream = entry.Open();
                         PackageIdentity identity = GetIdentity(nuspecFile);
                         return new NupkgInfo(identity);
