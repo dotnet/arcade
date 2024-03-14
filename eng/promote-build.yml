@@ -54,6 +54,11 @@ resources:
 extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
   parameters:
+    sdl:
+     sourceAnalysisPool:
+     name: NetCore1ESPool-Internal # Name of your hosted pool
+     image: 1es-windows-2019  # Name of the image in your pool. If not specified, first image of the pool is used
+     os: windows
     pool:
       ${{ if eq(variables['System.TeamProject'], 'DevDiv') }}:
         name: AzurePipelines-EO
