@@ -57,16 +57,11 @@ extends:
     pool:
       ${{ if eq(variables['System.TeamProject'], 'DevDiv') }}:
         name: AzurePipelines-EO
-        image: 1ESPT-Ubuntu22.04
-        os: linux
+        image: 1ESPT-Windows2019
+        os: windows
       ${{ else }}:
         name: NetCore1ESPool-Publishing-Internal
         image: windows.vs2019.amd64
-        os: windows
-    sdl:
-      sourceAnalysisPool:
-        name: AzurePipelines-EO 
-        image: 1ESPT-Windows2019
         os: windows
     customBuildTags:
     - ES365AIMigrationTooling
