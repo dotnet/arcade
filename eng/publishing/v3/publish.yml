@@ -127,7 +127,41 @@ stages:
       displayName: Publish packages, blobs and symbols
       inputs:
         filePath: $(Build.SourcesDirectory)/eng/common/sdk-task.ps1
-        arguments: -task PublishArtifactsInManifest -restore -msbuildEngine dotnet /p:PublishingInfraVersion=3 /p:BARBuildId=${{ parameters.BARBuildId }} /p:TargetChannels='${{ parameters.PromoteToChannelIds }}' /p:IsInternalBuild=${{ contains(variables['AzDOBranch'], 'internal/') }} /p:NugetPath=$(NuGetExeToolPath) /p:MaestroApiEndpoint='$(MaestroApiEndPoint)' /p:BuildAssetRegistryToken='$(MaestroApiAccessToken)' /p:ManifestsBasePath='$(Build.ArtifactStagingDirectory)/AssetManifests/' /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/' /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts/' /p:PublishInstallersAndChecksums=true /p:AzureDevOpsFeedsKey='$(dn-bot-all-orgs-artifact-feeds-rw)' /p:AkaMSClientId=$(akams-app-id) /p:AkaMSClientSecret=$(akams-app-secret) ${{ parameters.artifactsPublishingAdditionalParameters }} /p:PDBArtifactsBasePath='$(Build.ArtifactStagingDirectory)/PDBArtifacts/' /p:SymbolPublishingExclusionsFile='$(Build.ArtifactStagingDirectory)/ReleaseConfigs/SymbolPublishingExclusionsFile.txt' ${{ parameters.symbolPublishingAdditionalParameters}} /p:MsdlToken=$(microsoft-symbol-server-pat) /p:SymWebToken=$(symweb-symbol-server-pat) /p:BuildQuality='${{ parameters.buildQuality }}' /p:AzdoApiToken='$(dn-bot-all-orgs-build-rw-code-rw)' /p:ArtifactsBasePath='$(Build.ArtifactStagingDirectory)/' /p:BuildId='$(AzDOBuildId)' /p:AzureDevOpsOrg='$(AzDOAccount)' /p:AzureProject='$(AzDOProject)' /p:UseStreamingPublishing='true' /p:StreamingPublishingMaxClients=16 /p:NonStreamingPublishingMaxClients=12 /p:DotNetBuildsPublicUriBase64='$(dotnetbuilds-public-container-uri-base64)' /p:DotNetBuildsPublicChecksumsUriBase64='$(dotnetbuilds-public-container-checksum-uri-base64)' /p:DotNetBuildsInternalUriBase64='$(dotnetbuilds-internal-container-uri-base64)' /p:DotNetBuildsInternalChecksumsUriBase64='$(dotnetbuilds-internal-container-checksum-uri-base64)' /p:DotNetCliMsrcDotNetUriBase64='$(dotnetclimsrc-dotnet-container-uri-base64)' /p:DotNetCliChecksumsMsrcDotNetUriBase64='$(dotnetclichecksumsmsrc-dotnet-container-uri-base64)'
+        arguments: -task PublishArtifactsInManifest 
+        -restore -msbuildEngine dotnet 
+        /p:PublishingInfraVersion=3 
+        /p:BARBuildId=${{ parameters.BARBuildId }} 
+        /p:TargetChannels='${{ parameters.PromoteToChannelIds }}' 
+        /p:IsInternalBuild=${{ contains(variables['AzDOBranch'], 'internal/') }} 
+        /p:NugetPath=$(NuGetExeToolPath) 
+        /p:MaestroApiEndpoint='$(MaestroApiEndPoint)' 
+        /p:BuildAssetRegistryToken='$(MaestroApiAccessToken)' 
+        /p:ManifestsBasePath='$(Build.ArtifactStagingDirectory)/AssetManifests/' 
+        /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/' 
+        /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts/' 
+        /p:PublishInstallersAndChecksums=true 
+        /p:AzureDevOpsFeedsKey='$(dn-bot-all-orgs-artifact-feeds-rw)' 
+        /p:AkaMSClientId=$(akams-app-id) 
+        /p:AkaMSClientSecret=$(akams-app-secret) ${{ parameters.artifactsPublishingAdditionalParameters }} 
+        /p:PDBArtifactsBasePath='$(Build.ArtifactStagingDirectory)/PDBArtifacts/' 
+        /p:SymbolPublishingExclusionsFile='$(Build.ArtifactStagingDirectory)/ReleaseConfigs/SymbolPublishingExclusionsFile.txt' ${{ parameters.symbolPublishingAdditionalParameters}} 
+        /p:MsdlToken=$(microsoft-symbol-server-pat) 
+        /p:SymWebToken=$(symweb-symbol-server-pat) 
+        /p:BuildQuality='${{ parameters.buildQuality }}' 
+        /p:AzdoApiToken='$(dn-bot-all-orgs-build-rw-code-rw)' 
+        /p:ArtifactsBasePath='$(Build.ArtifactStagingDirectory)/' 
+        /p:BuildId='$(AzDOBuildId)' 
+        /p:AzureDevOpsOrg='$(AzDOAccount)' 
+        /p:AzureProject='$(AzDOProject)' 
+        /p:UseStreamingPublishing='true' 
+        /p:StreamingPublishingMaxClients=16 
+        /p:NonStreamingPublishingMaxClients=12 
+        /p:DotNetBuildsPublicUriBase64='$(dotnetbuilds-public-container-uri-base64)' 
+        /p:DotNetBuildsPublicChecksumsUriBase64='$(dotnetbuilds-public-container-checksum-uri-base64)' 
+        /p:DotNetBuildsInternalUriBase64='$(dotnetbuilds-internal-container-uri-base64)' 
+        /p:DotNetBuildsInternalChecksumsUriBase64='$(dotnetbuilds-internal-container-checksum-uri-base64)' 
+        /p:DotNetCliMsrcDotNetUriBase64='$(dotnetclimsrc-dotnet-container-uri-base64)' 
+        /p:DotNetCliChecksumsMsrcDotNetUriBase64='$(dotnetclichecksumsmsrc-dotnet-container-uri-base64)'
     - template: /eng/common/templates-official/steps/publish-logs.yml@self
       parameters:
         StageLabel: '${{ parameters.stageName }}'
