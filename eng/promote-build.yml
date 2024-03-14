@@ -65,9 +65,9 @@ extends:
         os: windows
     sdl:
       sourceAnalysisPool:
-      name: NetCore1ESPool-Internal  
-      image: 1es-windows-2019  
-      os: windows
+        name: NetCore1ESPool-Internal  
+        image: 1es-windows-2019  
+        os: windows
     customBuildTags:
     - ES365AIMigrationTooling
     stages:
