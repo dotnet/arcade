@@ -38,12 +38,3 @@ steps:
       ${{parameters.CustomSensitiveDataList}}
   continueOnError: true
   condition: always()
-      
-- task: PublishBuildArtifacts@1
-  displayName: Publish Logs
-  inputs:
-    PathtoPublish: '$(Build.SourcesDirectory)/PostBuildLogs'
-    PublishLocation: Container
-    ArtifactName: PostBuildLogs
-  continueOnError: true
-  condition: always()
