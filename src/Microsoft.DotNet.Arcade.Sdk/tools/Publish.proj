@@ -24,9 +24,10 @@
 
   <!--
     In VMR inner-build copy to local storage, do not push to AzDO.
+    Inner-repo builds outside of VMR do not use arcade publishing.
     Define this property before importing repo Publishing.props, to have it control any repo-specific publishing.
   -->
-  <PropertyGroup Condition="'$(DotNetBuildInnerRepo)' == 'true' and '$(DotNetBuildOrchestrator)' == 'true'">
+  <PropertyGroup Condition="'$(DotNetBuildPhase)' == 'InnerRepo' and '$(DotNetBuildOrchestrator)' == 'true'">
     <PushToLocalStorage>true</PushToLocalStorage>
   </PropertyGroup>
 
