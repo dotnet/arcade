@@ -64,11 +64,10 @@ extends:
         image: windows.vs2019.amd64
         os: windows
     sdl:
-      ${{ if eq(variables['System.TeamProject'], 'DevDiv') }}:
-        sourceAnalysisPool:
-        name: NetCore1ESPool-Internal # Name of your hosted pool
-        image: 1es-windows-2019  # Name of the image in your pool. If not specified, first image of the pool is used
-        os: windows
+      sourceAnalysisPool:
+      name: NetCore1ESPool-Internal  
+      image: 1es-windows-2019  
+      os: windows
     customBuildTags:
     - ES365AIMigrationTooling
     stages:
