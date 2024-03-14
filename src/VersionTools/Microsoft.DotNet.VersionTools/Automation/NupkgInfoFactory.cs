@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.VersionTools.Automation
                     if (entry.Name.EndsWith(".nuspec"))
                     {
                         using Stream nuspecFileStream = entry.Open();
-                        PackageIdentity identity = GetIdentity(nuspecFile);
+                        PackageIdentity identity = GetIdentity(nuspecFileStream);
                         return new NupkgInfo(identity);
                     }
                 }
