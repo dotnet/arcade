@@ -129,7 +129,7 @@
       <!-- Exclude all existing *.symbols.nupkg in source-only build - we create a unified symbols archive instead. -->
       <ExistingSymbolPackages Remove="@(ExistingSymbolPackages)" Condition="'$(DotNetBuildSourceOnly)' == 'true'"/>
 
-      <ItemsToPushToBlobFeed Include="@(PackagesToPublish);@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)" Exclude="@(ItemsToPushToBlobFeed)">
+      <ItemsToPushToBlobFeed Include="@(PackagesToPublish);@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)" Exclude="@(ItemsToPushToBlobFeed)" />
 
       <ItemsToPushToBlobFeed>
         <ManifestArtifactData Condition="'%(IsShipping)' != 'true'">NonShipping=true</ManifestArtifactData>
