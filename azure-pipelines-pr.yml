@@ -1,0 +1,202 @@
+trigger: none
+
+pr:
+  branches:
+    include:
+    - main
+    - release/6.0
+    - templates
+
+variables:
+- template: eng/common-variables.yml
+
+resources:
+  containers:
+  - container: LinuxContainer
+    image: mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
+
+stages:
+- stage: build
+  displayName: Build
+  jobs:
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      artifacts:
+        publish:
+          artifacts: true
+          logs: true
+          manifests: true
+      enableMicrobuild: true
+      enablePublishUsingPipelines: true
+      enableSourceIndex: true
+      enableSourceBuild: true
+      workspace:
+        clean: all
+      jobs:
+      - job: Windows_NT
+        timeoutInMinutes: 90
+        pool:
+          vmImage: windows-latest
+        strategy:
+          matrix:
+            Build_Release:
+              _BuildConfig: Release
+            Build_Debug:
+              _BuildConfig: Debug
+        preSteps:
+        - checkout: self
+          clean: true
+        steps:
+        - script: eng\common\cibuild.cmd
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            $(_InternalBuildArgs)
+            /p:Test=false
+          displayName: Windows Build / Publish
+
+      - job: Linux
+        container: LinuxContainer
+        pool:
+          vmImage: ubuntu-latest
+        strategy:
+          matrix:
+            Build_Debug:
+              _BuildConfig: Debug
+            Build_Release:
+              _BuildConfig: Release
+        preSteps:
+        - checkout: self
+          clean: true
+        steps:
+        - script: eng/common/cibuild.sh
+            --configuration $(_BuildConfig)
+            --prepareMachine
+            /p:Test=false
+          displayName: Unix Build / Publish
+
+- stage: Test
+  dependsOn: build
+  jobs:
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      artifacts:
+        publish:
+          artifacts:
+            name: Artifacts_Test_$(Agent.OS)_$(_BuildConfig)
+          logs:
+            name: Logs_Test_$(Agent.OS)_$(_BuildConfig)
+        download: true
+      workspace:
+        clean: all
+      jobs:
+      - job: Windows_NT
+        timeoutInMinutes: 90
+        pool:
+          vmimage: windows-latest
+        strategy:
+          matrix:
+            Build_Release:
+              _BuildConfig: Release
+            Build_Debug:
+              _BuildConfig: Debug
+        preSteps:
+        - checkout: self
+          clean: true
+        steps:
+        - task: PowerShell@2
+          displayName: sdk-task verification
+          inputs:
+            filePath: eng\common\sdk-task.ps1
+            arguments: -task PublishToSymbolServers /p:DryRun="true" -restore -msbuildEngine dotnet
+              /p:DotNetSymbolServerTokenMsdl=DryRunPTA
+              /p:DotNetSymbolServerTokenSymWeb=DryRunPTA
+              /p:PDBArtifactsDirectory='$(Build.ArtifactStagingDirectory)/PDBArtifacts/'
+              /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
+              /p:SymbolPublishingExclusionsFile='$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
+              /p:Configuration=Release
+              /p:PublishToMSDL=false
+        - powershell: eng\common\build.ps1
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            -ci
+            -restore
+            -test
+            -warnAsError $false
+            -projects $(Build.SourcesDirectory)\tests\UnitTests.proj
+            /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.binlog
+            /p:RestoreUsingNuGetTargets=false
+          displayName: Run Helix Tests
+          env:
+            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+            HelixAccessToken: ''
+        - powershell: eng\common\build.ps1
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            -ci
+            -restore
+            -test
+            -warnAsError $false
+            -projects $(Build.SourcesDirectory)\tests\XHarness.Android.DeviceTests.proj
+            /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.Device.Tests.binlog
+            /p:RestoreUsingNuGetTargets=false
+          displayName: XHarness Android Helix Testing (Windows)
+          env:
+            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+            HelixAccessToken: ''
+      - job: Linux
+        timeoutInMinutes: 180
+        container: LinuxContainer
+        pool:
+          vmimage: ubuntu-latest
+        strategy:
+          matrix:
+            Build_Debug:
+              _BuildConfig: Debug
+            Build_Release:
+              _BuildConfig: Release
+        preSteps:
+        - checkout: self
+          clean: true
+        steps:
+        - script: eng/common/build.sh
+            --configuration $(_BuildConfig)
+            --prepareMachine
+            --ci
+            --restore
+            --test
+            --warnAsError false
+            --projects $(Build.SourcesDirectory)/tests/UnitTests.proj
+            /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
+            /p:RestoreUsingNuGetTargets=false
+          displayName: Run Helix Tests
+          env:
+            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+            HelixAccessToken: ''
+        - script: eng/common/build.sh
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            -ci
+            -restore
+            -test
+            -warnAsError false
+            -projects $(Build.SourcesDirectory)/tests/XHarness.Apple.DeviceTests.proj
+            /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Apple.Device.Tests.binlog
+            /p:RestoreUsingNuGetTargets=false
+          displayName: XHarness Apple Device Helix Testing
+          env:
+            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+            HelixAccessToken: ''
+        - script: eng/common/build.sh
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            -ci
+            -restore
+            -test
+            -warnAsError false
+            -projects $(Build.SourcesDirectory)/tests/XHarness.Android.SimulatorTests.proj
+            /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Android.Simulator.Tests.binlog
+            /p:RestoreUsingNuGetTargets=false
+          displayName: XHarness Android Helix Testing (Linux)
+          env:
+            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+            HelixAccessToken: ''
