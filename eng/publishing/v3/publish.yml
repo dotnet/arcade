@@ -24,14 +24,6 @@ stages:
     - name: MaestroApiVersion
       value: "2020-02-20"
     - template: /eng/common/templates-official/post-build/common-variables.yml@self
-    templateContext:
-      outputs:
-      - output: pipelineArtifact
-        displayName: 'Publish Logs'
-        condition: always()
-        targetPath: '$(Build.SourcesDirectory)/PostBuildLogs'
-        publishLocation: Container
-        artifactName: PostBuildLogs
     steps:
     - task: PowerShell@2
       displayName: Validate and Locate Build
