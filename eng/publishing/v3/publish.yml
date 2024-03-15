@@ -4,6 +4,7 @@ parameters:
   BARBuildId: ''
   symbolPublishingAdditionalParameters: ''
   buildQuality: 'daily'
+  
 stages:
 - stage: publish
   displayName: Publishing
@@ -24,6 +25,7 @@ stages:
     - name: MaestroApiVersion
       value: "2020-02-20"
     - template: /eng/common/templates-official/post-build/common-variables.yml@self
+
     steps:
     - task: PowerShell@2
       displayName: Validate and Locate Build
@@ -88,6 +90,7 @@ stages:
         MAESTRO_API_TOKEN: $(MaestroApiAccessToken)
         BARBuildId: ${{ parameters.BARBuildId }}
         PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
+
     - task: DownloadBuildArtifacts@0
       displayName: Download Build Assets
       continueOnError: true
@@ -105,15 +108,19 @@ stages:
           PdbArtifacts/**
           ReleaseConfigs/SymbolPublishingExclusionsFile.txt
         downloadPath: '$(Build.ArtifactStagingDirectory)'
+
     - task: NuGetToolInstaller@1
       displayName: 'Install NuGet.exe'
+
     - task: NuGetAuthenticate@1
       displayName: 'Authenticate to AzDO Feeds'
+
     - task: PowerShell@2
       displayName: Enable cross-org publishing
       inputs:
         filePath: $(Build.SourcesDirectory)/eng/common/enable-cross-org-publishing.ps1
         arguments: -token $(dn-bot-all-orgs-artifact-feeds-rw)
+
     - task: PowerShell@2
       displayName: Publish packages, blobs and symbols
       inputs:
@@ -152,6 +159,7 @@ stages:
           /p:DotNetBuildsInternalChecksumsUriBase64='$(dotnetbuilds-internal-container-checksum-uri-base64)' 
           /p:DotNetCliMsrcDotNetUriBase64='$(dotnetclimsrc-dotnet-container-uri-base64)' 
           /p:DotNetCliChecksumsMsrcDotNetUriBase64='$(dotnetclichecksumsmsrc-dotnet-container-uri-base64)'
+
     - template: /eng/common/templates-official/steps/publish-logs.yml@self
       parameters:
         StageLabel: '${{ parameters.stageName }}'
