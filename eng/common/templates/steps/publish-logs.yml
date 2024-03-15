@@ -22,16 +22,16 @@ steps:
   inputs:
     filePath: $(Build.SourcesDirectory)/eng/common/post-build/redact-logs.ps1
     arguments: -InputPath '$(Build.SourcesDirectory)/PostBuildLogs' 
-    -BinlogToolVersion ${{parameters.BinlogToolVersion}} 
-    -TokensFilePath '$(Build.SourcesDirectory)/eng/BinlogSecretsRedactionFile.txt' 
-    '$(publishing-dnceng-devdiv-code-r-build-re)' 
-    '$(MaestroAccessToken)' '
-    $(dn-bot-all-orgs-artifact-feeds-rw)' 
-    '$(akams-client-id)' 
-    '$(akams-client-secret)' 
-    '$(microsoft-symbol-server-pat)' 
-    '$(symweb-symbol-server-pat)' 
-    '$(dn-bot-all-orgs-build-rw-code-rw)'
-     ${{parameters.CustomSensitiveDataList}}
+      -BinlogToolVersion ${{parameters.BinlogToolVersion}} 
+      -TokensFilePath '$(Build.SourcesDirectory)/eng/BinlogSecretsRedactionFile.txt' 
+      '$(publishing-dnceng-devdiv-code-r-build-re)' 
+      '$(MaestroAccessToken)' 
+      '$(dn-bot-all-orgs-artifact-feeds-rw)' 
+      '$(akams-client-id)' 
+      '$(akams-client-secret)' 
+      '$(microsoft-symbol-server-pat)' 
+      '$(symweb-symbol-server-pat)' 
+      '$(dn-bot-all-orgs-build-rw-code-rw)'
+       ${{parameters.CustomSensitiveDataList}}
   continueOnError: true
   condition: always()
