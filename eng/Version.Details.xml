@@ -19,33 +19,33 @@
       <Uri>https://github.com/dotnet/templating</Uri>
       <Sha>f9c0073656bb4cd5a40e5edad65e35b3d0cbaf5a</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="9.0.0-beta.24162.2">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="9.0.0-beta.24164.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>1c8e12b71c28f5dc6626b529b08abefdbb7ca6e8</Sha>
+      <Sha>d8a997bd4a23c6d6fe7c785b3b440be7dd8463e9</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="9.0.0-beta.24162.2">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="9.0.0-beta.24164.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>1c8e12b71c28f5dc6626b529b08abefdbb7ca6e8</Sha>
+      <Sha>d8a997bd4a23c6d6fe7c785b3b440be7dd8463e9</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SignTool" Version="9.0.0-beta.24162.2">
+    <Dependency Name="Microsoft.DotNet.SignTool" Version="9.0.0-beta.24164.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>1c8e12b71c28f5dc6626b529b08abefdbb7ca6e8</Sha>
+      <Sha>d8a997bd4a23c6d6fe7c785b3b440be7dd8463e9</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="9.0.0-beta.24162.2">
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="9.0.0-beta.24164.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>1c8e12b71c28f5dc6626b529b08abefdbb7ca6e8</Sha>
+      <Sha>d8a997bd4a23c6d6fe7c785b3b440be7dd8463e9</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="9.0.0-beta.24162.2">
+    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="9.0.0-beta.24164.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>1c8e12b71c28f5dc6626b529b08abefdbb7ca6e8</Sha>
+      <Sha>d8a997bd4a23c6d6fe7c785b3b440be7dd8463e9</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.24161.3">
+    <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.24163.7">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>d88cdaf3c0fe2dfb47d89eb6fc860597954d6a10</Sha>
+      <Sha>ba165e6aa0bf16decf19e19292107458e12f89c3</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.1.0-beta.24161.3">
+    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.1.0-beta.24163.7">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>d88cdaf3c0fe2dfb47d89eb6fc860597954d6a10</Sha>
+      <Sha>ba165e6aa0bf16decf19e19292107458e12f89c3</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="9.0.0-prerelease.24160.7">
       <Uri>https://github.com/dotnet/xharness</Uri>
@@ -122,10 +122,16 @@
       <Sha>39aef81ec6cffa06da9964b46d4b9e3bf2fc9979</Sha>
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.arcade" Version="9.0.0-beta.24162.2">
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.arcade" Version="9.0.0-beta.24164.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>1c8e12b71c28f5dc6626b529b08abefdbb7ca6e8</Sha>
+      <Sha>d8a997bd4a23c6d6fe7c785b3b440be7dd8463e9</Sha>
       <SourceBuild RepoName="arcade" ManagedOnly="true" />
+    </Dependency>
+    <!-- Intermediate is necessary for source build. -->
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.command-line-api" Version="0.1.512601">
+      <Uri>https://github.com/dotnet/command-line-api</Uri>
+      <Sha>5ea97af07263ea3ef68a18557c8aa3f7e3200bda</Sha>
+      <SourceBuild RepoName="command-line-api" ManagedOnly="true" />
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
     <Dependency Name="Microsoft.SourceBuild.Intermediate.deployment-tools" Version="8.0.0-preview.1.23159.4" CoherentParentDependency="Microsoft.NET.Sdk.WorkloadManifestReader">
@@ -162,9 +168,9 @@
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>2874d26cb343fc55be295a628b3ee474e19ff95e</Sha>
     </Dependency>
-    <Dependency Name="System.CommandLine" Version="2.0.0-beta4.23307.1">
+    <Dependency Name="System.CommandLine" Version="2.0.0-beta4.24126.1">
       <Uri>https://github.com/dotnet/command-line-api</Uri>
-      <Sha>02fe27cd6a9b001c8feb7938e6ef4b3799745759</Sha>
+      <Sha>5ea97af07263ea3ef68a18557c8aa3f7e3200bda</Sha>
     </Dependency>
     <!-- Transitive dependency needed for source build. -->
     <Dependency Name="System.Reflection.Metadata" Version="9.0.0-alpha.1.24059.2">
