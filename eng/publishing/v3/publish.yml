@@ -138,7 +138,7 @@ stages:
           /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/' 
           /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts/' 
           /p:PublishInstallersAndChecksums=true 
-          p:AzureDevOpsFeedsKey='$(dn-bot-all-orgs-artifact-feeds-rw)' 
+          /p:AzureDevOpsFeedsKey='$(dn-bot-all-orgs-artifact-feeds-rw)' 
           /p:AkaMSClientId=$(akams-app-id) 
           /p:AkaMSClientSecret=$(akams-app-secret) ${{ parameters.artifactsPublishingAdditionalParameters }} 
           /p:PDBArtifactsBasePath='$(Build.ArtifactStagingDirectory)/PDBArtifacts/' 
