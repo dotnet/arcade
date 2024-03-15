@@ -128,9 +128,6 @@
         <ManifestArtifactData Condition="'%(IsShipping)' != 'true'">NonShipping=true</ManifestArtifactData>
         <ManifestArtifactData Condition="'%(IsShipping)' == 'true' and '$(ProducesDotNetReleaseShippingAssets)' == 'true'">DotNetReleaseShipping=true</ManifestArtifactData>
       </ItemsToPushToBlobFeed>
-
-      <PackagesToPublish Remove="@(PackagesToPublish)" />
-      <PackagesToPublish Include="@(ItemsToPushToBlobFeed)" />
     </ItemGroup>
     
     <Error Condition="'$(AllowEmptySignPostBuildList)' != 'true' AND '@(ItemsToSignPostBuild)' == ''" 
