@@ -6,21 +6,26 @@ parameters:
   default: 3
   values:
   - 3
+
 - name: BARBuildId
   displayName: "Maestro ID of the build to be promoted:"
   type: number
+
 - name: PromoteToChannelIds
   displayName: Which Maestro channels' IDs should the build be promoted to? (comma separated)
   type: string
   default: ' '
+
 - name: SymbolPublishingAdditionalParameters
   displayName: Additional (MSBuild) properties for symbol publishing
   type: string
   default: ' '
+
 - name: ArtifactsPublishingAdditionalParameters
   displayName: Additional (MSBuild) properties for general asset publishing
   type: string
   default: ' '
+
  # The parameters below here are legacy. They are passed by add-build-to-channel
  # to the build pipeline, and if they are not present in the pipeline, then queueing
  # will fail. Remove once add-build-to-channel has been updated to remove the parameters.
@@ -28,6 +33,7 @@ parameters:
   displayName: Should Sourcelink validation be performed?
   type: boolean
   default: false
+  
 - name: EnableNugetValidation
   displayName: Should NuGet metadata validation be performed?
   type: boolean
@@ -65,7 +71,7 @@ extends:
         name: NetCore1ESPool-Publishing-Internal
         image: windows.vs2019.amd64
         os: windows
-        
+
     stages:
     - template: /eng/publishing/v3/publish.yml@self
       parameters:
