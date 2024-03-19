@@ -8,7 +8,7 @@ Let's start with describing nomenclatures used throughout this document:
 
 For the VMR effort, the goal is to identify and act on the current join points in the .NET SDK product. To support join-points, builds that depend on each other need to run sequentially. This requires declaring the dependent verticals and passing information into the build so that it builds the components that depend on outputs from the other verticals. Such join verticals should only build the components that depend on other verticals to avoid overbuilding and with that producing identical assets that can't be resolved when publishing the VMR artifacts. 
 
-Multiple 
+While the following design supports multiple join point passes, minimizing the number of join points and sequential builds should be preferred.
 
 ### DotNetBuildPass
 
