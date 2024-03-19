@@ -10,7 +10,7 @@ For the VMR effort, the goal is to identify and act on the current join points i
 
 ### DotNetBuildPhase
 
-The `DotNetBuildPhase` (integer) parameter identifies the build phase number in the sequential build order.
+The `DotNetBuildPhase` parameter identifies the build phase number in the sequential build order.
 
 ```mermaid
 graph LR
