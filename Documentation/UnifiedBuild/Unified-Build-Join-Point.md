@@ -94,15 +94,15 @@ The join verticals will declare their dependent verticals and pass the `DotNetBu
 
 ```YML
 # Join vertical with
-#  - `Windows_x64_BuildPhase2` job name
-#  - `win-x64 BuildPhase 2` display name
+#  - `Windows_x64_BuildPass2` job name
+#  - `win-x64 BuildPass 2` display name
 #  - `Windows_x64` and `Windows_x86` job dependencies
 
 - template: ../jobs/vmr-build.yml
   parameters:
     buildName: Windows
     displayName: win-x64
-    buildPhase: 2
+    buildPass: 2
     targetOS: windows
     targetArchitecture: x64
     # Order is important, declare by priority
