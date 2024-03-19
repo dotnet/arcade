@@ -46,8 +46,8 @@ _eng/Build.props_
 <Project>
 
   <!-- Build ComponentA in the join vertical, when DotNetBuildPhase=2 is passed in. -->
-  <ItemGroup Condition="'$(DotNetBuildPhase)' == '2'">
-    <ProjectToBuild Include="src\ComponentA\ComponentA.csproj" />
+  <ItemGroup>
+    <ProjectToBuild Include="src\ComponentA\ComponentA.csproj" DotNetBuildPhase="2" />
   </ItemGroup>
 
 </Project>
