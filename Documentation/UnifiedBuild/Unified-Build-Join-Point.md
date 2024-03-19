@@ -110,4 +110,4 @@ The above YML does the following:
    Asset selection: In case of duplicates (i.e. rid agnostic `System.CommandLine.nupkg` package that gets produced by all verticals), the artifact from the first payload wins.
 3. Invokes the VMR's build script and passes the `DotNetBuildPhase=2` msbuild property in addition to the other parameters in.
 4. The VMR build then traverses all repositories and only builds the join components that are declared to be built in `DotNetBuildPhase=2`.
-5. The VMR publish then only publishes the new components that got produced in that vertical.
+5. The VMR publish then only publishes the new components that got produced in that vertical and the new build manifest.
