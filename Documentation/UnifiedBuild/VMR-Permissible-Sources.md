@@ -8,32 +8,84 @@ This document provides guidelines on the types of source code that are permissib
 
 ### Policy
 
-OSS licensed binaries are allowed in the VMR, but they require explicit inclusion in the VMR.
+OSS licensed binaries are allowed in the VMR, but the inclusion/exclusion status of all binaries that could be included in the VMR must be made explicit. Any binary not explicitly specified is considered "new" and is not allowed in the VMR for all build scenarios. In general, it is preferred to not have binaries in the VMR, but they can be included as long as they are not required to build the source-build product.
 
-This action involves adding the binary or its exclusion pattern to either [`allowed-binaries.txt`](https://github.com/dotnet/dotnet/blob/main/src/installer/src/VirtualMonoRepo/allowed-binaries.txt) or [`disallowed-sb-binaries.txt`](https://github.com/dotnet/dotnet/blob/main/src/installer/src/VirtualMonoRepo/disallowed-sb-binaries.txt). Which file to add the binary or exclusion pattern to depends on whether or not the binary is allowed for source build. For help determining if the newly detected binary is allowed in the source-build context, please contact a member of the source-build team at @dotnet/source-build-internal.
+To allow a binary into the VMR, you must add the binary or its file glob pattern to either [`allowed-sb-binaries.txt`](https://github.com/dotnet/dotnet/blob/main/src/installer/src/VirtualMonoRepo/allowed-sb-binaries.txt) or [`allowed-vmr-binaries.txt`](https://github.com/dotnet/dotnet/blob/main/src/installer/src/VirtualMonoRepo/allowed-vmr-binaries.txt). Which file to add the binary or its pattern to depends on whether or not the binary is allowed for source build. For help determining if the newly detected binary is allowed in the source-build context, please contact a member of the source-build team at [@dotnet/source-build-internal](https://github.com/orgs/dotnet/teams/source-build-internal).
 
-If the binary is allowed for source build, add it to `allowed-binaries.txt`. This binary will not be removed during a source build of the product and it will no longer be considered a new binary in the VMR.
+If the binary is allowed for source-build, add it to `allowed-sb-binaries.txt`. This binary is now allowed in the VMR for source-build and non-source-build scenarios. The binary will not be removed during a build of the source-build product.
 
-If the binary is not allowed for source build, add it to `disallowed-binaries.txt`. This binary will be removed during a source build of the product, but it will not longer be considered a new binary in the VMR.
+If the binary is not allowed for source-build, add it to `allowed-vmr-binaries.txt`. This binary is now allowed in the VMR for non-source-build scenarios and will be removed during a build of the source-build product.
 
-When adding a binary or pattern to either file, remember to include a link to the relevant issue and tag @dotnet/source-build-internal as a reviewer.
+> [!IMPORTANT]  
+> It is best to target a single file or use a specific pattern when adding to either `allowed-sb-binaries.txt` or `allowed-vmr-binaries.txt`. Otherwise, vague patterns may permit binaries into the VMR that were previously undetected. For example, avoid patterns such as `**/test/**` and instead use a more specific patterns like `src/arcade/test/**/*.png`.
 
-### Detection and Removal
+When adding a binary or pattern to either `allowed-sb-binaries.txt` or `allowed-vmr-binaries.txt`, remember to include a link to the relevant issue and tag [@dotnet/source-build-internal](https://github.com/orgs/dotnet/teams/source-build-internal) as a reviewer.
 
-The [BinaryTool](https://github.com/dotnet/dotnet/tree/main/eng/tools/BinaryToolKit) is used to detect and remove binaries in the VMR. You can run the tool locally by running `eng/prep-source-build.sh`.
+### Validation and Cleaning
 
-For detection, the tool identifies binaries not listed in `allowed-binaries.txt` and `disallowed-sb-binaries.txt`. Any binary not listed in these files is considered "new" and requires explicit action as discussed above.
+The [BinaryTool](https://github.com/dotnet/dotnet/tree/main/eng/tools/BinaryToolKit) is used to validate binaries in the VMR and clean binaries from the VMR. You can run the tool locally by running `./eng/run-binary-tooling.sh --validate` or `./eng/run-binary-tooling.sh --clean`.
 
-For removal, the tool identifies binaries not listed in `allowed-binaries.txt`. Any binary not listed in this file is not allowed for source-building and will be removed from the VMR.
+#### Validation
+
+The tool detects "new" binaries by checking if they are listed in either `allowed-vmr-binaries.txt` or `allowed-sb-binaries.txt`. Note that the tool only uses `allowed-vmr-binaries.txt` as a baseline, but `allowed-sb-binaries.txt` is imported at the top of `allowed-vmr-binaries.txt`. This means that all binaries in `allowed-sb-binaries.txt` are also relevent.
+
+To run default validation, execute `eng/run-binary-tooling.sh --validate`.
+
+An example output is as follows:
+
+```
+00:21:03 info: BinaryTool[0] Starting binary tool at 03/19/2024 00:21:03 in Validate mode
+00:21:03 info: BinaryTool[0] Detecting binaries in '/vmr' not listed in '/vmr/eng/allowed-vmr-binaries.txt'...
+00:21:10 info: BinaryTool[0] Finished binary detection.
+00:21:10 dbug: BinaryTool[0] New binaries:
+00:21:10 dbug: BinaryTool[0]     src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/MSG00001.bin
+00:21:10 dbug: BinaryTool[0]     src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/wpf-etwTEMP.BIN
+00:21:10 fail: BinaryTool[0] ERROR: 2 new binaries. Check '/vmr/artifacts/log/binary-report/NewBinaries.txt' for details.
+00:21:10 info: BinaryTool[0] Finished all binary tasks. Took 6.9387884 seconds.
+```
+
+In this example, the tool detected 2 new binaries:
+  - `src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/MSG00001.bin`
+  - `src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/wpf-etwTEMP.BIN`.
+
+If these binaries are permitted for source-build, add the binaries and/or relevent file glob pattern(s), such as `src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/*.bin`, to `allowed-sb-binaries.txt`. Otherwise, add the binaries or relevent file glob pattern(s) to `allowed-vmr-binaries.txt`.
+
+#### Cleaning
+
+The tool cleans binaries from the VMR that are not listed in `allowed-sb-binaries.txt`. Binary cleaning runs automatically as part of `./prep-source-build.sh`.
+
+To run default cleaning, execute `./eng/run-binary-tooling.sh --clean` or `./prep-source-build.sh`. Executing `./prep-source-build.sh` will build the tool using previously source-built artifacts whereas executing `./eng/run-binary-tooling.sh --clean` will build the tool using online resources.
+
+An example output is as follows:
+
+```
+16:42:19 info: BinaryTool[0] Starting binary tool at 3/19/2024 4:42:19 PM in Clean mode
+16:42:19 info: BinaryTool[0] Detecting binaries in '/vmr' not listed in '/vmr/eng/allowed-sb-binaries.txt'...
+16:42:23 info: BinaryTool[0] Finished binary detection.
+16:42:24 info: BinaryTool[0] Removing binaries from '/vmr'...
+16:42:24 dbug: BinaryTool[0]     src/winforms/src/System.Windows.Forms.Design/src/Resources/colordlg.data
+16:42:24 dbug: BinaryTool[0]     src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/MSG00001.bin
+16:42:24 dbug: BinaryTool[0]     src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/wpf-etwTEMP.BIN
+16:42:24 info: BinaryTool[0] Finished binary removal. Removed 3 binaries.
+16:42:24 info: BinaryTool[0] Finished all binary tasks. Took 4.9003778 seconds.
+```
+
+In this example, the tool removed 3 binaries: 
+ - `src/winforms/src/System.Windows.Forms.Design/src/Resources/colordlg.data`
+ - `src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/MSG00001.bin`
+ - `src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/wpf-etwTEMP.BIN`.
+ 
+If you no longer wish for these binaries to be removed, add the binaries and/or relevent file glob pattern(s) to `allowed-sb-binaries.txt`.
 
 ## Licenses
 
 ### Policy
 
-The VMR does not permit code and binaries licensed under non-OSS licenses.
+The VMR does not permit code and binaries licensed under non-OSS licenses. Fedora's approved open-source licenses can be found [on their wiki](https://fedoraproject.org/wiki/Licensing:Main#Good_Licenses), or you can check on the [OSI-approved list of licenses](https://opensource.org/licenses/alphabetical).
 
 When a non-OSS license is detected, the offending code and binaries must be cloaked from the VMR. See [the VMR](./VMR-Design-And-Operation.md#repository-source-mappings) and [source-build documentation](https://github.com/dotnet/source-build/blob/main/Documentation/sourcebuild-in-repos/new-repo.md#cloaking-filtering-the-repository-sources) on cloaking.
 
 ### Detection
 
-Licenses are detected by the [license scan smoke test](https://github.com/dotnet/dotnet/blob/main/test/Microsoft.DotNet.SourceBuild.SmokeTests/LicenseScanTests.cs). This smoke test is run as part of the [source-build license scan pipeline](https://dev.azure.com/dnceng/internal/_build?definitionId=1301&_a=summary). The test detects any license in the VMR that is not listed in [`LicenseExclusions.txt`](https://github.com/dotnet/dotnet/blob/main/test/Microsoft.DotNet.SourceBuild.SmokeTests/assets/LicenseExclusions.txt).
+Licenses are detected by the [license scan test](https://github.com/dotnet/dotnet/blob/main/test/Microsoft.DotNet.SourceBuild.SmokeTests/LicenseScanTests.cs). This test is run as part of the [source-build license scan pipeline](https://dev.azure.com/dnceng/internal/_build?definitionId=1301&_a=summary) (internal Microsoft link). The test detects any license in the VMR that is not part of an exclusion listed in [`LicenseExclusions.txt`](https://github.com/dotnet/dotnet/blob/main/test/Microsoft.DotNet.SourceBuild.SmokeTests/assets/LicenseExclusions.txt).
+
