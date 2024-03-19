@@ -14,8 +14,8 @@ extends:
   template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
   parameters:
     pool:
-      name: AzurePipelines-EO
-      image: 1ESPT-Windows2022
+      name: $(DncEngInternalBuildPool)
+      image: windows.vs2019.amd64
       os: windows
 # Moves code from GitHub into internal repos
     stages:
