@@ -89,3 +89,6 @@ When a non-OSS license is detected, the offending code and binaries must be cloa
 
 Licenses are detected by the [license scan test](https://github.com/dotnet/dotnet/blob/main/test/Microsoft.DotNet.SourceBuild.SmokeTests/LicenseScanTests.cs). This test is run as part of the [source-build license scan pipeline](https://dev.azure.com/dnceng/internal/_build?definitionId=1301&_a=summary) (internal Microsoft link). The test detects any license in the VMR that is not part of an exclusion listed in [`LicenseExclusions.txt`](https://github.com/dotnet/dotnet/blob/main/test/Microsoft.DotNet.SourceBuild.SmokeTests/assets/LicenseExclusions.txt).
 
+Common cases for adding a license to [`LicenseExclusions.txt`](https://github.com/dotnet/dotnet/blob/main/test/Microsoft.DotNet.SourceBuild.SmokeTests/assets/LicenseExclusions.txt) include false positives, licenses related to test data, or needing to get a clean scan result with a relevant backport issue to remove the offending license later.
+
+To have a license be added to the list of exclusions in [`LicenseExclusions.txt`](https://github.com/dotnet/dotnet/blob/main/test/Microsoft.DotNet.SourceBuild.SmokeTests/assets/LicenseExclusions.txt), open a PR, include a link to the relevant issue above the exclusion, and tag [@dotnet/source-build-internal](https://github.com/orgs/dotnet/teams/source-build-internal) as a reviewer.
