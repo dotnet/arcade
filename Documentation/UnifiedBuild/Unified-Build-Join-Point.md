@@ -81,6 +81,9 @@ _src\ComponentA\ComponentA.csproj_
 
 The above example demonstrates how to only build a component in a join vertical that depends on live outputs from other verticals.
 
+> [!NOTE]
+> This requires changing arcade's Build.proj to not look for a solution file or any other project to build when `DotNetBuildPhase>=1` is passed in. This guarantees that nothing gets built by default in a join build.
+
 ### YML
 
 The join verticals will declare their dependent verticals and pass the `DotNetBuildPhase` property in. Example:
