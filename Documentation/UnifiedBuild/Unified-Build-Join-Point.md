@@ -8,14 +8,16 @@ Let's start with describing nomenclatures used throughout this document:
 
 For the VMR effort, the goal is to identify and act on the current join points in the .NET SDK product. To support join-points, builds that depend on each other need to run sequentially. This requires declaring the dependent verticals and passing information into the build so that it builds the components that depend on outputs from the other verticals. Such join verticals should only build the components that depend on other verticals to avoid overbuilding and with that producing identical assets that can't be resolved when publishing the VMR artifacts. 
 
-### DotNetBuildPhase
+Multiple 
 
-The `DotNetBuildPhase` parameter identifies the build phase number in the sequential build order.
+### DotNetBuildPass
+
+The `DotNetBuildPass` parameter identifies the build phase number in the sequential build order.
 
 ```mermaid
 graph LR
 
-subgraph DotNetBuildPhase 1
+subgraph DotNetBuildPass 1
     A[win-x64]
     B[win-x86]
     C[win-arm]
@@ -24,30 +26,32 @@ end
 A --> D
 B --> D
 
-subgraph DotNetBuildPhase 2
+subgraph DotNetBuildPass 2
     D[win-x64]
 end
 ```
 
-In the above example, the `win-x64` build in the `DotNetBuildPhase=2` group builds after `win-x64` and `win-x86` in the `DotNetBuildPhase 1` group:
+In the above example, the `win-x64` build in the `DotNetBuildPass=2` group builds after `win-x64` and `win-x86` in the `DotNetBuildPass 1` group:
 - A: Inputs=`TargetOS=windows, TargetArchitecture=x64`, Dependencies=`none`.
 - B: Inputs=`TargetOS=windows, TargetArchitecture=x86`, Dependencies=`none`.
-- D: Inputs=`TargetOS=windows, TargetArchitecture=x64, DotNetBuildPhase=2`, Dependencies=`A,B`.
+- D: Inputs=`TargetOS=windows, TargetArchitecture=x64, DotNetBuildPass=2`, Dependencies=`A,B`.
 
 > [!NOTE]
-> The default value (`DotNetBuildPhase=1`) doesn't get passed into the build to avoid additional state.
+> The default value (`DotNetBuildPass=1`) doesn't get passed into the build to avoid additional state.
+
+By setting `DotNetBuildPass=final`, the VMR vertical build skips building repositories and performs the final pass which selects artifacts, merges build manifests and publishes the result to the Build Asset Registry.
 
 ### eng/Build.props
-The `eng/Build.props` is an Arcade msbuild extension point to specify the projects to build. To facilitate VMR join verticals, repositories need to specify the components to build when the `DotNetBuildPhase` property is passed in.
+The `eng/Build.props` is an Arcade msbuild extension point to specify the projects to build. To facilitate VMR join verticals, repositories need to specify the components to build when the `DotNetBuildPass` property is passed in.
 If repositories already use an similar mechanism to traverse the repository graph based on inputs, i.e. the `Microsoft.Build.Traversal` msbuild sdk, then that can be used instead. The below example works in all Arcade-ified repositories. 
 
 _eng/Build.props_
 ```xml
 <Project>
 
-  <!-- Build ComponentA in the join vertical, when DotNetBuildPhase=2 is passed in. -->
+  <!-- Build ComponentA in the join vertical, when DotNetBuildPass=2 is passed in. -->
   <ItemGroup>
-    <ProjectToBuild Include="src\ComponentA\ComponentA.csproj" DotNetBuildPhase="2" />
+    <ProjectToBuild Include="src\ComponentA\ComponentA.csproj" DotNetBuildPass="2" />
   </ItemGroup>
 
 </Project>
@@ -58,10 +62,10 @@ _src\ComponentA\ComponentA.csproj_
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <!-- ComponentA doesn't get built unless in the DotNetBuildPhase=2 join vertical.
+    <!-- ComponentA doesn't get built unless in the DotNetBuildPass=2 join vertical.
          This uses Arcade's exclude infrastructure but can be replaced with any condition that feelds
          right in the individual repository. -->
-    <ExcludeFromBuild Condition="'$(DotNetBuildPhase)' != '2'">true</ExcludeFormBuild>
+    <ExcludeFromBuild Condition="'$(DotNetBuildPass)' != '2'">true</ExcludeFormBuild>
     ...
   </PropertyGroup>
 
@@ -82,11 +86,11 @@ _src\ComponentA\ComponentA.csproj_
 The above example demonstrates how to only build a component in a join vertical that depends on live outputs from other verticals.
 
 > [!NOTE]
-> This requires changing arcade's Build.proj to not look for a solution file or any other project to build when `DotNetBuildPhase>=1` is passed in. This guarantees that nothing gets built by default in a join build.
+> This requires changing arcade's Build.proj to not look for a solution file or any other project to build when `DotNetBuildPass>=1` is passed in. This guarantees that nothing gets built by default in a join build.
 
 ### YML
 
-The join verticals will declare their dependent verticals and pass the `DotNetBuildPhase` property in. Example:
+The join verticals will declare their dependent verticals and pass the `DotNetBuildPass` property in. Example:
 
 ```YML
 # Join vertical with
@@ -111,6 +115,6 @@ The above YML does the following:
 1. Downloads the job artifacts from the two depent jobs. The job artifact payload contains the artifacts/packages and artifacts/assets folders.
 2. Places the downloaded folders into the repo's artifacts folder in order of declaration.
    Asset selection: In case of duplicates (i.e. rid agnostic `System.CommandLine.nupkg` package that gets produced by all verticals), the artifact from the first payload wins.
-3. Invokes the VMR's build script and passes the `DotNetBuildPhase=2` msbuild property in addition to the other parameters in.
-4. The VMR build then traverses all repositories and only builds the join components that are declared to be built in `DotNetBuildPhase=2`.
+3. Invokes the VMR's build script and passes the `DotNetBuildPass=2` msbuild property in addition to the other parameters in.
+4. The VMR build then traverses all repositories and only builds the join components that are declared to be built in `DotNetBuildPass=2`.
 5. The VMR publish then only publishes the new components that got produced in that vertical and the new build manifest.
