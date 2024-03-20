@@ -13,11 +13,11 @@
     Optional variables:
       DotNetPublishUsingPipelines       Whether publishing to BAR should be performed or not.
       DotNetFinalVersionKind            Global property that stores the type of the current build: https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Versioning.md#build-kind
-      DotNetOutputBlobFeedDir           Source Build publishing directory
       DotNetSymbolServerTokenMsdl       Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Server-Pats.
       DotNetSymbolServerTokenSymWeb     Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Server-Pats.
       DotNetSymbolExpirationInDays      Symbol expiration time in days (defaults to 10 years).
       SkipPackageChecks                 Skips package safety checks.
+      EnableDefaultPublishItems         Includes all packages under "/artifacts/packages". Defaults to true.
   -->
 
   <Import Project="BuildStep.props" />
@@ -35,9 +35,6 @@
   <Import Project="$(RepositoryEngineeringDir)Publishing.props" Condition="Exists('$(RepositoryEngineeringDir)Publishing.props')" />
 
   <PropertyGroup>
-    <PublishToSourceBuildStorage>false</PublishToSourceBuildStorage>
-    <PublishToSourceBuildStorage Condition="'$(DotNetOutputBlobFeedDir)' != ''">true</PublishToSourceBuildStorage>
-
     <!-- Default publishing target is 3. -->
     <PublishingVersion Condition="'$(PublishingVersion)' == ''">3</PublishingVersion>
     
@@ -64,10 +61,11 @@
     <SymbolPackagesDir>$(ArtifactsTmpDir)SymbolPackages\</SymbolPackagesDir>
 
     <PublishDependsOnTargets Condition="$(PublishToSymbolServer)">$(PublishDependsOnTargets);PublishSymbols</PublishDependsOnTargets>
-    <PublishDependsOnTargets Condition="$(PublishToSourceBuildStorage)">$(PublishDependsOnTargets);PublishToSourceBuildStorage</PublishDependsOnTargets>
     <PublishDependsOnTargets Condition="$(DotNetPublishUsingPipelines)">$(PublishDependsOnTargets);PublishToAzureDevOpsArtifacts</PublishDependsOnTargets>
 
     <PublishDependsOnTargets>BeforePublish;$(PublishDependsOnTargets)</PublishDependsOnTargets>
+
+    <EnableDefaultPublishItems Condition="'$(EnableDefaultPublishItems)' == ''">true</EnableDefaultPublishItems>
   </PropertyGroup>
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets"/>
@@ -77,12 +75,16 @@
           DependsOnTargets="$(PublishDependsOnTargets)" />
 
   <Target Name="BeforePublish">
-    <ItemGroup>
+    <ItemGroup Condition="'$(EnableDefaultPublishItems)' == 'true'">
       <ExistingSymbolPackages Include="$(ArtifactsShippingPackagesDir)**/*.symbols.nupkg" IsShipping="true" />
       <ExistingSymbolPackages Include="$(ArtifactsNonShippingPackagesDir)**/*.symbols.nupkg" IsShipping="false" />
 
       <PackagesToPublish Include="$(ArtifactsShippingPackagesDir)**/*.nupkg" IsShipping="true" />
       <PackagesToPublish Include="$(ArtifactsNonShippingPackagesDir)**/*.nupkg" IsShipping="false" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <!-- Make sure that PackagesToPublish doesn't contain existing symbol packages. --> 
       <PackagesToPublish Remove="@(ExistingSymbolPackages)" />
 
       <!-- Do not generate symbol packages when building from source. The generate package for the source build intermediate
@@ -129,23 +131,11 @@
       <!-- Exclude all existing *.symbols.nupkg in source-only build - we create a unified symbols archive instead. -->
       <ExistingSymbolPackages Remove="@(ExistingSymbolPackages)" Condition="'$(DotNetBuildSourceOnly)' == 'true'"/>
 
-      <ItemsToPushToBlobFeed Include="@(PackagesToPublish);@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)" Exclude="@(ItemsToPushToBlobFeed)">
-        <ManifestArtifactData Condition="'%(IsShipping)' != 'true'">NonShipping=true</ManifestArtifactData>
-        <ManifestArtifactData Condition="'%(IsShipping)' == 'true' and '$(ProducesDotNetReleaseShippingAssets)' == 'true'">DotNetReleaseShipping=true</ManifestArtifactData>
-      </ItemsToPushToBlobFeed>
-
-      <PackagesToPublish Remove="@(PackagesToPublish)" />
-      <PackagesToPublish Include="@(ItemsToPushToBlobFeed)" />
+      <ItemsToPushToBlobFeed Include="@(PackagesToPublish);@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)" Exclude="@(ItemsToPushToBlobFeed)" />
     </ItemGroup>
     
     <Error Condition="'$(AllowEmptySignPostBuildList)' != 'true' AND '@(ItemsToSignPostBuild)' == ''" 
            Text="List of files to sign post-build is empty. Make sure that ItemsToSignPostBuild is configured correctly." />
-  </Target>
-
-  <Target Name="PublishToSourceBuildStorage">
-    <!-- Source Build local storage -->    
-    <Copy SourceFiles="@(PackagesToPublish)" DestinationFolder="$(DotNetOutputBlobFeedDir)packages" />
-    <Copy SourceFiles="@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)" DestinationFolder="$(DotNetOutputBlobFeedDir)assets" />
   </Target>
 
   <Target Name="PublishToAzureDevOpsArtifacts">
@@ -181,6 +171,13 @@
       <ManifestBuildData Include="AzureDevOpsBuildNumber=$(BUILD_BUILDNUMBER)" />
       <ManifestBuildData Include="AzureDevOpsRepository=$(BUILD_REPOSITORY_URI)" />
       <ManifestBuildData Include="AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ItemsToPushToBlobFeed>
+        <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.IsShipping)' != 'true'">NonShipping=true</ManifestArtifactData>
+        <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.IsShipping)' == 'true' and '$(ProducesDotNetReleaseShippingAssets)' == 'true'">DotNetReleaseShipping=true</ManifestArtifactData>
+      </ItemsToPushToBlobFeed>
     </ItemGroup>
 
     <!--
