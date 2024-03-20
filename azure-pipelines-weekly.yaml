@@ -23,12 +23,6 @@ stages:
         inputs:
           useGlobalJson: true
 
-      - task: UseDotNet@2
-        displayName: Install .NET 3.1 runtime
-        inputs:
-          packageType: runtime
-          version: 3.1.x
-
       - script: dotnet tool restore
 
       - task: AzureCLI@2
