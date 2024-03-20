@@ -175,8 +175,8 @@
 
     <ItemGroup>
       <ItemsToPushToBlobFeed>
-        <ManifestArtifactData Condition="'%(IsShipping)' != 'true'">NonShipping=true</ManifestArtifactData>
-        <ManifestArtifactData Condition="'%(IsShipping)' == 'true' and '$(ProducesDotNetReleaseShippingAssets)' == 'true'">DotNetReleaseShipping=true</ManifestArtifactData>
+        <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.IsShipping)' != 'true'">NonShipping=true</ManifestArtifactData>
+        <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.IsShipping)' == 'true' and '$(ProducesDotNetReleaseShippingAssets)' == 'true'">DotNetReleaseShipping=true</ManifestArtifactData>
       </ItemsToPushToBlobFeed>
     </ItemGroup>
 
