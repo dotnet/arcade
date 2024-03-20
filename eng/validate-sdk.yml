@@ -4,7 +4,7 @@ parameters:
   buildConfig: Release
 
 jobs:
-- template: /eng/common/templates/job/job.yml
+- template: /eng/common/templates-official/job/job.yml@self
   parameters:
     name: ValidateArcadeSDK
     displayName: Validate Arcade SDK
