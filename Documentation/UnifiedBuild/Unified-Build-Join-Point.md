@@ -112,7 +112,7 @@ The join verticals will declare their dependent verticals and pass the `DotNetBu
 ```
 
 The above YML does the following:
-1. Downloads the job artifacts from the two depent jobs. The job artifact payload contains the artifacts/packages and artifacts/assets folders.
+1. Downloads the job artifacts from the two dependent jobs. The job artifact payload contains the artifacts/packages and artifacts/assets folders.
 2. Places the downloaded folders into the repo's artifacts folder in order of declaration.
    Asset selection: In case of duplicates (i.e. rid agnostic `System.CommandLine.nupkg` package that gets produced by all verticals), the artifact from the first payload wins.
 3. Invokes the VMR's build script and passes the `DotNetBuildPass=2` msbuild property in addition to the other parameters in.
