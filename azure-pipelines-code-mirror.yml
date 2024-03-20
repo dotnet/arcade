@@ -36,7 +36,7 @@ extends:
               # If it's not devdiv, it's dnceng
               ${{ if ne(variables['System.TeamProject'], 'DevDiv') }}:
                 name: $(DncEngInternalBuildPool)
-                image: 1es-ubuntu-2204-pt
+                image: 1es-mariner-2
                 os: linux
             variables:
             - name: WorkingDirectoryName
