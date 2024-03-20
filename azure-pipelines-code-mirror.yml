@@ -32,12 +32,12 @@ extends:
               ${{ if eq(variables['System.TeamProject'], 'DevDiv') }}:
                 name: AzurePipelines-EO
                 image: 1ESPT-Ubuntu22.04
-                os: ubuntu
+                os: linux
               # If it's not devdiv, it's dnceng
               ${{ if ne(variables['System.TeamProject'], 'DevDiv') }}:
                 name: $(DncEngInternalBuildPool)
-                image: Build.Ubuntu.2204.Amd64
-                os: ubuntu
+                image: 1es-ubuntu-2204-pt
+                os: linux
             variables:
             - name: WorkingDirectoryName
               value: repo-dir
