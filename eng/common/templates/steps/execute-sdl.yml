@@ -63,7 +63,7 @@ steps:
     condition: succeededOrFailed()
 
   - publish: $(Agent.BuildDirectory)/.gdn
-    artifact: GuardianConfiguration
+    artifact: GuardianConfiguration-$(System.JobId)
     displayName: Publish GuardianConfiguration
     condition: succeededOrFailed()
 
