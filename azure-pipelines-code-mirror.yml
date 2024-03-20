@@ -19,7 +19,7 @@ extends:
       os: windows
 # Moves code from GitHub into internal repos
     stages:
-    - stage: stage
+    - stage: Merge_GitHub_to_Azure_DevOps
       jobs:
       - template: /eng/common/templates/jobs/jobs.yml@self
         parameters:
