@@ -23,13 +23,13 @@ When adding a binary or pattern to either `allowed-sb-binaries.txt` or `allowed-
 
 ### Validation and Cleaning
 
-The [BinaryTool](https://github.com/dotnet/dotnet/tree/main/eng/tools/BinaryToolKit) is used to validate binaries in the VMR and clean binaries from the VMR. You can run the tool locally by running `./eng/run-binary-tooling.sh --validate` or `./eng/run-binary-tooling.sh --clean`.
+The [BinaryTool](https://github.com/dotnet/dotnet/tree/main/eng/tools/BinaryToolKit) is used to validate binaries in the VMR and clean binaries from the VMR. You can run the tool locally by running `./eng/detect-binaries.sh`, `./eng/detect-binaries.sh --clean`, or `./prep-source-build/sh`.
 
 #### Validation
 
 The tool detects "new" binaries by checking if they are listed in either `allowed-vmr-binaries.txt` or `allowed-sb-binaries.txt`. Note that the tool only uses `allowed-vmr-binaries.txt` as a baseline, but `allowed-sb-binaries.txt` is imported at the top of `allowed-vmr-binaries.txt`. This means that all binaries in `allowed-sb-binaries.txt` are also relevent.
 
-To run default validation, execute `eng/run-binary-tooling.sh --validate`.
+To run default validation, execute `eng/detect-binaries.sh`.
 
 An example output is as follows:
 
@@ -54,28 +54,26 @@ If these binaries are permitted for source-build, add the binaries and/or releve
 
 The tool cleans binaries from the VMR that are not listed in `allowed-sb-binaries.txt`. Binary cleaning runs automatically as part of `./prep-source-build.sh`.
 
-To run default cleaning, execute `./eng/run-binary-tooling.sh --clean` or `./prep-source-build.sh`. Executing `./prep-source-build.sh` will build the tool using previously source-built artifacts whereas executing `./eng/run-binary-tooling.sh --clean` will build the tool using online resources.
+To run cleaning, execute `./eng/detect-binaries.sh --clean` or `./prep-source-build.sh`. Executing `./prep-source-build.sh` will build the tool using previously source-built artifacts and remove non-source-build allowed binaries from the VMR whereas executing `./eng/detect-binaries.sh --clean` will build the tool using online resources and remove new binaries from the VMR.
 
 An example output is as follows:
 
 ```
 16:42:19 info: BinaryTool[0] Starting binary tool at 3/19/2024 4:42:19 PM in Clean mode
-16:42:19 info: BinaryTool[0] Detecting binaries in '/vmr' not listed in '/vmr/eng/allowed-sb-binaries.txt'...
+16:42:19 info: BinaryTool[0] Detecting binaries in '/vmr' not listed in '/vmr/eng/allowed-vmr-binaries.txt'...
 16:42:23 info: BinaryTool[0] Finished binary detection.
 16:42:24 info: BinaryTool[0] Removing binaries from '/vmr'...
-16:42:24 dbug: BinaryTool[0]     src/winforms/src/System.Windows.Forms.Design/src/Resources/colordlg.data
 16:42:24 dbug: BinaryTool[0]     src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/MSG00001.bin
 16:42:24 dbug: BinaryTool[0]     src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/wpf-etwTEMP.BIN
-16:42:24 info: BinaryTool[0] Finished binary removal. Removed 3 binaries.
+16:42:24 info: BinaryTool[0] Finished binary removal. Removed 2 binaries.
 16:42:24 info: BinaryTool[0] Finished all binary tasks. Took 4.9003778 seconds.
 ```
 
-In this example, the tool removed 3 binaries: 
- - `src/winforms/src/System.Windows.Forms.Design/src/Resources/colordlg.data`
+In this example, the tool removed 2 binaries: 
  - `src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/MSG00001.bin`
  - `src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/wpf-etwTEMP.BIN`.
  
-If you no longer wish for these binaries to be removed, add the binaries and/or relevent file glob pattern(s) to `allowed-sb-binaries.txt`.
+If these binaries are permitted for source-build, add the binaries and/or relevent file glob pattern(s), such as `src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/*.bin`, to `allowed-sb-binaries.txt`. Otherwise, add the binaries or relevent file glob pattern(s) to `allowed-vmr-binaries.txt`.
 
 ## Licenses
 
