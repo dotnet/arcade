@@ -17,14 +17,14 @@
       DotNetSymbolServerTokenSymWeb     Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Server-Pats.
       DotNetSymbolExpirationInDays      Symbol expiration time in days (defaults to 10 years).
       SkipPackageChecks                 Skips package safety checks.
-      EnableDefaultArtifacts            If true, includes packages under "/artifacts/packages/**" for publishing. Defaults to true.
+      EnableDefaultArtifacts            Icludes packages under "/artifacts/packages/**" for publishing. Defaults to true.
     
     Optional items:
       Artifact (with Metadata)          Path to the artifact to publish. Declare the item in Signing.props to sign and publish the artifact.
-        - RelativeBlobPath              The relative blob path when PublishFlatContainer is true.
-        - ChecksumPath                  The destination path to generate a checksum file for the artifact. Make sure to also set the
-                                        `RelativeBlobPathParent` property so that the RelativeBlobPath can be calculated.
-        - PublishFlatContainer          If true, publishes to blob artifacts, otherwise package artifacts.
+        - RelativeBlobPath                The relative blob path when PublishFlatContainer is true.
+        - ChecksumPath                    The destination path to generate a checksum file for the artifact. Make sure to set the `RelativeBlobPathParent`
+                                          property so that the RelativeBlobPath for the generate checksum can be calculated.
+        - PublishFlatContainer            If true, publishes to blob artifacts, otherwise package artifacts.
   -->
 
   <Import Project="BuildStep.props" />
