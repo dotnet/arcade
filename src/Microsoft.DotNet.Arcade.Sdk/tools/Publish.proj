@@ -17,7 +17,7 @@
       DotNetSymbolServerTokenSymWeb     Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Server-Pats.
       DotNetSymbolExpirationInDays      Symbol expiration time in days (defaults to 10 years).
       SkipPackageChecks                 Skips package safety checks.
-      EnableDefaultItems                Includes all packages under "/artifacts/packages" to publish. Defaults to true.
+      EnableDefaultArtifacts            Includes all packages under "/artifacts/packages" to publish. Defaults to true.
   -->
 
   <Import Project="BuildStep.props" />
@@ -75,7 +75,7 @@
           DependsOnTargets="$(PublishDependsOnTargets)" />
 
   <Target Name="BeforePublish">
-    <ItemGroup Condition="'$(EnableDefaultItems)' == 'true'">
+    <ItemGroup Condition="'$(EnableDefaultArtifacts)' == 'true'">
       <ExistingSymbolPackages Include="$(ArtifactsShippingPackagesDir)**/*.symbols.nupkg" IsShipping="true" />
       <ExistingSymbolPackages Include="$(ArtifactsNonShippingPackagesDir)**/*.symbols.nupkg" IsShipping="false" />
 

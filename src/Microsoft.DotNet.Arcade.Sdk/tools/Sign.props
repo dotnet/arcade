@@ -3,7 +3,7 @@
 
   <PropertyGroup>
     <!-- By default, search for sign aritfacts under the list of known directories. -->
-    <EnableDefaultItems>true</EnableDefaultItems>
+    <EnableDefaultArtifacts>true</EnableDefaultArtifacts>
   </PropertyGroup>
 
   <ItemGroup>
@@ -16,7 +16,7 @@
     <CertificatesSignInfo Include="3PartySHA2" DualSigningAllowed="true" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(EnableDefaultItems)' == 'true'">
+  <ItemGroup Condition="'$(EnableDefaultArtifacts)' == 'true'">
     <!-- List of container files that will be opened and checked for files that need to be signed. -->
     <_DefaultItemsToSign Include="$(ArtifactsPackagesDir)**\*.nupkg" />
     <_DefaultItemsToSign Include="$(VisualStudioSetupOutputPath)**\*.vsix" />
