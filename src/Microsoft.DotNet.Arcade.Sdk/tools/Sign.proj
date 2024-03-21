@@ -11,7 +11,7 @@
       - https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Signing.md
   
     Optional variables:
-      EnableDefaultArtifacts            If true, includes *.nupkg, *.vsix and *.wixpack.zip under "/artifacts/packages/**" for sigining.
+      EnableDefaultArtifacts            Includes *.nupkg, *.vsix and *.wixpack.zip under "/artifacts/packages/**" for sigining.
                                         Defaults to true.
     
     Optional items:
