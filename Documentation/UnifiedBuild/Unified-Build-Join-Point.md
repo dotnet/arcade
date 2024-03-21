@@ -46,8 +46,8 @@ In the above example, the `win-x64` build in the `DotNetBuildPass=2` group build
 By setting `DotNetBuildPass=final`, the VMR vertical build skips building repositories and performs the final pass which selects artifacts, merges build manifests and publishes the result to the Build Asset Registry.
 
 Below is a more complex example:
-- Builds six verticals in the first build phase
-- Builds two join verticals in the second build phase. The join vertical starts as soon as the dependent verticals finished.
+- Builds six verticals in the first build pass
+- Builds two join verticals in the second build pass. The join vertical starts as soon as the dependent verticals finished.
 - Builds the final vertical that merges artifacts and publishes to the Build Asset Registry when all other verticals finished.
 
 ```mermaid
@@ -172,4 +172,4 @@ The above YML does the following:
 5. The VMR publish then only publishes the new components that got produced in that vertical and the new build manifest.
 
 > [!NOTE]
-> While join verticals could be grouped into stages per build phase for a better UX in the AzDO pipeline view, that would significantly impact build performance as join verticals would need to wait for all jobs in the previous stage to complete. Therefore, stages won't be utilized.
+> While join verticals could be grouped into stages per build pass for a better UX in the AzDO pipeline view, that would significantly impact build performance as join verticals would need to wait for all jobs in the previous stage to complete. Therefore, stages won't be utilized.
