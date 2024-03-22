@@ -208,10 +208,9 @@
       <ManifestBuildData Include="AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)" />
     </ItemGroup>
 
-    <!-- Respect Artifact item repo extension point for blob items (non packages). -->
+    <!-- Add non-package Artifact items (repo extension point) as package already got added in the BeforePublish target. -->
     <ItemGroup>
-      <ItemsToPushToBlobFeed Include="@(Artifact)"
-                             Condition="'%(Artifact.SkipPublish)' != 'true' and '%(Extension)' != '.nupkg'" />
+      <ItemsToPushToBlobFeed Include="@(Artifact)" Condition="'%(Artifact.SkipPublish)' != 'true' and '%(Extension)' != '.nupkg'" />
     </ItemGroup>
 
     <ItemGroup>
