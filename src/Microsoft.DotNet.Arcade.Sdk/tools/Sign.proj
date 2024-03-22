@@ -1,11 +1,6 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project DefaultTargets="Sign">
 
-  <PropertyGroup>
-    <!-- Disable target framework filtering for top level projects -->
-    <NoTargetFrameworkFiltering>true</NoTargetFrameworkFiltering>
-  </PropertyGroup>
-
   <!--
     Documentation for publishing is available here:
       - https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Signing.md
@@ -23,6 +18,11 @@
         - IsShipping                      Set to true to mark a package as shipping when publishing to package artifacts. Defaults to false.
         - SkipPublish                     If true, skips publishing the artifact.
   -->
+
+  <PropertyGroup>
+    <!-- Disable target framework filtering for top level projects -->
+    <NoTargetFrameworkFiltering>true</NoTargetFrameworkFiltering>
+  </PropertyGroup>
 
   <Import Project="BuildStep.props" />
 
