@@ -171,5 +171,6 @@ The above YML does the following:
 4. The VMR build then traverses all repositories and only builds the join components that are declared to be built in `DotNetBuildPass=2`.
 5. The VMR publish then only publishes the new components that got produced in that vertical and the new build manifest.
 
-> [!NOTE]
-> While join verticals could be grouped into stages per build pass for a better UX in the AzDO pipeline view, that would significantly impact build performance as join verticals would need to wait for all jobs in the previous stage to complete. Therefore, stages won't be utilized.
+While join verticals could be grouped into stages per build pass for a better UX in the AzDO pipeline view, that would significantly impact build performance as join verticals would need to wait for all jobs in the previous stage to complete. Therefore, stages won't be utilized.
+
+Step one above downloads the job artifacts payload from each dependent job which contains the packages and assets folders. While not all artifacts might be needed by the join vertical, it's easier to just download the entire archive than hardcoding the assets to use in YML. This strategy could be revisited in the future if it significantly impacts the overall build times.
