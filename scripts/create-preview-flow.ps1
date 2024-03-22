@@ -88,8 +88,6 @@ MakeDefaultChannel https://github.com/dotnet/runtime $RuntimeBranch $RuntimeChan
 MakeDefaultChannel https://github.com/dotnet/windowsdesktop $RuntimeBranch $RuntimeChannel
 MakeDefaultChannel https://github.com/dotnet/wpf $RuntimeBranch $RuntimeChannel
 MakeDefaultChannel https://github.com/dotnet/winforms $RuntimeBranch $RuntimeChannel
-## TODO Remove when https://github.com/dotnet/sdk/pull/38857 gets merged
-MakeDefaultChannel https://github.com/dotnet/format $RuntimeBranch $RuntimeChannel
 
 if ($AddInternalFlow) {
     # Because of where internal fixes tend to be, we eliminate some leaves in the graph
@@ -153,8 +151,6 @@ AddFlow https://github.com/dotnet/icu $RuntimeChannel https://github.com/dotnet/
 AddBatchedFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dotnet/aspnetcore $RuntimeBranch EveryBuild
 AddFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dotnet/efcore $RuntimeBranch EveryBuild
 AddFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dotnet/winforms $RuntimeBranch EveryBuild
-## TODO Remove when https://github.com/dotnet/sdk/pull/38857 gets merged
-AddFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dotnet/format $RuntimeBranch EveryBuild
 AddFlow https://github.com/dotnet/winforms $RuntimeChannel https://github.com/dotnet/wpf $RuntimeBranch EveryBuild
 AddFlow https://github.com/dotnet/wpf $RuntimeChannel https://github.com/dotnet/windowsdesktop $RuntimeBranch EveryBuild
 
@@ -175,8 +171,6 @@ Write-Host "Add runtime->sdk flow"
 AddFlow https://github.com/dotnet/aspnetcore $RuntimeChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
 AddFlow https://github.com/dotnet/windowsdesktop $RuntimeChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
 AddFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
-## TODO Remove when https://github.com/dotnet/sdk/pull/38857 gets merged
-AddFlow https://github.com/dotnet/format $RuntimeChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
 AddFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dotnet/templating $SdkBranch EveryBuild
 
 if ($AddInternalFlow) {
