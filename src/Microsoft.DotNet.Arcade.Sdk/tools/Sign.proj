@@ -15,7 +15,7 @@
                                           property if the RelativeBlobPath for the generate checksum should be automatically set.
         - PublishFlatContainer            By default artifacts are published to blob artifacts. Set to false to publish to package artifacts.
         - RelativeBlobPath                The relative blob path when publishing to blob artifacts.
-        - IsShipping                      Set to true to mark a package as shipping when publishing to package artifacts. Defaults to false.
+        - IsShipping                      Set to false to mark the artifact as non-shipping. Defaults to true.
         - SkipPublish                     If true, skips publishing the artifact.
   -->
 
