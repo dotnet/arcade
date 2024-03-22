@@ -28,12 +28,6 @@
     <NoTargetFrameworkFiltering>true</NoTargetFrameworkFiltering>
   </PropertyGroup>
 
-  <ItemDefinitionGroup>
-    <Artifact>
-      <PublishFlatContainer>true</PublishFlatContainer>
-    </Artifact>
-  </ItemDefintionGroup>
-
   <Import Project="BuildStep.props" />
 
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GenerateChecksums" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
