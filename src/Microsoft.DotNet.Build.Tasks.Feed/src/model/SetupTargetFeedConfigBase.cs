@@ -28,7 +28,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             bool isStableBuild,
             string repositoryName,
             string commitSha,
-            string azureStorageTargetFeedPAT,
             bool publishInstallersAndChecksums,
             string installersTargetStaticFeed,
             string installersAzureAccountKey,
@@ -44,7 +43,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             IsStableBuild = isStableBuild;
             RepositoryName = repositoryName;
             CommitSha = commitSha;
-            AzureStorageTargetFeedPAT = azureStorageTargetFeedPAT;
             PublishInstallersAndChecksums = publishInstallersAndChecksums;
             InstallersTargetStaticFeed = installersTargetStaticFeed;
             InstallersAzureAccountKey = installersAzureAccountKey;
