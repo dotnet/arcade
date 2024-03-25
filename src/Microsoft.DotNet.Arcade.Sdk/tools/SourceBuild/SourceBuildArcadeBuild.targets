@@ -94,11 +94,12 @@
   </Target>
 
   <!--
-    Copy the src to a new location to build from. Source-build targets will change the source dynamically.
-    Creating a fresh copy avoids overwriting existing work or making subtle changes that might
-    accidentally get added to the user's existing work via a 'git add .'.
+    PrepareInnerSourceBuildRepoRoot copies the source to the inner repo.  Source-build
+    targets will change the source dynamically. Creating a fresh copy avoids overwriting
+    existing work or making subtle changes that might accidentally get added to the user's
+    existing work via a 'git add .'. Repos take a dependency on PrepareInnerSourceBuildRepoRoot.
   -->
-  <Target Name="CopyInnerSourceBuildRepoRoot" Condition="'$(UseInnerClone)' == 'true'">
+  <Target Name="PrepareInnerSourceBuildRepoRoot" Condition="'$(UseInnerClone)' == 'true'">
     <ItemGroup>
       <SourceBuildFilesToCopy Include="$(RepoRoot)/**/*" />
       <SourceBuildFilesToCopy Include="$(RepoRoot)/**/.*" />
@@ -112,7 +113,7 @@
   </Target>
 
   <Target Name="RunInnerSourceBuildCommand"
-          DependsOnTargets="CopyInnerSourceBuildRepoRoot">
+          DependsOnTargets="PrepareInnerSourceBuildRepoRoot">
     <PropertyGroup>
       <!-- Prevent any projects from building in the outside build: they would use prebuilts. -->
       <PreventPrebuiltBuild>true</PreventPrebuiltBuild>
