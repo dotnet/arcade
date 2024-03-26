@@ -1,5 +1,10 @@
-trigger: none
-
+trigger:
+  batch: true
+  branches:
+    include:
+    - main
+    - release/6.0
+    
 pr:
   branches:
     include:
