@@ -10,6 +10,8 @@
   Optional parameters:
     Configuration                   Build configuration: "Debug", "Release", etc.
 
+    DotNetBuildPass                 The build pass number. Set to a number other than '1' when performing a join build.
+                                    This makes ProjectToBuild items only be built when the `DotNetBuildPass` metadata matches.
     DotNetBuildRepo                 Build the repo as part of the entire .NET stack.
     DotNetBuildInnerRepo            Build the repo as part of the entire .NET stack. This switch is used on the inner repo invocation and should not be passed by the user.
     DotNetBuildOrchestrator         Build the entire .NET stack.
@@ -58,27 +60,35 @@
   <Import Project="$(RepositoryEngineeringDir)Build.props" Condition="Exists('$(RepositoryEngineeringDir)Build.props')" />
 
   <PropertyGroup>
-    <_ProjectsPropertyWasUpdatedInBuildProps Condition="'$(_OriginalProjectsValue)' != '$(Projects)'">true</_ProjectsPropertyWasUpdatedInBuildProps>
+    <_DotNetBuildPassSet Condition="'$(DotNetBuildPass)' != '' and '$(DotNetBuildPass)' != '1'">true</_DotNetBuildPassSet>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(Projects)' != ''">
-    <!-- Copy the original list so we can log diagnostics later. -->
-    <_OriginalProjectToBuild Include="@(ProjectToBuild)" />
     <!-- Setting 'Projects' overrides the ProjectToBuild list. -->
     <ProjectToBuild Remove="@(ProjectToBuild)" />
     <ProjectToBuild Include="$(Projects)" />
   </ItemGroup>
 
-  <!--
-    Default values.
-  -->
   <!-- If Projects is unspecified and ProjectToBuild was not set via Build.props, fallback to building .sln files in the repo root. -->
   <ItemGroup Condition="'@(ProjectToBuild)' == ''">
-    <ProjectToBuild Include="$(RepoRoot)*.sln" />
+    <!-- Don't glob and build solution files from the repo root by default when DotNetBuildPass is set to a value other than 1. -->
+    <EnableDefaultSolutionItems Condition="'$(EnableDefaultSolutionItems)' == '' and '$(_DotNetBuildPassSet)' == 'true'">false</EnableDefaultSolutionItems>
+    <EnableDefaultSolutionItems Condition="'$(EnableDefaultSolutionItems)' == ''">true</EnableDefaultSolutionItems>
+    <ProjectToBuild Include="$(RepoRoot)*.sln" Condition="'$(EnableDefaultSolutionItems)' == 'true'" />
   </ItemGroup>
 
-  <Target Name="Execute">
-    <Error Text="No projects were found to build. Either the 'Projects' property or 'ProjectToBuild' item group must be specified." Condition="'@(ProjectToBuild)' == ''"/>
+  <!-- Only build the projects for the passed in build pass numer in when DotNetBuildPass is set to a value other than 1. -->
+  <ItemGroup Condition="'@(ProjectToBuild)' != '' and '$(_DotNetBuildPassSet)' == 'true'">
+    <_ProjectToBuildKeep Include="@(ProjectToBuild->WithMetadataValue('DotNetBuildPass', '$(DotNetBuildPass)'))" />
+    <_ProjectToBuildRemove Include="@(ProjectToBuild)" Exclude="@(_ProjectToBuildKeep)" />
+    <ProjectToBuild Remove="@(_ProjectToBuildRemove)" />
+  </ItemGroup>
+
+  <!-- Skip execution when DotNetBuildPass is set and ProjectToBuild is empty.
+       This can happen whenever a repository gets built as part of a VMR join vertical but already built
+       all components in the non-join build. -->
+  <Target Name="Execute"
+          Condition="'$(_DotNetBuildPassSet)' != 'true' or '@(ProjectToBuild)' != ''">
     <Error Text="Property 'RepoRoot' must be specified" Condition="'$(RepoRoot)' == ''"/>
     <Error Text="File 'global.json' must exist in directory specified by RepoRoot: '$(RepoRoot)'" Condition="'$(RepoRoot)' != '' and !Exists('$(RepoRoot)global.json')"/>
 
@@ -109,6 +119,9 @@
       <_SolutionBuildTargets Include="IntegrationTest" Condition="'$(IntegrationTest)' == 'true'" />
       <_SolutionBuildTargets Include="PerformanceTest" Condition="'$(PerformanceTest)' == 'true'" />
     </ItemGroup>
+
+    <Error Text="No projects were found to build. Either the 'Projects' property or 'ProjectToBuild' item group must be specified."
+           Condition="'@(ProjectToBuild)' == '' and '@(_SolutionBuildTargets)' != '' and '$(SkipProjectToBuildError)' != 'true'"/>
 
     <PropertyGroup>
       <_RemoveProps>Projects;Restore;Deploy;Sign;Publish;NETCORE_ENGINEERING_TELEMETRY;@(_SolutionBuildTargets)</_RemoveProps>
@@ -177,9 +190,7 @@
       <_SolutionBuildProps Include="__ImportPackTargets=true" Condition="'$(Pack)' == 'true'" />
     </ItemGroup>
 
-    <!--
-      Restore built-in tools.
-    -->
+    <!-- Restore built-in tools -->
     <MSBuild Projects="Tools.proj"
              Targets="Restore"
              Properties="@(_RestoreToolsProps);_NETCORE_ENGINEERING_TELEMETRY=Restore"
@@ -226,7 +237,7 @@
              Targets="_IsProjectRestoreSupported"
              SkipNonexistentTargets="true"
              BuildInParallel="true"
-             Condition="'$(RestoreUsingNuGetTargets)' != 'false' and '%(ProjectToBuild.Extension)' != '.sln' and '%(ProjectToBuild.Extension)' != '.slnf' and '$(RestoreUseStaticGraphEvaluation)' != 'true' and '$(Restore)' == 'true'">
+             Condition="'$(RestoreUsingNuGetTargets)' != 'false' and '@(ProjectToBuild)' != '' and '%(ProjectToBuild.Extension)' != '.sln' and '%(ProjectToBuild.Extension)' != '.slnf' and '$(RestoreUseStaticGraphEvaluation)' != 'true' and '$(Restore)' == 'true'">
 
       <Output TaskParameter="TargetOutputs" ItemName="_ProjectToRestoreWithNuGet" />
     </MSBuild>
@@ -259,26 +270,22 @@
              Targets="Restore"
              SkipNonexistentTargets="true"
              BuildInParallel="%(_ProjectToRestore.RestoreInParallel)"
-             Condition="'$(Restore)' == 'true'"/>
+             Condition="'$(Restore)' == 'true' and '@(_ProjectToRestore)' != ''" />
 
-    <!--
-      Build solution.
-    -->
+    <!-- Build ProjectToBuild items -->
     <MSBuild Projects="@(ProjectToBuild)"
              Properties="@(_SolutionBuildProps);__BuildPhase=SolutionBuild;_NETCORE_ENGINEERING_TELEMETRY=Build"
              RemoveProperties="$(_RemoveProps)"
              Targets="@(_SolutionBuildTargets)"
              BuildInParallel="%(ProjectToBuild.BuildInParallel)"
-             Condition="'@(_SolutionBuildTargets)' != ''" />
+             Condition="'@(_SolutionBuildTargets)' != '' and '@(ProjectToBuild)' != ''" />
 
     <MSBuild Projects="AfterSolutionBuild.proj"
              Properties="@(_CommonProps);_NETCORE_ENGINEERING_TELEMETRY=Build"
              Targets="@(_SolutionBuildTargets)"
              Condition="'@(_SolutionBuildTargets)' != ''" />
 
-    <!--
-      Sign artifacts.
-    -->
+    <!-- Sign artifacts -->
     <MSBuild Projects="Sign.proj"
              Properties="@(_CommonProps)"
              Targets="Sign"
@@ -297,30 +304,25 @@
              Properties="@(_CommonProps);_NETCORE_ENGINEERING_TELEMETRY=AfterSourceBuild"
              Condition="'$(ArcadeBuildFromSource)' == 'true' or '$(DotNetBuildRepo)' == 'true'"/>
 
-    <!--
-      Publish artifacts. This should run in the following situations:
-      - Regular single repo builds
-        - When running in the outer build phase of a source-only repo build, to properly publish the source-build intermediate nupkg.
-      - VMR builds
-        - When running in the inner build phase
-
-      It shouldn't run:
-      - In an inner build if running from single repo build.
-      - In an outer build if running from the full product build.
-    -->
-
-    <PropertyGroup>
+    <!-- Publish artifacts -->
+    <PropertyGroup Condition="'$(Publish)' == 'true'">
       <_VmrBuild Condition="'$(DotNetBuildFromSourceFlavor)' == 'Product' or '$(DotNetBuildOrchestrator)' == 'true'">true</_VmrBuild>
+
+      <_OuterRepoBuild Condition="'$(ArcadeInnerBuildFromSource)' != 'true' and '$(DotNetBuildPhase)' != 'InnerRepo'">true</_OuterRepoBuild>
       <_InnerRepoBuild Condition="'$(ArcadeInnerBuildFromSource)' == 'true' or '$(DotNetBuildPhase)' == 'InnerRepo'">true</_InnerRepoBuild>
-      <_ShouldRunPublish Condition="'$(_InnerRepoBuild)' == 'true' and '$(_VmrBuild)' == 'true'">true</_ShouldRunPublish>
-      <_ShouldRunPublish Condition="'$(_InnerRepoBuild)' != 'true' and '$(_VmrBuild)' != 'true'">true</_ShouldRunPublish>
+
+      <!-- Don't publish inside the VMR in the outer repo build. -->
+      <_ShouldRunPublish Condition="'$(_VmrBuild)' == 'true' and '$(_OuterRepoBuild)' == 'true'">false</_ShouldRunPublish>
+      <!-- Don't publish outside of the VRM in an inner build (source-only). -->
+      <_ShouldRunPublish Condition="'$(_VmrBuild)' != 'true' and '$(_InnerRepoBuild)' == 'true'">false</_ShouldRunPublish>
+      <!-- Otherwise, publish -->
+      <_ShouldRunPublish Condition="'$(_ShouldRunPublish)' == ''">true</_ShouldRunPublish>
     </PropertyGroup>
 
-      <!-- Make sure we always publish in VMR build - working around runtime repo which sets Publish to false. -->
     <MSBuild Projects="Publish.proj"
              Properties="@(_PublishProps);_NETCORE_ENGINEERING_TELEMETRY=Publish"
              Targets="Publish"
-             Condition="'$(Publish)' == 'true' and '$(_ShouldRunPublish)' == 'true'"/>
+             Condition="'$(_ShouldRunPublish)' == 'true'"/>
   </Target>
 
 </Project>

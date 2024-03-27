@@ -19,15 +19,21 @@
 
     <_DirSeparatorEscapedCharForExecArg Condition="'$(OS)' == 'Windows_NT'">\</_DirSeparatorEscapedCharForExecArg>
     <_DirSeparatorEscapedCharForExecArg Condition="'$(OS)' != 'Windows_NT'" />
+
+    <RunInnerSourceBuildCommand Condition="('$(ArcadeBuildFromSource)' == 'true' and
+                                            '$(ArcadeInnerBuildFromSource)' != 'true')
+                                           or '$(DotNetBuildPhase)' == 'Repo'">true</RunInnerSourceBuildCommand>
+    <SkipProjectToBuildError Condition="'$(RunInnerSourceBuildCommand)' == 'true'">true</SkipProjectToBuildError>
   </PropertyGroup>
 
+  <!-- Prevent projects from building in the outer build: they would use prebuilts. -->
+  <ItemGroup Condition="'$(RunInnerSourceBuildCommand)' == 'true'">
+    <ProjectToBuild Remove="@(ProjectToBuild)" />
+  </ItemGroup>
+
   <Target Name="ExecuteWithSourceBuiltTooling"
-          DependsOnTargets="
-            GetSourceBuildCommandConfiguration;
-            RunInnerSourceBuildCommand"
-          Condition="
-            ('$(ArcadeBuildFromSource)' == 'true' and '$(ArcadeInnerBuildFromSource)' != 'true') or 
-            '$(DotNetBuildPhase)' == 'Repo'"
+          DependsOnTargets="GetSourceBuildCommandConfiguration;RunInnerSourceBuildCommand"
+          Condition="'$(RunInnerSourceBuildCommand)' == 'true'"
           BeforeTargets="Execute" />
 
   <!--
@@ -114,9 +120,6 @@
   <Target Name="RunInnerSourceBuildCommand"
           DependsOnTargets="PrepareInnerSourceBuildRepoRoot">
     <PropertyGroup>
-      <!-- Prevent any projects from building in the outside build: they would use prebuilts. -->
-      <PreventPrebuiltBuild>true</PreventPrebuiltBuild>
-
       <!--
         Normally, the inner build should run using the original build command with some extra args
         appended. Allow the repo to override this default behavior if the repo is e.g. not onboarded
@@ -130,16 +133,6 @@
       WorkingDirectory="$(InnerSourceBuildRepoRoot)"
       IgnoreStandardErrorWarningFormat="true"
       EnvironmentVariables="@(InnerBuildEnv)" />
-  </Target>
-
-  <Target Name="PreventPrebuiltBuild"
-          DependsOnTargets="ExecuteWithSourceBuiltTooling"
-          Condition="'$(PreventPrebuiltBuild)' == 'true'"
-          BeforeTargets="Execute">
-    <ItemGroup>
-      <ProjectToBuild Remove="@(ProjectToBuild)" />
-      <ProjectToBuild Include="$(MSBuildThisFileDirectory)Noop.proj" />
-    </ItemGroup>
   </Target>
 
 </Project>
