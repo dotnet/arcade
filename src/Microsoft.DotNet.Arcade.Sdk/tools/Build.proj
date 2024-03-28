@@ -306,10 +306,15 @@
 
     <!-- Publish artifacts -->
     <PropertyGroup Condition="'$(Publish)' == 'true'">
+      <_VmrBuild Condition="'$(DotNetBuildFromSourceFlavor)' == 'Product' or '$(DotNetBuildOrchestrator)' == 'true'">true</_VmrBuild>
+
+      <_OuterRepoBuild Condition="'$(ArcadeInnerBuildFromSource)' != 'true' and '$(DotNetBuildPhase)' != 'InnerRepo'">true</_OuterRepoBuild>
+      <_InnerRepoBuild Condition="'$(ArcadeInnerBuildFromSource)' == 'true' or '$(DotNetBuildPhase)' == 'InnerRepo'">true</_InnerRepoBuild>
+
       <!-- Don't publish inside the VMR in the outer repo build. -->
-      <_ShouldRunPublish Condition="'$(DotNetBuildOrchestrator)' == 'true' and '$(DotNetBuildPhase)' == 'Repo'">false</_ShouldRunPublish>
+      <_ShouldRunPublish Condition="'$(_VmrBuild)' == 'true' and '$(_OuterRepoBuild)' == 'true'">false</_ShouldRunPublish>
       <!-- Don't publish outside of the VRM in an inner build (source-only). -->
-      <_ShouldRunPublish Condition="'$(DotNetBuildOrchestrator)' != 'true' and '$(DotNetBuildPhase)' == 'InnerRepo'">false</_ShouldRunPublish>
+      <_ShouldRunPublish Condition="'$(_VmrBuild)' != 'true' and '$(_InnerRepoBuild)' == 'true'">false</_ShouldRunPublish>
       <!-- Otherwise, publish -->
       <_ShouldRunPublish Condition="'$(_ShouldRunPublish)' == ''">true</_ShouldRunPublish>
     </PropertyGroup>
