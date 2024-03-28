@@ -15,9 +15,9 @@
     <MicrosoftSignedWixVersion>3.14.0-8606.20240208.1</MicrosoftSignedWixVersion>
     <!-- Overwrite XUnitVersion/XUnitAnalyzersVersion/XUnitAnalyzersVersion that comes from the Arcade SDK to be in sync as Arcade doesn't use a live Arcade SDK.
          Keep in sync with DefaultVersions.props. -->
-    <XUnitVersion>2.6.7-pre.5</XUnitVersion>
-    <XUnitAnalyzersVersion>1.10.0</XUnitAnalyzersVersion>
-    <XUnitRunnerVisualStudioVersion>2.5.7-pre.8</XUnitRunnerVisualStudioVersion>
+    <XUnitVersion>2.7.0</XUnitVersion>
+    <XUnitAnalyzersVersion>1.11.0</XUnitAnalyzersVersion>
+    <XUnitRunnerVisualStudioVersion>2.5.7</XUnitRunnerVisualStudioVersion>
   </PropertyGroup>
 
   <ItemGroup>
