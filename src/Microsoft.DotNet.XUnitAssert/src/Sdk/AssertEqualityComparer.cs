@@ -232,6 +232,12 @@ namespace Xunit.Sdk
 				return CollectionTracker.AreCollectionsEqual(xTracker, yTracker, InnerComparer, InnerComparer == DefaultInnerComparer, out mismatchedIndex);
 #endif
 
+#if !XUNIT_FRAMEWORK
+			// Special case collections (before IStructuralEquatable because arrays implement that in a way we don't want to call)
+			if (xTracker != null && yTracker != null)
+				return CollectionTracker.AreCollectionsEqual(xTracker, yTracker, InnerComparer, InnerComparer == DefaultInnerComparer, out mismatchedIndex);
+#endif
+
 			// Implements IStructuralEquatable?
 			var structuralEquatable = x as IStructuralEquatable;
 			if (structuralEquatable != null && structuralEquatable.Equals(y, new TypeErasedEqualityComparer(innerComparer.Value)))
