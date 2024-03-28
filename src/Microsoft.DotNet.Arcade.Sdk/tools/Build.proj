@@ -54,7 +54,7 @@
   <Import Project="RepoDefaults.props"/>
   <Import Project="RepoLayout.props"/>
 
-  <Import Project="SourceBuild/SourceBuildArcadeBuild.targets" Condition="'$(ArcadeBuildFromSource)' == 'true' or '$(DotNetBuildRepo)' == 'true'" />
+  <Import Project="SourceBuild/SourceBuildArcadeBuild.targets" Condition="'$(DotNetBuildRepo)' == 'true'" />
 
   <!-- Allow for repo specific Build properties such as the list of Projects to build -->
   <Import Project="$(RepositoryEngineeringDir)Build.props" Condition="Exists('$(RepositoryEngineeringDir)Build.props')" />
