@@ -77,7 +77,7 @@
     <ProjectToBuild Include="$(RepoRoot)*.sln" Condition="'$(EnableDefaultSolutionItems)' == 'true'" />
   </ItemGroup>
 
-  <!-- Only build the projects for the passed in build pass numer in when DotNetBuildPass is set to a value other than 1. -->
+  <!-- Only build the projects for the passed in build pass number in when DotNetBuildPass is set to a value other than 1. -->
   <ItemGroup Condition="'@(ProjectToBuild)' != '' and '$(_DotNetBuildPassSet)' == 'true'">
     <_ProjectToBuildKeep Include="@(ProjectToBuild->WithMetadataValue('DotNetBuildPass', '$(DotNetBuildPass)'))" />
     <_ProjectToBuildRemove Include="@(ProjectToBuild)" Exclude="@(_ProjectToBuildKeep)" />
