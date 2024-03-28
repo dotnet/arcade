@@ -312,7 +312,7 @@
       <_InnerRepoBuild Condition="'$(ArcadeInnerBuildFromSource)' == 'true' or '$(DotNetBuildPhase)' == 'InnerRepo'">true</_InnerRepoBuild>
 
       <!-- Don't publish inside the VMR in the outer repo build. -->
-      <_ShouldRunPublish Condition="'$(_VmrBuild)' == 'true' and '$(_OuterRepoBuild)' == 'true'">false</_ShouldRunPublish>
+      <_ShouldRunPublish Condition="'$(DotNetBuildOrchestrator)' == 'true' and '$(DotNetBuildPhase)' == 'Repo'">false</_ShouldRunPublish>
       <!-- Don't publish outside of the VRM in an inner build (source-only). -->
       <_ShouldRunPublish Condition="'$(_VmrBuild)' != 'true' and '$(_InnerRepoBuild)' == 'true'">false</_ShouldRunPublish>
       <!-- Otherwise, publish -->
