@@ -1,10 +1,14 @@
 #if XUNIT_NULLABLE
 #nullable enable
+#else
+// In case this is source-imported with global nullable enabled but no XUNIT_NULLABLE
+#pragma warning disable CS8604
 #endif
 
 using System;
 using System.Globalization;
 using System.Linq;
+using Xunit.Internal;
 
 namespace Xunit.Sdk
 {
@@ -18,16 +22,27 @@ namespace Xunit.Sdk
 #endif
 	partial class CollectionException : XunitException
 	{
+		static readonly char[] crlfSeparators = new[] { '\r', '\n' };
+
 		CollectionException(string message) :
 			base(message)
 		{ }
 
 		static string FormatInnerException(Exception innerException)
 		{
+			var text = innerException.Message;
+			var filteredStack = ExceptionUtility.TransformStackTrace(ExceptionUtility.FilterStackTrace(innerException.StackTrace), "  ");
+			if (!string.IsNullOrWhiteSpace(filteredStack))
+			{
+				if (text.Length != 0)
+					text += Environment.NewLine;
+
+				text += "Stack Trace:" + Environment.NewLine + filteredStack;
+			}
+
 			var lines =
-				innerException
-					.Message
-					.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+				text
+					.Split(crlfSeparators, StringSplitOptions.RemoveEmptyEntries)
 					.Select((value, idx) => idx > 0 ? "            " + value : value);
 
 			return string.Join(Environment.NewLine, lines);

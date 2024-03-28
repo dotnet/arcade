@@ -77,6 +77,18 @@ namespace Xunit
 			HashSet<T> set) =>
 				Contains(expected, (ISet<T>)set);
 
+		/// <summary>
+		/// Verifies that the sorted hashset contains the given object.
+		/// </summary>
+		/// <typeparam name="T">The type of the object to be verified</typeparam>
+		/// <param name="expected">The object expected to be in the set</param>
+		/// <param name="set">The set to be inspected</param>
+		/// <exception cref="ContainsException">Thrown when the object is not present in the set</exception>
+		public static void Contains<T>(
+			T expected,
+			SortedSet<T> set) =>
+				Contains(expected, (ISet<T>)set);
+
 #if XUNIT_IMMUTABLE_COLLECTIONS
 		/// <summary>
 		/// Verifies that the immutable hashset contains the given object.
@@ -88,6 +100,18 @@ namespace Xunit
 		public static void Contains<T>(
 			T expected,
 			ImmutableHashSet<T> set) =>
+				Contains(expected, (ISet<T>)set);
+
+		/// <summary>
+		/// Verifies that the immutable sorted hashset contains the given object.
+		/// </summary>
+		/// <typeparam name="T">The type of the object to be verified</typeparam>
+		/// <param name="expected">The object expected to be in the set</param>
+		/// <param name="set">The set to be inspected</param>
+		/// <exception cref="ContainsException">Thrown when the object is not present in the set</exception>
+		public static void Contains<T>(
+			T expected,
+			ImmutableSortedSet<T> set) =>
 				Contains(expected, (ISet<T>)set);
 #endif
 
@@ -145,6 +169,18 @@ namespace Xunit
 			HashSet<T> set) =>
 				DoesNotContain(expected, (ISet<T>)set);
 
+		/// <summary>
+		/// Verifies that the sorted hashset does not contain the given item.
+		/// </summary>
+		/// <typeparam name="T">The type of the object to be verified</typeparam>
+		/// <param name="expected">The object expected to be in the set</param>
+		/// <param name="set">The set to be inspected</param>
+		/// <exception cref="ContainsException">Thrown when the object is not present in the set</exception>
+		public static void DoesNotContain<T>(
+			T expected,
+			SortedSet<T> set) =>
+				DoesNotContain(expected, (ISet<T>)set);
+
 #if XUNIT_IMMUTABLE_COLLECTIONS
 		/// <summary>
 		/// Verifies that the immutable hashset does not contain the given item.
@@ -156,6 +192,18 @@ namespace Xunit
 		public static void DoesNotContain<T>(
 			T expected,
 			ImmutableHashSet<T> set) =>
+				DoesNotContain(expected, (ISet<T>)set);
+
+		/// <summary>
+		/// Verifies that the immutable sorted hashset does not contain the given item.
+		/// </summary>
+		/// <typeparam name="T">The type of the object to be verified</typeparam>
+		/// <param name="expected">The object expected to be in the set</param>
+		/// <param name="set">The set to be inspected</param>
+		/// <exception cref="ContainsException">Thrown when the object is not present in the set</exception>
+		public static void DoesNotContain<T>(
+			T expected,
+			ImmutableSortedSet<T> set) =>
 				DoesNotContain(expected, (ISet<T>)set);
 #endif
 
