@@ -91,7 +91,7 @@ end
 
 The `eng/Build.props` file is an Arcade msbuild extension point to specify the projects to build. To facilitate VMR join verticals, repositories need to specify the components to build when the `DotNetBuildPass` property is passed in.
 
-If a repository doesn't use the `eng/Build.props` extension point, [Arcade's Build.proj wrapper project searches for and builds solution files in the repository root](https://github.com/dotnet/arcade/blob/777bc46bd883555cf89b8a68e3e2023fd4f1ee50/src/Microsoft.DotNet.Arcade.Sdk/tools/Build.proj#L75-L78). This needs to change in Arcade so that the default is ignored when `DotNetBuildPass>1` is passed in. This guarantees that nothing gets built in the individual repository if it doesn't explicitly opt into building components in a join vertical. 
+If a repository doesn't use the `eng/Build.props` extension point, [Arcade's Build.proj wrapper project searches for and builds solution files in the repository root](https://github.com/dotnet/arcade/blob/777bc46bd883555cf89b8a68e3e2023fd4f1ee50/src/Microsoft.DotNet.Arcade.Sdk/tools/Build.proj#L75-L78). This needs to change in Arcade so that the default is ignored when `DotNetBuildPass>1` is passed in. This guarantees that nothing gets built in the individual repository if it doesn't explicitly opt into building components in a join vertical.
 
 > [!NOTE]
 > If a repository already uses another mechanism to traverse the repository graph based on inputs, i.e. the `Microsoft.Build.Traversal` msbuild sdk, then that can be used instead. The below examples works in all Arcade-ified repositories.
@@ -169,8 +169,10 @@ The above YML does the following:
    Asset selection: In case of duplicates (i.e. rid agnostic `System.CommandLine.nupkg` package that gets produced in all verticals), the artifact from the primary dependent job wins.
 3. Invokes the VMR's build script and passes the `DotNetBuildPass=2` msbuild property in addition to the other parameters in.
 4. The VMR build then traverses all repositories and only builds the join components that are declared to be built in `DotNetBuildPass=2`.
-5. The VMR publish then only publishes the new components that got produced in that vertical and the new build manifest.
+5. The VMR then only publishes the new components that got produced in that vertical and the new build manifest. The archive name will have the build pass number appended, i.e. `Windows_x64_BuildPass2_Artifacts.zip`.
 
 While join verticals could be grouped into stages per build pass for a better UX in the AzDO pipeline view, that would significantly impact build performance as join verticals would need to wait for all jobs in the previous stage to complete. Therefore, stages won't be utilized.
 
 Step one above downloads the job artifacts payload from each dependent job which contains the packages and assets folders. While not all artifacts might be needed by the join vertical, it's easier to just download the entire archive than hardcoding the assets to use in YML. This strategy could be revisited in the future if it significantly impacts the overall build times.
+
+The logic that is responsible for downloading the dependent jobs' artifacts will be shared with the msbuild task that downloads, merges and publishes everything to the Build Asset Registry after all the verticals got built. This allows implementing the asset selection algorithm in a single place. The join vertical build will receive the `DotNetBuildDependentVerticalNames` and `DotNetBuildPrimaryDependentVerticalName` msbuild properties which are then getting passed to the task that handles downloading the archives and selecting the assets.
