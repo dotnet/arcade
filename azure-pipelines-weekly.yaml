@@ -23,6 +23,12 @@ stages:
         inputs:
           useGlobalJson: true
 
+      - task: UseDotNet@2
+        displayName: Install .NET 6 runtime
+        inputs:
+          packageType: runtime
+          version: 6.x
+
       - script: dotnet tool restore
 
       - task: AzureCLI@2
