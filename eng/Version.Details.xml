@@ -113,10 +113,6 @@
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>2874d26cb343fc55be295a628b3ee474e19ff95e</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.ApplicationInsights" Version="2.22.0">
-      <Uri>https://github.com/microsoft/ApplicationInsights-dotnet</Uri>
-      <Sha>43825e06a22cdfb702fc199a7ba99a7d541d48c6</Sha>
-    </Dependency>
     <Dependency Name="Microsoft.Deployment.DotNet.Releases" Version="1.0.0-preview6.1.23159.4" CoherentParentDependency="Microsoft.NET.Sdk.WorkloadManifestReader">
       <Uri>https://github.com/dotnet/deployment-tools</Uri>
       <Sha>b60c95e1ce736630d17e16626c59e3dd85ebae2b</Sha>
