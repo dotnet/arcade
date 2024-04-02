@@ -104,9 +104,15 @@ _eng/Build.props_
 ```xml
 <Project>
 
-  <!-- Build ComponentA in the join vertical when DotNetBuildPass=2 is passed in. -->
+  <!-- By default build build.proj which references all projects in the repository. -->
   <ItemGroup>
-    <ProjectToBuild Include="src\ComponentA\ComponentA.csproj" DotNetBuildPass="2" />
+    <ProjectToBuild Include="$(RepoRoot)build.proj" />
+  </ItemGroup>
+
+  <!-- Only build ComponentA in the join vertical when DotNetBuildPass=2 is passed in. -->
+  <ItemGroup Condition="'$(DotNetBuildPass)' == '2'">
+    <ProjectToBuild Remove="@(ProjectToBuild)" />
+    <ProjectToBuild Include="src\ComponentA\ComponentA.csproj" />
   </ItemGroup>
 
 </Project>
@@ -175,4 +181,4 @@ While join verticals could be grouped into stages per build pass for a better UX
 
 Step one above downloads the job artifacts payload from each dependent job which contains the packages and assets folders. While not all artifacts might be needed by the join vertical, it's easier to just download the entire archive than hardcoding the assets to use in YML. This strategy could be revisited in the future if it significantly impacts the overall build times.
 
-The logic that is responsible for downloading the dependent jobs' artifacts will be shared with the msbuild task that downloads, merges and publishes to the Build Asset Registry when `DotNetBuildPass=final`. This allows implementing the artifact selection algorithm in a single place. The join vertical build will receive the `DotNetBuildDependentVerticalNames` and `DotNetBuildPrimaryDependentVerticalName` msbuild properties which are then getting passed to the task that handles downloading the archives and selecting the assets.
+The logic that is responsible for downloading the dependent jobs' artifacts will be shared with the msbuild task that downloads, merges and publishes to the Build Asset Registry when `DotNetBuildPass=final`. This allows implementing the artifact selection algorithm in a single place. The join vertical build will receive the `DotNetBuildDependentVerticals` (values separated by `,`) and `DotNetBuildPrimaryDependentVertical` msbuild properties which are then getting passed to the task that handles downloading the archives and selecting the assets.
