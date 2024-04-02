@@ -148,7 +148,7 @@ The join verticals will declare their dependent verticals and pass the `DotNetBu
 #  - `Windows_x64_BuildPass2` job name
 #  - `win-x64 BuildPass 2` display name
 #  - `Windows_x64` and `Windows_x86` job dependencies
-#  - `Windows_x64` as the primary job dependency (important for asset selection)
+#  - `Windows_x64` as the primary job dependency (important for artifact selection)
 
 - template: ../jobs/vmr-build.yml
   parameters:
@@ -166,7 +166,7 @@ The join verticals will declare their dependent verticals and pass the `DotNetBu
 The above YML does the following:
 1. Downloads the job artifacts from the two dependent jobs. The job artifact payload contains the artifacts/packages and artifacts/assets folders.
 2. Places the downloaded folders into the VMR's artifacts folder, i.e. `Windows_x64_Artifacts/packages` -> `/artifacts/packages` and `Windows_X64_Artifacts/assets` -> `/artifacts/assets`.
-   Asset selection: In case of duplicates (i.e. rid agnostic `System.CommandLine.nupkg` package that gets produced in all verticals), the artifact from the primary dependent job wins.
+   Artifact selection: In case of duplicates (i.e. rid agnostic `System.CommandLine.nupkg` package that gets produced in all verticals), the artifact from the primary dependent job wins.
 3. Invokes the VMR's build script and passes the `DotNetBuildPass=2` msbuild property in addition to the other parameters in.
 4. The VMR build then traverses all repositories and only builds the join components that are declared to be built in `DotNetBuildPass=2`.
 5. The VMR then only publishes the new components that got produced in that vertical and the new build manifest. The archive name will still be the job name, i.e. `Windows_x64_BuildPass2_Artifacts.zip`.
@@ -175,4 +175,4 @@ While join verticals could be grouped into stages per build pass for a better UX
 
 Step one above downloads the job artifacts payload from each dependent job which contains the packages and assets folders. While not all artifacts might be needed by the join vertical, it's easier to just download the entire archive than hardcoding the assets to use in YML. This strategy could be revisited in the future if it significantly impacts the overall build times.
 
-The logic that is responsible for downloading the dependent jobs' artifacts will be shared with the msbuild task that downloads, merges and publishes everything to the Build Asset Registry after all the verticals got built. This allows implementing the asset selection algorithm in a single place. The join vertical build will receive the `DotNetBuildDependentVerticalNames` and `DotNetBuildPrimaryDependentVerticalName` msbuild properties which are then getting passed to the task that handles downloading the archives and selecting the assets.
+The logic that is responsible for downloading the dependent jobs' artifacts will be shared with the msbuild task that downloads, merges and publishes everything to the Build Asset Registry after all the verticals got built. This allows implementing the artifact selection algorithm in a single place. The join vertical build will receive the `DotNetBuildDependentVerticalNames` and `DotNetBuildPrimaryDependentVerticalName` msbuild properties which are then getting passed to the task that handles downloading the archives and selecting the assets.
