@@ -11,7 +11,7 @@
     Configuration                   Build configuration: "Debug", "Release", etc.
 
     DotNetBuildPass                 The build pass number. Set to a number other than '1' when performing a join build.
-                                    This makes ProjectToBuild items only be built when the `DotNetBuildPass` metadata matches.
+                                    This is passed to the repository and should be used to filter the ProjectToBuild items in Build.props.
     DotNetBuildRepo                 Build the repo as part of the entire .NET stack.
     DotNetBuildInnerRepo            Build the repo as part of the entire .NET stack. This switch is used on the inner repo invocation and should not be passed by the user.
     DotNetBuildOrchestrator         Build the entire .NET stack.
@@ -57,10 +57,6 @@
   <!-- Allow for repo specific Build properties such as the list of Projects to build -->
   <Import Project="$(RepositoryEngineeringDir)Build.props" Condition="Exists('$(RepositoryEngineeringDir)Build.props')" />
 
-  <PropertyGroup>
-    <_DotNetBuildAdditionalPass Condition="'$(DotNetBuildPass)' != '' and '$(DotNetBuildPass)' != '1'">true</_DotNetBuildAdditionalPass>
-  </PropertyGroup>
-
   <ItemGroup Condition="'$(Projects)' != ''">
     <!-- Setting 'Projects' overrides the ProjectToBuild list. -->
     <ProjectToBuild Remove="@(ProjectToBuild)" />
@@ -70,25 +66,16 @@
   <!-- If Projects is unspecified and ProjectToBuild was not set via Build.props, fallback to building .sln files in the repo root. -->
   <ItemGroup Condition="'@(ProjectToBuild)' == ''">
     <!-- Don't glob and build solution files from the repo root by default when DotNetBuildPass is set to a value other than 1. -->
-    <EnableDefaultSolutionItems Condition="'$(EnableDefaultSolutionItems)' == '' and '$(_DotNetBuildAdditionalPass)' == 'true'">false</EnableDefaultSolutionItems>
+    <EnableDefaultSolutionItems Condition="'$(EnableDefaultSolutionItems)' == '' and
+                                           '$(DotNetBuildPass)' != '' and
+                                           '$(DotNetBuildPass)' != '1'">false</EnableDefaultSolutionItems>
     <EnableDefaultSolutionItems Condition="'$(EnableDefaultSolutionItems)' == ''">true</EnableDefaultSolutionItems>
     <ProjectToBuild Include="$(RepoRoot)*.sln" Condition="'$(EnableDefaultSolutionItems)' == 'true'" />
   </ItemGroup>
 
-  <!-- Only build the projects for the passed in build pass number in when DotNetBuildPass is set to a value other than 1. -->
-  <ItemGroup Condition="'@(ProjectToBuild)' != '' and '$(_DotNetBuildAdditionalPass)' == 'true'">
-    <_ProjectToBuildKeep Include="@(ProjectToBuild->WithMetadataValue('DotNetBuildPass', '$(DotNetBuildPass)'))" />
-    <_ProjectToBuildRemove Include="@(ProjectToBuild)" Exclude="@(_ProjectToBuildKeep)" />
-    <ProjectToBuild Remove="@(_ProjectToBuildRemove)" />
-  </ItemGroup>
-
   <Import Project="SourceBuild/SourceBuildArcadeBuild.targets" Condition="'$(DotNetBuildRepo)' == 'true'" />
 
-  <!-- Skip execution when DotNetBuildPass is set and ProjectToBuild is empty.
-       This can happen whenever a repository gets built as part of a VMR join vertical but already built
-       all components in the non-join build. -->
-  <Target Name="Execute"
-          Condition="'$(_DotNetBuildAdditionalPass)' != 'true' or '@(ProjectToBuild)' != ''">
+  <Target Name="Execute">
     <Error Text="Property 'RepoRoot' must be specified" Condition="'$(RepoRoot)' == ''"/>
     <Error Text="File 'global.json' must exist in directory specified by RepoRoot: '$(RepoRoot)'" Condition="'$(RepoRoot)' != '' and !Exists('$(RepoRoot)global.json')"/>
 
