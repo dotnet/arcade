@@ -54,8 +54,6 @@
   <Import Project="RepoDefaults.props"/>
   <Import Project="RepoLayout.props"/>
 
-  <Import Project="SourceBuild/SourceBuildArcadeBuild.targets" Condition="'$(DotNetBuildRepo)' == 'true'" />
-
   <!-- Allow for repo specific Build properties such as the list of Projects to build -->
   <Import Project="$(RepositoryEngineeringDir)Build.props" Condition="Exists('$(RepositoryEngineeringDir)Build.props')" />
 
@@ -83,6 +81,8 @@
     <_ProjectToBuildRemove Include="@(ProjectToBuild)" Exclude="@(_ProjectToBuildKeep)" />
     <ProjectToBuild Remove="@(_ProjectToBuildRemove)" />
   </ItemGroup>
+
+  <Import Project="SourceBuild/SourceBuildArcadeBuild.targets" Condition="'$(DotNetBuildRepo)' == 'true'" />
 
   <!-- Skip execution when DotNetBuildPass is set and ProjectToBuild is empty.
        This can happen whenever a repository gets built as part of a VMR join vertical but already built
