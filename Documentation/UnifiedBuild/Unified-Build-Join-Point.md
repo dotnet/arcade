@@ -169,7 +169,7 @@ The above YML does the following:
    Asset selection: In case of duplicates (i.e. rid agnostic `System.CommandLine.nupkg` package that gets produced in all verticals), the artifact from the primary dependent job wins.
 3. Invokes the VMR's build script and passes the `DotNetBuildPass=2` msbuild property in addition to the other parameters in.
 4. The VMR build then traverses all repositories and only builds the join components that are declared to be built in `DotNetBuildPass=2`.
-5. The VMR then only publishes the new components that got produced in that vertical and the new build manifest. The archive name will have the build pass number appended, i.e. `Windows_x64_BuildPass2_Artifacts.zip`.
+5. The VMR then only publishes the new components that got produced in that vertical and the new build manifest. The archive name will still be the job name, i.e. `Windows_x64_BuildPass2_Artifacts.zip`.
 
 While join verticals could be grouped into stages per build pass for a better UX in the AzDO pipeline view, that would significantly impact build performance as join verticals would need to wait for all jobs in the previous stage to complete. Therefore, stages won't be utilized.
 
