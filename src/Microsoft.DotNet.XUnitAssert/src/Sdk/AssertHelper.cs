@@ -164,9 +164,6 @@ namespace Xunit.Internal
 		internal static bool IsCompilerGenerated(Type type) =>
 			type.GetTypeInfo().CustomAttributes.Any(a => a.AttributeType.FullName == "System.Runtime.CompilerServices.CompilerGeneratedAttribute");
 
-		internal static bool IsCompilerGenerated(Type type) =>
-			type.GetTypeInfo().CustomAttributes.Any(a => a.AttributeType.FullName == "System.Runtime.CompilerServices.CompilerGeneratedAttribute");
-
 		internal static string ShortenAndEncodeString(
 #if XUNIT_NULLABLE
 			string? value,
