@@ -71,7 +71,7 @@
     <MicrosoftSymbolUploaderVersion>2.0.0-preview.1.23470.14</MicrosoftSymbolUploaderVersion>
     <MicrosoftNetSdkWorkloadManifestReaderVersion>6.0.100-rtm.21515.10</MicrosoftNetSdkWorkloadManifestReaderVersion>
     <MicrosoftDeploymentDotNetReleasesVersion>1.0.0-preview1.1.21116.1</MicrosoftDeploymentDotNetReleasesVersion>
-    <MicrosoftSignedWixVersion>3.14.0-8606.20240208.1</MicrosoftSignedWixVersion>
+    <MicrosoftSignedWixVersion>3.14.1-8722.20240403.1</MicrosoftSignedWixVersion>
     <!-- Used to flow Source Link version through Arcade SDK -->
     <MicrosoftSourceLinkVersion>$(MicrosoftSourceLinkGitHubVersion)</MicrosoftSourceLinkVersion>
   </PropertyGroup>
