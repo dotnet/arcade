@@ -161,7 +161,7 @@
   -->
 
   <Target Name="CreateRepoSymbolsArchive"
-          Condition="'$(OS)' != 'Windows_NT' and ('$(DotNetBuildFromSourceFlavor)' == 'Product' or '$(DotNetBuildOrchestrator)' == 'true' or '$(SupplementalIntermediateNupkgCategory)' == '$(SymbolsIntermediateNupkgCategory)')"
+          Condition="'$(OS)' != 'Windows_NT' and '$(SupplementalIntermediateNupkgCategory)' == '$(SymbolsIntermediateNupkgCategory)'"
           DependsOnTargets="$(CreateRepoSymbolsArchiveDependsOn);
                             DiscoverRepoSymbols;
                             PackageRepoSymbols"/>
@@ -184,7 +184,7 @@
   </Target>
 
   <Target Name="PackageRepoSymbols"
-          Condition="'$(OS)' != 'Windows_NT' and ('$(DotNetBuildFromSourceFlavor)' == 'Product' or '$(DotNetBuildOrchestrator)' == 'true' or '$(SupplementalIntermediateNupkgCategory)' == '$(SymbolsIntermediateNupkgCategory)')"
+          Condition="'$(OS)' != 'Windows_NT' and '$(SupplementalIntermediateNupkgCategory)' == '$(SymbolsIntermediateNupkgCategory)'"
           DependsOnTargets="$(CreateRepoSymbolsArchiveDependsOn);DiscoverRepoSymbols">
     <PropertyGroup>
       <SymbolsArchiveLocation>$(CurrentRepoSourceBuildArtifactsNonShippingPackagesDir)</SymbolsArchiveLocation>
