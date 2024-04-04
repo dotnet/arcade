@@ -166,8 +166,7 @@
                             DiscoverRepoSymbols;
                             PackageRepoSymbols"/>
 
-  <Target Name="DiscoverRepoSymbols"
-          DependsOnTargets="$(CreateRepoSymbolsArchiveDependsOn)">
+  <Target Name="DiscoverRepoSymbols">
     <PropertyGroup>
       <SymbolsRoot>$(CurrentRepoSourceBuildArtifactsDir)</SymbolsRoot>
       <!-- Fall back to repo root for source-build-externals or repos that don't have the regular SymbolsRoot as defined above -->
@@ -183,7 +182,7 @@
   </Target>
 
   <Target Name="PackageRepoSymbols"
-          DependsOnTargets="$(CreateRepoSymbolsArchiveDependsOn);DiscoverRepoSymbols">
+          DependsOnTargets="DiscoverRepoSymbols">
     <PropertyGroup>
       <SymbolsArchiveLocation>$(CurrentRepoSourceBuildArtifactsNonShippingPackagesDir)</SymbolsArchiveLocation>
       <SymbolsArchiveLocation Condition="'$(GitHubRepositoryName)' == 'nuget-client' and '$(PackageOutputPath)' != ''">$([MSBuild]::EnsureTrailingSlash('$(PackageOutputPath)'))</SymbolsArchiveLocation>
