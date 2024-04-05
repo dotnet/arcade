@@ -61,7 +61,7 @@
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.VisualStudio" Version="$(MicrosoftDotNetBuildTasksVisualStudioVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" IsImplicitlyDefined="true" />
   </ItemGroup>
 
-  <!-- Unlike the items above, we should restore M.D.B.T.F in source build scenarios since it'su sed in the inner build. -->
+  <!-- Unlike the items above, we should restore M.D.B.T.F in source build scenarios since it's used in the inner build. -->
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" IsImplicitlyDefined="true" />
   </ItemGroup>
