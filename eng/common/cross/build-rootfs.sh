@@ -448,7 +448,7 @@ if [[ "$__CodeName" == "alpine" ]]; then
     __ApkKeysDir="$(mktemp -d)"
 
     arch="$(uname -m)"
-    wget "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic//v$__ApkToolsVersion/$arch/apk.static" -P "$__ApkToolsDir"
+    wget "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v$__ApkToolsVersion/$arch/apk.static" -P "$__ApkToolsDir"
     if [[ "$arch" == "x86_64" ]]; then
       __ApkToolsSHA512SUM="53e57b49230da07ef44ee0765b9592580308c407a8d4da7125550957bb72cb59638e04f8892a18b584451c8d841d1c7cb0f0ab680cc323a3015776affaa3be33"
     elif [[ "$arch" == "aarch64" ]]; then
