@@ -142,7 +142,6 @@ while :; do
     case $lowerI in
         -\?|-h|--help)
             usage
-            exit 1
             ;;
         arm)
             __BuildArch=arm
@@ -229,12 +228,19 @@ while :; do
             __UbuntuRepo="http://archive.ubuntu.com/ubuntu/"
             ;;
         lldb*)
-            version="${lowerI/lldb/}"
-            parts=(${version//./ })
+            version="$(echo "$lowerI" | tr -d '[:alpha:]-=')"
+            majorVersion="${version%%.*}"
+
+            [ -z "${version##*.*}" ] && minorVersion="${version#*.}"
+            if [ -z "$minorVersion" ]; then
+                minorVersion=0
+            fi
 
             # for versions > 6.0, lldb has dropped the minor version
-            if [[ "${parts[0]}" -gt 6 ]]; then
-                version="${parts[0]}"
+            if [ "$majorVersion" -le 6 ]; then
+                version="$majorVersion.$minorVersion"
+            else
+                version="$majorVersion"
             fi
 
             __LLDB_Package="liblldb-${version}-dev"
@@ -243,15 +249,19 @@ while :; do
             unset __LLDB_Package
             ;;
         llvm*)
-            version="${lowerI/llvm/}"
-            parts=(${version//./ })
-            __LLVM_MajorVersion="${parts[0]}"
-            __LLVM_MinorVersion="${parts[1]}"
+            version="$(echo "$lowerI" | tr -d '[:alpha:]-=')"
+            __LLVM_MajorVersion="${version%%.*}"
 
-            # for versions > 6.0, llvm has dropped the minor version
-            if [[ -z "$__LLVM_MinorVersion" && "$__LLVM_MajorVersion" -le 6 ]]; then
-                __LLVM_MinorVersion=0;
+            [ -z "${version##*.*}" ] && __LLVM_MinorVersion="${version#*.}"
+            if [ -z "$__LLVM_MinorVersion" ]; then
+                __LLVM_MinorVersion=0
             fi
+
+            # for versions > 6.0, lldb has dropped the minor version
+            if [ "$__LLVM_MajorVersion" -gt 6 ]; then
+                __LLVM_MinorVersion=
+            fi
+
             ;;
         xenial) # Ubuntu 16.04
             if [[ "$__CodeName" != "jessie" ]]; then
@@ -323,14 +333,13 @@ while :; do
         alpine*)
             __CodeName=alpine
             __UbuntuRepo=
-            version="${lowerI/alpine/}"
 
-            if [[ "$version" == "edge" ]]; then
+            if [[ "$lowerI" == "alpineedge" ]]; then
                 __AlpineVersion=edge
             else
-                parts=(${version//./ })
-                __AlpineMajorVersion="${parts[0]}"
-                __AlpineMinoVersion="${parts[1]}"
+                version="$(echo "$lowerI" | tr -d '[:alpha:]-=')"
+                __AlpineMajorVersion="${version%%.*}"
+                __AlpineMinoVersion="${version#*.}"
                 __AlpineVersion="$__AlpineMajorVersion.$__AlpineMinoVersion"
             fi
             ;;
@@ -454,7 +463,7 @@ if [[ "$__CodeName" == "alpine" ]]; then
     elif [[ "$arch" == "aarch64" ]]; then
       __ApkToolsSHA512SUM="9e2b37ecb2b56c05dad23d379be84fd494c14bd730b620d0d576bda760588e1f2f59a7fcb2f2080577e0085f23a0ca8eadd993b4e61c2ab29549fdb71969afd0"
     else
-      echo "WARNING: add missing hash for your host architecture. To find the value, use: `find /tmp -name apk.static -exec sha512sum {} \;`"
+      echo "WARNING: add missing hash for your host architecture. To find the value, use: 'find /tmp -name apk.static -exec sha512sum {} \;'"
     fi
     echo "$__ApkToolsSHA512SUM $__ApkToolsDir/apk.static" | sha512sum -c
     chmod +x "$__ApkToolsDir/apk.static"
@@ -582,8 +591,8 @@ elif [[ "$__CodeName" == "haiku" ]]; then
     mkdir "$__RootfsDir/tmp/download"
 
     echo "Downloading Haiku package tool"
-    git clone https://github.com/haiku/haiku-toolchains-ubuntu --depth 1 $__RootfsDir/tmp/script
-    wget -O "$__RootfsDir/tmp/download/hosttools.zip" $($__RootfsDir/tmp/script/fetch.sh --hosttools)
+    git clone https://github.com/haiku/haiku-toolchains-ubuntu --depth 1 "$__RootfsDir"/tmp/script
+    wget -O "$__RootfsDir/tmp/download/hosttools.zip" $("$__RootfsDir"/tmp/script/fetch.sh --hosttools)
     unzip -o "$__RootfsDir/tmp/download/hosttools.zip" -d "$__RootfsDir/tmp/bin"
 
     DepotBaseUrl="https://depot.haiku-os.org/__api/v2/pkg/get-pkg"
@@ -616,7 +625,7 @@ elif [[ "$__CodeName" == "haiku" ]]; then
 
     # Download buildtools
     echo "Downloading Haiku buildtools"
-    wget -O "$__RootfsDir/tmp/download/buildtools.zip" $($__RootfsDir/tmp/script/fetch.sh --buildtools --arch=$__HaikuArch)
+    wget -O "$__RootfsDir/tmp/download/buildtools.zip" $("$__RootfsDir"/tmp/script/fetch.sh --buildtools --arch=$__HaikuArch)
     unzip -o "$__RootfsDir/tmp/download/buildtools.zip" -d "$__RootfsDir"
 
     # Cleaning up temporary files
@@ -650,6 +659,5 @@ elif [[ "$__Tizen" == "tizen" ]]; then
     ROOTFS_DIR="$__RootfsDir" "$__CrossDir/tizen-build-rootfs.sh" "$__BuildArch"
 else
     echo "Unsupported target platform."
-    usage;
-    exit 1
+    usage
 fi
