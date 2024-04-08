@@ -1,6 +1,3 @@
-# Internal resources (telemetry, microbuild) can only be accessed from non-public projects,
-# and some (Microbuild) should only be applied to non-PR cases for internal builds.
-
 parameters:
 # Job schema parameters - https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=vsts&tabs=schema#job
   cancelTimeoutInMinutes: ''
@@ -21,7 +18,6 @@ parameters:
   # See schema documentation - https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/TemplateSchema.md
   # publishing defaults
   artifacts: ''
-
   enableMicrobuild: false
   enablePublishBuildArtifacts: false
   enablePublishBuildAssets: false
@@ -35,7 +31,7 @@ parameters:
   testResultsFormat: ''
   name: ''
   preSteps: []
-  postSteps: []
+  artifactPublishSteps: []
   runAsPublic: false
 
 # Sbom related params
@@ -266,5 +262,5 @@ jobs:
         Contents: '**'
         TargetFolder: '$(Build.ArtifactStagingDirectory)/eng/common/BuildConfiguration'
 
-  - ${{ each step in parameters.postSteps }}:
+  - ${{ each step in parameters.artifactPublishSteps }}:
     - ${{ step }}

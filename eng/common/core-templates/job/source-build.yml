@@ -50,7 +50,7 @@ jobs:
     ${{ if eq(parameters.templateIs1ESManaged, 'true') }}:
       pool:
         name: $[replace(replace(eq(contains(coalesce(variables['System.PullRequest.TargetBranch'], variables['Build.SourceBranch'], 'refs/heads/main'), 'release'), 'true'), True, 'NetCore1ESPool-Svc-Internal'), False, 'NetCore1ESPool-Internal')]
-        image: 1es-mariner-2
+        image: 1es-mariner-2-pt
         os: linux
     ${{ else }}:
       pool:

@@ -11,11 +11,7 @@ jobs:
     - ${{ each step in parameters.steps }}:
       - ${{ step }}
 
-    postSteps:
-      - ${{ each step in parameters.postSteps }}:
-        - ${{ step }}
-
-      # Publish artifacts
+    artifactPublishSteps:
       - ${{ if ne(parameters.artifacts.publish, '') }}:
         - ${{ if and(ne(parameters.artifacts.publish.artifacts, 'false'), ne(parameters.artifacts.publish.artifacts, '')) }}:
           - template: /eng/common/core-templates/steps/publish-build-artifacts.yml
