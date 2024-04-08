@@ -596,8 +596,7 @@ elif [[ "$__CodeName" == "haiku" ]]; then
 
     echo "Downloading Haiku package tool"
     git clone https://github.com/haiku/haiku-toolchains-ubuntu --depth 1 "$__RootfsDir/tmp/script"
-    # shellcheck disable=SC2046
-    wget -O "$__RootfsDir/tmp/download/hosttools.zip" $("$__RootfsDir/tmp/script/fetch.sh" --hosttools)
+    wget -O "$__RootfsDir/tmp/download/hosttools.zip" "$("$__RootfsDir/tmp/script/fetch.sh" --hosttools)"
     unzip -o "$__RootfsDir/tmp/download/hosttools.zip" -d "$__RootfsDir/tmp/bin"
 
     DepotBaseUrl="https://depot.haiku-os.org/__api/v2/pkg/get-pkg"
@@ -630,8 +629,7 @@ elif [[ "$__CodeName" == "haiku" ]]; then
 
     # Download buildtools
     echo "Downloading Haiku buildtools"
-    # shellcheck disable=SC2046
-    wget -O "$__RootfsDir/tmp/download/buildtools.zip" $("$__RootfsDir/tmp/script/fetch.sh" --buildtools --arch=$__HaikuArch)
+    wget -O "$__RootfsDir/tmp/download/buildtools.zip" "$("$__RootfsDir/tmp/script/fetch.sh" --buildtools --arch=$__HaikuArch)"
     unzip -o "$__RootfsDir/tmp/download/buildtools.zip" -d "$__RootfsDir"
 
     # Cleaning up temporary files
