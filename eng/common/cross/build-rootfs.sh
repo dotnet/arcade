@@ -339,8 +339,8 @@ while :; do
             else
                 version="$(echo "$lowerI" | tr -d '[:alpha:]-=')"
                 __AlpineMajorVersion="${version%%.*}"
-                __AlpineMinoVersion="${version#*.}"
-                __AlpineVersion="$__AlpineMajorVersion.$__AlpineMinoVersion"
+                __AlpineMinorVersion="${version#*.}"
+                __AlpineVersion="$__AlpineMajorVersion.$__AlpineMinorVersion"
             fi
             ;;
         freebsd13)
