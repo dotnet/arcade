@@ -493,12 +493,14 @@ if [[ "$__CodeName" == "alpine" ]]; then
     fi
 
     # initialize DB
+    # shellcheck disable=SC2086
     "$__ApkToolsDir/apk.static" \
         -X "http://dl-cdn.alpinelinux.org/alpine/$version/main" \
         -X "http://dl-cdn.alpinelinux.org/alpine/$version/community" \
         -U $__ApkSignatureArg --root "$__RootfsDir" --arch "$__AlpineArch" --initdb add
 
     if [[ "$__AlpineLlvmLibsLookup" == 1 ]]; then
+        # shellcheck disable=SC2086
         __AlpinePackages+=" $("$__ApkToolsDir/apk.static" \
             -X "http://dl-cdn.alpinelinux.org/alpine/$version/main" \
             -X "http://dl-cdn.alpinelinux.org/alpine/$version/community" \
@@ -507,6 +509,7 @@ if [[ "$__CodeName" == "alpine" ]]; then
     fi
 
     # install all packages in one go
+    # shellcheck disable=SC2086
     "$__ApkToolsDir/apk.static" \
         -X "http://dl-cdn.alpinelinux.org/alpine/$version/main" \
         -X "http://dl-cdn.alpinelinux.org/alpine/$version/community" \
@@ -530,6 +533,7 @@ elif [[ "$__CodeName" == "freebsd" ]]; then
     rm -rf "$__RootfsDir/tmp/pkg-${__FreeBSDPkg}"
     # install packages we need.
     INSTALL_AS_USER=$(whoami) "$__RootfsDir"/host/sbin/pkg -r "$__RootfsDir" -C "$__RootfsDir"/usr/local/etc/pkg.conf update
+    # shellcheck disable=SC2086
     INSTALL_AS_USER=$(whoami) "$__RootfsDir"/host/sbin/pkg -r "$__RootfsDir" -C "$__RootfsDir"/usr/local/etc/pkg.conf install --yes $__FreeBSDPackages
 elif [[ "$__CodeName" == "illumos" ]]; then
     mkdir "$__RootfsDir/tmp"
@@ -592,6 +596,7 @@ elif [[ "$__CodeName" == "haiku" ]]; then
 
     echo "Downloading Haiku package tool"
     git clone https://github.com/haiku/haiku-toolchains-ubuntu --depth 1 "$__RootfsDir/tmp/script"
+    # shellcheck disable=SC2046
     wget -O "$__RootfsDir/tmp/download/hosttools.zip" $("$__RootfsDir/tmp/script/fetch.sh" --hosttools)
     unzip -o "$__RootfsDir/tmp/download/hosttools.zip" -d "$__RootfsDir/tmp/bin"
 
@@ -625,6 +630,7 @@ elif [[ "$__CodeName" == "haiku" ]]; then
 
     # Download buildtools
     echo "Downloading Haiku buildtools"
+    # shellcheck disable=SC2046
     wget -O "$__RootfsDir/tmp/download/buildtools.zip" $("$__RootfsDir/tmp/script/fetch.sh" --buildtools --arch=$__HaikuArch)
     unzip -o "$__RootfsDir/tmp/download/buildtools.zip" -d "$__RootfsDir"
 
@@ -638,10 +644,12 @@ elif [[ -n "$__CodeName" ]]; then
         __Keyring="$__Keyring --force-check-gpg"
     fi
 
+    # shellcheck disable=SC2086
     debootstrap "--variant=minbase" $__Keyring --arch "$__UbuntuArch" "$__CodeName" "$__RootfsDir" "$__UbuntuRepo"
     cp "$__CrossDir/$__BuildArch/sources.list.$__CodeName" "$__RootfsDir/etc/apt/sources.list"
     chroot "$__RootfsDir" apt-get update
     chroot "$__RootfsDir" apt-get -f -y install
+    # shellcheck disable=SC2086
     chroot "$__RootfsDir" apt-get -y install $__UbuntuPackages
     chroot "$__RootfsDir" symlinks -cr /usr
     chroot "$__RootfsDir" apt-get clean
