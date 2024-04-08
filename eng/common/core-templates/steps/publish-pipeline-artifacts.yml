@@ -1,0 +1,20 @@
+parameters:
+- name: templateIs1ESManaged
+  type: boolean
+  default: false
+
+- name: args
+  type: object
+  default: {}  
+
+steps:
+- ${{ if ne(parameters.templateIs1ESManaged, true) }}:
+  - template: /eng/common/templates/steps/publish-pipeline-artifacts.yml
+    parameters:
+      ${{ each parameter in parameters }}:
+        ${{ parameter.key }}: ${{ parameter.value }}
+- ${{ else }}:
+  - template: /eng/common/templates-official/steps/publish-pipeline-artifacts.yml
+    parameters:
+      ${{ each parameter in parameters }}:
+        ${{ parameter.key }}: ${{ parameter.value }}

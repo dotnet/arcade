@@ -2,8 +2,9 @@ parameters:
   StageLabel: ''
   JobLabel: ''
   CustomSensitiveDataList: ''
-  # A default - in case value from eng/common/templates/post-build/common-variables.yml is not passed
+  # A default - in case value from eng/common/core-templates/post-build/common-variables.yml is not passed
   BinlogToolVersion: '1.0.11'
+  templateIs1ESManaged: false
 
 steps:
 - task: Powershell@2
@@ -38,12 +39,21 @@ steps:
       ${{parameters.CustomSensitiveDataList}}
   continueOnError: true
   condition: always()
-      
-- task: PublishBuildArtifacts@1
-  displayName: Publish Logs
+
+- task: CopyFiles@2
+  displayName: Gather post build logs
   inputs:
-    PathtoPublish: '$(Build.SourcesDirectory)/PostBuildLogs'
-    PublishLocation: Container
-    ArtifactName: PostBuildLogs
-  continueOnError: true
-  condition: always()
+    SourceFolder: '$(Build.SourcesDirectory)/PostBuildLogs'
+    Contents: '**'
+    TargetFolder: '$(Build.ArtifactStagingDirectory)/PostBuildLogs'
+
+- template: /eng/common/core-templates/steps/publish-build-artifacts.yml
+  parameters:
+    templateIs1ESManaged: ${{ parameters.templateIs1ESManaged }}
+    args:
+      displayName: Publish Logs
+      pathToPublish: '$(Build.ArtifactStagingDirectory)/PostBuildLogs'
+      publishLocation: Container
+      artifactName: PostBuildLogs
+      continueOnError: true
+      condition: always()

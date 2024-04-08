@@ -1,0 +1,8 @@
+parameters:
+  templateIs1ESManaged: false
+
+variables:
+  - ${{ if eq(parameters.templateIs1ESManaged, 'true') }}:
+    - template: /eng/common/templates-official/variables/pool-providers.yml
+  - ${{ else }}:
+    - template: /eng/common/templates/variables/pool-providers.yml
