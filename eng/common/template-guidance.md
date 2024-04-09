@@ -4,6 +4,22 @@ Arcade provides templates for public (`/templates`) and 1ES pipeline templates (
 
 Additional implementation notes regarding 1ES pipeline templates can be found in the [Guidance for implementing 1ES Pipeline Templates](https://microsoft-my.sharepoint.com/:w:/r/personal/mjanecke_microsoft_com/Documents/Guidance%20for%20Implementing%201ES%20Pipeline%20Templates.docx?d=wb85ba51ba3a54329ba8a3c55e1698f73&csf=1&web=1&e=NIZo0V) doc.
 
+
+## How to use
+
+- 1ES Pipeline Template or 1ES Microbuild template runs should reference `eng/common/templates-official`
+
+- All other runs should reference `eng/common/templates`
+
+- If you directly reference `steps` or `variables` templates, make sure the default value for `templateIs1ESManaged` is properly set or explicitly provide it.
+
+Repo YAML's should reference templates in either `eng/common/templates` or `eng/common/templates-official`.
+
+If your pipeline runs internal and is Production, it should reference `eng/common/templates-official` templates.  Otherwise, reference `eng/common/templates` templates.  See [azure-pipelines.yml](../../azure-pipelines.yml) (templates-official example) or [azure-pipelines-pr.yml](../../azure-pipelines-pr.yml) (templates example) for examples.
+
+If you reference a template under the `job`, `jobs`, or `post-build` subdirectories, then the `templateIs1ESManaged` parameter should be properly initialized.  References to templates under `steps` or `variables` subdirectories, should provide a default value for `templateIs1ESManaged` which is appropriate for those scenarios, but you can provide a different value when directly referencing those templates if you have a unique scenario.
+
+
 ## Multiple outputs
 
 1ES pipeline templates impose a policy where every publish artifact execution results in additional security scans being injected into your pipeline.  When using `templates-official/jobs/jobs.yml`, Arcade reduces the number of additional security injections by gathering all publishing outputs into the [Build.ArtifactStagingDirectory](https://learn.microsoft.com/en-us/azure/devops/pipelines/build/variables?view=azure-devops&tabs=yaml#build-variables-devops-services), and utilizing the [outputParentDirectory](https://eng.ms/docs/cloud-ai-platform/devdiv/one-engineering-system-1es/1es-docs/1es-pipeline-templates/features/outputs#multiple-outputs) feature of 1ES pipeline templates.  When implementing your pipeline, if you ensure publish artifacts are located in the `$(Build.ArtifactStagingDirectory)`, and utilize the 1ES provided template context, then you can reduce the number of security scans for your pipeline.
