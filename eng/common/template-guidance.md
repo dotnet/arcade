@@ -13,11 +13,9 @@ Additional implementation notes regarding 1ES pipeline templates can be found in
 
 - If you directly reference `steps` or `variables` templates, make sure the default value for `templateIs1ESManaged` is properly set or explicitly provide it.
 
-Repo YAML's should reference templates in either `eng/common/templates` or `eng/common/templates-official`.
-
 If your pipeline runs internal and is Production, it should reference `eng/common/templates-official` templates.  Otherwise, reference `eng/common/templates` templates.  See [azure-pipelines.yml](../../azure-pipelines.yml) (templates-official example) or [azure-pipelines-pr.yml](../../azure-pipelines-pr.yml) (templates example) for examples.
 
-If you reference a template under the `job`, `jobs`, or `post-build` subdirectories, then the `templateIs1ESManaged` parameter should be properly initialized.  References to templates under `steps` or `variables` subdirectories, should provide a default value for `templateIs1ESManaged` which is appropriate for those scenarios, but you can provide a different value when directly referencing those templates if you have a unique scenario.
+If you reference a template under the `job`, `jobs`, or `post-build` subdirectories, then the `templateIs1ESManaged` parameter should be properly initialized.  References to templates under `steps` or `variables` subdirectories, provide a default value for `templateIs1ESManaged` which is appropriate for those scenarios, but you can provide a different value when directly referencing those templates if you have a unique scenario.  See [Development Notes](#development-notes) below for more information on the `templateIs1ESManaged1 parameter.
 
 
 ## Multiple outputs
