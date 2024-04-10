@@ -21,7 +21,7 @@ parameters:
   # one job runs on 'defaultManagedPlatform'.
   platforms: []
 
-  templateIs1ESManaged: false
+  templateIs1ESManaged: ''
 
 jobs:
 

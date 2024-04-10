@@ -24,7 +24,7 @@ parameters:
   MirrorBranch: main
   condition: ''
   JobNameSuffix: ''
-  templateIs1ESManaged: false
+  templateIs1ESManaged: ''
 jobs:
 - job: OneLocBuild${{ parameters.JobNameSuffix }}
   
@@ -58,10 +58,13 @@ jobs:
       # If it's not devdiv, it's dnceng
       ${{ if ne(variables['System.TeamProject'], 'DevDiv') }}:
         name: $(DncEngInternalBuildPool)
-        image: 1es-windows-2022-pt
+        image: 1es-windows-2022
         os: windows
 
   steps:
+    - ${{ if eq(parameters.templateIs1ESManaged, '') }}:
+      - 'Illegal entry point, templateIs1ESManaged is not defined. Repository yaml should not directly reference templates in core-templates folder.': error
+
     - ${{ if ne(parameters.SkipLocProjectJsonGeneration, 'true') }}:
       - task: Powershell@2
         inputs:

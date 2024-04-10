@@ -8,7 +8,7 @@ parameters:
   condition: ''
   dependsOn: ''
   pool: ''
-  templateIs1ESManaged: false
+  templateIs1ESManaged: ''
 
 jobs:
 - job: SourceIndexStage1
@@ -39,6 +39,9 @@ jobs:
         image: windows.vs2022.amd64
 
   steps:
+  - ${{ if eq(parameters.templateIs1ESManaged, '') }}:
+    - 'Illegal entry point, templateIs1ESManaged is not defined. Repository yaml should not directly reference templates in core-templates folder.': error
+
   - ${{ each preStep in parameters.preSteps }}:
     - ${{ preStep }}
 

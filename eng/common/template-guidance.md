@@ -2,9 +2,6 @@
 
 Arcade provides templates for public (`/templates`) and 1ES pipeline templates (`/templates-official`) scenarios.  Pipelines which are required to be managed by 1ES pipeline templates should reference `/templates-offical`, all other pipelines may reference `/templates`.
 
-Additional implementation notes regarding 1ES pipeline templates can be found in the [Guidance for implementing 1ES Pipeline Templates](https://microsoft-my.sharepoint.com/:w:/r/personal/mjanecke_microsoft_com/Documents/Guidance%20for%20Implementing%201ES%20Pipeline%20Templates.docx?d=wb85ba51ba3a54329ba8a3c55e1698f73&csf=1&web=1&e=NIZo0V) doc.
-
-
 ## How to use
 
 - 1ES Pipeline Template or 1ES Microbuild template runs should reference `eng/common/templates-official`
