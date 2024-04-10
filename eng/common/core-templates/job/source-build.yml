@@ -49,17 +49,21 @@ jobs:
     # /eng/common/core-templates/variables/pool-providers.yml can't be used here (some customers declare variables already), so duplicate its logic
     ${{ if eq(parameters.templateIs1ESManaged, 'true') }}:
       pool:
-        name: $[replace(replace(eq(contains(coalesce(variables['System.PullRequest.TargetBranch'], variables['Build.SourceBranch'], 'refs/heads/main'), 'release'), 'true'), True, 'NetCore1ESPool-Svc-Internal'), False, 'NetCore1ESPool-Internal')]
-        image: 1es-mariner-2
-        os: linux
+        ${{ if eq(variables['System.TeamProject'], 'public') }}:
+          name: $[replace(replace(eq(contains(coalesce(variables['System.PullRequest.TargetBranch'], variables['Build.SourceBranch'], 'refs/heads/main'), 'release'), 'true'), True, 'NetCore-Svc-Public' ), False, 'NetCore-Public')]
+          demands: ImageOverride -equals build.ubuntu.2004.amd64
+        ${{ if eq(variables['System.TeamProject'], 'internal') }}:
+          name: $[replace(replace(eq(contains(coalesce(variables['System.PullRequest.TargetBranch'], variables['Build.SourceBranch'], 'refs/heads/main'), 'release'), 'true'), True, 'NetCore1ESPool-Svc-Internal'), False, 'NetCore1ESPool-Internal')]
+          image: 1es-mariner-2
+          os: linux
     ${{ else }}:
       pool:
         ${{ if eq(variables['System.TeamProject'], 'public') }}:
           name: $[replace(replace(eq(contains(coalesce(variables['System.PullRequest.TargetBranch'], variables['Build.SourceBranch'], 'refs/heads/main'), 'release'), 'true'), True, 'NetCore-Svc-Public' ), False, 'NetCore-Public')]
-          demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
+          demands: ImageOverride -equals Build.Ubuntu.2204.Amd64.Open
         ${{ if eq(variables['System.TeamProject'], 'internal') }}:
           name: $[replace(replace(eq(contains(coalesce(variables['System.PullRequest.TargetBranch'], variables['Build.SourceBranch'], 'refs/heads/main'), 'release'), 'true'), True, 'NetCore1ESPool-Svc-Internal'), False, 'NetCore1ESPool-Internal')]
-          demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
+          demands: ImageOverride -equals Build.Ubuntu.2204.Amd64
   ${{ if ne(parameters.platform.pool, '') }}:
     pool: ${{ parameters.platform.pool }}
 
