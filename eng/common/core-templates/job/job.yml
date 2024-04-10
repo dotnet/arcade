@@ -36,7 +36,7 @@ parameters:
 
 # Sbom related params
   enableSbom: true
-  PackageVersion: 7.0.0
+  PackageVersion: 9.0.0
   BuildDropPath: '$(Build.SourcesDirectory)/artifacts'
 
 # 1es specific parameters
