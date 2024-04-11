@@ -2,7 +2,7 @@ stages:
 - template: /eng/common/core-templates/post-build/post-build.yml
   parameters:
     # Specifies whether to use 1ES
-    templateIs1ESManaged: true
+    is1ESPipeline: true
 
     ${{ each parameter in parameters }}:
       ${{ parameter.key }}: ${{ parameter.value }}

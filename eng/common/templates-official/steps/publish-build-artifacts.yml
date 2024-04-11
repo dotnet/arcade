@@ -21,12 +21,12 @@ parameters:
   type: string
   default: 'Container'
 
-- name: templateIs1ESManaged
+- name: is1ESPipeline
   type: boolean
   default: true
   
 steps:
-- ${{ if ne(parameters.templateIs1ESManaged, true) }}:
+- ${{ if ne(parameters.is1ESPipeline, true) }}:
   - 'eng/common/templates-official cannot be referenced from a non-1ES managed template': error
 - task: 1ES.PublishBuildArtifacts@1
   displayName: ${{ parameters.displayName }}

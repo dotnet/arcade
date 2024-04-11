@@ -11,7 +11,7 @@ parameters:
   ManifestDirPath: $(Build.ArtifactStagingDirectory)/sbom
   IgnoreDirectories: ''
   sbomContinueOnError: true
-  templateIs1ESManaged: false
+  is1ESPipeline: false
   # disable publishArtifacts if some other step is publishing the artifacts (like job.yml).
   publishArtifacts: true
 
@@ -45,7 +45,7 @@ steps:
 - ${{ if eq(parameters.publishArtifacts, 'true')}}:
   - template: /eng/common/core-templates/steps/publish-pipeline-artifacts.yml
     parameters:
-      templateIs1ESManaged: ${{ parameters.templateIs1ESManaged }}
+      is1ESPipeline: ${{ parameters.is1ESPipeline }}
       args:
         displayName: Publish SBOM manifest
         continueOnError: ${{parameters.sbomContinueOnError}}

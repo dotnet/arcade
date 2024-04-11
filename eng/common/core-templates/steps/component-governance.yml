@@ -1,7 +1,7 @@
 parameters:
   disableComponentGovernance: false
   componentGovernanceIgnoreDirectories: ''
-  templateIs1ESManaged: false
+  is1ESPipeline: false
   
 steps:
 - ${{ if eq(parameters.disableComponentGovernance, 'true') }}:

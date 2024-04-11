@@ -30,7 +30,7 @@ parameters:
 
   signingValidationAdditionalParameters: ''
 
-  templateIs1ESManaged: ''
+  is1ESPipeline: ''
 
 jobs:
 - job: Asset_Registry_Publish
@@ -46,7 +46,7 @@ jobs:
   variables:
   - template: /eng/common/core-templates/variables/pool-providers.yml
     parameters:
-      templateIs1ESManaged: ${{ parameters.templateIs1ESManaged }}
+      is1ESPipeline: ${{ parameters.is1ESPipeline }}
   - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - group: Publish-Build-Assets
     - group: AzureDevOps-Artifact-Feeds-Pats
@@ -68,8 +68,8 @@ jobs:
       image: windows.vs2019.amd64
       os: windows
   steps:
-  - ${{ if eq(parameters.templateIs1ESManaged, '') }}:
-    - 'Illegal entry point, templateIs1ESManaged is not defined. Repository yaml should not directly reference templates in core-templates folder.': error
+  - ${{ if eq(parameters.is1ESPipeline, '') }}:
+    - 'Illegal entry point, is1ESPipeline is not defined. Repository yaml should not directly reference templates in core-templates folder.': error
 
   - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - checkout: self
@@ -113,7 +113,7 @@ jobs:
 
     - template: /eng/common/core-templates/steps/publish-build-artifacts.yml
       parameters:
-        templateIs1ESManaged: ${{ parameters.templateIs1ESManaged }}
+        is1ESPipeline: ${{ parameters.is1ESPipeline }}
         args:
           displayName: Publish ReleaseConfigs Artifact
           pathToPublish: '$(Build.StagingDirectory)/ReleaseConfigs'
@@ -138,7 +138,7 @@ jobs:
 
     - template: /eng/common/core-templates/steps/publish-build-artifacts.yml
       parameters:
-        templateIs1ESManaged: ${{ parameters.templateIs1ESManaged }}
+        is1ESPipeline: ${{ parameters.is1ESPipeline }}
         args:
           displayName: Publish SymbolPublishingExclusionsFile Artifact
           condition: eq(variables['SymbolExclusionFile'], 'true') 
@@ -167,5 +167,5 @@ jobs:
     - ${{ if eq(parameters.enablePublishBuildArtifacts, 'true') }}:
       - template: /eng/common/core-templates/steps/publish-logs.yml
         parameters:
-          templateIs1ESManaged: ${{ parameters.templateIs1ESManaged }}
+          is1ESPipeline: ${{ parameters.is1ESPipeline }}
           JobLabel: 'Publish_Artifacts_Logs'     

@@ -88,7 +88,7 @@ parameters:
     type: boolean
     default: false
 
-  - name: templateIs1ESManaged
+  - name: is1ESPipeline
     type: boolean
     default: false
 
@@ -101,7 +101,7 @@ stages:
       - template: common-variables.yml
       - template: /eng/common/core-templates/variables/pool-providers.yml
         parameters:
-          templateIs1ESManaged: ${{ parameters.templateIs1ESManaged }}
+          is1ESPipeline: ${{ parameters.is1ESPipeline }}
     jobs:
     - job:
       displayName: NuGet Validation
@@ -197,7 +197,7 @@ stages:
 
         - template: /eng/common/core-templates/steps/publish-logs.yml
           parameters:
-            templateIs1ESManaged: ${{ parameters.templateIs1ESManaged }}
+            is1ESPipeline: ${{ parameters.is1ESPipeline }}
             StageLabel: 'Validation'
             JobLabel: 'Signing'
             BinlogToolVersion: $(BinlogToolVersion)
@@ -256,7 +256,7 @@ stages:
       - template: common-variables.yml
       - template: /eng/common/core-templates/variables/pool-providers.yml
         parameters:
-          templateIs1ESManaged: ${{ parameters.templateIs1ESManaged }}
+          is1ESPipeline: ${{ parameters.is1ESPipeline }}
     jobs:
     - job:
       displayName: Publish Using Darc

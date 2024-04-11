@@ -4,16 +4,21 @@ Arcade provides templates for public (`/templates`) and 1ES pipeline templates (
 
 ## How to use
 
-- 1ES Pipeline Template or 1ES Microbuild template runs should reference `eng/common/templates-official`
+Basic guidance is:
 
-- All other runs should reference `eng/common/templates`
+- 1ES Pipeline Template or 1ES Microbuild template runs should reference `eng/common/templates-official`. Any internal production-graded pipeline should use these templates.
 
-- If you directly reference `steps` or `variables` templates, make sure the default value for `templateIs1ESManaged` is properly set or explicitly provide it.
+- All other runs should reference `eng/common/templates`.
 
-If your pipeline runs internal and is Production, it should reference `eng/common/templates-official` templates.  Otherwise, reference `eng/common/templates` templates.  See [azure-pipelines.yml](../../azure-pipelines.yml) (templates-official example) or [azure-pipelines-pr.yml](../../azure-pipelines-pr.yml) (templates example) for examples.
+See [azure-pipelines.yml](../../azure-pipelines.yml) (templates-official example) or [azure-pipelines-pr.yml](../../azure-pipelines-pr.yml) (templates example) for examples.
 
-If you reference a template under the `job`, `jobs`, or `post-build` subdirectories, then the `templateIs1ESManaged` parameter should be properly initialized.  References to templates under `steps` or `variables` subdirectories, generally provide a default value for `templateIs1ESManaged` which is appropriate for those scenarios, but you can provide a different value when directly referencing those templates if you have a unique scenario.  See [Development Notes](#development-notes) below for more information on the `templateIs1ESManaged1 parameter.
+#### The `templateIs1ESManaged` parameter
 
+The `templateIs1ESManaged` is available on most templates and affects which of the variants is used for nested templates. See [Development Notes](#development-notes) below for more information on the `templateIs1ESManaged1 parameter.
+
+- For templates under `job/`, `jobs/`, or `post-build/`, this parameter must be explicitly set.
+
+- For templates under `steps/` or `variables/`, the parameter provides a suitable default value for most cases but you can choose to override it.
 
 ## Multiple outputs
 
@@ -112,13 +117,13 @@ eng\common\
 
 In the table above, a file is designated as "shim", "logic", or "redirect".
 
-- shim - represents a yaml file which is an intermediate step between pipeline logic and .Net Core Engineering's templates (`core-templates`) and defines the `templateIs1ESManaged` parameter value.
+- shim - represents a yaml file which is an intermediate step between pipeline logic and .Net Core Engineering's templates (`core-templates`) and defines the `is1ESPipeline` parameter value.
 
 - logic - represents actual base template logic.
 
 - redirect- represents a file in `core-templates` which redirects to the "logic" file in either `templates` or `templates-official`.
 
-Logic for Arcade's templates live **primarily** in the `core-templates` folder.  The exceptions to the location of the logic files are around artifact publishing, which is handled differently between 1es pipeline templates and standard templates.  `templates` and `templates-official` provide shim entry points which redirect to `core-templates` while also defining the `templateIs1ESManaged` parameter.  If a shim is referenced in `templates`, then `templateIs1ESManaged` is set to `false`.  If a shim is referenced in `templates-official`, then `templateIs1ESManaged` is set to `true`. 
+Logic for Arcade's templates live **primarily** in the `core-templates` folder.  The exceptions to the location of the logic files are around artifact publishing, which is handled differently between 1es pipeline templates and standard templates.  `templates` and `templates-official` provide shim entry points which redirect to `core-templates` while also defining the `is1ESPipeline` parameter.  If a shim is referenced in `templates`, then `is1ESPipeline` is set to `false`.  If a shim is referenced in `templates-official`, then `is1ESPipeline` is set to `true`. 
 
 Within `templates` and `templates-official`, the templates at the "stages", and "jobs" / "job" level have been replaced with shims.  Templates at the "steps" and "variables" level are typically too granular to be replaced with shims and instead persist logic which is directly applicable to either scenario.
 

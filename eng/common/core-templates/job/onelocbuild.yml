@@ -24,7 +24,7 @@ parameters:
   MirrorBranch: main
   condition: ''
   JobNameSuffix: ''
-  templateIs1ESManaged: ''
+  is1ESPipeline: ''
 jobs:
 - job: OneLocBuild${{ parameters.JobNameSuffix }}
   
@@ -43,7 +43,7 @@ jobs:
         value: ${{ variables._GenerateLocProjectArguments }} -UseCheckedInLocProjectJson
     - template: /eng/common/core-templates/variables/pool-providers.yml
       parameters:
-        templateIs1ESManaged: ${{ parameters.templateIs1ESManaged }}
+        is1ESPipeline: ${{ parameters.is1ESPipeline }}
 
   ${{ if ne(parameters.pool, '') }}:
     pool: ${{ parameters.pool }}
@@ -62,8 +62,8 @@ jobs:
         os: windows
 
   steps:
-    - ${{ if eq(parameters.templateIs1ESManaged, '') }}:
-      - 'Illegal entry point, templateIs1ESManaged is not defined. Repository yaml should not directly reference templates in core-templates folder.': error
+    - ${{ if eq(parameters.is1ESPipeline, '') }}:
+      - 'Illegal entry point, is1ESPipeline is not defined. Repository yaml should not directly reference templates in core-templates folder.': error
 
     - ${{ if ne(parameters.SkipLocProjectJsonGeneration, 'true') }}:
       - task: Powershell@2
@@ -102,7 +102,7 @@ jobs:
 
     - template: /eng/common/core-templates/steps/publish-build-artifacts.yml
       parameters:
-        templateIs1ESManaged: ${{ parameters.templateIs1ESManaged }}
+        is1ESPipeline: ${{ parameters.is1ESPipeline }}
         args:
           displayName: Publish Localization Files
           pathToPublish: '$(Build.ArtifactStagingDirectory)/loc'
@@ -112,7 +112,7 @@ jobs:
 
     - template: /eng/common/core-templates/steps/publish-build-artifacts.yml
       parameters:
-        templateIs1ESManaged: ${{ parameters.templateIs1ESManaged }}
+        is1ESPipeline: ${{ parameters.is1ESPipeline }}
         args:
           displayName: Publish LocProject.json
           pathToPublish: '$(Build.SourcesDirectory)/eng/Localize/'

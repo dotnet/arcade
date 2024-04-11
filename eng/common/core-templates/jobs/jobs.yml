@@ -42,14 +42,14 @@ parameters:
   sourceIndexParams: {}
 
   artifacts: {}
-  templateIs1ESManaged: ''
+  is1ESPipeline: ''
 
 # Internal resources (telemetry, microbuild) can only be accessed from non-public projects,
 # and some (Microbuild) should only be applied to non-PR cases for internal builds.
 
 jobs:
 - ${{ each job in parameters.jobs }}:
-  - ${{ if eq(parameters.templateIs1ESManaged, 'true') }}:
+  - ${{ if eq(parameters.is1ESPipeline, 'true') }}:
     - template: /eng/common/templates-official/job/job.yml
       parameters: 
         # pass along parameters
@@ -82,7 +82,7 @@ jobs:
 - ${{ if eq(parameters.enableSourceBuild, true) }}:
   - template: /eng/common/core-templates/jobs/source-build.yml
     parameters:
-      templateIs1ESManaged: ${{ parameters.templateIs1ESManaged }}
+      is1ESPipeline: ${{ parameters.is1ESPipeline }}
       allCompletedJobId: Source_Build_Complete
       ${{ each parameter in parameters.sourceBuildParameters }}:
         ${{ parameter.key }}: ${{ parameter.value }}
@@ -90,7 +90,7 @@ jobs:
 - ${{ if eq(parameters.enableSourceIndex, 'true') }}:
   - template: ../job/source-index-stage1.yml
     parameters:
-      templateIs1ESManaged: ${{ parameters.templateIs1ESManaged }}
+      is1ESPipeline: ${{ parameters.is1ESPipeline }}
       runAsPublic: ${{ parameters.runAsPublic }}
       ${{ each parameter in parameters.sourceIndexParams }}:
         ${{ parameter.key }}: ${{ parameter.value }}
@@ -99,7 +99,7 @@ jobs:
   - ${{ if or(eq(parameters.enablePublishBuildAssets, true), eq(parameters.artifacts.publish.manifests, 'true'), ne(parameters.artifacts.publish.manifests, '')) }}:
     - template: ../job/publish-build-assets.yml
       parameters:
-        templateIs1ESManaged: ${{ parameters.templateIs1ESManaged }}
+        is1ESPipeline: ${{ parameters.is1ESPipeline }}
         continueOnError: ${{ parameters.continueOnError }}
         dependsOn:
         - ${{ if ne(parameters.publishBuildAssetsDependsOn, '') }}:

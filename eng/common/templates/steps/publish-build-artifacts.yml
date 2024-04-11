@@ -1,5 +1,5 @@
 parameters:
-- name: templateIs1ESManaged
+- name: is1ESPipeline
   type: boolean
   default: false
 
@@ -26,7 +26,7 @@ parameters:
   default: 'Container'
 
 steps:
-- ${{ if eq(parameters.templateIs1ESManaged, true) }}:
+- ${{ if eq(parameters.is1ESPipeline, true) }}:
   - 'eng/common/templates cannot be referenced from a 1ES managed template': error
 - task: PublishBuildArtifacts@1
   displayName: ${{ parameters.displayName }}

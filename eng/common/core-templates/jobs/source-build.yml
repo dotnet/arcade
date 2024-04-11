@@ -21,7 +21,7 @@ parameters:
   # one job runs on 'defaultManagedPlatform'.
   platforms: []
 
-  templateIs1ESManaged: ''
+  is1ESPipeline: ''
 
 jobs:
 
@@ -38,13 +38,13 @@ jobs:
 - ${{ each platform in parameters.platforms }}:
   - template: /eng/common/core-templates/job/source-build.yml
     parameters:
-      templateIs1ESManaged: ${{ parameters.templateIs1ESManaged }}
+      is1ESPipeline: ${{ parameters.is1ESPipeline }}
       jobNamePrefix: ${{ parameters.jobNamePrefix }}
       platform: ${{ platform }}
 
 - ${{ if eq(length(parameters.platforms), 0) }}:
   - template: /eng/common/core-templates/job/source-build.yml
     parameters:
-      templateIs1ESManaged: ${{ parameters.templateIs1ESManaged }}
+      is1ESPipeline: ${{ parameters.is1ESPipeline }}
       jobNamePrefix: ${{ parameters.jobNamePrefix }}
       platform: ${{ parameters.defaultManagedPlatform }}

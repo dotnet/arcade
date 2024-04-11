@@ -4,7 +4,7 @@ parameters:
   CustomSensitiveDataList: ''
   # A default - in case value from eng/common/core-templates/post-build/common-variables.yml is not passed
   BinlogToolVersion: '1.0.11'
-  templateIs1ESManaged: false
+  is1ESPipeline: false
 
 steps:
 - task: Powershell@2
@@ -49,7 +49,7 @@ steps:
 
 - template: /eng/common/core-templates/steps/publish-build-artifacts.yml
   parameters:
-    templateIs1ESManaged: ${{ parameters.templateIs1ESManaged }}
+    is1ESPipeline: ${{ parameters.is1ESPipeline }}
     args:
       displayName: Publish Logs
       pathToPublish: '$(Build.ArtifactStagingDirectory)/PostBuildLogs'
