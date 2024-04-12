@@ -124,6 +124,7 @@ stages:
           parameters:
             BARBuildId: ${{ parameters.BARBuildId }}
             PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
+            is1ESPipeline: ${{ parameters.is1ESPipeline }}
 
         - task: DownloadBuildArtifacts@0
           displayName: Download Package Artifacts
@@ -163,6 +164,7 @@ stages:
           parameters:
             BARBuildId: ${{ parameters.BARBuildId }}
             PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
+            is1ESPipeline: ${{ parameters.is1ESPipeline }}
 
         - task: DownloadBuildArtifacts@0
           displayName: Download Package Artifacts
@@ -222,6 +224,7 @@ stages:
           parameters:
             BARBuildId: ${{ parameters.BARBuildId }}
             PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
+            is1ESPipeline: ${{ parameters.is1ESPipeline }}
 
         - task: DownloadBuildArtifacts@0
           displayName: Download Blob Artifacts
@@ -278,6 +281,7 @@ stages:
           parameters:
             BARBuildId: ${{ parameters.BARBuildId }}
             PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
+            is1ESPipeline: ${{ parameters.is1ESPipeline }}
 
         - task: NuGetAuthenticate@1
 
