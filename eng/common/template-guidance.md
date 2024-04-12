@@ -79,6 +79,8 @@ eng\common\
         post-build\
             post-build.yml                   (shim)
             trigger-subscription.yml         (shim)
+            common-variabls.yml              (shim)
+            setup-maestro-vars.yml           (shim)
         steps\
             publish-build-artifacts.yml      (logic)
             publish-pipeline-artifacts.yml   (logic)

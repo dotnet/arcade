@@ -98,7 +98,7 @@ stages:
     dependsOn: ${{ parameters.validateDependsOn }}
     displayName: Validate Build Assets
     variables:
-      - template: common-variables.yml
+      - template: /eng/common/core-templates/post-build/common-variables.yml
       - template: /eng/common/core-templates/variables/pool-providers.yml
         parameters:
           is1ESPipeline: ${{ parameters.is1ESPipeline }}
@@ -120,7 +120,7 @@ stages:
           os: windows
 
       steps:
-        - template: setup-maestro-vars.yml
+        - template: /eng/common/core-templates/post-build/setup-maestro-vars.yml
           parameters:
             BARBuildId: ${{ parameters.BARBuildId }}
             PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
@@ -159,7 +159,7 @@ stages:
           image: 1es-windows-2022
           os: windows
       steps:
-        - template: setup-maestro-vars.yml
+        - template: /eng/common/core-templates/post-build/setup-maestro-vars.yml
           parameters:
             BARBuildId: ${{ parameters.BARBuildId }}
             PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
@@ -218,7 +218,7 @@ stages:
           image: 1es-windows-2022
           os: windows
       steps:
-        - template: setup-maestro-vars.yml
+        - template: /eng/common/core-templates/post-build/setup-maestro-vars.yml
           parameters:
             BARBuildId: ${{ parameters.BARBuildId }}
             PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
@@ -253,7 +253,7 @@ stages:
       dependsOn: ${{ parameters.validateDependsOn }}
     displayName: Publish using Darc
     variables:
-      - template: common-variables.yml
+      - template: /eng/common/core-templates/post-build/common-variables.yml
       - template: /eng/common/core-templates/variables/pool-providers.yml
         parameters:
           is1ESPipeline: ${{ parameters.is1ESPipeline }}
@@ -274,7 +274,7 @@ stages:
           image: windows.vs2019.amd64
           os: windows
       steps:
-        - template: setup-maestro-vars.yml
+        - template: /eng/common/core-templates/post-build/setup-maestro-vars.yml
           parameters:
             BARBuildId: ${{ parameters.BARBuildId }}
             PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
