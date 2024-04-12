@@ -7,11 +7,10 @@ parameters:
   # artifact for all subsequent jobs to use, to reduce dependence on a strong network connection to
   # GitHub. Using this steps template leaves room for that infra to be included.
 
-  # Defines the platform on which to run the steps. See 'eng/common/core-templates/job/source-build.yml'
+  # Defines the platform on which to run the steps. See 'eng/common/templates/job/source-build.yml'
   # for details. The entire object is described in the 'job' template for simplicity, even though
   # the usage of the properties on this object is split between the 'job' and 'steps' templates.
   platform: {}
-  is1ESPipeline: false
 
 steps:
 # Build. Keep it self-contained for simple reusability. (No source-build-specific job variables.)
@@ -114,15 +113,13 @@ steps:
   continueOnError: true
   condition: succeededOrFailed()
 
-- template: /eng/common/core-templates/steps/publish-pipeline-artifacts.yml
-  parameters:
-    is1ESPipeline: ${{ parameters.is1ESPipeline }}
-    args:
-      displayName: Publish BuildLogs
-      targetPath: '$(Build.StagingDirectory)/BuildLogs'
-      artifactName: BuildLogs_SourceBuild_${{ parameters.platform.name }}_Attempt$(System.JobAttempt)
-      continueOnError: true
-      condition: succeededOrFailed()
+- task: PublishPipelineArtifact@1
+  displayName: Publish BuildLogs
+  inputs:
+    targetPath: '$(Build.StagingDirectory)/BuildLogs'
+    artifactName: BuildLogs_SourceBuild_${{ parameters.platform.name }}_Attempt$(System.JobAttempt)
+  continueOnError: true
+  condition: succeededOrFailed()
 
 # Manually inject component detection so that we can ignore the source build upstream cache, which contains
 # a nupkg cache of input packages (a local feed).
