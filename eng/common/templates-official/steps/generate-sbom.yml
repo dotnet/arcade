@@ -5,15 +5,12 @@
 # IgnoreDirectories - Directories to ignore for SBOM generation. This will be passed through to the CG component detector.
 
 parameters:
-  PackageVersion: 9.0.0
+  PackageVersion: 7.0.0
   BuildDropPath: '$(Build.SourcesDirectory)/artifacts'
   PackageName: '.NET'
   ManifestDirPath: $(Build.ArtifactStagingDirectory)/sbom
   IgnoreDirectories: ''
   sbomContinueOnError: true
-  is1ESPipeline: false
-  # disable publishArtifacts if some other step is publishing the artifacts (like job.yml).
-  publishArtifacts: true
 
 steps:
 - task: PowerShell@2 
@@ -42,13 +39,10 @@ steps:
       ${{ if ne(parameters.IgnoreDirectories, '') }}:
         AdditionalComponentDetectorArgs: '--IgnoreDirectories ${{ parameters.IgnoreDirectories }}'
 
-- ${{ if eq(parameters.publishArtifacts, 'true')}}:
-  - template: /eng/common/core-templates/steps/publish-pipeline-artifacts.yml
-    parameters:
-      is1ESPipeline: ${{ parameters.is1ESPipeline }}
-      args:
-        displayName: Publish SBOM manifest
-        continueOnError: ${{parameters.sbomContinueOnError}}
-        targetPath: '${{ parameters.manifestDirPath }}'
-        artifactName: $(ARTIFACT_NAME)
+- task: 1ES.PublishPipelineArtifact@1
+  displayName: Publish SBOM manifest
+  continueOnError: ${{parameters.sbomContinueOnError}}
+  inputs:
+    targetPath: '${{parameters.manifestDirPath}}'
+    artifactName: $(ARTIFACT_NAME)
 
