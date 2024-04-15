@@ -55,6 +55,12 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
             }
         }
 
+        public string RepoOrigin
+        {
+            get { return Attributes.GetOrDefault(nameof(RepoOrigin)); }
+            set { Attributes[nameof(RepoOrigin)] = value; }
+        }
+
         public override string ToString() => $"Package {Id} {Version}";
 
         public override bool Equals(object obj)
