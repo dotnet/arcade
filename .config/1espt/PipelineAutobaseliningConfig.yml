@@ -23,20 +23,20 @@ pipelines:
     retail:
       binary:
         credscan:
-          lastModifiedDate: 2024-04-12
+          lastModifiedDate: 2024-04-15
         binskim:
-          lastModifiedDate: 2024-04-12
+          lastModifiedDate: 2024-04-15
         spotbugs:
-          lastModifiedDate: 2024-04-12
+          lastModifiedDate: 2024-04-15
       source:
         credscan:
-          lastModifiedDate: 2024-04-12
+          lastModifiedDate: 2024-04-15
         eslint:
-          lastModifiedDate: 2024-04-12
+          lastModifiedDate: 2024-04-15
         psscriptanalyzer:
-          lastModifiedDate: 2024-04-12
+          lastModifiedDate: 2024-04-15
         armory:
-          lastModifiedDate: 2024-04-12
+          lastModifiedDate: 2024-04-15
   16:
     retail:
       source:
