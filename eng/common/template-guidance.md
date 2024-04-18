@@ -16,9 +16,7 @@ See [azure-pipelines.yml](../../azure-pipelines.yml) (templates-official example
 
 The `templateIs1ESManaged` is available on most templates and affects which of the variants is used for nested templates. See [Development Notes](#development-notes) below for more information on the `templateIs1ESManaged1 parameter.
 
-- For templates under `job/`, `jobs/`, or `post-build/`, this parameter must be explicitly set.
-
-- For templates under `steps/` or `variables/`, the parameter provides a suitable default value for most cases but you can choose to override it.
+- For templates under `job/`, `jobs/`, `steps`, or `post-build/`, this parameter must be explicitly set.
 
 ## Multiple outputs
 
@@ -84,6 +82,13 @@ eng\common\
         steps\
             publish-build-artifacts.yml      (logic)
             publish-pipeline-artifacts.yml   (logic)
+            add-build-channel.yml            (shim)
+            component-governance.yml         (shim)
+            generate-sbom.yml                (shim)
+            publish-logs.yml                 (shim)
+            retain-build.yml                 (shim)
+            send-to-helix.yml                (shim)
+            source-build.yml                 (shim)
         variables\
             pool-providers.yml               (logic + redirect) # templates/variables/pool-providers.yml will redirect to templates-official/variables/pool-providers.yml if you are running in the internal project
             sdl-variables.yml                (logic)
