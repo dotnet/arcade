@@ -231,7 +231,7 @@
       ManifestBranch="$(BUILD_SOURCEBRANCH)"
       ManifestBuildId="$(BUILD_BUILDNUMBER)"
       ManifestCommit="$(BUILD_SOURCEVERSION)"
-      ManifestRepoOrigin="$(RepositoryName)"
+      ManifestRepoOrigin="$(GitHubRepositoryName)"
       IsStableBuild="$(IsStableBuild)"
       PublishingVersion="$(PublishingVersion)"
       AssetManifestPath="$(AssetManifestFilePath)" 
