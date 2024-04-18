@@ -19,7 +19,7 @@ jobs:
         - ${{ if and(ne(parameters.artifacts.publish.logs, 'false'), ne(parameters.artifacts.publish.logs, '')) }}:
           - output: pipelineArtifact
             targetPath: '$(Build.ArtifactStagingDirectory)/artifacts/log'
-            artifactName: ${{ coalesce(parameters.artifacts.publish.logs.name, 'Logs_Build_$(Agent.Os)_$(_BuildConfig)') }}
+            artifactName: ${{ coalesce(parameters.artifacts.publish.logs.name, 'Logs_Build_$(Agent.Os)_$(_BuildConfig)_Attempt$(System.JobAttempt)') }}
             displayName: 'Publish logs'
             continueOnError: true
             condition: always()
