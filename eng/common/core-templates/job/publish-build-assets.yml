@@ -132,7 +132,7 @@ jobs:
             Write-Host "##vso[task.setvariable variable=SymbolExclusionFile]true"
           }
           else{
-           Write-Host "Symbols Exclusion file does not exists"
+           Write-Host "Symbols Exclusion file does not exist"
            Write-Host "##vso[task.setvariable variable=SymbolExclusionFile]false"
           }
 
