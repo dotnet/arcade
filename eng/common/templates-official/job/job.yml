@@ -51,6 +51,11 @@ jobs:
       - ${{ if ne(parameters.templateContext.outputs, '') }}:
         - ${{ each output in parameters.templateContext.outputs }}:
           - ${{ output }}
+      
+      # add any remaining templateContext properties
+      ${{ each context in parameters.templateContext }}:
+        ${{ if and(ne(context.key, 'outputParentDirectory'), ne(context.key, 'outputs')) }}:
+          ${{ context.key }}: ${{ context.value }}
 
     ${{ each parameter in parameters }}:
       ${{ if and(ne(parameter.key, 'templateContext'), ne(parameter.key, 'is1ESPipeline')) }}:
