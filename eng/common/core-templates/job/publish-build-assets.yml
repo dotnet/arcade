@@ -151,6 +151,7 @@ jobs:
         parameters:
           BARBuildId: ${{ parameters.BARBuildId }}
           PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
+          is1ESPipeline: ${{ parameters.is1ESPipeline }}
 
       - task: PowerShell@2
         displayName: Publish Using Darc
