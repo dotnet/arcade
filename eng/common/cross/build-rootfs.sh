@@ -168,8 +168,7 @@ while :; do
             __UbuntuArch=armhf
             __QEMUArch=arm
             __UbuntuRepo="http://raspbian.raspberrypi.org/raspbian/"
-            __CodeName=buster
-            __LLDB_Package="liblldb-6.0-dev"
+            __CodeName=bullseye
 
             if [[ -e "/usr/share/keyrings/raspbian-archive-keyring.gpg" ]]; then
                 __Keyring="--keyring /usr/share/keyrings/raspbian-archive-keyring.gpg"
