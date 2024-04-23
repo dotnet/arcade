@@ -34,10 +34,6 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>2b8c11bfab5f996b7bb5966a11c0d48a9dc7cdea</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="9.0.0-beta.24223.1">
-      <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>2b8c11bfab5f996b7bb5966a11c0d48a9dc7cdea</Sha>
-    </Dependency>
     <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.24223.1">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
       <Sha>0c89e9cbde00179871f262673c78893f1ce5b688</Sha>
