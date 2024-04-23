@@ -10,12 +10,10 @@
   </PropertyGroup>
   <PropertyGroup>
     <!-- arcade -->
-    <MicrosoftDotNetBuildTasksFeedVersion>9.0.0-beta.24176.6</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftDotNetSignToolVersion>9.0.0-beta.24176.6</MicrosoftDotNetSignToolVersion>
-    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>9.0.0-beta.24176.6</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>9.0.0-beta.24219.5</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
     <!-- arcade-services -->
-    <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.24176.2</MicrosoftDotNetMaestroClientVersion>
-    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.24176.2</MicrosoftDotNetMaestroTasksVersion>
+    <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.24219.1</MicrosoftDotNetMaestroClientVersion>
+    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.24219.1</MicrosoftDotNetMaestroTasksVersion>
     <!-- command-line-api -->
     <SystemCommandLineVersion>2.0.0-beta4.24126.1</SystemCommandLineVersion>
     <!-- corefx -->
@@ -75,13 +73,17 @@
     <SystemTextJsonVersion>9.0.0-alpha.1.24059.2</SystemTextJsonVersion>
     <!-- sdk -->
     <MicrosoftNetSdkWorkloadManifestReaderVersion>8.0.100-preview.3.23178.3</MicrosoftNetSdkWorkloadManifestReaderVersion>
+    <!-- source-build-externals -->
+    <!-- The version is overridden by the VMR to use the version from the previous (n-1) build of Arcade. -->
+    <MicrosoftApplicationInsightsVersion>2.22.0</MicrosoftApplicationInsightsVersion>
+    <NewtonsoftJsonVersion>13.0.3</NewtonsoftJsonVersion>
     <!-- symreader-converter -->
     <MicrosoftDiaSymReaderPdb2PdbVersion>1.1.0-beta2-19575-01</MicrosoftDiaSymReaderPdb2PdbVersion>
     <!-- templating -->
-    <MicrosoftTemplateEngineAuthoringTasksVersion>9.0.100-preview.4.24174.2</MicrosoftTemplateEngineAuthoringTasksVersion>
+    <MicrosoftTemplateEngineAuthoringTasksVersion>9.0.100-preview.4.24221.1</MicrosoftTemplateEngineAuthoringTasksVersion>
     <!-- vstest -->
     <MicrosoftNetTestSdkVersion>17.5.0</MicrosoftNetTestSdkVersion>
     <!-- xharness -->
-    <MicrosoftDotNetXHarnessCLIVersion>9.0.0-prerelease.24168.2</MicrosoftDotNetXHarnessCLIVersion>
+    <MicrosoftDotNetXHarnessCLIVersion>9.0.0-prerelease.24208.1</MicrosoftDotNetXHarnessCLIVersion>
   </PropertyGroup>
 </Project>

@@ -629,6 +629,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 symbolTargetType: PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
+            // .NET 8.0.4xx SDK,
+            new TargetChannelConfig(
+                id: 4586,
+                isInternal: false,
+                publishingInfraVersion: PublishingInfraVersion.Latest,
+                akaMSChannelNames: new List<string>() { "8.0.4xx", "8.0" },
+                targetFeeds: DotNet8Feeds,
+                symbolTargetType: PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
             // .NET 9,
             new TargetChannelConfig(
                 id: 3883,
@@ -1123,6 +1133,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             // VS 17.10
             new TargetChannelConfig(
                 id: 4165,
+                isInternal: false,
+                publishingInfraVersion: PublishingInfraVersion.Latest,
+                akaMSChannelNames: new List<string>(),
+                targetFeeds: DotNetToolsFeeds,
+                symbolTargetType: PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
+            // VS 17.11
+            new TargetChannelConfig(
+                id: 4544,
                 isInternal: false,
                 publishingInfraVersion: PublishingInfraVersion.Latest,
                 akaMSChannelNames: new List<string>(),
