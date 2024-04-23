@@ -1,7 +1,7 @@
 <Project>
 
   <PropertyGroup>
-    <MicrosoftDotNetSwaggerGeneratorMSBuildProjectDirectory>$([MSBuild]::NormalizeDirectory('$(RepoRoot)', 'src', 'Microsoft.DotNet.SwaggerGenerator.MSBuild'))</MicrosoftDotNetSwaggerGeneratorMSBuildProjectDirectory>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildProjectDirectory>$([MSBuild]::NormalizeDirectory('$(RepoRoot)', 'src', 'Microsoft.DotNet.SwaggerGenerator', 'Microsoft.DotNet.SwaggerGenerator.MSBuild'))</MicrosoftDotNetSwaggerGeneratorMSBuildProjectDirectory>
     <MicrosoftDotNetSwaggerGeneratorMSBuildBaseOutputDirectory>$(ArtifactsBinDir)Microsoft.DotNet.SwaggerGenerator.MSBuild\$(Configuration)\</MicrosoftDotNetSwaggerGeneratorMSBuildBaseOutputDirectory>
     <!-- Keep TFMs in sync with Microsoft.DotNet.SwaggerGenerator.MSBuild.csproj -->
     <MicrosoftDotNetSwaggerGeneratorMSBuildDirectory Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MicrosoftDotNetSwaggerGeneratorMSBuildBaseOutputDirectory)$(NetToolCurrent)\</MicrosoftDotNetSwaggerGeneratorMSBuildDirectory>
