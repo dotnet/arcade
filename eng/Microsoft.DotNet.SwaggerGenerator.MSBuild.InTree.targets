@@ -9,7 +9,7 @@
     <!-- Swagger generator msbuild tasks should be invoked out-of-proc in this repository to avoid assembly lock issues. -->
     <MicrosoftDotNetSwaggerGeneratorMSBuildTaskFactory>TaskHostFactory</MicrosoftDotNetSwaggerGeneratorMSBuildTaskFactory>
     <!-- Make sure that the P2Ps are built before swagger generator targets are invoked. -->
-    <MicrosoftDotNetSwaggerGeneratorMSBuildDependsOn>ResolveProjectReferences</MicrosoftDotNetSwaggerGeneratorMSBuildDependsOn>
+    <GenerateSwaggerCodeDependsOn>ResolveProjectReferences</GenerateSwaggerCodeDependsOn>
   </PropertyGroup>
 
   <!-- Props and targets files get automatically imported when referencing via a PackageReference,

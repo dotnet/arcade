@@ -3,7 +3,7 @@
 
   <UsingTask TaskName="GenerateSwaggerCode" AssemblyFile="$(MicrosoftDotNetSwaggerGeneratorMSBuildTasksAssembly)" TaskFactory="$(MicrosoftDotNetSwaggerGeneratorMSBuildTaskFactory)" />
 
-  <Target Name="GenerateCode" DependsOnTargets="$(MicrosoftDotNetSwaggerGeneratorMSBuildDependsOn)">
+  <Target Name="GenerateSwaggerCode" DependsOnTargets="$(GenerateSwaggerCodeDependsOn)">
     <GenerateSwaggerCode
       SwaggerDocumentUri="$(SwaggerDocumentUri)"
       RootNamespace="$(RootNamespace)"

@@ -8,7 +8,7 @@
     <SwaggerDocumentUri>https://helix.dot.net/api/openapi.json</SwaggerDocumentUri>
     <SwaggerClientName>HelixApi</SwaggerClientName>
     <ExcludeFromSwaggerOutputDirectory>README.md</ExcludeFromSwaggerOutputDirectory>
-    <!-- For opt-in GenerateCode target. Re-generate code under generated-code via `dotnet build /t:GenerateCode`. -->
+    <!-- For opt-in GenerateSwaggerCode target. Re-generate code under generated-code via `dotnet build /t:GenerateSwaggerCode`. -->
     <UsingInTreeToolSwaggerGeneratorMSBuild>true</UsingInTreeToolSwaggerGeneratorMSBuild>
   </PropertyGroup>
 
