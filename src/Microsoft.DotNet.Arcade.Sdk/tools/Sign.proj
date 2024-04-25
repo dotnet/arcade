@@ -1,6 +1,19 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project DefaultTargets="Sign">
 
+  <!--
+    Documentation for publishing is available here:
+      - https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Signing.md
+  
+    Optional variables:
+      EnableDefaultArtifacts            Includes *.nupkg, *.vsix and *.wixpack.zip under "/artifacts/packages/**" for sigining.
+                                        Defaults to true.
+
+    Optional items:
+      Artifact (with Metadata)          Path to the artifact to publish. Declare the item in Signing.props to sign and publish the artifact.
+        - SkipPublish                     If true, skips publishing the artifact.
+  -->
+
   <PropertyGroup>
     <!-- Disable target framework filtering for top level projects -->
     <NoTargetFrameworkFiltering>true</NoTargetFrameworkFiltering>
