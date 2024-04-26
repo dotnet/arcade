@@ -451,13 +451,34 @@ fi
 mkdir -p "$__RootfsDir"
 __RootfsDir="$( cd "$__RootfsDir" && pwd )"
 
+if command -v wget &> /dev/null; then
+    __downloadTool="$(command -v wget)"
+    __prefixFlag="-P"
+    __redirectFlag="-O-"
+    __inplaceOutputFlag="-O"
+    __quietFlag="-q"
+    __postFlag="--post-data"
+elif command -v curl &> /dev/null; then
+    __downloadTool="$(command -v curl)"
+    __prefixFlag="-O --output-dir"
+    __inplaceFlag="-SLO"
+    __redirectFlag="-SL"
+    __inplaceOutputFlag="-SLo"
+    __quietFlag="-s"
+    __postFlag="-XPOST --data"
+else
+    >&2 echo "ERROR: either wget or curl is required by this script."
+    exit 1
+fi
+
 if [[ "$__CodeName" == "alpine" ]]; then
     __ApkToolsVersion=2.12.11
     __ApkToolsDir="$(mktemp -d)"
     __ApkKeysDir="$(mktemp -d)"
 
     arch="$(uname -m)"
-    wget "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v$__ApkToolsVersion/$arch/apk.static" -P "$__ApkToolsDir"
+    # shellcheck disable=SC2086
+    "$__downloadTool" "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v$__ApkToolsVersion/$arch/apk.static" $__prefixFlag "$__ApkToolsDir"
     if [[ "$arch" == "x86_64" ]]; then
       __ApkToolsSHA512SUM="53e57b49230da07ef44ee0765b9592580308c407a8d4da7125550957bb72cb59638e04f8892a18b584451c8d841d1c7cb0f0ab680cc323a3015776affaa3be33"
     elif [[ "$arch" == "aarch64" ]]; then
@@ -520,12 +541,12 @@ if [[ "$__CodeName" == "alpine" ]]; then
 elif [[ "$__CodeName" == "freebsd" ]]; then
     mkdir -p "$__RootfsDir"/usr/local/etc
     JOBS=${MAXJOBS:="$(getconf _NPROCESSORS_ONLN)"}
-    wget -O - "https://download.freebsd.org/ftp/releases/${__FreeBSDArch}/${__FreeBSDMachineArch}/${__FreeBSDBase}/base.txz" | tar -C "$__RootfsDir" -Jxf - ./lib ./usr/lib ./usr/libdata ./usr/include ./usr/share/keys ./etc ./bin/freebsd-version
+    "$__downloadTool" $__redirectFlag "https://download.freebsd.org/ftp/releases/${__FreeBSDArch}/${__FreeBSDMachineArch}/${__FreeBSDBase}/base.txz" | tar -C "$__RootfsDir" -Jxf - ./lib ./usr/lib ./usr/libdata ./usr/include ./usr/share/keys ./etc ./bin/freebsd-version
     echo "ABI = \"FreeBSD:${__FreeBSDABI}:${__FreeBSDMachineArch}\"; FINGERPRINTS = \"${__RootfsDir}/usr/share/keys\"; REPOS_DIR = [\"${__RootfsDir}/etc/pkg\"]; REPO_AUTOUPDATE = NO; RUN_SCRIPTS = NO;" > "${__RootfsDir}"/usr/local/etc/pkg.conf
     echo "FreeBSD: { url: \"pkg+http://pkg.FreeBSD.org/\${ABI}/quarterly\", mirror_type: \"srv\", signature_type: \"fingerprints\", fingerprints: \"${__RootfsDir}/usr/share/keys/pkg\", enabled: yes }" > "${__RootfsDir}"/etc/pkg/FreeBSD.conf
     mkdir -p "$__RootfsDir"/tmp
     # get and build package manager
-    wget -O - "https://github.com/freebsd/pkg/archive/${__FreeBSDPkg}.tar.gz" | tar -C "$__RootfsDir"/tmp -zxf -
+    "$__downloadTool" $__redirectFlag "https://github.com/freebsd/pkg/archive/${__FreeBSDPkg}.tar.gz" | tar -C "$__RootfsDir"/tmp -zxf -
     cd "$__RootfsDir/tmp/pkg-${__FreeBSDPkg}"
     # needed for install to succeed
     mkdir -p "$__RootfsDir"/host/etc
@@ -540,14 +561,14 @@ elif [[ "$__CodeName" == "illumos" ]]; then
     pushd "$__RootfsDir/tmp"
     JOBS=${MAXJOBS:="$(getconf _NPROCESSORS_ONLN)"}
     echo "Downloading sysroot."
-    wget -O - https://github.com/illumos/sysroot/releases/download/20181213-de6af22ae73b-v1/illumos-sysroot-i386-20181213-de6af22ae73b-v1.tar.gz | tar -C "$__RootfsDir" -xzf -
+    "$__downloadTool" $__redirectFlag https://github.com/illumos/sysroot/releases/download/20181213-de6af22ae73b-v1/illumos-sysroot-i386-20181213-de6af22ae73b-v1.tar.gz | tar -C "$__RootfsDir" -xzf -
     echo "Building binutils. Please wait.."
-    wget -O - https://ftp.gnu.org/gnu/binutils/binutils-2.33.1.tar.bz2 | tar -xjf -
+    "$__downloadTool" $__redirectFlag https://ftp.gnu.org/gnu/binutils/binutils-2.33.1.tar.bz2 | tar -xjf -
     mkdir build-binutils && cd build-binutils
     ../binutils-2.33.1/configure --prefix="$__RootfsDir" --target="${__illumosArch}-sun-solaris2.10" --program-prefix="${__illumosArch}-illumos-" --with-sysroot="$__RootfsDir"
     make -j "$JOBS" && make install && cd ..
     echo "Building gcc. Please wait.."
-    wget -O - https://ftp.gnu.org/gnu/gcc/gcc-8.4.0/gcc-8.4.0.tar.xz | tar -xJf -
+    "$__downloadTool" $__redirectFlag https://ftp.gnu.org/gnu/gcc/gcc-8.4.0/gcc-8.4.0.tar.xz | tar -xJf -
     CFLAGS="-fPIC"
     CXXFLAGS="-fPIC"
     CXXFLAGS_FOR_TARGET="-fPIC"
@@ -564,7 +585,8 @@ elif [[ "$__CodeName" == "illumos" ]]; then
     fi
     BaseUrl="$BaseUrl/packages/SmartOS/trunk/${__illumosArch}/All"
     echo "Downloading manifest"
-    wget "$BaseUrl"
+    # shellcheck disable=SC2086
+    "$__downloadTool" $__inplaceFlag "$BaseUrl"
     echo "Downloading dependencies."
     read -ra array <<<"$__IllumosPackages"
     for package in "${array[@]}"; do
@@ -572,7 +594,8 @@ elif [[ "$__CodeName" == "illumos" ]]; then
         # find last occurrence of package in listing and extract its name
         package="$(sed -En '/.*href="('"$package"'-[0-9].*).tgz".*/h;$!d;g;s//\1/p' All)"
         echo "Resolved name '$package'"
-        wget "$BaseUrl"/"$package".tgz
+        # shellcheck disable=SC2086
+        "$__downloadTool" $__inplaceFlag "$BaseUrl"/"$package".tgz
         ar -x "$package".tgz
         tar --skip-old-files -xzf "$package".tmp.tg* -C "$__RootfsDir" 2>/dev/null
     done
@@ -581,10 +604,14 @@ elif [[ "$__CodeName" == "illumos" ]]; then
     rm -rf "$__RootfsDir"/{tmp,+*}
     mkdir -p "$__RootfsDir"/usr/include/net
     mkdir -p "$__RootfsDir"/usr/include/netpacket
-    wget -P "$__RootfsDir"/usr/include/net https://raw.githubusercontent.com/illumos/illumos-gate/master/usr/src/uts/common/io/bpf/net/bpf.h
-    wget -P "$__RootfsDir"/usr/include/net https://raw.githubusercontent.com/illumos/illumos-gate/master/usr/src/uts/common/io/bpf/net/dlt.h
-    wget -P "$__RootfsDir"/usr/include/netpacket https://raw.githubusercontent.com/illumos/illumos-gate/master/usr/src/uts/common/inet/sockmods/netpacket/packet.h
-    wget -P "$__RootfsDir"/usr/include/sys https://raw.githubusercontent.com/illumos/illumos-gate/master/usr/src/uts/common/sys/sdt.h
+    # shellcheck disable=SC2086
+    "$__downloadTool" $__prefixFlag "$__RootfsDir"/usr/include/net https://raw.githubusercontent.com/illumos/illumos-gate/master/usr/src/uts/common/io/bpf/net/bpf.h
+    # shellcheck disable=SC2086
+    "$__downloadTool" $__prefixFlag "$__RootfsDir"/usr/include/net https://raw.githubusercontent.com/illumos/illumos-gate/master/usr/src/uts/common/io/bpf/net/dlt.h
+    # shellcheck disable=SC2086
+    "$__downloadTool" $__prefixFlag "$__RootfsDir"/usr/include/netpacket https://raw.githubusercontent.com/illumos/illumos-gate/master/usr/src/uts/common/inet/sockmods/netpacket/packet.h
+    # shellcheck disable=SC2086
+    "$__downloadTool" $__prefixFlag "$__RootfsDir"/usr/include/sys https://raw.githubusercontent.com/illumos/illumos-gate/master/usr/src/uts/common/sys/sdt.h
 elif [[ "$__CodeName" == "haiku" ]]; then
     JOBS=${MAXJOBS:="$(getconf _NPROCESSORS_ONLN)"}
 
@@ -596,7 +623,7 @@ elif [[ "$__CodeName" == "haiku" ]]; then
 
     echo "Downloading Haiku package tool"
     git clone https://github.com/haiku/haiku-toolchains-ubuntu --depth 1 "$__RootfsDir/tmp/script"
-    wget -O "$__RootfsDir/tmp/download/hosttools.zip" "$("$__RootfsDir/tmp/script/fetch.sh" --hosttools)"
+    "$__downloadTool" $__inplaceOutputFlag "$__RootfsDir/tmp/download/hosttools.zip" "$("$__RootfsDir/tmp/script/fetch.sh" --hosttools)"
     unzip -o "$__RootfsDir/tmp/download/hosttools.zip" -d "$__RootfsDir/tmp/bin"
 
     DepotBaseUrl="https://depot.haiku-os.org/__api/v2/pkg/get-pkg"
@@ -609,14 +636,18 @@ elif [[ "$__CodeName" == "haiku" ]]; then
         echo "Downloading $package..."
         # API documented here: https://github.com/haiku/haikudepotserver/blob/master/haikudepotserver-api2/src/main/resources/api2/pkg.yaml#L60
         # The schema here: https://github.com/haiku/haikudepotserver/blob/master/haikudepotserver-api2/src/main/resources/api2/pkg.yaml#L598
-        hpkgDownloadUrl="$(wget -qO- --post-data='{"name":"'"$package"'","repositorySourceCode":"haikuports_'$__HaikuArch'","versionType":"LATEST","naturalLanguageCode":"en"}' \
-            --header='Content-Type:application/json' "$DepotBaseUrl" | jq -r '.result.versions[].hpkgDownloadURL')"
-        wget -P "$__RootfsDir/tmp/download" "$hpkgDownloadUrl"
+        # shellcheck disable=SC2086
+        hpkgDownloadUrl="$("$__downloadTool" $__redirectFlag $__quietFlag $__postFlag '{"name":"'"$package"'","repositorySourceCode":"haikuports_'$__HaikuArch'","versionType":"LATEST","naturalLanguageCode":"en"}' \
+            --header 'Content-Type:application/json' "$DepotBaseUrl" | jq -r '.result.versions[].hpkgDownloadURL')"
+        # shellcheck disable=SC2086
+        "$__downloadTool" $__prefixFlag "$__RootfsDir/tmp/download" "$hpkgDownloadUrl"
     done
     for package in haiku haiku_devel; do
         echo "Downloading $package..."
-        hpkgVersion="$(wget -qO- $HpkgBaseUrl | sed -n 's/^.*version: "\([^"]*\)".*$/\1/p')"
-        wget -P "$__RootfsDir/tmp/download" "$HpkgBaseUrl/packages/$package-$hpkgVersion-1-$__HaikuArch.hpkg"
+        hpkgVersion="$("$__downloadTool" $__redirectFlag $__quietFlag $HpkgBaseUrl | sed -n 's/^.*version: "\([^"]*\)".*$/\1/p')"
+
+        # shellcheck disable=SC2086
+        "$__downloadTool" $__prefixFlag "$__RootfsDir/tmp/download" "$HpkgBaseUrl/packages/$package-$hpkgVersion-1-$__HaikuArch.hpkg"
     done
 
     # Set up the sysroot
@@ -629,7 +660,7 @@ elif [[ "$__CodeName" == "haiku" ]]; then
 
     # Download buildtools
     echo "Downloading Haiku buildtools"
-    wget -O "$__RootfsDir/tmp/download/buildtools.zip" "$("$__RootfsDir/tmp/script/fetch.sh" --buildtools --arch=$__HaikuArch)"
+    "$__downloadTool" $__inplaceOutputFlag "$__RootfsDir/tmp/download/buildtools.zip" "$("$__RootfsDir/tmp/script/fetch.sh" --buildtools --arch=$__HaikuArch)"
     unzip -o "$__RootfsDir/tmp/download/buildtools.zip" -d "$__RootfsDir"
 
     # Cleaning up temporary files
