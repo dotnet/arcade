@@ -12,7 +12,7 @@
     <MicrosoftCciVersion>4.0.0-rc3-24214-00</MicrosoftCciVersion>
     <!-- Keep Microsoft.Data.Services.Client package version in sync with Microsoft.Data.OData -->
     <MicrosoftDataServicesClientVersion>5.8.4</MicrosoftDataServicesClientVersion>
-    <MicrosoftSignedWixVersion>3.14.0-8606.20240208.1</MicrosoftSignedWixVersion>
+    <MicrosoftSignedWixVersion>3.14.1-8722.20240403.1</MicrosoftSignedWixVersion>
     <!-- Overwrite XUnitVersion/XUnitAnalyzersVersion/XUnitAnalyzersVersion that comes from the Arcade SDK to be in sync as Arcade doesn't use a live Arcade SDK.
          Keep in sync with DefaultVersions.props. -->
     <XUnitVersion>2.6.7-pre.5</XUnitVersion>
@@ -21,8 +21,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- arcade -->
-    <PackageVersion Include="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="$(MicrosoftDotNetSwaggerGeneratorMSBuildVersion)" />
     <!-- arcade-services -->
     <PackageVersion Include="Microsoft.DotNet.Maestro.Client" Version="$(MicrosoftDotNetMaestroClientVersion)" />
     <!-- command-line-api -->
@@ -69,7 +67,7 @@
 
   <!-- external -->
   <ItemGroup>
-    <PackageVersion Include="Azure.Core" Version="1.36.0" />
+    <PackageVersion Include="Azure.Core" Version="1.38.0" />
     <PackageVersion Include="Azure.Storage.Blobs" Version="12.19.1" />
     <PackageVersion Include="CommandLineParser" Version="2.5.0" />
     <PackageVersion Include="coverlet.collector" Version="1.0.1" />
@@ -78,7 +76,7 @@
     <PackageVersion Include="JetBrains.Annotations" Version="2018.2.1" />
     <PackageVersion Include="LZMA-SDK" Version="19.0.0" />
     <PackageVersion Include="McMaster.Extensions.CommandLineUtils" Version="2.3.0" />
-    <PackageVersion Include="Microsoft.ApplicationInsights" Version="2.22.0" />
+    <PackageVersion Include="Microsoft.ApplicationInsights" Version="$(MicrosoftApplicationInsightsVersion)" />
     <PackageVersion Include="Microsoft.Data.OData" Version="5.8.4" />
     <PackageVersion Include="Microsoft.DataServices.Client" Version="$(MicrosoftDataServicesClientVersion)" />
     <PackageVersion Include="Microsoft.Diagnostics.Runtime" Version="1.0.5" />
@@ -89,7 +87,7 @@
     <PackageVersion Include="Microsoft.VisualStudio.OLE.Interop" Version="7.10.6071" />
     <PackageVersion Include="Mono.Options" Version="5.3.0.1" />
     <PackageVersion Include="Moq" Version="4.18.4" />
-    <PackageVersion Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageVersion Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageVersion Include="Octokit" Version="10.0.0" />
     <PackageVersion Include="xunit" Version="$(XUnitVersion)" />
     <PackageVersion Include="xunit.abstractions" Version="2.0.3" />
