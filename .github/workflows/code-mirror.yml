@@ -23,7 +23,7 @@ jobs:
       # Queue a code mirror build in azure devops
       - name: Queue a build
         run: |
-          az pipelines build queue --definition-id 16 --project internal --org dnceng --variables BranchToMirror=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} GitHubRepo=${{ github.repository_owner }}/${{ github.repository }}
+          az pipelines build queue --definition-id 16 --project internal --organization dnceng --variables BranchToMirror=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}} GitHubRepo=${{ github.repository_owner }}/${{ github.repository }}
 
       - name: logout
         run: |
