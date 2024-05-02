@@ -1,6 +1,7 @@
 parameters:
   runAsPublic: false
-  sourceIndexPackageVersion: 2.0.0-20240502.12
+  sourceIndexUploadPackageVersion: 2.0.0-20240502.12
+  sourceIndexProcessBinlogPackageVersion: 1.0.1-20240129.2
   sourceIndexPackageSource: https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
   sourceIndexBuildCommand: powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "eng/common/build.ps1 -restore -build -binarylog -ci"
   preSteps: []
@@ -15,8 +16,10 @@ jobs:
   dependsOn: ${{ parameters.dependsOn }}
   condition: ${{ parameters.condition }}
   variables:
-  - name: SourceIndexPackageVersion
-    value: ${{ parameters.sourceIndexPackageVersion }}
+  - name: SourceIndexUploadPackageVersion
+    value: ${{ parameters.sourceIndexUploadPackageVersion }}
+  - name: SourceIndexProcessBinlogPackageVersion
+    value: ${{ parameters.sourceIndexProcessBinlogPackageVersion }}
   - name: SourceIndexPackageSource
     value: ${{ parameters.sourceIndexPackageSource }}
   - name: BinlogPath
@@ -54,8 +57,8 @@ jobs:
       workingDirectory: $(Agent.TempDirectory)
 
   - script: |
-      $(Agent.TempDirectory)/dotnet/dotnet tool install BinLogToSln --version $(SourceIndexPackageVersion) --add-source $(SourceIndexPackageSource) --tool-path $(Agent.TempDirectory)/.source-index/tools
-      $(Agent.TempDirectory)/dotnet/dotnet tool install UploadIndexStage1 --version $(SourceIndexPackageVersion) --add-source $(SourceIndexPackageSource) --tool-path $(Agent.TempDirectory)/.source-index/tools
+      $(Agent.TempDirectory)/dotnet/dotnet tool install BinLogToSln --version $(sourceIndexProcessBinlogPackageVersion) --add-source $(SourceIndexPackageSource) --tool-path $(Agent.TempDirectory)/.source-index/tools
+      $(Agent.TempDirectory)/dotnet/dotnet tool install UploadIndexStage1 --version $(sourceIndexUploadPackageVersion) --add-source $(SourceIndexPackageSource) --tool-path $(Agent.TempDirectory)/.source-index/tools
     displayName: Download Tools
     # Set working directory to temp directory so 'dotnet' doesn't try to use global.json and use the repo's sdk.
     workingDirectory: $(Agent.TempDirectory)
