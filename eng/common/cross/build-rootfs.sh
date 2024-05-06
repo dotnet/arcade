@@ -451,21 +451,27 @@ fi
 mkdir -p "$__RootfsDir"
 __RootfsDir="$( cd "$__RootfsDir" && pwd )"
 
-if command -v wget &> /dev/null; then
-    __hasWget=1
-elif command -v curl &> /dev/null; then
-    __hasWget=0
-else
-    >&2 echo "ERROR: either wget or curl is required by this script."
-    exit 1
-fi
+__hasWget=
+ensureDownloadTool()
+{
+    if command -v wget &> /dev/null; then
+        __hasWget=1
+    elif command -v curl &> /dev/null; then
+        __hasWget=0
+    else
+        >&2 echo "ERROR: either wget or curl is required by this script."
+        exit 1
+    fi
+}
 
 if [[ "$__CodeName" == "alpine" ]]; then
     __ApkToolsVersion=2.12.11
     __ApkToolsDir="$(mktemp -d)"
     __ApkKeysDir="$(mktemp -d)"
-
     arch="$(uname -m)"
+
+    ensureDownloadTool()
+    
     if [[ "$__hasWget" == 1 ]]; then
         wget -P "$__ApkToolsDir" "https://gitlab.alpinelinux.org/api/v4/projects/5/packages/generic/v$__ApkToolsVersion/$arch/apk.static"
     else
@@ -533,6 +539,9 @@ if [[ "$__CodeName" == "alpine" ]]; then
 elif [[ "$__CodeName" == "freebsd" ]]; then
     mkdir -p "$__RootfsDir"/usr/local/etc
     JOBS=${MAXJOBS:="$(getconf _NPROCESSORS_ONLN)"}
+
+    ensureDownloadTool()
+
     if [[ "$__hasWget" == 1 ]]; then
         wget -O- "https://download.freebsd.org/ftp/releases/${__FreeBSDArch}/${__FreeBSDMachineArch}/${__FreeBSDBase}/base.txz" | tar -C "$__RootfsDir" -Jxf - ./lib ./usr/lib ./usr/libdata ./usr/include ./usr/share/keys ./etc ./bin/freebsd-version
     else
@@ -560,6 +569,9 @@ elif [[ "$__CodeName" == "illumos" ]]; then
     mkdir "$__RootfsDir/tmp"
     pushd "$__RootfsDir/tmp"
     JOBS=${MAXJOBS:="$(getconf _NPROCESSORS_ONLN)"}
+
+    ensureDownloadTool()
+
     echo "Downloading sysroot."
     if [[ "$__hasWget" == 1 ]]; then
         wget -O- https://github.com/illumos/sysroot/releases/download/20181213-de6af22ae73b-v1/illumos-sysroot-i386-20181213-de6af22ae73b-v1.tar.gz | tar -C "$__RootfsDir" -xzf -
@@ -641,6 +653,8 @@ elif [[ "$__CodeName" == "haiku" ]]; then
     pushd "$__RootfsDir/tmp"
 
     mkdir "$__RootfsDir/tmp/download"
+
+    ensureDownloadTool()
 
     echo "Downloading Haiku package tool"
     git clone https://github.com/haiku/haiku-toolchains-ubuntu --depth 1 "$__RootfsDir/tmp/script"
