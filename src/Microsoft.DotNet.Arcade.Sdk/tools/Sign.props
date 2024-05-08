@@ -29,8 +29,6 @@
     <_DefaultItemsToSign Include="$(ArtifactsPackagesDir)**\*.nupkg" />
     <_DefaultItemsToSign Include="$(VisualStudioSetupOutputPath)**\*.vsix" />
     <_DefaultItemsToSign Include="$(VisualStudioBuildPackagesDir)**\*.nupkg" />
-    <!-- Sign wixpacks to correspond to msi/exe signing -->
-    <_ItemsToOnlySignPostBuild Include="$(ArtifactsPackagesDir)**\*.wixpack.zip" />
 
     <!-- If PostBuildSign == true, these are added to ItemsToSignPostBuild, otherwise these are added to ItemsToSign -->
     <ItemsToSign Include="@(_DefaultItemsToSign)" Condition="'$(PostBuildSign)' != 'true'" />
@@ -96,10 +94,6 @@
 
   <!-- Respect Artifact item repo extension point -->
   <ItemGroup Condition="'@(Artifact)' != ''">
-    <!-- Sign wixpacks to correspond to msi/exe signing -->
-    <_ItemsToOnlySignPostBuild Include="@(Artifact)"
-                               Condition="$([System.String]::Copy('%(Filename)%(Extension)').EndsWith('.wixpack.zip'))" />
-
     <!-- If PostBuildSign == true, these are added to ItemsToSignPostBuild, otherwise these are added to ItemsToSign -->
     <ItemsToSign Include="@(Artifact)"
                  Exclude="@(_ItemsToOnlySignPostBuild)"
