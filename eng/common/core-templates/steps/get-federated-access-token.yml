@@ -1,0 +1,19 @@
+parameters:
+- name: federatedServiceConnection
+  type: string
+  default: ''
+- name: outputVariableName
+  type: string
+
+steps:
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: ${{ coalesce(parameters.federatedServiceConnection, 'dnceng-artifacts-feeds-read') }}
+    scriptType: 'pscore'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      $accessToken = az account get-access-token --query accessToken --resource 499b84ac-1321-427f-aa17-267ca6975798 -o tsv
+
+      # Set the access token as a secret, so it doesn't get leaked in the logs
+      Write-Host "##vso[task.setsecret]$accessToken"
+      Write-Host "##vso[task.setvariable variable=${{ parameters.outputVariableName }}]$accessToken"

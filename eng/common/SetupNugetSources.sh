@@ -1,28 +1,22 @@
 #!/usr/bin/env bash
 
-# This file is a temporary workaround for internal builds to be able to restore from private AzDO feeds.
-# This file should be removed as part of this issue: https://github.com/dotnet/arcade/issues/4080
+# This script adds internal feeds required to build commits that depend on intenral package sources. For instance,
+# dotnet6-internal would be added automatically if dotnet6 was found in the nuget.config file. In addition also enables
+# disabled internal Maestro (darc-int*) feeds.
+# 
+# Optionally, this script also adds a credential entry for each of the internal feeds if supplied.
+# This option will be removed ASAP, when no longer in use. This is a workaround for feed auth issues that dates to the 3.1 release.
 #
-# What the script does is iterate over all package sources in the pointed NuGet.config and add a credential entry
-# under <packageSourceCredentials> for each Maestro's managed private feed. Two additional credential 
-# entries are also added for the two private static internal feeds: dotnet3-internal and dotnet3-internal-transport.
-#
-# This script needs to be called in every job that will restore packages and which the base repo has
-# private AzDO feeds in the NuGet.config.
-#
-# See example YAML call for this script below. Note the use of the variable `$(dn-bot-dnceng-artifact-feeds-rw)`
-# from the AzureDevOps-Artifact-Feeds-Pats variable group.
-#
-# Any disabledPackageSources entries which start with "darc-int" will be re-enabled as part of this script executing.
+# See example call for this script below.
 #
 #  - task: Bash@3
 #    displayName: Setup Private Feeds Credentials
 #    inputs:
 #      filePath: $(Build.SourcesDirectory)/eng/common/SetupNugetSources.sh
-#      arguments: $(Build.SourcesDirectory)/NuGet.config $Token
+#      arguments: $(Build.SourcesDirectory)/NuGet.config
 #    condition: ne(variables['Agent.OS'], 'Windows_NT')
-#    env:
-#      Token: $(dn-bot-dnceng-artifact-feeds-rw)
+#
+# This logic is also abstracted into enable-internal-sources.yml.
 
 ConfigFile=$1
 CredToken=$2
@@ -45,11 +39,6 @@ scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 
 if [ ! -f "$ConfigFile" ]; then
     Write-PipelineTelemetryError -Category 'Build' "Error: Eng/common/SetupNugetSources.sh returned a non-zero exit code. Couldn't find the NuGet config file: $ConfigFile"
-    ExitWithExitCode 1
-fi
-
-if [ -z "$CredToken" ]; then
-    Write-PipelineTelemetryError -category 'Build' "Error: Eng/common/SetupNugetSources.sh returned a non-zero exit code. Please supply a valid PAT"
     ExitWithExitCode 1
 fi
 
@@ -140,18 +129,20 @@ PackageSources+="$IFS"
 PackageSources+=$(grep -oh '"darc-int-[^"]*"' $ConfigFile | tr -d '"')
 IFS=$PrevIFS
 
-for FeedName in ${PackageSources[@]} ; do
-    # Check if there is no existing credential for this FeedName
-    grep -i "<$FeedName>" $ConfigFile 
-    if [ "$?" != "0" ]; then
-        echo "Adding credentials for $FeedName."
+if [ "$CredToken" ]; then
+    for FeedName in ${PackageSources[@]} ; do
+        # Check if there is no existing credential for this FeedName
+        grep -i "<$FeedName>" $ConfigFile 
+        if [ "$?" != "0" ]; then
+            echo "Adding credentials for $FeedName."
 
-        PackageSourceCredentialsNodeFooter="</packageSourceCredentials>"
-        NewCredential="${TB}${TB}<$FeedName>${NL}<add key=\"Username\" value=\"dn-bot\" />${NL}<add key=\"ClearTextPassword\" value=\"$CredToken\" />${NL}</$FeedName>"
+            PackageSourceCredentialsNodeFooter="</packageSourceCredentials>"
+            NewCredential="${TB}${TB}<$FeedName>${NL}<add key=\"Username\" value=\"dn-bot\" />${NL}<add key=\"ClearTextPassword\" value=\"$CredToken\" />${NL}</$FeedName>"
 
-        sed -i.bak "s|$PackageSourceCredentialsNodeFooter|$NewCredential${NL}$PackageSourceCredentialsNodeFooter|" $ConfigFile
-    fi
-done
+            sed -i.bak "s|$PackageSourceCredentialsNodeFooter|$NewCredential${NL}$PackageSourceCredentialsNodeFooter|" $ConfigFile
+        fi
+    done
+fi
 
 # Re-enable any entries in disabledPackageSources where the feed name contains darc-int
 grep -i "<disabledPackageSources>" $ConfigFile
