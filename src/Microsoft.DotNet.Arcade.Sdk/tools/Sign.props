@@ -96,8 +96,8 @@
   <!-- Respect Artifact item repo extension point -->
   <ItemGroup Condition="'@(Artifact)' != ''">
     <!-- If PostBuildSign == true, these are added to ItemsToSignPostBuild, otherwise these are added to ItemsToSign -->
-    <ItemsToSign Include="@(Artifact->ClearMetadata())" Condition="'$(PostBuildSign)' != 'true'" KeepDuplicates="false" />
-    <ItemsToSignPostBuild Include="@(Artifact->ClearMetadata()->'%(Filename)%(Extension)')" Condition="'$(PostBuildSign)' == 'true'" KeepDuplicates="false" />
+    <ItemsToSign Include="@(Artifact)" Condition="'$(PostBuildSign)' != 'true'" />
+    <ItemsToSignPostBuild Include="@(Artifact->'%(Filename)%(Extension)')" Condition="'$(PostBuildSign)' == 'true'" />
   </ItemGroup>
 
 </Project>
