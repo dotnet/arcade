@@ -29,8 +29,6 @@
     <_DefaultItemsToSign Include="$(ArtifactsPackagesDir)**\*.nupkg" />
     <_DefaultItemsToSign Include="$(VisualStudioSetupOutputPath)**\*.vsix" />
     <_DefaultItemsToSign Include="$(VisualStudioBuildPackagesDir)**\*.nupkg" />
-    <!-- Sign wixpacks to correspond to msi/exe signing -->
-    <_DefaultItemsToSign Include="$(ArtifactsPackagesDir)**\*.wixpack.zip" />
 
     <!-- If PostBuildSign == true, these are added to ItemsToSignPostBuild, otherwise these are added to ItemsToSign -->
     <ItemsToSign Include="@(_DefaultItemsToSign)" Condition="'$(PostBuildSign)' != 'true'" />
