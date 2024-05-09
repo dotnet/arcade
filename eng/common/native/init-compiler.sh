@@ -60,15 +60,16 @@ check_version_exists() {
     echo "$desired_version"
 }
 
+__baseOS="$(uname)"
 set_compiler_version_from_CC() {
-    if [ "$(uname)" = "Darwin" ]; then
+    if [ "$__baseOS" = "Darwin" ]; then
         # On Darwin, the versions from -version/-dumpversion refer to Xcode
         # versions, not llvm versions, so we can't rely on them.
         return
     fi
 
     version="$("$CC" -dumpversion)"
-    if [ "$version" = "" ]; then
+    if [ -z "$version" ]; then
         echo "Error: $CC -dumpversion didn't provide a version"
         exit 1
     fi
@@ -104,7 +105,7 @@ if [ -z "$CLR_CC" ]; then
             CXX="$(command -v "$cxxCompiler")"
             set_compiler_version_from_CC
         else
-            if ( [ "$compiler" = "clang" ] && [ "$majorVersion" -lt 5 ] ) && ( [ "$build_arch" = "arm" ] || [ "$build_arch" = "armel" ] ); then
+            if [ "$compiler" = "clang" ] && [ "$majorVersion" -lt 5 ] && { [ "$build_arch" = "arm" ] || [ "$build_arch" = "armel" ]; }; then
                 # If a major version was provided explicitly, and it was too old, find a newer compiler instead
                 if ! command -v "$compiler" > /dev/null; then
                     echo "Error: Found clang version $majorVersion which is not supported on arm/armel architectures, and there is no clang in PATH."
@@ -145,11 +146,11 @@ if [ -z "$CC" ]; then
     exit 1
 fi
 
-if [ "$(uname)" != "Darwin" ]; then
+if [ "$__baseOS" != "Darwin" ]; then
     # On Darwin, we always want to use the Apple linker.
 
     # Only lld version >= 9 can be considered stable. lld supports s390x starting from 18.0.
-    if [ "$compiler" = "clang" ] && [ -n "$majorVersion" ] && [ "$majorVersion" -ge 9 ] && ( [ "$build_arch" != "s390x" ] || [ "$majorVersion" -ge 18 ] ); then
+    if [ "$compiler" = "clang" ] && [ -n "$majorVersion" ] && [ "$majorVersion" -ge 9 ] && { [ "$build_arch" != "s390x" ] || [ "$majorVersion" -ge 18 ]; }; then
         if "$CC" -fuse-ld=lld -Wl,--version >/dev/null 2>&1; then
             LDFLAGS="-fuse-ld=lld"
         fi
