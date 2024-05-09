@@ -101,8 +101,8 @@ if [ -z "$CLR_CC" ]; then
                 exit 1
             fi
 
-            CC="$(command -v "$compiler")"
-            CXX="$(command -v "$cxxCompiler")"
+            CC="$(command -v "$compiler" 2> /dev/null)"
+            CXX="$(command -v "$cxxCompiler" 2> /dev/null)"
             set_compiler_version_from_CC
         else
             if [ "$compiler" = "clang" ] && [ "$majorVersion" -lt 5 ] && { [ "$build_arch" = "arm" ] || [ "$build_arch" = "armel" ]; }; then
@@ -112,8 +112,8 @@ if [ -z "$CLR_CC" ]; then
                     exit 1
                 fi
 
-                CC="$(command -v "$compiler")"
-                CXX="$(command -v "$cxxCompiler")"
+                CC="$(command -v "$compiler" 2> /dev/null)"
+                CXX="$(command -v "$cxxCompiler" 2> /dev/null)"
                 set_compiler_version_from_CC
             fi
         fi
@@ -126,9 +126,9 @@ if [ -z "$CLR_CC" ]; then
     fi
 
     if [ -z "$CC" ]; then
-        CC="$(command -v "$compiler$desired_version")"
-        CXX="$(command -v "$cxxCompiler$desired_version")"
-        if [ -z "$CXX" ]; then CXX="$(command -v "$cxxCompiler")"; fi
+        CC="$(command -v "$compiler$desired_version" 2> /dev/null)"
+        CXX="$(command -v "$cxxCompiler$desired_version" 2> /dev/null)"
+        if [ -z "$CXX" ]; then CXX="$(command -v "$cxxCompiler" 2> /dev/null)"; fi
         set_compiler_version_from_CC
     fi
 else
@@ -157,6 +157,6 @@ if [ "$__baseOS" != "Darwin" ]; then
     fi
 fi
 
-SCAN_BUILD_COMMAND="$(command -v "scan-build$desired_version")"
+SCAN_BUILD_COMMAND="$(command -v "scan-build$desired_version" 2> /dev/null)"
 
 export CC CXX LDFLAGS SCAN_BUILD_COMMAND
