@@ -36,6 +36,8 @@ $feedEndpoints = $null
 # credentials that may have been provided by a previous call to the credential provider.
 if ($Password -and $env:VSS_NUGET_EXTERNAL_FEED_ENDPOINTS -ne $null) {
     $feedEndpoints = $env:VSS_NUGET_EXTERNAL_FEED_ENDPOINTS | ConvertFrom-Json
+} elseif ($Password) {
+    $feedEndpoints = @{ endpointCredentials = @() }
 }
 
 # Add source entry to PackageSources
@@ -44,6 +46,7 @@ function AddPackageSource($sources, $SourceName, $SourceEndPoint, $pwd) {
     
     if ($packageSource -eq $null)
     {
+        Write-Host "`tAdding package source" $PackageSource.Key
         $packageSource = $doc.CreateElement("add")
         $packageSource.SetAttribute("key", $SourceName)
         $packageSource.SetAttribute("value", $SourceEndPoint)
@@ -54,32 +57,26 @@ function AddPackageSource($sources, $SourceName, $SourceEndPoint, $pwd) {
     }
 
     if ($Password) {
-        AddCredential -Source $SourceEndPoint -pwd $pwd
+        $feedEndpoints.endpointCredentials = AddCredential -endpointCredentials $feedEndpoints.endpointCredentials -source $SourceEndPoint -pwd $pwd
     }
 }
 
 # Add a new feed endpoint credential
-function AddCredential($source, $pwd) {
-    if ($feedEndpoints -eq $null) {
-        $feedEndpoints = @{ endpointCredentials = @() }
-    }
-
-    $feedEndpoints.endpointCredentials += @{
+function AddCredential([array]$endpointCredentials, $source, $pwd) {
+    $endpointCredentials += @{
         endpoint = $source;
-        username = "";
         password = $pwd
     }
+    return $endpointCredentials
 }
 
 function InsertMaestroInternalFeedCredentials($Sources, $pwd) {
     if ($Password) {
         $maestroInternalSources = $Sources.SelectNodes("add[contains(@key,'darc-int')]")
 
-        Write-Host "Inserting credentials for $($maestroInternalSources.Count) Maestro's internal feeds."
-
         ForEach ($PackageSource in $maestroInternalSources) {
-            Write-Host "`tInserting credential for Maestro's feed:" $PackageSource.Key
-            AddCredential -Source $PackageSource.value -pwd $pwd
+            Write-Host "`tAdding credential for Maestro's feed:" $PackageSource.Key
+            $feedEndpoints.endpointCredentials = AddCredential -endpointCredentials $feedEndpoints.endpointCredentials -source $PackageSource.value -pwd $pwd
         }
     }
 }
@@ -122,8 +119,8 @@ InsertMaestroInternalFeedCredentials -Sources $sources -pwd $Password
 # 3.1 uses a different feed url format so it's handled differently here
 $dotnet31Source = $sources.SelectSingleNode("add[@key='dotnet3.1']")
 if ($dotnet31Source -ne $null) {
-    AddPackageSource -Sources $sources -SourceName "dotnet3.1-internal" -SourceEndPoint "https://pkgs.dev.azure.com/dnceng/_packaging/dotnet3.1-internal/nuget/v2" -pwd $Password
-    AddPackageSource -Sources $sources -SourceName "dotnet3.1-internal-transport" -SourceEndPoint "https://pkgs.dev.azure.com/dnceng/_packaging/dotnet3.1-internal-transport/nuget/v2" -pwd $Password
+    AddPackageSource -Sources $sources -SourceName "dotnet3.1-internal" -SourceEndPoint "https://pkgs.dev.azure.com/dnceng/_packaging/dotnet3.1-internal/nuget/v3/index.json" -pwd $Password
+    AddPackageSource -Sources $sources -SourceName "dotnet3.1-internal-transport" -SourceEndPoint "https://pkgs.dev.azure.com/dnceng/_packaging/dotnet3.1-internal-transport/nuget/v3/index.json" -pwd $Password
 }
 
 $dotnetVersions = @('5','6','7','8')
@@ -132,14 +129,17 @@ foreach ($dotnetVersion in $dotnetVersions) {
     $feedPrefix = "dotnet" + $dotnetVersion;
     $dotnetSource = $sources.SelectSingleNode("add[@key='$feedPrefix']")
     if ($dotnetSource -ne $null) {
-        AddPackageSource -Sources $sources -SourceName "$feedPrefix-internal" -SourceEndPoint "https://pkgs.dev.azure.com/dnceng/internal/_packaging/$feedPrefix-internal/nuget/v2" -pwd $Password
-        AddPackageSource -Sources $sources -SourceName "$feedPrefix-internal-transport" -SourceEndPoint "https://pkgs.dev.azure.com/dnceng/internal/_packaging/$feedPrefix-internal-transport/nuget/v2" -pwd $Password
+        AddPackageSource -Sources $sources -SourceName "$feedPrefix-internal" -SourceEndPoint "https://pkgs.dev.azure.com/dnceng/internal/_packaging/$feedprefix-internal/nuget/v3/index.json" -pwd $Password
+        AddPackageSource -Sources $sources -SourceName "$feedPrefix-internal-transport" -SourceEndPoint "https://pkgs.dev.azure.com/dnceng/internal/_packaging/$feedPrefix-internal-transport/nuget/v3/index.json" -pwd $Password
     }
 }
 
 $doc.Save($filename)
 
-# If any credentials were added or altered, update the VS_NUGET_EXTERNAL_FEED_ENDPOINTS environment variable
-if ($feedEndpoints -ne $null) {
-    Write-PipelineSetVariable -Name 'VS_NUGET_EXTERNAL_FEED_ENDPOINTS' -Value $($feedEndpoints | ConvertTo-Json) -IsMultiJobVariable $false
+# If any credentials were added or altered, update the VSS_NUGET_EXTERNAL_FEED_ENDPOINTS environment variable
+if ($feedEndpoints.endpointCredentials -ne $null) {
+    # ci is set to true so vso logging commands will be used.
+    $ci = $true
+    Write-PipelineSetVariable -Name 'VSS_NUGET_EXTERNAL_FEED_ENDPOINTS' -Value $($feedEndpoints | ConvertTo-Json) -IsMultiJobVariable $false
+    Write-PipelineSetVariable -Name 'NUGET_CREDENTIALPROVIDER_SESSIONTOKENCACHE_ENABLED' -Value "False" -IsMultiJobVariable $false
 }

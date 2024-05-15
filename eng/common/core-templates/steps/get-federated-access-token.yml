@@ -7,9 +7,8 @@ parameters:
 
 steps:
 - task: AzureCLI@2
-  displayName: 'Get federated access token'
   inputs:
-    azureSubscription: ${{ parameters.federatedServiceConnection }}
+    azureSubscription: ${{ coalesce(parameters.federatedServiceConnection, 'dnceng-artifacts-feeds-read') }}
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
     inlineScript: |
