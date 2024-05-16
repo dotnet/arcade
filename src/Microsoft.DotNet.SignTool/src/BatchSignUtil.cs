@@ -382,7 +382,7 @@ namespace Microsoft.DotNet.SignTool
             };
 
             string path = processStartInfo.EnvironmentVariables["PATH"];
-            path = $"{path};{wixToolsPath}";
+            path = $"{wixToolsPath};{path}";
             processStartInfo.EnvironmentVariables.Remove("PATH");
             processStartInfo.EnvironmentVariables.Add("PATH", path);
 
