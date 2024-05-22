@@ -3,7 +3,7 @@ parameters:
   type: string
 - name: outputVariableName
   type: string
-- name: expiryHours
+- name: expiryInHours
   type: number
   default: 1
 - name: base64Encode
@@ -21,11 +21,12 @@ steps:
 - task: AzureCLI@2
   inputs:
     azureSubscription: ${{ parameters.federatedServiceConnection }}
+    displayName: 'Generate delegation SAS Token for ${{ parameters.storageAccount }}/${{ parameters.container }}'
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
     inlineScript: |
       # Calculate the expiration of the SAS token and convert to UTC
-      $expiry = (Get-Date).AddHours(${{ parameters.expiryHours }}).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+      $expiry = (Get-Date).AddHours(${{ parameters.expiryInHours }}).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
 
       $sas = az storage container generate-sas --account-name ${{ parameters.storageAccount }} --name ${{ parameters.container }} --permissions ${{ parameters.permissions }} --expiry $expiry --auth-mode login --as-user -o tsv
 
