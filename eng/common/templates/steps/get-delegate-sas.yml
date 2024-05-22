@@ -19,9 +19,9 @@ parameters:
 
 steps:
 - task: AzureCLI@2
+  displayName: 'Generate delegation SAS Token for ${{ parameters.storageAccount }}/${{ parameters.container }}'
   inputs:
     azureSubscription: ${{ parameters.federatedServiceConnection }}
-    displayName: 'Generate delegation SAS Token for ${{ parameters.storageAccount }}/${{ parameters.container }}'
     scriptType: 'pscore'
     scriptLocation: 'inlineScript'
     inlineScript: |
