@@ -43,4 +43,4 @@ steps:
       Write-Host "##vso[task.setsecret]$sas"
 
       Write-Host "Setting '${{ parameters.outputVariableName }}' with the access token value"
-      Write-Host "##vso[task.setvariable variable=${{ parameters.outputVariableName }}]$sas"
+      Write-Host "##vso[task.setvariable variable=${{ parameters.outputVariableName }};issecret=true]$sas"
