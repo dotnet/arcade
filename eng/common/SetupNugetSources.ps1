@@ -34,7 +34,7 @@ $feedEndpoints = $null
 
 # If a credential is provided, ensure that we don't overwrite the current set of
 # credentials that may have been provided by a previous call to the credential provider.
-if ($Password -and $env:VSS_NUGET_EXTERNAL_FEED_ENDPOINTS -ne $null) {
+if ($Password -and $null -ne $env:VSS_NUGET_EXTERNAL_FEED_ENDPOINTS) {
     $feedEndpoints = $env:VSS_NUGET_EXTERNAL_FEED_ENDPOINTS | ConvertFrom-Json
 } elseif ($Password) {
     $feedEndpoints = @{ endpointCredentials = @() }
@@ -44,7 +44,7 @@ if ($Password -and $env:VSS_NUGET_EXTERNAL_FEED_ENDPOINTS -ne $null) {
 function AddPackageSource($sources, $SourceName, $SourceEndPoint, $pwd) {
     $packageSource = $sources.SelectSingleNode("add[@key='$SourceName']")
     
-    if ($packageSource -eq $null)
+    if ($null -eq $packageSource)
     {
         Write-Host "`tAdding package source" $SourceName
         $packageSource = $doc.CreateElement("add")
@@ -100,14 +100,14 @@ $doc.Load($filename)
 
 # Get reference to <PackageSources> or create one if none exist already
 $sources = $doc.DocumentElement.SelectSingleNode("packageSources")
-if ($sources -eq $null) {
+if ($null -eq $sources) {
     $sources = $doc.CreateElement("packageSources")
     $doc.DocumentElement.AppendChild($sources) | Out-Null
 }
 
 # Check for disabledPackageSources; we'll enable any darc-int ones we find there
 $disabledSources = $doc.DocumentElement.SelectSingleNode("disabledPackageSources")
-if ($disabledSources -ne $null) {
+if ($null -ne $disabledSources) {
     Write-Host "Checking for any darc-int disabled package sources in the disabledPackageSources node"
     EnableInternalPackageSources -DisabledPackageSources $disabledSources
 }
@@ -118,7 +118,7 @@ if ($Password) {
 
 # 3.1 uses a different feed url format so it's handled differently here
 $dotnet31Source = $sources.SelectSingleNode("add[@key='dotnet3.1']")
-if ($dotnet31Source -ne $null) {
+if ($null -ne $dotnet31Source) {
     AddPackageSource -Sources $sources -SourceName "dotnet3.1-internal" -SourceEndPoint "https://pkgs.dev.azure.com/dnceng/_packaging/dotnet3.1-internal/nuget/v3/index.json" -pwd $Password
     AddPackageSource -Sources $sources -SourceName "dotnet3.1-internal-transport" -SourceEndPoint "https://pkgs.dev.azure.com/dnceng/_packaging/dotnet3.1-internal-transport/nuget/v3/index.json" -pwd $Password
 }
@@ -128,7 +128,7 @@ $dotnetVersions = @('5','6','7','8')
 foreach ($dotnetVersion in $dotnetVersions) {
     $feedPrefix = "dotnet" + $dotnetVersion;
     $dotnetSource = $sources.SelectSingleNode("add[@key='$feedPrefix']")
-    if ($dotnetSource -ne $null) {
+    if ($dotnetSource) {
         AddPackageSource -Sources $sources -SourceName "$feedPrefix-internal" -SourceEndPoint "https://pkgs.dev.azure.com/dnceng/internal/_packaging/$feedprefix-internal/nuget/v3/index.json" -pwd $Password
         AddPackageSource -Sources $sources -SourceName "$feedPrefix-internal-transport" -SourceEndPoint "https://pkgs.dev.azure.com/dnceng/internal/_packaging/$feedPrefix-internal-transport/nuget/v3/index.json" -pwd $Password
     }
@@ -137,7 +137,7 @@ foreach ($dotnetVersion in $dotnetVersions) {
 $doc.Save($filename)
 
 # If any credentials were added or altered, update the VSS_NUGET_EXTERNAL_FEED_ENDPOINTS environment variable
-if ($feedEndpoints -ne $null) {
+if ($null -ne $feedEndpoints) {
     # ci is set to true so vso logging commands will be used.
     $ci = $true
     Write-PipelineSetVariable -Name 'VSS_NUGET_EXTERNAL_FEED_ENDPOINTS' -Value $($feedEndpoints | ConvertTo-Json) -IsMultiJobVariable $false
