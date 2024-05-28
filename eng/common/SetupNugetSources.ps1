@@ -56,7 +56,7 @@ function AddPackageSource($sources, $SourceName, $SourceEndPoint, $pwd) {
         Write-Host "Package source $SourceName already present."
     }
 
-    if ($Password) {
+    if ($pwd) {
         $feedEndpoints.endpointCredentials = AddCredential -endpointCredentials $feedEndpoints.endpointCredentials -source $SourceEndPoint -pwd $pwd
     }
 }
@@ -71,13 +71,11 @@ function AddCredential([array]$endpointCredentials, $source, $pwd) {
 }
 
 function InsertMaestroInternalFeedCredentials($Sources, $pwd) {
-    if ($Password) {
-        $maestroInternalSources = $Sources.SelectNodes("add[contains(@key,'darc-int')]")
+    $maestroInternalSources = $Sources.SelectNodes("add[contains(@key,'darc-int')]")
 
-        ForEach ($PackageSource in $maestroInternalSources) {
-            Write-Host "`tAdding credential for Maestro's feed:" $PackageSource.Key
-            $feedEndpoints.endpointCredentials = AddCredential -endpointCredentials $feedEndpoints.endpointCredentials -source $PackageSource.value -pwd $pwd
-        }
+    ForEach ($PackageSource in $maestroInternalSources) {
+        Write-Host "`tAdding credential for Maestro's feed:" $PackageSource.Key
+        $feedEndpoints.endpointCredentials = AddCredential -endpointCredentials $feedEndpoints.endpointCredentials -source $PackageSource.value -pwd $pwd
     }
 }
 
@@ -114,7 +112,9 @@ if ($disabledSources -ne $null) {
     EnableInternalPackageSources -DisabledPackageSources $disabledSources
 }
 
-InsertMaestroInternalFeedCredentials -Sources $sources -pwd $Password
+if ($Password) {
+    InsertMaestroInternalFeedCredentials -Sources $sources -pwd $Password
+}
 
 # 3.1 uses a different feed url format so it's handled differently here
 $dotnet31Source = $sources.SelectSingleNode("add[@key='dotnet3.1']")
@@ -137,7 +137,7 @@ foreach ($dotnetVersion in $dotnetVersions) {
 $doc.Save($filename)
 
 # If any credentials were added or altered, update the VSS_NUGET_EXTERNAL_FEED_ENDPOINTS environment variable
-if ($feedEndpoints.endpointCredentials -ne $null) {
+if ($feedEndpoints -ne $null) {
     # ci is set to true so vso logging commands will be used.
     $ci = $true
     Write-PipelineSetVariable -Name 'VSS_NUGET_EXTERNAL_FEED_ENDPOINTS' -Value $($feedEndpoints | ConvertTo-Json) -IsMultiJobVariable $false
