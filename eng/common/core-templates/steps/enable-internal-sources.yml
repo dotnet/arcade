@@ -11,7 +11,7 @@ steps:
   # may be added. Instead, we'll use the traditional approach (add cred to nuget.config), but use an account token.
   - ${{ if eq(variables['System.TeamProject'], 'internal') }}:
     - task: PowerShell@2
-      displayName: Setup Private Feeds
+      displayName: Setup Internal Feeds
       inputs:
         filePath: $(Build.SourcesDirectory)/eng/common/SetupNugetSources.ps1
         arguments: -ConfigFile $(Build.SourcesDirectory)/NuGet.config
@@ -22,7 +22,7 @@ steps:
         federatedServiceConnection: ${{ parameters.nugetFederatedServiceConnection }}
         outputVariableName: 'dnceng-artifacts-feeds-read-access-token'
     - task: PowerShell@2
-      displayName: Setup Private Feeds
+      displayName: Setup Internal Feeds
       inputs:
         filePath: $(Build.SourcesDirectory)/eng/common/SetupNugetSources.ps1
         arguments: -ConfigFile $(Build.SourcesDirectory)/NuGet.config -Password $(dnceng-artifacts-feeds-read-access-token)
