@@ -5,7 +5,6 @@
 # disabled internal Maestro (darc-int*) feeds.
 # 
 # Optionally, this script also adds a credential entry for each of the internal feeds if supplied.
-# This option will be removed ASAP, when no longer in use. This is a workaround for feed auth issues that dates to the 3.1 release.
 #
 # See example call for this script below.
 #
@@ -15,6 +14,12 @@
 #      filePath: $(Build.SourcesDirectory)/eng/common/SetupNugetSources.sh
 #      arguments: $(Build.SourcesDirectory)/NuGet.config
 #    condition: ne(variables['Agent.OS'], 'Windows_NT')
+#  - task: NuGetAuthenticate@1
+#
+# Note that the NuGetAuthenticate task should be called after SetupNugetSources.
+# This ensures that:
+# - Appropriate creds are set for the added internal feeds (if not supplied to the scrupt)
+# - The credential provider is installed.
 #
 # This logic is also abstracted into enable-internal-sources.yml.
 

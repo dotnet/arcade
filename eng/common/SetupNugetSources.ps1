@@ -8,14 +8,19 @@
 #
 # See example call for this script below.
 #
-#  - task: NuGetAuthenticate@1
 #  - task: PowerShell@2
 #    displayName: Setup Internal Feeds
 #    condition: eq(variables['Agent.OS'], 'Windows_NT')
 #    inputs:
 #      filePath: $(Build.SourcesDirectory)/eng/common/SetupNugetSources.ps1
 #      arguments: -ConfigFile $(Build.SourcesDirectory)/NuGet.config
+#  - task: NuGetAuthenticate@1
 # 
+# Note that the NuGetAuthenticate task should be called after SetupNugetSources.
+# This ensures that:
+# - Appropriate creds are set for the added internal feeds (if not supplied to the scrupt)
+# - The credential provider is installed
+#
 # This logic is also abstracted into enable-internal-sources.yml.
 
 [CmdletBinding()]
