@@ -1,8 +1,8 @@
 trigger: none
 
 schedules:
-- cron: 0 12 * * 1
-  displayName: Weekly Monday build
+- cron: 0 12 * * *
+  displayName: Daily build
   branches:
     include:
     - main
@@ -18,11 +18,6 @@ stages:
         demands: ImageOverride -equals 1es-windows-2022
 
       steps:
-      - task: UseDotNet@2
-        displayName: Install Correct .NET Version
-        inputs:
-          useGlobalJson: true
-
       - task: UseDotNet@2
         displayName: Install .NET 6 runtime
         inputs:
