@@ -13,6 +13,7 @@ stages:
   - stage: SynchronizeSecrets
     jobs:
     - job: Synchronize
+      displayName: Synchronize secrets
       pool:
         name: NetCore1ESPool-Internal-NoMSI
         demands: ImageOverride -equals 1es-windows-2022
