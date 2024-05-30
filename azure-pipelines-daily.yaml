@@ -29,7 +29,7 @@ stages:
       - task: AzureCLI@2
         inputs:
           azureSubscription: DotNet Eng Services Secret Manager
-          scriptType: ps
+          scriptType: pscore
           scriptLocation: inlineScript
           inlineScript: |
             Get-ChildItem .vault-config/*.yaml |% { dotnet secret-manager synchronize $_}
