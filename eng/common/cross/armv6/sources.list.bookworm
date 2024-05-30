@@ -1,11 +1,2 @@
-deb http://deb.debian.org/debian bookworm main
-deb-src http://deb.debian.org/debian bookworm main
-
-deb http://deb.debian.org/debian-security/ bookworm/updates main
-deb-src http://deb.debian.org/debian-security/ bookworm/updates main
-
-deb http://deb.debian.org/debian bookworm-updates main
-deb-src http://deb.debian.org/debian bookworm-updates main
-
-deb http://deb.debian.org/debian bookworm-backports main contrib non-free
-deb-src http://deb.debian.org/debian bookworm-backports main contrib non-free
+deb http://raspbian.raspberrypi.org/raspbian/ bookworm main contrib non-free rpi
+deb-src http://raspbian.raspberrypi.org/raspbian/ bookworm main contrib non-free rpi
