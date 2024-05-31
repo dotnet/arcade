@@ -32,6 +32,7 @@ parameters:
   platform: {}
 
   is1ESPipeline: ''
+
   # If set to true and running on a non-public project,
   # Internal nuget and blob storage locations will be enabled.
   # This is not enabled by default because many repositories do not need internal sources
