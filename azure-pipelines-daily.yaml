@@ -25,8 +25,8 @@ stages:
           packageType: runtime
           version: 6.x
 
-      - powershell: |
-          . .\eng\scripts\dotnet-install.ps1
+      - pwsh: |
+          . ./eng/common/dotnet-install.ps1
           dotnet-install
         displayName: Install Arcade dotnet
 
