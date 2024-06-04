@@ -2,7 +2,7 @@
 # tool: https://github.com/NuGet/NuGetGallery/tree/jver-verify/src/VerifyMicrosoftPackage
 
 param(
-  [Parameter(Mandatory=$true)][string] $PackagesPath,           # Path to where the packages to be validated are
+  [Parameter(Mandatory=$true)][string] $PackagesPath # Path to where the packages to be validated are
 )
 
 try {

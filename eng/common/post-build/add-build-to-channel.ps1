@@ -27,7 +27,7 @@ try {
     --password $MaestroApiAccessToken
 
   if(-not $?) {
-    Write-PipelineTelemetryCategory -Category 'PromoteBuild' -Message "Channel with BAR ID $ChannelId was not found in BAR!"
+    Write-PipelineTelemetryError -Category 'PromoteBuild' -Message "Channel with BAR ID $ChannelId was not found in BAR!"
     ExitWithExitCode 1
   }
 
