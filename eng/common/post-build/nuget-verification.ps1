@@ -25,6 +25,8 @@
     https://github.com/NuGet/NuGetGallery/blob/master/src/VerifyMicrosoftPackage/README.md
 #>
 
+# This script was copied from https://github.com/NuGet/NuGetGallery/blob/3e25ad135146676bcab0050a516939d9958bfa5d/src/VerifyMicrosoftPackage/verify.ps1
+
 [CmdletBinding(PositionalBinding = $false)]
 param(
    [string]$NuGetExePath,

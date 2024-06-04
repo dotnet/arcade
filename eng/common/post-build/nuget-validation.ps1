@@ -3,7 +3,6 @@
 
 param(
   [Parameter(Mandatory=$true)][string] $PackagesPath,           # Path to where the packages to be validated are
-  [Parameter(Mandatory=$true)][string] $ToolDestinationPath     # Where the validation tool should be downloaded to
 )
 
 try {
