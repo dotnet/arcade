@@ -6,12 +6,30 @@ param(
   [Parameter(Mandatory=$false)][string] $MaestroApiVersion = '2019-01-16'
 )
 
+$ErrorActionPreference = 'Stop'
+Set-StrictMode -Version 2.0
+
 try {
-  . $PSScriptRoot\post-build-utils.ps1
+  # `tools.ps1` checks $ci to perform some actions. Since the post-build
+  # scripts don't necessarily execute in the same agent that run the
+  # build.ps1/sh script this variable isn't automatically set.
+  $ci = $true
+  $disableConfigureToolsetImport = $true
+  . $PSScriptRoot\..\tools.ps1
+
+  $darc = Get-Darc
+
+  $normalizedSourceRepo = $SourceRepo.Replace('dnceng@', '')
 
   # Get all the $SourceRepo subscriptions
-  $normalizedSourceRepo = $SourceRepo.Replace('dnceng@', '')
-  $subscriptions = Get-MaestroSubscriptions -SourceRepository $normalizedSourceRepo -ChannelId $ChannelId
+  $subscriptions = & $darc get-subscriptions `
+    --source-repo $normalizedSourceRepo `
+    --channel $ChannelId `
+    --output-format json `
+    --azdev-pat $AzdoToken `
+    --bar-uri $MaestroApiEndPoint `
+    --password $MaestroApiAccessToken `
+    | ConvertFrom-Json
 
   if (!$subscriptions) {
     Write-PipelineTelemetryError -Category 'TriggerSubscriptions' -Message "No subscriptions found for source repo '$normalizedSourceRepo' in channel '$ChannelId'"
@@ -33,8 +51,12 @@ try {
     try {
       Write-Host "Triggering subscription '$subscriptionToTrigger'."
 
-      Trigger-Subscription -SubscriptionId $subscriptionToTrigger
-    
+      & $darc trigger-subscriptions `
+        --id $subscriptionToTrigger `
+        --azdev-pat $AzdoToken `
+        --bar-uri $MaestroApiEndPoint `
+        --password $MaestroApiAccessToken
+
       Write-Host 'done.'
     } 
     catch
