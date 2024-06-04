@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links
             AkaMSLinkManager manager;
             if (!string.IsNullOrEmpty(ClientCertificate))
             {
-                manager = new AkaMSLinkManager(ClientId, new X509Certificate2(ClientSecret), Tenant, Log);
+                manager = new AkaMSLinkManager(ClientId, new X509Certificate2(ClientCertificate), Tenant, Log);
             }
             else if (!string.IsNullOrEmpty(ClientSecret))
             {
