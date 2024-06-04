@@ -7,15 +7,7 @@ param(
 )
 
 try {
-  . $PSScriptRoot\post-build-utils.ps1
-
-  $url = 'https://raw.githubusercontent.com/NuGet/NuGetGallery/3e25ad135146676bcab0050a516939d9958bfa5d/src/VerifyMicrosoftPackage/verify.ps1'
-
-  New-Item -ItemType 'directory' -Path ${ToolDestinationPath} -Force
-
-  Invoke-WebRequest $url -OutFile ${ToolDestinationPath}\verify.ps1 
-
-  & ${ToolDestinationPath}\verify.ps1 ${PackagesPath}\*.nupkg
+  & $PSScriptRoot\nuget-verification.ps1 ${PackagesPath}\*.nupkg
 } 
 catch {
   Write-Host $_.ScriptStackTrace
