@@ -151,6 +151,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AkaMSClientSecret { get; set; }
 
+        /// <summary>
+        /// Path to client certificate
+        /// </summary>
+        public string AkaMSClientCertificate { get; set; }
+
         public string AkaMSTenant { get; set; }
 
         public string AkaMsOwners { get; set; }
@@ -320,6 +325,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 SkipSafetyChecks = this.SkipSafetyChecks,
                 AkaMSClientId = this.AkaMSClientId,
                 AkaMSClientSecret = this.AkaMSClientSecret,
+                AkaMSClientCertificate = !string.IsNullOrEmpty(AkaMSClientCertificate) ? new System.Security.Cryptography.X509Certificates.X509Certificate2(AkaMSClientCertificate) : null,
                 AkaMSCreatedBy = this.AkaMSCreatedBy,
                 AkaMSGroupOwner = this.AkaMSGroupOwner,
                 AkaMsOwners = this.AkaMsOwners,
