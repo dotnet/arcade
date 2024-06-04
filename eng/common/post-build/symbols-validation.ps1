@@ -322,6 +322,8 @@ function InstallDotnetSymbol {
 }
 
 try {
+  InstallDotnetSymbol
+
   foreach ($Job in @(Get-Job)) {
     Remove-Job -Id $Job.Id
   }
