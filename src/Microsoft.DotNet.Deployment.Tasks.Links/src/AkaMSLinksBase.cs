@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Build.Framework;
 
@@ -23,7 +24,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links
             AkaMSLinkManager manager;
             if (!string.IsNullOrEmpty(ClientCertificate))
             {
-                manager = new AkaMSLinkManager(ClientId, new X509Certificate2(ClientCertificate), Tenant, Log);
+                manager = new AkaMSLinkManager(ClientId, new X509Certificate2(Convert.FromBase64String(File.ReadAllText(ClientCertificate))), Tenant, Log);
             }
             else if (!string.IsNullOrEmpty(ClientSecret))
             {
