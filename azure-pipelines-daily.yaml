@@ -25,10 +25,10 @@ stages:
           packageType: runtime
           version: 6.x
 
-      - pwsh: |
-          . ./eng/common/dotnet-install.ps1
-          dotnet-install
-        displayName: Install Arcade dotnet
+      - task: UseDotNet@2
+        displayName: Install global.json SDK
+        inputs:
+          useGlobalJson: true
 
       - script: dotnet tool restore
 
