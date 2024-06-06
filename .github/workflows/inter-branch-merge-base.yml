@@ -1,6 +1,6 @@
 # This is a workflow file that will be used to merge branches in the repository.
 # Permissions required: 
-#   Content 
+#   Contents
 #     write
 #   Pull requests 
 #     write
@@ -52,7 +52,7 @@ jobs:
       - name: Checkout arcade repository
         uses: actions/checkout@v4
         with:
-          repository: f-alizada/arcade # will be replaced with dotnet: dotnet/arcade
+          repository: dotnet/arcade
           path: arcade-repository 
           ref: ${{ inputs.script_version }}
           sparse-checkout: |
