@@ -43,10 +43,10 @@ $ErrorActionPreference = 'stop'
 Set-StrictMode -Version 1
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-$stringTokken = $Env:GH_TOKEN
+$stringToken = $Env:GH_TOKEN
 
 $headers = @{
-    Authorization = "bearer $stringTokken"
+    Authorization = "bearer $stringToken"
 }
 
 [hashtable] $script:emails = @{}
@@ -242,7 +242,7 @@ You may need to fix this problem by merging branches with this PR. Contact .NET 
         $previewHeaders = @{
             #  Required while this api is in preview: https://developer.github.com/v3/pulls/#create-a-pull-request
             Accept        = 'application/vnd.github.symmetra-preview+json'
-            Authorization = "bearer $stringTokken"
+            Authorization = "bearer $stringToken"
         }
 
         $prBody = @"
