@@ -41,8 +41,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    env: 
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout caller repository
         uses: actions/checkout@v4
@@ -84,7 +82,8 @@ jobs:
           $repoName = "${{ github.repository }}"
           $repoNameWithoutOwner = $repoName.Substring("${{ github.repository_owner }}".Length + 1)
           "repository_name=$repoNameWithoutOwner" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-      
       - run: ${{ github.workspace }}\arcade-repository\.github\workflows\scripts\inter-branch-merge.ps1 -RepoName ${{ steps.fetch-repo-name.outputs.repository_name }} -RepoOwner ${{ github.repository_owner }} -HeadBranch $env:GITHUB_REF_NAME -BaseBranch ${{ inputs.base_branch }} ${{ steps.switch-parameters.outputs.mergeSwitchArguments }}
         name: Merge branches
         working-directory: ${{ github.workspace }}/repository
+        env: 
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
