@@ -64,15 +64,15 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
         public AzureStorageUtils(string AccountName, string AccountKey, string ContainerName)
         {
             StorageSharedKeyCredential credential = new(AccountName, AccountKey);
-            Uri endpoint = new Uri($"https://{AccountName}.blob.core.windows.net");
-            BlobServiceClient service = new BlobServiceClient(endpoint, credential, s_clientOptions);
+            Uri endpoint = new($"https://{AccountName}.blob.core.windows.net");
+            BlobServiceClient service = new(endpoint, credential, s_clientOptions);
             Container = service.GetBlobContainerClient(ContainerName);
         }
 
         public AzureStorageUtils(string accountName, TokenCredential credential, string containerName)
         {
-            Uri endpoint = new Uri($"https://{accountName}.blob.core.windows.net");
-            BlobServiceClient service = new BlobServiceClient(endpoint, credential, s_clientOptions);
+            Uri endpoint = new($"https://{accountName}.blob.core.windows.net");
+            BlobServiceClient service = new(endpoint, credential, s_clientOptions);
             Container = service.GetBlobContainerClient(containerName);
             service.GetBlobContainerClient(containerName);
         }
