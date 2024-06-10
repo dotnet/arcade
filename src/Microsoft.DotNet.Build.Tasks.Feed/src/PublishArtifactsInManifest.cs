@@ -11,7 +11,9 @@ using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
@@ -90,9 +92,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         /// <summary>
         /// Authentication token to be used when interacting with Maestro API.
+        /// Deprecated and should not be used anymore.
         /// </summary>
-        [Required]
         public string BuildAssetRegistryToken { get; set; }
+
+        /// <summary>
+        /// Federated token to be used in edge cases when this task cannot be called from within an AzureCLI task directly.
+        /// The token is obtained in a previous AzureCLI@2 step and passed as a secret to this task.
+        /// </summary>
+        public string MaestroApiFederatedToken { get; set; }
+
+        /// <summary>
+        /// When running this task locally, allow the interactive browser-based authentication against Maestro.
+        /// </summary>
+        public bool AllowInteractiveAuthentication { get; set; }
 
         /// <summary>
         /// Directory where "nuget.exe" is installed. This will be used to publish packages.
@@ -150,6 +163,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string AkaMSClientId { get; set; }
 
         public string AkaMSClientSecret { get; set; }
+
+        /// <summary>
+        /// Path to client certificate
+        /// </summary>
+        public string AkaMSClientCertificate { get; set; }
 
         public string AkaMSTenant { get; set; }
 
@@ -249,7 +267,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     //         https://github.com/dotnet/arcade/issues/5489
                     if (PublishedV3Manifest)
                     {
-                        IMaestroApi client = ApiFactory.GetAuthenticated(MaestroApiEndpoint, BuildAssetRegistryToken);
+                        IMaestroApi client = MaestroApiFactory.GetAuthenticated(
+                            MaestroApiEndpoint,
+                            BuildAssetRegistryToken,
+                            MaestroApiFederatedToken,
+                            !AllowInteractiveAuthentication);
                         Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
 
                         var targetChannelsIds = TargetChannels.Split('-').Select(ci => int.Parse(ci));
@@ -320,6 +342,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 SkipSafetyChecks = this.SkipSafetyChecks,
                 AkaMSClientId = this.AkaMSClientId,
                 AkaMSClientSecret = this.AkaMSClientSecret,
+                AkaMSClientCertificate = !string.IsNullOrEmpty(AkaMSClientCertificate) ?
+                    new X509Certificate2(Convert.FromBase64String(File.ReadAllText(AkaMSClientCertificate))) : null,
                 AkaMSCreatedBy = this.AkaMSCreatedBy,
                 AkaMSGroupOwner = this.AkaMSGroupOwner,
                 AkaMsOwners = this.AkaMsOwners,
