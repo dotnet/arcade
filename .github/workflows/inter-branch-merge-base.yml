@@ -54,8 +54,6 @@ jobs:
           repository: dotnet/arcade
           path: arcade-repository 
           ref: ${{ inputs.script_version }}
-          sparse-checkout: |
-            .github
 
       - name: Switch parameters setting
         id: switch-parameters
