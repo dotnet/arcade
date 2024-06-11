@@ -10,6 +10,11 @@ using System.Globalization;
 using System.Linq;
 using Xunit.Internal;
 
+// An "ExceptionUtility" class exists in both xunit.assert (Xunit.Internal.ExceptionUtility) as well as xunit.execution.dotnet (Xunit.Sdk.ExceptionUtility)
+// This causes an compile-time error in projects that reference both the xunit.assert.source and xunit.core packages.
+// To resolve this issue, add an alias for the Xunit.Internal.ExceptionUtility to make sure, the xunit.assert core uses the right ExceptionUtility
+using ExceptionUtilityInternal = Xunit.Internal.ExceptionUtility;
+
 namespace Xunit.Sdk
 {
 	/// <summary>
@@ -31,7 +36,7 @@ namespace Xunit.Sdk
 		static string FormatInnerException(Exception innerException)
 		{
 			var text = innerException.Message;
-			var filteredStack = ExceptionUtility.TransformStackTrace(ExceptionUtility.FilterStackTrace(innerException.StackTrace), "  ");
+			var filteredStack = ExceptionUtilityInternal.TransformStackTrace(ExceptionUtilityInternal.FilterStackTrace(innerException.StackTrace), "  ");
 			if (!string.IsNullOrWhiteSpace(filteredStack))
 			{
 				if (text.Length != 0)

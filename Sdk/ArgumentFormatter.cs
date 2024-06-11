@@ -93,6 +93,8 @@ namespace Xunit.Sdk
 			{ typeof(short).GetTypeInfo(), "short" },
 			{ typeof(ushort).GetTypeInfo(), "ushort" },
 			{ typeof(string).GetTypeInfo(), "string" },
+			{ typeof(IntPtr).GetTypeInfo(), "nint" },
+			{ typeof(UIntPtr).GetTypeInfo(), "nuint" },
 		};
 
 		static ArgumentFormatter()
