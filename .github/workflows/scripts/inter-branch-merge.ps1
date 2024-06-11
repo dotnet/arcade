@@ -120,7 +120,7 @@ try {
 
     Write-Host -f Magenta "${HeadBranch}:`t$(& git log --format=$formatString -1 HEAD)"
 
-    [string[]] $commitsToMerge = & git rev-list --right-only "$BaseBranch..$HeadBranch" # find all commits which will be merged
+    [string[]] $commitsToMerge = & git rev-list "$BaseBranch..$HeadBranch" # find all commits which will be merged
 
     if (-not $commitsToMerge) {
         Write-Warning "There were no commits to be merged from $HeadBranch into $BaseBranch"
@@ -322,7 +322,7 @@ git push git@github.com:$prOwnerName/$prRepoName HEAD:${mergeBranchName}
 
 </details>
 
-Contact .NET Core Engineering if you have questions or issues.
+Contact .NET Core Engineering (dotnet/dnceng) if you have questions or issues.
 Also, if this PR was generated incorrectly, help us fix it. See https://github.com/dotnet/arcade/blob/master/scripts/GitHubMergeBranches.ps1.
 
 "@;
