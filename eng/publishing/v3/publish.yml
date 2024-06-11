@@ -15,7 +15,6 @@ stages:
     - group: DotNet-Symbol-Server-Pats
     - group: DotNetBuilds storage account tokens
     - group: AzureDevOps-Artifact-Feeds-Pats
-    - group: DotNet-MSRC-Storage
     - group: Publish-Build-Assets
   
     # Default Maestro++ API Endpoint and API Version
@@ -149,7 +148,6 @@ stages:
           /p:PublishInstallersAndChecksums=true 
           /p:AzureDevOpsFeedsKey='$(dn-bot-all-orgs-artifact-feeds-rw)' 
           /p:AkaMSClientId=$(akams-app-id) 
-          /p:AkaMSClientSecret=$(akams-app-secret) ${{ parameters.artifactsPublishingAdditionalParameters }} 
           /p:AkaMSClientCertificate=$(Agent.TempDirectory)/akamsclientcert.pfx
           /p:PDBArtifactsBasePath='$(Build.ArtifactStagingDirectory)/PDBArtifacts/' 
           /p:SymbolPublishingExclusionsFile='$(Build.ArtifactStagingDirectory)/ReleaseConfigs/SymbolPublishingExclusionsFile.txt' ${{ parameters.symbolPublishingAdditionalParameters}} 

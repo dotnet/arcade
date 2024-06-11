@@ -93,6 +93,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 // of the assets being published so we can add a new location for them.
                 IMaestroApi client = MaestroApiFactory.GetAuthenticated(
                     MaestroApiEndpoint,
+                    BuildAssetRegistryToken,
                     MaestroApiFederatedToken,
                     disableInteractiveAuth: !AllowInteractiveAuthentication);
 
