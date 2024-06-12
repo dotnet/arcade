@@ -740,11 +740,9 @@ elif [[ -n "$__CodeName" ]]; then
     # shellcheck disable=SC2086
     echo running debootstrap "--variant=minbase" $__Keyring --arch "$__UbuntuArch" "$__CodeName" "$__RootfsDir" "$__UbuntuRepo"
     debootstrap "--variant=minbase" $__Keyring --arch "$__UbuntuArch" "$__CodeName" "$__RootfsDir" "$__UbuntuRepo"
-    if [[ "$__UseDeb822Format" == 1 ]]; then
-        cp "$__CrossDir/$__BuildArch/sources.list.$__CodeName" "$__RootfsDir/etc/apt/sources.list.d/$__CodeName.sources"
-    else
-        cp "$__CrossDir/$__BuildArch/sources.list.$__CodeName" "$__RootfsDir/etc/apt/sources.list"
-    fi
+    mkdir -p "$__RootfsDir/etc/apt/sources.list.d/"
+    grep -q "Types:" "$__CrossDir/$__BuildArch/sources.list.$__CodeName" && filename="$__CodeName.sources" || filename="$__CodeName.list"
+    cp "$__CrossDir/$__BuildArch/sources.list.$__CodeName" "$__RootfsDir/etc/apt/sources.list.d/$filename"
     chroot "$__RootfsDir" apt-get update
     chroot "$__RootfsDir" apt-get -f -y install
     # shellcheck disable=SC2086
