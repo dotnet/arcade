@@ -17,12 +17,12 @@ on:
     inputs:      
       config_file_branch:
         type: string
-        description: The branch to read the configuration file from
+        description: The branch to read the configuration file from.
         required: false
         default: 'main'
       configuration_file_path:
         type: string
-        description: The path to the configuration file
+        description: The path to the configuration file.
         required: false
         default: 'github-merge-flow.json'
       script_version:
@@ -47,7 +47,7 @@ jobs:
       - name: Checkout arcade repository
         uses: actions/checkout@v4
         with:
-          repository: f-alizada/arcade 
+          repository: dotnet/arcade 
           path: arcade-repository 
           ref: ${{ inputs.script_version }}
           sparse-checkout: |
