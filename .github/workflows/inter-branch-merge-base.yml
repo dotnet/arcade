@@ -47,7 +47,7 @@ jobs:
       - name: Checkout arcade repository
         uses: actions/checkout@v4
         with:
-          repository: dotnet/arcade
+          repository: f-alizada/arcade
           path: arcade-repository 
           ref: ${{ inputs.script_version }}
           sparse-checkout: |

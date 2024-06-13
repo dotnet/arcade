@@ -49,18 +49,21 @@ $headers = @{
 
 function GetConfiguration {
     # Read the configuration file from provided branch
+    $urlToConfigurationFile = "https://raw.githubusercontent.com/$RepoOwner/$RepoName/$ConfigurationFileBranch/$ConfigurationFilePath"
+    Write-Host "Fetching configuration file from $urlToConfigurationFile"
+
     try{
         $response = Invoke-WebRequest -Method GET -MaximumRetryCount 3 -Headers $headers `
-                "https://raw.githubusercontent.com/$RepoOwner/$RepoName/$ConfigurationFileBranch/$ConfigurationFilePath"
+                $urlToConfigurationFile
         
         $mergeFlowConfig = ConvertFrom-Json -InputObject $response.Content -AsHashTable
         if ($mergeFlowConfig -eq $null) {
-            Write-Warning "Failed to read configuration file from default branch"
+            Write-Warning "Failed to read configuration file"
             return $null
         }
 
         if (!$mergeFlowConfig.ContainsKey('merge-flow-configurations')) {
-            Write-Host "no merge-flow-configurations found in configuration file from config file branch"
+            Write-Host "No merge-flow-configurations found in configuration file"
             return $null
         }
 
@@ -70,10 +73,10 @@ function GetConfiguration {
             Write-Host $config
             return $config
         }else{
-            Write-Warning "There were no configuration found in default branch for $MergeFromBranch"
+            Write-Host "There was no configuration found for $MergeFromBranch"
         }
     }catch{
-        Write-Warning "Failed to fetch and process configuration file from default branch"
+        Write-Warning "Failed to fetch and process configuration file"
     }
 
     return $null
