@@ -129,6 +129,7 @@ __AlpineKeys='
 616db30d:MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAnpUpyWDWjlUk3smlWeA0\nlIMW+oJ38t92CRLHH3IqRhyECBRW0d0aRGtq7TY8PmxjjvBZrxTNDpJT6KUk4LRm\na6A6IuAI7QnNK8SJqM0DLzlpygd7GJf8ZL9SoHSH+gFsYF67Cpooz/YDqWrlN7Vw\ntO00s0B+eXy+PCXYU7VSfuWFGK8TGEv6HfGMALLjhqMManyvfp8hz3ubN1rK3c8C\nUS/ilRh1qckdbtPvoDPhSbTDmfU1g/EfRSIEXBrIMLg9ka/XB9PvWRrekrppnQzP\nhP9YE3x/wbFc5QqQWiRCYyQl/rgIMOXvIxhkfe8H5n1Et4VAorkpEAXdsfN8KSVv\nLSMazVlLp9GYq5SUpqYX3KnxdWBgN7BJoZ4sltsTpHQ/34SXWfu3UmyUveWj7wp0\nx9hwsPirVI00EEea9AbP7NM2rAyu6ukcm4m6ATd2DZJIViq2es6m60AE6SMCmrQF\nwmk4H/kdQgeAELVfGOm2VyJ3z69fQuywz7xu27S6zTKi05Qlnohxol4wVb6OB7qG\nLPRtK9ObgzRo/OPumyXqlzAi/Yvyd1ZQk8labZps3e16bQp8+pVPiumWioMFJDWV\nGZjCmyMSU8V6MB6njbgLHoyg2LCukCAeSjbPGGGYhnKLm1AKSoJh3IpZuqcKCk5C\n8CM1S15HxV78s9dFntEqIokCAwEAAQ==
 '
 __Keyring=
+__KeyringFile="/usr/share/keyrings/ubuntu-archive-keyring.gpg"
 __SkipSigCheck=0
 __UseMirror=0
 __UseDeb822Format=0
@@ -163,6 +164,7 @@ while :; do
             __UbuntuArch=armel
             __UbuntuRepo="http://ftp.debian.org/debian/"
             __CodeName=jessie
+            __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
             ;;
         armv6)
             __BuildArch=armv6
@@ -170,10 +172,11 @@ while :; do
             __QEMUArch=arm
             __UbuntuRepo="http://raspbian.raspberrypi.org/raspbian/"
             __CodeName=buster
+            __KeyringFile="/usr/share/keyrings/raspbian-archive-keyring.gpg"
             __LLDB_Package="liblldb-6.0-dev"
 
-            if [[ -e "/usr/share/keyrings/raspbian-archive-keyring.gpg" ]]; then
-                __Keyring="--keyring /usr/share/keyrings/raspbian-archive-keyring.gpg"
+            if [[ -e "$__KeyringFile" ]]; then
+                __Keyring="--keyring $__KeyringFile"
             fi
             ;;
         riscv64)
@@ -184,10 +187,6 @@ while :; do
             __UbuntuArch=riscv64
             __UbuntuPackages="${__UbuntuPackages// libunwind8-dev/}"
             unset __LLDB_Package
-
-            if [[ -e "/usr/share/keyrings/debian-archive-keyring.gpg" ]]; then
-                __Keyring="--keyring /usr/share/keyrings/debian-archive-keyring.gpg --include=debian-archive-keyring"
-            fi
             ;;
         ppc64le)
             __BuildArch=ppc64le
@@ -296,6 +295,7 @@ while :; do
             ;;
         jessie) # Debian 8
             __CodeName=jessie
+            __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
 
             if [[ -z "$__UbuntuRepo" ]]; then
                 __UbuntuRepo="http://ftp.debian.org/debian/"
@@ -304,6 +304,7 @@ while :; do
         stretch) # Debian 9
             __CodeName=stretch
             __LLDB_Package="liblldb-6.0-dev"
+            __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
 
             if [[ -z "$__UbuntuRepo" ]]; then
                 __UbuntuRepo="http://ftp.debian.org/debian/"
@@ -312,6 +313,7 @@ while :; do
         buster) # Debian 10
             __CodeName=buster
             __LLDB_Package="liblldb-6.0-dev"
+            __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
 
             if [[ -z "$__UbuntuRepo" ]]; then
                 __UbuntuRepo="http://ftp.debian.org/debian/"
@@ -319,6 +321,7 @@ while :; do
             ;;
         bullseye) # Debian 11
             __CodeName=bullseye
+            __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
 
             if [[ -z "$__UbuntuRepo" ]]; then
                 __UbuntuRepo="http://ftp.debian.org/debian/"
@@ -326,6 +329,7 @@ while :; do
             ;;
         bookworm) # Debian 12
             __CodeName=bookworm
+            __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
 
             if [[ -z "$__UbuntuRepo" ]]; then
                 __UbuntuRepo="http://ftp.debian.org/debian/"
@@ -333,6 +337,7 @@ while :; do
             ;;
         sid) # Debian sid
             __CodeName=sid
+            __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
 
             if [[ -z "$__UbuntuRepo" ]]; then
                 __UbuntuRepo="http://ftp.debian.org/debian/"
@@ -740,9 +745,22 @@ elif [[ -n "$__CodeName" ]]; then
     # shellcheck disable=SC2086
     echo running debootstrap "--variant=minbase" $__Keyring --arch "$__UbuntuArch" "$__CodeName" "$__RootfsDir" "$__UbuntuRepo"
     debootstrap "--variant=minbase" $__Keyring --arch "$__UbuntuArch" "$__CodeName" "$__RootfsDir" "$__UbuntuRepo"
+
     mkdir -p "$__RootfsDir/etc/apt/sources.list.d/"
-    grep -q "Types:" "$__CrossDir/$__BuildArch/sources.list.$__CodeName" && filename="$__CodeName.sources" || filename="$__CodeName.list"
-    cp "$__CrossDir/$__BuildArch/sources.list.$__CodeName" "$__RootfsDir/etc/apt/sources.list.d/$filename"
+    cat > "$__RootfsDir/etc/apt/sources.list.d/$__CodeName.sources" <<EOF
+Types: deb
+URIs: $__UbuntuRepo
+Suites: $__CodeName $__CodeName-updates
+Components: main
+Signed-By: $__KeyringFile
+
+Types: deb
+URIs: $__UbuntuRepo
+Suites: $__CodeName-security
+Components: main
+Signed-By: $__KeyringFile
+EOF
+
     chroot "$__RootfsDir" apt-get update
     chroot "$__RootfsDir" apt-get -f -y install
     # shellcheck disable=SC2086
