@@ -7,7 +7,7 @@ Creates a GitHub pull request to merge a head branch into a base branch
 The GitHub repository owner.
 .PARAMETER RepoName
 The GitHub repository name.
-.PARAMETER HeadBranch
+.PARAMETER MergeFromBranch
 The current branch
 .PARAMETER ConfigurationFileBranch
 The ConfigurationFileBranch is the branch where the configuration file is stored.
@@ -26,7 +26,7 @@ param(
 
     [Alias('h')]
     [Parameter(Mandatory = $true)]
-    $HeadBranch,
+    $MergeFromBranch,
 
     [Alias('d')]
     [Parameter(Mandatory = $true)]
@@ -64,13 +64,13 @@ function GetConfiguration {
             return $null
         }
 
-        if($mergeFlowConfig['merge-flow-configurations'].ContainsKey($HeadBranch)){
-            $config = $mergeFlowConfig['merge-flow-configurations'][$HeadBranch]
+        if($mergeFlowConfig['merge-flow-configurations'].ContainsKey($MergeFromBranch)){
+            $config = $mergeFlowConfig['merge-flow-configurations'][$MergeFromBranch]
             Write-Host "Found Configuration"
             Write-Host $config
             return $config
         }else{
-            Write-Warning "There were no configuration found in default branch for $HeadBranch"
+            Write-Warning "There were no configuration found in default branch for $MergeFromBranch"
         }
     }catch{
         Write-Warning "Failed to fetch and process configuration file from default branch"

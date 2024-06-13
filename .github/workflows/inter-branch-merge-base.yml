@@ -47,7 +47,7 @@ jobs:
       - name: Checkout arcade repository
         uses: actions/checkout@v4
         with:
-          repository: dotnet/arcade
+          repository: f-alizada/arcade
           path: arcade-repository 
           ref: ${{ inputs.script_version }}
           sparse-checkout: |
@@ -61,7 +61,7 @@ jobs:
 
       - name: Extract configuration values
         id: extract-configuration-values
-        run: ${{ github.workspace }}\arcade-repository\.github\workflows\scripts\read-configuration.ps1 -ConfigurationFileBranch ${{ inputs.configuration_file_branch }} -RepoName ${{ steps.fetch-repo-name.outputs.repository_name }} -RepoOwner ${{ github.repository_owner }} -HeadBranch $env:GITHUB_REF_NAME -ConfigurationFilePath ${{inputs.configuration_file_path}}
+        run: ${{ github.workspace }}\arcade-repository\.github\workflows\scripts\read-configuration.ps1 -ConfigurationFileBranch ${{ inputs.configuration_file_branch }} -RepoName ${{ steps.fetch-repo-name.outputs.repository_name }} -RepoOwner ${{ github.repository_owner }} -MergeFromBranch $env:GITHUB_REF_NAME -ConfigurationFilePath ${{inputs.configuration_file_path}}
         env: 
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
@@ -69,7 +69,7 @@ jobs:
         if: steps.extract-configuration-values.outputs.configurationFound != 'true'
         name: Read configuration status
 
-      - run: ${{ github.workspace }}\arcade-repository\.github\workflows\scripts\inter-branch-merge.ps1 -RepoName ${{ steps.fetch-repo-name.outputs.repository_name }} -RepoOwner ${{ github.repository_owner }} -HeadBranch $env:GITHUB_REF_NAME -BaseBranch ${{ steps.extract-configuration-values.outputs.mergeToBranch }} ${{ steps.extract-configuration-values.outputs.mergeSwitchArguments }}
+      - run: ${{ github.workspace }}\arcade-repository\.github\workflows\scripts\inter-branch-merge.ps1 -RepoName ${{ steps.fetch-repo-name.outputs.repository_name }} -RepoOwner ${{ github.repository_owner }} -MergeFromBranch $env:GITHUB_REF_NAME -MergeToBranch ${{ steps.extract-configuration-values.outputs.mergeToBranch }} ${{ steps.extract-configuration-values.outputs.mergeSwitchArguments }}
         if: steps.extract-configuration-values.outputs.configurationFound == 'true'
         name: Merge branches
         working-directory: ${{ github.workspace }}/repository
