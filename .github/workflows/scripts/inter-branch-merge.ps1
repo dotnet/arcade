@@ -246,7 +246,7 @@ You may need to fix this problem by merging branches with this PR. Contact .NET 
         }
 
         $prBody = @"
-I detected changes in the $MergeFromBranch branch which have not been merged yet to $MergeToBranch. I'm a robot and am [configured](https://github.com/dotnet/versions/blob/main/Maestro/subscriptions.json) to help you automatically keep $MergeToBranch up to date, so I've opened this PR.
+I detected changes in the $MergeFromBranch branch which have not been merged yet to $MergeToBranch. I'm a robot and am configured to help you automatically keep $MergeToBranch up to date, so I've opened this PR.
 
 $committersList
 
@@ -323,7 +323,7 @@ git push git@github.com:$prOwnerName/$prRepoName HEAD:${mergeBranchName}
 </details>
 
 Contact .NET Core Engineering (dotnet/dnceng) if you have questions or issues.
-Also, if this PR was generated incorrectly, help us fix it. See https://github.com/dotnet/arcade/blob/master/scripts/GitHubMergeBranches.ps1.
+Also, if this PR was generated incorrectly, help us fix it. See https://github.com/dotnet/arcade/blob/main/.github/workflows/scripts/inter-branch-merge.ps1.
 
 "@;
 
