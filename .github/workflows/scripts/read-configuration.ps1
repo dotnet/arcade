@@ -9,7 +9,7 @@ The GitHub repository owner.
 The GitHub repository name.
 .PARAMETER HeadBranch
 The current branch
-.PARAMETER DefaultRepositoryBranch
+.PARAMETER ConfigurationFileBranch
 The ConfigurationFileBranch is the branch where the configuration file is stored.
 .PARAMETER ConfigurationFilePath
 The ConfigurationFilePath is the path to the configuration file.
