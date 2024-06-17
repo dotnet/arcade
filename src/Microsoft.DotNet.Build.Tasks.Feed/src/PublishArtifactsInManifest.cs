@@ -103,7 +103,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string MaestroApiFederatedToken { get; set; }
 
         /// <summary>
-        /// Managed identity to be used to authenticate with Maestro API in case the regular Azure CLI or token is not available.
+        /// Managed identity to be used to authenticate with Maestro app in case the regular Azure CLI or token is not available.
         /// </summary>
         public string MaestroManagedIdentityId { get; set; }
 
