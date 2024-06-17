@@ -19,6 +19,10 @@
          Writes a stub file to component intermediate directory.
   -->
 
+  <PropertyGroup>
+    <ArcadeVisualStudioBuildTasksAssembly>$(NuGetPackageRoot)microsoft.dotnet.build.tasks.visualstudio\$(MicrosoftDotNetBuildTasksVisualStudioVersion)\tools\net472\Microsoft.DotNet.Build.Tasks.VisualStudio.dll</ArcadeVisualStudioBuildTasksAssembly>
+  </PropertyGroup>
+
   <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.VisualStudio.FinalizeInsertionVsixFile" AssemblyFile="$(ArcadeVisualStudioBuildTasksAssembly)" />
 
   <PropertyGroup>
