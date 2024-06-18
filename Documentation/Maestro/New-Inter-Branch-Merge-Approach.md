@@ -6,29 +6,6 @@ Inter branch merge is mechanism to create automated PRs to upstream branches whe
 
 Example of the PR: https://github.com/dotnet/sdk/pull/41440
 
-### Current flow
-Current flow of creating the PR is based on Web-Hooks.
-Repository, in order to onboard to use inter-merge automated flow, had to add the object in subscritions list of [subscriptions file](https://github.com/dotnet/versions/blob/616bf3daa90677d8315954f6477f9c78045e0f0f/Maestro/subscriptions.json):
-
-```JSON
-{
-    "triggerPaths": [
-        "https://github.com/dotnet/runtime/blob/release/8.0/**/*"
-    ],
-    "action": "github-dnceng-branch-merge-pr-generator",
-    "actionArguments": {
-        "vsoSourceBranch": "main",
-        "vsoBuildParameters": {
-            "GithubRepoOwner": "dotnet",
-            "GithubRepoName": "<trigger-repo>",
-            "HeadBranch": "<trigger-branch>",
-            "BaseBranch": "release/8.0-staging",
-            "ExtraSwitches": "-QuietComments"
-        }
-    }
-}
-```
-
 ## Why to migrate to new approach
 For more information about the reasons of changing the approach please refer to the one-pager https://github.com/dotnet/dnceng/blob/main/Documentation/OnePagers/ol-maestro-deprecation.md
 
@@ -74,9 +51,13 @@ For repositories to start using the new reusable workflow will need to:
 ### Step 1: Prepare the configuration file, which will contain the rules of upstream merging
 The configuration file structure example
 ```JS
+// ONLY THE VERSION OF THIS FILE IN THE MAIN BRANCH IS USED!
 {
     "merge-flow-configurations": {
-        // key of the objects is the source branch name
+        // format of this section is
+        // "source-branch-name": {
+        //    "MergeToBranch": "target-branch-name"
+        // },
         "release/8.0.3xx": {
             // The MergeToBranch property should be presented in the object in order the merge flow to work
             "MergeToBranch": "release/8.0.4xx",
@@ -90,6 +71,8 @@ The configuration file structure example
     }
 }
 ```
+The convenient place way to create this configuration would be in **default branch**, so workflow will fetch the configurations from the specified (default) branch. 
+
 
 ### Step 2: Create the workflow file in branches where the inter-merge should be available
 Create the workflow file in: `.github/workflows/`
@@ -99,7 +82,6 @@ name: Usage of Inter-branch merge workflow
 on: 
   push:
     branches:
-      - 'main'
       - 'releases/**'
 
 permissions:
@@ -116,9 +98,10 @@ jobs:
 
 Once the PR with the workflow will be merged into the specified branches:
 
-- The workflow will fetch the configuration from the config-file
-- Will check the validity of the configuration
-- Will create the merge PR from source-to-target-branch (given that both are presented)
+- The workflow will fetch the configuration from the config-file.
+- Will check the validity of the configuration.
+- Will create the merge PR from source-to-target-branch (given that both are presented).
+- If there are merge conflicts, you will need to resolve them manually before merging.
 
 ## Creating releases with new flow
 
@@ -135,12 +118,10 @@ Existing configuration file of merge flow:
 {
     "merge-flow-configurations": {
         "release/8.0.3xx": {
-            "MergeToBranch": "release/8.0.4xx",
-            "ExtraSwitches": "-QuietComments"
+            "MergeToBranch": "release/8.0.4xx"
         },
         "release/8.0.4xx": {
             "MergeToBranch": "main",
-            "ExtraSwitches": "-QuietComments"
         }
     }
 }
@@ -155,16 +136,13 @@ The new configuration will look like that:
 {
     "merge-flow-configurations": {
         "release/8.0.3xx": {
-            "MergeToBranch": "release/8.0.4xx",
-            "ExtraSwitches": "-QuietComments"
+            "MergeToBranch": "release/8.0.4xx"
         },
         "release/8.0.4xx": {
-            "MergeToBranch": "release/8.0.5xx",
-            "ExtraSwitches": "-QuietComments"
+            "MergeToBranch": "release/8.0.5xx"
         },
         "release/8.0.5xx": {
-            "MergeToBranch": "main",
-            "ExtraSwitches": "-QuietComments"
+            "MergeToBranch": "main"
         }
     }
 }
@@ -176,3 +154,28 @@ The new configuration will look like that:
 https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/managing-github-actions-settings-for-a-repository#preventing-github-actions-from-creating-or-approving-pull-requests
 
 For any other issues please raise queries in FR
+
+
+
+### Current flow
+Current flow of creating the PR is based on Web-Hooks.
+Repository, in order to onboard to use inter-merge automated flow, had to add the object in subscritions list of [subscriptions file](https://github.com/dotnet/versions/blob/616bf3daa90677d8315954f6477f9c78045e0f0f/Maestro/subscriptions.json):
+
+```JSON
+{
+    "triggerPaths": [
+        "https://github.com/dotnet/runtime/blob/release/8.0/**/*"
+    ],
+    "action": "github-dnceng-branch-merge-pr-generator",
+    "actionArguments": {
+        "vsoSourceBranch": "main",
+        "vsoBuildParameters": {
+            "GithubRepoOwner": "dotnet",
+            "GithubRepoName": "<trigger-repo>",
+            "HeadBranch": "<trigger-branch>",
+            "BaseBranch": "release/8.0-staging",
+            "ExtraSwitches": "-QuietComments"
+        }
+    }
+}
+```
