@@ -104,6 +104,13 @@ Once the PR with the workflow will be merged into the specified branches:
 - The PR should not be squash and merged, it will bring conflicts in future merges.
 - If there are merge conflicts, you will need to resolve them manually before merging.
 
+
+### Offboard from old approach
+This step could be done before or after the onboarding to the new approach.
+In order to offboard from old approach, remove the items with actions = "github-dnceng-branch-merge-pr-generator" and triggerPaths = <your-repository-path>
+
+Please be aware that in case the onboarding will start before project is offboarded then there will be two merge requests created at the same time on each change in the release configured branches.
+
 ## Creating releases with new flow
 
 Once the onboarding is completed, and there is a need to configure new flow the steps listed below should be completed: 
