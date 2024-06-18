@@ -103,7 +103,7 @@ Once the PR with the workflow will be merged into the specified branches:
 
 ### Offboard from old approach
 This step could be done before or after the onboarding to the new approach.
-In order to offboard from old approach, remove the items with actions = "github-dnceng-branch-merge-pr-generator" and triggerPaths = <your-repository-path>
+In order to offboard from old approach, remove the items with actions = "github-dnceng-branch-merge-pr-generator" and triggerPaths = "your-repository-path"
 
 Please be aware that in case the onboarding will start before project is offboarded then there will be two merge requests created at the same time on each change in the release configured branches.
 
