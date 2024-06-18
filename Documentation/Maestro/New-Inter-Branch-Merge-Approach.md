@@ -101,6 +101,7 @@ Once the PR with the workflow will be merged into the specified branches:
 - The workflow will fetch the configuration from the config-file.
 - Will check the validity of the configuration.
 - Will create the merge PR from source-to-target-branch (given that both are presented).
+- The PR should not be squash and merged, it will bring conflicts in future merges.
 - If there are merge conflicts, you will need to resolve them manually before merging.
 
 ## Creating releases with new flow
