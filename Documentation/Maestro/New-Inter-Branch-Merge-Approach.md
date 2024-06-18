@@ -152,6 +152,33 @@ The new configuration will look like that:
 }
 ```
 
+### Example of using the workflow from different branch
+In case the reusable workflow file was extended not from main branch but a specific reference then the `script_version` parameter should be specified in order to use the same script logic from the mentioned reference.
+
+Note: Using default value `main` without specifying the reference, will allow use the latest version of the workflow with latest updates.
+
+Example
+ ```YML
+name: Usage of Inter-branch merge workflow with 
+on: 
+  push:
+    branches:
+      - 'releases/**'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  check-script:
+    uses: dotnet/arcade/.github/workflows/inter-branch-merge-base.yml@custom_ref
+    with:
+      configuration_file_path: '.config/merge-flow.json'
+      configuration_file_branch: 'custom-branch-if-needed'
+      script_version: 'custom_ref'
+```
+
+
 
 ## Troubleshooting 
 - In case the workflow fails with the permission error, please verify that the github actions should have the permission to create the PR:
