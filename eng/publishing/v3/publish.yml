@@ -130,10 +130,13 @@ stages:
         inlineScript: |
           az keyvault secret show --vault-name EngKeyVault --name Redirection-UST-Client-NetCoreDeployment | ConvertFrom-Json | Select-Object -Expand  value > $(Agent.TempDirectory)/akamsclientcert.pfx
 
-    - task: PowerShell@2
+    - task: AzureCLI@2
       displayName: Publish packages, blobs and symbols
       inputs:
-        filePath: $(Build.SourcesDirectory)/eng/common/sdk-task.ps1
+        azureSubscription: 'maestro-build-promotion'
+        scriptType: 'pscore'
+        scriptLocation: scriptPath
+        scriptPath: $(Build.SourcesDirectory)/eng/common/sdk-task.ps1
         arguments: -task PublishArtifactsInManifest -restore -msbuildEngine dotnet 
           /p:PublishingInfraVersion=3 
           /p:BARBuildId=${{ parameters.BARBuildId }} 
@@ -162,11 +165,7 @@ stages:
           /p:AzureProject='$(AzDOProject)' 
           /p:UseStreamingPublishing='true' 
           /p:StreamingPublishingMaxClients=16 
-          /p:NonStreamingPublishingMaxClients=12 
-          /p:DotNetBuildsPublicUriBase64='$(dotnetbuilds-public-container-uri-base64)' 
-          /p:DotNetBuildsPublicChecksumsUriBase64='$(dotnetbuilds-public-container-checksum-uri-base64)' 
-          /p:DotNetBuildsInternalUriBase64='$(dotnetbuilds-internal-container-uri-base64)' 
-          /p:DotNetBuildsInternalChecksumsUriBase64='$(dotnetbuilds-internal-container-checksum-uri-base64)'
+          /p:NonStreamingPublishingMaxClients=12
 
     - template: /eng/common/templates-official/steps/publish-logs.yml@self
       parameters:
