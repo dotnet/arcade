@@ -6,9 +6,6 @@ Inter branch merge is mechanism to create automated PRs to upstream branches whe
 
 Example of the PR: https://github.com/dotnet/sdk/pull/41440
 
-## Why to migrate to new approach
-For more information about the reasons of changing the approach please refer to the one-pager https://github.com/dotnet/dnceng/blob/main/Documentation/OnePagers/ol-maestro-deprecation.md
-
 ## GitHub workflow
 The new approach moves from Web-hook functionality to the github actions per repository. 
 Initial proposed design could be found here:
@@ -61,12 +58,11 @@ The configuration file structure example
         "release/8.0.3xx": {
             // The MergeToBranch property should be presented in the object in order the merge flow to work
             "MergeToBranch": "release/8.0.4xx",
-            // ExtraSwitches value are similar to the subscriptions file from versions: https://github.com/dotnet/versions/blob/main/Maestro/subscriptions.json
+            // ExtraSwitches is an optional parameter which is accepted by the script: https://github.com/dotnet/arcade/blob/main/.github/workflows/inter-branch-merge-base.yml. Accepted values are similar to the values from the version file: https://github.com/dotnet/versions/blob/main/Maestro/subscriptions.json
             "ExtraSwitches": "-QuietComments"
         },
         "release/8.0.4xx": {
-            "MergeToBranch": "main",
-            "ExtraSwitches": "-QuietComments"
+            "MergeToBranch": "main"
         }
     }
 }
@@ -164,9 +160,8 @@ https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-f
 For any other issues please raise queries in FR
 
 
-
-### Current flow
-Current flow of creating the PR is based on Web-Hooks.
+### Legacy flow
+Legacy flow of creating the PR is based on Web-Hooks.
 Repository, in order to onboard to use inter-merge automated flow, had to add the object in subscritions list of [subscriptions file](https://github.com/dotnet/versions/blob/616bf3daa90677d8315954f6477f9c78045e0f0f/Maestro/subscriptions.json):
 
 ```JSON
@@ -187,3 +182,6 @@ Repository, in order to onboard to use inter-merge automated flow, had to add th
     }
 }
 ```
+
+### Why to migrate to new approach
+For more information about the reasons of changing the approach please refer to the one-pager https://github.com/dotnet/dnceng/blob/main/Documentation/OnePagers/ol-maestro-deprecation.md
