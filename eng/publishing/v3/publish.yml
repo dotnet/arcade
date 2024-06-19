@@ -167,7 +167,6 @@ stages:
           /p:UseStreamingPublishing='true' 
           /p:StreamingPublishingMaxClients=16 
           /p:NonStreamingPublishingMaxClients=12
-          /p:ManagedIdentityClientId=$env:servicePrincipalId
 
     - template: /eng/common/templates-official/steps/publish-logs.yml@self
       parameters:
