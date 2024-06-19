@@ -163,6 +163,9 @@
 
       <_RestoreSignProps Include="@(_RestoreProps)"/>
       <_RestoreSignProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)CommonSign"/>
+
+      <_RestorePublishProps Include="@(_RestoreProps)"/>
+      <_RestorePublishProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)CommonPublish"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -198,6 +201,14 @@
     <MSBuild Projects="Sign.proj"
              Targets="Restore"
              Properties="@(_RestoreSignProps);_NETCORE_ENGINEERING_TELEMETRY=Restore"
+             Condition="'$(Restore)' == 'true'"/>
+
+    <!--
+      Restore built-in tools for publishing.
+    -->
+    <MSBuild Projects="Publish.proj"
+             Targets="Restore"
+             Properties="@(_RestorePublishProps);_NETCORE_ENGINEERING_TELEMETRY=Restore"
              Condition="'$(Restore)' == 'true'"/>
 
     <!--
