@@ -146,6 +146,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AkaMSGroupOwner { get; set; }
 
+        public string ManagedIdentityClientId { get; set; }
+
         public string BuildQuality { get; set; }
 
         public string AzdoApiToken { get; set; }
