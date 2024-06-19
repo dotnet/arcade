@@ -134,19 +134,18 @@
     </ItemGroup>
 
     <ItemGroup Condition="'$(Restore)' == 'true'">
-      <_RestoreToolsProps Include="@(_CommonProps)"/>
-      <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
-      <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
-      <_RestoreToolsProps Include="_NuGetRestoreTargets=$(_NuGetRestoreTargets)"/>
-      
+      <_RestoreProps Include="@(_CommonProps)"/>
+      <_RestoreProps Include="ExcludeRestorePackageImports=true"/>
+      <_RestoreProps Include="_NuGetRestoreTargets=$(_NuGetRestoreTargets)"/>
+
       <!-- Used in the SDK (Tools.proj) to control whether Build.Tasks.Feed will be restored or not. -->
-      <_RestoreToolsProps Include="Publish=$(Publish)"/>
+      <_RestoreProps Include="Publish=$(Publish)"/>
 
       <!-- Used in the SDK (Tools.proj) to control whether SymbolUploader.Build.Task will be restored or not. -->
-      <_RestoreToolsProps Include="PublishToSymbolServer=$(PublishToSymbolServer)"/>
+      <_RestoreProps Include="PublishToSymbolServer=$(PublishToSymbolServer)"/>
 
       <!-- Forward this property because we can't assume it will be available globally. -->
-      <_RestoreToolsProps Include="DotNetPublishUsingPipelines=$(DotNetPublishUsingPipelines)"/>
+      <_RestoreProps Include="DotNetPublishUsingPipelines=$(DotNetPublishUsingPipelines)"/>
     </ItemGroup>
 
     <!--
@@ -154,8 +153,16 @@
       from a private location.
     -->
     <ItemGroup Condition="'$(SYSTEM_TEAMPROJECT)' == 'internal'">
-      <_RestoreToolsProps Include="DotNetRuntimeSourceFeed=$(DotNetRuntimeSourceFeed)"/>
-      <_RestoreToolsProps Include="DotNetRuntimeSourceFeedKey=$(DotNetRuntimeSourceFeedKey)"/>
+      <_RestoreProps Include="DotNetRuntimeSourceFeed=$(DotNetRuntimeSourceFeed)"/>
+      <_RestoreProps Include="DotNetRuntimeSourceFeedKey=$(DotNetRuntimeSourceFeedKey)"/>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(Restore)' == 'true'">
+      <_RestoreToolsProps Include="@(_RestoreProps)"/>
+      <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
+
+      <_RestoreSignProps Include="@(_RestoreProps)"/>
+      <_RestoreSignProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)CommonSign"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -183,6 +190,14 @@
     <MSBuild Projects="Tools.proj"
              Targets="Restore"
              Properties="@(_RestoreToolsProps);_NETCORE_ENGINEERING_TELEMETRY=Restore"
+             Condition="'$(Restore)' == 'true'"/>
+
+    <!--
+      Restore built-in tools for signing.
+    -->
+    <MSBuild Projects="Sign.proj"
+             Targets="Restore"
+             Properties="@(_RestoreSignProps);_NETCORE_ENGINEERING_TELEMETRY=Restore"
              Condition="'$(Restore)' == 'true'"/>
 
     <!--
