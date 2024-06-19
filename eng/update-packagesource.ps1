@@ -1,4 +1,5 @@
 Param(
+  [string] $barToken,
   [string] $gitHubPat,
   [string] $packagesSource
 )
@@ -69,12 +70,7 @@ try {
   CheckExitCode "Running darc-init"
 
   $Env:dotnet_root = $dotnetRoot
-  & $DarcExe\darc.exe update-dependencies `
-    --packages-folder "$packagesSource" `
-    --github-pat "$gitHubPat" `
-    --channel ".NET Tools - Latest" `
-    --ci
-
+  & $DarcExe\darc.exe update-dependencies --packages-folder $packagesSource --password $barToken --github-pat $gitHubPat --channel ".NET Tools - Latest"
   CheckExitCode "Updating dependencies"
 }
 catch {

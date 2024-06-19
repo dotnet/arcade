@@ -2,6 +2,7 @@ param(
   [Parameter(Mandatory=$true)][int] $BuildId,
   [Parameter(Mandatory=$true)][int] $PublishingInfraVersion,
   [Parameter(Mandatory=$true)][string] $AzdoToken,
+  [Parameter(Mandatory=$true)][string] $MaestroToken,
   [Parameter(Mandatory=$false)][string] $MaestroApiEndPoint = 'https://maestro.dot.net',
   [Parameter(Mandatory=$true)][string] $WaitPublishingFinish,
   [Parameter(Mandatory=$false)][string] $ArtifactsPublishingAdditionalParameters,
@@ -35,13 +36,14 @@ try {
   }
 
   & $darc add-build-to-channel `
-    --id $buildId `
-    --publishing-infra-version $PublishingInfraVersion `
-    --default-channels `
-    --source-branch main `
-    --azdev-pat "$AzdoToken" `
-    --bar-uri "$MaestroApiEndPoint" `
-    --ci `
+  --id $buildId `
+  --publishing-infra-version $PublishingInfraVersion `
+  --default-channels `
+  --source-branch main `
+  --azdev-pat $AzdoToken `
+  --bar-uri $MaestroApiEndPoint `
+  --password $MaestroToken `
+  --ci `
 	@optionalParams
 
   if ($LastExitCode -ne 0) {
