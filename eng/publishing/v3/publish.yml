@@ -137,6 +137,7 @@ stages:
         scriptType: 'pscore'
         scriptLocation: scriptPath
         scriptPath: $(Build.SourcesDirectory)/eng/common/sdk-task.ps1
+        addSpnToEnvironment: true
         arguments: -task PublishArtifactsInManifest -restore -msbuildEngine dotnet 
           /p:PublishingInfraVersion=3 
           /p:BARBuildId=${{ parameters.BARBuildId }} 
@@ -166,6 +167,7 @@ stages:
           /p:UseStreamingPublishing='true' 
           /p:StreamingPublishingMaxClients=16 
           /p:NonStreamingPublishingMaxClients=12
+          /p:ManagedIdentityClientId=$env:servicePrincipalId
 
     - template: /eng/common/templates-official/steps/publish-logs.yml@self
       parameters:

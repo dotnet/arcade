@@ -26,11 +26,11 @@
       <Uri>https://github.com/dotnet/templating</Uri>
       <Sha>5cbcd39027f739dd3ce1e5d50cfb99446a605491</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="9.0.0-beta.24317.3">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="9.0.0-beta.24319.7">
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>579b9d3c2a51de22be7685f0bd624bf83265c901</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="9.0.0-beta.24317.3">
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="9.0.0-beta.24319.7">
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>579b9d3c2a51de22be7685f0bd624bf83265c901</Sha>
     </Dependency>
@@ -124,7 +124,7 @@
       <Sha>39aef81ec6cffa06da9964b46d4b9e3bf2fc9979</Sha>
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.arcade" Version="9.0.0-beta.24317.3">
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.arcade" Version="9.0.0-beta.24319.7">
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>579b9d3c2a51de22be7685f0bd624bf83265c901</Sha>
       <SourceBuild RepoName="arcade" ManagedOnly="true" />
