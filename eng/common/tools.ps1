@@ -659,6 +659,11 @@ function GetNuGetPackageCachePath() {
         # global packages folder, this expression will evaluate to the empty string which will effectively leave the
         # environment variable set to null.
         $env:NUGET_PACKAGES = $nugetConfigXml.SelectSingleNode("//configuration/config/add[@key='globalPackagesFolder']").value
+        if ($env:NUGET_PACKAGES -ne $null) {
+          # Join-Path with an empty child path effectively adds a trailing directory separator only if one does not
+          # already exist
+          $env:NUGET_PACKAGES = Join-Path $env:NUGET_PACKAGES ''
+        }
       }
 
       if ($env:NUGET_PACKAGES -eq $null) {
