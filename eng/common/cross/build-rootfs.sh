@@ -751,7 +751,7 @@ elif [[ -n "$__CodeName" ]]; then
 Types: deb
 URIs: $__UbuntuRepo
 Suites: $__CodeName $__CodeName-updates $__CodeName-security $__CodeName-backports
-Components: main
+Components: main universe
 Signed-By: $__KeyringFile
 EOF
 
