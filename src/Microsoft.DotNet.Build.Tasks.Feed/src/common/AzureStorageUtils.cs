@@ -33,16 +33,6 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             {".svg", "no-cache"}
         };
 
-        /// <summary>
-        ///  Enum describing the states of a given package on a feed
-        /// </summary>
-        public enum PackageFeedStatus
-        {
-            DoesNotExist,
-            ExistsAndIdenticalToLocal,
-            ExistsAndDifferent,
-            Unknown
-        }
 
         public BlobContainerClient Container { get; set; }
 
