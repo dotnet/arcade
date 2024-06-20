@@ -146,6 +146,7 @@
       AkaMSOwners="$(AkaMSOwners)"
       AkaMSGroupOwner="$(AkaMSGroupOwner)"
       AkaMSCreatedBy="$(AkaMSCreatedBy)" 
+      ManagedIdentityClientId="$(ManagedIdentityClientId)"
       MsdlToken="$(MsdlToken)"
       SymWebToken="$(SymWebToken)"
       SymbolPublishingExclusionsFile="$(SymbolPublishingExclusionsFile)"
