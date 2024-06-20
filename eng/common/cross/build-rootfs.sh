@@ -750,13 +750,7 @@ elif [[ -n "$__CodeName" ]]; then
     cat > "$__RootfsDir/etc/apt/sources.list.d/$__CodeName.sources" <<EOF
 Types: deb
 URIs: $__UbuntuRepo
-Suites: $__CodeName $__CodeName-updates
-Components: main
-Signed-By: $__KeyringFile
-
-Types: deb
-URIs: $__UbuntuRepo
-Suites: $__CodeName-security
+Suites: $__CodeName $__CodeName-updates $__CodeName-security $__CodeName-backports
 Components: main
 Signed-By: $__KeyringFile
 EOF
