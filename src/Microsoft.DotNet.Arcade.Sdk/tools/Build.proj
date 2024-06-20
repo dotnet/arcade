@@ -150,6 +150,20 @@
     </ItemGroup>
 
     <!--
+      Restore built-in tools.
+    -->
+    <MSBuild Projects="Tools.proj"
+             Targets="RestoreAndReturnNuGetPackageRoot"
+             Properties="@(_RestoreToolsProps);_NETCORE_ENGINEERING_TELEMETRY=Restore"
+             Condition="'$(Restore)' == 'true'">
+      <Output TaskParameter="TargetOutputs" ItemName="_RestoreToolsOutput" />
+    </MSBuild>
+
+    <ItemGroup Condition="'$(Restore)' == 'true'">
+      <_CommonProps Include="@(_RestoreToolsOutput->'NuGetPackageRoot=%(Identity)')"/>
+    </ItemGroup>
+
+    <!--
       Builds from the 'internal' project, and only those, can download the .net Runtime 
       from a private location.
     -->
@@ -176,14 +190,6 @@
       <_SolutionBuildProps Include="__DeployProjectOutput=$(Deploy)" Condition="'$(Deploy)' != ''"/>
       <_SolutionBuildProps Include="__ImportPackTargets=true" Condition="'$(Pack)' == 'true'" />
     </ItemGroup>
-
-    <!--
-      Restore built-in tools.
-    -->
-    <MSBuild Projects="Tools.proj"
-             Targets="Restore"
-             Properties="@(_RestoreToolsProps);_NETCORE_ENGINEERING_TELEMETRY=Restore"
-             Condition="'$(Restore)' == 'true'"/>
 
     <!--
       Restore solutions and projects.

@@ -86,6 +86,8 @@
         Condition="'$(Restore)' == 'true'"/>
   </Target>
 
+  <Target Name="RestoreAndReturnNuGetPackageRoot" DependsOnTargets="Restore" Returns="$(NuGetPackageRoot)" />
+
   <Import Project="SourceBuild/SourceBuildArcadeTools.targets" Condition="'$(ArcadeBuildFromSource)' == 'true' or
                                                                           '$(DotNetBuildRepo)' == 'true' or
                                                                           '$(SetUpSourceBuildIntermediateNupkgCache)' == 'true'" />
