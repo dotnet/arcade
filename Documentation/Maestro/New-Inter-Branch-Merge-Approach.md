@@ -24,7 +24,7 @@ Inter-branch-merge-base parameters:
     - The path to the configuration file
     - Type: string
     - Required: false
-    - Default: false
+    - Default: github-merge-flow.json
 - **script_version**
     - Optional parameter which allows the target repository to use different branch of this shared workflow
     - Type: string
