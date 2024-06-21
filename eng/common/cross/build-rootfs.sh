@@ -30,7 +30,8 @@ __IllumosArch=arm7
 __HaikuArch=arm
 __QEMUArch=arm
 __UbuntuArch=armhf
-__UbuntuRepo="http://ports.ubuntu.com/"
+__UbuntuRepo=
+__UbuntuSuites="updates security backports"
 __LLDB_Package="liblldb-3.9-dev"
 __SkipUnmount=0
 
@@ -174,6 +175,7 @@ while :; do
             __CodeName=buster
             __KeyringFile="/usr/share/keyrings/raspbian-archive-keyring.gpg"
             __LLDB_Package="liblldb-6.0-dev"
+            __UbuntuSuites=
 
             if [[ -e "$__KeyringFile" ]]; then
                 __Keyring="--keyring $__KeyringFile"
@@ -446,6 +448,10 @@ if [[ "$__CodeName" == "xenial" && "$__UbuntuArch" == "armhf" ]]; then
 fi
 
 __UbuntuPackages+=" ${__LLDB_Package:-}"
+
+if [[ -z "$__UbuntuRepo" ]]; then
+    __UbuntuRepo="http://ports.ubuntu.com/"
+fi
 
 if [[ -n "$__LLVM_MajorVersion" ]]; then
     __UbuntuPackages+=" libclang-common-${__LLVM_MajorVersion}${__LLVM_MinorVersion:+.$__LLVM_MinorVersion}-dev"
@@ -750,7 +756,7 @@ elif [[ -n "$__CodeName" ]]; then
     cat > "$__RootfsDir/etc/apt/sources.list.d/$__CodeName.sources" <<EOF
 Types: deb
 URIs: $__UbuntuRepo
-Suites: $__CodeName $__CodeName-updates $__CodeName-security $__CodeName-backports
+Suites: $__CodeName $(echo $__UbuntuSuites | xargs -n 1 | xargs -I {} echo -n "$__CodeName-{} ")
 Components: main universe
 Signed-By: $__KeyringFile
 EOF
