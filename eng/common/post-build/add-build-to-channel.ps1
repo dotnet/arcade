@@ -1,7 +1,6 @@
 param(
   [Parameter(Mandatory=$true)][int] $BuildId,
   [Parameter(Mandatory=$true)][int] $ChannelId,
-  [Parameter(Mandatory=$true)][string] $MaestroApiAccessToken,
   [Parameter(Mandatory=$false)][string] $MaestroApiEndPoint = 'https://maestro.dot.net',
   [Parameter(Mandatory=$false)][string] $MaestroApiVersion = '2019-01-16'
 )

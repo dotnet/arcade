@@ -65,6 +65,5 @@ steps:
           exit 1
         }
     env:
-      MAESTRO_API_TOKEN: $(MaestroApiAccessToken)
       BARBuildId: ${{ parameters.BARBuildId }}
       PromoteToMaestroChannels: ${{ parameters.PromoteToChannelIds }}
