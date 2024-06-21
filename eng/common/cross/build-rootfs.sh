@@ -133,7 +133,6 @@ __Keyring=
 __KeyringFile="/usr/share/keyrings/ubuntu-archive-keyring.gpg"
 __SkipSigCheck=0
 __UseMirror=0
-__UseDeb822Format=0
 
 __UnprocessedBuildArgs=
 while :; do
@@ -293,7 +292,9 @@ while :; do
             if [[ "$__CodeName" != "jessie" ]]; then
                 __CodeName=noble
             fi
-            __UseDeb822Format=1
+            if [[ -n "$__LLDB_Package" ]]; then
+                __LLDB_Package="liblldb-18-dev"
+            fi
             ;;
         jessie) # Debian 8
             __CodeName=jessie
