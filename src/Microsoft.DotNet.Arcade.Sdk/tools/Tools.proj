@@ -86,7 +86,9 @@
         Condition="'$(Restore)' == 'true'"/>
   </Target>
 
-  <Target Name="RestoreAndReturnNuGetPackageRoot" DependsOnTargets="Restore" Returns="$(NuGetPackageRoot)" />
+  <Target Name="ReturnNuGetPackageRoot" Returns="$(NuGetPackageRoot)">
+    <Error Text="Unable to determine 'NuGetPackageRoot' prior to restore." Condition="'$(NuGetPackageRoot)' == ''" />
+  </Target>
 
   <Import Project="SourceBuild/SourceBuildArcadeTools.targets" Condition="'$(ArcadeBuildFromSource)' == 'true' or
                                                                           '$(DotNetBuildRepo)' == 'true' or
