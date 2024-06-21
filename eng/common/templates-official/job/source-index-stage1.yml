@@ -26,19 +26,6 @@ jobs:
     value: ${{ parameters.sourceIndexPackageSource }}
   - name: BinlogPath
     value: ${{ parameters.binlogPath }}
-  - template: /eng/common/templates-official/variables/pool-providers.yml
-
-  ${{ if ne(parameters.pool, '') }}:
-    pool: ${{ parameters.pool }}
-  ${{ if eq(parameters.pool, '') }}:
-    pool:
-      ${{ if eq(variables['System.TeamProject'], 'public') }}:
-        name: $(DncEngPublicBuildPool)
-        demands: ImageOverride -equals windows.vs2019.amd64.open
-      ${{ if eq(variables['System.TeamProject'], 'internal') }}:
-        name: $(DncEngInternalBuildPool)
-        image: windows.vs2022.amd64
-        os: windows
 
   pool: ${{ parameters.pool }}
   steps:
