@@ -117,11 +117,15 @@ steps:
       condition: succeededOrFailed()
       sbomEnabled: false  # we don't need SBOM for logs
 
-# Manually inject component detection so that we can ignore the source build upstream cache, which contains
-# a nupkg cache of input packages (a local feed).
-# This path must match the upstream cache path in property 'CurrentRepoSourceBuiltNupkgCacheDir'
-# in src\Microsoft.DotNet.Arcade.Sdk\tools\SourceBuild\SourceBuildArcade.targets
-- task: ComponentGovernanceComponentDetection@0
-  displayName: Component Detection (Exclude upstream cache)
-  inputs:
-    ignoreDirectories: '$(Build.SourcesDirectory)/artifacts/sb/src/artifacts/obj/source-built-upstream-cache'
+- ${{ if eq(variables['System.TeamProject'], 'public') }}:
+  - script: echo "##vso[task.setvariable variable=skipComponentGovernanceDetection]true"
+    displayName: Set skipComponentGovernanceDetection variable
+- ${{ else }}:
+  # Manually inject component detection so that we can ignore the source build upstream cache, which contains
+  # a nupkg cache of input packages (a local feed).
+  # This path must match the upstream cache path in property 'CurrentRepoSourceBuiltNupkgCacheDir'
+  # in src\Microsoft.DotNet.Arcade.Sdk\tools\SourceBuild\SourceBuildArcade.targets
+  - task: ComponentGovernanceComponentDetection@0
+    displayName: Component Detection (Exclude upstream cache)
+    inputs:
+      ignoreDirectories: '$(Build.SourcesDirectory)/artifacts/sb/src/artifacts/obj/source-built-upstream-cache'
