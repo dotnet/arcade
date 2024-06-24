@@ -38,7 +38,6 @@
     <Error Text="The ManifestsPath property must be set on the command line." Condition="'$(ManifestsPath)' == ''" />
     
     <PushMetadataToBuildAssetRegistry ManifestsPath="$(ManifestsPath)"
-                                      BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
                                       MaestroApiEndpoint="$(MaestroApiEndpoint)"
                                       RepoRoot="$(RepoRoot)"
                                       AssetVersion="$(Version)"/>
