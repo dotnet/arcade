@@ -90,7 +90,6 @@ stages:
         scriptType: ps
         scriptLocation: scriptPath
         scriptPath: $(Build.SourcesDirectory)/eng/common/sdk-task.ps1
-        addSpnToEnvironment: true
         arguments: >
           -task PublishArtifactsInManifest -restore -msbuildEngine dotnet
           /p:PublishingInfraVersion=3
