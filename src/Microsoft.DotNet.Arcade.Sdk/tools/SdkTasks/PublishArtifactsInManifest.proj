@@ -14,7 +14,6 @@
       - PackageBasePath                         
       - BARBuildId                              : BAR ID of the build being published.
       - MaestroApiEndpoint                      : Maestro API/Token. Used for updating asset locations.
-      - BuildAssetRegistryToken
       - NugetPath                               : Full path to nuget.exe. Used for pushing to AzDO feeds.
       - PublishInstallersAndChecksums           : Whether installers & checksums should be published.
       - AzureDevOpsFeedsKey                     : Token used to publish to *any* AzDO feed in dnceng.
@@ -139,7 +138,6 @@
       TargetChannels="$(TargetChannels)"
       BARBuildId="$(BARBuildId)"
       MaestroApiEndpoint="$(MaestroApiEndpoint)"
-      BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
       PublishInstallersAndChecksums="$(PublishInstallersAndChecksums)"
       AssetManifestPaths="@(ManifestFiles)"
       BlobAssetsBasePath="$(BlobBasePath)"
