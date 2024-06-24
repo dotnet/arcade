@@ -121,11 +121,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 string azureDevOpsFeedsBaseUrl = $"https://feeds.dev.azure.com/{AzureDevOpsOrg}/";
 
-                Lazy<AzureCliCredential> credential = new();
                 if (string.IsNullOrEmpty(AzureDevOpsPersonalAccessToken))
                 {
                     const string AzureDevOpsScope = "499b84ac-1321-427f-aa17-267ca6975798/.default";
-                    AzureDevOpsPersonalAccessToken = credential.Value.GetToken(new TokenRequestContext(new[] { AzureDevOpsScope })).Token;
+                    AzureDevOpsPersonalAccessToken = new AzureCliCredential().GetToken(new TokenRequestContext(new[] { AzureDevOpsScope })).Token;
                 }
 
                 do
