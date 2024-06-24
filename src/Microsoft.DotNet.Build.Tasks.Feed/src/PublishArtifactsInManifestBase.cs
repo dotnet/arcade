@@ -134,8 +134,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AkaMSClientId { get; set; }
 
-        public string AkaMSClientSecret { get; set; }
-
         public X509Certificate2 AkaMSClientCertificate { get; set; }
 
         public string AkaMSTenant { get; set; }
@@ -145,6 +143,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string AkaMSCreatedBy { get; set; }
 
         public string AkaMSGroupOwner { get; set; }
+
+        public string ManagedIdentityClientId { get; set; }
 
         public string BuildQuality { get; set; }
 
@@ -1509,17 +1509,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         LinkManager = new LatestLinksManager(
                             AkaMSClientId,
                             AkaMSClientCertificate,
-                            AkaMSTenant,
-                            AkaMSGroupOwner,
-                            AkaMSCreatedBy,
-                            AkaMsOwners,
-                            Log);
-                    }
-                    else if (!string.IsNullOrEmpty(AkaMSClientSecret))
-                    {
-                        LinkManager = new LatestLinksManager(
-                            AkaMSClientId,
-                            AkaMSClientSecret,
                             AkaMSTenant,
                             AkaMSGroupOwner,
                             AkaMSCreatedBy,

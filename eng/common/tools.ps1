@@ -650,20 +650,7 @@ function GetNuGetPackageCachePath() {
     # use global cache in dev builds to avoid cost of downloading packages.
     # For directory normalization, see also: https://github.com/NuGet/Home/issues/7968
     if ($useGlobalNuGetCache) {
-      # Check NuGet.Config to see if the packages folder has been redirected https://github.com/dotnet/arcade/issues/14761
-      $nugetConfig = Join-Path $env:APPDATA "NuGet\NuGet.Config"
-      if (Test-Path -Path $nugetConfig) {
-        [xml]$nugetConfigXml = Get-Content $nugetConfig
-
-        # Set the NUGET_PACKAGES environment variable to match the configured globalPackagesFolder. If there is no
-        # global packages folder, this expression will evaluate to the empty string which will effectively leave the
-        # environment variable set to null.
-        $env:NUGET_PACKAGES = $nugetConfigXml.SelectSingleNode("//configuration/config/add[@key='globalPackagesFolder']").value
-      }
-
-      if ($env:NUGET_PACKAGES -eq $null) {
-        $env:NUGET_PACKAGES = Join-Path $env:UserProfile '.nuget\packages\'
-      }
+      $env:NUGET_PACKAGES = Join-Path $env:UserProfile '.nuget\packages\'
     } else {
       $env:NUGET_PACKAGES = Join-Path $RepoRoot '.packages\'
       $env:RESTORENOHTTPCACHE = $true
