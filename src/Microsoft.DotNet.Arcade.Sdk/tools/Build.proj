@@ -134,19 +134,18 @@
     </ItemGroup>
 
     <ItemGroup>
-      <_RestoreToolsProps Include="@(_CommonProps)"/>
-      <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
-      <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
-      <_RestoreToolsProps Include="_NuGetRestoreTargets=$(_NuGetRestoreTargets)"/>
+      <_CommonToolsProps Include="@(_CommonProps)"/>
+      <_CommonToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
+      <_CommonToolsProps Include="_NuGetRestoreTargets=$(_NuGetRestoreTargets)"/>
       
       <!-- Used in the SDK (Tools.proj) to control whether Build.Tasks.Feed will be restored or not. -->
-      <_RestoreToolsProps Include="Publish=$(Publish)"/>
+      <_CommonToolsProps Include="Publish=$(Publish)"/>
 
       <!-- Used in the SDK (Tools.proj) to control whether SymbolUploader.Build.Task will be restored or not. -->
-      <_RestoreToolsProps Include="PublishToSymbolServer=$(PublishToSymbolServer)"/>
+      <_CommonToolsProps Include="PublishToSymbolServer=$(PublishToSymbolServer)"/>
 
       <!-- Forward this property because we can't assume it will be available globally. -->
-      <_RestoreToolsProps Include="DotNetPublishUsingPipelines=$(DotNetPublishUsingPipelines)"/>
+      <_CommonToolsProps Include="DotNetPublishUsingPipelines=$(DotNetPublishUsingPipelines)"/>
     </ItemGroup>
 
     <!--
@@ -154,8 +153,13 @@
       from a private location.
     -->
     <ItemGroup Condition="'$(SYSTEM_TEAMPROJECT)' == 'internal'">
-      <_RestoreToolsProps Include="DotNetRuntimeSourceFeed=$(DotNetRuntimeSourceFeed)"/>
-      <_RestoreToolsProps Include="DotNetRuntimeSourceFeedKey=$(DotNetRuntimeSourceFeedKey)"/>
+      <_CommonToolsProps Include="DotNetRuntimeSourceFeed=$(DotNetRuntimeSourceFeed)"/>
+      <_CommonToolsProps Include="DotNetRuntimeSourceFeedKey=$(DotNetRuntimeSourceFeedKey)"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <_RestoreToolsProps Include="@(_CommonToolsProps)"/>
+      <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
     </ItemGroup>
 
     <!--
@@ -168,7 +172,7 @@
 
     <MSBuild Projects="Tools.proj"
              Targets="ReturnNuGetPackageRoot"
-             Properties="@(_RestoreToolsProps);_NETCORE_ENGINEERING_TELEMETRY=ReturnNuGetPackageRoot">
+             Properties="@(_CommonToolsProps);_NETCORE_ENGINEERING_TELEMETRY=ReturnNuGetPackageRoot">
       <Output TaskParameter="TargetOutputs" ItemName="_RestoreToolsOutput" />
     </MSBuild>
 
