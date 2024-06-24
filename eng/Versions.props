@@ -12,8 +12,8 @@
     <MicrosoftDotNetSignToolVersion>8.0.0-beta.23463.1</MicrosoftDotNetSignToolVersion>
     <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>8.0.0-beta.23463.1</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
     <!-- arcade-services -->
-    <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.23477.2</MicrosoftDotNetMaestroClientVersion>
-    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.24157.2</MicrosoftDotNetMaestroTasksVersion>
+    <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.24321.1</MicrosoftDotNetMaestroClientVersion>
+    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.24321.1</MicrosoftDotNetMaestroTasksVersion>
     <!-- corefx -->
     <MicrosoftBclHashCodeVersion>1.1.1</MicrosoftBclHashCodeVersion>
     <SystemMemoryVersion>4.5.5</SystemMemoryVersion>
@@ -42,7 +42,7 @@
     <MicrosoftCodeAnalysisCSharpVersion>4.6.0</MicrosoftCodeAnalysisCSharpVersion>
     <MicrosoftNetCompilersToolsetVersion>4.6.0</MicrosoftNetCompilersToolsetVersion>
     <!-- runtime -->
-    <MicrosoftExtensionsDependencyInjectionAbstractionsVersion>6.0.0</MicrosoftExtensionsDependencyInjectionAbstractionsVersion>
+    <MicrosoftExtensionsDependencyInjectionAbstractionsVersion>8.0.1</MicrosoftExtensionsDependencyInjectionAbstractionsVersion>
     <MicrosoftExtensionsDependencyInjectionVersion>6.0.0</MicrosoftExtensionsDependencyInjectionVersion>
     <MicrosoftExtensionsDependencyModelVersion>8.0.0-preview.4.23259.5</MicrosoftExtensionsDependencyModelVersion>
     <MicrosoftExtensionsLoggingConsoleVersion>6.0.0</MicrosoftExtensionsLoggingConsoleVersion>
@@ -82,7 +82,7 @@
     <MicrosoftDotNetXliffTasksVersion>1.0.0-beta.23475.1</MicrosoftDotNetXliffTasksVersion>
     <!-- external -->
     <AzureCoreVersion>1.34.0</AzureCoreVersion>
-    <AzureIdentityVersion>1.11.2</AzureIdentityVersion>
+    <AzureIdentityVersion>1.11.4</AzureIdentityVersion>
     <AzureStorageBlobsVersion>12.16.0</AzureStorageBlobsVersion>
     <CommandLineParserVersion>2.5.0</CommandLineParserVersion>
     <CoverletCollectorVersion>1.0.1</CoverletCollectorVersion>
