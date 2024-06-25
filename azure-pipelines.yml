@@ -47,7 +47,7 @@ extends:
               manifests: true
           enableMicrobuild: true
           enablePublishUsingPipelines: true
-          enableSourceIndex: true
+          enableSourceIndex: false
           enableSourceBuild: true
           workspace:
             clean: all
