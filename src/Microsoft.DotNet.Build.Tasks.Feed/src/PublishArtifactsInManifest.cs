@@ -182,6 +182,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AkaMSGroupOwner { get; set; }
 
+        /// <summary>
+        /// Client ID to use with credential-free publishing. If not specified, the default
+        /// credential is used.
+        /// </summary>
+        public string ManagedIdentityClientId { get; set; }
+
         public string BuildQuality
         {
             get { return _buildQuality.GetDescription(); }
@@ -354,6 +360,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AkaMSGroupOwner = this.AkaMSGroupOwner,
                 AkaMsOwners = this.AkaMsOwners,
                 AkaMSTenant = this.AkaMSTenant,
+                ManagedIdentityClientId = this.ManagedIdentityClientId,
                 PublishInstallersAndChecksums = this.PublishInstallersAndChecksums,
                 FeedKeys = this.FeedKeys,
                 FeedSasUris = this.FeedSasUris,
