@@ -1,5 +1,7 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
-<Project Sdk="Microsoft.Build.NoTargets">
+<Project>
+
+  <Import Project="Microsoft.Build.NoTargets.3.7.56.Sdk.props"/>
 
   <Import Project="BuildStep.props" />
 
@@ -100,5 +102,7 @@
   <Import Project="InstallDotNetCore.targets" Condition="'$(_ImportOrUseTooling)' == 'true'" />
 
   <Import Project="VisualStudio.AcquireOptimizationData.targets" Condition="'$(UsingToolVisualStudioIbcTraining)' == 'true'" />
+
+  <Import Project="Microsoft.Build.NoTargets.3.7.56.Sdk.targets"/>
 
 </Project>
