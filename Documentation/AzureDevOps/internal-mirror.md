@@ -1,10 +1,10 @@
-# dev.azure.com/dnceng Internal Mirrors
+# Mirroring GitHub to dev.azure.com/dnceng and dev.azure.com/devdiv
 
-Public code should be mirrored to dev.azure.com/dnceng/internal or (see [Azure DevOps Guidance](https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/AzureDevOpsGuidance.md)).  These are the steps for setting up your GitHub repo to mirror into dev.azure.com/dnceng/internal.
+Public code should be mirrored to dev.azure.com/dnceng/internal or dev.azure.com/dnceng/devdiv, depending on where your pipelines live. (see [Azure DevOps Guidance](https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/AzureDevOpsGuidance.md)).  These are the steps for setting up your GitHub repo for mirroring.
 
-1. Make sure you have created a repo in the dev.azure.com/dnceng/internal project that is in the format "{org}-{repo}" (replace  any `/` with `-` in the GitHub repo name).
+1. Make sure you have a repo in the dev.azure.com/dnceng/internal project with a name in the format "{org}-{repo}" (replace  any `/` with `-` in the GitHub repo name). Please follow up with dnceng if a repository does not exist. For DevDiv repos, the pattern is {org}-{repo}-Trusted.
     - Example: github.com/dotnet/arcade => dotnet-arcade
-2. Create a PR to the `dotnet-mirroring` internal repo which adds data for repo and branches that you want mirrored to the [subscriptions json](https://dev.azure.com/dnceng/internal/_git/dotnet-mirroring?path=/dnceng-subscriptions.jsonc) file. Specifically, add a URI for your GitHub repository to the `repos` object. Please alphabetize.
+2. Create a PR to the `dotnet-mirroring` internal repo which adds data for repo and branches that you want mirrored, to the [dnceng subscriptions json](https://dev.azure.com/dnceng/internal/_git/dotnet-mirroring?path=/dnceng-subscriptions.jsonc) or [devdiv subscriptions json](https://dev.azure.com/dnceng/internal/_git/dotnet-mirroring?path=/devdiv-subscriptions.jsonc) files. Specifically, add a URI for your GitHub repository to the `repos` object, then types of mirroring and regex branch patterns. Please alphabetize.
 
 Example:
 ```json
@@ -15,7 +15,7 @@ Example:
     },
     "https://github.com/dotnet/sourcelink": {
       "fastForward": [
-        "main",
+        "main", // Fast forward main -> main
         "release/.*"
       ]
     },
@@ -23,6 +23,9 @@ Example:
       "fastForward": [
         // GitHubBranchNotFound "main",
         "release/.*"
+      ],
+      "internalMerge": [
+        "release/.*" // Merge release/.* -> internal/release/.*
       ]
     },
 ```
