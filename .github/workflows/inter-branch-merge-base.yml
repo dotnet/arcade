@@ -24,7 +24,7 @@ on:
         type: string
         description: The path to the configuration file.
         required: false
-        default: 'github-merge-flow.json'
+        default: 'github-merge-flow.jsonc'
       script_version:
         type: string
         required: false
@@ -37,7 +37,9 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    steps:
+    steps:  
+      - name: Enable git longpath
+        run: git config --global core.longpaths true
       - name: Checkout caller repository
         uses: actions/checkout@v4
         with:

@@ -19,10 +19,6 @@
          Writes a stub file to component intermediate directory.
   -->
 
-  <PropertyGroup>
-    <ArcadeVisualStudioBuildTasksAssembly>$(NuGetPackageRoot)microsoft.dotnet.build.tasks.visualstudio\$(MicrosoftDotNetBuildTasksVisualStudioVersion)\tools\net472\Microsoft.DotNet.Build.Tasks.VisualStudio.dll</ArcadeVisualStudioBuildTasksAssembly>
-  </PropertyGroup>
-
   <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.VisualStudio.FinalizeInsertionVsixFile" AssemblyFile="$(ArcadeVisualStudioBuildTasksAssembly)" />
 
   <PropertyGroup>
@@ -284,7 +280,7 @@
   <!--
     Make sure to include information about inputs and outputs to CreateVsixContainer for fast up-to-date check.
   -->
-  <PropertyGroup>
+  <PropertyGroup Condition="'$(VSToolsPath)' != '' and ('$(IsVsixProject)' == 'true' or '$(GeneratePkgDefFile)' == 'true')">
     <CollectUpToDateCheckInputDesignTimeDependsOn>$(CollectUpToDateCheckInputDesignTimeDependsOn);CollectVsixUpToDateCheckInput</CollectUpToDateCheckInputDesignTimeDependsOn>
     <CollectUpToDateCheckBuiltDesignTimeDependsOn>$(CollectUpToDateCheckBuiltDesignTimeDependsOn);CollectVsixUpToDateCheckBuilt</CollectUpToDateCheckBuiltDesignTimeDependsOn>
   </PropertyGroup>
