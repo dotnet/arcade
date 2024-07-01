@@ -39,7 +39,6 @@ call an inner build after some setup. The targets work roughly like this:
       * Create intermediate nupkg that contains the inner source-build's artifacts.
         * MSBuild `Projects=SourceBuildIntermediate.proj Targets=Restore;Pack`
       * Empty out the list of `ProjectToBuild`, because we already built them from source.
-        * Put `Noop.proj` in the list as a sentinel value.
     * During **Outer Execute**:
       * MSBuild `Projects=Tools.proj Targets=Restore`
         * Does nothing interesting.
