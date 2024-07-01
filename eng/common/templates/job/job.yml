@@ -1,6 +1,6 @@
 parameters: 
   enablePublishBuildArtifacts: false
-  disableComponentGovernance: false
+  disableComponentGovernance: ''
   componentGovernanceIgnoreDirectories: ''
 # Sbom related params
   enableSbom: true
