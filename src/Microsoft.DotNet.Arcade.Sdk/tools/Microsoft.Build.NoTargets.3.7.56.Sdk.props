@@ -4,6 +4,7 @@
   
   Licensed under the MIT license.
 -->
+<!-- Sourced from NuGet package Microsoft.Build.NoTargets -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>

@@ -1,3 +1,4 @@
+﻿<!-- Sourced from NuGet package Microsoft.Build.NoTargets -->
 <Project>
   <!-- Disables the _CopyFilesMarkedCopyLocal target by overriding it -->
   <Target Name="_CopyFilesMarkedCopyLocal" />
