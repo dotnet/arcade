@@ -6,10 +6,6 @@
     <MSTestRunner Condition=" '$(MSTestRunner)' == '' ">VSTest</MSTestRunner>
   </PropertyGroup>
 
-  <Target Name="_MSTestValidatePackageDeps" BeforeTargets="Build">
-    <Error Condition=" '$(UseMSTestMetaPackage)' == 'true' AND '$(UseMSTestSdk)' == 'true' " Text="Cannot use 'MSTest' metapackage and 'MSTest.Sdk' simultaneously." />
-  </Target>
-
   <ItemGroup Condition=" '$(MSTestDependencyMode)' == 'Packages' ">
     <PackageReference Include="Microsoft.TestPlatform" Version="$(MicrosoftTestPlatformVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true"/>
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestTestFrameworkVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true"/>
