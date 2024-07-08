@@ -1,12 +1,26 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
 
-  <ItemGroup>
+  <PropertyGroup>
+    <MSTestDependencyMode Condition=" '$(MSTestDependencyMode)' == '' ">Packages</MSTestDependencyMode>
+    <MSTestRunner Condition=" '$(MSTestRunner)' == '' ">VSTest</MSTestRunner>
+  </PropertyGroup>
+
+  <Target Name="_MSTestValidatePackageDeps" BeforeTargets="Build">
+    <Error Condition=" '$(UseMSTestMetaPackage)' == 'true' AND '$(UseMSTestSdk)' == 'true' " Text="Cannot use 'MSTest' metapackage and 'MSTest.Sdk' simultaneously." />
+  </Target>
+
+  <ItemGroup Condition=" '$(MSTestDependencyMode)' == 'Packages' ">
     <PackageReference Include="Microsoft.TestPlatform" Version="$(MicrosoftTestPlatformVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true"/>
     <PackageReference Include="MSTest.TestFramework" Version="$(MSTestTestFrameworkVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true"/>
     <PackageReference Include="MSTest.TestAdapter" Version="$(MSTestTestAdapterVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true"/>
   </ItemGroup>
 
-  <Import Project="..\VSTest.targets"/>
+  <ItemGroup Condition=" '$(MSTestDependencyMode)' == 'MetaPackage' ">
+    <PackageReference Include="MSTest" Version="$(MSTestVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true"/>
+  </ItemGroup>
+
+  <Import Project="..\VSTest.targets" Condition=" '$(MSTestRunner)' == 'VSTest' " />
+  <Import Project="..\Microsoft.Testing.Platform.targets" Condition=" '$(MSTestRunner)' == 'Microsoft.Testing.Platform' " />
 
 </Project>
