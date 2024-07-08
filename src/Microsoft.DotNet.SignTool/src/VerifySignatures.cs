@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.SignTool
             X509Certificate2 certificate;
             try
             {
-                X509Certificate signer = X509Certificate2.CreateFromSignedFile(fullPath);
+                X509Certificate signer = X509CertificateLoader.LoadCertificateFromFile(fullPath);
                 certificate = new X509Certificate2(signer);
             }
             catch (Exception)
