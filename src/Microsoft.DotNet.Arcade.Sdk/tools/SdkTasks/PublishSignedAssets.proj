@@ -13,8 +13,8 @@
       - NonShippingFolder                       : Location of the nonshipping assets about to be published.
       - FeedName                                : Name of the feed that will be created. This will
                                                   be appended by '-shipping' and '-nonshipping' depending the case
-      - NugetPath                               : Path to nuget.exe                                            
-      - AzdoTargetFeedPAT                       : Required token to publish assets to feeds
+      - NugetPath                               : Path to nuget.exe
+      - AzdoTargetFeedPAT                       : Token to publish assets to feeds
   -->
 
   <Target Name="Execute">
@@ -30,14 +30,11 @@
       Condition="'$(NonShippingFolder)' == ''"
       Text="Parameters 'NonShippingFolder' is empty." />
 
-    <Error
-      Condition="'$(AzdoTargetFeedPAT)' == ''"
-      Text="Parameters 'AzdoTargetFeedPAT' is empty." />
-
     <PropertyGroup>
       <AzureDevOpsOrg Condition="'$(AzureDevOpsOrg)' == ''">dnceng</AzureDevOpsOrg>
       <AzureDevOpsProject Condition="'(AzureDevOpsProject)' == '' and '(AzureDevOpsOrg)' == 'dnceng' and '$(IsInternalBuild)' == 'true'">internal</AzureDevOpsProject>
       <AzureDevOpsProject Condition="'(AzureDevOpsProject)' == '' and '(AzureDevOpsOrg)' == 'dnceng' and '$(IsInternalBuild)' == 'false'">public</AzureDevOpsProject>
+      <AzureDevOpsPersonalAccessToken Condition="'$(AzdoTargetFeedPAT)' != ''">$(AzdoTargetFeedPAT)</AzureDevOpsPersonalAccessToken>
     </PropertyGroup>
 
     <Error
@@ -46,7 +43,7 @@
 
     <!--Create the shipping feed-->
     <CreateAzureDevOpsFeed
-        AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)"
+        AzureDevOpsPersonalAccessToken="$(AzureDevOpsPersonalAccessToken)"
         FeedName="$(FeedName)-shipping"
         AzureDevOpsOrg="$(AzureDevOpsOrg)"
         AzureDevOpsProject="$(AzureDevOpsProject)">
@@ -55,7 +52,7 @@
 
     <!--Create the nonshipping feed-->
     <CreateAzureDevOpsFeed
-        AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)"
+        AzureDevOpsPersonalAccessToken="$(AzureDevOpsPersonalAccessToken)"
         FeedName="$(FeedName)-nonshipping"
         AzureDevOpsOrg="$(AzureDevOpsOrg)"
         AzureDevOpsProject="$(AzureDevOpsProject)">
@@ -63,7 +60,7 @@
     </CreateAzureDevOpsFeed>
 
     <PublishSignedAssets
-      AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)"
+      AzureDevOpsPersonalAccessToken="$(AzureDevOpsPersonalAccessToken)"
       ShippingFeedName="$(ShippingAzdoPackageFeedURL)"
       NonShippingFeedName="$(NonShippingAzdoPackageFeedURL)"
       ShippingAssetsFolder="$(ShippingFolder)"
