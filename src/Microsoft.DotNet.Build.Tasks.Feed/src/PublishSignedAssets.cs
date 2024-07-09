@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.src
             {
                 if (string.IsNullOrEmpty(AzureDevOpsPersonalAccessToken))
                 {
-                    AzureDevOpsPersonalAccessToken = new AzureCliCredential().GetToken(new TokenRequestContext(new[] { AzureDevOpsScope })).Token;
+                    AzureDevOpsPersonalAccessToken = (await new AzureCliCredential().GetTokenAsync(new TokenRequestContext(new[] { AzureDevOpsScope }))).Token;
                 }
 
                 // Push shipping packages
