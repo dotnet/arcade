@@ -8,6 +8,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 
@@ -98,11 +99,23 @@ namespace Microsoft.DotNet.SignTool
 
         internal static bool IsDigitallySigned(string fullPath)
         {
+            // We later suppress SYSLIB0057 because X509CertificateLoader does not handle authenticode inputs
+            // so we should verify that the certificate is authenticode before using X509Certificate2.CreateFromSignedFile
+            var certContentType = X509Certificate2.GetCertContentType(fullPath);
+            if (certContentType != X509ContentType.Authenticode)
+            {
+                throw new CryptographicException($"Unexpected certificate content type, got '{certContentType}' instead of Authenticode.");
+            }
+
             X509Certificate2 certificate;
             try
             {
-                X509Certificate signer = X509CertificateLoader.LoadCertificateFromFile(fullPath);
+                // X509CertificateLoader does not handle authenticode inputs
+                // so we have to suppress the X509Certificate2 ctor obsoletion
+                #pragma warning disable SYSLIB0057
+                X509Certificate signer = X509Certificate2.CreateFromSignedFile(fullPath);
                 certificate = new X509Certificate2(signer);
+                #pragma warning restore SYSLIB0057
             }
             catch (Exception)
             {
