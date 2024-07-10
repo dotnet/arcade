@@ -107,7 +107,7 @@ namespace Microsoft.DotNet.SignTool
                 var certContentType = X509Certificate2.GetCertContentType(fullPath);
                 if (certContentType != X509ContentType.Authenticode)
                 {
-                    throw new CryptographicException($"Unexpected certificate content type, got '{certContentType}' instead of Authenticode.");
+                    return false;
                 }
 
                 #pragma warning disable SYSLIB0057 // Suppress obsoletion warning for CreateFromSignedFile
