@@ -10,10 +10,14 @@ parameters:
 - name: resource
   type: string
   default: '499b84ac-1321-427f-aa17-267ca6975798'
+- name: isStepOutputVariable
+  type: boolean
+  default: false
 
 steps:
 - task: AzureCLI@2
   displayName: 'Getting federated access token for feeds'
+  name: getFederatedAccessToken
   inputs:
     azureSubscription: ${{ parameters.federatedServiceConnection }}
     scriptType: 'pscore'
@@ -25,4 +29,4 @@ steps:
         exit 1
       }
       Write-Host "Setting '${{ parameters.outputVariableName }}' with the access token value"
-      Write-Host "##vso[task.setvariable variable=${{ parameters.outputVariableName }};issecret=true]$accessToken"
+      Write-Host "##vso[task.setvariable variable=${{ parameters.outputVariableName }};issecret=true;isOutput=${{ parameters.isStepOutputVariable }}]$accessToken"
