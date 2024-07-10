@@ -3,6 +3,12 @@ parameters:
   type: string
 - name: outputVariableName
   type: string
+- name: stepName
+  type: string
+  default: 'getFederatedAccessToken'
+- name: condition
+  type: string
+  default: ''
 # Resource to get a token for. Common values include:
 # - '499b84ac-1321-427f-aa17-267ca6975798' for Azure DevOps
 # - 'https://storage.azure.com/' for storage
@@ -17,7 +23,9 @@ parameters:
 steps:
 - task: AzureCLI@2
   displayName: 'Getting federated access token for feeds'
-  name: getFederatedAccessToken
+  name: ${{ parameters.stepName }}
+  ${{ if ne(parameters.condition, '') }}:
+    condition: ${{ parameters.condition }}
   inputs:
     azureSubscription: ${{ parameters.federatedServiceConnection }}
     scriptType: 'pscore'
