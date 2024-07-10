@@ -34,7 +34,6 @@
       <AzureDevOpsOrg Condition="'$(AzureDevOpsOrg)' == ''">dnceng</AzureDevOpsOrg>
       <AzureDevOpsProject Condition="'(AzureDevOpsProject)' == '' and '(AzureDevOpsOrg)' == 'dnceng' and '$(IsInternalBuild)' == 'true'">internal</AzureDevOpsProject>
       <AzureDevOpsProject Condition="'(AzureDevOpsProject)' == '' and '(AzureDevOpsOrg)' == 'dnceng' and '$(IsInternalBuild)' == 'false'">public</AzureDevOpsProject>
-      <AzureDevOpsPersonalAccessToken Condition="'$(AzdoTargetFeedPAT)' != ''">$(AzdoTargetFeedPAT)</AzureDevOpsPersonalAccessToken>
     </PropertyGroup>
 
     <Error
@@ -43,7 +42,7 @@
 
     <!--Create the shipping feed-->
     <CreateAzureDevOpsFeed
-        AzureDevOpsPersonalAccessToken="$(AzureDevOpsPersonalAccessToken)"
+        AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)"
         FeedName="$(FeedName)-shipping"
         AzureDevOpsOrg="$(AzureDevOpsOrg)"
         AzureDevOpsProject="$(AzureDevOpsProject)">
@@ -52,7 +51,7 @@
 
     <!--Create the nonshipping feed-->
     <CreateAzureDevOpsFeed
-        AzureDevOpsPersonalAccessToken="$(AzureDevOpsPersonalAccessToken)"
+        AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)"
         FeedName="$(FeedName)-nonshipping"
         AzureDevOpsOrg="$(AzureDevOpsOrg)"
         AzureDevOpsProject="$(AzureDevOpsProject)">
@@ -60,7 +59,7 @@
     </CreateAzureDevOpsFeed>
 
     <PublishSignedAssets
-      AzureDevOpsPersonalAccessToken="$(AzureDevOpsPersonalAccessToken)"
+      AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)"
       ShippingFeedName="$(ShippingAzdoPackageFeedURL)"
       NonShippingFeedName="$(NonShippingAzdoPackageFeedURL)"
       ShippingAssetsFolder="$(ShippingFolder)"
