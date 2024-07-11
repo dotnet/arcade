@@ -119,9 +119,9 @@
       <Uri>https://github.com/dotnet/deployment-tools</Uri>
       <Sha>b60c95e1ce736630d17e16626c59e3dd85ebae2b</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Sdk.WorkloadManifestReader" Version="8.0.100-preview.3.23178.3">
+    <Dependency Name="Microsoft.NET.Sdk.WorkloadManifestReader" Version="9.0.100-preview.7.24361.1">
       <Uri>https://github.com/dotnet/sdk</Uri>
-      <Sha>39aef81ec6cffa06da9964b46d4b9e3bf2fc9979</Sha>
+      <Sha>81ac886071828da7f14d0c26d731ac06abd0c7f6</Sha>
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
     <Dependency Name="Microsoft.SourceBuild.Intermediate.arcade" Version="9.0.0-beta.24360.1">
@@ -148,9 +148,9 @@
       <SourceBuild RepoName="runtime" ManagedOnly="false" />
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.sdk" Version="8.0.100-preview.3.23178.3">
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.sdk" Version="9.0.100-preview.7.24361.1">
       <Uri>https://github.com/dotnet/sdk</Uri>
-      <Sha>39aef81ec6cffa06da9964b46d4b9e3bf2fc9979</Sha>
+      <Sha>81ac886071828da7f14d0c26d731ac06abd0c7f6</Sha>
       <SourceBuild RepoName="sdk" ManagedOnly="true" />
     </Dependency>
     <!-- Intermediate is necessary for source build. -->

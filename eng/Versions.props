@@ -72,7 +72,7 @@
     <SystemTextEncodingsWebVersion>9.0.0-alpha.1.24059.2</SystemTextEncodingsWebVersion>
     <SystemTextJsonVersion>9.0.0-alpha.1.24059.2</SystemTextJsonVersion>
     <!-- sdk -->
-    <MicrosoftNetSdkWorkloadManifestReaderVersion>8.0.100-preview.3.23178.3</MicrosoftNetSdkWorkloadManifestReaderVersion>
+    <MicrosoftNETSdkWorkloadManifestReaderVersion>9.0.100-preview.7.24361.1</MicrosoftNETSdkWorkloadManifestReaderVersion>
     <!-- source-build-externals -->
     <!-- The version is overridden by the VMR to use the version from the previous (n-1) build of Arcade. -->
     <MicrosoftApplicationInsightsVersion>2.22.0</MicrosoftApplicationInsightsVersion>
