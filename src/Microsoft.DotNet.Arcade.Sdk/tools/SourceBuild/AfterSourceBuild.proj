@@ -1,5 +1,5 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
-<Project DefaultTargets="AfterSourceBuild">
+<Project DefaultTargets="AfterSourceBuildInnerBuild;AfterSourceBuild">
 
   <Import Project="..\BuildStep.props" />
 
@@ -11,12 +11,23 @@
 
   <Import Project="$(MicrosoftDotNetSourceBuildTasksBuildDir)Microsoft.DotNet.SourceBuild.Tasks.props" />
 
+  <Target Name="AfterSourceBuildInnerBuild"
+          Condition="('$(ArcadeInnerBuildFromSource)' == 'true' or '$(DotNetBuildInnerRepo)' == 'true') and
+                     '$(DotNetBuildOrchestrator)' == 'true'"
+          DependsOnTargets="CopyRepoSymbolsToIntermediates;ClearPreviousSBRP" />
+
+  <Target Name="ClearPreviousSBRP"
+          Condition="'$(GitHubRepositoryName)' == 'source-build-reference-packages'">
+    <!-- Building SBRP: At this point the References directory contains the previously-source-built SBRPs,
+         clear it before publishing current SBRPs.  This ensures n-1 SBRPs aren't required to build the product repos. -->
+    <RemoveDir Directories="$(ReferencePackageNupkgCacheDir)" />
+  </Target>
+
   <Target Name="AfterSourceBuild"
           Condition="'$(ArcadeInnerBuildFromSource)' != 'true' and '$(DotNetBuildInnerRepo)' != 'true'"
           DependsOnTargets="
             ReportPrebuiltUsage;
-            PackSourceBuildIntermediateNupkgs;
-            CreateRepoManifest" />
+            PackSourceBuildIntermediateNupkgs" />
 
   <Target Name="WritePrebuiltUsageData">
     <ItemGroup>
@@ -74,7 +85,7 @@
       OutputBaselineFile="$(SourceBuildSelfPrebuiltReportDir)generated-new-baseline.xml"
       OutputReportFile="$(SourceBuildSelfPrebuiltReportDir)baseline-comparison.xml"
       ContinueOnError="$(ContinueOnPrebuiltBaselineError)"
-      Condition="'$(DotNetBuildFromSourceFlavor)' != 'Product' and 
+      Condition="'$(DotNetBuildFromSourceFlavor)' != 'Product' and '$(DotNetBuildOrchestrator)' != 'true' and
         ('$(ArcadeBuildFromSource)' == 'true' or '$(DotNetBuildSourceOnly)' == 'true')" />
   </Target>
 
@@ -116,34 +127,6 @@
     <Copy
       SourceFiles="$(DetectedLicenseFile)"
       DestinationFiles="$(SourceBuildIntermediateNupkgLicenseFile)" />
-  </Target>
-
-  <!--
-    In VMR build we create repo manifest.
-    SB orchestrator will parse the manifest and copy the artifacts to the right locations.
-
-    This can be removed once we enable standard repo assets manifests and SB orchestrator
-    starts using it - https://github.com/dotnet/source-build/issues/3970
-  -->
-  <Target Name="CreateRepoManifest"
-          Condition="'$(DotNetBuildFromSourceFlavor)' == 'Product'"
-          DependsOnTargets="
-            GetCategorizedIntermediateNupkgContents;
-            CreateRepoSymbolsArchive">
-    <PropertyGroup>
-      <RepoManifestFile>$(ArtifactsDir)RepoManifest.xml</RepoManifestFile>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <RepoManifestLine Include='&lt;Build&gt;' />
-      <RepoManifestLine Include='&lt;Artifact Path="%(IntermediateNupkgFile.Identity)" /&gt;' />
-      <RepoManifestLine Include='&lt;/Build&gt;' />
-    </ItemGroup>
-
-    <WriteLinesToFile
-      File="$(RepoManifestFile)"
-      Lines="@(RepoManifestLine)"
-      Overwrite="true" />
   </Target>
 
   <!--

@@ -32,12 +32,7 @@ namespace Xunit
 		/// <param name="collection">The collection</param>
 		/// <param name="action">The action to test each item against</param>
 		/// <exception cref="AllException">Thrown when the collection contains at least one non-matching element</exception>
-		public static void All<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces |
-	DynamicallyAccessedMemberTypes.PublicFields |
-	DynamicallyAccessedMemberTypes.NonPublicFields |
-	DynamicallyAccessedMemberTypes.PublicProperties |
-	DynamicallyAccessedMemberTypes.NonPublicProperties |
-	DynamicallyAccessedMemberTypes.PublicMethods)] T>(
+		public static void All<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces | DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.NonPublicFields | DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.NonPublicProperties | DynamicallyAccessedMemberTypes.PublicMethods)] T>(
 			IEnumerable<T> collection,
 			Action<T> action)
 		{
@@ -55,12 +50,7 @@ namespace Xunit
 		/// <param name="collection">The collection</param>
 		/// <param name="action">The action to test each item against</param>
 		/// <exception cref="AllException">Thrown when the collection contains at least one non-matching element</exception>
-		public static void All<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces |
-	DynamicallyAccessedMemberTypes.PublicFields |
-	DynamicallyAccessedMemberTypes.NonPublicFields |
-	DynamicallyAccessedMemberTypes.PublicProperties |
-	DynamicallyAccessedMemberTypes.NonPublicProperties |
-	DynamicallyAccessedMemberTypes.PublicMethods)] T>(
+		public static void All<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces | DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.NonPublicFields | DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.NonPublicProperties | DynamicallyAccessedMemberTypes.PublicMethods)] T>(
 			IEnumerable<T> collection,
 			Action<T, int> action)
 		{
@@ -231,24 +221,31 @@ namespace Xunit
 		/// <param name="expected">The object expected to be in the collection</param>
 		/// <param name="collection">The collection to be inspected</param>
 		/// <exception cref="ContainsException">Thrown when the object is not present in the collection</exception>
-		public static void Contains<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces |
-	DynamicallyAccessedMemberTypes.PublicFields |
-	DynamicallyAccessedMemberTypes.NonPublicFields |
-	DynamicallyAccessedMemberTypes.PublicProperties |
-	DynamicallyAccessedMemberTypes.NonPublicProperties |
-	DynamicallyAccessedMemberTypes.PublicMethods)] T>(
+		public static void Contains<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces | DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.NonPublicFields | DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.NonPublicProperties | DynamicallyAccessedMemberTypes.PublicMethods)] T>(
 			T expected,
 			IEnumerable<T> collection)
 		{
 			GuardArgumentNotNull(nameof(collection), collection);
 
-			// We special case HashSet<T> because it has a custom Contains implementation that is based on the comparer
-			// passed into their constructors, which we don't have access to.
-			var hashSet = collection as HashSet<T>;
-			if (hashSet != null)
-				Contains(expected, hashSet);
-			else
-				Contains(expected, collection, GetEqualityComparer<T>());
+			// We special case sets because they are constructed with their comparers, which we don't have access to.
+			// We want to let them do their normal logic when appropriate, and not try to use our default comparer.
+			var set = collection as ISet<T>;
+			if (set != null)
+			{
+				Contains(expected, set);
+				return;
+			}
+#if NET5_0_OR_GREATER
+			var readOnlySet = collection as IReadOnlySet<T>;
+			if (readOnlySet != null)
+			{
+				Contains(expected, readOnlySet);
+				return;
+			}
+#endif
+
+			// Fall back to the assumption that this is a linear container and use our default comparer
+			Contains(expected, collection, GetEqualityComparer<T>());
 		}
 
 		/// <summary>
@@ -336,24 +333,31 @@ namespace Xunit
 		/// <param name="expected">The object that is expected not to be in the collection</param>
 		/// <param name="collection">The collection to be inspected</param>
 		/// <exception cref="DoesNotContainException">Thrown when the object is present inside the container</exception>
-		public static void DoesNotContain<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces |
-	DynamicallyAccessedMemberTypes.PublicFields |
-	DynamicallyAccessedMemberTypes.NonPublicFields |
-	DynamicallyAccessedMemberTypes.PublicProperties |
-	DynamicallyAccessedMemberTypes.NonPublicProperties |
-	DynamicallyAccessedMemberTypes.PublicMethods)] T>(
+		public static void DoesNotContain<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.Interfaces | DynamicallyAccessedMemberTypes.PublicFields | DynamicallyAccessedMemberTypes.NonPublicFields | DynamicallyAccessedMemberTypes.PublicProperties | DynamicallyAccessedMemberTypes.NonPublicProperties | DynamicallyAccessedMemberTypes.PublicMethods)] T>(
 			T expected,
 			IEnumerable<T> collection)
 		{
 			GuardArgumentNotNull(nameof(collection), collection);
 
-			// We special case HashSet<T> because it has a custom Contains implementation that is based on the comparer
-			// passed into their constructors, which we don't have access to.
-			var hashSet = collection as HashSet<T>;
-			if (hashSet != null)
-				DoesNotContain(expected, hashSet);
-			else
-				DoesNotContain(expected, collection, GetEqualityComparer<T>());
+			// We special case sets because they are constructed with their comparers, which we don't have access to.
+			// We want to let them do their normal logic when appropriate, and not try to use our default comparer.
+			var set = collection as ISet<T>;
+			if (set != null)
+			{
+				DoesNotContain(expected, set);
+				return;
+			}
+#if NET5_0_OR_GREATER
+			var readOnlySet = collection as IReadOnlySet<T>;
+			if (readOnlySet != null)
+			{
+				DoesNotContain(expected, readOnlySet);
+				return;
+			}
+#endif
+
+			// Fall back to the assumption that this is a linear container and use our default comparer
+			DoesNotContain(expected, collection, GetEqualityComparer<T>());
 		}
 
 		/// <summary>

@@ -7,6 +7,7 @@
 #pragma warning disable CS8603
 #pragma warning disable CS8604
 #pragma warning disable CS8621
+#pragma warning disable CS8625
 #endif
 
 using System;
@@ -21,6 +22,10 @@ using Xunit.Sdk;
 
 #if XUNIT_NULLABLE
 using System.Diagnostics.CodeAnalysis;
+#endif
+
+#if NETCOREAPP3_0_OR_GREATER
+using System.Threading.Tasks;
 #endif
 
 namespace Xunit.Internal
@@ -132,6 +137,34 @@ namespace Xunit.Internal
 						.ToDictionary(g => g.name, g => g.getter);
 			});
 
+#if !XUNIT_AOT
+#if XUNIT_NULLABLE
+		static TypeInfo? GetTypeInfo(string typeName)
+#else
+		static TypeInfo GetTypeInfo(string typeName)
+#endif
+		{
+			try
+			{
+				foreach (var assembly in getAssemblies.Value)
+				{
+					var type = assembly.GetType(typeName);
+					if (type != null)
+						return type.GetTypeInfo();
+				}
+
+				return null;
+			}
+			catch (Exception ex)
+			{
+				throw new InvalidOperationException(string.Format(CultureInfo.CurrentCulture, "Fatal error: Exception occurred while trying to retrieve type '{0}'", typeName), ex);
+			}
+		}
+#endif
+
+		internal static bool IsCompilerGenerated(Type type) =>
+			type.GetTypeInfo().CustomAttributes.Any(a => a.AttributeType.FullName == "System.Runtime.CompilerServices.CompilerGeneratedAttribute");
+
 		internal static string ShortenAndEncodeString(
 #if XUNIT_NULLABLE
 			string? value,
@@ -215,6 +248,33 @@ namespace Xunit.Internal
 			return ShortenAndEncodeString(value, (value?.Length - 1) ?? 0, out pointerIndent);
 		}
 
+#if NETCOREAPP3_0_OR_GREATER
+
+#if XUNIT_NULLABLE
+		[return: NotNullIfNotNull(nameof(data))]
+		internal static IEnumerable<T>? ToEnumerable<T>(IAsyncEnumerable<T>? data) =>
+#else
+		internal static IEnumerable<T> ToEnumerable<T>(IAsyncEnumerable<T> data) =>
+#endif
+			data == null ? null : ToEnumerableImpl(data);
+
+		static IEnumerable<T> ToEnumerableImpl<T>(IAsyncEnumerable<T> data)
+		{
+			var enumerator = data.GetAsyncEnumerator();
+
+			try
+			{
+				while (WaitForValueTask(enumerator.MoveNextAsync()))
+					yield return enumerator.Current;
+			}
+			finally
+			{
+				WaitForValueTask(enumerator.DisposeAsync());
+			}
+		}
+
+#endif
+
 		static bool TryConvert(
 			object value,
 			Type targetType,
@@ -224,8 +284,16 @@ namespace Xunit.Internal
 			out object converted)
 #endif
 		{
-			converted = Convert.ChangeType(value, targetType, CultureInfo.CurrentCulture);
-			return converted != null;
+			try
+			{
+				converted = Convert.ChangeType(value, targetType, CultureInfo.CurrentCulture);
+				return converted != null;
+			}
+			catch (InvalidCastException)
+			{
+				converted = null;
+				return false;
+			}
 		}
 
 #if XUNIT_NULLABLE
@@ -311,7 +379,7 @@ namespace Xunit.Internal
 				var actualTypeInfo = actualType.GetTypeInfo();
 
 				// Primitive types, enums and strings should just fall back to their Equals implementation
-				if (expectedTypeInfo.IsPrimitive || expectedTypeInfo.IsEnum || expectedType == typeof(string))
+				if (expectedTypeInfo.IsPrimitive || expectedTypeInfo.IsEnum || expectedType == typeof(string) || expectedType == typeof(decimal))
 					return VerifyEquivalenceIntrinsics(expected, actual, prefix);
 
 				// DateTime and DateTimeOffset need to be compared via IComparable (because of a circular
@@ -522,5 +590,29 @@ namespace Xunit.Internal
 
 			return null;
 		}
+
+#if NETCOREAPP3_0_OR_GREATER
+
+		static void WaitForValueTask(ValueTask valueTask)
+		{
+			var valueTaskAwaiter = valueTask.GetAwaiter();
+			if (valueTaskAwaiter.IsCompleted)
+				return;
+
+			// Let the task complete on a thread pool thread while we block the main thread
+			Task.Run(valueTask.AsTask).GetAwaiter().GetResult();
+		}
+
+		static T WaitForValueTask<T>(ValueTask<T> valueTask)
+		{
+			var valueTaskAwaiter = valueTask.GetAwaiter();
+			if (valueTaskAwaiter.IsCompleted)
+				return valueTaskAwaiter.GetResult();
+
+			// Let the task complete on a thread pool thread while we block the main thread
+			return Task.Run(valueTask.AsTask).GetAwaiter().GetResult();
+		}
+
+#endif
 	}
 }

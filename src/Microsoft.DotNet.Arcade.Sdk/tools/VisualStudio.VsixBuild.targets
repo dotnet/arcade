@@ -277,4 +277,36 @@
     <GetVsixSourceItemsDependsOn>$(GetVsixSourceItemsDependsOn);_GetVsixTemplateItems</GetVsixSourceItemsDependsOn>
   </PropertyGroup>
 
+  <!--
+    Make sure to include information about inputs and outputs to CreateVsixContainer for fast up-to-date check.
+  -->
+  <PropertyGroup Condition="'$(VSToolsPath)' != '' and ('$(IsVsixProject)' == 'true' or '$(GeneratePkgDefFile)' == 'true')">
+    <CollectUpToDateCheckInputDesignTimeDependsOn>$(CollectUpToDateCheckInputDesignTimeDependsOn);CollectVsixUpToDateCheckInput</CollectUpToDateCheckInputDesignTimeDependsOn>
+    <CollectUpToDateCheckBuiltDesignTimeDependsOn>$(CollectUpToDateCheckBuiltDesignTimeDependsOn);CollectVsixUpToDateCheckBuilt</CollectUpToDateCheckBuiltDesignTimeDependsOn>
+  </PropertyGroup>
+
+  <Target Name="CollectVsixUpToDateCheckInput" DependsOnTargets="GetVsixSourceItems;FindSourceVsixManifest">
+    <ItemGroup Condition="$(CreateVsixContainer)">
+      <_InputVSIXSourceItem Include="@(VSIXSourceItem)" />
+      <_InputVSIXSourceItem Remove="@(IntermediateAssembly)" />
+      <_InputVSIXSourceItem Remove="@(AddModules)" />
+      <_InputVSIXSourceItem Remove="$(IntermediateOutputPath)$(_SGenDllName)" />
+      <_InputVSIXSourceItem Remove="@(_DebugSymbolsIntermediatePath)" />
+      <_InputVSIXSourceItem Remove="@(DocFileItem)" />
+      <_InputVSIXSourceItem Remove="@(SatelliteDllsProjectOutputGroupOutput->'%(FinalOutputPath)')" />
+      <_InputVSIXSourceItem Remove="@(SatelliteDllsProjectOutputGroupOutput)" />
+      <_InputVSIXSourceItem Remove="$(IntermediateOutputPath)$(TargetName).pkgdef" />
+      <_InputVSIXSourceItem Remove="@(_GeneratedExtensionJson)" />
+
+      <UpToDateCheckInput Include="@(_InputVSIXSourceItem)" />
+      <UpToDateCheckInput Include="@(SourceVsixManifest)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CollectVsixUpToDateCheckBuilt">
+    <ItemGroup Condition="$(CreateVsixContainer)">
+      <UpToDateCheckBuilt Include="$(TargetVsixContainer)" />
+    </ItemGroup>
+  </Target>
+
 </Project>

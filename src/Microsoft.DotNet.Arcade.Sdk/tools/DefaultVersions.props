@@ -24,7 +24,7 @@
     Workaround for https://github.com/NuGet/Home/issues/3116
   -->
   <PropertyGroup>
-    <RestoreNoCache Condition="'$(ContinuousIntegrationBuild)' == 'true'">true</RestoreNoCache>
+    <RestoreNoHttpCache Condition="'$(ContinuousIntegrationBuild)' == 'true'">true</RestoreNoHttpCache>
   </PropertyGroup>
 
   <!--
@@ -71,7 +71,7 @@
     Default versions
   -->
   <PropertyGroup>
-    <DropAppVersion Condition="'$(DropAppVersion)' == ''">18.165.29912-buildid11693003</DropAppVersion>
+    <DropAppVersion Condition="'$(DropAppVersion)' == ''">19.239.34923-buildid28260713</DropAppVersion>
     <MicroBuildPluginsSwixBuildVersion Condition="'$(MicroBuildPluginsSwixBuildVersion)' == ''">1.0.422</MicroBuildPluginsSwixBuildVersion>
     <MicroBuildCoreVersion Condition="'$(MicroBuildCoreVersion)' == ''">0.2.0</MicroBuildCoreVersion>
     <MicrosoftDotNetIBCMergeVersion Condition="'$(MicrosoftDotNetIBCMergeVersion)' == ''">5.1.0-beta.21356.1</MicrosoftDotNetIBCMergeVersion>
@@ -83,10 +83,10 @@
     <MicrosoftTestPlatformVersion Condition="'$(MicrosoftTestPlatformVersion)' == ''">16.5.0</MicrosoftTestPlatformVersion>
 
     <!-- Follow the instructions on how to update any of the below xunit versions: https://github.com/dotnet/arcade/blob/main/Documentation/update-xunit.md. -->
-    <XUnitVersion Condition="'$(XUnitVersion)' == ''">2.6.6</XUnitVersion>
-    <XUnitAnalyzersVersion Condition="'$(XUnitAnalyzersVersion)' == ''">1.10.0</XUnitAnalyzersVersion>
+    <XUnitVersion Condition="'$(XUnitVersion)' == ''">2.8.1</XUnitVersion>
+    <XUnitAnalyzersVersion Condition="'$(XUnitAnalyzersVersion)' == ''">1.14.0</XUnitAnalyzersVersion>
     <XUnitRunnerConsoleVersion Condition="'$(XUnitRunnerConsoleVersion)' == ''">$(XUnitVersion)</XUnitRunnerConsoleVersion>
-    <XUnitRunnerVisualStudioVersion Condition="'$(XUnitRunnerVisualStudioVersion)' == ''">2.5.6</XUnitRunnerVisualStudioVersion>
+    <XUnitRunnerVisualStudioVersion Condition="'$(XUnitRunnerVisualStudioVersion)' == ''">2.8.1</XUnitRunnerVisualStudioVersion>
 
     <MSTestVersion Condition="'$(MSTestVersion)' == ''">2.0.0</MSTestVersion>
     <MSTestTestAdapterVersion Condition="'$(MSTestTestAdapterVersion)' == ''">$(MSTestVersion)</MSTestTestAdapterVersion>
@@ -103,7 +103,7 @@
     <MicrosoftVisualStudioEngMicroBuildCoreVersion Condition="'$(MicrosoftVisualStudioEngMicroBuildCoreVersion)' == ''">1.0.0</MicrosoftVisualStudioEngMicroBuildCoreVersion>
     <MicrosoftManifestToolCrossPlatformVersion Condition="'$(MicrosoftManifestToolCrossPlatformVersion)' == ''">2.1.3</MicrosoftManifestToolCrossPlatformVersion>
     <MicrosoftVisualStudioEngMicroBuildPluginsSwixBuildVersion Condition="'$(MicrosoftVisualStudioEngMicroBuildPluginsSwixBuildVersion)' == ''">1.1.286</MicrosoftVisualStudioEngMicroBuildPluginsSwixBuildVersion>
-    <MicrosoftSignedWixVersion Condition="'$(MicrosoftSignedWixVersion)' == ''">1.0.0-v3.14.0.5722</MicrosoftSignedWixVersion>
+    <MicrosoftSignedWixVersion Condition="'$(MicrosoftSignedWixVersion)' == ''">3.14.1-8722.20240403.1</MicrosoftSignedWixVersion>
   </PropertyGroup>
 
   <!-- RestoreSources overrides - defines DotNetRestoreSources variable if available -->

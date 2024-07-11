@@ -1,7 +1,7 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
 
-  <!-- OS invariant helper properties for use in the repo's SourceBuild.props file and here. -->
+  <!-- OS invariant helper properties for use in the repo's DotNetBuild.props file and here. -->
   <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
     <ArchiveExtension>.zip</ArchiveExtension>
     <FlagParameterPrefix>-</FlagParameterPrefix>
@@ -15,6 +15,8 @@
   </PropertyGroup>
 
   <!-- Repo extensibility point. -->
+  <Import Project="$(RepositoryEngineeringDir)DotNetBuild.props" Condition="Exists('$(RepositoryEngineeringDir)DotNetBuild.props')" />
+  <!-- Remove the legacy extension point when all repositories updated to Arcade 9 and renamed their SourceBuild.props file. -->
   <Import Project="$(RepositoryEngineeringDir)SourceBuild.props" Condition="Exists('$(RepositoryEngineeringDir)SourceBuild.props')" />
 
   <PropertyGroup>
@@ -22,10 +24,10 @@
       Do not use inner-clone in full product source-build, unless explicitly requested,
       i.e. for specific repos, like source-build-externals.
     -->
-    <UseInnerClone Condition="'$(UseInnerClone)' == '' and '$(DotNetBuildFromSourceFlavor)' != 'Product'">true</UseInnerClone>
+    <UseInnerClone Condition="'$(UseInnerClone)' == '' and '$(DotNetBuildFromSourceFlavor)' != 'Product' and '$(DotNetBuildOrchestrator)' != 'true'">true</UseInnerClone>
 
     <!-- Do not create intermediate package in full product source-build. -->
-    <CreateIntermediatePackage Condition="'$(DotNetBuildFromSourceFlavor)' != 'Product'">true</CreateIntermediatePackage>
+    <CreateIntermediatePackage Condition="'$(DotNetBuildFromSourceFlavor)' != 'Product' and '$(DotNetBuildOrchestrator)' != 'true'">true</CreateIntermediatePackage>
 
     <!-- Prefer abbreviations to avoid long paths (breaks on Windows) -->
     <SourceBuildOutputDir Condition="'$(SourceBuildOutputDir)' == ''">$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'sb'))</SourceBuildOutputDir>
@@ -42,7 +44,9 @@
       Inner-clone removal - in VMR use regular artifacts dir.
     -->
     <CurrentRepoSourceBuildArtifactsDir>$([MSBuild]::NormalizeDirectory('$(CurrentRepoSourceBuildSourceDir)', 'artifacts'))</CurrentRepoSourceBuildArtifactsDir>
+    <CurrentRepoSourceBuildArtifactsLogsDir>$([MSBuild]::NormalizeDirectory('$(CurrentRepoSourceBuildArtifactsDir)', 'log', '$(Configuration)'))</CurrentRepoSourceBuildArtifactsLogsDir>
     <CurrentRepoSourceBuildArtifactsPackagesDir>$([MSBuild]::NormalizeDirectory('$(CurrentRepoSourceBuildArtifactsDir)', 'packages', '$(Configuration)'))</CurrentRepoSourceBuildArtifactsPackagesDir>
+    <CurrentRepoSourceBuildArtifactsNonShippingPackagesDir>$([MSBuild]::NormalizeDirectory('$(CurrentRepoSourceBuildArtifactsPackagesDir)', 'NonShipping'))</CurrentRepoSourceBuildArtifactsNonShippingPackagesDir>
 
     <CurrentRepoSourceBuildNuGetSourceName>source-build-int-nupkg-cache</CurrentRepoSourceBuildNuGetSourceName>
     <!-- If this path is updated, also update the component detection task in eng\common\templates\steps\source-build.yml -->
@@ -65,6 +69,8 @@
     -->
     <_DefaultNetFrameworkFilter>netstandard2.0%3bnetstandard2.1%3bnetcoreapp2.1%3bnetcoreapp3.1%3bnet5.0%3bnet6.0%3bnet7.0%3bnet8.0%3bnet9.0</_DefaultNetFrameworkFilter>
     <SourceBuildTargetFrameworkFilter Condition="'$(SourceBuildTargetFrameworkFilter)' == ''">$(_DefaultNetFrameworkFilter)</SourceBuildTargetFrameworkFilter>
+    <RepoManifestFile>$(ArtifactsDir)RepoManifest.xml</RepoManifestFile>
+    <CreateRepoSymbolsArchiveDependsOn Condition="'$(CreateIntermediatePackage)' == 'true'">GetCategorizedIntermediateNupkgContents</CreateRepoSymbolsArchiveDependsOn>
   </PropertyGroup>
 
   <Target Name="GetSourceBuildIntermediateNupkgNameConvention">
@@ -95,7 +101,7 @@
     default, all non-symbol-package nupkg files and archive files in
     'artifacts/packages/{configuration}' are packed in the intermediate nupkg.
 
-    To configure this, add a target to eng/SourceBuild.props with
+    To configure this, add a target to eng/DotNetBuild.props with
     'BeforeTargets="GetCategorizedIntermediateNupkgContents"' that sets up
     'IntermediateNupkgArtifactFile' items with optional 'Category' metadata.
 
@@ -145,22 +151,26 @@
   </Target>
 
   <!--
-    Create symbols archive.
+    Create symbols archive in product source-build and during intermediate package build
+    in repo build, if SupplementalIntermediateNupkgCategory matches SymbolsIntermediateNupkgCategory.
+
+    Include symbols archive in the main intermediate nupkg, by default. Repos can select a different
+    intermediate nupkg by defining 'SymbolsIntermediateNupkgCategory' property in eng/DotNetBuild.props.
 
     Conditioning out for Windows as the tar execution below doesn't work cross-plat.
   -->
-  <Target Name="CreateRepoSymbolsArchive" Condition="'$(OS)' != 'Windows_NT'">
+
+  <Target Name="CreateRepoSymbolsArchive"
+          Condition="'$(OS)' != 'Windows_NT' and '$(SupplementalIntermediateNupkgCategory)' == '$(SymbolsIntermediateNupkgCategory)'"
+          DependsOnTargets="$(CreateRepoSymbolsArchiveDependsOn);
+                            DiscoverRepoSymbols;
+                            PackageRepoSymbols"/>
+
+  <Target Name="DiscoverRepoSymbols">
     <PropertyGroup>
       <SymbolsRoot>$(CurrentRepoSourceBuildArtifactsDir)</SymbolsRoot>
       <!-- Fall back to repo root for source-build-externals or repos that don't have the regular SymbolsRoot as defined above -->
       <SymbolsRoot Condition="!Exists('$(SymbolsRoot)') or '$(GitHubRepositoryName)' == 'source-build-externals'">$(RepoRoot)</SymbolsRoot>
-      <SymbolsArchiveLocation>$(CurrentRepoSourceBuildArtifactsPackagesDir)</SymbolsArchiveLocation>
-      <SymbolsArchiveLocation Condition="'$(GitHubRepositoryName)' == 'nuget-client' and '$(PackageOutputPath)' != ''">$([MSBuild]::EnsureTrailingSlash('$(PackageOutputPath)'))</SymbolsArchiveLocation>
-      <SymbolsList>$([MSBuild]::NormalizePath('$(SymbolsArchiveLocation)', 'symbols.lst'))</SymbolsList>
-      <SymbolsArchivePrefix>Symbols.</SymbolsArchivePrefix>
-      <!-- $(Version) and $(TargetRid) are only available when target is executed as part of intermediate package creation. -->
-      <SymbolsArchiveSuffix Condition="'$(CreateIntermediatePackage)' == 'true'">.$(Version).$(TargetRid)</SymbolsArchiveSuffix>
-      <SymbolsArchiveFile>$(SymbolsArchiveLocation)$(SymbolsArchivePrefix)$(GitHubRepositoryName)$(SymbolsArchiveSuffix)$(ArchiveExtension)</SymbolsArchiveFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -169,6 +179,19 @@
         <RelativePath>$([MSBuild]::MakeRelative($(SymbolsRoot), %(FullPath)))</RelativePath>
       </AbsoluteSymbolPath>
     </ItemGroup>
+  </Target>
+
+  <Target Name="PackageRepoSymbols"
+          DependsOnTargets="DiscoverRepoSymbols">
+    <PropertyGroup>
+      <SymbolsArchiveLocation>$(CurrentRepoSourceBuildArtifactsNonShippingPackagesDir)</SymbolsArchiveLocation>
+      <SymbolsArchiveLocation Condition="'$(GitHubRepositoryName)' == 'nuget-client' and '$(PackageOutputPath)' != ''">$([MSBuild]::EnsureTrailingSlash('$(PackageOutputPath)'))</SymbolsArchiveLocation>
+      <SymbolsList>$([MSBuild]::NormalizePath('$(SymbolsArchiveLocation)', 'symbols.lst'))</SymbolsList>
+      <SymbolsArchivePrefix>Symbols.</SymbolsArchivePrefix>
+      <!-- $(Version) and $(TargetRid) are only available when target is executed as part of intermediate package creation. -->
+      <SymbolsArchiveSuffix Condition="'$(CreateIntermediatePackage)' == 'true'">.$(Version).$(TargetRid)</SymbolsArchiveSuffix>
+      <SymbolsArchiveFile>$(SymbolsArchiveLocation)$(SymbolsArchivePrefix)$(GitHubRepositoryName)$(SymbolsArchiveSuffix)$(ArchiveExtension)</SymbolsArchiveFile>
+    </PropertyGroup>
 
     <WriteLinesToFile
       File="$(SymbolsList)"
@@ -180,11 +203,49 @@
           WorkingDirectory="$(SymbolsRoot)" Condition="Exists($(SymbolsList))" />
     <Message Importance="High" Text="Packaged symbols to $(SymbolsArchiveFile)" Condition="Exists($(SymbolsList))" />
 
-    <ItemGroup>
-      <IntermediateNupkgFile Include="$(SymbolsArchiveFile)" PackagePath="artifacts" Condition="Exists($(SymbolsArchiveFile)) and '$(CreateIntermediatePackage)' != 'true'" />
+    <ItemGroup Condition="Exists($(SymbolsList))">
+      <SymbolsArchivePackageFile Include="$(SymbolsArchiveFile)" PackagePath="artifacts" />
+      <SymbolsArchivePackageFile Condition="'$(SymbolsIntermediateNupkgCategory)' != ''">
+        <Category>$(SymbolsIntermediateNupkgCategory)</Category>
+      </SymbolsArchivePackageFile>
+      <IntermediatePackageFile Include="@(SymbolsArchivePackageFile)" />
     </ItemGroup>
 
     <Delete Files="$(SymbolsList)" Condition="Exists($(SymbolsList))" />
   </Target>
 
+  <Target Name="CopyRepoSymbolsToIntermediates"
+          DependsOnTargets="DiscoverRepoSymbols">
+    <MakeDir Directories="$(SourceBuiltSymbolsDir)" />
+    <Copy
+      SourceFiles="@(AbsoluteSymbolPath)"
+      DestinationFolder="$(SourceBuiltSymbolsDir)%(RecursiveDir)" />
+  </Target>
+  <!--
+    This target can be removed once we enable standard repo assets manifests and SB orchestrator
+    starts using it - https://github.com/dotnet/source-build/issues/3970
+  -->
+  <Target Name="CreateRepoManifest"
+          DependsOnTargets="
+            GetCategorizedIntermediateNupkgContents;
+            CreateRepoSymbolsArchive">
+    <ItemGroup>
+      <RepoManifestLine Include='&lt;Build&gt;' />
+      <RepoManifestLine Include='&lt;Artifact Path="%(IntermediatePackageFile.Identity)" /&gt;' />
+      <RepoManifestLine Include='&lt;/Build&gt;' />
+    </ItemGroup>
+
+    <WriteLinesToFile
+      File="$(RepoManifestFile)"
+      Lines="@(RepoManifestLine)"
+      Overwrite="true" />
+  </Target>
+
+  <Target Name="IncludeRepoManifestInIntermediatePackage"
+           Condition="'$(CreateIntermediatePackage)' == 'true' and Exists($(RepoManifestFile))"
+           DependsOnTargets="CreateRepoManifest">
+    <ItemGroup>
+      <Content Include="$(RepoManifestFile)" PackagePath="." />
+    </ItemGroup>
+  </Target>
 </Project>
