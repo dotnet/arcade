@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                         var decodedToken = System.Text.Encoding.UTF8.GetString(encodedTokenBytes);
                         // It's possible that the decoded SAS does not begin with the query string parameter.
                         // Handle cleanly before constructing the final URL
-                        if (!decodedToken.StartsWith('?'))
+                        if (!decodedToken.StartsWith("?"))
                         {
                             decodedToken = $"?{decodedToken}";
                         }
