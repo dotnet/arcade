@@ -41,7 +41,6 @@ steps:
   - powershell: ${{ parameters.executeAllSdlToolsScript }}
       -GuardianCliLocation $(GuardianCliLocation)
       -NugetPackageDirectory $(Build.SourcesDirectory)\.packages
-      -AzureDevOpsAccessToken $(dn-bot-dotnet-build-rw-code-rw)
       ${{ parameters.additionalParameters }}
     displayName: Execute SDL
     continueOnError: ${{ parameters.sdlContinueOnError }}
