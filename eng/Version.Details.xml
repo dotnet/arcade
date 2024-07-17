@@ -34,13 +34,13 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>731d793be2d0a66bafc96b1a79dc96b4d1f0301b</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.24361.11">
+    <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.24367.1">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>78939636941717922c23c0c73279602159853de6</Sha>
+      <Sha>38fd914311cd2ec406a99c3e00eaf833de20f31f</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.1.0-beta.24361.11">
+    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.1.0-beta.24367.1">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>78939636941717922c23c0c73279602159853de6</Sha>
+      <Sha>38fd914311cd2ec406a99c3e00eaf833de20f31f</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="9.0.0-prerelease.24358.1">
       <Uri>https://github.com/dotnet/xharness</Uri>
@@ -154,15 +154,15 @@
       <SourceBuild RepoName="sdk" ManagedOnly="true" />
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-externals" Version="9.0.0-alpha.1.24358.3">
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-externals" Version="9.0.0-alpha.1.24365.1">
       <Uri>https://github.com/dotnet/source-build-externals</Uri>
-      <Sha>52c45e529d6a5956136ba3cddf849a16b65eb1f2</Sha>
+      <Sha>65c96a16071bd74ad3c2d455cc235a6f5806376a</Sha>
       <SourceBuild RepoName="source-build-externals" ManagedOnly="true" />
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="9.0.0-alpha.1.24362.1">
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="9.0.0-alpha.1.24365.1">
       <Uri>https://github.com/dotnet/source-build-reference-packages</Uri>
-      <Sha>2fa4c4f8c0b17b48d2f37839563d6862d1974736</Sha>
+      <Sha>4d5ba7206ed1d56612b36560334494652ed486b2</Sha>
       <SourceBuild RepoName="source-build-reference-packages" ManagedOnly="true" />
     </Dependency>
     <!-- Transitive dependency needed for source build. -->
