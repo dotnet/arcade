@@ -3,6 +3,8 @@ parameters:
   type: string
 - name: outputVariableName
   type: string
+- name: is1ESPipeline
+  type: boolean
 - name: stepName
   type: string
   default: 'getFederatedAccessToken'
