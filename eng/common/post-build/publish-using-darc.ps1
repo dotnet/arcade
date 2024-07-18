@@ -42,7 +42,7 @@ try {
     --azdev-pat "$AzdoToken" `
     --bar-uri "$MaestroApiEndPoint" `
     --ci `
-    --debug `
+    --verbose `
 	@optionalParams
 
   if ($LastExitCode -ne 0) {
