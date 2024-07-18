@@ -53,8 +53,10 @@ secrets:
       organizations: dnceng
       scopes: build_execute code_write
 
-  akams:
-    type: ad-application
+  akams-client-id:
+    type: text
+    parameters:
+      description: Client id for akams app
 
   dn-bot-dotnet-build-rw-code-rw:
     type: azure-devops-access-token
