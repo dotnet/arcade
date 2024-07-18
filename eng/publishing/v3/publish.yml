@@ -24,6 +24,8 @@ stages:
         # Default Maestro++ API Endpoint and API Version
         - name: MaestroApiEndPoint
           value: "https://maestro.dot.net"
+        - name: MaestroApiAccessToken
+          value: $(MaestroAccessToken)
         - name: MaestroApiVersion
           value: "2020-02-20"
 
@@ -112,6 +114,7 @@ stages:
                 exit 1
               }
           env:
+            MAESTRO_API_TOKEN: $(MaestroApiAccessToken)
             BARBuildId: ${{ parameters.BARBuildId }}
             PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
 
@@ -146,18 +149,6 @@ stages:
             filePath: $(Build.SourcesDirectory)/eng/common/enable-cross-org-publishing.ps1
             arguments: -token $(dn-bot-dnceng-artifact-feeds-rw)
 
-        - task: AzureCLI@2
-          displayName: Authenticate Maestro API
-          name: AuthenticateMaestro
-          inputs:
-            azureSubscription: 'Darc: Maestro Production'
-            addSpnToEnvironment: true
-            scriptType: ps
-            scriptLocation: inlineScript
-            inlineScript: |
-              $token = (az account get-access-token --resource "$env:servicePrincipalId" | ConvertFrom-Json).accessToken
-              echo "##vso[task.setvariable variable=MaestroToken;isOutput=true;isSecret=true]$token"
-
         - task: PowerShell@2
           displayName: Publish packages, blobs and symbols
           inputs:
@@ -169,7 +160,7 @@ stages:
               /p:IsInternalBuild=${{ contains(variables['AzDOBranch'], 'internal/') }}
               /p:NugetPath=$(NuGetExeToolPath)
               /p:MaestroApiEndpoint='$(MaestroApiEndPoint)'
-              /p:BuildAssetRegistryToken='$(AuthenticateMaestro.MaestroToken)'
+              /p:BuildAssetRegistryToken='$(MaestroApiAccessToken)'
               /p:ManifestsBasePath='$(Build.ArtifactStagingDirectory)/AssetManifests/'
               /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
               /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts/'
