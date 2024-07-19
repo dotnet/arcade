@@ -51,6 +51,8 @@ stages:
         preSteps:
         - checkout: self
           clean: true
+          fetchDepth: 0
+
         steps:
         - script: eng\common\cibuild.cmd
             -configuration $(_BuildConfig)
@@ -58,6 +60,31 @@ stages:
             $(_InternalBuildArgs)
             /p:Test=false
           displayName: Windows Build / Publish
+
+        - powershell: |
+            # Detects if current change contains change for which we need to run XHarness E2E tests
+            git fetch --all
+            $diff=$(git diff HEAD HEAD~ --name-only -- src/Microsoft.DotNet.Helix/Sdk 'tests/XHarness*')
+
+            if ($diff) {
+              Write-Host "Detected changes that will require running XHarness E2E tests. Changed files:"
+              Write-Host $diff
+              Write-Host "##vso[task.setvariable variable=RunXHarnessTests;isOutput=true]True"
+              exit 0
+            }
+
+            # Detects if Version.Details.xml or Versions.props changed (a version bump)
+            $fullDiff=$(git diff --unified=0 HEAD HEAD~ -- eng/Version.Details.xml eng/Versions.props)
+            if ($fullDiff -match 'Microsoft.DotNet.XHarness.CLI')
+            {
+              Write-Host "Detected a version bump of Microsoft.DotNet.XHarness.CLI, will run XHarness E2E tests"
+              Write-Host "##vso[task.setvariable variable=RunXHarnessTests;isOutput=true]True"
+              exit 0
+            }
+
+            Write-Host "No changes detected that will require running XHarness E2E tests"
+          name: XHarnessChangeDetection
+          displayName: Detect XHarness changes
 
       - job: Linux
         container: LinuxContainer
@@ -98,6 +125,9 @@ stages:
         timeoutInMinutes: 90
         pool:
           vmimage: windows-latest
+        variables:
+          - name: runXHarnessTests
+            value: $[ dependencies.build.Windows_NT.Build_Release.outputs['XHarnessChangeDetection.RunXHarnessTests'] ]
         strategy:
           matrix:
             Build_Release:
@@ -120,6 +150,7 @@ stages:
               /p:SymbolPublishingExclusionsFile='$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
               /p:Configuration=Release
               /p:PublishToMSDL=false
+
         - powershell: eng\common\build.ps1
             -configuration $(_BuildConfig)
             -prepareMachine
@@ -134,6 +165,7 @@ stages:
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             HelixAccessToken: ''
+
         - powershell: eng\common\build.ps1
             -configuration $(_BuildConfig)
             -prepareMachine
@@ -148,11 +180,16 @@ stages:
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             HelixAccessToken: ''
+          condition: and(succeeded(), eq(variables.runXHarnessTests, 'true'))
+
       - job: Linux
         timeoutInMinutes: 180
         container: LinuxContainer
         pool:
           vmimage: ubuntu-latest
+        variables:
+          - name: runXHarnessTests
+            value: $[ dependencies.build.Windows_NT.Build_Release.outputs['XHarnessChangeDetection.RunXHarnessTests'] ]
         strategy:
           matrix:
             Build_Debug:
@@ -177,6 +214,7 @@ stages:
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             HelixAccessToken: ''
+
         - script: eng/common/build.sh
             -configuration $(_BuildConfig)
             -prepareMachine
@@ -191,6 +229,8 @@ stages:
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             HelixAccessToken: ''
+          condition: and(succeeded(), eq(variables.runXHarnessTests, 'true'))
+
         - script: eng/common/build.sh
             -configuration $(_BuildConfig)
             -prepareMachine
@@ -205,3 +245,4 @@ stages:
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             HelixAccessToken: ''
+          condition: and(succeeded(), eq(variables.runXHarnessTests, 'true'))
