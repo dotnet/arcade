@@ -125,6 +125,9 @@ stages:
         timeoutInMinutes: 90
         pool:
           vmimage: windows-latest
+        variables:
+          - name: runXHarnessTests
+            value: $[ dependencies.build.Windows_NT.Build_Release.outputs['XHarnessChangeDetection.RunXHarnessTests'] ]
         strategy:
           matrix:
             Build_Release:
@@ -177,13 +180,16 @@ stages:
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             HelixAccessToken: ''
-          condition: and(succeeded(), eq(stageDependencies.build.Windows_NT.Build_Release.outputs['XHarnessChangeDetection.RunXHarnessTests'], 'True'))
+          condition: and(succeeded(), eq(variables.runXHarnessTests, 'true'))
 
       - job: Linux
         timeoutInMinutes: 180
         container: LinuxContainer
         pool:
           vmimage: ubuntu-latest
+        variables:
+          - name: runXHarnessTests
+            value: $[ dependencies.build.Windows_NT.Build_Release.outputs['XHarnessChangeDetection.RunXHarnessTests'] ]
         strategy:
           matrix:
             Build_Debug:
@@ -223,7 +229,7 @@ stages:
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             HelixAccessToken: ''
-          condition: and(succeeded(), eq(stageDependencies.build.Windows_NT.Build_Release.outputs['XHarnessChangeDetection.RunXHarnessTests'], 'True'))
+          condition: and(succeeded(), eq(variables.runXHarnessTests, 'true'))
 
         - script: eng/common/build.sh
             -configuration $(_BuildConfig)
@@ -239,4 +245,4 @@ stages:
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             HelixAccessToken: ''
-          condition: and(succeeded(), eq(stageDependencies.build.Windows_NT.Build_Release.outputs['XHarnessChangeDetection.RunXHarnessTests'], 'True'))
+          condition: and(succeeded(), eq(variables.runXHarnessTests, 'true'))
