@@ -51,8 +51,9 @@ stages:
         preSteps:
         - checkout: self
           clean: true
-        steps:
+          fetchDepth: 0
 
+        steps:
         - script: eng\common\cibuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
