@@ -632,7 +632,7 @@ elif [[ "$__CodeName" == "illumos" ]]; then
     if [[ "$__UseMirror" == 1 ]]; then
         BaseUrl=https://pkgsrc.smartos.skylime.net
     fi
-    BaseUrl="$BaseUrl/packages/SmartOS/trunk/${__illumosArch}/All"
+    BaseUrl="$BaseUrl/packages/SmartOS/2019Q4/${__illumosArch}/All"
     echo "Downloading manifest"
     if [[ "$__hasWget" == 1 ]]; then
         wget "$BaseUrl"
