@@ -38,6 +38,11 @@ namespace Microsoft.DotNet.Arcade.Sdk
         
         public string RuntimeSourceFeedKey { get; set; }
 
+        /// <summary>
+        /// Optional timeout parameter in seconds.
+        /// </summary>
+        public string DownloadTimeout { get; set; }
+
         public override bool Execute()
         {
             if (!File.Exists(GlobalJsonPath))
@@ -138,6 +143,11 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                         if (!string.IsNullOrWhiteSpace(RuntimeSourceFeed) && !string.IsNullOrWhiteSpace(RuntimeSourceFeedKey))
                                         {
                                             arguments += $" -runtimeSourceFeedKey {RuntimeSourceFeedKey}";
+                                        }
+
+                                        if (!string.IsNullOrWhiteSpace(DownloadTimeout))
+                                        {
+                                            arguments += $" -downloadTimeout {DownloadTimeout}";
                                         }
 
                                         Log.LogMessage(MessageImportance.Low, $"Executing: {DotNetInstallScript} {arguments}");
