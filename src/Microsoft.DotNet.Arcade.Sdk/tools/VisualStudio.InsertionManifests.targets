@@ -14,7 +14,6 @@
     This is important since the manifest contain hashes of the VSIX files.
   -->
   <Target Name="GenerateVisualStudioInsertionManifests"
-          DependsOnTargets="RestoreInternalTooling"
           BeforeTargets="AfterPack"
           Outputs="%(_StubDirs.Identity)"
           Condition="'@(_StubDirs)' != ''">
