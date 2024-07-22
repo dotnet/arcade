@@ -53,19 +53,10 @@ secrets:
       organizations: dnceng
       scopes: build_execute code_write
 
-  akams:
-    type: ad-application
-
-  publishing-dnceng-devdiv-code-r-build-re:
-    type: azure-devops-access-token
+  akams-client-id:
+    type: text
     parameters:
-      domainAccountName: dn-bot
-      domainAccountSecret:
-          location: helixkv
-          name: dn-bot-account-redmond
-      name: publishing-dnceng-devdiv-code
-      organizations: dnceng devdiv
-      scopes: code build_execute 
+      description: Client id for akams app
 
   dn-bot-dotnet-build-rw-code-rw:
     type: azure-devops-access-token
