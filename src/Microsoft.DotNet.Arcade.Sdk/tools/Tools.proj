@@ -13,7 +13,7 @@
     <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
     <!-- Invoke restore internal tooling target when necessary.
          - VisualStudio.BuildIbcTrainingInputs.targets: Keep condition in sync with import in AfterSigning.proj. -->
-    <RestoreInternalToolingAfterTargets Condition="'$(UsingToolVSSDK)' == 'true' and '$(UsingToolVisualStudioIbcTraining)' == 'true' and '$(MSBuildRuntimeType)' != 'Core'">Restore</RestoreInternalToolingAfterTargets>
+    <RestoreInternalToolingAfterTargets Condition="'$(UsingToolVSSDK)' == 'true' and '$(MSBuildRuntimeType)' != 'Core'">Restore</RestoreInternalToolingAfterTargets>
   </PropertyGroup>
 
   <!-- 
