@@ -11,9 +11,11 @@
     <TargetFrameworkIdentifier  Condition="'$(TargetFrameworkIdentifier)' == ''">.NETFramework</TargetFrameworkIdentifier>
     <TargetFrameworkMoniker Condition="'$(TargetFrameworkMoniker)' == ''">.NETFramework,Version=v4.7.2</TargetFrameworkMoniker>   
     <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
-    <!-- Invoke restore internal tooling target when necessary.
-         - VisualStudio.BuildIbcTrainingInputs.targets: Keep condition in sync with import in AfterSigning.proj. -->
-    <RestoreInternalToolingAfterTargets Condition="'$(UsingToolVSSDK)' == 'true' and '$(MSBuildRuntimeType)' != 'Core'">Restore</RestoreInternalToolingAfterTargets>
+
+    <!-- Internal tool restore settings -->
+    <!-- VisualStudio.InsertionManifests.targets: Keep condition in sync with import in AfterSigning.proj. -->
+    <RestoreInternalTooling Condition="'$(UsingToolVSSDK)' == 'true' and '$(MSBuildRuntimeType)' != 'Core'">true</RestoreInternalTooling>
+    <RestoreInternalToolingAfterTargets Condition="'$(RestoreInternalTooling)' == 'true'">Restore</RestoreInternalToolingAfterTargets>
   </PropertyGroup>
 
   <!-- 
