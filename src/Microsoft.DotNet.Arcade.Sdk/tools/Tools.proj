@@ -14,7 +14,7 @@
 
     <!-- Internal tool restore settings -->
     <!-- VisualStudio.InsertionManifests.targets: Keep condition in sync with import in AfterSigning.proj. -->
-    <RestoreInternalTooling Condition="'$(UsingToolVSSDK)' == 'true' and '$(MSBuildRuntimeType)' != 'Core' and '$(OfficialBuild)' == 'true'">true</RestoreInternalTooling>
+    <RestoreInternalTooling Condition="'$(UsingToolVSSDK)' == 'true' and '$(GenerateSbom)' == 'true' and '$(MSBuildRuntimeType)' != 'Core'">true</RestoreInternalTooling>
     <RestoreInternalToolingAfterTargets Condition="'$(RestoreInternalTooling)' == 'true'">Restore</RestoreInternalToolingAfterTargets>
   </PropertyGroup>
 
