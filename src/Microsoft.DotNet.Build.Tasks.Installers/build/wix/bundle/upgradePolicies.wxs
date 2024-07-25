@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-  <?include "..\variables.wxi" ?>
-
   <Fragment>
     <!-- Bundle variables become unset if a search fails. The global key is retrieved first. If this fails,
          RemoveUpgradeRelatedBundle becomes unset, allowing the version specific search to potentially set 
@@ -36,5 +34,4 @@
                          Variable="RemoveUpgradeRelatedBundle"
                          Win64="yes" />
   </Fragment>
-
 </Wix>
