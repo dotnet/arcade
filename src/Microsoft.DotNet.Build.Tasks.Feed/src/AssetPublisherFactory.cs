@@ -28,7 +28,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 case FeedType.AzureStorageContainer:
                     return new AzureStorageContainerAssetTokenCredentialPublisher(
                         new Uri(feedConfig.TargetURL),
-                        new DefaultAzureCredential(new DefaultAzureCredentialOptions {  ManagedIdentityClientId = task.ManagedIdentityClientId }),
+                        new DefaultAzureCredential(
+                            new DefaultAzureCredentialOptions 
+                            {  
+                                ManagedIdentityClientId = task.ManagedIdentityClientId,
+                                CredentialProcessTimeout = TimeSpan.FromSeconds(60.0)
+                            }),
                         _log);
                 default:
                     throw new NotImplementedException();
