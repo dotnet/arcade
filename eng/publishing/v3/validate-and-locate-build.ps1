@@ -1,7 +1,7 @@
 param(
   [Parameter(Mandatory = $true)][int] $BuildId,
   [Parameter(Mandatory = $true)][string] $PromoteToChannelIds,
-  [Parameter(Mangatory = $true)][string] $DarcVersion
+  [Parameter(Mandatory = $true)][string] $DarcVersion
 )
 
 try {
