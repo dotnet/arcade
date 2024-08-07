@@ -5,7 +5,7 @@ param(
 
 try {
   . $PSScriptRoot\..\..\common\tools.ps1
-  $darc = Get-Darc -version "1.1.0-beta.24373.1"
+  $darc = Get-Darc
 
   $buildInfo = & $darc get-build `
     --id $BuildId `
