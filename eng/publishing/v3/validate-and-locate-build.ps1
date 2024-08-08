@@ -1,18 +1,11 @@
 param(
   [Parameter(Mandatory = $true)][int] $BuildId,
-  [Parameter(Mandatory = $true)][string] $PromoteToChannelIds,
-  [Parameter(Mandatory = $true)][string] $DarcVersion
+  [Parameter(Mandatory = $true)][string] $PromoteToChannelIds
 )
 
 try {
   . $PSScriptRoot\..\..\common\tools.ps1
-  
-  if (($DarcVersion -eq "latest") -or ($darcVersion -eq "")) {
-    $darc = Get-Darc
-  }
-  else {
-    $darc = Get-Darc -version $DarcVersion
-  }
+  $darc = Get-Darc -version "1.1.0-beta.24373.1"
 
   $buildInfo = & $darc get-build `
     --id $BuildId `
