@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.AsmDiff
         private readonly IEnumerable<DiffComment> _diffComments;
 
         public DiffCSharpWriter(IStyleSyntaxWriter writer, MappingSettings settings, IEnumerable<DiffComment> diffComments)
-            : this(writer, settings, diffComments, includePseudoCustomAttributes:false)
+            : this(writer, settings, diffComments, includePseudoCustomAttributes: false)
         {
         }
 
@@ -41,24 +41,36 @@ namespace Microsoft.DotNet.AsmDiff
         {
             _syntaxWriter = writer;
             _settings = InitializeSettings(settings);
-            _formatter = new CSDeclarationWriter(_syntaxWriter, _settings.Filter, forCompilation: false, includePseudoCustomAttributes: includePseudoCustomAttributes)
+            _formatter = new CSDeclarationWriter(_syntaxWriter, _settings.Filter, forCompilation: false, includePseudoCustomAttributes: includePseudoCustomAttributes, _settings.AttributesToExclude)
             {
                 LangVersion = CSDeclarationWriter.LangVersionPreview
             };
-            _declHelper = new CSDeclarationHelper(_settings.Filter, forCompilation: false, includePseudoCustomAttributes: includePseudoCustomAttributes);
+            _declHelper = new CSDeclarationHelper(_settings.Filter, _settings.AttributesToExclude, forCompilation: false, includePseudoCustomAttributes: includePseudoCustomAttributes);
             _diffComments = diffComments ?? Enumerable.Empty<DiffComment>();
         }
 
         public DiffCSharpWriter(IStyleSyntaxWriter writer, MappingSettings settings)
             : this(writer, settings, null, false)
-        {          
+        {
         }
 
         public bool IncludeSpaceBetweenMemberGroups { get; set; }
 
         public bool IncludeMemberGroupHeadings { get; set; }
 
-        public bool HighlightBaseMembers { get; set; }
+        public bool HighlightBaseMembers
+        {
+            get => HighlightMemberOverrides && HighlightInterfaceImplementations;
+            set
+            {
+                HighlightMemberOverrides = true;
+                HighlightInterfaceImplementations = true;
+            }
+        }
+
+        public bool HighlightMemberOverrides { get; set; }
+
+        public bool HighlightInterfaceImplementations { get; set; }
 
         public bool IncludeAssemblyProperties { get; set; }
 
@@ -197,11 +209,11 @@ namespace Microsoft.DotNet.AsmDiff
             {
                 IDisposable style = null;
 
-                if (this.HighlightBaseMembers)
+                if (HighlightMemberOverrides || HighlightInterfaceImplementations)
                 {
-                    if (member.Representative.IsInterfaceImplementation())
+                    if (HighlightInterfaceImplementations && member.Representative.IsInterfaceImplementation())
                         style = _syntaxWriter.StartStyle(SyntaxStyle.InterfaceMember);
-                    else if (member.Representative.IsOverride())
+                    else if (HighlightMemberOverrides && member.Representative.IsOverride())
                         style = _syntaxWriter.StartStyle(SyntaxStyle.InheritedMember);
                 }
 
@@ -237,7 +249,7 @@ namespace Microsoft.DotNet.AsmDiff
                 foreach (var comment in commentSet)
                 {
                     reviewCommentWriter.WriteReviewComment(comment.Author, comment.Text);
-                    _syntaxWriter.WriteLine();    
+                    _syntaxWriter.WriteLine();
                 }
             }
         }

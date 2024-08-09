@@ -33,6 +33,8 @@ namespace Microsoft.Cci.Writers.CSharp
         private bool _includeFakeAttributes;
         private bool _alwaysIncludeBase;
 
+        private readonly IEnumerable<string> _attributesToExclude;
+
         public CSDeclarationWriter(ISyntaxWriter writer)
             : this(writer, new PublicOnlyCciFilter())
         {
@@ -56,10 +58,11 @@ namespace Microsoft.Cci.Writers.CSharp
             _metadataReaderCache = new SRMetadataPEReaderCache();
         }
 
-        public CSDeclarationWriter(ISyntaxWriter writer, ICciFilter filter, bool forCompilation, bool includePseudoCustomAttributes = false)
+        public CSDeclarationWriter(ISyntaxWriter writer, ICciFilter filter, bool forCompilation, bool includePseudoCustomAttributes, IEnumerable<string> attributesToExclude)
             : this(writer, filter, forCompilation)
         {
             _includeFakeAttributes = includePseudoCustomAttributes;
+            _attributesToExclude = attributesToExclude;
         }
 
         public bool ForCompilation

@@ -39,7 +39,7 @@ namespace Microsoft.Cci.Writers.CSharp
             {
                 writeVisibility = false;
             }
-            
+
             if (method.IsExplicitInterfaceMethod() || method.IsStaticConstructor)
             {
                 writeVisibility = false;
