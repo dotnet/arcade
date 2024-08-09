@@ -15,7 +15,6 @@
 
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
     <XUnitWorkitemTimeout>300</XUnitWorkitemTimeout>
-    <HelixBaseUri>https://helix.int-dot.net</HelixBaseUri>
   </PropertyGroup>
 
   <ItemGroup>
