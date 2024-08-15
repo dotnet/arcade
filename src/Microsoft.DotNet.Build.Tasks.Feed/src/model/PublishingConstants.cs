@@ -878,7 +878,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 symbolTargetType: PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
-            // .NET 9.0.1xx SDK,
+            // .NET 10.0.1xx SDK,
             new TargetChannelConfig(
                 id: 5173,
                 isInternal: false,
