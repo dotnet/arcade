@@ -35,11 +35,11 @@
     <!-- nuget -->
     <!-- Important: Don't version higher than what's available in the toolset SDK as
          NuGet assemblies aren't redistributed with .NETCoreApp msbuild tasks. -->
-    <NuGetCommandsVersion>6.9.1</NuGetCommandsVersion>
-    <NuGetFrameworksVersion>6.9.1</NuGetFrameworksVersion>
-    <NuGetPackagingVersion>6.9.1</NuGetPackagingVersion>
-    <NuGetProjectModelVersion>6.9.1</NuGetProjectModelVersion>
-    <NuGetVersioningVersion>6.9.1</NuGetVersioningVersion>
+    <NuGetCommandsVersion>6.11.0</NuGetCommandsVersion>
+    <NuGetFrameworksVersion>6.11.0</NuGetFrameworksVersion>
+    <NuGetPackagingVersion>6.11.0</NuGetPackagingVersion>
+    <NuGetProjectModelVersion>6.11.0</NuGetProjectModelVersion>
+    <NuGetVersioningVersion>6.11.0</NuGetVersioningVersion>
     <!-- roslyn -->
     <MicrosoftCodeAnalysisCSharpVersion>4.8.0</MicrosoftCodeAnalysisCSharpVersion>
     <MicrosoftNetCompilersToolsetVersion>4.8.0</MicrosoftNetCompilersToolsetVersion>
