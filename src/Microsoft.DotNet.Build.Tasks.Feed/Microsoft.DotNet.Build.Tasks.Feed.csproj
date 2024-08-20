@@ -73,6 +73,7 @@
     <Compile Remove="src\model\SetupTargetFeedConfigV3.cs" />
     <Compile Remove="src\model\TargetChannelConfig.cs" />
     <Compile Remove="src\model\TargetFeedConfig.cs" />
+    <Compile Remove="src\PATCredential.cs" />
     <Compile Remove="src\PublishArtifactsInManifest.cs" />
     <Compile Remove="src\PublishArtifactsInManifestBase.cs" />
     <Compile Remove="src\PublishArtifactsInManifestV3.cs" />

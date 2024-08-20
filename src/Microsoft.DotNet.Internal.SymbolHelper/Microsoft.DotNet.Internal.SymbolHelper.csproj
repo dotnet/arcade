@@ -3,9 +3,10 @@
   <PropertyGroup>
     <TargetFramework>$(NetToolCurrent)</TargetFramework>
     <IsPackable>true</IsPackable>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(DotNetBuildSourceOnly)' != 'true'">
     <!-- Upgrade Microsoft.DiaSymReader.Converter's transitive NETStandard.Library
         dependency to avoid .NET Standard 1.x dependencies. -->
     <PackageReference Include="NETStandard.Library"
