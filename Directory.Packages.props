@@ -31,11 +31,10 @@
     <PackageVersion Include="System.Runtime.InteropServices.RuntimeInformation" Version="$(SystemRuntimeInteropServicesRuntimeInformation)" />
     <!-- deployment-tools -->
     <PackageVersion Include="Microsoft.Deployment.DotNet.Releases" Version="$(MicrosoftDeploymentDotNetReleasesVersion)" />
-    <!-- symreader-converter -->
-    <PackageVersion Include="Microsoft.DiaSymReader.Converter" Version="$(MicrosoftDiaSymReaderConverterVersion)" />
-    <PackageVersion Include="Microsoft.DiaSymReader.Pdb2Pdb" Version="$(MicrosoftDiaSymReaderPdb2PdbVersion)" />
     <!-- dotnet-symuploader -->
     <PackageVersion Include="Microsoft.SymbolUploader" Version="$(MicrosoftSymbolUploaderVersion)" />
+    <!-- symreader-converter -->
+    <PackageVersion Include="Microsoft.DiaSymReader.Converter" Version="$(MicrosoftDiaSymReaderConverterVersion)" />
     <!-- diagnostics -->
     <PackageVersion Include="Microsoft.SymbolManifestGenerator" Version="$(MicrosoftSymbolManifestGeneratorVersion)" />
     <!-- msbuild -->
