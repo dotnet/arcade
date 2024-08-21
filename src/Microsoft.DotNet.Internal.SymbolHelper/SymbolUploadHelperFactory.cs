@@ -7,6 +7,7 @@ using System.IO.Compression;
 using System.Net;
 using System.Net.Http;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -158,7 +159,7 @@ public class SymbolUploadHelperFactory
             {
                 Headers =
                 {
-                    Authorization = new ("Bearer", azdoToken.Token),
+                    Authorization = new ("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($":{azdoToken.Token}"))),
                     Accept = { new ("application/json") },
                 }
             };
