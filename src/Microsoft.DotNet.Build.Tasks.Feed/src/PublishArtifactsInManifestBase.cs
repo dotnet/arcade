@@ -580,6 +580,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         symbolPublishingSucceeded = false;
                         Log.LogError("Unable to upload files to symbol server. Symbol client returned {0}.", result);
+                        return;
                     }
                 }
 
@@ -613,7 +614,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     await DeleteSymbolRequest(requestName, helpers);
                 }
             }
-            
+
             if (symbolPublishingSucceeded)
             {
                 // TODO (symbol-promotion)
