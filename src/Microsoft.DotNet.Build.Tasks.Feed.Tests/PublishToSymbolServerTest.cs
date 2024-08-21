@@ -141,7 +141,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             Assert.Contains(buildEngine.BuildMessageEvents, x => x.Message.StartsWith("No target symbol servers"));
         }
 
-        [Fact]
+        [WindowsOnlyFact]
         public async Task PublishSymbolsBasicScenarioTest()
         {
             (var buildEngine, var task, var symbolPackages, var symbolFilesDir, var exclusionFile, var buildInfo) = GetCanonicalSymbolTestAssets(SymbolTargetType.Msdl | SymbolTargetType.SymWeb);
