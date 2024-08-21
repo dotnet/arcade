@@ -52,7 +52,7 @@ public class SymbolUploadHelperFactory
 
         _ = Directory.CreateDirectory(installDirectory);
 
-        string localToolPath = await DownloadSymbolsToolAsync(logger, options.Tenant, options.Credential, installDirectory, retryCount, token);
+        string localToolPath = await DownloadSymbolsToolAsync(logger, options.Tenant, installDirectory, retryCount, token);
 
         return GetSymbolHelperFromLocalTool(logger, options, localToolPath, workingDir);
     }
@@ -83,19 +83,16 @@ public class SymbolUploadHelperFactory
         return new SymbolUploadHelper(logger, expectedSymbolPath, options, workingDir);
     }
 
-    /// <exception cref="ArgumentNullException">If <paramref name="logger"/>, <paramref name="credential"/>, or <paramref name="installDirectory"/> is null.</exception>
+    /// <exception cref="ArgumentNullException">If <paramref name="logger"/> or <paramref name="installDirectory"/> is null.</exception>
     /// <exception cref="ArgumentException">If <paramref name="tenant"/> is null or empty.</exception>
     /// <exception cref="InvalidOperationException">If the host is not supported for symbol publishing.</exception>
-    /// <exception cref="InvalidOperationException">If the download response does not contain the expected URI.</exception>
     /// <exception cref="HttpRequestException">If the symbol client download fails after retries.</exception>
     /// <exception cref="FileNotFoundException">If the symbol tool is not found after download.</exception>
     private static async Task<string> DownloadSymbolsToolAsync(
-        ITracer logger,
-        string tenant, TokenCredential credential,
+        ITracer logger, string tenant,
         string installDirectory, int retryCount = 3, CancellationToken token = default)
     {
         ArgumentNullException.ThrowIfNull(logger);
-        ArgumentNullException.ThrowIfNull(credential);
         ArgumentNullException.ThrowIfNull(installDirectory);
         ArgumentException.ThrowIfNullOrWhiteSpace(tenant);
         ThrowIfHostUnsupported();
@@ -108,17 +105,16 @@ public class SymbolUploadHelperFactory
                     if (args.Outcome.Exception is null) { return ValueTask.FromResult(false); }
                     if (args.Outcome.Exception is HttpRequestException httpException)
                     {
-                        bool isRetryable = (httpException.StatusCode == HttpStatusCode.Unauthorized && args.AttemptNumber == 0) // In case the token was grabbed from cache and died shortly. Retry only once in this case.
-                            || httpException.StatusCode == HttpStatusCode.RequestTimeout
+                        return ValueTask.FromResult(
+                            httpException.StatusCode == HttpStatusCode.RequestTimeout
                             || httpException.StatusCode == HttpStatusCode.TooManyRequests
                             || httpException.StatusCode == HttpStatusCode.BadGateway
                             || httpException.StatusCode == HttpStatusCode.ServiceUnavailable
-                            || httpException.StatusCode == HttpStatusCode.GatewayTimeout;
-                        return ValueTask.FromResult(isRetryable);
+                            || httpException.StatusCode == HttpStatusCode.GatewayTimeout);
                     }
                     return ValueTask.FromResult(false);
                 },
-                Delay = TimeSpan.FromSeconds(30),
+                Delay = TimeSpan.FromSeconds(15),
                 MaxRetryAttempts = retryCount,
                 BackoffType = DelayBackoffType.Exponential,
                 UseJitter = true,
@@ -138,67 +134,30 @@ public class SymbolUploadHelperFactory
             })
             .Build();
 
-        string toolUrlWithSas = await pipeline.ExecuteAsync(async token => await GetToolUrl(logger, tenant, credential, token), token);
-        string toolZipPath = await pipeline.ExecuteAsync(async token => await DownloadTool(logger, toolUrlWithSas, installDirectory, token), token);
+        string toolZipPath = await pipeline.ExecuteAsync(async token => await GetToolUrl(logger, tenant, installDirectory, token), token);
 
         using ZipArchive archive = ZipFile.OpenRead(toolZipPath);
         archive.ExtractToDirectory(installDirectory);
 
         return installDirectory;
 
-        static async Task<string> GetToolUrl(ITracer logger, string tenant, TokenCredential credential, CancellationToken token)
+        static async Task<string> GetToolUrl(ITracer logger, string tenant, string installDirectory, CancellationToken token)
         {
-            string downloadUri = $"https://vsblob.dev.azure.com/{tenant}/_apis/clienttools/symbol/release?osName=windows&arch=x86_64";
+            string downloadUri = $"https://vsblob.dev.azure.com/{tenant}/_apis/clienttools/symbol/download?osName=windows&arch=x86_64";
 
-            logger.Information($"Fetching symbol tool location from {downloadUri}");
+            logger.Information($"Fetching symbol tool from {downloadUri}. Installing to {installDirectory}");
 
-            const string AzureDevOpsResource = "499b84ac-1321-427f-aa17-267ca6975798";
-            AccessToken azdoToken = await credential.GetTokenAsync(new([AzureDevOpsResource]), token).ConfigureAwait(false);
+            using HttpRequestMessage getToolRequest = new(HttpMethod.Get, downloadUri) { Headers = { Accept = { new ("application/zip") } } };
 
-            using HttpRequestMessage getUriRequest = new(HttpMethod.Get, downloadUri)
-            {
-                Headers =
-                {
-                    Authorization = new ("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes($":{azdoToken.Token}"))),
-                    Accept = { new ("application/json") },
-                }
-            };
+            // Suppress the redirect to the login page
+            getToolRequest.Headers.Add("X-TFS-FedAuthRedirect", "Suppress");
 
-            // Suppress the redirect to the login page if the token is invalid
-            getUriRequest.Headers.Add("X-TFS-FedAuthRedirect", "Suppress");
-
-            using HttpResponseMessage response = await s_symbolDownloadClient.SendAsync(getUriRequest, token).ConfigureAwait(false);
+            using HttpResponseMessage response = await s_symbolDownloadClient.SendAsync(getToolRequest, token).ConfigureAwait(false);
             response.EnsureSuccessStatusCode();
-
-            Stream jsonResponse = await response.Content.ReadAsStreamAsync(token).ConfigureAwait(false);
-            JsonDocument jsonDocument = await JsonDocument.ParseAsync(jsonResponse, cancellationToken: token);
-
-            if (!jsonDocument.RootElement.TryGetProperty("uri", out JsonElement uriElement))
-            {
-                throw new InvalidOperationException($"Failed to get download URL for symbol tool in tenant {tenant}");
-            }
-
-            string toolUrlWithSas = uriElement.GetString() ?? throw new InvalidOperationException("URI field of symbol download response not in expected format.");
-            return toolUrlWithSas;
-        }
-
-        static async Task<string> DownloadTool(ITracer logger, string toolUrlWithSas, string installDirectory, CancellationToken token)
-        {
-            Uri toolUri = new(toolUrlWithSas);
-            string secretlessUri = toolUri.GetComponents(UriComponents.SchemeAndServer | UriComponents.Path, UriFormat.UriEscaped);
-            logger.Information($"Downloading symbol tool from {secretlessUri} to {installDirectory}");
-
-            HttpRequestMessage getToolRequest = new(HttpMethod.Get, toolUrlWithSas)
-            {
-                Headers = { Accept = { new("application/zip") } }
-            };
-
-            using HttpResponseMessage symbolDownloadResponse = await s_symbolDownloadClient.SendAsync(getToolRequest, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false);
-            symbolDownloadResponse.EnsureSuccessStatusCode();
 
             string zipFilePath = Path.Combine(installDirectory, "symbol.zip");
             using (FileStream fileStream = new(zipFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
-            using (Stream zipStream = await symbolDownloadResponse.Content.ReadAsStreamAsync(token).ConfigureAwait(false))
+            using (Stream zipStream = await response.Content.ReadAsStreamAsync(token).ConfigureAwait(false))
             {
                 await zipStream.CopyToAsync(fileStream, token).ConfigureAwait(false);
             }
