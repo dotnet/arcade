@@ -679,7 +679,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     if (!File.Exists(symbolPublishingExclusionsFile))
                     {
-                        Log.LogWarning("Exclusions file {0} not found. No exclusions will be applied.", symbolPublishingExclusionsFile);
+                        Log.LogMessage(MessageImportance.High, "Exclusions file {0} not found. No exclusions will be applied.", symbolPublishingExclusionsFile);
                         return FrozenSet<string>.Empty;
                     }
 
