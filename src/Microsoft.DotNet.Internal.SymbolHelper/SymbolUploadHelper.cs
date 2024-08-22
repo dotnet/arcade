@@ -21,6 +21,7 @@ public sealed class SymbolUploadHelper
     public const string ConversionFolderName = "_convertedPdbs";
     private const string AzureDevOpsResource = "499b84ac-1321-427f-aa17-267ca6975798";
     private const string PathEnvVarName = "AzureDevOpsToken";
+    private const int SymbolToolTimeoutInMins = 5;
     private static readonly FrozenSet<string> s_validExtensions = FrozenSet.ToFrozenSet(["", ".exe", ".dll", ".pdb", ".so", ".dbg", ".dylib", ".dwarf", ".r2rmap"]);
     private readonly ScopedTracerFactory _tracerFactory;
     private readonly ScopedTracer _globalTracer;
@@ -374,6 +375,11 @@ public sealed class SymbolUploadHelper
         };
 
         _ = process.Start();
+
+        using CancellationTokenSource lcts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        lcts.CancelAfter(TimeSpan.FromMinutes(SymbolToolTimeoutInMins));
+        ct = lcts.Token;
+
         Task processExit = process.WaitForExitAsync(ct);
 
         // This sentinel task is used to indicate that the output has been fully read. It's never completed.
@@ -385,10 +391,9 @@ public sealed class SymbolUploadHelper
         StreamReader standardError = process.StandardError;
         Task<string?> errorAvailable = standardError.ReadLineAsync(ct).AsTask();
 
-        // TODO: handle time capping & cancelation.
-        while (!processExit.IsCompleted && !ct.IsCancellationRequested)
+        while (!ct.IsCancellationRequested && (outputAvailable != outputFinishedSentinel.Task || errorAvailable != outputFinishedSentinel.Task))
         {
-            Task alertedTask = await Task.WhenAny(outputAvailable, errorAvailable, processExit).ConfigureAwait(false);
+            Task alertedTask = await Task.WhenAny(outputAvailable, errorAvailable).ConfigureAwait(false);
 
             if (alertedTask == outputAvailable)
             {
@@ -400,23 +405,15 @@ public sealed class SymbolUploadHelper
             }
         }
 
-        if (ct.IsCancellationRequested && processExit.IsCompleted)
+        if (ct.IsCancellationRequested && !process.HasExited)
         {
-            process.Kill();
+            try { process.Kill(); } catch (InvalidOperationException) { }
+            return -1;
         }
 
-        while (!standardOutput.EndOfStream)
-        {
-            string? line = await standardOutput.ReadLineAsync(ct).ConfigureAwait(false);
-            if (line is not null) { logger.Information(line); }
-        }
-
-        while (!standardError.EndOfStream)
-        {
-            string? line = await standardError.ReadLineAsync(ct).ConfigureAwait(false);
-            if (line is not null) { logger.Error(line); }
-        }
-
+        // This should be a no-op if the process has already exited. Since it's not the ct doing this or we'd have exited, and we drained both 
+        // output streams, this is the expected scenario.
+        await processExit.ConfigureAwait(false);
         return process.ExitCode;
 
         async Task<Task<string?>> LogFromStreamReader(Task<string?> outputTask, Func<Task<string?>> readLine, Action<string> logMethod)
