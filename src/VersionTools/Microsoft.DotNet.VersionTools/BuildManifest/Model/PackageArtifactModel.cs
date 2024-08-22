@@ -42,6 +42,19 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
             set { Attributes[nameof(OriginBuildName)] = value; }
         }
 
+        public string NuPkgFilename
+        {
+            get => GetNuPkgFileName(Id, Version);
+        }
+
+        public static string GetNuPkgFileName (string id, string version)
+        {
+            var metadataStart = version.IndexOf('+');
+            if (metadataStart >= 0)
+                version = version.Substring(0, metadataStart);
+            return $"{id}.{version}.nupkg";
+        }
+
         public bool NonShipping
         {
             get
