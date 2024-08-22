@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Azure.Core;
@@ -111,6 +112,12 @@ public sealed class SymbolUploadHelper
     {
         ScopedTracer logger = _tracerFactory.CreateTracer(nameof(AddFiles));
         ValidateRequestName(name, logger);
+
+        if (!files.Any())
+        {
+            logger.Information("No files to add to request {0}", name!);
+            return 0;
+        }
 
         // We create a folder and copy loose files to avoid starting a process per file.
         DirectoryInfo tempDirInfo = CreateTempDirectory();
