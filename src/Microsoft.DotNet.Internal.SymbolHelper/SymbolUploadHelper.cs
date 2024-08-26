@@ -17,6 +17,17 @@ using Microsoft.SymbolStore;
 
 namespace Microsoft.DotNet.Internal.SymbolHelper;
 
+/// <summary>
+/// Helper class for uploading symbols to a symbol server. This file assumes the logger to be thread safe.
+/// All state within this is immutable after construction, and the class is thread safe. Multiple uploads
+/// can be done in parallel with the same instance.
+/// The usual workflow is to create a request, add files and packages to it as needed. Finally, the request
+/// can be finalized with some TTL if all uploads. Otherwise, if assets fail to upload, the request can be
+/// deleted.
+/// There's a few options for the helper that can be controlled by the <see cref="SymbolPublisherOptions"/> passed in,
+/// notably the ability to convert portable PDBs to Windows PDBs and the ability to generate a special manifest
+/// for the official runtime builds.
+/// </summary>
 public sealed class SymbolUploadHelper
 {
     public const string ConversionFolderName = "_convertedPdbs";
@@ -37,6 +48,13 @@ public sealed class SymbolUploadHelper
     private readonly FrozenSet<string> _packageFileExclusions;
     private readonly bool _treatPdbConversionIssuesAsInfo;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SymbolUploadHelper"/> class.
+    /// </summary>
+    /// <param name="logger">The logger instance.</param>
+    /// <param name="symbolToolPath">The path to the symbol tool.</param>
+    /// <param name="options">The symbol publisher options.</param>
+    /// <param name="workingDir">The working directory.</param>
     internal SymbolUploadHelper(ITracer logger, string symbolToolPath, SymbolPublisherOptions options, string? workingDir = null)
     {
         // These are all validated by the factory since this constructor is internal.
@@ -48,7 +66,7 @@ public sealed class SymbolUploadHelper
         _tracerFactory = new ScopedTracerFactory(logger!);
         _globalTracer = _tracerFactory.CreateTracer(nameof(SymbolUploadHelper));
 
-        _commonArgs = $"-s https://{options!.Tenant}.artifacts.visualstudio.com/ --patAuthEnvVar {PathEnvVarName}";
+        _commonArgs = $"-s https://{options!.AzdoOrg}.artifacts.visualstudio.com/ --patAuthEnvVar {PathEnvVarName}";
         if (options.VerboseClient)
         {
             // the true verbosity level is "verbose" but the tool is very chatty at that level.
@@ -63,7 +81,15 @@ public sealed class SymbolUploadHelper
         _workingDir = workingDir ?? Path.GetTempPath();
         _credential = options.Credential;
         _symbolToolPath = symbolToolPath;
+
+        // This is a special case for dotnet internal builds, particularly to control the special indexing of
+        // diagnostic artifacts coming from the runtime build. Any runtime pack or cross OS diagnostic symbol
+        // package needs this - and it will generate a special JSON manifest for the symbol client to consume.
+        // All other builds should not set this flag in the interest of perf.
         _shouldGenerateManifest = options.DotnetInternalPublishSpecialClrFiles;
+
+        // This is an extremely slow operation and should be used sparingly. We usually only want to do this
+        // in the staging/release pipeline, not in the nightly build pipeline.
         _shouldConvertPdbs = options.ConvertPortablePdbs;
         _isDryRun = options.IsDryRun;
         _packageFileExclusions = options.PackageFileExcludeList;
@@ -97,6 +123,11 @@ public sealed class SymbolUploadHelper
         return await RunSymbolCommand("help", ".", logger).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Creates a symbol request.
+    /// </summary>
+    /// <param name="name">The name of the symbol request.</param>
+    /// <returns>The result of the operation.</returns>
     public async Task<int> CreateRequest(string? name)
     {
         ScopedTracer logger = _tracerFactory.CreateTracer(nameof(CreateRequest));
@@ -108,6 +139,12 @@ public sealed class SymbolUploadHelper
         return await RunSymbolCommand(arguments, ".", logger).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Adds files to a symbol request.
+    /// </summary>
+    /// <param name="name">The name of the symbol request to append to. Must be non-finalized.</param>
+    /// <param name="files">The files to add.</param>
+    /// <returns>The result of the operation.</returns>
     public async Task<int> AddFiles(string? name, IEnumerable<string> files)
     {
         ScopedTracer logger = _tracerFactory.CreateTracer(nameof(AddFiles));
@@ -147,6 +184,13 @@ public sealed class SymbolUploadHelper
         }
     }
 
+    /// <summary>
+    /// Adds a package to a symbol request. This respects conversion requests and manifest generation
+    /// if such options were specified at helper creation time.
+    /// </summary>
+    /// <param name="name">The name of the symbol request.</param>
+    /// <param name="packagePath">The path to the package.</param>
+    /// <returns>The result of the operation.</returns>
     public async Task<int> AddPackageToRequest(string? name, string packagePath)
     {
         ScopedTracer logger = _tracerFactory.CreateTracer(nameof(AddPackagesToRequest));
@@ -156,6 +200,13 @@ public sealed class SymbolUploadHelper
         return await AddPackageToRequestCore(name!, packagePath, logger).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Adds multiple packages to a symbol request. This respects conversion requests and manifest generation
+    /// if such options were specified at helper creation time.
+    /// </summary>
+    /// <param name="name">The name of the symbol request.</param>
+    /// <param name="packagePaths">The paths to the packages.</param>
+    /// <returns>The result of the operation.</returns>
     public async Task<int> AddPackagesToRequest(string? name, IEnumerable<string> packagePaths)
     {
         ScopedTracer logger = _tracerFactory.CreateTracer(nameof(AddPackagesToRequest));
@@ -176,6 +227,12 @@ public sealed class SymbolUploadHelper
         return result;
     }
 
+    /// <summary>
+    /// Finalizes a symbol request.
+    /// </summary>
+    /// <param name="name">The name of the symbol request.</param>
+    /// <param name="daysToRetain">The number of days to retain the request.</param>
+    /// <returns>The result of the operation.</returns>
     public async Task<int> FinalizeRequest(string? name, uint daysToRetain)
     {
         ScopedTracer logger = _tracerFactory.CreateTracer(nameof(FinalizeRequest));
@@ -186,6 +243,11 @@ public sealed class SymbolUploadHelper
         return await RunSymbolCommand(arguments, ".", logger).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Deletes a symbol request.
+    /// </summary>
+    /// <param name="name">The name of the symbol request.</param>
+    /// <returns>The result of the operation.</returns>
     public async Task<int> DeleteRequest(string? name)
     {
         ScopedTracer logger = _tracerFactory.CreateTracer(nameof(DeleteRequest));

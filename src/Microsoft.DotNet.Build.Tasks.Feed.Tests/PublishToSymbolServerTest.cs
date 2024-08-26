@@ -23,8 +23,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         private const string MsdlToken = "msdlToken";
         private const string SymWebToken = "SymWebToken";
         private const string TargetUrl = "TargetUrl";
-        private const string MsdlTenant = "microsoftpublicsymbols";
-        private const string SymWebTenant = "microsoft";
+        private const string MsdlAzdoOrg = "microsoftpublicsymbols";
+        private const string SymwebAzdoOrg = "microsoft";
 
         [Fact]
         public void TemporarySymbolsDirectoryTest()
@@ -42,8 +42,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         }
 
         [Theory]
-        [InlineData(SymbolTargetType.Msdl, MsdlTenant)]
-        [InlineData(SymbolTargetType.SymWeb, SymWebTenant)]
+        [InlineData(SymbolTargetType.Msdl, MsdlAzdoOrg)]
+        [InlineData(SymbolTargetType.SymWeb, SymwebAzdoOrg)]
         public void PublishToSymbolServersTest(SymbolTargetType symbolTargetType , string symbolServer)
         {
             var publishTask = new PublishArtifactsInManifestV3();
@@ -59,9 +59,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 @internal: false,
                 allowOverwrite: true,
                 symbolTargetType));
-            List<(string Tenant, string Token)> servers = publishTask.GetTargetSymbolServers(feedConfigsForSymbols, MsdlToken, SymWebToken);
+            List<(string AzdoOrg, string Token)> servers = publishTask.GetTargetSymbolServers(feedConfigsForSymbols, MsdlToken, SymWebToken);
             Assert.Single(servers);
-            Assert.Contains(servers, x => x.Tenant == symbolServer);
+            Assert.Contains(servers, x => x.AzdoOrg == symbolServer);
         }
 
         [Fact]
@@ -92,8 +92,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 allowOverwrite: true,
                 SymbolTargetType.Msdl));
             List<(string Tenant, string Token)> servers = publishTask.GetTargetSymbolServers(feedConfigsForSymbols, MsdlToken, SymWebToken);
-            Assert.Contains(servers, x => x.Tenant == MsdlTenant);
-            Assert.Contains(servers, x => x.Tenant == SymWebTenant);
+            Assert.Contains(servers, x => x.Tenant == MsdlAzdoOrg);
+            Assert.Contains(servers, x => x.Tenant == SymwebAzdoOrg);
             Assert.Equal(2, servers.Count);
         }
 

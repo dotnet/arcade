@@ -164,7 +164,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureDevOpsOrg { get; set; }
 
-        private readonly string AzureDevOpsBaseUrl = $"https://dev.azure.com";
+        private const string AzureDevOpsBaseUrl = $"https://dev.azure.com";
 
         /// <summary>
         /// Instead of relying on pre-downloaded artifacts, 'stream' artifacts in from the input build.
@@ -193,9 +193,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private static Regex FourPartVersionRegex = new Regex(FourPartVersionPattern);
 
-        private const string SymwebTenant = "microsoft";
+        private const string SymwebAzdoOrg = "microsoft";
 
-        private const string MsdlTenant = "microsoftpublicsymbols";
+        private const string MsdlAzdoOrg = "microsoftpublicsymbols";
 
         private const uint SymbolExpirationInDays = 3650;
 
@@ -424,7 +424,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Publishes files to symbol server(s) one by one using Azure api to download files
         /// </summary>
         /// <param name="pdbArtifactsBasePath">Path to dll and pdb files</param>
-        /// <param name="clientThrottle">To avoid starting too many processes</param>
+        /// <param name="clientThrottle">Limits parallelism of asset download from Azure DevOps.
+        /// This also limits the maximum number of packages that get published at any point of time.
+        /// An asset will be downloaded once the throttle will be released when it's uploaded by all
+        /// helpers. </param>
         /// <returns>true if all publishing operations were successful</returns>
         private async Task<bool> PublishSymbolsUsingStreamingAsync(
             string requestName,
@@ -513,13 +516,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <summary>
         /// Decides how to publish the symbol, dll and pdb files
         /// </summary>
-        /// <param name="pdbArtifactsBasePath">Path to dll and pdb files</param>
-        /// <param name="msdlToken">Token to authenticate msdl</param>
-        /// <param name="symWebToken">Token to authenticate symweb</param>
-        /// <param name="symbolPublishingExclusionsFile">Right now we do not add any files to this, so this is going to be null</param>
-        /// <param name="temporarySymbolsLocation">Path to Symbol.nupkgs</param>
-        /// <param name="clientThrottle">To avoid starting too many processes</param>
-        /// <param name="publishSpecialClrFiles">If true, the special coreclr module indexed files like DBI, DAC and SOS are published</param>
+        /// <param name="buildInfo">Build information used to get symbol server publishing name.</param>
+        /// <param name="buildAssets">Name to asset map for this particular publishing build.</param>
+        /// <param name="pdbArtifactsBasePath">Path to loose dll and pdb files folder.</param>
+        /// <param name="msdlToken">Token to authenticate MSDL.</param>
+        /// <param name="symWebToken">Token to authenticate SymWeb.</param>
+        /// <param name="symbolPublishingExclusionsFile">Path to file containing list of relative file paths for files in packages that can't be published.</param>
+        /// <param name="clientThrottle">Semaphore to throttle concurrent AzDO asset download and symbol uploads.</param>
+        /// <param name="publishSpecialClrFiles">If true, the special coreclr module indexed files like  DBI, DAC and SOS are published</param>
+        /// <param name="dryRun">If true, it will log all the operations of extraction and the symbol command that would get used, but never call into the symbol indexing logic.</param>
         public async Task HandleSymbolPublishingAsync(
             Maestro.Client.Models.Build buildInfo,
             ReadOnlyDictionary<string, Asset> buildAssets,
@@ -564,6 +569,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     $"\tSymbol package count: {symbolPackageNames.Length}" + Environment.NewLine +
                     $"\tLoose symbol file count: {looseSymbolFiles.Length}");
 
+            // The general flow is:
+            // 1. Create a request in the symbol servers that we are targeting.
+            // 2. Upload the loose files to the symbol servers. In both streaming mode and blob mode, they are assumed to already be 
+            //    locally available on disk. In streaming mode, they are downloaded in yml. There's usually very few of them.
+            // 3. Upload the packages to the symbol servers. In streaming mode, they are downloaded dynamically and uploaded with aa degree of 
+            //    parallelism controlled by the throttle. In blob mode, they are published serially.
+            // 4. If all uploads succeed, finalize the request in the symbol servers. This is the point of no return. The request is now immutable and will be
+            //    the only two options onward is to modify the lifetime or to delete. If any of the uploads fail, we delete the request. A retry can be requested.
             if (!await CreateSymbolRequest(requestName, helpers))
             {
                 Log.LogError("Unable to create request in necessary symbol servers.");
@@ -586,18 +599,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 if (UseStreamingPublishing)
                 {
-                    symbolPublishingSucceeded = await PublishSymbolsUsingStreamingAsync(
-                                requestName,
-                                helpers,
-                                symbolPackageNames,
-                                clientThrottle);
+                    symbolPublishingSucceeded = await PublishSymbolsUsingStreamingAsync(requestName, helpers,
+                                                                                        symbolPackageNames,
+                                                                                        clientThrottle);
                 }
                 else
                 {
-                    symbolPublishingSucceeded = await PublishSymbolsFromBlobArtifactsAsync(
-                        requestName,
-                        helpers,
-                        symbolPackageNames);
+                    symbolPublishingSucceeded = await PublishSymbolsFromBlobArtifactsAsync(requestName, helpers,
+                                                                                           symbolPackageNames);
                 }
 
                 if (symbolPublishingSucceeded)
@@ -625,7 +634,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[TargetFeedContentType.Symbols];
 
-                List<(string Tenant, string Token)> serversToPublish = GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
+                List<(string AzdoOrg, string Token)> serversToPublish = GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
 
                 if (serversToPublish.Count == 0)
                 {
@@ -640,11 +649,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 for (int i = 0; i < serversToPublish.Count; i++)
                 {
-                    (string tenant, string token) = serversToPublish[i];
+                    (string azdoOrg, string token) = serversToPublish[i];
                     PATCredential creds = new(token);
 
                     SymbolPublisherOptions options = new(
-                        tenant,
+                        azdoOrg,
                         creds,
                         packageFileExcludeList: exclusions,
                         convertPortablePdbs: false,
@@ -726,7 +735,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private Task<bool> FinalizeSymbolRequest(string requestName, SymbolUploadHelper[] helpers, uint expirationInDays) => OperationOnAllServers(helpers, helper => helper.FinalizeRequest(requestName, expirationInDays), nameof(FinalizeSymbolRequest));
 
-        private Task DeleteSymbolRequest(string requestName, SymbolUploadHelper[] helpers) => OperationOnAllServers(helpers, helper => helper.DeleteRequest(requestName), nameof(DeleteSymbolRequest));
+        private Task<bool> DeleteSymbolRequest(string requestName, SymbolUploadHelper[] helpers) => OperationOnAllServers(helpers, helper => helper.DeleteRequest(requestName), nameof(DeleteSymbolRequest));
 
         internal static (string[], string[]) GetSymbolAssetsToPublish(ReadOnlyDictionary<string, Asset> buildAssets, string pdbArtifactsBasePath)
         {
@@ -756,16 +765,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="msdlToken"></param>
         /// <param name="symWebToken"></param>
         /// <returns>A map of symbol server path => token to the symbol server</returns>
-        public List<(string Tenant, string Token)> GetTargetSymbolServers(HashSet<TargetFeedConfig> feedConfigsForSymbols, string msdlToken, string symWebToken)
+        public List<(string AzdoOrg, string Token)> GetTargetSymbolServers(HashSet<TargetFeedConfig> feedConfigsForSymbols, string msdlToken, string symWebToken)
         {
-            List<(string Tenant, string Token)> targetSymbolTenants = new(2);
+            List<(string AzdoOrg, string Token)> targetSymbolTenants = new(2);
             if (feedConfigsForSymbols.Any(x => x.SymbolTargetType.HasFlag(SymbolTargetType.Msdl)))
             {
-                targetSymbolTenants.Add((MsdlTenant, msdlToken));
+                targetSymbolTenants.Add((MsdlAzdoOrg, msdlToken));
             }
             if (feedConfigsForSymbols.Any(x => x.SymbolTargetType.HasFlag(SymbolTargetType.SymWeb)))
             {
-                targetSymbolTenants.Add((SymwebTenant, symWebToken));
+                targetSymbolTenants.Add((SymwebAzdoOrg, symWebToken));
             }
             return targetSymbolTenants;
         }
@@ -1782,68 +1791,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 Log.LogError($"The property {nameof(ArtifactsBasePath)} is required when using streaming publishing, but doesn't have a value set.");
             }
             return Log.HasLoggedErrors;
-        }
-    }
-
-    internal class TaskTracer : Microsoft.SymbolStore.ITracer
-    {
-        readonly MsBuildUtils.TaskLoggingHelper _log;
-        readonly bool _verbose;
-
-        public TaskTracer(MsBuildUtils.TaskLoggingHelper log, bool verbose)
-        {
-            _log = log;
-            _verbose = verbose;
-        }
-
-        public void WriteLine(string message)
-        {
-            WriteLine("{0}", message);
-        }
-
-        public void WriteLine(string format, params object[] arguments)
-        {
-            _log.LogMessage(MessageImportance.High, format, arguments);
-        }
-
-        public void Information(string message)
-        {
-            Information("{0}", message);
-        }
-
-        public void Information(string format, params object[] arguments)
-        {
-            _log.LogMessage(MessageImportance.Normal, format, arguments);
-        }
-
-        public void Warning(string message)
-        {
-            Warning("{0}", message);
-        }
-
-        public void Warning(string format, params object[] arguments)
-        {
-            _log.LogWarning(format, arguments);
-        }
-
-        public void Error(string message)
-        {
-            Error("{0}", message);
-        }
-
-        public void Error(string format, params object[] arguments)
-        {
-            _log.LogError(format, arguments);
-        }
-
-        public void Verbose(string message)
-        {
-            Verbose("{0}", message);
-        }
-
-        public void Verbose(string format, params object[] arguments)
-        {
-            _log.LogMessage(_verbose ? MessageImportance.Normal : MessageImportance.Low, format, arguments);
         }
     }
 }
