@@ -20,6 +20,7 @@ public sealed class SymbolPublisherOptions
     /// <param name="convertPortablePdbs">A flag indicating whether to convert portable PDBs to windows PDBs. Defaults to false. </param>
     /// <param name="treatPdbConversionIssuesAsInfo">A flag indicating whether to treat PDB conversion issues as informational rather than warn/error. Defaults to false.</param>
     /// <param name="pdbConversionTreatAsWarning">The list of PDB conversion issue IDs to treat as warnings. Defaults to empty.</param>
+    /// <param name="operationTimeoutInMins">Symbol client per-operation timeout in minutes. Defaults to 10 mins.</param>
     /// <param name="dotnetInternalPublishSpecialClrFiles">A flag indicating whether to publish CLR files under their special diagnostic indexes. Defaults to false.</param>
     /// <param name="verboseClient">A flag indicating whether to enable verbose client logging. Defaults to false.</param>
     /// <param name="isDryRun">A flag indicating whether to perform a dry run. Defaults to false.</param>
@@ -30,6 +31,7 @@ public sealed class SymbolPublisherOptions
         bool convertPortablePdbs = false,
         bool treatPdbConversionIssuesAsInfo = false,
         IEnumerable<int>? pdbConversionTreatAsWarning = null,
+        uint operationTimeoutInMins = 10,
         bool dotnetInternalPublishSpecialClrFiles = false,
         bool verboseClient = false,
         bool isDryRun = false)
@@ -40,6 +42,7 @@ public sealed class SymbolPublisherOptions
         ConvertPortablePdbs = convertPortablePdbs;
         TreatPdbConversionIssuesAsInfo = treatPdbConversionIssuesAsInfo;
         PdbConversionTreatAsWarning = pdbConversionTreatAsWarning is null ? FrozenSet<int>.Empty : pdbConversionTreatAsWarning.ToFrozenSet();
+        OperationTimeoutInMins = operationTimeoutInMins;
         DotnetInternalPublishSpecialClrFiles = dotnetInternalPublishSpecialClrFiles;
         VerboseClient = verboseClient;
         IsDryRun = isDryRun;
@@ -74,6 +77,11 @@ public sealed class SymbolPublisherOptions
     /// List of PDB conversion issue IDs to treat as warnings.
     /// </summary>
     public FrozenSet<int> PdbConversionTreatAsWarning { get; }
+
+    /// <summary>
+    /// Symbol client per-operation timeout in minutes.
+    /// </summary>
+    public uint OperationTimeoutInMins { get; }
 
     /// <summary>
     /// Flag indicating whether to publish special CLR files for dotnet internal builds.

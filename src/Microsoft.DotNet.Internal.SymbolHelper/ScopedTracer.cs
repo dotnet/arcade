@@ -39,19 +39,21 @@ internal class ScopedTracer : ITracer
     public void Warning(string format, params object[] arguments) => LogToMethod(_logger.Warning, format, arguments);
     public void WriteLine(string message) => LogToMethod(_logger.WriteLine, message);
     public void WriteLine(string format, params object[] arguments) => LogToMethod(_logger.WriteLine, format, arguments);
-    public IDisposable AddSubScope(string scope)
-    {
-        _subScope = scope;
-        return new TokenScope(this);
-    }
+    public IDisposable AddSubScope(string scope) => new TokenScope(this, scope);
 
     private sealed class TokenScope : IDisposable
     {
         private readonly ScopedTracer _tracer;
+        private readonly string? _priorScope;
 
-        public TokenScope(ScopedTracer tracer) => _tracer = tracer;
+        public TokenScope(ScopedTracer tracer, string? newScope)
+        {
+            _tracer = tracer;
+            _priorScope = _tracer._subScope;
+            _tracer._subScope = _priorScope is null ? newScope : $"{_priorScope}/{newScope}";
+        }
 
-        public void Dispose() => _tracer._subScope = null;
+        public void Dispose() => _tracer._subScope = _priorScope;
     }
 }
 

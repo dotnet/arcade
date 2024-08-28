@@ -33,7 +33,6 @@ public sealed class SymbolUploadHelper
     public const string ConversionFolderName = "_convertedPdbs";
     private const string AzureDevOpsResource = "499b84ac-1321-427f-aa17-267ca6975798";
     private const string PathEnvVarName = "AzureDevOpsToken";
-    private const int SymbolToolTimeoutInMins = 5;
     private static readonly FrozenSet<string> s_validExtensions = FrozenSet.ToFrozenSet(["", ".exe", ".dll", ".pdb", ".so", ".dbg", ".dylib", ".dwarf", ".r2rmap"]);
     private readonly ScopedTracerFactory _tracerFactory;
     private readonly ScopedTracer _globalTracer;
@@ -42,6 +41,7 @@ public sealed class SymbolUploadHelper
     private readonly string _commonArgs;
     private readonly string _symbolToolPath;
     private readonly PdbConverter? _pdbConverter;
+    private readonly uint _symbolToolTimeoutInMins;
     private readonly bool _shouldGenerateManifest;
     private readonly bool _shouldConvertPdbs;
     private readonly bool _isDryRun;
@@ -65,8 +65,9 @@ public sealed class SymbolUploadHelper
 
         _tracerFactory = new ScopedTracerFactory(logger!);
         _globalTracer = _tracerFactory.CreateTracer(nameof(SymbolUploadHelper));
+        _symbolToolTimeoutInMins = options.OperationTimeoutInMins;
 
-        _commonArgs = $"-s https://{options!.AzdoOrg}.artifacts.visualstudio.com/ --patAuthEnvVar {PathEnvVarName}";
+        _commonArgs = $"-s https://{options!.AzdoOrg}.artifacts.visualstudio.com/ --patAuthEnvVar {PathEnvVarName} -t --timeout {_symbolToolTimeoutInMins}";
         if (options.VerboseClient)
         {
             // the true verbosity level is "verbose" but the tool is very chatty at that level.
@@ -152,7 +153,7 @@ public sealed class SymbolUploadHelper
 
         if (!files.Any())
         {
-            logger.Information("No files to add to request {0}", name!);
+            logger.WriteLine("No files to add to request {0}", name!);
             return 0;
         }
 
@@ -174,7 +175,7 @@ public sealed class SymbolUploadHelper
                 ConvertPortablePdbsInDirectory(logger, tempCopyPath);
             }
 
-            logger.Information("Adding files to request {0}", name!);
+            logger.WriteLine("Adding files to request {0}", name!);
             return await AddDirectoryCore(name!, tempCopyPath, manifestPath: null, logger).ConfigureAwait(false);
         }
         finally
@@ -238,7 +239,7 @@ public sealed class SymbolUploadHelper
         ScopedTracer logger = _tracerFactory.CreateTracer(nameof(FinalizeRequest));
         ValidateRequestName(name, logger);
 
-        logger.Information("Finalize symbol request: {0}", name!);
+        logger.WriteLine("Finalize symbol request: {0}", name!);
         string arguments = $"finalize {_commonArgs} --name {name} --expirationInDays {daysToRetain}";
         return await RunSymbolCommand(arguments, ".", logger).ConfigureAwait(false);
     }
@@ -248,18 +249,22 @@ public sealed class SymbolUploadHelper
     /// </summary>
     /// <param name="name">The name of the symbol request.</param>
     /// <returns>The result of the operation.</returns>
-    public async Task<int> DeleteRequest(string? name)
+    public async Task<int> DeleteRequest(string? name, bool synchronous = false)
     {
         ScopedTracer logger = _tracerFactory.CreateTracer(nameof(DeleteRequest));
         ValidateRequestName(name, logger);
-        logger.Information("Deleting symbol request: {0}", name!);
-        string arguments = $"delete {_commonArgs} --name {name} --quiet --synchronous";
+        logger.WriteLine("Deleting symbol request: {0}", name!);
+        string arguments = $"delete {_commonArgs} --name {name} --quiet";
+        if (synchronous)
+        {
+            arguments += "--synchronous";
+        }
         return await RunSymbolCommand(arguments, ".", logger).ConfigureAwait(false);
     }
 
     private async Task<int> AddDirectoryCore(string name, string pathToAdd, string? manifestPath, ScopedTracer logger)
     {
-        logger.Information("Adding directory {0} to request {1}", pathToAdd, name);
+        logger.WriteLine("Adding directory {0} to request {1}", pathToAdd, name);
         string arguments = $"adddirectory {_commonArgs} -n {name} --directory {pathToAdd} --recurse true";
 
         if (manifestPath is not null)
@@ -277,6 +282,7 @@ public sealed class SymbolUploadHelper
         string packageExtractDir = packageDirInfo.FullName;
         try
         {
+            logger.WriteLine("Processing package");
             using ZipArchive archive = ZipFile.Open(packagePath, ZipArchiveMode.Read);
 
             logger.Information("Extracting symbol package {0} to {1}", packagePath, packageExtractDir);
@@ -320,7 +326,7 @@ public sealed class SymbolUploadHelper
                 logger.Verbose("Generated manifest in {0}", manifest);
             }
 
-            logger.Information("Adding package {0} to request {1}", packagePath, name);
+            logger.WriteLine("Adding package {0} to request {1}", packagePath, name);
             return await AddDirectoryCore(name, packageExtractDir, manifest, logger).ConfigureAwait(false);
         }
         finally
@@ -418,88 +424,112 @@ public sealed class SymbolUploadHelper
         }
     }
 
-    private async Task<int> RunSymbolCommand(string arguments, string directory, ITracer logger, CancellationToken ct = default)
+    private async Task<int> RunSymbolCommand(string arguments, string directory, ScopedTracer logger, CancellationToken ct = default)
     {
         // TODO: Add retry logic. Need to parse output stream for this.
         logger.Verbose("Running command: {0} {1} from '{2}'", _symbolToolPath, arguments, directory);
+        using IDisposable scopedTrace = logger.AddSubScope("symbol.exe");
+
         if (_isDryRun)
         {
             logger.Information("Would run command: {0} {1} from '{2}'", _symbolToolPath, arguments, directory);
             return 0;
         }
 
-        AccessToken token = await _credential.GetTokenAsync(new TokenRequestContext([AzureDevOpsResource]), ct).ConfigureAwait(false);
-        ProcessStartInfo info = new(_symbolToolPath, arguments)
-        {
-            UseShellExecute = false,
-            RedirectStandardError = true,
-            RedirectStandardOutput = true,
-            WorkingDirectory = directory,
-            Environment = { [PathEnvVarName] = token.Token }
-        };
-
-        using Process process = new()
-        {
-            StartInfo = info
-        };
-
-        _ = process.Start();
-
-        using CancellationTokenSource lcts = CancellationTokenSource.CreateLinkedTokenSource(ct);
-        lcts.CancelAfter(TimeSpan.FromMinutes(SymbolToolTimeoutInMins));
-        ct = lcts.Token;
-
-        Task processExit = process.WaitForExitAsync(ct);
-
         // This sentinel task is used to indicate that the output has been fully read. It's never completed.
         TaskCompletionSource<string?> outputFinishedSentinel = new();
+        Stopwatch sw = Stopwatch.StartNew();
 
-        StreamReader standardOutput = process.StandardOutput;
-        Task<string?> outputAvailable = standardOutput.ReadLineAsync(ct).AsTask();
-
-        StreamReader standardError = process.StandardError;
-        Task<string?> errorAvailable = standardError.ReadLineAsync(ct).AsTask();
-
-        while (!ct.IsCancellationRequested && (outputAvailable != outputFinishedSentinel.Task || errorAvailable != outputFinishedSentinel.Task))
+        try
         {
-            Task alertedTask = await Task.WhenAny(outputAvailable, errorAvailable).ConfigureAwait(false);
+            AccessToken token = await _credential.GetTokenAsync(new TokenRequestContext([AzureDevOpsResource]), ct).ConfigureAwait(false);
+            ProcessStartInfo info = new(_symbolToolPath, arguments)
+            {
+                UseShellExecute = false,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                WorkingDirectory = directory,
+                Environment = { [PathEnvVarName] = token.Token }
+            };
 
-            if (alertedTask == outputAvailable)
+            using CancellationTokenSource lcts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+
+            using Process process = new()
             {
-                outputAvailable = await LogFromStreamReader(outputAvailable, standardOutput.ReadLineAsync, logger.Information);
-            }
-            else if (alertedTask == errorAvailable)
+                StartInfo = info
+            };
+
+            _ = process.Start();
+
+            lcts.CancelAfter(TimeSpan.FromMinutes(_symbolToolTimeoutInMins));
+            ct = lcts.Token;
+
+            Task processExit = process.WaitForExitAsync(ct);
+
+            StreamReader standardOutput = process.StandardOutput;
+            Task<string?> outputAvailable = standardOutput.ReadLineAsync(ct).AsTask();
+
+            StreamReader standardError = process.StandardError;
+            Task<string?> errorAvailable = standardError.ReadLineAsync(ct).AsTask();
+
+            while (!ct.IsCancellationRequested && (outputAvailable != outputFinishedSentinel.Task || errorAvailable != outputFinishedSentinel.Task))
             {
-                errorAvailable = await LogFromStreamReader(errorAvailable, standardError.ReadLineAsync, logger.Error);
+                if (processExit.IsCompleted)
+                {
+                    // We already did the work. Might as well drain the IO.
+                    lcts.Dispose();
+                    logger.Verbose("uploader completion detected after {0}. Draining I/O streams.", sw.Elapsed);
+                }
+
+                Task alertedTask = await Task.WhenAny(outputAvailable, errorAvailable).ConfigureAwait(false);
+
+                if (alertedTask == outputAvailable)
+                {
+                    outputAvailable = await LogFromStreamReader(outputAvailable, standardOutput.ReadLineAsync, logger.Verbose, ct);
+                }
+                else if (alertedTask == errorAvailable)
+                {
+                    errorAvailable = await LogFromStreamReader(errorAvailable, standardError.ReadLineAsync, logger.Error, ct);
+                }
             }
+
+            if (ct.IsCancellationRequested && !process.HasExited)
+            {
+                try { process.Kill(); } catch (InvalidOperationException) { }
+                return -1;
+            }
+
+            // This should be a no-op if the process has already exited. Since it's not the ct doing this or we'd have exited, and we drained both 
+            // output streams, this is the expected scenario.
+            await processExit.ConfigureAwait(false);
+            logger.Information("completed after {0} with exit code {1}", sw.Elapsed, process.ExitCode);
+            return process.ExitCode;
         }
-
-        if (ct.IsCancellationRequested && !process.HasExited)
+        catch (Exception ex)
         {
-            try { process.Kill(); } catch (InvalidOperationException) { }
+            logger.Error("Unable to finish invocation or drain its output after {0}: {1}", sw.Elapsed, ex);
             return -1;
         }
 
-        // This should be a no-op if the process has already exited. Since it's not the ct doing this or we'd have exited, and we drained both 
-        // output streams, this is the expected scenario.
-        await processExit.ConfigureAwait(false);
-        return process.ExitCode;
-
-        async Task<Task<string?>> LogFromStreamReader(Task<string?> outputTask, Func<Task<string?>> readLine, Action<string> logMethod)
+        async Task<Task<string?>> LogFromStreamReader(Task<string?> outputTask, Func<CancellationToken, ValueTask<string?>> readLine, Action<string> logMethod, CancellationToken ct)
         {
-            string? line = await outputTask.ConfigureAwait(false);
+            ValueTask<string?> vt = new(outputTask);
 
-            if (line is not null)
+            while (!ct.IsCancellationRequested && outputTask.IsCompleted)
             {
-                logMethod(line);
-                outputTask = readLine();
-            }
-            else
-            {
-                outputTask = outputFinishedSentinel.Task;
+                string? line = await vt.ConfigureAwait(false);
+                if (line is not null)
+                {
+                    logMethod(line);
+                    vt = readLine(ct);
+                }
+                else
+                {
+                    return outputFinishedSentinel.Task;
+                }
             }
 
-            return outputTask;
+            return vt.AsTask();
         }
     }
 }
