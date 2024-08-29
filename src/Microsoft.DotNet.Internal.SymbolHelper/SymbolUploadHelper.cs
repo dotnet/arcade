@@ -257,7 +257,7 @@ public sealed class SymbolUploadHelper
         string arguments = $"delete {_commonArgs} --name {name} --quiet";
         if (synchronous)
         {
-            arguments += "--synchronous";
+            arguments += " --synchronous";
         }
         return await RunSymbolCommand(arguments, ".", logger).ConfigureAwait(false);
     }
