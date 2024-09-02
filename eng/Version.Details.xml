@@ -191,9 +191,9 @@
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>573461dc897731c11d6166574b77a8c3aabba220</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DncEng.SecretManager" Version="1.1.0-beta.24419.1">
+    <Dependency Name="Microsoft.DncEng.SecretManager" Version="1.1.0-beta.24430.2">
       <Uri>https://github.com/dotnet/dnceng</Uri>
-      <Sha>d2f4ad508066c0d1d86061cef54d295cbed71a6a</Sha>
+      <Sha>bf62edd70d1d3a36e326bc4ef528038d86e2ee52</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
