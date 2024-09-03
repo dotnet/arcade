@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Whether this build is internal or not. If true, extra checks are done to avoid accidental
         /// publishing of assets to public feeds or storage accounts.
         /// </summary>
-        public bool InternalBuild { get; set; }
+        public bool IsInternalBuild { get; set; }
 
         public bool PublishInstallersAndChecksums { get; set; } = false;
 
@@ -347,7 +347,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 MaestroApiEndpoint = this.MaestroApiEndpoint,
                 BuildAssetRegistryToken = this.BuildAssetRegistryToken,
                 NugetPath = this.NugetPath,
-                IsInternalBuild = this.InternalBuild,
+                IsInternalBuild = this.IsInternalBuild,
                 SkipSafetyChecks = this.SkipSafetyChecks,
                 AkaMSClientId = this.AkaMSClientId,
                 AkaMSClientCertificate = !string.IsNullOrEmpty(AkaMSClientCertificate) ?
