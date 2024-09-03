@@ -60,6 +60,11 @@ try {
     $buildNumberName = $buildNumberName.Substring(0, 255)
   }
 
+  $isInternalBuild = $false
+  if ([string]::IsNullOrEmpty($buildInfo.gitHubRepository) -and $buildInfo.azureDevOpsBranch.Contains("internal/release")) {
+    $isInternalBuild = $true
+  }
+
   # Set tags on publishing for visibility
   Write-Host "##vso[build.updatebuildnumber]$buildNumberName"
   Write-Host "##vso[build.addbuildtag]Channel(s) - $channelNames"
@@ -71,6 +76,7 @@ try {
   Write-Host "##vso[task.setvariable variable=AzDOBuildId]$($buildInfo.azureDevOpsBuildId)"
   Write-Host "##vso[task.setvariable variable=AzDOAccount]$($buildInfo.azureDevOpsAccount)"
   Write-Host "##vso[task.setvariable variable=AzDOBranch]$($buildInfo.azureDevOpsBranch)"
+  Write-Host "##vso[task.setvariable variable=IsInternalBuild]$isInternalBuild"
 }
 catch {
   Write-Host $_

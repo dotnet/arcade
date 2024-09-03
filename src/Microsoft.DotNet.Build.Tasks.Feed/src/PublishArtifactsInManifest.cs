@@ -347,7 +347,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 MaestroApiEndpoint = this.MaestroApiEndpoint,
                 BuildAssetRegistryToken = this.BuildAssetRegistryToken,
                 NugetPath = this.NugetPath,
-                InternalBuild = this.InternalBuild,
+                IsInternalBuild = this.InternalBuild,
                 SkipSafetyChecks = this.SkipSafetyChecks,
                 AkaMSClientId = this.AkaMSClientId,
                 AkaMSClientCertificate = !string.IsNullOrEmpty(AkaMSClientCertificate) ?
