@@ -219,12 +219,12 @@
   <!--
     Create Debian package.
   -->
-  <Target Name="CreateDeb"
+  <Target Name="CreateDebWithPackageTool"
           DependsOnTargets="
             _GetInstallerProperties;
             _CreateInstallerLayout;
             GetDebInstallerJsonProperties"
-          Condition="'$(_DebuildPresent)' == 'true'"
+          Condition="'$(_DebuildPresent)' == 'true' and '$(CreateDebWithTask)' != 'true'"
           Returns="$(_InstallerFile)">
     <PropertyGroup>
       <_ConfigJsonFile>$(_LayoutDirectory)debian_config.json</_ConfigJsonFile>
@@ -273,6 +273,13 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="CreateDebWithTask"
+          Condition="'$(CreateDebWithTask)' == 'true'"
+          DependsOnTargets="_GetInstallerProperties;_CreateInstallerLayout;_GetCommonJsonProperties">
+
+  </Target>
+
+  <Target Name="CreateDeb" DependsOnTargets="CreateDebWithPackageTool;CreateDebWithTask" />
   <!--
     Create RPM package.
   -->
