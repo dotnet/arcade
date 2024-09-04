@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 {
     internal sealed class ArEntry
     {
-        public ArEntry(string name, ulong timestamp, ulong ownerID, ulong groupID, uint mode, MemoryStream dataStream)
+        public ArEntry(string name, ulong timestamp, ulong ownerID, ulong groupID, uint mode, Stream dataStream)
         {
             Name = name;
             Timestamp = timestamp;
@@ -22,6 +22,6 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
         public ulong OwnerID { get; }
         public ulong GroupID { get; }
         public uint Mode { get; }
-        public MemoryStream DataStream { get; }
+        public Stream DataStream { get; }
     }
 }
