@@ -144,6 +144,12 @@ PATs that may be used:
 - *[DEPRECATED] A Build Asset Registry (BAR) password for interacting with Maestro++/BAR (e.g.
   obtaining build information needed for a drop). This one is no longer needed and you can sign-in through browser when using darc.*
 
+> [!NOTE]
+>  [PatGeneratorTool](https://dev.azure.com/dnceng/public/_artifacts/feed/dotnet-eng/NuGet/Microsoft.DncEng.PatGeneratorTool) can be installed with the following command
+> ```
+> dotnet tool install --global Microsoft.DncEng.PatGeneratorTool --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json --prerelease
+> ```
+
 These tokens can either be passed on the command line using parameters (see [Common parameters](#common-parameters)), or
 cached locally on the machine using the [`darc authenticate`](#authenticate) command.
 
