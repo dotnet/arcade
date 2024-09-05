@@ -80,7 +80,7 @@
              BuildInParallel="$(BuildInParallel)" />
   </Target>
 
-  <Target Name="GenerateDeb" DependsOnTargets="FindDebuild;CreateDeb" />
+  <Target Name="GenerateDeb" DependsOnTargets="CreateDeb" />
   <Target Name="GenerateRpm" DependsOnTargets="FindFPM;CreateRpm" />
   <Target Name="GenerateMsi" DependsOnTargets="CreateWixInstaller" />
   <Target Name="GenerateCrossArchMsi" DependsOnTargets="CreateCrossArchWixInstaller" />
@@ -193,14 +193,18 @@
              Text="FPM tool Not found, RPM packages will not be built." />
   </Target>
 
+  <!-- This target is kept for back-compat for targets that would hook it to add package info. -->
+  <Target Name="GetDebInstallerJsonProperties" />
+
   <Target Name="CreateDeb"
-          DependsOnTargets="_GetInstallerProperties;_GetCommonJsonProperties"
+          DependsOnTargets="_GetInstallerProperties;_GetCommonJsonProperties;GetDebInstallerJsonProperties"
           Returns="$(_InstallerFile)">
     <PropertyGroup>
       <_LayoutDirectory>$(IntermediateOutputPath)installer/debLayout/</_LayoutDirectory>
-      <_LayoutPackageRoot>$(_LayoutDirectory)root/$(LinuxPackageRoot)</_LayoutPackageRoot>
+      <_LayoutDataRoot>$(_LayoutDirectory)root/</_LayoutDataRoot>
+      <_LayoutPackageRoot>$(_LayoutDataRoot)$(LinuxInstallRoot)</_LayoutPackageRoot>
       <_LayoutControlRoot>$(_LayoutDirectory)control/</_LayoutControlRoot>
-      <_LayoutDocs>$(_LayoutDirectory)root/usr/share/doc</_LayoutDocs>
+      <_LayoutDocs>$(_LayoutDataRoot)/usr/share/doc</_LayoutDocs>
     </PropertyGroup>
 
     <RemoveDir Condition="Exists('$(_InstallerIntermediatesDir)')" Directories="$(_InstallerIntermediatesDir)" />
@@ -210,6 +214,7 @@
     <RemoveDir Condition="Exists('$(_LayoutDirectory)')" Directories="$(_LayoutDirectory)" />
     <MakeDir Directories="$(_LayoutDirectory)" />
     <MakeDir Directories="$(_LayoutPackageRoot)" />
+    <MakeDir Directories="$(_LayoutControlRoot)" />
     <MakeDir Directories="$(_LayoutDocs)" />
 
     <MSBuild Projects="$(MSBuildProjectFullPath)"
@@ -224,11 +229,11 @@
     <!-- Write copyright file in the debian format. -->
     <ItemGroup>
       <_CopyrightLine Include="Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/" />
-      <_CopyrightLine Include="Files: *" />
+      <_CopyrightLine Include="%0AFiles: *" />
       <_CopyrightLine Include="Copyright: $(_PackageCopyright)" />
       <_CopyrightLine Include="Comment: Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license." />
       <_CopyrightLine Include="License: MIT and ASL 2.0 and BSD" />
-      <_CopyrightLine Include="%0ALicense: $(FullLicenseText)" />
+      <_CopyrightLine Include="%0ALicense: $([System.IO.File]::ReadAllText('$(LicenseFile)'))" />
     </ItemGroup>
 
     <WriteLinesToFile File="$(_LayoutDocs)/$(VersionedInstallerName)/copyright" Lines="@(_CopyrightLine)" />
@@ -251,14 +256,14 @@
 
     <ItemGroup>
       <_MD5SumsFile Include="$(_LayoutControlRoot)/md5sums" />
-      <_MD5SourceFiles Include="$(_LayoutPackageRoot)/**/*" />
+      <_MD5SourceFiles Include="$(_LayoutDataRoot)/**/*" />
     </ItemGroup>
 
     <CreateMD5SumsFile
-        MD5SumsOutputPath="@(_MD5SumsFile)"
-        RootDirectory="$(_LayoutPackageRoot)"
+        OutputFile="@(_MD5SumsFile)"
+        RootDirectory="$(_LayoutDataRoot)"
         Files="@(_MD5SourceFiles)">
-      <Output TaskParameter="TotalFileSize" PropertyName="_InstalledSize" />
+      <Output TaskParameter="InstalledSize" PropertyName="_InstalledSize" />
     </CreateMD5SumsFile>
 
     <ItemGroup>
@@ -267,31 +272,33 @@
 
     <ItemGroup>
       <_ControlFile Include="$(_LayoutControlRoot)/control" />
-      <_ControlFileAdditionalProperty Include="Homepage" Value="https://github.com/dotnet/core" />
-      <_ControlFileAdditionalProperty Include="Priority" Value="standard" />
     </ItemGroup>
 
     <CreateControlFile
         ControlFileOutputPath="@(_ControlFile)"
         PackageName="$(VersionedInstallerName)"
         PackageVersion="$(InstallerPackageVersion)"
-        PackageArchitecture="$(InstallerTargetArchitecture)"
+        PackageArchitecture="$(LinuxPackageArchitecture)"
         Maintainer=".NET Team &lt;dotnetpackages@dotnetfoundation.org&gt;"
-        Description="$(_PackageLongDescription)"
+        Description="$(_ShortDescription)%0A $(_PackageLongDescription)"
         InstalledSize="$(_InstalledSize)"
         Depends="@(LinuxPackageDependency)"
         Section="libs"
-        AdditionalProperties="@(_ControlFileAdditionalProperty)" />
+        AdditionalProperties="@(DebControlProperty)" />
 
     <ItemGroup>
       <FileWrites Include="@(_ControlFile)" />
     </ItemGroup>
+
+    <!-- Create any symlinks -->
+    <MakeDir Directories="$(_LayoutDataRoot)%(DebSymlink.RelativeDir)" Condition="'%(DebSymlink.Identity)' != ''" />
+    <Exec Command="ln -s %(DebSymlink.LinkTarget) %(DebSymlink.FileName)%(DebSymlink.Extension)" WorkingDirectory="$(_LayoutDataRoot)%(DebSymlink.RelativeDir)" Condition="'%(DebSymlink.Identity)' != ''" />
     
     <Exec Command="tar -C '$(_LayoutControlRoot)' -czf '$(_LayoutDirectory)/control.tar.gz' ."
           IgnoreExitCode="true"
           IgnoreStandardErrorWarningFormat="true" />
     
-    <Exec Command="tar -C '$(_LayoutPackageRoot)' -czf '$(_LayoutDirectory)/data.tar.gz' ."
+    <Exec Command="tar -C '$(_LayoutDataRoot)' -czf '$(_LayoutDirectory)/data.tar.gz' ."
           IgnoreExitCode="true"
           IgnoreStandardErrorWarningFormat="true" />
 
