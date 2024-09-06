@@ -9,22 +9,20 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Azure.Core;
 using Microsoft.Arcade.Common;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.DotNet.Arcade.Test.Common;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Maestro.Client.Models;
 using Xunit;
+using static Microsoft.DotNet.Internal.SymbolHelper.SymbolPromotionHelper;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
     public class PublishToSymbolServerTest
     {
-        private const string MsdlToken = "msdlToken";
-        private const string SymWebToken = "SymWebToken";
         private const string TargetUrl = "TargetUrl";
-        private const string MsdlAzdoOrg = "microsoftpublicsymbols";
-        private const string SymwebAzdoOrg = "microsoft";
 
         [Fact]
         public void TemporarySymbolsDirectoryTest()
@@ -42,59 +40,55 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         }
 
         [Theory]
-        [InlineData(SymbolTargetType.Msdl, MsdlAzdoOrg)]
-        [InlineData(SymbolTargetType.SymWeb, SymwebAzdoOrg)]
-        public void PublishToSymbolServersTest(SymbolTargetType symbolTargetType , string symbolServer)
+        [InlineData(SymbolPublishVisibility.Public)]
+        [InlineData(SymbolPublishVisibility.Internal)]
+        public void PublishToSymbolServersTest(SymbolPublishVisibility symbolTargetType)
         {
             var publishTask = new PublishArtifactsInManifestV3();
-            var feedConfigsForSymbols = new HashSet<TargetFeedConfig>();
-            feedConfigsForSymbols.Add(new TargetFeedConfig(
+            var feedConfigsForSymbols = new HashSet<TargetFeedConfig>
+            {
+                new TargetFeedConfig(
                 TargetFeedContentType.Symbols,
                 "TargetUrl",
                 FeedType.AzDoNugetFeed,
-                MsdlToken,
+                default,
                 new List<string>(),
                 AssetSelection.All,
                 isolated: true,
                 @internal: false,
                 allowOverwrite: true,
-                symbolTargetType));
-            List<(string AzdoOrg, string Token)> servers = publishTask.GetTargetSymbolServers(feedConfigsForSymbols, MsdlToken, SymWebToken);
-            Assert.Single(servers);
-            Assert.Contains(servers, x => x.AzdoOrg == symbolServer);
+                symbolTargetType)
+            };
+            SymbolPublishVisibility visibility = publishTask.GetSymbolPublishingVisibility(feedConfigsForSymbols);
+            Assert.Equal(symbolTargetType, visibility);
         }
 
-        [Fact]
-        public void PublishToBothSymbolServerTest()
+        [Theory]
+        [InlineData(SymbolPublishVisibility.None)]
+        [InlineData(SymbolPublishVisibility.Internal)]
+        [InlineData(SymbolPublishVisibility.Public)]
+        public void PublishToMultipleServersVisibilityTest(SymbolPublishVisibility maxVisibility)
         {
-            var publishTask = new PublishArtifactsInManifestV3();
-            var feedConfigsForSymbols = new HashSet<TargetFeedConfig>();
-            feedConfigsForSymbols.Add(new TargetFeedConfig(
-                TargetFeedContentType.Symbols,
-                "testUrl",
-                FeedType.AzDoNugetFeed,
-                SymWebToken,
-                new List<string>(),
-                AssetSelection.All,
-                isolated: true,
-                @internal: false,
-                allowOverwrite: true,
-                SymbolTargetType.SymWeb));
-            feedConfigsForSymbols.Add(new TargetFeedConfig(
-                TargetFeedContentType.Symbols,
-                TargetUrl,
-                FeedType.AzDoNugetFeed,
-                MsdlToken,
-                new List<string>(),
-                AssetSelection.All,
-                isolated: true,
-                @internal: false,
-                allowOverwrite: true,
-                SymbolTargetType.Msdl));
-            List<(string Tenant, string Token)> servers = publishTask.GetTargetSymbolServers(feedConfigsForSymbols, MsdlToken, SymWebToken);
-            Assert.Contains(servers, x => x.Tenant == MsdlAzdoOrg);
-            Assert.Contains(servers, x => x.Tenant == SymwebAzdoOrg);
-            Assert.Equal(2, servers.Count);
+            PublishArtifactsInManifestV3 publishTask = new();
+            HashSet<TargetFeedConfig> feedConfigsForSymbols = [];
+            IEnumerable<SymbolPublishVisibility> visibilities = Enum.GetValues<SymbolPublishVisibility>().Where(x => x <= maxVisibility);
+            foreach (SymbolPublishVisibility v in visibilities)
+            {
+                feedConfigsForSymbols.Add(
+                    new TargetFeedConfig(
+                    TargetFeedContentType.Symbols,
+                    "testUrl" + v,
+                    FeedType.AzDoNugetFeed,
+                    default,
+                    [],
+                    AssetSelection.All,
+                    isolated: true,
+                    @internal: false,
+                    allowOverwrite: true,
+                    v));
+            }
+            SymbolPublishVisibility visibility = publishTask.GetSymbolPublishingVisibility(feedConfigsForSymbols);
+            Assert.Equal(maxVisibility, visibility);
         }
 
         [Fact]
@@ -109,8 +103,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 buildInfo: buildInfo,
                 buildAssets: buildAsset,
                 pdbArtifactsBasePath: path,
-                msdlToken: MsdlToken,
-                symWebToken: SymWebToken,
                 symbolPublishingExclusionsFile: "",
                 publishSpecialClrFiles: false,
                 clientThrottle: null);
@@ -124,40 +116,36 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public async Task NoServersToPublishFound()
         {
-            (var buildEngine, var task, var symbolPackages, _, _, var buildInfo) = GetCanonicalSymbolTestAssets(SymbolTargetType.None);
+            (var buildEngine, var task, var symbolPackages, _, _, var buildInfo) = GetCanonicalSymbolTestAssets(SymbolPublishVisibility.None);
 
             await task.HandleSymbolPublishingAsync(
                 buildInfo: buildInfo,
                 symbolPackages,
                 pdbArtifactsBasePath: null,
-                msdlToken: MsdlToken,
-                symWebToken: SymWebToken,
                 symbolPublishingExclusionsFile: "",
                 publishSpecialClrFiles: false,
                 clientThrottle: null);
 
             // This isn't the best type of test as it tests implementation specifics and not behavior, but the task doesn't
-            // have interesting observable state. It's also a big perf hit to try to not go down this path.
+            // have interesting observable state. It's also a big perf hit to try to not go down this path. As a design decision,
+            // if symbl type is none we don't even publish to the home/temp tenant.
             Assert.Contains(buildEngine.BuildMessageEvents, x => x.Message.StartsWith("No target symbol servers"));
         }
 
         [WindowsOnlyFact]
         public async Task PublishSymbolsBasicScenarioTest()
         {
-            (var buildEngine, var task, var symbolPackages, var symbolFilesDir, var exclusionFile, var buildInfo) = GetCanonicalSymbolTestAssets(SymbolTargetType.Msdl | SymbolTargetType.SymWeb);
+            (var buildEngine, var task, var symbolPackages, var symbolFilesDir, var exclusionFile, var buildInfo) = GetCanonicalSymbolTestAssets(SymbolPublishVisibility.Public);
 
             await task.HandleSymbolPublishingAsync(
                 buildInfo: buildInfo,
                 symbolPackages,
                 pdbArtifactsBasePath: symbolFilesDir,
-                msdlToken: MsdlToken,
-                symWebToken: SymWebToken,
                 symbolPublishingExclusionsFile: exclusionFile,
                 publishSpecialClrFiles: false,
                 clientThrottle: null,
-                dryRun: true);
-
-            task.UseStreamingPublishing = true;
+                dryRun: true,
+                Internal.SymbolHelper.SymbolPromotionHelper.Environment.PPE);
 
             Assert.Empty(buildEngine.BuildErrorEvents);
             Assert.Empty(buildEngine.BuildWarningEvents);
@@ -169,20 +157,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             Assert.Contains("Symbol package count: 1", message.Message);
             Assert.Contains("Loose symbol file count: 1", message.Message);
 
-            Assert.Equal(2, buildEngine.BuildMessageEvents.Where(x => x.Message.Contains("Creating symbol request")).Count());
-            Assert.Equal(2, buildEngine.BuildMessageEvents.Where(x => x.Message.Contains("Adding files to request")).Count());
+            Assert.Contains(buildEngine.BuildMessageEvents, x => x.Message.Contains("Creating symbol request"));
+            Assert.Contains(buildEngine.BuildMessageEvents, x => x.Message.Contains("Adding files to request"));
 
             // Message per package per server
-            Assert.Equal(2 * symbolPackages.Keys.Count, buildEngine.BuildMessageEvents.Where(x => x.Message.Contains($"Extracting symbol package")).Count());
-            Assert.Equal(2 * symbolPackages.Keys.Count, buildEngine.BuildMessageEvents.Where(x => x.Message.Contains($"Adding package")).Count());
+            Assert.Equal(symbolPackages.Keys.Count, buildEngine.BuildMessageEvents.Where(x => x.Message.Contains($"Extracting symbol package")).Count());
+            Assert.Equal(symbolPackages.Keys.Count, buildEngine.BuildMessageEvents.Where(x => x.Message.Contains($"Adding package")).Count());
 
             // Make sure exclusions are tracked this should change in conjunction with the exclusion file in the symbols test directory.
             Assert.Contains(buildEngine.BuildMessageEvents , x => x.Message.Contains("Skipping lib/net8.0/aztoken.dll"));
-            Assert.Contains(buildEngine.BuildMessageEvents, x => x.Message.StartsWith("Finalizing publishing to the appropriate symbol servers."));
-            Assert.Contains(buildEngine.BuildMessageEvents, x => x.Message.StartsWith("Finished publishing symbols."));
+            Assert.Contains(buildEngine.BuildMessageEvents, x => x.Message.StartsWith("Finished publishing symbols to temporary tenant"));
+            Assert.Single(buildEngine.BuildMessageEvents, x => x.Message.StartsWith("Would register request"));
+            Microsoft.Build.Framework.BuildMessageEventArgs registerLog = buildEngine.BuildMessageEvents.Where(x => x.Message.StartsWith("Would register request")).Single();
+            Assert.Contains("project dotnettest", registerLog.Message);
+            Assert.Contains("environment PPE", registerLog.Message);
+            Assert.Contains("visibility Public", registerLog.Message);
+            Assert.Contains("to last 3650 days", registerLog.Message);
         }
 
-        private static (MockBuildEngine, PublishArtifactsInManifestV3, ReadOnlyDictionary<string, Asset>, string, string, Maestro.Client.Models.Build) GetCanonicalSymbolTestAssets(SymbolTargetType targetServer = SymbolTargetType.SymWeb | SymbolTargetType.Msdl)
+        private static (MockBuildEngine, PublishArtifactsInManifestV3, ReadOnlyDictionary<string, Asset>, string, string, Maestro.Client.Models.Build) GetCanonicalSymbolTestAssets(SymbolPublishVisibility targetServer = SymbolPublishVisibility.Public)
         {
             var symbolPackages = new Dictionary<string, Asset>()
             {
@@ -198,7 +191,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 TargetFeedContentType.Symbols,
                 TargetUrl,
                 FeedType.AzDoNugetFeed,
-                SymWebToken,
+                default,
                 latestLinkShortUrlPrefixes: [],
                 AssetSelection.All,
                 isolated: true,
@@ -210,7 +203,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var task = new PublishArtifactsInManifestV3()
             {
                 BuildEngine = buildEngine,
-                BlobAssetsBasePath = symbolFilesDir
+                BlobAssetsBasePath = symbolFilesDir,
+                TempSymbolsAzureDevOpsOrg = "dncengtest",
+                TempSymbolsAzureDevOpsOrgToken = "token",
+                SymbolRequestProject = "dotnettest"
             };
             task.FeedConfigs.Add(TargetFeedContentType.Symbols, feedConfigsForSymbols);
 

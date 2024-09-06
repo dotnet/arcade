@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         /// </summary>
         public List<string> LatestLinkShortUrlPrefixes { get; }
 
-        public SymbolTargetType SymbolTargetType { get; }
+        public SymbolPublishVisibility SymbolTargetType { get; }
 
         public ImmutableList<string> FilenamesToExclude { get; }
 
@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             bool isolated = false, 
             bool @internal = false, 
             bool allowOverwrite = false, 
-            SymbolTargetType symbolTargetType = SymbolTargetType.None, 
+            SymbolPublishVisibility symbolTargetType = SymbolPublishVisibility.None, 
             IEnumerable<string> filenamesToExclude = null,
             bool flatten = true)
         {
@@ -156,12 +156,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         Other           = 4096
     }
 
-    [Flags]
-    public enum SymbolTargetType
+    public enum SymbolPublishVisibility
     {
         None = 0,
-        SymWeb = 1,
-        Msdl = 2
+        Internal = 1,
+        Public = 2
     }
 
     /// <summary>

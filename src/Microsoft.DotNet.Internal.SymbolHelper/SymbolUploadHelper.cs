@@ -133,7 +133,7 @@ public sealed class SymbolUploadHelper
     {
         ScopedTracer logger = _tracerFactory.CreateTracer(nameof(CreateRequest));
 
-        ValidateRequestName(name, logger);
+        SymbolRequestHelpers.ValidateRequestName(name, logger);
 
         logger.Information("Creating symbol request: {0}", name!);
         string arguments = $"create {_commonArgs} --name {name}";
@@ -149,7 +149,7 @@ public sealed class SymbolUploadHelper
     public async Task<int> AddFiles(string? name, IEnumerable<string> files)
     {
         ScopedTracer logger = _tracerFactory.CreateTracer(nameof(AddFiles));
-        ValidateRequestName(name, logger);
+        SymbolRequestHelpers.ValidateRequestName(name, logger);
 
         if (!files.Any())
         {
@@ -195,7 +195,7 @@ public sealed class SymbolUploadHelper
     public async Task<int> AddPackageToRequest(string? name, string packagePath)
     {
         ScopedTracer logger = _tracerFactory.CreateTracer(nameof(AddPackagesToRequest));
-        ValidateRequestName(name, logger);
+        SymbolRequestHelpers.ValidateRequestName(name, logger);
         string packageName = Path.GetFileName(packagePath);
         using IDisposable scopeToken = logger.AddSubScope(packageName);
         return await AddPackageToRequestCore(name!, packagePath, logger).ConfigureAwait(false);
@@ -211,7 +211,7 @@ public sealed class SymbolUploadHelper
     public async Task<int> AddPackagesToRequest(string? name, IEnumerable<string> packagePaths)
     {
         ScopedTracer logger = _tracerFactory.CreateTracer(nameof(AddPackagesToRequest));
-        ValidateRequestName(name, logger);
+        SymbolRequestHelpers.ValidateRequestName(name, logger);
 
         int result = 0;
 
@@ -237,7 +237,7 @@ public sealed class SymbolUploadHelper
     public async Task<int> FinalizeRequest(string? name, uint daysToRetain)
     {
         ScopedTracer logger = _tracerFactory.CreateTracer(nameof(FinalizeRequest));
-        ValidateRequestName(name, logger);
+        SymbolRequestHelpers.ValidateRequestName(name, logger);
 
         logger.WriteLine("Finalize symbol request: {0}", name!);
         string arguments = $"finalize {_commonArgs} --name {name} --expirationInDays {daysToRetain}";
@@ -252,7 +252,7 @@ public sealed class SymbolUploadHelper
     public async Task<int> DeleteRequest(string? name, bool synchronous = false)
     {
         ScopedTracer logger = _tracerFactory.CreateTracer(nameof(DeleteRequest));
-        ValidateRequestName(name, logger);
+        SymbolRequestHelpers.ValidateRequestName(name, logger);
         logger.WriteLine("Deleting symbol request: {0}", name!);
         string arguments = $"delete {_commonArgs} --name {name} --quiet";
         if (synchronous)
@@ -328,6 +328,11 @@ public sealed class SymbolUploadHelper
 
             logger.WriteLine("Adding package {0} to request {1}", packagePath, name);
             return await AddDirectoryCore(name, packageExtractDir, manifest, logger).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            logger.Error("Failed to process package {0}: {1}", packagePath, ex);
+            return -1;
         }
         finally
         {
@@ -413,15 +418,6 @@ public sealed class SymbolUploadHelper
         }
 
         return Directory.CreateDirectory(tempDir);
-    }
-
-    private static void ValidateRequestName(string? name, ScopedTracer logger)
-    {
-        if (name is null or "")
-        {
-            logger.Error("Can't create a request with an empty name.");
-            throw new ArgumentException("Name must be specified", nameof(name));
-        }
     }
 
     private async Task<int> RunSymbolCommand(string arguments, string directory, ScopedTracer logger, CancellationToken ct = default)

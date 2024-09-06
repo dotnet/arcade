@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             };
         }
 
-        private const SymbolTargetType symbolTargetType = SymbolTargetType.Msdl;
+        private const SymbolPublishVisibility symbolTargetType = SymbolPublishVisibility.Internal;
 
         private readonly ITestOutputHelper Output;
 
