@@ -69,6 +69,7 @@
     <Compile Remove="src\common\CreateNewAzureContainer.cs" />
     <Compile Remove="src\common\LatestLinksManager.cs" />
     <Compile Remove="src\common\UploadToAzure.cs" />
+    <Compile Remove="src\common\TokenCredentialShortCache.cs" />
     <Compile Remove="src\CreateAzureDevOpsFeed.cs" />
     <Compile Remove="src\model\PublishingConstants.cs" />
     <Compile Remove="src\model\SetupTargetFeedConfigBase.cs" />
