@@ -158,7 +158,7 @@
       <!-- Targeting packs don't have symbol files except for analyzer ones. -->
       <FilesToPackage Remove="@(FilesToPackage)"
                       Condition="'%(FilesToPackage.IsSymbolFile)' == 'true' and 
-                                  !$([System.String]::new('%(DownloadedArtifactFile.TargetPath)').StartsWith('analyzers/'))" />
+                                  !$([System.String]::new('%(FilesToPackage.TargetPath)').StartsWith('analyzers/'))" />
     </ItemGroup>
 
     <ItemGroup>
