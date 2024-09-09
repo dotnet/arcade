@@ -114,7 +114,7 @@
           IgnoreStandardErrorWarningFormat="true"
           Condition="'$(ArchiveFormat)' == 'tar.gz' and '$(_PigzFoundExitCode)' != '0'"/>
 
-    <Message Text="Successfully created archive -> '$(_DestinationFileName)' from '$(_OutputPathRoot)" Importance="high" />
+    <Message Text="Successfully created archive -> '$(_DestinationFileName)' from '$(_OutputPathRoot)'" Importance="high" />
   </Target>
 
   <Target Name="_CreateSymbolsArchive"
@@ -144,7 +144,7 @@
           IgnoreStandardErrorWarningFormat="true"
           Condition="'$(ArchiveFormat)' == 'tar.gz' and '$(_PigzFoundExitCode)' != '0'"/>
 
-    <Message Text="Successfully created archive -> '$(_DestinationFileName)' from '$(_SymbolsOutputPathRoot)" Importance="high" />
+    <Message Text="Successfully created archive -> '$(_DestinationFileName)' from '$(_SymbolsOutputPathRoot)'" Importance="high" />
   </Target>
 
 </Project>
