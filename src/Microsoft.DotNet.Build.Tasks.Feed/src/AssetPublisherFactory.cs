@@ -53,8 +53,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private TokenCredential GetAzureTokenCredential(string managedIdentityClientId)
         {
             TokenCredential tokenCredential = _tokenCredentialsPerManagedIdentity.GetOrAdd(managedIdentityClientId, static (mi) =>
-            {
-                return new TokenCredentialShortCache(
+                new TokenCredentialShortCache(
                     new DefaultAzureCredential(
                         new DefaultAzureCredentialOptions
                         {
@@ -66,8 +65,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             CredentialProcessTimeout = TimeSpan.FromSeconds(60.0)
                         }
                     )
-                );
-            });
+                )
+            );
             return tokenCredential;
         }
     }

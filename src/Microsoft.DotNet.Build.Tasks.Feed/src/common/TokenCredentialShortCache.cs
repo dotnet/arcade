@@ -34,7 +34,7 @@ public class TokenCredentialShortCache : TokenCredential
     {
         CacheKey cacheKey = new CacheKey
         {
-            Scopes = String.Join(":", requestContext.Scopes),
+            Scopes = string.Join(":", requestContext.Scopes),
             Claims = requestContext.Claims,
             TenantId = requestContext.TenantId,
             IsCaeEnabled = requestContext.IsCaeEnabled
@@ -49,18 +49,15 @@ public class TokenCredentialShortCache : TokenCredential
             return _tokenCredential.GetTokenAsync(requestContext, cancellationToken);
         });
 
-
         if (doCleanUpCache)
         {
             // go over all the cache items and remove the ones that are eligible to remove
+            // cached token items not used for CacheExpirationMinutes will be removed
             _tokenCache.Keys.ToList().ForEach(key =>
             {
-                if (_tokenCache.TryGetValue(key, out CachedToken ct))
+                if (_tokenCache.TryGetValue(key, out CachedToken ct) && ct.EligibleToRemove)
                 {
-                    if (ct.EligibleToRemove)
-                    {
-                        _tokenCache.TryRemove(key, out _);
-                    }
+                    _tokenCache.TryRemove(key, out _);
                 }
             });
         }
