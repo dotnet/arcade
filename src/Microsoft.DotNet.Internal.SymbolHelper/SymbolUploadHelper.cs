@@ -67,7 +67,7 @@ public sealed class SymbolUploadHelper
         _globalTracer = _tracerFactory.CreateTracer(nameof(SymbolUploadHelper));
         _symbolToolTimeoutInMins = options.OperationTimeoutInMins;
 
-        _commonArgs = $"-s https://{options!.AzdoOrg}.artifacts.visualstudio.com/ --patAuthEnvVar {PathEnvVarName} -t --timeout {_symbolToolTimeoutInMins}";
+        _commonArgs = $"-s https://artifacts.dev.azure.com/{options!.AzdoOrg} --patAuthEnvVar {PathEnvVarName} -t --timeout {_symbolToolTimeoutInMins}";
         if (options.VerboseClient)
         {
             // the true verbosity level is "verbose" but the tool is very chatty at that level.
@@ -376,7 +376,7 @@ public sealed class SymbolUploadHelper
                 continue;
             }
 
-            logger.Verbose("Converting {0} to portable format", file);
+            logger.Verbose("Converting {0} to classic PDB format", file);
 
             string pePath = Path.ChangeExtension(file, ".dll");
             // Try to fall back to the framework exe scenario.
@@ -397,7 +397,7 @@ public sealed class SymbolUploadHelper
             {
                 using Stream peStream = File.OpenRead(pePath);
                 using Stream convertedPdbStream = File.Create(convertedPdbPath);
-                _pdbConverter!.ConvertWindowsToPortable(peStream, pdbStream, convertedPdbStream);
+                _pdbConverter!.ConvertPortableToWindows(peStream, pdbStream, convertedPdbStream);
             }
             catch (Exception ex)
             {
