@@ -63,6 +63,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             Assert.Equal(symbolTargetType, visibility);
         }
 
+        [Fact]
+        public void EnsureOrderingOfVisibility()
+        {
+            Assert.True(SymbolPublishVisibility.Public > SymbolPublishVisibility.Internal);
+            Assert.True(SymbolPublishVisibility.Internal > SymbolPublishVisibility.None);
+
+            Assert.True(Visibility.Public > Visibility.Internal);
+        }
+
         [Theory]
         [InlineData(SymbolPublishVisibility.None)]
         [InlineData(SymbolPublishVisibility.Internal)]

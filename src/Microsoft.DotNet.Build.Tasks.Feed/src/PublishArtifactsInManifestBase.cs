@@ -555,7 +555,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             // There's a slight chance of optimization here. If a symbol is already published, it doesn't need to be published again.
             // We can check if the symbol is already published and skip the download/unwrap/conversion and just update the lifetime and send to
-            // the symbolrequest pipeline to promote to other tenants as needed. However this needs two things:
+            // the symbolrequest pipeline to promote to other orgs as needed. However this needs two things:
             // - Resilience against build agent shutdown. i.e. deal with unfinalized requests that might be incomplete.
             // - It assumes immutability of the BAR assets to ensure inputs are the same.
             // - We'd need to augment the name to include flags that are not encoded in the BAR build info (e.g. conversion).
@@ -565,7 +565,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             Log.LogMessage(MessageImportance.High,
                 $"Publishing Symbols to Symbol server:" + Environment.NewLine +
-                    $"\tTemp symbol tenant: {TempSymbolsAzureDevOpsOrg}" + Environment.NewLine +
+                    $"\tTemp symbol org: {TempSymbolsAzureDevOpsOrg}" + Environment.NewLine +
                     $"\tFinal symbol visibility: {publishVisibility}" + Environment.NewLine +
                     $"\tRequest Name: {requestName}" + Environment.NewLine +
                     $"\tSymbol package count: {symbolPackageNames.Length}" + Environment.NewLine +
@@ -635,16 +635,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 if (!symbolPublishingSucceeded)
                 {
                     Log.LogError("Unable to create create request in necessary symbol servers with all assets. Deleting all requests.");
-                    await helper.DeleteRequest(requestName);
+                    result = await helper.DeleteRequest(requestName);
+                    Log.LogMessage(MessageImportance.High, "Deletion request {0} from symbol servers returned {1}.", requestName, result);
+                    return;
                 }
             }
 
-            if (!symbolPublishingSucceeded)
-            {
-                return;
-            }
-
-            Log.LogMessage(MessageImportance.High, "Finished publishing symbols to temporary tenant. Calling registration to SymbolRequest");
+            Log.LogMessage(MessageImportance.High, "Finished publishing symbols to temporary azdo org. Calling registration to SymbolRequest");
 
             SymbolPromotionHelper.Visibility visibility = publishVisibility switch
             {
@@ -750,14 +747,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <returns>A map of symbol server path => token to the symbol server</returns>
         public SymbolPublishVisibility GetSymbolPublishingVisibility(HashSet<TargetFeedConfig> feedConfigsForSymbols)
         {
-            SymbolPublishVisibility finalSymbolTarget = SymbolPublishVisibility.None;
+            SymbolPublishVisibility highestVisibility = SymbolPublishVisibility.None;
 
             foreach (var feedConfig in feedConfigsForSymbols)
             {
-                finalSymbolTarget = feedConfig.SymbolTargetType > finalSymbolTarget ? feedConfig.SymbolTargetType : finalSymbolTarget;
+                highestVisibility = feedConfig.SymbolTargetType > highestVisibility ? feedConfig.SymbolTargetType : highestVisibility;
             }
 
-            return finalSymbolTarget;
+            return highestVisibility;
         }
 
         /// <summary>
