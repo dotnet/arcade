@@ -26,13 +26,13 @@
       <Uri>https://github.com/dotnet/templating</Uri>
       <Sha>75cf65b0c85a704e977ef56ff962d8f8045cfa4a</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.24456.3">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.24459.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>7cd1cae2edfb3895f5f0ee577131e0214ed8af1a</Sha>
+      <Sha>8260f289b9d748432a34680a1afeac677cda6049</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="10.0.0-beta.24456.3">
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="10.0.0-beta.24459.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>7cd1cae2edfb3895f5f0ee577131e0214ed8af1a</Sha>
+      <Sha>8260f289b9d748432a34680a1afeac677cda6049</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.24455.3">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
@@ -128,9 +128,9 @@
       <Sha>ef4c24166691977558e5312758df4313ab310dc0</Sha>
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.arcade" Version="10.0.0-beta.24456.3">
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.arcade" Version="10.0.0-beta.24459.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>7cd1cae2edfb3895f5f0ee577131e0214ed8af1a</Sha>
+      <Sha>8260f289b9d748432a34680a1afeac677cda6049</Sha>
       <SourceBuild RepoName="arcade" ManagedOnly="true" />
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
