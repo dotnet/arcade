@@ -571,6 +571,22 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     $"\tSymbol package count: {symbolPackageNames.Length}" + Environment.NewLine +
                     $"\tLoose symbol file count: {looseSymbolFiles.Length}");
 
+            // The OIDC token that the AzureCLI task generates is short lived (10 mins). The operations below can take longer than that.
+            // So we send at least one request to createrequest to ensure the CLI caches a valid token. We will need to revisit this if we
+            // run this for over an hour. At that point, we might need to inject OIDC refreshes to the task callsite.
+            DefaultAzureCredential creds = new(new DefaultAzureCredentialOptions
+            {
+                ExcludeVisualStudioCodeCredential = true,
+                ExcludeVisualStudioCredential = true,
+                ExcludeAzureDeveloperCliCredential = true,
+                ExcludeInteractiveBrowserCredential = true,
+                ManagedIdentityClientId = ManagedIdentityClientId,
+                CredentialProcessTimeout = TimeSpan.FromSeconds(60.0)
+            });
+            TaskTracer tracer = new(Log, verbose: true);
+
+            _ = await SymbolPromotionHelper.CheckRequestRegistration(tracer, creds, env, SymbolRequestProject, requestName);
+
             // The general flow is:
             // 1. Create a request in the symbol servers that we are targeting.
             // 2. Upload the loose files to the symbol servers. In both streaming mode and blob mode, they are assumed to already be 
@@ -629,17 +645,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             Log.LogMessage(MessageImportance.High, "Finished publishing symbols to temporary tenant. Calling registration to SymbolRequest");
-            DefaultAzureCredential creds = new(new DefaultAzureCredentialOptions
-            {
-                ExcludeVisualStudioCodeCredential = true,
-                ExcludeVisualStudioCredential = true,
-                ExcludeAzureDeveloperCliCredential = true,
-                ExcludeInteractiveBrowserCredential = true,
-                ManagedIdentityClientId = ManagedIdentityClientId,
-                CredentialProcessTimeout = TimeSpan.FromSeconds(60.0)
-            });
-
-            TaskTracer tracer = new(Log, verbose: true);
 
             SymbolPromotionHelper.Visibility visibility = publishVisibility switch
             {
