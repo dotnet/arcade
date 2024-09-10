@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         /// </summary>
         public List<string> LatestLinkShortUrlPrefixes { get; }
 
-        public SymbolPublishVisibility SymbolTargetType { get; }
+        public SymbolPublishVisibility SymbolPublishVisibility { get; }
 
         public ImmutableList<string> FilenamesToExclude { get; }
 
@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             bool isolated = false, 
             bool @internal = false, 
             bool allowOverwrite = false, 
-            SymbolPublishVisibility symbolTargetType = SymbolPublishVisibility.None, 
+            SymbolPublishVisibility symbolPublishVisibility = SymbolPublishVisibility.None, 
             IEnumerable<string> filenamesToExclude = null,
             bool flatten = true)
         {
@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             Internal = @internal;
             AllowOverwrite = allowOverwrite;
             LatestLinkShortUrlPrefixes = latestLinkShortUrlPrefixes ?? new List<string>();
-            SymbolTargetType = symbolTargetType;
+            SymbolPublishVisibility = symbolPublishVisibility;
             FilenamesToExclude = filenamesToExclude?.ToImmutableList() ?? ImmutableList<string>.Empty;
             Flatten = flatten;
         }

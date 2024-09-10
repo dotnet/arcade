@@ -755,7 +755,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             foreach (var feedConfig in feedConfigsForSymbols)
             {
-                highestVisibility = feedConfig.SymbolTargetType > highestVisibility ? feedConfig.SymbolTargetType : highestVisibility;
+                highestVisibility = feedConfig.SymbolPublishVisibility > highestVisibility ? feedConfig.SymbolPublishVisibility : highestVisibility;
             }
 
             return highestVisibility;
