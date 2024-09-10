@@ -105,10 +105,12 @@
                   Overwrite="true"
                   DestinationFile="$(_DestinationFileName)"
                   Condition="'$(ArchiveFormat)' == 'zip'"/>
+    <!-- use parallel gzip implementation when available -->
     <Exec Command="tar -C '$(_OutputPathRoot)' -cf - . | pigz &gt; '$(_DestinationFileName)'"
           IgnoreExitCode="true"
           IgnoreStandardErrorWarningFormat="true"
           Condition="'$(ArchiveFormat)' == 'tar.gz' and '$(_PigzFoundExitCode)' == '0'"/>
+    <!-- otherwise, use built-in gzip feature (-z) -->
     <Exec Command="tar -C '$(_OutputPathRoot)' -czf '$(_DestinationFileName)' ."
           IgnoreExitCode="true"
           IgnoreStandardErrorWarningFormat="true"
@@ -135,10 +137,12 @@
                   Overwrite="true"
                   DestinationFile="$(_DestinationFileName)"
                   Condition="'$(ArchiveFormat)' == 'zip'"/>
+    <!-- use parallel gzip implementation when available -->
     <Exec Command="tar -C '$(_OutputPathRoot)' -cf - . | pigz &gt; '$(_DestinationFileName)'"
           IgnoreExitCode="true"
           IgnoreStandardErrorWarningFormat="true"
           Condition="'$(ArchiveFormat)' == 'tar.gz' and '$(_PigzFoundExitCode)' == '0'"/>
+    <!-- otherwise, use built-in gzip feature (-z) -->
     <Exec Command="tar -C '$(_OutputPathRoot)' -czf '$(_DestinationFileName)' ."
           IgnoreExitCode="true"
           IgnoreStandardErrorWarningFormat="true"
