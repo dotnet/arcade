@@ -175,7 +175,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             // Make sure exclusions are tracked this should change in conjunction with the exclusion file in the symbols test directory.
             Assert.Contains(buildEngine.BuildMessageEvents , x => x.Message.Contains("Skipping lib/net8.0/aztoken.dll"));
-            Assert.Contains(buildEngine.BuildMessageEvents, x => x.Message.StartsWith("Finished publishing symbols to temporary tenant"));
+            Assert.Contains(buildEngine.BuildMessageEvents, x => x.Message.StartsWith("Finished publishing symbols to temporary azdo org"));
             Assert.Single(buildEngine.BuildMessageEvents, x => x.Message.StartsWith("Would register request"));
             Microsoft.Build.Framework.BuildMessageEventArgs registerLog = buildEngine.BuildMessageEvents.Where(x => x.Message.StartsWith("Would register request")).Single();
             Assert.Contains("project dotnettest", registerLog.Message);
