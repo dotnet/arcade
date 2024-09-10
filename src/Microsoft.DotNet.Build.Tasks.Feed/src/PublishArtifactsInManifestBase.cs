@@ -637,8 +637,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Log.LogError("Unable to create create request in necessary symbol servers with all assets. Deleting all requests.");
                     result = await helper.DeleteRequest(requestName);
                     Log.LogMessage(MessageImportance.High, "Deletion request {0} from symbol servers returned {1}.", requestName, result);
-                    return;
                 }
+            }
+
+            if (!symbolPublishingSucceeded)
+            {
+                return;
             }
 
             Log.LogMessage(MessageImportance.High, "Finished publishing symbols to temporary azdo org. Calling registration to SymbolRequest");
