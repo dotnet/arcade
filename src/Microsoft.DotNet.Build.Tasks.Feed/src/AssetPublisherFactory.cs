@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private TokenCredential GetAzureTokenCredential(string managedIdentityClientId)
         {
-            TokenCredential tokenCredential = _tokenCredentialsPerManagedIdentity.GetOrAdd(managedIdentityClientId, static (mi) =>
+            TokenCredential tokenCredential = _tokenCredentialsPerManagedIdentity.GetOrAdd(managedIdentityClientId ?? string.Empty, static (mi) =>
                 new TokenCredentialShortCache(
                     new DefaultAzureCredential(
                         new DefaultAzureCredentialOptions
@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             ExcludeVisualStudioCredential = true,
                             ExcludeAzureDeveloperCliCredential = true,
                             ExcludeInteractiveBrowserCredential = true,
-                            ManagedIdentityClientId = mi,
+                            ManagedIdentityClientId = string.IsNullOrEmpty(mi) ? null : mi,
                             CredentialProcessTimeout = TimeSpan.FromSeconds(60.0)
                         }
                     )
