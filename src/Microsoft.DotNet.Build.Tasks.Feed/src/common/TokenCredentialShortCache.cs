@@ -1,17 +1,16 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+#if !NET472_OR_GREATER
+
 using System;
 using System.Collections.Concurrent;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Azure.Core;
 
-#if !NET472_OR_GREATER
 
 namespace Microsoft.DotNet.Build.Tasks.Feed;
-
 
 public class TokenCredentialShortCache : TokenCredential
 {
@@ -40,27 +39,10 @@ public class TokenCredentialShortCache : TokenCredential
             IsCaeEnabled = requestContext.IsCaeEnabled
         };
 
-        bool doCleanUpCache = false;
-
         CachedToken cachedToken = _tokenCache.GetOrAdd(cacheKey, _ => new CachedToken());
         var token = await cachedToken.GetToken(requestContext, () => {
-            // initiate cleanup of cache only when we are going to get any fresh token
-            doCleanUpCache = true;
             return _tokenCredential.GetTokenAsync(requestContext, cancellationToken);
         });
-
-        if (doCleanUpCache)
-        {
-            // go over all the cache items and remove the ones that are eligible to remove
-            // cached token items not used for CacheExpirationMinutes will be removed
-            _tokenCache.Keys.ToList().ForEach(key =>
-            {
-                if (_tokenCache.TryGetValue(key, out CachedToken ct) && ct.EligibleToRemove)
-                {
-                    _tokenCache.TryRemove(key, out _);
-                }
-            });
-        }
 
         return token;
     }
@@ -78,8 +60,6 @@ public class TokenCredentialShortCache : TokenCredential
         private AccessToken? token { get; set; }
         private DateTime shortTimeCacheExpiresOn = DateTime.UtcNow.AddMinutes(CacheExpirationMinutes);
         private SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
-
-        public bool EligibleToRemove => shortTimeCacheExpiresOn.AddMinutes(CacheExpirationMinutes) < DateTime.UtcNow;
 
         public async ValueTask<AccessToken> GetToken(TokenRequestContext requestContext, Func<ValueTask<AccessToken>> getFreshToken)
         {
