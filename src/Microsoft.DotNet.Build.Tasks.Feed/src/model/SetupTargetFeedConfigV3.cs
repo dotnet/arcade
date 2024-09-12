@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             ITaskItem[] feedOverrides,
             List<string> latestLinkShortUrlPrefixes,
             IBuildEngine buildEngine,
-            SymbolPublishVisibility symbolTargetType,
+            SymbolPublishVisibility symbolPublishVisibility,
             string stablePackagesFeed = null,
             string stableSymbolsFeed = null,
             ImmutableList<string> filesToExclude = null,
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             BuildEngine = buildEngine;
             StableSymbolsFeed = stableSymbolsFeed;
             StablePackagesFeed = stablePackagesFeed;
-            SymbolServerVisibility = symbolTargetType;
+            SymbolServerVisibility = symbolPublishVisibility;
             FilesToExclude = filesToExclude ?? ImmutableList<string>.Empty;
             Flatten = flatten;
             FeedKeys = feedKeys.ToImmutableDictionary(i => i.ItemSpec, i => i.GetMetadata("Key"));

@@ -572,8 +572,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     $"\tLoose symbol file count: {looseSymbolFiles.Length}");
 
             // The OIDC token that the AzureCLI task generates is short lived (10 mins). The operations below can take longer than that.
-            // So we send at least one request to createrequest to ensure the CLI caches a valid token. We will need to revisit this if we
-            // run this for over an hour. At that point, we might need to inject OIDC refreshes to the task callsite.
+            // So we send at least one request to symbolrequest to ensure the CLI caches a valid token. We will need to revisit this if we
+            // run this for over the token's validity period (1hr). At that point, we might need to inject OIDC refreshes to the task call site.
             DefaultAzureCredential creds = new(new DefaultAzureCredentialOptions
             {
                 ExcludeVisualStudioCodeCredential = true,

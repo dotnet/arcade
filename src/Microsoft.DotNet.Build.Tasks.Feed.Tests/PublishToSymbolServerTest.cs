@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Theory]
         [InlineData(SymbolPublishVisibility.Public)]
         [InlineData(SymbolPublishVisibility.Internal)]
-        public void PublishToSymbolServersTest(SymbolPublishVisibility symbolTargetType)
+        public void PublishToSymbolServersTest(SymbolPublishVisibility symbolTargetVisibility)
         {
             var publishTask = new PublishArtifactsInManifestV3();
             var feedConfigsForSymbols = new HashSet<TargetFeedConfig>
@@ -57,10 +57,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 isolated: true,
                 @internal: false,
                 allowOverwrite: true,
-                symbolTargetType)
+                symbolTargetVisibility)
             };
             SymbolPublishVisibility visibility = publishTask.GetSymbolPublishingVisibility(feedConfigsForSymbols);
-            Assert.Equal(symbolTargetType, visibility);
+            Assert.Equal(symbolTargetVisibility, visibility);
         }
 
         [Fact]

@@ -191,10 +191,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureDevOpsOrg { get; set; }
 
+        /// <summary>
+        /// This is the DevOps Org that we upload our symbols to prior to requesting a promotion to the
+        /// internal and public symbol servers.
+        /// </summary>
         public string TempSymbolsAzureDevOpsOrg { get; set; }
 
+        /// <summary>
+        /// This token must have symbol_manage access to the temporary staging DevOps Org that will be used.
+        /// </summary>
         public string TempSymbolsAzureDevOpsOrgToken { get; set; }
 
+        /// <summary>
+        /// The project to use when requesting symbol promotion from temporary tenant to public and internal
+        /// symbol servers using the symbolrequest service. This determines:
+        /// - What identities are allowed to request promotion
+        /// - Exclusive symbol ownership for public symbol server.
+        /// - Symbol stripping policy for public symbol server.
+        /// </summary>
         public string SymbolRequestProject { get; set; }
 
         /// <summary>

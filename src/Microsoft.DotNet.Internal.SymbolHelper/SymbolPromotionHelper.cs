@@ -16,6 +16,8 @@ using Polly.Retry;
 using Polly;
 using System.Text.Json;
 using System.IO;
+using System.Net.Http.Headers;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Internal.SymbolHelper;
 
@@ -196,12 +198,11 @@ public static class SymbolPromotionHelper
         {
             return await s_retryPipeline.ExecuteAsync(async _ =>
             {
-                AccessToken token = await credential.GetTokenAsync(new TokenRequestContext([tokenResource]), ct);
                 using HttpRequestMessage statusRequest = new(HttpMethod.Get, requestSpecificEndpoint)
                 {
                     Headers =
                     {
-                        Authorization = new ("Bearer", token.Token),
+                        Authorization = await GetSymbolRequestAuthHeader(credential, tokenResource, ct),
                         Accept = { new("application/json") }
                     }
                 };
@@ -227,6 +228,12 @@ public static class SymbolPromotionHelper
         {
             ResilienceContextPool.Shared.Return(context);
         }
+    }
+
+    private async static Task<AuthenticationHeaderValue> GetSymbolRequestAuthHeader(TokenCredential credential, string tokenResource, CancellationToken ct)
+    {
+        AccessToken token = await credential.GetTokenAsync(new TokenRequestContext([tokenResource]), ct);
+        return new AuthenticationHeaderValue("Bearer", token.Token);
     }
 
     public static async Task<bool> UpdateRequestExpiration(ITracer logger, TokenCredential credential,
