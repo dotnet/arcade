@@ -58,9 +58,9 @@
       <Uri>https://github.com/dotnet/symreader-converter</Uri>
       <Sha>c5ba7c88f92e2dde156c324a8c8edc04d9fa4fe0</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.SymbolManifestGenerator" Version="8.0.0-preview.24460.2">
+    <Dependency Name="Microsoft.SymbolManifestGenerator" Version="8.0.0-preview.24461.2">
       <Uri>https://github.com/dotnet/diagnostics</Uri>
-      <Sha>a5c4167284a37e2bd48924bc832f1a17ee498e98</Sha>
+      <Sha>3007744d190d50dc586acdb761c4ce6c0d5bdc15</Sha>
     </Dependency>
     <!-- Necessary for source-build. The dependency is loaded in during built-time
          by consumers of NuGetRepack.Tasks, so we cannot use a ref pack for it -->
