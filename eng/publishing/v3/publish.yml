@@ -130,3 +130,4 @@ stages:
         StageLabel: '${{ parameters.stageName }}'
         JobLabel: 'AssetsPublishing'
         BinlogToolVersion: $(BinlogToolVersion)
+        CustomSensitiveDataList: '$(AuthenticateMaestro.MaestroToken)'

@@ -82,7 +82,7 @@
     <MicrosoftDiaSymReaderConverterVersion>1.1.0-beta2-19575-01</MicrosoftDiaSymReaderConverterVersion>
     <MicrosoftDiaSymReaderPdb2PdbVersion>1.1.0-beta2-19575-01</MicrosoftDiaSymReaderPdb2PdbVersion>
     <!-- diagnostics -->
-    <MicrosoftSymbolManifestGeneratorVersion>8.0.0-preview.24326.1</MicrosoftSymbolManifestGeneratorVersion>
+    <MicrosoftSymbolManifestGeneratorVersion>8.0.0-preview.24461.2</MicrosoftSymbolManifestGeneratorVersion>
     <!-- templating -->
     <MicrosoftTemplateEngineAuthoringTasksVersion>10.0.100-alpha.2.24459.1</MicrosoftTemplateEngineAuthoringTasksVersion>
     <!-- vstest -->
