@@ -143,12 +143,11 @@ public static class SymbolPromotionHelper
                 context.Properties.Set(s_loggerKey, logger);
                 await s_retryPipeline.ExecuteAsync(async _ =>
                 {
-                    AccessToken token = await credential.GetTokenAsync(new TokenRequestContext([tokenResource]), ct);
                     using HttpRequestMessage registerRequest = new(HttpMethod.Post, url)
                     {
                         Headers =
                         {
-                            Authorization = new ("Bearer", token.Token),
+                            Authorization = await GetSymbolRequestAuthHeader(credential, tokenResource, ct),
                         },
                         Content = new StringContent(payload.ToString(), Encoding.UTF8, "application/json")
                     };
@@ -261,12 +260,11 @@ public static class SymbolPromotionHelper
 
             return await s_retryPipeline.ExecuteAsync(async _ =>
             {
-                AccessToken token = await credential.GetTokenAsync(new TokenRequestContext([tokenResource]), ct);
                 using HttpRequestMessage statusRequest = new(HttpMethod.Patch, requestSpecificEndpoint)
                 {
                     Headers =
                     {
-                        Authorization = new ("Bearer", token.Token),
+                        Authorization = await GetSymbolRequestAuthHeader(credential, tokenResource, ct),
                     },
                     Content = new StringContent(extensionPayload.ToString(), Encoding.UTF8, "application/json")
                 };
