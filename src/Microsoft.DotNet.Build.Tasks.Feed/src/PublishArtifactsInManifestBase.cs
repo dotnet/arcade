@@ -535,8 +535,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             ArgumentNullException.ThrowIfNull(buildInfo);
 
-            (string[] symbolPackageNames, string[] looseSymbolFiles) = GetSymbolAssetsToPublish(buildAssets, pdbArtifactsBasePath);
-            if (symbolPackageNames.Length == 0 && looseSymbolFiles.Length == 0)
+            (string[] symbolPackageNames, string looseSymbolFilesDirectory) = GetSymbolAssetsToPublish(buildAssets, pdbArtifactsBasePath);
+            int looseFileCount = Directory.EnumerateFiles(looseSymbolFilesDirectory).Count();
+
+            if (symbolPackageNames.Length == 0 && looseFileCount == 0)
             {
                 Log.LogMessage(MessageImportance.High, "No assets to publish to symbol server were found.");
                 return;
@@ -569,7 +571,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     $"\tFinal symbol visibility: {publishVisibility}" + Environment.NewLine +
                     $"\tRequest Name: {requestName}" + Environment.NewLine +
                     $"\tSymbol package count: {symbolPackageNames.Length}" + Environment.NewLine +
-                    $"\tLoose symbol file count: {looseSymbolFiles.Length}");
+                    $"\tLoose symbol file count: {looseFileCount}");
 
             // The OIDC token that the AzureCLI task generates is short lived (10 mins). The operations below can take longer than that.
             // So we send at least one request to symbolrequest to ensure the CLI caches a valid token. We will need to revisit this if we
@@ -605,7 +607,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             bool symbolPublishingSucceeded = false;
             try
             {
-                result = await helper.AddFiles(requestName, looseSymbolFiles);
+                result = await helper.AddDirectory(requestName, looseSymbolFilesDirectory);
                 if (result != 0)
                 {
                     Log.LogError("Unable to upload files to symbol server. Symbol client returned {0}.", result);
@@ -721,26 +723,30 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
             }
         }
-        internal static (string[], string[]) GetSymbolAssetsToPublish(ReadOnlyDictionary<string, Asset> buildAssets, string pdbArtifactsBasePath)
+
+        internal (string[], string) GetSymbolAssetsToPublish(ReadOnlyDictionary<string, Asset> buildAssets, string pdbArtifactsBasePath)
         {
             string[] symbolPackagesAssetNames = buildAssets?.Keys.Where(x => IsSymbolPackage(x)).Distinct().ToArray() ?? [];
-            string[] filesToSymbolServer = [];
+            string pdbStagePath = CreateTemporaryDirectory();
 
             if (Directory.Exists(pdbArtifactsBasePath))
             {
-                IEnumerable<string> pdbEntries = System.IO.Directory.EnumerateFiles(
-                    pdbArtifactsBasePath,
-                    "*.pdb",
-                    SearchOption.AllDirectories);
-                IEnumerable<string> dllEntries = System.IO.Directory.EnumerateFiles(
-                    pdbArtifactsBasePath,
-                    "*.dll",
-                    SearchOption.AllDirectories);
-                filesToSymbolServer = pdbEntries.Concat(dllEntries).ToArray();
+                foreach (string looseFile in Directory.EnumerateFiles(pdbArtifactsBasePath))
+                {
+                    string extension = Path.GetExtension(looseFile);
+                    if (extension.AsSpan().SequenceEqual(".pdb") || extension.AsSpan().SequenceEqual(".dll"))
+                    {
+                        string relativePath = Path.GetRelativePath(pdbArtifactsBasePath, looseFile);
+                        FileInfo looseFileStagePath = new(Path.Combine(pdbStagePath, relativePath));
+                        looseFileStagePath.Directory.Create();
+                        File.Copy(looseFile, looseFileStagePath.FullName);
+                    }
+                }
             }
 
-            return (symbolPackagesAssetNames, filesToSymbolServer);
+            return (symbolPackagesAssetNames, pdbStagePath);
         }
+
 
         /// <summary>
         /// Get the Symbol Server to publish

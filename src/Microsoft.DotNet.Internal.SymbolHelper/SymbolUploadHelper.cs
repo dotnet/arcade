@@ -1,3 +1,4 @@
+
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable enable
@@ -141,48 +142,34 @@ public sealed class SymbolUploadHelper
     }
 
     /// <summary>
-    /// Adds files to a symbol request.
+    /// Adds directory to a symbol request. This will convert portable PDBs as long as the PE is next to the 
+    /// PDB and the options specified conversion.
     /// </summary>
     /// <param name="name">The name of the symbol request to append to. Must be non-finalized.</param>
     /// <param name="files">The files to add.</param>
     /// <returns>The result of the operation.</returns>
-    public async Task<int> AddFiles(string? name, IEnumerable<string> files)
+    public async Task<int> AddDirectory(string? name, string pathToAdd)
     {
-        ScopedTracer logger = _tracerFactory.CreateTracer(nameof(AddFiles));
+        ScopedTracer logger = _tracerFactory.CreateTracer(nameof(AddDirectory));
         SymbolRequestHelpers.ValidateRequestName(name, logger);
-
-        if (!files.Any())
-        {
-            logger.WriteLine("No files to add to request {0}", name!);
-            return 0;
-        }
-
-        // We create a folder and copy loose files to avoid starting a process per file.
-        DirectoryInfo tempDirInfo = CreateTempDirectory();
-        string tempCopyPath = tempDirInfo.FullName;
         try
         {
-            foreach (string file in files)
-            {
-                using FileStream fs = File.OpenRead(file);
-                string destPath = Path.Combine(tempCopyPath, Path.GetFileName(file));
-                using FileStream fsCopy = new(destPath, FileMode.Create);
-                await fs.CopyToAsync(fsCopy).ConfigureAwait(false);
-            }
-
             if (_shouldConvertPdbs)
             {
-                ConvertPortablePdbsInDirectory(logger, tempCopyPath);
+                ConvertPortablePdbsInDirectory(logger, pathToAdd);
             }
 
-            logger.WriteLine("Adding files to request {0}", name!);
-            return await AddDirectoryCore(name!, tempCopyPath, manifestPath: null, logger).ConfigureAwait(false);
+            return await AddDirectoryCore(name!, pathToAdd, manifestPath: null, logger).ConfigureAwait(false);
         }
         finally
         {
-            logger.Information("Cleaning up temporary directory {0}", tempDirInfo.FullName);
-            try { tempDirInfo.Delete(recursive: true); } catch { }
-        }
+            string convertedFolder = GetConvertedPdbFolder(pathToAdd);
+            if (_shouldConvertPdbs && !Directory.Exists(convertedFolder))
+            {
+                logger.Information("Cleaning up symbol conversion directory {0}", convertedFolder);
+                try { Directory.Delete(convertedFolder, recursive: true); } catch { }
+            }
+        }    
     }
 
     /// <summary>
@@ -366,7 +353,7 @@ public sealed class SymbolUploadHelper
     private void ConvertPortablePdbsInDirectory(ScopedTracer logger, string filesDir)
     {
         Action<string> logWarning = _treatPdbConversionIssuesAsInfo ? logger.Information : logger.Error;
-        string convertedPdbFolder = Path.Combine(filesDir, ConversionFolderName);
+        string convertedPdbFolder = GetConvertedPdbFolder(filesDir);
         _ = Directory.CreateDirectory(convertedPdbFolder);
         foreach (string file in Directory.EnumerateFiles(filesDir, "*.pdb", SearchOption.AllDirectories))
         {
@@ -408,6 +395,8 @@ public sealed class SymbolUploadHelper
             logger.Verbose("Converted successfully to {0}.", convertedPdbPath);
         }
     }
+    
+    private static string GetConvertedPdbFolder(string filesDir) => Path.Combine(filesDir, ConversionFolderName);
 
     private DirectoryInfo CreateTempDirectory()
     {
