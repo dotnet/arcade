@@ -734,7 +734,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 foreach (string looseFile in Directory.EnumerateFiles(pdbArtifactsBasePath))
                 {
                     string extension = Path.GetExtension(looseFile);
-                    if (extension.AsSpan().SequenceEqual(".pdb") || extension.AsSpan().SequenceEqual(".dll"))
+                    if (extension == "pdb" || extension == ".dll")
                     {
                         string relativePath = Path.GetRelativePath(pdbArtifactsBasePath, looseFile);
                         FileInfo looseFileStagePath = new(Path.Combine(pdbStagePath, relativePath));
