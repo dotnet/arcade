@@ -536,7 +536,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             ArgumentNullException.ThrowIfNull(buildInfo);
 
             (string[] symbolPackageNames, string looseSymbolFilesDirectory) = GetSymbolAssetsToPublish(buildAssets, pdbArtifactsBasePath);
-            int looseFileCount = Directory.EnumerateFiles(looseSymbolFilesDirectory).Count();
+            int looseFileCount = Directory.EnumerateFiles(looseSymbolFilesDirectory, "*", SearchOption.AllDirectories).Count();
 
             if (symbolPackageNames.Length == 0 && looseFileCount == 0)
             {
@@ -731,7 +731,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             if (Directory.Exists(pdbArtifactsBasePath))
             {
-                foreach (string looseFile in Directory.EnumerateFiles(pdbArtifactsBasePath))
+                foreach (string looseFile in Directory.EnumerateFiles(pdbArtifactsBasePath, "*", SearchOption.AllDirectories))
                 {
                     string extension = Path.GetExtension(looseFile);
                     if (extension == "pdb" || extension == ".dll")
