@@ -167,7 +167,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             Assert.Contains("Loose symbol file count: 1", message.Message);
 
             Assert.Contains(buildEngine.BuildMessageEvents, x => x.Message.Contains("Creating symbol request"));
-            Assert.Contains(buildEngine.BuildMessageEvents, x => x.Message.Contains("Adding files to request"));
+            Assert.Equal(2, buildEngine.BuildMessageEvents.Where(x => x.Message.Contains("Adding directory")).Count());
 
             // Message per package per server
             Assert.Equal(symbolPackages.Keys.Count, buildEngine.BuildMessageEvents.Where(x => x.Message.Contains($"Extracting symbol package")).Count());
@@ -212,6 +212,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var task = new PublishArtifactsInManifestV3()
             {
                 BuildEngine = buildEngine,
+                ArtifactsBasePath = "testPath",
                 BlobAssetsBasePath = symbolFilesDir,
                 TempSymbolsAzureDevOpsOrg = "dncengtest",
                 TempSymbolsAzureDevOpsOrgToken = "token",
