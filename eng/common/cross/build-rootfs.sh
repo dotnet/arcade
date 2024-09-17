@@ -91,18 +91,18 @@ __HaikuPackages="gcc_syslibs"
 __HaikuPackages+=" gcc_syslibs_devel"
 __HaikuPackages+=" gmp"
 __HaikuPackages+=" gmp_devel"
-__HaikuPackages+=" icu66"
-__HaikuPackages+=" icu66_devel"
+__HaikuPackages+=" icu[0-9]+"
+__HaikuPackages+=" icu[0-9]*_devel"
 __HaikuPackages+=" krb5"
 __HaikuPackages+=" krb5_devel"
 __HaikuPackages+=" libiconv"
 __HaikuPackages+=" libiconv_devel"
-__HaikuPackages+=" llvm12_libunwind"
-__HaikuPackages+=" llvm12_libunwind_devel"
+__HaikuPackages+=" llvm[0-9]*_libunwind"
+__HaikuPackages+=" llvm[0-9]*_libunwind_devel"
 __HaikuPackages+=" mpfr"
 __HaikuPackages+=" mpfr_devel"
-__HaikuPackages+=" openssl"
-__HaikuPackages+=" openssl_devel"
+__HaikuPackages+=" openssl3"
+__HaikuPackages+=" openssl3_devel"
 __HaikuPackages+=" zlib"
 __HaikuPackages+=" zlib_devel"
 
@@ -705,12 +705,13 @@ elif [[ "$__CodeName" == "haiku" ]]; then
     read -ra array <<<"$__HaikuPackages"
     for package in "${array[@]}"; do
         echo "Downloading $package..."
-        hpkgFilename=$(LD_LIBRARY_PATH="$__RootfsDir/tmp/bin" "$__RootfsDir/tmp/bin/package_repo" list -f "$__RootfsDir/tmp/download/repo" \
-            | grep -F ${package}- | xargs)
+        hpkgFilename="$(LD_LIBRARY_PATH="$__RootfsDir/tmp/bin" "$__RootfsDir/tmp/bin/package_repo" list -f "$__RootfsDir/tmp/download/repo" |
+            grep -E "${package}-" | sort -V | tail -n 1 | xargs)"
         if [ -z "$hpkgFilename" ]; then
             >&2 echo "ERROR: package $package missing."
             exit 1
         fi
+        echo "Resolved filename: $hpkgFilename..."
         hpkgDownloadUrl="$HaikuPortsBaseUrl/packages/$hpkgFilename"
         if [[ "$__hasWget" == 1 ]]; then
             wget -P "$__RootfsDir/tmp/download" "$hpkgDownloadUrl"
