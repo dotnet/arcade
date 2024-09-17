@@ -707,6 +707,10 @@ elif [[ "$__CodeName" == "haiku" ]]; then
         echo "Downloading $package..."
         hpkgFilename=$(LD_LIBRARY_PATH="$__RootfsDir/tmp/bin" "$__RootfsDir/tmp/bin/package_repo" list -f "$__RootfsDir/tmp/download/repo" \
             | grep -F ${package}- | xargs)
+        if [ -z "$hpkgFilename" ]; then
+            >&2 echo "ERROR: package $package missing."
+            exit 1
+        fi
         hpkgDownloadUrl="$HaikuPortsBaseUrl/packages/$hpkgFilename"
         if [[ "$__hasWget" == 1 ]]; then
             wget -P "$__RootfsDir/tmp/download" "$hpkgDownloadUrl"
