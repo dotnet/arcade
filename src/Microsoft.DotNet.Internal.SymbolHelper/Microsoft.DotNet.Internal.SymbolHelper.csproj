@@ -6,7 +6,7 @@
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(DotNetBuildSourceOnly)' != 'true'">
+  <ItemGroup>
     <PackageReference Include="Azure.Core" Version="$(AzureCoreVersion)" />
     <PackageReference Include="Microsoft.DiaSymReader.Converter" Version="$(MicrosoftDiaSymReaderConverterVersion)" />
     <PackageReference Include="Microsoft.SymbolManifestGenerator" Version="$(MicrosoftSymbolManifestGeneratorVersion)" />
