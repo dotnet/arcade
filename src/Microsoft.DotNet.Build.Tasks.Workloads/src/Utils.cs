@@ -75,11 +75,17 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 return safeId;
             }
 
+            foreach (string wellKnownPrefix in DefaultValues.WellKnownWorkloadPrefixes)
+            {
+                if (safeId.StartsWith(wellKnownPrefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    safeId = safeId.Substring(wellKnownPrefix.Length);
+                    break;
+                }
+            }
+
             // Trim well-known prefixes manually since net472 doesn't support all the string.Replace overloads
-            return prefix + '.' + (
-                safeId = safeId.StartsWith("Microsoft.NET.", StringComparison.OrdinalIgnoreCase) ? safeId.Substring(14) :
-                safeId.StartsWith("Microsoft.", StringComparison.OrdinalIgnoreCase) ? safeId.Substring(10) :
-                safeId);
+            return prefix + '.' + safeId;
         }
 
         /// <summary>
