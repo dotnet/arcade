@@ -9,6 +9,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
     internal static class DefaultValues
     {
         /// <summary>
+        /// Default prefix to use for Visual Studio component and component group IDs.
+        /// </summary>
+        public const string VisualStudioComponentPrefix = "Microsoft.NET.Component";
+
+        /// <summary>
         /// Prefix used in Visual Studio for SWIX based package group.
         /// </summary>
         public const string PackageGroupPrefix = "PackageGroup";
