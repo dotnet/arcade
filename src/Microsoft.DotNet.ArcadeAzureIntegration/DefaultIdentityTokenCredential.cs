@@ -14,8 +14,8 @@ using Azure.Identity;
 namespace Microsoft.DotNet.ArcadeAzureIntegration;
 
 
-// This implementation of TokenCredential will try cover all common ways to
-// authenticate to Azure services used in Arcade tooling
+// This implementation of TokenCredential will try to cover all common ways of
+// authentication to Azure services used in Arcade tooling
 public class DefaultIdentityTokenCredential : ChainedTokenCredential
 {
     public DefaultIdentityTokenCredential()
@@ -30,7 +30,7 @@ public class DefaultIdentityTokenCredential : ChainedTokenCredential
 
     private static TokenCredential[] CreateAvailableTokenCredentials(DefaultIdentityTokenCredentialOptions options)
     {
-        var tokenCredentials = new List<TokenCredential>();
+        List<TokenCredential> tokenCredentials = [];
 
         // Add Managed Identity credential if the client id is provided
         if (!string.IsNullOrEmpty(options.ManagedIdentityClientId))
@@ -79,11 +79,11 @@ public class DefaultIdentityTokenCredential : ChainedTokenCredential
         return tokenCredentials.ToArray();
     }
 
-    private static object _workloadToeknFileLock = new object();
+    private static object _workloadTokenFileLock = new object();
     private static string? _workloadTokenFile = null;
     private static string? _workloadToken = null;
 
-    // Create WorkloadIdentityCredential if the environment variables are set by AzurePipeline are provided
+    // Create WorkloadIdentityCredential if the environment variables set by AzurePipeline are provided
     private static WorkloadIdentityCredential? GetWorkloadIdentityCredentialForAzurePipelineTask()
     {
         string? servicePrincipalId = Environment.GetEnvironmentVariable("servicePrincipalId");
@@ -94,7 +94,7 @@ public class DefaultIdentityTokenCredential : ChainedTokenCredential
             !string.IsNullOrEmpty(tenantId) &&
             !string.IsNullOrEmpty(servicePrincipalId))
         {
-            lock (_workloadToeknFileLock)
+            lock (_workloadTokenFileLock)
             {
                 if (idToken != _workloadToken)
                 {
@@ -115,7 +115,7 @@ public class DefaultIdentityTokenCredential : ChainedTokenCredential
         return null;
     }
 
-    // Create AzurePipelinesCredential if the environment variables are set by AzureCli task and SYSTEM_ACCESSTOKEN is provided
+    // Create AzurePipelinesCredential if the environment variables set by AzureCli task and SYSTEM_ACCESSTOKEN are provided
     private static AzurePipelinesCredential? GetAzurePipelinesCredentialForAzurePipelineTask()
     {
         string? systemAccessToken = Environment.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN");

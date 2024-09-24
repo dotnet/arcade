@@ -15,8 +15,8 @@ namespace Microsoft.DotNet.ArcadeAzureIntegration;
 
 
 /// <summary>
-/// TokenCredentialShortCache is a wrapper around TokenCredential that caches the token for the same scope and requrest parameters.
-/// Cache time is short, 3 minutes only because we don't want to affect expiration window handled still by underlying TokenCredential implementation. 
+/// TokenCredentialShortCache is a wrapper around TokenCredential that caches the token for the same scope and request parameters.
+/// Cache time is short, 3 minutes only because we don't want to affect the expiration window that's still handled by the underlying TokenCredential implementation. 
 /// It helps with reducing the number of requests to Entra or AzureCLI external process during heavy paralellized operations.
 /// </summary>
 public class TokenCredentialShortCache : TokenCredential

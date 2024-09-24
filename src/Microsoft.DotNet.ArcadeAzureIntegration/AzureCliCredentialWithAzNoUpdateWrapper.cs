@@ -91,7 +91,7 @@ public class AzureCliCredentialWithAzNoUpdateWrapper : TokenCredential
                 throw new InvalidOperationException("Failed to start process to disable auto update of Azure CLI");
             }
 
-            using var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken.None);
+            using var tokenSource = new CancellationTokenSource();
             tokenSource.CancelAfter(TimeSpan.FromSeconds(30));
             await process.WaitForExitAsync(tokenSource.Token);
 
