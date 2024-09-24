@@ -152,7 +152,7 @@ jobs:
                 issue_number: pr_number,
                 body: git_am_failed_body
               });
-              core.setFailed(new Error("Error: git am failed, most likely due to a merge conflict.", false));
+              core.setFailed("Error: git am failed, most likely due to a merge conflict.");
               return;
             }
             else {
