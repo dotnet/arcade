@@ -52,12 +52,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private TokenCredential GetAzureTokenCredential(string managedIdentityClientId)
         {
-            TokenCredential tokenCredential = _tokenCredentialsPerManagedIdentity.GetOrAdd(managedIdentityClientId, static (mi) =>
+            TokenCredential tokenCredential = _tokenCredentialsPerManagedIdentity.GetOrAdd(managedIdentityClientId ?? string.Empty, static (mi) =>
                 new TokenCredentialShortCache(
                     new DefaultIdentityTokenCredential(
                         new DefaultIdentityTokenCredentialOptions
                         {
-                            ManagedIdentityClientId = mi
+                            ManagedIdentityClientId = string.IsNullOrEmpty(mi) ? null : mi
                         }
                     )
                 )
