@@ -252,7 +252,7 @@ to use `MicrosoftDotNet500`. This approach must be used if some files still need
 
 #### 9. Certificate Subjects
 
-The authenticode certificates in use by .NET's core binaries have specific subjects that have meaning to various tools. These subjects are **not** expected to change. However, if they do, or if we introduce a new certificate for signing a specific .NET binary (e.g. a new DAC), .NET tactics and the Defender team should be contacted with this information.
+The authenticode certificates in use by .NET's core binaries have specific subjects that have meaning to various tools. These subjects are **not** expected to change. However, if they do, or if we introduce a new certificate for signing a specific .NET binary (e.g. a new DAC), .NET tactics and the Defender team should be contacted with this information. We want to ensure that the certificates are explicitly trusted by Defender.
 
 Examples of subjects that should be treated with special care:
 
