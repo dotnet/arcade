@@ -250,6 +250,18 @@ to use `MicrosoftDotNet500`. This approach must be used if some files still need
    </PropertyGroup>
    ```
 
+#### 9. Certificate Subjects
+
+The authenticode certificates in use by .NET's core binaries have specific subjects that have meaning to various tools. These subjects are **not** expected to change. However, if they do, or if we introduce a new certificate for signing a specific .NET binary (e.g. a new DAC), .NET tactics and the Defender team should be contacted with this information. We want to ensure that the certificates are explicitly trusted by Defender.
+
+Examples of subjects that should be treated with special care:
+
+```
+CN=.NET, O=Microsoft Corporation, L=Redmond, S=Washington, C=US
+CN=.NET, O=Microsoft Corporat, L=Redmond, S=Washington, C=US
+CN=.NET DAC, O=Microsoft Corporation, L=Redmond, S=Washington, C=US
+```
+
 ## Logs & MicroBuild configuration files
 
 The log messages from the SignToolTask itself will be included in the log (+.binlog) of the original build process. The binary log of executing the MicroBuild signing plugin will be stored in files named `SigningX.binlog` in the `LogDir` folder. The project files used to call the MicroBuild plugin will be stored in files named `RoundX.proj` in the `TempDir` folder. In both cases the `X` in the name refers to a signing round.
