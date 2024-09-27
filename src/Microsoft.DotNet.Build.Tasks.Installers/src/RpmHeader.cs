@@ -92,7 +92,26 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             return builder.ToString();
         }
 
-        public static unsafe RpmHeader<TEntryTag> Read(Stream stream)
+        private static IndexEntry ReadIndexEntry(ReadOnlySpan<byte> bytes)
+        {
+            return new IndexEntry()
+            {
+                Tag = BinaryPrimitives.ReadInt32BigEndian(bytes),
+                Type = (EntryType)BinaryPrimitives.ReadInt32BigEndian(bytes.Slice(4)),
+                Offset = BinaryPrimitives.ReadInt32BigEndian(bytes.Slice(8)),
+                Count = BinaryPrimitives.ReadInt32BigEndian(bytes.Slice(12))
+            };
+        }
+
+        private static void WriteIndexEntry(Span<byte> bytes, IndexEntry entry)
+        {
+            BinaryPrimitives.WriteInt32BigEndian(bytes, entry.Tag);
+            BinaryPrimitives.WriteInt32BigEndian(bytes.Slice(4), (int)entry.Type);
+            BinaryPrimitives.WriteInt32BigEndian(bytes.Slice(8), entry.Offset);
+            BinaryPrimitives.WriteInt32BigEndian(bytes.Slice(12), entry.Count);
+        }
+
+        public static unsafe RpmHeader<TEntryTag> Read(Stream stream, TEntryTag immutableRegionTag)
         {
             if (!stream.ReadExactly(3).SequenceEqual((ReadOnlySpan<byte>)[0x8e, 0xad, 0xe8 ]))
             {
@@ -120,16 +139,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             IndexEntry[] indexEntries = new IndexEntry[numIndexEntries];
             for (int i = 0; i < numIndexEntries; i++)
             {
-                IndexEntry entry = default;
-                entry.Tag = BinaryPrimitives.ReadInt32BigEndian(indexBytesSpan);
-                indexBytesSpan = indexBytesSpan.Slice(4);
-                entry.Type = (EntryType)BinaryPrimitives.ReadInt32BigEndian(indexBytesSpan);
-                indexBytesSpan = indexBytesSpan.Slice(4);
-                entry.Offset = BinaryPrimitives.ReadInt32BigEndian(indexBytesSpan);
-                indexBytesSpan = indexBytesSpan.Slice(4);
-                entry.Count = BinaryPrimitives.ReadInt32BigEndian(indexBytesSpan);
-                indexBytesSpan = indexBytesSpan.Slice(4);
-                indexEntries[i] = entry;
+                indexEntries[i] = ReadIndexEntry(indexBytesSpan.Slice(i * sizeof(IndexEntry)));
             }
 
             byte[] store = new byte[numHeaderBytes];
@@ -139,6 +149,21 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
             foreach (var entry in indexEntries)
             {
+                // Check the "immutable tag" and validate it if it exists.
+                // We don't persist this tag as we need to generate it during emit.
+                if (entry.Tag.Equals(Convert.ToInt32(immutableRegionTag)))
+                {
+                    IndexEntry indexEntry = ReadIndexEntry(store.AsSpan().Slice(entry.Offset));
+                    if (entry.Tag != indexEntry.Tag
+                        || !indexEntry.Type.Equals(EntryType.Binary)
+                        || indexEntry.Count != 16
+                        || indexEntry.Offset != -indexBytes.Length)
+                    {
+                        throw new InvalidOperationException("Invalid immutable region tag");
+                    }
+                    continue;
+                }
+
                 if (entry.Type is EntryType.Binary)
                 {
                     entries.Add(new Entry(entry.Tag, entry.Type, new ArraySegment<byte>(store, entry.Offset, entry.Count)));
@@ -225,19 +250,43 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             return new RpmHeader<TEntryTag>(entries);
         }
 
-        public void WriteTo(Stream stream)
+        public void WriteTo(Stream stream, TEntryTag immutableRegionTag)
         {
             stream.Write([0x8e, 0xad, 0xe8]); // magic
             stream.WriteByte(1); // version
             stream.Write([0, 0, 0, 0]); // reserved
             byte[] numIndexEntries = new byte[4];
-            BinaryPrimitives.WriteInt32BigEndian(numIndexEntries, Entries.Count);
+            // Add 1 for the immutable region tag
+            BinaryPrimitives.WriteInt32BigEndian(numIndexEntries, Entries.Count + 1);
             stream.Write(numIndexEntries);
 
             using MemoryStream storeStream = new();
+
+            byte[] indexInfoBytes = new byte[16];
+            IndexEntry immutableRegionIndexEntry = new()
+            {
+                Tag = Convert.ToInt32(immutableRegionTag),
+                Type = EntryType.Binary,
+                Offset = 0,
+                Count = 16
+            };
+
+            WriteIndexEntry(indexInfoBytes, immutableRegionIndexEntry);
+            stream.Write(indexInfoBytes);
+
+            IndexEntry immutableRegionData = new()
+            {
+                Tag = Convert.ToInt32(immutableRegionTag),
+                Type = EntryType.Binary,
+                Offset = -(Entries.Count + 1) * Unsafe.SizeOf<IndexEntry>(),
+                Count = 16
+            };
+
+            WriteIndexEntry(indexInfoBytes, immutableRegionData);
+            storeStream.Write(indexInfoBytes);
+
             foreach (var entry in Entries)
             {
-                byte[] indexInfoBytes = new byte[16];
                 BinaryPrimitives.WriteInt32BigEndian(indexInfoBytes, Convert.ToInt32(entry.Tag));
                 BinaryPrimitives.WriteInt32BigEndian(indexInfoBytes.AsSpan(4), (int)entry.Type);
                 if (entry.Type is EntryType.Binary)

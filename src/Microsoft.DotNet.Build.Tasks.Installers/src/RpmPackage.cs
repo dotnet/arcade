@@ -23,9 +23,9 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
         {
             RpmLead lead = RpmLead.Read(stream);
 
-            RpmHeader<RpmSignatureTag> signature = RpmHeader<RpmSignatureTag>.Read(stream);
+            RpmHeader<RpmSignatureTag> signature = RpmHeader<RpmSignatureTag>.Read(stream, RpmSignatureTag.HeaderSignatures);
             stream.AlignReadTo(8);
-            RpmHeader<RpmHeaderTag> header = RpmHeader<RpmHeaderTag>.Read(stream);
+            RpmHeader<RpmHeaderTag> header = RpmHeader<RpmHeaderTag>.Read(stream, RpmHeaderTag.Immutable);
 
             using GZipStream gzipStream = new(stream, CompressionMode.Decompress, leaveOpen: true);
             MemoryStream archiveStream = new();
@@ -37,9 +37,9 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
         public void WriteTo(Stream stream)
         {
             Lead.WriteTo(stream);
-            Signature.WriteTo(stream);
+            Signature.WriteTo(stream, RpmSignatureTag.HeaderSignatures);
             stream.AlignWriteTo(8);
-            Header.WriteTo(stream);
+            Header.WriteTo(stream, RpmHeaderTag.Immutable);
 
             using GZipStream gzipStream = new(stream, CompressionMode.Compress, leaveOpen: true);
             ArchiveStream.CopyTo(gzipStream);
