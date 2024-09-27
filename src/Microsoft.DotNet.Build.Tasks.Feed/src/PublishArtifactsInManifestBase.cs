@@ -574,13 +574,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     $"\tSymbol package count: {symbolPackageNames.Length}" + Environment.NewLine +
                     $"\tLoose symbol file count: {looseFileCount}");
 
-            var creds = new TokenCredentialShortCache(
-                new DefaultIdentityTokenCredential(
-                    new DefaultIdentityTokenCredentialOptions
-                    {
-                        ManagedIdentityClientId = ManagedIdentityClientId
-                    }
-                )
+            var creds = new DefaultIdentityTokenCredential(
+                new DefaultIdentityTokenCredentialOptions
+                {
+                    ManagedIdentityClientId = ManagedIdentityClientId
+                }
             );
             TaskTracer tracer = new(Log, verbose: true);
 
@@ -681,7 +679,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     isDryRun: dryRun);
 
                 // In dry run mode, we never hit the symbol server. Don't download symbol.exe in such scenario.
-                return dryRun ? Task.FromResult(SymbolUploadHelperFactory.GetSymbolHelperFromLocalTool(tracer, options, ".")) 
+                return dryRun ? Task.FromResult(SymbolUploadHelperFactory.GetSymbolHelperFromLocalTool(tracer, options, "."))
                     : SymbolUploadHelperFactory.GetSymbolHelperWithDownloadAsync(tracer, options);
 
                 FrozenSet<string> LoadExclusions(string symbolPublishingExclusionsFile)
@@ -1470,7 +1468,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 await PublishAssetsWithoutStreamingPublishingAsync(assetPublisher, assetsToPublish, buildAssets, feedConfig);
             }
 
-            if (feedConfig.Type == FeedType.AzureStorageContainer && 
+            if (feedConfig.Type == FeedType.AzureStorageContainer &&
                 feedConfig.LatestLinkShortUrlPrefixes.Any())
             {
 
