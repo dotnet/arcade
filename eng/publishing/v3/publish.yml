@@ -86,9 +86,10 @@ stages:
 
     - task: AzureCLI@2
       displayName: Publish packages, blobs and symbols
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       inputs:
         azureSubscription: maestro-build-promotion
-        addSpnToEnvironment: true
         scriptType: ps
         scriptLocation: scriptPath
         scriptPath: $(Build.SourcesDirectory)/eng/common/sdk-task.ps1

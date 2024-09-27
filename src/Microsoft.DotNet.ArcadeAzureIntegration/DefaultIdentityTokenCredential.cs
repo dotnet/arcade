@@ -40,18 +40,18 @@ public class DefaultIdentityTokenCredential : ChainedTokenCredential
             );
         }
 
-        // Add work load identity credential if the environment variables are set
-        var workloadIdentityCredential = GetWorkloadIdentityCredentialForAzurePipelineTask();
-        if (workloadIdentityCredential != null)
-        {
-            tokenCredentials.Add(workloadIdentityCredential);
-        }
-
         // Add Azure Pipelines credential if the environment variables are set
         var azurePipelinesCredential = GetAzurePipelinesCredentialForAzurePipelineTask();
         if (azurePipelinesCredential != null)
         {
             tokenCredentials.Add(azurePipelinesCredential);
+        }
+
+        // Add work load identity credential if the environment variables are set
+        var workloadIdentityCredential = GetWorkloadIdentityCredentialForAzurePipelineTask();
+        if (workloadIdentityCredential != null)
+        {
+            tokenCredentials.Add(workloadIdentityCredential);
         }
 
         if (!options.ExcludeAzureCliCredential)

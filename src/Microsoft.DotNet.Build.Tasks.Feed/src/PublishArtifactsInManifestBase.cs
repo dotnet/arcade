@@ -28,6 +28,7 @@ using Azure.Identity;
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.Maestro.Client.Models;
 using Microsoft.DotNet.Internal.SymbolHelper;
+using Microsoft.DotNet.ArcadeAzureIntegration;
 #endif
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Newtonsoft.Json;
@@ -573,18 +574,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     $"\tSymbol package count: {symbolPackageNames.Length}" + Environment.NewLine +
                     $"\tLoose symbol file count: {looseFileCount}");
 
-            // The OIDC token that the AzureCLI task generates is short lived (10 mins). The operations below can take longer than that.
-            // So we send at least one request to symbolrequest to ensure the CLI caches a valid token. We will need to revisit this if we
-            // run this for over the token's validity period (1hr). At that point, we might need to inject OIDC refreshes to the task call site.
-            DefaultAzureCredential creds = new(new DefaultAzureCredentialOptions
-            {
-                ExcludeVisualStudioCodeCredential = true,
-                ExcludeVisualStudioCredential = true,
-                ExcludeAzureDeveloperCliCredential = true,
-                ExcludeInteractiveBrowserCredential = true,
-                ManagedIdentityClientId = ManagedIdentityClientId,
-                CredentialProcessTimeout = TimeSpan.FromSeconds(60.0)
-            });
+            var creds = new TokenCredentialShortCache(
+                new DefaultIdentityTokenCredential(
+                    new DefaultIdentityTokenCredentialOptions
+                    {
+                        ManagedIdentityClientId = ManagedIdentityClientId
+                    }
+                )
+            );
             TaskTracer tracer = new(Log, verbose: true);
 
             _ = await SymbolPromotionHelper.CheckRequestRegistration(tracer, creds, env, SymbolRequestProject, requestName);
