@@ -27,6 +27,11 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             stream.AlignReadTo(8);
             RpmHeader<RpmHeaderTag> header = RpmHeader<RpmHeaderTag>.Read(stream, RpmHeaderTag.Immutable);
 
+            if (header.Entries.First(e => e.Tag == RpmHeaderTag.PayloadCompressor).Value is not "gzip")
+            {
+                throw new InvalidDataException("Unsupported payload compressor");
+            }
+
             using GZipStream gzipStream = new(stream, CompressionMode.Decompress, leaveOpen: true);
             MemoryStream archiveStream = new();
             gzipStream.CopyTo(archiveStream);
