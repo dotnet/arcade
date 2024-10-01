@@ -60,11 +60,15 @@ try {
     $buildNumberName = $buildNumberName.Substring(0, 255)
   }
 
-  $isInternalBuild = $false
-  if ([string]::IsNullOrEmpty($buildInfo.gitHubRepository) -and $buildInfo.azureDevOpsBranch.Contains("internal/release")) {
-    $isInternalBuild = $true
+  $isInternalBuild = $true
+  if ([string]::IsNullOrEmpty($buildInfo.gitHubRepository) -eq $false) {
+    $buildInfo.gitHubRepository -match "https://github.com/(.*)/(.*)" | Out-Null
+    $response = Invoke-WebRequest -Uri "https://api.github.com/repos/$($Matches[1])/$($Matches[2]))/contents/README.md"
+    if ($response.StatusCode -eq 200) {
+      $isInternalBuild = $false
+      Write-Host "This is a public build"
+    }
   }
-
   # Set tags on publishing for visibility
   Write-Host "##vso[build.updatebuildnumber]$buildNumberName"
   Write-Host "##vso[build.addbuildtag]Channel(s) - $channelNames"
