@@ -17,7 +17,7 @@
     due to strong-name signing.
     https://github.com/dotnet/arcade/issues/15117
   -->
-  <PropertyGroup Condition="'$(DotNetSignType)' == 'real' and '$(OS)' != 'Windows_NT'>
+  <PropertyGroup Condition="'$(DotNetSignType)' == 'real' and '$(OS)' != 'Windows_NT'">
     <SignAssembly>false</SignAssembly>
   </PropertyGroup>
 
