@@ -356,13 +356,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             // If separated out for clarity.
             if (!SkipSafetyChecks && IsInternalBuild)
             {
-                foreach (TargetFeedConfig feedConfig in FeedConfigs.Values.SelectMany(x => x))
+                var publicFeeds = FeedConfigs.Values
+                    .SelectMany(f => f)
+                    .Where(f => f.Internal == false);
+
+                foreach (TargetFeedConfig feedConfig in publicFeeds)
                 {
-                    if (feedConfig.Internal == false)
-                    {
-                        Log.LogError($"Internal builds shouldn't be published to public feed '{feedConfig.TargetURL}'. This behavior can be overridden with '{nameof(SkipSafetyChecks)}= true'");
-                    }
-                }             
+                    Log.LogError($"Internal builds shouldn't be published to public feed '{feedConfig.TargetURL}'. This behavior can be overridden with '{nameof(SkipSafetyChecks)}= true'");
+                }         
             }
         }
 
