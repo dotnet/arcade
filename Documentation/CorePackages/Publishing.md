@@ -167,7 +167,7 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
     | enableSourceLinkValidation              | bool     | Run SourceLink validation during the post-build stage.                                               | false |
     | enableSigningValidation                 | bool     | Run signing validation during the post-build stage.                                                  | true |
     | enableNugetValidation                   | bool     | Run NuGet package validation tool during the post build stage.                                       | true |
-    | symbolPublishingAdditionalParameters    | string   | Additional arguments for the PublishToSymbolServers sdk task.                                        | '' |
+    | symbolPublishingAdditionalParameters    | string   | Additional arguments for the symbol publishing. Only supported in v3 publishing.                     | '' |
     | artifactsPublishingAdditionalParameters | string   | Additional arguments for the PublishArtifactsInManifest sdk task.                                    | '' |
     | signingValidationAdditionalParameters   | string  | Additional arguments for the SigningValidation sdk task.     | '' |
     | publishInstallersAndChecksums           | bool     | Publish installers packages and checksums from the build artifacts to the dotnetcli storage account. Documentation for opting in to automatic checksum generation can be found in the [Checksum section](https://github.com/dotnet/arcade/blob/main/Documentation/CorePackages/Publishing.md#checksum-generation) of this document. | true |
