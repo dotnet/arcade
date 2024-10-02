@@ -19,6 +19,7 @@
   -->
   <PropertyGroup Condition="'$(DotNetSignType)' == 'real' and '$(OS)' != 'Windows_NT'">
     <SignAssembly>false</SignAssembly>
+    <PublicSign>false</PublicSign>
   </PropertyGroup>
 
   <!--
