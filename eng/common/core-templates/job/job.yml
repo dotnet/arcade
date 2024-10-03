@@ -129,6 +129,12 @@ jobs:
 
   - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - ${{ if eq(parameters.enableMicrobuild, 'true') }}:
+
+      - ${{ if and(eq(parameters.enableMicrobuildForMacAndLinux, 'true'), ne(variables['Agent.Os'], 'Windows_NT')) }}:
+        - task: UsePythonVersion@0
+          inputs:
+            versionSpec: '3.11.x'
+
       - task: MicroBuildSigningPlugin@4
         displayName: Install MicroBuild plugin
         inputs:
