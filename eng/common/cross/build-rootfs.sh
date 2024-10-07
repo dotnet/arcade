@@ -6,7 +6,7 @@ usage()
 {
     echo "Usage: $0 [BuildArch] [CodeName] [lldbx.y] [llvmx[.y]] [--skipunmount] --rootfsdir <directory>]"
     echo "BuildArch can be: arm(default), arm64, armel, armv6, ppc64le, riscv64, s390x, x64, x86"
-    echo "CodeName - optional, Code name for Linux, can be: xenial(default), zesty, bionic, alpine"
+    echo "CodeName - optional, Code name for Linux, can be: jammy(default for arm), xenial(default), zesty, bionic, alpine"
     echo "                               for alpine can be specified with version: alpineX.YY or alpineedge"
     echo "                               for FreeBSD can be: freebsd13, freebsd14"
     echo "                               for illumos can be: illumos"
@@ -20,7 +20,8 @@ usage()
     exit 1
 }
 
-__CodeName=xenial
+__DefaultCodeName=xenial
+__CodeName=
 __CrossDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 __BuildArch=arm
 __AlpineArch=armv7
@@ -151,6 +152,7 @@ while :; do
             __UbuntuArch=armhf
             __AlpineArch=armv7
             __QEMUArch=arm
+            __DefaultCodeName=jammy
             ;;
         arm64)
             __BuildArch=arm64
@@ -442,6 +444,10 @@ fi
 
 if [[ "$__BuildArch" == "armel" ]]; then
     __LLDB_Package="lldb-3.5-dev"
+fi
+
+if [[ "$__CodeName" == "" ]]; then
+    __CodeName="${__DefaultCodeName}"
 fi
 
 if [[ "$__CodeName" == "xenial" && "$__UbuntuArch" == "armhf" ]]; then
