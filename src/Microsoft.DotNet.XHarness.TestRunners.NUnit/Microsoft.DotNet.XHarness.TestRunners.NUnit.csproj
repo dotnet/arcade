@@ -1,4 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../Xharness.Packages.props" />
+  <Import Project="../../Xharness.Build.props" />
+
 
   <PropertyGroup>
     <TargetFramework>$(NetMinimum)</TargetFramework>
