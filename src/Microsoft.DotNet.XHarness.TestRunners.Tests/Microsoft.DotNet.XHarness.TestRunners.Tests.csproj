@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(NetCurrent)</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Moq" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\xUnit\NUnit3Xml.xslt"
+             Link="xUnit\NUnit3Xml.xslt" />
+    <Content Include="..\..\src\Microsoft.DotNet.XHarness.Tests.Runners\xUnit\NUnitXml.xslt"
+             Link="xUnit\NUnitXml.xslt" />
+    <EmbeddedResource Include="..\Microsoft.DotNet.XHarness.iOS.Shared.Tests\Samples\NUnitV3Sample.xml"
+                      Link="NUnit/NUnitV3Sample.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.TestRunners.Common\Microsoft.DotNet.XHarness.TestRunners.Common.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.TestRunners.NUnit\Microsoft.DotNet.XHarness.TestRunners.NUnit.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.TestRunners.Xunit\Microsoft.DotNet.XHarness.TestRunners.Xunit.csproj" />
+  </ItemGroup>
+
+</Project>

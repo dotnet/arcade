@@ -1,0 +1,92 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>$(NetCurrent);$(NetPrevious);$(NetMinimum)</TargetFrameworks>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>xharness</ToolCommandName>
+    <RollForward>Major</RollForward>
+    <!-- Mono.Options is apparently not strong-name signed -->
+    <NoWarn>$(NoWarn);CS8002</NoWarn>
+    <MlaunchDestinationDir Condition="'$(TargetFrameworks)' == '' OR $(TargetFrameworks.EndsWith($(TargetFramework)))">$(BaseIntermediateOutputPath)/mlaunch</MlaunchDestinationDir>
+
+    <!-- When updating these URLs, avoid using 'latest' url as these are redirects and can make the same commit build differently on different days -->
+    <WindowsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r32.0.0-windows.zip</WindowsAndroidSdkUrl>
+    <WindowsAndroidSdkFileName>windows-android-platform-tools.zip</WindowsAndroidSdkFileName>
+
+    <LinuxAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r32.0.0-linux.zip</LinuxAndroidSdkUrl>
+    <LinuxAndroidSdkFileName>linux-android-platform-tools.zip</LinuxAndroidSdkFileName>
+
+    <MacOsAndroidSdkUrl>https://dl.google.com/android/repository/platform-tools_r32.0.0-darwin.zip</MacOsAndroidSdkUrl>
+    <MacOsAndroidSdkFileName>macos-android-platform-tools.zip</MacOsAndroidSdkFileName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Tools.Mlaunch" ExcludeAssets="runtime" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" />
+    <PackageReference Include="Mono.Options" />
+    <PackageReference Include="Selenium.WebDriver" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.XHarness.Android\Microsoft.DotNet.XHarness.Android.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.XHarness.Apple\Microsoft.DotNet.XHarness.Apple.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.XHarness.Common\Microsoft.DotNet.XHarness.Common.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.XHarness.iOS.Shared\Microsoft.DotNet.XHarness.iOS.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <Target Name="DownloadAdb">
+    <DownloadFile SourceUrl="$(WindowsAndroidSdkUrl)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools/" DestinationFileName="$(WindowsAndroidSdkFileName)" SkipUnchangedFiles="true" />
+    <DownloadFile SourceUrl="$(LinuxAndroidSdkUrl)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools/" DestinationFileName="$(LinuxAndroidSdkFileName)" SkipUnchangedFiles="True" />
+    <DownloadFile SourceUrl="$(MacOsAndroidSdkUrl)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools/" DestinationFileName="$(MacOsAndroidSdkFileName)" SkipUnchangedFiles="True" />
+    <Unzip SourceFiles="$(BaseIntermediateOutputPath)/android-tools/$(WindowsAndroidSdkFileName)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows" OverwriteReadOnlyFiles="true" />
+    <Unzip SourceFiles="$(BaseIntermediateOutputPath)/android-tools/$(LinuxAndroidSdkFileName)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools-unzipped/linux" OverwriteReadOnlyFiles="true" />
+    <Unzip SourceFiles="$(BaseIntermediateOutputPath)/android-tools/$(MacOsAndroidSdkFileName)" DestinationFolder="$(BaseIntermediateOutputPath)/android-tools-unzipped/macos" OverwriteReadOnlyFiles="true" />
+    <RemoveDir Directories="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/systrace;$(BaseIntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/systrace;$(BaseIntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/systrace" />
+  </Target>
+
+  <Target Name="IncludeAdb" BeforeTargets="DispatchToInnerBuilds" DependsOnTargets="DownloadAdb">
+    <ItemGroup>
+      <WindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/adb.exe" />
+      <WindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/AdbWinApi.dll" />
+      <WindowsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/windows/platform-tools/AdbWinUsbApi.dll" />
+      <LinuxAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/linux/platform-tools/adb" />
+      <MacOsAdbFiles Include="$(BaseIntermediateOutputPath)/android-tools-unzipped/macos/platform-tools/adb" />
+      <Content Include="@(WindowsAdbFiles)">
+        <Pack>true</Pack>
+        <PackagePath>runtimes/any/native/adb/windows</PackagePath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="@(LinuxAdbFiles)">
+        <Pack>true</Pack>
+        <PackagePath>runtimes/any/native/adb/linux</PackagePath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+      <Content Include="@(MacOsAdbFiles)">
+        <Pack>true</Pack>
+        <PackagePath>runtimes/any/native/adb/macos</PackagePath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+  </Target>
+
+  <!-- The ExtractMlaunch target comes from the Mlaunch NuGet package and places files in the obj/ dir -->
+  <!-- This target used to depend on ExtractMlaunch but it broke when we started multi-targeting XHarness -->
+  <Target Name="IncludeMlaunch" BeforeTargets="_GetPackageFiles">
+    <ItemGroup>
+      <Content Include="$(BaseIntermediateOutputPath)/mlaunch/**/*.*">
+        <Pack>true</Pack>
+        <PackagePath>runtimes/any/native/mlaunch</PackagePath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+  </Target>
+
+</Project>
