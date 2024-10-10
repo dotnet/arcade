@@ -22,7 +22,7 @@ maintaining this functionality directly.
 The source-build targets work by having the build noop, and instead recursively
 call an inner build after some setup. The targets work roughly like this:
 
-* Run `./build.sh /p:DotNetBuildRepo=true`
+* Run `./build.sh -sb`
   * Run `dotnet msbuild ... Build.proj /p:DotNetBuildRepo=true`
     * [Hook] Before **Outer Execute**:
       * Clone the source into `artifacts/sb/src`
