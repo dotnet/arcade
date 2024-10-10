@@ -61,7 +61,8 @@
     <!-- If `AutoGenerateSymbolPackages` is not set we default it to true. -->
     <!-- Do not generate symbol packages if in outer source build mode, to avoid creating copies of the intermediates. -->
     <!-- Also do not generate symbol packages if in inner source build, in product build. -->
-    <AutoGenerateSymbolPackages Condition="'$(AutoGenerateSymbolPackages)' == '' and '$(DotNetBuildSourceOnly)' != 'true'">true</AutoGenerateSymbolPackages>
+    <AutoGenerateSymbolPackages Condition="'$(AutoGenerateSymbolPackages)' == '' and 
+      ('$(DotNetBuildSourceOnly)' != 'true' or ('$(DotNetBuildInnerRepo)' == 'true' and '$(DotNetBuildOrchestrator)' != 'true'))">true</AutoGenerateSymbolPackages>
 
     <AssetManifestOS Condition="'$(AssetManifestOS)' == ''">$(OS)</AssetManifestOS>
 
