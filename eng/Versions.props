@@ -57,12 +57,12 @@
     <WindowsAzureStorageVersion>8.5.0</WindowsAzureStorageVersion>
     <XUnitVersion>2.4.2-pre.9</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>6.0.0-beta.24459.5</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftDotNetSignToolVersion>6.0.0-beta.24459.5</MicrosoftDotNetSignToolVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>6.0.0-beta.24508.2</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetSignToolVersion>6.0.0-beta.24508.2</MicrosoftDotNetSignToolVersion>
     <MicrosoftDiaSymReaderPdb2PdbVersion>1.1.0-beta2-19575-01</MicrosoftDiaSymReaderPdb2PdbVersion>
     <MicrosoftSourceLinkGitHubVersion>1.1.0-beta-21480-02</MicrosoftSourceLinkGitHubVersion>
     <MicrosoftSourceLinkAzureReposGitVersion>1.1.0-beta-21480-02</MicrosoftSourceLinkAzureReposGitVersion>
-    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>6.0.0-beta.24459.5</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>6.0.0-beta.24508.2</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
     <MicrosoftDotNetXliffTasksVersion>1.0.0-beta.21431.1</MicrosoftDotNetXliffTasksVersion>
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.24321.3</MicrosoftDotNetMaestroTasksVersion>
     <MicrosoftDotNetXHarnessCLIVersion>6.0.0-prerelease.24420.2</MicrosoftDotNetXHarnessCLIVersion>
