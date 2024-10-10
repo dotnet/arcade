@@ -34,13 +34,13 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>f209a925b15bc66ecb9a8825bd9595937bbe3aa1</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.24508.2">
+    <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.24510.1">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>e07f01c2b87afb6162e50bcd4798ae868857f3da</Sha>
+      <Sha>9b4dbd0d937f9847b76939ab282cbaa9eb860f0a</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.1.0-beta.24508.2">
+    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.1.0-beta.24510.1">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>e07f01c2b87afb6162e50bcd4798ae868857f3da</Sha>
+      <Sha>9b4dbd0d937f9847b76939ab282cbaa9eb860f0a</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="10.0.0-prerelease.24476.1">
       <Uri>https://github.com/dotnet/xharness</Uri>
