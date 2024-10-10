@@ -1,0 +1,125 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{45602218-CB6D-4BC9-9C7F-B933B20FBB6C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.Android", "src\Microsoft.DotNet.XHarness.Android\Microsoft.DotNet.XHarness.Android.csproj", "{A3189CB0-2C9F-4714-B6B2-467DADA8E271}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.Android.Tests", "src\Microsoft.DotNet.XHarness.Android.Tests\Microsoft.DotNet.XHarness.Android.Tests.csproj", "{662594E2-1E72-46CF-ADBC-9463EE0F494E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.Apple", "src\Microsoft.DotNet.XHarness.Apple\Microsoft.DotNet.XHarness.Apple.csproj", "{BD7332EC-2BC9-46BF-9ABB-B9FC0DF4C22B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.Apple.Tests", "src\Microsoft.DotNet.XHarness.Apple.Tests\Microsoft.DotNet.XHarness.Apple.Tests.csproj", "{BB3F3766-F54F-4CF7-8AE2-D698C14451AD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.CLI", "src\Microsoft.DotNet.XHarness.CLI\Microsoft.DotNet.XHarness.CLI.csproj", "{1F83D109-F5CE-4781-ABB0-E25B0D9D3389}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.CLI.Tests", "src\Microsoft.DotNet.XHarness.CLI.Tests\Microsoft.DotNet.XHarness.CLI.Tests.csproj", "{C8EBBA73-3B4A-424D-B737-542DF14B87AF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.Common", "src\Microsoft.DotNet.XHarness.Common\Microsoft.DotNet.XHarness.Common.csproj", "{3648B151-A53B-41FE-890A-9D7380E76CD6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.Common.Tests", "src\Microsoft.DotNet.XHarness.Common.Tests\Microsoft.DotNet.XHarness.Common.Tests.csproj", "{C982543F-FC37-4120-BC00-8E0700C8A9BB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.DefaultAndroidEntryPoint.Xunit", "src\Microsoft.DotNet.XHarness.InstrumentationBase.Xunit\Microsoft.DotNet.XHarness.DefaultAndroidEntryPoint.Xunit.csproj", "{AC1CAC1A-4BFC-4EA4-B064-7A4930C7F454}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.TestRunners.Common", "src\Microsoft.DotNet.XHarness.TestRunners.Common\Microsoft.DotNet.XHarness.TestRunners.Common.csproj", "{43E3C9A6-62AF-4E16-98C2-5064238F284A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.TestRunners.NUnit", "src\Microsoft.DotNet.XHarness.TestRunners.NUnit\Microsoft.DotNet.XHarness.TestRunners.NUnit.csproj", "{17C43154-8343-4F29-9FB0-E24A29BB23EC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.TestRunners.Tests", "src\Microsoft.DotNet.XHarness.TestRunners.Tests\Microsoft.DotNet.XHarness.TestRunners.Tests.csproj", "{4ACF81C7-FF8D-4675-B8BA-C76092CB8C6C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.TestRunners.Xunit", "src\Microsoft.DotNet.XHarness.TestRunners.Xunit\Microsoft.DotNet.XHarness.TestRunners.Xunit.csproj", "{25B6458D-D88E-434D-B19D-FDB5E59C1292}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.iOS.Shared", "src\Microsoft.DotNet.XHarness.iOS.Shared\Microsoft.DotNet.XHarness.iOS.Shared.csproj", "{1EB1AC81-7056-42DF-BBE4-D4084042D049}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.XHarness.iOS.Shared.Tests", "src\Microsoft.DotNet.XHarness.iOS.Shared.Tests\Microsoft.DotNet.XHarness.iOS.Shared.Tests.csproj", "{C84C3E70-F2F0-458F-8EF9-4EF708C40619}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A3189CB0-2C9F-4714-B6B2-467DADA8E271}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3189CB0-2C9F-4714-B6B2-467DADA8E271}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3189CB0-2C9F-4714-B6B2-467DADA8E271}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3189CB0-2C9F-4714-B6B2-467DADA8E271}.Release|Any CPU.Build.0 = Release|Any CPU
+		{662594E2-1E72-46CF-ADBC-9463EE0F494E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{662594E2-1E72-46CF-ADBC-9463EE0F494E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{662594E2-1E72-46CF-ADBC-9463EE0F494E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{662594E2-1E72-46CF-ADBC-9463EE0F494E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD7332EC-2BC9-46BF-9ABB-B9FC0DF4C22B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD7332EC-2BC9-46BF-9ABB-B9FC0DF4C22B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD7332EC-2BC9-46BF-9ABB-B9FC0DF4C22B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD7332EC-2BC9-46BF-9ABB-B9FC0DF4C22B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB3F3766-F54F-4CF7-8AE2-D698C14451AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB3F3766-F54F-4CF7-8AE2-D698C14451AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB3F3766-F54F-4CF7-8AE2-D698C14451AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB3F3766-F54F-4CF7-8AE2-D698C14451AD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1F83D109-F5CE-4781-ABB0-E25B0D9D3389}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1F83D109-F5CE-4781-ABB0-E25B0D9D3389}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1F83D109-F5CE-4781-ABB0-E25B0D9D3389}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1F83D109-F5CE-4781-ABB0-E25B0D9D3389}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C8EBBA73-3B4A-424D-B737-542DF14B87AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C8EBBA73-3B4A-424D-B737-542DF14B87AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C8EBBA73-3B4A-424D-B737-542DF14B87AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C8EBBA73-3B4A-424D-B737-542DF14B87AF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3648B151-A53B-41FE-890A-9D7380E76CD6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3648B151-A53B-41FE-890A-9D7380E76CD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3648B151-A53B-41FE-890A-9D7380E76CD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3648B151-A53B-41FE-890A-9D7380E76CD6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C982543F-FC37-4120-BC00-8E0700C8A9BB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C982543F-FC37-4120-BC00-8E0700C8A9BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C982543F-FC37-4120-BC00-8E0700C8A9BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C982543F-FC37-4120-BC00-8E0700C8A9BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AC1CAC1A-4BFC-4EA4-B064-7A4930C7F454}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC1CAC1A-4BFC-4EA4-B064-7A4930C7F454}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC1CAC1A-4BFC-4EA4-B064-7A4930C7F454}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC1CAC1A-4BFC-4EA4-B064-7A4930C7F454}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43E3C9A6-62AF-4E16-98C2-5064238F284A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43E3C9A6-62AF-4E16-98C2-5064238F284A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43E3C9A6-62AF-4E16-98C2-5064238F284A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43E3C9A6-62AF-4E16-98C2-5064238F284A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{17C43154-8343-4F29-9FB0-E24A29BB23EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{17C43154-8343-4F29-9FB0-E24A29BB23EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{17C43154-8343-4F29-9FB0-E24A29BB23EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{17C43154-8343-4F29-9FB0-E24A29BB23EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4ACF81C7-FF8D-4675-B8BA-C76092CB8C6C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4ACF81C7-FF8D-4675-B8BA-C76092CB8C6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4ACF81C7-FF8D-4675-B8BA-C76092CB8C6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4ACF81C7-FF8D-4675-B8BA-C76092CB8C6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{25B6458D-D88E-434D-B19D-FDB5E59C1292}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{25B6458D-D88E-434D-B19D-FDB5E59C1292}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{25B6458D-D88E-434D-B19D-FDB5E59C1292}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{25B6458D-D88E-434D-B19D-FDB5E59C1292}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1EB1AC81-7056-42DF-BBE4-D4084042D049}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1EB1AC81-7056-42DF-BBE4-D4084042D049}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1EB1AC81-7056-42DF-BBE4-D4084042D049}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1EB1AC81-7056-42DF-BBE4-D4084042D049}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C84C3E70-F2F0-458F-8EF9-4EF708C40619}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C84C3E70-F2F0-458F-8EF9-4EF708C40619}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C84C3E70-F2F0-458F-8EF9-4EF708C40619}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C84C3E70-F2F0-458F-8EF9-4EF708C40619}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A3189CB0-2C9F-4714-B6B2-467DADA8E271} = {45602218-CB6D-4BC9-9C7F-B933B20FBB6C}
+		{662594E2-1E72-46CF-ADBC-9463EE0F494E} = {45602218-CB6D-4BC9-9C7F-B933B20FBB6C}
+		{BD7332EC-2BC9-46BF-9ABB-B9FC0DF4C22B} = {45602218-CB6D-4BC9-9C7F-B933B20FBB6C}
+		{BB3F3766-F54F-4CF7-8AE2-D698C14451AD} = {45602218-CB6D-4BC9-9C7F-B933B20FBB6C}
+		{1F83D109-F5CE-4781-ABB0-E25B0D9D3389} = {45602218-CB6D-4BC9-9C7F-B933B20FBB6C}
+		{C8EBBA73-3B4A-424D-B737-542DF14B87AF} = {45602218-CB6D-4BC9-9C7F-B933B20FBB6C}
+		{3648B151-A53B-41FE-890A-9D7380E76CD6} = {45602218-CB6D-4BC9-9C7F-B933B20FBB6C}
+		{C982543F-FC37-4120-BC00-8E0700C8A9BB} = {45602218-CB6D-4BC9-9C7F-B933B20FBB6C}
+		{AC1CAC1A-4BFC-4EA4-B064-7A4930C7F454} = {45602218-CB6D-4BC9-9C7F-B933B20FBB6C}
+		{43E3C9A6-62AF-4E16-98C2-5064238F284A} = {45602218-CB6D-4BC9-9C7F-B933B20FBB6C}
+		{17C43154-8343-4F29-9FB0-E24A29BB23EC} = {45602218-CB6D-4BC9-9C7F-B933B20FBB6C}
+		{4ACF81C7-FF8D-4675-B8BA-C76092CB8C6C} = {45602218-CB6D-4BC9-9C7F-B933B20FBB6C}
+		{25B6458D-D88E-434D-B19D-FDB5E59C1292} = {45602218-CB6D-4BC9-9C7F-B933B20FBB6C}
+		{1EB1AC81-7056-42DF-BBE4-D4084042D049} = {45602218-CB6D-4BC9-9C7F-B933B20FBB6C}
+		{C84C3E70-F2F0-458F-8EF9-4EF708C40619} = {45602218-CB6D-4BC9-9C7F-B933B20FBB6C}
+	EndGlobalSection
+EndGlobal
