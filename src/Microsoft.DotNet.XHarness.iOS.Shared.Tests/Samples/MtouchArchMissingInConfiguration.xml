@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">iPhoneSimulator</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{839212D5-C25B-4284-AA96-59C3872B8184}</ProjectGuid>
+    <ProjectTypeGuids>{FEACFBD2-3405-455C-9665-78FE426C6842};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>dontlink</RootNamespace>
+    <AssemblyName>dont link</AssemblyName>
+    <TargetFrameworkIdentifier>Xamarin.iOS</TargetFrameworkIdentifier>
+    <IntermediateOutputPath>obj\$(Platform)\$(Configuration)-unified</IntermediateOutputPath>
+    <DefineConstants>
+    </DefineConstants>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <RootTestsDirectory>\Users\prvysoky\Documents\xamarin-macios\tests</RootTestsDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|iPhoneSimulator' ">
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>False</Optimize>
+    <OutputPath>bin\iPhoneSimulator\$(Configuration)-unified</OutputPath>
+    <DefineConstants>DEBUG;MONOTOUCH;$(DefineConstants)</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <MtouchLink>None</MtouchLink>
+    <MtouchDebug>True</MtouchDebug>
+    <MtouchExtraArgs>-v -v</MtouchExtraArgs>
+    <!--<MtouchArch>i386, x86_64</MtouchArch>  THIS IS MISSING -->
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release64|iPhone' ">
+    <DebugType>none</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\iPhone\$(Configuration)-unified</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <CodesignKey>iPhone Developer</CodesignKey>
+    <MtouchExtraArgs>-v -v</MtouchExtraArgs>
+    <MtouchUseLlvm>True</MtouchUseLlvm>
+    <MtouchLink>None</MtouchLink>
+    <MtouchArch>ARM64</MtouchArch>
+    <DefineConstants>MONOTOUCH;$(DefineConstants)</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Core" />
+    <Reference Include="Xamarin.iOS" />
+    <PackageReference Include="MonoTouch.Dialog" Version="2.0.0-pre1" />
+    <ProjectReference Include="\Users\prvysoky\Documents\xamarin-macios\tests\xharness\tmp-test-dir\dont link77\Touch.Client-iOS.csproj">
+      <Project>{F611ED96-54B5-4975-99BB-12F50AF95936}</Project>
+      <Name>Touch.Client-iOS</Name>
+      <LogicalName>..\..\..\..\external\Touch.Unit\Touch.Client\iOS\Touch.Client-iOS.csproj</LogicalName>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="\Users\prvysoky\Documents\xamarin-macios\tests\linker\ios\dont link\Info.plist">
+      <LogicalName>Info.plist</LogicalName>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="\Users\prvysoky\Documents\xamarin-macios\tests\linker\ios\dont link\Main.cs">
+      <LogicalName>Main.cs</LogicalName>
+    </Compile>
+    <Compile Include="\Users\prvysoky\Documents\xamarin-macios\tests\linker\ios\dont link\AppDelegate.cs">
+      <LogicalName>AppDelegate.cs</LogicalName>
+    </Compile>
+    <Compile Include="\Users\prvysoky\Documents\xamarin-macios\tests\linker\ios\dont link\DontLinkRegressionTests.cs">
+      <LogicalName>DontLinkRegressionTests.cs</LogicalName>
+    </Compile>
+    <Compile Include="\Users\prvysoky\Documents\xamarin-macios\tests\linker\CommonDontLinkTest.cs">
+      <Link>CommonDontLinkTest.cs</Link>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <InterfaceDefinition Include="\Users\prvysoky\Documents\xamarin-macios\tests\linker\ios\dont link\LaunchScreen.storyboard" Condition="'$(TargetFrameworkIdentifier)' != 'Xamarin.WatchOS'">
+      <LogicalName>LaunchScreen.storyboard</LogicalName>
+    </InterfaceDefinition>
+  </ItemGroup>
+  <ItemGroup>
+    <ImageAsset Condition="'$(TargetFrameworkIdentifier)' != 'Xamarin.WatchOS'" Include="\Users\prvysoky\Documents\xamarin-macios\tests\linker\ios\dont link\Assets.xcassets\AppIcons.appiconset\Contents.json">
+      <LogicalName>Assets.xcassets\AppIcons.appiconset\Contents.json</LogicalName>
+    </ImageAsset>
+    <ImageAsset Condition="'$(TargetFrameworkIdentifier)' != 'Xamarin.WatchOS'" Include="\Users\prvysoky\Documents\xamarin-macios\tests\linker\ios\dont link\Assets.xcassets\AppIcons.appiconset\Icon-app-60%403x.png">
+      <LogicalName>Assets.xcassets\AppIcons.appiconset\Icon-app-60%403x.png</LogicalName>
+    </ImageAsset>
+  </ItemGroup>
+  <Import Project="$(RootTestsDirectory)\nunit.framework.targets" />
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
+  <ItemGroup>
+    <Content Include="\Users\prvysoky\Documents\xamarin-macios\tests\linker\ios\dont link\BoardingPass.pkpass">
+      <LogicalName>BoardingPass.pkpass</LogicalName>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="\Users\prvysoky\Documents\xamarin-macios\tests\xharness\tmp-test-dir\dont link333\BundledResources.csproj">
+      <Project>{FE6EDEE9-ADF6-4F42-BCF2-B68C0A44EC3D}</Project>
+      <Name>BundledResources</Name>
+      <LogicalName>..\..\..\BundledResources\BundledResources.csproj</LogicalName>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

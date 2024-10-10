@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../Xharness.Packages.props" />
+  <Import Project="../../Xharness.Build.props" />
+
+  <PropertyGroup>
+    <TargetFramework>$(NetCurrent)</TargetFramework>
+    <!-- Mono.Options is apparently not strong-name signed -->
+    <NoWarn>$(NoWarn);CS8002</NoWarn>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.Common\Microsoft.DotNet.XHarness.Common.csproj" />
+  </ItemGroup>
+
+</Project>

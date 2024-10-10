@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../Xharness.Packages.props" />
+  <Import Project="../../Xharness.Build.props" />
+
+  <PropertyGroup>
+    <TargetFramework>$(NetMinimum)</TargetFramework>
+    <IsPackable>true</IsPackable>
+    <!-- Mono.Options is apparently not strong-name signed -->
+    <NoWarn>$(NoWarn);CS8002</NoWarn>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mono.Options" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.XHarness.Common\XmlResultJargon.cs"
+             Link="XmlResultJargon.cs" />
+    <Compile Include="..\Microsoft.DotNet.XHarness.iOS.Shared\Execution\EnviromentVariables.cs"
+             Link="EnvironmentVariables.cs" />
+  </ItemGroup>
+
+</Project>

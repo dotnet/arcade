@@ -103,6 +103,8 @@
     <PackageVersion Include="xunit.extensibility.execution" Version="$(XUnitVersion)" />
     <PackageVersion Include="xunit.runner.reporters" Version="$(XUnitVersion)" />
     <PackageVersion Include="nsubstitute" Version="5.1.0" />
+        <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-f32c-w444-8ppv" />
+    <NuGetAuditSuppress Include="https://github.com/advisories/GHSA-qj66-m88j-hmgj" />
   </ItemGroup>
 
 </Project>
