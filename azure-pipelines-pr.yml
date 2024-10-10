@@ -84,6 +84,7 @@ stages:
             -prepareMachine
             $(_InternalBuildArgs)
             /p:Test=false
+            /p:Projects='$(Build.SourcesDirectory)/Arcade.sln'
           displayName: Windows Build / Publish
 
         - powershell: |
@@ -127,6 +128,7 @@ stages:
             --configuration $(_BuildConfig)
             --prepareMachine
             /p:Test=false
+            /p:Projects='$(Build.SourcesDirectory)/Arcade.sln'
           displayName: Unix Build / Publish
 
 - stage: Test
