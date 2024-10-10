@@ -3,6 +3,7 @@
     <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
     <DisableImplicitNamespaceImports_DotNet>true</DisableImplicitNamespaceImports_DotNet>
     <Nullable>enable</Nullable>
-      <NoWarn>$(NoWarn);IDE0073</NoWarn>
+    <NoWarn>$(NoWarn);IDE0073</NoWarn>
+    <ExcludeFromSourceOnlyBuild>true</ExcludeFromSourceOnlyBuild>
   </PropertyGroup>
 </Project>
