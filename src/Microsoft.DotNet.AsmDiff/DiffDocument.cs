@@ -13,13 +13,15 @@ namespace Microsoft.DotNet.AsmDiff
         public AssemblySet Right { get; private set; }
         public ReadOnlyCollection<DiffLine> Lines { get; private set; }
         public ReadOnlyCollection<DiffApiDefinition> ApiDefinitions { get; private set; }
+        public IEnumerable<string> AttributesToExclude { get; private set; }
 
-        public DiffDocument(AssemblySet left, AssemblySet right, IEnumerable<DiffLine> lines, IEnumerable<DiffApiDefinition> apiDefinitions)
+        public DiffDocument(AssemblySet left, AssemblySet right, IEnumerable<DiffLine> lines, IEnumerable<DiffApiDefinition> apiDefinitions, IEnumerable<string> attributesToExclude)
         {
             Left = left;
             Right = right;
             Lines = new ReadOnlyCollection<DiffLine>(lines.ToArray());
             ApiDefinitions = new ReadOnlyCollection<DiffApiDefinition>(apiDefinitions.ToArray());
+            AttributesToExclude = attributesToExclude;
         }
 
         public bool IsDiff

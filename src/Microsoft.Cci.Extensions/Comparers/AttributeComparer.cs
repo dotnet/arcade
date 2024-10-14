@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using Microsoft.Cci.Extensions;
 using Microsoft.Cci.Filters;
 using Microsoft.Cci.Writers.CSharp;
@@ -19,7 +21,7 @@ namespace Microsoft.Cci.Comparers
 
         public AttributeComparer(ICciFilter filter, bool forCompilation)
         {
-            _helper = new CSDeclarationHelper(filter, forCompilation);
+            _helper = new CSDeclarationHelper(filter, new List<string>(), forCompilation);
         }
 
         public override string GetKey(ICustomAttribute c)

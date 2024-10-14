@@ -21,11 +21,14 @@ namespace Microsoft.Cci.Writers.CSharp
         private TokenSyntaxWriter _tokenizer;
         private CSDeclarationWriter _tokenWriter;
 
-        public CSDeclarationHelper(ICciFilter filter, bool forCompilation = false, bool includePseudoCustomAttributes = false)
+        private readonly IEnumerable<string> _attributesToExclude;
+
+        public CSDeclarationHelper(ICciFilter filter, IEnumerable<string> attributesToExclude, bool forCompilation = false, bool includePseudoCustomAttributes = false)
         {
             _filter = filter;
             _forCompilation = forCompilation;
             _includeFakeAttributes = includePseudoCustomAttributes;
+            _attributesToExclude = attributesToExclude;
         }
 
         public string GetString(IDefinition definition, int indentLevel = -1)
@@ -92,7 +95,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 StringWriter sw = new StringWriter(_string);
                 TextSyntaxWriter tsw = new TextSyntaxWriter(sw);
 
-                _stringWriter = new CSDeclarationWriter(tsw, _filter, _forCompilation, _includeFakeAttributes);
+                _stringWriter = new CSDeclarationWriter(tsw, _filter, _forCompilation, _includeFakeAttributes, _attributesToExclude);
             }
         }
 
@@ -101,7 +104,7 @@ namespace Microsoft.Cci.Writers.CSharp
             if (_tokenWriter == null)
             {
                 _tokenizer = new TokenSyntaxWriter();
-                _tokenWriter = new CSDeclarationWriter(_tokenizer, _filter, _forCompilation, _includeFakeAttributes);
+                _tokenWriter = new CSDeclarationWriter(_tokenizer, _filter, _forCompilation, _includeFakeAttributes, _attributesToExclude);
             }
         }
     }
