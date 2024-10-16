@@ -58,12 +58,14 @@ namespace Microsoft.DotNet.Arcade.Sdk
             var bytes = Encoding.UTF8.GetBytes(jsonContent);
 
             string feedKey = "";
-            if (!string.IsNullOrWhiteSpace(RuntimeSourceFeed) && !string.IsNullOrWhiteSpace(feedKey))
+            if (!string.IsNullOrWhiteSpace(RuntimeSourceFeed) && !string.IsNullOrWhiteSpace(RuntimeSourceFeedKey))
             {
                 // If the key is "az", the user wants automatic authentication.
-                if (feedKey.Equals("az", StringComparison.OrdinalIgnoreCase))
+                if (RuntimeSourceFeedKey.Equals("az", StringComparison.OrdinalIgnoreCase))
                 {
+                    Log.LogMessage(MessageImportance.Low, $"Attempting to generate SAS token for current user.");
                     string sasToken = AuthenticationHelpers.GenerateDelegationSas(RuntimeSourceFeed);
+                    Log.LogMessage(MessageImportance.High, $"Got sasToken {sasToken}");
                     feedKey = Convert.ToBase64String(Encoding.ASCII.GetBytes(sasToken));
                 }
                 else
