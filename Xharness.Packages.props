@@ -1,0 +1,17 @@
+<Project>
+  <ItemGroup>
+    <PackageVersion Update="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageVersion Update="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.0" />
+    <PackageVersion Include="Microsoft.Extensions.Logging" Version="8.0.0" />
+    <PackageVersion Update="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
+    <PackageVersion Update="Mono.Options" Version="6.12.0.148" />
+    <PackageVersion Update="Newtonsoft.Json" Version="13.0.3" />
+    <PackageVersion Include="Selenium.WebDriver" Version="4.0.0-alpha05" />
+    <PackageVersion Include="Microsoft.Tools.Mlaunch" Version="1.0.256" />
+    <PackageVersion Include="NUnit" Version="3.13.0" />
+    <PackageVersion Include="NUnit.Engine" Version="3.13.0" />
+    <PackageVersion Update="xunit.extensibility.execution" Version="$(XUnitVersion)" />
+    <PackageVersion Include="xunit.runner.utility" Version="$(XUnitVersion)" />
+    <PackageVersion Update="Moq" Version="4.20.70" />
+    </ItemGroup>
+</Project>

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-run id="2" name="TestSuite" fullname="TestSuite" testcasecount="2732" result="Failed" start-time="0001-01-01 00:00:00Z" end-time="0001-01-01 00:00:00Z" duration="0.000000" total="2732" passed="2500" failed="3" inconclusive="38" skipped="191" asserts="24457" random-seed="730160228">
+  <command-line><![CDATA[/Users/builder/azdo/_work/1/s/xamarin-macios/tests/xharness/tmp-test-dir/monotouch-test77/bin/Debug/net6.0-maccatalyst/maccatalyst-x64/monotouchtest.app/Contents/MacOS/monotouchtest -transport:FILE --logfile:/Users/builder/azdo/_work/1/s/xamarin-macios/jenkins-results/tests/monotouch-test/318/test-MacCatalyst-20211117_142343.xml --enablexml --xmlmode=wrapped --xmlversion=nunitv3 --autostart --autoexit]]></command-line>
+  <filter />
+  <test-suite type="TestSuite" id="1000" name="TestSuite" fullname="TestSuite" runstate="Runnable" testcasecount="2732" result="Failed" site="Child" start-time="0001-01-01 00:00:00Z" end-time="0001-01-01 00:00:00Z" duration="0.000000" total="2732" passed="2500" failed="3" warnings="0" inconclusive="38" skipped="191" asserts="24457">
+    <environment framework-version="3.12.0.0" clr-version="6.0.0" os-version="Darwin 20.6.0 Darwin Kernel Version 20.6.0: Tue Oct 12 18:33:42 PDT 2021; root:xnu-7195.141.8~1/RELEASE_X86_64" platform="Unix" cwd="/Users/builder/azdo/_work/1/s/xamarin-macios/tests/xharness/tmp-test-dir/monotouch-test77/bin/Debug/net6.0-maccatalyst/maccatalyst-x64/monotouchtest.app" machine-name="XAMBOT-1096" user="builder" user-domain="XAMBOT-1096" culture="" uiculture="" os-architecture="x64" />
+    <failure>
+      <message><![CDATA[One or more child tests had errors]]></message>
+    </failure>
+    <test-suite type="Assembly" id="4343" name="N/A " fullname="N/A " runstate="Runnable" testcasecount="2707" result="Failed" site="Child" start-time="2021-11-17 19:23:52Z" end-time="2021-11-17 19:26:24Z" duration="151.612501" total="2707" passed="2479" failed="3" warnings="0" inconclusive="38" skipped="187" asserts="24381">
+      <properties>
+        <property name="_PID" value="26101" />
+        <property name="_APPDOMAIN" value="monotouchtest" />
+      </properties>
+      <failure>
+        <message><![CDATA[One or more child tests had errors]]></message>
+      </failure>
+      <test-suite type="TestSuite" id="4346" name="MonoTests" fullname="MonoTests" runstate="Runnable" testcasecount="22" result="Passed" start-time="2021-11-17 19:23:52Z" end-time="2021-11-17 19:24:05Z" duration="12.495639" total="22" passed="19" failed="0" warnings="0" inconclusive="3" skipped="0" asserts="67">
+        <properties />
+        <test-suite type="TestSuite" id="4347" name="System" fullname="MonoTests.System" runstate="Runnable" testcasecount="22" result="Passed" start-time="2021-11-17 19:23:52Z" end-time="2021-11-17 19:24:05Z" duration="12.494040" total="22" passed="19" failed="0" warnings="0" inconclusive="3" skipped="0" asserts="67">
+          <test-suite type="TestFixture" id="3407" name="TimerTest" fullname="MonoTouchFixtures.Foundation.TimerTest" classname="MonoTouchFixtures.Foundation.TimerTest" runstate="Runnable" testcasecount="3" result="Failed" site="Child" start-time="2021-11-17 19:25:11Z" end-time="2021-11-17 19:25:34Z" duration="22.591606" total="3" passed="0" failed="3" warnings="0" inconclusive="0" skipped="0" asserts="3">
+            <properties />
+            <failure>
+              <message><![CDATA[One or more child tests had errors]]></message>
+            </failure>
+            <test-case id="3408" name="Bug17793" fullname="MonoTouchFixtures.Foundation.TimerTest.Bug17793" methodname="Bug17793" classname="MonoTouchFixtures.Foundation.TimerTest" runstate="Runnable" seed="367205192" result="Failed" start-time="2021-11-17 19:25:11Z" end-time="2021-11-17 19:25:16Z" duration="5.007821" asserts="1">
+              <failure>
+                <message><![CDATA[  Not signalled twice in 5s
+  Expected: True
+  But was:  False
+]]></message>
+                <stack-trace><![CDATA[   at MonoTouchFixtures.Foundation.TimerTest.Bug17793() in /Users/builder/azdo/_work/1/s/xamarin-macios/tests/monotouch-test/Foundation/TimerTest.cs:line 48
+]]></stack-trace>
+              </failure>
+              <output><![CDATA[Thread started
+Thread timer added
+Thread ended
+]]></output>
+              <assertions>
+                <assertion result="Failed">
+                  <message><![CDATA[  Not signalled twice in 5s
+  Expected: True
+  But was:  False
+]]></message>
+                  <stack-trace><![CDATA[   at MonoTouchFixtures.Foundation.TimerTest.Bug17793() in /Users/builder/azdo/_work/1/s/xamarin-macios/tests/monotouch-test/Foundation/TimerTest.cs:line 48
+]]></stack-trace>
+                </assertion>
+              </assertions>
+            </test-case>
+            <test-case id="3409" name="Bug2443" fullname="MonoTouchFixtures.Foundation.TimerTest.Bug2443" methodname="Bug2443" classname="MonoTouchFixtures.Foundation.TimerTest" runstate="Runnable" seed="1629190242" result="Failed" start-time="2021-11-17 19:25:16Z" end-time="2021-11-17 19:25:26Z" duration="10.126118" asserts="1">
+              <failure>
+                <message><![CDATA[  Not signalled twice in 5s
+  Expected: True
+  But was:  False
+]]></message>
+                <stack-trace><![CDATA[   at MonoTouchFixtures.Foundation.TimerTest.Bug2443() in /Users/builder/azdo/_work/1/s/xamarin-macios/tests/monotouch-test/Foundation/TimerTest.cs:line 76
+]]></stack-trace>
+              </failure>
+              <assertions>
+                <assertion result="Failed">
+                  <message><![CDATA[  Not signalled twice in 5s
+  Expected: True
+  But was:  False
+]]></message>
+                  <stack-trace><![CDATA[   at MonoTouchFixtures.Foundation.TimerTest.Bug2443() in /Users/builder/azdo/_work/1/s/xamarin-macios/tests/monotouch-test/Foundation/TimerTest.cs:line 76
+]]></stack-trace>
+                </assertion>
+              </assertions>
+              <attachments>
+                <attachment>
+                  <filePath>log.xml</filePath>
+                </attachment>
+              </attachments>
+            </test-case>
+            <test-case id="3410" name="CreateTimer_NewSignature" fullname="MonoTouchFixtures.Foundation.TimerTest.CreateTimer_NewSignature" methodname="CreateTimer_NewSignature" classname="MonoTouchFixtures.Foundation.TimerTest" runstate="Runnable" seed="1927192256" result="Failed" start-time="2021-11-17 19:25:26Z" end-time="2021-11-17 19:25:34Z" duration="7.457277" asserts="1">
+              <failure>
+                <message><![CDATA[  WaitOne
+  Expected: True
+  But was:  False
+]]></message>
+                <stack-trace><![CDATA[   at MonoTouchFixtures.Foundation.TimerTest.CreateTimer_NewSignature() in /Users/builder/azdo/_work/1/s/xamarin-macios/tests/monotouch-test/Foundation/TimerTest.cs:line 107
+]]></stack-trace>
+              </failure>
+              <assertions>
+                <assertion result="Failed">
+                  <message><![CDATA[  WaitOne
+  Expected: True
+  But was:  False
+]]></message>
+                  <stack-trace><![CDATA[   at MonoTouchFixtures.Foundation.TimerTest.CreateTimer_NewSignature() in /Users/builder/azdo/_work/1/s/xamarin-macios/tests/monotouch-test/Foundation/TimerTest.cs:line 107
+]]></stack-trace>
+                </assertion>
+              </assertions>
+            </test-case>
+          </test-suite>
+        </test-suite>
+      </test-suite>
+    </test-suite>
+  </test-suite>
+</test-run>

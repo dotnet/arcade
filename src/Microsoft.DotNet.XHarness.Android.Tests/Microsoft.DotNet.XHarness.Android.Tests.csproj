@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../Xharness.Packages.props" />
+  <Import Project="../../Xharness.Build.props" />
+
+  <PropertyGroup>
+    <TargetFramework>$(NetCurrent)</TargetFramework>
+    <Nullable>disable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Moq" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Microsoft.DotNet.XHarness.Android\Microsoft.DotNet.XHarness.Android.csproj" />
+  </ItemGroup>
+
+</Project>
