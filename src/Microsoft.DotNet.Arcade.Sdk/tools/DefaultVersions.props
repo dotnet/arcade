@@ -40,7 +40,6 @@
     <UsingToolIbcOptimization Condition="'$(UsingToolIbcOptimization)' == ''">false</UsingToolIbcOptimization>
     <UsingToolVisualStudioIbcTraining Condition="'$(UsingToolVisualStudioIbcTraining)' == ''">false</UsingToolVisualStudioIbcTraining>
     <UsingToolNuGetRepack Condition="'$(UsingToolNuGetRepack)' == ''">false</UsingToolNuGetRepack>
-    <UsingToolSymbolUploader Condition="'$(UsingToolSymbolUploader)' == ''">false</UsingToolSymbolUploader>
 
     <!-- Deprecated features -->
     <!--
@@ -64,7 +63,6 @@
     <UsingToolVSSDK>false</UsingToolVSSDK>
     <UsingToolIbcOptimization>false</UsingToolIbcOptimization>
     <UsingToolVisualStudioIbcTraining>false</UsingToolVisualStudioIbcTraining>
-    <UsingToolSymbolUploader>false</UsingToolSymbolUploader>
   </PropertyGroup>
 
   <!--
