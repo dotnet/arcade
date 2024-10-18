@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 byte[] hash = md5.ComputeHash(fileStream);
                 string relativePath = file.ItemSpec.Substring(RootDirectory.Length).TrimStart(Path.DirectorySeparatorChar);
 #if NET
-                writer.WriteLine($"{Convert.ToHexString(hash)} {relativePath}");
+                writer.WriteLine($"{HexConverter.ToHexString(hash)} {relativePath}");
 #else
                 writer.WriteLine($"{BitConverter.ToString(hash).Replace("-", "")} {relativePath}");
 #endif

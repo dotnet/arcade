@@ -15,9 +15,11 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
     public enum RpmSignatureTag
     {
         HeaderSignatures = 62,
+        RsaHeader = 268,
         Sha1Header = 269,
         Sha256Header = 273,
         HeaderAndPayloadSize = 1000,
+        PgpHeaderAndPayload = 1002,
         Md5HeaderAndPayload = 1004,
         UncompressedPayloadSize = 1007,
         ReservedSpace = 1008,

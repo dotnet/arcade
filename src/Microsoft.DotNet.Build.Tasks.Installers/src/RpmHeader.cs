@@ -14,49 +14,28 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Build.Tasks.Installers
 {
-    internal class RpmHeader<TEntryTag>(List<RpmHeader<TEntryTag>.Entry> entries)
+    internal sealed partial class RpmHeader<TEntryTag>(List<RpmHeader<TEntryTag>.Entry> entries)
         where TEntryTag : struct, Enum
     {
-        [StructLayout(LayoutKind.Sequential)]
-        private unsafe struct StructureHeader
-        {
-            public fixed byte Magic[3];
-            public byte Version;
-
-            private int _reserved;
-
-            public int NumIndexEntries;
-
-            public int NumHeaderBytes;
-        }
-
-        public enum EntryType : uint
-        {
-            Null = 0,
-            Char = 1,
-            Int8 = 2,
-            Int16 = 3,
-            Int32 = 4,
-            Int64 = 5,
-            String = 6,
-            Binary = 7,
-            StringArray = 8,
-            I18NString = 9,
-        }
 
         [StructLayout(LayoutKind.Sequential)]
         private unsafe struct IndexEntry
         {
             public int Tag;
-            public EntryType Type;
+            public RpmHeaderEntryType Type;
             public int Offset;
             public int Count;
         }
 
-        public readonly struct Entry(int tag, EntryType type, object value)
+        public readonly struct Entry(TEntryTag tag, RpmHeaderEntryType type, object value)
         {
-            public TEntryTag Tag { get; } = (TEntryTag)Enum.ToObject(typeof(TEntryTag), tag);
-            public EntryType Type { get; } = type;
+            public Entry(int entryTag, RpmHeaderEntryType type, object value)
+                : this((TEntryTag)Enum.ToObject(typeof(TEntryTag), entryTag), type, value)
+            {
+            }
+
+            public TEntryTag Tag { get; } = tag;
+            public RpmHeaderEntryType Type { get; } = type;
             public object Value { get; } = value;
         }
 
@@ -72,7 +51,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 {
                     builder.AppendLine($"\t\t'{str}'");
                 }
-                else if (entry.Type == EntryType.Binary)
+                else if (entry.Type == RpmHeaderEntryType.Binary)
                 {
                     builder.AppendLine($"\t\t{((ArraySegment<byte>)entry.Value).Count} bytes");
                     builder.AppendLine($"\t\t{BitConverter.ToString(((ArraySegment<byte>)entry.Value).Array!, ((ArraySegment<byte>)entry.Value).Offset, ((ArraySegment<byte>)entry.Value).Count)}");
@@ -97,7 +76,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             return new IndexEntry()
             {
                 Tag = BinaryPrimitives.ReadInt32BigEndian(bytes),
-                Type = (EntryType)BinaryPrimitives.ReadInt32BigEndian(bytes.Slice(4)),
+                Type = (RpmHeaderEntryType)BinaryPrimitives.ReadInt32BigEndian(bytes.Slice(4)),
                 Offset = BinaryPrimitives.ReadInt32BigEndian(bytes.Slice(8)),
                 Count = BinaryPrimitives.ReadInt32BigEndian(bytes.Slice(12))
             };
@@ -155,24 +134,25 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 {
                     IndexEntry indexEntry = ReadIndexEntry(store.AsSpan().Slice(entry.Offset));
                     if (entry.Tag != indexEntry.Tag
-                        || !indexEntry.Type.Equals(EntryType.Binary)
-                        || indexEntry.Count != 16
-                        || indexEntry.Offset != -indexBytes.Length)
+                        || !indexEntry.Type.Equals(RpmHeaderEntryType.Binary)
+                        || indexEntry.Count != 16)
                     {
+                        // Don't validate the size of the immutable region as it may not match the size of the header
+                        // (i.e. if the package has been signed)
                         throw new InvalidOperationException("Invalid immutable region tag");
                     }
                     continue;
                 }
 
-                if (entry.Type is EntryType.Binary)
+                if (entry.Type is RpmHeaderEntryType.Binary)
                 {
                     entries.Add(new Entry(entry.Tag, entry.Type, new ArraySegment<byte>(store, entry.Offset, entry.Count)));
                 }
-                else if (entry.Type is EntryType.Null)
+                else if (entry.Type is RpmHeaderEntryType.Null)
                 {
                     throw new InvalidOperationException("Null entry should not be present in RPM header");
                 }
-                else if (entry.Type is EntryType.String or EntryType.I18NString)
+                else if (entry.Type is RpmHeaderEntryType.String or RpmHeaderEntryType.I18NString)
                 {
                     int offset = entry.Offset;
                     int nullTerminatorIndex = Array.IndexOf(store, (byte)0, offset);
@@ -183,7 +163,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                     int length = nullTerminatorIndex - offset;
                     entries.Add(new Entry(entry.Tag, entry.Type, Encoding.UTF8.GetString(store, entry.Offset, length)));
                 }
-                else if (entry.Type is EntryType.StringArray)
+                else if (entry.Type is RpmHeaderEntryType.StringArray)
                 {
                     int offset = entry.Offset;
                     string[] strings = new string[entry.Count];
@@ -204,11 +184,11 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 {
                     Array contents = Array.CreateInstance(entry.Type switch
                     {
-                        EntryType.Char => typeof(char),
-                        EntryType.Int8 => typeof(byte),
-                        EntryType.Int16 => typeof(short),
-                        EntryType.Int32 => typeof(int),
-                        EntryType.Int64 => typeof(long),
+                        RpmHeaderEntryType.Char => typeof(char),
+                        RpmHeaderEntryType.Int8 => typeof(byte),
+                        RpmHeaderEntryType.Int16 => typeof(short),
+                        RpmHeaderEntryType.Int32 => typeof(int),
+                        RpmHeaderEntryType.Int64 => typeof(long),
                         _ => throw new InvalidOperationException("Invalid RPM header entry type")
                     }, entry.Count);
 
@@ -218,25 +198,25 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                     {
                         switch (entry.Type)
                         {
-                            case EntryType.Char:
+                            case RpmHeaderEntryType.Char:
                                 contents.SetValue((char)store[offset], i);
                                 offset += 1;
                                 break;
-                            case EntryType.Int8:
+                            case RpmHeaderEntryType.Int8:
                                 contents.SetValue(store[offset], i);
                                 offset += 1;
                                 break;
-                            case EntryType.Int16:
+                            case RpmHeaderEntryType.Int16:
                                 contents.SetValue(BinaryPrimitives.ReadInt16BigEndian(store.AsSpan().Slice(offset.AlignUp(2), 2)), i);
                                 offset += 2;
                                 break;
 
-                            case EntryType.Int32:
+                            case RpmHeaderEntryType.Int32:
                                 contents.SetValue(BinaryPrimitives.ReadInt32BigEndian(store.AsSpan().Slice(offset.AlignUp(4), 4)), i);
                                 offset += 4;
                                 break;
 
-                            case EntryType.Int64:
+                            case RpmHeaderEntryType.Int64:
                                 contents.SetValue(BinaryPrimitives.ReadInt64BigEndian(store.AsSpan().Slice(offset.AlignUp(8), 8)), i);
                                 offset += 8;
                                 break;
@@ -266,7 +246,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             IndexEntry immutableRegionIndexEntry = new()
             {
                 Tag = Convert.ToInt32(immutableRegionTag),
-                Type = EntryType.Binary,
+                Type = RpmHeaderEntryType.Binary,
                 Offset = 0,
                 Count = 16
             };
@@ -277,7 +257,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             IndexEntry immutableRegionData = new()
             {
                 Tag = Convert.ToInt32(immutableRegionTag),
-                Type = EntryType.Binary,
+                Type = RpmHeaderEntryType.Binary,
                 Offset = -(Entries.Count + 1) * Unsafe.SizeOf<IndexEntry>(),
                 Count = 16
             };
@@ -289,7 +269,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             {
                 BinaryPrimitives.WriteInt32BigEndian(indexInfoBytes, Convert.ToInt32(entry.Tag));
                 BinaryPrimitives.WriteInt32BigEndian(indexInfoBytes.AsSpan(4), (int)entry.Type);
-                if (entry.Type is EntryType.Binary)
+                if (entry.Type is RpmHeaderEntryType.Binary)
                 {
                     BinaryPrimitives.WriteInt32BigEndian(indexInfoBytes.AsSpan(8), (int)storeStream.Length);
 
@@ -298,11 +278,11 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                     
                     BinaryPrimitives.WriteInt32BigEndian(indexInfoBytes.AsSpan(12), binary.Count);
                 }
-                else if (entry.Type is EntryType.Null)
+                else if (entry.Type is RpmHeaderEntryType.Null)
                 {
                     throw new InvalidOperationException("Null entry should not be present in RPM header");
                 }
-                else if (entry.Type is EntryType.String or EntryType.I18NString)
+                else if (entry.Type is RpmHeaderEntryType.String or RpmHeaderEntryType.I18NString)
                 {
                     BinaryPrimitives.WriteInt32BigEndian(indexInfoBytes.AsSpan(8), (int)storeStream.Length);
                     BinaryPrimitives.WriteInt32BigEndian(indexInfoBytes.AsSpan(12), 1);
@@ -312,7 +292,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                     storeStream.WriteByte(0);
 
                 }
-                else if (entry.Type is EntryType.StringArray)
+                else if (entry.Type is RpmHeaderEntryType.StringArray)
                 {
                     BinaryPrimitives.WriteInt32BigEndian(indexInfoBytes.AsSpan(8), (int)storeStream.Length);
 
@@ -331,11 +311,11 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 {
                     int alignment = entry.Type switch
                     {
-                        EntryType.Char => 1,
-                        EntryType.Int8 => 1,
-                        EntryType.Int16 => 2,
-                        EntryType.Int32 => 4,
-                        EntryType.Int64 => 8,
+                        RpmHeaderEntryType.Char => 1,
+                        RpmHeaderEntryType.Int8 => 1,
+                        RpmHeaderEntryType.Int16 => 2,
+                        RpmHeaderEntryType.Int32 => 4,
+                        RpmHeaderEntryType.Int64 => 8,
                         _ => throw new InvalidOperationException("Invalid RPM header entry type")
                     };
 
@@ -351,21 +331,21 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                     {
                         switch (entry.Type)
                         {
-                            case EntryType.Char:
+                            case RpmHeaderEntryType.Char:
                                 storeStream.WriteByte((byte)(char)contents.GetValue(i)!);
                                 break;
-                            case EntryType.Int8:
+                            case RpmHeaderEntryType.Int8:
                                 storeStream.WriteByte((byte)contents.GetValue(i)!);
                                 break;
-                            case EntryType.Int16:
+                            case RpmHeaderEntryType.Int16:
                                 BinaryPrimitives.WriteInt16BigEndian(tempBeBytes, (short)contents.GetValue(i)!);
                                 storeStream.Write(tempBeBytes, 0, 2);
                                 break;
-                            case EntryType.Int32:
+                            case RpmHeaderEntryType.Int32:
                                 BinaryPrimitives.WriteInt32BigEndian(tempBeBytes, (int)contents.GetValue(i)!);
                                 storeStream.Write(tempBeBytes, 0, 4);
                                 break;
-                            case EntryType.Int64:
+                            case RpmHeaderEntryType.Int64:
                                 BinaryPrimitives.WriteInt64BigEndian(tempBeBytes, (long)contents.GetValue(i)!);
                                 storeStream.Write(tempBeBytes, 0, 8);
                                 break;

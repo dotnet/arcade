@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
         public ulong OwnerID { get; } = ownerID;
         public ulong GroupID { get; } = groupID;
         public uint Mode { get; } = mode;
-        public Stream DataStream { get; } = dataStream;
+        public MemoryStream DataStream { get; } = dataStream;
         public ushort NumberOfLinks { get; } = numberOfLinks;
         public ulong DevMajor { get; } = devMajor;
         public ulong DevMinor { get; } = devMinor;

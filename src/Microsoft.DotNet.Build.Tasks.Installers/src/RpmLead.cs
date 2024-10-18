@@ -4,6 +4,7 @@
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -36,7 +37,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             lead.Architecture = BinaryPrimitives.ReadInt16BigEndian(stream.ReadExactly(2));
             byte[] name = new byte[66];
             stream.ReadExactly(name, 0, 66);
-            lead.Name = new string(Encoding.UTF8.GetString(name, 0, Array.IndexOf<byte>(name, 0)));
+            lead.Name = Encoding.UTF8.GetString(name, 0, Array.IndexOf<byte>(name, 0));
             lead.OperatingSystem = BinaryPrimitives.ReadInt16BigEndian(stream.ReadExactly(2));
             lead.SignatureType = BinaryPrimitives.ReadInt16BigEndian(stream.ReadExactly(2));
             stream.ReadExactly(16); // Skip reserved

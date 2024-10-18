@@ -18,9 +18,9 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
     {
         public void WriteNextEntry(CpioEntry entry)
         {
-            stream.Write("070701"u8);
+            stream.Write("070701"u8.ToArray());
 
-            using StreamWriter writer = new(stream, Encoding.ASCII, leaveOpen: true);
+            using StreamWriter writer = new(stream, Encoding.ASCII, bufferSize: -1, leaveOpen: true);
 
             writer.Write(entry.Inode.ToString("x8"));
             writer.Write(entry.Mode.ToString("x8"));
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             writer.Write(entry.RDevMajor.ToString("x8"));
             writer.Write(entry.RDevMinor.ToString("x8"));
             writer.Write(entry.Name.Length.ToString("x8"));
-            stream.Write("00000000"u8); // Check field
+            stream.Write("00000000"u8.ToArray()); // Check field
             writer.Write(entry.Name);
             stream.WriteByte(0);
             stream.AlignWriteTo(2);

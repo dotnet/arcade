@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Build.Tasks.Installers
 {
-    internal class RpmPackage(RpmLead lead, RpmHeader<RpmSignatureTag> signature, RpmHeader<RpmHeaderTag> header, MemoryStream archiveStream) : IDisposable
+    internal sealed class RpmPackage(RpmLead lead, RpmHeader<RpmSignatureTag> signature, RpmHeader<RpmHeaderTag> header, MemoryStream archiveStream) : IDisposable
     {
         public RpmLead Lead { get; set; } = lead;
         public RpmHeader<RpmSignatureTag> Signature { get; set; } = signature;
@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             stream.AlignWriteTo(8);
             Header.WriteTo(stream, RpmHeaderTag.Immutable);
 
-            using GZipStream gzipStream = new(stream, CompressionMode.Compress, leaveOpen: true);
+            using GZipStream gzipStream = new(stream, CompressionLevel.Optimal, leaveOpen: true);
             ArchiveStream.CopyTo(gzipStream);
         }
 

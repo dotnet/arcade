@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             stream.AlignReadTo(4);
 
             byte[] data = new byte[size];
-            stream.ReadExactly(data, 0, checked((int)size));            
+            stream.ReadExactly(data, 0, (int)size);            
             MemoryStream dataStream = new(data);
 
             stream.AlignReadTo(4);
