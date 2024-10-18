@@ -154,18 +154,30 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
         {
             // Build the header first.
             List<RpmHeader<RpmHeaderTag>.Entry> entries = [..PackageEntries];
-            entries.Add(new(RpmHeaderTag.ProvideName, RpmHeaderEntryType.StringArray, _provides.Select(p => p.capability).ToArray()));
-            entries.Add(new(RpmHeaderTag.ProvideVersion, RpmHeaderEntryType.StringArray, _provides.Select(p => p.version).ToArray()));
-            entries.Add(new(RpmHeaderTag.ProvideFlags, RpmHeaderEntryType.Int32, _provides.Select(_ => 0).ToArray()));
-            entries.Add(new(RpmHeaderTag.ConflictName, RpmHeaderEntryType.StringArray, _conflicts.ToArray()));
-            entries.Add(new(RpmHeaderTag.ConflictFlags, RpmHeaderEntryType.Int32, _conflicts.Select(_ => 0).ToArray()));
-            entries.Add(new(RpmHeaderTag.RequireName, RpmHeaderEntryType.StringArray, _requires.Select(r => r.name).ToArray()));
-            entries.Add(new(RpmHeaderTag.RequireVersion, RpmHeaderEntryType.StringArray, _requires.Select(r => r.version).ToArray()));
-            entries.Add(new(RpmHeaderTag.RequireFlags, RpmHeaderEntryType.Int32, _requires.Select(r => r.flags).ToArray()));
-            entries.Add(new(RpmHeaderTag.ChangelogName, RpmHeaderEntryType.StringArray, _changelogLines.Select(l => l.name).ToArray()));
-            entries.Add(new(RpmHeaderTag.ChangelogText, RpmHeaderEntryType.StringArray, _changelogLines.Select(l => l.text).ToArray()));
-            entries.Add(new(RpmHeaderTag.ChangelogText, RpmHeaderEntryType.StringArray, _changelogLines.Select(l => l.text).ToArray()));
-            entries.Add(new(RpmHeaderTag.ChangelogTimestamp, RpmHeaderEntryType.Int32, _changelogLines.Select(_ => (int)(DateTimeOffset.UtcNow - UnixEpoch).TotalSeconds).ToArray()));
+            if (_provides.Count != 0)
+            {
+                entries.Add(new(RpmHeaderTag.ProvideName, RpmHeaderEntryType.StringArray, _provides.Select(p => p.capability).ToArray()));
+                entries.Add(new(RpmHeaderTag.ProvideVersion, RpmHeaderEntryType.StringArray, _provides.Select(p => p.version).ToArray()));
+                entries.Add(new(RpmHeaderTag.ProvideFlags, RpmHeaderEntryType.Int32, _provides.Select(_ => 0).ToArray()));
+            }
+            if (_conflicts.Count != 0)
+            {
+                entries.Add(new(RpmHeaderTag.ConflictName, RpmHeaderEntryType.StringArray, _conflicts.ToArray()));
+                entries.Add(new(RpmHeaderTag.ConflictFlags, RpmHeaderEntryType.Int32, _conflicts.Select(_ => 0).ToArray()));
+            }
+            if (_requires.Count != 0)
+            {
+                entries.Add(new(RpmHeaderTag.RequireName, RpmHeaderEntryType.StringArray, _requires.Select(r => r.name).ToArray()));
+                entries.Add(new(RpmHeaderTag.RequireVersion, RpmHeaderEntryType.StringArray, _requires.Select(r => r.version).ToArray()));
+                entries.Add(new(RpmHeaderTag.RequireFlags, RpmHeaderEntryType.Int32, _requires.Select(r => r.flags).ToArray()));
+            }
+            if (_changelogLines.Count != 0)
+            {
+                entries.Add(new(RpmHeaderTag.ChangelogName, RpmHeaderEntryType.StringArray, _changelogLines.Select(l => l.name).ToArray()));
+                entries.Add(new(RpmHeaderTag.ChangelogText, RpmHeaderEntryType.StringArray, _changelogLines.Select(l => l.text).ToArray()));
+                entries.Add(new(RpmHeaderTag.ChangelogText, RpmHeaderEntryType.StringArray, _changelogLines.Select(l => l.text).ToArray()));
+                entries.Add(new(RpmHeaderTag.ChangelogTimestamp, RpmHeaderEntryType.Int32, _changelogLines.Select(_ => (int)(DateTimeOffset.UtcNow - UnixEpoch).TotalSeconds).ToArray()));
+            }
             entries.Add(new(RpmHeaderTag.BuildTime, RpmHeaderEntryType.Int32, new[] { (int)(DateTimeOffset.UtcNow - UnixEpoch).TotalSeconds }));
             entries.Add(new(RpmHeaderTag.Prefixes, RpmHeaderEntryType.StringArray, new[] { "/" }));
             entries.Add(new(RpmHeaderTag.Vendor, RpmHeaderEntryType.String, Vendor));
@@ -315,8 +327,8 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             using (SHA256 sha256 = SHA256.Create())
             {
                 entries.Add(new(RpmHeaderTag.PayloadDigestAlgorithm, RpmHeaderEntryType.Int32, Sha256DigestAlgorithmValue));
-                entries.Add(new(RpmHeaderTag.CompressedPayloadDigest, RpmHeaderEntryType.String, HexConverter.ToHexString(sha256.ComputeHash(compressedPayload))));
-                entries.Add(new(RpmHeaderTag.UncompressedPayloadDigest, RpmHeaderEntryType.String, HexConverter.ToHexString(sha256.ComputeHash(cpioArchive))));
+                entries.Add(new(RpmHeaderTag.CompressedPayloadDigest, RpmHeaderEntryType.StringArray, new string[] { HexConverter.ToHexString(sha256.ComputeHash(compressedPayload)) }));
+                entries.Add(new(RpmHeaderTag.UncompressedPayloadDigest, RpmHeaderEntryType.StringArray, new string[] { HexConverter.ToHexString(sha256.ComputeHash(cpioArchive)) }));
 
                 cpioArchive.Seek(0, SeekOrigin.Begin);
 

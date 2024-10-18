@@ -240,30 +240,11 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             BinaryPrimitives.WriteInt32BigEndian(numIndexEntries, Entries.Count + 1);
             stream.Write(numIndexEntries);
 
+            MemoryStream indexStream = new();
+
             using MemoryStream storeStream = new();
 
             byte[] indexInfoBytes = new byte[16];
-            IndexEntry immutableRegionIndexEntry = new()
-            {
-                Tag = Convert.ToInt32(immutableRegionTag),
-                Type = RpmHeaderEntryType.Binary,
-                Offset = 0,
-                Count = 16
-            };
-
-            WriteIndexEntry(indexInfoBytes, immutableRegionIndexEntry);
-            stream.Write(indexInfoBytes);
-
-            IndexEntry immutableRegionData = new()
-            {
-                Tag = Convert.ToInt32(immutableRegionTag),
-                Type = RpmHeaderEntryType.Binary,
-                Offset = -(Entries.Count + 1) * Unsafe.SizeOf<IndexEntry>(),
-                Count = 16
-            };
-
-            WriteIndexEntry(indexInfoBytes, immutableRegionData);
-            storeStream.Write(indexInfoBytes);
 
             foreach (var entry in Entries)
             {
@@ -353,9 +334,45 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                     }
                 }
 
-                stream.Write(indexInfoBytes);
+                indexStream.Write(indexInfoBytes);
             }
 
+            // Now that we've written all of the index entries, we can write the immutable region tags.
+            byte[] immutableRegionIndexEntryBytes = new byte[16];
+            IndexEntry immutableRegionIndexEntry = new()
+            {
+                Tag = Convert.ToInt32(immutableRegionTag),
+                Type = RpmHeaderEntryType.Binary,
+                Offset = (int)storeStream.Position,
+                Count = 16
+            };
+
+            WriteIndexEntry(immutableRegionIndexEntryBytes, immutableRegionIndexEntry);
+
+            IndexEntry immutableRegionTrailer = new()
+            {
+                Tag = Convert.ToInt32(immutableRegionTag),
+                Type = RpmHeaderEntryType.Binary,
+                Offset = -(Entries.Count + 1) * Unsafe.SizeOf<IndexEntry>(),
+                Count = 16
+            };
+
+            WriteIndexEntry(indexInfoBytes, immutableRegionTrailer);
+            storeStream.Write(indexInfoBytes);
+
+            // Now that we've written the whole index and store, we can write the size of the store
+            byte[] numHeaderBytes = new byte[4];
+            BinaryPrimitives.WriteInt32BigEndian(numHeaderBytes, (int)storeStream.Length);
+            stream.Write(numHeaderBytes);
+
+            // Now write the immutable region index entry
+            // at the start of the index.
+            stream.Write(immutableRegionIndexEntryBytes);
+
+            // Now write the rest of the index index and the entire store.
+            indexStream.Position = 0;
+            storeStream.Position = 0;
+            indexStream.CopyTo(stream);
             storeStream.CopyTo(stream);
         }
     }
