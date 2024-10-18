@@ -33,13 +33,15 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             writer.Write(entry.DevMinor.ToString("x8"));
             writer.Write(entry.RDevMajor.ToString("x8"));
             writer.Write(entry.RDevMinor.ToString("x8"));
-            writer.Write(entry.Name.Length.ToString("x8"));
+            writer.Write((entry.Name.Length + 1).ToString("x8")); // This field should include the null terminator.
+            writer.Flush();
             stream.Write("00000000"u8.ToArray()); // Check field
             writer.Write(entry.Name);
+            writer.Flush();
             stream.WriteByte(0);
-            stream.AlignWriteTo(2);
+            stream.AlignWriteTo(4);
             entry.DataStream.CopyTo(stream);
-            stream.AlignWriteTo(2);
+            stream.AlignWriteTo(4);
         }
 
         public void Dispose()
