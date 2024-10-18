@@ -6,7 +6,7 @@ set -e
 #
 # Usage:
 #
-# ./install-native-dependencies.sh <OS>
+# ./install-dependencies.sh <OS>
 
 os="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
 
