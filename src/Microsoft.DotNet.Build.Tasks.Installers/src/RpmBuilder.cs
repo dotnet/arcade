@@ -24,8 +24,8 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
         private readonly List<(string name, int flags, string version)> _requires = [
             ("rpmlib(CompressedFileNames)", 16777226, "3.0.4-1"),
-            ("rpmlib(PayloadFilesHavePrefix)", 16777226, "4.6.0-1"),
-            ("rpmlib(FileDigests)", 16777226, "4.0-1")
+            ("rpmlib(PayloadFilesHavePrefix)", 16777226, "4.0-1"),
+            ("rpmlib(FileDigests)", 16777226, "4.6.0-1")
         ];
 
         private RpmLead Lead { get; } = new()
@@ -217,9 +217,9 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                     file.DataStream.Position = 0;
 
                     // If the entry is a regular file, compute its digest.
-                    if ((file.Mode & 0170000) == 0100000)
+                    if ((file.Mode & CpioEntry.FileKindMask) == CpioEntry.RegularFile)
                     {
-                        fileDigests.Add(HexConverter.ToHexString(sha256.ComputeHash(file.DataStream)));
+                        fileDigests.Add(HexConverter.ToHexStringLower(sha256.ComputeHash(file.DataStream)));
                         file.DataStream.Position = 0;
                     }
                     else
@@ -228,7 +228,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                         fileDigests.Add("");
                     }
 
-                    if ((file.Mode & 0170000) == 0120000)
+                    if ((file.Mode & CpioEntry.FileKindMask) == CpioEntry.SymbolicLink)
                     {
                         // For symbolic links, the contents of the file is the link target.
                         using StreamReader reader = new(file.DataStream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: -1, leaveOpen: true);
@@ -241,6 +241,16 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                     }
                     baseNames.Add(Path.GetFileName(file.Name));
                     string dirName = Path.GetDirectoryName(file.Name)!;
+                    if (dirName.StartsWith("./"))
+                    {
+                        // The cpio entries must have './', but the RPM header entries must have
+                        // the actual (non-relative) pathing.
+                        dirName = dirName.Substring(1);
+                    }
+
+                    // RPM requires the directory names to end with the directory separator.
+                    dirName += '/';
+
                     int directoryIndex = directories.IndexOf(dirName);
                     if (directoryIndex == -1)
                     {
@@ -289,7 +299,15 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                         fileColors.Add(0);
                     }
 
-                    fileFlags.Add(0);
+                    if (file.Name.StartsWith("usr/share/doc") && Path.GetFileName(file.Name) == "copyright")
+                    {
+                        // Treat the copyright file as though it came from the %%doc section in an RPM spec file.
+                        fileFlags.Add(2);
+                    }
+                    else
+                    {
+                        fileFlags.Add(0);
+                    }
                 }
                 entries.Add(new(RpmHeaderTag.FileDigests, RpmHeaderEntryType.StringArray, fileDigests.ToArray()));
                 entries.Add(new(RpmHeaderTag.BaseNames, RpmHeaderEntryType.StringArray, baseNames.ToArray()));
@@ -327,8 +345,8 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             using (SHA256 sha256 = SHA256.Create())
             {
                 entries.Add(new(RpmHeaderTag.PayloadDigestAlgorithm, RpmHeaderEntryType.Int32, Sha256DigestAlgorithmValue));
-                entries.Add(new(RpmHeaderTag.CompressedPayloadDigest, RpmHeaderEntryType.StringArray, new string[] { HexConverter.ToHexString(sha256.ComputeHash(compressedPayload)) }));
-                entries.Add(new(RpmHeaderTag.UncompressedPayloadDigest, RpmHeaderEntryType.StringArray, new string[] { HexConverter.ToHexString(sha256.ComputeHash(cpioArchive)) }));
+                entries.Add(new(RpmHeaderTag.CompressedPayloadDigest, RpmHeaderEntryType.StringArray, new string[] { HexConverter.ToHexStringLower(sha256.ComputeHash(compressedPayload)) }));
+                entries.Add(new(RpmHeaderTag.UncompressedPayloadDigest, RpmHeaderEntryType.StringArray, new string[] { HexConverter.ToHexStringLower(sha256.ComputeHash(cpioArchive)) }));
 
                 cpioArchive.Seek(0, SeekOrigin.Begin);
 
@@ -350,12 +368,12 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             // RPM has removed the header+payload legacy tags in favor of the header-only tags + payload digests in the header in newer versions.
             using (SHA1 sha1 = SHA1.Create())
             {
-                signatureEntries.Add(new(RpmSignatureTag.Sha1Header, RpmHeaderEntryType.String, HexConverter.ToHexString(sha1.ComputeHash(headerStream))));
+                signatureEntries.Add(new(RpmSignatureTag.Sha1Header, RpmHeaderEntryType.String, HexConverter.ToHexStringLower(sha1.ComputeHash(headerStream))));
                 headerStream.Seek(0, SeekOrigin.Begin);
             }
             using (SHA256 sha256 = SHA256.Create())
             {
-                signatureEntries.Add(new(RpmSignatureTag.Sha256Header, RpmHeaderEntryType.String, HexConverter.ToHexString(sha256.ComputeHash(headerStream))));
+                signatureEntries.Add(new(RpmSignatureTag.Sha256Header, RpmHeaderEntryType.String, HexConverter.ToHexStringLower(sha256.ComputeHash(headerStream))));
             }
 
             signatureEntries.Add(new(RpmSignatureTag.ReservedSpace, RpmHeaderEntryType.Binary, new ArraySegment<byte>(new byte[4128])));

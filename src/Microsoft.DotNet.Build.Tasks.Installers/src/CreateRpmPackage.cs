@@ -110,7 +110,10 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
                 Dictionary<string, string> filePathToKind = RawPayloadFileKinds.Select(k => k.ItemSpec.Split(':')).ToDictionary(k => k[0], k => k[1].Trim());
                 for (CpioEntry entry = reader.GetNextEntry(); entry is not null; entry = reader.GetNextEntry())
                 {
-                    string kind = filePathToKind[$"./{entry.Name}"];
+                    // RPM requires the CPIO entries to be rooted in a relative root of './'.
+                    // The cpio tool doesn't want to do this, so we do it here.
+                    entry = entry.WithName($"./{entry.Name}");
+                    string kind = filePathToKind[entry.Name];
                     // Symlinks may be broken when we are assembling the package, but will not be when we install the package.
                     // Update the file kinds to not say "broken symlink".
                     kind = kind.Replace("broken symlink", "symlink");

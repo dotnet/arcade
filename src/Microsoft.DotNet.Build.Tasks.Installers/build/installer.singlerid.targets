@@ -374,7 +374,7 @@
     <PropertyGroup>
       <_FindAllPayloadFilesCommand>find . -depth ! -wholename '.' ! -wholename './usr' ! -regex '^./usr/[a-z]+$' ! -wholename './usr/share/doc'</_FindAllPayloadFilesCommand>
     </PropertyGroup>
-    <Exec Command="$(_FindAllPayloadFilesCommand) -print  | cpio -H newc -o > '$(_LayoutDirectory)/payload.cpio'"
+    <Exec Command="$(_FindAllPayloadFilesCommand) -print  | cpio -H newc -o --quiet > '$(_LayoutDirectory)/payload.cpio'"
           WorkingDirectory="$(_LayoutDataRoot)"
           EchoOff="true"
           StandardOutputImportance="Low" />
