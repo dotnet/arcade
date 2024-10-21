@@ -89,6 +89,6 @@
     <!-- vstest -->
     <MicrosoftNetTestSdkVersion>17.5.0</MicrosoftNetTestSdkVersion>
     <!-- xharness -->
-    <MicrosoftDotNetXHarnessCLIVersion>10.0.0-prerelease.24511.1</MicrosoftDotNetXHarnessCLIVersion>
+    <MicrosoftDotNetXHarnessCLIVersion>10.0.0-prerelease.24514.1</MicrosoftDotNetXHarnessCLIVersion>
   </PropertyGroup>
 </Project>
