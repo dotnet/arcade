@@ -409,26 +409,6 @@
        />
 
     <Message Text="$(MSBuildProjectName) -> $(_InstallerFile)" Importance="high" />
-    
-    <!-- CBL-Mariner 1.0 -->
-    <Copy Condition="'$(CreateRPMForCblMariner)' == 'true'"
-          SourceFiles="$(_InstallerFile)"
-          DestinationFiles="$(_InstallerFileCblMariner)"
-          OverwriteReadOnlyFiles="True"
-          SkipUnchangedFiles="False"
-          UseHardlinksIfPossible="False" />
-
-    <Message Text="$(MSBuildProjectName) -> $(_InstallerFileCblMariner)" Importance="high" />
-
-    <!-- CBL-Mariner 2.0 -->
-    <Copy Condition="'$(CreateRPMForCblMariner)' == 'true'"
-          SourceFiles="$(_InstallerFile)"
-          DestinationFiles="$(_InstallerFileCblMariner2)"
-          OverwriteReadOnlyFiles="True"
-          SkipUnchangedFiles="False"
-          UseHardlinksIfPossible="False" />
-
-    <Message Text="$(MSBuildProjectName) -> $(_InstallerFileCblMariner2)" Importance="high" />
   </Target>
 
   <Target Name="CreateRpmUsingFpm"
@@ -485,10 +465,13 @@
           UseHardlinksIfPossible="False" />
 
     <Message Text="$(MSBuildProjectName) -> $(_InstallerFile)" Importance="high" />
+  </Target>
 
+  <Target Name="_BuildMarinerRpms"
+          AfterTargets="GenerateRpm"
+          Condition="'$(CreateRPMForCblMariner)' == 'true'">
     <!-- CBL-Mariner 1.0 -->
-    <Copy Condition="'$(CreateRPMForCblMariner)' == 'true'"
-          SourceFiles="@(GeneratedRpmFiles)"
+    <Copy SourceFiles="$(_InstallerFile)"
           DestinationFiles="$(_InstallerFileCblMariner)"
           OverwriteReadOnlyFiles="True"
           SkipUnchangedFiles="False"
@@ -497,8 +480,7 @@
     <Message Text="$(MSBuildProjectName) -> $(_InstallerFileCblMariner)" Importance="high" />
 
     <!-- CBL-Mariner 2.0 -->
-    <Copy Condition="'$(CreateRPMForCblMariner)' == 'true'"
-          SourceFiles="@(GeneratedRpmFiles)"
+    <Copy SourceFiles="$(_InstallerFile)"
           DestinationFiles="$(_InstallerFileCblMariner2)"
           OverwriteReadOnlyFiles="True"
           SkipUnchangedFiles="False"
