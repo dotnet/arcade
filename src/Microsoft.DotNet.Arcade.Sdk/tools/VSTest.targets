@@ -1,10 +1,6 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
 
-  <PropertyGroup>
-    <TestRunSettingsFile Condition="'$(TestRunSettingsFile)' == ''">$(VSTestRunSettingsFile)</TestRunSettingsFile>
-  </PropertyGroup>
-
   <Target Name="RunTests"
           Outputs="%(TestToRun.ResultsStdOutPath)"
           Condition="'$(SkipTests)' != 'true' and '@(TestToRun)' != ''">
@@ -80,6 +76,13 @@
     <ItemGroup>
       <FileWrites Include="@(_OutputFiles)"/>
     </ItemGroup>
+  </Target>
+
+  <!-- Set VSTest specific settings in a target so that the TestToRun item can read from it and customers can set it at any time during evaluation. -->
+  <Target Name="_AddVSTestSpecificSettingsToInnerBuild" BeforeTargets="_InnerGetTestsToRun">
+    <PropertyGroup>
+      <TestRunSettingsFile Condition="'$(TestRunSettingsFile)' == ''">$(VSTestRunSettingsFile)</TestRunSettingsFile>
+    </PropertyGroup>
   </Target>
 
 </Project>
