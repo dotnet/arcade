@@ -64,7 +64,7 @@ jobs:
       with:
         script: |
           const target_branch = '${{ steps.target-branch-extractor.outputs.result }}';
-          const backport_start_body = `Started backporting to _${target_branch}_": https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+          const backport_start_body = `Started backporting to _${target_branch}_: https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
           await github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
