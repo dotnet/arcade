@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<test-results name="Test results" errors="0" inconclusive="0" ignored="0" invalid="0" not-run="0" date="2020-04-27" time="01:02:45" total="3" failures="1" skipped="1">
+  <environment os-version="unknown" platform="unknown" cwd="unknown" machine-name="unknown" user="unknown" user-domain="unknown" nunit-version="xUnit.net 2.4.1.0" clr-version="64-bit .NET  [collection-per-class, non-parallel]" />
+  <culture-info current-culture="unknown" current-uiculture="unknown" />
+  <test-suite type="Assemblies" name="xUnit.net Tests" executed="True" success="False" result="Failure" time="0.594">
+    <results>
+      <test-suite type="Assembly" executed="True" name="System.Numerics.Vectors.Tests.dll" result="Failure" success="False" time="0.594">
+        <results>
+          <test-suite type="TestCollection" executed="True" name="Test collection for DummyTestProject.DummyTests" result="Failure" success="False" time="0.191">
+            <results>
+              <test-case name="DummyTestProject.DummyTests.SkippedTest" executed="False" result="Skipped" time="0">
+                <reason>
+                  <message>Skipped reason</message>
+                </reason>
+              </test-case>
+              <test-case name="DummyTestProject.DummyTests.FailingTest" executed="True" result="Failure" success="False" time="0.1253504">
+                <failure>
+                  <message>Assert.Equal() Failure\nExpected: 1\nActual:   2</message>
+                  <stack-trace>   at DummyTestProject.DummyTests.FailingTest() in /Users/egorbo/prj/runtime-3/src/libraries/System.Numerics.Vectors/tests/Vector2Tests.cs:line 16
+                    at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture) in /Users/egorbo/prj/runtime-3/src/mono/netcore/System.Private.CoreLib/src/System/Reflection/RuntimeMethodInfo.cs:line 359</stack-trace>
+                </failure>
+              </test-case>
+              <test-case name="DummyTestProject.DummyTests.PassingTest" executed="True" result="Success" success="True" time="0.0657749" />
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>
