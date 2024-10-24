@@ -67,8 +67,6 @@
       ('$(DotNetBuildSourceOnly)' != 'true' or ('$(DotNetBuildInnerRepo)' == 'true' and '$(DotNetBuildOrchestrator)' != 'true'))">true</AutoGenerateSymbolPackages>
 
     <SymbolPackagesDir>$(ArtifactsTmpDir)SymbolPackages\</SymbolPackagesDir>
-
-    <PublishDependsOnTargets Condition="$(PublishToSymbolServer)">$(PublishDependsOnTargets);PublishSymbols</PublishDependsOnTargets>
     <PublishDependsOnTargets Condition="$(DotNetPublishUsingPipelines)">$(PublishDependsOnTargets);PublishToAzureDevOpsArtifacts</PublishDependsOnTargets>
 
     <PublishDependsOnTargets>BeforePublish;$(PublishDependsOnTargets)</PublishDependsOnTargets>
@@ -87,7 +85,6 @@
   </PropertyGroup>
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets"/>
-  <Import Project="$(NuGetPackageRoot)microsoft.symboluploader.build.task\$(MicrosoftSymbolUploaderBuildTaskVersion)\build\PublishSymbols.targets" Condition="$(PublishToSymbolServer)"/>
 
   <Target Name="Publish"
           DependsOnTargets="$(PublishDependsOnTargets)" />
@@ -190,7 +187,7 @@
 			<!-- When we have <account>.visualstudio.com -->
       <AzureDevOpsAccount Condition="$(CollectionUri.IndexOf('visualstudio.com')) >= 0">$(CollectionUri.Split('.')[0].Split('/')[2])</AzureDevOpsAccount>
       
-      <!-- Directory where pdbs pointed in `FilesToPublishToSymbolServer` are copied before publishing to AzDO artifacts. -->
+      <!-- Directory where pdbs pointed in `FilesToUploadToPdbArtifactsContainer` are copied before publishing to AzDO artifacts. -->
       <PDBsToPublishTempLocation>$(ArtifactsTmpDir)PDBsToPublish/</PDBsToPublishTempLocation>
     </PropertyGroup>
     
@@ -252,11 +249,11 @@
 
     <!-- 
         Publish Windows PDBs produced by SymStore.targets (by default, only shipping PDBs are placed there).
-        SymbolUploader doesn't support embedded PDBs yet, so let SymStore.targets do the conversion for now.
+        symbol.exe doesn't support embedded PDBs, so let SymStore.targets do the conversion for now.
         https://github.com/dotnet/symstore/issues/143
       -->
     <ItemGroup>
-      <FilesToPublishToSymbolServer Include="$(ArtifactsSymStoreDirectory)**\*.pdb"/>
+      <FilesToUploadToPdbArtifactsContainer Include="$(ArtifactsSymStoreDirectory)**\*.pdb"/>
     </ItemGroup>
 
     <!--
@@ -269,79 +266,18 @@
 
         - It's possible that the user have PDBs outside the Arcade.SDK standard folder 
            (artifacts/SymStore/$Configuration) and we need to maintain that support. For that reason,
-           and the one mentioned above, we copy all files in `FilesToPublishToSymbolServer` to a temporary
+           and the one mentioned above, we copy all files in `FilesToUploadToPdbArtifactsContainer` to a temporary
            folder before adding them to the AzDO artifact container.
     -->
 		<Copy
-			SourceFiles="@(FilesToPublishToSymbolServer)"
-			DestinationFiles="@(FilesToPublishToSymbolServer->'$(PDBsToPublishTempLocation)%(RecursiveDir)%(Filename)%(Extension)')"
+			SourceFiles="@(FilesToUploadToPdbArtifactsContainer)"
+			DestinationFiles="@(FilesToUploadToPdbArtifactsContainer->'$(PDBsToPublishTempLocation)%(RecursiveDir)%(Filename)%(Extension)')"
 		/>
 
     <Message
       Text="##vso[artifact.upload containerfolder=PdbArtifacts;artifactname=PdbArtifacts]$(PDBsToPublishTempLocation)"
       Importance="high" 
-      Condition="'@(FilesToPublishToSymbolServer)' != ''"/>
-  </Target>
-
-  <Target Name="PublishSymbols">
-    <PropertyGroup>
-      <DotNetSymbolExpirationInDays Condition="'$(DotNetSymbolExpirationInDays)' == ''">3650</DotNetSymbolExpirationInDays>
-      <DryRun>false</DryRun>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(OfficialBuild)' != 'true'">
-      <DryRun>true</DryRun>
-      <DotNetSymbolServerTokenSymWeb>DryRunPTA</DotNetSymbolServerTokenSymWeb>
-      <DotNetSymbolServerTokenMsdl>DryRunPTA</DotNetSymbolServerTokenMsdl>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <!-- 
-        Publish Windows PDBs produced by SymStore.targets (by default, only shipping PDBs are placed there).
-        SymbolUploader doesn't support embedded PDBs yet, so let SymStore.targets do the conversion for now.
-        https://github.com/dotnet/core-eng/issues/3645
-      -->
-      <FilesToPublishToSymbolServer Include="$(ArtifactsSymStoreDirectory)**\*.pdb"/>
-
-      <!--
-        Publish Portable PDBs contained in symbol packages.
-      -->
-      <PackagesToPublishToSymbolServer Include="@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)"/>
-    </ItemGroup>
-
-    <PropertyGroup>
-      <PublishToSymbolServer Condition="'@(FilesToPublishToSymbolServer)' == '' and '@(PackagesToPublishToSymbolServer)' == ''">false</PublishToSymbolServer>
-    </PropertyGroup>
-
-    <!-- Symbol Uploader: MSDL -->
-    <Message Importance="High" Text="Publishing symbol packages to MSDL ..." Condition="$(PublishToSymbolServer)" />
-    <PublishSymbols PackagesToPublish="@(PackagesToPublishToSymbolServer)"
-                    FilesToPublish="@(FilesToPublishToSymbolServer)"
-                    PersonalAccessToken="$(DotNetSymbolServerTokenMsdl)"
-                    SymbolServerPath="https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection"
-                    ExpirationInDays="$(DotNetSymbolExpirationInDays)"
-                    VerboseLogging="true"
-                    DryRun="$(DryRun)"
-                    ConvertPortablePdbsToWindowsPdbs="false"
-                    PdbConversionTreatAsWarning=""
-                    Condition="$(PublishToSymbolServer)"/>
-
-    <!-- 
-      Symbol Uploader: SymWeb 
-      Watson, VS insertion testings and the typical internal dev usage require SymWeb.
-      Currently we need to call the task twice (https://github.com/dotnet/core-eng/issues/3489).
-    -->
-    <Message Importance="High" Text="Publishing symbol packages to SymWeb ..." Condition="$(PublishToSymbolServer)" />
-    <PublishSymbols PackagesToPublish="@(PackagesToPublishToSymbolServer)"
-                    FilesToPublish="@(FilesToPublishToSymbolServer)"
-                    PersonalAccessToken="$(DotNetSymbolServerTokenSymWeb)"
-                    SymbolServerPath="https://microsoft.artifacts.visualstudio.com/DefaultCollection"
-                    ExpirationInDays="$(DotNetSymbolExpirationInDays)"
-                    VerboseLogging="true"
-                    DryRun="$(DryRun)"
-                    ConvertPortablePdbsToWindowsPdbs="false"
-                    PdbConversionTreatAsWarning=""
-                    Condition="$(PublishToSymbolServer)"/>
+      Condition="'@(FilesToUploadToPdbArtifactsContainer)' != ''"/>
   </Target>
 
   <!-- Update sign infos that were using Microsoft400 to use the .NET-specific cert if UseDotNetCertificate is present.
