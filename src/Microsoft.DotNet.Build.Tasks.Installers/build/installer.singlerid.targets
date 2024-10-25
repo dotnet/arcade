@@ -524,7 +524,7 @@
       <LinuxPackageArchitecture Condition="'$(LinuxPackageArchitecture)' == 'x64'">amd64</LinuxPackageArchitecture>
       <_PackageCopyright>2017 Microsoft</_PackageCopyright>
       <_PackageLongDescription Condition="'$(PackageDescription)' != ''">$(PackageDescription)</_PackageLongDescription>
-      <_PackageLongDescription Condition="'$(_PackageLongDescription)' != ''">.NET is a development platform that you can use to build command-line applications, microservices and modern websites. It is open source, cross-platform and is supported by Microsoft. We hope you enjoy using it! If you do, please consider joining the active community of developers that are contributing to the project on GitHub (https://github.com/dotnet/core). We happily accept issues and PRs.</_PackageLongDescription>
+      <_PackageLongDescription Condition="'$(_PackageLongDescription)' == ''">.NET is a development platform that you can use to build command-line applications, microservices and modern websites. It is open source, cross-platform and is supported by Microsoft. We hope you enjoy using it! If you do, please consider joining the active community of developers that are contributing to the project on GitHub (https://github.com/dotnet/core). We happily accept issues and PRs.</_PackageLongDescription>
     </PropertyGroup>
 
     <ItemGroup>
