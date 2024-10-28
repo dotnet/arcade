@@ -105,14 +105,6 @@
 
       <!-- If `DotNetPublishUsingPipelines` is not set we default it to false. -->
       <DotNetPublishUsingPipelines Condition="'$(DotNetPublishUsingPipelines)' == ''">false</DotNetPublishUsingPipelines>
-
-      <!-- 
-        If DotNetPublishUsingPipelines is set we don't publish symbols during the build stage,
-        only in the Maestro post-build stages. If DotNetPublishUsingPipelines is NOT set then
-        we publish symbols during the build stage.
-      -->
-      <PublishToSymbolServer>true</PublishToSymbolServer>
-      <PublishToSymbolServer Condition="'$(DotNetPublishUsingPipelines)' == 'true'">false</PublishToSymbolServer>
     </PropertyGroup>
 
     <ItemGroup>
@@ -158,9 +150,6 @@
       <!-- Used in the SDK (Tools.proj) to control whether Build.Tasks.Feed will be restored or not. -->
       <_RestoreToolsProps Include="Publish=$(Publish)"/>
 
-      <!-- Used in the SDK (Tools.proj) to control whether SymbolUploader.Build.Task will be restored or not. -->
-      <_RestoreToolsProps Include="PublishToSymbolServer=$(PublishToSymbolServer)"/>
-
       <!-- Forward this property because we can't assume it will be available globally. -->
       <_RestoreToolsProps Include="DotNetPublishUsingPipelines=$(DotNetPublishUsingPipelines)"/>
     </ItemGroup>
@@ -179,9 +168,6 @@
 
       <!-- Used in a few places in the stack to decide if publishing was enabled or not. -->
       <_PublishProps Include="Publish=$(Publish)"/>
-
-      <!-- Used in the SDK (Publish.proj) to control whether in-build symbol publishing should be performed. -->
-      <_PublishProps Include="PublishToSymbolServer=$(PublishToSymbolServer)"/>
 
       <!-- Forward this property because we can't assume it will be available globally. -->
       <_PublishProps Include="DotNetPublishUsingPipelines=$(DotNetPublishUsingPipelines)"/>
