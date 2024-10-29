@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <IsPackable>true</IsPackable>
+    <Description>Pkg</Description>
+    <PackageTags>Arcade Build Tool Pkg</PackageTags>
+    <DevelopmentDependency>false</DevelopmentDependency>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == '$(NetToolCurrent)'">
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>dotnet-pkg</ToolCommandName>
+  </PropertyGroup>
+
+</Project>
