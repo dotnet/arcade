@@ -66,10 +66,10 @@ namespace Microsoft.DotNet.SignTool
             || Path.GetExtension(path).Equals(".psm1", StringComparison.OrdinalIgnoreCase);
 
         internal static bool IsPackage(string path)
-            => IsVsix(path) || IsNupkg(path);
+            => IsVsix(path) || IsNupkg(path) || IsPkg(path) || IsAppBundle(path);
 
         internal static bool IsZipContainer(string path)
-            => IsPackage(path) || IsMPack(path) || IsZip(path) || IsTarGZip(path) || IsPkg(path) || IsAppBundle(path);
+            => IsPackage(path) || IsMPack(path) || IsZip(path) || IsTarGZip(path);
 
         internal bool IsDeb() => IsDeb(FileName);
 

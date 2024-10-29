@@ -16,5 +16,14 @@ namespace Microsoft.DotNet.MacOsPkg
             string args = $"-c -k --sequesterRsrc {inputPath} {outputPath}";
             ExecuteHelper.Run("ditto", args);
         }
+
+        internal static void VerifySignature()
+        {
+            string output = ExecuteHelper.Run("codesign", $"--verify --verbose {Processor.InputPath}");
+            if (output.Contains("is not signed at all"))
+            {
+                throw new Exception("No signature found in app bundle");
+            }
+        }
     }
 }

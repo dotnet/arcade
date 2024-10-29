@@ -234,7 +234,7 @@ namespace Microsoft.DotNet.SignTool
 
                 if(PkgToolPath == null && RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
-                    Log.LogError($"PkgToolPath ('{PkgToolPath}') does not exist & is required for unpacking and repacking .pkg files and .app bundles on MacOS.");
+                    Log.LogError($"PkgToolPath ('{PkgToolPath}') does not exist & is required for unpacking, repacking, and notarizing .pkg files and .app bundles on MacOS.");
                 }
             }
             if(WixToolsPath != null && !Directory.Exists(WixToolsPath))
