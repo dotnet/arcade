@@ -37,6 +37,8 @@ namespace Microsoft.DotNet.SignTool.Tests
             {".vsix",  new List<SignInfo>{ new SignInfo("VsixSHA2") } },
             {".zip",  new List<SignInfo>{ SignInfo.Ignore } },
             {".tgz",  new List<SignInfo>{ SignInfo.Ignore } },
+            {".pkg",  new List<SignInfo>{ SignInfo.Ignore } },
+            {".app",  new List<SignInfo>{ SignInfo.Ignore } },
             {".nupkg",  new List<SignInfo>{ new SignInfo("NuGet") } },
             {".symbols.nupkg",  new List<SignInfo>{ SignInfo.Ignore } },
         };
@@ -62,6 +64,8 @@ namespace Microsoft.DotNet.SignTool.Tests
             { ".vsix", new List<SignInfo>{ new SignInfo("VsixSHA2", collisionPriorityId: "123") } },
             { ".zip", new List<SignInfo>{ SignInfo.Ignore } },
             { ".tgz", new List<SignInfo>{ SignInfo.Ignore } },
+            { ".pkg", new List<SignInfo>{ SignInfo.Ignore } },
+            { ".app",  new List<SignInfo>{ SignInfo.Ignore } },
             { ".nupkg", new List<SignInfo>{ new SignInfo("NuGet", collisionPriorityId: "123") } },
             { ".symbols.nupkg",  new List<SignInfo>{ SignInfo.Ignore } },
         };
@@ -110,6 +114,14 @@ namespace Microsoft.DotNet.SignTool.Tests
                 { SignToolConstants.CollisionPriorityId, "123" }
             }),
             new TaskItem(".tgz", new Dictionary<string, string> {
+                { "CertificateName", "None" },
+                { SignToolConstants.CollisionPriorityId, "123" }
+            }),
+            new TaskItem(".pkg", new Dictionary<string, string> {
+                { "CertificateName", "None" },
+                { SignToolConstants.CollisionPriorityId, "123" }
+            }),
+            new TaskItem(".app", new Dictionary<string, string> {
                 { "CertificateName", "None" },
                 { SignToolConstants.CollisionPriorityId, "123" }
             }),
@@ -255,6 +267,7 @@ namespace Microsoft.DotNet.SignTool.Tests
         }
 
         private static string s_tarToolPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "tar", "Microsoft.Dotnet.Tar.dll");
+        private static string s_pkgToolPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "pkg", "Microsoft.Dotnet.Pkg.dll");
 
         private string GetResourcePath(string name, string relativePath = null)
         {
@@ -314,10 +327,10 @@ namespace Microsoft.DotNet.SignTool.Tests
             // The path to MSBuild and DotNet will always be null in these tests, this will force
             // the signing logic to call our FakeBuildEngine.BuildProjectFile with a path
             // to the XML that store the content of the would be Microbuild sign request.
-            var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, dotnetPath: null, _tmpDir, enclosingDir: "", "", wixToolsPath: wixToolsPath, tarToolPath: s_tarToolPath);
+            var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, dotnetPath: null, _tmpDir, enclosingDir: "", "", wixToolsPath: wixToolsPath, tarToolPath: s_tarToolPath, pkgToolPath: s_pkgToolPath);
 
             var signTool = new FakeSignTool(signToolArgs, task.Log);
-            var configuration = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, tarToolPath: s_tarToolPath, task.Log);
+            var configuration = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, tarToolPath: s_tarToolPath, pkgToolPath: s_pkgToolPath, task.Log);
             var signingInput = configuration.GenerateListOfFiles();
             var util = new BatchSignUtil(
                 task.BuildEngine,
@@ -363,7 +376,7 @@ namespace Microsoft.DotNet.SignTool.Tests
         {
             var engine = new FakeBuildEngine();
             var task = new SignToolTask { BuildEngine = engine };
-            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, tarToolPath: s_tarToolPath, task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, tarToolPath: s_tarToolPath, pkgToolPath: s_pkgToolPath, task.Log).GenerateListOfFiles();
 
             signingInput.FilesToSign.Select(f => f.ToString()).Should().BeEquivalentTo(expected);
             signingInput.FilesToCopy.Select(f => $"{f.Key} -> {f.Value}").Should().BeEquivalentTo(expectedCopyFiles ?? Array.Empty<string>());
@@ -381,7 +394,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
-            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, null, tarToolPath: s_tarToolPath, task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, null, tarToolPath: s_tarToolPath, pkgToolPath: s_pkgToolPath, task.Log).GenerateListOfFiles();
 
             signingInput.FilesToSign.Should().BeEmpty();
             signingInput.ZipDataMap.Should().BeEmpty();
@@ -402,7 +415,8 @@ namespace Microsoft.DotNet.SignTool.Tests
                 TestSign = true,
                 MSBuildPath = CreateTestResource("msbuild.fake"),
                 DotNetPath = CreateTestResource("dotnet.fake"),
-                SNBinaryPath = CreateTestResource("fake.sn.exe")
+                SNBinaryPath = CreateTestResource("fake.sn.exe"),
+                PkgToolPath = s_pkgToolPath,
             };
 
             task.Execute().Should().BeTrue();
@@ -424,6 +438,7 @@ namespace Microsoft.DotNet.SignTool.Tests
                 DotNetPath = CreateTestResource("dotnet.fake"),
                 DoStrongNameCheck = false,
                 SNBinaryPath = null,
+                PkgToolPath = s_pkgToolPath,
             };
 
             task.Execute().Should().BeTrue();
@@ -1046,6 +1061,141 @@ $@"
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
 "
+            });
+        }
+
+        [MacOSOnlyFact]
+        public void SignPkgFile()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("test.pkg"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("ArcadeCertTest", "ArcadeStrongTest") } }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
+                "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
+                "File 'NestedPkg.pkg' Certificate=''",
+                "File 'test.pkg' Certificate=''",
+            });
+
+            // OSX files need to be zipped first before being signed
+            // This is why the .pkgs are listed as .zip files below
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                $@"
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "3", "Payload/SOS.NETCore.dll"))}"">
+                <Authenticode>Microsoft400</Authenticode>
+                </FilesToSign>
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "4", "Payload/NativeLibrary.dll"))}"">
+                <Authenticode>Microsoft400</Authenticode>
+                </FilesToSign>
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "5", "Payload/this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.SOS.NETCore.dll"))}"">
+                <Authenticode>Microsoft400</Authenticode>
+                </FilesToSign>
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "6", "Payload/this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll"))}"">
+                <Authenticode>Microsoft400</Authenticode>
+                </FilesToSign>
+                "
+            });
+        }
+
+        [MacOSOnlyFact]
+        public void SignNestedPkgFile()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem( GetResourcePath("NestedPkg.pkg"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("ArcadeCertTest", "ArcadeStrongTest") } }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
+                "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
+                "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'NestedPkg.pkg' Certificate=''",
+            });
+
+            // OSX files need to be zipped first before being signed
+            // This is why the .pkgs and .apps are listed as .zip files below
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                $@"
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "2", "Payload/SOS.NETCore.dll"))}"">
+                <Authenticode>Microsoft400</Authenticode>
+                </FilesToSign>
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "3", "Payload/NativeLibrary.dll"))}"">
+                <Authenticode>Microsoft400</Authenticode>
+                </FilesToSign>
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "4", "Payload/this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.SOS.NETCore.dll"))}"">
+                <Authenticode>Microsoft400</Authenticode>
+                </FilesToSign>
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "5", "Payload/this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll"))}"">
+                <Authenticode>Microsoft400</Authenticode>
+                </FilesToSign>
+                "
+            });
+        }
+
+        [MacOSOnlyFact]
+        public void SignPkgFileWithApp()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem( GetResourcePath("WithApp.pkg"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("ArcadeCertTest", "ArcadeStrongTest") } }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            // When .apps are unpacked from .pkgs, they get zipped so they can be signed
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'libexample.dylib' Certificate='DylibCertificate'",
+                "File 'test.app' Certificate=''",
+                "File 'WithApp.pkg' Certificate=''",
+            });
+
+            // OSX files need to be zipped first before being signed
+            // This is why the .pkgs and .apps are listed as .zip files below
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                $@"
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "4", "Contents/Resources/libexample.dylib"))}"">
+                <Authenticode>DylibCertificate</Authenticode>
+                </FilesToSign>
+                "
             });
         }
 
@@ -1941,6 +2091,7 @@ $@"
                 DoStrongNameCheck = false,
                 SNBinaryPath = null,
                 TarToolPath = s_tarToolPath,
+                PkgToolPath = s_pkgToolPath,
             };
 
             task.Execute().Should().BeTrue();
@@ -2216,6 +2367,7 @@ $@"
                 new Dictionary<string, List<SignInfo>>(),
                 new ITaskItem[0],
                 tarToolPath: s_tarToolPath,
+                pkgToolPath: s_pkgToolPath,
                 task.Log)
                 .GenerateListOfFiles();
 
@@ -2252,6 +2404,7 @@ $@"
                 new Dictionary<string, List<SignInfo>>() { { extension, new List<SignInfo> { SignInfo.Ignore } } },
                 new ITaskItem[0],
                 tarToolPath: s_tarToolPath,
+                pkgToolPath: s_pkgToolPath,
                 task.Log)
                 .GenerateListOfFiles();
 

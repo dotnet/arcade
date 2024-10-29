@@ -114,11 +114,10 @@ namespace Microsoft.DotNet.SignTool
 
         /// <summary>
         /// List of known signable extensions for OSX files.
+        /// We only consider these signable on an OSX platform
+        /// Should be made non-empty with https://github.com/dotnet/arcade/issues/14435
         /// </summary>
-        public static readonly HashSet<string> SignableOSXExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ".pkg"
-        };
+        public static readonly HashSet<string> SignableOSXExtensions = new HashSet<string>();
 
         /// <summary>
         /// Attribute for the CollisionPriorityId

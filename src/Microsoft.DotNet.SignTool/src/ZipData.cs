@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.SignTool
             return null;
         }
 
-        public static IEnumerable<(string relativePath, Stream content, long contentSize)> ReadEntries(string archivePath, string tempDir, string tarToolPath, bool ignoreContent = false)
+        public static IEnumerable<(string relativePath, Stream content, long contentSize)> ReadEntries(string archivePath, string tempDir, string tarToolPath, string pkgToolPath, bool ignoreContent = false)
         {
             if (FileSignInfo.IsTarGZip(archivePath))
             {
@@ -63,6 +63,10 @@ namespace Microsoft.DotNet.SignTool
                     .Select(entry => (entry.Name, entry.DataStream, entry.Length));
 #endif
             }
+            else if (FileSignInfo.IsPkg(archivePath) || FileSignInfo.IsAppBundle(archivePath))
+            {
+                return ReadPkgOrAppBundleEntries(archivePath, tempDir, pkgToolPath, ignoreContent);
+            }
 
             return ReadZipEntries(archivePath);
         }
@@ -70,7 +74,7 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// Repack the zip container with the signed files.
         /// </summary>
-        public void Repack(TaskLoggingHelper log, string tempDir, string wixToolsPath, string tarToolPath)
+        public void Repack(TaskLoggingHelper log, string tempDir, string wixToolsPath, string tarToolPath, string pkgToolPath)
         {
 #if NET472
             if (FileSignInfo.IsVsix())
@@ -86,6 +90,10 @@ namespace Microsoft.DotNet.SignTool
             else if (FileSignInfo.IsWixContainer())
             {
                 RepackWixPack(log, tempDir, wixToolsPath);
+            }
+            else if (FileSignInfo.IsPkg() || FileSignInfo.IsAppBundle())
+            {
+                RepackPkgOrAppBundles(log, tempDir, pkgToolPath);
             }
             else 
             {
@@ -242,6 +250,84 @@ namespace Microsoft.DotNet.SignTool
                 // Delete the intermediates
                 Directory.Delete(workingDir, true);
                 Directory.Delete(outputDir, true);
+            }
+        }
+
+        internal static bool RunPkgProcess(string srcPath, string dstPath, string action, string pkgToolPath)
+        {
+            if (action != "unpack" && action != "repack")
+            {
+                throw new ArgumentException($"Invalid action '{action}' for pkg tool.");
+            }
+
+            var process = Process.Start(new ProcessStartInfo()
+            {
+                FileName = "dotnet",
+                Arguments = $@"exec ""{pkgToolPath}"" ""{srcPath}"" ""{dstPath}"" {action}",
+                UseShellExecute = false,
+                RedirectStandardError = true,
+            });
+
+            process.WaitForExit();
+            return process.ExitCode == 0;
+        }
+
+        private static IEnumerable<(string relativePath, Stream content, long contentSize)> ReadPkgOrAppBundleEntries(string archivePath, string tempDir, string pkgToolPath, bool ignoreContent)
+        {
+            string extractDir = Path.Combine(tempDir, Guid.NewGuid().ToString());
+            try
+            {
+                if (!RunPkgProcess(archivePath, extractDir, "unpack", pkgToolPath))
+                {
+                    yield break;
+                }
+
+                foreach (var path in Directory.EnumerateFiles(extractDir, "*.*", SearchOption.AllDirectories))
+                {
+                    var relativePath = path.Substring(extractDir.Length + 1).Replace(Path.DirectorySeparatorChar, '/');
+                    using var stream = ignoreContent ? null : (Stream)File.Open(path, FileMode.Open);
+                    yield return (relativePath, stream, stream?.Length ?? 0);
+                }
+            }
+            finally
+            {
+                Directory.Delete(extractDir, recursive: true);
+            }
+        }
+
+        private void RepackPkgOrAppBundles(TaskLoggingHelper log, string tempDir, string pkgToolPath)
+        {
+            string extractDir = Path.Combine(tempDir, Guid.NewGuid().ToString());
+            try
+            {
+                if (!RunPkgProcess(srcPath: FileSignInfo.FullPath, dstPath: extractDir, "unpack", pkgToolPath))
+                {
+                    return;
+                }
+
+                foreach (var path in Directory.EnumerateFiles(extractDir, "*.*", SearchOption.AllDirectories))
+                {
+                    var relativePath = path.Substring(extractDir.Length + 1).Replace(Path.DirectorySeparatorChar, '/');
+
+                    var signedPart = FindNestedPart(relativePath);
+                    if (!signedPart.HasValue)
+                    {
+                        log.LogMessage(MessageImportance.Low, $"Didn't find signed part for nested file: {FileSignInfo.FullPath} -> {relativePath}");
+                        continue;
+                    }
+
+                    log.LogMessage(MessageImportance.Low, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {FileSignInfo.FullPath} -> {relativePath}.");
+                    File.Copy(signedPart.Value.FileSignInfo.FullPath, path, overwrite: true);
+                }
+
+                if (!RunPkgProcess(srcPath: extractDir, dstPath: FileSignInfo.FullPath, "repack", pkgToolPath))
+                {
+                    return;
+                }
+            }
+            finally
+            {
+                Directory.Delete(extractDir, recursive: true);
             }
         }
 

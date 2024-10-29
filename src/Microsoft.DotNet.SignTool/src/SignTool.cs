@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.SignTool
 
         internal string WixToolsPath => _args.WixToolsPath;
         internal string TarToolPath => _args.TarToolPath;
+        internal string PkgToolPath => _args.PkgToolPath;
 
         internal SignTool(SignToolArgs args, TaskLoggingHelper log)
         {

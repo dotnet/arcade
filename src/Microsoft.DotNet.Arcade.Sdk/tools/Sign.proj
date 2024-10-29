@@ -58,6 +58,9 @@
 
       <!-- SN is only available on Windows -->
       <SNBinaryPath Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(NuGetPackageRoot)sn\$(SNVersion)\sn.exe</SNBinaryPath>
+      
+      <!-- .pkgs and .app bundle tooling is only available on MacOS -->
+      <PkgToolPath Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(NuGetPackageRoot)microsoft.dotnet.pkg\$(MicrosoftDotNetSignToolVersion)\tools\net9.0\any\Microsoft.Dotnet.Pkg.dll</PkgToolPath>
     </PropertyGroup>
 
     <Error Condition="'$(AllowEmptySignList)' != 'true' AND '@(ItemsToSign)' == ''" 
@@ -98,6 +101,7 @@
         MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"
         WixToolsPath="$(WixInstallPath)"
         TarToolPath="$(NuGetPackageRoot)microsoft.dotnet.tar\$(MicrosoftDotNetSignToolVersion)\tools\net9.0\any\Microsoft.Dotnet.Tar.dll"
+        PkgToolPath="$(PkgToolPath)"
         RepackParallelism="$(SignToolRepackParallelism)"
         MaximumParallelFileSize="$(SignToolRepackMaximumParallelFileSize)" />
   </Target>
