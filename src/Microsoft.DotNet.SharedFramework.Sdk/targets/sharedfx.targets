@@ -100,6 +100,7 @@
                             ResolveFrameworkReferences;
                             ResolveLockFileCopyLocalFiles;
                             ResolveReferences;
+                            FindReferenceAssembliesForReferences;
                             _ReadyToRunSharedFramework;
                             _FindSymbolFilesForSharedFrameworkFiles"
           Returns="@(FilesToPackage)">
@@ -122,7 +123,7 @@
     </ItemGroup>
 
     <ItemGroup Condition="'$(PlatformPackageType)' == 'TargetingPack'">
-      <FilesToPackage Include="@(ReferencePath)" Condition="'%(ReferencePath.FrameworkReferenceName)' == ''">
+      <FilesToPackage Include="@(ReferencePath->Metadata('ReferenceAssembly'))" Condition="'%(ReferencePath.FrameworkReferenceName)' == ''">
         <TargetPath>ref/$(TargetFramework)</TargetPath>
       </FilesToPackage>
 
