@@ -21,14 +21,6 @@
                       SkipGetTargetFrameworkProperties="true"
                       Private="false"
                       OutputItemType="_TarToolPath" />
-
-    <ProjectReference Condition="$([MSBuild]::IsOSPlatform('osx'))"
-                  Include="..\Microsoft.DotNet.Pkg\Microsoft.DotNet.Pkg.csproj"
-                  ReferenceOutputAssembly="false"
-                  SetTargetFramework="TargetFramework=$(NetToolCurrent)"
-                  SkipGetTargetFrameworkProperties="true"
-                  Private="false"
-                  OutputItemType="_PkgToolPath" />
   </ItemGroup>
 
   <ItemGroup>
@@ -52,18 +44,6 @@
     </ItemGroup>
     <ItemGroup>
       <Content Include="@(_TarToolFiles)" CopyToOutputDirectory="PreserveNewest" Link="tools\tar\%(RecursiveDir)%(Filename)%(Extension)"/>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="_CopyPkgTool" AfterTargets="ResolveProjectReferences" Condition="$([MSBuild]::IsOSPlatform('osx'))">
-    <PropertyGroup>
-      <_PkgToolPattern>@(_PkgToolPath->'%(RootDir)%(Directory)')**\*.*</_PkgToolPattern>
-    </PropertyGroup>
-    <ItemGroup>
-      <_PkgToolFiles Include="$(_PkgToolPattern)"/>
-    </ItemGroup>
-    <ItemGroup>
-      <Content Include="@(_PkgToolFiles)" CopyToOutputDirectory="PreserveNewest" Link="tools\pkg\%(RecursiveDir)%(Filename)%(Extension)"/>
     </ItemGroup>
   </Target>
 
