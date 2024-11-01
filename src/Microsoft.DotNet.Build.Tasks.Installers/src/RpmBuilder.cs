@@ -124,7 +124,14 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
         public void AddRequiredCapability(string capability, string version)
         {
-            _requires.Add((capability, 0xC, version));
+            if (string.IsNullOrEmpty(version))
+            {
+                _requires.Add((capability, 0x0, ""));
+            }
+            else
+            {
+                _requires.Add((capability, 0xC, version));
+            }
         }
 
         public void AddChangelogLine(string name, string text)
