@@ -362,6 +362,11 @@
 
     <WriteLinesToFile File="$(_LayoutDocs)/$(VersionedInstallerName)/copyright" Lines="@(_CopyrightLine)" />
 
+    <!-- We always own the directory for the copyright file. -->
+    <ItemGroup>
+      <_GeneratedFileOwnedDirectory Include="$(_LayoutDocs)/$(VersionedInstallerName)" />
+    </ItemGroup>
+
     <!-- Create any symlinks -->
     <MakeDir Directories="$(_LayoutDataRoot)%(DebSymlink.RelativeDir)" Condition="'%(DebSymlink.Identity)' != ''" />
     <Exec Command="ln -sf %(DebSymlink.LinkTarget) %(DebSymlink.FileName)%(DebSymlink.Extension)" WorkingDirectory="$(_LayoutDataRoot)%(DebSymlink.RelativeDir)" Condition="'%(DebSymlink.Identity)' != ''" />
@@ -400,7 +405,7 @@
       RawPayloadFileKinds="@(_RawFileKindInfo)"
       Requires="@(LinuxPackageDependency)"
       Conflicts="@(RpmConflicts)"
-      OwnedDirectories="@(RpmOwnedDirectory)"
+      OwnedDirectories="@(RpmOwnedDirectory);@(_GeneratedFileOwnedDirectory)"
       ChangelogLines="- https://github.com/dotnet/core/tree/master/release-notes"
       License="MIT and ASL 2.0 and BSD"
       Summary="$(_ShortDescription)"
