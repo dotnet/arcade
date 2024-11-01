@@ -367,12 +367,11 @@
     <Exec Command="ln -sf %(DebSymlink.LinkTarget) %(DebSymlink.FileName)%(DebSymlink.Extension)" WorkingDirectory="$(_LayoutDataRoot)%(DebSymlink.RelativeDir)" Condition="'%(DebSymlink.Identity)' != ''" />
     
     <!--
-      Compress all files and directories that we output,
-      but don't add entries for the system directories
-      we put files under.
+      Compress all files and directories that we output.
+      We'll filter out any directories we don't own in CreateRpmPackage.
     -->
     <PropertyGroup>
-      <_FindAllPayloadFilesCommand>find . -depth ! -wholename '.' ! -wholename './usr' ! -regex '^./usr/[a-z]+$' ! -wholename './usr/share/doc'</_FindAllPayloadFilesCommand>
+      <_FindAllPayloadFilesCommand>find . -depth ! -wholename '.'</_FindAllPayloadFilesCommand>
     </PropertyGroup>
     <Exec Command="$(_FindAllPayloadFilesCommand) -print  | cpio -H newc -o --quiet > '$(_LayoutDirectory)/payload.cpio'"
           WorkingDirectory="$(_LayoutDataRoot)"
