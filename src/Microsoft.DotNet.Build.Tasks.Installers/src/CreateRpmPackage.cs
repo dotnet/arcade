@@ -50,6 +50,8 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
         [Required]
         public ITaskItem[] Conflicts { get; set; } = [];
         [Required]
+        public ITaskItem[] OwnedDirectories { get; set; } = [];
+        [Required]
         public ITaskItem[] ChangelogLines { get; set; } = [];
         [Required]
         public string License { get; set; } = "";
@@ -105,11 +107,21 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
             builder.AddProvidedCapability(PackageName, PackageVersion);
             builder.AddProvidedCapability($"{PackageName}({RpmBuilder.GetRpmHeaderArchitecture(arch)})", PackageVersion);
 
+            HashSet<string> ownedDirectories = new(OwnedDirectories.Select(d => d.ItemSpec));
+
             using (CpioReader reader = new(File.OpenRead(Payload), leaveOpen: false))
             {
                 Dictionary<string, string> filePathToKind = RawPayloadFileKinds.Select(k => k.ItemSpec.Split(':')).ToDictionary(k => k[0], k => k[1].Trim());
                 for (CpioEntry entry = reader.GetNextEntry(); entry is not null; entry = reader.GetNextEntry())
                 {
+                    if ((entry.Mode & CpioEntry.FileKindMask) == CpioEntry.Directory)
+                    {
+                        // Only include directories we own.
+                        if (!ownedDirectories.Contains(entry.Name))
+                        {
+                            continue;
+                        }
+                    }
                     // RPM requires the CPIO entries to be rooted in a relative root of './'.
                     // The cpio tool doesn't want to do this, so we do it here.
                     entry = entry.WithName($"./{entry.Name}");
