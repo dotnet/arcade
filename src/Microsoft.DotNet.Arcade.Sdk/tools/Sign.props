@@ -50,7 +50,11 @@
       a public key token.
       The certificate can be overriden using the StrongNameSignInfo or the FileSignInfo item group.
     -->
-    <FileExtensionSignInfo Include=".deb" CertificateName="LinuxSign" />
+    <!--
+      Collision priority ID needed to avoid failures with duplicate FileExtensionSignInfo for ".deb".
+      See https://github.com/dotnet/arcade/pull/15216#discussion_r1828513419
+     -->
+    <FileExtensionSignInfo Include=".deb" CertificateName="LinuxSign" CollisionPriorityId="0" />
     <FileExtensionSignInfo Include=".jar" CertificateName="MicrosoftJARSHA2" />
     <FileExtensionSignInfo Include=".js;.ps1;.psd1;.psm1;.psc1;.py" CertificateName="Microsoft400" />
     <FileExtensionSignInfo Include=".dll;.exe;.mibc" CertificateName="Microsoft400" />
