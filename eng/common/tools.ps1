@@ -772,6 +772,8 @@ function MSBuild() {
       # new scripts need to work with old packages, so we need to look for the old names/versions
       (Join-Path $basePath (Join-Path $buildTool.Framework 'Microsoft.DotNet.ArcadeLogging.dll')),
       (Join-Path $basePath (Join-Path $buildTool.Framework 'Microsoft.DotNet.Arcade.Sdk.dll')),
+
+      # This list doesn't need to be updated anymore and can eventually be removed.
       (Join-Path $basePath (Join-Path net9.0 'Microsoft.DotNet.ArcadeLogging.dll')),
       (Join-Path $basePath (Join-Path net9.0 'Microsoft.DotNet.Arcade.Sdk.dll')),
       (Join-Path $basePath (Join-Path net8.0 'Microsoft.DotNet.ArcadeLogging.dll')),

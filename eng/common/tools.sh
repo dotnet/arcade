@@ -450,6 +450,8 @@ function MSBuild {
     local possiblePaths=()
     possiblePaths+=( "$toolset_dir/net/Microsoft.DotNet.ArcadeLogging.dll" )
     possiblePaths+=( "$toolset_dir/net/Microsoft.DotNet.Arcade.Sdk.dll" )
+
+    # This list doesn't need to be updated anymore and can eventually be removed.
     possiblePaths+=( "$toolset_dir/net9.0/Microsoft.DotNet.ArcadeLogging.dll" )
     possiblePaths+=( "$toolset_dir/net9.0/Microsoft.DotNet.Arcade.Sdk.dll" )
     possiblePaths+=( "$toolset_dir/net8.0/Microsoft.DotNet.ArcadeLogging.dll" )
