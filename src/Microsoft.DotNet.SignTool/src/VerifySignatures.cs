@@ -7,7 +7,10 @@ using NuGet.Packaging.Signing;
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
@@ -16,6 +19,53 @@ namespace Microsoft.DotNet.SignTool
 {
     internal class VerifySignatures
     {
+        internal static bool VerifySignedDeb(string filePath)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                // We cannot check the signature of a .deb file on Windows.
+                return true;
+            }
+
+            string tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            Directory.CreateDirectory(tempDir);
+
+            // https://microsoft.sharepoint.com/teams/prss/esrp/info/SitePages/Linux%20GPG%20Signing.aspx
+            try
+            {
+                // Download the Microsoft public key
+                using (HttpClient client = new HttpClient())
+                {
+                    using (Stream stream = client.GetStreamAsync("https://packages.microsoft.com/keys/microsoft.asc").Result)
+                    {
+                        using (FileStream fileStream = File.Create($"{tempDir}/microsoft.asc"))
+                        {
+                            stream.CopyTo(fileStream);
+                        }
+                    }
+                }
+
+                RunCommand($"ar x {filePath} --output {tempDir}");
+                RunCommand($"gpg --import {tempDir}/microsoft.asc");
+                RunCommand($"cat {tempDir}/debian-binary {tempDir}/control.tar.gz {tempDir}/data.tar.gz > {tempDir}/combined-contents");
+                string output = RunCommand($"gpg --verify {tempDir}/_gpgorigin {tempDir}/combined-contents");
+                if (output.Contains("Good signature"))
+                {
+                    return true;
+                }
+                
+                return false;
+            }
+            catch(Exception)
+            {
+                return false;
+            }
+            finally
+            {
+                Directory.Delete(tempDir, true);
+            }
+        }
+
         internal static bool VerifySignedPowerShellFile(string filePath)
         {
             return File.ReadLines(filePath).Any(line => line.IndexOf("# SIG # Begin Signature Block", StringComparison.OrdinalIgnoreCase) >= 0);
@@ -120,6 +170,29 @@ namespace Microsoft.DotNet.SignTool
                 return false;
             }
             return certificate.Verify();
+        }
+
+        private static string RunCommand(string command)
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "bash",
+                Arguments = $"-c \"{command}\"",
+                RedirectStandardOutput = true,
+                RedirectStandardError = false,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using (var process = Process.Start(psi))
+            {
+                process.WaitForExit();
+                if (process.ExitCode != 0)
+                {
+                    throw new Exception($"Command '{command}' failed with exit code {process.ExitCode}");
+                }
+                return process.StandardOutput.ReadToEnd();
+            }
         }
     }
 }

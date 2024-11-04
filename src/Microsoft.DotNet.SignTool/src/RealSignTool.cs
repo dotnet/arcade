@@ -129,6 +129,11 @@ namespace Microsoft.DotNet.SignTool
             return process.ExitCode == 0;
         }
 
+        public override bool VerifySignedDeb(string filePath)
+        {
+            return VerifySignatures.VerifySignedDeb(filePath);
+        }
+
         public override bool VerifySignedPowerShellFile(string filePath)
         {
             return VerifySignatures.VerifySignedPowerShellFile(filePath);

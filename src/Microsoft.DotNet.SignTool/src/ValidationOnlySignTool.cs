@@ -49,6 +49,9 @@ namespace Microsoft.DotNet.SignTool
         {
         }
 
+        public override bool VerifySignedDeb(string filePath)
+            => true;
+
         public override bool VerifySignedPEFile(Stream assemblyStream)
             => true;
 

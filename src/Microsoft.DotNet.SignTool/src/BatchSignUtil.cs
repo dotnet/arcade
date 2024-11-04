@@ -495,6 +495,17 @@ namespace Microsoft.DotNet.SignTool
                         log.LogError($"VSIX {fileName} cannot be strong name signed.");
                     }
                 }
+                else if (fileName.IsDeb())
+                {
+                    if (isInvalidEmptyCertificate)
+                    {
+                        log.LogError($"Deb package {fileName} should have a certificate name.");
+                    }
+                    if (!IsLinuxSignCertificate(fileName.SignInfo.Certificate))
+                    {
+                        log.LogError($"Deb package {fileName} must be signed with a LinuxSign certificate.");
+                    }
+                }
                 else if (fileName.IsNupkg())
                 {
                     if(isInvalidEmptyCertificate)
@@ -548,6 +559,13 @@ namespace Microsoft.DotNet.SignTool
                     {
                         _log.LogMessage(MessageImportance.Low, $"Assembly {file.FullPath} is signed properly");
                     }
+                }
+            }
+            else if (file.IsDeb())
+            {
+                if (!_signTool.VerifySignedDeb(file.FullPath))
+                {
+                    _log.LogError($"Deb package {file.FullPath} is not signed properly.");
                 }
             }
             else if (file.IsPowerShellScript())
@@ -621,5 +639,7 @@ namespace Microsoft.DotNet.SignTool
         }
 
         private static bool IsVsixCertificate(string certificate) => certificate.StartsWith("Vsix", StringComparison.OrdinalIgnoreCase);
+
+        private static bool IsLinuxSignCertificate(string certificate) => certificate.StartsWith("LinuxSign", StringComparison.OrdinalIgnoreCase);
     }
 }
