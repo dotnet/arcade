@@ -43,7 +43,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Metadata Internal (optional): If true, the feed is only internally accessible.
         ///                               If false, the feed is publicly visible and internal builds wwill be rejected.
         ///                               If not provided, then this task will attempt to determine whether the feed URL is publicly visible or not.
-        ///                               Unless SkipSafetyChecks is passed, the publishing infrastructure will check the accessibility of the feed.
         /// Metadata Isolated (optional): If true, stable packages can be pushed to this feed.
         ///                               If false, stable packages will be rejected.
         ///                               If not provided then defaults to false.
