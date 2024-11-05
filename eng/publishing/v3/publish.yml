@@ -86,7 +86,6 @@ stages:
           
           echo "##vso[task.setvariable variable=MaestroToken;isOutput=true;isSecret=true]$token"
 
-    # we're setting the SkipInternalAssetToPublicFeedCheck property to true for 
     - task: AzureCLI@2
       displayName: Publish packages, blobs and symbols
       inputs:
