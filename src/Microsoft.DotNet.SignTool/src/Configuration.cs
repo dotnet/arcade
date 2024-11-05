@@ -420,7 +420,7 @@ namespace Microsoft.DotNet.SignTool
             }
             else if(FileSignInfo.IsDeb(file.FullPath))
             {
-                isAlreadySigned = VerifySignatures.VerifySignedDeb(file.FullPath);
+                isAlreadySigned = VerifySignatures.VerifySignedDeb(_log, file.FullPath);
                 if (!isAlreadySigned)
                 {
                     _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} is not signed.");

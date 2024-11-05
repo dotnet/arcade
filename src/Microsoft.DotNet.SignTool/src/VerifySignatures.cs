@@ -1,6 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using NuGet.Common;
 using NuGet.Packaging;
 using NuGet.Packaging.Signing;
@@ -19,7 +21,7 @@ namespace Microsoft.DotNet.SignTool
 {
     internal class VerifySignatures
     {
-        internal static bool VerifySignedDeb(string filePath)
+        internal static bool VerifySignedDeb(TaskLoggingHelper log, string filePath)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
@@ -56,8 +58,9 @@ namespace Microsoft.DotNet.SignTool
                 
                 return false;
             }
-            catch(Exception)
+            catch(Exception e)
             {
+                log.LogMessage(MessageImportance.Low, $"Failed to verify signature of {filePath} with the following error: {e.Message}");
                 return false;
             }
             finally

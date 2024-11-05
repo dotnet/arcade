@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.SignTool
             // This is a recursive process since we process nested containers.
             foreach (var file in _batchData.FilesToSign)
             {
-                VerifyAfterSign(file);
+                VerifyAfterSign(_log, file);
             }
 
             if (_log.HasLoggedErrors)
@@ -545,7 +545,7 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
-        private void VerifyAfterSign(FileSignInfo file)
+        private void VerifyAfterSign(TaskLoggingHelper log, FileSignInfo file)
         {
             if (file.IsPEFile())
             {
@@ -563,7 +563,7 @@ namespace Microsoft.DotNet.SignTool
             }
             else if (file.IsDeb())
             {
-                if (!_signTool.VerifySignedDeb(file.FullPath))
+                if (!_signTool.VerifySignedDeb(log, file.FullPath))
                 {
                     _log.LogError($"Deb package {file.FullPath} is not signed properly.");
                 }
@@ -600,7 +600,7 @@ namespace Microsoft.DotNet.SignTool
                         continue;
                     }
 
-                    VerifyAfterSign(zipPart.Value.FileSignInfo);
+                    VerifyAfterSign(_log, zipPart.Value.FileSignInfo);
                 }
 
                 if (!SkipZipContainerSignatureMarkerCheck)

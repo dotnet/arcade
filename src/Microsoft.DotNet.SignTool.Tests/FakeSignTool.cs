@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
-        public override bool VerifySignedDeb(string filePath)
+        public override bool VerifySignedDeb(TaskLoggingHelper log, string filePath)
         {
             return true;
         }
