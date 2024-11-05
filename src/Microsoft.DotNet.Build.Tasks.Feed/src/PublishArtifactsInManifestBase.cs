@@ -121,11 +121,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public bool IsInternalBuild { get; set; } = false;
 
         /// <summary>
-        /// If true, safety checks only print messages and do not error
-        /// - Internal asset to public feed
-        /// - Stable packages to non-isolated feeds
+        /// If true, allows publishing of a stable package to a non isolated feed
         /// </summary>
-        public bool SkipSafetyChecks { get; set; } = false;
+        public bool SkipStablePackagesNonIsolatedFeedsCheck { get; set; } = false;
+
+        /// <summary>
+        /// If true, allows publishing of internal assets to public feeds
+        /// </summary>
+        public bool SkipInternalAssetToPublicFeedCheck { get; set; } = false;
 
         /// <summary>
         /// Which build model (i.e., parsed build manifest) the publishing task will operate on.
@@ -354,7 +357,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         protected void CheckForInternalBuildsOnPublicFeeds()
         {
             // If separated out for clarity.
-            if (!SkipSafetyChecks && IsInternalBuild)
+            if (!SkipInternalAssetToPublicFeedCheck && IsInternalBuild)
             {
                 var publicFeeds = FeedConfigs.Values
                     .SelectMany(f => f)
@@ -362,7 +365,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 foreach (TargetFeedConfig feedConfig in publicFeeds)
                 {
-                    Log.LogError($"Internal builds shouldn't be published to public feed '{feedConfig.TargetURL}'. This behavior can be overridden with '{nameof(SkipSafetyChecks)}= true'");
+                    Log.LogError($"Internal builds shouldn't be published to public feed '{feedConfig.TargetURL}'. This behavior can be overridden with '{nameof(SkipInternalAssetToPublicFeedCheck)}= true'");
                 }         
             }
         }
@@ -376,7 +379,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public void CheckForStableAssetsInNonIsolatedFeeds()
         {
-            if (BuildModel.Identity.IsReleaseOnlyPackageVersion || SkipSafetyChecks)
+            if (BuildModel.Identity.IsReleaseOnlyPackageVersion || SkipStablePackagesNonIsolatedFeedsCheck)
             {
                 return;
             }

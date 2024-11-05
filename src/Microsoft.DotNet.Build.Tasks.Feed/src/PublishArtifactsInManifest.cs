@@ -159,11 +159,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public bool PublishSpecialClrFiles { get; set; }
 
         /// <summary>
-        /// If true, safety checks only print messages and do not error
-        /// - Internal asset to public feed
-        /// - Stable packages to non-isolated feeds
+        /// If true, allows publishing of a stable package to a non isolated feed
         /// </summary>
-        public bool SkipSafetyChecks { get; set; } = false;
+        public bool SkipStablePackagesNonIsolatedFeedsCheck { get; set; } = false;
+
+        /// <summary>
+        /// If true, allows publishing of internal assets to public feeds
+        /// </summary>
+        public bool SkipInternalAssetToPublicFeedCheck { get; set; } = false;
 
         public string AkaMSClientId { get; set; }
 
@@ -348,7 +351,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 BuildAssetRegistryToken = this.BuildAssetRegistryToken,
                 NugetPath = this.NugetPath,
                 IsInternalBuild = this.IsInternalBuild,
-                SkipSafetyChecks = this.SkipSafetyChecks,
+                SkipInternalAssetToPublicFeedCheck = this.SkipInternalAssetToPublicFeedCheck,
+                SkipStablePackagesNonIsolatedFeedsCheck = this.SkipStablePackagesNonIsolatedFeedsCheck,
                 AkaMSClientId = this.AkaMSClientId,
                 AkaMSClientCertificate = !string.IsNullOrEmpty(AkaMSClientCertificate) ?
 #pragma warning disable SYSLIB0057 // https://github.com/dotnet/arcade/issues/14936

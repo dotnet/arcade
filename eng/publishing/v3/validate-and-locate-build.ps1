@@ -63,7 +63,7 @@ try {
   $isInternalBuild = $true
   if ([string]::IsNullOrEmpty($buildInfo.gitHubRepository) -eq $false) {
     $buildInfo.gitHubRepository -match "https://github.com/(.*)/(.*)" | Out-Null
-    $response = Invoke-WebRequest -Uri "https://api.github.com/repos/$($Matches[1])/$($Matches[2]))/contents/README.md"
+    $response = Invoke-WebRequest -Uri "https://api.github.com/repos/$($Matches[1])/$($Matches[2]))/commits/$($buildInfo.commit)"
     if ($response.StatusCode -eq 200) {
       $isInternalBuild = $false
       Write-Host "This is a public build"
