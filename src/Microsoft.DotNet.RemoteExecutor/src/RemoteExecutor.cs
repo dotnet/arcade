@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.RemoteExecutor
         {
             get
             {
-                int.TryParse(Environment.GetEnvironmentVariable("DOTNET_REMOTE_EXECUTOR_FAIL_WAIT_TIMEOUT_MULTIPLIER"), out int failWaitTimeoutMultiplier);
+                int.TryParse(Environment.GetEnvironmentVariable("DOTNET_TEST_TIMEOUT_MULTIPLIER"), out int failWaitTimeoutMultiplier);
                 return 60 * 1000 * Math.Max(failWaitTimeoutMultiplier, 1);
             }
         }
