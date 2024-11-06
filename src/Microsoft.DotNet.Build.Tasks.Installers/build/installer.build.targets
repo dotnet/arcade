@@ -122,11 +122,14 @@
   <!-- This target is kept for back-compat for targets that would hook it to add package info. -->
   <Target Name="GetDebInstallerJsonProperties" />
 
-  <Target Name="CreateDeb"
-          DependsOnTargets="_GetInstallerProperties;_GetCommonJsonProperties;GetDebInstallerJsonProperties"
-          Returns="$(_InstallerFile)">
+  <PropertyGroup>
+    <_LinuxPackageType Condition="'$(GenerateDeb)' == 'true'">deb</_LinuxPackageType>
+    <_LinuxPackageType Condition="'$(GenerateRpm)' == 'true'">rpm</_LinuxPackageType>
+  </PropertyGroup>
+
+  <Target Name="_CreateLinuxPackagingLayout">
     <PropertyGroup>
-      <_LayoutDirectory>$(IntermediateOutputPath)installer/debLayout/</_LayoutDirectory>
+      <_LayoutDirectory>$(IntermediateOutputPath)installer/$(_LinuxPackageType)Layout/</_LayoutDirectory>
       <_LayoutDataRoot>$(_LayoutDirectory)root/</_LayoutDataRoot>
       <_LayoutPackageRoot>$(_LayoutDataRoot)$(LinuxInstallRoot)</_LayoutPackageRoot>
       <_LayoutControlRoot>$(_LayoutDirectory)control/</_LayoutControlRoot>
@@ -165,6 +168,24 @@
     <WriteLinesToFile File="$(_LayoutDocs)/$(VersionedInstallerName)/copyright" Lines="@(_CopyrightLine)" />
 
     <ItemGroup>
+      <!-- Allow the old DebSymlink name and the new LinuxPackageSymlink name. -->
+      <_SymlinksToCreate Include="@(DebSymlink);@(LinuxPackageSymlink)" />
+    </ItemGroup>
+
+    <!-- Create any symlinks -->
+    <MakeDir Directories="$(_LayoutDataRoot)%(_SymlinksToCreate.RelativeDir)" Condition="'%(_SymlinksToCreate.Identity)' != ''" />
+    <Exec Command="ln -sf %(_SymlinksToCreate.LinkTarget) %(_SymlinksToCreate.FileName)%(_SymlinksToCreate.Extension)" WorkingDirectory="$(_LayoutDataRoot)%(_SymlinksToCreate.RelativeDir)" Condition="'%(_SymlinksToCreate.Identity)' != ''" />
+
+    <ItemGroup>
+      <_CreatedSymlinks Include="@(_SymlinksToCreate->'$(_LayoutDataRoot)%(Identity)')" />
+    </ItemGroup>
+    
+  </Target>
+
+  <Target Name="CreateDeb"
+          DependsOnTargets="_GetInstallerProperties;_GetCommonJsonProperties;GetDebInstallerJsonProperties;_CreateLinuxPackagingLayout"
+          Returns="$(_InstallerFile)">
+    <ItemGroup>
       <_ChangelogFile Include="$(_LayoutDocs)/$(VersionedInstallerName)/changelog.Debian.gz" />
     </ItemGroup>
     
@@ -182,7 +203,8 @@
 
     <ItemGroup>
       <_MD5SumsFile Include="$(_LayoutControlRoot)/md5sums" />
-      <_MD5SourceFiles Include="$(_LayoutDataRoot)/**/*" />
+      <!-- The md5sums file does not include symlinks -->
+      <_MD5SourceFiles Include="$(_LayoutDataRoot)/**/*" Exclude="@(_CreatedSymlinks)" />
     </ItemGroup>
 
     <CreateMD5SumsFile
@@ -200,6 +222,14 @@
       <_ControlFile Include="$(_LayoutControlRoot)/control" />
     </ItemGroup>
 
+    <PropertyGroup>
+      <_ConflictsProperty Condition="'@(LinuxPackageConflicts)' != ''">Conflicts: @(LinuxPackageConflicts->'%(Identity)',', ')</_ConflictsProperty>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_ConflictsControlProperty Include="$(_ConflictsProperty)" />
+    </ItemGroup>
+
     <CreateControlFile
         ControlFileOutputPath="@(_ControlFile)"
         PackageName="$(VersionedInstallerName)"
@@ -210,16 +240,12 @@
         InstalledSize="$(_InstalledSize)"
         Depends="@(LinuxPackageDependency)"
         Section="libs"
-        AdditionalProperties="@(DebControlProperty)" />
+        AdditionalProperties="@(DebControlProperty);@(_ConflictsControlProperty)" />
 
     <ItemGroup>
       <FileWrites Include="@(_ControlFile)" />
     </ItemGroup>
 
-    <!-- Create any symlinks -->
-    <MakeDir Directories="$(_LayoutDataRoot)%(DebSymlink.RelativeDir)" Condition="'%(DebSymlink.Identity)' != ''" />
-    <Exec Command="ln -sf %(DebSymlink.LinkTarget) %(DebSymlink.FileName)%(DebSymlink.Extension)" WorkingDirectory="$(_LayoutDataRoot)%(DebSymlink.RelativeDir)" Condition="'%(DebSymlink.Identity)' != ''" />
-    
     <Exec Command="tar -C '$(_LayoutControlRoot)' -czf '$(_LayoutDirectory)/control.tar.gz' ."
           IgnoreExitCode="true"
           IgnoreStandardErrorWarningFormat="true" />
@@ -242,56 +268,9 @@
   <Target Name="CreateRpm"
           DependsOnTargets="
             _GetInstallerProperties;
-            _CreateInstallerLayout;
-            GetRpmInstallerJsonProperties"
+            GetRpmInstallerJsonProperties;
+            _CreateLinuxPackagingLayout"
           Returns="$(_InstallerFile)">
-    
-    <PropertyGroup>
-      <_LayoutDirectory>$(IntermediateOutputPath)installer/rpmLayout/</_LayoutDirectory>
-      <_LayoutDataRoot>$(_LayoutDirectory)root/</_LayoutDataRoot>
-      <_LayoutPackageRoot>$(_LayoutDataRoot)$(LinuxInstallRoot)</_LayoutPackageRoot>
-      <_LayoutDocs>$(_LayoutDataRoot)/usr/share/doc</_LayoutDocs>
-    </PropertyGroup>
-
-    <RemoveDir Condition="Exists('$(_InstallerIntermediatesDir)')" Directories="$(_InstallerIntermediatesDir)" />
-    <MakeDir Directories="$(_InstallerIntermediatesDir)" />
-
-    <!-- Create empty layout. -->
-    <RemoveDir Condition="Exists('$(_LayoutDirectory)')" Directories="$(_LayoutDirectory)" />
-    <MakeDir Directories="$(_LayoutDirectory)" />
-    <MakeDir Directories="$(_LayoutPackageRoot)" />
-    <MakeDir Directories="$(_LayoutDocs)" />
-
-    <MSBuild Projects="$(MSBuildProjectFullPath)"
-             Targets="PublishToDisk"
-             Properties="OutputPath=$([MSBuild]::EnsureTrailingSlash('$(_LayoutPackageRoot)'))"
-             RemoveProperties="@(_GlobalPropertiesToRemoveForPublish)"  />
-
-    <Copy
-      SourceFiles="@(Manpage)"
-      DestinationFiles="@(Manpage->'$(_LayoutDocs)/%(RecursiveDir)%(Filename)%(Extension)')" />
-
-    <!-- Write copyright file in the debian format. There's no defined format for RPM copyright files. -->
-    <ItemGroup>
-      <_CopyrightLine Include="Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/" />
-      <_CopyrightLine Include="%0AFiles: *" />
-      <_CopyrightLine Include="Copyright: $(_PackageCopyright)" />
-      <_CopyrightLine Include="Comment: Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license." />
-      <_CopyrightLine Include="License: MIT and ASL 2.0 and BSD" />
-      <_CopyrightLine Include="%0ALicense: $([System.IO.File]::ReadAllText('$(LicenseFile)'))" />
-    </ItemGroup>
-
-    <WriteLinesToFile File="$(_LayoutDocs)/$(VersionedInstallerName)/copyright" Lines="@(_CopyrightLine)" />
-
-    <!-- We always own the directory for the copyright file. -->
-    <ItemGroup>
-      <_GeneratedFileOwnedDirectory Include="$(_LayoutDocs)/$(VersionedInstallerName)" />
-    </ItemGroup>
-
-    <!-- Create any symlinks -->
-    <MakeDir Directories="$(_LayoutDataRoot)%(DebSymlink.RelativeDir)" Condition="'%(DebSymlink.Identity)' != ''" />
-    <Exec Command="ln -sf %(DebSymlink.LinkTarget) %(DebSymlink.FileName)%(DebSymlink.Extension)" WorkingDirectory="$(_LayoutDataRoot)%(DebSymlink.RelativeDir)" Condition="'%(DebSymlink.Identity)' != ''" />
-    
     <!--
       Compress all files and directories that we output.
       We'll filter out any directories we don't own in CreateRpmPackage.
@@ -325,7 +304,7 @@
       Payload="$(_LayoutDirectory)/payload.cpio"
       RawPayloadFileKinds="@(_RawFileKindInfo)"
       Requires="@(LinuxPackageDependency)"
-      Conflicts="@(RpmConflicts)"
+      Conflicts="@(RpmConflicts);@(LinuxPackageConflicts)"
       OwnedDirectories="@(RpmOwnedDirectory);@(_GeneratedFileOwnedDirectory)"
       ChangelogLines="- https://github.com/dotnet/core/tree/master/release-notes"
       License="MIT and ASL 2.0 and BSD"
