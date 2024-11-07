@@ -33,6 +33,10 @@ To add package conflicts, add a `LinuxPackageConflict` item for the package.
 
 To add symlinks that should be installed on the system, add a `LinuxPackageSymlink` item with the `LinkTarget` metadata pointing to the target of the symlink.
 
+> [!NOTE]
+> Symlinks added with `LinuxPackageSymlink` are relative to the filesystem root, not to the `LinuxInstallRoot` property.
+> As the vast majority of symlinks in a package are from system locations to the install root, this provides an easier UX for defining symlinks.
+
 #### Deb package configuration
 
 To add additional properties for the deb control file, add `DebControlProperty` items with the value of the field in the `Value` metadata.
