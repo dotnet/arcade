@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using TaskLoggingHelper = Microsoft.Build.Utilities.TaskLoggingHelper;
 
@@ -563,7 +564,11 @@ namespace Microsoft.DotNet.SignTool
             }
             else if (file.IsDeb())
             {
-                if (!_signTool.VerifySignedDeb(log, file.FullPath))
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    _log.LogMessage(MessageImportance.Low, $"Skipping signature verification of {file.FullPath} on Windows.");
+                }
+                else if (!_signTool.VerifySignedDeb(log, file.FullPath))
                 {
                     _log.LogError($"Deb package {file.FullPath} is not signed properly.");
                 }

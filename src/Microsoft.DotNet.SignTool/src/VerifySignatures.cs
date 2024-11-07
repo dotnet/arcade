@@ -26,7 +26,8 @@ namespace Microsoft.DotNet.SignTool
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 // We cannot check the signature of a .deb file on Windows.
-                return true;
+                log.LogMessage(MessageImportance.Low, $"Skipping signature verification of {filePath} on Windows.");
+                return false;
             }
 
             string tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
