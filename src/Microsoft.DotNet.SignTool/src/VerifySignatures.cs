@@ -199,7 +199,7 @@ namespace Microsoft.DotNet.SignTool
 
             using (var process = Process.Start(psi))
             {
-                process.WaitForExit(3000); // 3 seconds
+                process.WaitForExit(10000); // 10 seconds
                 if (process.ExitCode != 0)
                 {
                     throw new Exception($"Command '{command}' failed with exit code {process.ExitCode}");
