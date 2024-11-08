@@ -90,6 +90,10 @@
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-runtime</Uri>
       <Sha>990ebf52fc408ca45929fd176d2740675a67fab8</Sha>
     </Dependency>
+    <Dependency Name="Microsoft.Extensions.Http" Version="9.0.0-rc.2.24473.5">
+      <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-runtime</Uri>
+      <Sha>990ebf52fc408ca45929fd176d2740675a67fab8</Sha>
+    </Dependency>
     <Dependency Name="Microsoft.Extensions.FileProviders.Abstractions" Version="9.0.0-rc.2.24473.5">
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-runtime</Uri>
       <Sha>990ebf52fc408ca45929fd176d2740675a67fab8</Sha>
