@@ -127,7 +127,7 @@ namespace Microsoft.DotNet.Helix.Client
 
                 if (returnSas != default(bool?))
                 {
-                    _req.Headers.Add("return-sas", returnSas);
+                    _req.Headers.Add("return-sas", returnSas.ToString());
                 }
 
                 if (body != default(Models.JobCreationRequest))
