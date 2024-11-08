@@ -47,6 +47,7 @@
     <MicrosoftBclAsyncInterfacesVersion>9.0.0-rc.2.24473.5</MicrosoftBclAsyncInterfacesVersion>
     <MicrosoftExtensionsDependencyInjectionAbstractionsVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsDependencyInjectionAbstractionsVersion>
     <MicrosoftExtensionsDependencyInjectionVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsDependencyInjectionVersion>
+    <MicrosoftExtensionsHttpVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsHttpVersion>
     <MicrosoftExtensionsDependencyModelVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsDependencyModelVersion>
     <MicrosoftExtensionsFileProvidersAbstractionsVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsFileProvidersAbstractionsVersion>
     <MicrosoftExtensionsFileSystemGlobbingVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsFileSystemGlobbingVersion>

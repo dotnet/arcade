@@ -3,6 +3,7 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Extensions.DependencyInjection;
 using NuGet.Common;
 using NuGet.Packaging;
 using NuGet.Packaging.Signing;
@@ -16,11 +17,19 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
+using System.Runtime.Remoting;
 
 namespace Microsoft.DotNet.SignTool
 {
     internal class VerifySignatures
     {
+#if NETFRAMEWORK
+        private static IServiceProvider serviceProvider;
+        private static IHttpClientFactory httpClientFactory;
+        private static HttpClient client;
+#else
+        private static readonly HttpClient client = new(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(10) });
+#endif
         internal static bool VerifySignedDeb(TaskLoggingHelper log, string filePath)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -36,15 +45,17 @@ namespace Microsoft.DotNet.SignTool
             // https://microsoft.sharepoint.com/teams/prss/esrp/info/SitePages/Linux%20GPG%20Signing.aspx
             try
             {
+#if NETFRAMEWORK
+                serviceProvider = new ServiceCollection().AddHttpClient().BuildServiceProvider();
+                httpClientFactory = serviceProvider.GetRequiredService<IHttpClientFactory>();
+                client = httpClientFactory.CreateClient();
+#endif
                 // Download the Microsoft public key
-                using (HttpClient client = new HttpClient())
+                using (Stream stream = client.GetStreamAsync("https://packages.microsoft.com/keys/microsoft.asc").Result)
                 {
-                    using (Stream stream = client.GetStreamAsync("https://packages.microsoft.com/keys/microsoft.asc").Result)
+                    using (FileStream fileStream = File.Create($"{tempDir}/microsoft.asc"))
                     {
-                        using (FileStream fileStream = File.Create($"{tempDir}/microsoft.asc"))
-                        {
-                            stream.CopyTo(fileStream);
-                        }
+                        stream.CopyTo(fileStream);
                     }
                 }
 
@@ -55,13 +66,12 @@ namespace Microsoft.DotNet.SignTool
                 if (output.Contains("Good signature"))
                 {
                     return true;
-                }
-                
+                }     
                 return false;
             }
             catch(Exception e)
             {
-                log.LogMessage(MessageImportance.Low, $"Failed to verify signature of {filePath} with the following error: {e.Message}");
+                log.LogMessage(MessageImportance.Low, $"Failed to verify signature of {filePath} with the following error: {e}");
                 return false;
             }
             finally
@@ -190,7 +200,7 @@ namespace Microsoft.DotNet.SignTool
 
             using (var process = Process.Start(psi))
             {
-                process.WaitForExit();
+                process.WaitForExit(3000); // 3 seconds
                 if (process.ExitCode != 0)
                 {
                     throw new Exception($"Command '{command}' failed with exit code {process.ExitCode}");
