@@ -798,25 +798,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 symbolTargetType: InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
-                // .NET 9.0.2xx SDK,
-+            new TargetChannelConfig(
-+                id: 5286,
-+                isInternal: false,
-+                publishingInfraVersion: PublishingInfraVersion.Latest,
-+                akaMSChannelNames: new List<string>() { "9.0.2xx" },
-+                targetFeeds: DotNet9Feeds,
-+                symbolTargetType: PublicAndInternalSymbolTargets,
-+                filenamesToExclude: FilenamesToExclude),
-+
-+            // .NET 9.0.2xx SDK Internal,
-+            new TargetChannelConfig(
-+                id: 5287,
-+                isInternal: true,
-+                publishingInfraVersion: PublishingInfraVersion.Latest,
-+                akaMSChannelNames: new List<string>() { "internal/9.0.2xx" },
-+                targetFeeds: DotNet9InternalFeeds,
-+                symbolTargetType: InternalSymbolTargets,
-                 filenamesToExclude: FilenamesToExclude),
+            // .NET 9.0.2xx SDK,
+            new TargetChannelConfig(
+                id: 5286,
+                isInternal: false,
+                publishingInfraVersion: PublishingInfraVersion.Latest,
+                akaMSChannelNames: new List<string>() { "9.0.2xx" },
+                targetFeeds: DotNet9Feeds,
+                symbolTargetType: PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // .NET 9.0.2xx SDK Internal,
+            new TargetChannelConfig(
+                id: 5287,
+                isInternal: true,
+                publishingInfraVersion: PublishingInfraVersion.Latest,
+                akaMSChannelNames: new List<string>() { "internal/9.0.2xx" },
+                targetFeeds: DotNet9InternalFeeds,
+                symbolTargetType: InternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
 
             // .NET 9 RC 1
             new TargetChannelConfig(
