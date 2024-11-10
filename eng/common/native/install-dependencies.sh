@@ -51,7 +51,6 @@ brew "openssl@3"
 brew "pkg-config"
 brew "python3"
 brew "pigz"
-brew "cpio"
 EOF
         ;;
 
