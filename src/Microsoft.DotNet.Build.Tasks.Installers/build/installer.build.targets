@@ -253,6 +253,20 @@
           SkipUnchangedFiles="True"
           UseHardlinksIfPossible="True" />
 
+    <Copy SourceFiles="@(LinuxPostInstallScript)"
+          DestinationFiles="@(_ControlFile->'$(_LayoutControlRoot)postinst')"
+          OverwriteReadOnlyFiles="True"
+          SkipUnchangedFiles="True"
+          UseHardlinksIfPossible="True" />
+
+    <Copy SourceFiles="@(LinuxPostRemoveScript)"
+          DestinationFiles="@(_ControlFile->'$(_LayoutControlRoot)postrm')"
+          OverwriteReadOnlyFiles="True"
+          SkipUnchangedFiles="True"
+          UseHardlinksIfPossible="True" />
+
+    <Exec Command="chmod 0755 '$(_LayoutControlRoot)postinst' '$(_LayoutControlRoot)postrm'" />
+
     <Exec Command="tar -C '$(_LayoutControlRoot)' -czf '$(_LayoutDirectory)/control.tar.gz' ."
           IgnoreExitCode="true"
           IgnoreStandardErrorWarningFormat="true" />
@@ -299,6 +313,11 @@
       <Output TaskParameter="ConsoleOutput" ItemName="_RawFileKindInfo" />
     </Exec>
 
+    <ItemGroup>
+      <_RpmScriptlet Include="@(LinuxPostInstallScript)" Kind="Postin" />
+      <_RpmScriptlet Include="@(LinuxPostRmScript)" Kind="Postun" />
+    </ItemGroup>
+
     <CreateRpmPackage
       OutputRpmPackagePath="$(_InstallerFile)"
       Vendor=".NET Foundation"
@@ -318,6 +337,7 @@
       Summary="$(_ShortDescription)"
       Description="$(_PackageLongDescription)"
       PackageUrl="https://github.com/dotnet/core"
+      Scripts="@(_RpmScriptlet)"
        />
 
     <Message Text="$(MSBuildProjectName) -> $(_InstallerFile)" Importance="high" />
