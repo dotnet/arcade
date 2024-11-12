@@ -248,7 +248,7 @@
     </ItemGroup>
 
     <Copy SourceFiles="@(DebControlFile)"
-          DestinationFiles="@(_ControlFile->'$(_LayoutControlRoot)%(Filename)%(Extension)')"
+          DestinationFiles="@(DebControlFile->'$(_LayoutControlRoot)%(Filename)%(Extension)')"
           OverwriteReadOnlyFiles="True"
           SkipUnchangedFiles="True"
           UseHardlinksIfPossible="True" />
