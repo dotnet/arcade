@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
                 "x86" => Architecture.X86,
                 "x64" => Architecture.X64,
                 "arm" => Architecture.Arm,
-                "aarch64" => Architecture.Arm64,
+                "arm64" => Architecture.Arm64,
 #if NET
                 "armv6" => Architecture.Armv6,
                 "s390x" => Architecture.S390x,

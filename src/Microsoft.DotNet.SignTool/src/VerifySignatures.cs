@@ -31,10 +31,10 @@ namespace Microsoft.DotNet.SignTool
 #endif
         internal static bool VerifySignedDeb(TaskLoggingHelper log, string filePath)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                // We cannot check the signature of a .deb file on Windows.
-                log.LogMessage(MessageImportance.Low, $"Skipping signature verification of {filePath} on Windows.");
+                // We cannot check the signature of a .deb file on non-Linux platforms.
+                log.LogMessage(MessageImportance.Low, $"Skipping signature verification of {filePath} on non-Linux platform.");
                 return false;
             }
 
@@ -61,11 +61,14 @@ namespace Microsoft.DotNet.SignTool
                 RunCommand($"ar x {filePath} --output {tempDir}");
                 RunCommand($"gpg --import {tempDir}/microsoft.asc");
                 RunCommand($"cat {tempDir}/debian-binary {tempDir}/control.tar.gz {tempDir}/data.tar.gz > {tempDir}/combined-contents");
-                string output = RunCommand($"gpg --verify {tempDir}/_gpgorigin {tempDir}/combined-contents");
+
+                // 'gpg --verify' will return a non-zero exit code if the signature is invalid
+                // We don't want to throw an exception in that case, so we pass throwOnError: false
+                string output = RunCommand($"gpg --verify {tempDir}/_gpgorigin {tempDir}/combined-contents", throwOnError: false);
                 if (output.Contains("Good signature"))
                 {
                     return true;
-                }     
+                }
                 return false;
             }
             catch(Exception e)
@@ -185,26 +188,31 @@ namespace Microsoft.DotNet.SignTool
             return certificate.Verify();
         }
 
-        private static string RunCommand(string command)
+        private static string RunCommand(string command, bool throwOnError = true)
         {
             var psi = new ProcessStartInfo
             {
                 FileName = "bash",
                 Arguments = $"-c \"{command}\"",
                 RedirectStandardOutput = true,
-                RedirectStandardError = false,
+                RedirectStandardError = true,
                 UseShellExecute = false,
                 CreateNoWindow = true
             };
 
             using (var process = Process.Start(psi))
             {
+                string output = process.StandardOutput.ReadToEnd();
+                string error = process.StandardError.ReadToEnd();
+
                 process.WaitForExit(10000); // 10 seconds
-                if (process.ExitCode != 0)
+                if (process.ExitCode != 0 && throwOnError)
                 {
                     throw new Exception($"Command '{command}' failed with exit code {process.ExitCode}");
                 }
-                return process.StandardOutput.ReadToEnd();
+
+                // Some processes write to stderr even if they succeed. 'gpg' is one such example
+                return $"{output}{error}";
             }
         }
     }

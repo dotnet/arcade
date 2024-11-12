@@ -564,9 +564,9 @@ namespace Microsoft.DotNet.SignTool
             }
             else if (file.IsDeb())
             {
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                 {
-                    _log.LogMessage(MessageImportance.Low, $"Skipping signature verification of {file.FullPath} on Windows.");
+                    _log.LogMessage(MessageImportance.Low, $"Skipping signature verification of {file.FullPath} on non-Linux platform.");
                 }
                 else if (!_signTool.VerifySignedDeb(log, file.FullPath))
                 {

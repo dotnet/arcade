@@ -22,25 +22,25 @@
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
       <Sha>d617bc8ed2787c235a57cf0dcdfd087b86ff9521</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="10.0.100-alpha.1.24553.1">
+    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="10.0.100-alpha.1.24560.2">
       <Uri>https://github.com/dotnet/templating</Uri>
-      <Sha>8aae0b239e10a9cc26fd6ead99420ea2b9e2fda6</Sha>
+      <Sha>dcbc031627671b433927ed0e650dbdebc8e7ccc7</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.24555.3">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.24561.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>c3a704e16866ce8653c58265cf784b85b567c68c</Sha>
+      <Sha>32b8acf5b6f79e78a7cc5f7b7c619f68ff0c97ad</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="10.0.0-beta.24555.3">
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="10.0.0-beta.24561.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>c3a704e16866ce8653c58265cf784b85b567c68c</Sha>
+      <Sha>32b8acf5b6f79e78a7cc5f7b7c619f68ff0c97ad</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.24555.3">
+    <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.24561.3">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>426d8efcbefe90fe4cfdfe5d2b0468e985a0327e</Sha>
+      <Sha>a84acdf351a07aa8d42dec315d8f4c52dc391c8d</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.1.0-beta.24555.3">
+    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.1.0-beta.24561.3">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>426d8efcbefe90fe4cfdfe5d2b0468e985a0327e</Sha>
+      <Sha>a84acdf351a07aa8d42dec315d8f4c52dc391c8d</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="10.0.0-prerelease.24555.2">
       <Uri>https://github.com/dotnet/xharness</Uri>
@@ -132,9 +132,9 @@
       <Sha>ef4c24166691977558e5312758df4313ab310dc0</Sha>
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.arcade" Version="10.0.0-beta.24555.3">
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.arcade" Version="10.0.0-beta.24561.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>c3a704e16866ce8653c58265cf784b85b567c68c</Sha>
+      <Sha>32b8acf5b6f79e78a7cc5f7b7c619f68ff0c97ad</Sha>
       <SourceBuild RepoName="arcade" ManagedOnly="true" />
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
@@ -162,15 +162,15 @@
       <SourceBuild RepoName="sdk" ManagedOnly="true" />
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-externals" Version="10.0.0-alpha.1.24554.1">
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-externals" Version="10.0.0-alpha.1.24561.2">
       <Uri>https://github.com/dotnet/source-build-externals</Uri>
-      <Sha>f85bef35b34955a287e21a32f3107b24b9514723</Sha>
+      <Sha>b4c6488eecb5011a4c7fc363d96c9c77f461a5fe</Sha>
       <SourceBuild RepoName="source-build-externals" ManagedOnly="true" />
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="10.0.0-alpha.1.24554.1">
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="10.0.0-alpha.1.24561.2">
       <Uri>https://github.com/dotnet/source-build-reference-packages</Uri>
-      <Sha>e781442b88c4d939f06a94f38f24a5dc18c383d4</Sha>
+      <Sha>92a51d1379daa1fa7892a9d06840ba833fcd6298</Sha>
       <SourceBuild RepoName="source-build-reference-packages" ManagedOnly="true" />
     </Dependency>
     <!-- Transitive dependency needed for source build. -->
@@ -199,9 +199,9 @@
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-runtime</Uri>
       <Sha>990ebf52fc408ca45929fd176d2740675a67fab8</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DncEng.SecretManager" Version="1.1.0-beta.24529.1">
+    <Dependency Name="Microsoft.DncEng.SecretManager" Version="1.1.0-beta.24558.2">
       <Uri>https://github.com/dotnet/dnceng</Uri>
-      <Sha>800cb505f45128d066cee106bb123187f96f21e8</Sha>
+      <Sha>a15fc6e7e7a94b1df660a523cebfac4fc0117e64</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
