@@ -265,7 +265,7 @@
           SkipUnchangedFiles="True"
           UseHardlinksIfPossible="True" />
 
-    <Exec Command="chmod 0755 '$(_LayoutControlRoot)postinst' '$(_LayoutControlRoot)postrm'" />
+    <Exec Command="chmod ugo+x '$(_LayoutControlRoot)postinst' '$(_LayoutControlRoot)postrm'" />
 
     <Exec Command="tar -C '$(_LayoutControlRoot)' -czf '$(_LayoutDirectory)/control.tar.gz' ."
           IgnoreExitCode="true"
