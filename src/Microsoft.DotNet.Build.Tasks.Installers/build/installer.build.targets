@@ -254,13 +254,13 @@
           UseHardlinksIfPossible="True" />
 
     <Copy SourceFiles="@(LinuxPostInstallScript)"
-          DestinationFiles="@(_ControlFile->'$(_LayoutControlRoot)postinst')"
+          DestinationFiles="$(_LayoutControlRoot)postinst"
           OverwriteReadOnlyFiles="True"
           SkipUnchangedFiles="True"
           UseHardlinksIfPossible="True" />
 
     <Copy SourceFiles="@(LinuxPostRemoveScript)"
-          DestinationFiles="@(_ControlFile->'$(_LayoutControlRoot)postrm')"
+          DestinationFiles="$(_LayoutControlRoot)postrm"
           OverwriteReadOnlyFiles="True"
           SkipUnchangedFiles="True"
           UseHardlinksIfPossible="True" />
