@@ -41,6 +41,8 @@ To add symlinks that should be installed on the system, add a `LinuxPackageSymli
 
 To add additional properties for the deb control file, add `DebControlProperty` items with the value of the field in the `Value` metadata.
 
+To add additional files to the `control` tarball in the package, add `DebControlFile` items for each file.
+
 #### Rpm package configuration
 
 To specify directories owned by the package, add `RpmOwnedDirectory` items for each directory. These are provided automatically for any non-ToolPack packages produced by the Shared Framework SDK.

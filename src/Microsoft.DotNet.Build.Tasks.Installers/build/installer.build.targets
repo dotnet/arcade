@@ -247,6 +247,12 @@
       <FileWrites Include="@(_ControlFile)" />
     </ItemGroup>
 
+    <Copy SourceFiles="@(DebControlFile)"
+          DestinationFiles="@(_ControlFile->'$(_LayoutControlRoot)%(Filename)%(Extension)')"
+          OverwriteReadOnlyFiles="True"
+          SkipUnchangedFiles="True"
+          UseHardlinksIfPossible="True" />
+
     <Exec Command="tar -C '$(_LayoutControlRoot)' -czf '$(_LayoutDirectory)/control.tar.gz' ."
           IgnoreExitCode="true"
           IgnoreStandardErrorWarningFormat="true" />
