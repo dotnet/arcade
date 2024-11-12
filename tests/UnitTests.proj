@@ -57,13 +57,13 @@
       <PayloadDirectory>$(MSBuildThisFileDirectory)XUnit</PayloadDirectory>
     </HelixWorkItem>
   </ItemGroup>
-  <!-- Exercise Helix failure reporting path for Xunit --> 
+  <!-- Exercise Helix failure reporting path for Xunit -->
   <ItemGroup>
     <AzurePipelinesExpectedTestFailure Include="XunitReportingTests.ExerciseXunitCharacterFilteringFailurePath"/>
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
-    <HelixTargetQueue Include="RedHat.7.Amd64"/>
+    <HelixTargetQueue Include="(Centos.7.Amd64)Ubuntu.2204.Amd64.svc@mcr.microsoft.com/dotnet-buildtools/prereqs:centos-7-mlnet-helix"/>
     <HelixTargetQueue Include="Windows.10.Amd64"/>
     <HelixTargetQueue Include="(Debian.11.Amd64)ubuntu.2204.amd64@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-11-helix-amd64"/>
   </ItemGroup>
@@ -75,7 +75,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="RedHat.7.Amd64.Open"/>
+    <HelixTargetQueue Include="(Centos.7.Amd64.Open)Ubuntu.2204.Amd64.Open.svc@mcr.microsoft.com/dotnet-buildtools/prereqs:centos-7-mlnet-helix"/>
     <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
     <HelixTargetQueue Include="(Debian.11.Amd64.Open)ubuntu.2204.amd64.open@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-11-helix-amd64"/>
   </ItemGroup>
@@ -98,7 +98,7 @@
 
   <!-- Yields an existing archive that will fail if ArchivePayload doesn't work -->
   <Target Name="ZipPrexistingArchive" BeforeTargets="Build">
-      <MakeDir Directories="$(IntermediateOutputPath)\correlationarchivepayload" /> 
+      <MakeDir Directories="$(IntermediateOutputPath)\correlationarchivepayload" />
       <WriteLinesToFile
            File="$(IntermediateOutputPath)\correlationarchivepayload\testArchivePayload.txt"
            Lines="I am a test Archive Payload"
