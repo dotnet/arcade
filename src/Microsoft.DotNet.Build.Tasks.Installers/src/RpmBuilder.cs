@@ -202,10 +202,10 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             entries.Add(new(RpmHeaderTag.Summary, RpmHeaderEntryType.I18NString, Summary));
             entries.Add(new(RpmHeaderTag.Description, RpmHeaderEntryType.I18NString, Description));
 
-            foreach ((string kind, string script) in _scripts)
+            foreach (var script in _scripts)
             {
-                entries.Add((RpmHeaderTag)Enum.Parse(typeof(RpmHeaderTag), kind), RpmHeaderEntryType.String, "/bin/sh");
-                entries.Add((RpmHeaderTag)Enum.Parse(typeof(RpmHeaderTag), $"{kind}prog"), RpmHeaderEntryType.String, script);
+                entries.Add(new((RpmHeaderTag)Enum.Parse(typeof(RpmHeaderTag), script.Key), RpmHeaderEntryType.String, "/bin/sh"));
+                entries.Add(new((RpmHeaderTag)Enum.Parse(typeof(RpmHeaderTag), $"{script.Key}prog"), RpmHeaderEntryType.String, script.Value));
             }
 
             MemoryStream cpioArchive = new();
