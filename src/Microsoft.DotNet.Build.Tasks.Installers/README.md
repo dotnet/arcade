@@ -37,9 +37,14 @@ To add symlinks that should be installed on the system, add a `LinuxPackageSymli
 > Symlinks added with `LinuxPackageSymlink` are relative to the filesystem root, not to the `LinuxInstallRoot` property.
 > As the vast majority of symlinks in a package are from system locations to the install root, this provides an easier UX for defining symlinks.
 
+Add a `LinuxPostInstallScript` item to specify an sh script that should be run after the package is installed.
+Add a `LinuxPostRemoveScript` item to specify an sh script that should be run after the package is removed.
+
 #### Deb package configuration
 
 To add additional properties for the deb control file, add `DebControlProperty` items with the value of the field in the `Value` metadata.
+
+To add additional files to the `control` tarball in the package, add `DebControlFile` items for each file.
 
 #### Rpm package configuration
 
