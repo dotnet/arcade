@@ -80,14 +80,14 @@
     <ItemGroup Condition="'$(GenerateExeBundle)' == 'true'">
       <BundleComponentReference>
         <Targets>CreateWixInstaller</Targets>
-        <AdditionalProperties>GenerateMSI=true</AdditionalProperties>
+        <AdditionalProperties>_IsIndividualInstallerBuild=true;GenerateMSI=true</AdditionalProperties>
         <RemoveProperties>GenerateExeBundle</RemoveProperties>
       </BundleComponentReference>
     </ItemGroup>
     <ItemGroup Condition="'$(GeneratePkgBundle)' == 'true'">
       <BundleComponentReference>
         <Targets>CreatePkg</Targets>
-        <AdditionalProperties>GeneratePkg=true</AdditionalProperties>
+        <AdditionalProperties>_IsIndividualInstallerBuild=true;GeneratePkg=true</AdditionalProperties>
         <RemoveProperties>GeneratePkgBundle</RemoveProperties>
       </BundleComponentReference>
     </ItemGroup>
