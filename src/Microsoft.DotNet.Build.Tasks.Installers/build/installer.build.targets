@@ -257,15 +257,21 @@
           DestinationFiles="$(_LayoutControlRoot)postinst"
           OverwriteReadOnlyFiles="True"
           SkipUnchangedFiles="True"
-          UseHardlinksIfPossible="True" />
+          UseHardlinksIfPossible="True"
+          Condition="'@(LinuxPostInstallScript)' != ''" />
+
+    <Exec Command="chmod ugo+x '$(_LayoutControlRoot)postinst'"
+          Condition="'@(LinuxPostInstallScript)' != ''" />
 
     <Copy SourceFiles="@(LinuxPostRemoveScript)"
           DestinationFiles="$(_LayoutControlRoot)postrm"
           OverwriteReadOnlyFiles="True"
           SkipUnchangedFiles="True"
-          UseHardlinksIfPossible="True" />
+          UseHardlinksIfPossible="True"
+          Condition="'@(LinuxPostRemoveScript)' != ''"/>
 
-    <Exec Command="chmod ugo+x '$(_LayoutControlRoot)postinst' '$(_LayoutControlRoot)postrm'" />
+    <Exec Command="chmod ugo+x '$(_LayoutControlRoot)postrm'"
+          Condition="'@(LinuxPostRemoveScript)' != ''" />
 
     <Exec Command="tar -C '$(_LayoutControlRoot)' -czf '$(_LayoutDirectory)/control.tar.gz' ."
           IgnoreExitCode="true"

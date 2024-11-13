@@ -17,7 +17,8 @@
       Projects="$(AcquireWixProjectFile)"
       Targets="AcquireWixCore"
       Properties="BaseIntermediateOutputPath=$(BaseIntermediateOutputPath);
-                  RepoRoot=$(RepoRoot)" />
+                  RepoRoot=$(RepoRoot);
+                  InstallerRuntimeIdentifier=$(InstallerRuntimeIdentifier)" />
   </Target>
 
   <Target Name="GetAcquireWixProperties"> 
@@ -453,7 +454,8 @@
       Projects="$(AcquireNuGetExeProjectFile)"
       Targets="AcquireNuGetExeCore"
       Properties="BaseIntermediateOutputPath=$(BaseIntermediateOutputPath);
-                  RepoRoot=$(RepoRoot)" />
+                  RepoRoot=$(RepoRoot);
+                  InstallerRuntimeIdentifier=$(InstallerRuntimeIdentifier)" />
   </Target>
 
   <Target Name="_GetAcquireNuGetExeProperties">
