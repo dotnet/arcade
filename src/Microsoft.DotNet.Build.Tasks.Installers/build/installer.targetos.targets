@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetRuntimeOS>$(InstallerRuntimeIdentifier.Substring(0, $(InstallerRuntimeIdentifier.LastIndexOf('-'))))</TargetRuntimeOS>
     <TargetArchitecture Condition="'$(TargetArchitecture)' == ''">$(InstallerRuntimeIdentifier.Substring($(InstallerRuntimeIdentifier.LastIndexOf('-'))).TrimStart('-'))</TargetArchitecture>
+    <InstallerTargetArchitecture Condition="'$(InstallerTargetArchitecture)' == ''">$(TargetArchitecture)</InstallerTargetArchitecture>
   </PropertyGroup>
   
   <Target Name="_GetTargetOSArchInfo">
