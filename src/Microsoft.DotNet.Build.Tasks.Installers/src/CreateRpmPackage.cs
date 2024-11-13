@@ -61,6 +61,8 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
         public string Description { get; set; } = "";
         [Required]
         public string PackageUrl { get; set; } = "";
+        [Required]
+        public ITaskItem[] Scripts { get; set; } = [];
 
         public override bool Execute()
         {
@@ -69,7 +71,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
                 "x86" => Architecture.X86,
                 "x64" => Architecture.X64,
                 "arm" => Architecture.Arm,
-                "aarch64" => Architecture.Arm64,
+                "arm64" => Architecture.Arm64,
 #if NET
                 "armv6" => Architecture.Armv6,
                 "s390x" => Architecture.S390x,
@@ -108,6 +110,11 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
             builder.AddProvidedCapability($"{PackageName}({RpmBuilder.GetRpmHeaderArchitecture(arch)})", PackageVersion);
 
             HashSet<string> ownedDirectories = new(OwnedDirectories.Select(d => d.ItemSpec));
+
+            foreach (ITaskItem script in Scripts)
+            {
+                builder.AddScript(script.GetMetadata("Kind"), File.ReadAllText(script.ItemSpec));
+            }
 
             using (CpioReader reader = new(File.OpenRead(Payload), leaveOpen: false))
             {
