@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Pkg
 
             if (string.IsNullOrEmpty(workingDirectory))
             {
-                workingDirectory = Processor.WorkingDirectory;
+                workingDirectory = Directory.GetCurrentDirectory();
             }
 
             string output = string.Empty;

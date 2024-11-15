@@ -24,15 +24,53 @@ string op = args[2];
 
 try
 {
-    Processor.Initialize(srcPath, dstPath);
-
     if (op == "unpack")
     {
-        Processor.Unpack();
+        if (!File.Exists(srcPath))
+        {
+            throw new Exception("Input path must be a valid file");
+        }
+
+        if (!Utilities.IsPkg(srcPath) && !Utilities.IsAppBundle(srcPath))
+        {
+            throw new Exception("Input path must be a .pkg or .app (zipped) file");
+        }
+
+        Utilities.CleanupPath(dstPath);
+        Utilities.CreateParentDirectory(dstPath);
+
+        if (Utilities.IsPkg(srcPath))
+        {
+            Package.Unpack(srcPath, dstPath);
+        }
+        else if (Utilities.IsAppBundle(srcPath))
+        {
+            AppBundle.Unpack(srcPath, dstPath);
+        }
     }
     else if(op == "pack")
     {
-        Processor.Pack();
+        if (!Directory.Exists(srcPath))
+        {
+            throw new Exception("Input path must be a valid directory");
+        }
+
+        if (!Utilities.IsPkg(dstPath) && !Utilities.IsAppBundle(dstPath))
+        {
+            throw new Exception("Output path must be a .pkg or .app (zipped) file");
+        }
+
+        Utilities.CleanupPath(dstPath);
+        Utilities.CreateParentDirectory(dstPath);
+
+        if (Utilities.IsPkg(dstPath))
+        {
+            Package.Pack(srcPath, dstPath);
+        }
+        else if (Utilities.IsAppBundle(dstPath))
+        {
+            AppBundle.Pack(srcPath, dstPath);
+        }
     }
     else
     {

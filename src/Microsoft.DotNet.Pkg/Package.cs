@@ -18,31 +18,31 @@ namespace Microsoft.DotNet.Pkg
         private static string? Scripts = null;
         private static List<PackageBundle> Bundles = new List<PackageBundle>();
 
-        internal static void Unpack() =>
-            ProcessPackage(packing: false);
+        internal static void Unpack(string srcPath, string dstPath) =>
+            ProcessPackage(string srcPath, string dstPath, packing: false);
 
-        internal static void Pack() =>
-            ProcessPackage(packing: true);
+        internal static void Pack(string srcPath, string dstPath) =>
+            ProcessPackage(srcPath, dstPath, packing: true);
 
-        private static void ProcessPackage(bool packing)
+        private static void ProcessPackage(string srcPath, string dstPath, bool packing)
         {
-            NameWithExtension = packing ? Path.GetFileName(Processor.OutputPath) : Path.GetFileName(Processor.InputPath);
-            LocalExtractionPath = packing ? Processor.InputPath : Processor.OutputPath;
+            NameWithExtension = packing ? Path.GetFileName(dstPath) : Path.GetFileName(srcPath);
+            LocalExtractionPath = packing ? srcPath : dstPath;
 
-            if (!Processor.IsPkg(NameWithExtension))
+            if (!Utilities.IsPkg(NameWithExtension))
             {
                 throw new Exception($"Package '{NameWithExtension}' is not a .pkg file");
             }
 
             if (!packing)
             {
-                ExpandPkg();
+                ExpandPkg(srcPath);
             }
 
-            Resources = Processor.FindInPath("Resources", LocalExtractionPath, isDirectory: true, searchOption: SearchOption.TopDirectoryOnly);
-            Distribution = Processor.FindInPath("Distribution", LocalExtractionPath, isDirectory: false, searchOption: SearchOption.TopDirectoryOnly);
-            Scripts = Processor.FindInPath("Scripts", LocalExtractionPath, isDirectory: true, searchOption: SearchOption.TopDirectoryOnly);
-            string? packageInfo = Processor.FindInPath("PackageInfo", LocalExtractionPath, isDirectory: false, searchOption: SearchOption.TopDirectoryOnly);
+            Resources = Utilities.FindInPath("Resources", LocalExtractionPath, isDirectory: true, searchOption: SearchOption.TopDirectoryOnly);
+            Distribution = Utilities.FindInPath("Distribution", LocalExtractionPath, isDirectory: false, searchOption: SearchOption.TopDirectoryOnly);
+            Scripts = Utilities.FindInPath("Scripts", LocalExtractionPath, isDirectory: true, searchOption: SearchOption.TopDirectoryOnly);
+            string? packageInfo = Utilities.FindInPath("PackageInfo", LocalExtractionPath, isDirectory: false, searchOption: SearchOption.TopDirectoryOnly);
 
             if (!string.IsNullOrEmpty(Distribution))
             {
@@ -59,14 +59,14 @@ namespace Microsoft.DotNet.Pkg
                 
                 if (packing)
                 {
-                    PackPkg();
+                    PackPkg(dstPath);
                 }
             }
             else if (!string.IsNullOrEmpty(packageInfo))
             {
                 // This is a single bundle package
                 XElement pkgBundle = XElement.Load(packageInfo);
-                ProcessBundle(pkgBundle, isNested: false, packing: packing);
+                ProcessBundle(pkgBundle, isNested: false, packing: packing, dstPath);
             }
             else if (packing)
             {
@@ -74,17 +74,17 @@ namespace Microsoft.DotNet.Pkg
             }
         }
 
-        private static void ExpandPkg()
+        private static void ExpandPkg(string srcPath)
         {
             if (Directory.Exists(LocalExtractionPath))
             {
                 Directory.Delete(LocalExtractionPath, true);
             }
 
-            ExecuteHelper.Run("pkgutil", $"--expand {Processor.InputPath} {LocalExtractionPath}");
+            ExecuteHelper.Run("pkgutil", $"--expand {srcPath} {LocalExtractionPath}");
         }
 
-        private static void PackPkg()
+        private static void PackPkg(string dstPath)
         {
             string args = string.Empty;
             args += $"--distribution {Distribution}";
@@ -105,11 +105,11 @@ namespace Microsoft.DotNet.Pkg
                 args += $" --root {LocalExtractionPath}";
             }
 
-            if (File.Exists(Processor.OutputPath))
+            if (File.Exists(dstPath))
             {
-                File.Delete(Processor.OutputPath);
+                File.Delete(dstPath);
             }
-            args += $" {Processor.OutputPath}";
+            args += $" {dstPath}";
 
             ExecuteHelper.Run("productbuild", args);
         }
@@ -127,7 +127,7 @@ namespace Microsoft.DotNet.Pkg
             }
             else
             {
-                bundle.Pack();
+                bundle.Pack(dstPath);
             }
 
             if (isNested)
