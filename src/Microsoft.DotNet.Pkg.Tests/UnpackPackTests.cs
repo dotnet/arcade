@@ -1,366 +1,207 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using FluentAssertions;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Diagnostics;
 using Xunit;
-using FluentAssertions;
+using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Pkg.Tests
 {
     public class UnpackPackTests
     {
-        private static string pkgToolPath = Path.Combine(
-            Path.GetDirectoryName(typeof(UnpackPackTests).Assembly.Location),
+        private readonly ITestOutputHelper output;
+        private static readonly string simplePkg = GetResourceFilePath("Simple.pkg");
+        private static readonly string withAppPkg = GetResourceFilePath("WithApp.pkg");
+        private static readonly string simpleInstallerPkg = GetResourceFilePath("SimpleInstaller.pkg");
+        private static readonly string withAppInstallerPkg = GetResourceFilePath("WithAppInstaller.pkg");
+
+        private static readonly string pkgToolPath = Path.Combine(
+            Path.GetDirectoryName(typeof(UnpackPackTests).Assembly.Location)!,
             "tools",
             "pkg",
             "Microsoft.Dotnet.Pkg.dll");
 
-        private static string[] simplePkgFiles = new[]
-        {
-            Path.Combine("Bom"),
-            Path.Combine("PackageInfo"),
+        private static readonly string[] simplePkgFiles =
+        [
+            "Bom",
+            "PackageInfo",
             Path.Combine("Payload", "Sample.txt")
-        };
+        ];
 
-        private static string[] withAppPkgFiles = new[]
-        {
-            Path.Combine("Bom"),
-            Path.Combine("PackageInfo"),
+        private static readonly string[] withAppPkgFiles =
+        [
+            "Bom",
+            "PackageInfo",
             Path.Combine("Payload", "test.app")
-        };
+        ];
 
-        private static string[] appFiles = new[]
-        {
+        private static readonly string[] appFiles =
+        [
             Path.Combine("Contents", "Info.plist"),
             Path.Combine("Contents", "MacOS", "main"),
-            Path.Combine("Contents", "Resources", "libexample.dylib"),
-        };
+            Path.Combine("Contents", "Resources", "libexample.dylib")
+        ];
 
-        private static string[] simpleInstallerFiles = new[]
-        {
-            Path.Combine("Distribution"),
-            Path.Combine("Simple.pkg"),
-        };
+        private static readonly string[] simpleInstallerFiles =
+        [
+            "Distribution",
+            "Simple.pkg"
+        ];
 
-        private static string[] withAppInstallerFiles = new[]
-        {
-            Path.Combine("Distribution"),
-            Path.Combine("WithApp.pkg"),
-        };
-    
+        private static readonly string[] withAppInstallerFiles =
+        [
+            "Distribution",
+            "WithApp.pkg"
+        ];
+
+        public UnpackPackTests(ITestOutputHelper output) => this.output = output;
+
         [MacOSOnlyFact]
-        public void UnpackSimplePkg()
+        public void UnpackPackSimplePkg()
         {
-            string srcPath = GetResourceFilePath("Simple.pkg");
-            string dstPath = GetTempFilePath("SimplePkg");
-            try
+            string unpackPath = Path.GetTempFileName();
+            string packPath = GetTempPkgPath();
+
+            ExecuteWithCleanup(() =>
             {
-                Unpack(srcPath, dstPath, simplePkgFiles);
-            }
-            finally
-            {
-                Directory.Delete(dstPath, true);
-            }
+                Unpack(simplePkg, unpackPath, simplePkgFiles);
+                Pack(unpackPath, packPath, simplePkgFiles);
+            }, new List<string> { unpackPath, packPath });
         }
 
         [MacOSOnlyFact]
-        public void PackSimplePkg()
+        public void UnpackPackWithAppPkg()
         {
-            string srcPath = GetResourceFilePath("Simple.pkg");
-            string dstPath = GetTempFilePath("SimplePkg");
-            string packPath = GetTempFilePath("PackSimple.pkg");
-            try
-            {
-                // Unpack the package
-                Unpack(srcPath, dstPath);
+            string unpackPath = Path.GetTempFileName();
+            string packPath = GetTempPkgPath();
 
-                // Pack the package
-                Pack(dstPath, packPath, simplePkgFiles);
-            }
-            finally
+            ExecuteWithCleanup(() =>
             {
-                Directory.Delete(dstPath, true);
-                File.Delete(packPath);
-            }
+                Unpack(withAppPkg, unpackPath, withAppPkgFiles);
+                Pack(unpackPath, packPath, withAppPkgFiles);
+            }, new List<string> { unpackPath, packPath });
         }
 
         [MacOSOnlyFact]
-        public void UnpackPkgWithApp()
+        public void UnpackPackAppBundle()
         {
-            string srcPath = GetResourceFilePath("WithApp.pkg");
-            string dstPath = GetTempFilePath("WithAppPkg");
-            try
+            string unpackPkgPath = Path.GetTempFileName();
+            string unpackAppPath = Path.GetTempFileName();
+            string packAppPath = GetTempAppPath();
+
+            ExecuteWithCleanup(() =>
             {
-                Unpack(srcPath, dstPath, withAppPkgFiles);
-            }
-            finally
-            {
-                Directory.Delete(dstPath, true);
-            }
+                Unpack(withAppPkg, unpackPkgPath, withAppPkgFiles);
+                Unpack(Path.Combine(unpackPkgPath, "Payload", "test.app"), unpackAppPath, appFiles);
+                Pack(unpackAppPath, packAppPath, appFiles);
+            }, new List<string> { unpackPkgPath, unpackAppPath });
         }
 
         [MacOSOnlyFact]
-        public void PackPkgWithApp()
+        public void UnpackPackSimpleInstallerPkg()
         {
-            string srcPath = GetResourceFilePath("WithApp.pkg");
-            string dstPath = GetTempFilePath("WithAppPkg");
-            string packPath = GetTempFilePath("PackWithApp.pkg");
-            try
-            {
-                // Unpack the package
-                Unpack(srcPath, dstPath);
+            string unpackPath = Path.GetTempFileName();
+            string packPath = GetTempPkgPath();
 
-                // Pack the package
-                Pack(dstPath, packPath, withAppPkgFiles);
-            }
-            finally
+            ExecuteWithCleanup(() =>
             {
-                Directory.Delete(dstPath, true);
-                File.Delete(packPath);
-            }
+                Unpack(simpleInstallerPkg, unpackPath, simpleInstallerFiles);
+                Pack(unpackPath, packPath, simpleInstallerFiles);
+            }, new List<string> { unpackPath, packPath });
         }
 
         [MacOSOnlyFact]
-        public void UnpackAppBundle()
+        public void UnpackPackSimplePkgInSimpleInstallerPkg()
         {
-            string srcPath = GetResourceFilePath("WithApp.pkg");
-            string dstPath = GetTempFilePath("WithAppPkg");
-            string appPath = Path.Combine(dstPath, "Payload", "test.app");
-            string appDstPath = GetTempFilePath("TestApp");
-            try
-            {
-                // Unpack the package
-                Unpack(srcPath, dstPath);
+            string unpackInstallerPath = Path.GetTempFileName();
+            string unpackComponentPath = Path.GetTempFileName();
+            string packInstallerPath = GetTempPkgPath();
 
-                // Unpack the app bundle
-                Unpack(appPath, appDstPath, appFiles);
-            }
-            finally
+            string componentPkgPath = Path.Combine(unpackInstallerPath, "Simple.pkg");
+
+            ExecuteWithCleanup(() =>
             {
-                Directory.Delete(dstPath, true);
-                Directory.Delete(appDstPath, true);
-            }
+                Unpack(simpleInstallerPkg, unpackInstallerPath, simpleInstallerFiles);
+                Unpack(componentPkgPath, unpackComponentPath, simplePkgFiles);
+                Pack(unpackComponentPath, componentPkgPath, simplePkgFiles);
+                Pack(unpackInstallerPath, packInstallerPath, simpleInstallerFiles);
+            }, new List<string> { unpackInstallerPath, unpackComponentPath, packInstallerPath });
         }
 
         [MacOSOnlyFact]
-        public void PackAppBundle()
+        public void UnpackPackAppBundleAndWithAppPkgInWithAppInstallerPkg()
         {
-            string srcPath = GetResourceFilePath("WithApp.pkg");
-            string dstPath = GetTempFilePath("WithAppPkg");
-            string appPath = Path.Combine(dstPath, "Payload", "test.app");
-            string appDstPath = GetTempFilePath("TestApp");
-            try
-            {
-                // Unpack the package
-                Unpack(srcPath, dstPath);
-
-                // Unpack the app bundle
-                Unpack(appPath, appDstPath);
-
-                // Pack the app bundle
-                Pack(appDstPath, appPath, appFiles);
-            }
-            finally
-            {
-                Directory.Delete(dstPath, true);
-                Directory.Delete(appDstPath, true);
-            }
-        }
-
-        [MacOSOnlyFact]
-        public void UnpackSimpleInstaller()
-        {
-            string srcPath = GetResourceFilePath("SimpleInstaller.pkg");
-            string dstPath = GetTempFilePath("SimpleInstallerPkg");
-            try
-            {
-                Unpack(srcPath, dstPath, simpleInstallerFiles);
-            }
-            finally
-            {
-                Directory.Delete(dstPath, true);
-            }
-        }
-
-        [MacOSOnlyFact]
-        public void PackSimpleInstaller()
-        {
-            string srcPath = GetResourceFilePath("SimpleInstaller.pkg");
-            string dstPath = GetTempFilePath("SimpleInstallerPkg");
-            string packPath = GetTempFilePath("PackSimpleInstaller.pkg");
-            try
-            {
-                // Unpack the installer
-                Unpack(srcPath, dstPath);
-
-                // Pack the installer
-                Pack(dstPath, packPath, simpleInstallerFiles);
-            }
-            finally
-            {
-                Directory.Delete(dstPath, true);
-                File.Delete(packPath);
-            }
-        }
-
-        [MacOSOnlyFact]
-        public void UnpackNestedInstaller()
-        {
-            string srcPath = GetResourceFilePath("SimpleInstaller.pkg");
-            string dstPath = GetTempFilePath("SimpleInstallerPkg");
-            string simplePkgPath = Path.Combine(dstPath, "Simple.pkg");
-            string simplePkgDstPath = GetTempFilePath("SimplePkg");
-            try
-            {
-                // Unpack the installer
-                Unpack(srcPath, dstPath, simpleInstallerFiles);
-
-                // Unpack the simple package inside the installer
-                Unpack(simplePkgPath, simplePkgDstPath, simplePkgFiles);
-            }
-            finally
-            {
-                Directory.Delete(dstPath, true);
-                Directory.Delete(simplePkgDstPath, true);
-            }
-        }
-
-        [MacOSOnlyFact]
-        public void PackNestedInstaller()
-        {
-            string srcPath = GetResourceFilePath("SimpleInstaller.pkg");
-            string dstPath = GetTempFilePath("SimpleInstallerPkg");
-            string simplePkgPath = Path.Combine(dstPath, "Simple.pkg");
-            string simplePkgDstPath = GetTempFilePath("SimplePkg");
-            string packPath = GetTempFilePath("PackSimpleInstaller.pkg");
-            string unpackPackPath = GetTempFilePath("UnpackPackSimpleInstallerPkg");
-            string unpackPackSimplePkgPath = Path.Combine(unpackPackPath, "Simple.pkg");
-            string unpackPackSimplePkgDstPath = GetTempFilePath("UnpackPackSimplePkg");
-            try
-            {
-                // Unpack the installer
-                Unpack(srcPath, dstPath);
-
-                // Unpack and pack the simple package
-                Unpack(simplePkgPath, simplePkgDstPath);
-                Pack(simplePkgDstPath, simplePkgPath);
-
-                // Pack the installer
-                Pack(dstPath, packPath, simpleInstallerFiles);
-
-                // Unpack the packed simple pkg inside to compare the content
-                Unpack(packPath, unpackPackPath);
-                Unpack(unpackPackSimplePkgPath, unpackPackSimplePkgDstPath, simplePkgFiles);
-            }
-            finally
-            {
-                File.Delete(packPath);
-                File.Delete(simplePkgPath);
-
-                Directory.Delete(dstPath, true);
-                Directory.Delete(simplePkgDstPath, true);
-                Directory.Delete(unpackPackPath, true);
-                Directory.Delete(unpackPackSimplePkgDstPath, true);
-            }
-        }
-
-        [MacOSOnlyFact]
-        public void UnpackNestedInstallerWithApp()
-        {
-            string srcPath = GetResourceFilePath("WithAppInstaller.pkg");
-            string dstPath = GetTempFilePath("WithAppInstallerPkg");
-            string withAppPkgPath = Path.Combine(dstPath, "WithApp.pkg");
-            string withAppPkgDstPath = GetTempFilePath("WithAppPkg");
-            try
-            {
-                // Unpack the installer
-                Unpack(srcPath, dstPath, withAppInstallerFiles);
-
-                // Unpack the app package inside the installer
-                Unpack(withAppPkgPath, withAppPkgDstPath, withAppPkgFiles);
-            }
-            finally
-            {
-                Directory.Delete(dstPath, true);
-                Directory.Delete(withAppPkgDstPath, true);
-            }
-        }
-
-        [MacOSOnlyFact]
-        public void PackNestedInstallerWithApp()
-        {
-            string srcPath = GetResourceFilePath("WithAppInstaller.pkg");
-            string dstPath = GetTempFilePath("WithAppInstallerPkg");
-            string withAppPkgPath = Path.Combine(dstPath, "WithApp.pkg");
-            string withAppPkgDstPath = GetTempFilePath("WithAppPkg");
-            string packPath = GetTempFilePath("PackWithAppInstaller.pkg");
-            string unpackPackPath = GetTempFilePath("UnpackPackWithAppInstallerPkg");
-            string unpackPackWithAppPkgPath = Path.Combine(unpackPackPath, "WithApp.pkg");
-            string unpackPackWithAppPkgDstPath = GetTempFilePath("UnpackPackWithAppPkg");
-            try
-            {
-                // Unpack the installer
-                Unpack(srcPath, dstPath);
-
-                // Unpack and pack the app package
-                Unpack(withAppPkgPath, withAppPkgDstPath);
-                Pack(withAppPkgDstPath, withAppPkgPath);
-
-                // Pack the installer
-                Pack(dstPath, packPath, withAppInstallerFiles);
-
-                // Unpack the packed app pkg inside to compare the content
-                Unpack(packPath, unpackPackPath);
-                Unpack(unpackPackWithAppPkgPath, unpackPackWithAppPkgDstPath, withAppPkgFiles);
-            }
-            finally
-            {
-                File.Delete(packPath);
-                File.Delete(withAppPkgPath);
-
-                Directory.Delete(dstPath, true);
-                Directory.Delete(withAppPkgDstPath, true);
-                Directory.Delete(unpackPackPath, true);
-                Directory.Delete(unpackPackWithAppPkgDstPath, true);
-            }
-        }
-
-        private static void Unpack(string inputPath, string outputPath, string[] expectedFiles = null)
-        {
-            bool success = RunPkgProcess(inputPath, outputPath, "unpack");
-            success.Should().BeTrue();
-
-            Directory.Exists(outputPath).Should().BeTrue();
+            string unpackInstallerPath = Path.GetTempFileName();
+            string unpackComponentPath = Path.GetTempFileName();
+            string unpackAppPath = Path.GetTempFileName();
+            string packInstallerPath = GetTempPkgPath();
             
-            if (expectedFiles != null)
-            {
-                CompareContent(outputPath, expectedFiles);
-            }
+            string componentPkgPath = Path.Combine(unpackInstallerPath, "WithApp.pkg");
+            string appPath = Path.Combine(unpackComponentPath, "Payload", "test.app");
+
+            ExecuteWithCleanup(() =>
+                {
+                    Unpack(withAppInstallerPkg, unpackInstallerPath, withAppInstallerFiles);
+                    Unpack(componentPkgPath, unpackComponentPath, withAppPkgFiles);
+                    Unpack(appPath, unpackAppPath, appFiles);
+                    Pack(unpackAppPath, appPath, appFiles);
+                    Pack(unpackComponentPath, componentPkgPath, withAppPkgFiles);
+                    Pack(unpackInstallerPath, packInstallerPath, withAppInstallerFiles);
+                },
+                new List<string> { unpackInstallerPath, unpackComponentPath, unpackAppPath, packInstallerPath });
         }
 
-        private static void Pack(string inputPath, string outputPath, string[] expectedFiles = null)
+        private static void ExecuteWithCleanup(Action action, List<string> cleanupPaths)
         {
-            bool success = RunPkgProcess(inputPath, outputPath, "pack");
-            success.Should().BeTrue();
-
-            File.Exists(outputPath).Should().BeTrue();
-
-            if (expectedFiles != null)
+            try
             {
-                string tempPath = GetTempFilePath($"UnpackPack{Path.GetFileNameWithoutExtension(inputPath)}");
-                RunPkgProcess(outputPath, tempPath, "unpack").Should().BeTrue();
-                Directory.Exists(tempPath).Should().BeTrue();
-
-                CompareContent(tempPath, expectedFiles);
-
-                Directory.Delete(tempPath, true);
+                action();
+            }
+            finally
+            {
+                foreach (string path in cleanupPaths)
+                {
+                    if (Directory.Exists(path))
+                    {
+                        Directory.Delete(path, true);
+                    }
+                    else if (File.Exists(path))
+                    {
+                        File.Delete(path);
+                    }
+                }
             }
         }
 
-        private static bool RunPkgProcess(string inputPath, string outputPath, string action)
+        private void Unpack(string srcPath, string dstPath, string[] expectedFiles)
+        {
+            RunPkgProcess(srcPath, dstPath, "unpack").Should().BeTrue();
+
+            Directory.Exists(dstPath).Should().BeTrue();
+            
+            CompareContent(dstPath, expectedFiles);
+        }
+
+        private void Pack(string srcPath, string dstPath, string[] expectedFiles)
+        {
+            RunPkgProcess(srcPath, dstPath, "pack").Should().BeTrue();
+
+            File.Exists(dstPath).Should().BeTrue();
+
+            // Unpack the packed pkg and verify the content
+            string unpackPath = Path.GetTempFileName();
+            ExecuteWithCleanup(() =>
+            {
+                Unpack(dstPath, unpackPath, expectedFiles);
+            }, new List<string> { unpackPath });
+        }
+
+        private bool RunPkgProcess(string inputPath, string outputPath, string action)
         {
             var process = Process.Start(new ProcessStartInfo()
             {
@@ -370,11 +211,11 @@ namespace Microsoft.DotNet.Pkg.Tests
                 RedirectStandardError = true,
             });
 
-            process.WaitForExit();
+            process!.WaitForExit(60000); // 60 seconds
             bool success = process.ExitCode == 0;
             if (!success)
             {
-                Console.WriteLine($"Error: {process.StandardError.ReadToEnd()}");
+                output.WriteLine($"Error: {process.StandardError.ReadToEnd()}");
             }
             return success;
         }
@@ -382,17 +223,14 @@ namespace Microsoft.DotNet.Pkg.Tests
         private static string GetResourceFilePath(string resourceName)
         {
             return Path.Combine(
-                Path.GetDirectoryName(typeof(UnpackPackTests).Assembly.Location),
+                Path.GetDirectoryName(typeof(UnpackPackTests).Assembly.Location)!,
                 "Resources",
                 resourceName);
         }
 
-        private static string GetTempFilePath(string fileName)
-        {
-            return Path.Combine(
-                Path.GetTempPath(),
-                fileName);
-        }
+        private static string GetTempPkgPath() => $"{Path.GetTempFileName()}.pkg";
+
+        private static string GetTempAppPath() => $"{Path.GetTempFileName()}.app";
 
         private static void CompareContent(string basePath, string[] expectedFiles)
         {
