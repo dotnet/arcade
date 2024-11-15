@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.MacOsPkg.Tests
             {
                 Unpack(simplePkg, unpackPath, simplePkgFiles);
                 Pack(unpackPath, packPath, simplePkgFiles);
-            }, new List<string> { unpackPath, packPath });
+            }, [ unpackPath, packPath ]);
         }
 
         [MacOSOnlyFact]
@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.MacOsPkg.Tests
             {
                 Unpack(withAppPkg, unpackPath, withAppPkgFiles);
                 Pack(unpackPath, packPath, withAppPkgFiles);
-            }, new List<string> { unpackPath, packPath });
+            }, [ unpackPath, packPath ]);
         }
 
         [MacOSOnlyFact]
@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.MacOsPkg.Tests
                 Unpack(withAppPkg, unpackPkgPath, withAppPkgFiles);
                 Unpack(Path.Combine(unpackPkgPath, "Payload", "test.app"), unpackAppPath, appFiles);
                 Pack(unpackAppPath, packAppPath, appFiles);
-            }, new List<string> { unpackPkgPath, unpackAppPath });
+            }, [ unpackPkgPath, unpackAppPath ]);
         }
 
         [MacOSOnlyFact]
@@ -112,7 +112,7 @@ namespace Microsoft.DotNet.MacOsPkg.Tests
             {
                 Unpack(simpleInstallerPkg, unpackPath, simpleInstallerFiles);
                 Pack(unpackPath, packPath, simpleInstallerFiles);
-            }, new List<string> { unpackPath, packPath });
+            }, [ unpackPath, packPath ]);
         }
 
         [MacOSOnlyFact]
@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.MacOsPkg.Tests
                 Unpack(componentPkgPath, unpackComponentPath, simplePkgFiles);
                 Pack(unpackComponentPath, componentPkgPath, simplePkgFiles);
                 Pack(unpackInstallerPath, packInstallerPath, simpleInstallerFiles);
-            }, new List<string> { unpackInstallerPath, unpackComponentPath, packInstallerPath });
+            }, [ unpackInstallerPath, unpackComponentPath, packInstallerPath ]);
         }
 
         [MacOSOnlyFact]
@@ -152,8 +152,7 @@ namespace Microsoft.DotNet.MacOsPkg.Tests
                     Pack(unpackAppPath, appPath, appFiles);
                     Pack(unpackComponentPath, componentPkgPath, withAppPkgFiles);
                     Pack(unpackInstallerPath, packInstallerPath, withAppInstallerFiles);
-                },
-                new List<string> { unpackInstallerPath, unpackComponentPath, unpackAppPath, packInstallerPath });
+                }, [ unpackInstallerPath, unpackComponentPath, unpackAppPath, packInstallerPath ]);
         }
 
         private static void ExecuteWithCleanup(Action action, List<string> cleanupPaths)
@@ -198,7 +197,7 @@ namespace Microsoft.DotNet.MacOsPkg.Tests
             ExecuteWithCleanup(() =>
             {
                 Unpack(dstPath, unpackPath, expectedFiles);
-            }, new List<string> { unpackPath });
+            }, [ unpackPath ]);
         }
 
         private bool RunPkgProcess(string inputPath, string outputPath, string action)

@@ -9,16 +9,11 @@ namespace Microsoft.DotNet.MacOsPkg
 {
     public static class ExecuteHelper
     {
-        public static string Run(string command, string arguments = "", string? workingDirectory = null)
+        public static string Run(string command, string arguments = "", string workingDirectory = "")
         {
             if (string.IsNullOrEmpty(command))
             {
                 throw new ArgumentNullException(nameof(command));
-            }
-
-            if (string.IsNullOrEmpty(workingDirectory))
-            {
-                workingDirectory = Directory.GetCurrentDirectory();
             }
 
             string output = string.Empty;
@@ -38,7 +33,7 @@ namespace Microsoft.DotNet.MacOsPkg
             return output;
         }
 
-        private static ProcessStartInfo CreateProcessStartInfo(string command, string arguments, string? workingDirectory) =>
+        private static ProcessStartInfo CreateProcessStartInfo(string command, string arguments, string workingDirectory = "") =>
             new ProcessStartInfo
             {
                 FileName = command,
