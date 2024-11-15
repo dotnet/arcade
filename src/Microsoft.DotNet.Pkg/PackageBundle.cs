@@ -148,18 +148,14 @@ namespace Microsoft.DotNet.Pkg
             Directory.CreateDirectory(tempDir);
             try
             {
-                Directory.SetCurrentDirectory(tempDir);
-
                 // While we're shelling out to an executable named 'tar', the "Payload" file from pkgs is not actually
                 // a tar file.  It's secretly a 'pbzx' file that tar on OSX has been taught to unpack.
                 // As such, while there is actually untarring / re-tarring in this file using Python libraries, we have to
                 // shell out to the host machine to do this.
-                ExecuteHelper.Run("tar", $"-xf {payloadFilePath}");
+                ExecuteHelper.Run("tar", $"-xf {payloadFilePath}", tempDir);
             }
             finally
             {
-                Directory.SetCurrentDirectory(Processor.WorkingDirectory);
-
                 // Remove the payload file and replace it with
                 // a directory of the same name containing the unpacked contents
                 File.Delete(payloadFilePath);
