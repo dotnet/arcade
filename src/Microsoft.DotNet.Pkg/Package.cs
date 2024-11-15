@@ -11,13 +11,6 @@ namespace Microsoft.DotNet.Pkg
 {
     internal static class Package
     {
-        private static string NameWithExtension = string.Empty;
-        private static string LocalExtractionPath = string.Empty;
-        private static string? Resources = null;
-        private static string? Distribution = null;
-        private static string? Scripts = null;
-        private static List<PackageBundle> Bundles = new List<PackageBundle>();
-
         internal static void Unpack(string srcPath, string dstPath) =>
             ProcessPackage(string srcPath, string dstPath, packing: false);
 
@@ -26,27 +19,22 @@ namespace Microsoft.DotNet.Pkg
 
         private static void ProcessPackage(string srcPath, string dstPath, bool packing)
         {
-            NameWithExtension = packing ? Path.GetFileName(dstPath) : Path.GetFileName(srcPath);
-            LocalExtractionPath = packing ? srcPath : dstPath;
-
-            if (!Utilities.IsPkg(NameWithExtension))
-            {
-                throw new Exception($"Package '{NameWithExtension}' is not a .pkg file");
-            }
+            string nameWithExtension = packing ? Path.GetFileName(dstPath) : Path.GetFileName(srcPath);
+            string localExtractionPath = packing ? srcPath : dstPath;
 
             if (!packing)
             {
-                ExpandPkg(srcPath);
+                ExpandPkg(srcPath, dstPath);
             }
 
-            Resources = Utilities.FindInPath("Resources", LocalExtractionPath, isDirectory: true, searchOption: SearchOption.TopDirectoryOnly);
-            Distribution = Utilities.FindInPath("Distribution", LocalExtractionPath, isDirectory: false, searchOption: SearchOption.TopDirectoryOnly);
-            Scripts = Utilities.FindInPath("Scripts", LocalExtractionPath, isDirectory: true, searchOption: SearchOption.TopDirectoryOnly);
-            string? packageInfo = Utilities.FindInPath("PackageInfo", LocalExtractionPath, isDirectory: false, searchOption: SearchOption.TopDirectoryOnly);
+            string? resources = Utilities.FindInPath("Resources", localExtractionPath, isDirectory: true, searchOption: SearchOption.TopDirectoryOnly);
+            string? distribution = Utilities.FindInPath("Distribution", localExtractionPath, isDirectory: false, searchOption: SearchOption.TopDirectoryOnly);
+            string? scripts = Utilities.FindInPath("Scripts", localExtractionPath, isDirectory: true, searchOption: SearchOption.TopDirectoryOnly);
+            string? packageInfo = Utilities.FindInPath("PackageInfo", localExtractionPath, isDirectory: false, searchOption: SearchOption.TopDirectoryOnly);
 
-            if (!string.IsNullOrEmpty(Distribution))
+            if (!string.IsNullOrEmpty(distribution))
             {
-                var xml = XElement.Load(Distribution);
+                var xml = XElement.Load(distribution);
                 List<XElement> pkgBundles = xml.Elements("pkg-ref").Where(e => e.Value.Trim() != "").ToList();
                 if (!pkgBundles.Any())
                 {
@@ -59,7 +47,7 @@ namespace Microsoft.DotNet.Pkg
                 
                 if (packing)
                 {
-                    PackPkg(dstPath);
+                    PackPkg(srcPath, dstPath, distribution, resources, scripts);
                 }
             }
             else if (!string.IsNullOrEmpty(packageInfo))
@@ -74,35 +62,20 @@ namespace Microsoft.DotNet.Pkg
             }
         }
 
-        private static void ExpandPkg(string srcPath)
-        {
-            if (Directory.Exists(LocalExtractionPath))
-            {
-                Directory.Delete(LocalExtractionPath, true);
-            }
+        private static void ExpandPkg(string srcPath, string dstPath) =>
+            ExecuteHelper.Run("pkgutil", $"--expand {srcPath} {dstPath}");
 
-            ExecuteHelper.Run("pkgutil", $"--expand {srcPath} {LocalExtractionPath}");
-        }
-
-        private static void PackPkg(string dstPath)
+        private static void PackPkg(string srcPath, string dstPath, string distribution, string? resources, string? scripts)
         {
-            string args = string.Empty;
-            args += $"--distribution {Distribution}";
-            if (Bundles.Any())
+            string args = $"--distribution {distribution} --package-path {srcPath}";
+
+            if (!string.IsNullOrEmpty(resources))
             {
-                args += $" --package-path {LocalExtractionPath}";
+                args += $" --resources {resources}";
             }
-            if (!string.IsNullOrEmpty(Resources))
+            if (!string.IsNullOrEmpty(scripts))
             {
-                args += $" --resources {Resources}";
-            }
-            if (!string.IsNullOrEmpty(Scripts))
-            {
-                args += $" --scripts {Scripts}";
-            }
-            if (args.Length == 0)
-            {
-                args += $" --root {LocalExtractionPath}";
+                args += $" --scripts {scripts}";
             }
 
             if (File.Exists(dstPath))
@@ -114,36 +87,19 @@ namespace Microsoft.DotNet.Pkg
             ExecuteHelper.Run("productbuild", args);
         }
 
-        private static void ProcessBundle(XElement bundleInfo, bool isNested, bool packing)
+        private static void ProcessBundle(XElement bundleInfo, string localExtractionPath, string nameWithExtension, bool isNested, bool packing)
         {
-            string extractionPath = isNested ? Path.Combine(LocalExtractionPath, bundleInfo.Value.Substring(1)) : LocalExtractionPath;
-            string version = bundleInfo.Attribute("version")?.Value ?? throw new Exception($"No version found in bundle file {NameWithExtension}");
-            string id = GetId(bundleInfo);
-            PackageBundle bundle = new PackageBundle(extractionPath, id, version, NameWithExtension, isNested);
-
+            string extractionPath = isNested ? Path.Combine(localExtractionPath, bundleInfo.Value.Substring(1)) : localExtractionPath;
             if (!packing)
             {
-                bundle.Unpack();
+                bundle.Unpack(extractionPath, isNested);
             }
             else
             {
-                bundle.Pack(dstPath);
+                string version = bundleInfo.Attribute("version")?.Value ?? throw new Exception($"No version found in bundle file {nameWithExtension}");
+                string id = bundleInfo.Attribute("identifier")?.Value ?? throw new Exception($"No identifier found in bundle file {nameWithExtension}");
+                bundle.Pack(extractionPath, dstPath, id, version, isNested)
             }
-
-            if (isNested)
-            {
-                Bundles.Add(bundle);
-            }
-        }
-
-        private static string GetId(XElement element)
-        {
-            string id = element.Attribute("packageIdentifier")?.Value
-                ?? element.Attribute("id")?.Value
-                ?? element.Attribute("identifier")?.Value
-                ?? throw new Exception("No packageIdentifier or id found in XElement.");
-
-            return id;
         }
     }
 }

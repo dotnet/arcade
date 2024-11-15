@@ -9,55 +9,26 @@ namespace Microsoft.DotNet.Pkg
 {
     internal class PackageBundle
     {
-        private bool IsNested;
-        private string NameWithExtension;
-        private string LocalExtractionPath;
-        private string Identifier;
-        private string Version;
-        private string? Scripts;
-        private string? Payload;
-
-        internal PackageBundle(string localExtractionPath, string identifier, string version, string rootPkgName, bool isNested)
+        internal void Unpack(string srcPath, bool isNested)
         {
-            IsNested = isNested;
-            Identifier = identifier;
-            Version = version;
-            NameWithExtension = rootPkgName;
-            LocalExtractionPath = localExtractionPath;
             if (isNested)
             {
-                NameWithExtension = Path.GetFileName(localExtractionPath);
-                LocalExtractionPath = Path.Combine(Path.GetDirectoryName(localExtractionPath) ?? string.Empty, Path.GetFileNameWithoutExtension(NameWithExtension));
-            }
+                string nameWithExtension = Path.GetFileName(srcPath);
+                srcPath = Path.Combine(Path.GetDirectoryName(srcPath) ?? string.Empty, Path.GetFileNameWithoutExtension(srcPath));
 
-            if (!Utilities.IsPkg(NameWithExtension))
-            {
-                throw new Exception($"Bundle '{NameWithExtension}' is not a .pkg file");
-            }
-        }
-
-        internal void Unpack()
-        {
-            if (IsNested)
-            {
                 // The nested bundles get unpacked into a directory with a .pkg extension by `pkgutil --expand`,
                 // so we remove this extension when unpacking the bundle.
                 // Otherwise, there will be problems when packing the bundle due to the naming conflict
-                Directory.Move(LocalExtractionPath + ".pkg", LocalExtractionPath);
+                Directory.Move(srcPath + ".pkg", srcPath);
             }
 
-            Scripts = Utilities.FindInPath("Scripts", LocalExtractionPath, isDirectory: true, searchOption: SearchOption.TopDirectoryOnly);
-            Payload = Utilities.FindInPath("Payload", LocalExtractionPath, isDirectory: false, searchOption: SearchOption.TopDirectoryOnly);
+            string? payload = Utilities.FindInPath("Payload", srcPath, isDirectory: false, searchOption: SearchOption.TopDirectoryOnly) ?? throw new Exception("Payload not found");
+            UnpackPayloadFile(Path.GetFullPath(payload));
 
-            if (!string.IsNullOrEmpty(Payload))
-            {
-                UnpackPayloadFile(Path.GetFullPath(Payload));
-            }
-
-            if (!IsNested)
+            if (!isNested)
             {
                 // Zip the nested app bundles
-                IEnumerable<string> nestedApps = Utilities.GetDirectories(LocalExtractionPath, "*.app", SearchOption.AllDirectories);
+                IEnumerable<string> nestedApps = Utilities.GetDirectories(srcPath, "*.app", SearchOption.AllDirectories);
                 foreach (string app in nestedApps)
                 {
                     string tempDest = $"{app}.zip";
@@ -71,22 +42,19 @@ namespace Microsoft.DotNet.Pkg
                 }
             }
 
-            if (IsNested)
+            if (isNested)
             {
                 // We now need to repack the nested bundle and remove the unpacked directory
-                PkgBuild();
-                Directory.Delete(LocalExtractionPath, true);
+                PkgBuild(payload, isNested);
+                Directory.Delete(srcPath, true);
             }
         }
 
-        internal void Pack(string dstPath)
+        internal void Pack(string srcPath, string dstPath, string identifier, string version, bool isNested)
         {
-            if (!IsNested)
+            if (!isNested)
             {
-                Scripts = Utilities.FindInPath("Scripts", LocalExtractionPath, isDirectory: true, searchOption: SearchOption.TopDirectoryOnly);
-                Payload = Utilities.FindInPath("Payload", LocalExtractionPath, isDirectory: true, searchOption: SearchOption.TopDirectoryOnly);
-
-                IEnumerable<string> zippedNestedApps = Directory.GetFiles(LocalExtractionPath, "*.app", SearchOption.AllDirectories);
+                IEnumerable<string> zippedNestedApps = Directory.GetFiles(srcPath, "*.app", SearchOption.AllDirectories);
                 foreach (string appZip in zippedNestedApps)
                 {
                     // Unzip the .app directory
@@ -99,22 +67,24 @@ namespace Microsoft.DotNet.Pkg
                     Directory.Move(tempDest, appZip);
                 }
 
-                PkgBuild(dstPath);
+                PkgBuild(srcPath, identifier, version, isNested, dstPath);
             }
         }
 
-        private void PkgBuild(string dstPath = "")
+        private void PkgBuild(string srcPath, string identifier, string version, bool isNested, string dstPath = "")
         {
+            string? payload = Utilities.FindInPath("Payload", srcPath, isDirectory: true, searchOption: SearchOption.TopDirectoryOnly) ?? throw new Exception("Payload not found");
             string info = GenerateInfoPlist();
-            string root = string.IsNullOrEmpty(Payload) ? $"{LocalExtractionPath}" : $"{Payload}";
-            string args = $"--root {root} --component-plist {info} --identifier {Identifier} --version {Version} --keychain login.keychain --install-location /usr/local/share/dotnet";
+            string args = $"--root {payload} --component-plist {info} --identifier {identifier} --version {version} --keychain login.keychain --install-location /usr/local/share/dotnet";
+
+            string? scripts = Utilities.FindInPath("Scripts", srcPath, isDirectory: true, searchOption: SearchOption.TopDirectoryOnly);
             if (!string.IsNullOrEmpty(Scripts))
             {
-                args += $" --scripts {Scripts}";
+                args += $" --scripts {scripts}";
             }
 
-            string outputPath = $"{LocalExtractionPath}.pkg";
-            if (!IsNested)
+            string outputPath = $"{srcPath}.pkg";
+            if (!isNested)
             {
                 outputPath = dstPath;
                 if (File.Exists(outputPath))
@@ -129,11 +99,10 @@ namespace Microsoft.DotNet.Pkg
             File.Delete(info);
         }
 
-        private string GenerateInfoPlist()
+        private string GenerateInfoPlist(string payload)
         {
-            string root = string.IsNullOrEmpty(Payload) ? $"{LocalExtractionPath}" : $"{Payload}";
             string info = Path.Combine(Directory.GetCurrentDirectory(), "Info.plist");
-            ExecuteHelper.Run("pkgbuild", $"--analyze --root {root} {info}");
+            ExecuteHelper.Run("pkgbuild", $"--analyze --root {payload} {info}");
             return info;
         }
 
