@@ -4,6 +4,7 @@
     <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
     <Description>Pkg</Description>
     <PackageTags>Arcade Build Tool Pkg</PackageTags>

@@ -4,10 +4,8 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Collections.Generic;
 using System.Diagnostics;
 using Xunit;
-using Xunit.Abstractions;
 using FluentAssertions;
 
 namespace Microsoft.DotNet.Pkg.Tests

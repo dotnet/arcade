@@ -2,15 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Collections.Generic;
-using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
-
-#nullable enable
 
 namespace Microsoft.DotNet.Pkg
 {
