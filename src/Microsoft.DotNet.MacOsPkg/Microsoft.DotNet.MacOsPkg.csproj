@@ -5,14 +5,14 @@
     <OutputType>Exe</OutputType>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
-    <Description>Pkg</Description>
-    <PackageTags>Arcade Build Tool Pkg</PackageTags>
+    <Description>MacOsPkg</Description>
+    <PackageTags>Arcade Build Tool MacOS Pkg</PackageTags>
     <DevelopmentDependency>false</DevelopmentDependency>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == '$(NetToolCurrent)'">
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>dotnet-pkg</ToolCommandName>
+    <ToolCommandName>dotnet-macos-pkg</ToolCommandName>
   </PropertyGroup>
 
 </Project>

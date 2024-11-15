@@ -4,7 +4,7 @@
 using System.IO;
 using System.Linq;
 
-namespace Microsoft.DotNet.Pkg
+namespace Microsoft.DotNet.MacOsPkg
 {
     public static class Utilities
     {

@@ -21,23 +21,23 @@
     <ProjectReference Include="..\Microsoft.DotNet.XUnitExtensions\src\Microsoft.DotNet.XUnitExtensions.csproj" />
 
     <ProjectReference Condition="$([MSBuild]::IsOSPlatform('osx'))"
-                  Include="..\Microsoft.DotNet.Pkg\Microsoft.DotNet.Pkg.csproj"
+                  Include="..\Microsoft.DotNet.MacOsPkg\Microsoft.DotNet.MacOsPkg.csproj"
                   ReferenceOutputAssembly="false"
                   SetTargetFramework="TargetFramework=$(NetToolCurrent)"
                   SkipGetTargetFrameworkProperties="true"
                   Private="false"
-                  OutputItemType="_PkgToolPath" />
+                  OutputItemType="_MacOsPkgToolPath" />
   </ItemGroup>
 
-  <Target Name="_CopyPkgTool" AfterTargets="ResolveProjectReferences" Condition="$([MSBuild]::IsOSPlatform('osx'))">
+  <Target Name="_CopyMacOsPkgTool" AfterTargets="ResolveProjectReferences" Condition="$([MSBuild]::IsOSPlatform('osx'))">
     <PropertyGroup>
-      <_PkgToolPattern>@(_PkgToolPath->'%(RootDir)%(Directory)')**\*.*</_PkgToolPattern>
+      <_MacOSPkgToolPattern>@(_MacOsPkgToolPath->'%(RootDir)%(Directory)')**\*.*</_MacOSPkgToolPattern>
     </PropertyGroup>
     <ItemGroup>
-      <_PkgToolFiles Include="$(_PkgToolPattern)"/>
+      <_MacOSPkgToolFiles Include="$(_MacOsPkgToolPattern)"/>
     </ItemGroup>
     <ItemGroup>
-      <Content Include="@(_PkgToolFiles)" CopyToOutputDirectory="PreserveNewest" Link="tools\pkg\%(RecursiveDir)%(Filename)%(Extension)"/>
+      <Content Include="@(_MacOsPkgToolFiles)" CopyToOutputDirectory="PreserveNewest" Link="tools\macospkg\%(RecursiveDir)%(Filename)%(Extension)"/>
     </ItemGroup>
   </Target>
 

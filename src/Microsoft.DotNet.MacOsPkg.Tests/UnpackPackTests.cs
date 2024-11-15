@@ -10,7 +10,7 @@ using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Microsoft.DotNet.Pkg.Tests
+namespace Microsoft.DotNet.MacOsPkg.Tests
 {
     public class UnpackPackTests
     {
@@ -23,8 +23,8 @@ namespace Microsoft.DotNet.Pkg.Tests
         private static readonly string pkgToolPath = Path.Combine(
             Path.GetDirectoryName(typeof(UnpackPackTests).Assembly.Location)!,
             "tools",
-            "pkg",
-            "Microsoft.Dotnet.Pkg.dll");
+            "macospkg",
+            "Microsoft.Dotnet.MacOsPkg.dll");
 
         private static readonly string[] simplePkgFiles =
         [

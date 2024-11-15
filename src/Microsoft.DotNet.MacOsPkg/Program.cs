@@ -4,7 +4,7 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.DotNet.Pkg;
+using Microsoft.DotNet.MacOsPkg;
 
 if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 {

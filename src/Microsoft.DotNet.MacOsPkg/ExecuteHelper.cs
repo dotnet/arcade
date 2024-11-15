@@ -5,7 +5,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 
-namespace Microsoft.DotNet.Pkg
+namespace Microsoft.DotNet.MacOsPkg
 {
     public static class ExecuteHelper
     {

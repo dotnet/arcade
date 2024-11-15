@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 
-namespace Microsoft.DotNet.Pkg
+namespace Microsoft.DotNet.MacOsPkg
 {
     internal static class Package
     {
