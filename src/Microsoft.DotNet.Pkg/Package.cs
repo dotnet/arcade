@@ -25,22 +25,22 @@ namespace Microsoft.DotNet.Pkg
         private static List<PackageBundle> Bundles = new List<PackageBundle>();
 
         internal static void Unpack() =>
-            ProcessPackage(repacking: false);
+            ProcessPackage(packing: false);
 
-        internal static void Repack() =>
-            ProcessPackage(repacking: true);
+        internal static void Pack() =>
+            ProcessPackage(packing: true);
 
-        private static void ProcessPackage(bool repacking)
+        private static void ProcessPackage(bool packing)
         {
-            NameWithExtension = repacking ? Path.GetFileName(Processor.OutputPath) : Path.GetFileName(Processor.InputPath);
-            LocalExtractionPath = repacking ? Processor.InputPath : Processor.OutputPath;
+            NameWithExtension = packing ? Path.GetFileName(Processor.OutputPath) : Path.GetFileName(Processor.InputPath);
+            LocalExtractionPath = packing ? Processor.InputPath : Processor.OutputPath;
 
             if (!Processor.IsPkg(NameWithExtension))
             {
                 throw new Exception($"Package '{NameWithExtension}' is not a .pkg file");
             }
 
-            if (!repacking)
+            if (!packing)
             {
                 ExpandPkg();
             }
@@ -61,21 +61,21 @@ namespace Microsoft.DotNet.Pkg
                 Identifier = GetId(pkgBundles[0]);
                 foreach (var pkgBundle in pkgBundles)
                 {
-                    ProcessBundle(pkgBundle, isNested: true, repacking: repacking);
+                    ProcessBundle(pkgBundle, isNested: true, packing: packing);
                 }
                 
-                if (repacking)
+                if (packing)
                 {
-                    RepackPkg();
+                    PackPkg();
                 }
             }
             else if (!string.IsNullOrEmpty(packageInfo))
             {
                 // This is a single bundle package
                 XElement pkgBundle = XElement.Load(packageInfo);
-                ProcessBundle(pkgBundle, isNested: false, repacking: repacking);
+                ProcessBundle(pkgBundle, isNested: false, packing: packing);
             }
-            else if (repacking)
+            else if (packing)
             {
                 throw new Exception("Cannot unpack: no Distribution or PackageInfo file found in package");
             }
@@ -91,7 +91,7 @@ namespace Microsoft.DotNet.Pkg
             ExecuteHelper.Run("pkgutil", $"--expand {Processor.InputPath} {LocalExtractionPath}");
         }
 
-        private static void RepackPkg()
+        private static void PackPkg()
         {
             string args = string.Empty;
             args += $"--distribution {Distribution}";
@@ -121,20 +121,20 @@ namespace Microsoft.DotNet.Pkg
             ExecuteHelper.Run("productbuild", args);
         }
 
-        private static void ProcessBundle(XElement bundleInfo, bool isNested, bool repacking)
+        private static void ProcessBundle(XElement bundleInfo, bool isNested, bool packing)
         {
             string extractionPath = isNested ? Path.Combine(LocalExtractionPath, bundleInfo.Value.Substring(1)) : LocalExtractionPath;
             string version = bundleInfo.Attribute("version")?.Value ?? throw new Exception($"No version found in bundle file {NameWithExtension}");
             string id = GetId(bundleInfo);
             PackageBundle bundle = new PackageBundle(extractionPath, id, version, NameWithExtension, isNested);
 
-            if (!repacking)
+            if (!packing)
             {
                 bundle.Unpack();
             }
             else
             {
-                bundle.Repack();
+                bundle.Pack();
             }
 
             if (isNested)

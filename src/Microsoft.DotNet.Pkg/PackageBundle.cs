@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Pkg
             {
                 // The nested bundles get unpacked into a directory with a .pkg extension by `pkgutil --expand`,
                 // so we remove this extension when unpacking the bundle.
-                // Otherwise, there will be problems when repacking the bundle due to the naming conflict
+                // Otherwise, there will be problems when packing the bundle due to the naming conflict
                 Directory.Move(LocalExtractionPath + ".pkg", LocalExtractionPath);
             }
 
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Pkg
                 foreach (string app in nestedApps)
                 {
                     string tempDest = $"{app}.zip";
-                    AppBundle.Repack(app, tempDest);
+                    AppBundle.Pack(app, tempDest);
                     Directory.Delete(app, true);
 
                     // Rename the zipped file to .app
@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.Pkg
             }
         }
 
-        internal void Repack()
+        internal void Pack()
         {
             if (!IsNested)
             {

@@ -12,10 +12,10 @@ using FluentAssertions;
 
 namespace Microsoft.DotNet.Pkg.Tests
 {
-    public class UnpackRepackTests
+    public class UnpackPackTests
     {
         private static string pkgToolPath = Path.Combine(
-            Path.GetDirectoryName(typeof(UnpackRepackTests).Assembly.Location),
+            Path.GetDirectoryName(typeof(UnpackPackTests).Assembly.Location),
             "tools",
             "pkg",
             "Microsoft.Dotnet.Pkg.dll");
@@ -69,23 +69,23 @@ namespace Microsoft.DotNet.Pkg.Tests
         }
 
         [MacOSOnlyFact]
-        public void RepackSimplePkg()
+        public void PackSimplePkg()
         {
             string srcPath = GetResourceFilePath("Simple.pkg");
             string dstPath = GetTempFilePath("SimplePkg");
-            string repackPath = GetTempFilePath("RepackSimple.pkg");
+            string packPath = GetTempFilePath("PackSimple.pkg");
             try
             {
                 // Unpack the package
                 Unpack(srcPath, dstPath);
 
-                // Repack the package
-                Repack(dstPath, repackPath, simplePkgFiles);
+                // Pack the package
+                Pack(dstPath, packPath, simplePkgFiles);
             }
             finally
             {
                 Directory.Delete(dstPath, true);
-                File.Delete(repackPath);
+                File.Delete(packPath);
             }
         }
 
@@ -105,23 +105,23 @@ namespace Microsoft.DotNet.Pkg.Tests
         }
 
         [MacOSOnlyFact]
-        public void RepackPkgWithApp()
+        public void PackPkgWithApp()
         {
             string srcPath = GetResourceFilePath("WithApp.pkg");
             string dstPath = GetTempFilePath("WithAppPkg");
-            string repackPath = GetTempFilePath("RepackWithApp.pkg");
+            string packPath = GetTempFilePath("PackWithApp.pkg");
             try
             {
                 // Unpack the package
                 Unpack(srcPath, dstPath);
 
-                // Repack the package
-                Repack(dstPath, repackPath, withAppPkgFiles);
+                // Pack the package
+                Pack(dstPath, packPath, withAppPkgFiles);
             }
             finally
             {
                 Directory.Delete(dstPath, true);
-                File.Delete(repackPath);
+                File.Delete(packPath);
             }
         }
 
@@ -148,7 +148,7 @@ namespace Microsoft.DotNet.Pkg.Tests
         }
 
         [MacOSOnlyFact]
-        public void RepackAppBundle()
+        public void PackAppBundle()
         {
             string srcPath = GetResourceFilePath("WithApp.pkg");
             string dstPath = GetTempFilePath("WithAppPkg");
@@ -162,8 +162,8 @@ namespace Microsoft.DotNet.Pkg.Tests
                 // Unpack the app bundle
                 Unpack(appPath, appDstPath);
 
-                // Repack the app bundle
-                Repack(appDstPath, appPath, appFiles);
+                // Pack the app bundle
+                Pack(appDstPath, appPath, appFiles);
             }
             finally
             {
@@ -188,23 +188,23 @@ namespace Microsoft.DotNet.Pkg.Tests
         }
 
         [MacOSOnlyFact]
-        public void RepackSimpleInstaller()
+        public void PackSimpleInstaller()
         {
             string srcPath = GetResourceFilePath("SimpleInstaller.pkg");
             string dstPath = GetTempFilePath("SimpleInstallerPkg");
-            string repackPath = GetTempFilePath("RepackSimpleInstaller.pkg");
+            string packPath = GetTempFilePath("PackSimpleInstaller.pkg");
             try
             {
                 // Unpack the installer
                 Unpack(srcPath, dstPath);
 
-                // Repack the installer
-                Repack(dstPath, repackPath, simpleInstallerFiles);
+                // Pack the installer
+                Pack(dstPath, packPath, simpleInstallerFiles);
             }
             finally
             {
                 Directory.Delete(dstPath, true);
-                File.Delete(repackPath);
+                File.Delete(packPath);
             }
         }
 
@@ -231,41 +231,41 @@ namespace Microsoft.DotNet.Pkg.Tests
         }
 
         [MacOSOnlyFact]
-        public void RepackNestedInstaller()
+        public void PackNestedInstaller()
         {
             string srcPath = GetResourceFilePath("SimpleInstaller.pkg");
             string dstPath = GetTempFilePath("SimpleInstallerPkg");
             string simplePkgPath = Path.Combine(dstPath, "Simple.pkg");
             string simplePkgDstPath = GetTempFilePath("SimplePkg");
-            string repackPath = GetTempFilePath("RepackSimpleInstaller.pkg");
-            string unpackRepackPath = GetTempFilePath("UnpackRepackSimpleInstallerPkg");
-            string unpackRepackSimplePkgPath = Path.Combine(unpackRepackPath, "Simple.pkg");
-            string unpackRepackSimplePkgDstPath = GetTempFilePath("UnpackRepackSimplePkg");
+            string packPath = GetTempFilePath("PackSimpleInstaller.pkg");
+            string unpackPackPath = GetTempFilePath("UnpackPackSimpleInstallerPkg");
+            string unpackPackSimplePkgPath = Path.Combine(unpackPackPath, "Simple.pkg");
+            string unpackPackSimplePkgDstPath = GetTempFilePath("UnpackPackSimplePkg");
             try
             {
                 // Unpack the installer
                 Unpack(srcPath, dstPath);
 
-                // Unpack and repack the simple package
+                // Unpack and pack the simple package
                 Unpack(simplePkgPath, simplePkgDstPath);
-                Repack(simplePkgDstPath, simplePkgPath);
+                Pack(simplePkgDstPath, simplePkgPath);
 
-                // Repack the installer
-                Repack(dstPath, repackPath, simpleInstallerFiles);
+                // Pack the installer
+                Pack(dstPath, packPath, simpleInstallerFiles);
 
-                // Unpack the repacked simple pkg inside to compare the content
-                Unpack(repackPath, unpackRepackPath);
-                Unpack(unpackRepackSimplePkgPath, unpackRepackSimplePkgDstPath, simplePkgFiles);
+                // Unpack the packed simple pkg inside to compare the content
+                Unpack(packPath, unpackPackPath);
+                Unpack(unpackPackSimplePkgPath, unpackPackSimplePkgDstPath, simplePkgFiles);
             }
             finally
             {
-                File.Delete(repackPath);
+                File.Delete(packPath);
                 File.Delete(simplePkgPath);
 
                 Directory.Delete(dstPath, true);
                 Directory.Delete(simplePkgDstPath, true);
-                Directory.Delete(unpackRepackPath, true);
-                Directory.Delete(unpackRepackSimplePkgDstPath, true);
+                Directory.Delete(unpackPackPath, true);
+                Directory.Delete(unpackPackSimplePkgDstPath, true);
             }
         }
 
@@ -292,41 +292,41 @@ namespace Microsoft.DotNet.Pkg.Tests
         }
 
         [MacOSOnlyFact]
-        public void RepackNestedInstallerWithApp()
+        public void PackNestedInstallerWithApp()
         {
             string srcPath = GetResourceFilePath("WithAppInstaller.pkg");
             string dstPath = GetTempFilePath("WithAppInstallerPkg");
             string withAppPkgPath = Path.Combine(dstPath, "WithApp.pkg");
             string withAppPkgDstPath = GetTempFilePath("WithAppPkg");
-            string repackPath = GetTempFilePath("RepackWithAppInstaller.pkg");
-            string unpackRepackPath = GetTempFilePath("UnpackRepackWithAppInstallerPkg");
-            string unpackRepackWithAppPkgPath = Path.Combine(unpackRepackPath, "WithApp.pkg");
-            string unpackRepackWithAppPkgDstPath = GetTempFilePath("UnpackRepackWithAppPkg");
+            string packPath = GetTempFilePath("PackWithAppInstaller.pkg");
+            string unpackPackPath = GetTempFilePath("UnpackPackWithAppInstallerPkg");
+            string unpackPackWithAppPkgPath = Path.Combine(unpackPackPath, "WithApp.pkg");
+            string unpackPackWithAppPkgDstPath = GetTempFilePath("UnpackPackWithAppPkg");
             try
             {
                 // Unpack the installer
                 Unpack(srcPath, dstPath);
 
-                // Unpack and repack the app package
+                // Unpack and pack the app package
                 Unpack(withAppPkgPath, withAppPkgDstPath);
-                Repack(withAppPkgDstPath, withAppPkgPath);
+                Pack(withAppPkgDstPath, withAppPkgPath);
 
-                // Repack the installer
-                Repack(dstPath, repackPath, withAppInstallerFiles);
+                // Pack the installer
+                Pack(dstPath, packPath, withAppInstallerFiles);
 
-                // Unpack the repacked app pkg inside to compare the content
-                Unpack(repackPath, unpackRepackPath);
-                Unpack(unpackRepackWithAppPkgPath, unpackRepackWithAppPkgDstPath, withAppPkgFiles);
+                // Unpack the packed app pkg inside to compare the content
+                Unpack(packPath, unpackPackPath);
+                Unpack(unpackPackWithAppPkgPath, unpackPackWithAppPkgDstPath, withAppPkgFiles);
             }
             finally
             {
-                File.Delete(repackPath);
+                File.Delete(packPath);
                 File.Delete(withAppPkgPath);
 
                 Directory.Delete(dstPath, true);
                 Directory.Delete(withAppPkgDstPath, true);
-                Directory.Delete(unpackRepackPath, true);
-                Directory.Delete(unpackRepackWithAppPkgDstPath, true);
+                Directory.Delete(unpackPackPath, true);
+                Directory.Delete(unpackPackWithAppPkgDstPath, true);
             }
         }
 
@@ -343,16 +343,16 @@ namespace Microsoft.DotNet.Pkg.Tests
             }
         }
 
-        private static void Repack(string inputPath, string outputPath, string[] expectedFiles = null)
+        private static void Pack(string inputPath, string outputPath, string[] expectedFiles = null)
         {
-            bool success = RunPkgProcess(inputPath, outputPath, "repack");
+            bool success = RunPkgProcess(inputPath, outputPath, "pack");
             success.Should().BeTrue();
 
             File.Exists(outputPath).Should().BeTrue();
 
             if (expectedFiles != null)
             {
-                string tempPath = GetTempFilePath($"UnpackRepack{Path.GetFileNameWithoutExtension(inputPath)}");
+                string tempPath = GetTempFilePath($"UnpackPack{Path.GetFileNameWithoutExtension(inputPath)}");
                 RunPkgProcess(outputPath, tempPath, "unpack").Should().BeTrue();
                 Directory.Exists(tempPath).Should().BeTrue();
 
@@ -384,7 +384,7 @@ namespace Microsoft.DotNet.Pkg.Tests
         private static string GetResourceFilePath(string resourceName)
         {
             return Path.Combine(
-                Path.GetDirectoryName(typeof(UnpackRepackTests).Assembly.Location),
+                Path.GetDirectoryName(typeof(UnpackPackTests).Assembly.Location),
                 "Resources",
                 resourceName);
         }

@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Pkg
             ExecuteHelper.Run("ditto", args);
         }
 
-        internal static void Repack(string inputPath, string outputPath)
+        internal static void Pack(string inputPath, string outputPath)
         {
             string args = $"-c -k --sequesterRsrc {inputPath} {outputPath}";
             ExecuteHelper.Run("ditto", args);

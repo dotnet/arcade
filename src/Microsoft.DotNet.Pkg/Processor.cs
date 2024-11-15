@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Pkg
             }
         }
         
-        public static void Repack()
+        public static void Pack()
         {
             if (!Directory.Exists(InputPath))
             {
@@ -67,11 +67,11 @@ namespace Microsoft.DotNet.Pkg
 
             if (IsPkg(OutputPath))
             {
-                Package.Repack();
+                Package.Pack();
             }
             else if (IsAppBundle(OutputPath))
             {
-                AppBundle.Repack(InputPath, OutputPath);
+                AppBundle.Pack(InputPath, OutputPath);
             }
         }
 

@@ -17,7 +17,7 @@ if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 
 if (args.Length != 3)
 {
-    Console.Error.WriteLine("Usage: <src path> <dst path> <unpack|repack>");
+    Console.Error.WriteLine("Usage: <src path> <dst path> <unpack|pack>");
     return 1;
 }
 
@@ -33,9 +33,9 @@ try
     {
         Processor.Unpack();
     }
-    else if(op == "repack")
+    else if(op == "pack")
     {
-        Processor.Repack();
+        Processor.Pack();
     }
     else
     {
