@@ -24,7 +24,7 @@
     </Dependency>
     <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="9.0.101">
       <Uri>https://github.com/dotnet/templating</Uri>
-      <Sha>b699ff195f37e5039d378be3be64ccf7512df50a</Sha>
+      <Sha>e660cd905cc907f7167c0826e2c30eb57a87e4da</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="9.0.0-beta.24421.7">
       <Uri>https://github.com/dotnet/arcade</Uri>
