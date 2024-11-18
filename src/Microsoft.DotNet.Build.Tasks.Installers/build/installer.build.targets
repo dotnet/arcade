@@ -37,6 +37,12 @@
     <CombinedInstallerExtension Condition="'$(TargetRuntimeOS)' != 'win'">$(InstallerExtension)</CombinedInstallerExtension>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <IncludePreReleaseLabelInPackageVersion Condition="'$(DotNetFinalVersionKind)' != 'release'">true</IncludePreReleaseLabelInPackageVersion>
+    <IncludePreReleaseLabelInPackageVersion Condition="'$(SuppressFinalPackageVersion)' == 'true'">true</IncludePreReleaseLabelInPackageVersion>
+    <IncludePreReleaseLabelInPackageVersion Condition="'$(IsShipping)' != 'true'">true</IncludePreReleaseLabelInPackageVersion>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(GenerateDeb)' == 'true'">
     <InstallerPackageVersion Condition="'$(IncludePreReleaseLabelInPackageVersion)' == 'true'">$(VersionPrefix)~$(VersionSuffix)</InstallerPackageVersion>
   </PropertyGroup>
