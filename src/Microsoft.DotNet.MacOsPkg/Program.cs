@@ -22,22 +22,22 @@ string srcPath = args[0];
 string dstPath = args[1];
 string op = args[2];
 
+var cleanTarget = () =>
+{
+    Utilities.CleanupPath(dstPath);
+    Utilities.CreateParentDirectory(dstPath);
+};
+
 try
 {
     if (op == "unpack")
     {
-        if (!File.Exists(srcPath))
+        if (!File.Exists(srcPath) || (!Utilities.IsPkg(srcPath) && !Utilities.IsAppBundle(srcPath)))
         {
-            throw new Exception("Input path must be a valid file");
+            throw new Exception("Input path must be an existing .pkg or .app (zipped) file.");
         }
 
-        if (!Utilities.IsPkg(srcPath) && !Utilities.IsAppBundle(srcPath))
-        {
-            throw new Exception("Input path must be a .pkg or .app (zipped) file");
-        }
-
-        Utilities.CleanupPath(dstPath);
-        Utilities.CreateParentDirectory(dstPath);
+        cleanTarget();
 
         if (Utilities.IsPkg(srcPath))
         {
@@ -52,16 +52,15 @@ try
     {
         if (!Directory.Exists(srcPath))
         {
-            throw new Exception("Input path must be a valid directory");
+            throw new Exception("Input path must be a valid directory.");
         }
 
         if (!Utilities.IsPkg(dstPath) && !Utilities.IsAppBundle(dstPath))
         {
-            throw new Exception("Output path must be a .pkg or .app (zipped) file");
+            throw new Exception("Output path must be a .pkg or .app (zipped) file.");
         }
 
-        Utilities.CleanupPath(dstPath);
-        Utilities.CreateParentDirectory(dstPath);
+        cleanTarget();
 
         if (Utilities.IsPkg(dstPath))
         {
