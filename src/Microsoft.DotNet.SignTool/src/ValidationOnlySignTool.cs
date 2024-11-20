@@ -38,7 +38,10 @@ namespace Microsoft.DotNet.SignTool
             {
                 if (file.SignInfo.ShouldLocallyStrongNameSign)
                 {
-                    LocalStrongNameSign(file);
+                    if (!LocalStrongNameSign(file))
+                    {
+                        return false;
+                    }
                 }
             }
 
