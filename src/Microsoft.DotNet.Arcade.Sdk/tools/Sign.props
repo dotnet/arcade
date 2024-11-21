@@ -60,7 +60,7 @@
     <FileExtensionSignInfo Include=".tgz" CertificateName="None" />
     <FileExtensionSignInfo Include=".tar.gz" CertificateName="None" />
     <FileExtensionSignInfo Condition="$([MSBuild]::IsOSPlatform('OSX'))" Include=".pkg" CertificateName="None" />
-    <!-- .app bundles are technically directories, but the Microsoft.DotNet.Pkg
+    <!-- .app bundles are technically directories, but the Microsoft.DotNet.MacOsPkg
     tool packs these bundles into zips when unpacking .pkgs -->
     <FileExtensionSignInfo Condition="$([MSBuild]::IsOSPlatform('OSX'))" Include=".app" CertificateName="None" />
   </ItemGroup>

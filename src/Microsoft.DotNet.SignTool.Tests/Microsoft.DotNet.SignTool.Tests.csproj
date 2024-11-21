@@ -23,7 +23,7 @@
                       OutputItemType="_TarToolPath" />
 
     <ProjectReference Condition="$([MSBuild]::IsOSPlatform('osx'))"
-                  Include="..\Microsoft.DotNet.Pkg\Microsoft.DotNet.Pkg.csproj"
+                  Include="..\Microsoft.DotNet.MacOsPkg\Microsoft.DotNet.MacOsPkg.csproj"
                   ReferenceOutputAssembly="false"
                   SetTargetFramework="TargetFramework=$(NetToolCurrent)"
                   SkipGetTargetFrameworkProperties="true"

@@ -147,7 +147,7 @@ namespace Microsoft.DotNet.SignTool
         public string TarToolPath { get; set; }
 
         /// <summary>
-        /// Path to Microsoft.DotNet.Pkg.dll. Required for signing pkg files on MacOS.
+        /// Path to Microsoft.DotNet.MacOsPkg.dll. Required for signing pkg files on MacOS.
         /// </summary>
         public string PkgToolPath { get; set; }
 
