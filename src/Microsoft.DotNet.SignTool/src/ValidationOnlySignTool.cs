@@ -38,7 +38,10 @@ namespace Microsoft.DotNet.SignTool
             {
                 if (file.SignInfo.ShouldLocallyStrongNameSign)
                 {
-                    return LocalStrongNameSign(file);
+                    if (!LocalStrongNameSign(file))
+                    {
+                        return false;
+                    }
                 }
             }
 
@@ -48,6 +51,9 @@ namespace Microsoft.DotNet.SignTool
         public override void RemovePublicSign(string assemblyPath)
         {
         }
+
+        public override bool VerifySignedDeb(TaskLoggingHelper log, string filePath)
+            => true;
 
         public override bool VerifySignedPEFile(Stream assemblyStream)
             => true;
