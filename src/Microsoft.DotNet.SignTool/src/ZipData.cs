@@ -255,7 +255,7 @@ namespace Microsoft.DotNet.SignTool
 
         internal static bool RunPkgProcess(string srcPath, string dstPath, string action, string pkgToolPath)
         {
-            if (action != "unpack" && action != "repack")
+            if (action != "unpack" && action != "pack")
             {
                 throw new ArgumentException($"Invalid action '{action}' for pkg tool.");
             }
@@ -320,7 +320,7 @@ namespace Microsoft.DotNet.SignTool
                     File.Copy(signedPart.Value.FileSignInfo.FullPath, path, overwrite: true);
                 }
 
-                if (!RunPkgProcess(srcPath: extractDir, dstPath: FileSignInfo.FullPath, "repack", pkgToolPath))
+                if (!RunPkgProcess(srcPath: extractDir, dstPath: FileSignInfo.FullPath, "pack", pkgToolPath))
                 {
                     return;
                 }
