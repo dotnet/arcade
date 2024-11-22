@@ -336,7 +336,10 @@ namespace Microsoft.DotNet.SignTool
             }
             finally
             {
-                Directory.Delete(extractDir, recursive: true);
+                if (Directory.Exists(extractDir))
+                {
+                    Directory.Delete(extractDir, recursive: true);
+                }
             }
         }
 
