@@ -1195,8 +1195,6 @@ $@"
                 "File 'WithApp.pkg' Certificate=''",
             });
 
-            // OSX files need to be zipped first before being signed
-            // This is why the .pkgs and .apps are listed as .zip files below
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 $@"

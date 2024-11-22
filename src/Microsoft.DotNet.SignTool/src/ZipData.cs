@@ -11,6 +11,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Data;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 #if NET472
 using System.IO.Packaging;
@@ -255,6 +256,11 @@ namespace Microsoft.DotNet.SignTool
 
         internal static bool RunPkgProcess(string srcPath, string dstPath, string action, string pkgToolPath)
         {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                throw new Exception($"Pkg tooling is only support on MacOS.");
+            }
+
             if (action != "unpack" && action != "pack")
             {
                 throw new ArgumentException($"Invalid action '{action}' for pkg tool.");

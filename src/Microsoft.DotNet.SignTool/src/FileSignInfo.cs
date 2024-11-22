@@ -37,17 +37,13 @@ namespace Microsoft.DotNet.SignTool
         internal static bool IsNupkg(string path)
             => Path.GetExtension(path).Equals(".nupkg", StringComparison.OrdinalIgnoreCase);
 
-        // Only recognize and process OSX packages on OSX because
-        // unpacking, repacking, and notarization can only happen on a Mac.
+        // Note: unpacking, repacking, and notarization can only happen on a Mac.
         internal static bool IsPkg(string path)
-            => Path.GetExtension(path).Equals(".pkg", StringComparison.OrdinalIgnoreCase)
-                && RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+            => Path.GetExtension(path).Equals(".pkg", StringComparison.OrdinalIgnoreCase);
 
-        // Only recognize and process OSX packages on OSX because
-        // unpacking, repacking, and notarization can only happen on a Mac.
+        // Note: unpacking, repacking, and notarization can only happen on a Mac.
         internal static bool IsAppBundle(string path)
-            => Path.GetExtension(path).Equals(".app", StringComparison.OrdinalIgnoreCase)
-                && RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+            => Path.GetExtension(path).Equals(".app", StringComparison.OrdinalIgnoreCase);
 
         internal static bool IsSymbolsNupkg(string path)
             => path.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase);
