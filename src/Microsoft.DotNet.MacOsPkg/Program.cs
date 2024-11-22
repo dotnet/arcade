@@ -79,7 +79,7 @@ try
 }
 catch (Exception e)
 {
-    Console.Error.Write(e.Message);
+    Console.Error.WriteLine(e);
     return 1;
 }
 

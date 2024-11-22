@@ -1,11 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(NetToolCurrent)</TargetFrameworks>
+    <TargetFramework>$(NetToolCurrent)</TargetFramework>
     <OutputType>Exe</OutputType>
     <Nullable>enable</Nullable>
     <IsPackable>true</IsPackable>
-    <Description>MacOsPkg</Description>
+    <Description>The MacOsPkg tool is used for unpacking and packing MacOS .pkg files and nested .app bundles.</Description>
     <PackageTags>Arcade Build Tool MacOS Pkg</PackageTags>
     <DevelopmentDependency>false</DevelopmentDependency>
     <PackAsTool>true</PackAsTool>
