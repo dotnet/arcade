@@ -26,37 +26,48 @@ namespace Microsoft.DotNet.MacOsPkg.Tests
             "macospkg",
             "Microsoft.Dotnet.MacOsPkg.dll");
 
-        private static readonly string[] simplePkgFiles =
+        const UnixFileMode nonExecutableFileMode = UnixFileMode.OtherRead | 
+                                                   UnixFileMode.GroupRead |
+                                                   UnixFileMode.UserWrite |
+                                                   UnixFileMode.UserRead;
+        const UnixFileMode executableFileMode = UnixFileMode.OtherExecute |
+                                                UnixFileMode.OtherRead |
+                                                UnixFileMode.GroupExecute |
+                                                UnixFileMode.GroupRead |
+                                                UnixFileMode.UserExecute |
+                                                UnixFileMode.UserWrite |
+                                                UnixFileMode.UserRead;
+        private static readonly (string file, UnixFileMode mode)[] simplePkgFiles =
         [
-            "Bom",
-            "PackageInfo",
-            Path.Combine("Payload", "Sample.txt")
+            ("Bom", nonExecutableFileMode ),
+            ("PackageInfo", nonExecutableFileMode),
+            (Path.Combine("Payload", "Sample.txt"), nonExecutableFileMode),
         ];
 
-        private static readonly string[] withAppPkgFiles =
+        private static readonly (string file, UnixFileMode mode)[] withAppPkgFiles =
         [
-            "Bom",
-            "PackageInfo",
-            Path.Combine("Payload", "test.app")
+            ("Bom", nonExecutableFileMode),
+            ("PackageInfo", nonExecutableFileMode),
+            (Path.Combine("Payload", "test.app"), nonExecutableFileMode),
         ];
 
-        private static readonly string[] appFiles =
+        private static readonly (string file, UnixFileMode mode)[] appFiles =
         [
-            Path.Combine("Contents", "Info.plist"),
-            Path.Combine("Contents", "MacOS", "main"),
-            Path.Combine("Contents", "Resources", "libexample.dylib")
+            (Path.Combine("Contents", "Info.plist"), nonExecutableFileMode),
+            (Path.Combine("Contents", "MacOS", "main"), executableFileMode),
+            (Path.Combine("Contents", "Resources", "libexample.dylib"), executableFileMode)
         ];
 
-        private static readonly string[] simpleInstallerFiles =
+        private static readonly (string file, UnixFileMode mode)[] simpleInstallerFiles =
         [
-            "Distribution",
-            "Simple.pkg"
+            ("Distribution", nonExecutableFileMode),
+            ("Simple.pkg", nonExecutableFileMode),
         ];
 
-        private static readonly string[] withAppInstallerFiles =
+        private static readonly (string file, UnixFileMode mode)[] withAppInstallerFiles =
         [
-            "Distribution",
-            "WithApp.pkg"
+            ("Distribution", nonExecutableFileMode),
+            ("WithApp.pkg", nonExecutableFileMode),
         ];
 
         public UnpackPackTests(ITestOutputHelper output) => this.output = output;
@@ -177,7 +188,7 @@ namespace Microsoft.DotNet.MacOsPkg.Tests
             }
         }
 
-        private void Unpack(string srcPath, string dstPath, string[] expectedFiles)
+        private void Unpack(string srcPath, string dstPath, (string, UnixFileMode)[] expectedFiles)
         {
             RunPkgProcess(srcPath, dstPath, "unpack").Should().BeTrue();
 
@@ -186,7 +197,7 @@ namespace Microsoft.DotNet.MacOsPkg.Tests
             CompareContent(dstPath, expectedFiles);
         }
 
-        private void Pack(string srcPath, string dstPath, string[] expectedFiles)
+        private void Pack(string srcPath, string dstPath, (string, UnixFileMode)[] expectedFiles)
         {
             RunPkgProcess(srcPath, dstPath, "pack").Should().BeTrue();
 
@@ -231,10 +242,11 @@ namespace Microsoft.DotNet.MacOsPkg.Tests
 
         private static string GetTempAppPath() => $"{Path.GetTempFileName()}.app";
 
-        private static void CompareContent(string basePath, string[] expectedFiles)
+#pragma warning disable CA1416
+        private static void CompareContent(string basePath, (string file, UnixFileMode mode)[] expectedFiles)
         {
-            string[] actualFiles = Directory.GetFiles(basePath, "*.*", SearchOption.AllDirectories)
-                .Select(f => f.Substring(basePath.Length + 1))
+            (string, UnixFileMode)[] actualFiles = Directory.GetFiles(basePath, "*.*", SearchOption.AllDirectories)
+                .Select(f => (f.Substring(basePath.Length + 1), File.GetUnixFileMode(f)))
                 .ToArray();
             actualFiles.Should().BeEquivalentTo(expectedFiles);
         }
