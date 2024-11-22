@@ -262,21 +262,17 @@ namespace Microsoft.DotNet.SignTool
                 throw new Exception($"Pkg tooling is only support on MacOS.");
             }
 
-            if (action != "unpack" && action != "repack" && action != "verify")
+            string args = $@"{action} ""{srcPath}""";
+            
+            if (action != "verify")
             {
-                throw new ArgumentException($"Invalid action '{action}' for pkg tool.");
-            }
-
-            if (action == "verify")
-            {
-                // The verify action doesn't take a destination path.
-                dstPath = "no_dst_path";
+                args += $@" ""{dstPath}""";
             }
 
             var process = Process.Start(new ProcessStartInfo()
             {
                 FileName = "dotnet",
-                Arguments = $@"exec ""{pkgToolPath}"" ""{srcPath}"" ""{dstPath}"" {action}",
+                Arguments = $@"exec ""{pkgToolPath}"" {args}",
                 UseShellExecute = false,
                 RedirectStandardError = true,
             });

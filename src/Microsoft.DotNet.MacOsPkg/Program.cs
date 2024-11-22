@@ -14,13 +14,13 @@ if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 
 if (args.Length != 3)
 {
-    Console.Error.WriteLine("Usage: <src path> <dst path> <unpack|pack|verify>");
+    Console.Error.WriteLine("Usage: <unpack|pack|verify> <src path> [dst path]");
     return 1;
 }
 
-string srcPath = args[0];
-string dstPath = args[1];
-string op = args[2];
+string op = args[0];
+string srcPath = args[1];
+string dstPath = args[2];
 
 var cleanTarget = () =>
 {
@@ -48,7 +48,7 @@ try
             AppBundle.Unpack(srcPath, dstPath);
         }
     }
-    else if(op == "pack")
+    else if (op == "pack")
     {
         if (!Directory.Exists(srcPath))
         {
