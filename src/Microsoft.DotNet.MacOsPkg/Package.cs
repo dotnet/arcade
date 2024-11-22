@@ -175,5 +175,15 @@ namespace Microsoft.DotNet.MacOsPkg
 
         private static string GetPackageInfoAttribute(XElement pkgInfo, string elementName) =>
             pkgInfo.Attribute(elementName)?.Value ?? throw new Exception($"{elementName} is required in PackageInfo");
+
+        internal static void VerifySignature(string inputPath)
+        {
+            string full_path = Path.GetFullPath(inputPath);
+            string output = ExecuteHelper.Run("pkgutil", $"--check-signature {full_path}");
+            if (output.Contains("Status: no signature"))
+            {
+                throw new Exception("No signature found in package");
+            }
+        }
     }
 }

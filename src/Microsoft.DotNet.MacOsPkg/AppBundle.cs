@@ -1,6 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
+
 namespace Microsoft.DotNet.MacOsPkg
 {
     internal static class AppBundle
@@ -17,9 +19,9 @@ namespace Microsoft.DotNet.MacOsPkg
             ExecuteHelper.Run("ditto", args);
         }
 
-        internal static void VerifySignature()
+        internal static void VerifySignature(string inputPath)
         {
-            string output = ExecuteHelper.Run("codesign", $"--verify --verbose {Processor.InputPath}");
+            string output = ExecuteHelper.Run("codesign", $"--verify --verbose {inputPath}");
             if (output.Contains("is not signed at all"))
             {
                 throw new Exception("No signature found in app bundle");
