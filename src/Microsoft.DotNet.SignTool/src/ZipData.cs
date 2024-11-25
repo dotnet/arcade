@@ -305,6 +305,7 @@ namespace Microsoft.DotNet.SignTool
                     Directory.Delete(extractDir, recursive: true);
                 }
             }
+        }
 
         private void RepackPkgOrAppBundles(TaskLoggingHelper log, string tempDir, string pkgToolPath)
         {
