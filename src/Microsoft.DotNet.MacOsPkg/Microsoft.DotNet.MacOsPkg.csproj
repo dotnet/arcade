@@ -16,4 +16,5 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>dotnet-macos-pkg</ToolCommandName>
   </PropertyGroup>
+ 
 </Project>
