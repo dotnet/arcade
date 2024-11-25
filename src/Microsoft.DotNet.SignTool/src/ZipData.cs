@@ -288,7 +288,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 if (!RunPkgProcess(archivePath, extractDir, "unpack", pkgToolPath))
                 {
-                    yield break;
+                    throw new Exception($"Failed to unpack pkg {archivePath}");
                 }
 
                 foreach (var path in Directory.EnumerateFiles(extractDir, "*.*", SearchOption.AllDirectories))
@@ -369,7 +369,7 @@ namespace Microsoft.DotNet.SignTool
 
                 if (!RunTarProcess(archivePath, extractDir, tarToolPath))
                 {
-                    yield break;
+                    throw new Exception($"Failed to unpack tar archive: {archivePath}");
                 }
 
                 foreach (var path in Directory.EnumerateFiles(extractDir, "*.*", SearchOption.AllDirectories))
