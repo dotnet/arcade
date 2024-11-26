@@ -69,12 +69,37 @@ namespace Microsoft.DotNet.MacOsPkg
             }
         }
 
+        /// <summary>
+        /// Unpack the payload of the .pkg, and package up .app directories as .zips
+        /// </summary>
+        /// <param name="dstPath"></param>
+        /// <remarks>
+        /// In a pkg, the .app bundles are represented by directories with a standard file structure.
+        /// The directory is typically marked with a .app extension, though apparently this is not required.
+        /// The important part is that the .app bundle is viewed by the system as a single entity and is signed as such.
+        /// This means that signtool needs to view the .app as a signable file and not as a directory. To achieve this,
+        /// After unpacking the payload, we zip the .app directories so that signtool can properly track them, unpack them recursively again,
+        /// and sign them.
+        /// 
+        /// There's one other important element to this. We need to recognize whether the .app directory is in fact
+        /// a .app bundle and not, say "Microsoft.NetCore.App". To do this, we apply some heuristics.
+        /// If:
+        /// - Extension should be lower case ".app"
+        /// - A directory named "Contents" under the .app directory.
+        /// - An Info.plist in this "Contents" directory.
+        /// 
+        /// If these conditions are met, the file is re-zipped and treated like a bundle.
+        /// 
+        /// NOTE: I believe that there are very no circumstances where the first condition is met but the other two
+        /// will NOT be met. For now, this method will throw an exception in this case so that further examination can be
+        /// made.
+        /// </remarks>
         private static void UnpackComponentPackage(string dstPath)
         {
             UnpackPayload(dstPath);
 
             // Zip the nested app bundles
-            IEnumerable<string> nestedApps = Directory.GetDirectories(dstPath, "*.app", SearchOption.AllDirectories);
+            IEnumerable<string> nestedApps = Directory.GetDirectories(dstPath, "*.app", SearchOption.AllDirectories).Where(app => AppBundle.IsBundle(app));
             foreach (string app in nestedApps)
             {
                 string tempDest = $"{app}.zip";
@@ -117,7 +142,7 @@ namespace Microsoft.DotNet.MacOsPkg
         private static void PackComponentPackage(string srcPath, string dstPath, string packageInfo)
         {
             // Unzip the nested app bundles
-            IEnumerable<string> zippedNestedApps = Directory.GetFiles(srcPath, "*.app", SearchOption.AllDirectories);
+            IEnumerable<string> zippedNestedApps = Directory.GetFiles(srcPath, "*.app", SearchOption.AllDirectories).Where(app => AppBundle.IsBundle(app));
             foreach (string appZip in zippedNestedApps)
             {
                 // Unzip the .app directory
