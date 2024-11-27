@@ -5,6 +5,7 @@ using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -36,6 +37,14 @@ namespace Microsoft.DotNet.SignTool
         internal static bool IsNupkg(string path)
             => Path.GetExtension(path).Equals(".nupkg", StringComparison.OrdinalIgnoreCase);
 
+        // Note: unpacking, repacking, and notarization can only happen on a Mac.
+        internal static bool IsPkg(string path)
+            => Path.GetExtension(path).Equals(".pkg", StringComparison.OrdinalIgnoreCase);
+
+        // Note: unpacking, repacking, and notarization can only happen on a Mac.
+        internal static bool IsAppBundle(string path)
+            => Path.GetExtension(path).Equals(".app", StringComparison.OrdinalIgnoreCase);
+
         internal static bool IsSymbolsNupkg(string path)
             => path.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase);
 
@@ -60,7 +69,7 @@ namespace Microsoft.DotNet.SignTool
             => IsVsix(path) || IsNupkg(path);
 
         internal static bool IsZipContainer(string path)
-            => IsPackage(path) || IsMPack(path) || IsZip(path) || IsTarGZip(path);
+            => IsPackage(path) || IsMPack(path) || IsZip(path) || IsTarGZip(path) || IsPkg(path) || IsAppBundle(path);
 
         internal bool IsDeb() => IsDeb(FileName);
 
@@ -73,6 +82,10 @@ namespace Microsoft.DotNet.SignTool
         internal bool IsVsix() => IsVsix(FileName);
 
         internal bool IsNupkg() => IsNupkg(FileName) && !IsSymbolsNupkg();
+
+        internal bool IsPkg() => IsPkg(FileName);
+
+        internal bool IsAppBundle() => IsAppBundle(FileName);
 
         internal bool IsSymbolsNupkg() => IsSymbolsNupkg(FileName);
 
