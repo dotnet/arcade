@@ -344,6 +344,8 @@ namespace Microsoft.DotNet.SignTool
                             using var signedStream = File.OpenRead(signedPart.Value.FileSignInfo.FullPath);
                             log.LogMessage(MessageImportance.Low, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {FileSignInfo.FullPath} -> {relativeName}.");
                             entry.DataStream = signedStream;
+                            writer.WriteEntry(entry);
+                            continue;
                         }
                         else
                         {
