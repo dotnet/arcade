@@ -8,7 +8,7 @@ usage()
     echo "BuildArch can be: arm(default), arm64, armel, armv6, ppc64le, riscv64, s390x, x64, x86"
     echo "CodeName - optional, Code name for Linux, can be: xenial(default), zesty, bionic, alpine"
     echo "                               for alpine can be specified with version: alpineX.YY or alpineedge"
-    echo "                               for FreeBSD can be: freebsd14"
+    echo "                               for FreeBSD can be: freebsd13, freebsd14"
     echo "                               for illumos can be: illumos"
     echo "                               for Haiku can be: haiku."
     echo "lldbx.y - optional, LLDB version, can be: lldb3.9(default), lldb4.0, lldb5.0, lldb6.0 no-lldb. Ignored for alpine and FreeBSD"
@@ -73,9 +73,9 @@ __AlpinePackages+=" krb5-dev"
 __AlpinePackages+=" openssl-dev"
 __AlpinePackages+=" zlib-dev"
 
-__FreeBSDBase="14.0-RELEASE"
+__FreeBSDBase="13.4-RELEASE"
 __FreeBSDPkg="1.21.3"
-__FreeBSDABI="14"
+__FreeBSDABI="13"
 __FreeBSDPackages="libunwind"
 __FreeBSDPackages+=" icu"
 __FreeBSDPackages+=" libinotify"
@@ -365,8 +365,14 @@ while :; do
                 __AlpineVersion="$__AlpineMajorVersion.$__AlpineMinorVersion"
             fi
             ;;
+        freebsd13)
+            __CodeName=freebsd
+            __SkipUnmount=1
+            ;;
         freebsd14)
             __CodeName=freebsd
+            __FreeBSDBase="14.2-RELEASE"
+            __FreeBSDABI="14"
             __SkipUnmount=1
             ;;
         illumos)
