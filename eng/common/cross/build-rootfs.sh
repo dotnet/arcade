@@ -574,7 +574,7 @@ elif [[ "$__CodeName" == "freebsd" ]]; then
         curl -SL "https://download.freebsd.org/ftp/releases/${__FreeBSDArch}/${__FreeBSDMachineArch}/${__FreeBSDBase}/base.txz" | tar -C "$__RootfsDir" -Jxf - ./lib ./usr/lib ./usr/libdata ./usr/include ./usr/share/keys ./etc ./bin/freebsd-version
     fi
     echo "ABI = \"FreeBSD:${__FreeBSDABI}:${__FreeBSDMachineArch}\"; FINGERPRINTS = \"${__RootfsDir}/usr/share/keys\"; REPOS_DIR = [\"${__RootfsDir}/etc/pkg\"]; REPO_AUTOUPDATE = NO; RUN_SCRIPTS = NO;" > "${__RootfsDir}"/usr/local/etc/pkg.conf
-    echo "FreeBSD: { url: \"pkg+http://pkg.FreeBSD.org/\${ABI}/quarterly\", mirror_type: \"srv\", signature_type: \"fingerprints\", fingerprints: \"${__RootfsDir}/usr/share/keys/pkg\", enabled: yes }" > "${__RootfsDir}"/etc/pkg/FreeBSD.conf
+    echo "FreeBSD: { url: \"pkg+http://pkg.FreeBSD.org/\${ABI}/quarterly\", mirror_type: \"srv\", signature_type: \"fingerprints\", fingerprints: \"/usr/share/keys/pkg\", enabled: yes }" > "${__RootfsDir}"/etc/pkg/FreeBSD.conf
     mkdir -p "$__RootfsDir"/tmp
     # get and build package manager
     if [[ "$__hasWget" == 1 ]]; then
@@ -588,9 +588,9 @@ elif [[ "$__CodeName" == "freebsd" ]]; then
     ./autogen.sh && ./configure --prefix="$__RootfsDir"/host && make -j "$JOBS" && make install
     rm -rf "$__RootfsDir/tmp/pkg-${__FreeBSDPkg}"
     # install packages we need.
-    INSTALL_AS_USER=$(whoami) "$__RootfsDir"/host/sbin/pkg -C "$__RootfsDir"/usr/local/etc/pkg.conf update
+    INSTALL_AS_USER=$(whoami) "$__RootfsDir"/host/sbin/pkg -r "$__RootfsDir" -C "$__RootfsDir"/usr/local/etc/pkg.conf update
     # shellcheck disable=SC2086
-    INSTALL_AS_USER=$(whoami) "$__RootfsDir"/host/sbin/pkg -C "$__RootfsDir"/usr/local/etc/pkg.conf install --yes $__FreeBSDPackages
+    INSTALL_AS_USER=$(whoami) "$__RootfsDir"/host/sbin/pkg -r "$__RootfsDir" -C "$__RootfsDir"/usr/local/etc/pkg.conf install --yes $__FreeBSDPackages
 elif [[ "$__CodeName" == "illumos" ]]; then
     mkdir "$__RootfsDir/tmp"
     pushd "$__RootfsDir/tmp"
