@@ -74,7 +74,7 @@ __AlpinePackages+=" openssl-dev"
 __AlpinePackages+=" zlib-dev"
 
 __FreeBSDBase="13.3-RELEASE"
-__FreeBSDPkg="1.17.0"
+__FreeBSDPkg="1.21.3"
 __FreeBSDABI="13"
 __FreeBSDPackages="libunwind"
 __FreeBSDPackages+=" icu"
@@ -588,9 +588,9 @@ elif [[ "$__CodeName" == "freebsd" ]]; then
     ./autogen.sh && ./configure --prefix="$__RootfsDir"/host && make -j "$JOBS" && make install
     rm -rf "$__RootfsDir/tmp/pkg-${__FreeBSDPkg}"
     # install packages we need.
-    INSTALL_AS_USER=$(whoami) "$__RootfsDir"/host/sbin/pkg -r "$__RootfsDir" -C "$__RootfsDir"/usr/local/etc/pkg.conf update
+    INSTALL_AS_USER=$(whoami) "$__RootfsDir"/host/sbin/pkg -C "$__RootfsDir"/usr/local/etc/pkg.conf update
     # shellcheck disable=SC2086
-    INSTALL_AS_USER=$(whoami) "$__RootfsDir"/host/sbin/pkg -r "$__RootfsDir" -C "$__RootfsDir"/usr/local/etc/pkg.conf install --yes $__FreeBSDPackages
+    INSTALL_AS_USER=$(whoami) "$__RootfsDir"/host/sbin/pkg -C "$__RootfsDir"/usr/local/etc/pkg.conf install --yes $__FreeBSDPackages
 elif [[ "$__CodeName" == "illumos" ]]; then
     mkdir "$__RootfsDir/tmp"
     pushd "$__RootfsDir/tmp"
