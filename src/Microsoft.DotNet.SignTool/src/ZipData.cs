@@ -439,21 +439,20 @@ namespace Microsoft.DotNet.SignTool
                     {
                         var relativeName = entry.Name;
                         var signedPart = FindNestedPart(relativeName);
-                        if (!signedPart.HasValue)
+
+                        if (signedPart.HasValue)
+                        {
+                            using var signedStream = File.OpenRead(signedPart.Value.FileSignInfo.FullPath);
+                            log.LogMessage(MessageImportance.Low, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {FileSignInfo.FullPath} -> {relativeName}.");
+                            entry.DataStream = signedStream;
+                        }
+                        else
                         {
                             log.LogMessage(MessageImportance.Low, $"Didn't find signed part for nested file: {FileSignInfo.FullPath} -> {relativeName}");
-                            continue;
                         }
+                    }
 
-                        using var signedStream = File.OpenRead(signedPart.Value.FileSignInfo.FullPath);
-                        log.LogMessage(MessageImportance.Low, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {FileSignInfo.FullPath} -> {relativeName}.");
-                        entry.DataStream = signedStream;
-                        writer.WriteEntry(entry);
-                    }
-                    else
-                    {
-                        writer.WriteEntry(entry);
-                    }
+                    writer.WriteEntry(entry);
                 }
             }
 

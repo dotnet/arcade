@@ -60,10 +60,11 @@
     <FileExtensionSignInfo Include=".tgz" CertificateName="None" />
     <FileExtensionSignInfo Include=".tar.gz" CertificateName="None" />
     <!-- Note, these can only be signed on Mac -->
-    <FileExtensionSignInfo Include=".pkg" CertificateName="MacDeveloper" />
+    <FileExtensionSignInfo Include=".pkg" CertificateName="MacDeveloperHarden" />
     <!-- .app bundles are technically directories, but the Microsoft.DotNet.MacOsPkg
     tool packs these bundles into zips when unpacking .pkgs -->
-    <FileExtensionSignInfo Include=".app" CertificateName="MacDeveloper" />
+    <FileExtensionSignInfo Include=".app" CertificateName="MacDeveloperHarden" />
+    <FileExtensionSignInfo Include=".dylib" CertificateName="MacDeveloperHarden" />
   </ItemGroup>
 
   <!-- The name of the .NET specific certificate, which is a general replacement for Microsoft400

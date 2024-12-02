@@ -136,7 +136,7 @@ namespace Microsoft.DotNet.SignTool
         }
 
         public override string ToString()
-            => $"File '{FileName}'" +
+            => $"File '{FullPath}'" +
                (TargetFramework != null ? $" TargetFramework='{TargetFramework}'" : "") +
                $" Certificate='{SignInfo.Certificate}'" +
                (SignInfo.StrongName != null ? $" StrongName='{SignInfo.StrongName}'" : "");

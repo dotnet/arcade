@@ -124,6 +124,8 @@ namespace Microsoft.DotNet.SignTool
                             }
                         }
 
+                        // This isn't right here. The task will zip when Zip is used on a Mac, but not on Windows.
+                        // This whole code block (osxFilesToSign), is for signing of .pkgs on Windows.
                         var osxProjContent = GenerateBuildFileContent(osxFileGroup, zipPaths: zipPaths, isOSX: true);
 
                         File.WriteAllText(osxBuildFilePath, osxProjContent);
@@ -255,7 +257,7 @@ namespace Microsoft.DotNet.SignTool
         {
             if (!File.Exists(_args.SNBinaryPath) || !_args.SNBinaryPath.EndsWith("sn.exe"))
             {
-                _log.LogError($"Found file that needs to be strong-name sign ({file.FullPath}), but path to 'sn.exe' wasn't specified.");
+                _log.LogError($"File '{file.FullPath}' needs to be locally strong-name signed, but path to 'sn.exe' wasn't specified.");
                 return false;
             }
 

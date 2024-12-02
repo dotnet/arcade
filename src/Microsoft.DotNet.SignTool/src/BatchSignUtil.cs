@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 if (fileSignInfo.SignInfo.StrongName != null && fileSignInfo.SignInfo.ShouldSign)
                 {
-                    _log.LogMessage($"Removing public sign: '{fileSignInfo.FileName}'");
+                    _log.LogMessage($"Removing public sign: '{fileSignInfo.FullPath}'");
                     _signTool.RemovePublicSign(fileSignInfo.FullPath);
                 }
             }
@@ -134,7 +134,8 @@ namespace Microsoft.DotNet.SignTool
                     string collisionIdInfo = string.Empty;
                     if(_hashToCollisionIdMap != null)
                     {
-                        if(_hashToCollisionIdMap.TryGetValue(file.FileContentKey, out string collisionPriorityId))
+                        if(_hashToCollisionIdMap.TryGetValue(file.FileContentKey, out string collisionPriorityId) &&
+                            !string.IsNullOrEmpty(collisionPriorityId))
                         {
                             collisionIdInfo = $"Collision Id='{collisionPriorityId}'";
                         }
