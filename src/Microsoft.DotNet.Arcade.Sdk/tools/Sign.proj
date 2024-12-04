@@ -23,6 +23,8 @@
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.signtool\$(MicrosoftDotNetSignToolVersion)\build\Microsoft.DotNet.SignTool.props" />
 
+  <Import Project="StrongName.props" />
+
   <Import Project="Sign.props" />
 
   <!-- Import the wix props to get the install path -->
