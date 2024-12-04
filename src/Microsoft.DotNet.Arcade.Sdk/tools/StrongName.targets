@@ -21,10 +21,6 @@
       AssemblyOriginatorKeyFile
   -->
 
-  <PropertyGroup>
-    <FullAssemblySigningSupported Condition="'$(FullAssemblySigningSupported)' == '' and '$(DotNetBuildSourceOnly)' == 'true'">false</FullAssemblySigningSupported>
-  </PropertyGroup>
-
   <PropertyGroup Condition="'$(SignAssembly)' != 'false'">
     <DelaySign>false</DelaySign>
     <PublicSign>true</PublicSign>
