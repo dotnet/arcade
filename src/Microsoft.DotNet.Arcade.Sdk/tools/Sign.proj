@@ -23,6 +23,7 @@
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.signtool\$(MicrosoftDotNetSignToolVersion)\build\Microsoft.DotNet.SignTool.props" />
 
+  <!-- Required to determine whether full assembly strong name signing is supported. -->
   <Import Project="StrongName.props" />
 
   <Import Project="Sign.props" />
