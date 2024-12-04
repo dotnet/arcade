@@ -15,8 +15,6 @@
 
     <CleanInnerSourceBuildRepoRoot Condition="'$(CleanInnerSourceBuildRepoRoot)' == ''">true</CleanInnerSourceBuildRepoRoot>
 
-    <FullAssemblySigningSupported Condition="'$(FullAssemblySigningSupported)' == ''">false</FullAssemblySigningSupported>
-
     <_DirSeparatorEscapedCharForExecArg Condition="'$(OS)' == 'Windows_NT'">\</_DirSeparatorEscapedCharForExecArg>
     <_DirSeparatorEscapedCharForExecArg Condition="'$(OS)' != 'Windows_NT'" />
   </PropertyGroup>
