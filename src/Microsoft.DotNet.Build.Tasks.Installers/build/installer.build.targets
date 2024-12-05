@@ -17,22 +17,41 @@
     <LinuxInstallRoot Condition="'$(LinuxInstallRoot)' == ''">/usr/share/dotnet</LinuxInstallRoot>
   </PropertyGroup>
 
+  <!-- Set up properties for the installer package name and version -->
+  <PropertyGroup>
+    <VersionedInstallerName Condition="'$(VersionInstallerName)' == 'true'">$(InstallerName)-$(MajorVersion).$(MinorVersion)</VersionedInstallerName>
+    <VersionedInstallerName Condition="'$(VersionInstallerName)' != 'true'">$(InstallerName)</VersionedInstallerName>
+    <VersionedInstallerName>$(VersionedInstallerName.ToLowerInvariant())</VersionedInstallerName>
+    <InstallerPackageRelease>1</InstallerPackageRelease>
+    <InstallerPackageVersion>$(VersionPrefix)</InstallerPackageVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <IncludePreReleaseLabelInPackageVersion Condition="'$(DotNetFinalVersionKind)' != 'release'">true</IncludePreReleaseLabelInPackageVersion>
+    <IncludePreReleaseLabelInPackageVersion Condition="'$(SuppressFinalPackageVersion)' == 'true'">true</IncludePreReleaseLabelInPackageVersion>
+    <IncludePreReleaseLabelInPackageVersion Condition="'$(IsShipping)' != 'true'">true</IncludePreReleaseLabelInPackageVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(GenerateDeb)' == 'true'">
+    <InstallerPackageVersion Condition="'$(IncludePreReleaseLabelInPackageVersion)' == 'true'">$(VersionPrefix)~$(VersionSuffix)</InstallerPackageVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(GenerateRpm)' == 'true'">
+    <InstallerPackageRelease Condition="'$(IncludePreReleaseLabelInPackageVersion)' == 'true'">0.1.$(VersionSuffix)</InstallerPackageRelease>
+    <InstallerPackageRelease>$([System.String]::Copy('$(InstallerPackageRelease)').Replace('-', '_'))</InstallerPackageRelease>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(GeneratePkg)' == 'true'">
+    <InstallerPackageVersion Condition="'$(IncludePreReleaseLabelInPackageVersion)' == 'true'">$(VersionPrefix)-$(VersionSuffix)</InstallerPackageVersion>
+  </PropertyGroup>
+
   <!--
     Legacy target. Some consumers depend on this target name, so keep it around.
+    Determine the installer file names from the package name, version, type, and other properties.
   -->
   <Target Name="_GetInstallerProperties"
           DependsOnTargets="_GetTargetOSArchInfo;
                             _GetProductBrandName">
-    <!-- Set up property defaults for installer generation-->
-    <PropertyGroup>
-      <LinuxInstallRoot Condition="'$(LinuxInstallRoot)' == ''">/usr/share/dotnet</LinuxInstallRoot>
-      <VersionedInstallerName Condition="'$(VersionInstallerName)' == 'true'">$(InstallerName)-$(MajorVersion).$(MinorVersion)</VersionedInstallerName>
-      <VersionedInstallerName Condition="'$(VersionInstallerName)' != 'true'">$(InstallerName)</VersionedInstallerName>
-      <VersionedInstallerName>$(VersionedInstallerName.ToLowerInvariant())</VersionedInstallerName>
-      <InstallerPackageRelease>1</InstallerPackageRelease>
-      <InstallerPackageVersion>$(VersionPrefix)</InstallerPackageVersion>
-    </PropertyGroup>
-    
     <!-- Distinguish the cross-arch installer filename. -->
     <PropertyGroup Condition="'$(CrossArchContentsArch)' != ''">
       <CrossArchContentsBuildPart>_$(CrossArchContentsArch)</CrossArchContentsBuildPart>
@@ -45,25 +64,6 @@
       <InstallerExtension Condition="'$(GenerateRpm)' == 'true'">.rpm</InstallerExtension>
       <CombinedInstallerExtension Condition="'$(TargetRuntimeOS)' == 'win'">.exe</CombinedInstallerExtension>
       <CombinedInstallerExtension Condition="'$(TargetRuntimeOS)' != 'win'">$(InstallerExtension)</CombinedInstallerExtension>
-    </PropertyGroup>
-
-    <PropertyGroup>
-      <IncludePreReleaseLabelInPackageVersion Condition="'$(DotNetFinalVersionKind)' != 'release'">true</IncludePreReleaseLabelInPackageVersion>
-      <IncludePreReleaseLabelInPackageVersion Condition="'$(SuppressFinalPackageVersion)' == 'true'">true</IncludePreReleaseLabelInPackageVersion>
-      <IncludePreReleaseLabelInPackageVersion Condition="'$(IsShipping)' != 'true'">true</IncludePreReleaseLabelInPackageVersion>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(GenerateDeb)' == 'true'">
-      <InstallerPackageVersion Condition="'$(IncludePreReleaseLabelInPackageVersion)' == 'true'">$(VersionPrefix)~$(VersionSuffix)</InstallerPackageVersion>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(GenerateRpm)' == 'true'">
-      <InstallerPackageRelease Condition="'$(IncludePreReleaseLabelInPackageVersion)' == 'true'">0.1.$(VersionSuffix)</InstallerPackageRelease>
-      <InstallerPackageRelease>$([System.String]::Copy('$(InstallerPackageRelease)').Replace('-', '_'))</InstallerPackageRelease>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(GeneratePkg)' == 'true'">
-      <InstallerPackageVersion Condition="'$(IncludePreReleaseLabelInPackageVersion)' == 'true'">$(VersionPrefix)-$(VersionSuffix)</InstallerPackageVersion>
     </PropertyGroup>
 
     <PropertyGroup>
