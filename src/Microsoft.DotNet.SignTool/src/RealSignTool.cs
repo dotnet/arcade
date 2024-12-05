@@ -105,7 +105,6 @@ namespace Microsoft.DotNet.SignTool
 
             return ContentUtil.IsAuthenticodeSigned(assemblyStream);
         }
-
         public override bool VerifyStrongNameSign(string fileFullPath)
         {
             // The assembly won't verify by design when doing test signing.
@@ -114,19 +113,7 @@ namespace Microsoft.DotNet.SignTool
                 return true;
             }
 
-            var process = Process.Start(new ProcessStartInfo()
-            {
-                FileName = _snPath,
-                Arguments = $@"-vf ""{fileFullPath}"" > nul",
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardError = false,
-                RedirectStandardOutput = false
-            });
-
-            process.WaitForExit();
-
-            return process.ExitCode == 0;
+            return ContentUtil.IsStrongNameSigned(fileFullPath);
         }
 
         public override bool VerifySignedDeb(TaskLoggingHelper log, string filePath)
