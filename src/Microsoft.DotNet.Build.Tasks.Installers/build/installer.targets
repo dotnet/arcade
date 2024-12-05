@@ -122,7 +122,7 @@
     <InstallerRuntimeIdentifiers Condition="'$(InstallerRuntimeIdentifiers)' == ''">$(RuntimeIdentifiers)</InstallerRuntimeIdentifiers>
     <InstallerRuntimeIdentifier Condition="'$(InstallerRuntimeIdentifier)' == ''">$(RuntimeIdentifier)</InstallerRuntimeIdentifier>
     <!-- When building a non-portable build, BaseOS specifies a known (portable) RID that is a parent of the curent runtime identifier. -->
-    <InstallerRuntimeIdentifier Condition="'$(PortableBuild)' != 'true' and '$(BaseOS)' != '$(RuntimeIdentifier)'">$(BaseOS)</InstallerRuntimeIdentifier>
+    <InstallerRuntimeIdentifier Condition="'$(PortableBuild)' == 'false' and '$(BaseOS)' != '$(RuntimeIdentifier)'">$(BaseOS)</InstallerRuntimeIdentifier>
   </PropertyGroup>
   
   <Import Project="$(MSBuildThisFileDirectory)installer.singlerid.targets"
