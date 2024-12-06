@@ -2494,7 +2494,7 @@ $@"
         {
             // Missing signatures
             ContentUtil.IsStrongNameSigned(GetResourcePath("AspNetCoreCrossLib.dll")).Should().BeFalse();
-            ContentUtil.IsStrongNameSigned(GetResourcePath("CoreLibCrossArm.dll")).Should().BeFalse();
+            ContentUtil.IsStrongNameSigned(GetResourcePath("CoreLibCrossARM.dll")).Should().BeFalse();
             ContentUtil.IsStrongNameSigned(GetResourcePath("EmptyPKT.dll")).Should().BeFalse();
 
             // Delay signed assembly
