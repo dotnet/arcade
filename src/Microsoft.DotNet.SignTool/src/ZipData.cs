@@ -245,7 +245,7 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
-#if NET472
+#if NETFRAMEWORK
         private static bool RunTarProcess(string srcPath, string dstPath, string tarToolPath)
         {
             var process = Process.Start(new ProcessStartInfo()
@@ -326,56 +326,49 @@ namespace Microsoft.DotNet.SignTool
 #else
         private void RepackTarGZip(TaskLoggingHelper log, string tempDir, string tarToolPath)
         {
-            using var outputStream = new MemoryStream();
-
+            using MemoryStream streamToCompress = new();
+            using (TarWriter writer = new(streamToCompress, leaveOpen: true))
             {
-                using var gzipStream = new GZipStream(outputStream, CompressionMode.Compress, leaveOpen: true);
-                using var writer = new TarWriter(gzipStream);
-
-                foreach (var entry in ReadTarGZipEntries(FileSignInfo.FullPath))
+                foreach (TarEntry entry in ReadTarGZipEntries(FileSignInfo.FullPath))
                 {
                     if (entry.DataStream != null)
                     {
-                        var relativeName = entry.Name;
-                        var signedPart = FindNestedPart(relativeName);
-                        if (!signedPart.HasValue)
+                        string relativeName = entry.Name;
+                        ZipPart? signedPart = FindNestedPart(relativeName);
+
+                        if (signedPart.HasValue)
                         {
-                            log.LogMessage(MessageImportance.Low, $"Didn't find signed part for nested file: {FileSignInfo.FullPath} -> {relativeName}");
+                            using FileStream signedStream = File.OpenRead(signedPart.Value.FileSignInfo.FullPath);
+                            entry.DataStream = signedStream;
+                            entry.DataStream.Position = 0;
+                            writer.WriteEntry(entry);
+
+                            log.LogMessage(MessageImportance.Low, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {FileSignInfo.FullPath} -> {relativeName}.");
                             continue;
                         }
 
-                        using var signedStream = File.OpenRead(signedPart.Value.FileSignInfo.FullPath);
-                        log.LogMessage(MessageImportance.Low, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {FileSignInfo.FullPath} -> {relativeName}.");
-                        entry.DataStream = signedStream;
-                        writer.WriteEntry(entry);
+                        log.LogMessage(MessageImportance.Low, $"Didn't find signed part for nested file: {FileSignInfo.FullPath} -> {relativeName}");
                     }
-                    else
-                    {
-                        writer.WriteEntry(entry);
-                    }
+
+                    writer.WriteEntry(entry);
                 }
             }
 
-            outputStream.Position = 0;
-
-            using var outputFile = File.Open(FileSignInfo.FullPath, FileMode.Truncate, FileAccess.Write);
-            outputStream.CopyTo(outputFile);
+            streamToCompress.Position = 0;
+            using (FileStream outputStream = File.Open(FileSignInfo.FullPath, FileMode.Truncate, FileAccess.Write))
+            {
+                using GZipStream compressor = new(outputStream, CompressionMode.Compress);
+                streamToCompress.CopyTo(compressor);
+            }
         }
 
-        internal static IEnumerable<TarEntry> ReadTarGZipEntries(string path)
+        private static IEnumerable<TarEntry> ReadTarGZipEntries(string path)
         {
-            using var gzipStream = File.Open(path, FileMode.Open);
-            using var tar = new GZipStream(gzipStream, CompressionMode.Decompress);
-            using var reader = new TarReader(tar);
-
-            while (true)
+            using FileStream streamToDecompress = File.OpenRead(path);
+            using GZipStream decompressor = new(streamToDecompress, CompressionMode.Decompress);
+            using TarReader tarReader = new(decompressor);
+            while (tarReader.GetNextEntry() is TarEntry entry)
             {
-                var entry = reader.GetNextEntry();
-                if (entry == null)
-                {
-                    break;
-                }
-
                 yield return entry;
             }
         }
