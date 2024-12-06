@@ -10,6 +10,7 @@ namespace Microsoft.DotNet.ArcadeAzureIntegration;
 
 public class DefaultIdentityTokenCredentialOptions
 {
+    public bool UseAzurePipelineCredentialOnlyIfConfigured { get; set; } = true;
     public string? ManagedIdentityClientId { get; set; } = null;
     public bool ExcludeAzureCliCredential { get; set; }
 }
