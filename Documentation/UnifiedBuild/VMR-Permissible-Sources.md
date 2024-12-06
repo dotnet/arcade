@@ -51,7 +51,7 @@ In this example, the tool detected 2 new binaries:
 - `src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/MSG00001.bin`
 - `src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/wpf-etwTEMP.BIN`.
 
-If these binaries are permitted for source-build, add the binaries and/or relevent file glob pattern(s), such as `src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/*.bin`, to `allowed-sb-binaries.txt`. Otherwise, add the binaries or relevent file glob pattern(s) to `allowed-vmr-binaries.txt`.
+If these binaries are permitted for source-build, add the binaries and/or relevant file glob pattern(s), such as `src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/*.bin`, to `allowed-sb-binaries.txt`. Otherwise, add the binaries or relevant file glob pattern(s) to `allowed-vmr-binaries.txt`.
 
 #### Cleaning
 
@@ -77,7 +77,7 @@ In this example, the tool removed 2 binaries:
 - `src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/MSG00001.bin`
 - `src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/wpf-etwTEMP.BIN`.
 
-If these binaries are permitted for source-build, add the binaries and/or relevent file glob pattern(s), such as `src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/*.bin`, to `allowed-sb-binaries.txt`. Otherwise, add the binaries or relevent file glob pattern(s) to `allowed-vmr-binaries.txt`.
+If these binaries are permitted for source-build, add the binaries and/or relevant file glob pattern(s), such as `src/wpf/src/Microsoft.DotNet.Wpf/src/Shared/Tracing/resources/*.bin`, to `allowed-sb-binaries.txt`. Otherwise, add the binaries or relevant file glob pattern(s) to `allowed-vmr-binaries.txt`.
 
 ## Licenses
 
@@ -89,7 +89,7 @@ When a non-OSS license is detected, the offending code and binaries must be cloa
 
 ### Detection
 
-Licenses are detected by the [license scan test](https://github.com/dotnet/dotnet/blob/main/test/Microsoft.DotNet.SourceBuild.SmokeTests/LicenseScanTests.cs). This test is run as part of the [source-build license scan pipeline](https://dev.azure.com/dnceng/internal/_build?definitionId=1301&_a=summary) (internal Microsoft link). The test detects any license in the VMR that is not part of an exclusion listed in [`LicenseExclusions.txt`](https://github.com/dotnet/dotnet/blob/main/test/Microsoft.DotNet.SourceBuild.SmokeTests/assets/LicenseExclusions.txt).
+Licenses are detected by the [license scan test](https://github.com/dotnet/dotnet/blob/main/test/Microsoft.DotNet.SourceBuild.Tests/LicenseScanTests.cs). This test is run as part of the [source-build license scan pipeline](https://dev.azure.com/dnceng/internal/_build?definitionId=1301&_a=summary) (internal Microsoft link). The test detects any license in the VMR that is not part of an exclusion listed in [`LicenseExclusions.txt`](https://github.com/dotnet/dotnet/blob/main/test/Microsoft.DotNet.SourceBuild.Tests/assets/LicenseScanTests/LicenseExclusions.txt).
 
 Common cases for adding a license to [`LicenseExclusions.txt`](https://github.com/dotnet/dotnet/blob/main/test/Microsoft.DotNet.SourceBuild.SmokeTests/assets/LicenseExclusions.txt) include false positives, licenses related to test data, or needing to get a clean scan result with a relevant backport issue to remove the offending license later.
 
