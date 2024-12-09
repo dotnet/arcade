@@ -182,6 +182,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
 
                 CheckForStableAssetsInNonIsolatedFeeds();
+                CheckForInternalBuildsOnPublicFeeds();
 
                 if (Log.HasLoggedErrors)
                 {
