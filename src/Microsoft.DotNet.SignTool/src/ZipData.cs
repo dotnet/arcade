@@ -447,7 +447,6 @@ namespace Microsoft.DotNet.SignTool
                             log.LogMessage(MessageImportance.Low, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {FileSignInfo.FullPath} -> {relativeName}.");
                             continue;
                         }
-                    }
 
                         log.LogMessage(MessageImportance.Low, $"Didn't find signed part for nested file: {FileSignInfo.FullPath} -> {relativeName}");
                     }
