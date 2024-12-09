@@ -24,6 +24,8 @@
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.signtool\$(MicrosoftDotNetSignToolVersion)\build\Microsoft.DotNet.SignTool.props" />
 
+  <!-- Required to determine whether full assembly strong name signing is supported, which may affect selection of some certificates. -->
+  <Import Project="StrongName.props" />
   <Import Project="Sign.props" />
 
   <!-- Import the wix props to get the install path -->
@@ -61,7 +63,7 @@
       <SNBinaryPath Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(NuGetPackageRoot)sn\$(SNVersion)\sn.exe</SNBinaryPath>
       
       <!-- .pkgs and .app bundle tooling is only available on MacOS -->
-      <PkgToolPath Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(NuGetPackageRoot)microsoft.dotnet.macospkg\$(MicrosoftDotNetMacOsPkgVersion)\tools\net9.0\any\Microsoft.Dotnet.MacOsPkg.dll</PkgToolPath>
+      <PkgToolPath Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(NuGetPackageRoot)microsoft.dotnet.macospkg\$(MicrosoftDotNetMacOsPkgVersion)\tools\net10.0\any\Microsoft.Dotnet.MacOsPkg.dll</PkgToolPath>
     </PropertyGroup>
 
     <Error Condition="'$(AllowEmptySignList)' != 'true' AND '@(ItemsToSign)' == ''" 
@@ -102,7 +104,7 @@
         SNBinaryPath="$(SNBinaryPath)"
         MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"
         WixToolsPath="$(WixInstallPath)"
-        TarToolPath="$(NuGetPackageRoot)microsoft.dotnet.tar\$(MicrosoftDotNetTarVersion)\tools\net9.0\any\Microsoft.Dotnet.Tar.dll"
+        TarToolPath="$(NuGetPackageRoot)microsoft.dotnet.tar\$(MicrosoftDotNetTarVersion)\tools\net10.0\any\Microsoft.Dotnet.Tar.dll"
         PkgToolPath="$(PkgToolPath)"
         RepackParallelism="$(SignToolRepackParallelism)"
         MaximumParallelFileSize="$(SignToolRepackMaximumParallelFileSize)" />
