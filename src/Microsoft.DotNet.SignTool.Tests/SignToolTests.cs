@@ -1,18 +1,18 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.Arcade.Test.Common;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Runtime.InteropServices;
+using System.Reflection.PortableExecutable;
+using FluentAssertions;
+using Microsoft.Arcade.Test.Common;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Xunit;
 using Xunit.Abstractions;
-using FluentAssertions;
 
 namespace Microsoft.DotNet.SignTool.Tests
 {
@@ -519,6 +519,99 @@ namespace Microsoft.DotNet.SignTool.Tests
                 "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'"
+            });
+        }
+
+        [Fact]
+        public void SkipStrongNamingForAlreadyStrongNamedBinary()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("SignedLibrary.dll"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "31bf3856ad364e35", new List<SignInfo> {new SignInfo("FooCert", "Blah.snk") } }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, Array.Empty<string>());
+        }
+
+        [Fact]
+        public void DoNotSkipStrongNamingForDelaySignedBinary()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("DelaySigned.dll"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "b03f5f7f11d50a3a", new List<SignInfo> {new SignInfo("3PartySHA2", "ArcadeStrongTest") } }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[] 
+            {
+                "File 'DelaySigned.dll' TargetFramework='.NETCoreApp,Version=v9.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'"
+            });
+        }
+
+        [Fact]
+        public void SkipStrongNamingForCrossGennedBinary()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("Crossgenned.exe"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "b03f5f7f11d50a3a", new List<SignInfo> {new SignInfo("3PartySHA2", "ArcadeStrongTest") } }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'Crossgenned.exe' Certificate='Microsoft400'"
+            });
+        }
+
+        [Fact]
+        public void SkipStrongNamingBinaryButDontSkipAuthenticode()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("OpenSigned.dll"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "cc7b13ffcd2ddd51", new List<SignInfo> {new SignInfo("3PartySHA2", "ArcadeStrongTest") } }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'OpenSigned.dll' TargetFramework='.NETCoreApp,Version=v9.0' Certificate='3PartySHA2'"
             });
         }
 
@@ -1044,7 +1137,7 @@ $@"
                 "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
-                "File 'test.zip' Certificate=''",
+                "File 'test.zip'",
             }/*,
             Reenable after https://github.com/dotnet/arcade/issues/10293,
             expectedWarnings: new[]
@@ -1255,7 +1348,7 @@ $@"
                 "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
-                "File 'test.tgz' Certificate=''",
+                "File 'test.tgz'",
             }/*,
             Reenable after https://github.com/dotnet/arcade/issues/10293,
             expectedWarnings: new[]
@@ -1307,7 +1400,7 @@ $@"
                 "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
-                "File 'test.symbols.nupkg' Certificate=''",
+                "File 'test.symbols.nupkg'",
             }/*,
             Reenable after https://github.com/dotnet/arcade/issues/10293,
             expectedWarnings: new[]
@@ -1627,7 +1720,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'VisualStudio.Mac.Banana.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2'",
-                "File 'test.mpack' Certificate=''",
+                "File 'test.mpack'",
             });
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
@@ -2078,8 +2171,8 @@ $@"
             {
                 "File 'Simple1.exe' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='Microsoft400'",
                 "File 'Simple2.exe' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='Microsoft400'",
-                "File 'SameFiles1.zip' Certificate=''",
-                "File 'SameFiles2.zip' Certificate=''",
+                "File 'SameFiles1.zip'",
+                "File 'SameFiles2.zip'",
             },
             expectedWarnings: new[]
             {
@@ -2258,7 +2351,7 @@ $@"
             {
                 "File 'NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
-                "File 'test.zip' Certificate=''",
+                "File 'test.zip'",
                 "File 'PackageWithZip.nupkg' Certificate='NuGet'",
             }/*,
             Reenable after https://github.com/dotnet/arcade/issues/10293,
@@ -2290,10 +2383,10 @@ $@"
             {
                 "File 'NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
-                "File 'InnerZipFile.zip' Certificate=''",
+                "File 'InnerZipFile.zip'",
                 "File 'Mid.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'MidNativeLibrary.dll' Certificate='Microsoft400'",
-                "File 'NestedZip.zip' Certificate=''",
+                "File 'NestedZip.zip'",
             }/*,
             Reenable after https://github.com/dotnet/arcade/issues/10293,
             expectedWarnings: new[]
@@ -2584,6 +2677,128 @@ $@"
             BatchSignUtil.RunWixTool("create.cmd", "foodir", "bardir", "totally/wix/tools", task.Log).Should().BeFalse();
             task.Log.HasLoggedErrors.Should().BeTrue();
             fakeBuildEngine.LogErrorEvents.Should().Contain(e => e.Message.Contains($"WixToolsPath '{totalWixToolDir}' not found."));
+        }
+
+        [Fact]
+        public void MissingStrongNameSignaturesDoNotValidate()
+        {
+            // Missing signatures
+            ContentUtil.IsStrongNameSigned(GetResourcePath("AspNetCoreCrossLib.dll")).Should().BeFalse();
+            ContentUtil.IsStrongNameSigned(GetResourcePath("CoreLibCrossARM.dll")).Should().BeFalse();
+            ContentUtil.IsStrongNameSigned(GetResourcePath("EmptyPKT.dll")).Should().BeFalse();
+
+            // Delay signed assembly
+            ContentUtil.IsStrongNameSigned(GetResourcePath("DelaySigned.dll")).Should().BeFalse();
+            ContentUtil.IsStrongNameSigned(GetResourcePath("ProjectOne.dll")).Should().BeFalse();
+        }
+
+        /// <summary>
+        /// Add one to a byte in the input stream and write to the output stream. Both streams are left open.
+        /// </summary>
+        /// <param name="inputStream"></param>
+        /// <param name="outputStream"></param>
+        /// <param name="offset"></param>
+        private void FlipBit(Stream inputStream, Stream outputStream, int offset, byte flipz)
+        {
+            using BinaryReader reader = new BinaryReader(inputStream, System.Text.Encoding.Default, true);
+            using BinaryWriter writer = new BinaryWriter(outputStream, System.Text.Encoding.Default, true);
+
+            // Read up to the checksum and write to the binary
+            var bytesBeforeOffset = reader.ReadBytes(offset);
+            writer.Write(bytesBeforeOffset);
+
+            // Toggle a bit and write it out
+            // Cast to byte explicitly to avoid writing an int.
+            byte b = reader.ReadByte();
+            byte f = (byte)(b ^ flipz);
+            writer.Write(f);
+
+            // Then write the read
+            var bytesAfterChecksum = reader.ReadBytes((int)inputStream.Length - offset - 1);
+            writer.Write(bytesAfterChecksum);
+
+            outputStream.Position = 0;
+            inputStream.Position = 0;
+        }
+
+        private void WriteBytesToLocation(Stream inputStream, Stream outputStream, int offset, uint bytez)
+        {
+            using BinaryReader reader = new BinaryReader(inputStream, System.Text.Encoding.Default, true);
+            using BinaryWriter writer = new BinaryWriter(outputStream, System.Text.Encoding.Default, true);
+
+            // Read up to the checksum and write to the binary
+            var bytesBeforeOffset = reader.ReadBytes(offset);
+            writer.Write(bytesBeforeOffset);
+
+            // Toggle a bit and write it out
+            // Cast to byte explicitly to avoid writing an int.
+            writer.Write(bytez);
+            // Advance the reader.
+            reader.ReadUInt32();
+
+            // Then write the read
+            var bytesAfterChecksum = reader.ReadBytes((int)inputStream.Length - offset - sizeof(uint));
+            writer.Write(bytesAfterChecksum);
+
+            outputStream.Position = 0;
+            inputStream.Position = 0;
+        }
+
+        /// <summary>
+        /// Verify that flipbit works properly by flipping twice.
+        /// </summary>
+        [Fact]
+        public void NoFlipButWriteShouldVerify()
+        {
+            // We're going to open the file and flip a bit in the checksum
+            using var inputStream = File.OpenRead(GetResourcePath("SignedLibrary.dll"));
+            using MemoryStream outputStream = new();
+
+            PEHeaders peHeaders = new PEHeaders(inputStream);
+            inputStream.Position = 0;
+
+            int checksumStart = peHeaders.PEHeaderStartOffset + ContentUtil.ChecksumOffsetInPEHeader;
+            WriteBytesToLocation(inputStream, outputStream, checksumStart, peHeaders.PEHeader.CheckSum);
+            ContentUtil.IsStrongNameSigned(outputStream).Should().BeTrue();
+        }
+
+        [Fact]
+        public void IncorrectChecksumsDoNotValidate()
+        {
+            // We're going to open the file and flip a bit in the checksum
+            using var inputStream = File.OpenRead(GetResourcePath("SignedLibrary.dll"));
+            using MemoryStream outputStream = new();
+
+            PEHeaders peHeaders = new PEHeaders(inputStream);
+            inputStream.Position = 0;
+
+            int checksumStart = peHeaders.PEHeaderStartOffset + ContentUtil.ChecksumOffsetInPEHeader;
+            WriteBytesToLocation(inputStream, outputStream, checksumStart, peHeaders.PEHeader.CheckSum ^ 0x1);
+            ContentUtil.IsStrongNameSigned(outputStream).Should().BeFalse();
+        }
+
+        // This binary has had a resource added after it was strong name. This invalidated the checksum too,
+        // so we write the expected checksum.
+        [Fact]
+        public void InvalidatedSNSignatureDoesNotValidate()
+        {
+            using var inputStream = File.OpenRead(GetResourcePath("InvalidatedStrongName.dll"));
+            using MemoryStream outputStream = new();
+
+            PEHeaders peHeaders = new PEHeaders(inputStream);
+            inputStream.Position = 0;
+
+            int checksumStart = peHeaders.PEHeaderStartOffset + ContentUtil.ChecksumOffsetInPEHeader;
+            // Write the checksum that would be expected after editing the binary.
+            WriteBytesToLocation(inputStream, outputStream, checksumStart, 110286);
+
+            ContentUtil.IsStrongNameSigned(outputStream).Should().BeFalse();
+        }
+
+        [Fact]
+        public void ValidStrongNameSignaturesValidate()
+        {
+            ContentUtil.IsStrongNameSigned(GetResourcePath("SignedLibrary.dll")).Should().BeTrue();
         }
     }
 }
