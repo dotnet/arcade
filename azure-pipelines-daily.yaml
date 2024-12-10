@@ -41,3 +41,8 @@ stages:
           scriptLocation: inlineScript
           inlineScript: |
             Get-ChildItem .vault-config/*.yaml |% { dotnet secret-manager synchronize $_}
+      
+      - task: CmdLine@2
+        displayName: Run Restore.cmd script
+        inputs:
+          - script: 'Restore.cmd'
