@@ -6,6 +6,7 @@ using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -229,6 +230,10 @@ namespace Microsoft.DotNet.SignTool
                     {
                         _zipDataMap[fileSignInfo.FileContentKey] = zipData;
                     }
+                    else
+                    {
+                        _log.LogError($"Failed to build zip data for {fileSignInfo.FullPath}");
+                    }
                 }
                 else if (fileSignInfo.IsWixContainer())
                 {
@@ -236,6 +241,10 @@ namespace Microsoft.DotNet.SignTool
                     if (TryBuildWixData(fileSignInfo, out var msiData))
                     {
                         _zipDataMap[fileSignInfo.FileContentKey] = msiData;
+                    }
+                    else
+                    {
+                        _log.LogError($"Failed to build wix data for {fileSignInfo.FullPath}");
                     }
                 }
             }
@@ -777,7 +786,7 @@ namespace Microsoft.DotNet.SignTool
             }
             catch (Exception e)
             {
-                _log.LogErrorFromException(e);
+                _log.LogErrorFromException(e, true);
                 zipData = null;
                 return false;
             }
