@@ -32,6 +32,8 @@ parameters:
 
   is1ESPipeline: ''
 
+  preSteps: []
+
 jobs:
 - job: Asset_Registry_Publish
 
@@ -67,6 +69,7 @@ jobs:
       name: NetCore1ESPool-Publishing-Internal
       image: windows.vs2019.amd64
       os: windows
+
   steps:
   - ${{ if eq(parameters.is1ESPipeline, '') }}:
     - 'Illegal entry point, is1ESPipeline is not defined. Repository yaml should not directly reference templates in core-templates folder.': error
@@ -75,7 +78,11 @@ jobs:
     - checkout: self
       fetchDepth: 3
       clean: true
-      
+
+    - ${{ if ne(parameters.preSteps, '') }}:
+      - ${{ each preStep in parameters.preSteps }}:
+        - ${{ preStep }}
+
     - task: DownloadBuildArtifacts@0
       displayName: Download artifact
       inputs:
@@ -84,7 +91,7 @@ jobs:
         checkDownloadedFiles: true
       condition: ${{ parameters.condition }}
       continueOnError: ${{ parameters.continueOnError }}
-    
+
     - task: NuGetAuthenticate@1
 
     - task: AzureCLI@2
@@ -101,7 +108,7 @@ jobs:
           /p:OfficialBuildId=$(Build.BuildNumber)
       condition: ${{ parameters.condition }}
       continueOnError: ${{ parameters.continueOnError }}
-    
+
     - task: powershell@2
       displayName: Create ReleaseConfigs Artifact
       inputs:
@@ -155,4 +162,4 @@ jobs:
       - template: /eng/common/core-templates/steps/publish-logs.yml
         parameters:
           is1ESPipeline: ${{ parameters.is1ESPipeline }}
-          JobLabel: 'Publish_Artifacts_Logs'     
+          JobLabel: 'Publish_Artifacts_Logs'
