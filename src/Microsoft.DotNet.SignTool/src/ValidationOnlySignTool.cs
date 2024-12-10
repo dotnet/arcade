@@ -29,10 +29,10 @@ namespace Microsoft.DotNet.SignTool
             // We could skip it always in the validation sign tool, but it is useful to
             // get some level of validation.
 
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            /*if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 return true;
-            }
+            }*/
 
             foreach (var file in files)
             {
