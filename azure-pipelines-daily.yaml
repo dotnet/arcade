@@ -23,11 +23,6 @@ stages:
         displayName: Run restore.cmd
         inputs:
           script: 'restore.cmd'
-          
-      - task: UseDotNet@2
-        displayName: Install global.json SDK
-        inputs:
-          useGlobalJson: true
 
       - task: UseDotNet@2
         displayName: Install .NET 6 runtime
