@@ -30,8 +30,12 @@ stages:
           packageType: runtime
           version: 6.x
 
-      - script: dotnet tool restore
+      - script: |
+          set DOTNET_ROOT=D:\a\_work\1\s\.dotnet\
+          dotnet tool restore
         displayName: Restore dotnet tools
+        env:
+          DOTNET_ROOT: D:\a\_work\1\s\.dotnet\
 
       - task: AzureCLI@2
         displayName: Run secret-manager synchronize
