@@ -19,6 +19,11 @@ stages:
         demands: ImageOverride -equals 1es-windows-2022
 
       steps:
+      - task: CmdLine@2
+        displayName: Run restore.cmd
+        inputs:
+          script: 'restore.cmd'
+          
       - task: UseDotNet@2
         displayName: Install global.json SDK
         inputs:
@@ -42,7 +47,4 @@ stages:
           inlineScript: |
             Get-ChildItem .vault-config/*.yaml |% { dotnet secret-manager synchronize $_}
       
-      - task: CmdLine@2
-        displayName: Run restore.cmd
-        inputs:
-          script: 'restore.cmd'
+      
