@@ -19,10 +19,13 @@ stages:
         demands: ImageOverride -equals 1es-windows-2022
 
       steps:
-      - task: CmdLine@2
-        displayName: Run restore.cmd
+      - task: UseDotNet@2
+        displayName: Install global.json SDK
         inputs:
-          script: 'restore.cmd'
+          useGlobalJson: false
+          version: "9.0.101"
+
+      - task:
 
       - task: UseDotNet@2
         displayName: Install .NET 6 runtime
@@ -30,12 +33,8 @@ stages:
           packageType: runtime
           version: 6.x
 
-      - script: |
-          set DOTNET_ROOT=D:\a\_work\1\s\.dotnet\
-          dotnet tool restore
+      - script: dotnet tool restore
         displayName: Restore dotnet tools
-        env:
-          DOTNET_ROOT: D:\a\_work\1\s\.dotnet\
 
       - task: AzureCLI@2
         displayName: Run secret-manager synchronize
@@ -45,5 +44,3 @@ stages:
           scriptLocation: inlineScript
           inlineScript: |
             Get-ChildItem .vault-config/*.yaml |% { dotnet secret-manager synchronize $_}
-      
-      
