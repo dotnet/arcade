@@ -43,6 +43,6 @@ stages:
             Get-ChildItem .vault-config/*.yaml |% { dotnet secret-manager synchronize $_}
       
       - task: CmdLine@2
-        displayName: Run Restore.cmd script
+        displayName: Run restore.cmd
         inputs:
-          - script: 'Restore.cmd'
+          script: 'restore.cmd'
