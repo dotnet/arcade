@@ -103,7 +103,7 @@ namespace Microsoft.DotNet.SignTool
                 if (fileSignInfo.SignInfo.ShouldStrongName)
                 {
                     _log.LogMessage($"Removing public sign: '{fileSignInfo.FullPath}'");
-                    _signTool.RemovePublicSign(fileSignInfo.FullPath);
+                    // _signTool.RemovePublicSign(fileSignInfo.FullPath);
                 }
             }
         }

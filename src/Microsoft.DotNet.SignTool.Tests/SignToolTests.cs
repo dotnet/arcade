@@ -530,7 +530,8 @@ namespace Microsoft.DotNet.SignTool.Tests
             // List of files to be considered for signing
             var itemsToSign = new ITaskItem[]
             {
-                new TaskItem(GetResourcePath("SignedLibrary.dll"))
+                new TaskItem(GetResourcePath("SignedLibrary.dll")),
+                new TaskItem(GetResourcePath("System.Formats.Asn1.dll"))
             };
 
             // Default signing information
