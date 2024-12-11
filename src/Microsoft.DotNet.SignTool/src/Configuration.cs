@@ -374,6 +374,7 @@ namespace Microsoft.DotNet.SignTool
                 isAlreadyAuthenticodeSigned = ContentUtil.IsAuthenticodeSigned(file.FullPath);
                 isAlreadyStrongNamed = ContentUtil.IsStrongNameSigned(file.FullPath);
 
+
                 if (!isAlreadyAuthenticodeSigned)
                 {
                     _log.LogMessage(MessageImportance.Low, $"PE file {file.FullPath} does not have a signature marker.");

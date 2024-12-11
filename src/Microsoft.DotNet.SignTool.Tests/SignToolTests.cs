@@ -275,6 +275,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             return Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "wix");
         }
 
+        private static string s_snPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "sn", "sn.exe");
         private static string s_tarToolPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "tar", "Microsoft.Dotnet.Tar.dll");
         private static string s_pkgToolPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "pkg", "Microsoft.Dotnet.MacOsPkg.dll");
 
@@ -2818,6 +2819,14 @@ $@"
         public void ValidStrongNameSignaturesValidate()
         {
             ContentUtil.IsStrongNameSigned(GetResourcePath("SignedLibrary.dll")).Should().BeTrue();
+            ContentUtil.IsStrongNameSigned(GetResourcePath("StrongNamedWithEcmaKey.dll")).Should().BeTrue();
+        }
+
+        [Fact]
+        public void ValidStrongNameSignaturesValidateWithFallback()
+        {
+            ContentUtil.IsStrongNameSignedLegacy(GetResourcePath("SignedLibrary.dll"), s_snPath).Should().BeTrue();
+            ContentUtil.IsStrongNameSignedLegacy(GetResourcePath("StrongNamedWithEcmaKey.dll"), s_snPath).Should().BeTrue();
         }
     }
 }

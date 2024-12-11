@@ -8,6 +8,7 @@
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" />
     <PackageReference Include="Microsoft.Build.Framework" />
+    <PackageReference Include="sn" GeneratePathProperty="true" />
   </ItemGroup>
 
   <ItemGroup>
@@ -67,4 +68,12 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="_CopySnTool" AfterTargets="ResolveProjectReferences" Condition="$([MSBuild]::IsOSPlatform('windows'))">
+    <ItemGroup>
+      <_SnToolFiles Include="$(Pkgsn)\sn.exe.*"/>
+    </ItemGroup>
+    <ItemGroup>
+      <Content Include="@(_SnToolFiles)" CopyToOutputDirectory="PreserveNewest" Link="tools\sn\%(RecursiveDir)%(Filename)%(Extension)" />
+    </ItemGroup>
+  </Target>
 </Project>
