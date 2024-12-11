@@ -12,6 +12,8 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using System.Diagnostics;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -140,17 +142,77 @@ namespace Microsoft.DotNet.SignTool
         private const int AuthenticodeDirectorySize = 2 * sizeof(int);
         private const int SnPublicKeyHeaderSize = 12;
 
+        // ECMA key
+        static readonly byte[] ECMAKey =
+        {
+            0x00,0x24,0x00,0x00,0x04,0x80,0x00,0x00,0x94,0x00,0x00,0x00,0x06,0x02,0x00,0x00,
+            0x00,0x24,0x00,0x00,0x52,0x53,0x41,0x31,0x00,0x04,0x00,0x00,0x01,0x00,0x01,0x00,
+            0x07,0xd1,0xfa,0x57,0xc4,0xae,0xd9,0xf0,0xa3,0x2e,0x84,0xaa,0x0f,0xae,0xfd,0x0d,
+            0xe9,0xe8,0xfd,0x6a,0xec,0x8f,0x87,0xfb,0x03,0x76,0x6c,0x83,0x4c,0x99,0x92,0x1e,
+            0xb2,0x3b,0xe7,0x9a,0xd9,0xd5,0xdc,0xc1,0xdd,0x9a,0xd2,0x36,0x13,0x21,0x02,0x90,
+            0x0b,0x72,0x3c,0xf9,0x80,0x95,0x7f,0xc4,0xe1,0x77,0x10,0x8f,0xc6,0x07,0x77,0x4f,
+            0x29,0xe8,0x32,0x0e,0x92,0xea,0x05,0xec,0xe4,0xe8,0x21,0xc0,0xa5,0xef,0xe8,0xf1,
+            0x64,0x5c,0x4c,0x0c,0x93,0xc1,0xab,0x99,0x28,0x5d,0x62,0x2c,0xaa,0x65,0x2c,0x1d,
+            0xfa,0xd6,0x3d,0x74,0x5d,0x6f,0x2d,0xe5,0xf1,0x7e,0x5e,0xaf,0x0f,0xc4,0x96,0x3d,
+            0x26,0x1c,0x8a,0x12,0x43,0x65,0x18,0x20,0x6d,0xc0,0x93,0x34,0x4d,0x5a,0xd2,0x93
+        };
+
+        static readonly byte[] NeutralPublicKey = { 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0 };
+
         /// <summary>
         /// Returns true if the file has a valid strong name signature.
         /// </summary>
         /// <param name="file">Path to file</param>
+        /// <param name="log">MSBuild logger if desired</param>
+        /// <param name="snPath">Path to sn.exe, if available and desired.</param>
         /// <returns>True if the file has a valid strong name signature, false otherwise.</returns>
-        public static bool IsStrongNameSigned(string file)
+        public static bool IsStrongNameSigned(string file, string snPath = null, TaskLoggingHelper log = null)
         {
-            using (var metadata = new FileStream(file, FileMode.Open))
+            try
             {
-                return IsStrongNameSigned(metadata);
+                using (var metadata = new FileStream(file, FileMode.Open))
+                {
+                    return IsStrongNameSigned(metadata);
+                }
             }
+            catch (Exception e)
+            {
+                if (log != null)
+                {
+                    log.LogMessage(MessageImportance.High, $"Failed to determine whether PE file {file} has a valid strong name signature. {e}");
+                }
+
+                if (!string.IsNullOrEmpty(snPath))
+                {
+                    // Fall back to the old method of checking for a strong name signature, but only on Windows.
+                    // Otherwise, return false:
+                    return IsStrongNameSignedLegacy(file, snPath);
+                }
+            }
+
+            return false;
+        }
+
+        internal static bool IsStrongNameSignedLegacy(string file, string snPath)
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return false;
+            }
+
+            var process = Process.Start(new ProcessStartInfo()
+            {
+                FileName = snPath,
+                Arguments = $@"-vf ""{file}"" > nul",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardError = false,
+                RedirectStandardOutput = false
+            });
+
+            process.WaitForExit();
+
+            return process.ExitCode == 0;
         }
 
         // Internal for testing to avoid having to write a file to disk.
@@ -218,6 +280,15 @@ namespace Microsoft.DotNet.SignTool
                 byte[] hash = ComputeSigningHash(peImage, peHeaders, snOffset, snSize);
 
                 ImmutableArray<byte> publicKeyBlob = metadataReader.GetBlobContent(metadataReader.GetAssemblyDefinition().PublicKey);
+
+                // It's possible that the public key blob is a neutral public key blob,
+                // meaning that it's actually the ECMA key that was used to sign the assembly.
+                // Verify against that.
+                if (publicKeyBlob.SequenceEqual(NeutralPublicKey))
+                {
+                    publicKeyBlob = ECMAKey.ToImmutableArray();
+                }
+
                 // RSA parameters start after the public key offset
                 byte[] publicKeyParams = new byte[publicKeyBlob.Length - SnPublicKeyHeaderSize];
                 publicKeyBlob.CopyTo(SnPublicKeyHeaderSize, publicKeyParams, 0, publicKeyParams.Length);
