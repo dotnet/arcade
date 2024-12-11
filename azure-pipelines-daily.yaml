@@ -35,9 +35,6 @@ stages:
           packageType: runtime
           version: 6.x
 
-      - script: dotnet tool restore
-        displayName: Restore dotnet tools
-
       - task: AzureCLI@2
         displayName: Run secret-manager synchronize
         inputs:
