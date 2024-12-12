@@ -386,11 +386,11 @@ namespace Microsoft.DotNet.SignTool
 
                 if (!isAlreadyStrongNamed)
                 {
-                    _log.LogMessage(MessageImportance.Low, $"PE file {file.FullPath} has a valid strong name signature.");
+                    _log.LogMessage(MessageImportance.Low, $"PE file {file.FullPath} does not have a valid strong name signature.");
                 }
                 else
                 {
-                    _log.LogMessage(MessageImportance.Low, $"PE file {file.FullPath} does not have a valid strong name signature.");
+                    _log.LogMessage(MessageImportance.Low, $"PE file {file.FullPath} has a valid strong name signature.");
                 }
 
                 peInfo = GetPEInfo(file.FullPath);
