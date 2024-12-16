@@ -4,6 +4,7 @@
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Arcade.Common;
 using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
@@ -55,6 +56,23 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
             var jsonContent = File.ReadAllText(GlobalJsonPath);
             var bytes = Encoding.UTF8.GetBytes(jsonContent);
+
+            string feedKey = "";
+            if (!string.IsNullOrWhiteSpace(RuntimeSourceFeed) && !string.IsNullOrWhiteSpace(RuntimeSourceFeedKey))
+            {
+                // If the key is "az", the user wants automatic authentication.
+                if (RuntimeSourceFeedKey.Equals("az", StringComparison.OrdinalIgnoreCase))
+                {
+                    Log.LogMessage(MessageImportance.Low, $"Attempting to generate SAS token for current user.");
+                    string sasToken = AuthenticationHelpers.GenerateDelegationSas(RuntimeSourceFeed);
+                    Log.LogMessage(MessageImportance.High, $"Got sasToken {sasToken}");
+                    feedKey = Convert.ToBase64String(Encoding.ASCII.GetBytes(sasToken));
+                }
+                else
+                {
+                    feedKey = RuntimeSourceFeedKey;
+                }
+            }
 
             using (JsonDocument jsonDocument = JsonDocument.Parse(bytes))
             {
@@ -137,9 +155,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                         }
 
                                         // The default RuntimeSourceFeed doesn't need a key
-                                        if (!string.IsNullOrWhiteSpace(RuntimeSourceFeed) && !string.IsNullOrWhiteSpace(RuntimeSourceFeedKey))
+                                        if (!string.IsNullOrWhiteSpace(feedKey))
                                         {
-                                            arguments += $" -runtimeSourceFeedKey {RuntimeSourceFeedKey}";
+                                            arguments += $" -runtimeSourceFeedKey {feedKey}";
                                         }
 
                                         Log.LogMessage(MessageImportance.Low, $"Executing: {DotNetInstallScript} {arguments}");
