@@ -4,20 +4,14 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Configuration;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Pipes;
 using System.Linq;
-using System.Numerics;
-using System.Reflection;
 using System.Reflection.Metadata;
-using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
-using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -136,8 +130,10 @@ namespace Microsoft.DotNet.SignTool
 
                 // Reset position before creating the blob builder.
                 peStream.Position = 0;
-
                 byte[] peBuffer = ReadPEToBuffer(peStream);
+
+                // Verify the checksum before verifying the strong name signature
+                // PreparePEForHashing will zero out the checksum and authenticode signature.
 
                 if (peHeaders.PEHeader.CheckSum != CalculateChecksum(peBuffer, peHeaders))
                 {
@@ -270,9 +266,6 @@ namespace Microsoft.DotNet.SignTool
                 // If the binary doesn't have metadata (e.g. crossgenned) then it's not signed.
                 MetadataReader metadataReader = peReader.GetMetadataReader();
 
-                // Reset the position before creating the blob builder.
-                peStream.Position = 0;
-
                 // Parse the SNK
                 if (!TryParseKey(File.ReadAllBytes(keyFile).ToImmutableArray(), out ImmutableArray<byte> snkPublicKey, out RSAParameters? privateKey) ||
                     privateKey == null)
@@ -307,6 +300,7 @@ namespace Microsoft.DotNet.SignTool
                 }
 
                 // Copy the PE into a buffer
+                peStream.Position = 0;
                 peBuffer = ReadPEToBuffer(peStream);
 
                 // Now prepare that buffer for hashing
@@ -324,18 +318,12 @@ namespace Microsoft.DotNet.SignTool
                 }
 
                 // Write the signature into the strong name signature directory
-                for (int i = 0; i < signature.Length; i++)
-                {
-                    peBuffer[snSignatureOffset + i] = signature[i];
-                }
+                peBuffer.SetBytes(snSignatureOffset, signature);
 
                 // Compute a new checksum and write it out.
                 uint checksum = CalculateChecksum(peBuffer, peHeaders);
                 var checksumBytes = BitConverter.GetBytes(checksum);
-                for (int i = 0; i < checksumBytes.Length; i++)
-                {
-                    peBuffer[peHeaders.PEHeaderStartOffset + ChecksumOffsetInPEHeader + i] = checksumBytes[i];
-                }
+                peBuffer.SetBytes(peHeaders.PEHeaderStartOffset + ChecksumOffsetInPEHeader, checksumBytes);
             }
 
             // Write the PE stream back
@@ -351,7 +339,7 @@ namespace Microsoft.DotNet.SignTool
 
         private static uint CalculateChecksum(byte[] peImage, PEHeaders peHeaders)
         {
-            return CalculateChecksum(GetContentWithoutChecksum(peImage, peHeaders)) + 1;
+            return CalculateChecksum(GetContentWithoutChecksum(peImage, peHeaders)) + (uint)peImage.Length;
         }
 
         private static uint CalculateChecksum(IEnumerable<Blob> blobs)
@@ -455,26 +443,46 @@ namespace Microsoft.DotNet.SignTool
             bool is32bit = peHeaders.PEHeader.Magic == PEMagic.PE32;
 
             // Zero the checksum
-            for (int i = 0; i < CheckSumSize; i++)
-            {
-                peBuffer[peHeaders.PEHeaderStartOffset + ChecksumOffsetInPEHeader + i] = 0;
-            }
+            peBuffer.SetBytes(peHeaders.PEHeaderStartOffset + ChecksumOffsetInPEHeader, CheckSumSize, 0);
 
             // Zero the authenticode signature
             int authenticodeOffset = GetAuthenticodeOffset(peHeaders, is32bit);
             var authenticodeDir = peHeaders.PEHeader.CertificateTableDirectory;
-            for (int i = 0; i < AuthenticodeDirectorySize; i++)
-            {
-                peBuffer[authenticodeOffset + i] = 0;
-            }
+            peBuffer.SetBytes(authenticodeOffset, AuthenticodeDirectorySize, 0);
 
             if (setStrongNameBit)
             {
                 var flagBytes = BitConverter.GetBytes((uint)(peHeaders.CorHeader.Flags | CorFlags.StrongNameSigned));
-                for (int i = 0; i < CorFlagsSize; i++)
-                {
-                    peBuffer[peHeaders.CorHeaderStartOffset + FlagsOffsetInCorHeader + i] = flagBytes[i];
-                }
+                peBuffer.SetBytes(peHeaders.CorHeaderStartOffset + FlagsOffsetInCorHeader, flagBytes);
+            }
+        }
+
+        /// <summary>
+        /// Sets <paramref name="count"/> bytes starting at <paramref name="index"/> in buffer to value
+        /// </summary>
+        /// <param name="buffer">Buffer to alter</param>
+        /// <param name="index">Start index</param>
+        /// <param name="count">count</param>
+        /// <param name="value">Value to set</param>
+        private static void SetBytes(this byte[] buffer, int index, int count, byte value)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                buffer[index + i] = value;
+            }
+        }
+
+        /// <summary>
+        /// Sets the bytes in the buffer starting at <paramref name="index"/> to the bytes in <paramref name="value"/>
+        /// </summary>
+        /// <param name="buffer">Buffer to alter</param>
+        /// <param name="index">Starting index</param>
+        /// <param name="value">Value</param>
+        private static void SetBytes(this byte[] buffer, int index, byte[] value)
+        {
+            for (int i = 0; i < value.Length; i++)
+            {
+                buffer[index + i] = value[i];
             }
         }
 
