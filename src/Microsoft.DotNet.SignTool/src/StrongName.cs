@@ -311,6 +311,7 @@ namespace Microsoft.DotNet.SignTool
                 {
                     snkRSA.ImportParameters(privateKey.Value);
 
+                    // CodeQL [SM02196] ECMA-335 requires us to support SHA-1 and this is testing that support
                     signature = snkRSA.SignHash(hash, HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1);
 
                     // The signature is written in reverse order
