@@ -1232,16 +1232,19 @@ $@"
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
+                "File 'mscorlib.dll' TargetFramework='.NETCoreApp,Version=v10.0' Certificate='Microsoft400'",
+                "File 'data.tar.gz' Certificate=''",
                 "File 'test.deb' Certificate='LinuxSign'"
             });
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
-$@"
-<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.deb"))}"">
+$@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "1", "./usr/local/bin/mscorlib.dll"))}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>",
+$@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.deb"))}"">
   <Authenticode>LinuxSign</Authenticode>
-</FilesToSign>
-"
+</FilesToSign>"
             });
         }
 
