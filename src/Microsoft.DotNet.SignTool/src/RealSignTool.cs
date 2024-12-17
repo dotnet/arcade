@@ -113,7 +113,16 @@ namespace Microsoft.DotNet.SignTool
                 return true;
             }
 
+
+/* Unmerged change from project 'Microsoft.DotNet.SignTool (net472)'
+Before:
             return ContentUtil.IsStrongNameSigned(fileFullPath);
+        }
+After:
+            return DotNet.SignTool.StrongName.IsStrongNameSigned(fileFullPath);
+        }
+*/
+            return StrongName.IsSigned(fileFullPath);
         }
 
         public override bool VerifySignedDeb(TaskLoggingHelper log, string filePath)

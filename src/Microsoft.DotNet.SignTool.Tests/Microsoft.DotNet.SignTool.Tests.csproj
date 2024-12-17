@@ -56,4 +56,13 @@
       <Content Include="@(_SnToolFiles)" CopyToOutputDirectory="PreserveNewest" Link="tools\sn\%(RecursiveDir)%(Filename)%(Extension)" />
     </ItemGroup>
   </Target>
+
+  <Target Name="_CopyKeys" AfterTargets="ResolveProjectReferences">
+    <ItemGroup>
+      <_SnToolFiles Include="$(Pkgsn)\sn.exe.*"/>
+    </ItemGroup>
+    <ItemGroup>
+      <Content Include="@(_SnToolFiles)" CopyToOutputDirectory="PreserveNewest" Link="tools\sn\%(RecursiveDir)%(Filename)%(Extension)" />
+    </ItemGroup>
+  </Target>
 </Project>

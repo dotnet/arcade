@@ -7,6 +7,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection.PortableExecutable;
+using System.Runtime.InteropServices;
 using FluentAssertions;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.Build.Framework;
@@ -2493,14 +2494,11 @@ $@"
         [Fact]
         public void MissingStrongNameSignaturesDoNotValidate()
         {
-            // Missing signatures
-            ContentUtil.IsStrongNameSigned(GetResourcePath("AspNetCoreCrossLib.dll")).Should().BeFalse();
-            ContentUtil.IsStrongNameSigned(GetResourcePath("CoreLibCrossARM.dll")).Should().BeFalse();
-            ContentUtil.IsStrongNameSigned(GetResourcePath("EmptyPKT.dll")).Should().BeFalse();
-
-            // Delay signed assembly
-            ContentUtil.IsStrongNameSigned(GetResourcePath("DelaySigned.dll")).Should().BeFalse();
-            ContentUtil.IsStrongNameSigned(GetResourcePath("ProjectOne.dll")).Should().BeFalse();
+            StrongName.IsSigned(GetResourcePath("AspNetCoreCrossLib.dll")).Should().BeFalse();
+            StrongName.IsSigned(GetResourcePath("CoreLibCrossARM.dll")).Should().BeFalse();
+            StrongName.IsSigned(GetResourcePath("EmptyPKT.dll")).Should().BeFalse();
+            StrongName.IsSigned(GetResourcePath("DelaySigned.dll")).Should().BeFalse();
+            StrongName.IsSigned(GetResourcePath("ProjectOne.dll")).Should().BeFalse();
         }
 
         /// <summary>
@@ -2567,10 +2565,9 @@ $@"
 
             PEHeaders peHeaders = new PEHeaders(inputStream);
             inputStream.Position = 0;
-
-            int checksumStart = peHeaders.PEHeaderStartOffset + ContentUtil.ChecksumOffsetInPEHeader;
+            int checksumStart = peHeaders.PEHeaderStartOffset + StrongName.ChecksumOffsetInPEHeader;
             WriteBytesToLocation(inputStream, outputStream, checksumStart, peHeaders.PEHeader.CheckSum);
-            ContentUtil.IsStrongNameSigned(outputStream).Should().BeTrue();
+            StrongName.IsSigned(outputStream).Should().BeTrue();
         }
 
         [Fact]
@@ -2582,10 +2579,9 @@ $@"
 
             PEHeaders peHeaders = new PEHeaders(inputStream);
             inputStream.Position = 0;
-
-            int checksumStart = peHeaders.PEHeaderStartOffset + ContentUtil.ChecksumOffsetInPEHeader;
+            int checksumStart = peHeaders.PEHeaderStartOffset + StrongName.ChecksumOffsetInPEHeader;
             WriteBytesToLocation(inputStream, outputStream, checksumStart, peHeaders.PEHeader.CheckSum ^ 0x1);
-            ContentUtil.IsStrongNameSigned(outputStream).Should().BeFalse();
+            StrongName.IsSigned(outputStream).Should().BeFalse();
         }
 
         // This binary has had a resource added after it was strong name. This invalidated the checksum too,
@@ -2599,25 +2595,60 @@ $@"
             PEHeaders peHeaders = new PEHeaders(inputStream);
             inputStream.Position = 0;
 
-            int checksumStart = peHeaders.PEHeaderStartOffset + ContentUtil.ChecksumOffsetInPEHeader;
+            int checksumStart = peHeaders.PEHeaderStartOffset + StrongName.ChecksumOffsetInPEHeader;
             // Write the checksum that would be expected after editing the binary.
             WriteBytesToLocation(inputStream, outputStream, checksumStart, 110286);
 
-            ContentUtil.IsStrongNameSigned(outputStream).Should().BeFalse();
+            StrongName.IsSigned(outputStream).Should().BeFalse();
         }
 
         [Fact]
         public void ValidStrongNameSignaturesValidate()
         {
-            ContentUtil.IsStrongNameSigned(GetResourcePath("SignedLibrary.dll")).Should().BeTrue();
-            ContentUtil.IsStrongNameSigned(GetResourcePath("StrongNamedWithEcmaKey.dll")).Should().BeTrue();
+            StrongName.IsSigned(GetResourcePath("SignedLibrary.dll")).Should().BeTrue();
+            StrongName.IsSigned(GetResourcePath("StrongNamedWithEcmaKey.dll")).Should().BeTrue();
         }
 
         [Fact]
         public void ValidStrongNameSignaturesValidateWithFallback()
         {
-            ContentUtil.IsStrongNameSignedLegacy(GetResourcePath("SignedLibrary.dll"), s_snPath).Should().BeTrue();
-            ContentUtil.IsStrongNameSignedLegacy(GetResourcePath("StrongNamedWithEcmaKey.dll"), s_snPath).Should().BeTrue();
+            StrongName.IsSigned_Legacy(GetResourcePath("SignedLibrary.dll"), s_snPath).Should().BeTrue();
+            StrongName.IsSigned_Legacy(GetResourcePath("StrongNamedWithEcmaKey.dll"), s_snPath).Should().BeTrue();
+        }
+
+        [Theory]
+        [InlineData("OpenSigned.dll", "OpenSignedCorrespondingKey.snk", true)]
+        [InlineData("DelaySignedWithOpen.dll", "OpenSignedCorrespondingKey.snk", false)]
+        public void SigningSignsAsExpected(string file, string key, bool initiallySigned)
+        {
+            // Make sure this is unique
+            string resource = GetResourcePath(file, Guid.NewGuid().ToString());
+            using (var stream = new FileStream(resource, FileMode.Open))
+            {
+                StrongName.IsSigned(stream).Should().Be(initiallySigned);
+                stream.Position = 0;
+                StrongName.Sign(stream, GetResourcePath(key));
+                stream.Position = 0;
+                StrongName.IsSigned(stream).Should().BeTrue();
+            }
+
+            // Legacy sn verification works on on Windows only
+            StrongName.IsSigned_Legacy(resource, s_snPath).Should().Be(
+                RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+        }
+
+        [Fact]
+        public void CannotSignWithTheEcmaKey()
+        {
+            Action shouldFail = () => StrongName.Sign(GetResourcePath("StrongNamedWithEcmaKey.dll"), GetResourcePath("OpenSignedCorrespondingKey.snk"));
+            shouldFail.Should().Throw<NotImplementedException>();
+        }
+
+        [Fact]
+        public void DelaySignedBinaryFailsToSignWithDifferentKey()
+        {
+            Action shouldFail = () => StrongName.Sign(GetResourcePath("DelaySigned.dll"), GetResourcePath("OpenSignedCorrespondingKey.snk"));
+            shouldFail.Should().Throw<InvalidOperationException>();
         }
     }
 }

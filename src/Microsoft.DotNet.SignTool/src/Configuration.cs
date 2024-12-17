@@ -351,7 +351,14 @@ namespace Microsoft.DotNet.SignTool
             if (FileSignInfo.IsPEFile(file.FullPath))
             {
                 isAlreadyAuthenticodeSigned = ContentUtil.IsAuthenticodeSigned(file.FullPath);
+
+/* Unmerged change from project 'Microsoft.DotNet.SignTool (net472)'
+Before:
                 isAlreadyStrongNamed = ContentUtil.IsStrongNameSigned(file.FullPath);
+After:
+                isAlreadyStrongNamed = DotNet.SignTool.StrongName.IsStrongNameSigned(file.FullPath);
+*/
+                isAlreadyStrongNamed = StrongName.IsSigned(file.FullPath);
 
 
                 if (!isAlreadyAuthenticodeSigned)
