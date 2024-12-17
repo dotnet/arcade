@@ -220,16 +220,80 @@ namespace Microsoft.DotNet.SignTool
         }
 
         /// <summary>
+        /// Unset the strong name signing bit from a file. This is required for sn
+        /// </summary>
+        /// <param name="file"></param>
+        public static void ClearStrongNameSignedBit(string file)
+        {
+            using (var stream = new FileStream(file, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
+            using (var peReader = new PEReader(stream))
+            using (var writer = new BinaryWriter(stream))
+            {
+                if (!ContentUtil.IsPublicSigned(peReader))
+                {
+                    return;
+                }
+
+                stream.Position = peReader.PEHeaders.CorHeaderStartOffset + FlagsOffsetInCorHeader;
+                writer.Write((UInt32)(peReader.PEHeaders.CorHeader.Flags & ~CorFlags.StrongNameSigned));
+            }
+        }
+
+        /// <summary>
         /// Strong names an existing previously signed or delay-signed binary with keyfile.
+        /// Fall back to legacy signing if available and new signing fails.
         /// </summary>
         /// <param name="file">Path to file to sign</param>
         /// <param name="keyFile">Path to key pair.</param>
-        public static void Sign(string file, string keyFile)
+        /// <param name="log">Optional logger</param>
+        /// <param name="snPath">Optional path to sn.exe</param>
+        /// <returns>True if the file was signed successfully, false otherwise</returns>
+        public static bool Sign(string file, string keyFile, string snPath = null, TaskLoggingHelper log = null)
         {
-            using (var metadata = new FileStream(file, FileMode.Open))
+            try
             {
-                Sign(metadata, keyFile);
+                using (var metadata = new FileStream(file, FileMode.Open))
+                {
+                    Sign(metadata, keyFile);
+                }
+                return true;
             }
+            catch (Exception e)
+            {
+                if (log != null)
+                {
+                    log.LogMessage(MessageImportance.High, $"Failed to sign PE file {file} with strong name {keyFile}: {e}");
+                }
+
+                if (!string.IsNullOrEmpty(snPath))
+                {
+                    // Fall back to the old method of checking for a strong name signature, but only on Windows.
+                    // Otherwise, return false:
+                    return Sign_Legacy(file, keyFile, snPath);
+                }
+            }
+
+            return false;
+        }
+
+        internal static bool Sign_Legacy(string file, string keyfile,  string snPath)
+        {
+            // sn -R <path_to_file> <path_to_snk>
+            var process = Process.Start(new ProcessStartInfo()
+            {
+                FileName = snPath,
+                Arguments = $@"-R ""{file}"" ""{keyfile}""",
+                UseShellExecute = false
+            });
+
+            process.WaitForExit();
+
+            if (process.ExitCode != 0)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -239,7 +303,7 @@ namespace Microsoft.DotNet.SignTool
         /// <param name="keyFile"></param>
         /// <exception cref="InvalidOperationException"></exception>
         /// <exception cref="Exception"></exception>
-        public static void Sign(Stream peStream, string keyFile)
+        internal static void Sign(Stream peStream, string keyFile)
         {
             // This process happens as follows:
             // 1. Open the PE and read into a file.

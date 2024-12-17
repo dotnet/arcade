@@ -2622,33 +2622,51 @@ $@"
         public void SigningSignsAsExpected(string file, string key, bool initiallySigned)
         {
             // Make sure this is unique
-            string resource = GetResourcePath(file, Guid.NewGuid().ToString());
-            using (var stream = new FileStream(resource, FileMode.Open))
-            {
-                StrongName.IsSigned(stream).Should().Be(initiallySigned);
-                stream.Position = 0;
-                StrongName.Sign(stream, GetResourcePath(key));
-                stream.Position = 0;
-                StrongName.IsSigned(stream).Should().BeTrue();
-            }
+            string resourcePath = GetResourcePath(file, Guid.NewGuid().ToString());
+            StrongName.IsSigned(resourcePath).Should().Be(initiallySigned);
+            StrongName.Sign(resourcePath, GetResourcePath(key));
+            StrongName.IsSigned(resourcePath).Should().BeTrue();
 
             // Legacy sn verification works on on Windows only
-            StrongName.IsSigned_Legacy(resource, s_snPath).Should().Be(
+            StrongName.IsSigned_Legacy(resourcePath, s_snPath).Should().Be(
                 RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+        }
+
+        [WindowsOnlyTheory]
+        [InlineData("OpenSigned.dll", "OpenSignedCorrespondingKey.snk", true)]
+        [InlineData("DelaySignedWithOpen.dll", "OpenSignedCorrespondingKey.snk", false)]
+        [Trait("Category", "SkipWhenLiveUnitTesting")]
+        public void SigningSignsAsExpectedWithLegacyAndVerifiesWithNonLegacy(string file, string key, bool initiallySigned)
+        {
+            // Make sure this is unique
+            string resourcePath = GetResourcePath(file, Guid.NewGuid().ToString());
+            StrongName.IsSigned_Legacy(resourcePath, s_snPath).Should().Be(initiallySigned);
+            // Unset the strong name bit first
+            StrongName.ClearStrongNameSignedBit(resourcePath);
+            StrongName.Sign_Legacy(resourcePath, GetResourcePath(key), s_snPath).Should().BeTrue();
+            StrongName.IsSigned(resourcePath).Should().BeTrue();
         }
 
         [Fact]
         public void CannotSignWithTheEcmaKey()
         {
-            Action shouldFail = () => StrongName.Sign(GetResourcePath("StrongNamedWithEcmaKey.dll"), GetResourcePath("OpenSignedCorrespondingKey.snk"));
-            shouldFail.Should().Throw<NotImplementedException>();
+            // Using stream variant so that legacy fallback doesn't swallow the exception.
+            using (var inputStream = File.OpenRead(GetResourcePath("StrongNamedWithEcmaKey.dll")))
+            {
+                Action shouldFail = () => StrongName.Sign(inputStream, GetResourcePath("OpenSignedCorrespondingKey.snk"));
+                shouldFail.Should().Throw<NotImplementedException>();
+            }
         }
 
         [Fact]
         public void DelaySignedBinaryFailsToSignWithDifferentKey()
         {
-            Action shouldFail = () => StrongName.Sign(GetResourcePath("DelaySigned.dll"), GetResourcePath("OpenSignedCorrespondingKey.snk"));
-            shouldFail.Should().Throw<InvalidOperationException>();
+            // Using stream variant so that legacy fallback doesn't swallow the exception.
+            using (var inputStream = File.OpenRead(GetResourcePath("DelaySigned.dll")))
+            {
+                Action shouldFail = () => StrongName.Sign(inputStream, GetResourcePath("OpenSignedCorrespondingKey.snk"));
+                shouldFail.Should().Throw<InvalidOperationException>();
+            }
         }
     }
 }

@@ -51,6 +51,7 @@
   <Target Name="_CopySnTool" AfterTargets="ResolveProjectReferences" Condition="$([MSBuild]::IsOSPlatform('windows'))">
     <ItemGroup>
       <_SnToolFiles Include="$(Pkgsn)\sn.exe.*"/>
+      <_SnToolFiles Include="$(Pkgsn)\1033\*"/>
     </ItemGroup>
     <ItemGroup>
       <Content Include="@(_SnToolFiles)" CopyToOutputDirectory="PreserveNewest" Link="tools\sn\%(RecursiveDir)%(Filename)%(Extension)" />
