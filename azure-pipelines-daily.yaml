@@ -24,6 +24,12 @@ stages:
         inputs:
           script: "restore.cmd"
 
+      - task: UseDotNet@2
+        displayName: Install .NET 6 runtime
+        inputs:
+          packageType: runtime
+          version: 6.x
+
       - script: $(Build.SourcesDirectory)/.dotnet/dotnet.exe tool restore
         displayName: Restore dotnet tools
 
