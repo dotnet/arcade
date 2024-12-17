@@ -104,13 +104,6 @@
     </ItemGroup>
 
     <!-- Respect Artifact item repo extension point for packages -->
-    <ItemGroup>
-      <Artifact>
-        <!-- Build visibility means don't publish outside of this build in any way. -->
-        <SkipPublish Condition="'%(Artifact.SkipPublish)' == '' and '%(Artifact.ArtifactVisibility)' == 'Build'">true</SkipPublish>
-      </Artifact>
-    </ItemGroup>
-
     <ItemGroup Condition="'@(Artifact)' != ''">
       <ExistingSymbolPackages Include="@(Artifact)" Condition="'%(Artifact.SkipPublish)' != 'true' and $([System.String]::Copy('%(Filename)%(Extension)').EndsWith('.symbols.nupkg'))" />
       <PackagesToPublish Include="@(Artifact)" Condition="'%(Artifact.SkipPublish)' != 'true' and '%(Extension)' == '.nupkg'" />
@@ -220,8 +213,20 @@
 
     <!-- Add non-package Artifact items (repo extension point) as package already got added in the BeforePublish target. -->
     <ItemGroup>
-      <ItemsToPushToBlobFeed Include="@(Artifact)" Condition="'%(Artifact.SkipPublish)' != 'true' and '%(Artifact.ArtifactVisibility)' != 'Build' and '%(Extension)' != '.nupkg'" />
+      <ItemsToPushToBlobFeed Include="@(Artifact)" Condition="'%(Artifact.SkipPublish)' != 'true' and '%(Extension)' != '.nupkg'" />
     </ItemGroup>
+
+    <ItemGroup>
+      <ItemsToPushToBlobFeed>
+        <!-- Default artifact visibility is External -->
+        <Visibility Condition="'%(ItemsToPushToBlobFeed.Visibility)' == ''">External</Visibility>
+        <!-- Default to IsShipping=true -->
+        <IsShipping Condition="'%(ItemsToPushToBlobFeed.IsShipping)' == ''">true</IsShipping>
+      </ItemsToPushToBlobFeed>
+    </ItemGroup>
+
+    <Error Condition="@(ItemsToPublishToBlobFeed->AnyWithMetadataValue('Visibility','Vertical')) and '$(DotNetBuildOrchestrator)' != 'true'"
+           Text="Visibility 'Vertical' is only supported in vertical builds." />
 
     <ItemGroup>
       <ItemsToPushToBlobFeed>
@@ -230,9 +235,16 @@
       </ItemsToPushToBlobFeed>
     </ItemGroup>
 
+    <Error Condition="@(ItemsToPublishToBlobFeed->WithMetadataValue('IsShipping','true')->AnyHaveMetadataValue('Visibility','Vertical'))"
+           Text="Visibility 'Vertical' is not supported for shipping artifacts." />
+    <Error Condition="@(ItemsToPublishToBlobFeed->WithMetadataValue('IsShipping','true')->AnyHaveMetadataValue('Visibility','Internal'))"
+           Text="Visibility 'Internal' is not supported for shipping artifacts." />
+    <Error Condition="@(ItemsToPublishToBlobFeed->AnyHaveMetadataValue('Visibility','Vertical')) and '$(DotNetBuildOrchestrator)' != 'true'"
+           Text="Visibility 'Vertical' is only supported in vertical builds." />
+
     <ItemGroup>
       <ItemsToPushToBlobFeed>
-        <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.ArtifactVisibility)' != ''">%(ItemsToPushToBlobFeed.ManifestArtifactData);ArtifactVisibility=%(ItemsToPushToBlobFeed.ArtifactVisibility)</ManifestArtifactData>
+        <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.Visibility)' != ''">%(ItemsToPushToBlobFeed.ManifestArtifactData);Visibility=%(ItemsToPushToBlobFeed.Visibility)</ManifestArtifactData>
       </ItemsToPushToBlobFeed>
     </ItemGroup>
 
