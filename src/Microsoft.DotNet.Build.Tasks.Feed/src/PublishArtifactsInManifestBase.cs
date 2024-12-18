@@ -831,15 +831,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private HashSet<PackageArtifactModel> FilterPackages(HashSet<PackageArtifactModel> packages, TargetFeedConfig feedConfig)
         {
-            HashSet<PackageArtifactModel> filteredPackages = new HashSet<PackageArtifactModel>(packages);
-            // We only publish externally visible packages to any feeds.
-            filteredPackages.RemoveWhere(p => p.Visibility != ArtifactVisibility.External);
-
             return feedConfig.AssetSelection switch
             {
-                AssetSelection.All => filteredPackages,
-                AssetSelection.NonShippingOnly => filteredPackages.Where(p => p.NonShipping).ToHashSet(),
-                AssetSelection.ShippingOnly => filteredPackages.Where(p => !p.NonShipping).ToHashSet(),
+                AssetSelection.All => packages,
+                AssetSelection.NonShippingOnly => packages.Where(p => p.NonShipping).ToHashSet(),
+                AssetSelection.ShippingOnly => packages.Where(p => !p.NonShipping).ToHashSet(),
 
                 // Throw NIE here instead of logging an error because error would have already been logged in the
                 // parser for the user.
@@ -1059,15 +1055,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <returns></returns>
         private HashSet<BlobArtifactModel> FilterBlobs(HashSet<BlobArtifactModel> blobs, TargetFeedConfig feedConfig)
         {
-            HashSet<BlobArtifactModel> filteredBlobs = new HashSet<BlobArtifactModel>(blobs);
-            // We only publish externally visible packages to any feeds.
-            filteredBlobs.RemoveWhere(p => p.Visibility != ArtifactVisibility.External);
-
             return feedConfig.AssetSelection switch
             {
-                AssetSelection.All => filteredBlobs,
-                AssetSelection.NonShippingOnly => filteredBlobs.Where(p => p.NonShipping).ToHashSet(),
-                AssetSelection.ShippingOnly => filteredBlobs.Where(p => !p.NonShipping).ToHashSet(),
+                AssetSelection.All => blobs,
+                AssetSelection.NonShippingOnly => blobs.Where(p => p.NonShipping).ToHashSet(),
+                AssetSelection.ShippingOnly => blobs.Where(p => !p.NonShipping).ToHashSet(),
 
                 // Throw NYI here instead of logging an error because error would have already been logged in the
                 // parser for the user.

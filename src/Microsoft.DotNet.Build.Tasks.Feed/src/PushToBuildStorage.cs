@@ -218,6 +218,22 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             .Where(blob => blob != null);
                     }
 
+                    // Filter out any "Internal" artifacts from the asset manifest.
+                    // We don't want to publish these outside of the build, so we exclude them from the manifest but still publish them.
+                    // We obviously want to include "External" artifacts as they are the ones we want to publish externally.
+                    packageArtifacts = packageArtifacts.Where(p => p.Visibility != Visibility.Internal);
+                    blobArtifacts = blobArtifacts.Where(p => p.Visibility != Visibility.Internal);
+
+                    if (!PushToLocalStorage)
+                    {
+                        // Inside the VMR, we publish to local storage to pass artifacts between repo sub-builds.
+                        // Outside the VMR, we publish to Azure DevOps artifacts storage.
+                        // "Vertical" artifacts should only ever be available within a build on a single machine, and should never be uploaded
+                        // to Azure DevOps artifacts storage.
+                        packageArtifacts = packageArtifacts.Where(p => p.Visibility != Visibility.Vertical);
+                        blobArtifacts = blobArtifacts.Where(p => p.Visibility != Visibility.Vertical);
+                    }
+
                     PublishingInfraVersion targetPublishingVersion = PublishingInfraVersion.Latest;
 
                     if (!string.IsNullOrEmpty(PublishingVersion))
