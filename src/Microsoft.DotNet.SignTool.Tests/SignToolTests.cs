@@ -2609,7 +2609,7 @@ $@"
             StrongName.IsSigned(GetResourcePath("StrongNamedWithEcmaKey.dll")).Should().BeTrue();
         }
 
-        [Fact]
+        [WindowsOnlyFact]
         public void ValidStrongNameSignaturesValidateWithFallback()
         {
             StrongName.IsSigned_Legacy(GetResourcePath("SignedLibrary.dll"), s_snPath).Should().BeTrue();
