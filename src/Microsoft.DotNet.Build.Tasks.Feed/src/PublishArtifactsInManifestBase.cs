@@ -831,13 +831,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private HashSet<PackageArtifactModel> FilterPackages(HashSet<PackageArtifactModel> packages, TargetFeedConfig feedConfig)
         {
-            IEnumerable<PackageArtifactModel> filteredPackages = new HashSet<PackageArtifactModel>(packages);
+            HashSet<PackageArtifactModel> filteredPackages = new HashSet<PackageArtifactModel>(packages);
             // We only publish externally visible packages to any feeds.
-            filteredPackages = filteredPackages.Where(p => p.Visibility == ArtifactVisibility.External);
+            filteredPackages.RemoveWhere(p => p.Visibility != ArtifactVisibility.External);
 
             return feedConfig.AssetSelection switch
             {
-                AssetSelection.All => filteredPackages.ToHashSet(),
+                AssetSelection.All => filteredPackages,
                 AssetSelection.NonShippingOnly => filteredPackages.Where(p => p.NonShipping).ToHashSet(),
                 AssetSelection.ShippingOnly => filteredPackages.Where(p => !p.NonShipping).ToHashSet(),
 
@@ -1059,13 +1059,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <returns></returns>
         private HashSet<BlobArtifactModel> FilterBlobs(HashSet<BlobArtifactModel> blobs, TargetFeedConfig feedConfig)
         {
-            IEnumerable<BlobArtifactModel> filteredBlobs = new HashSet<BlobArtifactModel>(blobs);
-            // We only publish externally visible blobs to any feeds.
-            filteredBlobs = filteredBlobs.Where(p => p.Visibility == ArtifactVisibility.External);
+            HashSet<BlobArtifactModel> filteredBlobs = new HashSet<BlobArtifactModel>(blobs);
+            // We only publish externally visible packages to any feeds.
+            filteredBlobs.RemoveWhere(p => p.Visibility != ArtifactVisibility.External);
 
             return feedConfig.AssetSelection switch
             {
-                AssetSelection.All => filteredBlobs.ToHashSet(),
+                AssetSelection.All => filteredBlobs,
                 AssetSelection.NonShippingOnly => filteredBlobs.Where(p => p.NonShipping).ToHashSet(),
                 AssetSelection.ShippingOnly => filteredBlobs.Where(p => !p.NonShipping).ToHashSet(),
 

@@ -228,7 +228,7 @@
     <ItemGroup>
       <ItemsToPushToBlobFeed>
         <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.IsShipping)' == 'false'">%(ItemsToPushToBlobFeed.ManifestArtifactData);NonShipping=true</ManifestArtifactData>
-        <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.IsShipping)' != 'false' and '$(ProducesDotNetReleaseShippingAssets)' == 'true'">%(ItemsToPushToBlobFeed.ManifestArtifactData);DotNetReleaseShipping=true</ManifestArtifactData>
+        <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.IsShipping)' == 'true' and '$(ProducesDotNetReleaseShippingAssets)' == 'true'">%(ItemsToPushToBlobFeed.ManifestArtifactData);DotNetReleaseShipping=true</ManifestArtifactData>
       </ItemsToPushToBlobFeed>
     </ItemGroup>
 
@@ -236,7 +236,7 @@
            Text="Visibility 'Vertical' is not supported for shipping artifacts." />
     <Error Condition="'@(ItemsToPublishToBlobFeed->WithMetadataValue('IsShipping','true')->AnyHaveMetadataValue('Visibility','Internal'))' == 'true'"
            Text="Visibility 'Internal' is not supported for shipping artifacts." />
-    <Error Condition="'@(ItemsToPublishToBlobFeed->AnyHaveMetadataValue('Visibility','Vertical'))' == 'true' and '$(DotNetBuildOrchestrator)' != 'true'"
+    <Error Condition="'@(ItemsToPublishToBlobFeed->AnyHaveMetadataValue('Visibility','Vertical'))' == 'true' and '$(DotNetBuild)' != 'true'"
            Text="Visibility 'Vertical' is only supported in vertical builds." />
 
     <ItemGroup>
