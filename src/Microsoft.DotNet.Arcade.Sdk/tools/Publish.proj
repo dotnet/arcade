@@ -225,7 +225,7 @@
       </ItemsToPushToBlobFeed>
     </ItemGroup>
 
-    <Error Condition="@(ItemsToPublishToBlobFeed->AnyWithMetadataValue('Visibility','Vertical')) and '$(DotNetBuildOrchestrator)' != 'true'"
+    <Error Condition="'@(ItemsToPublishToBlobFeed->AnyHaveMetadataValue('Visibility','Vertical'))' == 'true' and '$(DotNetBuildOrchestrator)' != 'true'"
            Text="Visibility 'Vertical' is only supported in vertical builds." />
 
     <ItemGroup>
@@ -235,11 +235,11 @@
       </ItemsToPushToBlobFeed>
     </ItemGroup>
 
-    <Error Condition="@(ItemsToPublishToBlobFeed->WithMetadataValue('IsShipping','true')->AnyHaveMetadataValue('Visibility','Vertical'))"
+    <Error Condition="'@(ItemsToPublishToBlobFeed->WithMetadataValue('IsShipping','true')->AnyHaveMetadataValue('Visibility','Vertical'))' == 'true'"
            Text="Visibility 'Vertical' is not supported for shipping artifacts." />
-    <Error Condition="@(ItemsToPublishToBlobFeed->WithMetadataValue('IsShipping','true')->AnyHaveMetadataValue('Visibility','Internal'))"
+    <Error Condition="'@(ItemsToPublishToBlobFeed->WithMetadataValue('IsShipping','true')->AnyHaveMetadataValue('Visibility','Internal'))' == 'true'"
            Text="Visibility 'Internal' is not supported for shipping artifacts." />
-    <Error Condition="@(ItemsToPublishToBlobFeed->AnyHaveMetadataValue('Visibility','Vertical')) and '$(DotNetBuildOrchestrator)' != 'true'"
+    <Error Condition="'@(ItemsToPublishToBlobFeed->AnyHaveMetadataValue('Visibility','Vertical'))' == 'true' and '$(DotNetBuildOrchestrator)' != 'true'"
            Text="Visibility 'Vertical' is only supported in vertical builds." />
 
     <ItemGroup>
