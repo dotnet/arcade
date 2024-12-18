@@ -857,7 +857,7 @@ namespace Microsoft.DotNet.SignTool
         }
 
         /// <summary>
-        /// Helper for converting a UInt32 exponent to bytes.
+        /// Convert a UInt32 into the minimal number of bytes (in big-endian order) to represent the value.
         /// Copied from https://github.com/dotnet/corefx/blob/5fe5f9aae7b2987adc7082f90712b265bee5eefc/src/System.Security.Cryptography.Csp/src/System/Security/Cryptography/CapiHelper.Shared.cs
         /// </summary>
         private static byte[] ExponentAsBytes(uint exponent)
