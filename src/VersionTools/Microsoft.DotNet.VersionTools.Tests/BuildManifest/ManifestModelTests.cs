@@ -585,7 +585,7 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
                 }
             };
 
-            Assert.Equal((ArtifactVisibility)Enum.Parse(typeof(ArtifactVisibility), visibility), packageArtifact.Visibility);
+            Assert.Equal(visibility is "" ? ArtifactVisibility.External : (ArtifactVisibility)Enum.Parse(typeof(ArtifactVisibility), visibility), packageArtifact.Visibility);
         }
 
         [Fact]
@@ -691,7 +691,7 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
                 }
             };
 
-            Assert.Equal((ArtifactVisibility)Enum.Parse(typeof(ArtifactVisibility), visibility), blobArtifact.Visibility);
+            Assert.Equal(visibility is "" ? ArtifactVisibility.External : (ArtifactVisibility)Enum.Parse(typeof(ArtifactVisibility), visibility), blobArtifact.Visibility);
         }
 
         private BuildModel CreatePackageOnlyBuildManifestModel()
