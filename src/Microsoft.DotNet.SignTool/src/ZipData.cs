@@ -447,8 +447,8 @@ namespace Microsoft.DotNet.SignTool
             string controlArchive = Path.Combine(workingDir, relativePath);
             File.WriteAllBytes(controlArchive, ((MemoryStream)content).ToArray());
 
-            ExtractTarballContents(dataArchive, dataLayout, skipDirectories: true, skipSymlinks: true);
-            ExtractTarballContents(controlArchive, controlLayout, skipDirectories: true, skipSymlinks: true);
+            ExtractTarballContents(dataArchive, dataLayout);
+            ExtractTarballContents(controlArchive, controlLayout);
 
             string sumsFile = Path.Combine(workingDir, "md5sums");
             CreateMD5SumsFile createMD5SumsFileTask = new()
@@ -488,11 +488,11 @@ namespace Microsoft.DotNet.SignTool
             return controlArchive;
         }
 
-        private void ExtractTarballContents(string file, string destination, bool skipDirectories = false, bool skipSymlinks = false)
+        private static void ExtractTarballContents(string file, string destination, bool skipSymlinks = true)
         {
             foreach (TarEntry tar in ReadTarGZipEntries(file))
             {
-                if ((skipDirectories && tar.EntryType == TarEntryType.Directory) ||
+                if (tar.EntryType == TarEntryType.Directory ||
                     (skipSymlinks && tar.EntryType == TarEntryType.SymbolicLink))
                 {
                     continue;
