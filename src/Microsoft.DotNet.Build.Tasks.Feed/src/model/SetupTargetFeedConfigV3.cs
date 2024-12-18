@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         
         private string StableSymbolsFeed { get; set; }
 
-        private SymbolTargetType SymbolTargetType { get; }
+        private SymbolPublishVisibility SymbolServerVisibility { get; }
 
         private ImmutableList<string> FilesToExclude { get; }
 
@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             ITaskItem[] feedOverrides,
             List<string> latestLinkShortUrlPrefixes,
             IBuildEngine buildEngine,
-            SymbolTargetType symbolTargetType,
+            SymbolPublishVisibility symbolPublishVisibility,
             string stablePackagesFeed = null,
             string stableSymbolsFeed = null,
             ImmutableList<string> filesToExclude = null,
@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             BuildEngine = buildEngine;
             StableSymbolsFeed = stableSymbolsFeed;
             StablePackagesFeed = stablePackagesFeed;
-            SymbolTargetType = symbolTargetType;
+            SymbolServerVisibility = symbolPublishVisibility;
             FilesToExclude = filesToExclude ?? ImmutableList<string>.Empty;
             Flatten = flatten;
             FeedKeys = feedKeys.ToImmutableDictionary(i => i.ItemSpec, i => i.GetMetadata("Key"));
@@ -100,7 +100,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     AzureDevOpsFeedsKey,
                     LatestLinkShortUrlPrefixes,
                     assetSelection: AssetSelection.ShippingOnly,
-                    symbolTargetType: SymbolTargetType,
+                    symbolPublishVisibility: SymbolServerVisibility,
                     isolated: true,
                     @internal: IsInternalBuild,
                     filenamesToExclude: FilesToExclude,
@@ -112,7 +112,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
                     LatestLinkShortUrlPrefixes,
-                    symbolTargetType: SymbolTargetType,
+                    symbolPublishVisibility: SymbolServerVisibility,
                     isolated: true,
                     @internal: IsInternalBuild,
                     filenamesToExclude: FilesToExclude,
@@ -174,7 +174,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         false,
                         IsInternalBuild,
                         false,
-                        SymbolTargetType,
+                        SymbolServerVisibility,
                         filenamesToExclude: FilesToExclude,
                         flatten: Flatten
                     );

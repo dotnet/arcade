@@ -41,7 +41,8 @@
     <StrongNameSignInfo Include="SilverlightCert121" PublicKeyToken="7cec85d7bea7798e" CertificateName="Microsoft400" />
     <StrongNameSignInfo Include="StrongName" PublicKeyToken="b77a5c561934e089" CertificateName="Microsoft400" />
     <StrongNameSignInfo Include="StrongName" PublicKeyToken="b03f5f7f11d50a3a" CertificateName="Microsoft400" />
-    <StrongNameSignInfo Include="$(MSBuildThisFileDirectory)snk\Open.snk" PublicKeyToken="cc7b13ffcd2ddd51" CertificateName="Microsoft400" />
+    <!-- Do not include specific key files if full assembly signing is not supported, as they will not be usable when we sign. -->
+    <StrongNameSignInfo Include="$(MSBuildThisFileDirectory)snk\Open.snk" PublicKeyToken="cc7b13ffcd2ddd51" CertificateName="Microsoft400" Condition="'$(FullAssemblySigningSupported)' != 'false'" />
 
     <!--
       Map of file extensions to default certificate name. Files with these extensions are
@@ -49,6 +50,7 @@
       a public key token.
       The certificate can be overriden using the StrongNameSignInfo or the FileSignInfo item group.
     -->
+    <FileExtensionSignInfo Include=".deb" CertificateName="LinuxSign" />
     <FileExtensionSignInfo Include=".jar" CertificateName="MicrosoftJARSHA2" />
     <FileExtensionSignInfo Include=".js;.ps1;.psd1;.psm1;.psc1;.py" CertificateName="Microsoft400" />
     <FileExtensionSignInfo Include=".dll;.exe;.mibc" CertificateName="Microsoft400" />
@@ -56,6 +58,7 @@
     <FileExtensionSignInfo Include=".vsix" CertificateName="VsixSHA2" />
     <FileExtensionSignInfo Include=".zip" CertificateName="None" />
     <FileExtensionSignInfo Include=".tgz" CertificateName="None" />
+    <FileExtensionSignInfo Include=".tar.gz" CertificateName="None" />
   </ItemGroup>
 
   <!-- The name of the .NET specific certificate, which is a general replacement for Microsoft400

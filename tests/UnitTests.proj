@@ -3,8 +3,8 @@
   <!-- Using locally built version of the helix sdk, normal projects replace the below Import and PropertyGroup with the SDK import above-->
   <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.props"/>
   <PropertyGroup>
-    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(Configuration)/net9.0/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
-    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(Configuration)/net472/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
+    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(Configuration)/$(NetToolCurrent)/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
+    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(Configuration)/$(NetFrameworkToolCurrent)/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -61,7 +61,7 @@
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
     <HelixTargetQueue Include="(AlmaLinux.8.Amd64)Ubuntu.2204.Amd64@mcr.microsoft.com/dotnet-buildtools/prereqs:almalinux-8-helix-amd64"/>
     <HelixTargetQueue Include="Windows.10.Amd64"/>
-    <HelixTargetQueue Include="(Debian.11.Amd64)ubuntu.2204.amd64@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-11-helix-amd64"/>
+    <HelixTargetQueue Include="(Debian.12.Amd64)ubuntu.2204.amd64@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-12-helix-amd64"/>
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
@@ -73,7 +73,7 @@
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
     <HelixTargetQueue Include="(AlmaLinux.8.Amd64.Open)Ubuntu.2204.Amd64.Open@mcr.microsoft.com/dotnet-buildtools/prereqs:almalinux-8-helix-amd64"/>
     <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
-    <HelixTargetQueue Include="(Debian.11.Amd64.Open)ubuntu.2204.amd64.open@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-11-helix-amd64"/>
+    <HelixTargetQueue Include="(Debian.12.Amd64.Open)ubuntu.2204.amd64.open@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-12-helix-amd64"/>
   </ItemGroup>
 
   <PropertyGroup Condition="!$(HelixTargetQueue.StartsWith('Windows'))">
@@ -116,9 +116,10 @@
   <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.targets"/>
 
   <ItemGroup>
-    <HelixWorkItem Condition="$(HelixTargetQueue.StartsWith('Windows'))" Include="AspNetCoreTest">
+    <!-- TODO: Re-enable aspnetcore version branding test: https://github.com/dotnet/arcade/issues/15249 -->
+    <!-- <HelixWorkItem Condition="$(HelixTargetQueue.StartsWith('Windows'))" Include="AspNetCoreTest">
       <Command>powershell %HELIX_WORKITEM_PAYLOAD%\aspnet-versioncheck.ps1 -aspNetCoreVersion $(AspNetCoreRuntimeVersion)</Command>
       <PayloadDirectory>$(MSBuildThisFileDirectory)\AspNetVersionCheck</PayloadDirectory>
-    </HelixWorkItem>
+    </HelixWorkItem> -->
   </ItemGroup>
 </Project>

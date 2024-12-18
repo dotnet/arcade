@@ -138,16 +138,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string PdbArtifactsBasePath {get; set;}
 
         /// <summary>
-        /// Token to publish to Msdl symbol server
-        /// </summary>
-        public string MsdlToken {get; set;}
-
-        /// <summary>
-        /// Token to publish to SymWeb symbol server 
-        /// </summary>
-        public string SymWebToken {get; set;}
-
-        /// <summary>
         /// Files to exclude from symbol publishing
         /// </summary>
         public string SymbolPublishingExclusionsFile {get; set;}
@@ -199,6 +189,26 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string AzureProject { get; set; }
 
         public string AzureDevOpsOrg { get; set; }
+
+        /// <summary>
+        /// This is the DevOps Org that we upload our symbols to prior to requesting a promotion to the
+        /// internal and public symbol servers.
+        /// </summary>
+        public string TempSymbolsAzureDevOpsOrg { get; set; }
+
+        /// <summary>
+        /// This token must have symbol_manage access to the temporary staging DevOps Org that will be used.
+        /// </summary>
+        public string TempSymbolsAzureDevOpsOrgToken { get; set; }
+
+        /// <summary>
+        /// The project to use when requesting symbol promotion from temporary tenant to public and internal
+        /// symbol servers using the symbolrequest service. This determines:
+        /// - What identities are allowed to request promotion
+        /// - Exclusive symbol ownership for public symbol server.
+        /// - Symbol stripping policy for public symbol server.
+        /// </summary>
+        public string SymbolRequestProject { get; set; }
 
         /// <summary>
         /// If true, uses Azdo Api to download artifacts and symbols files one file at a time during publishing process.
@@ -278,7 +288,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         IMaestroApi client = MaestroApiFactory.GetAuthenticated(
                             MaestroApiEndpoint,
                             BuildAssetRegistryToken,
-                            MaestroApiFederatedToken,
                             MaestroManagedIdentityId,
                             !AllowInteractiveAuthentication);
                         Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
@@ -351,9 +360,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 SkipSafetyChecks = this.SkipSafetyChecks,
                 AkaMSClientId = this.AkaMSClientId,
                 AkaMSClientCertificate = !string.IsNullOrEmpty(AkaMSClientCertificate) ?
-#pragma warning disable SYSLIB0057 // https://github.com/dotnet/arcade/issues/14936
+#if NET9_0_OR_GREATER
+                    X509CertificateLoader.LoadPkcs12(Convert.FromBase64String(File.ReadAllText(AkaMSClientCertificate)), password: null) : null,
+#else
                     new X509Certificate2(Convert.FromBase64String(File.ReadAllText(AkaMSClientCertificate))) : null,
-#pragma warning restore
+#endif
                 AkaMSCreatedBy = this.AkaMSCreatedBy,
                 AkaMSGroupOwner = this.AkaMSGroupOwner,
                 AkaMsOwners = this.AkaMsOwners,
@@ -364,8 +375,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 FeedOverrides = this.FeedOverrides,
                 AllowFeedOverrides = this.AllowFeedOverrides,
                 PdbArtifactsBasePath = this.PdbArtifactsBasePath,
-                SymWebToken = this.SymWebToken,
-                MsdlToken = this.MsdlToken,
                 SymbolPublishingExclusionsFile = this.SymbolPublishingExclusionsFile,
                 PublishSpecialClrFiles = this.PublishSpecialClrFiles,
                 BuildQuality = this.BuildQuality,
@@ -374,6 +383,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 BuildId = this.BuildId,
                 AzureProject = this.AzureProject,
                 AzureDevOpsOrg = this.AzureDevOpsOrg,
+                TempSymbolsAzureDevOpsOrg = this.TempSymbolsAzureDevOpsOrg,
+                TempSymbolsAzureDevOpsOrgToken = this.TempSymbolsAzureDevOpsOrgToken,
+                SymbolRequestProject = this.SymbolRequestProject,
                 UseStreamingPublishing = this.UseStreamingPublishing,
                 StreamingPublishingMaxClients = this.StreamingPublishingMaxClients,
                 NonStreamingPublishingMaxClients = this.NonStreamingPublishingMaxClients

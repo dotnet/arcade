@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             };
         }
 
-        private const SymbolTargetType symbolTargetType = SymbolTargetType.Msdl;
+        private const SymbolPublishVisibility symbolVisibility = SymbolPublishVisibility.Internal;
 
         private readonly ITestOutputHelper Output;
 
@@ -100,7 +100,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isolated: true,
                     @internal: isInternalBuild,
                     allowOverwrite: false,
-                    symbolTargetType: symbolTargetType,
+                    symbolPublishVisibility: symbolVisibility,
                     filenamesToExclude: FilesToExclude));
 
             expectedFeeds.Add(
@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isolated: true,
                     @internal: isInternalBuild,
                     allowOverwrite: false,
-                    symbolTargetType: symbolTargetType,
+                    symbolPublishVisibility: symbolVisibility,
                     filenamesToExclude: FilesToExclude));
 
             expectedFeeds.Add(
@@ -128,7 +128,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isolated: false,
                     @internal: isInternalBuild,
                     allowOverwrite: false,
-                    symbolTargetType: symbolTargetType,
+                    symbolPublishVisibility: symbolVisibility,
                     filenamesToExclude: FilesToExclude));
 
             if (publishInstallersAndChecksums)
@@ -150,7 +150,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                             isolated: false,
                             @internal: isInternalBuild,
                             allowOverwrite: false,
-                            symbolTargetType: symbolTargetType,
+                            symbolPublishVisibility: symbolVisibility,
                             filenamesToExclude: FilesToExclude));
                 }
                 expectedFeeds.Add(
@@ -164,7 +164,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         isolated: false,
                         @internal: isInternalBuild,
                         allowOverwrite: false,
-                        symbolTargetType: symbolTargetType,
+                        symbolPublishVisibility: symbolVisibility,
                         filenamesToExclude: FilesToExclude));
             }
 
@@ -182,7 +182,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     Array.Empty<ITaskItem>(),
                     new List<string>() { $"{LatestLinkShortUrlPrefix}/{BuildQuality}" },
                     buildEngine,
-                    symbolTargetType,
+                    symbolVisibility,
                     StablePackageFeed,
                     StableSymbolsFeed,
                     filesToExclude: FilesToExclude
@@ -210,7 +210,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 false,
                 true,
                 false,
-                symbolTargetType: symbolTargetType,
+                symbolPublishVisibility: symbolVisibility,
                 filenamesToExclude: FilesToExclude));
 
             expectedFeeds.Add(new TargetFeedConfig(
@@ -223,7 +223,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 false,
                 true,
                 false,
-                symbolTargetType: symbolTargetType,
+                symbolPublishVisibility: symbolVisibility,
                 filenamesToExclude: FilesToExclude));
 
             if (publishInstallersAndChecksums)
@@ -241,7 +241,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                             isolated: false,
                             @internal: true,
                             allowOverwrite: false,
-                            symbolTargetType: symbolTargetType,
+                            symbolPublishVisibility: symbolVisibility,
                             filenamesToExclude: FilesToExclude));
                 }
 
@@ -256,7 +256,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         isolated: false,
                         @internal: true,
                         allowOverwrite: false,
-                        symbolTargetType: symbolTargetType,
+                        symbolPublishVisibility: symbolVisibility,
                         filenamesToExclude: FilesToExclude));
 
             }
@@ -273,7 +273,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         isolated: false,
                         @internal: true,
                         allowOverwrite: false,
-                        symbolTargetType: symbolTargetType,
+                        symbolPublishVisibility: symbolVisibility,
                         filenamesToExclude: FilesToExclude));
             }
 
@@ -290,7 +290,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     Array.Empty<ITaskItem>(),
                     latestLinkShortUrlPrefixes: new List<string>() { $"{LatestLinkShortUrlPrefix}/{BuildQuality}" },
                     buildEngine: buildEngine,
-                    symbolTargetType,
+                    symbolVisibility,
                     filesToExclude: FilesToExclude
                 );
 
@@ -317,7 +317,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isolated: false,
                     @internal: false,
                     allowOverwrite: false,
-                    symbolTargetType: symbolTargetType,
+                    symbolPublishVisibility: symbolVisibility,
                     filenamesToExclude: FilesToExclude));
 
             expectedFeeds.Add(
@@ -331,7 +331,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isolated: false,
                     @internal: false,
                     allowOverwrite: false,
-                    symbolTargetType: symbolTargetType,
+                    symbolPublishVisibility: symbolVisibility,
                     filenamesToExclude: FilesToExclude));
 
             if (publishInstallersAndChecksums)
@@ -349,7 +349,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                             isolated: false,
                             @internal: false,
                             allowOverwrite: false,
-                            symbolTargetType: symbolTargetType,
+                            symbolPublishVisibility: symbolVisibility,
                             filenamesToExclude: FilesToExclude));
                 }
 
@@ -364,7 +364,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         isolated: false,
                         @internal: false,
                         allowOverwrite: false,
-                        symbolTargetType: symbolTargetType,
+                        symbolPublishVisibility: symbolVisibility,
                         filenamesToExclude: FilesToExclude));
             }
             else
@@ -380,7 +380,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         isolated: false,
                         @internal: false,
                         allowOverwrite: false,
-                        symbolTargetType: symbolTargetType,
+                        symbolPublishVisibility: symbolVisibility,
                         filenamesToExclude: FilesToExclude));
             }
 
@@ -397,7 +397,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     Array.Empty<ITaskItem>(),
                     latestLinkShortUrlPrefixes: new List<string>() { $"{LatestLinkShortUrlPrefix}/{BuildQuality}" },
                     buildEngine: buildEngine,
-                    symbolTargetType,
+                    symbolVisibility,
                     filesToExclude: FilesToExclude
                 );
 

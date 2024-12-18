@@ -23,6 +23,8 @@
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.signtool\$(MicrosoftDotNetSignToolVersion)\build\Microsoft.DotNet.SignTool.props" />
 
+  <!-- Required to determine whether full assembly strong name signing is supported, which may affect selection of some certificates. -->
+  <Import Project="StrongName.props" />
   <Import Project="Sign.props" />
 
   <!-- Import the wix props to get the install path -->
@@ -44,13 +46,20 @@
 
     <PropertyGroup>
       <_DryRun>true</_DryRun>
-      <_DryRun Condition="'$(OfficialBuild)' == 'true'">false</_DryRun>
+      <!-- Allow an official build to force dry run signing. This allows the VMR's build to test signing in CI without changing versions. -->
+      <_DryRun Condition="'$(OfficialBuild)' == 'true' and '$(ForceDryRunSigning)' != 'true'">false</_DryRun>
 
       <_TestSign>false</_TestSign>
       <_TestSign Condition="'$(DotNetSignType)' == 'test'">true</_TestSign>
 
       <_DesktopMSBuildRequired>false</_DesktopMSBuildRequired>
-      <_DesktopMSBuildRequired Condition="'$(_DryRun)' != 'true' and '$(MSBuildRuntimeType)' == 'Core'">true</_DesktopMSBuildRequired>
+      <_DesktopMSBuildRequired Condition="'$(_DryRun)' != 'true' and '$(MSBuildRuntimeType)' == 'Core'  and '$(OS)' == 'Windows_NT'">true</_DesktopMSBuildRequired>
+
+      <_DotNetCoreRequired>false</_DotNetCoreRequired>
+      <_DotNetCoreRequired Condition="'$(_DryRun)' != 'true' and '$(OS)' != 'Windows_NT'">true</_DotNetCoreRequired>
+
+      <!-- SN is only available on Windows -->
+      <SNBinaryPath Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(NuGetPackageRoot)sn\$(SNVersion)\sn.exe</SNBinaryPath>
     </PropertyGroup>
 
     <Error Condition="'$(AllowEmptySignList)' != 'true' AND '@(ItemsToSign)' == ''" 
@@ -69,6 +78,11 @@
       <_DesktopMSBuildPath Condition="!Exists('$(_DesktopMSBuildPath)')">$(_VSInstallDir)\MSBuild\15.0\Bin\msbuild.exe</_DesktopMSBuildPath>
     </PropertyGroup>
 
+    <PropertyGroup Condition="$(_DotNetCoreRequired)">
+      <_DotNetCorePath>$(DotNetTool)</_DotNetCorePath>
+    </PropertyGroup>
+
+    <!-- Keep TarToolPath TFM in sync with TarTool project TFM. -->
     <Microsoft.DotNet.SignTool.SignToolTask
         DryRun="$(_DryRun)"
         TestSign="$(_TestSign)"
@@ -82,10 +96,11 @@
         TempDir="$(ArtifactsTmpDir)"
         LogDir="$(ArtifactsLogDir)"
         MSBuildPath="$(_DesktopMSBuildPath)"
-        SNBinaryPath="$(NuGetPackageRoot)sn\$(SNVersion)\sn.exe"
+        DotNetPath="$(_DotNetCorePath)"
+        SNBinaryPath="$(SNBinaryPath)"
         MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"
         WixToolsPath="$(WixInstallPath)"
-        TarToolPath="$(NuGetPackageRoot)microsoft.dotnet.tar\$(MicrosoftDotNetSignToolVersion)\tools\net9.0\any\Microsoft.Dotnet.Tar.dll"
+        TarToolPath="$(NuGetPackageRoot)microsoft.dotnet.tar\$(MicrosoftDotNetSignToolVersion)\tools\net10.0\any\Microsoft.Dotnet.Tar.dll"
         RepackParallelism="$(SignToolRepackParallelism)"
         MaximumParallelFileSize="$(SignToolRepackMaximumParallelFileSize)" />
   </Target>

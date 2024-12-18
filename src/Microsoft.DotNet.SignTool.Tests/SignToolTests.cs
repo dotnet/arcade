@@ -31,12 +31,14 @@ namespace Microsoft.DotNet.SignTool.Tests
             {".psm1",  new List<SignInfo>{ new SignInfo("PSMCertificate") } },
             {".psc1",   new List<SignInfo>{ new SignInfo("PSCCertificate") } },
             {".dylib", new List<SignInfo>{ new SignInfo("DylibCertificate") } },
+            {".deb", new List<SignInfo>{ new SignInfo("LinuxSign") } },
             {".dll",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             {".exe",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             {".msi",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             {".vsix",  new List<SignInfo>{ new SignInfo("VsixSHA2") } },
             {".zip",  new List<SignInfo>{ SignInfo.Ignore } },
             {".tgz",  new List<SignInfo>{ SignInfo.Ignore } },
+            {".py",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             {".nupkg",  new List<SignInfo>{ new SignInfo("NuGet") } },
             {".symbols.nupkg",  new List<SignInfo>{ SignInfo.Ignore } },
         };
@@ -51,6 +53,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             { ".psm1", new List<SignInfo>{ new SignInfo("PSMCertificate", collisionPriorityId: "123") } },
             { ".psc1", new List<SignInfo>{ new SignInfo("PSCCertificate", collisionPriorityId: "123") } },
             { ".dylib", new List<SignInfo>{ new SignInfo("DylibCertificate", collisionPriorityId: "123") } },
+            { ".deb", new List<SignInfo>{ new SignInfo("LinuxSign", collisionPriorityId: "123") } },
             { ".dll", new List<SignInfo>
                 { 
                     new SignInfo("Microsoft400", collisionPriorityId: "123"), // lgtm [cs/common-default-passwords] Safe, these are certificate names
@@ -95,6 +98,10 @@ namespace Microsoft.DotNet.SignTool.Tests
             }),
             new TaskItem(".dylib", new Dictionary<string, string> {
                 { "CertificateName", "DylibCertificate" },
+                { SignToolConstants.CollisionPriorityId, "123" }
+            }),
+            new TaskItem(".deb", new Dictionary<string, string> {
+                { "CertificateName", "LinuxSign" },
                 { SignToolConstants.CollisionPriorityId, "123" }
             }),
             new TaskItem(".dll", new Dictionary<string, string> {
@@ -231,7 +238,9 @@ namespace Microsoft.DotNet.SignTool.Tests
             ".esd",
 
             ".py",
-            ".pyd"
+            ".pyd",
+
+            ".deb",
         };
 
         public static IEnumerable<object[]> GetSignableExtensions()
@@ -311,10 +320,10 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             var task = new SignToolTask { BuildEngine = buildEngine };
 
-            // The path to MSBuild will always be null in these tests, this will force
+            // The path to MSBuild and DotNet will always be null in these tests, this will force
             // the signing logic to call our FakeBuildEngine.BuildProjectFile with a path
             // to the XML that store the content of the would be Microbuild sign request.
-            var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, _tmpDir, enclosingDir: "", "", wixToolsPath: wixToolsPath, tarToolPath: s_tarToolPath);
+            var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, dotnetPath: null, _tmpDir, enclosingDir: "", "", wixToolsPath: wixToolsPath, tarToolPath: s_tarToolPath);
 
             var signTool = new FakeSignTool(signToolArgs, task.Log);
             var configuration = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, tarToolPath: s_tarToolPath, task.Log);
@@ -401,6 +410,7 @@ namespace Microsoft.DotNet.SignTool.Tests
                 DryRun = false,
                 TestSign = true,
                 MSBuildPath = CreateTestResource("msbuild.fake"),
+                DotNetPath = CreateTestResource("dotnet.fake"),
                 SNBinaryPath = CreateTestResource("fake.sn.exe")
             };
 
@@ -420,6 +430,7 @@ namespace Microsoft.DotNet.SignTool.Tests
                 DryRun = false,
                 TestSign = true,
                 MSBuildPath = CreateTestResource("msbuild.fake"),
+                DotNetPath = CreateTestResource("dotnet.fake"),
                 DoStrongNameCheck = false,
                 SNBinaryPath = null,
             };
@@ -1205,6 +1216,36 @@ $@"
         }
 
         [Fact]
+        public void CheckDebSigning()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("test.deb"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'test.deb' Certificate='LinuxSign'"
+            });
+
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+$@"
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.deb"))}"">
+  <Authenticode>LinuxSign</Authenticode>
+</FilesToSign>
+"
+            });
+        }
+
+        [Fact]
         public void CheckPowershellSigning()
         {
             // List of files to be considered for signing
@@ -1381,6 +1422,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
                 TempDir = "TempDir",
                 DryRun = true,
                 MSBuildPath = CreateTestResource("msbuild.fake"),
+                DotNetPath = null,
                 DoStrongNameCheck = false,
                 SNBinaryPath = null,
                 WixToolsPath = badPath
@@ -1727,6 +1769,24 @@ $@"
         }
 
         [Fact]
+        public void ZeroLengthFilesShouldNotBeSigned()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("ZeroLengthPythonFile.py"))
+            };
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
+            {
+                { new ExplicitCertificateKey("ZeroLengthPythonFile.py"), "3PartySHA2" }
+            };
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, Array.Empty<string>());
+        }
+
+        [Fact]
         public void CheckFileExtensionSignInfo()
         {
             // List of files to be considered for signing
@@ -1817,6 +1877,19 @@ $@"
             {
                 { "CertificateName", "JSCertificate" },
                 { "CollisionPriorityId", "456" }
+            }));
+
+            runTask(fileExtensionSignInfo: fileExtensionSignInfo.ToArray()).Should().BeTrue();
+        }
+
+        [Fact]
+        public void ValidateParseFileExtensionEntriesForTarGzExtensionPasses()
+        {
+            var fileExtensionSignInfo = new List<ITaskItem>();
+
+            fileExtensionSignInfo.Add(new TaskItem(".tar.gz", new Dictionary<string, string>
+            {
+                { "CertificateName", "None" }
             }));
 
             runTask(fileExtensionSignInfo: fileExtensionSignInfo.ToArray()).Should().BeTrue();
@@ -1933,6 +2006,7 @@ $@"
                 TempDir = "TempDir",
                 DryRun = true,
                 MSBuildPath = CreateTestResource("msbuild.fake"),
+                DotNetPath = CreateTestResource("dotnet.fake"),
                 MicroBuildCorePath = "MicroBuildCorePath",
                 DoStrongNameCheck = false,
                 SNBinaryPath = null,
@@ -1967,6 +2041,7 @@ $@"
                 TempDir = "TempDir",
                 DryRun = true,
                 MSBuildPath = CreateTestResource("msbuild.fake"),
+                DotNetPath = CreateTestResource("dotnet.fake"),
                 DoStrongNameCheck = false,
                 SNBinaryPath = null,
             };

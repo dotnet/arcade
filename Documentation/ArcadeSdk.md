@@ -219,7 +219,31 @@ optimizations by setting 'RestoreUsingNuGetTargets' to false.
 </Project>
 ```
 
-CoreFx does not use the default build projects in its repo - [example](https://github.com/dotnet/corefx/blob/66392f577c7852092f668876822b6385bcafbd44/eng/Build.props).
+#### Example: batching projects together for more complex build ordering
+
+Arcade builds all passed-in projects in parallel by default. While it's possible to set the `BuildInParallel` property or item metadata, more complex build order requirements might be necessary. When projects should be built in batches, the `BuildStep` item metadata can be used to express that.
+
+Below, the build order is the following: `native1 -> native2 -> java & managed (parallel) -> installer1 & installer2 (parallel) -> cleanup -> optimization.
+```xml
+<!-- eng/Build.props -->
+<Project>
+  <PropertyGroup>
+    <RestoreUsingNuGetTargets>false</RestoreUsingNuGetTargets>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectToBuild Include="src\native1.proj" BuildStep="native" BuildInParallel="false" />
+    <ProjectToBuild Include="src\native2.proj" BuildStep="native" BuildInParallel="false" />
+    <ProjectToBuild Include="src\java.proj" BuildStep="managed" />
+    <ProjectToBuild Include="src\managed.proj" BuildStep="managed" />
+    <ProjectToBuild Include="src\installer1.proj" BuildStep="installers" />
+    <ProjectToBuild Include="src\installer2.proj" BuildStep="installers" />
+    <ProjectToBuild Include="src\cleanup.proj" BuildStep="finish" BuildInParallel="false" />
+    <ProjectToBuild Include="src\optimization.proj" BuildStep="finish" BuildInParallel="false" />
+  </ItemGroup>
+</Project>
+```
+
+Runtime does not use the default build projects in its repo - [example](https://github.com/dotnet/runtime/blob/1e6311a9795556149b5a051c5f5b2159d5a9765c/eng/Build.props#L7).
 
 ### /eng/Versions.props: A single file listing component versions and used tools
 
@@ -1060,9 +1084,6 @@ If set to `true` the GetResourceString method is not included in the generated c
 
 #### `FlagNetStandard1XDependencies` (bool)
 If set to `true` the `FlagNetStandard1xDependencies` target validates that the dependency graph doesn't contain any netstandard1.x packages.
-
-#### `_OverrideArcadeInitializeBuildToolFramework` (string)
-If this environment variable is set, the value will be used to override the default Build Tools Framework version.
 
 <!-- Begin Generated Content: Doc Feedback -->
 <sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CArcadeSdk.md)](https://helix.dot.net/f/p/5?p=Documentation%5CArcadeSdk.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CArcadeSdk.md)</sub>

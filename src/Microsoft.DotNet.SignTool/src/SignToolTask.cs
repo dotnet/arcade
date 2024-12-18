@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Resources;
+using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 
 namespace Microsoft.DotNet.SignTool
@@ -126,9 +127,14 @@ namespace Microsoft.DotNet.SignTool
         public ITaskItem[] CertificatesSignInfo { get; set; }
 
         /// <summary>
-        /// Path to msbuild.exe. Required if <see cref="DryRun"/> is <c>false</c>.
+        /// Path to msbuild.exe. Required if <see cref="DryRun"/> is <c>false</c>, OS is <c>Windows_NT</c>, and project is using .NET Core.
         /// </summary>
         public string MSBuildPath { get; set; }
+
+        /// <summary>
+        /// Path to dotnet executable. Required if <see cref="DryRun"/> is <c>false</c> and OS is not <c>Windows_NT</c>.
+        /// </summary>
+        public string DotNetPath { get; set; }
 
         /// <summary>
         /// Path to sn.exe. Required if strong name signing files locally is needed.
@@ -180,12 +186,6 @@ namespace Microsoft.DotNet.SignTool
 
         public void ExecuteImpl()
         {
-            if (!DryRun && typeof(object).Assembly.GetName().Name != "mscorlib" && !File.Exists(MSBuildPath))
-            {
-                Log.LogError($"MSBuild was not found at this path: '{MSBuildPath}'.");
-                return;
-            }
-
             if (!AllowEmptySignList && ItemsToSign.Count() == 0)
             {
                 Log.LogWarning(subcategory: null,
@@ -201,6 +201,20 @@ namespace Microsoft.DotNet.SignTool
 
             if (!DryRun)
             {
+                bool isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+                if (isWindows && typeof(object).Assembly.GetName().Name != "mscorlib" && !File.Exists(MSBuildPath))
+                {
+                    // For Windows, desktop msbuild is required if running on .NET Core.
+                    Log.LogError($"MSBuild was not found at this path: '{MSBuildPath}'.");
+                    return;
+                }
+                else if (!isWindows && !File.Exists(DotNetPath))
+                {
+                    // For Mac and Linux, dotnet is required.
+                    Log.LogError($"DotNet was not found at this path: '{DotNetPath}'.");
+                    return;
+                }
+
                 if(!Path.IsPathRooted(TempDir))
                 {
                     Log.LogWarning($"TempDir ('{TempDir}' is not rooted, this can cause unexpected behavior in signtool.  Please provide a fully qualified 'TempDir' path.");
@@ -208,17 +222,6 @@ namespace Microsoft.DotNet.SignTool
                 var isValidSNPath = !string.IsNullOrEmpty(SNBinaryPath) && File.Exists(SNBinaryPath) && SNBinaryPath.EndsWith("sn.exe");
 
                 if (DoStrongNameCheck && !isValidSNPath)
-                {
-                    Log.LogError($"An incorrect full path to 'sn.exe' was specified: {SNBinaryPath}");
-                    return;
-                }
-
-                var strongNameLocally = StrongNameSignInfo != null
-                    && StrongNameSignInfo
-                        .Where(ti => !string.IsNullOrEmpty(ti.ItemSpec) && ti.ItemSpec.EndsWith(".snk", StringComparison.OrdinalIgnoreCase))
-                        .Any();
-
-                if (!isValidSNPath && strongNameLocally)
                 {
                     Log.LogError($"An incorrect full path to 'sn.exe' was specified: {SNBinaryPath}");
                     return;
@@ -241,7 +244,7 @@ namespace Microsoft.DotNet.SignTool
 
             if (Log.HasLoggedErrors) return;
 
-            var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir, enclosingDir, SNBinaryPath, WixToolsPath, TarToolPath);
+            var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, DotNetPath, LogDir, enclosingDir, SNBinaryPath, WixToolsPath, TarToolPath);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs, Log) : (SignTool)new RealSignTool(signToolArgs, Log);
 
             Telemetry telemetry = new Telemetry();
@@ -360,6 +363,11 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
+        private readonly HashSet<string> specialExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ".tar.gz"
+        };
+
         private Dictionary<string, List<SignInfo>> ParseFileExtensionSignInfo()
         {
             var map = new Dictionary<string, List<SignInfo>>(StringComparer.OrdinalIgnoreCase);
@@ -372,7 +380,8 @@ namespace Microsoft.DotNet.SignTool
                     var certificate = item.GetMetadata("CertificateName");
                     var collisionPriorityId = item.GetMetadata(SignToolConstants.CollisionPriorityId);
 
-                    if (!extension.Equals(Path.GetExtension(extension)))
+                    // Some supported extensions have multiple dots. Special case these so that we don't throw an error below.
+                    if (!extension.Equals(Path.GetExtension(extension)) && !specialExtensions.Contains(extension))
                     {
                         Log.LogError($"Value of {nameof(FileExtensionSignInfo)} is invalid: '{extension}'");
                         continue;

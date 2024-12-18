@@ -288,6 +288,14 @@ namespace Microsoft.DotNet.SignTool
             PEInfo peInfo = null;
             SignedFileContentKey signedFileContentKey = new SignedFileContentKey(file.ContentHash, file.FileName);
 
+            // First check for zero length files. These occasionally occur in python and
+            // cannot be signed.
+            if (file.ContentHash == ContentUtil.EmptyFileContentHash)
+            {
+                _log.LogMessage(MessageImportance.Low, $"Ignoring zero length file: {file.FullPath}");
+                return new FileSignInfo(file, SignInfo.Ignore, wixContentFilePath: wixContentFilePath);
+            }
+
             // handle multi-part extensions like ".symbols.nupkg" specified in FileExtensionSignInfo
             if (_fileExtensionSignInfo != null)
             {
@@ -416,6 +424,18 @@ namespace Microsoft.DotNet.SignTool
                 else
                 {
                     _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} is digitally signed.");
+                }
+            }
+            else if(FileSignInfo.IsDeb(file.FullPath))
+            {
+                isAlreadySigned = VerifySignatures.VerifySignedDeb(_log, file.FullPath);
+                if (!isAlreadySigned)
+                {
+                    _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} is not signed.");
+                }
+                else
+                {
+                    _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} is signed.");
                 }
             }
             else if(FileSignInfo.IsPowerShellScript(file.FullPath))

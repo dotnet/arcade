@@ -35,7 +35,7 @@ use darc to achieve them, as well as a general reference guide to darc commands.
   - [default-channel-status](#default-channel-status) - Enables or disables a default channel association.
   - [delete-channel](#delete-channel) - Deletes an existing channel.
   - [delete-default-channel](#delete-default-channel) - Remove a default channel association.
-  - [delete-subscription](#delete-subscription) - Remove a subscription.
+  - [delete-subscriptions](#delete-subscriptions) - Remove a subscription.
   - [gather-drop](#gather-drop) - Gather a drop of the outputs for a build.
   - [get-asset](#get-asset) - Get information about an asset.
   - [get-build](#get-build) - Retrieves a specific build of a repository,
@@ -77,7 +77,7 @@ service at the time of the installation.
 #### Step 1: Ensure you're part of the **dotnetes-maestro-users** CoreIdentity group:
 Go to https://coreidentity.microsoft.com/manage/Entitlement/entitlement/dotnetesmaes-z54r and request to join.
 
-#### Step 2: Install the darc client:
+#### Step 2: Install the darc client (from scripts in any arcadified repository):
 ```
 D:\repos\arcade> .\eng\common\darc-init.ps1
   Attempting to install 'sdk v9.0.100-preview.4.24267.66' from public location.
@@ -135,14 +135,20 @@ No verb selected.
 When executing most operations, the client needs to make some remote queries.
 These remote queries require authentication in most circumstances. There are 3
 PATs that may be used:
-- A GitHub PAT for downloading files from GitHub (e.g. `eng/Version.Details.xml` or
+- **[Required]** A GitHub PAT for downloading files from GitHub (e.g. `eng/Version.Details.xml` or
   arcade script files. No scopes required but token must be [SSO enabled](https://docs.github.com/en/enterprise-cloud@latest/authentication/authenticating-with-saml-single-sign-on/authorizing-a-personal-access-token-for-use-with-saml-single-sign-on) for all organizations for which repositories `darc` will be used.
-- An Azure DevOps PAT for downloading files from Azure DevOps. (e.g.
-  eng/Version.Details.xml)  Required scopes: Code-Read, Build-Read & Execute, Packaging Read.
+- **[Optional]** An Azure DevOps PAT for downloading files from Azure DevOps. (e.g.
+  eng/Version.Details.xml). When not provided, local system credentials are used. Required scopes: Code-Read, Build-Read & Execute, Packaging Read.
   The recommended way of generating the PAT is using the [PatGeneratorTool](https://dev.azure.com/dnceng/public/_artifacts/feed/dotnet-eng/NuGet/Microsoft.DncEng.PatGeneratorTool),
   with the `dotnet pat-generator --scopes build_execute code --organizations dnceng devdiv --expires-in 180` command
 - *[DEPRECATED] A Build Asset Registry (BAR) password for interacting with Maestro++/BAR (e.g.
   obtaining build information needed for a drop). This one is no longer needed and you can sign-in through browser when using darc.*
+
+> [!NOTE]
+>  [PatGeneratorTool](https://dev.azure.com/dnceng/public/_artifacts/feed/dotnet-eng/NuGet/Microsoft.DncEng.PatGeneratorTool) can be installed with the following command
+> ```
+> dotnet tool install --global Microsoft.DncEng.PatGeneratorTool --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json --prerelease
+> ```
 
 These tokens can either be passed on the command line using parameters (see [Common parameters](#common-parameters)), or
 cached locally on the machine using the [`darc authenticate`](#authenticate) command.
@@ -163,6 +169,9 @@ D:\repos\arcade> darc get-channels
 .NET 3 Tools
 .NET 3 Tools - Validation
 ```
+
+*Note: `darc get-channels` does not exercise all authentication paths which require PAT's.  If you run a darc command and see an error like `Response status code does not indicate success: 401 (Unauthorized)`, it likely indicates that you are missing an AzDo or GH PAT (or that one of those PAT's is invalid / expired).*
+
 
 ### Adding dependencies to a repository
 
@@ -726,7 +735,7 @@ darc and Maestro++ have a few mechanisms to enable such scenarios:
                      ]
   - Last Build: N/A
 
-  PS C:\enlistments\arcade> darc delete-subscription --id 21e611eb-ab71-410e-ca98-08d61f236c94
+  PS C:\enlistments\arcade> darc delete-subscriptions --id 21e611eb-ab71-410e-ca98-08d61f236c94
   Successfully deleted subscription with id '21e611eb-ab71-410e-ca98-08d61f236c94'
   ```
 
@@ -1301,7 +1310,7 @@ Successfully created new subscription with id '4f300f68-8800-4b14-328e-08d68308f
   ```
 
 **See also**:
-- [delete-subscription](#delete-subscription)
+- [delete-subscriptions](#delete-subscriptions)
 - [get-subscriptions](#get-subscriptions)
 - [trigger-subscriptions](#trigger-subscriptions)
 - [get-channels](#get-channels)
@@ -1325,7 +1334,6 @@ parameters:
 
 - `--id` - **(Required)**. BAR id of build to assign to channel.
 - `--channel` - **(Required)**. Channel to assign build to.
-- `--publish-installers-and-checksums` **(Required)** Whether installers and checksums should be published. All the installers and checksums usually go to the same storage account. By setting this to true we are agreeing to republish them everytime a new channel is added. This has to be set to true at all times.
 - `--publishing-infra-version` - Version of publishing, for single stage [publishing infrastructure use 3](https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md#what-is-v3-publishing-how-is-it-different-from-v2) else for multi stage publishing infra with each stage representing available channel(s) use 2. Default is 2. 
 - `--signing-validation-parameters` - Additional (MSBuild) properties to be passed to signing validation
 - `--symbol-publishing-parameters` -Additional (MSBuild) properties to be passed to symbol publishing
@@ -1347,7 +1355,7 @@ parameters:
 **If using --publishing-infra-version 2**
 ```
 
-darc add-build-to-channel --id 13078 --channel ".NET Core 3 Release" --publish-installers-and-checksums
+darc add-build-to-channel --id 13078 --channel ".NET Core 3 Release"
 Assigning the following build to channel '.NET Core 3 Release':
 
 Repository:    https://github.com/dotnet/core-setup
@@ -1374,7 +1382,7 @@ If the above example build doesn't happen to be the latest in a channel but you 
 **If using --publishing-infra-version 3**
 ```
 
-darc add-build-to-channel --id 65256 --channel ".NET 6 Dev" --publishing-infra-version 3 --publish-installers-and-checksums
+darc add-build-to-channel --id 65256 --channel ".NET 6 Dev" --publishing-infra-version 3
 
 Waiting '60' seconds for promotion build to complete.
 
@@ -1528,7 +1536,7 @@ PS D:\enlistments\arcade> darc delete-default-channel --channel ".Net 5 Dev" --b
 - [add-default-channel](#add-default-channel)
 - [get-default-channels](#get-default-channels)
 
-### **`delete-subscription`**
+### **`delete-subscriptions`**
 
 Deletes a specified subscription by its id. This removes the subscription from
 Maestro and no new updates based on the subscription will be created. Any
@@ -1537,7 +1545,7 @@ obtain the id of a subscription to be deleted, see [get-subscriptions](#get-subs
 
 **Sample**:
 ```
-PS D:\enlistments\arcade-services> darc delete-subscription --id 4f300f68-8800-4b14-328e-08d68308fe30
+PS D:\enlistments\arcade-services> darc delete-subscriptions --id 4f300f68-8800-4b14-328e-08d68308fe30
 
 Successfully deleted subscription with id '4f300f68-8800-4b14-328e-08d68308fe30'
 ```
@@ -2666,7 +2674,7 @@ https://github.com/aspnet/Extensions @ release/3.0-preview6
 Retrieves information about existing subscriptions. This command is generally
 useful to determine what kind of dependency flow will happen on new builds, or
 to obtain the id of a subscription for use in
-[delete-subscription](#delete-subscription).
+[delete-subscriptions](#delete-subscriptions).
 
 The top line of the listing shows the subscription mapping and is read:
 ```

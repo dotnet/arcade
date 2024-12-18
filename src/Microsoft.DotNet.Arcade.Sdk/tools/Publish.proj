@@ -12,7 +12,9 @@
       DotNetSymbolServerTokenSymWeb     Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Server-Pats.
       DotNetSymbolExpirationInDays      Symbol expiration time in days (defaults to 10 years).
       SkipPackageChecks                 Skips package safety checks.
-      EnableDefaultArtifacts            Icludes packages under "/artifacts/packages/**" for publishing. Defaults to true.
+      EnableDefaultArtifacts            Includes packages under "/artifacts/packages/**" for publishing. Defaults to true.
+      DotNetBuildPass                   While building the repo as part of the entire .NET stack, this parameter specifies which build pass the current build is part of.
+                                          The build pass number gets added to the asset manifest file name to avoid collisions.
     
     Optional items:
       Artifact (with Metadata)          Path to the artifact to publish. Declare the item in Signing.props to sign and publish the artifact.
@@ -41,6 +43,8 @@
     <PushToLocalStorage>true</PushToLocalStorage>
   </PropertyGroup>
 
+  <!-- Required to determine whether full assembly strong name signing is supported, which may affect selection of some certificates. -->
+  <Import Project="StrongName.targets" />
   <Import Project="Sign.props" />
 
   <!-- Allow for repo specific Publish properties such as add additional files to be published -->
@@ -61,14 +65,8 @@
     <!-- If `AutoGenerateSymbolPackages` is not set we default it to true. -->
     <!-- Do not generate symbol packages if in outer source build mode, to avoid creating copies of the intermediates. -->
     <!-- Also do not generate symbol packages if in inner source build, in product build. -->
-    <AutoGenerateSymbolPackages Condition="'$(AutoGenerateSymbolPackages)' == '' and
-       ('$(DotNetBuildSourceOnly)' != 'true' or
-       ('$(ArcadeInnerBuildFromSource)' == 'true' and '$(DotNetBuildFromSourceFlavor)' != 'Product'))">true</AutoGenerateSymbolPackages>
-
-    <AssetManifestOS Condition="'$(AssetManifestOS)' == ''">$(OS)</AssetManifestOS>
-
-    <AssetManifestFileName>$(AssetManifestOS)-$(PlatformName).xml</AssetManifestFileName>
-    <AssetManifestFilePath>$(ArtifactsLogDir)AssetManifest\$(AssetManifestFileName)</AssetManifestFilePath>
+    <AutoGenerateSymbolPackages Condition="'$(AutoGenerateSymbolPackages)' == '' and 
+      ('$(DotNetBuildSourceOnly)' != 'true' or ('$(DotNetBuildInnerRepo)' == 'true' and '$(DotNetBuildOrchestrator)' != 'true'))">true</AutoGenerateSymbolPackages>
 
     <SymbolPackagesDir>$(ArtifactsTmpDir)SymbolPackages\</SymbolPackagesDir>
 
@@ -76,6 +74,18 @@
     <PublishDependsOnTargets Condition="$(DotNetPublishUsingPipelines)">$(PublishDependsOnTargets);PublishToAzureDevOpsArtifacts</PublishDependsOnTargets>
 
     <PublishDependsOnTargets>BeforePublish;$(PublishDependsOnTargets)</PublishDependsOnTargets>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Prefer TargetOS when set over OS -->
+    <AssetManifestOS Condition="'$(AssetManifestOS)' == ''">$([MSBuild]::ValueOrDefault('$(TargetOS)', '$(OS)'))</AssetManifestOS>
+    <!-- Prefer TargetArchitecture when set over PlatformName -->
+    <AssetManifestArch Condition="'$(AssetManifestArch)' == ''">$([MSBuild]::ValueOrDefault('$(TargetArchitecture)', '$(PlatformName)'))</AssetManifestArch>
+    <!-- Add the build pass number when DotNetBuildPass is set to a value other than 1. -->
+    <AssetManifestPass Condition="'$(DotNetBuildPass)' != '' and '$(DotNetBuildPass)' != '1'">-Pass$(DotNetBuildPass)</AssetManifestPass>
+
+    <AssetManifestFileName>$(AssetManifestOS)-$(AssetManifestArch)$(AssetManifestPass).xml</AssetManifestFileName>
+    <AssetManifestFilePath>$(ArtifactsLogDir)AssetManifest\$(AssetManifestFileName)</AssetManifestFilePath>
   </PropertyGroup>
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets"/>
@@ -208,8 +218,8 @@
 
     <ItemGroup>
       <ItemsToPushToBlobFeed>
-        <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.IsShipping)' == 'false'">NonShipping=true</ManifestArtifactData>
-        <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.IsShipping)' != 'false' and '$(ProducesDotNetReleaseShippingAssets)' == 'true'">DotNetReleaseShipping=true</ManifestArtifactData>
+        <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.IsShipping)' == 'false'">%(ItemsToPushToBlobFeed.ManifestArtifactData);NonShipping=true</ManifestArtifactData>
+        <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.IsShipping)' != 'false' and '$(ProducesDotNetReleaseShippingAssets)' == 'true'">%(ItemsToPushToBlobFeed.ManifestArtifactData);DotNetReleaseShipping=true</ManifestArtifactData>
       </ItemsToPushToBlobFeed>
     </ItemGroup>
 
@@ -347,7 +357,6 @@
   </ItemGroup>
 
   <!-- Import the publish targets when in the inner or outer repo builds. -->
-  <Import Project="SourceBuild/SourceBuildArcadePublish.targets" Condition="'$(ArcadeBuildFromSource)' == 'true' or 
-                                                                            '$(DotNetBuildRepo)' == 'true'" />
+  <Import Project="SourceBuild/SourceBuildArcadePublish.targets" Condition="'$(DotNetBuildRepo)' == 'true'" />
 
 </Project>
