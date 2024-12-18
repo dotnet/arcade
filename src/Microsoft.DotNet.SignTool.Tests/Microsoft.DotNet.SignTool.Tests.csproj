@@ -23,13 +23,12 @@
                       Private="false"
                       OutputItemType="_TarToolPath" />
 
-    <ProjectReference Condition="$([MSBuild]::IsOSPlatform('osx'))"
-                  Include="..\Microsoft.DotNet.MacOsPkg\Microsoft.DotNet.MacOsPkg.csproj"
-                  ReferenceOutputAssembly="false"
-                  SetTargetFramework="TargetFramework=$(NetToolCurrent)"
-                  SkipGetTargetFrameworkProperties="true"
-                  Private="false"
-                  OutputItemType="_PkgToolPath" />
+    <ProjectReference Include="..\Microsoft.DotNet.MacOsPkg\Microsoft.DotNet.MacOsPkg.csproj"
+                      ReferenceOutputAssembly="false"
+                      SetTargetFramework="TargetFramework=$(NetToolCurrent)"
+                      SkipGetTargetFrameworkProperties="true"
+                      Private="false"
+                      OutputItemType="_PkgToolPath" />
   </ItemGroup>
 
   <ItemGroup>
@@ -56,7 +55,9 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="_CopyPkgTool" AfterTargets="ResolveProjectReferences" Condition="$([MSBuild]::IsOSPlatform('osx'))">
+  <!-- Copy the tooling even on platforms that won't use it, since we might run these
+       tests in Helix, on another platform. -->
+  <Target Name="_CopyPkgTool" AfterTargets="ResolveProjectReferences">
     <PropertyGroup>
       <_PkgToolPattern>@(_PkgToolPath->'%(RootDir)%(Directory)')**\*.*</_PkgToolPattern>
     </PropertyGroup>
@@ -68,19 +69,10 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="_CopySnTool" AfterTargets="ResolveProjectReferences" Condition="$([MSBuild]::IsOSPlatform('windows'))">
+  <Target Name="_CopySnTool" AfterTargets="ResolveProjectReferences">
     <ItemGroup>
       <_SnToolFiles Include="$(Pkgsn)\sn.exe.*"/>
       <_SnToolFiles Include="$(Pkgsn)\1033\*"/>
-    </ItemGroup>
-    <ItemGroup>
-      <Content Include="@(_SnToolFiles)" CopyToOutputDirectory="PreserveNewest" Link="tools\sn\%(RecursiveDir)%(Filename)%(Extension)" />
-    </ItemGroup>
-  </Target>
-
-  <Target Name="_CopyKeys" AfterTargets="ResolveProjectReferences">
-    <ItemGroup>
-      <_SnToolFiles Include="$(Pkgsn)\sn.exe.*"/>
     </ItemGroup>
     <ItemGroup>
       <Content Include="@(_SnToolFiles)" CopyToOutputDirectory="PreserveNewest" Link="tools\sn\%(RecursiveDir)%(Filename)%(Extension)" />
