@@ -175,8 +175,8 @@ namespace Microsoft.DotNet.SignTool
 
                     var reversedSignature = peReader.GetSectionData(snDirectory.RelativeVirtualAddress).GetContent(0, snSize).ToArray();
 
-                    // Unknown why the signature is reversed, but this matches the behavior of the CLR
-                    // signing implementation.
+                    // The signature bytes are in host (little-endian) byte order.
+                    // Reverse the bytes to put them back into network byte order to verify the signature.
                     Array.Reverse(reversedSignature);
 
                     // CodeQL [SM02196] ECMA-335 requires us to support SHA-1 and this is testing that support
@@ -848,7 +848,7 @@ namespace Microsoft.DotNet.SignTool
         }
 
         /// <summary>
-        /// Helper for converting a UInt32 exponent to bytes.
+        /// Convert a UInt32 into the minimal number of bytes (in big-endian order) to represent the value.
         /// Copied from https://github.com/dotnet/corefx/blob/5fe5f9aae7b2987adc7082f90712b265bee5eefc/src/System.Security.Cryptography.Csp/src/System/Security/Cryptography/CapiHelper.Shared.cs
         /// </summary>
         private static byte[] ExponentAsBytes(uint exponent)
