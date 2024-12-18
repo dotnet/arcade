@@ -175,8 +175,8 @@ namespace Microsoft.DotNet.SignTool
 
                     var reversedSignature = peReader.GetSectionData(snDirectory.RelativeVirtualAddress).GetContent(0, snSize).ToArray();
 
-                    // Unknown why the signature is reversed, but this matches the behavior of the CLR
-                    // signing implementation.
+                    // The signature bytes are in host (little-endian) byte order.
+                    // Reverse the bytes to put them back into network byte order to verify the signature.
                     Array.Reverse(reversedSignature);
 
                     // CodeQL [SM02196] ECMA-335 requires us to support SHA-1 and this is testing that support
