@@ -1,17 +1,13 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
-  <PropertyGroup Condition=" '$(IncludeXHarnessCli)' == 'true' ">
-    <!-- We then invoke the CLI DLL directly using .NET runtime without the need for .NET SDK -->
-    <IncludeDotNetCli>true</IncludeDotNetCli>
-    <IncludeXHarnessCli>true</IncludeXHarnessCli>
 
-    <!--
-      TODO (https://github.com/dotnet/arcade/issues/7787): Use ASP.NET Core only once we are past RC1
-      <DotNetCliPackageType Condition="'$(DotNetCliPackageType)' != 'sdk'">aspnetcore-runtime</DotNetCliPackageType> 
-      <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' ">$(AspNetCoreRuntimeVersion)</DotNetCliVersion>
-    -->
+  <PropertyGroup Condition=" '$(IncludeXHarnessCli)' == 'true' ">
+    <IncludeDotNetCli>true</IncludeDotNetCli>
+    <XHarnessTargetFramework Condition=" '$(XHarnessTargetFramework)' == '' ">net8.0</XHarnessTargetFramework>
+    <DotNetCliVersion Condition=" '$(XHarnessTargetFramework)' == 'net8.0' ">8.0.100</DotNetCliVersion>
+    <DotNetCliVersion Condition=" '$(XHarnessTargetFramework)' == 'net7.0' ">7.0.100</DotNetCliVersion>
+    <DotNetCliVersion Condition=" '$(XHarnessTargetFramework)' == 'net6.0' ">6.0.202</DotNetCliVersion>
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
-    <DotNetCliVersion>6.0.100-rc.1.21430.12</DotNetCliVersion>
-    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '$(BundledNETCoreAppPackageVersion)' AND '$(DotNetCliPackageType)' == 'aspnetcore-runtime' ">$(AspNetCoreRuntimeVersion)</DotNetCliVersion>
   </PropertyGroup>
 
   <Target Name="AddXHarnessCli"
@@ -25,19 +21,29 @@
     <Message Condition=" '$(XHarnessNupkgPath)' != '' " Text="XHarnessNupkgPath is set so XHarnessPackageSource will be ignored" Importance="normal" />
 
     <PropertyGroup Condition=" '$(XHarnessNupkgPath)' != '' ">
-      <XHarnessPackageSource>$([System.IO.Path]::GetDirectoryName($(XHarnessNupkgPath))) --no-cache</XHarnessPackageSource>
+      <XHarnessPackageSource>$([System.IO.Path]::GetDirectoryName($(XHarnessNupkgPath)))</XHarnessPackageSource>
+      <XHarnessNoCache>true</XHarnessNoCache>
     </PropertyGroup>
 
-    <!-- We install the tool locally on the build machine, then, installed as-is, we zip it up and send as a correlation payload -->
+    <!--
+      We install the tool locally on the build machine, then, installed as-is, we zip it up and send as a correlation payload
+      We do this so that we avoid all of the machines installing the tool too and ddosing the NuGet feed
+    -->
+    <InstallDotNetTool Name="$(_XHarnessPackageName)"
+                       DestinationPath="$(ArtifactsTmpDir)"
+                       Version="$(_XHarnessPackageVersion)"
+                       Source="$(XHarnessPackageSource)"
+                       TargetFramework="$(XHarnessTargetFramework)"
+                       WorkingDirectory="$(ArtifactsTmpDir)"
+                       DotnetPath="$(DotNetTool)"
+                       NoCache="$(XHarnessNoCache)">
+      <Output TaskParameter="ToolPath" PropertyName="_XHarnessCliPath" />
+    </InstallDotNetTool>
+
+    <!-- We grab the unpacked .NET command line application from the .NET tool store where it is installed -->
     <PropertyGroup>
-      <_XHarnessLocalToolPath>$(ArtifactsTmpDir)Microsoft.DotNet.XHarness.CLI</_XHarnessLocalToolPath>
-      <_XHarnessCliPath>$(_XHarnessLocalToolPath)\.store\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)</_XHarnessCliPath>
+      <_XHarnessCliPath>$(_XHarnessCliPath)\.store\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)</_XHarnessCliPath>
     </PropertyGroup>
-
-    <!-- It can happen that the SDK is invoked in parallel and then it can fail when re-using the install location, so we ignore the exit code -->
-    <Exec Command="&quot;$(DotNetTool)&quot; tool install --framework net6.0 --tool-path $(_XHarnessLocalToolPath) --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)"
-          WorkingDirectory="$(ArtifactsTmpDir)"
-          IgnoreExitCode="true" />
 
     <!-- There are files we don't need extracted inside of the extracted tool dir (such as the original .nupkg) that blow up the size 3x, so we remove them -->
     <ItemGroup>
@@ -59,21 +65,21 @@
       <HelixPreCommands>$(HelixPreCommands);export PATH=$HELIX_CORRELATION_PAYLOAD/xharness-cli:$PATH</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
-      <HelixPreCommands>$(HelixPreCommands);export XHARNESS_CLI_PATH=$HELIX_CORRELATION_PAYLOAD/microsoft.dotnet.xharness.cli/$(_XHarnessPackageVersion)/tools/net6.0/any/Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);export XHARNESS_CLI_PATH=$HELIX_CORRELATION_PAYLOAD/microsoft.dotnet.xharness.cli/$(_XHarnessPackageVersion)/tools/$(XHarnessTargetFramework)/any/Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
 
       <HelixPreCommands Condition=" '$(EnableXHarnessTelemetry)' == 'true' ">$(HelixPreCommands);export XHARNESS_DIAGNOSTICS_PATH=$HELIX_WORKITEM_ROOT/diagnostics.json</HelixPreCommands>
-      <HelixPostCommands Condition=" '$(EnableXHarnessTelemetry)' == 'true' ">"$HELIX_PYTHONPATH" "$HELIX_WORKITEM_PAYLOAD/xharness-event-reporter.py";$(HelixPostCommands)</HelixPostCommands>
+      <HelixPostCommands Condition=" '$(EnableXHarnessTelemetry)' == 'true' ">"$HELIX_PYTHONPATH" -u "$HELIX_WORKITEM_PAYLOAD/xharness-event-processor.py";$(HelixPostCommands)</HelixPostCommands>
     </PropertyGroup>
 
     <PropertyGroup Condition="!$(IsPosixShell)">
       <HelixPreCommands>$(HelixPreCommands);set PATH=%HELIX_CORRELATION_PAYLOAD%\xharness-cli%3B%PATH%</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
-      <HelixPreCommands>$(HelixPreCommands);set XHARNESS_CLI_PATH=%HELIX_CORRELATION_PAYLOAD%\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\tools\net6.0\any\Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);set XHARNESS_CLI_PATH=%HELIX_CORRELATION_PAYLOAD%\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\tools\$(XHarnessTargetFramework)\any\Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);doskey xharness="dotnet exec %XHARNESS_CLI_PATH%"</HelixPreCommands>
 
       <HelixPreCommands Condition=" '$(EnableXHarnessTelemetry)' == 'true' ">$(HelixPreCommands);set XHARNESS_DIAGNOSTICS_PATH=%HELIX_WORKITEM_ROOT%\diagnostics.json</HelixPreCommands>
-      <HelixPostCommands Condition=" '$(EnableXHarnessTelemetry)' == 'true' ">"%HELIX_PYTHONPATH%" "%HELIX_WORKITEM_PAYLOAD%\xharness-event-reporter.py";$(HelixPostCommands)</HelixPostCommands>
+      <HelixPostCommands Condition=" '$(EnableXHarnessTelemetry)' == 'true' ">"%HELIX_PYTHONPATH%" -u "%HELIX_WORKITEM_PAYLOAD%\xharness-event-processor.py";$(HelixPostCommands)</HelixPostCommands>
     </PropertyGroup>
   </Target>
 

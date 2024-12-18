@@ -1,4 +1,15 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
+
+  <PropertyGroup>
+    <BuildDependsOn>
+      $(BuildDependsOn);
+      _GetSkipArchivesBuildProps;
+      _CreateArchive;
+      _CreateSymbolsArchive
+    </BuildDependsOn>
+  </PropertyGroup>
+
   <Target Name="_GetCurrentProjectServicingConfiguration">
     <ItemGroup>
       <CurrentProjectServicingConfiguration
@@ -25,7 +36,7 @@
   -->
   <Target Name="SetLastReleasedVersionForSourceBuild"
           Condition="
-            '$(DotNetBuildFromSource)' == 'true' and
+            '$(DotNetBuildSourceOnly)' == 'true' and
             '$(SkipSetLastReleasedVersionForSourceBuild)' != 'true'"
           BeforeTargets="GetProductVersions"
           DependsOnTargets="_GetCurrentProjectServicingConfiguration">
@@ -66,14 +77,24 @@
     <SymbolsArchiveName Condition="'$(SymbolsArchiveName)' == ''">$(ArchiveName)-symbols</SymbolsArchiveName>
   </PropertyGroup>
 
+  <Target Name="_CheckPigzAvailability" Condition="'$(_PigzFoundExitCode)' == ''">
+    <PropertyGroup>
+      <_CommandProbe>command -v</_CommandProbe>
+      <_CommandProbe Condition="'$(OS)' == 'Windows_NT'">where</_CommandProbe>
+    </PropertyGroup>
+    <Exec Command="$(_CommandProbe) pigz" IgnoreExitCode="true" StandardOutputImportance="Low">
+      <Output TaskParameter="ExitCode" PropertyName="_PigzFoundExitCode" />
+    </Exec>
+  </Target>
+
   <Target Name="_CreateArchive"
+          DependsOnTargets="_CheckPigzAvailability"
           Condition="'$(SkipArchivesBuild)' != 'true'">
     <PropertyGroup>
       <_OutputPathRoot>$(IntermediateOutputPath)output/</_OutputPathRoot>
       <_ArchiveFileName>$(ArchiveName)-$(Version)</_ArchiveFileName>
       <_ArchiveFileName Condition="'$(RuntimeIdentifier)' != ''">$(ArchiveName)-$(Version)-$(RuntimeIdentifier)</_ArchiveFileName>
-      <_DestinationFileName Condition="$([MSBuild]::IsOSPlatform(Windows))">$(PackageOutputPath)/$(_ArchiveFileName).zip</_DestinationFileName>
-      <_DestinationFileName Condition="!$([MSBuild]::IsOSPlatform(Windows))">$(PackageOutputPath)/$(_ArchiveFileName).tar.gz</_DestinationFileName>
+      <_DestinationFileName>$(PackageOutputPath)/$(_ArchiveFileName).$(ArchiveFormat)</_DestinationFileName>
     </PropertyGroup>
     <MSBuild Projects="$(MSBuildProjectFullPath)"
              Targets="PublishToDisk"
@@ -83,23 +104,29 @@
     <ZipDirectory SourceDirectory="$(_OutputPathRoot)"
                   Overwrite="true"
                   DestinationFile="$(_DestinationFileName)"
-                  Condition="$([MSBuild]::IsOSPlatform(Windows))"/>
-    <Exec Command="tar -C '$(_OutputPathRoot)' -czf $(_DestinationFileName) ."
+                  Condition="'$(ArchiveFormat)' == 'zip'"/>
+    <!-- use parallel gzip implementation when available -->
+    <Exec Command="tar -C '$(_OutputPathRoot)' -cf - . | pigz &gt; '$(_DestinationFileName)'"
           IgnoreExitCode="true"
           IgnoreStandardErrorWarningFormat="true"
-          Condition="!$([MSBuild]::IsOSPlatform(Windows))"/>
+          Condition="'$(ArchiveFormat)' == 'tar.gz' and '$(_PigzFoundExitCode)' == '0'"/>
+    <!-- otherwise, use built-in gzip feature (-z) -->
+    <Exec Command="tar -C '$(_OutputPathRoot)' -czf '$(_DestinationFileName)' ."
+          IgnoreExitCode="true"
+          IgnoreStandardErrorWarningFormat="true"
+          Condition="'$(ArchiveFormat)' == 'tar.gz' and '$(_PigzFoundExitCode)' != '0'"/>
 
-    <Message Text="$(_OutputPathRoot) -> $(_DestinationFileName)" Importance="high" />
+    <Message Text="Successfully created archive -> '$(_DestinationFileName)' from '$(_OutputPathRoot)'" Importance="high" />
   </Target>
 
   <Target Name="_CreateSymbolsArchive"
+          DependsOnTargets="_CheckPigzAvailability"
           Condition="'$(CreateSymbolsArchive)' == 'true' and '$(SkipArchivesBuild)' != 'true'">
     <PropertyGroup>
       <_SymbolsOutputPathRoot>$(IntermediateOutputPath)symbols/</_SymbolsOutputPathRoot>
       <_ArchiveFileName>$(SymbolsArchiveName)-$(Version)</_ArchiveFileName>
       <_ArchiveFileName Condition="'$(RuntimeIdentifier)' != ''">$(SymbolsArchiveName)-$(RuntimeIdentifier)-$(Version)</_ArchiveFileName>
-      <_DestinationFileName Condition="$([MSBuild]::IsOSPlatform(Windows))">$(PackageOutputPath)/$(_ArchiveFileName).zip</_DestinationFileName>
-      <_DestinationFileName Condition="!$([MSBuild]::IsOSPlatform(Windows))">$(PackageOutputPath)/$(_ArchiveFileName).tar.gz</_DestinationFileName>
+      <_DestinationFileName>$(PackageOutputPath)/$(_ArchiveFileName).$(ArchiveFormat)</_DestinationFileName>
     </PropertyGroup>
     <MSBuild Projects="$(MSBuildProjectFullPath)"
              Targets="PublishSymbolsToDisk"
@@ -109,21 +136,19 @@
     <ZipDirectory SourceDirectory="$(_SymbolsOutputPathRoot)"
                   Overwrite="true"
                   DestinationFile="$(_DestinationFileName)"
-                  Condition="$([MSBuild]::IsOSPlatform(Windows))"/>
-    <Exec Command="tar -C '$(_SymbolsOutputPathRoot)' -czf $(_DestinationFileName) ."
+                  Condition="'$(ArchiveFormat)' == 'zip'"/>
+    <!-- use parallel gzip implementation when available -->
+    <Exec Command="tar -C '$(_OutputPathRoot)' -cf - . | pigz &gt; '$(_DestinationFileName)'"
           IgnoreExitCode="true"
           IgnoreStandardErrorWarningFormat="true"
-          Condition="!$([MSBuild]::IsOSPlatform(Windows))"/>
+          Condition="'$(ArchiveFormat)' == 'tar.gz' and '$(_PigzFoundExitCode)' == '0'"/>
+    <!-- otherwise, use built-in gzip feature (-z) -->
+    <Exec Command="tar -C '$(_OutputPathRoot)' -czf '$(_DestinationFileName)' ."
+          IgnoreExitCode="true"
+          IgnoreStandardErrorWarningFormat="true"
+          Condition="'$(ArchiveFormat)' == 'tar.gz' and '$(_PigzFoundExitCode)' != '0'"/>
 
-    <Message Text="$(_SymbolsOutputPathRoot) -> $(_DestinationFileName)" Importance="high" />
+    <Message Text="Successfully created archive -> '$(_DestinationFileName)' from '$(_SymbolsOutputPathRoot)'" Importance="high" />
   </Target>
 
-  <PropertyGroup>
-    <BuildDependsOn>
-      $(BuildDependsOn);
-      _GetSkipArchivesBuildProps;
-      _CreateArchive;
-      _CreateSymbolsArchive
-    </BuildDependsOn>
-  </PropertyGroup>
 </Project>

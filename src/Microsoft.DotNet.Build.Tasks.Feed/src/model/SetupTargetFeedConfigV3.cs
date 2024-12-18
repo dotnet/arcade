@@ -3,25 +3,18 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.Linq;
+using System.Text;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
     public class SetupTargetFeedConfigV3 : SetupTargetFeedConfigBase
     {
-        private readonly List<TargetFeedContentType> Installers = new List<TargetFeedContentType>() {
-            TargetFeedContentType.OSX,
-            TargetFeedContentType.Deb,
-            TargetFeedContentType.Rpm,
-            TargetFeedContentType.Node,
-            TargetFeedContentType.BinaryLayout,
-            TargetFeedContentType.Installer,
-            TargetFeedContentType.Maven,
-            TargetFeedContentType.VSIX,
-            TargetFeedContentType.Badge,
-            TargetFeedContentType.Other
-        };
+        private readonly TargetChannelConfig _targetChannelConfig;
 
         private IBuildEngine BuildEngine { get; }
         
@@ -29,196 +22,184 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         
         private string StableSymbolsFeed { get; set; }
 
-        private string AzureDevOpsPublicStaticSymbolsFeed { get; set; }
+        private SymbolPublishVisibility SymbolServerVisibility { get; }
 
-        private SymbolTargetType SymbolTargetType { get; set; }
-
-        private List<string> FilesToExclude { get; }
+        private ImmutableList<string> FilesToExclude { get; }
 
         private bool Flatten { get; }
 
-        public SetupTargetFeedConfigV3(bool isInternalBuild,
+        public TaskLoggingHelper Log { get; }
+
+        public string AzureDevOpsOrg => "dnceng";
+
+        public SetupTargetFeedConfigV3(
+            TargetChannelConfig targetChannelConfig,
+            bool isInternalBuild,
             bool isStableBuild,
             string repositoryName,
             string commitSha,
-            string azureStorageTargetFeedPAT,
             bool publishInstallersAndChecksums,
-            string installersTargetStaticFeed,
-            string installersAzureAccountKey,
-            string checksumsTargetStaticFeed,
-            string checksumsAzureAccountKey,
-            string azureDevOpsStaticShippingFeed,
-            string azureDevOpsStaticTransportFeed,
-            string azureDevOpsStaticSymbolsFeed,
-            string latestLinkShortUrlPrefix,
-            string azureDevOpsFeedsKey,
+            ITaskItem[] feedKeys,
+            ITaskItem[] feedSasUris,
+            ITaskItem[] feedOverrides,
+            List<string> latestLinkShortUrlPrefixes,
             IBuildEngine buildEngine,
-            SymbolTargetType symbolTargetType,
+            SymbolPublishVisibility symbolPublishVisibility,
             string stablePackagesFeed = null,
             string stableSymbolsFeed = null,
-            string azureDevOpsPublicStaticSymbolsFeed = null,
-            List<string> filesToExclude = null,
-            bool flatten = true) 
-            : base(isInternalBuild, isStableBuild, repositoryName, commitSha, azureStorageTargetFeedPAT, publishInstallersAndChecksums, installersTargetStaticFeed, installersAzureAccountKey, checksumsTargetStaticFeed, checksumsAzureAccountKey, azureDevOpsStaticShippingFeed, azureDevOpsStaticTransportFeed, azureDevOpsStaticSymbolsFeed, latestLinkShortUrlPrefix, azureDevOpsFeedsKey)
+            ImmutableList<string> filesToExclude = null,
+            bool flatten = true,
+            TaskLoggingHelper log = null) 
+            : base(isInternalBuild, isStableBuild, repositoryName, commitSha, publishInstallersAndChecksums, null, null, null, null, null, null, null, latestLinkShortUrlPrefixes, null)
         {
+            _targetChannelConfig = targetChannelConfig;
             BuildEngine = buildEngine;
             StableSymbolsFeed = stableSymbolsFeed;
             StablePackagesFeed = stablePackagesFeed;
-            SymbolTargetType = symbolTargetType;
-            AzureDevOpsPublicStaticSymbolsFeed = azureDevOpsPublicStaticSymbolsFeed;
-            FilesToExclude = filesToExclude ?? new List<string>();
+            SymbolServerVisibility = symbolPublishVisibility;
+            FilesToExclude = filesToExclude ?? ImmutableList<string>.Empty;
             Flatten = flatten;
+            FeedKeys = feedKeys.ToImmutableDictionary(i => i.ItemSpec, i => i.GetMetadata("Key"));
+            FeedSasUris = feedSasUris.ToImmutableDictionary(i => i.ItemSpec, i => ConvertFromBase64(i.GetMetadata("Base64Uri")));
+            FeedOverrides = feedOverrides.ToImmutableDictionary(i => i.ItemSpec, i => i.GetMetadata("Replacement"));
+            AzureDevOpsFeedsKey = FeedKeys.TryGetValue("https://pkgs.dev.azure.com/dnceng", out string key) ? key : null;
+            Log = log;
         }
+
+        private static string ConvertFromBase64(string value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+            return Encoding.UTF8.GetString(Convert.FromBase64String(value));
+        }
+
+        public ImmutableDictionary<string, string> FeedOverrides { get; set; }
+
+        public ImmutableDictionary<string, string> FeedSasUris { get; set; }
+
+        public ImmutableDictionary<string, string> FeedKeys { get; set; }
 
         public override List<TargetFeedConfig> Setup()
         {
-            if (string.IsNullOrEmpty(InstallersAzureAccountKey))
-            {
-                throw new ArgumentException("Parameters 'InstallersAzureAccountKey' is empty.");
-            }
+            return Feeds().Distinct().ToList();
+        }
 
-            if (string.IsNullOrEmpty(ChecksumsAzureAccountKey))
-            {
-                throw new ArgumentException("Parameters 'ChecksumsAzureAccountKey' is empty.");
-            }
-
+        private IEnumerable<TargetFeedConfig> Feeds()
+        {
+            // If the build is stable, we need to create two new feeds (if not provided)
+            // that can contain stable packages. These packages cannot be pushed to the normal
+            // feeds specified in the feed config because it would mean pushing the same package more than once
+            // to the same feed on successive builds, which is not allowed.
             if (IsStableBuild)
             {
-                return StableFeeds();
-            }
-            else
-            {
-                return NonStableFeeds();
-            }
-        }
+                CreateStablePackagesFeedIfNeeded();
+                CreateStableSymbolsFeedIfNeeded();
 
-        private List<TargetFeedConfig> NonStableFeeds()
-        {
-            List<TargetFeedConfig> targetFeedConfigs = new List<TargetFeedConfig>();
-
-            if (PublishInstallersAndChecksums)
-            {
-                foreach (var contentType in Installers)
-                {
-                    targetFeedConfigs.Add(
-                        new TargetFeedConfig(
-                            contentType,
-                            InstallersTargetStaticFeed,
-                            FeedType.AzureStorageFeed,
-                            InstallersAzureAccountKey,
-                            latestLinkShortUrlPrefix: LatestLinkShortUrlPrefix,
-                            @internal: IsInternalBuild,
-                            symbolTargetType: SymbolTargetType,
-                            filenamesToExclude: FilesToExclude,
-                            flatten: Flatten));
-                }
-
-                targetFeedConfigs.Add(
-                    new TargetFeedConfig(
-                        TargetFeedContentType.Checksum,
-                        ChecksumsTargetStaticFeed,
-                        FeedType.AzureStorageFeed,
-                        ChecksumsAzureAccountKey,
-                        latestLinkShortUrlPrefix: LatestLinkShortUrlPrefix,
-                        @internal: IsInternalBuild,
-                        symbolTargetType: SymbolTargetType,
-                        filenamesToExclude: FilesToExclude,
-                        flatten: Flatten));
-            }
-
-            targetFeedConfigs.Add(
-                new TargetFeedConfig(
+                yield return new TargetFeedConfig(
                     TargetFeedContentType.Package,
-                    AzureDevOpsStaticShippingFeed,
+                    StablePackagesFeed,
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
+                    LatestLinkShortUrlPrefixes,
                     assetSelection: AssetSelection.ShippingOnly,
+                    symbolPublishVisibility: SymbolServerVisibility,
+                    isolated: true,
                     @internal: IsInternalBuild,
-                    symbolTargetType: SymbolTargetType,
                     filenamesToExclude: FilesToExclude,
-                    flatten: Flatten));
+                    flatten: Flatten);
 
-            targetFeedConfigs.Add(
-                new TargetFeedConfig(
-                    TargetFeedContentType.Package,
-                    AzureDevOpsStaticTransportFeed,
+                yield return new TargetFeedConfig(
+                    TargetFeedContentType.Symbols,
+                    StableSymbolsFeed,
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
-                    assetSelection: AssetSelection.NonShippingOnly,
-                    @internal: IsInternalBuild,
-                    symbolTargetType: SymbolTargetType,
-                    filenamesToExclude: FilesToExclude,
-                    flatten: Flatten));
-
-            // For symbols, we don't have a blob location where internal symbols can go today,
-            // so a feed is used in this case. This would be a potential performance improvement for internal builds.
-            // This is pretty uncommon though, as non-stable internal builds are quite rare.
-            string symbolsFeed;
-            FeedType symbolsFeedType;
-            string symbolsFeedSecret;
-
-            if (IsInternalBuild)
-            {
-                symbolsFeed = AzureDevOpsStaticSymbolsFeed;
-                symbolsFeedType = FeedType.AzDoNugetFeed;
-                symbolsFeedSecret = AzureDevOpsFeedsKey;
-            }
-            else if (!string.IsNullOrEmpty(AzureDevOpsPublicStaticSymbolsFeed))
-            {
-                symbolsFeed = AzureDevOpsPublicStaticSymbolsFeed;
-                symbolsFeedType = FeedType.AzDoNugetFeed;
-                symbolsFeedSecret = AzureDevOpsFeedsKey;
-            }
-            else
-            {
-                symbolsFeed = PublishingConstants.LegacyDotNetBlobFeedURL;
-                symbolsFeedType = FeedType.AzureStorageFeed;
-                symbolsFeedSecret = AzureStorageTargetFeedPAT;
-            }
-
-            targetFeedConfigs.Add(
-                new TargetFeedConfig(
-                    TargetFeedContentType.Symbols,
-                    symbolsFeed,
-                    symbolsFeedType,
-                    symbolsFeedSecret,
-                    symbolTargetType: SymbolTargetType,
+                    LatestLinkShortUrlPrefixes,
+                    symbolPublishVisibility: SymbolServerVisibility,
+                    isolated: true,
                     @internal: IsInternalBuild,
                     filenamesToExclude: FilesToExclude,
-                    flatten: Flatten));
+                    flatten: Flatten);
+            }
 
-            return targetFeedConfigs;
+            foreach (var spec in _targetChannelConfig.TargetFeeds)
+            {
+                foreach (var type in spec.ContentTypes)
+                {
+                    if (!PublishInstallersAndChecksums)
+                    {
+                        if (PublishingConstants.InstallersAndChecksums.Contains(type))
+                        {
+                            continue;
+                        }
+                    }
+
+                    // If dealing with a stable build, the package feed targeted for shipping packages and symbols
+                    // should be skipped, as it is added above.
+                    if (IsStableBuild && ((type is TargetFeedContentType.Package && spec.Assets == AssetSelection.ShippingOnly) || type is TargetFeedContentType.Symbols))
+                    {
+                        continue;
+                    }
+
+                    var oldFeed = spec.FeedUrl;
+                    var feed = GetFeedOverride(oldFeed);
+                    if (type is TargetFeedContentType.Package &&
+                        spec.Assets == AssetSelection.NonShippingOnly &&
+                        FeedOverrides.TryGetValue("transport-packages", out string newFeed))
+                    {
+                        feed = newFeed;
+                    }
+                    else if (type is TargetFeedContentType.Package &&
+                        spec.Assets == AssetSelection.ShippingOnly &&
+                        FeedOverrides.TryGetValue("shipping-packages", out newFeed))
+                    {
+                        feed = newFeed;
+                    }
+                    var key = GetFeedKey(feed);
+                    var sasUri = GetFeedSasUri(feed);
+
+                    var feedType = feed.StartsWith("https://pkgs.dev.azure.com")
+                        ? FeedType.AzDoNugetFeed : FeedType.AzureStorageContainer;
+
+                    // If no SAS is specified, then the default azure credential will be used.
+                    if (feedType == FeedType.AzDoNugetFeed && string.IsNullOrEmpty(key))
+                    {
+                        Log?.LogError($"No key found for {feed}, unable to publish to it.");
+                        continue;
+                    }
+
+                    yield return new TargetFeedConfig(
+                        type,
+                        feed,
+                        feedType,
+                        sasUri ?? key,
+                        LatestLinkShortUrlPrefixes,
+                        spec.Assets,
+                        false,
+                        IsInternalBuild,
+                        false,
+                        SymbolServerVisibility,
+                        filenamesToExclude: FilesToExclude,
+                        flatten: Flatten
+                    );
+                }
+            }
         }
 
-        private List<TargetFeedConfig> StableFeeds()
+        /// <summary>
+        /// Create the stable symbol packages feed if one is not already explicitly provided
+        /// </summary>
+        /// <exception cref="Exception">Throws if the feed cannot be created</exception>
+        private void CreateStableSymbolsFeedIfNeeded()
         {
-            List<TargetFeedConfig> targetFeedConfigs = new List<TargetFeedConfig>();
-
-            if (string.IsNullOrEmpty(StablePackagesFeed))
-            {
-                var packagesFeedTask = new CreateAzureDevOpsFeed()
-                {
-                    BuildEngine = BuildEngine,
-                    IsInternal = IsInternalBuild,
-                    AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
-                    RepositoryName = RepositoryName,
-                    CommitSha = CommitSha
-                };
-
-                if (!packagesFeedTask.Execute())
-                {
-                    throw new Exception($"Problems creating an AzureDevOps feed for repository '{RepositoryName}' and commit '{CommitSha}'.");
-                }
-
-                StablePackagesFeed = packagesFeedTask.TargetFeedURL;
-            }
-
             if (string.IsNullOrEmpty(StableSymbolsFeed))
             {
                 var symbolsFeedTask = new CreateAzureDevOpsFeed()
                 {
                     BuildEngine = BuildEngine,
-                    IsInternal = IsInternalBuild,
+                    AzureDevOpsOrg = AzureDevOpsOrg,
+                    AzureDevOpsProject = IsInternalBuild ? "internal" : "public",
                     AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
                     RepositoryName = RepositoryName,
                     CommitSha = CommitSha,
@@ -232,77 +213,72 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 StableSymbolsFeed = symbolsFeedTask.TargetFeedURL;
             }
+        }
 
-            targetFeedConfigs.Add(
-                new TargetFeedConfig(
-                    TargetFeedContentType.Package,
-                    StablePackagesFeed,
-                    FeedType.AzDoNugetFeed,
-                    AzureDevOpsFeedsKey,
-                    assetSelection: AssetSelection.ShippingOnly,
-                    symbolTargetType: SymbolTargetType,
-                    isolated: true,
-                    filenamesToExclude: FilesToExclude,
-                    flatten: Flatten));
-
-            targetFeedConfigs.Add(
-                new TargetFeedConfig(
-                    TargetFeedContentType.Symbols,
-                    StableSymbolsFeed,
-                    FeedType.AzDoNugetFeed,
-                    AzureDevOpsFeedsKey,
-                    symbolTargetType: SymbolTargetType,
-                    isolated: true,
-                    filenamesToExclude: FilesToExclude,
-                    flatten: Flatten));
-
-            targetFeedConfigs.Add(
-                new TargetFeedConfig(
-                    TargetFeedContentType.Package,
-                    AzureDevOpsStaticTransportFeed,
-                    FeedType.AzDoNugetFeed,
-                    AzureDevOpsFeedsKey,
-                    assetSelection: AssetSelection.NonShippingOnly,
-                    symbolTargetType: SymbolTargetType,
-                    isolated: false,
-                    filenamesToExclude: FilesToExclude,
-                    flatten: Flatten));
-
-            if (PublishInstallersAndChecksums)
+        /// <summary>
+        /// Create the stable packages feed if one is not already explicitly provided
+        /// </summary>
+        /// <exception cref="Exception">Throws if the feed cannot be created</exception>
+        private void CreateStablePackagesFeedIfNeeded()
+        {
+            if (string.IsNullOrEmpty(StablePackagesFeed))
             {
-                foreach (var contentType in Installers)
+                var packagesFeedTask = new CreateAzureDevOpsFeed()
                 {
-                    targetFeedConfigs.Add(
-                        new TargetFeedConfig(
-                            contentType,
-                            InstallersTargetStaticFeed,
-                            FeedType.AzureStorageFeed,
-                            InstallersAzureAccountKey,
-                            isolated: true,
-                            symbolTargetType: SymbolTargetType,
-                            latestLinkShortUrlPrefix: LatestLinkShortUrlPrefix,
-                            @internal: false,
-                            allowOverwrite: true,
-                            filenamesToExclude: FilesToExclude,
-                            flatten: Flatten));
+                    BuildEngine = BuildEngine,
+                    AzureDevOpsOrg = AzureDevOpsOrg,
+                    AzureDevOpsProject = IsInternalBuild ? "internal" : "public",
+                    AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
+                    RepositoryName = RepositoryName,
+                    CommitSha = CommitSha
+                };
+
+                if (!packagesFeedTask.Execute())
+                {
+                    throw new Exception($"Problems creating an AzureDevOps feed for repository '{RepositoryName}' and commit '{CommitSha}'.");
                 }
 
-                targetFeedConfigs.Add(
-                    new TargetFeedConfig(
-                        TargetFeedContentType.Checksum,
-                        ChecksumsTargetStaticFeed,
-                        FeedType.AzureStorageFeed,
-                        ChecksumsAzureAccountKey,
-                        isolated: true,
-                        symbolTargetType: SymbolTargetType,
-                        latestLinkShortUrlPrefix: LatestLinkShortUrlPrefix,
-                        @internal: false,
-                        allowOverwrite: true,
-                        filenamesToExclude: FilesToExclude,
-                        flatten: Flatten));
+                StablePackagesFeed = packagesFeedTask.TargetFeedURL;
+            }
+        }
+
+        private string GetFeedOverride(string feed)
+        {
+            foreach (var prefix in FeedOverrides.Keys.OrderByDescending(f => f.Length))
+            {
+                if (feed.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    return FeedOverrides[prefix];
+                }
             }
 
-            return targetFeedConfigs;
+            return feed;
+        }
+
+        private string GetFeedSasUri(string feed)
+        {
+            foreach (var prefix in FeedSasUris.Keys.OrderByDescending(f => f.Length))
+            {
+                if (feed.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    return FeedSasUris[prefix];
+                }
+            }
+
+            return null;
+        }
+
+        private string GetFeedKey(string feed)
+        {
+            foreach (var prefix in FeedKeys.Keys.OrderByDescending(f => f.Length))
+            {
+                if (feed.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                {
+                    return FeedKeys[prefix];
+                }
+            }
+
+            return null;
         }
     }
 }

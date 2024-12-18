@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             // Any fixed GUID will do for a namespace.
             Guid namespaceId = new Guid("28F1468D-672B-489A-8E0C-7C5B3030630C");
 
-            using (SHA1 hasher = SHA1.Create())
+            using (SHA1 hasher = SHA1.Create()) // lgtm [cs/weak-crypto] Algorithm is required by UUIDv5 spec
             {
                 var nameBytes = System.Text.Encoding.UTF8.GetBytes(Name ?? string.Empty);
                 var namespaceBytes = namespaceId.ToByteArray();

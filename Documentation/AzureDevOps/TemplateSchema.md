@@ -16,9 +16,6 @@ parameters:
   continueOnError: boolean # 'true' if future jobs should run even if this job fails; defaults to 'false'
   enablePublishBuildArtifacts: boolean # Enables publishing build logs as an Azure DevOps artifact.
   enablePublishUsingPipelines: boolean # Enable publishing using release pipelines
-  graphFileGeneration:
-    enabled: boolean # Enable generating the graph files at the end of the build
-    includeToolset: boolean # Include toolset dependencies in the generated graph files
   jobs: [ jobSchema ] # see "Job schema" below
   publishBuildAssetsDependsOn: [ string ] # Override automatically derived dependsOn value for "publish build assets" job
   runAsPublic: boolean # Specify if job should run as a public build even in the internal project
@@ -117,3 +114,8 @@ artifacts:
     artifacts | logs | manifests:
       name: string # Azure DevOps artifact name
 ```
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CAzureDevOps%5CTemplateSchema.md)](https://helix.dot.net/f/p/5?p=Documentation%5CAzureDevOps%5CTemplateSchema.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CAzureDevOps%5CTemplateSchema.md)</sub>
+<!-- End Generated Content-->

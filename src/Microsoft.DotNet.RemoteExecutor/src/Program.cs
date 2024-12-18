@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             Type t = null;
             MethodInfo mi = null;
             object instance = null;
-            int exitCode = 0;
+            int exitCode = RemoteExecutor.SuccessExitCode;
             try
             {
                 // Create the test class if necessary
@@ -69,7 +69,10 @@ namespace Microsoft.DotNet.RemoteExecutor
                     exitCode = exit;
                 }
             }
-            catch (Exception exc)
+            // There's a bug in the .NET 7 Preview 7 runtime that makes an AccessViolationException catchable.
+            // For backward compatibility with the previous behavior, don't catch these exceptions.
+            // See https://github.com/dotnet/runtime/issues/73794 for more info.
+            catch (Exception exc) when (exc is not (TargetInvocationException { InnerException: AccessViolationException } or AccessViolationException))
             {
                 if (exc is TargetInvocationException && exc.InnerException != null)
                     exc = exc.InnerException;
@@ -95,6 +98,10 @@ namespace Microsoft.DotNet.RemoteExecutor
             }
             finally
             {
+                // We have seen cases where current directory holds a handle to a directory
+                // for a period after RemoteExecutor exits, preventing that directory being
+                // deleted. Tidy up by resetting it to the temp path.
+                Directory.SetCurrentDirectory(Path.GetTempPath());
                 (instance as IDisposable)?.Dispose();
             }
 

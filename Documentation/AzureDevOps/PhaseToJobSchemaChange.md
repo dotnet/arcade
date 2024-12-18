@@ -383,3 +383,8 @@ matrix: { string: { string: string } }
 #### job
 
 The job schema has replaced the phase schema and is publicly [documented](https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=vsts&tabs=schema#job)
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CAzureDevOps%5CPhaseToJobSchemaChange.md)](https://helix.dot.net/f/p/5?p=Documentation%5CAzureDevOps%5CPhaseToJobSchemaChange.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CAzureDevOps%5CPhaseToJobSchemaChange.md)</sub>
+<!-- End Generated Content-->

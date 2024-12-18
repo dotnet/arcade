@@ -11,7 +11,6 @@ namespace Microsoft.Cci.Writers.CSharp
     {
         private void WritePropertyDefinition(IPropertyDefinition property)
         {
-            bool isInterfaceProp = property.ContainingTypeDefinition.IsInterface;
             IMethodDefinition accessor = null;
             IMethodDefinition getter = null;
             IMethodDefinition setter = null;
@@ -58,14 +57,31 @@ namespace Microsoft.Cci.Writers.CSharp
             if (setter != null)
                 WriteAttributes(setter.Parameters.Last().Attributes);
 
-            if (!isInterfaceProp)
-            {
-                if (!accessor.IsExplicitInterfaceMethod())
-                    WriteVisibility(property.Visibility);
+            var writeVisibility = true;
 
-                // Getter and Setter modifiers should be the same
-                WriteMethodModifiers(accessor);
+            if (property.ContainingTypeDefinition.IsInterface)
+            {
+                writeVisibility = false;
             }
+
+            if (accessor.IsExplicitInterfaceMethod())
+            {
+                writeVisibility = false;
+            }
+
+            if (writeVisibility)
+            {
+                WriteVisibility(property.Visibility);
+            }
+
+            if (property.Attributes.HasRequiredMemberAttribute())
+            {
+                WriteKeyword("required");
+            }
+
+            // Getter and Setter modifiers should be the same
+            WriteMethodModifiers(accessor);
+
             if (property.GetHiddenBaseProperty(_filter) != Dummy.Property)
                 WriteKeyword("new");
 
@@ -93,7 +109,7 @@ namespace Microsoft.Cci.Writers.CSharp
                     WriteKeyword("readonly");
             }
 
-            WriteTypeName(property.Type, attributes: property.Attributes);
+            WriteTypeName(property.Type, property.Attributes);
 
             if (property.IsExplicitInterfaceProperty() && _forCompilationIncludeGlobalprefix)
                 Write("global::");

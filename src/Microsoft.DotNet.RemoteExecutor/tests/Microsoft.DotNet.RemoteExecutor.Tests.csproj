@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
-    <LangVersion>Latest</LangVersion>
-    <SignAssembly>false</SignAssembly>
+    <TargetFramework>$(NetToolCurrent)</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\src\Microsoft.DotNet.RemoteExecutor.csproj" />
   </ItemGroup>

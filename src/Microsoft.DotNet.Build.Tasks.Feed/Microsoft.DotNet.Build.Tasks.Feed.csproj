@@ -1,48 +1,87 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;net472</TargetFrameworks>
+    <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
-
-    <Description>This package provides support for publishing assets to a NuGet protocol based feed.</Description>
+    <Description>This package provides support for publishing assets to appropriate channels.</Description>
     <DevelopmentDependency>true</DevelopmentDependency>
+    <IsBuildTaskProject>true</IsBuildTaskProject>
     <PackageType>MSBuildSdk</PackageType>
-    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
-    <_ExcludeNuGetAssembliesTargetFramework>netcoreapp3.1</_ExcludeNuGetAssembliesTargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(DotNetBuildSourceOnly)' == 'true'">
+    <DefineConstants>$(DefineConstants);DOTNET_BUILD_SOURCE_ONLY</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Storage.Blobs" Version="$(AzureStorageBlobsVersion)" />
-    <PackageReference Include="DotNet.SleetLib" Version="$(DotNetSleetLibVersion)" />
-    <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
-    <PackageReference Include="Microsoft.DotNet.Maestro.Client" Version="$(MicrosoftDotNetMaestroClientVersion)" />    
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsDependencyInjectionVersion)" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(MicrosoftExtensionsDependencyInjectionAbstractionsVersion)" />
-    <PackageReference Include="Microsoft.SymbolUploader" Version="$(MicrosoftSymbolUploaderVersion)" />
-    <!-- Override the vulnerable version brought in by Microsoft.DotNet.Maestro.Client -->
-    <PackageReference Include="System.Text.Encodings.Web" Version="$(SystemTextEncodingsWebVersion)" />
+    <PackageReference Include="Azure.Core" Condition="'$(DotNetBuildSourceOnly)' != 'true'" />
+    <PackageReference Include="Azure.Identity" Condition="'$(DotNetBuildSourceOnly)' != 'true'" />
+    <PackageReference Include="Azure.Storage.Blobs" Condition="'$(DotNetBuildSourceOnly)' != 'true'" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(DotNetBuildSourceOnly)' != 'true'">
+    <!-- Maestro.Client stopped supporting .NET 4.7.2 long ago.
+    This functionality should eventually be moved into an arcade-services package,
+    but for users consuming other functionality we'll still support 4.7.2 by ifdefing it out. -->
+    <PackageReference Include="Microsoft.DotNet.Maestro.Client" />
+    <!-- SymbolUploadHelper uses Azure SDKs, S.T.Json, and several other dependencies that can't be downgraded safely.
+    On .NET Core/.NET these deps come from the shared framework and we don't need try to do version fixups, and 
+    the symbol publishing doesn't run on framework anyway (this project has a throwing stub for .NET framework in that path
+    due to the reliance in maestro). Until we really need to multitarget, this is the better path. -->
+    <ProjectReference Include="..\Microsoft.DotNet.Internal.SymbolHelper\Microsoft.DotNet.Internal.SymbolHelper.csproj" />
+    <!-- Additionally, SymbolHelper relies on Microsoft.DiaSymReader which brings NS.Library 1.6.1 and the slew of
+    old packages with it. Upgrade to keep CG happy. -->
+    <PackageReference Include="NETStandard.Library" IsImplicitlyDefined="false" PrivateAssets="all" ExcludeAssets="runtime" VersionOverride="2.0.3" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
+    <PackageReference Include="Microsoft.Bcl.HashCode" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Common\Microsoft.Arcade.Common\Microsoft.Arcade.Common.csproj" />
-    <ProjectReference Include="..\Microsoft.DotNet.Deployment.Tasks.Links\Microsoft.DotNet.Deployment.Tasks.Links.csproj" />
-    <ProjectReference Include="..\Microsoft.DotNet.VersionTools\lib\Microsoft.DotNet.VersionTools.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.Deployment.Tasks.Links\Microsoft.DotNet.Deployment.Tasks.Links.csproj" Condition="'$(DotNetBuildSourceOnly)' != 'true'" />
+    <ProjectReference Include="..\VersionTools\Microsoft.DotNet.VersionTools\Microsoft.DotNet.VersionTools.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.ArcadeAzureIntegration\Microsoft.DotNet.ArcadeAzureIntegration.csproj" Condition="'$(DotNetBuildSourceOnly)' != 'true'" />
   </ItemGroup>
 
   <ItemGroup>
     <Compile Include="..\Common\Internal\EnumExtensions.cs" />
   </ItemGroup>
 
-  <!-- Exclude NuGet package assemblies per https://github.com/dotnet/arcade/issues/1965
-       This is a workaround for https://github.com/microsoft/msbuild/issues/5073.  Required until #5073 is fixed or 
-       https://github.com/microsoft/msbuild/issues/5086 is available and we switch to that workaround -->
-  <Target Name="ExcludeNuGetPackagesFromNetCore" BeforeTargets="GenerateNuspec">
-    <ItemGroup>
-      <_PackageFilesToExclude Include="%(_PackageFiles.Identity)" Condition="$([System.String]::Copy('%(_PackageFiles.FileName)').StartsWith('NuGet')) and $([System.String]::Copy('%(_PackageFiles.Directory)').Contains('$(_ExcludeNuGetAssembliesTargetFramework)'))" />
-    </ItemGroup>
-  </Target>
+  <ItemGroup Condition="'$(DotNetBuildSourceOnly)' == 'true'">
+    <Compile Remove="src\AssetPublisherFactory.cs" />
+    <Compile Remove="src\AzureDevOpsArtifactFeed.cs" />
+    <Compile Remove="src\AzureDevOpsFeedPermission.cs" />
+    <Compile Remove="src\AzureDevOpsNugetFeedAssetPublisher.cs" />
+    <Compile Remove="src\AzureStorageAssetPublisher.cs" />
+    <Compile Remove="src\AzureStorageContainerAssetSasCredentialPublisher.cs" />
+    <Compile Remove="src\AzureStorageContainerAssetTokenCredentialPublisher.cs" />
+    <Compile Remove="src\AzureStorageExtensions.cs" />
+    <Compile Remove="src\BlobFeedAction.cs" />
+    <Compile Remove="src\IAssetPublisher.cs" />
+    <Compile Remove="src\common\AssetComparer.cs" />
+    <Compile Remove="src\common\AzureConnectionStringBuildTask.cs" />
+    <Compile Remove="src\common\AzureStorageUtils.cs" />
+    <Compile Remove="src\common\CreateAzureContainer.cs" />
+    <Compile Remove="src\common\CreateAzureContainerIfNotExists.cs" />
+    <Compile Remove="src\common\CreateNewAzureContainer.cs" />
+    <Compile Remove="src\common\LatestLinksManager.cs" />
+    <Compile Remove="src\common\UploadToAzure.cs" />
+    <Compile Remove="src\CreateAzureDevOpsFeed.cs" />
+    <Compile Remove="src\model\PublishingConstants.cs" />
+    <Compile Remove="src\model\SetupTargetFeedConfigBase.cs" />
+    <Compile Remove="src\model\SetupTargetFeedConfigV3.cs" />
+    <Compile Remove="src\model\TargetChannelConfig.cs" />
+    <Compile Remove="src\model\TargetFeedConfig.cs" />
+    <Compile Remove="src\PATCredential.cs" />
+    <Compile Remove="src\PublishArtifactsInManifest.cs" />
+    <Compile Remove="src\PublishArtifactsInManifestBase.cs" />
+    <Compile Remove="src\PublishArtifactsInManifestV3.cs" />
+    <Compile Remove="src\PublishSignedAssets.cs" />
+    <Compile Remove="src\TaskTracer.cs" />
+  </ItemGroup>
 
-  <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 </Project>

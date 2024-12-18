@@ -1,5 +1,11 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Execute">
+
+  <PropertyGroup>
+    <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
+    <TargetFramework>$(NetToolCurrent)</TargetFramework>
+  </PropertyGroup>
+  
   <!--
     Parameters:
       - IsInternalBuild                         : true if at least an asset to be published is internal.
@@ -7,15 +13,9 @@
       - NonShippingFolder                       : Location of the nonshipping assets about to be published.
       - FeedName                                : Name of the feed that will be created. This will
                                                   be appended by '-shipping' and '-nonshipping' depending the case
-      - NugetPath                               : Path to nuget.exe                                            
-      - AzdoTargetFeedPAT                       : Required token to publish assets to feeds
+      - NugetPath                               : Path to nuget.exe
+      - AzdoTargetFeedPAT                       : Token to publish assets to feeds
   -->
-
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
-    <AzureDevOpsOrg Condition="'$(AzureDevOpsOrg)' == ''">dnceng</AzureDevOpsOrg>
-  </PropertyGroup>
 
   <Target Name="Execute">
     <Error
@@ -30,25 +30,31 @@
       Condition="'$(NonShippingFolder)' == ''"
       Text="Parameters 'NonShippingFolder' is empty." />
 
+    <PropertyGroup>
+      <AzureDevOpsOrg Condition="'$(AzureDevOpsOrg)' == ''">dnceng</AzureDevOpsOrg>
+      <AzureDevOpsProject Condition="'(AzureDevOpsProject)' == '' and '(AzureDevOpsOrg)' == 'dnceng' and '$(IsInternalBuild)' == 'true'">internal</AzureDevOpsProject>
+      <AzureDevOpsProject Condition="'(AzureDevOpsProject)' == '' and '(AzureDevOpsOrg)' == 'dnceng' and '$(IsInternalBuild)' == 'false'">public</AzureDevOpsProject>
+    </PropertyGroup>
+
     <Error
-      Condition="'$(AzdoTargetFeedPAT)' == ''"
-      Text="Parameters 'AzdoTargetFeedPAT' is empty." />
+      Condition="'$(AzureDevOpsProject)' == ''"
+      Text="Parameters 'AzureDevOpsProject' is empty." />
 
     <!--Create the shipping feed-->
     <CreateAzureDevOpsFeed
-        IsInternal="$(IsInternalBuild)"
         AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)"
         FeedName="$(FeedName)-shipping"
-        AzureDevOpsOrg="$(AzureDevOpsOrg)">
+        AzureDevOpsOrg="$(AzureDevOpsOrg)"
+        AzureDevOpsProject="$(AzureDevOpsProject)">
       <Output TaskParameter="TargetFeedURL" PropertyName="ShippingAzdoPackageFeedURL"/>
     </CreateAzureDevOpsFeed>
 
     <!--Create the nonshipping feed-->
     <CreateAzureDevOpsFeed
-        IsInternal="$(IsInternalBuild)"
         AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)"
         FeedName="$(FeedName)-nonshipping"
-        AzureDevOpsOrg="$(AzureDevOpsOrg)">
+        AzureDevOpsOrg="$(AzureDevOpsOrg)"
+        AzureDevOpsProject="$(AzureDevOpsProject)">
       <Output TaskParameter="TargetFeedURL" PropertyName="NonShippingAzdoPackageFeedURL"/>
     </CreateAzureDevOpsFeed>
 
@@ -65,4 +71,5 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" />
   </ItemGroup>
+
 </Project>

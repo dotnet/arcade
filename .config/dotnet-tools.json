@@ -3,9 +3,15 @@
   "isRoot": true,
   "tools": {
     "microsoft.dnceng.secretmanager": {
-      "version": "1.1.0-beta.21380.2",
+      "version": "1.1.0-beta.24605.7",
       "commands": [
         "secret-manager"
+      ]
+    },
+    "microsoft.dnceng.patgeneratortool": {
+      "version": "1.1.0-beta.22580.1",
+      "commands": [
+        "pat-generator"
       ]
     }
   }

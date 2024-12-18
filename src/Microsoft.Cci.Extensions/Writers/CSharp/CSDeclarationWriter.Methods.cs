@@ -33,22 +33,24 @@ namespace Microsoft.Cci.Writers.CSharp
                 return;
             }
 
+            var writeVisibility = true;
+
             if (method.ContainingTypeDefinition.IsInterface)
             {
-                if (method.IsMethodUnsafe())
-                {
-                    WriteKeyword("unsafe");
-                }
+                writeVisibility = false;
             }
-            else
+            
+            if (method.IsExplicitInterfaceMethod() || method.IsStaticConstructor)
             {
-                if (!method.IsExplicitInterfaceMethod() && !method.IsStaticConstructor)
-                {
-                    WriteVisibility(method.Visibility);
-                }
-
-                WriteMethodModifiers(method);
+                writeVisibility = false;
             }
+
+            if (writeVisibility)
+            {
+                WriteVisibility(method.Visibility);
+            }
+
+            WriteMethodModifiers(method);
 
             WriteInterfaceMethodModifiers(method);
             WriteMethodDefinitionSignature(method);
@@ -67,9 +69,7 @@ namespace Microsoft.Cci.Writers.CSharp
 
         private void WriteTypeName(ITypeReference type, ITypeReference containingType, IEnumerable<ICustomAttribute> attributes = null, byte? methodNullableContextValue = null)
         {
-            var useKeywords = containingType.GetTypeName() != type.GetTypeName();
-
-            WriteTypeName(type, attributes: attributes, useTypeKeywords: useKeywords, methodNullableContextValue: methodNullableContextValue);
+            WriteTypeName(type, attributes: attributes, methodNullableContextValue: methodNullableContextValue);
         }
 
         private string GetNormalizedMethodName(IName name)
@@ -81,9 +81,9 @@ namespace Microsoft.Cci.Writers.CSharp
                 case "op_UnaryNegation": return "operator -";
                 case "op_UnaryPlus": return "operator +";
                 case "op_LogicalNot": return "operator !";
-                case "op_OnesComplement": return "operator ~";
                 case "op_True": return "operator true";
                 case "op_False": return "operator false";
+                case "op_OnesComplement": return "operator ~";
                 case "op_Addition": return "operator +";
                 case "op_Subtraction": return "operator -";
                 case "op_Multiply": return "operator *";
@@ -94,6 +94,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 case "op_BitwiseOr": return "operator |";
                 case "op_LeftShift": return "operator <<";
                 case "op_RightShift": return "operator >>";
+                case "op_UnsignedRightShift": return "operator >>>";
                 case "op_Equality": return "operator ==";
                 case "op_GreaterThan": return "operator >";
                 case "op_LessThan": return "operator <";
@@ -102,6 +103,14 @@ namespace Microsoft.Cci.Writers.CSharp
                 case "op_LessThanOrEqual": return "operator <=";
                 case "op_Explicit": return "explicit operator";
                 case "op_Implicit": return "implicit operator";
+                case "op_CheckedDecrement": return "operator checked --";
+                case "op_CheckedIncrement": return "operator checked ++";
+                case "op_CheckedUnaryNegation": return "operator checked -";
+                case "op_CheckedAddition": return "operator checked +";
+                case "op_CheckedSubtraction": return "operator checked -";
+                case "op_CheckedMultiply": return "operator checked *";
+                case "op_CheckedDivision": return "operator checked /";
+                case "op_CheckedExplicit": return "explicit operator checked";
                 default: return name.Value; // return just the name
             }
         }
@@ -122,16 +131,15 @@ namespace Microsoft.Cci.Writers.CSharp
             {
                 IMethodImplementation methodImplementation = method.GetMethodImplementation();
                 object nullableAttributeArgument = methodImplementation.GetExplicitInterfaceMethodNullableAttributeArgument(_metadataReaderCache);
-                if (nullableAttributeArgument != null)
-                {
-                    WriteTypeName(methodImplementation.ImplementedMethod.ContainingType, noSpace: true, nullableAttributeArgument: nullableAttributeArgument);
-                    WriteSymbol(".");
-                    WriteIdentifier(methodImplementation.ImplementedMethod.Name);
-                    return;
-                }
-            }
 
-            WriteIdentifier(GetNormalizedMethodName(method.Name));
+                WriteTypeName(methodImplementation.ImplementedMethod.ContainingType, noSpace: true, nullableAttributeArgument: nullableAttributeArgument);
+                WriteSymbol(".");
+                WriteIdentifier(GetNormalizedMethodName(methodImplementation.ImplementedMethod.Name));
+            }
+            else
+            {
+                WriteIdentifier(GetNormalizedMethodName(method.Name));
+            }
         }
 
         private void WriteMethodDefinitionSignature(IMethodDefinition method)
@@ -170,7 +178,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 WriteTypeName(method.Type, method.ContainingType, methodNullableContextValue: nullableContextValue);
             }
 
-            Contract.Assert(!(method is IGenericMethodInstance), "Currently don't support generic method instances");
+            Contract.Assert(method is not IGenericMethodInstance, "Currently don't support generic method instances");
             if (method.IsGeneric)
                 WriteGenericParameters(method.GenericParameters);
 
@@ -267,7 +275,14 @@ namespace Microsoft.Cci.Writers.CSharp
 
             if (method.IsVirtual)
             {
-                if (method.IsNewSlot)
+                if (method.ContainingTypeDefinition.IsInterface)
+                {
+                    if (method.IsStatic && method.IsAbstract)
+                    {
+                        WriteKeyword("abstract");
+                    }
+                }
+                else if (method.IsNewSlot)
                 {
                     if (method.IsAbstract)
                         WriteKeyword("abstract");

@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
 using System.IO;
 using Xunit;
@@ -42,7 +45,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         [Fact]
         public void FailOnceThenPass()
         {
-            string target = Path.Combine(Environment.GetEnvironmentVariable("HELIX_WORKITEM_ROOT") ?? Environment.GetEnvironmentVariable("TEMP"), "my-test-file-123456.snt");
+            string target = Path.Combine(Environment.GetEnvironmentVariable("HELIX_WORKITEM_ROOT") ?? Environment.GetEnvironmentVariable("TEMP") ?? Environment.GetEnvironmentVariable("TMPDIR"), "my-test-file-123456.snt");
 
             // If we're inside a Helix Docker work item, GetTempPath() is cleaned every execution, 
             // but the work item's own directory is not (and is writeable from inside Docker), so use it.
@@ -55,6 +58,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             if (!exists)
             {
                 File.WriteAllText(target, "Test failed once");
+                exists = File.Exists(target);
             }
             
             Assert.True(exists, $"File should exist: {target}");

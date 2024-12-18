@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using Microsoft.DotNet.Helix.Client;
 using Moq;
 using System;
@@ -16,7 +19,7 @@ namespace Microsoft.DotNet.Helix.JobSender.Test
             var archiveFile = Path.GetTempFileName();
             var blobContainer = new Mock<IBlobContainer>(MockBehavior.Strict);
             blobContainer
-                .Setup(bc => bc.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                .Setup(bc => bc.UploadFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<Action<string>>(), It.IsAny<CancellationToken>()))
                 .Returns(Task.FromResult(new Uri("http://microsoft.com/blob")));
             var archivePayload = new ArchivePayload(archiveFile);
 

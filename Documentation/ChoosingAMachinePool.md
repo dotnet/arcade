@@ -32,5 +32,10 @@ All test execution should run through helix. An up to date list of helix queues 
 [dnceng-linux-external-temp]: https://dev.azure.com/dnceng/public/_settings/agentqueues?queueId=65&_a=agents
 [dotnet-external-temp]: https://dev.azure.com/dnceng/internal/_settings/agentqueues?queueId=47&_a=agents
 
-[dotnet-helix-machines]: https://dev.azure.com/dnceng/internal/internal%20Team/_git/dotnet-helix-machines?path=%2FREADME.md&version=GBmaster
+[dotnet-helix-machines]: https://dev.azure.com/dnceng/internal/internal%20Team/_git/dotnet-helix-machines?path=%2FREADME.md&version=GBmain
 [Helix Queue Info Api]: https://helix.dot.net/swagger/ui/index#!/Information/Information_QueueInfoList
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CChoosingAMachinePool.md)](https://helix.dot.net/f/p/5?p=Documentation%5CChoosingAMachinePool.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CChoosingAMachinePool.md)</sub>
+<!-- End Generated Content-->

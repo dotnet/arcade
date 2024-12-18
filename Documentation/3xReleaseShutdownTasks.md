@@ -396,3 +396,8 @@ Below are listed various tools and commands useful for the Coherency QB.
   flow graph. See example in linked docs.
 
 [open-dependency-prs]: https://github.com/pulls?utf8=%E2%9C%93&q=is%3Aopen+is%3Apr+author%3Aapp%2Fdotnet-maestro+archived%3Afalse+user%3Adotnet+user%3Aaspnet+
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5C3xReleaseShutdownTasks.md)](https://helix.dot.net/f/p/5?p=Documentation%5C3xReleaseShutdownTasks.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5C3xReleaseShutdownTasks.md)</sub>
+<!-- End Generated Content-->

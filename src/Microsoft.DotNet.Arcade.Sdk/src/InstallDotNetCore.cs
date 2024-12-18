@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -22,6 +25,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
     public class InstallDotNetCore : Microsoft.Build.Utilities.Task
     {
 #endif
+        private static readonly char[] s_keyTrimChars = [ '$', '(', ')' ];
+
         public string VersionsPropsPath { get; set; }
 
         [Required]
@@ -88,7 +93,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                 }
                                 else
                                 {
-                                    var proj = Project.FromFile(VersionsPropsPath, new Build.Definition.ProjectOptions());
+                                    var proj = Project.FromFile(VersionsPropsPath, new Build.Definition.ProjectOptions() { ProjectCollection = new ProjectCollection() });
                                     properties = proj.AllEvaluatedProperties.ToLookup(p => p.Name, StringComparer.OrdinalIgnoreCase);
                                 }
                             }
@@ -109,11 +114,15 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                     // Try to parse version
                                     if (!SemanticVersion.TryParse(item.Key, out version))
                                     {
-                                        var propertyName = item.Key.Trim('$', '(', ')');
+                                        var propertyName = item.Key.Trim(s_keyTrimChars);
 
                                         // Unable to parse version, try to find the corresponding identifier from the MSBuild loaded MSBuild properties
-                                        string evaluatedValue = properties[propertyName].First().EvaluatedValue;
-                                        if (!SemanticVersion.TryParse(evaluatedValue, out version))
+                                        ProjectProperty property = properties[propertyName].FirstOrDefault();
+                                        if (property == null)
+                                        {
+                                            Log.LogError($"Unable to find '{item.Key}' in properties defined in '{VersionsPropsPath}'");
+                                        }
+                                        else if (!SemanticVersion.TryParse(property.EvaluatedValue, out version))
                                         {
                                             Log.LogError($"Unable to parse '{item.Key}' from properties defined in '{VersionsPropsPath}'");
                                         }
@@ -148,8 +157,28 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                         {
                                             FileName = DotNetInstallScript,
                                             Arguments = arguments,
-                                            UseShellExecute = false
+                                            UseShellExecute = false,
+                                            // Redirect to stdout/err. Addressing https://github.com/dotnet/msbuild/issues/7913
+                                            // Without it script execution was failing on Linux when run from
+                                            RedirectStandardOutput = true,
+                                            RedirectStandardError = true,
                                         });
+                                        process.OutputDataReceived += (sender, e) =>
+                                        {
+                                            if (!String.IsNullOrEmpty(e.Data))
+                                            {
+                                                Console.WriteLine(e.Data);
+                                            }
+                                        };
+                                        process.ErrorDataReceived += (sender, e) =>
+                                        {
+                                            if (!String.IsNullOrEmpty(e.Data))
+                                            {
+                                                Console.Error.WriteLine(e.Data);
+                                            }
+                                        };
+                                        process.BeginOutputReadLine();
+                                        process.BeginErrorReadLine();
                                         process.WaitForExit();
                                         if (process.ExitCode != 0)
                                         {

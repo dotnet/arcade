@@ -1,12 +1,12 @@
-using System;
-using System.Collections.Generic;
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.AzureDevOps;
-using Microsoft.DotNet.Helix.Client.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                                             ["testCaseTitle"] = $"{workItemFriendlyName} Work Item",
                                             ["outcome"] = failed ? "Failed" : "Passed",
                                             ["state"] = "Completed",
-                                            ["errorMessage"] = failed ? "The Helix Work Item failed. Often this is due to a test crash or infrastructure failure. See the Helix Test Logs tab in the Results page of Azure DevOps." : null,
+                                            ["errorMessage"] = failed ? "The Helix Work Item failed. Often this is due to a test crash. Please see the 'Artifacts' tab above for additional logs." : null,
                                             ["durationInMs"] = 60 * 1000, // Use a non-zero duration so that the graphs look better.
                                             ["comment"] = new JObject
                                             {
@@ -72,8 +72,16 @@ namespace Microsoft.DotNet.Helix.Sdk
                     }
                 });
 
-            var testResults = (JArray)testResultData["value"];
-            return (int)testResults.First()["id"];
+            if (testResultData != null)
+            {
+                if ((JArray)testResultData["value"] != null)
+                {
+                    var testResults = (JArray)testResultData["value"];
+                    return (int)testResults.First()["id"];
+                }
+                return 0;
+            }
+            return 0;
         }
     }
 }

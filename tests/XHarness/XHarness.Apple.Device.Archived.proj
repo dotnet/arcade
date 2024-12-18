@@ -19,10 +19,12 @@
     <ItemGroup>
       <XHarnessAppBundleToTest Include="@(TestApp)">
         <TestTarget>tvos-device</TestTarget>
-        <WorkItemTimeout>00:18:00</WorkItemTimeout>
+        <WorkItemTimeout>00:20:00</WorkItemTimeout>
         <CustomCommands>
+          <![CDATA[
           sign $(XHarnessTestAppName)
           xharness apple test -a $(XHarnessTestAppName) -o $output_directory -t $target -v --timeout 00:08:50
+          ]]>
         </CustomCommands>
       </XHarnessAppBundleToTest>
     </ItemGroup>

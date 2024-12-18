@@ -9,7 +9,7 @@ Contains tasks that manages aka.ms links.
 - **ClientSecret** - Token for application authorized to update a link
 - **Tenant** - `aka.ms` tenant.
 
-## CreateAkaMSLink
+## CreateAkaMSLinks
 
 Creates or updates a new aka.ms link.  Links may have a short url, which is a short string that may contain a number of forward slashes.  Examples:
 - `aka.ms/helloworld`
@@ -24,7 +24,7 @@ Creates or updates a new aka.ms link.  Links may have a short url, which is a sh
 - **GroupOwner (optional)** - Mail enabled security group (Owners still required)
 - **Overwrite (optional, defaults to true)** - If the link already exists, overwrite it with a new target.  Otherwise fail the task.
 
-## DeleteAkaMSLink
+## DeleteAkaMSLinks
 
 Removes an `aka.ms` link
 

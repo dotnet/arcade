@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -262,9 +265,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
 
                 Log.LogMessage(MessageImportance.High, $"Sending Job to {TargetQueue}...");
-
                 cancellationToken.ThrowIfCancellationRequested();
-                ISentJob job = await def.SendAsync(msg => Log.LogMessage(msg), cancellationToken);
+                // LogMessageFromText will take any string formatted as a canonical error or warning and convert the type of log to this
+                ISentJob job = await def.SendAsync(msg => Log.LogMessageFromText(msg, MessageImportance.Normal), cancellationToken);
                 JobCorrelationId = job.CorrelationId;
                 JobCancellationToken = job.HelixCancellationToken;
                 ResultsContainerUri = job.ResultsContainerUri;

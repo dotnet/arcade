@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
 using System.Diagnostics;
 using System.Net;
@@ -20,6 +23,13 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// The Helix Api Access Token
         /// </summary>
         public string AccessToken { get; set; }
+
+        /// <summary>
+        ///   If <see langword="true"/>, fail when posting jobs to non-existent queues; If <see langword="false"/> allow it and print a warning.
+        ///   Note if an MSBuild sequence starts and waits on jobs, and none are started, this will still fail.
+        ///   Defined on HelixTask so the catch block around Execute() can know about it.
+        /// </summary>
+        public bool FailOnMissingTargetQueue { get; set; } = true;
 
         protected IHelixApi HelixApi { get; private set; }
 
@@ -62,6 +72,17 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 // Canceled
                 return false;
+            }
+            catch (ArgumentException argEx) when (argEx.Message.StartsWith("Helix API does not contain an entry "))
+            {
+                if (FailOnMissingTargetQueue)
+                {
+                    Log.LogError(FailureCategory.Build, argEx.Message);
+                }
+                else
+                {
+                    Log.LogWarning($"{argEx.Message} (FailOnMissingTargetQueue is false, so this is just a warning.)");
+                }
             }
             catch (Exception ex)
             {

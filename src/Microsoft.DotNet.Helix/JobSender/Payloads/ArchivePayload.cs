@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
 using System.IO;
 using System.Threading;
@@ -39,7 +42,7 @@ namespace Microsoft.DotNet.Helix.Client
 
             using (var stream = File.OpenRead(Archive.FullName))
             {
-                Uri zipUri = await payloadContainer.UploadFileAsync(stream, $"{Archive.Name}", cancellationToken);
+                Uri zipUri = await payloadContainer.UploadFileAsync(stream, $"{Archive.Name}", log, cancellationToken);
                 File.WriteAllText(alreadyUploadedFile.FullName, zipUri.AbsoluteUri);
                 return zipUri.AbsoluteUri;
             }

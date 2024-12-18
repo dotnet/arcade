@@ -41,3 +41,8 @@ This is because RepoToolset is expecting a GitHub url but internal builds are bu
 ## Agent pools
 
 See [Azure DevOps Onboarding documentation](./AzureDevOpsOnboarding.md#agent-queues)
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CAzureDevOps%5CMovingFromDevDivToDncEng.md)](https://helix.dot.net/f/p/5?p=Documentation%5CAzureDevOps%5CMovingFromDevDivToDncEng.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CAzureDevOps%5CMovingFromDevDivToDncEng.md)</sub>
+<!-- End Generated Content-->

@@ -1,6 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+#nullable disable
+
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
@@ -13,7 +15,7 @@ namespace Microsoft.DotNet.Build.Tasks
 
         internal Log Log
         {
-            get { return _log ?? (_log = new Log(new TaskLoggingHelper(this))); }
+            get { return _log ??= new Log(new TaskLoggingHelper(this)); }
         }
 
         public BuildTask()

@@ -31,11 +31,14 @@ namespace Microsoft.DotNet.SignTool.Tests
             {".psm1",  new List<SignInfo>{ new SignInfo("PSMCertificate") } },
             {".psc1",   new List<SignInfo>{ new SignInfo("PSCCertificate") } },
             {".dylib", new List<SignInfo>{ new SignInfo("DylibCertificate") } },
-            {".dll",  new List<SignInfo>{ new SignInfo("Microsoft400") } },
-            {".exe",  new List<SignInfo>{ new SignInfo("Microsoft400") } },
-            {".msi",  new List<SignInfo>{ new SignInfo("Microsoft400") } },
+            {".deb", new List<SignInfo>{ new SignInfo("LinuxSign") } },
+            {".dll",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
+            {".exe",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
+            {".msi",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             {".vsix",  new List<SignInfo>{ new SignInfo("VsixSHA2") } },
             {".zip",  new List<SignInfo>{ SignInfo.Ignore } },
+            {".tgz",  new List<SignInfo>{ SignInfo.Ignore } },
+            {".py",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             {".nupkg",  new List<SignInfo>{ new SignInfo("NuGet") } },
             {".symbols.nupkg",  new List<SignInfo>{ SignInfo.Ignore } },
         };
@@ -50,16 +53,18 @@ namespace Microsoft.DotNet.SignTool.Tests
             { ".psm1", new List<SignInfo>{ new SignInfo("PSMCertificate", collisionPriorityId: "123") } },
             { ".psc1", new List<SignInfo>{ new SignInfo("PSCCertificate", collisionPriorityId: "123") } },
             { ".dylib", new List<SignInfo>{ new SignInfo("DylibCertificate", collisionPriorityId: "123") } },
+            { ".deb", new List<SignInfo>{ new SignInfo("LinuxSign", collisionPriorityId: "123") } },
             { ".dll", new List<SignInfo>
                 { 
-                    new SignInfo("Microsoft400", collisionPriorityId: "123"),
+                    new SignInfo("Microsoft400", collisionPriorityId: "123"), // lgtm [cs/common-default-passwords] Safe, these are certificate names
                     new SignInfo("FakeOne", collisionPriorityId: "456")
                 } 
              },
-            { ".exe", new List<SignInfo>{ new SignInfo("Microsoft400", collisionPriorityId:  "123") } },
-            { ".msi", new List<SignInfo>{ new SignInfo("Microsoft400", collisionPriorityId:  "123") } },
+            { ".exe", new List<SignInfo>{ new SignInfo("Microsoft400", collisionPriorityId:  "123") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
+            { ".msi", new List<SignInfo>{ new SignInfo("Microsoft400", collisionPriorityId:  "123") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             { ".vsix", new List<SignInfo>{ new SignInfo("VsixSHA2", collisionPriorityId: "123") } },
             { ".zip", new List<SignInfo>{ SignInfo.Ignore } },
+            { ".tgz", new List<SignInfo>{ SignInfo.Ignore } },
             { ".nupkg", new List<SignInfo>{ new SignInfo("NuGet", collisionPriorityId: "123") } },
             { ".symbols.nupkg",  new List<SignInfo>{ SignInfo.Ignore } },
         };
@@ -95,15 +100,23 @@ namespace Microsoft.DotNet.SignTool.Tests
                 { "CertificateName", "DylibCertificate" },
                 { SignToolConstants.CollisionPriorityId, "123" }
             }),
+            new TaskItem(".deb", new Dictionary<string, string> {
+                { "CertificateName", "LinuxSign" },
+                { SignToolConstants.CollisionPriorityId, "123" }
+            }),
             new TaskItem(".dll", new Dictionary<string, string> {
-                { "CertificateName", "Microsoft400" },
+                { "CertificateName", "Microsoft400" }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
                 { SignToolConstants.CollisionPriorityId, "123" }
             }),
             new TaskItem(".exe", new Dictionary<string, string> {
-                { "CertificateName", "Microsoft400" },
+                { "CertificateName", "Microsoft400" }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
                 { SignToolConstants.CollisionPriorityId, "123" }
             }),
             new TaskItem(".zip", new Dictionary<string, string> {
+                { "CertificateName", "None" },
+                { SignToolConstants.CollisionPriorityId, "123" }
+            }),
+            new TaskItem(".tgz", new Dictionary<string, string> {
                 { "CertificateName", "None" },
                 { SignToolConstants.CollisionPriorityId, "123" }
             }),
@@ -132,7 +145,7 @@ namespace Microsoft.DotNet.SignTool.Tests
                 { SignToolConstants.CollisionPriorityId, "234" }
             }),
             new TaskItem(".dll", new Dictionary<string, string> {
-                { "CertificateName", "Microsoft400" },
+                { "CertificateName", "Microsoft400" }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
                 { SignToolConstants.CollisionPriorityId, "234" }
             }),
             new TaskItem(".nupkg", new Dictionary<string, string> {
@@ -225,7 +238,9 @@ namespace Microsoft.DotNet.SignTool.Tests
             ".esd",
 
             ".py",
-            ".pyd"
+            ".pyd",
+
+            ".deb",
         };
 
         public static IEnumerable<object[]> GetSignableExtensions()
@@ -247,6 +262,8 @@ namespace Microsoft.DotNet.SignTool.Tests
         {
             return Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "wix");
         }
+
+        private static string s_tarToolPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "tar", "Microsoft.Dotnet.Tar.dll");
 
         private string GetResourcePath(string name, string relativePath = null)
         {
@@ -303,15 +320,21 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             var task = new SignToolTask { BuildEngine = buildEngine };
 
-            // The path to MSBuild will always be null in these tests, this will force
+            // The path to MSBuild and DotNet will always be null in these tests, this will force
             // the signing logic to call our FakeBuildEngine.BuildProjectFile with a path
             // to the XML that store the content of the would be Microbuild sign request.
-            var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, _tmpDir, enclosingDir: "", "", wixToolsPath: wixToolsPath);
+            var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, dotnetPath: null, _tmpDir, enclosingDir: "", "", wixToolsPath: wixToolsPath, tarToolPath: s_tarToolPath);
 
             var signTool = new FakeSignTool(signToolArgs, task.Log);
-            var configuration = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, task.Log);
+            var configuration = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, tarToolPath: s_tarToolPath, task.Log);
             var signingInput = configuration.GenerateListOfFiles();
-            var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput, new string[] { }, configuration._hashToCollisionIdMap);
+            var util = new BatchSignUtil(
+                task.BuildEngine,
+                task.Log,
+                signTool,
+                signingInput,
+                new string[] { },
+                configuration._hashToCollisionIdMap);
 
             var beforeSigningEngineFilesList = Directory.GetFiles(signToolArgs.TempDir, "*-engine.exe", SearchOption.AllDirectories);
             util.Go(doStrongNameCheck: true);
@@ -349,7 +372,7 @@ namespace Microsoft.DotNet.SignTool.Tests
         {
             var engine = new FakeBuildEngine();
             var task = new SignToolTask { BuildEngine = engine };
-            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, tarToolPath: s_tarToolPath, task.Log).GenerateListOfFiles();
 
             signingInput.FilesToSign.Select(f => f.ToString()).Should().BeEquivalentTo(expected);
             signingInput.FilesToCopy.Select(f => $"{f.Key} -> {f.Value}").Should().BeEquivalentTo(expectedCopyFiles ?? Array.Empty<string>());
@@ -367,7 +390,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
-            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, null, task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, null, tarToolPath: s_tarToolPath, task.Log).GenerateListOfFiles();
 
             signingInput.FilesToSign.Should().BeEmpty();
             signingInput.ZipDataMap.Should().BeEmpty();
@@ -387,6 +410,7 @@ namespace Microsoft.DotNet.SignTool.Tests
                 DryRun = false,
                 TestSign = true,
                 MSBuildPath = CreateTestResource("msbuild.fake"),
+                DotNetPath = CreateTestResource("dotnet.fake"),
                 SNBinaryPath = CreateTestResource("fake.sn.exe")
             };
 
@@ -406,6 +430,7 @@ namespace Microsoft.DotNet.SignTool.Tests
                 DryRun = false,
                 TestSign = true,
                 MSBuildPath = CreateTestResource("msbuild.fake"),
+                DotNetPath = CreateTestResource("dotnet.fake"),
                 DoStrongNameCheck = false,
                 SNBinaryPath = null,
             };
@@ -443,7 +468,12 @@ namespace Microsoft.DotNet.SignTool.Tests
                 "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'",
-            });
+            }/*,
+            Reenable after https://github.com/dotnet/arcade/issues/10293,
+            expectedWarnings: new[]
+            {
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+            }*/);
         }
 
         [Fact]
@@ -551,10 +581,12 @@ $@"
             },
             expectedWarnings: new[]
             {
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "3", "lib/net461/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "5", "lib/netcoreapp2.0/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "6", "lib/netcoreapp2.1/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "7", "lib/netstandard2.0/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''."
+                // Reenable after https://github.com/dotnet/arcade/issues/10293
+                // $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "3", "lib/net461/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "5", "lib/netcoreapp2.0/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "6", "lib/netcoreapp2.1/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "7", "lib/netstandard2.0/ProjectOne.dll")}' with Microsoft certificate 'OverriddenCertificate'. The library is considered 3rd party library due to its copyright: ''."
             });
         }
 
@@ -595,7 +627,9 @@ $@"
             },
             expectedWarnings: new[]
             {
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "4", "lib/netcoreapp2.0/ContainerOne.dll")}' with Microsoft certificate 'ArcadeCertTest'. The library is considered 3rd party library due to its copyright: ''."
+                // Reenable after https://github.com/dotnet/arcade/issues/10293
+                // $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}' with Microsoft certificate 'OverriddenCertificate1'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "4", "lib/netcoreapp2.0/ContainerOne.dll")}' with Microsoft certificate 'ArcadeCertTest'. The library is considered 3rd party library due to its copyright: ''."
             });
         }
 
@@ -646,7 +680,7 @@ $@"
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
                 { "7cec85d7bea7798e", new List<SignInfo>{ new SignInfo("ArcadeCertTest", "ArcadeStrongTest", "123") } },
-                { "adb9793829ddae60", new List<SignInfo>{ new SignInfo("Microsoft400", "AspNetCore", "123") } }
+                { "adb9793829ddae60", new List<SignInfo>{ new SignInfo("Microsoft400", "AspNetCore", "123") } } // lgtm [cs/common-default-passwords] Safe, these are certificate names
             };
 
             // Overriding information
@@ -743,15 +777,14 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "CoreLibCr
             },
             expectedWarnings: new[]
             {
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "EmptyPKT.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "EmptyPKT.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
             });
         }
 
-        [SkippableFact]
+        [WindowsOnlyFact]
         [Trait("Category", "SkipWhenLiveUnitTesting")]
         public void DoubleNestedContainer()
         {
-            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             // List of files to be considered for signing
             var itemsToSign = new ITaskItem[]
             {
@@ -779,14 +812,20 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "CoreLibCr
                 "File 'MsiSetup.msi' Certificate='Microsoft400'",
                 "File 'MsiBootstrapper.exe' Certificate='Microsoft400'",
                 "File 'PackageWithWix.nupkg' Certificate='NuGet'"
-            });
+            }/*,
+            Reenable after https://github.com/dotnet/arcade/issues/10293
+            expectedWarnings: new[]
+            {
+                
+                // $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "4", "MsiBootstrapper.exe")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: 'Copyright (c). All rights reserved.'."
+            }*/);
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
 $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "4", "ABCDEFG/MsiSetup.msi"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>",
-$@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "engines\\MsiBootstrapper.exe-engine.exe"))}"">
+$@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "engines\\0\\MsiBootstrapper.exe-engine.exe"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>",
 $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "4", "MsiBootstrapper.exe"))}"">
@@ -832,7 +871,12 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "PackageWi
                 "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'",
                 "File 'NestedContainer.1.0.0.nupkg' Certificate='NuGet'"
-            });
+            }/*,
+            Reenable after https://github.com/dotnet/arcade/issues/10293,
+            expectedWarnings: new[]
+            {
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
+            }*/);
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
@@ -912,7 +956,12 @@ $@"
                 "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'",
                 "File 'NestedContainer.1.0.0.nupkg' Certificate='NuGet'"
-            });
+            }/*,
+            Reenable after https://github.com/dotnet/arcade/issues/10293,
+            expectedWarnings: new[]
+            {
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
+            }*/);
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
@@ -982,7 +1031,13 @@ $@"
                 "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'test.zip' Certificate=''",
-            });
+            }/*,
+            Reenable after https://github.com/dotnet/arcade/issues/10293,
+            expectedWarnings: new[]
+            {
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+            }*/);
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -997,6 +1052,58 @@ $@"
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
 <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "3", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.SOS.NETCore.dll"))}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>
+"
+            });
+        }
+
+        [Fact]
+        public void SignTarGZipFile()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("test.tgz"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("ArcadeCertTest", "ArcadeStrongTest") } }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
+                "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
+                "File 'test.tgz' Certificate=''",
+            }/*,
+            Reenable after https://github.com/dotnet/arcade/issues/10293,
+            expectedWarnings: new[]
+            {
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "test/NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "test/this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+            }*/);
+
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+$@"
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "0", "test/NativeLibrary.dll"))}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "1", "test/SOS.NETCore.dll"))}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "2", "test/this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll"))}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "3", "test/this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.SOS.NETCore.dll"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
 "
@@ -1028,7 +1135,13 @@ $@"
                 "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'test.symbols.nupkg' Certificate=''",
-            });
+            }/*,
+            Reenable after https://github.com/dotnet/arcade/issues/10293,
+            expectedWarnings: new[]
+            {
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+            }*/);
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -1075,7 +1188,13 @@ $@"
                 "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'test.symbols.nupkg' Certificate='NuGet'",
-            });
+            }/*,
+            Reenable after https://github.com/dotnet/arcade/issues/10293,
+            expectedWarnings: new[]
+            {
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+            }*/);
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -1091,6 +1210,36 @@ $@"
 </FilesToSign>
 <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "3", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.SOS.NETCore.dll"))}"">
   <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>
+"
+            });
+        }
+
+        [Fact]
+        public void CheckDebSigning()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("test.deb"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'test.deb' Certificate='LinuxSign'"
+            });
+
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+$@"
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.deb"))}"">
+  <Authenticode>LinuxSign</Authenticode>
 </FilesToSign>
 "
             });
@@ -1163,11 +1312,10 @@ $@"
             });
         }
 #endif
-        [SkippableFact]
+        [WindowsOnlyFact]
         [Trait("Category", "SkipWhenLiveUnitTesting")]
         public void SignMsiEngine()
         {
-            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             // List of files to be considered for signing
             var itemsToSign = new ITaskItem[]
             {
@@ -1188,14 +1336,19 @@ $@"
             {
                 "File 'MsiSetup.msi' Certificate='Microsoft400'",
                 "File 'MsiBootstrapper.exe' Certificate='Microsoft400'"
-            });
+            }/*,
+            Reenable after https://github.com/dotnet/arcade/issues/10293,
+            expectedWarnings: new[]
+            {
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "MsiBootstrapper.exe")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: 'Copyright (c). All rights reserved.'."
+            }*/);
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
 {
 $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "0", "ABCDEFG/MsiSetup.msi"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>",
- $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "engines", "MsiBootstrapper.exe-engine.exe"))}"">
+ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "engines", "0", "MsiBootstrapper.exe-engine.exe"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>",
  $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "MsiBootstrapper.exe"))}"">
@@ -1206,11 +1359,10 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
 
         }
 
-        [SkippableFact]
+        [WindowsOnlyFact]
         [Trait("Category", "SkipWhenLiveUnitTesting")]
         public void MsiWithWixpack()
         {
-            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             // List of files to be considered for signing
             var itemsToSign = new ITaskItem[]
             {
@@ -1254,11 +1406,9 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
         /// <summary>
         /// Validate that an invalid wix toolset path causes an error
         /// </summary>
-        [SkippableFact]
+        [WindowsOnlyFact]
         public void BadWixToolsetPath()
         {
-            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
-
             var badPath = Path.Combine(GetWixToolPath(), "badpath");
 
             var fakeBuildEngine = new FakeBuildEngine(_output);
@@ -1272,6 +1422,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
                 TempDir = "TempDir",
                 DryRun = true,
                 MSBuildPath = CreateTestResource("msbuild.fake"),
+                DotNetPath = null,
                 DoStrongNameCheck = false,
                 SNBinaryPath = null,
                 WixToolsPath = badPath
@@ -1618,6 +1769,24 @@ $@"
         }
 
         [Fact]
+        public void ZeroLengthFilesShouldNotBeSigned()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("ZeroLengthPythonFile.py"))
+            };
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
+            {
+                { new ExplicitCertificateKey("ZeroLengthPythonFile.py"), "3PartySHA2" }
+            };
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, Array.Empty<string>());
+        }
+
+        [Fact]
         public void CheckFileExtensionSignInfo()
         {
             // List of files to be considered for signing
@@ -1689,6 +1858,7 @@ $@"
 
             runTask(fileExtensionSignInfo: fileExtensionSignInfo.ToArray()).Should().BeFalse();
         }
+
         [Fact]
         public void ValidateParseFileExtensionEntriesForDifferentCollisionPriorityIdSucceeds()
         {
@@ -1707,6 +1877,19 @@ $@"
             {
                 { "CertificateName", "JSCertificate" },
                 { "CollisionPriorityId", "456" }
+            }));
+
+            runTask(fileExtensionSignInfo: fileExtensionSignInfo.ToArray()).Should().BeTrue();
+        }
+
+        [Fact]
+        public void ValidateParseFileExtensionEntriesForTarGzExtensionPasses()
+        {
+            var fileExtensionSignInfo = new List<ITaskItem>();
+
+            fileExtensionSignInfo.Add(new TaskItem(".tar.gz", new Dictionary<string, string>
+            {
+                { "CertificateName", "None" }
             }));
 
             runTask(fileExtensionSignInfo: fileExtensionSignInfo.ToArray()).Should().BeTrue();
@@ -1745,10 +1928,11 @@ $@"
             },
             expectedWarnings: new[]
             {
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "Simple1.exe")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "1", "Simple2.exe")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "Simple1.exe")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "1", "Simple2.exe")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
             });
         }
+
         /// <summary>
         /// This test is intended to validate that the argument parsing which occurs
         /// in the SignToolTask class are properly parsed before they are passed
@@ -1822,9 +2006,11 @@ $@"
                 TempDir = "TempDir",
                 DryRun = true,
                 MSBuildPath = CreateTestResource("msbuild.fake"),
+                DotNetPath = CreateTestResource("dotnet.fake"),
                 MicroBuildCorePath = "MicroBuildCorePath",
                 DoStrongNameCheck = false,
                 SNBinaryPath = null,
+                TarToolPath = s_tarToolPath,
             };
 
             task.Execute().Should().BeTrue();
@@ -1855,12 +2041,14 @@ $@"
                 TempDir = "TempDir",
                 DryRun = true,
                 MSBuildPath = CreateTestResource("msbuild.fake"),
+                DotNetPath = CreateTestResource("dotnet.fake"),
                 DoStrongNameCheck = false,
                 SNBinaryPath = null,
             };
 
             return task.Execute();
         }
+
         [Fact]
         public void ValidateAppendingCertificate()
         {
@@ -1916,7 +2104,12 @@ $@"
                 "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'test.zip' Certificate=''",
                 "File 'PackageWithZip.nupkg' Certificate='NuGet'",
-            });
+            }/*,
+            Reenable after https://github.com/dotnet/arcade/issues/10293,
+            expectedWarnings: new[]
+            {
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
+            }*/);
         }
 
         [Fact]
@@ -1945,7 +2138,13 @@ $@"
                 "File 'Mid.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'MidNativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'NestedZip.zip' Certificate=''",
-            });
+            }/*,
+            Reenable after https://github.com/dotnet/arcade/issues/10293,
+            expectedWarnings: new[]
+            {
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "4", "MidNativeLibrary.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
+            }*/);
         }
 
         [Fact]
@@ -2049,11 +2248,11 @@ $@"
             },
             expectedWarnings: new[]
             {
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "EmptyPKT.dll")}' with Microsoft certificate 'DLLCertificate'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "9", "lib/net461/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate3'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "10", "lib/netstandard2.0/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate4'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "16", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate5'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "23", "Simple.dll")}' with Microsoft certificate 'DLLCertificate2'. The library is considered 3rd party library due to its copyright: ''."
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "EmptyPKT.dll")}' with Microsoft certificate 'DLLCertificate'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "9", "lib/net461/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate3'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "10", "lib/netstandard2.0/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate4'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "16", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate5'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "23", "Simple.dll")}' with Microsoft certificate 'DLLCertificate2'. The library is considered 3rd party library due to its copyright: ''."
             });
         }
 
@@ -2085,7 +2284,9 @@ $@"
                 new Dictionary<string, List<SignInfo>>(),
                 new Dictionary<ExplicitCertificateKey, string>(),
                 new Dictionary<string, List<SignInfo>>(),
-                new ITaskItem[0], task.Log)
+                new ITaskItem[0],
+                tarToolPath: s_tarToolPath,
+                task.Log)
                 .GenerateListOfFiles();
 
             task.Log.HasLoggedErrors.Should().BeTrue();
@@ -2120,6 +2321,7 @@ $@"
                 new Dictionary<ExplicitCertificateKey, string>(),
                 new Dictionary<string, List<SignInfo>>() { { extension, new List<SignInfo> { SignInfo.Ignore } } },
                 new ITaskItem[0],
+                tarToolPath: s_tarToolPath,
                 task.Log)
                 .GenerateListOfFiles();
 
@@ -2157,13 +2359,12 @@ $@"
         /// Verify that running the wixpack returns passing result and that the expected output file
         /// is created, or a negative result if the wix tool fails.
         /// </summary>
-        [SkippableTheory]
+        [WindowsOnlyTheory]
         [InlineData(true)]
         [InlineData(false)]
         [Trait("Category", "SkipWhenLiveUnitTesting")]
         public void RunWixToolRunsOrFailsProperly(bool deleteWixobjBeforeRunningTool)
         {
-            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
 
             const string expectedExe = "MsiBootstrapper.exe";

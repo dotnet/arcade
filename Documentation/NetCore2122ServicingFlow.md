@@ -196,3 +196,8 @@ There are a number of things that require attention to ensure a working product 
     If significant changes have been made to build definitions or repo infrastructure code, ensuring that this contract is still abided by can ensure a proper isolated product build.
 - Did all repos update their branding properly?
 - Are intra-build storage accounts publicly visible?  Intra-build storage (typically only used in corefx, coreclr and core-setup) should not be publicly visible in internal build scenarios. 
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CNetCore2122ServicingFlow.md)](https://helix.dot.net/f/p/5?p=Documentation%5CNetCore2122ServicingFlow.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CNetCore2122ServicingFlow.md)</sub>
+<!-- End Generated Content-->

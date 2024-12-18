@@ -1,39 +1,26 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Project>
-  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 
-  <Import Project="$(RepositoryEngineeringDir)TargetFrameworkDefaults.props" />
+  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 
   <PropertyGroup>
     <Copyright>$(CopyrightNetFoundation)</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <DebugType>embedded</DebugType>
     <DebugSymbols>true</DebugSymbols>
-    <LangVersion>Latest</LangVersion>
-
-    <!--
-      Tools and packages produced by this repository support infrastructure and are not shipping on NuGet or via any other official channel.
-    -->
+    <LangVersion>latest</LangVersion>
+    <!-- Tools and packages produced by this repository support infrastructure and are not shipping on NuGet or via any other official channel. -->
     <IsShipping>false</IsShipping>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <RepositoryUrl>https://github.com/dotnet/arcade</RepositoryUrl>
+    <!-- Only upgrade NuGetAudit warnings to errors for official builds. -->
+    <WarningsNotAsErrors Condition="'$(OfficialBuild)' != 'true'">$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+    <!-- TODO: Remove when the VMR uses a new bootstrap Arcade.Sdk in source-only builds that has the TFM changes in TargetFrameworkDefaults.props. -->
+    <NetCurrent>net10.0</NetCurrent>
+    <NetPrevious>net9.0</NetPrevious>
+    <NetToolCurrent>$(NetCurrent)</NetToolCurrent>
+    <NetToolMinimum Condition="'$(DotNetBuildSourceOnly)' == 'true'">$(NetToolCurrent)</NetToolMinimum>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(DotNetBuildFromSource)' == 'true'">
-    <!--    
-      When building using source-build the process is:
-      - Newtonsoft.Json versions 9.0.1 and 12.0.2 are built by source-build
-      - Version 12.0.2 is written to Version.props
-      - Arcade needs to use 9.0.1 so we need to override Version.props value here
-    -->
-    <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(DotNetBuildOffline)' == 'true'">
-    <!--
-      Arcade has a special version prop for CodeAnalysis.CSharp in GenFacades
-      to try to match the version loaded by msbuild.  In the offline build, this
-      is simply the source-built version.
-    -->
-    <MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>$(MicrosoftCodeAnalysisCSharpVersion)</MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>
-  </PropertyGroup>
 </Project>

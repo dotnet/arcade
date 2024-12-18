@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
 
@@ -10,16 +9,6 @@
     <PropertyGroup>
       <!-- Needs to be set in a target because it has to be set after the initial evaluation in the common targets -->
       <GenerateBindingRedirectsOutputType>true</GenerateBindingRedirectsOutputType>
-    </PropertyGroup>
-  </Target>
-
-  <!--
-    Workaround to fix IntelliSense file generation for XAML projects
-    https://github.com/dotnet/project-system/issues/2488
-  -->
-  <Target Name="WorkaroundForXamlIntelliSenseBuildIssue" AfterTargets="_CheckCompileDesignTimePrerequisite">
-    <PropertyGroup>
-      <BuildingProject>false</BuildingProject>
     </PropertyGroup>
   </Target>
 
@@ -43,14 +32,6 @@
       </ItemGroup>
     </When>
   </Choose>
-
-  <!--
-    Workaround for a race condition https://github.com/Microsoft/msbuild/issues/1479.
-  -->
-  <PropertyGroup>
-    <TargetFrameworkMonikerAssemblyAttributesPath>$(IntermediateOutputPath)$(TargetFrameworkMoniker).AssemblyAttributes$(DefaultLanguageSourceExtension)</TargetFrameworkMonikerAssemblyAttributesPath>
-    <TargetFrameworkMonikerAssemblyAttributesFileClean>true</TargetFrameworkMonikerAssemblyAttributesFileClean>
-  </PropertyGroup>
 
   <!--
      Portable PDBs are not included in .nupkg by default. Include them unless the project produces symbol packages.
@@ -202,4 +183,50 @@
       <TfmSpecificPackageFile Include="@(_File)" PackagePath="%(_File.TargetDir)/%(_File.RecursiveDir)%(_File.FileName)%(_File.Extension)"/>
     </ItemGroup>
   </Target>
+
+  <!-- BEGIN workaround for https://github.com/dotnet/sdk/issues/43339; remove after updated to VS 17.12 or a future 17.11 patch -->
+  <Target Name="WorkaroundDotnetSdk43339" BeforeTargets="ResolvePackageAssets" Condition=" '$(MSBuildRuntimeType)' == 'Full' and $([MSBuild]::VersionLessThan($(MSBuildVersion), 17.11.5))">
+    <PrimeSystemTextJson804ForNET9SDK Condition="'$(NETCoreSdkVersion)' == '' or !$(NETCoreSdkVersion.StartsWith('10.0'))" />
+    <PrimeSystemTextJson804ForNET10SDK Condition="$(NETCoreSdkVersion.StartsWith('10.0'))" />
+  </Target>
+  <UsingTask
+    TaskName="PrimeSystemTextJson804ForNET9SDK"
+    TaskFactory="RoslynCodeTaskFactory"
+    AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll" >
+    <Task>
+      <Code Type="Fragment" Language="cs">
+<![CDATA[
+try
+{
+    System.Reflection.Assembly.LoadFrom(@"$(MicrosoftNETBuildTasksDirectoryRoot)\..\..\..\DotnetTools\dotnet-format\BuildHost-net472\System.Text.Json.dll");
+}
+catch
+{
+    // Best effort: if something moves in the SDK don't break the build.
+}
+]]>
+      </Code>
+    </Task>
+  </UsingTask>
+  <UsingTask
+    TaskName="PrimeSystemTextJson804ForNET10SDK"
+    TaskFactory="RoslynCodeTaskFactory"
+    AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll" >
+    <Task>
+      <Code Type="Fragment" Language="cs">
+<![CDATA[
+try
+{
+    System.Reflection.Assembly.LoadFrom(@"$(MicrosoftNETBuildTasksDirectoryRoot)\..\..\..\Sdks\Microsoft.NET.Sdk.StaticWebAssets\tasks\net472\System.Text.Json.dll");
+}
+catch
+{
+    // Best effort: if something moves in the SDK don't break the build.
+}
+]]>
+      </Code>
+    </Task>
+  </UsingTask>
+  <!-- END workaround for https://github.com/dotnet/sdk/issues/43339 -->
+
 </Project>

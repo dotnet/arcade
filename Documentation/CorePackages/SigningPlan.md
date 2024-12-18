@@ -23,3 +23,8 @@ The goal of the signing plan is to provide guidance on how the tier 1 (T1) produ
 - S138: 7/2 - 7/20 
 - S139: 7/23 - 8/10 
 - S140: 8/13 - 8/31 
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CCorePackages%5CSigningPlan.md)](https://helix.dot.net/f/p/5?p=Documentation%5CCorePackages%5CSigningPlan.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CCorePackages%5CSigningPlan.md)</sub>
+<!-- End Generated Content-->

@@ -22,6 +22,7 @@ namespace Microsoft.Cci.Writers
         private readonly bool _apiOnly;
         private readonly ICciFilter _cciFilter;
         private bool _firstMemberGroup;
+        private ICciFilter _currentTypeListFilter;
 
         public CSharpWriter(ISyntaxWriter writer, ICciFilter filter, bool apiOnly, bool writeAssemblyAttributes = false)
             : base(filter)
@@ -32,6 +33,12 @@ namespace Microsoft.Cci.Writers
             _cciFilter = filter;
             _declarationWriter = new CSDeclarationWriter(_syntaxWriter, filter, !apiOnly);
             _writeAssemblyAttributes = writeAssemblyAttributes;
+        }
+
+        public class ConditionalTypeList
+        {
+            public ICciFilter Filter { get; set; }
+            public string Symbol { get; set; }
         }
 
         public ISyntaxWriter SyntaxWriter { get { return _syntaxWriter; } }
@@ -47,6 +54,10 @@ namespace Microsoft.Cci.Writers
         public bool HighlightInterfaceMembers { get; set; }
 
         public bool PutBraceOnNewLine { get; set; }
+
+        public IEnumerable<ConditionalTypeList> ConditionalTypeLists { get; set; }
+
+        public string DefaultCondition { get; set; }
 
         public bool IncludeGlobalPrefixForCompilation
         {
@@ -87,7 +98,23 @@ namespace Microsoft.Cci.Writers
                 _declarationWriter.WriteDeclaration(assembly);
             }
 
-            base.Visit(assembly);
+            var namespaces = assembly.GetAllNamespaces();
+            _currentTypeListFilter = null;
+
+            // first pass, visit types *not* mentioned in ConditionalTypeLists
+            WriteConditionStart(DefaultCondition);
+            Visit(namespaces);
+            WriteConditionEnd(DefaultCondition);
+
+            // second pass, visit types mentioned in ConditionalTypeLists
+            foreach (var typeList in ConditionalTypeLists ?? Enumerable.Empty<ConditionalTypeList>())
+            {
+                _currentTypeListFilter = typeList.Filter;
+
+                WriteConditionStart(typeList.Symbol);
+                Visit(namespaces.Where(_currentTypeListFilter.Include));
+                WriteConditionEnd(typeList.Symbol);
+            }
         }
 
         public override void Visit(INamespaceDefinition ns)
@@ -102,7 +129,16 @@ namespace Microsoft.Cci.Writers
 
                 using (_syntaxWriter.StartBraceBlock(PutBraceOnNewLine))
                 {
-                    base.Visit(ns);
+                    var types = ns.GetTypes(this.IncludeForwardedTypes);
+                    if (ConditionalTypeLists != null)
+                    {
+                        // in the first pass we want all types *except* the ones in ConditionalTypeLists filters
+                        // in the second pass we want *only* the types in ConditionalTypeLists filters
+                        var firstPass = _currentTypeListFilter == null;
+                        types = types.Where(t => ConditionalTypeLists.Any(c => c.Filter.Include(t) == !firstPass));
+                    }
+
+                    Visit(types);
                 }
             }
 
@@ -159,7 +195,7 @@ namespace Microsoft.Cci.Writers
                 // For compile-time compat, the following rules should work for producing a reference assembly. We drop all private fields,
                 // but add back certain synthesized private fields for a value type (struct) as follows:
 
-                // 1. If there is a reference type field in the struct or within the fields' type closure,
+                // 1. If there is a ref field or reference type field in the struct or within the fields' type closure,
                 //    it should emit a reference type and a value type dummy field.
                 //    - The reference type dummy field is needed in order to inform the compiler to block
                 //      taking pointers to this struct because the GC will not track updating those references.
@@ -293,6 +329,24 @@ namespace Microsoft.Cci.Writers
                         _syntaxWriter.WriteLine();
                     }
                 }
+            }
+        }
+
+        private void WriteConditionStart(string condition)
+        {
+            if (!string.IsNullOrEmpty(condition))
+            {
+                _syntaxWriter.Write($"#if {condition}");
+                _syntaxWriter.WriteLine();
+            }
+        }
+
+        private void WriteConditionEnd(string condition)
+        {
+            if (!string.IsNullOrEmpty(condition))
+            {
+                _syntaxWriter.Write($"#endif // {condition}");
+                _syntaxWriter.WriteLine();
             }
         }
 

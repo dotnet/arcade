@@ -155,8 +155,7 @@ namespace Microsoft.Cci.Extensions.CSharp
                 if (resolvedType.IsReferenceType)
                     return true;
 
-                // ByReference<T> is a special type understood by runtime to hold a ref T.
-                if (resolvedType.AreGenericTypeEquivalent(ByReferenceFullName))
+                if (resolvedType.IsByRef())
                     return true;
 
                 foreach (var field in resolvedType.Fields.Where(f => !f.IsStatic))
@@ -189,7 +188,7 @@ namespace Microsoft.Cci.Extensions.CSharp
                 if (typeToCheck.TypeCode != PrimitiveTypeCode.NotPrimitive && typeToCheck.TypeCode != PrimitiveTypeCode.Invalid)
                     return true;
 
-                if (resolvedType is Dummy || resolvedType.IsReferenceType || resolvedType.AreGenericTypeEquivalent(ByReferenceFullName))
+                if (resolvedType is Dummy || resolvedType.IsReferenceType || resolvedType.IsByRef())
                 {
                     if (node == 0)
                     {
@@ -217,8 +216,13 @@ namespace Microsoft.Cci.Extensions.CSharp
 
         public static bool IsConversionOperator(this IMethodDefinition method)
         {
-            return (method.IsSpecialName &&
-                (method.Name.Value == "op_Explicit" || method.Name.Value == "op_Implicit"));
+            if (method.IsSpecialName)
+            {
+                return (method.Name.Value == "op_CheckedExplicit")
+                    || (method.Name.Value == "op_Explicit")
+                    || (method.Name.Value == "op_Implicit");
+            }
+            return false;
         }
 
         public static bool IsExplicitInterfaceMember(this ITypeDefinitionMember member)
@@ -240,7 +244,20 @@ namespace Microsoft.Cci.Extensions.CSharp
 
         public static bool IsExplicitInterfaceMethod(this IMethodDefinition method)
         {
-            return MemberHelper.GetExplicitlyOverriddenMethods(method).Any();
+            // This used to do MemberHelper.GetExplicitlyOverriddenMethods(method).Any()
+            // however, Cci reports all `static abstract interface members` as explicitly implemented
+            // as such, we'll duplicate the original loop logic and specialize the static case
+            // by checking for a name that contains `.`
+
+            foreach (IMethodImplementation explicitImplementationOverride in method.ContainingTypeDefinition.ExplicitImplementationOverrides)
+            {
+                if (method.InternedKey == explicitImplementationOverride.ImplementingMethod.InternedKey)
+                {
+                    return !method.IsStatic || method.Name.Value.Contains('.');
+                }
+            }
+
+            return false;
         }
 
         public static bool IsExplicitInterfaceProperty(this IPropertyDefinition property)
@@ -374,6 +391,13 @@ namespace Microsoft.Cci.Extensions.CSharp
         public static bool IsUnsafeType(this ITypeReference type)
         {
             return type.TypeCode == PrimitiveTypeCode.Pointer;
+        }
+
+        public static bool IsByRef(this ITypeReference type)
+        {
+            // ByReference<T> is a special type understood by runtime to hold a ref T.
+            // ByReference<T> was removed in .NET 7 since support for ref T in C# 11 was introduced.
+            return type.TypeCode == PrimitiveTypeCode.Reference || type.AreGenericTypeEquivalent(ByReferenceFullName);
         }
 
         public static bool IsMethodUnsafe(this IMethodDefinition method)
@@ -774,6 +798,16 @@ namespace Microsoft.Cci.Extensions.CSharp
         public static bool HasIsReadOnlyAttribute(this IEnumerable<ICustomAttribute> attributes)
         {
             return attributes.HasAttributeOfType("System.Runtime.CompilerServices.IsReadOnlyAttribute");
+        }
+
+        public static bool HasNativeIntegerAttribute(this IEnumerable<ICustomAttribute> attributes)
+        {
+            return attributes.HasAttributeOfType("System.Runtime.CompilerServices.NativeIntegerAttribute");
+        }
+
+        public static bool HasRequiredMemberAttribute(this IEnumerable<ICustomAttribute> attributes)
+        {
+            return attributes.HasAttributeOfType("System.Runtime.CompilerServices.RequiredMemberAttribute");
         }
 
         public static string[] GetValueTupleNames(this IEnumerable<ICustomAttribute> attributes)

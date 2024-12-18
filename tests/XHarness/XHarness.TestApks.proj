@@ -50,7 +50,11 @@
         <AndroidInstrumentationName>net.dot.MonoRunner</AndroidInstrumentationName>
 
         <!-- This command is the same for PowerShell and bash so no need to detect the platform -->
-        <CustomCommands>xharness android test --app "$app" --package-name "$package_name" --output-directory "$output_directory" --instrumentation "$instrumentation" --timeout "$timeout" -v</CustomCommands>
+        <CustomCommands>
+          <![CDATA[
+          xharness android test --app "$app" --package-name "$package_name" --output-directory "$output_directory" --instrumentation "$instrumentation" --timeout "$timeout" -v
+          ]]>
+        </CustomCommands>
       </XHarnessApkToTest>
     </ItemGroup>
   </Target>

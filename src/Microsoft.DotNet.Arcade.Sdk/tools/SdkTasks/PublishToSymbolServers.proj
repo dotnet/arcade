@@ -1,5 +1,6 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Execute">
+
   <!--
     This MSBuild file is intended to be used as the body of the default 
     publishing release pipeline. The release pipeline will use this file
@@ -17,7 +18,7 @@
   -->
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>$(NetToolCurrent)</TargetFramework>
     <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
   </PropertyGroup>
 
@@ -37,6 +38,9 @@
       <PackagesToPublishToSymbolServer Remove="$(BlobBasePath)\Microsoft.DotNet.Maestro.Tasks.*" />
     </ItemGroup>
 
+    <!--
+    ConvertPortablePdbsToWindowsPdbs is set to true only in staging pipeline, because this is an expensive task and we don't want to do it for every build.
+    -->
     <PropertyGroup>
       <DotNetSymbolExpirationInDays Condition="'$(DotNetSymbolExpirationInDays)' == ''">3650</DotNetSymbolExpirationInDays>
       <PublishToSymbolServer>true</PublishToSymbolServer>
@@ -45,6 +49,8 @@
       <PublishToSymbolServer Condition="'@(FilesToPublishToSymbolServer)' == '' and '@(PackagesToPublishToSymbolServer)' == ''">false</PublishToSymbolServer>
       <PublishSpecialClrFiles Condition="'$(PublishSpecialClrFiles)' == ''">true</PublishSpecialClrFiles>
       <DryRun Condition="'$(DryRun)' == ''">false</DryRun>
+      <ConvertPortablePdbsToWindowsPdbs Condition="'$(ConvertPortablePdbsToWindowsPdbs)' == ''">false</ConvertPortablePdbsToWindowsPdbs>
+      <TreatPdbConversionIssuesAsInfo Condition="'$(TreatPdbConversionIssuesAsInfo)' == ''">false</TreatPdbConversionIssuesAsInfo>
     </PropertyGroup>
 
     <Message
@@ -98,13 +104,15 @@
                     ExpirationInDays="$(DotNetSymbolExpirationInDays)"
                     VerboseLogging="true"
                     DryRun="$(DryRun)"
-                    ConvertPortablePdbsToWindowsPdbs="false"
+                    ConvertPortablePdbsToWindowsPdbs="$(ConvertPortablePdbsToWindowsPdbs)"
                     PdbConversionTreatAsWarning=""
                     PublishSpecialClrFiles="$(PublishSpecialClrFiles)"
-                    Condition="$(PublishToSymbolServer)"/>
+                    Condition="$(PublishToSymbolServer)"
+                    TreatPdbConversionIssuesAsInfo="$(TreatPdbConversionIssuesAsInfo)"/>
   </Target>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.SymbolUploader.Build.Task" Version="$(MicrosoftSymbolUploaderBuildTaskVersion)" />
   </ItemGroup>
+
 </Project>

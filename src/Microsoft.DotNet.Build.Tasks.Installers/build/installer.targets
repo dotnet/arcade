@@ -1,4 +1,6 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
+
   <Target Name="_GetCurrentProjectServicingConfiguration">
     <ItemGroup>
       <CurrentProjectServicingConfiguration
@@ -25,7 +27,7 @@
   -->
   <Target Name="SetLastReleasedVersionForSourceBuild"
           Condition="
-            '$(DotNetBuildFromSource)' == 'true' and
+            '$(DotNetBuildSourceOnly)' == 'true' and
             '$(SkipSetLastReleasedVersionForSourceBuild)' != 'true'"
           BeforeTargets="GetProductVersions"
           DependsOnTargets="_GetCurrentProjectServicingConfiguration">
@@ -73,42 +75,16 @@
       ComponentMsiFile;
       InstallerRuntimeIdentifier;
       InstallerTargetArchitecture;
-      CrossArchContentsArch
+      CrossArchContentsArch;
+      _IsIndividualInstallerBuild
     </_GlobalPropertiesToRemoveForPublish>
   </PropertyGroup>
   
   <ItemGroup>
     <_GlobalPropertiesToRemoveForPublish Include="$(_GlobalPropertiesToRemoveForPublish)" />
   </ItemGroup>
-  
-  <Target Name="_GetTargetOSArchInfo">
-    <Error Condition="'$(InstallerRuntimeIdentifier)' == ''"
-           Text="An InstallerRuntimeIdentifier must be specified when building installers." />
-    <PropertyGroup>
-      <TargetRuntimeOS>$(InstallerRuntimeIdentifier.Substring(0, $(InstallerRuntimeIdentifier.LastIndexOf('-'))))</TargetRuntimeOS>
-      <TargetArchitecture Condition="'$(TargetArchitecture)' == ''">$(InstallerRuntimeIdentifier.Substring($(InstallerRuntimeIdentifier.LastIndexOf('-'))).TrimStart('-'))</TargetArchitecture>
-      <InstallerTargetArchitecture Condition="'$(InstallerTargetArchitecture)' == ''">$(TargetArchitecture)</InstallerTargetArchitecture>
-    </PropertyGroup>
-    <ItemGroup>
-      <CrossArchMsiToBuild Include="@(CrossArchSdkMsiInstallerArch)" Exclude="$(TargetArchitecture)" />
-    </ItemGroup>
-    <PropertyGroup>
-      <_osSupportsWixBasedInstallers Condition="$([MSBuild]::IsOsPlatform(Windows)) and '$(TargetRuntimeOS)' == 'win'">true</_osSupportsWixBasedInstallers>
 
-      <_osArchSupportsWixBasedInstallers>$(_osSupportsWixBasedInstallers)</_osArchSupportsWixBasedInstallers>
-      <_osArchSupportsWixBasedInstallers Condition="'$(TargetArchitecture)' == 'arm'">false</_osArchSupportsWixBasedInstallers>
-    </PropertyGroup>
-  </Target>
-
-  <Target Name="_GetVersionInfo">
-    <PropertyGroup>
-      <IncludePreReleaseLabelInPackageVersion Condition="'$(DotNetFinalVersionKind)' != 'release'">true</IncludePreReleaseLabelInPackageVersion>
-      <IncludePreReleaseLabelInPackageVersion Condition="'$(SuppressFinalPackageVersion)' == 'true'">true</IncludePreReleaseLabelInPackageVersion>
-      <IncludePreReleaseLabelInPackageVersion Condition="'$(IsShipping)' != 'true'">true</IncludePreReleaseLabelInPackageVersion>
-    </PropertyGroup>
-  </Target>
-
-  <Target Name="_GetProductBrandName" DependsOnTargets="_GetVersionInfo">
+  <Target Name="_GetProductBrandName">
     <PropertyGroup
       Condition="
         '$(ReleaseBrandSuffix)' == '' and
@@ -120,6 +96,7 @@
 
       <ReleaseBrandSuffix>$(PreReleaseVersionLabel.Substring(0,1).ToUpperInvariant())</ReleaseBrandSuffix>
       <ReleaseBrandSuffix>$(ReleaseBrandSuffix)$(PreReleaseVersionLabel.Substring(1))</ReleaseBrandSuffix>
+      <ReleaseBrandSuffix Condition="'$(PreReleaseVersionLabel.ToUpperInvariant())' == 'RC'">RC</ReleaseBrandSuffix>
       <ReleaseBrandSuffix>$(ReleaseBrandSuffix) $(PreReleaseVersionIteration)</ReleaseBrandSuffix>
     </PropertyGroup>
 
@@ -144,6 +121,8 @@
   <PropertyGroup>
     <InstallerRuntimeIdentifiers Condition="'$(InstallerRuntimeIdentifiers)' == ''">$(RuntimeIdentifiers)</InstallerRuntimeIdentifiers>
     <InstallerRuntimeIdentifier Condition="'$(InstallerRuntimeIdentifier)' == ''">$(RuntimeIdentifier)</InstallerRuntimeIdentifier>
+    <!-- When building a non-portable build, BaseOS can specify a known (portable) RID that is a parent of the curent runtime identifier. -->
+    <InstallerRuntimeIdentifier Condition="'$(PortableBuild)' == 'false' and '$(BaseOS)' != '' and '$(BaseOS)' != '$(RuntimeIdentifier)'">$(BaseOS)</InstallerRuntimeIdentifier>
   </PropertyGroup>
   
   <Import Project="$(MSBuildThisFileDirectory)installer.singlerid.targets"
@@ -152,4 +131,5 @@
           Condition="'$(MSBuildProjectExtension)' != '.bundleproj' and '$(GenerateInstallers)' == 'true' and '$(InstallerRuntimeIdentifier)' == ''" />
   <Import Project="$(MSBuildThisFileDirectory)bundle.targets"
           Condition="'$(MSBuildProjectExtension)' == '.bundleproj'" />
+
 </Project>

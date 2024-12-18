@@ -1,3 +1,4 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
 
   <!--
@@ -7,13 +8,10 @@
     See https://github.com/dotnet/arcade/blob/238f1bbb23ba67616818d0b242c5b55a18edec55/Documentation/ArcadeSdk.md#directorybuildprops
   -->
 
-  <PropertyGroup Condition="'$(DotNetSharedFrameworkTaskDir)' == ''">
-    <DotNetSharedFrameworkTaskDir Condition="'$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)../tools/netcoreapp3.1/</DotNetSharedFrameworkTaskDir>
-    <DotNetSharedFrameworkTaskDir Condition="'$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)../tools/net472/</DotNetSharedFrameworkTaskDir>
-  </PropertyGroup>
+  <Import Project="$(MSBuildThisFileDirectory)BuildTask.props" />
 
   <PropertyGroup>
-    <DotNetSharedFrameworkTaskFile>$(DotNetSharedFrameworkTaskDir)Microsoft.DotNet.SharedFramework.Sdk.dll</DotNetSharedFrameworkTaskFile>
+    <UsingMicrosoftDotNetSharedFrameworkSdk>true</UsingMicrosoftDotNetSharedFrameworkSdk>
   </PropertyGroup>
 
   <!-- Allow setting a property to use targets from a development dir for faster iteration. -->

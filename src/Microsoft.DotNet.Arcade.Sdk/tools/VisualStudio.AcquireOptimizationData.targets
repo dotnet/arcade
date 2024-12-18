@@ -1,5 +1,6 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
+
   <!-- 
     Properties:
       RepositoryName                   Current repository name (e.g. 'dotnet/roslyn').
@@ -10,7 +11,7 @@
   -->
   
   <PropertyGroup>
-    <_VisualStudioBuildTasksAssembly>$(NuGetPackageRoot)microsoft.dotnet.build.tasks.visualstudio\$(MicrosoftDotNetBuildTasksVisualStudioVersion)\tools\net472\Microsoft.DotNet.Build.Tasks.VisualStudio.dll</_VisualStudioBuildTasksAssembly>
+    <_VisualStudioBuildTasksAssembly>$(NuGetPackageRoot)microsoft.dotnet.build.tasks.visualstudio\$(MicrosoftDotNetBuildTasksVisualStudioVersion)\tools\netframework\Microsoft.DotNet.Build.Tasks.VisualStudio.dll</_VisualStudioBuildTasksAssembly>
   </PropertyGroup>
   
   <UsingTask AssemblyFile="$(_VisualStudioBuildTasksAssembly)" TaskName="Microsoft.DotNet.Build.Tasks.VisualStudio.FindLatestDrop"/>
@@ -29,7 +30,8 @@
           Condition="'$(EnableNgenOptimization)' == 'true'">
   </Target>
   
-  <Target Name="_PrepareAcquireVisualStudioOptimizationData">
+  <Target Name="_PrepareAcquireVisualStudioOptimizationData"
+          DependsOnTargets="RestoreInternalTooling">
     <PropertyGroup>
       <_DropToolPath>$(NuGetPackageRoot)drop.app\$(DropAppVersion)\lib\net45\drop.exe</_DropToolPath>
       <_DropToolExists>false</_DropToolExists>

@@ -6,7 +6,23 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.SignTool
 {
-    public enum SigningToolErrorCode { SIGN001, SIGN002, SIGN003 };
+    public enum SigningToolErrorCode
+    {
+        /// <summary>
+        /// Signing a Microsoft library with a 3rd party cert
+        /// </summary>
+        SIGN001,
+        /// <summary>
+        /// Unable to determine a certificate for a file that should be signed
+        /// </summary>
+        SIGN002,
+        /// <summary>
+        /// No files to sign.
+        /// </summary>
+        SIGN003,
+        // Signing a 3rd party library with a Microsoft cert.
+        SIGN004
+    };
         
     internal static class SignToolConstants
     {
@@ -15,7 +31,8 @@ namespace Microsoft.DotNet.SignTool
         public const string MsiEngineExtension = "-engine.exe";
         /// <summary>
         /// List of known signable extensions. Copied, removing duplicates, from here:
-        /// https://microsoft.sharepoint.com/teams/codesigninfo/Wiki/Signable%20Files.aspx
+        /// https://microsoft.sharepoint.com/teams/prss/Codesign/SitePages/Signable%20Files.aspx
+        /// ".deb" is not in the list linked above, but it is a known signable extension.
         /// </summary>
         public static readonly HashSet<string> SignableExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
@@ -94,6 +111,8 @@ namespace Microsoft.DotNet.SignTool
 
             ".py",
             ".pyd",
+
+            ".deb",
         };
 
         /// <summary>

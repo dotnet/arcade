@@ -135,14 +135,36 @@ namespace Microsoft.Cci.Writers.CSharp
 
         private string GetTypeName(ITypeReference type)
         {
-            Contract.Requires(type != null);
-            NameFormattingOptions namingOptions = NameFormattingOptions.TypeParameters | NameFormattingOptions.UseTypeKeywords;
+            NameFormattingOptions formattingOptions = NameFormattingOptions.TypeParameters | NameFormattingOptions.UseTypeKeywords;
 
             if (!_forCompilation)
-                namingOptions |= NameFormattingOptions.OmitContainingNamespace;
+            {
+                formattingOptions |= NameFormattingOptions.OmitContainingNamespace;
+            }
 
-            string name = TypeHelper.GetTypeName(type, namingOptions);
-            return name;
+            return GetTypeName(type, formattingOptions);
+        }
+
+        private string GetTypeName(ITypeReference type, NameFormattingOptions formattingOptions)
+        {
+            if ((formattingOptions & NameFormattingOptions.UseTypeKeywords) != 0)
+            {
+                if (TypeHelper.TypesAreEquivalent(type, type.PlatformType.SystemIntPtr))
+                {
+                    if ((LangVersion >= LangVersion11_0) || type.Attributes.HasNativeIntegerAttribute())
+                    {
+                        return "nint";
+                    }
+                }
+                else if (TypeHelper.TypesAreEquivalent(type, type.PlatformType.SystemUIntPtr))
+                {
+                    if ((LangVersion >= LangVersion11_0) || type.Attributes.HasNativeIntegerAttribute())
+                    {
+                        return "nuint";
+                    }
+                }
+            }
+            return TypeHelper.GetTypeName(type, formattingOptions);
         }
 
         private ITypeReference GetBaseType(ITypeDefinition type)

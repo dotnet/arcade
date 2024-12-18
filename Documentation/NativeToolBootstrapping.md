@@ -159,3 +159,8 @@ Example:
 I think that this model will allow us to be a bit more flexible in the types of dependencies that we install and provide a method for non-xcopy deployable dependencies to be installed in the future.  The tool installers may make use of common libraries for installs though.
 
 We are looking into improving this experience to genericize the installers and reduce boilerplate.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CNativeToolBootstrapping.md)](https://helix.dot.net/f/p/5?p=Documentation%5CNativeToolBootstrapping.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CNativeToolBootstrapping.md)</sub>
+<!-- End Generated Content-->

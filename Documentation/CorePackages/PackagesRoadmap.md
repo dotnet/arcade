@@ -1,6 +1,6 @@
 # Packages Roadmap
 The goal of this document is to provide guidance on the definition and implementation of the "Core" packages that should be in the
-Arcade SDK and that should be consumed by the [tier 1 repositories](..\TierOneRepos.md)
+Arcade SDK and that should be consumed by the repositories that make up .NET.
 
 ## Packages that should belong in the Arcade SDK
 The following list provides a summary of the state of each package. For more information, the work is being tracked under the Epic [Publish core "set" of shared packages](https://github.com/dotnet/arcade/issues/46) where every issue is marked according to the package it belongs.
@@ -56,3 +56,8 @@ The following list provides a summary of the state of each package. For more inf
   - Make sure what we currently have will work for most repositories. Refactor where necessary.
   - Add documentation.
 - **When could start being consumed by other repositories**: S141 => 9/21
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CCorePackages%5CPackagesRoadmap.md)](https://helix.dot.net/f/p/5?p=Documentation%5CCorePackages%5CPackagesRoadmap.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CCorePackages%5CPackagesRoadmap.md)</sub>
+<!-- End Generated Content-->

@@ -69,7 +69,7 @@ More about [Channels, Branches, and Subscriptions](https://github.com/dotnet/arc
 
 Once you are part of the `arcade-contrib` team
 
-1. Go to https://maestro-prod.westus2.cloudapp.azure.com/
+1. Go to https://maestro.dot.net/
 2. Click "Sign in" in the upper right of the page
 3. Give consent to "DotNet Maestro"
 4. Click on your name and then on "Tokens"
@@ -202,17 +202,9 @@ To validate that created subscriptions and channels work as expected you'd need 
                      ]
    - Last Build: N/A
    ```
-2. Use the ID and query for the subscription history:
-   ```
-   darc get-subscription-history --id <id>
-   ```
-   For example:
-   ```
-   darc get-subscription-history --id d2d2e80d-8b31-4744-1959-08d6175791f6
-   10/19/2018 9:15:17 AM: (Success) - Checking merge policy for pr 'https://api.github.com/repos/dotnet/arcade-minimalci-sample/pulls/129'
-   10/19/2018 9:10:15 AM: (Success) - Checking merge policy for pr 'https://api.github.com/repos/dotnet/arcade-minimalci-sample/pulls/129'
-   10/19/2018 9:05:14 AM: (Success) - Checking merge policy for pr 'https://api.github.com/repos/dotnet/arcade-minimalci-sample/pulls/129'
-   10/19/2018 9:05:04 AM: (Success) - Updating subscription for build '146'
-   ```
-   Any failed actions will be marked as such, along with a retry command.
-3. Let @alexperovich, @jcagme or @mmitche know about the errors in the unsuccessful entry
+2. Incase of any errors contact @dnceng. 
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CDependencyFlowOnboarding.md)](https://helix.dot.net/f/p/5?p=Documentation%5CDependencyFlowOnboarding.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CDependencyFlowOnboarding.md)</sub>
+<!-- End Generated Content-->

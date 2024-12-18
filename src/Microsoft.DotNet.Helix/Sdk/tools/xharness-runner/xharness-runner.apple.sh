@@ -10,12 +10,15 @@ app=''
 target=''
 timeout=''
 launch_timeout=''
+command_timeout=20
 xcode_version=''
 app_arguments=''
 expected_exit_code=0
 includes_test_runner=false
 reset_simulator=false
 
+# Ignore shellcheck lint warning about unused variables (they can be used in the sourced script)
+# shellcheck disable=SC2034
 while [[ $# -gt 0 ]]; do
     opt="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
     case "$opt" in
@@ -29,6 +32,10 @@ while [[ $# -gt 0 ]]; do
         ;;
       --timeout)
         timeout="$2"
+        shift
+        ;;
+      --command-timeout)
+        command_timeout="$2"
         shift
         ;;
       --launch-timeout)
@@ -65,7 +72,7 @@ function die ()
 
 function sign ()
 {
-    echo "Signing $1"
+    echo "Signing bundle $1"
 
     provisioning_profile="$1/embedded.mobileprovision"
     if [ ! -f "$provisioning_profile" ]; then
@@ -97,8 +104,22 @@ function sign ()
     security cms -D -i "$provisioning_profile" > provision.plist
     /usr/libexec/PlistBuddy -x -c 'Print :Entitlements' provision.plist > entitlements.plist
 
-    # Sign the app
-    /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements entitlements.plist "$1"
+    # Perform deep signing - sign all .app, .framework and Mach-O files by respecting bundle hierarchy (deepest files are signed first)
+    for file_in_bundle in $(find "$1" -d 2>/dev/null); do
+
+      file_name=$(basename -- "$file_in_bundle")
+      file_extension="${file_name##*.}"
+      is_macho=$(file -b $file_in_bundle | grep Mach-O)
+
+      if [ "$file_extension" = "app" ] || [ "$file_extension" = "framework" ] || [ ! -z "${is_macho}" ]; then
+        echo "Signing file $file_in_bundle"
+        if [ "$file_extension" = "app" ]; then
+            /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements entitlements.plist "$file_in_bundle"
+        else
+            /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --preserve-metadata=identifier,entitlements,flags "$file_in_bundle"
+        fi
+      fi
+    done
 }
 
 if [ -z "$app" ]; then
@@ -112,11 +133,20 @@ fi
 if [ -z "$xcode_version" ]; then
     xcode_path="$(dirname "$(dirname "$(xcode-select -p)")")"
 else
-    xcode_path="/Applications/Xcode${xcode_version/./}.app"
+    xcode_path="/Applications/Xcode_${xcode_version}.app"
+
+    if [ ! -d "$xcode_path" ]; then
+      xcode_path="/Applications/Xcode${xcode_version/./}.app"
+    fi
+fi
+
+if [ ! -d "$xcode_path" ]; then
+    echo "WARNING - Xcode not found at $xcode_path"
 fi
 
 # First we need to revive env variables since they were erased by launchctl
 # This file already has the expressions in the `export name=value` format
+# shellcheck disable=SC1091
 . ./envvars
 
 output_directory=$HELIX_WORKITEM_UPLOAD_ROOT
@@ -130,8 +160,8 @@ if [ "$target" == 'ios-device' ] || [ "$target" == 'tvos-device' ]; then
     fi
 elif [[ "$target" =~ "simulator" ]]; then
     # Start the simulator if it is not running already
-    simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
-    open -a "$simulator_app"
+    export SIMULATOR_APP="$xcode_path/Contents/Developer/Applications/Simulator.app"
+    open -a "$SIMULATOR_APP"
 fi
 
 # The xharness alias
@@ -139,51 +169,36 @@ function xharness() {
     dotnet exec "$XHARNESS_CLI_PATH" "$@"
 }
 
-# Act out the actual commands
-source command.sh
+function report_infrastructure_failure() {
+    echo "Infrastructural problem reported by the user, requesting retry+reboot: $1"
+
+    echo "$1" > "$HELIX_WORKITEM_ROOT/.retry"
+
+    if [[ "$2" -ne "--no-reboot" ]]; then
+        echo "$1" > "$HELIX_WORKITEM_ROOT/.reboot"
+    fi
+}
+
+# Used to grep sys logs later in case of crashes
+start_time="$(date '+%Y-%m-%d %H:%M:%S')"
+
+# Act out the actual commands (and time constrain them to create buffer for the end of this script)
+# shellcheck disable=SC1091
+source command.sh & PID=$! ; (sleep "$command_timeout" && kill -s 0 $PID > /dev/null 2>&1 && echo "ERROR: WORKLOAD TIMED OUT - Killing user command.." && kill $PID 2> /dev/null & ) ; wait $PID
 exit_code=$?
 
-# Exit code values - https://github.com/dotnet/xharness/blob/main/src/Microsoft.DotNet.XHarness.Common/CLI/ExitCode.cs
-
-# Kill the simulator just in case when we fail to launch the app
-# 80 - app crash
-if [ $exit_code -eq 80 ] && [[ "$target" =~ "simulator" ]]; then
-    sudo pkill -9 -f "$simulator_app"
+# In case of issues, include the syslog (last 2 MB from the time this work item has been running)
+if [ $exit_code -ne 0 ]; then
+    sudo log show --style syslog --start "$start_time" --end "$(date '+%Y-%m-%d %H:%M:%S')" | tail -c 2097152 > "$output_directory/macos.system.log"
 fi
 
-# If we fail to find a simulator and we are not targeting a specific version (e.g. `ios-simulator_13.5`), it is probably an issue because Xcode should always have at least one runtime version inside
-# 81 - simulator/device not found
-if [ $exit_code -eq 81 ] && [[ "$target" =~ "simulator" ]] && [[ ! "$target" =~ "_" ]]; then
-    touch './.retry'
-    touch './.reboot'
-fi
-
-# If we have a launch failure AND we are on simulators, we need to signal that we want a reboot+retry
-# The script that is running this one will notice and request Helix to do it
-# 83 - app launch failure
-if [ $exit_code -eq 83 ] && [[ "$target" =~ "simulator" ]]; then
-    touch './.retry'
-    touch './.reboot'
-fi
-
-# If we fail to find a real device, it is unexpected as device queues should have one
-# It can often be fixed with a reboot
-# 81 - device not found
-if [ $exit_code -eq 81 ] && [[ "$target" =~ "device" ]]; then
-    touch './.retry'
-    touch './.reboot'
-fi
-
-# The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader
-chmod 0644 "$output_directory"/*.log
-
-# Remove empty files
+echo "Removing empty log files:"
 find "$output_directory" -name "*.log" -maxdepth 1 -size 0 -print -delete
 
 # Rename test result XML so that AzDO reporter recognizes it
 test_results=$(ls "$output_directory"/xunit-*.xml)
 if [ -f "$test_results" ]; then
-    echo "Found test results in $output_directory/$test_results. Renaming to testResults.xml to prepare for Helix upload"
+    echo "Found test results in $test_results. Renaming to testResults.xml to prepare for Helix upload"
 
     # Prepare test results for Helix to pick up
     mv "$test_results" "$output_directory/testResults.xml"

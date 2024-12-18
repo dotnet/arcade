@@ -1,4 +1,3 @@
-<?xml version="1.0" encoding="utf-8"?>
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
 
@@ -115,7 +114,7 @@
     <Error Text="VisualStudioInsertionComponent property must only be set for projects with extension.vsixmanifest or SWR files." Condition="'$(_PackageStubFile)' == ''"/>
 
     <MakeDir Directories="$(_ComponentIntermediateDir)" />
-    <WriteLinesToFile File="$(_PackageStubFile)" Lines="$(TargetVsixContainerName)/$(VsixVersion)" Overwrite="true" />
+    <WriteLinesToFile File="$(_PackageStubFile)" Lines="$(_VsixPackageId)/$(TargetVsixContainerName)/$(VsixVersion)" Overwrite="true" />
 
     <ItemGroup>
       <FileWrites Include="$(_PackageStubFile)"/>
@@ -184,7 +183,7 @@
       <_SwixArgs Include="SwrFiles=$([MSBuild]::Escape($(_SwrFiles)))"/>
       <_SwixArgs Include="SwrPackageName=$(_VsixPackageId)"/>
       <_SwixArgs Include="IntermediateOutputPath=$(IntermediateOutputPath)"/>
-      <_SwixArgs Include="SwixBuildPath=$(NuGetPackageRoot)microbuild.plugins.swixbuild\$(MicroBuildPluginsSwixBuildVersion)\"/>
+      <_SwixArgs Include="SwixBuildPath=$(NuGetPackageRoot)microsoft.visualstudioeng.microbuild.plugins.swixbuild\$(MicrosoftVisualStudioEngMicroBuildPluginsSwixBuildVersion)\"/>
     </ItemGroup>
 
     <MSBuild Projects="$(MSBuildThisFileDirectory)VisualStudio.SetupPackage.swixproj" Properties="@(_SwixArgs)" Targets="Build"/>
@@ -277,4 +276,26 @@
   <PropertyGroup>
     <GetVsixSourceItemsDependsOn>$(GetVsixSourceItemsDependsOn);_GetVsixTemplateItems</GetVsixSourceItemsDependsOn>
   </PropertyGroup>
+
+  <!--
+    Make sure to include information about inputs and outputs to CreateVsixContainer for fast up-to-date check.
+  -->
+  <PropertyGroup Condition="'$(VSToolsPath)' != '' and ('$(IsVsixProject)' == 'true' or '$(GeneratePkgDefFile)' == 'true')">
+    <CollectUpToDateCheckInputDesignTimeDependsOn>$(CollectUpToDateCheckInputDesignTimeDependsOn);CollectVsixUpToDateCheckInput</CollectUpToDateCheckInputDesignTimeDependsOn>
+    <CollectUpToDateCheckBuiltDesignTimeDependsOn>$(CollectUpToDateCheckBuiltDesignTimeDependsOn);CollectVsixUpToDateCheckBuilt</CollectUpToDateCheckBuiltDesignTimeDependsOn>
+  </PropertyGroup>
+
+  <Target Name="CollectVsixUpToDateCheckInput" DependsOnTargets="GetVsixSourceItems;FindSourceVsixManifest">
+    <ItemGroup Condition="$(CreateVsixContainer)">
+      <UpToDateCheckInput Include="@(VSIXSourceItem)" Set="VSIXSet"/>
+      <UpToDateCheckInput Include="@(SourceVsixManifest)" Set="VSIXSet" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CollectVsixUpToDateCheckBuilt">
+    <ItemGroup Condition="$(CreateVsixContainer)">
+      <UpToDateCheckOutput Include="$(TargetVsixContainer)" Set="VSIXSet"/>
+    </ItemGroup>
+  </Target>
+
 </Project>

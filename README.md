@@ -6,7 +6,7 @@ Arcade is intended to provide well-understood and consistent mechanisms for cons
 
 ## Build & Test Status
 
-Status of Arcade public CI builds: [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet/arcade/arcade-ci)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=208)
+Status of Arcade public CI builds: [![Build Status](https://dev.azure.com/dnceng-public/public/_apis/build/status/dotnet/arcade/arcade-ci?branchName=main)](https://dev.azure.com/dnceng-public/public/_build/latest?definitionId=13&branchName=main)
 
 ## Validation & Dependency Flow Status
 
@@ -14,19 +14,16 @@ Status of Arcade public CI builds: [![Build Status](https://dev.azure.com/dnceng
 
 ### Current Version of Arcade in `.NET Eng - Latest`
 
-[Link](https://maestro-prod.westus2.cloudapp.azure.com/2/https:%2F%2Fgithub.com%2Fdotnet%2Farcade/latest/graph) to BARViz
+[Link](https://maestro.dot.net/2/https:%2F%2Fdev.azure.com%2Fdnceng%2Finternal%2F_git%2Fdotnet-arcade/latest/graph) to BARViz
 
 ### Latest Version of Arcade Being Validated
 
-[Link](https://maestro-prod.westus2.cloudapp.azure.com/9/https:%2F%2Fdev.azure.com%2Fdnceng%2Finternal%2F_git%2Fdotnet-arcade/latest/graph) to BARViz. 
+[Link](https://maestro.dot.net/9/https:%2F%2Fdev.azure.com%2Fdnceng%2Finternal%2F_git%2Fdotnet-arcade/latest/graph) to BARViz. 
 
 ### Build Statuses
 
 |Repo Name|Current Build Status|
 |---|---|
-|Runtime|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/runtime/dotnet-runtime-official?branchName=main)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=679&branchName=main)|
-|ASPNETCore|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/aspnetcore/aspnetcore-ci-official?branchName=main)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=21&branchName=main)|
-|Installer|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/installer/DotNet%20Core%20SDK%20(Official)?branchName=main)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=286&branchName=main)|
 |Arcade Official Build|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/arcade/arcade-official-ci?branchName=main)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=6&branchName=main)| 
 |Arcade Validation|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/arcade-validation/dotnet-arcade-validation-official?branchName=main)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=282&branchName=main)|
 

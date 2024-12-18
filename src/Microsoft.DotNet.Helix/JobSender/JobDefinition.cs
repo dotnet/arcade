@@ -1,7 +1,11 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -154,6 +158,22 @@ namespace Microsoft.DotNet.Helix.Client
 
             var (queueId, dockerTag, queueAlias) = ParseQueueId(TargetQueueId);
 
+            // Save time / resources by checking that the queue isn't missing before doing any potentially expensive storage operations
+            try
+            {
+                QueueInfo queueInfo = await HelixApi.Information.QueueInfoAsync(queueId, false, cancellationToken);
+                WarnForImpendingRemoval(log, queueInfo);
+            }
+            // 404 = this queue does not exist, or did and was removed.
+            catch (RestApiException ex) when (ex.Response?.Status == 404)
+            {
+                // Do not throw for Helix pr- queues which are not in the queue info JSON
+                if (!queueId.ToLowerInvariant().StartsWith("pr-"))
+                {
+                    throw new ArgumentException($"Helix API does not contain an entry for {queueId}");
+                }
+            }
+
             IBlobContainer storageContainer = await storage.GetContainerAsync(TargetContainerName, queueId, cancellationToken);
             var jobList = new List<JobListEntry>();
 
@@ -173,6 +193,7 @@ namespace Microsoft.DotNet.Helix.Client
             Uri jobListUri = await storageContainer.UploadTextAsync(
                 jobListJson,
                 $"job-list-{Guid.NewGuid()}.json",
+                log,
                 cancellationToken);
             // Don't log the sas, remove the query string.
             string jobListUriForLogging = jobListUri.ToString().Replace(jobListUri.Query, "");
@@ -221,6 +242,28 @@ namespace Microsoft.DotNet.Helix.Client
             var newJob = await JobApi.NewAsync(creationRequest, jobStartIdentifier, cancellationToken).ConfigureAwait(false);
 
             return new SentJob(JobApi, newJob, newJob.ResultsUri, newJob.ResultsUriRSAS);
+        }
+
+        private void WarnForImpendingRemoval(Action<string> log, QueueInfo queueInfo) 
+        {
+            DateTime whenItExpires = DateTime.MaxValue;
+
+            if (DateTime.TryParseExact(queueInfo.EstimatedRemovalDate, "yyyy-MM-dd", null, DateTimeStyles.AssumeUniversal, out DateTime dtIso))
+            {
+                whenItExpires = dtIso;
+            }
+            if (whenItExpires != DateTime.MaxValue) // We recognized a date from the string
+            {
+                TimeSpan untilRemoved = whenItExpires.ToUniversalTime().Subtract(DateTime.UtcNow);
+                if (untilRemoved.TotalDays <= 10)
+                {
+                    log?.Invoke($"warning : Helix queue {queueInfo.QueueId} {(untilRemoved.TotalDays < 0 ? "was" : "is")} set for estimated removal date of {queueInfo.EstimatedRemovalDate}. In most cases the queue will be removed permanently due to end-of-life; please contact dnceng for any questions or concerns, and we can help you decide how to proceed and discuss other options.");
+                }
+            }
+            else
+            {
+                log?.Invoke($"error : Unable to parse estimated removal date '{queueInfo.EstimatedRemovalDate}' for queue '{queueInfo.QueueId}' (please contact dnceng with this information)");
+            }
         }
 
         private (string queueId, string dockerTag, string queueAlias) ParseQueueId(string value)

@@ -1,4 +1,6 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
+
   <Target Name="AddDotNetSdk"
           Condition="$(IncludeDotNetCli)"
           BeforeTargets="CoreTest;AddXHarnessCli">
@@ -35,7 +37,7 @@
     </PropertyGroup>
 
     <Message Text = "Adding correlation payload for additional .NET Core package: Version: '%(AdditionalDotNetPackage.Identity)'  Runtime: '$(DotNetCliRuntime)' PackageType: '$(_packageType)' Channel: '$(_channel)' "/>
-    <FindDotNetCliPackage Version="%(AdditionalDotNetPackage.Identity)" Runtime="$(DotNetCliRuntime)" PackageType="$(_packageType)" Channel="$(_channel)">
+    <FindDotNetCliPackage Version="%(AdditionalDotNetPackage.Identity)" Runtime="$(DotNetCliRuntime)" PackageType="$(_packageType)" Channel="$(_channel)" AdditionalFeeds="@(AdditionalDotNetPackageFeed)">
       <Output TaskParameter="PackageUri" PropertyName="DotNetCliPackageUri"/>
     </FindDotNetCliPackage>
     <ItemGroup>
@@ -45,4 +47,5 @@
       </HelixCorrelationPayload>
     </ItemGroup>
   </Target>
+
 </Project>

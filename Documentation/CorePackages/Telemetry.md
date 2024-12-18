@@ -76,4 +76,7 @@ phases:
       - template: /eng/code-inspection.yaml
 ```
 
-Having your build definitions collect and report telemetry is the first step for having the telemetry displayed in Mission Control. Besides that you need to follow the instructions outlined [here](https://github.com/dotnet/core-eng/wiki/MissionControlConfiguration) to create a `viewconfiguration.json` file that will tell Mission Control how to group and display the telemetry collected for the repository. For instance, the build configuration above have [this](https://github.com/dotnet/core-eng/blob/master/mission-control-config/dotnet/helix/viewconfiguration.json) `viewconfiguration.json` file associated with it.
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CCorePackages%5CTelemetry.md)](https://helix.dot.net/f/p/5?p=Documentation%5CCorePackages%5CTelemetry.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CCorePackages%5CTelemetry.md)</sub>
+<!-- End Generated Content-->

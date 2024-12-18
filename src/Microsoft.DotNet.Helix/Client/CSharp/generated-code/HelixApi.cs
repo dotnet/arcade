@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -23,10 +26,13 @@ namespace Microsoft.DotNet.Helix.Client
     {
         HelixApiOptions Options { get; set; }
 
+        IAggregate Aggregate { get; }
+        IAnalysis Analysis { get; }
         IInformation Information { get; }
         IJob Job { get; }
+        ILogSearch LogSearch { get; }
         IMachine Machine { get; }
-        IRepository Repository { get; }
+        IScaleSets ScaleSets { get; }
         IStorage Storage { get; }
         ITelemetry Telemetry { get; }
         IWorkItem WorkItem { get; }
@@ -105,13 +111,19 @@ namespace Microsoft.DotNet.Helix.Client
 
         public JsonSerializerSettings SerializerSettings { get; }
 
+        public IAggregate Aggregate { get; }
+
+        public IAnalysis Analysis { get; }
+
         public IInformation Information { get; }
 
         public IJob Job { get; }
 
+        public ILogSearch LogSearch { get; }
+
         public IMachine Machine { get; }
 
-        public IRepository Repository { get; }
+        public IScaleSets ScaleSets { get; }
 
         public IStorage Storage { get; }
 
@@ -128,10 +140,13 @@ namespace Microsoft.DotNet.Helix.Client
         public HelixApi(HelixApiOptions options)
         {
             Options = options;
+            Aggregate = new Aggregate(this);
+            Analysis = new Analysis(this);
             Information = new Information(this);
             Job = new Job(this);
+            LogSearch = new LogSearch(this);
             Machine = new Machine(this);
-            Repository = new Repository(this);
+            ScaleSets = new ScaleSets(this);
             Storage = new Storage(this);
             Telemetry = new Telemetry(this);
             WorkItem = new WorkItem(this);
@@ -318,6 +333,9 @@ namespace Microsoft.DotNet.Helix.Client
             Response = new ResponseWrapper(response, responseContent);
         }
 
+#if NET
+        [Obsolete]
+#endif
         protected RestApiException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
@@ -327,6 +345,9 @@ namespace Microsoft.DotNet.Helix.Client
             Response = JsonConvert.DeserializeObject<ResponseWrapper>(responseString, SerializerSettings);
         }
 
+#if NET
+        [Obsolete]
+#endif
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             if (info == null)
@@ -354,12 +375,18 @@ namespace Microsoft.DotNet.Helix.Client
             Body = body;
         }
 
+#if NET
+        [Obsolete]
+#endif
         protected RestApiException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
             Body = JsonConvert.DeserializeObject<T>(info.GetString("Body"));
         }
 
+#if NET
+        [Obsolete]
+#endif
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             if (info == null)

@@ -74,5 +74,10 @@ If `TsaNotificationEmail` is set, a notification email will be sent out with a l
 [Here](https://devdiv.visualstudio.com/DevDiv/_queries/query/?wiql=%20%20%20%20SELECT%20ID%2CSeverity%2CState%2C%5BAssigned%20To%5D%2CTitle%20FROM%20WorkItem%20WHERE%20Tags%20Contains%27TSA%23178337-Arcade-PoliCheck-12345.6%27%20%20%20%20) is the link to bugs filed after a test run for Arcade.
 
 ## See Also
-- [SDL Control Flow Document](https://github.com/dotnet/core-eng/blob/master/Documentation/Security/ArcadeSecurityControlFlowDocumentation.md)
-- [Introduction to Guardian and TSA](https://github.com/dotnet/core-eng/blob/master/Documentation/Security/IntroToGuardianAndTSA.md)
+- [SDL Control Flow Document](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/442/ArcadeSecurityControlFlowDocumentation)
+- [Introduction to Guardian and TSA](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/443/IntroToGuardianAndTSA)
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CHowToAddSDLRunToPipeline.md)](https://helix.dot.net/f/p/5?p=Documentation%5CHowToAddSDLRunToPipeline.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CHowToAddSDLRunToPipeline.md)</sub>
+<!-- End Generated Content-->

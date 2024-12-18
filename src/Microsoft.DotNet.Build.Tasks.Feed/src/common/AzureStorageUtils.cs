@@ -1,43 +1,61 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Azure;
+using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Storage;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
 using Azure.Storage.Sas;
 using Microsoft.Arcade.Common;
+using Microsoft.Build.Framework;
+using MsBuildUtils = Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
-using Azure.Core.Pipeline;
 using System.Net.Http;
+using Microsoft.DotNet.Build.Tasks.Feed;
 
 namespace Microsoft.DotNet.Build.CloudTestTasks
 {
     public class AzureStorageUtils
     {
-        private readonly Dictionary<string, string> MimeMappings = new Dictionary<string, string>()
+        private static readonly Dictionary<string, string> MimeMappings = new Dictionary<string, string>()
         {
             {".svg", "image/svg+xml"},
             {".version", "text/plain"}
         };
 
-        private readonly Dictionary<string, string> CacheMappings = new Dictionary<string, string>()
+        private static readonly Dictionary<string, string> CacheMappings = new Dictionary<string, string>()
         {
             {".svg", "no-cache"}
         };
 
-        // Save the credential so we can sign SAS tokens
-        private readonly StorageSharedKeyCredential _credential;
+        /// <summary>
+        ///  Enum describing the states of a given package on a feed
+        /// </summary>
+        public enum PackageFeedStatus
+        {
+            DoesNotExist,
+            ExistsAndIdenticalToLocal,
+            ExistsAndDifferent,
+            Unknown
+        }
 
         public BlobContainerClient Container { get; set; }
 
-        private static readonly HttpClient s_httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(300) };
+        private static readonly HttpClient s_httpClient = new HttpClient(
+            new HttpClientHandler() 
+            { 
+                CheckCertificateRevocationList = true
+            })
+        { 
+            Timeout = TimeSpan.FromSeconds(300) 
+        };
         private static readonly BlobClientOptions s_clientOptions = new BlobClientOptions()
         {
             Transport = new HttpClientTransport(s_httpClient)
@@ -45,10 +63,18 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 
         public AzureStorageUtils(string AccountName, string AccountKey, string ContainerName)
         {
-            _credential = new StorageSharedKeyCredential(AccountName, AccountKey);
-            Uri endpoint = new Uri($"https://{AccountName}.blob.core.windows.net");
-            BlobServiceClient service = new BlobServiceClient(endpoint, _credential, s_clientOptions);
+            StorageSharedKeyCredential credential = new(AccountName, AccountKey);
+            Uri endpoint = new($"https://{AccountName}.blob.core.windows.net");
+            BlobServiceClient service = new(endpoint, credential, s_clientOptions);
             Container = service.GetBlobContainerClient(ContainerName);
+        }
+
+        public AzureStorageUtils(string accountName, TokenCredential credential, string containerName)
+        {
+            Uri endpoint = new($"https://{accountName}.blob.core.windows.net");
+            BlobServiceClient service = new(endpoint, credential, s_clientOptions);
+            Container = service.GetBlobContainerClient(containerName);
+            service.GetBlobContainerClient(containerName);
         }
 
         public BlobClient GetBlob(string destinationBlob) =>
@@ -59,7 +85,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 
         public static string CalculateMD5(string filename)
         {
-            using (var md5 = MD5.Create())
+            using (var md5 = MD5.Create())  // lgtm [cs/weak-crypto] Azure Storage specifies use of MD5
             {
                 using (var stream = File.OpenRead(filename))
                 {
@@ -111,75 +137,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
         }
 
         public async Task<bool> IsFileIdenticalToBlobAsync(string localFileFullPath, string blobPath) =>
-            await IsFileIdenticalToBlobAsync(localFileFullPath, GetBlob(blobPath)).ConfigureAwait(false);
-
-        /// <summary>
-        /// Return a bool indicating whether a local file's content is the same as 
-        /// the content of a given blob. 
-        /// 
-        /// If the blob has the ContentHash property set, the comparison is performed using 
-        /// that (MD5 hash).  All recently-uploaded blobs or those uploaded by these libraries
-        /// should; some blob clients older than ~2012 may upload without the property set.
-        /// 
-        /// When the ContentHash property is unset, a byte-by-byte comparison is performed.
-        /// </summary>
-        public async Task<bool> IsFileIdenticalToBlobAsync(string localFileFullPath, BlobClient blob)
-        {
-            BlobProperties properties = await blob.GetPropertiesAsync();
-            if (properties.ContentHash != null)
-            {
-                var localMD5 = CalculateMD5(localFileFullPath);
-                var blobMD5 = Convert.ToBase64String(properties.ContentHash);
-                return blobMD5.Equals(localMD5, StringComparison.OrdinalIgnoreCase);
-            }
-            else
-            {
-                int bytesPerMegabyte = 1 * 1024 * 1024;
-                if (properties.ContentLength < bytesPerMegabyte)
-                {
-                    byte[] existingBytes = new byte[properties.ContentLength];
-                    byte[] localBytes = File.ReadAllBytes(localFileFullPath);
-
-                    using (MemoryStream stream = new MemoryStream(existingBytes, true))
-                    {
-                        await blob.DownloadToAsync(stream).ConfigureAwait(false);
-                    }
-                    return localBytes.SequenceEqual(existingBytes);
-                }
-                else
-                {
-                    using (Stream localFileStream = File.OpenRead(localFileFullPath))
-                    {
-                        byte[] localBuffer = new byte[bytesPerMegabyte];
-                        byte[] remoteBuffer = new byte[bytesPerMegabyte];
-                        int bytesLocalFile = 0;
-
-                        do
-                        {
-                            long start = localFileStream.Position;
-                            int localBytesRead = await localFileStream.ReadAsync(localBuffer, 0, bytesPerMegabyte);
-
-                            HttpRange range = new HttpRange(start, localBytesRead);
-                            BlobDownloadInfo download = await blob.DownloadAsync(range).ConfigureAwait(false);
-                            if (download.ContentLength != localBytesRead)
-                            {
-                                return false;
-                            }
-                            using (MemoryStream stream = new MemoryStream(remoteBuffer, true))
-                            {
-                                await download.Content.CopyToAsync(stream).ConfigureAwait(false);
-                            }
-                            if (!remoteBuffer.SequenceEqual(localBuffer))
-                            {
-                                return false;
-                            }
-                        }
-                        while (bytesLocalFile > 0);
-                    }
-                    return true;
-                }
-            }
-        }
+            await GetBlob(blobPath).IsFileIdenticalToBlobAsync(localFileFullPath);
 
         public async Task<string> CreateContainerAsync(PublicAccessType publicAccess)
         {
@@ -195,7 +153,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                 ExpiresOn = DateTimeOffset.UtcNow.AddDays(tokenExpirationInDays)
             };
             builder.SetPermissions(containerPermissions);
-            return builder.ToSasQueryParameters(_credential).ToString();
+            return Container.GenerateSasUri(builder).ToString();
         }
 
         public async Task<bool> CheckIfContainerExistsAsync() =>
@@ -205,7 +163,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             await GetBlob(blobPath).ExistsAsync().ConfigureAwait(false);
 
 
-        private BlobHttpHeaders GetBlobHeadersByExtension(string filePath)
+        public static BlobHttpHeaders GetBlobHeadersByExtension(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
             {
@@ -227,6 +185,125 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             }
 
             return headers;
+        }
+
+        /// <summary>
+        ///     Determine whether a local package is the same as a package on an AzDO feed.
+        /// </summary>
+        /// <param name="localPackageFullPath"></param>
+        /// <param name="packageContentUrl"></param>
+        /// <param name="client"></param>
+        /// <param name="log"></param>
+        /// <returns></returns>
+        /// <remarks>
+        ///     Open a stream to the local file and an http request to the package. There are a couple possibilities:
+        ///     - The returned headers include a content MD5 header, in which case we can
+        ///       hash the local file and just compare those.
+        ///     - No content MD5 hash, and the streams must be compared in blocks. This is a bit trickier to do efficiently,
+        ///       since we do not necessarily want to read all bytes if we can help it. Thus, we should compare in blocks.  However,
+        ///       the streams make no guarantee that they will return a full block each time when read operations are performed, so we
+        ///       must be sure to only compare the minimum number of bytes returned.
+        /// </remarks>
+        public static async Task<PackageFeedStatus> CompareLocalPackageToFeedPackage(
+            string localPackageFullPath,
+            string packageContentUrl,
+            HttpClient client,
+            MsBuildUtils.TaskLoggingHelper log)
+        {
+            return await CompareLocalPackageToFeedPackage(
+                localPackageFullPath,
+                packageContentUrl,
+                client,
+                log,
+                GeneralUtils.CreateDefaultRetryHandler());
+        }
+
+        /// <summary>
+        ///     Determine whether a local package is the same as a package on an AzDO feed.
+        /// </summary>
+        /// <param name="localPackageFullPath"></param>
+        /// <param name="packageContentUrl"></param>
+        /// <param name="client"></param>
+        /// <param name="log"></param>
+        /// <param name="retryHandler"></param>
+        /// <returns></returns>
+        /// <remarks>
+        ///     Open a stream to the local file and an http request to the package. There are a couple possibilities:
+        ///     - The returned headers include a content MD5 header, in which case we can
+        ///       hash the local file and just compare those.
+        ///     - No content MD5 hash, and the streams must be compared in blocks. This is a bit trickier to do efficiently,
+        ///       since we do not necessarily want to read all bytes if we can help it. Thus, we should compare in blocks.  However,
+        ///       the streams make no guarantee that they will return a full block each time when read operations are performed, so we
+        ///       must be sure to only compare the minimum number of bytes returned.
+        /// </remarks>
+        public static async Task<PackageFeedStatus> CompareLocalPackageToFeedPackage(
+            string localPackageFullPath,
+            string packageContentUrl,
+            HttpClient client,
+            MsBuildUtils.TaskLoggingHelper log,
+            IRetryHandler retryHandler)
+        {
+            log.LogMessage($"Getting package content from {packageContentUrl} and comparing to {localPackageFullPath}");
+
+            PackageFeedStatus result = PackageFeedStatus.Unknown;
+
+            bool success = await retryHandler.RunAsync(async attempt =>
+            {
+                try
+                {
+                    using (Stream localFileStream = File.OpenRead(localPackageFullPath))
+                    using (HttpResponseMessage response = await client.GetAsync(packageContentUrl))
+                    {
+                        response.EnsureSuccessStatusCode();
+
+                        // Check the headers for content length and md5 
+                        bool md5HeaderAvailable = response.Headers.TryGetValues("Content-MD5", out var md5);
+                        bool lengthHeaderAvailable = response.Headers.TryGetValues("Content-Length", out var contentLength);
+
+                        if (lengthHeaderAvailable && long.Parse(contentLength.Single()) != localFileStream.Length)
+                        {
+                            log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different length than remote package '{packageContentUrl}'.");
+                            result = PackageFeedStatus.ExistsAndDifferent;
+                            return true;
+                        }
+
+                        if (md5HeaderAvailable)
+                        {
+                            var localMD5 = AzureStorageUtils.CalculateMD5(localPackageFullPath);
+                            if (!localMD5.Equals(md5.Single(), StringComparison.OrdinalIgnoreCase))
+                            {
+                                log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different MD5 hash than remote package '{packageContentUrl}'.");
+                            }
+
+                            result = PackageFeedStatus.ExistsAndDifferent;
+                            return true;
+                        }
+
+                        const int BufferSize = 64 * 1024;
+
+                        // Otherwise, compare the streams
+                        var remoteStream = await response.Content.ReadAsStreamAsync();
+                        var streamsMatch = await GeneralUtils.CompareStreamsAsync(localFileStream, remoteStream, BufferSize);
+                        result = streamsMatch ? PackageFeedStatus.ExistsAndIdenticalToLocal : PackageFeedStatus.ExistsAndDifferent;
+                        return true;
+                    }
+                }
+                // String based comparison because the status code isn't exposed in HttpRequestException
+                // see here: https://github.com/dotnet/runtime/issues/23648
+                catch (Exception e) when (e is HttpRequestException || e is TaskCanceledException)
+                {
+                    if (e.Message.Contains("404 (Not Found)"))
+                    {
+                        result = PackageFeedStatus.DoesNotExist;
+                        return true;
+                    }
+
+                    // Retry this. Could be an http client timeout, 500, etc.
+                    return false;
+                }
+            });
+
+            return result;
         }
     }
 }

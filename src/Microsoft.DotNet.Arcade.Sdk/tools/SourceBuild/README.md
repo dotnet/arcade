@@ -1,14 +1,14 @@
-# Running source-build
+# Running source only builds
 
-These args control parts of source-build:
+These args control parts of source only build:
 
-* `/p:ArcadeBuildFromSource=true` - Enable simple developer machine repro defaults.
+* `-sb` - Enable simple developer machine repro defaults.
 * Not implemented but recognized as potentially useful:
   * Disable Git repo isolation (slightly faster, but not recommended for dev machines). We may want to use this for CI.
   * Clone and build upstreams from source rather than using intermediate nupkgs.
     * Not as useful as it sounds: this is only the "production" build so building this way is still not appropriate for a typical Linux distro archive.
 
-*All* source-build functionality is brought in only when `ArcadeBuildFromSource`
+*All* vmr-build functionality is brought in only when `DotNetBuild`
 is set to true, to ensure the new MSBuild props/targets don't introduce bugs
 into ordinary builds.
 
@@ -22,12 +22,12 @@ maintaining this functionality directly.
 The source-build targets work by having the build noop, and instead recursively
 call an inner build after some setup. The targets work roughly like this:
 
-* Run `./build.sh /p:ArcadeBuildFromSource=true`
-  * Run `dotnet msbuild ... Build.proj /p:ArcadeBuildFromSource=true`
+* Run `./build.sh -sb`
+  * Run `dotnet msbuild ... Build.proj /p:DotNetBuildRepo=true`
     * [Hook] Before **Outer Execute**:
-      * Clone the source into `artifacts/source-build/self/src`
+      * Clone the source into `artifacts/sb/src`
       * Assemble a build command by appending to the `dotnet msbuild` call.
-      * Run `dotnet msbuild ... Build.proj /p:ArcadeBuildFromSource=true ... /p:ArcadeInnerBuildFromSource=true`
+      * Run `dotnet msbuild ... Build.proj /p:DotNetBuildRepo=true ... /p:DotNetBuildInnerRepo=true`
         * [Hook] Before **Inner Execute**:
           * Compile source-build MSBuild tasks. (Temporary, should migrate to Arcade task DLL.)
         * During **Inner Execute**:

@@ -41,6 +41,7 @@ namespace Microsoft.DotNet.GenFacades
         public bool GenerateSource(
             IEnumerable<string> compileFiles,
             IEnumerable<string> constants,
+            string langVersion,
             bool ignoreMissingTypes)
         {
             List<string> externAliases = new List<string>();
@@ -51,7 +52,7 @@ namespace Microsoft.DotNet.GenFacades
 
             bool result = true;
 
-            HashSet<string> existingTypes = compileFiles != null ? TypeParser.GetAllPublicTypes(compileFiles, constants) : null;
+            HashSet<string> existingTypes = compileFiles != null ? TypeParser.GetAllPublicTypes(compileFiles, constants, langVersion) : null;
             IEnumerable<string> typesToForward = compileFiles == null ? _referenceTypes : _referenceTypes.Where(id => !existingTypes.Contains(id));
 
             foreach (string type in typesToForward.OrderBy(s => s))

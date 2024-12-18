@@ -13,8 +13,8 @@ AsmDiff is a command line tool which may be used to check the API changes betwee
 - `-osn|--OldSetName` - Provide a name for the old set in output. If this parameter is not provided the file or directory name will be used.
 - `-u|--Unchanged` - Include members, types, and namespaces that are unchanged.
 - `-r|--Removed` - Include members, types, and namespaces that were removed. (default is removed and added)
-- `-a|--Added` - Include members, types, and namespaces that were removed. (default is removed and added)
-- `-c|--Changed` - Include members, types, and namespaces that were removed. (default is removed and added)
+- `-a|--Added` - Include members, types, and namespaces that were added. (default is removed and added)
+- `-c|--Changed` - Include members, types, and namespaces that were changed. (default is removed and added)
 - `-to|--TypesOnly` - Only show down to the type level not the member level.
 - `-sr|--StrikeRemoved` - For removed API's also strike them out. This option currently only works with the HTML writer which is the default.
 - `-da|--DiffAttributes` - Enables diffing of the attributes as well, by default all attributes are ignored. For CSV writer causes the assembly name to be included in the column for types.

@@ -1,9 +1,9 @@
 # Microsoft.DotNet.Helix.Sdk
 
-This Package provides Helix Job sending functionality from an MSBuild project file.
+This Package provides Helix Job-sending functionality from an MSBuild project file.
 
 ## Examples
-Each of the following examples require dotnet-cli >= 2.1.300 and need the following files in a directory at or above the example project's directory.
+Each of the following examples require dotnet-cli >= 3.1.x, and need the following files in a directory at or above the example project's directory.
 #### NuGet.config
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -54,8 +54,8 @@ In order to run them, one has to publish the SDK locally so that the unit tests 
     ```
 3. Publish Arcade SDK and Helix SDK
     ```sh
-    dotnet publish -f netcoreapp3.1 src/Microsoft.DotNet.Arcade.Sdk/Microsoft.DotNet.Arcade.Sdk.csproj
-    dotnet publish -f netcoreapp3.1 src/Microsoft.DotNet.Helix/Sdk/Microsoft.DotNet.Helix.Sdk.csproj
+    dotnet publish -f <tfm> src/Microsoft.DotNet.Arcade.Sdk/Microsoft.DotNet.Arcade.Sdk.csproj
+    dotnet publish -f <tfm> src/Microsoft.DotNet.Helix/Sdk/Microsoft.DotNet.Helix.Sdk.csproj
     ```
 4. Pick one of the test `.proj` files, set some env variables and build it  
     Bash
@@ -149,13 +149,21 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
     <!-- The helix queue this job should run on. -->
     <HelixTargetQueue>Windows.10.Amd64.Open</HelixTargetQueue>
 
+    <!-- Whether to fail the build if any Helix queues supplied don't exist.
+         If set to false, sending to non-existent Helix Queues will only print a warning. Defaults to true. 
+         Only set this to false if losing this coverage when the target queue is deprecated is acceptable.
+         For any job waiting on runs, this will still cause failure if all queues do not exist as there must be
+         one or more runs started for waiting to not log errors.  Only set if you need it.
+    -->
+    <FailOnMissingTargetQueue>false</FailOnMissingTargetQueue>
+
     <!--
       The set of helix queues to send jobs to.
       This property is multiplexed over just like <TargetFrameworks> for C# projects.
       The project is built once per entry in this list with <HelixTargetQueue> set to the current list element value.
       Note that all payloads sent need to be able to run on all variations included.
     -->
-    <HelixTargetQueues>Ubuntu.1804.Amd64.Open;Ubuntu.1604.Amd64.Open;(Alpine.39.Amd64)Ubuntu.1604.Amd64.Open@mcr.microsoft.com/dotnet-buildtools/prereqs:alpine-3.9-helix-bfcd90a-20200123191053</HelixTargetQueues>
+    <HelixTargetQueues>Ubuntu.1804.Amd64.Open;Ubuntu.1604.Amd64.Open;(Alpine.39.Amd64)Ubuntu.1804.Amd64.Open@mcr.microsoft.com/dotnet-buildtools/prereqs:alpine-3.9-helix-bfcd90a-20200123191053</HelixTargetQueues>
 
     <!-- 'true' to download dotnet cli and add it to the path for every workitem. Default 'false' -->
     <IncludeDotNetCli>true</IncludeDotNetCli>
@@ -170,19 +178,6 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
     <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
     <!-- 'true' to produce a build error when tests fail. Default 'true' -->
     <FailOnTestFailure>true</FailOnTestFailure>
-
-    <!--
-      'true' to enable the xunit reporter. Default 'false'
-      The xunit reporter will report test results from a test results
-      xml file found in the work item working directory.
-      The following file names are accepted:
-        testResults.xml
-        test-results.xml
-        test_results.xml
-    -->
-    <EnableXUnitReporter>false</EnableXUnitReporter>
-    <!-- Instruct the sdk to wait for test result ingestion by MC, and fail if there are any failed work items or tests. -->
-    <FailOnMissionControlTestFailure>false</FailOnMissionControlTestFailure>
 
     <!--
       Commands that are run before each workitem's command
@@ -212,6 +207,11 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
     </AdditionalDotNetPackage>
     <!-- Includes the 6.0.0-preview.4.21175.1 version, using the default runtime packageType, DotNetCliRuntime, and Current channel  -->
     <AdditionalDotNetPackage Include="6.0.0-preview.4.21175.1" />
+
+    <!-- if the above package was not available from a public feed, you can specify a private feed like this -->
+    <AdditionalDotNetPackageFeed Include="https://someprivatefeed.blob.azure.com/internal">
+      <SasToken>$(SasTokenValueForSomePrivateFeed)</SasToken>
+    </AdditionalDotNetPackageFeed>
   </ItemGroup>
   
   <!--
@@ -228,11 +228,10 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
     <!-- TargetFramework of the xunit.runner.dll to use when running the tests -->
     <XUnitRuntimeTargetFramework>netcoreapp2.0</XUnitRuntimeTargetFramework>
     <!-- PackageVersion of xunit.runner.console to use -->
-    <XUnitRunnerVersion>2.4.1</XUnitRunnerVersion>
+    <XUnitRunnerVersion>2.9.2</XUnitRunnerVersion>
     <!-- Additional command line arguments to pass to xunit.console.exe -->
     <XUnitArguments></XUnitArguments>
   </PropertyGroup>
-
 
   <ItemGroup>
     <!--
@@ -276,42 +275,44 @@ There are times when a work item may detect that the machine being executed on i
 #### Request Infrastructure Retry
 An "infrastructure retry" is pre-existing functionality Helix Clients use in cases such as when communication to the telemetry service or Azure Service Bus fails; this allows the work item be run again in entirety, generally (but not guaranteedly) on a different machine, with the hope that the next machine will be in a better state.  Note that requesting this prevents any job using it from finishing, and as a FIFO queue the work items that get retried go to the back of the queue, so calling this API can significantly increase job execution time based off how many jobs are being handled by a given queue.      
 
-##### Sample usage:
+##### Sample usage in Python:
 
-###### In Python:
 
-```
-from helix.workitemutil import request_infra_retry
+```py
+from helix.public import request_infra_retry
 
 request_infra_retry('Optional reason string')
-
 ```
-
-###### Outside python:
-
-Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Optional reason string')"`
-
-Windows: `%HELIX_PYTHONPATH% -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Optional reason string')"`
 
 #### Request post-workitem reboot
 Helix work items explicitly rebooting the helix client machine themself will never "finish", since this will in most cases preclude sending the final event telemetry for these work items.  However, a work item may know that the machine is in a bad state where a reboot would be desirable (for instance, if the Helix agent is acting as a build machine and some leaked build process is preventing workspace cleanup). After calling this API, the work item runs to completion as normal, then after sending the usual telemetry and uploading results will perform a reboot before taking the next work item. 
 
-##### Sample usage:
+##### Sample usage in Python:
 
-###### In Python:
-
-```
-from helix.workitemutil import request_reboot
+```py
+from helix.public import request_reboot
 
 request_reboot('Optional reason string')
-
 ```
 
-###### Outside python:
+#### Send workitem metric / metrics
+Send custom metric(s) for the current workitem. The API accepts metric name(s), value(s) (float) and metric dimensions. These metrics are stored in the Kusto Metrics table.
 
-Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.workitemutil import request_reboot; request_reboot('Optional reason string')"`
+##### Sample usage in Python:
 
-Windows: `%HELIX_PYTHONPATH% -c "from helix.workitemutil import request_reboot; request_reboot('Optional reason string')"`
+```py
+from helix.public import send_metric, send_metrics
+
+send_metric('MetricName', <value>, {'Dimension1': 'value1', 'Dimension2' : 'value2', ...})
+
+send_metrics({'Metric1': <value1>, 'Metric2': <value2>,...}, {'Dimension1': 'value1', 'Dimension2' : 'value2', ...})
+```
+
+#### Sample usage from outside python:
+
+Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.public import <function>; <function>(...)"`
+
+Windows: `%HELIX_PYTHONPATH% -c "from helix.public import <function>; <function>(...)"`
 
 ### Common Helix client environment variables
 
@@ -340,7 +341,7 @@ If a test passes or fails in all attempts, only a single report is made represen
 
 To opt-in and configure test retries when using helix, create file in the reporitory at "eng/test-configuration.json"
 
-### test-configuraion.json format
+### test-configuration.json format
 ```json
 {
   "version" : 1,
@@ -386,7 +387,39 @@ The three "rules" entries are lists of rules that will be used to match test to 
 - if the default behavior is "fail" and a "rerun" rule matches, the test is rerun
 - default behavior is used
 
-A "rule" consists of a property, and then a rule object
+A "rule" consists on at least one condition. A condition should have a [property](#properties) and a [rule object](#rule-object), but it could have more than one condition.
+
+#### Rule with one condition
+In this case any test with a testName of "Pizza" is going to be retried
+
+```json
+{
+ "retryOnRules":[{"testName": "Pizza"}]
+}
+```
+
+#### Rule with multiple conditions
+In this case the  `testName` needs to be "Pizza" and the `failureMessage` needs to be "Message" in order to meet the rule to be retried.
+
+```json
+{
+  "retryOnRules": [{"testName":"Pizza",   "failureMessage":"Message"}]
+}
+```
+
+#### Multiple rules
+In this example we see two rules on `retryOnRules` section, only one rule needs to be met to retry the build. 
+
+In this case if a test fails and its `testName` is "Pizza" or its `testName` is "Taco", the test is going to be retried.
+
+```json
+{
+  "retryOnRules": [
+    {"testName":"Pizza"},
+    {"testName":"Taco"}
+  ]
+}
+```
 
 ### Properties
 <dl>

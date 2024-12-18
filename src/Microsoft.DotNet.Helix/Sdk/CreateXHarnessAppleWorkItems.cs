@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
 using System.IO;
 using System.Linq;
@@ -29,7 +32,10 @@ namespace Microsoft.DotNet.Helix.Sdk
         private const string EntryPointScript = "xharness-helix-job.apple.sh";
         private const string RunnerScript = "xharness-runner.apple.sh";
 
-        private static readonly TimeSpan s_defaultLaunchTimeout = TimeSpan.FromMinutes(10);
+        // We have a more aggressive timeout towards simulators which tend to slow down until installation takes 20 minutes and the machine needs a reboot
+        // For this reason, it's better to be aggressive and detect a slower machine sooner
+        private static readonly TimeSpan s_defaultSimulatorLaunchTimeout = TimeSpan.FromMinutes(6);
+        private static readonly TimeSpan s_defaultDeviceLaunchTimeout = TimeSpan.FromMinutes(5);
 
         /// <summary>
         /// An array of one or more paths to iOS/tvOS app bundles (folders ending with ".app" usually)
@@ -132,7 +138,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             target = target.ToLowerInvariant();
 
             // Optional timeout for the how long it takes for the app to be installed, booted and tests start executing
-            TimeSpan launchTimeout = s_defaultLaunchTimeout;
+            TimeSpan launchTimeout = target.Contains("device") ? s_defaultDeviceLaunchTimeout : s_defaultSimulatorLaunchTimeout;
             if (appBundleItem.TryGetMetadata(MetadataNames.LaunchTimeout, out string launchTimeoutProp))
             {
                 if (!TimeSpan.TryParse(launchTimeoutProp, out launchTimeout) || launchTimeout.Ticks < 0)
@@ -168,11 +174,11 @@ namespace Microsoft.DotNet.Helix.Sdk
             if (customCommands == null)
             {
                 // When no user commands are specified, we add the default `apple test ...` command
-                customCommands = GetDefaultCommand(target, includesTestRunner, resetSimulator);
+                customCommands = GetDefaultCommand(includesTestRunner, resetSimulator);
             }
 
             string appName = isAlreadyArchived ? $"{fileSystem.GetFileNameWithoutExtension(appFolderPath)}.app" : fileSystem.GetFileName(appFolderPath);
-            string helixCommand = GetHelixCommand(appName, target, testTimeout, launchTimeout, includesTestRunner, expectedExitCode, resetSimulator);
+            string helixCommand = GetHelixCommand(appName, target, workItemTimeout, testTimeout, launchTimeout, includesTestRunner, expectedExitCode, resetSimulator);
             string payloadArchivePath = await CreatePayloadArchive(
                 zipArchiveManager,
                 fileSystem,
@@ -196,24 +202,23 @@ namespace Microsoft.DotNet.Helix.Sdk
             return isAlreadyArchived ? fileSystem.FileExists(appBundlePath) : fileSystem.DirectoryExists(appBundlePath);
         }
 
-        private string GetDefaultCommand(string target, bool includesTestRunner, bool resetSimulator) =>
+        private string GetDefaultCommand(bool includesTestRunner, bool resetSimulator) =>
             $"xharness apple {(includesTestRunner ? "test" : "run")} " +
             "--app \"$app\" " +
             "--output-directory \"$output_directory\" " +
             "--target \"$target\" " +
             "--timeout \"$timeout\" " +
+            "--launch-timeout \"$launch_timeout\" " +
             "--xcode \"$xcode_path\" " +
             "-v " +
-            (includesTestRunner
-                ? $"--launch-timeout \"$launch_timeout\" "
-                : $"--expected-exit-code $expected_exit_code ") +
+            (!includesTestRunner ? "--expected-exit-code $expected_exit_code " : string.Empty) +
             (resetSimulator ? $"--reset-simulator " : string.Empty) +
-            (target.Contains("device") ? $"--signal-app-end " : string.Empty) + // iOS/tvOS 14+ workaround
             (!string.IsNullOrEmpty(AppArguments) ? "-- " + AppArguments : string.Empty);
 
         private string GetHelixCommand(
             string appName,
             string target,
+            TimeSpan workItemTimeout,
             TimeSpan testTimeout,
             TimeSpan launchTimeout,
             bool includesTestRunner,
@@ -223,6 +228,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             $"chmod +x {EntryPointScript} && ./{EntryPointScript} " +
             $"--app \"{appName}\" " +
             $"--target \"{target}\" " +
+            $"--command-timeout {(int)workItemTimeout.TotalSeconds} " +
             $"--timeout \"{testTimeout}\" " +
             $"--launch-timeout \"{launchTimeout}\" " +
             (includesTestRunner ? "--includes-test-runner " : string.Empty) +

@@ -35,7 +35,7 @@ use darc to achieve them, as well as a general reference guide to darc commands.
   - [default-channel-status](#default-channel-status) - Enables or disables a default channel association.
   - [delete-channel](#delete-channel) - Deletes an existing channel.
   - [delete-default-channel](#delete-default-channel) - Remove a default channel association.
-  - [delete-subscription](#delete-subscription) - Remove a subscription.
+  - [delete-subscriptions](#delete-subscriptions) - Remove a subscription.
   - [gather-drop](#gather-drop) - Gather a drop of the outputs for a build.
   - [get-asset](#get-asset) - Get information about an asset.
   - [get-build](#get-build) - Retrieves a specific build of a repository,
@@ -70,35 +70,44 @@ use darc to achieve them, as well as a general reference guide to darc commands.
 
 The darc client is a .NET Core global tool.  It requires that a .NET Core SDK be
 installed globally on the machine. The client can be installed using the
-eng\common\darc-init.ps1 script located under any arcade enabled repository.
-The version number is currently baked into the install script, so ensuring you
-have the latest arcade is a good idea.
+`eng\common\darc-init.ps1` script located under any arcade enabled repository.
+The version of the tool that will be installed will match the version of the Maestro++
+service at the time of the installation.
 
-#### Step 1: Ensure you're part of the **arcade-contrib** team:
-- If not you'll get 'Forbidden' errors when trying to use darc
-- Go to https://github.com/orgs/dotnet/teams/arcade-contrib/members
-- Click on "Request to join"
+#### Step 1: Ensure you're part of the **dotnetes-maestro-users** CoreIdentity group:
+Go to https://coreidentity.microsoft.com/manage/Entitlement/entitlement/dotnetesmaes-z54r and request to join.
 
-#### Step 2: Install the darc client:
+#### Step 2: Install the darc client (from scripts in any arcadified repository):
 ```
-PS C:\enlistments\arcade> .\eng\common\darc-init.ps1
-
-Tool 'microsoft.dotnet.darc' (version '1.1.0-beta.19057.9') was successfully uninstalled.
-Installing Darc CLI version 1.1.0-beta.19081.1...
+D:\repos\arcade> .\eng\common\darc-init.ps1
+  Attempting to install 'sdk v9.0.100-preview.4.24267.66' from public location.
+dotnet-install: Extracting the archive.
+dotnet-install: Adding to current process PATH: "D:\repos\arcade\.dotnet\". Note: This change will not be visible if PowerShell was run as a child process.
+dotnet-install: Note that the script does not resolve dependencies during installation.
+dotnet-install: To check the list of dependencies, go to https://learn.microsoft.com/dotnet/core/install/windows#dependencies
+dotnet-install: Installed version is 9.0.100-preview.4.24267.66
+dotnet-install: Installation finished
+Tool 'microsoft.dotnet.darc' (version '1.1.0-beta.24304.4') was successfully uninstalled.
+Installing Darc CLI version 1.1.0-beta.24306.2...
 You may need to restart your command window if this is the first dotnet tool you have installed.
-  Restoring packages for C:\Users\mmitche\AppData\Local\Temp\jlbo0wgo.ki2\restore.csproj...
-  Installing Microsoft.DotNet.Darc 1.1.0-beta.19081.1.
-  Restore completed in 13.12 sec for C:\Users\mmitche\AppData\Local\Temp\jlbo0wgo.ki2\restore.csproj.
+'D:\repos\arcade\.dotnet\dotnet.exe' tool install microsoft.dotnet.darc --version 1.1.0-beta.24306.2 --add-source 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json' -v minimal -g
 You can invoke the tool using the following command: darc
-Tool 'microsoft.dotnet.darc' (version '1.1.0-beta.19081.1') was successfully installed.
+Tool 'microsoft.dotnet.darc' (version '1.1.0-beta.24306.2') was successfully installed.
+```
+
+If you get a `SecurityError` saying that `\eng\common\darc-init.ps1` cannot be loaded because running
+scripts is disabled on this system, you can relax your `ExecutionPolicy` for this script:
+
+```
+powershell -ExecutionPolicy ByPass -File .\darc-init.ps1
 ```
 
 After your client is installed, you should be able to launch it by typing 'darc'
-on the command line.  If this is the first global tool you've installed, you may
+on the command line. If this is the first global tool you've installed, you may
 need to first restart your command window.
 
 ```
-PS C:\enlistments\arcade> darc
+D:\repos\arcade> darc
 Microsoft.DotNet 1.1.0-beta.19081.1+270fa76db13d4c103a6dec2b03f1fd79730ff429
 c Microsoft Corporation. All rights reserved.
 ERROR(S):
@@ -126,12 +135,20 @@ No verb selected.
 When executing most operations, the client needs to make some remote queries.
 These remote queries require authentication in most circumstances. There are 3
 PATs that may be used:
-- A GitHub PAT for downloading files from GitHub (e.g. eng/Version.Details.xml or
-  arcade script files.  Required scopes: None
-- An Azure DevOps PAT for downloading files from Azure DevOps. (e.g.
-  eng/Version.Details.xml)  Required scopes: Code-Read, Build-Read & Execute, Packaging Read
-- A Build Asset Registry (BAR) password for interacting with Maestro++/BAR (e.g.
-  obtaining build information needed for a drop).
+- **[Required]** A GitHub PAT for downloading files from GitHub (e.g. `eng/Version.Details.xml` or
+  arcade script files. No scopes required but token must be [SSO enabled](https://docs.github.com/en/enterprise-cloud@latest/authentication/authenticating-with-saml-single-sign-on/authorizing-a-personal-access-token-for-use-with-saml-single-sign-on) for all organizations for which repositories `darc` will be used.
+- **[Optional]** An Azure DevOps PAT for downloading files from Azure DevOps. (e.g.
+  eng/Version.Details.xml). When not provided, local system credentials are used. Required scopes: Code-Read, Build-Read & Execute, Packaging Read.
+  The recommended way of generating the PAT is using the [PatGeneratorTool](https://dev.azure.com/dnceng/public/_artifacts/feed/dotnet-eng/NuGet/Microsoft.DncEng.PatGeneratorTool),
+  with the `dotnet pat-generator --scopes build_execute code --organizations dnceng devdiv --expires-in 180` command
+- *[DEPRECATED] A Build Asset Registry (BAR) password for interacting with Maestro++/BAR (e.g.
+  obtaining build information needed for a drop). This one is no longer needed and you can sign-in through browser when using darc.*
+
+> [!NOTE]
+>  [PatGeneratorTool](https://dev.azure.com/dnceng/public/_artifacts/feed/dotnet-eng/NuGet/Microsoft.DncEng.PatGeneratorTool) can be installed with the following command
+> ```
+> dotnet tool install --global Microsoft.DncEng.PatGeneratorTool --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json --prerelease
+> ```
 
 These tokens can either be passed on the command line using parameters (see [Common parameters](#common-parameters)), or
 cached locally on the machine using the [`darc authenticate`](#authenticate) command.
@@ -139,7 +156,7 @@ cached locally on the machine using the [`darc authenticate`](#authenticate) com
 After supplying your secrets, a simple `darc get-channels` operations should succeed.
 
 ```
-PS C:\enlistments\arcade> darc get-channels
+D:\repos\arcade> darc get-channels
 .NET Tools - Latest
 .NET Engineering Services - Int
 .NET Engineering Services - Prod
@@ -152,6 +169,9 @@ PS C:\enlistments\arcade> darc get-channels
 .NET 3 Tools
 .NET 3 Tools - Validation
 ```
+
+*Note: `darc get-channels` does not exercise all authentication paths which require PAT's.  If you run a darc command and see an error like `Response status code does not indicate success: 401 (Unauthorized)`, it likely indicates that you are missing an AzDo or GH PAT (or that one of those PAT's is invalid / expired).*
+
 
 ### Adding dependencies to a repository
 
@@ -281,7 +301,6 @@ index a1d683c1..dbf3fe0e 100644
 --- a/eng/Versions.props
 +++ b/eng/Versions.props
 @@ -60,6 +60,7 @@
-     <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
      <MicrosoftDiaSymReaderConverterVersion>1.1.0-beta1-62810-01</MicrosoftDiaSymReaderConverterVersion>
      <MicrosoftDiaSymReaderNativeVersion>1.7.0</MicrosoftDiaSymReaderNativeVersion>
 +    <MicrosoftNETCoreAppVersion>3.0.0-preview-27401-3</MicrosoftNETCoreAppVersion>
@@ -716,7 +735,7 @@ darc and Maestro++ have a few mechanisms to enable such scenarios:
                      ]
   - Last Build: N/A
 
-  PS C:\enlistments\arcade> darc delete-subscription --id 21e611eb-ab71-410e-ca98-08d61f236c94
+  PS C:\enlistments\arcade> darc delete-subscriptions --id 21e611eb-ab71-410e-ca98-08d61f236c94
   Successfully deleted subscription with id '21e611eb-ab71-410e-ca98-08d61f236c94'
   ```
 
@@ -844,9 +863,9 @@ PS C:\enlistments\core-sdk> darc gather-drop --repo https://github.com/dotnet/co
 
 If no build exists at that drop, darc will show an error. In this case, you
 might try other recent shas, or use the BAR swagger API
-(https://maestro-prod.westus2.cloudapp.azure.com/swagger) to look up a build
+(https://maestro.dot.net/swagger) to look up a build
 id. Remember to authenticate using a token from
-https://maestro-prod.westus2.cloudapp.azure.com/.  Better methods of obtaining
+https://maestro.dot.net/.  Better methods of obtaining
 the root build are coming soon.
 
 The root build can then be provided using --id
@@ -945,7 +964,7 @@ You will find them on the `Checks` tab of each updates PRs created by maestro. D
 There are a few common parameters available on every command:
 
 - `-p, --password` - Build Asset Registry password.  You can obtain this
-  password by going to https://maestro-prod.westus2.cloudapp.azure.com/, logging
+  password by going to https://maestro.dot.net/, logging
   in using the link in the top right, then generating a token using the menu in
   the top right.  This setting overrides whatever BAR password was provided through `darc authenticate`.
 - `--github-pat` - Personal access token used to authenticate GitHub. This is a GitHub PAT used
@@ -954,10 +973,10 @@ There are a few common parameters available on every command:
   checked. This setting overrides whatever GitHub PAT was provided through
   `darc authenticate`.
 - `--azdev-pat` - Personal access token used to authenticate to Azure DevOps.
-  This token should have Code Read permissions. This setting overrides whatever
-  Azure DevOps PAT was provided through `darc authenticate`.
+  This token should have Build Execute and Code Read permissions. This setting overrides whatever
+  Azure DevOps PAT was provided through `darc authenticate`. If no PAT is set, local credentials are used.
 - `--bar-uri` - URI of the build asset registry service to use.  Typically left
-  as its default (https://maestro-prod.westus2.cloudapp.azure.com) This setting
+  as its default (https://maestro.dot.net) This setting
   overrides the Build Asset Registry URI provided through `darc authenticate`.
 - `--verbose` - Turn on additional output.
 - `--debug` - Turn on debug output
@@ -1291,7 +1310,7 @@ Successfully created new subscription with id '4f300f68-8800-4b14-328e-08d68308f
   ```
 
 **See also**:
-- [delete-subscription](#delete-subscription)
+- [delete-subscriptions](#delete-subscriptions)
 - [get-subscriptions](#get-subscriptions)
 - [trigger-subscriptions](#trigger-subscriptions)
 - [get-channels](#get-channels)
@@ -1315,7 +1334,6 @@ parameters:
 
 - `--id` - **(Required)**. BAR id of build to assign to channel.
 - `--channel` - **(Required)**. Channel to assign build to.
-- `--publish-installers-and-checksums` **(Required)** Whether installers and checksums should be published. All the installers and checksums usually go to the same storage account. By setting this to true we are agreeing to republish them everytime a new channel is added. This has to be set to true at all times.
 - `--publishing-infra-version` - Version of publishing, for single stage [publishing infrastructure use 3](https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md#what-is-v3-publishing-how-is-it-different-from-v2) else for multi stage publishing infra with each stage representing available channel(s) use 2. Default is 2. 
 - `--signing-validation-parameters` - Additional (MSBuild) properties to be passed to signing validation
 - `--symbol-publishing-parameters` -Additional (MSBuild) properties to be passed to symbol publishing
@@ -1337,7 +1355,7 @@ parameters:
 **If using --publishing-infra-version 2**
 ```
 
-darc add-build-to-channel --id 13078 --channel ".NET Core 3 Release" --publish-installers-and-checksums
+darc add-build-to-channel --id 13078 --channel ".NET Core 3 Release"
 Assigning the following build to channel '.NET Core 3 Release':
 
 Repository:    https://github.com/dotnet/core-setup
@@ -1364,7 +1382,7 @@ If the above example build doesn't happen to be the latest in a channel but you 
 **If using --publishing-infra-version 3**
 ```
 
-darc add-build-to-channel --id 65256 --channel ".NET 6 Dev" --publishing-infra-version 3 --publish-installers-and-checksums
+darc add-build-to-channel --id 65256 --channel ".NET 6 Dev" --publishing-infra-version 3
 
 Waiting '60' seconds for promotion build to complete.
 
@@ -1409,13 +1427,13 @@ PS D:\enlistments\arcade> darc authenticate
 
 (opens in editor)
 
-# Create new BAR tokens at https://maestro-prod.westus2.cloudapp.azure.com/Account/Tokens
+# Create new BAR tokens at https://maestro.dot.net/Account/Tokens
 bar_password=***
 # Create new GitHub personal access tokens at https://github.com/settings/tokens (no auth scopes needed)
 github_token=***
 # Create new Azure Dev Ops tokens at https://dev.azure.com/dnceng/_details/security/tokens (code read scope needed)
 azure_devops_token=***
-build_asset_registry_base_uri=https://maestro-prod.westus2.cloudapp.azure.com/
+build_asset_registry_base_uri=https://maestro.dot.net/
 
 # Storing the required settings...
 # Set elements above depending on what you need
@@ -1518,7 +1536,7 @@ PS D:\enlistments\arcade> darc delete-default-channel --channel ".Net 5 Dev" --b
 - [add-default-channel](#add-default-channel)
 - [get-default-channels](#get-default-channels)
 
-### **`delete-subscription`**
+### **`delete-subscriptions`**
 
 Deletes a specified subscription by its id. This removes the subscription from
 Maestro and no new updates based on the subscription will be created. Any
@@ -1527,7 +1545,7 @@ obtain the id of a subscription to be deleted, see [get-subscriptions](#get-subs
 
 **Sample**:
 ```
-PS D:\enlistments\arcade-services> darc delete-subscription --id 4f300f68-8800-4b14-328e-08d68308fe30
+PS D:\enlistments\arcade-services> darc delete-subscriptions --id 4f300f68-8800-4b14-328e-08d68308fe30
 
 Successfully deleted subscription with id '4f300f68-8800-4b14-328e-08d68308fe30'
 ```
@@ -1571,7 +1589,6 @@ The output directory structure is as follows:
   folders will be two additional folders: 'assets' and 'packages'. Assets
   contains all non-package outputs, while 'packages' contains all NuGet
   packages.
-  - A publish_files directory will contain the layout required for the .NET Core release publishing pipeline to publish nuget packages.
   - A manifest file will be generated under the root folder containing information about all gathered builds
 
 **Parameters**
@@ -2657,7 +2674,7 @@ https://github.com/aspnet/Extensions @ release/3.0-preview6
 Retrieves information about existing subscriptions. This command is generally
 useful to determine what kind of dependency flow will happen on new builds, or
 to obtain the id of a subscription for use in
-[delete-subscription](#delete-subscription).
+[delete-subscriptions](#delete-subscriptions).
 
 The top line of the listing shows the subscription mapping and is read:
 ```
@@ -2981,3 +2998,8 @@ None.
 PS C:\enlistments\core-setup> darc verify
 Dependency verification succeeded.
 ```
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CDarc.md)](https://helix.dot.net/f/p/5?p=Documentation%5CDarc.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CDarc.md)</sub>
+<!-- End Generated Content-->

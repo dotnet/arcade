@@ -9,6 +9,8 @@ repo. Xliff-Tasks will continue to be used in addition to OneLocBuild.
 To make OneLocBuild easier to use, we have integrated the task into Arcade. This integration is a job template
 ([here](/eng/common/templates/job/onelocbuild.yml)) that is described in this document.
 
+To see your repo's current loc configuration, please refer to https://aka.ms/locstats.
+
 ## Onboarding to OneLocBuild Using Arcade
 
 Onboarding to OneLocBuild is a simple process:
@@ -60,11 +62,11 @@ that the official build is based on.
 As a further note, the template by default assumes that your mirror repository is located in the dotnet GitHub
 organization. If that is not the case, you will need to specify `GitHubOrg` as well.
 
+If the repo is not in the dotnet organization, dotnet-bot may need to be granted additional permissions to interact with your repository.  Invite dotnet-bot (Go to the repository's "Settings" then click "Collaborators" in the left menu).  After the invite has been sent, reach out to the "First Responders" [channel](https://teams.microsoft.com/l/channel/19%3Aafba3d1545dd45d7b79f34c1821f6055%40thread.skype/First%20Responders?groupId=4d73664c-9f2f-450d-82a5-c2f02756606d&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47) and ask them to accept the "dotnet bot" collaboration invite.  To accept the invite, the first responder will need to [login](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/869/How-to-log-into-a-GitHub-bot-in-Key-Vault) as dotnet bot, go to the inviting repository, and then accept the invitation which should appear.
+
 8. Merge the changes to your main branch and then open a
    [repo modification ticket](https://aka.ms/ceChangeLocConfig)
    with the loc team to let them know to retarget the branch.
-
-
 
 ## Releasing with OneLocBuild Using Arcade
 
@@ -75,21 +77,44 @@ If you're releasing from the main branch of your repository, all that you need t
 PRs from OneLocBuild as they are made and that you allow the translator SLA for any new strings prior to the release.
 
 ### If You're Releasing from a Branch Other Than `main` (Including Servicing Branches)
-If you're releasing from any other branch (including servicing branches), you must do the following:
-
-1. Add the OneLocBuild job template to the pipeline YAML of the release branch. When you do this, you have to change the YAML of both the main branch and the target branch to include a conditional specifying 
+Depending on how often you want to release from the servicing branch you could:
+* Change the loc task, that parses your default branch, to temporarily parse resources from the servicing branch. Here is what you would need to do for that:
+  1. Add the OneLocBuild job template to the pipeline YAML of the release branch. When you do this, you have to change the YAML of both the main branch and the target branch to include a conditional specifying 
    the target branch rather than main (as above). Additionally, your YAML should include the following line (substituting your target branch for `target-branch`):
-```yaml
-  MirrorBranch: target-branch
-```
-2. Open a [repo modification ticket](https://aka.ms/ceChangeLocConfig) with the 
+   ```yaml
+      MirrorBranch: target-branch
+   ```
+  2. Open a [repo modification ticket](https://aka.ms/ceChangeLocConfig) with the 
    loc team at least two weeks before the release and request that they re-target your repository to the release branch.
-3. Merge the OneLocBuild PRs to your release branch.
-4. After the release, open another repo modification ticket to re-target your repository to the `main` branch again.
+  3. Merge the OneLocBuild PRs to your release branch.
+  4. After the release, open another repo modification ticket to re-target your repository to the `main` branch again.
+
+* Register a servicing branch with the loc team using [this ticket](https://aka.ms/ceNewLoc) ([Here](https://ceapex.visualstudio.com/CEINTL/_workitems/edit/523494)'s an example). This allows the loc team to parse your servicing branch(es) while your default branch continues to be parsed. If you already have an old servicing branch parsed by the loc team, you could update it to point to a newer servicing branch. Here's what you would need to do to update the branch:
+   1. Open a [repo modification ticket](https://aka.ms/ceChangeLocConfig) with the 
+   loc team at least two weeks before the release and request that they re-target your servicing branch to new branch.
+   2. Ask the loc team for a package Id for this servicing branch on the ticket. The value of the Package ID would then be substituted in the YAML of the OneLocBuild task.
+   ```yaml
+      LclPackageId: 'LCL-JUNO-PROD-YOURREPOSVC'
+   ```
+   3. Update the conditional on the OneLocBuild task to point to the right branch and change/add in a MirrorBranch field to the task as well. So if the servicing branch is `dev17.0.x` the task would look like:
+   ```yaml
+   - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/dev17.0.x') }}:
+     - template: /eng/common/templates/job/onelocbuild.yml
+       parameters:
+         LclSource: lclFilesfromPackage
+         LclPackageId: 'LCL-JUNO-PROD-YOURREPOSVC'
+         MirrorBranch: dev17.0.x
+   ```
+
+# Common Issues
 
 ## Filing Issues for Translation Issues
 
-File a translation issue ticket with the localization team (see documentation [here](https://dev.azure.com/ceapex/CEINTL/_wiki/wikis/CEINTL.wiki/1361/Provide-Enough-Information-in-DevRel-Feedback-Ticket)).
+File a translation issue ticket with the localization team [here](https://aka.ms/ceLocBug).
+
+## Leaving Comments for Translators
+
+Sometimes the proper solution to translation issues is to give the translators context for their work. This can be done easily in RESX files (which will be carried over to the XLF files by xliff-tasks) or in JSON files directly. For more information on how to leave translation comments, see the documentation [here](https://aka.ms/commenting).
 
 # Technical Documentation
 
@@ -136,8 +161,8 @@ Because the script can be run locally, devs can also do this validation prior to
 
 Currently, the LocProject.json generation script only creates fairly uniform LocProject.json files. If your repository
 requires the use of any of the more complex LocProject.json features as described in the OneLocBuild docs linked above,
-the OneLocBuild template in this doc will not work and you will need to check in and maintain the LocProject.json file
-manually.
+you will need to check in and maintain the LocProject.json file manually. To still use this template for running the task,
+set the `SkipLocProjectJsonGeneration` parameter to `true`.
 
 ## OneLocBuild Template Parameters
 
@@ -145,10 +170,11 @@ The most basic structure for calling the OneLocBuild template is:
 
 ```yaml
 jobs:
-- template: /eng/common/templates/job/onelocbuild.yml
-  parameters:
-    LclSource: lclFilesfromPackage
-    LclPackageId: 'LCL-PACKAGE-ID'
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+  - template: /eng/common/templates/job/onelocbuild.yml
+    parameters:
+      LclSource: lclFilesfromPackage
+      LclPackageId: 'LCL-PACKAGE-ID'
 ```
 
 The parameters that can be passed to the template are as follows:
@@ -159,14 +185,22 @@ The parameters that can be passed to the template are as follows:
 | `SourcesDirectory` | `$(Build.SourcesDirectory)` | This is the root directory for your repository source code. |
 | `CreatePr` | `true` | When set to `true`, instructs the OneLocBuild task to make a PR back to the source repository containing the localized files. |
 | `AutoCompletePr` | `false` | When set to `true`, instructs the OneLocBuild task to autocomplete the created PR. Requires permissions to bypass any checks on the main branch. |
+| `ReusePr` | `true` | When set to `true`, instructs the OneLocBuild task to update an existing PR (if one exists) rather than open a new one to reduce PR noise. |
 | `UseLfLineEndings` | `true` | When set to `true`, instructs the OneLocBuild task to use LF line endings during check-in rather than CRLF. |
 | `GitHubOrg` | `'dotnet'` | The GitHub organization to be used when making a PR (only used when using a mirrored repository). |
 | `MirrorRepo` | `''` | The name of the GitHub repository to make a PR to (only used when using a mirrored repository). |
 | `MirrorBranch` | `'main'` | The branch on GitHub to make a PR to (only used when using a mirrored repository). |
 | `UseCheckedInLocProjectJson` | `false` | When set to `true`, instructs the LocProject.json generation script to use build-time validation rather than build-time generation, as described above. |
+| `SkipLocProjectJsonGeneration` | `false` | When set to `true`, skips the LocProject.json generation in favor of using a checked-in LocProject.json.
 | `LanguageSet` | `VS_Main_Languages` | This defines the `LanguageSet` of the LocProject.json as described in the [OneLocBuild task documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)). |
 | `LclSource` | `LclFilesInRepo` | This passes the `LclSource` input to the OneLocBuild task as described in [its documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)). For most repos, this should be set to `LclFilesfromPackage`. |
 | `LclPackageId` | `''` | When `LclSource` is set to `LclFilesfromPackage`, this passes in the package ID as described in the [OneLocBuild task documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=scenario-2%3A-lcl-files-from-a-package). |
 | `condition` | `''` | Allows for conditionalizing the template's steps on build-time variables. |
+| `JobNameSuffix` | `''` | Allows for custom job name suffix. This is helpful for disambiguation in case of need for more then one OneLocBuild job run - e.g. as a way to set multiple package IDs. |
 
 It is recommended that you set `LclSource` and `LclPackageId` as shown in the example above.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5COneLocBuild.md)](https://helix.dot.net/f/p/5?p=Documentation%5COneLocBuild.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5COneLocBuild.md)</sub>
+<!-- End Generated Content-->

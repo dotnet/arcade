@@ -413,7 +413,8 @@ namespace Microsoft.Cci.Extensions
                 || reference is INamespaceTypeReference
                 || reference is IGenericTypeParameterReference
                 || reference is IGenericMethodParameterReference
-                || reference is IFunctionPointerTypeReference,
+                || reference is IFunctionPointerTypeReference
+                || reference is IManagedPointerType,
                 string.Format("Unexpected type reference that we may need to unwrap {0}", (reference != null ? reference.GetType().FullName : "null")));
 
             return reference;

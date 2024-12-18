@@ -423,3 +423,8 @@ GitHub raw links are automatically redirected. For example link https://raw.gith
 ./m2m-dotnet.ps1 -Verify -DataFile m2m-dotnet_[timestamp].json
 ```
 4. Reach out to us in case of any questions or issues with these scripts.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CProjects%5CM2MRenaming%5CMaster-to-Main-renaming-guide.md)](https://helix.dot.net/f/p/5?p=Documentation%5CProjects%5CM2MRenaming%5CMaster-to-Main-renaming-guide.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CProjects%5CM2MRenaming%5CMaster-to-Main-renaming-guide.md)</sub>
+<!-- End Generated Content-->

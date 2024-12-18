@@ -9,6 +9,7 @@ using Microsoft.Build.Framework;
 using System.Collections.Generic;
 using Azure.Storage.Blobs.Specialized;
 using Azure.Storage.Blobs;
+using Microsoft.DotNet.Build.Tasks.Feed;
 
 namespace Microsoft.DotNet.Build.CloudTestTasks
 {
@@ -104,7 +105,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                         {
                             if (PassIfExistingItemIdentical)
                             {
-                                if (await blobUtils.IsFileIdenticalToBlobAsync(item.ItemSpec, blobReference))
+                                if (await blobReference.IsFileIdenticalToBlobAsync(item.ItemSpec))
                                 {
                                     return;
                                 }

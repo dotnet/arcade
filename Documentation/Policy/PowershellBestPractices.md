@@ -165,3 +165,7 @@ Positional parameters cause problems for code maintenance, as adding new paramet
 will force this behavior.
 
 *Note: This rule will check for the usage of positional parameters rather than forcing binding to turn them off.*
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CPolicy%5CPowershellBestPractices.md)](https://helix.dot.net/f/p/5?p=Documentation%5CPolicy%5CPowershellBestPractices.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CPolicy%5CPowershellBestPractices.md)</sub>
+<!-- End Generated Content-->

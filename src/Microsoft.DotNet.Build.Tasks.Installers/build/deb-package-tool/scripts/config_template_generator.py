@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 #
 # Licensed to the .NET Foundation under one or more agreements.
 # The .NET Foundation licenses this file to you under the MIT license.
@@ -47,7 +47,7 @@ def generate_and_write_all(config_data, template_dir, output_dir, package_name=N
         symlink_contents = generate_symlinks(config_data, package_name=package_name)
         rules_contents = generate_rules(config_data, template_dir)
     except Exception as exc:
-      print exc
+      print(exc)
       help_and_exit("Error: Generation Failed, check your config file.")
 
     write_file(changelog_contents, output_dir, FILE_CHANGELOG)
@@ -66,15 +66,23 @@ def generate_rules(config_data, template_dir):
     template = get_template(template_dir, FILE_RULES)
 
     ignored_dependency_packages = config_data.get("debian_ignored_dependencies", None)
+    ignored_libraries = config_data.get("debian_ignored_libraries", None)
     override_text = ""
 
+    if ignored_dependency_packages != None or ignored_libraries != None:
+        override_text = "override_dh_shlibdeps:\n\tdh_shlibdeps"
+
     if ignored_dependency_packages != None:
-        override_text = "override_dh_shlibdeps:\n\tdh_shlibdeps --dpkg-shlibdeps-params=\""
+        override_text += " --dpkg-shlibdeps-params=\""
 
         for package in ignored_dependency_packages:
             override_text += "-x{0} ".format(package)
 
         override_text += "\""
+        
+    if ignored_libraries != None:
+        for library in ignored_libraries:
+            override_text += " -X{0} ".format(library)
 
     return template.format(overrides=override_text)
 
@@ -157,7 +165,7 @@ def generate_symlinks(config_data, package_name=None):
 
     symlink_data = config_data.get("symlinks", dict())
 
-    for package_rel_path, symlink_path in symlink_data.iteritems():
+    for package_rel_path, symlink_path in symlink_data.items():
 
         package_abs_path = os.path.join(package_root_path, package_rel_path)
 
@@ -222,11 +230,11 @@ def write_file(contents, output_dir, name):
 
 # Tool Functions
 def help_and_exit(msg):
-    print msg
+    print(msg)
     sys.exit(1)
 
 def print_usage():
-    print "Usage: config_template_generator.py [config file path] [template directory path] [output directory] (package name) (package version)"
+    print("Usage: config_template_generator.py [config file path] [template directory path] [output directory] (package name) (package version)")
 
 def parse_and_validate_args():
     if len(sys.argv) < 4:

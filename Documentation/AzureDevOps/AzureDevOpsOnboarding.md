@@ -9,11 +9,8 @@
       - [Switching service connections](#switching-service-connections)
     - [Git (internal) connections](#git-internal-connections)
   - [Agent queues](#agent-queues)
-    - [External : (Pool Provider: NetCorePublic-Pool)](#external--pool-provider-netcorepublic-pool)
-    - [Internal : (Pool Provider: NetCoreInternal-Pool)](#internal--pool-provider-netcoreinternal-pool)
   - [CI badge link](#ci-badge-link)
   - [Signed Builds](#signed-builds)
-  - [Generate Graph Files](#generate-graph-files)
   - [Security](#security)
   - [Notes about Yaml](#notes-about-yaml)
   - [Troubleshooting](#troubleshooting)
@@ -57,87 +54,39 @@ There is no way to update an existing build definition to use a different servic
 
 ### Git (internal) connections
 
-See the [dotnet-bot-github-service-endpoint documentation](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/VSTS/dotnet-bot-github-service-endpoint.md#dotnet-bot-github-service-endpoint)
+See the [dotnet-bot-github-service-endpoint documentation](https://github.com/dotnet/dnceng/blob/main/Documentation/ProjectDocs/VSTS/dotnet-bot-github-service-endpoint.md#dotnet-bot-github-service-endpoint)
 
 ## Agent queues
 
-We now use Azure Pool Providers to deploy VMs as build agents. Workflows defined in yaml that still use the "phases" syntax will not able to take advantage of this feature.  See [this document](https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/PhaseToJobSchemaChange.md) for details how to migrate if you are in this scenario.
+We now use Azure Pool Providers supplied by 1ES ('One' Engineering System) to deploy VMs as build agents. Workflows defined in yaml that still use the "phases" syntax will not able to take advantage of this feature.  See [this document](https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/PhaseToJobSchemaChange.md) for details how to migrate if you are in this scenario.
 
 To use an Azure Pool provider, you need to specify both the name of the pool provider and the Helix Queue it uses.  This looks something like:
+
 ``` yaml
-          name: NetCorePoolNameFromBelow-Pool
-          queue: Helix.Queue.From.Below
+  pool:
+    name: NetCore1ESPool-Internal
+    demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
 ```          
 
-Current machine pool recommendations:
+### dnceng/internal pools:
 
-### External : (Pool Provider: NetCorePublic-Pool)
-| OS         | Recommended pool     | Pool Provider Queue(s)     | Notes | 
-| ---------- | -------------------- | -------------------------- | ----- |
-| Windows_NT | Hosted VS2017 or 2019| BuildPool.Server.Amd64.Open  | Plain Windows: No VS install |
-|            |                      | BuildPool.Server.Amd64.ES.VS2017.Open | Spanish OS, Server Sku, VS2017 |
-|            |                      | BuildPool.Server.Amd64.VS2017.Open |  |
-|            |                      | BuildPool.Server.Amd64.VS2019.Open |  |
-|            |                      | BuildPool.Server.Amd64.VS2019.Pre.Open | Latest public preview VS 2019 |
-|            |                      | BuildPool.Server.Amd64.VS2019.Pre.ES.Open | Latest public preview VS 2019, Spanish OS |
-|            |                      | BuildPool.Server.Amd64.VS2019.BT.Open |  |
-|            |                      | BuildPool.Server.Wasm.Open | Web Assembly Build Configuration |
-|            |                      | BuildPool.Windows.10.Amd64.Open |  |
-|            |                      | BuildPool.Windows.10.Amd64.ES.VS2017.Open |  |
-|            |                      | BuildPool.Windows.10.Amd64.VS2017.Open |  |
-|            |                      | BuildPool.Windows.10.Amd64.VS2019.Open |  |
-|            |                      | BuildPool.Windows.10.Amd64.VS2019.Pre.Open | Latest public preview VS 2019 |
-|            |                      | BuildPool.Windows.Amd64.VS2019.Pre.ES.Open | Latest public preview VS 2019, Spanish OS |
-|            |                      | BuildPool.Windows.10.Amd64.VS2019.BT.Open |  |
-|            |                      | BuildPool.Windows.10.Wasm.Open | Web Assembly Build Configuration |
-| Linux      | Hosted Ubuntu 1604   | buildpool.ubuntu.1604.amd64.open | |
-| MacOS      | Hosted MacOS         | n/a | |
+- NetCore1ESPool-Internal : "regular" internal builds for official builds; has a Managed Service Identity for authenticating Microbuild Azure DevOps tasks.
+- NetCore1ESPool-Svc-Internal : Same as NetCore1ESPool-Internal, but for release branch builds
+- NetCore1ESPool-Internal-NoMSI : Same as NetCore1ESPool-Internal but no managed service identity; allows tools like Az CLI to authenticate using stored secrets.
 
-### Internal : (Pool Provider: NetCoreInternal-Pool)
+### dnceng/public pools:
 
-| OS         | Recommended pool     | Pool Provider Queue(s)      | Notes | 
-| ---------- | -------------------- | --------------------------- | ----- |
-| Windows_NT | Use Pool Provider -> | BuildPool.Server.Amd64.VS2017 |     |
-|            |                      | BuildPool.Server.Amd64.VS2019 |     |
-|            |                      | BuildPool.Server.Amd64.VS2017 |     |
-|            |                      | BuildPool.Server.Amd64.VS2019 |     |
-|            |                      | BuildPool.Server.Amd64.VS2019.BT |  |
-|            |                      | BuildPool.Server.Amd64.VS2019.Pre | |
-|            |                      | BuildPool.Windows.10.Amd64.VS2017 | |
-|            |                      | BuildPool.Windows.10.Amd64.VS2019 | |
-|            |                      | BuildPool.Windows.10.Amd64.VS2019.BT| |
-|            |                      | BuildPool.Windows.10.Amd64.VS2019.Pre | |
-|            |                      | BuildPool.Windows.10.Amd64.VS2019.Xaml| |
-| Linux      | Hosted Ubuntu 1604   | buildpool.ubuntu.1604.amd64 |
-| MacOS      | Hosted MacOs Internal| n/a | |
+- NetCore-Public : "regular" public builds for public CI
+- NetCore-Svc-Public : Public CI for release branches of .NET products
+
+For a 'live' list of available images for a given pool provider, see https://helix.dot.net/#1esPools
 
 A couple of notes:
 
 - [Hosted pool](https://docs.microsoft.com/en-us/azure/devops/pipelines/agents/hosted?view=vsts&tabs=yaml) capabilities
 
-  - Whenever possible, you're always encouraged to use the hosted agent pools for your builds.  These don't come from the same budget as other build agents, and have far more MacOS machines than the Engineering Services team has.  
-
-- BuildPool Helix machines will be defined in the [dnceng internal repo 'dotnet-helix-machines'](https://dnceng.visualstudio.com/internal/_git/dotnet-helix-machines?path=%2Fdefinitions%2Fshared&version=GBmain).  While this format is a bit dense, it is what is used by the deployment system so represents precisely what was on the machines for a given date of deployment.  As such, the descriptions below are not necessarily up-to-date but do represent what these queues had as of this edit.
-
-- BuildPool.Windows queues:
-
-  - Visual Studio versions are updated to "latest public GA" version on a roughly monthly cadence.  
-  - Windows Client RS4 or higher for "*.Windows.10*," or Server 2019 Images used for "*.Server.*" queues
-  - 4 cores
-  - 512 GB disk space capacity (not SSD)
-  - BuildPool.*.Amd64.VS2017 - Visual Studio 2017 15.X
-  - Buildpool.*.Amd64.ES.VS2017.Open  - Visual Studio 2017 15.X EN-US on an ES-ES OS
-  - BuildPool.*.Amd64.VS2019 - Visual Studio 2019 Enterprise 16.X
-  - BuildPool.*.Amd64.VS2019.ES - Visual Studio 2019 Enterprise 16.X on an ES-ES OS.
-  - BuildPool.*.Amd64.VS2019.Pre - Visual Studio 2019 Enterprise Preview 16.X
-  - BuildPool.*.Amd64.VS2019.BT - Visual Studio 2019 16.X 'BuildTools' SKU (no UI)
-  - BuildPool.*.Wasm - Web Assembly Build Configuration
-
-- BuildPool.Ubuntu queues:
-  - Ubuntu 16.04
-  - Docker 18.09.6
-  - 4 cores
-  - 512 GB disk space capacity (not SSD)
+  - For official builds (with the exception of MacOS builds), hosted images should be avoided.  Contact @dnceng if you are in doubt about this. 
+  - "1ES approved" versions of existing hosted images are included in all pool providers noted and are listed under  https://helix.dot.net/#1esPools.  E.g. `1es-ubuntu-1804` is a more locked-down version of the existing hosted image `ubuntu-1804`
 
 ## CI badge link
 
@@ -154,10 +103,6 @@ https://dev.azure.com/dnceng/public/_build?definitionId=208&branchName=master
 ## Signed Builds
 
 dev.azure.com/dnceng now has support for signed builds.  Code should be mirrored to dev.azure.com/dnceng/internal as outlined in the [Azure DevOps Guidance](./AzureDevOpsGuidance.md#projects).  See [MovingFromDevDivToDncEng.md](./MovingFromDevDivToDncEng.md) for information about moving signed builds from DevDiv to DncEng.
-
-## Generate Graph Files
-
-Generation of graph files as part of official builds is now supported. See [GeneratingGraphFiles.md](GeneratingGraphFiles.md) for information on how to opt-in to this feature.
 
 ## Security
 
@@ -253,3 +198,8 @@ For a list of known Azure DevOps issues we are tracking, please go [here](https:
   `An error occurred while loading the YAML Pipeline. Repository self references endpoint 6510879c-eddc-458b-b083-f8150e06ada5 which does not exist or is not authorized for use`
 
   The problem is the yaml file had a parse error when the definition was originally created. When the definition is created, parse errors are saved with the definition and are supposed to be shown in the definition editor. That regressed in the UI. Azure DevOps is also making a change so that even if there are errors parsing the file, they go ahead and save the repository endpoint as authorized.  In the mean time, you have to track down your YAML parse error.
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CAzureDevOps%5CAzureDevOpsOnboarding.md)](https://helix.dot.net/f/p/5?p=Documentation%5CAzureDevOps%5CAzureDevOpsOnboarding.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CAzureDevOps%5CAzureDevOpsOnboarding.md)</sub>
+<!-- End Generated Content-->

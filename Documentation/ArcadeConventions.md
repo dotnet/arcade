@@ -27,3 +27,8 @@ If your project depend on a package which is also part of the .NET SDK used by A
 
 
 
+
+
+<!-- Begin Generated Content: Doc Feedback -->
+<sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CArcadeConventions.md)](https://helix.dot.net/f/p/5?p=Documentation%5CArcadeConventions.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CArcadeConventions.md)</sub>
+<!-- End Generated Content-->
