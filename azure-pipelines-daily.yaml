@@ -29,6 +29,7 @@ stages:
         inputs:
           packageType: runtime
           version: 6.x
+          installationPath: $(Build.SourcesDirectory)/.dotnet
 
       - script: $(Build.SourcesDirectory)/.dotnet/dotnet.exe tool restore
         displayName: Restore dotnet tools
