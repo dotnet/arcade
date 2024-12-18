@@ -225,9 +225,6 @@
       </ItemsToPushToBlobFeed>
     </ItemGroup>
 
-    <Error Condition="'@(ItemsToPublishToBlobFeed->AnyHaveMetadataValue('Visibility','Vertical'))' == 'true' and '$(DotNetBuildOrchestrator)' != 'true'"
-           Text="Visibility 'Vertical' is only supported in vertical builds." />
-
     <ItemGroup>
       <ItemsToPushToBlobFeed>
         <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.IsShipping)' == 'false'">%(ItemsToPushToBlobFeed.ManifestArtifactData);NonShipping=true</ManifestArtifactData>
