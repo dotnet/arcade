@@ -79,20 +79,9 @@ namespace Microsoft.DotNet.SignTool
             return true;
         }
 
-        public override void RemovePublicSign(string assemblyPath)
+        public override void RemoveStrongNameSign(string assemblyPath)
         {
-            using (var stream = new FileStream(assemblyPath, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
-            using (var peReader = new PEReader(stream))
-            using (var writer = new BinaryWriter(stream))
-            {
-                if (!ContentUtil.IsPublicSigned(peReader))
-                {
-                    return;
-                }
-
-                stream.Position = peReader.PEHeaders.CorHeaderStartOffset + OffsetFromStartOfCorHeaderToFlags;
-                writer.Write((UInt32)(peReader.PEHeaders.CorHeader.Flags & ~CorFlags.StrongNameSigned));
-            }
+            StrongName.ClearStrongNameSignedBit(assemblyPath);
         }
 
         public override bool VerifySignedPEFile(Stream assemblyStream)
@@ -113,7 +102,7 @@ namespace Microsoft.DotNet.SignTool
                 return true;
             }
 
-            return ContentUtil.IsStrongNameSigned(fileFullPath);
+            return StrongName.IsSigned(fileFullPath);
         }
 
         public override bool VerifySignedDeb(TaskLoggingHelper log, string filePath)
