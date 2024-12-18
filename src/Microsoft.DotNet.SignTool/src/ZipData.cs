@@ -12,7 +12,6 @@ using System.Linq;
 using System.Data;
 using System.Diagnostics;
 using Microsoft.DotNet.Build.Tasks.Installers;
-using Microsoft.DotNet.Build.Tasks.Installers.src;
 
 #if NET472
 using System.IO.Packaging;
@@ -397,7 +396,7 @@ namespace Microsoft.DotNet.SignTool
         private void RepackDebContainer(TaskLoggingHelper log, string tempDir)
         {
             // Data archive is the only expected nested part
-            string dataArchive = NestedParts.Values.First().FileSignInfo.FullPath;
+            string dataArchive = NestedParts.Values.Single().FileSignInfo.FullPath;
 
             string controlArchive;
             try
@@ -444,7 +443,7 @@ namespace Microsoft.DotNet.SignTool
             Directory.CreateDirectory(dataLayout);
 
             // Get the original control archive - to reuse package metadata and scripts
-            var (relativePath, content, contentSize) = ReadDebContainerEntries(debianPackage, "control.tar").First();
+            var (relativePath, content, contentSize) = ReadDebContainerEntries(debianPackage, "control.tar").Single();
             string controlArchive = Path.Combine(workingDir, relativePath);
             File.WriteAllBytes(controlArchive, ((MemoryStream)content).ToArray());
 
