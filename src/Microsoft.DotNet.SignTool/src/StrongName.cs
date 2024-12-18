@@ -604,16 +604,7 @@ namespace Microsoft.DotNet.SignTool
         private enum AlgorithmSubId
         {
             Sha1Hash = 4,
-            MacHash = 5,
-            RipeMdHash = 6,
-            RipeMd160Hash = 7,
-            Ssl3ShaMD5Hash = 8,
-            HmacHash = 9,
-            Tls1PrfHash = 10,
-            HashReplacOwfHash = 11,
-            Sha256Hash = 12,
-            Sha384Hash = 13,
-            Sha512Hash = 14,
+            // Other possible values ommitted
         }
 
         /// <summary>
@@ -812,7 +803,7 @@ namespace Microsoft.DotNet.SignTool
 
         /// <summary>
         /// Helper for RsaCryptoServiceProvider.ExportParameters()
-        /// Copied from https://github.com/dotnet/corefx/blob/5fe5f9aae7b2987adc7082f90712b265bee5eefc/src/System.Security.Cryptography.Csp/src/System/Security/Cryptography/CapiHelper.Shared.cs
+        /// Adapted from https://github.com/dotnet/roslyn/blob/2f0aa43abd019143ae4662b5ccca11d4d666a61f/src/Compilers/Core/Portable/StrongName/CryptoBlobParser.cs#L257
         /// </summary>
         internal static RSAParameters ToRSAParameters(this ImmutableArray<byte> cspBlob, bool includePrivateParameters)
         {
