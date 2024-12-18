@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -22,6 +25,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
     public class InstallDotNetCore : Microsoft.Build.Utilities.Task
     {
 #endif
+        private static readonly char[] s_keyTrimChars = [ '$', '(', ')' ];
+
         public string VersionsPropsPath { get; set; }
 
         [Required]
@@ -104,11 +109,15 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                     // Try to parse version
                                     if (!SemanticVersion.TryParse(item.Key, out version))
                                     {
-                                        var propertyName = item.Key.Trim('$', '(', ')');
+                                        var propertyName = item.Key.Trim(s_keyTrimChars);
 
                                         // Unable to parse version, try to find the corresponding identifier from the MSBuild loaded MSBuild properties
-                                        string evaluatedValue = properties[propertyName].First().EvaluatedValue;
-                                        if (!SemanticVersion.TryParse(evaluatedValue, out version))
+                                        ProjectProperty property = properties[propertyName].FirstOrDefault();
+                                        if (property == null)
+                                        {
+                                            Log.LogError($"Unable to find '{item.Key}' in properties defined in '{VersionsPropsPath}'");
+                                        }
+                                        else if (!SemanticVersion.TryParse(property.EvaluatedValue, out version))
                                         {
                                             Log.LogError($"Unable to parse '{item.Key}' from properties defined in '{VersionsPropsPath}'");
                                         }

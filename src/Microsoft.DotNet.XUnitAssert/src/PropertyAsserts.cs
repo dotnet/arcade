@@ -1,3 +1,11 @@
+#pragma warning disable CA1052 // Static holder types should be static
+#pragma warning disable CA1720 // Identifier contains type name
+#pragma warning disable CA2007 // Consider calling ConfigureAwait on the awaited task
+#pragma warning disable IDE0022 // Use expression body for method
+#pragma warning disable IDE0039 // Use local function
+#pragma warning disable IDE0058 // Expression value is never used
+#pragma warning disable IDE0161 // Convert to file-scoped namespace
+
 #if XUNIT_NULLABLE
 #nullable enable
 #endif
@@ -35,7 +43,8 @@ namespace Xunit
 
 			var propertyChangeHappened = false;
 
-			PropertyChangedEventHandler handler = (sender, args) => propertyChangeHappened |= string.IsNullOrEmpty(args.PropertyName) || propertyName.Equals(args.PropertyName, StringComparison.OrdinalIgnoreCase);
+			PropertyChangedEventHandler handler = (sender, args) =>
+				propertyChangeHappened = propertyChangeHappened || string.IsNullOrEmpty(args.PropertyName) || propertyName.Equals(args.PropertyName, StringComparison.OrdinalIgnoreCase);
 
 			@object.PropertyChanged += handler;
 
@@ -43,7 +52,7 @@ namespace Xunit
 			{
 				testCode();
 				if (!propertyChangeHappened)
-					throw new PropertyChangedException(propertyName);
+					throw PropertyChangedException.ForUnsetProperty(propertyName);
 			}
 			finally
 			{
@@ -59,7 +68,7 @@ namespace Xunit
 			string propertyName,
 			Func<Task> testCode)
 		{
-			throw new NotImplementedException();
+			throw new NotImplementedException("You must call Assert.PropertyChangedAsync (and await the result) when testing async code.");
 		}
 
 		/// <summary>
@@ -81,7 +90,8 @@ namespace Xunit
 
 			var propertyChangeHappened = false;
 
-			PropertyChangedEventHandler handler = (sender, args) => propertyChangeHappened |= string.IsNullOrEmpty(args.PropertyName) || propertyName.Equals(args.PropertyName, StringComparison.OrdinalIgnoreCase);
+			PropertyChangedEventHandler handler = (sender, args) =>
+				propertyChangeHappened = propertyChangeHappened || string.IsNullOrEmpty(args.PropertyName) || propertyName.Equals(args.PropertyName, StringComparison.OrdinalIgnoreCase);
 
 			@object.PropertyChanged += handler;
 
@@ -89,7 +99,7 @@ namespace Xunit
 			{
 				await testCode();
 				if (!propertyChangeHappened)
-					throw new PropertyChangedException(propertyName);
+					throw PropertyChangedException.ForUnsetProperty(propertyName);
 			}
 			finally
 			{

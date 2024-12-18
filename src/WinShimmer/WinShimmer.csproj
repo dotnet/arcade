@@ -3,11 +3,10 @@
   <PropertyGroup>
     <TargetFramework>$(NetFrameworkToolCurrent)</TargetFramework>
     <OutputType>Exe</OutputType>
-    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCSharpVersion)" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" />
   </ItemGroup>
 
 </Project>

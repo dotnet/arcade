@@ -69,6 +69,7 @@
         <ResultsTrxPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).trx</ResultsTrxPath>
         <ResultsHtmlPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).html</ResultsHtmlPath>
         <ResultsStdOutPath>$(TestResultsLogDir)$(_ResultFileNameNoExt).log</ResultsStdOutPath>
+        <TestRunSettingsFile>$(TestRunSettingsFile)</TestRunSettingsFile>
         <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments)</TestRunnerAdditionalArguments>
       </TestToRun>
     </ItemGroup>
@@ -91,4 +92,5 @@
   
   <!-- Allow for repo specific Test targets such as rerunning tests -->
   <Import Project="$(RepositoryEngineeringDir)Tests.targets" Condition="Exists('$(RepositoryEngineeringDir)Tests.targets')" />
+
 </Project>

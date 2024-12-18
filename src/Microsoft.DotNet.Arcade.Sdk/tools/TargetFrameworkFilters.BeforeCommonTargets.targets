@@ -1,5 +1,6 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
+
   <PropertyGroup>
     <_EnableTargetFrameworkFiltering>false</_EnableTargetFrameworkFiltering>
     <_EnableTargetFrameworkFiltering Condition="'$(NoTargetFrameworkFiltering)' != 'true' and '$(DotNetTargetFrameworkFilter)' != ''">true</_EnableTargetFrameworkFiltering>
@@ -66,6 +67,9 @@
         System.Threading.Timer;
         System.Xml.ReaderWriter;
         System.Xml.XDocument" />
+      <!-- That package doesn't bring any dependencies in on .NET Framework and is fine to use. -->
+      <NetStandard1xPackage Remove="System.Runtime.InteropServices.RuntimeInformation"
+                            Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" />
     </ItemGroup>
 
     <ItemGroup>

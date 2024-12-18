@@ -11,7 +11,9 @@ using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
+using System.IO;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
@@ -52,7 +54,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Metadata LatestLinkShortUrlPrefixes (optional): If provided, AKA ms links are generated (for artifacts blobs only)
         ///                                               that target this short url path. The link is construct as such:
         ///                                               aka.ms/AkaShortUrlPath/BlobArtifactPath -> Target blob url
-        ///                                               If specified, then AkaMSClientId, AkaMSClientSecret and AkaMSTenant must be provided.
+        ///                                               If specified, then AkaMSClientId, AkaMSClientCertificate and AkaMSTenant must be provided.
         ///                                               The version information is stripped away from the file and blob artifact path.
         /// </summary>
         public ITaskItem[] TargetFeedConfig { get; set; }
@@ -90,9 +92,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         /// <summary>
         /// Authentication token to be used when interacting with Maestro API.
+        /// Deprecated and should not be used anymore.
         /// </summary>
-        [Required]
         public string BuildAssetRegistryToken { get; set; }
+
+        /// <summary>
+        /// Federated token to be used in edge cases when this task cannot be called from within an AzureCLI task directly.
+        /// The token is obtained in a previous AzureCLI@2 step and passed as a secret to this task.
+        /// </summary>
+        public string MaestroApiFederatedToken { get; set; }
+
+        /// <summary>
+        /// Managed identity to be used to authenticate with Maestro app in case the regular Azure CLI or token is not available.
+        /// </summary>
+        public string MaestroManagedIdentityId { get; set; }
+
+        /// <summary>
+        /// When running this task locally, allow the interactive browser-based authentication against Maestro.
+        /// </summary>
+        public bool AllowInteractiveAuthentication { get; set; }
 
         /// <summary>
         /// Directory where "nuget.exe" is installed. This will be used to publish packages.
@@ -121,16 +139,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string PdbArtifactsBasePath {get; set;}
 
         /// <summary>
-        /// Token to publish to Msdl symbol server
-        /// </summary>
-        public string MsdlToken {get; set;}
-
-        /// <summary>
-        /// Token to publish to SymWeb symbol server 
-        /// </summary>
-        public string SymWebToken {get; set;}
-
-        /// <summary>
         /// Files to exclude from symbol publishing
         /// </summary>
         public string SymbolPublishingExclusionsFile {get; set;}
@@ -149,7 +157,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AkaMSClientId { get; set; }
 
-        public string AkaMSClientSecret { get; set; }
+        /// <summary>
+        /// Path to client certificate
+        /// </summary>
+        public string AkaMSClientCertificate { get; set; }
 
         public string AkaMSTenant { get; set; }
 
@@ -158,6 +169,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string AkaMSCreatedBy { get; set; }
 
         public string AkaMSGroupOwner { get; set; }
+
+        /// <summary>
+        /// Client ID to use with credential-free publishing. If not specified, the default
+        /// credential is used.
+        /// </summary>
+        public string ManagedIdentityClientId { get; set; }
 
         public string BuildQuality
         {
@@ -173,6 +190,26 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string AzureProject { get; set; }
 
         public string AzureDevOpsOrg { get; set; }
+
+        /// <summary>
+        /// This is the DevOps Org that we upload our symbols to prior to requesting a promotion to the
+        /// internal and public symbol servers.
+        /// </summary>
+        public string TempSymbolsAzureDevOpsOrg { get; set; }
+
+        /// <summary>
+        /// This token must have symbol_manage access to the temporary staging DevOps Org that will be used.
+        /// </summary>
+        public string TempSymbolsAzureDevOpsOrgToken { get; set; }
+
+        /// <summary>
+        /// The project to use when requesting symbol promotion from temporary tenant to public and internal
+        /// symbol servers using the symbolrequest service. This determines:
+        /// - What identities are allowed to request promotion
+        /// - Exclusive symbol ownership for public symbol server.
+        /// - Symbol stripping policy for public symbol server.
+        /// </summary>
+        public string SymbolRequestProject { get; set; }
 
         /// <summary>
         /// If true, uses Azdo Api to download artifacts and symbols files one file at a time during publishing process.
@@ -249,7 +286,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     //         https://github.com/dotnet/arcade/issues/5489
                     if (PublishedV3Manifest)
                     {
-                        IMaestroApi client = ApiFactory.GetAuthenticated(MaestroApiEndpoint, BuildAssetRegistryToken);
+                        IMaestroApi client = MaestroApiFactory.GetAuthenticated(
+                            MaestroApiEndpoint,
+                            BuildAssetRegistryToken,
+                            MaestroManagedIdentityId,
+                            !AllowInteractiveAuthentication);
                         Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
 
                         var targetChannelsIds = TargetChannels.Split('-').Select(ci => int.Parse(ci));
@@ -319,19 +360,23 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 InternalBuild = this.InternalBuild,
                 SkipSafetyChecks = this.SkipSafetyChecks,
                 AkaMSClientId = this.AkaMSClientId,
-                AkaMSClientSecret = this.AkaMSClientSecret,
+                AkaMSClientCertificate = !string.IsNullOrEmpty(AkaMSClientCertificate) ?
+#if NET9_0_OR_GREATER
+                    X509CertificateLoader.LoadPkcs12(Convert.FromBase64String(File.ReadAllText(AkaMSClientCertificate)), password: null) : null,
+#else
+                    new X509Certificate2(Convert.FromBase64String(File.ReadAllText(AkaMSClientCertificate))) : null,
+#endif
                 AkaMSCreatedBy = this.AkaMSCreatedBy,
                 AkaMSGroupOwner = this.AkaMSGroupOwner,
                 AkaMsOwners = this.AkaMsOwners,
                 AkaMSTenant = this.AkaMSTenant,
+                ManagedIdentityClientId = this.ManagedIdentityClientId,
                 PublishInstallersAndChecksums = this.PublishInstallersAndChecksums,
                 FeedKeys = this.FeedKeys,
                 FeedSasUris = this.FeedSasUris,
                 FeedOverrides = this.FeedOverrides,
                 AllowFeedOverrides = this.AllowFeedOverrides,
                 PdbArtifactsBasePath = this.PdbArtifactsBasePath,
-                SymWebToken = this.SymWebToken,
-                MsdlToken = this.MsdlToken,
                 SymbolPublishingExclusionsFile = this.SymbolPublishingExclusionsFile,
                 PublishSpecialClrFiles = this.PublishSpecialClrFiles,
                 BuildQuality = this.BuildQuality,
@@ -340,6 +385,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 BuildId = this.BuildId,
                 AzureProject = this.AzureProject,
                 AzureDevOpsOrg = this.AzureDevOpsOrg,
+                TempSymbolsAzureDevOpsOrg = this.TempSymbolsAzureDevOpsOrg,
+                TempSymbolsAzureDevOpsOrgToken = this.TempSymbolsAzureDevOpsOrgToken,
+                SymbolRequestProject = this.SymbolRequestProject,
                 UseStreamingPublishing = this.UseStreamingPublishing,
                 StreamingPublishingMaxClients = this.StreamingPublishingMaxClients,
                 NonStreamingPublishingMaxClients = this.NonStreamingPublishingMaxClients

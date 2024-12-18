@@ -1,5 +1,7 @@
 <Project>
 
+  <Import Project="BuildTask.Packages.props"/>
+
   <PropertyGroup>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <IsPackable>true</IsPackable>
@@ -35,7 +37,7 @@
     <PackageReference Update="Microsoft.Build.Tasks.Core" Publish="false" />
     <PackageReference Update="Microsoft.Build.Utilities.Core" Publish="false" />
     <PackageReference Update="Microsoft.NET.StringTools" Publish="false" />
-    <PackageReference Update="System.Collections.Immutable" Publish="false" />
+    <PackageReference Update="System.Resources.Extensions" Publish="false" />
   </ItemGroup>
 
   <!-- Don't include assemblies that are provided by the SDK, next to MSBuild. -->
@@ -48,11 +50,16 @@
     <PackageReference Update="NuGet.Packaging" Publish="false" />
     <PackageReference Update="NuGet.ProjectModel" Publish="false" />
     <PackageReference Update="NuGet.Versioning" Publish="false" />
+    <PackageReference Update="System.CodeDom" Publish="false" />
+    <PackageReference Update="System.Security.Cryptography.ProtectedData" Publish="false" />
+    <PackageReference Update="System.Text.Encoding.CodePages" Publish="false" />
   </ItemGroup>
 
   <!-- Don't include assemblies that are inbox in Desktop MSBuild -->
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
+    <PackageReference Update="Microsoft.Bcl.AsyncInterfaces" Publish="false" />
     <PackageReference Update="System.Buffers" Publish="false" />
+    <PackageReference Update="System.Collections.Immutable" Publish="false" />
     <PackageReference Update="System.Memory" Publish="false" />
     <PackageReference Update="System.Numerics.Vectors" Publish="false" />
     <PackageReference Update="System.Reflection.Metadata" Publish="false" />
@@ -60,6 +67,7 @@
     <PackageReference Update="System.Runtime.CompilerServices.Unsafe" Publish="false" />
     <PackageReference Update="System.Text.Encodings.Web" Publish="false" />
     <PackageReference Update="System.Text.Json" Publish="false" />
+    <PackageReference Update="System.Threading.Channels" Publish="false" />
     <PackageReference Update="System.Threading.Tasks.Dataflow" Publish="false" />
     <PackageReference Update="System.Threading.Tasks.Extensions" Publish="false" />
     <PackageReference Update="System.ValueTuple" Publish="false" />
@@ -82,19 +90,25 @@
     <Reference Update="@(Reference)"
                Pack="false" />
   </ItemGroup>
-  
+
   <!-- Publish .NET Core assets and include them in the package under $(BuildTaskTargetFolder) directory. -->
   <Target Name="_AddBuildOutputToPackageCore" DependsOnTargets="Publish" Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
+    <PropertyGroup>
+      <BuildTaskTargetTfmSpecificFolder Condition="'$(BuildTaskTargetTfmSpecificFolder)' == ''">net</BuildTaskTargetTfmSpecificFolder>
+    </PropertyGroup>
     <ItemGroup>
-      <TfmSpecificPackageFile Include="$(PublishDir)**" 
-                              PackagePath="$(BuildTaskTargetFolder)/$(TargetFramework)/%(RecursiveDir)%(FileName)%(Extension)"/>
+      <TfmSpecificPackageFile Include="$(PublishDir)**"
+                              PackagePath="$(BuildTaskTargetFolder)/$(BuildTaskTargetTfmSpecificFolder)/%(RecursiveDir)%(FileName)%(Extension)"/>
     </ItemGroup>
   </Target>
 
   <!-- Include .NET Framework build outputs in the package under $(BuildTaskTargetFolder) directory. -->
-  <Target Name="_AddBuildOutputToPackageDesktop" Condition="'$(TargetFrameworkIdentifier)' != '.NETCoreApp'">
+  <Target Name="_AddBuildOutputToPackageDesktop" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
+    <PropertyGroup>
+      <BuildTaskTargetTfmSpecificFolder Condition="'$(BuildTaskTargetTfmSpecificFolder)' == ''">netframework</BuildTaskTargetTfmSpecificFolder>
+    </PropertyGroup>
     <ItemGroup>
-      <TfmSpecificPackageFile Include="$(OutputPath)**" PackagePath="$(BuildTaskTargetFolder)/$(TargetFramework)/%(RecursiveDir)%(FileName)%(Extension)"/>
+      <TfmSpecificPackageFile Include="$(OutputPath)**" PackagePath="$(BuildTaskTargetFolder)/$(BuildTaskTargetTfmSpecificFolder)/%(RecursiveDir)%(FileName)%(Extension)"/>
     </ItemGroup>
   </Target>
 

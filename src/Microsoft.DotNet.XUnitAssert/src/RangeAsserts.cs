@@ -1,5 +1,12 @@
+#pragma warning disable CA1052 // Static holder types should be static
+#pragma warning disable IDE0058 // Expression value is never used
+#pragma warning disable IDE0161 // Convert to file-scoped namespace
+
 #if XUNIT_NULLABLE
 #nullable enable
+#else
+// In case this is source-imported with global nullable enabled but no XUNIT_NULLABLE
+#pragma warning disable CS8604
 #endif
 
 using System;
@@ -28,7 +35,7 @@ namespace Xunit
 			T low,
 			T high)
 				where T : IComparable =>
-					InRange(actual, low, high, GetComparer<T>());
+					InRange(actual, low, high, GetRangeComparer<T>());
 
 		/// <summary>
 		/// Verifies that a value is within a given range, using a comparer.
@@ -45,10 +52,13 @@ namespace Xunit
 			T high,
 			IComparer<T> comparer)
 		{
+			GuardArgumentNotNull(nameof(actual), actual);
+			GuardArgumentNotNull(nameof(low), low);
+			GuardArgumentNotNull(nameof(high), high);
 			GuardArgumentNotNull(nameof(comparer), comparer);
 
 			if (comparer.Compare(low, actual) > 0 || comparer.Compare(actual, high) > 0)
-				throw new InRangeException(actual, low, high);
+				throw InRangeException.ForValueNotInRange(actual, low, high);
 		}
 
 		/// <summary>
@@ -64,7 +74,7 @@ namespace Xunit
 			T low,
 			T high)
 				where T : IComparable =>
-					NotInRange(actual, low, high, GetComparer<T>());
+					NotInRange(actual, low, high, GetRangeComparer<T>());
 
 		/// <summary>
 		/// Verifies that a value is not within a given range, using a comparer.
@@ -81,10 +91,13 @@ namespace Xunit
 			T high,
 			IComparer<T> comparer)
 		{
+			GuardArgumentNotNull(nameof(actual), actual);
+			GuardArgumentNotNull(nameof(low), low);
+			GuardArgumentNotNull(nameof(high), high);
 			GuardArgumentNotNull(nameof(comparer), comparer);
 
 			if (comparer.Compare(low, actual) <= 0 && comparer.Compare(actual, high) <= 0)
-				throw new NotInRangeException(actual, low, high);
+				throw NotInRangeException.ForValueInRange(actual, low, high);
 		}
 	}
 }

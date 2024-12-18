@@ -1,4 +1,6 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
+
   <Import Condition="'$(_PackagingCommonTargetsImported)' != 'true'" Project="Packaging.common.targets"/>
 
   <!-- The following properties are expected to change as we transition from
@@ -536,7 +538,7 @@
     <!-- determine if there is a file to be updated, and setup the output file -->
     <PropertyGroup>
       <RuntimeFileSource Condition="'%(File.FileName)%(File.Extension)' == 'runtime.json'">%(File.Identity)</RuntimeFileSource>
-      <_runtimeJsonIncluded Condition="'$(IsLineupPackage)' == 'true' OR '$(IncludeRuntimeJson)' == 'true'">true</_runtimeJsonIncluded>
+      <_runtimeJsonIncluded Condition="'$(IncludeRuntimeJson)' != 'false' and ('$(IsLineupPackage)' == 'true' OR '$(IncludeRuntimeJson)' == 'true')">true</_runtimeJsonIncluded>
     </PropertyGroup>
 
     <!-- only include runtime.json in lineup packages -->
@@ -948,6 +950,14 @@
     <DefaultValidateFramework Include="net8.0">
       <RuntimeIDs>@(NETCoreApp80RIDs)</RuntimeIDs>
     </DefaultValidateFramework>
+    <NETCoreApp90RIDs Condition="'@(NETCoreApp90RIDs)' == ''" Include="@(NETCoreApp80RIDs)" />
+    <DefaultValidateFramework Include="net9.0">
+      <RuntimeIDs>@(NETCoreApp90RIDs)</RuntimeIDs>
+    </DefaultValidateFramework>
+    <NETCoreApp100RIDs Condition="'@(NETCoreApp100RIDs)' == ''" Include="@(NETCoreApp90RIDs)" />
+    <DefaultValidateFramework Include="net10.0">
+      <RuntimeIDs>@(NETCoreApp100RIDs)</RuntimeIDs>
+    </DefaultValidateFramework>
 
     <NETCore50RIDs Condition="'@(NETCore50RIDs)' == ''" Include="win10-x86;win10-x86-aot;win10-x64;win10-x64-aot;win10-arm;win10-arm-aot" />
     <DefaultValidateFramework Include="netcore50">
@@ -1331,4 +1341,5 @@
                         InboxFrameworkLayoutFolders="@(FrameworkLayout)"
                         UpdateStablePackageInfo="$(UpdateStablePackageInfo)" />
   </Target>
+
 </Project>

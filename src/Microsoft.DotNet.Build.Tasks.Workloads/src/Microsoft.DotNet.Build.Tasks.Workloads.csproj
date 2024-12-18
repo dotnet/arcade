@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(NetCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
+    <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsPackable>true</IsPackable>
+    <IsBuildTaskProject>true</IsBuildTaskProject>
     <Description>Workload pack installer generation task package</Description>
     <PackageTags>Arcade Build Tool Installer Workloads</PackageTags>
     <DevelopmentDependency>true</DevelopmentDependency>
@@ -18,24 +19,24 @@
       installers, and source-build doesn't run on Windows, so excluding WiX while building in
       source-build mode to remove the prebuilt dependency has no impact to available .NET features.
     -->
-    <IncludeWiX Condition="'$(DotNetBuildFromSource)' != 'true'">true</IncludeWiX>
+    <IncludeWiX Condition="'$(DotNetBuildSourceOnly)' != 'true'">true</IncludeWiX>
     <DefaultExcludesInProjectFolder Condition="'$(IncludeWiX)' != 'true'">$(DefaultExcludesInProjectFolder);**\*.wix.cs;*.wix.cs</DefaultExcludesInProjectFolder>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
-    <PackageReference Include="Microsoft.Deployment.DotNet.Releases" Version="$(MicrosoftDeploymentDotNetReleasesVersion)" />
-    <PackageReference Include="Microsoft.NET.Sdk.WorkloadManifestReader" Version="$(MicrosoftNetSdkWorkloadManifestReaderVersion)" />
-    <PackageReference Include="NuGet.Packaging" Version="$(NuGetPackagingVersion)" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" />
+    <PackageReference Include="Microsoft.Deployment.DotNet.Releases" />
+    <PackageReference Include="Microsoft.NET.Sdk.WorkloadManifestReader" />
+    <PackageReference Include="NuGet.Packaging" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
-    <PackageReference Include="System.Text.Json" Version="$(SystemTextJsonVersion)" />
+    <PackageReference Include="System.Text.Json" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(IncludeWiX)' == 'true'">
-    <PackageReference Include="Microsoft.Signed.Wix" Version="$(MicrosoftSignedWixVersion)" />
+    <PackageReference Include="Microsoft.Signed.Wix" />
 
     <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Resources.dll" />
     <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Compression.dll" />
@@ -71,7 +72,5 @@
              AutoGen="True"
              DependentUpon="Strings.resx" />
   </ItemGroup>
-
-  <Import Project="$(RepositoryEngineeringDir)BuildTask.targets" />
 
 </Project>

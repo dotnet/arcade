@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -330,6 +333,9 @@ namespace Microsoft.DotNet.Helix.Client
             Response = new ResponseWrapper(response, responseContent);
         }
 
+#if NET
+        [Obsolete]
+#endif
         protected RestApiException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
@@ -339,6 +345,9 @@ namespace Microsoft.DotNet.Helix.Client
             Response = JsonConvert.DeserializeObject<ResponseWrapper>(responseString, SerializerSettings);
         }
 
+#if NET
+        [Obsolete]
+#endif
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             if (info == null)
@@ -366,12 +375,18 @@ namespace Microsoft.DotNet.Helix.Client
             Body = body;
         }
 
+#if NET
+        [Obsolete]
+#endif
         protected RestApiException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
             Body = JsonConvert.DeserializeObject<T>(info.GetString("Body"));
         }
 
+#if NET
+        [Obsolete]
+#endif
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
             if (info == null)

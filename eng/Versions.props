@@ -1,106 +1,95 @@
 <Project>
   <PropertyGroup>
     <!-- This repo version -->
-    <VersionPrefix>8.0.0</VersionPrefix>
+    <VersionPrefix>10.0.0</VersionPrefix>
     <PreReleaseVersionLabel>beta</PreReleaseVersionLabel>
     <!-- Opt-out repo features -->
     <UsingToolXliff>false</UsingToolXliff>
+    <!-- Don't allow netstandard1.x dependencies in this repository. -->
+    <FlagNetStandard1XDependencies>true</FlagNetStandard1XDependencies>
   </PropertyGroup>
   <PropertyGroup>
     <!-- arcade -->
-    <MicrosoftDotNetBuildTasksFeedVersion>8.0.0-beta.23316.6</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftDotNetSignToolVersion>8.0.0-beta.23316.6</MicrosoftDotNetSignToolVersion>
-    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>8.0.0-beta.23316.6</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>9.0.0-beta.24223.1</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
     <!-- arcade-services -->
-    <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.21553.1</MicrosoftDotNetMaestroClientVersion>
-    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.22076.4</MicrosoftDotNetMaestroTasksVersion>
+    <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.24618.1</MicrosoftDotNetMaestroClientVersion>
+    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.24618.1</MicrosoftDotNetMaestroTasksVersion>
+    <!-- command-line-api -->
+    <SystemCommandLineVersion>2.0.0-beta4.24126.1</SystemCommandLineVersion>
     <!-- corefx -->
     <MicrosoftBclHashCodeVersion>1.1.1</MicrosoftBclHashCodeVersion>
     <SystemMemoryVersion>4.5.5</SystemMemoryVersion>
     <SystemRuntimeInteropServicesRuntimeInformation>4.3.0</SystemRuntimeInteropServicesRuntimeInformation>
     <!-- deployment-tools -->
-    <MicrosoftDeploymentDotNetReleasesVersion>1.0.0-preview6.1.23159.4</MicrosoftDeploymentDotNetReleasesVersion>
+    <MicrosoftDeploymentDotNetReleasesVersion>2.0.0-preview.1.24305.1</MicrosoftDeploymentDotNetReleasesVersion>
     <!-- dotnet-symuploader -->
-    <MicrosoftSymbolUploaderBuildTaskVersion>2.0.0-preview.1.21526.15</MicrosoftSymbolUploaderBuildTaskVersion>
-    <MicrosoftSymbolUploaderVersion>2.0.0-preview.1.21526.15</MicrosoftSymbolUploaderVersion>
-    <!-- linker -->
-    <MicrosoftNETILLinkTasksVersion>6.0.100-1.22103.2</MicrosoftNETILLinkTasksVersion>
+    <MicrosoftSymbolUploaderBuildTaskVersion>2.0.0-preview.1.23470.14</MicrosoftSymbolUploaderBuildTaskVersion>
+    <MicrosoftSymbolUploaderVersion>2.0.0-preview.1.23470.14</MicrosoftSymbolUploaderVersion>
     <!-- msbuild -->
-    <MicrosoftBuildFrameworkVersion>17.3.2</MicrosoftBuildFrameworkVersion>
-    <MicrosoftBuildTasksCoreVersion>17.3.2</MicrosoftBuildTasksCoreVersion>
-    <MicrosoftBuildUtilitiesCoreVersion>17.3.2</MicrosoftBuildUtilitiesCoreVersion>
-    <MicrosoftBuildVersion>17.3.2</MicrosoftBuildVersion>
+    <MicrosoftBuildFrameworkVersion>17.8.3</MicrosoftBuildFrameworkVersion>
+    <MicrosoftBuildTasksCoreVersion>17.8.3</MicrosoftBuildTasksCoreVersion>
+    <MicrosoftBuildUtilitiesCoreVersion>17.8.3</MicrosoftBuildUtilitiesCoreVersion>
+    <MicrosoftBuildVersion>17.8.3</MicrosoftBuildVersion>
     <!-- netstandard -->
     <NETStandardLibraryVersion>2.0.3</NETStandardLibraryVersion>
     <!-- nuget -->
-    <NuGetCommandsVersion>6.2.2</NuGetCommandsVersion>
-    <NuGetFrameworksVersion>6.2.2</NuGetFrameworksVersion>
-    <NuGetPackagingVersion>6.2.2</NuGetPackagingVersion>
-    <NuGetProjectModelVersion>6.2.2</NuGetProjectModelVersion>
-    <NuGetVersioningVersion>6.2.2</NuGetVersioningVersion>
+    <!-- Important: Don't version higher than what's available in the toolset SDK as
+         NuGet assemblies aren't redistributed with .NETCoreApp msbuild tasks. -->
+    <NuGetCommandsVersion>6.11.0</NuGetCommandsVersion>
+    <NuGetFrameworksVersion>6.11.0</NuGetFrameworksVersion>
+    <NuGetPackagingVersion>6.11.0</NuGetPackagingVersion>
+    <NuGetProjectModelVersion>6.11.0</NuGetProjectModelVersion>
+    <NuGetVersioningVersion>6.11.0</NuGetVersioningVersion>
     <!-- roslyn -->
-    <MicrosoftCodeAnalysisCSharpVersion>4.6.0</MicrosoftCodeAnalysisCSharpVersion>
-    <MicrosoftNetCompilersToolsetVersion>4.6.0</MicrosoftNetCompilersToolsetVersion>
+    <MicrosoftCodeAnalysisCSharpVersion>4.8.0</MicrosoftCodeAnalysisCSharpVersion>
+    <MicrosoftNetCompilersToolsetVersion>4.8.0</MicrosoftNetCompilersToolsetVersion>
     <!-- runtime -->
-    <MicrosoftExtensionsDependencyInjectionAbstractionsVersion>6.0.0</MicrosoftExtensionsDependencyInjectionAbstractionsVersion>
-    <MicrosoftExtensionsDependencyInjectionVersion>6.0.0</MicrosoftExtensionsDependencyInjectionVersion>
-    <MicrosoftExtensionsDependencyModelVersion>8.0.0-preview.4.23259.5</MicrosoftExtensionsDependencyModelVersion>
-    <MicrosoftExtensionsLoggingConsoleVersion>6.0.0</MicrosoftExtensionsLoggingConsoleVersion>
+    <MicrosoftBclAsyncInterfacesVersion>9.0.0-rc.2.24473.5</MicrosoftBclAsyncInterfacesVersion>
+    <MicrosoftExtensionsDependencyInjectionAbstractionsVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsDependencyInjectionAbstractionsVersion>
+    <MicrosoftExtensionsDependencyInjectionVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsDependencyInjectionVersion>
+    <MicrosoftExtensionsHttpVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsHttpVersion>
+    <MicrosoftExtensionsDependencyModelVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsDependencyModelVersion>
+    <MicrosoftExtensionsFileProvidersAbstractionsVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsFileProvidersAbstractionsVersion>
+    <MicrosoftExtensionsFileSystemGlobbingVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsFileSystemGlobbingVersion>
+    <MicrosoftExtensionsLoggingConsoleVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsLoggingConsoleVersion>
     <MicrosoftNETCorePlatformsVersion>5.0.0</MicrosoftNETCorePlatformsVersion>
     <MicrosoftNETRuntimeEmscripten2023Nodewin_x64>6.0.4</MicrosoftNETRuntimeEmscripten2023Nodewin_x64>
     <MicrosoftNETRuntimeEmscripten2023Pythonwin_x64>6.0.4</MicrosoftNETRuntimeEmscripten2023Pythonwin_x64>
     <MicrosoftNETRuntimeEmscripten2023Sdkwin_x64>6.0.4</MicrosoftNETRuntimeEmscripten2023Sdkwin_x64>
+    <MicrosoftNETWorkloadBaselineVersion>9.0.100-baseline.1.23464.1</MicrosoftNETWorkloadBaselineVersion>
     <MicrosoftNETWorkloadEmscriptenManifest_60200Version>6.0.4</MicrosoftNETWorkloadEmscriptenManifest_60200Version>
+    <MicrosoftNETWorkloadEmscriptenManifest_80100Preview6Version>8.0.0-preview.6.23326.2</MicrosoftNETWorkloadEmscriptenManifest_80100Preview6Version>
     <MicrosoftNETWorkloadMonoToolChainManifest_60200Version>6.0.3</MicrosoftNETWorkloadMonoToolChainManifest_60200Version>
+    <MicrosoftNETWorkloadMonoToolChainManifest_60200Version_604>6.0.4</MicrosoftNETWorkloadMonoToolChainManifest_60200Version_604>
+    <MicrosoftNETWorkloadMonoToolChainManifest_60300Version_6021>6.0.21</MicrosoftNETWorkloadMonoToolChainManifest_60300Version_6021>
+    <MicrosoftNETWorkloadMonoToolChainManifest_60300Version_6022>6.0.22</MicrosoftNETWorkloadMonoToolChainManifest_60300Version_6022>
     <MicrosoftiOSTemplatesVersion>15.2.302-preview.14.122</MicrosoftiOSTemplatesVersion>
-    <SystemCollectionsImmutableVersion>7.0.0</SystemCollectionsImmutableVersion>
-    <SystemCompositionVersion>7.0.0</SystemCompositionVersion>
-    <SystemIOPackagingVersion>7.0.0</SystemIOPackagingVersion>
-    <SystemReflectionMetadataVersion>7.0.0</SystemReflectionMetadataVersion>
-    <SystemSecurityCryptographyX509CertificatesVersion>4.3.2</SystemSecurityCryptographyX509CertificatesVersion>
-    <SystemTextEncodingsWebVersion>7.0.0</SystemTextEncodingsWebVersion>
-    <SystemTextJsonVersion>7.0.2</SystemTextJsonVersion>
+    <MicrosoftiOSTemplatesVersion160527>16.0.527</MicrosoftiOSTemplatesVersion160527>
+    <SystemCollectionsImmutableVersion>9.0.0-rc.2.24473.5</SystemCollectionsImmutableVersion>
+    <SystemCompositionVersion>9.0.0-preview.6.24327.7</SystemCompositionVersion>
+    <SystemIOPackagingVersion>9.0.0-rc.2.24473.5</SystemIOPackagingVersion>
+    <SystemReflectionMetadataVersion>9.0.0-rc.2.24473.5</SystemReflectionMetadataVersion>
+    <SystemSecurityCryptographyPkcsVersion>9.0.0-rc.2.24473.5</SystemSecurityCryptographyPkcsVersion>
+    <SystemSecurityCryptographyXmlVersion>9.0.0-rc.2.24473.5</SystemSecurityCryptographyXmlVersion>
+    <SystemTextEncodingsWebVersion>9.0.0-rc.2.24473.5</SystemTextEncodingsWebVersion>
+    <SystemTextJsonVersion>9.0.0-rc.2.24473.5</SystemTextJsonVersion>
+    <SystemFormatsAsn1Version>9.0.0-rc.2.24473.5</SystemFormatsAsn1Version>
     <!-- sdk -->
-    <MicrosoftNetSdkWorkloadManifestReaderVersion>8.0.100-preview.3.23178.3</MicrosoftNetSdkWorkloadManifestReaderVersion>
-    <!-- sourcelink -->
-    <MicrosoftSourceLinkGitHubVersion>8.0.0-beta.23314.2</MicrosoftSourceLinkGitHubVersion>
-    <MicrosoftSourceLinkAzureReposGitVersion>8.0.0-beta.23314.2</MicrosoftSourceLinkAzureReposGitVersion>
+    <MicrosoftNETSdkWorkloadManifestReaderVersion>9.0.100-preview.6.24328.19</MicrosoftNETSdkWorkloadManifestReaderVersion>
+    <!-- source-build-externals -->
+    <!-- The version is overridden by the VMR to use the version from the previous (n-1) build of Arcade. -->
+    <MicrosoftApplicationInsightsVersion>2.22.0</MicrosoftApplicationInsightsVersion>
+    <NewtonsoftJsonVersion>13.0.3</NewtonsoftJsonVersion>
     <!-- symreader-converter -->
+    <MicrosoftDiaSymReaderConverterVersion>1.1.0-beta2-19575-01</MicrosoftDiaSymReaderConverterVersion>
     <MicrosoftDiaSymReaderPdb2PdbVersion>1.1.0-beta2-19575-01</MicrosoftDiaSymReaderPdb2PdbVersion>
+    <!-- diagnostics -->
+    <MicrosoftSymbolManifestGeneratorVersion>8.0.0-preview.24461.2</MicrosoftSymbolManifestGeneratorVersion>
     <!-- templating -->
-    <MicrosoftTemplateEngineAuthoringTasksVersion>8.0.100-preview.6.23319.1</MicrosoftTemplateEngineAuthoringTasksVersion>
+    <MicrosoftTemplateEngineAuthoringTasksVersion>10.0.100-alpha.1.24605.5</MicrosoftTemplateEngineAuthoringTasksVersion>
     <!-- vstest -->
     <MicrosoftNetTestSdkVersion>17.5.0</MicrosoftNetTestSdkVersion>
     <!-- xharness -->
-    <MicrosoftDotNetXHarnessCLIVersion>8.0.0-prerelease.23312.1</MicrosoftDotNetXHarnessCLIVersion>
-    <!-- xliff-tasks -->
-    <MicrosoftDotNetXliffTasksVersion>1.0.0-beta.23312.2</MicrosoftDotNetXliffTasksVersion>
-    <!-- external -->
-    <AzureCoreVersion>1.31.0</AzureCoreVersion>
-    <AzureStorageBlobsVersion>12.16.0</AzureStorageBlobsVersion>
-    <CommandLineParserVersion>2.5.0</CommandLineParserVersion>
-    <CoverletCollectorVersion>1.0.1</CoverletCollectorVersion>
-    <FluentAssertionsVersion>5.10.3</FluentAssertionsVersion>
-    <HandlebarsNetVersion>1.11.5</HandlebarsNetVersion>
-    <JetBrainsAnnotationsVersion>2018.2.1</JetBrainsAnnotationsVersion>
-    <LZMA_SDKVersion>19.0.0</LZMA_SDKVersion>
-    <McMasterExtensionsCommandLineUtils>2.3.0</McMasterExtensionsCommandLineUtils>
-    <MicrosoftApplicationInsightsVersion>2.21.0</MicrosoftApplicationInsightsVersion>
-    <MicrosoftCciVersion>4.0.0-rc3-24214-00</MicrosoftCciVersion>
-    <MicrosoftDataODataVersion>5.8.4</MicrosoftDataODataVersion>
-    <MicrosoftIdentityClientVersion>4.53.0</MicrosoftIdentityClientVersion>
-    <!-- Keep Microsoft.Data.Services.Client package version in sync with Microsoft.Data.OData -->
-    <MicrosoftDataServicesClientVersion>5.8.4</MicrosoftDataServicesClientVersion>
-    <MicrosoftDiagnosticsRuntimeVersion>1.0.5</MicrosoftDiagnosticsRuntimeVersion>
-    <MicrosoftOpenApiReadersVersion>1.3.2</MicrosoftOpenApiReadersVersion>
-    <MicrosoftOpenApiVersion>1.3.2</MicrosoftOpenApiVersion>
-    <MicrosoftSignedWixVersion>1.0.0-v3.14.0.5722</MicrosoftSignedWixVersion>
-    <MicrosoftVisualStudioOLEInteropVersion>7.10.6071</MicrosoftVisualStudioOLEInteropVersion>
-    <MonoOptionsVersion>5.3.0.1</MonoOptionsVersion>
-    <MoqVersion>4.18.4</MoqVersion>
-    <NewtonsoftJsonVersion>13.0.1</NewtonsoftJsonVersion>
-    <OctokitVersion>0.41.0</OctokitVersion>
-    <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
-    <XUnitVersion>2.4.2</XUnitVersion>
+    <MicrosoftDotNetXHarnessCLIVersion>10.0.0-prerelease.24610.1</MicrosoftDotNetXHarnessCLIVersion>
   </PropertyGroup>
 </Project>

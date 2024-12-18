@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
@@ -9,9 +12,11 @@ namespace Microsoft.Arcade.Common
 {
     public class Helpers : IHelpers
     {
+        private static readonly char[] s_slashes = [ '/', '\\' ];
+
         public string RemoveTrailingSlash(string directoryPath)
         {
-            return directoryPath.TrimEnd('/', '\\');
+            return directoryPath.TrimEnd(s_slashes);
         }
 
         public string ComputeSha256Hash(string normalizedPath)

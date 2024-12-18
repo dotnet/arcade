@@ -29,7 +29,7 @@ There are two ways to report a Known Issue: one is via Build Analysis and the ot
 
 1. Decide if you need to open a [repository issue or infrastructure issue](#decide-infrastructure-or-repository-issue)
 1. Open a new issue, choosing the repository in which you are opening the issue based on following rule:
-    - Infrastructure issue - arcade
+    - Infrastructure issue - [dnceng](https://github.com/dotnet/dnceng)
     - Repository issue - In the repo in which the issue is happening
 1. Add the label `Known Build Error`. (If the label is not available on the repository, follow the instructions to [get onboard](#how-to-get-onboard))
 1. Copy and paste the template
@@ -74,6 +74,62 @@ You need to enter `text \"using\" quotes` as the `ErrorMessage` value
 You can use the preview tab to validate your JSON blob, GitHub will highlight invalid characters.
 
 ![Invalid JSON blob](./Resources/invalid_json_blob.png?raw=true)
+
+### Fill out Known Issues with a list of errors 
+This section describes how to specify multiple error messages / error patterns to search for in order, as an AND condition, and every message/pattern being exclusive to a single line.
+
+- To use the feature, you need to pass a list of strings as part of the JSON.
+
+    For example, an ErrorMessage will look like this:
+    ```json
+    {
+    "ErrorMessage": ["Assert.True() Failure", "Actual:   False"]
+    }
+    ```
+
+    And an ErrorPattern will look like this:
+
+    ```json
+    {
+    "ErrorPattern": ["Assert.True() .+", "Actual:.*False"]
+    }
+    ```
+
+- The list works as an AND and they must be in order. Every issue in the list will try to match a line.
+- The first issue in the list will be searched first, and then if the first issue matches, the second issue will be searched in the subsequent lines.
+- In order to count as a match, all issues in the list must match.
+- **This works for ErrorMessage and ErrorPattern, but they should not be mixed. If you use ErrorMessage, then all issues in the list must match the ErrorMessage, and the same for ErrorPattern.**
+
+
+*Note that every pattern/message will be searched per line, NOT multiple lines.*
+
+#### Example
+
+Consider the following error message:
+
+```
+Assert.True() Failure
+Expected: True
+Actual:   False
+```
+
+In order to match this error message, you can use the following JSON:
+
+```json
+{
+  "ErrorMessage": ["Assert.True() Failure", "Actual:   False"]
+}
+```
+Even though we didn't put the `Expected: True` line, the other lines are in there and in the right order, so it will match.
+
+However, if we use the following JSON:
+```json
+{
+  "ErrorMessage": ["Assert.True() Failure", "Actual: True"]
+}
+```
+The last line doesn’t match, so it will not match the error message.
+
 
 ## How the matching process works between a Known Issue and a build/test error
 
@@ -146,7 +202,7 @@ We recommend you test your regular expression, to do it you can use [regex101 te
 
 Known Issues scan all builds from the last 24 hours since the issue was opened or updated with the error message provided. It also scans all builds that fail after the issue is created.
 
-Known issues analyzes both infrastructure issues (Known Issues in dotnet/arcade) and repository issues (Known Issues in the pull request’s repository).
+Known issues analyzes both infrastructure issues (Known Issues in dotnet/dnceng) and repository issues (Known Issues in the pull request’s repository).
 
 Additionally displays the Known Issues matches in the Build Analysis check. The example below shows that the feature found 4 matches for the issue “Tracking issue for CI build timeouts”.
 
@@ -176,7 +232,7 @@ This limitation is designed for two reasons:
 ## How to get onboard
 
 1. This feature depends on the Build Analysis feature. Therefore, you need to have the `Build Analysis` GitHub application installed in the repo where you want to use Known Issues. </br> To install the application, you can contact the [.NET Core Engineering Services team](https://dev.azure.com/dnceng/internal/_wiki/wikis/DNCEng%20Services%20Wiki/107/How-to-get-a-hold-of-Engineering-Servicing)
-1. For infrastructure issues, there are no additional steps because they are part of dotnet/arcade.
+1. For infrastructure issues, there are no additional steps because they are part of dotnet/dnceng.
 1. For repository issues, you need to [Create a label](https://docs.github.com/en/enterprise-server@3.1/issues/using-labels-and-milestones-to-track-work/managing-labels#creating-a-label) on the repo where you want to open the Repository issue. <br> The name of the label must be `Known Build Error`
 
 ## Decide Infrastructure or Repository issue
@@ -184,7 +240,7 @@ This limitation is designed for two reasons:
 - **Infrastructure**:
   - The issue is not exclusive to a repository
   - Needs to be investigated by the engineering services (@dotnet/dnceng)
-  - It hasn't been reported on [arcade](https://github.com/orgs/dotnet/projects/111/views/1)
+  - It hasn't been reported on [dnceng](https://github.com/orgs/dotnet/projects/111/views/1)
 - **Repository**:
   - The issue is happening in a particular repository
   - The error needs to be investigated by the repository owners.

@@ -1,10 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(NetCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
-    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
+    <ExcludeFromSourceOnlyBuild>true</ExcludeFromSourceOnlyBuild>
     <PackageType>MSBuildSdk</PackageType>
     <IsPackable>true</IsPackable>
+    <IsBuildTaskProject>true</IsBuildTaskProject>
     <PackageDescription>An msbuild task to generate code for the API surface of an assembly.</PackageDescription>
     <NoWarn>$(NoWarn);0436</NoWarn>
   </PropertyGroup>
@@ -14,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" />
 
     <!-- Manually reference Microsoft.Cci.dll via a PackageDownload+Reference item instead of
          using a PackageReference to avoid bringing in the old dependency graph. -->
@@ -25,7 +26,5 @@
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj" />
   </ItemGroup>
-
-  <Import Project="$(RepositoryEngineeringDir)BuildTask.targets" />
 
 </Project>

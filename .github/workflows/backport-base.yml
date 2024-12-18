@@ -14,50 +14,20 @@ on:
           Backport of #%source_pr_number% to %target_branch%
 
           /cc %cc_users%
+      repository_owners:
+        description: 'A comma-separated list of repository owners where the workflow will run. Defaults to "dotnet,microsoft".'
+        required: false
+        type: string
+        default: 'dotnet,microsoft'
 
 jobs:
   cleanup:
-    if: ${{ github.repository_owner == 'dotnet' && github.event_name == 'schedule' }}
-    runs-on: ubuntu-latest
-    permissions:
-      actions: write
-    steps:
-    - name: Cleanup workflow runs
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const repo_owner = context.payload.repository.owner.login;
-          const repo_name = context.payload.repository.name;
-
-          // look up workflow from current run
-          const currentWorkflowRun = await github.rest.actions.getWorkflowRun({
-            owner: repo_owner,
-            repo: repo_name,
-            run_id: context.runId
-          });
-
-          // get runs which are 'completed' (other candidate values of status field are e.g. 'queued' and 'in_progress')
-          for await (const response of github.paginate.iterator(
-            github.rest.actions.listWorkflowRuns, {
-              owner: repo_owner,
-              repo: repo_name,
-              workflow_id: currentWorkflowRun.data.workflow_id,
-              status: 'completed'
-            }
-          )) {
-            // delete each run
-            for (const run of response.data) {
-              console.log(`Deleting workflow run ${run.id}`);
-              await github.rest.actions.deleteWorkflowRun({
-                owner: repo_owner,
-                repo: repo_name,
-                run_id: run.id
-              });
-            }
-          }
+    uses: dotnet/arcade/.github/workflows/scheduled-action-cleanup-base.yml@main
+    with:
+      repository_owners: ${{ inputs.repository_owners }}
 
   run_backport:
-    if: ${{ github.repository_owner == 'dotnet' && github.event.issue.pull_request != '' && contains(github.event.comment.body, '/backport to') }}
+    if: ${{ contains(format('{0},', inputs.repository_owners), format('{0},', github.repository_owner)) && github.event.issue.pull_request != '' && contains(github.event.comment.body, '/backport to') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -65,7 +35,7 @@ jobs:
       pull-requests: write
     steps:
     - name: Extract backport target branch
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       id: target-branch-extractor
       with:
         result-encoding: string
@@ -79,7 +49,7 @@ jobs:
 
           return target_branch[1];
     - name: Unlock comments if PR is locked
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       if: ${{ github.event.issue.locked == true }}
       with:
         script: |
@@ -90,7 +60,7 @@ jobs:
             repo: context.repo.repo,
           });
     - name: Post backport started comment to pull request
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       with:
         script: |
           const target_branch = '${{ steps.target-branch-extractor.outputs.result }}';
@@ -102,11 +72,11 @@ jobs:
             body: backport_start_body
           });
     - name: Checkout repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Run backport
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       env:
         BACKPORT_PR_TITLE_TEMPLATE: ${{ inputs.pr_title_template }}
         BACKPORT_PR_DESCRIPTION_TEMPLATE: ${{ inputs.pr_description_template }}
@@ -159,7 +129,7 @@ jobs:
             // download and apply patch
             await exec.exec(`curl -sSL "${context.payload.issue.pull_request.patch_url}" --output changes.patch`);
 
-            const git_am_command = "git am --3way --ignore-whitespace --keep-non-patch changes.patch";
+            const git_am_command = "git am --3way --empty=keep --ignore-whitespace --keep-non-patch changes.patch";
             let git_am_output = `$ ${git_am_command}\n\n`;
             let git_am_failed = false;
             try {
@@ -182,7 +152,8 @@ jobs:
                 issue_number: pr_number,
                 body: git_am_failed_body
               });
-              throw new Error("Error: git am failed, most likely due to a merge conflict.", false);
+              core.setFailed("Error: git am failed, most likely due to a merge conflict.");
+              return;
             }
             else {
               // push the temp branch to the repository
@@ -241,7 +212,7 @@ jobs:
           }
  
     - name: Re-lock PR comments
-      uses: actions/github-script@v6
+      uses: actions/github-script@v7
       if: ${{ github.event.issue.locked == true && (success() || failure()) }}
       with:
         script: |

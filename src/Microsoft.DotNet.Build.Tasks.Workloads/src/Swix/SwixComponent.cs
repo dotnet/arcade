@@ -4,7 +4,6 @@
 #nullable enable
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Deployment.DotNet.Releases;
@@ -16,7 +15,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
     /// <summary>
     /// Represents a component or component group in Visual Studio Installer.
     /// </summary>
-    internal class SwixComponent
+    internal class SwixComponent : SwixPackageBase
     {
         /// <summary>
         /// RIDs supported on Windows. Only pack dependencies that contain these RIDs will be added to the component.
@@ -28,7 +27,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         /// </summary>
         private static readonly Version s_v1 = new Version("1.0.0.0");
 
-        private List<SwixDependency> _dependencies = new();
+        /// <summary>
+        /// Determines whether the component will be advertised to a user during an update operation.
+        /// </summary>
+        public bool Advertise
+        {
+            get;
+        }
 
         /// <summary>
         /// The component category.
@@ -39,11 +44,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         } = DefaultValues.ComponentCategory;
 
         /// <summary>
-        /// Gets the set of packages and components on which this component depends.
-        /// </summary>
-        public IEnumerable<SwixDependency> Dependencies => _dependencies;
-
-        /// <summary>
         /// The description of the component, displayed as a tooltip inside the UI.
         /// </summary>
         public string Description
@@ -52,24 +52,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         }
 
         /// <summary>
-        /// Gets whether this component has any dependencies.
-        /// </summary>
-        public bool HasDependencies => _dependencies.Count > 0;
-
-        /// <summary>
         /// When <see langword="true" />, this component represents a component group that is only visible as a top-level 
         /// dependency in the wokloads tab. Otherwise it is a visible component that becomes selectable in the individual components
         /// tab.
         /// </summary>
         public bool IsUiGroup
-        {
-            get;
-        }
-
-        /// <summary>
-        /// The component name (ID).
-        /// </summary>
-        public string Name
         {
             get;
         }
@@ -99,37 +86,27 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         }
 
         /// <summary>
-        /// The version of the component.
-        /// </summary>
-        public Version Version
-        {
-            get;
-        }
-
-        /// <summary>
         /// Creates a new SWIX component.
         /// </summary>
         /// <param name="sdkFeatureBand">The SDK feature band associated with the component.</param>
-        /// <param name="name">The component ID.</param>
-        /// /// <param name="title">The component title as it appears next to checkboxes on the workload and individual component tabs.</param>
+        /// <param name="title">The component title as it appears next to checkboxes on the workload and individual component tabs.</param>
         /// <param name="description">The component description, displayed as a tooltip in the Visual Studio Installer UI.</param>
-        /// <param name="version">The version of the component.</param>
         /// <param name="isUiGroup">When <see langword="true"/>, indicates that this component is a component group and
         /// will be hidden on the individual components tab.</param>
         /// <param name="category">The category associated with the component. The value acts as a grouping mechanism on
         /// the individual components tab.</param>
         /// <param name="shortNames">A set of items used to shorten the names and identifiers of setup packages.</param>
+        /// <param name="advertise">Indicates whether new components are advertised to users in Visual Studio during an update.</param>
         internal SwixComponent(ReleaseVersion sdkFeatureBand, string name, string title, string description, Version version,
-            bool isUiGroup, string category, ITaskItem[]? shortNames)
+            bool isUiGroup, string category, ITaskItem[]? shortNames, bool advertise = false) : base(name, version)
         {
-            Name = name;
             Title = title;
             Description = description;
-            Version = version;
             IsUiGroup = isUiGroup;
             Category = category;
             SdkFeatureBand = sdkFeatureBand;
             ShortNames = shortNames;
+            Advertise = advertise;
         }
 
         /// <summary>
@@ -140,7 +117,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         /// <param name="maxVersion">The maximum dependency version.</param>
         public void AddDependency(string id, Version? minVersion = null, Version? maxVersion = null)
         {
-            _dependencies.Add(new SwixDependency(id, minVersion, maxVersion));
+            Dependencies.Add(new SwixDependency(id, minVersion, maxVersion));
         }
 
         /// <summary>
@@ -149,7 +126,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
         /// <param name="pack">The workload pack to add as a dependency.</param>
         public void AddDependency(WorkloadPack pack)
         {
-            _dependencies.Add(new SwixDependency($"{pack.Id.ToString().Replace(ShortNames)}.{pack.Version}", new NuGetVersion(pack.Version).Version, maxVersion: null));
+            Dependencies.Add(new SwixDependency($"{pack.Id.ToString().Replace(ShortNames)}.{pack.Version}", new NuGetVersion(pack.Version).Version, maxVersion: null));
         }
 
         /// <inheritdoc/>
@@ -186,6 +163,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
                 new Version(resourceItem.GetMetadata(Metadata.Version)) :
                 new Version((new ReleaseVersion(manifest.Version)).ToString(3));
 
+            bool.TryParse(resourceItem?.GetMetadata(Metadata.AdvertisePackage), out bool advertise);
+
             // Since workloads only define a description, if no custom resources were provided, both the title and description of
             // the SWIX component will default to the workload description. 
             SwixComponent component = new(sdkFeatureBand, Utils.ToSafeId(workload.Id, componentSuffix),
@@ -193,7 +172,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Swix
                 resourceItem != null && !string.IsNullOrEmpty(resourceItem.GetMetadata(Metadata.Description)) ? resourceItem.GetMetadata(Metadata.Description) : workload.Description ?? throw new Exception(Strings.ComponentDescriptionCannotBeNull),
                 componentVersion, workload.IsAbstract,
                 resourceItem != null && !string.IsNullOrEmpty(resourceItem.GetMetadata(Metadata.Category)) ? resourceItem.GetMetadata(Metadata.Category) : DefaultValues.ComponentCategory ?? throw new Exception(Strings.ComponentCategoryCannotBeNull),
-                shortNames);
+                shortNames,
+                advertise);            
 
             // If the workload extends other workloads, we add those as component dependencies before
             // processing direct pack dependencies.

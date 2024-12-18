@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(NetCurrent)</TargetFramework>
+    <TargetFramework>$(NetToolCurrent)</TargetFramework>
     <SignAssembly>false</SignAssembly>
   </PropertyGroup>
 
@@ -10,10 +10,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
-    <PackageReference Include="Moq" Version="$(MoqVersion)" />
-    <PackageReference Include="NuGet.Packaging" Version="$(NuGetPackagingVersion)" />
-    <PackageReference Include="NuGet.Versioning" Version="$(NuGetVersioningVersion)" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" />
+    <PackageReference Include="Moq" />
+    <PackageReference Include="NuGet.Packaging" />
+    <PackageReference Include="NuGet.Versioning" />
   </ItemGroup>
 
 </Project>

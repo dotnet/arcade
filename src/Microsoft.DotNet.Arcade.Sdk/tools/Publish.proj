@@ -1,11 +1,6 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project DefaultTargets="Publish">
 
-  <PropertyGroup>
-    <!-- Disable target framework filtering for top level projects -->
-    <NoTargetFrameworkFiltering>true</NoTargetFrameworkFiltering>
-  </PropertyGroup>
-
   <!--
     Documentation for publishing is available here:
       - https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md
@@ -13,21 +8,49 @@
     Optional variables:
       DotNetPublishUsingPipelines       Whether publishing to BAR should be performed or not.
       DotNetFinalVersionKind            Global property that stores the type of the current build: https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Versioning.md#build-kind
-      DotNetOutputBlobFeedDir           Source Build publishing directory
       DotNetSymbolServerTokenMsdl       Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Server-Pats.
       DotNetSymbolServerTokenSymWeb     Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Server-Pats.
       DotNetSymbolExpirationInDays      Symbol expiration time in days (defaults to 10 years).
       SkipPackageChecks                 Skips package safety checks.
+      EnableDefaultArtifacts            Includes packages under "/artifacts/packages/**" for publishing. Defaults to true.
+      DotNetBuildPass                   While building the repo as part of the entire .NET stack, this parameter specifies which build pass the current build is part of.
+                                          The build pass number gets added to the asset manifest file name to avoid collisions.
+    
+    Optional items:
+      Artifact (with Metadata)          Path to the artifact to publish. Declare the item in Signing.props to sign and publish the artifact.
+        - ChecksumPath                    The destination path to generate a checksum file for the artifact. Set the `RelativeBlobPathParent`
+                                          property if the RelativeBlobPath for the generate checksum should be automatically set.
+        - PublishFlatContainer            By default artifacts are published to blob artifacts. Set to false to publish to package artifacts.
+        - RelativeBlobPath                The relative blob path when publishing to blob artifacts.
+        - IsShipping                      Set to false to mark the artifact as non-shipping. Defaults to true.
   -->
 
+  <PropertyGroup>
+    <!-- Disable target framework filtering for top level projects -->
+    <NoTargetFrameworkFiltering>true</NoTargetFrameworkFiltering>
+  </PropertyGroup>
+
   <Import Project="BuildStep.props" />
+
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GenerateChecksums" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
+
+  <!--
+    In VMR inner-build copy to local storage, do not push to AzDO.
+    Inner-repo builds outside of VMR do not use arcade publishing.
+    Define this property before importing repo Publishing.props, to have it control any repo-specific publishing.
+  -->
+  <PropertyGroup Condition="'$(DotNetBuildPhase)' == 'InnerRepo' and '$(DotNetBuildOrchestrator)' == 'true'">
+    <PushToLocalStorage>true</PushToLocalStorage>
+  </PropertyGroup>
+
+  <!-- Required to determine whether full assembly strong name signing is supported, which may affect selection of some certificates. -->
+  <Import Project="StrongName.targets" />
+  <Import Project="Sign.props" />
+
   <!-- Allow for repo specific Publish properties such as add additional files to be published -->
   <Import Project="$(RepositoryEngineeringDir)Publishing.props" Condition="Exists('$(RepositoryEngineeringDir)Publishing.props')" />
 
   <PropertyGroup>
-    <PublishToSourceBuildStorage>false</PublishToSourceBuildStorage>
-    <PublishToSourceBuildStorage Condition="'$(DotNetOutputBlobFeedDir)' != ''">true</PublishToSourceBuildStorage>
-
     <!-- Default publishing target is 3. -->
     <PublishingVersion Condition="'$(PublishingVersion)' == ''">3</PublishingVersion>
     
@@ -40,20 +63,29 @@
     <IsReleaseOnlyPackageVersion Condition ="('$(SkipPackagePublishingVersionChecks)' == 'true') or ('$(PreReleaseVersionLabel)' == '' and '$(AutoGenerateAssemblyVersion)' == 'true')">true</IsReleaseOnlyPackageVersion>
     
     <!-- If `AutoGenerateSymbolPackages` is not set we default it to true. -->
-    <AutoGenerateSymbolPackages Condition="'$(AutoGenerateSymbolPackages)' == ''">true</AutoGenerateSymbolPackages>
-
-    <AssetManifestOS Condition="'$(AssetManifestOS)' == ''">$(OS)</AssetManifestOS>
-
-    <AssetManifestFileName>$(AssetManifestOS)-$(PlatformName).xml</AssetManifestFileName>
-    <AssetManifestFilePath>$(ArtifactsLogDir)AssetManifest\$(AssetManifestFileName)</AssetManifestFilePath>
+    <!-- Do not generate symbol packages if in outer source build mode, to avoid creating copies of the intermediates. -->
+    <!-- Also do not generate symbol packages if in inner source build, in product build. -->
+    <AutoGenerateSymbolPackages Condition="'$(AutoGenerateSymbolPackages)' == '' and 
+      ('$(DotNetBuildSourceOnly)' != 'true' or ('$(DotNetBuildInnerRepo)' == 'true' and '$(DotNetBuildOrchestrator)' != 'true'))">true</AutoGenerateSymbolPackages>
 
     <SymbolPackagesDir>$(ArtifactsTmpDir)SymbolPackages\</SymbolPackagesDir>
 
     <PublishDependsOnTargets Condition="$(PublishToSymbolServer)">$(PublishDependsOnTargets);PublishSymbols</PublishDependsOnTargets>
-    <PublishDependsOnTargets Condition="$(PublishToSourceBuildStorage)">$(PublishDependsOnTargets);PublishToSourceBuildStorage</PublishDependsOnTargets>
     <PublishDependsOnTargets Condition="$(DotNetPublishUsingPipelines)">$(PublishDependsOnTargets);PublishToAzureDevOpsArtifacts</PublishDependsOnTargets>
 
     <PublishDependsOnTargets>BeforePublish;$(PublishDependsOnTargets)</PublishDependsOnTargets>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!-- Prefer TargetOS when set over OS -->
+    <AssetManifestOS Condition="'$(AssetManifestOS)' == ''">$([MSBuild]::ValueOrDefault('$(TargetOS)', '$(OS)'))</AssetManifestOS>
+    <!-- Prefer TargetArchitecture when set over PlatformName -->
+    <AssetManifestArch Condition="'$(AssetManifestArch)' == ''">$([MSBuild]::ValueOrDefault('$(TargetArchitecture)', '$(PlatformName)'))</AssetManifestArch>
+    <!-- Add the build pass number when DotNetBuildPass is set to a value other than 1. -->
+    <AssetManifestPass Condition="'$(DotNetBuildPass)' != '' and '$(DotNetBuildPass)' != '1'">-Pass$(DotNetBuildPass)</AssetManifestPass>
+
+    <AssetManifestFileName>$(AssetManifestOS)-$(AssetManifestArch)$(AssetManifestPass).xml</AssetManifestFileName>
+    <AssetManifestFilePath>$(ArtifactsLogDir)AssetManifest\$(AssetManifestFileName)</AssetManifestFilePath>
   </PropertyGroup>
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets"/>
@@ -63,14 +95,26 @@
           DependsOnTargets="$(PublishDependsOnTargets)" />
 
   <Target Name="BeforePublish">
-    <ItemGroup>
+    <ItemGroup Condition="'$(EnableDefaultArtifacts)' == 'true'">
       <ExistingSymbolPackages Include="$(ArtifactsShippingPackagesDir)**/*.symbols.nupkg" IsShipping="true" />
       <ExistingSymbolPackages Include="$(ArtifactsNonShippingPackagesDir)**/*.symbols.nupkg" IsShipping="false" />
 
       <PackagesToPublish Include="$(ArtifactsShippingPackagesDir)**/*.nupkg" IsShipping="true" />
       <PackagesToPublish Include="$(ArtifactsNonShippingPackagesDir)**/*.nupkg" IsShipping="false" />
+    </ItemGroup>
+
+    <!-- Respect Artifact item repo extension point for packages -->
+    <ItemGroup Condition="'@(Artifact)' != ''">
+      <ExistingSymbolPackages Include="@(Artifact)" Condition="'%(Artifact.SkipPublish)' != 'true' and $([System.String]::Copy('%(Filename)%(Extension)').EndsWith('.symbols.nupkg'))" />
+      <PackagesToPublish Include="@(Artifact)" Condition="'%(Artifact.SkipPublish)' != 'true' and '%(Extension)' == '.nupkg'" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <!-- Make sure that PackagesToPublish doesn't contain existing symbol packages. --> 
       <PackagesToPublish Remove="@(ExistingSymbolPackages)" />
 
+      <!-- Do not generate symbol packages when building from source. The generate package for the source build intermediate
+           will simply contain the same, non-symbol content. -->
       <PackagesToPublish Update="@(PackagesToPublish)" Condition="'$(AutoGenerateSymbolPackages)' == 'true'">
         <SymbolPackageToGenerate Condition="!Exists('%(RootDir)%(Directory)%(Filename).symbols.nupkg')">$(SymbolPackagesDir)%(Filename).symbols.nupkg</SymbolPackageToGenerate>
       </PackagesToPublish>
@@ -100,26 +144,39 @@
       -->
       <SymbolPackagesToGenerate Remove="$(SymbolPackagesDir)**/Microsoft.DotNet.Darc.*" />
       <SymbolPackagesToGenerate Remove="$(SymbolPackagesDir)**/Microsoft.DotNet.Maestro.Tasks.*" />
-      
-      <ItemsToPushToBlobFeed Include="@(PackagesToPublish);@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)">
-        <ManifestArtifactData Condition="'%(IsShipping)' != 'true'">NonShipping=true</ManifestArtifactData>
-      </ItemsToPushToBlobFeed>
 
-      <PackagesToPublish Remove="@(PackagesToPublish)" />
-      <PackagesToPublish Include="@(ItemsToPushToBlobFeed)" />
+      <!-- Exclude all existing *.symbols.nupkg in source-only build - we create a unified symbols archive instead. -->
+      <ExistingSymbolPackages Remove="@(ExistingSymbolPackages)" Condition="'$(DotNetBuildSourceOnly)' == 'true'"/>
+
+      <ItemsToPushToBlobFeed Include="@(PackagesToPublish);@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)" Exclude="@(ItemsToPushToBlobFeed)" />
     </ItemGroup>
     
     <Error Condition="'$(AllowEmptySignPostBuildList)' != 'true' AND '@(ItemsToSignPostBuild)' == ''" 
            Text="List of files to sign post-build is empty. Make sure that ItemsToSignPostBuild is configured correctly." />
   </Target>
 
-  <Target Name="PublishToSourceBuildStorage">
-    <!-- Source Build local storage -->    
-    <Copy SourceFiles="@(PackagesToPublish)" DestinationFolder="$(DotNetOutputBlobFeedDir)packages" />
-    <Copy SourceFiles="@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)" DestinationFolder="$(DotNetOutputBlobFeedDir)assets" />
+  <!-- Generate checksums from artifact items that set ChecksumPath.
+       The produced checksums get automatically added as artifacts. -->
+  <Target Name="GenerateChecksumsFromArtifacts"
+          Condition="'@(Artifact)' != '' and '@(Artifact->HasMetadata('ChecksumPath'))' != ''">
+    <ItemGroup>
+      <GenerateChecksumItems Include="@(Artifact->HasMetadata('ChecksumPath'))"
+                             DestinationPath="%(Artifact.ChecksumPath)"
+                             RemoveMetadata="RelativeBlobPath" />
+    </ItemGroup>
+
+    <GenerateChecksums Items="@(GenerateChecksumItems)" />
+
+    <ItemGroup>
+      <!-- Set RelativeBlobPath if RelativeBlobPathParent is provided. -->
+      <Artifact Include="@(GenerateChecksumItems -> '%(DestinationPath)')">
+        <RelativeBlobPath Condition="'$(RelativeBlobPathParent)' != ''">$(RelativeBlobPathParent)%(Filename)%(Extension)</RelativeBlobPath>
+      </Artifact>
+    </ItemGroup>
   </Target>
 
-  <Target Name="PublishToAzureDevOpsArtifacts">
+  <Target Name="PublishToAzureDevOpsArtifacts"
+          DependsOnTargets="GenerateChecksumsFromArtifacts">
     <!-- 
       Sadly AzDO doesn't have a variable to tell the account name. Also
       the format of CollectionURI is not precise across different agent 
@@ -154,17 +211,29 @@
       <ManifestBuildData Include="AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)" />
     </ItemGroup>
 
+    <!-- Add non-package Artifact items (repo extension point) as package already got added in the BeforePublish target. -->
+    <ItemGroup>
+      <ItemsToPushToBlobFeed Include="@(Artifact)" Condition="'%(Artifact.SkipPublish)' != 'true' and '%(Extension)' != '.nupkg'" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ItemsToPushToBlobFeed>
+        <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.IsShipping)' == 'false'">%(ItemsToPushToBlobFeed.ManifestArtifactData);NonShipping=true</ManifestArtifactData>
+        <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.IsShipping)' != 'false' and '$(ProducesDotNetReleaseShippingAssets)' == 'true'">%(ItemsToPushToBlobFeed.ManifestArtifactData);DotNetReleaseShipping=true</ManifestArtifactData>
+      </ItemsToPushToBlobFeed>
+    </ItemGroup>
+
     <!--
       The user can set `PublishingVersion` via eng\Publishing.props
     -->
-    <PushToAzureDevOpsArtifacts
+    <PushToBuildStorage
       AzureDevOpsCollectionUri="$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)"
       AzureDevOpsProject="$(SYSTEM_TEAMPROJECT)"
       AzureDevOpsBuildId="$(BUILD_BUILDID)"
       ItemsToPush="@(ItemsToPushToBlobFeed)"
       ItemsToSign="@(ItemsToSignPostBuild)"
       StrongNameSignInfo="@(StrongNameSignInfo)"
-      CertificatesSignInfo="@(CertificatesSignInfo)"                                
+      CertificatesSignInfo="@(CertificatesSignInfo)"
       FileSignInfo="@(FileSignInfo)"
       FileExtensionSignInfo="@(FileExtensionSignInfo)"
       ManifestBuildData="@(ManifestBuildData)"
@@ -172,10 +241,16 @@
       ManifestBranch="$(BUILD_SOURCEBRANCH)"
       ManifestBuildId="$(BUILD_BUILDNUMBER)"
       ManifestCommit="$(BUILD_SOURCEVERSION)"
+      ManifestRepoOrigin="$(GitHubRepositoryName)"
       IsStableBuild="$(IsStableBuild)"
       PublishingVersion="$(PublishingVersion)"
       AssetManifestPath="$(AssetManifestFilePath)" 
-      IsReleaseOnlyPackageVersion="$(IsReleaseOnlyPackageVersion)" />
+      IsReleaseOnlyPackageVersion="$(IsReleaseOnlyPackageVersion)"
+      PushToLocalStorage="$(PushToLocalStorage)"
+      AssetsLocalStorageDir="$(SourceBuiltAssetsDir)"
+      ShippingPackagesLocalStorageDir="$(SourceBuiltShippingPackagesDir)"
+      NonShippingPackagesLocalStorageDir="$(SourceBuiltNonShippingPackagesDir)"
+      AssetManifestsLocalStorageDir="$(SourceBuiltAssetManifestsDir)" />
 
     <!-- 
         Publish Windows PDBs produced by SymStore.targets (by default, only shipping PDBs are placed there).
@@ -271,8 +346,6 @@
                     Condition="$(PublishToSymbolServer)"/>
   </Target>
 
-  <Import Project="Sign.props" />
-
   <!-- Update sign infos that were using Microsoft400 to use the .NET-specific cert if UseDotNetCertificate is present.
        This will update any use, even if explicitly specified.
        NOTE: This is outside the target on purpose, as Update will not correctly evaluate in the target. See
@@ -283,6 +356,7 @@
     <FileSignInfo Update="@(FileSignInfo->WithMetadataValue('CertificateName','Microsoft400'))" CertificateName="$(DotNetCertificateName)" />
   </ItemGroup>
 
-  <Import Project="SourceBuild/SourceBuildArcadePublish.targets" Condition="'$(ArcadeBuildFromSource)' == 'true'" />
+  <!-- Import the publish targets when in the inner or outer repo builds. -->
+  <Import Project="SourceBuild/SourceBuildArcadePublish.targets" Condition="'$(DotNetBuildRepo)' == 'true'" />
 
 </Project>

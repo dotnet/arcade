@@ -3,23 +3,22 @@
   <Import Project="ResxWorkaround.props" />
 
   <PropertyGroup>
-    <TargetFramework>$(NetFrameworkToolCurrent)</TargetFramework>
+    <TargetFramework>$(NetFrameworkMinimum)</TargetFramework>
     <Platforms>x86</Platforms>
     <SignAssembly>false</SignAssembly>
     <RootNamespace>Microsoft.SignCheck</RootNamespace>
     <!-- This assembly is bundled in the Microsoft.DotNet.SignCheck package and is not mean to be used as a class library package. -->
     <IsPackable>false</IsPackable>
     <IsTool>true</IsTool>
-    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="LZMA-SDK" Version="$(LZMA_SDKVersion)" />
-    <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Version="$(MicrosoftVisualStudioOLEInteropVersion)" />
-    <PackageReference Include="NuGet.Frameworks" Version="$(NuGetFrameworksVersion)" />
-    <PackageReference Include="NuGet.Packaging" Version="$(NuGetPackagingVersion)" />
-    <PackageReference Include="System.IO.Packaging" Version="$(SystemIOPackagingVersion)" />
-    <PackageReference Include="Microsoft.Signed.Wix" Version="$(MicrosoftSignedWixVersion)" />
+    <PackageReference Include="LZMA-SDK" />
+    <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" />
+    <PackageReference Include="NuGet.Frameworks" />
+    <PackageReference Include="NuGet.Packaging" />
+    <PackageReference Include="System.IO.Packaging" />
+    <PackageReference Include="Microsoft.Signed.Wix" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,5 +1,19 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
+
+  <PropertyGroup>
+    <!-- By default, search for sign aritfacts under the list of known directories. -->
+    <EnableDefaultArtifacts>true</EnableDefaultArtifacts>
+  </PropertyGroup>
+
+  <!-- Repo extension point to sign and/or publish. Artifacts are shipping and blobs by default. -->
+  <ItemDefinitionGroup>
+    <Artifact>
+      <PublishFlatContainer>true</PublishFlatContainer>
+      <IsShipping>true</IsShipping>
+    </Artifact>
+  </ItemDefinitionGroup>
+
   <ItemGroup>
     <!--
       This is intended to hold information about the certificates used for signing.
@@ -8,25 +22,27 @@
     -->
     <CertificatesSignInfo Include="3PartyDual" DualSigningAllowed="true" />
     <CertificatesSignInfo Include="3PartySHA2" DualSigningAllowed="true" />
+  </ItemGroup>
 
+  <ItemGroup Condition="'$(EnableDefaultArtifacts)' == 'true'">
     <!-- List of container files that will be opened and checked for files that need to be signed. -->
     <_DefaultItemsToSign Include="$(ArtifactsPackagesDir)**\*.nupkg" />
     <_DefaultItemsToSign Include="$(VisualStudioSetupOutputPath)**\*.vsix" />
     <_DefaultItemsToSign Include="$(VisualStudioBuildPackagesDir)**\*.nupkg" />
-    <!-- Sign wixpacks to correspond to msi/exe signing -->
-    <_ItemsToOnlySignPostBuild Include="$(ArtifactsPackagesDir)**\*.wixpack.zip" />
 
     <!-- If PostBuildSign == true, these are added to ItemsToSignPostBuild, otherwise these are added to ItemsToSign -->
     <ItemsToSign Include="@(_DefaultItemsToSign)" Condition="'$(PostBuildSign)' != 'true'" />
     <ItemsToSignPostBuild Include="@(_DefaultItemsToSign->'%(Filename)%(Extension)')" Condition="'$(PostBuildSign)' == 'true'" />
-    <ItemsToSignPostBuild Include="@(_ItemsToOnlySignPostBuild->'%(Filename)%(Extension)')" Condition="'$(PostBuildSign)' == 'true'" />
+  </ItemGroup>
 
+  <ItemGroup>
     <!-- Default certificate/strong-name to be used for all files with PKT=="31bf3856ad364e35". -->
     <StrongNameSignInfo Include="MsSharedLib72" PublicKeyToken="31bf3856ad364e35" CertificateName="Microsoft400" />
     <StrongNameSignInfo Include="SilverlightCert121" PublicKeyToken="7cec85d7bea7798e" CertificateName="Microsoft400" />
     <StrongNameSignInfo Include="StrongName" PublicKeyToken="b77a5c561934e089" CertificateName="Microsoft400" />
     <StrongNameSignInfo Include="StrongName" PublicKeyToken="b03f5f7f11d50a3a" CertificateName="Microsoft400" />
-    <StrongNameSignInfo Include="$(MSBuildThisFileDirectory)snk\Open.snk" PublicKeyToken="cc7b13ffcd2ddd51" CertificateName="Microsoft400" />
+    <!-- Do not include specific key files if full assembly signing is not supported, as they will not be usable when we sign. -->
+    <StrongNameSignInfo Include="$(MSBuildThisFileDirectory)snk\Open.snk" PublicKeyToken="cc7b13ffcd2ddd51" CertificateName="Microsoft400" Condition="'$(FullAssemblySigningSupported)' != 'false'" />
 
     <!--
       Map of file extensions to default certificate name. Files with these extensions are
@@ -34,12 +50,15 @@
       a public key token.
       The certificate can be overriden using the StrongNameSignInfo or the FileSignInfo item group.
     -->
+    <FileExtensionSignInfo Include=".deb" CertificateName="LinuxSign" />
     <FileExtensionSignInfo Include=".jar" CertificateName="MicrosoftJARSHA2" />
     <FileExtensionSignInfo Include=".js;.ps1;.psd1;.psm1;.psc1;.py" CertificateName="Microsoft400" />
     <FileExtensionSignInfo Include=".dll;.exe;.mibc" CertificateName="Microsoft400" />
     <FileExtensionSignInfo Include=".nupkg" CertificateName="NuGet" />
     <FileExtensionSignInfo Include=".vsix" CertificateName="VsixSHA2" />
     <FileExtensionSignInfo Include=".zip" CertificateName="None" />
+    <FileExtensionSignInfo Include=".tgz" CertificateName="None" />
+    <FileExtensionSignInfo Include=".tar.gz" CertificateName="None" />
   </ItemGroup>
 
   <!-- The name of the .NET specific certificate, which is a general replacement for Microsoft400
@@ -64,6 +83,22 @@
     <NETCORE_ENGINEERING_TELEMETRY>Signing</NETCORE_ENGINEERING_TELEMETRY>
   </PropertyGroup>
 
+  <!-- Sign tool parallelism limits. These may be overridden by a repo. -->
+  <PropertyGroup>
+    <!-- Number of containers to repack in parallel -->
+    <SignToolRepackParallelism>16</SignToolRepackParallelism>
+    <!-- Maximum size in MB that a file may be before it is repacked serially -->
+    <SignToolRepackMaximumParallelFileSize>128</SignToolRepackMaximumParallelFileSize>
+  </PropertyGroup>
+
   <!-- Allow repository to customize signing configuration -->
   <Import Project="$(RepositoryEngineeringDir)Signing.props" Condition="Exists('$(RepositoryEngineeringDir)Signing.props')" />
+
+  <!-- Respect Artifact item repo extension point -->
+  <ItemGroup Condition="'@(Artifact)' != ''">
+    <!-- If PostBuildSign == true, these are added to ItemsToSignPostBuild, otherwise these are added to ItemsToSign -->
+    <ItemsToSign Include="@(Artifact)" Condition="'$(PostBuildSign)' != 'true'" />
+    <ItemsToSignPostBuild Include="@(Artifact->'%(Filename)%(Extension)')" Condition="'$(PostBuildSign)' == 'true'" />
+  </ItemGroup>
+
 </Project>

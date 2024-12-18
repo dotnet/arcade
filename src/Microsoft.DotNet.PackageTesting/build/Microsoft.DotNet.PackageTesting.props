@@ -2,30 +2,12 @@
 <Project>
 
   <PropertyGroup>
-    <DotNetPackageTestingAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\tools\net472\Microsoft.DotNet.PackageTesting.dll</DotNetPackageTestingAssembly>
-    <DotNetPackageTestingAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\tools\net8.0\Microsoft.DotNet.PackageTesting.dll</DotNetPackageTestingAssembly>
+    <DotNetPackageTestingAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\tools\netframework\Microsoft.DotNet.PackageTesting.dll</DotNetPackageTestingAssembly>
+    <DotNetPackageTestingAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\tools\net\Microsoft.DotNet.PackageTesting.dll</DotNetPackageTestingAssembly>
   </PropertyGroup>
 
   <UsingTask TaskName="GetCompatiblePackageTargetFrameworks" AssemblyFile="$(DotNetPackageTestingAssembly)" />
   <UsingTask TaskName="VerifyClosure" AssemblyFile="$(DotNetPackageTestingAssembly)" />
-  <UsingTask TaskName="VerifyTypes" AssemblyFile="$(DotNetPackageTestingAssembly)"/>
-
-  <ItemGroup>
-    <SupportedTestFramework Include="net6.0" />
-    <SupportedTestFramework Include="net7.0" />
-    <SupportedTestFramework Include="net8.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <SupportedTestFramework Include="netstandard2.0" />
-    <SupportedTestFramework Include="netstandard2.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <SupportedTestFramework Include="net462" />
-    <SupportedTestFramework Include="net471" />
-    <SupportedTestFramework Include="net472" />
-    <SupportedTestFramework Include="net48" />
-  </ItemGroup>
+  <UsingTask TaskName="VerifyTypes" AssemblyFile="$(DotNetPackageTestingAssembly)" />
 
 </Project>

@@ -38,12 +38,11 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
         [Required]
         public string OutputReportFile { get; set; }
 
-        private readonly string _preBuiltDocMessage = "See aka.ms/dotnet/prebuilts " +
+        private readonly string _preBuiltDocMessage = "See https://aka.ms/dotnet/prebuilts " +
             "for guidance on what pre-builts are and how to eliminate them.";
 
-        private readonly string _reviewRequestMessage = "Whenever altering this " +
-            "or other Source Build files, please include @dotnet/source-build-internal " +
-            "as a reviewer.";
+        private readonly string _reviewRequestMessage = "When altering this file or making " +
+            "other Source Build related changes, include @dotnet/source-build as a reviewer.";
 
         public override bool Execute()
         {

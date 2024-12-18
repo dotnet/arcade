@@ -1,5 +1,6 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project DefaultTargets="PublishPackagesToBlobFeed">
+
   <!--
     Publish targets:
       PublishPackagesToBlobFeed
@@ -42,13 +43,14 @@
   -->
   
   <PropertyGroup>
-    <_MicrosoftDotNetBuildTasksFeedTaskDir>$(MSBuildThisFileDirectory)../tools/net472/</_MicrosoftDotNetBuildTasksFeedTaskDir>
-    <_MicrosoftDotNetBuildTasksFeedTaskDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../tools/net8.0/</_MicrosoftDotNetBuildTasksFeedTaskDir>
+    <_MicrosoftDotNetBuildTasksFeedTaskDir>$(MSBuildThisFileDirectory)../tools/netframework/</_MicrosoftDotNetBuildTasksFeedTaskDir>
+    <_MicrosoftDotNetBuildTasksFeedTaskDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../tools/net/</_MicrosoftDotNetBuildTasksFeedTaskDir>
   </PropertyGroup>
 
-  <UsingTask TaskName="PushToAzureDevOpsArtifacts" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
+  <UsingTask TaskName="PushToBuildStorage" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
   <UsingTask TaskName="PublishArtifactsInManifest" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
   <UsingTask TaskName="CreateAzureDevOpsFeed" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" />
   <UsingTask TaskName="PublishSignedAssets" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" />
+  <UsingTask TaskName="CreateNewAzureContainer" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" />
 
 </Project>

@@ -10,12 +10,6 @@ references:
     parameters:
       subscription: a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1
       name: helixkv
-      
-  dotnetbuildskeys:
-    type: azure-key-vault
-    parameters:
-      subscription: 11c6037b-227b-4d63-bee1-18c7b68c3a40
-      name: dotnetbuildskeys
 
 secrets:
   BotAccount-dotnet-maestro-bot:
@@ -28,19 +22,7 @@ secrets:
     parameters:
       Name: dotnet-bot
 
-  #DotNet-Blob-Feed
-  dotnetfeed-storage-access-key-1:
-    type: azure-storage-key
-    parameters:
-      subscription: a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1
-      account: dotnetfeed
-
   #Publish-Build-Assets
-  MaestroAccessToken:
-    type: maestro-access-token
-    parameters:
-      environment: maestro-prod.westus2.cloudapp.azure.com
-
   BotAccount-dotnet-maestro-bot-PAT:
     type: github-access-token
     parameters:
@@ -64,22 +46,10 @@ secrets:
       organizations: dnceng
       scopes: build_execute code_write
 
-  akams:
-    type: github-oauth-secret
+  akams-client-id:
+    type: text
     parameters:
-      appName: akams
-      description: set to never expire
-
-  publishing-dnceng-devdiv-code-r-build-re:
-    type: azure-devops-access-token
-    parameters:
-      domainAccountName: dn-bot
-      domainAccountSecret:
-          location: helixkv
-          name: dn-bot-account-redmond
-      name: publishing-dnceng-devdiv-code
-      organizations: dnceng devdiv
-      scopes: code build_execute 
+      description: Client id for akams app
 
   dn-bot-dotnet-build-rw-code-rw:
     type: azure-devops-access-token
@@ -170,114 +140,42 @@ secrets:
           name: dn-bot-account-redmond
       name: dn-symweb-symbol-server-pat
       organizations: microsoft
-      scopes: symbols_write 
+      scopes: symbols_write
 
-  dotnetfeedmsrc-storage-access-key-1:
-    type: text
+  dnceng-symbol-server-pat:
+    type: azure-devops-access-token
     parameters:
-      description: Also located in dnceng-pipeline-secrets keyvault.
-      
-  dotnetfeedmsrc-private-feed-url:
-    type: text
-    parameters:
-      description: created manually from SAS in the format https://dotnetfeedmsrc.azurewebsites.net/sig/{sig}/se{se}
+      domainAccountName: dn-bot
+      domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+      name: dn-bot-dnceng-symbol-server-pat
+      organizations: dnceng
+      scopes: symbols_manage
 
-  dotnetfeedmsrc-connection-string:
-    type: azure-storage-connection-string
+  #OneLocBuildVariables
+  dn-bot-ceapex-package-r:
+    type: azure-devops-access-token
     parameters:
-      storageKeySecret: dotnetfeedmsrc-storage-access-key-1
-      account: dotnetfeedmsrc
+      domainAccountName: dn-bot
+      domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+      name: dn-bot-ceapex-package-r
+      organizations: ceapex
+      scopes: packaging
 
-  dotnetfeedmsrc-read-sas-token:
-    type: azure-storage-container-sas-token
+  # Token used for installing the Guardian CLI from the securitytools AzDO org
+  # The PAT is in the Guardian service connections in dnceng and devdiv:
+  # https://devdiv.visualstudio.com/DevDiv/_settings/adminservices?resourceId=e002c3af-b8a4-4ebe-816b-d4908648a66a
+  # https://dev.azure.com/dnceng/internal/_settings/adminservices?resourceId=d2604fd5-04f1-4957-afe3-3d3ea81a665b
+  dn-bot-securitytools-packaging-r:
+    type: azure-devops-access-token
     parameters:
-      connectionString: dotnetfeedmsrc-connection-string
-      permissions: r
-      container: $root
-
-  dotnetfeedmsrc-read-sas-token-base64:
-    type: base64-encoder
-    parameters:
-      secret: dotnetfeedmsrc-read-sas-token
-
-  dotnetclimsrc-access-key:
-    type: text
-    parameters:
-      description: Also located in dnceng-pipeline-secrets keyvault.
-
-  dotnetclimsrc-private-feed-url:
-    type: text
-    parameters:
-      description: created manually from SAS in the format https://dotnetclimsrc.azurewebsites.net/sig/{sig}/se{se}
-
-  dotnetclimsrc-connection-string:
-    type: azure-storage-connection-string
-    parameters:
-      storageKeySecret: dotnetclimsrc-access-key
-      account: dotnetclimsrc
-
-  dotnetclimsrc-read-sas-token:
-    type: azure-storage-container-sas-token
-    parameters:
-      connectionString: dotnetclimsrc-connection-string
-      permissions: rl
-      container: dotnet
-
-  dotnetclimsrc-read-sas-token-base64:
-    type: base64-encoder
-    parameters:
-      secret: dotnetclimsrc-read-sas-token
-
-  dotnetclichecksumsmsrc-storage-key:
-    type: text
-    parameters:
-      description: Also located in dnceng-pipeline-secrets keyvault.
-
-  dotnetclichecksumsmsrc-connection-string:
-    type: azure-storage-connection-string
-    parameters:
-      storageKeySecret: dotnetclichecksumsmsrc-storage-key
-      account: dotnetclichecksumsmsrc
-      
-  dotnetclichecksumsmsrc-dotnet-read-list-sas-token:
-    type: azure-storage-container-sas-token
-    parameters:
-      connectionString: dotnetclichecksumsmsrc-connection-string
-      permissions: rl
-      container: dotnet
-
-  dotnetbuilds-internal-container-read-token:
-    type: azure-storage-container-sas-token
-    parameters:
-      connectionString:
-        name: dotnetbuilds-connection-string
-        location: dotnetbuildskeys
-      permissions: rl
-      container: internal
-
-  dotnetbuilds-public-container-read-token:
-    type: azure-storage-container-sas-token
-    parameters:
-      connectionString:
-        name: dotnetbuilds-connection-string
-        location: dotnetbuildskeys
-      permissions: rl
-      container: public
-
-  dotnetbuilds-internal-checksums-container-read-token:
-    type: azure-storage-container-sas-token
-    parameters:
-      connectionString:
-        name: dotnetbuilds-connection-string
-        location: dotnetbuildskeys
-      permissions: rl
-      container: internal-checksums
-
-  dotnetbuilds-public-checksums-container-read-token:
-    type: azure-storage-container-sas-token
-    parameters:
-      connectionString:
-        name: dotnetbuilds-connection-string
-        location: dotnetbuildskeys
-      permissions: rl
-      container: public-checksums
+      domainAccountName: dn-bot
+      domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+      name: dn-bot-securitytools-packaging-r
+      organizations: securitytools
+      scopes: packaging

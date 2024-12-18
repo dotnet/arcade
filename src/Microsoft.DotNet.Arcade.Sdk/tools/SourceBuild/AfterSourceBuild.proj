@@ -1,5 +1,5 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
-<Project DefaultTargets="AfterSourceBuild">
+<Project DefaultTargets="AfterSourceBuildInnerBuild;AfterSourceBuild">
 
   <Import Project="..\BuildStep.props" />
 
@@ -11,8 +11,20 @@
 
   <Import Project="$(MicrosoftDotNetSourceBuildTasksBuildDir)Microsoft.DotNet.SourceBuild.Tasks.props" />
 
+  <Target Name="AfterSourceBuildInnerBuild"
+          Condition="'$(DotNetBuildInnerRepo)' == 'true' and
+                     '$(DotNetBuildOrchestrator)' == 'true'"
+          DependsOnTargets="CopyRepoSymbolsToIntermediates;ClearPreviousSBRP" />
+
+  <Target Name="ClearPreviousSBRP"
+          Condition="'$(GitHubRepositoryName)' == 'source-build-reference-packages'">
+    <!-- Building SBRP: At this point the References directory contains the previously-source-built SBRPs,
+         clear it before publishing current SBRPs.  This ensures n-1 SBRPs aren't required to build the product repos. -->
+    <RemoveDir Directories="$(ReferencePackageNupkgCacheDir)" />
+  </Target>
+
   <Target Name="AfterSourceBuild"
-          Condition="'$(ArcadeInnerBuildFromSource)' != 'true'"
+          Condition="'$(DotNetBuildInnerRepo)' != 'true'"
           DependsOnTargets="
             ReportPrebuiltUsage;
             PackSourceBuildIntermediateNupkgs" />
@@ -26,9 +38,9 @@
       <SourceBuiltPackageFiles Include="$(PreviouslySourceBuiltNupkgCacheDir)**/*.nupkg" Condition=" '$(PreviouslySourceBuiltNupkgCacheDir)' != '' " />
 
       <!-- Add some other potential top-level project directories for a more specific report. -->
-      <ProjectDirectories Include="$(CurrentRepoSourceBuildSourceDir)" />
+      <ProjectDirectories Include="$(CurrentRepoSourceBuildSourceDir)"  Condition="'$(UseInnerClone)' == 'true'" />
       <!-- Finally, scan entire source-build, in case project.assets.json ends up in an unexpected place. -->
-      <ProjectDirectories Include="$(SourceBuildSelfDir)" />
+      <ProjectDirectories Include="$(SourceBuildOutputDir)" />
     </ItemGroup>
 
     <PropertyGroup>
@@ -43,7 +55,7 @@
       PlatformsRuntimeJsonFiles="@(PlatformsRuntimeJsonFiles)"
       TargetRid="$(TargetRid)"
       ProjectDirectories="@(ProjectDirectories)"
-      RootDir="$(SourceBuildSelfDir)"
+      RootDir="$(SourceBuildOutputDir)"
       IgnoredProjectAssetsJsonFiles="@(IgnoredProjectAssetsJsonFiles)"
       DataFile="$(PackageReportDataFile)"
       ProjectAssetsJsonArchiveFile="$(ProjectAssetsJsonArchiveFile)" />
@@ -52,7 +64,7 @@
   <Target Name="ReportPrebuiltUsage"
           DependsOnTargets="WritePrebuiltUsageData">
     <PropertyGroup>
-      <FailOnPrebuiltBaselineError Condition="'$(FailOnPrebuiltBaselineError)' == ''">false</FailOnPrebuiltBaselineError>
+      <FailOnPrebuiltBaselineError Condition="'$(FailOnPrebuiltBaselineError)' == ''">true</FailOnPrebuiltBaselineError>
     </PropertyGroup>
 
     <WriteUsageReports
@@ -65,6 +77,7 @@
       <ContinueOnPrebuiltBaselineError Condition="'$(FailOnPrebuiltBaselineError)' != 'true'">true</ContinueOnPrebuiltBaselineError>
     </PropertyGroup>
 
+    <!-- Usage of prebuilts against the baseline is not reported outside of source-only builds. -->
     <ValidateUsageAgainstBaseline
       DataFile="$(PackageReportDataFile)"
       BaselineDataFile="$(PrebuiltBaselineDataFile)"
@@ -72,7 +85,7 @@
       OutputBaselineFile="$(SourceBuildSelfPrebuiltReportDir)generated-new-baseline.xml"
       OutputReportFile="$(SourceBuildSelfPrebuiltReportDir)baseline-comparison.xml"
       ContinueOnError="$(ContinueOnPrebuiltBaselineError)"
-      Condition="'$(DotNetBuildFromSourceFlavor)' != 'Product'" />
+      Condition="'$(DotNetBuildOrchestrator)' != 'true' and '$(DotNetBuildSourceOnly)' == 'true'" />
   </Target>
 
   <!--
@@ -120,6 +133,7 @@
     necessary) for dependency transport to downstream repos.
   -->
   <Target Name="PackSourceBuildIntermediateNupkgs"
+          Condition="'$(CreateIntermediatePackage)' == 'true'"
           DependsOnTargets="
             CopyIntermediateNupkgProjToProjectDirectory;
             GetLicenseFileForIntermediateNupkgPack;

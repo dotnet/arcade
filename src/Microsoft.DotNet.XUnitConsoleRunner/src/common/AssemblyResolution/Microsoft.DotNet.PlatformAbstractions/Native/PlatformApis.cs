@@ -1,5 +1,5 @@
-// Copyright (c) .NET Foundation and contributors. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
 using System.IO;
@@ -17,6 +17,7 @@ namespace Internal.Microsoft.DotNet.PlatformAbstractions.Native
 
         private static readonly Lazy<Platform> _platform = new Lazy<Platform>(DetermineOSPlatform);
         private static readonly Lazy<DistroInfo> _distroInfo = new Lazy<DistroInfo>(LoadDistroInfo);
+        private static readonly char[] _idTrimChars = [ '"', '\'' ];
 
         public static string GetOSName()
         {
@@ -105,11 +106,11 @@ namespace Internal.Microsoft.DotNet.PlatformAbstractions.Native
                 {
                     if (line.StartsWith("ID=", StringComparison.Ordinal))
                     {
-                        result.Id = line.Substring(3).Trim('"', '\'');
+                        result.Id = line.Substring(3).Trim(_idTrimChars);
                     }
                     else if (line.StartsWith("VERSION_ID=", StringComparison.Ordinal))
                     {
-                        result.VersionId = line.Substring(11).Trim('"', '\'');
+                        result.VersionId = line.Substring(11).Trim(_idTrimChars);
                     }
                 }
 

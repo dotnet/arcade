@@ -1,5 +1,11 @@
+#pragma warning disable CA1052 // Static holder types should be static
+#pragma warning disable IDE0161 // Convert to file-scoped namespace
+
 #if XUNIT_NULLABLE
 #nullable enable
+#else
+// In case this is source-imported with global nullable enabled but no XUNIT_NULLABLE
+#pragma warning disable CS8625
 #endif
 
 using Xunit.Sdk;
@@ -23,13 +29,11 @@ namespace Xunit
 		/// <param name="condition">The condition to be tested</param>
 		/// <exception cref="FalseException">Thrown if the condition is not false</exception>
 #if XUNIT_NULLABLE
-		public static void False([DoesNotReturnIf(parameterValue: true)] bool condition)
+		public static void False([DoesNotReturnIf(parameterValue: true)] bool condition) =>
 #else
-		public static void False(bool condition)
+		public static void False(bool condition) =>
 #endif
-		{
 			False((bool?)condition, null);
-		}
 
 		/// <summary>
 		/// Verifies that the condition is false.
@@ -37,13 +41,11 @@ namespace Xunit
 		/// <param name="condition">The condition to be tested</param>
 		/// <exception cref="FalseException">Thrown if the condition is not false</exception>
 #if XUNIT_NULLABLE
-		public static void False([DoesNotReturnIf(parameterValue: true)] bool? condition)
+		public static void False([DoesNotReturnIf(parameterValue: true)] bool? condition) =>
 #else
-		public static void False(bool? condition)
+		public static void False(bool? condition) =>
 #endif
-		{
 			False(condition, null);
-		}
 
 		/// <summary>
 		/// Verifies that the condition is false.
@@ -77,7 +79,7 @@ namespace Xunit
 #endif
 		{
 			if (!condition.HasValue || condition.GetValueOrDefault())
-				throw new FalseException(userMessage, condition);
+				throw FalseException.ForNonFalseValue(userMessage, condition);
 		}
 
 		/// <summary>
@@ -86,13 +88,11 @@ namespace Xunit
 		/// <param name="condition">The condition to be inspected</param>
 		/// <exception cref="TrueException">Thrown when the condition is false</exception>
 #if XUNIT_NULLABLE
-		public static void True([DoesNotReturnIf(parameterValue: false)] bool condition)
+		public static void True([DoesNotReturnIf(parameterValue: false)] bool condition) =>
 #else
-		public static void True(bool condition)
+		public static void True(bool condition) =>
 #endif
-		{
 			True((bool?)condition, null);
-		}
 
 		/// <summary>
 		/// Verifies that an expression is true.
@@ -100,13 +100,11 @@ namespace Xunit
 		/// <param name="condition">The condition to be inspected</param>
 		/// <exception cref="TrueException">Thrown when the condition is false</exception>
 #if XUNIT_NULLABLE
-		public static void True([DoesNotReturnIf(parameterValue: false)] bool? condition)
+		public static void True([DoesNotReturnIf(parameterValue: false)] bool? condition) =>
 #else
-		public static void True(bool? condition)
+		public static void True(bool? condition) =>
 #endif
-		{
 			True(condition, null);
-		}
 
 		/// <summary>
 		/// Verifies that an expression is true.
@@ -140,7 +138,7 @@ namespace Xunit
 #endif
 		{
 			if (!condition.HasValue || !condition.GetValueOrDefault())
-				throw new TrueException(userMessage, condition);
+				throw TrueException.ForNonTrueValue(userMessage, condition);
 		}
 	}
 }

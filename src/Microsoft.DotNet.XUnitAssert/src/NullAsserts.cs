@@ -1,3 +1,8 @@
+#pragma warning disable CA1052 // Static holder types should be static
+#pragma warning disable CA1720 // Identifier contains type name
+#pragma warning disable IDE0046 // Convert to conditional expression
+#pragma warning disable IDE0161 // Convert to file-scoped namespace
+
 #if XUNIT_NULLABLE
 #nullable enable
 #endif
@@ -29,7 +34,27 @@ namespace Xunit
 #endif
 		{
 			if (@object == null)
-				throw new NotNullException();
+				throw NotNullException.ForNullValue();
+		}
+
+		/// <summary>
+		/// Verifies that a nullable struct value is not null.
+		/// </summary>
+		/// <typeparam name="T">The type of the struct</typeparam>
+		/// <param name="value">The value to e validated</param>
+		/// <returns>The non-<c>null</c> value</returns>
+		/// <exception cref="NotNullException">Thrown when the value is null</exception>
+#if XUNIT_NULLABLE
+		public static T NotNull<T>([NotNull] T? value)
+#else
+		public static T NotNull<T>(T? value)
+#endif
+			where T : struct
+		{
+			if (!value.HasValue)
+				throw NotNullException.ForNullStruct(typeof(T));
+
+			return value.Value;
 		}
 
 		/// <summary>
@@ -44,7 +69,24 @@ namespace Xunit
 #endif
 		{
 			if (@object != null)
-				throw new NullException(@object);
+				throw NullException.ForNonNullValue(@object);
+		}
+
+		/// <summary>
+		/// Verifies that a nullable struct value is null.
+		/// </summary>
+		/// <param name="value">The value to be inspected</param>
+		/// <exception cref="NullException">Thrown when the value is not null</exception>
+		public static void Null<[DynamicallyAccessedMembers(
+					DynamicallyAccessedMemberTypes.PublicFields
+					| DynamicallyAccessedMemberTypes.NonPublicFields
+					| DynamicallyAccessedMemberTypes.PublicProperties
+					| DynamicallyAccessedMemberTypes.NonPublicProperties
+					| DynamicallyAccessedMemberTypes.PublicMethods)] T>(T? value)
+			where T : struct
+		{
+			if (value.HasValue)
+				throw NullException.ForNonNullStruct(typeof(T), value);
 		}
 	}
 }

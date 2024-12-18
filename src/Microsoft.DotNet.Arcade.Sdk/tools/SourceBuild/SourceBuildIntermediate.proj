@@ -53,8 +53,11 @@
   <Target Name="GetIntermediateNupkgArtifactFiles"
           DependsOnTargets="
             GetCategorizedIntermediateNupkgContents;
+            CreateRepoSymbolsArchive;
             GetSupplementalIntermediateNupkgManifest;
-            CreateNonShippingNupkgList"
+            GetNonShippingNupkgList;
+            CreateRepoManifest;
+            IncludeRepoManifestInIntermediatePackage"
           BeforeTargets="_GetPackageFiles">
     <ItemGroup>
       <Content Include="@(IntermediatePackageFile->WithMetadataValue('Category', '$(SupplementalIntermediateNupkgCategory)'))" />
@@ -80,19 +83,9 @@
   </Target>
 
   <!-- Create a list of non-shipping packages and include it in the intermediate package. -->
-  <Target Name="CreateNonShippingNupkgList"
-          Condition="'@(IntermediateNonShippingNupkgFile)' != ''">
-    <PropertyGroup>
-      <!-- The prefix needs to match what's defined in tarball source-build infra. Consider using a single property, in the future. -->
-      <NonShippingPackagesListPrefix>NonShipping.Packages.</NonShippingPackagesListPrefix>
-      <NonShippingPackagesList>$(CurrentRepoSourceBuildArtifactsPackagesDir)$(NonShippingPackagesListPrefix)$(GitHubRepositoryName).lst</NonShippingPackagesList>
-    </PropertyGroup>
-
-    <WriteLinesToFile
-      File="$(NonShippingPackagesList)"
-      Lines="@(IntermediateNonShippingNupkgFile->'%(Filename)%(Extension)')"
-      Overwrite="true" />
-
+  <Target Name="GetNonShippingNupkgList"
+          Condition="'$(NonShippingPackagesList)' != ''"
+          DependsOnTargets="GetCategorizedIntermediateNupkgContents">
     <ItemGroup>
       <!-- The list of non-shipping packages goes into the "main" intermediate nupkg. -->
       <Content Include="$(NonShippingPackagesList)" PackagePath="." />

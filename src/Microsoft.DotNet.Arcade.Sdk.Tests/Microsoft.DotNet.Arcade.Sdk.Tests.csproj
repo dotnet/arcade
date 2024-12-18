@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(NetCurrent)</TargetFramework>
+    <TargetFramework>$(NetToolCurrent)</TargetFramework>
     <DefaultItemExcludes>$(DefaultItemExcludes);testassets\**\*</DefaultItemExcludes>
   </PropertyGroup>
 
@@ -13,11 +13,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
-    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
-    <PackageReference Include="Moq" Version="$(MoqVersion)" />
+    <PackageReference Include="Microsoft.Build" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" />
+    <PackageReference Include="Moq" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(RepositoryEngineeringDir)common\**\*" LinkBase="testassets\boilerplate\eng\common\" CopyToOutputDirectory="PreserveNewest" />

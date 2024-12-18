@@ -9,6 +9,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
     internal static class DefaultValues
     {
         /// <summary>
+        /// Prefix used in Visual Studio for SWIX based package group.
+        /// </summary>
+        public const string PackageGroupPrefix = "PackageGroup";
+
+        /// <summary>
         /// The default category to assign to a SWIX component. The value is used
         /// to group individual components in Visual Studio Installer.
         /// </summary>
@@ -38,5 +43,20 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// A value indicating that the SWIX project creates a component package for a workload. 
         /// </summary>
         public static readonly string PackageTypeComponent = "component";
+
+        /// <summary>
+        /// A value indicating that the SWIX project creates a package group for a workload manifest. 
+        /// </summary>
+        public static readonly string PackageTypeManifestPackageGroup = "manifest-package-group";
+
+        /// <summary>
+        /// A value indicating that the SWIX project creates a package group for a workload manifest. 
+        /// </summary>
+        public static readonly string PackageTypeWorkloadSetPackageGroup = "workloadset-package-group";
+
+        /// <summary>
+        /// A value indicating that the SWIX project creates an MSI package for a workload set.
+        /// </summary>
+        public static readonly string PackageTypeMsiWorkloadSet = "msi-workload-set";
     }
 }
