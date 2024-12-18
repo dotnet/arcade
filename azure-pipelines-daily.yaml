@@ -19,10 +19,8 @@ stages:
         demands: ImageOverride -equals 1es-windows-2022
 
       steps:
-      - task: CmdLine@2
+      - script: restore.cmd -ci
         displayName: Run restore.cmd
-        inputs:
-          script: "restore.cmd"
 
       - task: UseDotNet@2
         displayName: Install .NET 6 runtime
