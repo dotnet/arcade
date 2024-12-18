@@ -417,7 +417,7 @@ namespace Microsoft.DotNet.SignTool
                 DataFile = new TaskItem(dataArchive)
             };
 
-            if (false == createDebPackageTask.Execute())
+            if (!createDebPackageTask.Execute())
             {
                 log.LogError($"Failed to create new DEB package: {FileSignInfo.FileName}");
             }
