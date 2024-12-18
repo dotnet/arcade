@@ -460,7 +460,7 @@ namespace Microsoft.DotNet.SignTool
                             .Select(f => new TaskItem(f)).ToArray()
             };
 
-            if (false == createMD5SumsFileTask.Execute())
+            if (!createMD5SumsFileTask.Execute())
             {
                 throw new Exception($"Failed to create MD5 checksums file for: {FileSignInfo.FileName}");
             }
