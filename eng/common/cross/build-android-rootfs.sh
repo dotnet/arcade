@@ -142,10 +142,5 @@ cp -R "$__TmpDir/data/data/com.termux/files/usr/"* "$__ToolchainDir/$__SysRoot/u
 echo "Generating platform file..."
 echo "RID=android.${__ApiLevel}-${__BuildArch}" > $__ToolchainDir/$__SysRoot/android_platform
 
-echo "Now to build coreclr, libraries and installers; run:"
-echo ROOTFS_DIR=$(realpath $__ToolchainDir/$__SysRoot) ./build.sh --cross --arch $__BuildArch \
-    --subsetCategory coreclr
-echo ROOTFS_DIR=$(realpath $__ToolchainDir/$__SysRoot) ./build.sh --cross --arch $__BuildArch \
-    --subsetCategory libraries
-echo ROOTFS_DIR=$(realpath $__ToolchainDir/$__SysRoot) ./build.sh --cross --arch $__BuildArch \
-    --subsetCategory installer
+echo "Now to build coreclr, libraries and host; run:"
+echo ROOTFS_DIR=$(realpath $__ToolchainDir/$__SysRoot) ./build.sh clr+libs+host --cross --arch $__BuildArch
