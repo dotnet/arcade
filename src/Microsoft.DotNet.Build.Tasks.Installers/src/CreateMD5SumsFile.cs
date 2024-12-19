@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 using FileStream fileStream = File.OpenRead(file.ItemSpec);
                 installedSize += (ulong)fileStream.Length;
                 byte[] hash = md5.ComputeHash(fileStream);
-                string relativePath = file.ItemSpec.Substring(RootDirectory.Length).TrimStart(Path.DirectorySeparatorChar);
+                string relativePath = file.ItemSpec.Substring(RootDirectory.Length).TrimStart(Path.DirectorySeparatorChar).Replace('\\', '/');
                 // Always use Linux line-endings
 #if NET
                 writer.Write($"{Convert.ToHexString(hash)} {relativePath}\n");

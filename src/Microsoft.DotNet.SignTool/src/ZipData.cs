@@ -488,7 +488,7 @@ namespace Microsoft.DotNet.SignTool
             return controlArchive;
         }
 
-        private static void ExtractTarballContents(string file, string destination, bool skipSymlinks = true)
+        internal static void ExtractTarballContents(string file, string destination, bool skipSymlinks = true)
         {
             foreach (TarEntry tar in ReadTarGZipEntries(file))
             {
@@ -506,7 +506,7 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
-        private static IEnumerable<(string relativePath, Stream content, long contentSize)> ReadDebContainerEntries(string archivePath, string match = null)
+        internal static IEnumerable<(string relativePath, Stream content, long contentSize)> ReadDebContainerEntries(string archivePath, string match = null)
         {
             using var archive = new ArReader(File.OpenRead(archivePath), leaveOpen: false);
 
