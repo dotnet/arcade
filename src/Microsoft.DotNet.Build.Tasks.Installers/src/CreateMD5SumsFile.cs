@@ -39,10 +39,11 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 installedSize += (ulong)fileStream.Length;
                 byte[] hash = md5.ComputeHash(fileStream);
                 string relativePath = file.ItemSpec.Substring(RootDirectory.Length).TrimStart(Path.DirectorySeparatorChar);
+                // Always use Linux line-endings
 #if NET
-                writer.WriteLine($"{Convert.ToHexString(hash)} {relativePath}");
+                writer.Write($"{Convert.ToHexString(hash)} {relativePath}\n");
 #else
-                writer.WriteLine($"{BitConverter.ToString(hash).Replace("-", "")} {relativePath}");
+                writer.Write($"{BitConverter.ToString(hash).Replace("-", "")} {relativePath}\n");
 #endif
             }
 
