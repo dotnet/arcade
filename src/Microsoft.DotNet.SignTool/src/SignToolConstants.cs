@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -117,11 +118,16 @@ namespace Microsoft.DotNet.SignTool
 
         /// <summary>
         /// List of known signable extensions for OSX files.
+        /// We only consider these signable on an OSX platform
         /// </summary>
-        public static readonly HashSet<string> SignableOSXExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ".pkg"
-        };
+        public static readonly HashSet<string> SignableOSXExtensions =
+            RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
+                ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    ".pkg",
+                    ".app",
+                }
+                : new HashSet<string>();
 
         /// <summary>
         /// Attribute for the CollisionPriorityId
