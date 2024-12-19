@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             NormalizeParameters();
             var feeds = new List<ITaskItem>();
             feeds.Add(new MSBuild.TaskItem("https://dotnetcli.azureedge.net/dotnet"));
-            feeds.Add(new MSBuild.TaskItem("https://dotnetbuilds.azureedge.net/public"));
+            feeds.Add(new MSBuild.TaskItem("https://ci.dot.net/public"));
             if (AdditionalFeeds != null)
             {
                 feeds.AddRange(AdditionalFeeds);
