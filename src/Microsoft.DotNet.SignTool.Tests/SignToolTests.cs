@@ -14,6 +14,7 @@ using Xunit;
 using Xunit.Abstractions;
 using FluentAssertions;
 using System.Security.Cryptography;
+using NuGet.Packaging;
 
 namespace Microsoft.DotNet.SignTool.Tests
 {
@@ -2378,19 +2379,20 @@ $@"
         [MemberData(nameof(GetSignableExtensions))]
         public void MissingCertificateNameButExtensionIsIgnored(string extension)
         {
-            var needContent = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            var needContent = new Dictionary<string, (string, string[])>(StringComparer.OrdinalIgnoreCase)
             {
-                { ".dll", "EmptyPKT.dll" },
-                { ".vsix", "Simple.vsix" },
-                { ".nupkg", "Simple.nupkg" },
-                { ".exe", "Simple.exe" },
-                { ".deb", "test.deb" }
+                { ".dll", ("EmptyPKT.dll", []) },
+                { ".vsix", ("Simple.vsix", []) },
+                { ".nupkg", ("Simple.nupkg", []) },
+                { ".exe", ("Simple.exe", []) },
+                { ".deb", ("test.deb", [".dll"]) }
             };
 
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
 
-            var inputFilePath = needContent.TryGetValue(extension, out var resourcePath) ?
-                GetResourcePath(resourcePath) :
+            needContent.TryGetValue(extension, out (string ResourcePath, string[] AdditionalExtensions) value);
+            var inputFilePath = value.ResourcePath != null ?
+                GetResourcePath(value.ResourcePath) :
                 CreateTestResource("test" + extension);
 
             var itemsToSign = new ITaskItem[]
@@ -2398,11 +2400,21 @@ $@"
                 new TaskItem(inputFilePath)
             };
 
+            var extensionSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { extension, new List<SignInfo> { SignInfo.Ignore } }
+            };
+
+            foreach (var additionalExtension in value.AdditionalExtensions ?? [])
+            {
+                extensionSignInfo.Add(additionalExtension, new List<SignInfo> { SignInfo.Ignore });
+            }
+
             new Configuration(_tmpDir,
                 itemsToSign,
                 new Dictionary<string, List<SignInfo>>(),
                 new Dictionary<ExplicitCertificateKey, string>(),
-                new Dictionary<string, List<SignInfo>>() { { extension, new List<SignInfo> { SignInfo.Ignore } } },
+                extensionSignInfo,
                 new ITaskItem[0],
                 tarToolPath: s_tarToolPath,
                 task.Log)
