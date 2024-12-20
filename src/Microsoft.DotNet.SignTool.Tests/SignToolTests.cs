@@ -2383,7 +2383,8 @@ $@"
                 { ".dll", "EmptyPKT.dll" },
                 { ".vsix", "Simple.vsix" },
                 { ".nupkg", "Simple.nupkg" },
-                { ".exe", "Simple.exe" }
+                { ".exe", "Simple.exe" },
+                { ".deb", "test.deb" }
             };
 
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
