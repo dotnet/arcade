@@ -14,7 +14,6 @@ using Xunit;
 using Xunit.Abstractions;
 using FluentAssertions;
 using System.Security.Cryptography;
-using NuGet.Packaging;
 
 namespace Microsoft.DotNet.SignTool.Tests
 {
