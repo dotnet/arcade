@@ -218,11 +218,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             .Where(blob => blob != null);
                     }
 
-                    // Filter out any "Internal" artifacts from the asset manifest.
-                    // We don't want to publish these outside of the build, so we exclude them from the manifest but still publish them.
-                    // We obviously want to include "External" artifacts as they are the ones we want to publish externally.
-                    packageArtifacts = packageArtifacts.Where(p => p.Visibility != ArtifactVisibility.Internal);
-                    blobArtifacts = blobArtifacts.Where(p => p.Visibility != ArtifactVisibility.Internal);
 
                     if (!PushToLocalStorage)
                     {
@@ -230,8 +225,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         // Outside the VMR, we publish to Azure DevOps artifacts storage.
                         // "Vertical" artifacts should only ever be available within a build on a single machine, and should never be uploaded
                         // to Azure DevOps artifacts storage.
-                        packageArtifacts = packageArtifacts.Where(p => p.Visibility != ArtifactVisibility.Vertical);
-                        blobArtifacts = blobArtifacts.Where(p => p.Visibility != ArtifactVisibility.Vertical);
+                        //
+                        // Inside the VMR, we also want to include "Internal" artifacts in the build manifest, as they are used by other jobs
+                        // so we want to inclue them here so they can be in the vertical's final manifest.
+                        // The VMR tooling to produce the final merged manifest for the VMR build as a whole will filter them out.
+                        // Outside the VMR, we don't want to include "Internal" artifacts in the build manifest, as they are only used by other jobs
+                        // and they will be pulled down by the other jobs within the repo by its own tooling. Since the artifacts would be
+                        // only from the same repository, the versions of them can be determined by that repository's infrastructure without much issue.
+                        packageArtifacts = packageArtifacts.Where(p => p.Visibility == ArtifactVisibility.External);
+                        blobArtifacts = blobArtifacts.Where(p => p.Visibility == ArtifactVisibility.External);
                     }
 
                     PublishingInfraVersion targetPublishingVersion = PublishingInfraVersion.Latest;
