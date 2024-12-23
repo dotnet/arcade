@@ -333,7 +333,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private static ArtifactVisibility[] GetVisibilitiesToPublish(ITaskItem[] allowedVisibilities)
         {
-            if (allowedVisibilities is null or [])
+            if (allowedVisibilities is null || allowedVisibilities.Length == 0)
             {
                 return [ArtifactVisibility.External];
             }
