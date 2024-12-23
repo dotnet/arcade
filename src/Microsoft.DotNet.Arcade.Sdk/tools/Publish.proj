@@ -43,6 +43,17 @@
     <PushToLocalStorage>true</PushToLocalStorage>
   </PropertyGroup>
 
+  <!--
+    Inside the VMR, we want to include "Vertical" artifacts as they should be available to other builds within the same
+    vertical on the same build machine.
+    Inside the VMR, we also want to include "Internal" artifacts in the build manifest, as they are used by other jobs
+    so we want to inclue them here so they can be in the vertical's final manifest.
+    The VMR tooling to produce the final merged manifest for the VMR build as a whole will filter them out.
+  -->
+  <ItemGroup Condition="'$(DotNetBuildPhase)' == 'InnerRepo' and '$(DotNetBuildOrchestrator)' == 'true'">
+    <ArtifactVisibilityToPublish Include="Vertical;Internal;External" />
+  </ItemGroup>
+
   <!-- Required to determine whether full assembly strong name signing is supported, which may affect selection of some certificates. -->
   <Import Project="StrongName.targets" />
   <Import Project="Sign.props" />
@@ -272,7 +283,8 @@
       AssetsLocalStorageDir="$(SourceBuiltAssetsDir)"
       ShippingPackagesLocalStorageDir="$(SourceBuiltShippingPackagesDir)"
       NonShippingPackagesLocalStorageDir="$(SourceBuiltNonShippingPackagesDir)"
-      AssetManifestsLocalStorageDir="$(SourceBuiltAssetManifestsDir)" />
+      AssetManifestsLocalStorageDir="$(SourceBuiltAssetManifestsDir)"
+      ArtifactVisibilitiesToPublish="@(ArtifactVisibilityToPublish)" />
 
     <!-- 
         Publish Windows PDBs produced by SymStore.targets (by default, only shipping PDBs are placed there).
