@@ -8,6 +8,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
+using System.Threading;
 using Azure.Core;
 using Azure.Identity;
 
@@ -16,20 +18,41 @@ namespace Microsoft.DotNet.ArcadeAzureIntegration;
 
 // This implementation of TokenCredential will try to cover all common ways of
 // authentication to Azure services used in Arcade tooling
-public class DefaultIdentityTokenCredential : ChainedTokenCredential
+public class DefaultIdentityTokenCredential : TokenCredential
 {
+    private readonly TokenCredential _tokenCredential;
+
     public DefaultIdentityTokenCredential()
         : this(new DefaultIdentityTokenCredentialOptions())
     {
     }
 
     public DefaultIdentityTokenCredential(DefaultIdentityTokenCredentialOptions options)
-        : base(CreateAvailableTokenCredentials(options))
     {
+        _tokenCredential = CreateAvailableTokenCredential(options);
     }
 
-    private static TokenCredential[] CreateAvailableTokenCredentials(DefaultIdentityTokenCredentialOptions options)
+    public override ValueTask<AccessToken> GetTokenAsync(TokenRequestContext requestContext, CancellationToken cancellationToken)
     {
+        return _tokenCredential.GetTokenAsync(requestContext, cancellationToken);
+    }
+    public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
+    {
+        return _tokenCredential.GetToken(requestContext, cancellationToken);
+    }
+
+    private static TokenCredential CreateAvailableTokenCredential(DefaultIdentityTokenCredentialOptions options)
+    {
+        var azurePipelinesCredential = GetAzurePipelinesCredentialForAzurePipelineTask();
+
+        if (options.UseAzurePipelineCredentialOnlyIfConfigured)
+        {
+            if (azurePipelinesCredential != null)
+            {
+                return azurePipelinesCredential;
+            }
+        }
+
         List<TokenCredential> tokenCredentials = [];
 
         // Add Managed Identity credential if the client id is provided
@@ -48,7 +71,6 @@ public class DefaultIdentityTokenCredential : ChainedTokenCredential
         }
 
         // Add Azure Pipelines credential if the environment variables are set
-        var azurePipelinesCredential = GetAzurePipelinesCredentialForAzurePipelineTask();
         if (azurePipelinesCredential != null)
         {
             tokenCredentials.Add(azurePipelinesCredential);
@@ -76,7 +98,8 @@ public class DefaultIdentityTokenCredential : ChainedTokenCredential
             throw new InvalidOperationException("No valid credential class detected and configured for authentication to Azure services.");
         }
 
-        return tokenCredentials.ToArray();
+        var ret = new ChainedTokenCredential(tokenCredentials.ToArray());
+        return ret;
     }
 
     private static object _workloadTokenFileLock = new object();
@@ -126,7 +149,8 @@ public class DefaultIdentityTokenCredential : ChainedTokenCredential
         if (!string.IsNullOrEmpty(systemAccessToken) &&
             !string.IsNullOrEmpty(clientId) &&
             !string.IsNullOrEmpty(tenantId) &&
-            !string.IsNullOrEmpty(serviceConnectionId))
+            !string.IsNullOrEmpty(serviceConnectionId) &&
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SYSTEM_OIDCREQUESTURI")))
         {
             return new AzurePipelinesCredential(tenantId, clientId, serviceConnectionId, systemAccessToken);
         }
