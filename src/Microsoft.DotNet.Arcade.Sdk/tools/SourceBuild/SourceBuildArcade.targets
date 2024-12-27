@@ -123,6 +123,7 @@
     
     <ItemGroup>
       <IntermediateNupkgFile Include="@(IntermediateNupkgArtifactFile)" PackagePath="artifacts" />
+      <IntermediateNupkgFile Remove="@(IntermediateNupkgFile)" Condition="'$(Version)' != '' and !$([System.Text.RegularExpressions.Regex]::Match(%(Identity),'$(Version)').Success)"/>
     </ItemGroup>
 
     <RemoveDuplicates Inputs="@(IntermediateNupkgFile)">
