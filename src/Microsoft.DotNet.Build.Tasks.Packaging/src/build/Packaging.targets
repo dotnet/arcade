@@ -678,7 +678,7 @@
     <CreateTrimDependencyGroups Dependencies="@(FilePackageDependency);@(Dependency)"
                       PackageIndexes="@(PackageIndex)"
                       Files="@(File)"
-                      Condition="'@(FilePackageDependency)' != '' AND '$(PackageTargetRuntime)' == '' AND '@(PackageIndex)' != ''">
+                      Condition="'@(FilePackageDependency)' != '' AND '$(PackageTargetRuntime)' == ''">
       <Output TaskParameter="TrimmedDependencies" ItemName="FilePackageDependency" />
     </CreateTrimDependencyGroups>
 
