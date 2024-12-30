@@ -35,6 +35,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         /// <summary>
         /// Package index files used to define stable package list.
         /// </summary>
+        [Required]
         public ITaskItem[] PackageIndexes
         {
             get;
