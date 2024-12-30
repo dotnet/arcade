@@ -53,7 +53,6 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 return true;
             }
 
-            var index = PackageIndex.Load(PackageIndexes.Select(pi => pi.GetMetadata("FullPath")));
             List<ITaskItem> updatedDependencies = new List<ITaskItem>();
 
             var suppressMetaPackages = new Dictionary<string, HashSet<string>>();
@@ -81,8 +80,12 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 }
             }
 
+            PackageIndex index = PackageIndexes != null && PackageIndexes.Length > 0 ?
+                PackageIndex.Load(PackageIndexes.Select(pi => pi.GetMetadata("FullPath"))) :
+                null;
+
             // We cannot add a dependency to a meta-package from a package that itself is part of the meta-package otherwise we create a cycle
-            var metaPackageThisPackageIsIn = index.MetaPackages.GetMetaPackageId(PackageId);
+            var metaPackageThisPackageIsIn = index?.MetaPackages?.GetMetaPackageId(PackageId);
             if (metaPackageThisPackageIsIn != null)
             {
                 suppressMetaPackages.Add(metaPackageThisPackageIsIn, new HashSet<string> { "All" } );
@@ -93,12 +96,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
             foreach (var originalDependency in OriginalDependencies)
             {
-                var metaPackage = index.MetaPackages.GetMetaPackageId(originalDependency.ItemSpec);
-
-                // convert to meta-package dependency
-                var tfm = originalDependency.GetMetadata("TargetFramework");
-                var fx = NuGetFramework.Parse(tfm);
-
+                var metaPackage = index?.MetaPackages?.GetMetaPackageId(originalDependency.ItemSpec);
                 if (metaPackage != null && !ShouldSuppressMetapackage(suppressMetaPackages, metaPackage, fx))
                 {
                     HashSet<NuGetFramework> metaPackageFrameworks;
@@ -107,6 +105,10 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                     {
                         metaPackagesToAdd[metaPackage] = metaPackageFrameworks = new HashSet<NuGetFramework>();
                     }
+
+                    // convert to meta-package dependency
+                    var tfm = originalDependency.GetMetadata("TargetFramework");
+                    var fx = NuGetFramework.Parse(tfm);
 
                     metaPackageFrameworks.Add(fx);
                 }

@@ -35,7 +35,6 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         /// <summary>
         /// Package index files used to define stable package list.
         /// </summary>
-        [Required]
         public ITaskItem[] PackageIndexes
         {
             get;
@@ -54,12 +53,12 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         reduce the set of frameworks to the minimum set of frameworks which is compatible (preferring inbox frameworks. */
         public override bool Execute()
         {
-            if (null == Dependencies)
+            if (Dependencies == null)
             {
                 Log.LogError("Dependencies argument must be specified");
                 return false;
             }
-            if (PackageIndexes == null && PackageIndexes.Length == 0)
+            if (PackageIndexes == null || PackageIndexes.Length == 0)
             {
                 Log.LogError("PackageIndexes argument must be specified");
                 return false;
