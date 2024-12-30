@@ -97,6 +97,11 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             foreach (var originalDependency in OriginalDependencies)
             {
                 var metaPackage = index?.MetaPackages?.GetMetaPackageId(originalDependency.ItemSpec);
+
+                // convert to meta-package dependency
+                var tfm = originalDependency.GetMetadata("TargetFramework");
+                var fx = NuGetFramework.Parse(tfm);
+
                 if (metaPackage != null && !ShouldSuppressMetapackage(suppressMetaPackages, metaPackage, fx))
                 {
                     HashSet<NuGetFramework> metaPackageFrameworks;
@@ -105,10 +110,6 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                     {
                         metaPackagesToAdd[metaPackage] = metaPackageFrameworks = new HashSet<NuGetFramework>();
                     }
-
-                    // convert to meta-package dependency
-                    var tfm = originalDependency.GetMetadata("TargetFramework");
-                    var fx = NuGetFramework.Parse(tfm);
 
                     metaPackageFrameworks.Add(fx);
                 }
