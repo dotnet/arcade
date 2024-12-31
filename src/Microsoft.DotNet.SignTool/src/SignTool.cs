@@ -187,7 +187,7 @@ namespace Microsoft.DotNet.SignTool
 
         protected bool LocalStrongNameSign(FileSignInfo file)
         {
-            _log.LogMessage($"Strong-name signing {file.FullPath} locally with {file.SignInfo.StrongName}.");
+            _log.LogMessage($"Strong-name signing '{file.FullPath}' locally with key '{file.SignInfo.StrongName}'.");
 
             return StrongName.Sign(file.FullPath, file.SignInfo.StrongName, _args.SNBinaryPath, _log);
         }
