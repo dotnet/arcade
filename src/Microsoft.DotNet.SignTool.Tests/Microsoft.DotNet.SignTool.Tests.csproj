@@ -8,7 +8,6 @@
     <PackageReference Include="FluentAssertions" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" />
     <PackageReference Include="Microsoft.Build.Framework" />
-    <PackageReference Include="sn" GeneratePathProperty="true" />
   </ItemGroup>
 
   <ItemGroup>
@@ -26,6 +25,7 @@
 
   <ItemGroup>
     <PackageDownload Include="Microsoft.Signed.Wix" Version="[$(MicrosoftSignedWixVersion)]" />
+    <PackageDownload Include="sn" Version="[$(SNVersion)]" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,27 +34,26 @@
     <Content Include="$(NuGetPackageRoot)microsoft.signed.wix\$(MicrosoftSignedWixVersion)\tools\**"
              CopyToOutputDirectory="Always"
              Link="tools\wix\%(RecursiveDir)%(Filename)%(Extension)" />
+    <_SnToolFiles Include="$(NuGetPackageRoot)sn\$(SNVersion)\sn.exe.*" />
+    <_SnToolFiles Include="$(NuGetPackageRoot)sn\$(SNVersion)\1033\*" />
+
+    <Content Include="$(NuGetPackageRoot)sn\$(SNVersion)\sn.exe.*"
+               CopyToOutputDirectory="PreserveNewest"
+               Link="tools\sn\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Content Include="$(NuGetPackageRoot)sn\$(SNVersion)\1033\*"
+               CopyToOutputDirectory="PreserveNewest"
+               Link="tools\sn\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
-  <Target Name="_CopyTarTool" AfterTargets="ResolveProjectReferences" >
+  <Target Name="_CopyTarTool" AfterTargets="ResolveProjectReferences">
     <PropertyGroup>
       <_TarToolPattern>@(_TarToolPath->'%(RootDir)%(Directory)')**\*.*</_TarToolPattern>
     </PropertyGroup>
     <ItemGroup>
-      <_TarToolFiles Include="$(_TarToolPattern)"/>
+      <_TarToolFiles Include="$(_TarToolPattern)" />
     </ItemGroup>
     <ItemGroup>
-      <Content Include="@(_TarToolFiles)" CopyToOutputDirectory="PreserveNewest" Link="tools\tar\%(RecursiveDir)%(Filename)%(Extension)"/>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="_CopySnTool" AfterTargets="ResolveProjectReferences">
-    <ItemGroup>
-      <_SnToolFiles Include="$(Pkgsn)\sn.exe.*"/>
-      <_SnToolFiles Include="$(Pkgsn)\1033\*"/>
-    </ItemGroup>
-    <ItemGroup>
-      <Content Include="@(_SnToolFiles)" CopyToOutputDirectory="PreserveNewest" Link="tools\sn\%(RecursiveDir)%(Filename)%(Extension)" />
+      <Content Include="@(_TarToolFiles)" CopyToOutputDirectory="PreserveNewest" Link="tools\tar\%(RecursiveDir)%(Filename)%(Extension)" />
     </ItemGroup>
   </Target>
 </Project>
