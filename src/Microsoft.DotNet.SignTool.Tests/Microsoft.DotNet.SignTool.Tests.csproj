@@ -35,15 +35,13 @@
     <Content Include="$(NuGetPackageRoot)microsoft.signed.wix\$(MicrosoftSignedWixVersion)\tools\**"
              CopyToOutputDirectory="Always"
              Link="tools\wix\%(RecursiveDir)%(Filename)%(Extension)" />
-    <_SnToolFiles Include="$(NuGetPackageRoot)sn\$(SNVersion)\sn.exe.*" />
-    <_SnToolFiles Include="$(NuGetPackageRoot)sn\$(SNVersion)\1033\*" />
 
-    <Content Include="$(NuGetPackageRoot)sn\$(SNVersion)\sn.exe.*"
+    <Content Include="$(NuGetPackageRoot)sn\$(SNVersion)\sn.exe*"
                CopyToOutputDirectory="PreserveNewest"
                Link="tools\sn\%(RecursiveDir)%(Filename)%(Extension)" />
     <Content Include="$(NuGetPackageRoot)sn\$(SNVersion)\1033\*"
                CopyToOutputDirectory="PreserveNewest"
-               Link="tools\sn\%(RecursiveDir)%(Filename)%(Extension)" />
+               Link="tools\sn\1033\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <Target Name="_CopyTarTool" AfterTargets="ResolveProjectReferences">
