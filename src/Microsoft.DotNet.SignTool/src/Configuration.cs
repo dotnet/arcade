@@ -101,6 +101,8 @@ namespace Microsoft.DotNet.SignTool
 
         private string _tarToolPath;
 
+        private string _snPath;
+
         public Configuration(
             string tempDir,
             ITaskItem[] itemsToSign,
@@ -109,6 +111,7 @@ namespace Microsoft.DotNet.SignTool
             Dictionary<string, List<SignInfo>> extensionSignInfo,
             ITaskItem[] dualCertificates,
             string tarToolPath,
+            string snPath,
             TaskLoggingHelper log,
             bool useHashInExtractionPath = false,
             Telemetry telemetry = null)
@@ -137,6 +140,7 @@ namespace Microsoft.DotNet.SignTool
             _hashToCollisionIdMap = new Dictionary<SignedFileContentKey, string>();
             _telemetry = telemetry;
             _tarToolPath = tarToolPath;
+            _snPath = snPath;
         }
 
         internal BatchSignInput GenerateListOfFiles()
@@ -359,7 +363,7 @@ namespace Microsoft.DotNet.SignTool
             if (FileSignInfo.IsPEFile(file.FullPath))
             {
                 isAlreadyAuthenticodeSigned = ContentUtil.IsAuthenticodeSigned(file.FullPath);
-                isAlreadyStrongNamed = StrongName.IsSigned(file.FullPath, log: _log);
+                isAlreadyStrongNamed = StrongName.IsSigned(file.FullPath, snPath:_snPath, log: _log);
 
 
                 if (!isAlreadyAuthenticodeSigned)

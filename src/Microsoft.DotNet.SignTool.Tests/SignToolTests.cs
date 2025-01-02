@@ -329,7 +329,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, dotnetPath: null, _tmpDir, enclosingDir: "", "", wixToolsPath: wixToolsPath, tarToolPath: s_tarToolPath);
 
             var signTool = new FakeSignTool(signToolArgs, task.Log);
-            var configuration = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, tarToolPath: s_tarToolPath, task.Log);
+            var configuration = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, tarToolPath: s_tarToolPath, snPath: s_snPath, task.Log);
             var signingInput = configuration.GenerateListOfFiles();
             var util = new BatchSignUtil(
                 task.BuildEngine,
@@ -375,7 +375,7 @@ namespace Microsoft.DotNet.SignTool.Tests
         {
             var engine = new FakeBuildEngine();
             var task = new SignToolTask { BuildEngine = engine };
-            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, tarToolPath: s_tarToolPath, task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, tarToolPath: s_tarToolPath, snPath: s_snPath, task.Log).GenerateListOfFiles();
 
             signingInput.FilesToSign.Select(f => f.ToString()).Should().BeEquivalentTo(expected);
             signingInput.FilesToCopy.Select(f => $"{f.Key} -> {f.Value}").Should().BeEquivalentTo(expectedCopyFiles ?? Array.Empty<string>());
@@ -457,7 +457,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
-            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, null, tarToolPath: s_tarToolPath, task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, null, tarToolPath: s_tarToolPath, snPath: s_snPath, task.Log).GenerateListOfFiles();
 
             signingInput.FilesToSign.Should().BeEmpty();
             signingInput.ZipDataMap.Should().BeEmpty();
@@ -2463,6 +2463,7 @@ $@"
                 new Dictionary<string, List<SignInfo>>(),
                 new ITaskItem[0],
                 tarToolPath: s_tarToolPath,
+                snPath: s_snPath,
                 task.Log)
                 .GenerateListOfFiles();
 
@@ -2511,6 +2512,7 @@ $@"
                 extensionSignInfo,
                 new ITaskItem[0],
                 tarToolPath: s_tarToolPath,
+                snPath: s_snPath,
                 task.Log)
                 .GenerateListOfFiles();
 

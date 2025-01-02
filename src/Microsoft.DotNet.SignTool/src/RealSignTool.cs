@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.SignTool
                 return true;
             }
 
-            return StrongName.IsSigned(fileFullPath);
+            return StrongName.IsSigned(fileFullPath, snPath:_snPath, log: _log);
         }
 
         public override bool VerifySignedDeb(TaskLoggingHelper log, string filePath)
