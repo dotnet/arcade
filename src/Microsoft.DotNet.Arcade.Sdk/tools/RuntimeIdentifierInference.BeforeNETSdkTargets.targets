@@ -1,12 +1,15 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
   <PropertyGroup>
-    <_EnableArcadeRuntimeIdentifierInference>$(EnableArcadeRuntimeIdentifierInference)</_EnableArcadeRuntimeIdentifierInference>
+    <_EnableArcadeRuntimeIdentifierInference Condition="'$(_EnableArcadeRuntimeIdentifierInference)' == ''">$(EnableArcadeRuntimeIdentifierInference)</_EnableArcadeRuntimeIdentifierInference>
 
     <!-- If the user has specified a RID for their project, don't overwrite it. -->
     <_EnableArcadeRuntimeIdentifierInference Condition="'$(_EnableArcadeRuntimeIdentifierInference)' == '' and '$(RuntimeIdentifier)' != ''">false</_EnableArcadeRuntimeIdentifierInference>
 
-    <!-- If the SDK will infer this project as "RID agnostic", don't infer RIDs. -->
+    <!--
+      If the SDK will infer this project as "RID agnostic", don't infer RIDs.
+      This should generally match the logic for setting IsRidAgnostic in the SDK.
+    -->
     <_RidAgnosticProject Condition="('$(OutputType)' == 'Library' or '$(IsTestProject)' == 'true') and '$(RuntimeIdentifiers)' == ''">true</_RidAgnosticProject>
 
     <!-- If this project is RID-agnostic, don't infer RIDs. -->
@@ -19,7 +22,7 @@
       To avoid this, we'll default to setting the RID to the vertical's target RID.
       To preserve expected behavior for projects that don't specify a RID in a non-vertical build, we won't append the RID to the output path if the user hasn't explicitly requested it.
     -->
-    <_EnableArcadeRuntimeIdentifierInference Condition="'$(_EnableArcadeRuntimeIdentifierInference)' == '' and '$(DotNetBuild)' == 'true'">true</_EnableArcadeRuntimeIdentifierInference>
+    <_EnableArcadeRuntimeIdentifierInference Condition="'$(_EnableArcadeRuntimeIdentifierInference)' == '' and '$(DotNetBuildTargetRidOnly)' == 'true'">true</_EnableArcadeRuntimeIdentifierInference>
 
     <_EnableArcadeRuntimeIdentifierFilters Condition="'$(EnableArcadeRuntimeIdentifierFilters)' != ''">$(EnableArcadeRuntimeIdentifierFilters)</_EnableArcadeRuntimeIdentifierFilters>
 
@@ -35,7 +38,7 @@
     <RuntimeIdentifier>$(TargetRid)</RuntimeIdentifier>
 
     <!-- If this project would have been inferred as "RID agnostic", preserve that as well. -->
-    <IsRidAgnostic Condition="('$(OutputType)' == 'Library' or '$(IsTestProject)' == 'true') and '$(RuntimeIdentifiers)' == ''">true</IsRidAgnostic>
+    <IsRidAgnostic Condition="'$(_RidAgnosticProject)' == 'true'">true</IsRidAgnostic>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(_EnableArcadeRuntimeIdentifierFilters)' == 'true' and '$(RuntimeIdentifiers)' != ''">
