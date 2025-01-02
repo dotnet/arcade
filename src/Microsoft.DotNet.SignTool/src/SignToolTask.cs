@@ -260,9 +260,9 @@ namespace Microsoft.DotNet.SignTool
                     fileSignInfo,
                     extensionSignInfo,
                     dualCertificates,
-                    TarToolPath,
-                    PkgToolPath,
-                    SNBinaryPath,
+                    tarToolPath: TarToolPath,
+                    pkgToolPath: PkgToolPath,
+                    snPath: SNBinaryPath,
                     Log,
                     useHashInExtractionPath: UseHashInExtractionPath,
                     telemetry: telemetry);
