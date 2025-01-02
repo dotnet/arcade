@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.SignTool
             => IsVsix(path) || IsNupkg(path) || IsPkg(path) || IsAppBundle(path);
 
         internal static bool IsZipContainer(string path)
-            => IsPackage(path) || IsMPack(path) || IsZip(path) || IsTarGZip(path);
+            => IsPackage(path) || IsMPack(path) || IsZip(path) || IsTarGZip(path) || IsDeb(path);
 
         internal bool IsDeb() => IsDeb(FileName);
 

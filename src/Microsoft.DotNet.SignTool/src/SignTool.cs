@@ -212,7 +212,7 @@ namespace Microsoft.DotNet.SignTool
                 string filePath = isOSX ? zipPaths[fileToSign.FullPath] : fileToSign.FullPath;
                 AppendLine(builder, depth: 2, text: $@"<FilesToSign Include=""{Uri.EscapeDataString(filePath)}"">");
                 AppendLine(builder, depth: 3, text: $@"<Authenticode>{fileToSign.SignInfo.Certificate}</Authenticode>");
-                if (fileToSign.SignInfo.StrongName != null && !fileToSign.SignInfo.ShouldLocallyStrongNameSign)
+                if (fileToSign.SignInfo.ShouldStrongName && !fileToSign.SignInfo.ShouldLocallyStrongNameSign)
                 {
                     AppendLine(builder, depth: 3, text: $@"<StrongName>{fileToSign.SignInfo.StrongName}</StrongName>");
                 }
@@ -255,7 +255,7 @@ namespace Microsoft.DotNet.SignTool
 
         protected bool LocalStrongNameSign(FileSignInfo file)
         {
-            _log.LogMessage($"Strong-name signing {file.FullPath} locally with {file.SignInfo.StrongName}.");
+            _log.LogMessage($"Strong-name signing '{file.FullPath}' locally with key '{file.SignInfo.StrongName}'.");
 
             return StrongName.Sign(file.FullPath, file.SignInfo.StrongName, _args.SNBinaryPath, _log);
         }

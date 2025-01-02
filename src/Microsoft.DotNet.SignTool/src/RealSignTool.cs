@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.SignTool
                 return true;
             }
 
-            return StrongName.IsSigned(fileFullPath);
+            return StrongName.IsSigned(fileFullPath, snPath:_snPath, log: _log);
         }
 
         public override bool VerifySignedDeb(TaskLoggingHelper log, string filePath)
@@ -132,14 +132,16 @@ namespace Microsoft.DotNet.SignTool
 
         public override bool LocalStrongNameSign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> files)
         {
-            foreach (var file in files)
+            var filesToLocallyStrongNameSign = files.Where(f => f.SignInfo.ShouldLocallyStrongNameSign);
+
+            _log.LogMessage($"Locally strong naming {filesToLocallyStrongNameSign.Count()} files.");
+
+            foreach (var file in filesToLocallyStrongNameSign)
             {
-                if (file.SignInfo.ShouldLocallyStrongNameSign)
+                if (!LocalStrongNameSign(file))
                 {
-                    if (!LocalStrongNameSign(file))
-                    {
-                        return false;
-                    }
+                    _log.LogMessage(MessageImportance.High, $"Failed to locally strong name sign '{file.FileName}'");
+                    return false;
                 }
             }
 

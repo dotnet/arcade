@@ -103,6 +103,7 @@ namespace Microsoft.DotNet.SignTool
         private string _tarToolPath;
 
         private string _pkgToolPath;
+        private string _snPath;
 
         public Configuration(
             string tempDir,
@@ -113,6 +114,7 @@ namespace Microsoft.DotNet.SignTool
             ITaskItem[] dualCertificates,
             string tarToolPath,
             string pkgToolPath,
+            string snPath,
             TaskLoggingHelper log,
             bool useHashInExtractionPath = false,
             Telemetry telemetry = null)
@@ -142,6 +144,7 @@ namespace Microsoft.DotNet.SignTool
             _telemetry = telemetry;
             _tarToolPath = tarToolPath;
             _pkgToolPath = pkgToolPath;
+            _snPath = snPath;
         }
 
         internal BatchSignInput GenerateListOfFiles()
@@ -372,14 +375,7 @@ namespace Microsoft.DotNet.SignTool
             if (FileSignInfo.IsPEFile(file.FullPath))
             {
                 isAlreadyAuthenticodeSigned = ContentUtil.IsAuthenticodeSigned(file.FullPath);
-
-/* Unmerged change from project 'Microsoft.DotNet.SignTool (net472)'
-Before:
-                isAlreadyStrongNamed = ContentUtil.IsStrongNameSigned(file.FullPath);
-After:
-                isAlreadyStrongNamed = DotNet.SignTool.StrongName.IsStrongNameSigned(file.FullPath);
-*/
-                isAlreadyStrongNamed = StrongName.IsSigned(file.FullPath);
+                isAlreadyStrongNamed = StrongName.IsSigned(file.FullPath, snPath:_snPath, log: _log);
 
 
                 if (!isAlreadyAuthenticodeSigned)

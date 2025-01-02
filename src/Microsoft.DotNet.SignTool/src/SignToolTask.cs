@@ -224,13 +224,6 @@ namespace Microsoft.DotNet.SignTool
                 {
                     Log.LogWarning($"TempDir ('{TempDir}' is not rooted, this can cause unexpected behavior in signtool.  Please provide a fully qualified 'TempDir' path.");
                 }
-                var isValidSNPath = !string.IsNullOrEmpty(SNBinaryPath) && File.Exists(SNBinaryPath) && SNBinaryPath.EndsWith("sn.exe");
-
-                if (DoStrongNameCheck && !isValidSNPath)
-                {
-                    Log.LogError($"An incorrect full path to 'sn.exe' was specified: {SNBinaryPath}");
-                    return;
-                }
 
                 if(PkgToolPath == null && RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
@@ -269,6 +262,7 @@ namespace Microsoft.DotNet.SignTool
                     dualCertificates,
                     TarToolPath,
                     PkgToolPath,
+                    SNBinaryPath,
                     Log,
                     useHashInExtractionPath: UseHashInExtractionPath,
                     telemetry: telemetry);
