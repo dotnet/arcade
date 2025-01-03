@@ -30,28 +30,30 @@ public class DefaultIdentityTokenCredential : ChainedTokenCredential
 
     private static TokenCredential[] CreateAvailableTokenCredentials(DefaultIdentityTokenCredentialOptions options)
     {
-        List<TokenCredential> tokenCredentials = [];
+        List<TokenCredential> tokenCredentials = [
+            new ManagedIdentityCredential(options.ManagedIdentityClientId)
+        ];
 
-        // Add Managed Identity credential if the client id is provided
-        if (!string.IsNullOrEmpty(options.ManagedIdentityClientId))
+        // Add Azure Pipelines credential if the environment variables are set
+        TokenCredential? azurePipelinesCredential = GetAzurePipelinesCredentialForAzurePipelineTask();
+        if (azurePipelinesCredential != null)
         {
-            tokenCredentials.Add(
-                new ManagedIdentityCredential(options.ManagedIdentityClientId)
-            );
+            if (!options.DisableShortCache)
+            {
+                azurePipelinesCredential = new TokenCredentialShortCache(azurePipelinesCredential);
+            }
+            tokenCredentials.Add(azurePipelinesCredential);
         }
 
         // Add work load identity credential if the environment variables are set
-        var workloadIdentityCredential = GetWorkloadIdentityCredentialForAzurePipelineTask();
+        TokenCredential? workloadIdentityCredential = GetWorkloadIdentityCredentialForAzurePipelineTask();
         if (workloadIdentityCredential != null)
         {
+            if (!options.DisableShortCache)
+            {
+                workloadIdentityCredential = new TokenCredentialShortCache(workloadIdentityCredential);
+            }
             tokenCredentials.Add(workloadIdentityCredential);
-        }
-
-        // Add Azure Pipelines credential if the environment variables are set
-        var azurePipelinesCredential = GetAzurePipelinesCredentialForAzurePipelineTask();
-        if (azurePipelinesCredential != null)
-        {
-            tokenCredentials.Add(azurePipelinesCredential);
         }
 
         if (!options.ExcludeAzureCliCredential)
@@ -59,16 +61,17 @@ public class DefaultIdentityTokenCredential : ChainedTokenCredential
             // Add Azure CLI credential as the last resort
             // az command to disable auto update of the Azure CLI to avoid timeout waiting for
             // console input will be called before first use of AzureCliCredential
-            tokenCredentials.Add(
-                new AzureCliCredentialWithAzNoUpdateWrapper(
-                    new AzureCliCredential(
-                        new AzureCliCredentialOptions
-                        {
-                            ProcessTimeout = TimeSpan.FromSeconds(30)
-                        }
-                    )
-                )
-             );
+            TokenCredential azureCliCredential = new AzureCliCredentialWithAzNoUpdateWrapper(
+                new AzureCliCredential(new AzureCliCredentialOptions
+                {
+                    ProcessTimeout = TimeSpan.FromSeconds(30)
+                })
+            );
+            if (!options.DisableShortCache)
+            {
+                azureCliCredential = new TokenCredentialShortCache(azureCliCredential);
+            }
+            tokenCredentials.Add(azureCliCredential);
         }
 
         if (tokenCredentials.Count == 0)
