@@ -63,7 +63,7 @@ async def download_deb_files_parallel(mirror, packages, tmp_dir):
 
         await asyncio.gather(*tasks)
 
-async def download_package_index_parallel(mirror, arch, suites):
+async def download_package_index_parallel(mirror, arch, suites, check_sig, keyring):
     """Download package index files for specified suites and components entirely in memory."""
     tasks = []
     timeout = aiohttp.ClientTimeout(total=60)
@@ -71,7 +71,7 @@ async def download_package_index_parallel(mirror, arch, suites):
     async with aiohttp.ClientSession(timeout=timeout) as session:
         for suite in suites:
             for component in ["main", "universe"]:
-                tasks.append(fetch_and_decompress(session, mirror, arch, suite, component))
+                tasks.append(fetch_and_decompress(session, mirror, arch, suite, component, check_sig, keyring))
 
         results = await asyncio.gather(*tasks)
 
@@ -84,7 +84,7 @@ async def download_package_index_parallel(mirror, arch, suites):
 
     return merged_content
 
-async def fetch_and_decompress(session, mirror, arch, suite, component):
+async def fetch_and_decompress(session, mirror, arch, suite, component, check_sig, keyring):
     """Fetch and decompress the Packages.gz file."""
 
     path = f"{component}/binary-{arch}/Packages.gz"
@@ -97,9 +97,9 @@ async def fetch_and_decompress(session, mirror, arch, suite, component):
                 decompressed_data = gzip.decompress(compressed_data).decode('utf-8')
                 print(f"Downloaded index: {url}")
 
-                if args.force_check_sig:
+                if check_sig:
                     # Verify the package index against the sha256 recorded in the Release file
-                    release_file_content = await fetch_release_file(session, mirror, suite)
+                    release_file_content = await fetch_release_file(session, mirror, suite, keyring)
                     packages_sha = parse_release_file(release_file_content, path)
 
                     sha256 = hashlib.sha256(compressed_data).hexdigest()
@@ -114,7 +114,7 @@ async def fetch_and_decompress(session, mirror, arch, suite, component):
     except Exception as e:
         print(f"Error fetching {url}: {e}")
 
-async def fetch_release_file(session, mirror, suite):
+async def fetch_release_file(session, mirror, suite, keyring):
     """Fetch Release and Release.gpg files and verify the signature."""
 
     release_url = f"{mirror}/dists/{suite}/Release"
@@ -124,7 +124,7 @@ async def fetch_release_file(session, mirror, suite):
         await download_file(session, release_url, release_file.name)
         await download_file(session, release_gpg_url, release_gpg_file.name)
 
-        if args.keyring != '':
+        if keyring != '':
             keyring_arg = f"--keyring {args.keyring}"
 
         print("Verifying signature of Release with Release.gpg.")
@@ -389,7 +389,7 @@ if __name__ == "__main__":
 
     print(f"Creating rootfs. rootfsdir: {args.rootfsdir}, distro: {args.distro}, arch: {args.arch}, suites: {args.suite}, mirror: {args.mirror}")
 
-    package_index_content = asyncio.run(download_package_index_parallel(args.mirror, args.arch, args.suite))
+    package_index_content = asyncio.run(download_package_index_parallel(args.mirror, args.arch, args.suite, args.force_check_sig, args.keyring))
 
     packages_info, aliases = parse_package_index(package_index_content)
 
