@@ -51,6 +51,14 @@ parameters:
   type: string
   default: ' '
 
+# TODO https://github.com/dotnet/arcade/issues/14167 
+# The default value of this parameter is temporarely being set to true to avoid breaking builds.
+# In the future, the value of this parameter will be provided by darc, and will be set to true for only builds that are not really internal, like wpf-int
+- name: SkipInternalAssetToPublicFeedCheck
+  displayName: Skip the check that ensures internal assets are not published to public feeds
+  type: boolean
+  default: true
+
 trigger: none
 resources:
   repositories:
@@ -84,3 +92,4 @@ extends:
         BARBuildId: ${{ parameters.BARBuildId }}
         symbolPublishingAdditionalParameters: ${{ parameters.SymbolPublishingAdditionalParameters }}
         artifactsPublishingAdditionalParameters: ${{ parameters.ArtifactsPublishingAdditionalParameters }}
+        SkipInternalAssetToPublicFeedCheck: ${{ parameters.SkipInternalAssetToPublicFeedCheck }}

@@ -60,6 +60,15 @@ try {
     $buildNumberName = $buildNumberName.Substring(0, 255)
   }
 
+  $isInternalBuild = $true
+  if ([string]::IsNullOrEmpty($buildInfo.gitHubRepository) -eq $false) {
+    $buildInfo.gitHubRepository -match "https://github.com/(.*)/(.*)" | Out-Null
+    $response = Invoke-WebRequest -Uri "https://api.github.com/repos/$($Matches[1])/$($Matches[2]))/commits/$($buildInfo.commit)"
+    if ($response.StatusCode -eq 200) {
+      $isInternalBuild = $false
+      Write-Host "This is a public build"
+    }
+  }
   # Set tags on publishing for visibility
   Write-Host "##vso[build.updatebuildnumber]$buildNumberName"
   Write-Host "##vso[build.addbuildtag]Channel(s) - $channelNames"
@@ -71,6 +80,7 @@ try {
   Write-Host "##vso[task.setvariable variable=AzDOBuildId]$($buildInfo.azureDevOpsBuildId)"
   Write-Host "##vso[task.setvariable variable=AzDOAccount]$($buildInfo.azureDevOpsAccount)"
   Write-Host "##vso[task.setvariable variable=AzDOBranch]$($buildInfo.azureDevOpsBranch)"
+  Write-Host "##vso[task.setvariable variable=IsInternalBuild]$isInternalBuild"
 }
 catch {
   Write-Host $_

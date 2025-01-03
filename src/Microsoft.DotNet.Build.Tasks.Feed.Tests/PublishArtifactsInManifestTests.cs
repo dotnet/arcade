@@ -95,7 +95,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             // Functionality is the same as this is in the base class, create a v2 object to test. 
             var task = new PublishArtifactsInManifestV3
             {
-                InternalBuild = true,
+                IsInternalBuild = true,
                 BuildEngine = buildEngine,
                 NugetPath = fakeNugetExeName,
                 MaxRetryCount = 5, // In case the default changes, lock to 5 so the test data works
