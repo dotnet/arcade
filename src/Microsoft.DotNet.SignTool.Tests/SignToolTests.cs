@@ -253,8 +253,9 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             ".py",
             ".pyd",
-
+#if !NETFRAMEWORK
             ".deb",
+#endif
         };
 
         public static IEnumerable<object[]> GetSignableExtensions()
@@ -1569,7 +1570,7 @@ $@"
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'mscorlib.dll' TargetFramework='.NETCoreApp,Version=v10.0' Certificate='Microsoft400'",
-                "File 'data.tar.gz' Certificate=''",
+                "File 'data.tar.gz'",
                 "File 'test.deb' Certificate='LinuxSign'"
             });
 
