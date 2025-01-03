@@ -6,7 +6,7 @@ param(
   [Parameter(Mandatory=$true)][string] $WaitPublishingFinish,
   [Parameter(Mandatory=$false)][string] $ArtifactsPublishingAdditionalParameters,
   [Parameter(Mandatory=$false)][string] $SymbolPublishingAdditionalParameters,
-  [Parameter(Mandatory=$false)][string] $RequireDefaultChannels,
+  [Parameter(Mandatory=$false)][string] $RequireDefaultChannels
 )
 
 try {
