@@ -241,8 +241,9 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             ".py",
             ".pyd",
-
+#if !NETFRAMEWORK
             ".deb",
+#endif
         };
 
         public static IEnumerable<object[]> GetSignableExtensions()
