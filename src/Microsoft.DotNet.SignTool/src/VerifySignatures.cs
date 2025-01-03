@@ -131,13 +131,23 @@ namespace Microsoft.DotNet.SignTool
             return filePath.StartsWith("package/services/digital-signature/", StringComparison.OrdinalIgnoreCase);
         }
 
-        internal static bool IsSignedContainer(string fullPath, string tempDir, string tarToolPath)
+        internal static bool VerifySignedPkgOrAppBundle(string fullPath, string pkgToolPath)
+        {
+            return ZipData.RunPkgProcess(fullPath, null, "verify", pkgToolPath);
+        }
+
+        internal static bool IsSignedContainer(string fullPath, string tempDir, string tarToolPath, string pkgToolPath)
         {
             if (FileSignInfo.IsZipContainer(fullPath))
             {
+                if ((FileSignInfo.IsPkg(fullPath) || FileSignInfo.IsAppBundle(fullPath)) && VerifySignedPkgOrAppBundle(fullPath, pkgToolPath))
+                {
+                    return true;
+                }
+
                 bool signedContainer = false;
 
-                foreach (var (relativePath, _, _) in ZipData.ReadEntries(fullPath, tempDir, tarToolPath, ignoreContent: false))
+                foreach (var (relativePath, _, _) in ZipData.ReadEntries(fullPath, tempDir, tarToolPath, pkgToolPath, ignoreContent: false))
                 {
                     if (FileSignInfo.IsNupkg(fullPath) && VerifySignedNupkgByFileMarker(relativePath))
                     {

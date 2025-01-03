@@ -136,7 +136,8 @@ namespace Microsoft.DotNet.SignTool
                     string collisionIdInfo = string.Empty;
                     if(_hashToCollisionIdMap != null)
                     {
-                        if(_hashToCollisionIdMap.TryGetValue(file.FileContentKey, out string collisionPriorityId))
+                        if(_hashToCollisionIdMap.TryGetValue(file.FileContentKey, out string collisionPriorityId) &&
+                            !string.IsNullOrEmpty(collisionPriorityId))
                         {
                             collisionIdInfo = $"Collision Id='{collisionPriorityId}'";
                         }
@@ -281,12 +282,12 @@ namespace Microsoft.DotNet.SignTool
                 if (file.IsZipContainer())
                 {
                     _log.LogMessage($"Repacking container: '{file.FileName}'");
-                    _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath, _signTool.TarToolPath);
+                    _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath, _signTool.TarToolPath, _signTool.PkgToolPath);
                 }
                 else if (file.IsWixContainer())
                 {
                     _log.LogMessage($"Packing wix container: '{file.FileName}'");
-                    _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath, _signTool.TarToolPath);
+                    _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath, _signTool.TarToolPath, _signTool.PkgToolPath);
                 }
                 else
                 {
@@ -521,6 +522,30 @@ namespace Microsoft.DotNet.SignTool
                         log.LogError($"Nupkg {fileName} cannot be strong name signed.");
                     }
                 }
+                else if (fileName.IsPkg())
+                {
+                    if(isInvalidEmptyCertificate)
+                    {
+                        log.LogError($"Pkg {fileName} should have a certificate name.");
+                    }
+
+                    if (fileName.SignInfo.StrongName != null)
+                    {
+                        log.LogError($"Pkg {fileName} cannot be strong name signed.");
+                    }
+                }
+                else if (fileName.IsAppBundle())
+                {
+                    if (isInvalidEmptyCertificate)
+                    {
+                        log.LogError($"AppBundle {fileName} should have a certificate name.");
+                    }
+
+                    if (fileName.SignInfo.StrongName != null)
+                    {
+                        log.LogError($"AppBundle {fileName} cannot be strong name signed.");
+                    }
+                }
                 else if (fileName.IsZip())
                 {
                     if (fileName.SignInfo.Certificate != null)
@@ -587,7 +612,7 @@ namespace Microsoft.DotNet.SignTool
                 var zipData = _batchData.ZipDataMap[file.FileContentKey];
                 bool signedContainer = false;
 
-                foreach (var (relativeName, _, _) in ZipData.ReadEntries(file.FullPath, _signTool.TempDir, _signTool.TarToolPath, ignoreContent: true))
+                foreach (var (relativeName, _, _) in ZipData.ReadEntries(file.FullPath, _signTool.TempDir, _signTool.TarToolPath, _signTool.PkgToolPath, ignoreContent: true))
                 {
                     if (!SkipZipContainerSignatureMarkerCheck)
                     {
@@ -596,6 +621,10 @@ namespace Microsoft.DotNet.SignTool
                             signedContainer = true;
                         }
                         else if (file.IsVsix() && _signTool.VerifySignedVSIXFileMarker(relativeName))
+                        {
+                            signedContainer = true;
+                        }
+                        else if ((file.IsPkg() || file.IsAppBundle()) && _signTool.VerifySignedPkgOrAppBundle(relativeName, _signTool.PkgToolPath))
                         {
                             signedContainer = true;
                         }
@@ -612,7 +641,7 @@ namespace Microsoft.DotNet.SignTool
 
                 if (!SkipZipContainerSignatureMarkerCheck)
                 {
-                    if ((file.IsNupkg() || file.IsVsix()) && !signedContainer)
+                    if ((file.IsNupkg() || file.IsPkg() || file.IsAppBundle() || file.IsVsix()) && !signedContainer)
                     {
                         _log.LogError($"Container {file.FullPath} does not have signature marker.");
                     }

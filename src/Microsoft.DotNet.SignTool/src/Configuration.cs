@@ -6,6 +6,7 @@ using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -101,6 +102,7 @@ namespace Microsoft.DotNet.SignTool
 
         private string _tarToolPath;
 
+        private string _pkgToolPath;
         private string _snPath;
 
         public Configuration(
@@ -111,6 +113,7 @@ namespace Microsoft.DotNet.SignTool
             Dictionary<string, List<SignInfo>> extensionSignInfo,
             ITaskItem[] dualCertificates,
             string tarToolPath,
+            string pkgToolPath,
             string snPath,
             TaskLoggingHelper log,
             bool useHashInExtractionPath = false,
@@ -140,6 +143,7 @@ namespace Microsoft.DotNet.SignTool
             _hashToCollisionIdMap = new Dictionary<SignedFileContentKey, string>();
             _telemetry = telemetry;
             _tarToolPath = tarToolPath;
+            _pkgToolPath = pkgToolPath;
             _snPath = snPath;
         }
 
@@ -229,6 +233,10 @@ namespace Microsoft.DotNet.SignTool
                     {
                         _zipDataMap[fileSignInfo.FileContentKey] = zipData;
                     }
+                    else
+                    {
+                        _log.LogError($"Failed to build zip data for {fileSignInfo.FullPath}");
+                    }
                 }
                 else if (fileSignInfo.IsWixContainer())
                 {
@@ -236,6 +244,10 @@ namespace Microsoft.DotNet.SignTool
                     if (TryBuildWixData(fileSignInfo, out var msiData))
                     {
                         _zipDataMap[fileSignInfo.FileContentKey] = msiData;
+                    }
+                    else
+                    {
+                        _log.LogError($"Failed to build wix data for {fileSignInfo.FullPath}");
                     }
                 }
             }
@@ -431,7 +443,7 @@ namespace Microsoft.DotNet.SignTool
             }
             else if (FileSignInfo.IsPackage(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = VerifySignatures.IsSignedContainer(file.FullPath, _pathToContainerUnpackingDirectory, _tarToolPath);
+                isAlreadyAuthenticodeSigned = VerifySignatures.IsSignedContainer(file.FullPath, _pathToContainerUnpackingDirectory, _tarToolPath, _pkgToolPath);
                 if(!isAlreadyAuthenticodeSigned)
                 {
                     _log.LogMessage(MessageImportance.Low, $"Container {file.FullPath} does not have a signature marker.");
@@ -722,7 +734,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 var nestedParts = new Dictionary<string, ZipPart>();
                 
-                foreach (var (relativePath, contentStream, contentSize) in ZipData.ReadEntries(archivePath, _pathToContainerUnpackingDirectory, _tarToolPath))
+                foreach (var (relativePath, contentStream, contentSize) in ZipData.ReadEntries(archivePath, _pathToContainerUnpackingDirectory, _tarToolPath, _pkgToolPath))
                 {
                     if (contentStream == null)
                     {
@@ -778,7 +790,7 @@ namespace Microsoft.DotNet.SignTool
             }
             catch (Exception e)
             {
-                _log.LogErrorFromException(e);
+                _log.LogErrorFromException(e, true);
                 zipData = null;
                 return false;
             }

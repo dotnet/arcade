@@ -147,6 +147,11 @@ namespace Microsoft.DotNet.SignTool
         public string TarToolPath { get; set; }
 
         /// <summary>
+        /// Path to Microsoft.DotNet.MacOsPkg.dll. Required for signing pkg files on MacOS.
+        /// </summary>
+        public string PkgToolPath { get; set; }
+
+        /// <summary>
         /// Number of containers to repack in parallel. Zero will default to the processor count
         /// </summary>
         public int RepackParallelism { get; set; } = 0;
@@ -219,6 +224,11 @@ namespace Microsoft.DotNet.SignTool
                 {
                     Log.LogWarning($"TempDir ('{TempDir}' is not rooted, this can cause unexpected behavior in signtool.  Please provide a fully qualified 'TempDir' path.");
                 }
+
+                if(PkgToolPath == null && RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    Log.LogError($"PkgToolPath ('{PkgToolPath}') does not exist & is required for unpacking, repacking, and notarizing .pkg files and .app bundles on MacOS.");
+                }
             }
             if(WixToolsPath != null && !Directory.Exists(WixToolsPath))
             {
@@ -237,7 +247,7 @@ namespace Microsoft.DotNet.SignTool
 
             if (Log.HasLoggedErrors) return;
 
-            var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, DotNetPath, LogDir, enclosingDir, SNBinaryPath, WixToolsPath, TarToolPath);
+            var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, DotNetPath, LogDir, enclosingDir, SNBinaryPath, WixToolsPath, TarToolPath, PkgToolPath);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs, Log) : (SignTool)new RealSignTool(signToolArgs, Log);
 
             Telemetry telemetry = new Telemetry();
@@ -250,8 +260,9 @@ namespace Microsoft.DotNet.SignTool
                     fileSignInfo,
                     extensionSignInfo,
                     dualCertificates,
-                    TarToolPath,
-                    SNBinaryPath,
+                    tarToolPath: TarToolPath,
+                    pkgToolPath: PkgToolPath,
+                    snPath: SNBinaryPath,
                     Log,
                     useHashInExtractionPath: UseHashInExtractionPath,
                     telemetry: telemetry);

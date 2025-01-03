@@ -14,13 +14,13 @@ if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 
 if (args.Length != 3)
 {
-    Console.Error.WriteLine("Usage: <src path> <dst path> <unpack|pack>");
+    Console.Error.WriteLine("Usage: <unpack|pack|verify> <src path> [dst path]");
     return 1;
 }
 
-string srcPath = args[0];
-string dstPath = args[1];
-string op = args[2];
+string op = args[0];
+string srcPath = args[1];
+string dstPath = args[2];
 
 var cleanTarget = () =>
 {
@@ -48,7 +48,7 @@ try
             AppBundle.Unpack(srcPath, dstPath);
         }
     }
-    else if(op == "pack")
+    else if (op == "pack")
     {
         if (!Directory.Exists(srcPath))
         {
@@ -69,6 +69,22 @@ try
         else if (Utilities.IsAppBundle(dstPath))
         {
             AppBundle.Pack(srcPath, dstPath);
+        }
+    }
+    else if (op == "verify")
+    {
+        if (!File.Exists(srcPath) || !Utilities.IsPkg(srcPath) && !Utilities.IsAppBundle(srcPath))
+        {
+            throw new Exception("Input path must be a .pkg or .app (zipped) file.");
+        }
+
+        if (Utilities.IsPkg(srcPath))
+        {
+            Package.VerifySignature(srcPath);
+        }
+        else if (Utilities.IsAppBundle(srcPath))
+        {
+            AppBundle.VerifySignature(srcPath);
         }
     }
     else

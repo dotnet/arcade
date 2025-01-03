@@ -78,5 +78,10 @@ namespace Microsoft.DotNet.SignTool
         {
             return true;
         }
+
+        public override bool VerifySignedPkgOrAppBundle(string filePath, string pkgToolPath)
+        {
+            return true;
+        }
     }
 }
