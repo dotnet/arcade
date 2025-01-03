@@ -797,15 +797,19 @@ elif [[ -n "$__CodeName" ]]; then
         # shellcheck disable=SC2086
         suites="$__CodeName $__DebianSuites $(echo $__UbuntuSuites | xargs -n 1 | xargs -I {} echo -n "$__CodeName-{} ")"
 
+        if [[ "$__SkipSigCheck" == "0" ]]; then
+            __Keyring="$__Keyring --force-check-sig"
+        fi
+
         PYTHON=${PYTHON_EXECUTABLE:-python3}
 
         # shellcheck disable=SC2086,SC2046
-        echo running "$PYTHON" "$__CrossDir/install-debs.py" --arch "$__UbuntuArch" --mirror "$__UbuntuRepo" --rootfsdir "$__RootfsDir" --artool "$AR" \
+        echo running "$PYTHON" "$__CrossDir/install-debs.py" $__Keyring --arch "$__UbuntuArch" --mirror "$__UbuntuRepo" --rootfsdir "$__RootfsDir" --artool "$AR" \
             $(echo $suites | xargs -n 1 | xargs -I {} echo -n "--suite {} ") \
             $__UbuntuPackages
 
         # shellcheck disable=SC2086,SC2046
-        "$PYTHON" "$__CrossDir/install-debs.py" --arch "$__UbuntuArch" --mirror "$__UbuntuRepo" --rootfsdir "$__RootfsDir" --artool "$AR" \
+        "$PYTHON" "$__CrossDir/install-debs.py" $__Keyring --arch "$__UbuntuArch" --mirror "$__UbuntuRepo" --rootfsdir "$__RootfsDir" --artool "$AR" \
             $(echo $suites | xargs -n 1 | xargs -I {} echo -n "--suite {} ") \
             $__UbuntuPackages
 
