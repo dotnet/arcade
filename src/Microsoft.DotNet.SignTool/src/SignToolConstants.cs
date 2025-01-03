@@ -126,6 +126,7 @@ namespace Microsoft.DotNet.SignTool
                 {
                     ".pkg",
                     ".app",
+                    ".dylib"
                 }
                 : new HashSet<string>();
 
