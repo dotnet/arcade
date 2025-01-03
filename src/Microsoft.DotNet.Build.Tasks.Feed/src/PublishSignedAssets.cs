@@ -5,6 +5,7 @@ using Azure.Core;
 using Azure.Identity;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using System;
@@ -94,7 +95,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.src
             await PushNugetPackagesAsync<PackageIdentity>(packagesToPublish, targetFeedConfig, 5,
                 async (feed, httpClient, package, feedAccount, feedVisibility, feedName) =>
                 {
-                    string localPackagePath = Path.Combine(packagesFolder, $"{package.Id}.{package.Version}.nupkg");
+                    string localPackagePath = Path.Combine(packagesFolder, PackageArtifactModel.GetNuPkgFileName(package.Id, package.Version.ToString ()));
 
                     if (!File.Exists(localPackagePath))
                     {
