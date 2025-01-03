@@ -46,7 +46,7 @@ parameters:
     default: true
     
   - name: requireDefaultChannels
-    displayName: Enable failing the build if there are on default channel(s) registration for the current build
+    displayName: Fail the build if there are no default channel(s) registrations for the current build
     type: boolean
     default: false
 
