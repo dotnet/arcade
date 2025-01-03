@@ -1502,10 +1502,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 // dead links in the interim.
                 await LinkManager.CreateOrUpdateLatestLinksAsync(
                     assetsToPublish,
-                    feedConfig,
-                    feedConfig.Type == FeedType.AzureStorageContainer
-                        ? 0
-                        : PublishingConstants.ExpectedFeedUrlSuffix.Length);
+                    feedConfig);
             }
         }
 
