@@ -782,6 +782,14 @@ elif [[ "$__CodeName" == "haiku" ]]; then
     popd
     rm -rf "$__RootfsDir/tmp"
 elif [[ -n "$__CodeName" ]]; then
+    __UpdateOptions=
+    if [[ "$__SkipSigCheck" == "0" ]]; then
+        __Keyring="$__Keyring --force-check-gpg"
+    else
+        __Keyring=
+        __UpdateOptions="--allow-unauthenticated --allow-insecure-repositories"
+    fi
+
     if [[ "$__SkipEmulation" == "1" ]]; then
         if [[ -z "$AR" ]]; then
             if command -v ar &>/dev/null; then
@@ -800,24 +808,16 @@ elif [[ -n "$__CodeName" ]]; then
         PYTHON=${PYTHON_EXECUTABLE:-python3}
 
         # shellcheck disable=SC2086,SC2046
-        echo running "$PYTHON" "$__CrossDir/install-debs.py" --arch "$__UbuntuArch" --mirror "$__UbuntuRepo" --rootfsdir "$__RootfsDir" --artool "$AR" \
+        echo running "$PYTHON" "$__CrossDir/install-debs.py" $__Keyring --arch "$__UbuntuArch" --mirror "$__UbuntuRepo" --rootfsdir "$__RootfsDir" --artool "$AR" \
             $(echo $suites | xargs -n 1 | xargs -I {} echo -n "--suite {} ") \
             $__UbuntuPackages
 
         # shellcheck disable=SC2086,SC2046
-        "$PYTHON" "$__CrossDir/install-debs.py" --arch "$__UbuntuArch" --mirror "$__UbuntuRepo" --rootfsdir "$__RootfsDir" --artool "$AR" \
+        "$PYTHON" "$__CrossDir/install-debs.py" $__Keyring --arch "$__UbuntuArch" --mirror "$__UbuntuRepo" --rootfsdir "$__RootfsDir" --artool "$AR" \
             $(echo $suites | xargs -n 1 | xargs -I {} echo -n "--suite {} ") \
             $__UbuntuPackages
 
         exit 0
-    fi
-
-    __UpdateOptions=
-    if [[ "$__SkipSigCheck" == "0" ]]; then
-        __Keyring="$__Keyring --force-check-gpg"
-    else
-        __Keyring=
-        __UpdateOptions="--allow-unauthenticated --allow-insecure-repositories"
     fi
 
     # shellcheck disable=SC2086
