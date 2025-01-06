@@ -124,8 +124,7 @@ async def fetch_release_file(session, mirror, suite, keyring):
         await download_file(session, release_url, release_file.name)
         await download_file(session, release_gpg_url, release_gpg_file.name)
 
-        if keyring != '':
-            keyring_arg = f"--keyring {args.keyring}"
+        keyring_arg = f"--keyring {keyring}" if keyring != '' else ''
 
         print("Verifying signature of Release with Release.gpg.")
         verify_command = f"gpg {keyring_arg} --verify {release_gpg_file.name} {release_file.name}"
