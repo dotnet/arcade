@@ -22,14 +22,6 @@
   </PropertyGroup>
 
   <!--
-    Public signing (as performed under DotNetBuildSourceOnly) fails with the F# compiler.
-    https://github.com/dotnet/fsharp/issues/17451
-  -->
-  <PropertyGroup Condition=" '$(DotNetBuildSourceOnly)' == 'true' and '$(MSBuildProjectExtension)' == '.fsproj' ">
-    <SignAssembly>false</SignAssembly>
-  </PropertyGroup>
-
-  <!--
     Workaround to fix that Visual Studio sometimes uses a special MSBuild evaluation
     mode where all common conditions (e.g., inside ItemGroup) are ignored.
   -->
