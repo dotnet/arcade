@@ -4,6 +4,7 @@ import argparse
 import asyncio
 import aiohttp
 import gzip
+import hashlib
 import os
 import re
 import shutil
@@ -16,7 +17,7 @@ import zstandard
 from collections import deque
 from functools import cmp_to_key
 
-async def download_file(session, url, dest_path, max_retries=3, retry_delay=2, timeout=60):
+async def download_file(session, url, dest_path, max_retries=3, retry_delay=2, timeout=60, checksum=None):
     """Asynchronous file download with retries."""
     attempt = 0
     while attempt < max_retries:
@@ -25,6 +26,13 @@ async def download_file(session, url, dest_path, max_retries=3, retry_delay=2, t
                 if response.status == 200:
                     with open(dest_path, "wb") as f:
                         content = await response.read()
+
+                        # verify checksum if provided
+                        if checksum:
+                            sha256 = hashlib.sha256(content).hexdigest()
+                            if sha256 != checksum:
+                                raise Exception(f"SHA256 mismatch for {url}: expected {checksum}, got {sha256}")
+
                         f.write(content)
                     print(f"Downloaded {url} at {dest_path}")
                     return
@@ -51,11 +59,11 @@ async def download_deb_files_parallel(mirror, packages, tmp_dir):
             if filename:
                 url = f"{mirror}/{filename}"
                 dest_path = os.path.join(tmp_dir, os.path.basename(filename))
-                tasks.append(asyncio.create_task(download_file(session, url, dest_path)))
+                tasks.append(asyncio.create_task(download_file(session, url, dest_path, checksum=info.get("SHA256"))))
 
         await asyncio.gather(*tasks)
 
-async def download_package_index_parallel(mirror, arch, suites):
+async def download_package_index_parallel(mirror, arch, suites, check_sig, keyring):
     """Download package index files for specified suites and components entirely in memory."""
     tasks = []
     timeout = aiohttp.ClientTimeout(total=60)
@@ -63,10 +71,9 @@ async def download_package_index_parallel(mirror, arch, suites):
     async with aiohttp.ClientSession(timeout=timeout) as session:
         for suite in suites:
             for component in ["main", "universe"]:
-                url = f"{mirror}/dists/{suite}/{component}/binary-{arch}/Packages.gz"
-                tasks.append(fetch_and_decompress(session, url))
+                tasks.append(fetch_and_decompress(session, mirror, arch, suite, component, check_sig, keyring))
 
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        results = await asyncio.gather(*tasks)
 
     merged_content = ""
     for result in results:
@@ -77,20 +84,72 @@ async def download_package_index_parallel(mirror, arch, suites):
 
     return merged_content
 
-async def fetch_and_decompress(session, url):
+async def fetch_and_decompress(session, mirror, arch, suite, component, check_sig, keyring):
     """Fetch and decompress the Packages.gz file."""
+
+    path = f"{component}/binary-{arch}/Packages.gz"
+    url = f"{mirror}/dists/{suite}/{path}"
+
     try:
         async with session.get(url) as response:
             if response.status == 200:
                 compressed_data = await response.read()
                 decompressed_data = gzip.decompress(compressed_data).decode('utf-8')
                 print(f"Downloaded index: {url}")
+
+                if check_sig:
+                    # Verify the package index against the sha256 recorded in the Release file
+                    release_file_content = await fetch_release_file(session, mirror, suite, keyring)
+                    packages_sha = parse_release_file(release_file_content, path)
+
+                    sha256 = hashlib.sha256(compressed_data).hexdigest()
+                    if sha256 != packages_sha:
+                        raise Exception(f"SHA256 mismatch for {path}: expected {packages_sha}, got {sha256}")
+                    print(f"Checksum verified for {path}")
+
                 return decompressed_data
             else:
                 print(f"Skipped index: {url} (doesn't exist)")
                 return None
     except Exception as e:
         print(f"Error fetching {url}: {e}")
+
+async def fetch_release_file(session, mirror, suite, keyring):
+    """Fetch Release and Release.gpg files and verify the signature."""
+
+    release_url = f"{mirror}/dists/{suite}/Release"
+    release_gpg_url = f"{mirror}/dists/{suite}/Release.gpg"
+
+    with tempfile.NamedTemporaryFile() as release_file, tempfile.NamedTemporaryFile() as release_gpg_file:
+        await download_file(session, release_url, release_file.name)
+        await download_file(session, release_gpg_url, release_gpg_file.name)
+
+        keyring_arg = f"--keyring {keyring}" if keyring != '' else ''
+
+        print("Verifying signature of Release with Release.gpg.")
+        verify_command = f"gpg {keyring_arg} --verify {release_gpg_file.name} {release_file.name}"
+        result = subprocess.run(verify_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        if result.returncode != 0:
+            raise Exception(f"Signature verification failed: {result.stderr.decode('utf-8')}")
+
+        print("Signature verified successfully.")
+
+        with open(release_file.name) as f: return f.read()
+
+def parse_release_file(content, path):
+    """Parses the Release file and returns sha256 checksum of the specified path."""
+
+    # data looks like this:
+    # <checksum>  <size>  <path>
+    matches = re.findall(r'^ (\S*) +(\S*) +(\S*)$', content, re.MULTILINE)
+
+    for entry in matches:
+        # the file has both md5 and sha256 checksums, we want sha256 which has a length of 64
+        if entry[2] == path and len(entry[0]) == 64:
+            return entry[0]
+
+    raise Exception(f"Could not find checksum for {path} in Release file.")
 
 def parse_debian_version(version):
     """Parse a Debian package version into epoch, upstream version, and revision."""
@@ -171,13 +230,15 @@ def parse_package_index(content):
             filename = fields.get("Filename")
             depends = fields.get("Depends")
             provides = fields.get("Provides", None)
+            sha256 = fields.get("SHA256")
 
             # Only update if package_name is not in packages or if the new version is higher
             if package_name not in packages or compare_debian_versions(version, packages[package_name]["Version"]) > 0:
                 packages[package_name] = {
                     "Version": version,
                     "Filename": filename,
-                    "Depends": depends
+                    "Depends": depends,
+                    "SHA256": sha256
                 }
 
                 # Update aliases if package provides any alternatives
@@ -301,6 +362,8 @@ if __name__ == "__main__":
     parser.add_argument('--suite', required=True, action='append', help='Specify one or more repository suites to collect index data.')
     parser.add_argument("--mirror", required=False, help="Mirror (e.g., http://ftp.debian.org/debian-ports etc.)")
     parser.add_argument("--artool", required=False, default="ar", help="ar tool to extract debs (e.g., ar, llvm-ar etc.)")
+    parser.add_argument("--force-check-gpg", required=False, action='store_true', help="Verify the packages against signatures in Release file.")
+    parser.add_argument("--keyring", required=False, default='', help="Keyring file to check signature of Release file.")
     parser.add_argument("packages", nargs="+", help="List of package names to be installed.")
 
     args = parser.parse_args()
@@ -324,7 +387,7 @@ if __name__ == "__main__":
 
     print(f"Creating rootfs. rootfsdir: {args.rootfsdir}, distro: {args.distro}, arch: {args.arch}, suites: {args.suite}, mirror: {args.mirror}")
 
-    package_index_content = asyncio.run(download_package_index_parallel(args.mirror, args.arch, args.suite))
+    package_index_content = asyncio.run(download_package_index_parallel(args.mirror, args.arch, args.suite, args.force_check_gpg, args.keyring))
 
     packages_info, aliases = parse_package_index(package_index_content)
 
