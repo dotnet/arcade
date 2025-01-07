@@ -33,7 +33,6 @@ __QEMUArch=arm
 __UbuntuArch=armhf
 __UbuntuRepo=
 __UbuntuSuites="updates security backports"
-__DebianSuites=
 __LLDB_Package="liblldb-3.9-dev"
 __SkipUnmount=0
 
@@ -188,8 +187,7 @@ while :; do
             __AlpineArch=loongarch64
             __QEMUArch=loongarch64
             __UbuntuArch=loong64
-            __UbuntuSuites=
-            __DebianSuites=unreleased
+            __UbuntuSuites=unreleased
             __LLDB_Package="liblldb-19-dev"
 
             if [[ "$__CodeName" == "sid" ]]; then
@@ -795,7 +793,7 @@ elif [[ -n "$__CodeName" ]]; then
         fi
 
         # shellcheck disable=SC2086
-        suites="$__CodeName $__DebianSuites $(echo $__UbuntuSuites | xargs -n 1 | xargs -I {} echo -n "$__CodeName-{} ")"
+        suites="$__CodeName $(echo $__UbuntuSuites | xargs -n 1 | xargs -I {} echo -n "$__CodeName-{} ")"
 
         PYTHON=${PYTHON_EXECUTABLE:-python3}
 
@@ -837,7 +835,7 @@ elif [[ -n "$__CodeName" ]]; then
     cat > "$__RootfsDir/etc/apt/sources.list.d/$__CodeName.sources" <<EOF
 Types: deb
 URIs: $__UbuntuRepo
-Suites: $__CodeName $__DebianSuites $(echo $__UbuntuSuites | xargs -n 1 | xargs -I {} echo -n "$__CodeName-{} ")
+Suites: $__CodeName $(echo $__UbuntuSuites | xargs -n 1 | xargs -I {} echo -n "$__CodeName-{} ")
 Components: main universe
 Signed-By: $__KeyringFile
 EOF
