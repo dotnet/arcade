@@ -94,8 +94,8 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(EnableDefaultArtifacts)' == 'true'">
-    <Artifact Include="$(ArtifactsShippingPackagesDir)**/*.nupkg" />
-    <Artifact Include="$(ArtifactsNonShippingPackagesDir)**/*.nupkg" IsShipping="false" />
+    <Artifact Include="$(ArtifactsShippingPackagesDir)**/*.nupkg" PublishFlatContainer="false" />
+    <Artifact Include="$(ArtifactsNonShippingPackagesDir)**/*.nupkg" IsShipping="false" PublishFlatContainer="false" />
   </ItemGroup>
 
   <!-- Allow for repo specific Publish properties such as add additional files to be published -->
