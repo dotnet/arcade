@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -192,19 +193,29 @@ namespace Microsoft.DotNet.SignTool
                 string zipFilePath = GetZipFilePath(TempDir, file.FileName);
                 zipPaths.Add(file.FullPath, zipFilePath);
 
-                var process = Process.Start(new ProcessStartInfo()
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
-                    FileName = "ditto",
-                    Arguments = $"-V -ck --sequesterRsrc \"{file.FullPath}\" \"{zipFilePath}\"",
-                    UseShellExecute = false,
-                    WorkingDirectory = TempDir,
-                });
+                    var process = Process.Start(new ProcessStartInfo()
+                    {
+                        FileName = "ditto",
+                        Arguments = $"-V -ck --sequesterRsrc \"{file.FullPath}\" \"{zipFilePath}\"",
+                        UseShellExecute = false,
+                        WorkingDirectory = TempDir,
+                    });
 
-                process.WaitForExit();
-                if (process.ExitCode != 0)
+                    process.WaitForExit();
+                    if (process.ExitCode != 0)
+                    {
+                        _log.LogError($"Failed to zip file {file.FullPath} to {zipFilePath}");
+                        throw new InvalidOperationException($"Failed to zip file {file.FullPath} to {zipFilePath}");
+                    }
+                }
+                else
                 {
-                    _log.LogError($"Failed to zip file {file.FullPath} to {zipFilePath}");
-                    throw new InvalidOperationException($"Failed to zip file {file.FullPath} to {zipFilePath}");
+                    using (var archive = ZipFile.Open(zipFilePath, ZipArchiveMode.Create))
+                    {
+                        archive.CreateEntryFromFile(file.FullPath, Path.GetFileName(file.FullPath));
+                    }
                 }
             }
 
@@ -215,19 +226,26 @@ namespace Microsoft.DotNet.SignTool
         {
             foreach (var item in zippedOSXFiles)
             {
-                var process = Process.Start(new ProcessStartInfo()
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
-                    FileName = "ditto",
-                    Arguments = $"-V -xk \"{item.Value}\" \"{Path.GetDirectoryName(item.Key)}\"",
-                    UseShellExecute = false,
-                    WorkingDirectory = TempDir,
-                });
+                    var process = Process.Start(new ProcessStartInfo()
+                    {
+                        FileName = "ditto",
+                        Arguments = $"-V -xk \"{item.Value}\" \"{Path.GetDirectoryName(item.Key)}\"",
+                        UseShellExecute = false,
+                        WorkingDirectory = TempDir,
+                    });
 
-                process.WaitForExit();
-                if (process.ExitCode != 0)
+                    process.WaitForExit();
+                    if (process.ExitCode != 0)
+                    {
+                        _log.LogError($"Failed to unzip file {item.Value} to {item.Key}");
+                        throw new InvalidOperationException($"Failed to unzip file {item.Value} to {item.Key}");
+                    }
+                }
+                else
                 {
-                    _log.LogError($"Failed to unzip file {item.Value} to {item.Key}");
-                    throw new InvalidOperationException($"Failed to unzip file {item.Value} to {item.Key}");
+                    ZipFile.ExtractToDirectory(item.Value, Path.GetDirectoryName(item.Key));
                 }
             }
         }
