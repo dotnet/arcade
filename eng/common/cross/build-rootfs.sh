@@ -780,7 +780,7 @@ elif [[ "$__CodeName" == "haiku" ]]; then
     popd
     rm -rf "$__RootfsDir/tmp"
 elif [[ -n "$__CodeName" ]]; then
-    __Suites="$__CodeName $(echo "$__UbuntuSuites" | xargs -n 1 | xargs -I {} echo -n "$__CodeName-{} ")"
+    __Suites="$__CodeName $(for suite in $__UbuntuSuites; do echo -n "$__CodeName-$suite "; done)"
 
     if [[ "$__SkipEmulation" == "1" ]]; then
         if [[ -z "$AR" ]]; then
@@ -798,12 +798,12 @@ elif [[ -n "$__CodeName" ]]; then
 
         # shellcheck disable=SC2086,SC2046
         echo running "$PYTHON" "$__CrossDir/install-debs.py" --arch "$__UbuntuArch" --mirror "$__UbuntuRepo" --rootfsdir "$__RootfsDir" --artool "$AR" \
-            $(echo "$__Suites" | xargs -n 1 | xargs -I {} echo -n "--suite {} ") \
+            $(for suite in $__Suites; do echo -n "--suite $suite "; done) \
             $__UbuntuPackages
 
         # shellcheck disable=SC2086,SC2046
         "$PYTHON" "$__CrossDir/install-debs.py" --arch "$__UbuntuArch" --mirror "$__UbuntuRepo" --rootfsdir "$__RootfsDir" --artool "$AR" \
-            $(echo "$__Suites" | xargs -n 1 | xargs -I {} echo -n "--suite {} ") \
+            $(for suite in $__Suites; do echo -n "--suite $suite "; done) \
             $__UbuntuPackages
 
         exit 0
