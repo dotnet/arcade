@@ -130,6 +130,17 @@ namespace Microsoft.DotNet.SignTool
                 }
                 : new HashSet<string>();
 
+
+        public static readonly Dictionary<string, string> SignAndNotarizeCertificateNames =
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "MacDeveloperHardenAndNotarize", "" },
+                { ".app", "application/octet-stream" },
+                { ".dylib", "application/octet-stream" }
+            };
+
+        public const string Notarization = "MacNotarize";
+
         /// <summary>
         /// Attribute for the CollisionPriorityId
         /// </summary>

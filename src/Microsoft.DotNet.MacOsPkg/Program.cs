@@ -37,7 +37,7 @@ public class Program
                 }
                 Utilities.CleanupPath(dstPath);
                 Utilities.CreateParentDirectory(dstPath);
-                if (Utilities.IsPkg(srcPath!))
+                if (Utilities.IsPkg(srcPath))
                 {
                     Package.Unpack(srcPath, dstPath);
                 }

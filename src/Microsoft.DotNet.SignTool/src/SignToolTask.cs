@@ -316,6 +316,13 @@ namespace Microsoft.DotNet.SignTool
                 .ToArray();
         }
 
+        private ITaskItem[] ParseNotarizationOperation()
+        {
+            return CertificatesSignInfo?
+                .Where(item => item.GetMetadata("DualSigningAllowed").Equals("true", StringComparison.OrdinalIgnoreCase))
+                .ToArray();
+        }
+
         private string GetEnclosingDirectoryOfItemsToSign()
         {
             var separators = new[] { '/', '\\' };
