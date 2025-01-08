@@ -162,7 +162,7 @@
     <!-- Intermediate is necessary for source build. -->
     <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="9.0.0-alpha.1.24619.1">
       <Uri>https://github.com/dotnet/source-build-reference-packages</Uri>
-      <Sha>e2b1d16fd66540b3a5813ec0ac1fd166688c3e0a
+      <Sha>e2b1d16fd66540b3a5813ec0ac1fd166688c3e0a</Sha>
       <SourceBuild RepoName="source-build-reference-packages" ManagedOnly="true" />
     </Dependency>
     <!-- Transitive dependency needed for source build. -->
