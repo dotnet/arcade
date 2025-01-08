@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.SignTool
             if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 log.LogMessage(MessageImportance.Low, $"Skipping signature verification of {filePath} for Windows.");
-                return true;
+                return false;
             }
 
             string tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());

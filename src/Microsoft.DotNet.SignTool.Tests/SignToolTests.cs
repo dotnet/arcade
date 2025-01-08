@@ -1421,7 +1421,6 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.deb"
             ValidateProducedDebContent(Path.Combine(_tmpDir, "test.deb"), expectedFilesOriginalHashes, signableFiles, expectedControlFileContent);
         }
 
-        [SkipOnPlatform(TestPlatforms.Windows, "This test is not supported on Windows.")]
         [Fact]
         public void VerifyDebIntegrity()
         {
@@ -1438,10 +1437,19 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.deb"
             // Overriding information
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            var expectedFilesToBeSigned = new List<string>
             {
                 "File 'IncorrectlySignedDeb.deb' Certificate='LinuxSign'"
-            });
+            };
+
+            // If on windows, both packages will be submitted for signing
+            // because the CL verification tool (gpg) is not available on Windows.
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                expectedFilesToBeSigned.Add("File 'SignedDeb.deb' Certificate='LinuxSign'");
+            }
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, expectedFilesToBeSigned.ToArray());
         }
 #endif
 
