@@ -108,8 +108,13 @@
 
   <Target Name="BeforePublish" Condition="'@(Artifact)' != ''">
     <ItemGroup>
-      <_ExistingSymbolPackage Include="@(Artifact)" Condition="'%(Artifact.SkipPublish)' != 'true' and $([System.String]::Copy('%(Filename)%(Extension)').EndsWith('.symbols.nupkg'))" />
+      <!-- Exclude all existing *.symbols.nupkg in source-only build - we create a unified symbols archive instead. -->
+      <_ExistingSymbolPackage Include="@(Artifact)" Condition="'$(DotNetBuildSourceOnly)' != 'true' and '%(Artifact.SkipPublish)' != 'true' and $([System.String]::Copy('%(Filename)%(Extension)').EndsWith('.symbols.nupkg'))" />
       <_PackageToPublish Include="@(Artifact)" Exclude="@(_ExistingSymbolPackage)" Condition="'%(Artifact.SkipPublish)' != 'true' and '%(Extension)' == '.nupkg'" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ItemsToPushToBlobFeed Include="@(_PackageToPublish);@(_ExistingSymbolPackage)" Exclude="@(ItemsToPushToBlobFeed)" />
     </ItemGroup>
   </Target>
 
@@ -150,11 +155,10 @@
       -->
       <_SymbolPackageToGenerate Remove="$(SymbolPackagesDir)**/Microsoft.DotNet.Darc.*" />
       <_SymbolPackageToGenerate Remove="$(SymbolPackagesDir)**/Microsoft.DotNet.Maestro.Tasks.*" />
+    </ItemGroup>
 
-      <!-- Exclude all existing *.symbols.nupkg in source-only build - we create a unified symbols archive instead. -->
-      <_ExistingSymbolPackage Remove="@(_ExistingSymbolPackage)" Condition="'$(DotNetBuildSourceOnly)' == 'true'"/>
-
-      <ItemsToPushToBlobFeed Include="@(_PackageToPublish);@(_ExistingSymbolPackage);@(_SymbolPackageToGenerate)" Exclude="@(ItemsToPushToBlobFeed)" />
+    <ItemGroup>
+      <ItemsToPushToBlobFeed Include="@(_SymbolPackageToGenerate)" Exclude="@(ItemsToPushToBlobFeed)" />
     </ItemGroup>
   </Target>
 
