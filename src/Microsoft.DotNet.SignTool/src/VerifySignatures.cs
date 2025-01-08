@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.SignTool
 # if NET472
             // Debian unpack tooling is not supported on .NET Framework
             log.LogMessage(MessageImportance.Low, $"Skipping signature verification of {filePath} for .NET Framework");
-            return true;
+            return false;
 # else
             if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
