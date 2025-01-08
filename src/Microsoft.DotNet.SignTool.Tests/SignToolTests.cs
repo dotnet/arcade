@@ -41,8 +41,8 @@ namespace Microsoft.DotNet.SignTool.Tests
             {".vsix",  new List<SignInfo>{ new SignInfo("VsixSHA2") } },
             {".zip",  new List<SignInfo>{ SignInfo.Ignore } },
             {".tgz",  new List<SignInfo>{ SignInfo.Ignore } },
-            {".pkg",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
-            {".app",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
+            {".pkg",  new List<SignInfo>{ new SignInfo("MacDeveloperHarden") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
+            {".app",  new List<SignInfo>{ new SignInfo("MacDeveloperHarden") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             {".py",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             {".nupkg",  new List<SignInfo>{ new SignInfo("NuGet") } },
             {".symbols.nupkg",  new List<SignInfo>{ SignInfo.Ignore } },
@@ -1227,7 +1227,7 @@ $@"
                 "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
-                "File 'NestedPkg.pkg' Certificate='Microsoft400'",
+                "File 'NestedPkg.pkg' Certificate='MacDeveloperHarden'",
                 "File 'test.pkg' Certificate='MacDeveloperHarden'",
             });
 
@@ -1250,12 +1250,12 @@ $@"
                 </FilesToSign>
                 ",
                 $@"
-                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Signing", "Microsoft400", "temp", "NestedPkg.zip"))}"">
-                <Authenticode>Microsoft400</Authenticode>
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "1", "NestedPkg.zip"))}"">
+                <Authenticode>MacDeveloperHarden</Authenticode>
                 </FilesToSign>",
                 $@"
-                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Signing", "Microsoft400", "temp", "test.zip"))}"">
-                <Authenticode>Microsoft400</Authenticode>
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.zip"))}"">
+                <Authenticode>MacDeveloperHarden</Authenticode>
                 </FilesToSign>",
             });
         }
@@ -1275,8 +1275,21 @@ $@"
                 { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo(certificate: "ArcadeCertTest", strongName: "ArcadeStrongTest") } }
             };
 
+            // Set up the cert to allow for signing and notarization.
+            var certificatesSignInfo = new Dictionary<string, List<AdditionalCertificateInformation>>()
+            {
+                {  "MacDeveloperHardenWithNotarization",
+                    new List<AdditionalCertificateInformation>() {
+                        new AdditionalCertificateInformation() { MacNotarizationOperation = "MacNotarize", MacSigningOperation = "MacDeveloperHarden" }
+                    } 
+                }
+            };
+
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
+            {
+                { new ExplicitCertificateKey("test.pkg"), "MacDeveloperHardenWithNotarization" }
+            };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -1284,9 +1297,9 @@ $@"
                 "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
-                "File 'NestedPkg.pkg' Certificate='Microsoft400'",
-                "File 'test.pkg' Certificate='MacDeveloperHardenAndNotarize'",
-            });
+                "File 'NestedPkg.pkg' Certificate='MacDeveloperHarden'",
+                "File 'test.pkg' Certificate='MacDeveloperHarden' Notarize='MacNotarize'",
+            }, additionalCertificateInfo: certificatesSignInfo);
 
             // OSX files need to be zipped first before being signed
             // This is why the .pkgs are listed as .zip files below
@@ -1307,14 +1320,19 @@ $@"
                 </FilesToSign>
                 ",
                 $@"
-                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Signing", "Microsoft400", "temp", "NestedPkg.zip"))}"">
-                <Authenticode>Microsoft400</Authenticode>
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "1", "NestedPkg.zip"))}"">
+                <Authenticode>MacDeveloperHarden</Authenticode>
                 </FilesToSign>",
                 $@"
-                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Signing", "Microsoft400", "temp", "test.zip"))}"">
-                <Authenticode>Microsoft400</Authenticode
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.zip"))}"">
+                <Authenticode>MacDeveloperHarden</Authenticode>
+                </FilesToSign>
+                ",
+                $@"
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.zip"))}"">
+                <Authenticode>MacNotarize</Authenticode>
                 </FilesToSign>",
-            });
+            }, additionalCertificateInfo: certificatesSignInfo);
         }
 
         [MacOSOnlyFact]
@@ -1341,7 +1359,7 @@ $@"
                 "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
-                "File 'NestedPkg.pkg' Certificate='Microsoft400'",
+                "File 'NestedPkg.pkg' Certificate='MacDeveloperHarden'",
             });
 
             // OSX files need to be zipped first before being signed
@@ -1363,9 +1381,8 @@ $@"
                 </FilesToSign>
                 ",
                 $@"
-                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Signing", "Microsoft400", "temp", "NestedPkg.zip"))}"">
-                <Authenticode>Microsoft400</Authenticode>
-                <Zip>true</Zip>
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "NestedPkg.zip"))}"">
+                <Authenticode>MacDeveloperHarden</Authenticode>
                 </FilesToSign>"
             });
         }
@@ -1392,27 +1409,26 @@ $@"
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'libexample.dylib' Certificate='DylibCertificate'",
-                "File 'test.app' Certificate='Microsoft400'",
-                "File 'WithApp.pkg' Certificate='Microsoft400'",
+                "File 'test.app' Certificate='MacDeveloperHarden'",
+                "File 'WithApp.pkg' Certificate='MacDeveloperHarden'",
             });
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
+                // This dylib does not go to a zip file because the cert chosen is DylibCertificate.
                 $@"
                 <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "4", "Contents/Resources/libexample.dylib"))}"">
                 <Authenticode>DylibCertificate</Authenticode>
                 </FilesToSign>
                 ",
                 $@"
-                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Signing", "Microsoft400", "temp", "test.zip"))}"">
-                <Authenticode>Microsoft400</Authenticode>
-                <Zip>true</Zip>
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "2", "Payload", "test.zip"))}"">
+                <Authenticode>MacDeveloperHarden</Authenticode>
                 </FilesToSign>
                 ",
                 $@"
-                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Signing", "Microsoft400", "temp", "WithApp.zip"))}"">
-                <Authenticode>Microsoft400</Authenticode>
-                <Zip>true</Zip>
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "WithApp.zip"))}"">
+                <Authenticode>MacDeveloperHarden</Authenticode>
                 </FilesToSign>"
             });
         }

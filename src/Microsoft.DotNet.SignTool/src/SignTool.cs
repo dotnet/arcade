@@ -62,11 +62,12 @@ namespace Microsoft.DotNet.SignTool
         private Dictionary<string, string> ZipMacFiles(IEnumerable<FileSignInfo> filesToSign)
         {
             var zipPaths = new Dictionary<string, string>();
-            var osxFilesToSign = filesToSign.Where(fsi => SignToolConstants.SignableOSXExtensions.Contains(Path.GetExtension(fsi.FileName)));
+            var osxFilesToZip = filesToSign.Where(fsi => SignToolConstants.MacSigningOperationsRequiringZipping.Contains(fsi.SignInfo.Certificate) ||
+                                                          SignToolConstants.MacSigningOperationsRequiringZipping.Contains(fsi.SignInfo.Notarization));
 
-            foreach (var file in osxFilesToSign)
+            foreach (var file in osxFilesToZip)
             {
-                string zipFilePath = GetZipFilePath(TempDir, file.FileName);
+                string zipFilePath = GetZipFilePath(file.FullPath);
                 zipPaths.Add(file.FullPath, zipFilePath);
 
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
@@ -145,7 +146,8 @@ namespace Microsoft.DotNet.SignTool
                 return false;
             }
 
-            var filesToNotarize = filesToSign.Where(f => f.SignInfo.Notarization != null);
+            // Then an additional notarization pass.
+            var filesToNotarize = filesToSign.Where(f => !string.IsNullOrEmpty(f.SignInfo.Notarization));
             if (filesToNotarize.Any())
             {
                 // Now notarize. No need to unzip in between
@@ -205,37 +207,9 @@ namespace Microsoft.DotNet.SignTool
             return builder.ToString();
         }
 
-        private string GenerateOSXBuildFileContent(string fullPathOSXFilesFolder, string osxCertificateName)
+        protected virtual string GetZipFilePath(string fullPath)
         {
-            var builder = new StringBuilder();
-            var signKind = _args.TestSign ? "test" : "real";
-
-            AppendLine(builder, depth: 0, text: @"<?xml version=""1.0"" encoding=""utf-8""?>");
-            AppendLine(builder, depth: 0, text: @"<Project DefaultTargets=""AfterBuild"">");
-
-            AppendLine(builder, depth: 1, text: $@"<Import Project=""{Path.Combine(MicroBuildCorePath, "build", "MicroBuild.Core.props")}"" />");
-
-            AppendLine(builder, depth: 1, text: $@"<PropertyGroup>");
-            AppendLine(builder, depth: 2, text: $@"<MACFilesTarget>{fullPathOSXFilesFolder}</MACFilesTarget>");
-            AppendLine(builder, depth: 2, text: $@"<MACFilesCert>{osxCertificateName}</MACFilesCert>");
-            AppendLine(builder, depth: 2, text: $@"<SignType>{signKind}</SignType>");
-            AppendLine(builder, depth: 1, text: $@"</PropertyGroup>");
-
-            AppendLine(builder, depth: 1, text: @"<Target Name=""AfterBuild"">");
-            AppendLine(builder, depth: 2, text: @"<Message Text=""Running OSX files signing process."" />");
-            AppendLine(builder, depth: 1, text: @"</Target>");
-
-            AppendLine(builder, depth: 1, text: $@"<Import Project=""{Path.Combine(MicroBuildCorePath, "build", "MicroBuild.Core.targets")}"" />");
-            AppendLine(builder, depth: 0, text: @"</Project>");
-
-            return builder.ToString();
-        }
-
-        protected virtual string GetZipFilePath(string zipFileDir, string fileName)
-        {
-            string tempDir = Path.Combine(zipFileDir, Path.GetRandomFileName());
-            Directory.CreateDirectory(tempDir);
-            return Path.Combine(tempDir, Path.GetFileNameWithoutExtension(fileName) + ".zip");
+            return Path.Combine(Path.GetDirectoryName(fullPath), Path.GetFileNameWithoutExtension(fullPath) + ".zip");
         }
 
         private static void AppendLine(StringBuilder builder, int depth, string text)

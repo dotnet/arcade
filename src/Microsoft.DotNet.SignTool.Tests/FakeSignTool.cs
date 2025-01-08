@@ -84,14 +84,5 @@ namespace Microsoft.DotNet.SignTool
         {
             return true;
         }
-
-        protected override string GetZipFilePath(string zipFileDir, string fileName)
-        {
-            // The original implementation of this method creates a temporary directory
-            // This is non-deterministic when testing, so we use a known path instead
-            string tempDir = Path.Combine(zipFileDir, "temp");
-            Directory.CreateDirectory(tempDir);
-            return Path.Combine(tempDir, Path.GetFileNameWithoutExtension(fileName) + ".zip");
-        }
     }
 }
