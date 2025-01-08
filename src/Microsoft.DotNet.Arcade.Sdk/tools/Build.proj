@@ -93,6 +93,9 @@
   <ItemGroup Condition="'@(ProjectToBuild)' == '' and '$(_DotNetBuildPassNormalized)' == '1'">
     <ProjectToBuild Include="$(RepoRoot)*.sln" />
   </ItemGroup>
+  <ItemGroup Condition="'@(ProjectToBuild)' == '' and '$(_DotNetBuildPassNormalized)' == '1'">
+    <ProjectToBuild Include="$(RepoRoot)*.slnx" />
+  </ItemGroup>
 
   <Target Name="InitializeSolutionBuildInputs">
     <ItemGroup>
