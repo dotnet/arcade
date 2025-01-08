@@ -49,8 +49,7 @@ namespace Microsoft.DotNet.SignTool
         public bool Sign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> files)
         {
             return LocalStrongNameSign(buildEngine, round, files)
-                && AuthenticodeSign(buildEngine, round, files)
-                && Notarize(buildEngine, round, files.Where(f => f.SignInfo.Certificate == "MacDeveloperHardenAndNotarize"));
+                && AuthenticodeSignAndNotarize(buildEngine, round, files);
         }
 
         /// <summary>
@@ -127,44 +126,41 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
-        private bool AuthenticodeSign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> filesToSign)
+        private bool AuthenticodeSignAndNotarize(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> filesToSign)
         {
-            var signingDir = Path.Combine(_args.TempDir, "Signing");
+            var dir = Path.Combine(_args.TempDir, "Signing");
+            bool status = true;
 
-            bool signingStatus = true;
-
-            Directory.CreateDirectory(signingDir);
-
-            var buildFilePath = Path.Combine(signingDir, $"Round{round}-Sign.proj");
+            Directory.CreateDirectory(dir);
+            
             var zippedPaths = ZipMacFiles(filesToSign);
-            var projectContent = GenerateBuildFileContent(filesToSign, zippedPaths, false);
 
-            File.WriteAllText(buildFilePath, projectContent);
-            signingStatus = RunMSBuild(buildEngine, buildFilePath, Path.Combine(_args.LogDir, $"Signing{round}.binlog"));
+            // First the signing pass
+            var signFilePath = Path.Combine(dir, $"Round{round}-Sign.proj");
+            File.WriteAllText(signFilePath, GenerateBuildFileContent(filesToSign, zippedPaths, false));
+            status = RunMSBuild(buildEngine, signFilePath, Path.Combine(_args.LogDir, $"SigningRound{round}.binlog"));
+
+            if (!status)
+            {
+                return false;
+            }
+
+            var filesToNotarize = filesToSign.Where(f => f.SignInfo.Notarization != null);
+            if (filesToNotarize.Any())
+            {
+                // Now notarize. No need to unzip in between
+                var notarizeFilePath = Path.Combine(dir, $"Round{round}-Notarize.proj");
+                File.WriteAllText(signFilePath, GenerateBuildFileContent(filesToNotarize, zippedPaths, true));
+                status = RunMSBuild(buildEngine, signFilePath, Path.Combine(_args.LogDir, $"NotarizationRound{round}.binlog"));
+            }
+
+            // Now unzip
             UnzipMacFiles(zippedPaths);
 
-            return signingStatus;
+            return status;
         }
 
-        private bool Notarize(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> filesToSign)
-        {
-            var notarizationDir = Path.Combine(_args.TempDir, "Notarization");
-            bool notarizationStatus = true;
-
-            Directory.CreateDirectory(notarizationDir);
-
-            var buildFilePath = Path.Combine(notarizationDir, $"Round{round}-Notarize.proj");
-            var zippedPaths = ZipMacFiles(filesToSign);
-            var projectContent = GenerateBuildFileContent(filesToSign, zippedPaths, true);
-
-            File.WriteAllText(buildFilePath, projectContent);
-            notarizationStatus = RunMSBuild(buildEngine, buildFilePath, Path.Combine(_args.LogDir, $"Notarization{round}.binlog"));
-            UnzipMacFiles(zippedPaths);
-
-            return notarizationStatus;
-        }
-
-        private string GenerateBuildFileContent(IEnumerable<FileSignInfo> filesToSign, Dictionary<string, string> zippedPaths, bool notarizationPass)
+        private string GenerateBuildFileContent(IEnumerable<FileSignInfo> filesToSign, Dictionary<string, string> zippedPaths, bool notarize)
         {
             var builder = new StringBuilder();
             AppendLine(builder, depth: 0, text: @"<?xml version=""1.0"" encoding=""utf-8""?>");
@@ -188,14 +184,7 @@ namespace Microsoft.DotNet.SignTool
                     filePath = fileToSign.FullPath;
                 }
                 AppendLine(builder, depth: 2, text: $@"<FilesToSign Include=""{Uri.EscapeDataString(filePath)}"">");
-                if (fileToSign.SignInfo.Certificate == "MacDeveloperHardenAndNotarize")
-                {
-                    AppendLine(builder, depth: 3, text: $@"<Authenticode>{(notarizationPass ? "MacNotarize" : "MacDeveloperHarden")}</Authenticode>");
-                }
-                else
-                {
-                    AppendLine(builder, depth: 3, text: $@"<Authenticode>{fileToSign.SignInfo.Certificate}</Authenticode>");
-                }
+                AppendLine(builder, depth: 3, text: $@"<Authenticode>{(notarize ? fileToSign.SignInfo.Notarization : fileToSign.SignInfo.Certificate)}</Authenticode>");
                 if (fileToSign.SignInfo.ShouldStrongName && !fileToSign.SignInfo.ShouldLocallyStrongNameSign)
                 {
                     AppendLine(builder, depth: 3, text: $@"<StrongName>{fileToSign.SignInfo.StrongName}</StrongName>");

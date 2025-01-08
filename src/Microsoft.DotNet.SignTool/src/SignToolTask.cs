@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using System.Resources;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using Microsoft.DotNet.SignTool.src;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -243,19 +244,21 @@ namespace Microsoft.DotNet.SignTool
             var strongNameInfo = ParseStrongNameSignInfo();
             var fileSignInfo = ParseFileSignInfo();
             var extensionSignInfo = ParseFileExtensionSignInfo();
-            var dualCertificates = ParseCertificateInfo();
+            var dualCertificates = ParseAdditionalCertificateInformation();
 
             if (Log.HasLoggedErrors) return;
 
             var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, DotNetPath, LogDir, enclosingDir, SNBinaryPath, WixToolsPath, TarToolPath, PkgToolPath);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs, Log) : (SignTool)new RealSignTool(signToolArgs, Log);
 
+            var itemsToSign = ItemsToSign.Select(i => new ItemToSign(i.ItemSpec, i.GetMetadata(SignToolConstants.CollisionPriorityId))).OrderBy(i => i.CollisionPriorityId).ToList();
+
             Telemetry telemetry = new Telemetry();
             try
             {
                 Configuration configuration = new Configuration(
                     TempDir,
-                    ItemsToSign.OrderBy(i => i.GetMetadata(SignToolConstants.CollisionPriorityId)).ToArray(),
+                    itemsToSign,
                     strongNameInfo,
                     fileSignInfo,
                     extensionSignInfo,
@@ -309,18 +312,58 @@ namespace Microsoft.DotNet.SignTool
             Log.LogMessage(MessageImportance.High, $"MicroBuild signing configuration will be in (Round*.proj): {TempDir}");
         }
 
-        private ITaskItem[] ParseCertificateInfo()
+        private Dictionary<string, List<AdditionalCertificateInformation>> ParseAdditionalCertificateInformation()
         {
-            return CertificatesSignInfo?
-                .Where(item => item.GetMetadata("DualSigningAllowed").Equals("true", StringComparison.OrdinalIgnoreCase))
-                .ToArray();
-        }
+            if (CertificatesSignInfo != null)
+            {
+                // Parse the additional certificate information, which has the following
+                // potential metadata:
+                // - DualSigningAllowed: boolean
+                // - CollisionPriorityId: string
+                // - MacCertificate: Name of actual cert if the cert name represents a sign+notarize operation. If present, requires "Notarize" metadata.
+                // - MacNotarizationOperation: Name of the notarize operation if the cert name represents a sign+notarize operation. If present, requires "Certificate" metadata.
 
-        private ITaskItem[] ParseNotarizationOperation()
-        {
-            return CertificatesSignInfo?
-                .Where(item => item.GetMetadata("DualSigningAllowed").Equals("true", StringComparison.OrdinalIgnoreCase))
-                .ToArray();
+                var map = new Dictionary<string, List<AdditionalCertificateInformation>>(StringComparer.OrdinalIgnoreCase);
+                foreach (var certificateSignInfo in CertificatesSignInfo)
+                {
+                    var certificateName = certificateSignInfo.ItemSpec;
+                    var dualSigningAllowed = certificateSignInfo.GetMetadata("DualSigningAllowed");
+                    bool dualSignAllowedValue = false;
+                    var macSigningOperation = certificateSignInfo.GetMetadata("MacCertificate");
+                    var macNotarizationOperation = certificateSignInfo.GetMetadata("MacNotarizationOperation");
+                    var collisionPriorityId = certificateSignInfo.GetMetadata(SignToolConstants.CollisionPriorityId);
+
+                    if (string.IsNullOrEmpty(macSigningOperation) != string.IsNullOrEmpty(macNotarizationOperation))
+                    {
+                        Log.LogError($"Both MacCertificate and MacNotarizationOperation must be specified");
+                        continue;
+                    }
+                    if (!string.IsNullOrEmpty(dualSigningAllowed) && !bool.TryParse(dualSigningAllowed, out dualSignAllowedValue))
+                    {
+                        Log.LogError($"DualSigningAllowed must be 'true' or 'false");
+                        continue;
+                    }
+
+                    var additionalCertInfo = new AdditionalCertificateInformation
+                    {
+                        DualSigningAllowed = dualSignAllowedValue,
+                        MacSigningOperation = macSigningOperation,
+                        MacNotarizationOperation = macNotarizationOperation,
+                        CollisionPriorityId = collisionPriorityId
+                    };
+
+                    if (!map.TryGetValue(certificateName, out var additionalCertificateInformation))
+                    {
+                        additionalCertificateInformation = new List<AdditionalCertificateInformation>();
+                        map.Add(certificateName, additionalCertificateInformation);
+                    }
+                    additionalCertificateInformation.Add(additionalCertInfo);
+                }
+
+                return map;
+            }
+
+            return null;
         }
 
         private string GetEnclosingDirectoryOfItemsToSign()

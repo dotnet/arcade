@@ -3,6 +3,7 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.DotNet.SignTool.src;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -22,7 +23,7 @@ namespace Microsoft.DotNet.SignTool
     {
         private readonly TaskLoggingHelper _log;
 
-        private readonly ITaskItem[] _itemsToSign;
+        private readonly List<ItemToSign> _itemsToSign;
 
         /// <summary>
         /// This store content information for container files.
@@ -78,7 +79,7 @@ namespace Microsoft.DotNet.SignTool
         /// This is a list of the friendly name of certificates that can be used to
         /// sign already signed binaries.
         /// </summary>
-        private readonly ITaskItem[] _dualCertificates;
+        private readonly Dictionary<string, List<AdditionalCertificateInformation>> _additionalCertificateInformation;
 
         /// <summary>
         /// Use the content hash in the path of the extracted file paths. 
@@ -107,11 +108,11 @@ namespace Microsoft.DotNet.SignTool
 
         public Configuration(
             string tempDir,
-            ITaskItem[] itemsToSign,
+            List<ItemToSign> itemsToSign,
             Dictionary<string, List<SignInfo>> strongNameInfo,
             Dictionary<ExplicitCertificateKey, string> fileSignInfo,
             Dictionary<string, List<SignInfo>> extensionSignInfo,
-            ITaskItem[] dualCertificates,
+            Dictionary<string, List<AdditionalCertificateInformation>> additionalCertificateInformation,
             string tarToolPath,
             string pkgToolPath,
             string snPath,
@@ -136,10 +137,10 @@ namespace Microsoft.DotNet.SignTool
             _zipDataMap = new Dictionary<SignedFileContentKey, ZipData>();
             _filesByContentKey = new Dictionary<SignedFileContentKey, FileSignInfo>();
             _itemsToSign = itemsToSign;
-            _dualCertificates = dualCertificates == null ? new ITaskItem[0] : dualCertificates;
+            _additionalCertificateInformation = additionalCertificateInformation == null ? new() : additionalCertificateInformation;
             _whichPackagesTheFileIsIn = new Dictionary<SignedFileContentKey, HashSet<string>>();
             _errors = new Dictionary<SigningToolErrorCode, HashSet<SignedFileContentKey>>();
-            _wixPacks = _itemsToSign.Where(w => WixPackInfo.IsWixPack(w.ItemSpec))?.Select(s => new WixPackInfo(s.ItemSpec)).ToList();
+            _wixPacks = _itemsToSign.Where(w => WixPackInfo.IsWixPack(w.FullPath))?.Select(s => new WixPackInfo(s.FullPath)).ToList();
             _hashToCollisionIdMap = new Dictionary<SignedFileContentKey, string>();
             _telemetry = telemetry;
             _tarToolPath = tarToolPath;
@@ -152,22 +153,20 @@ namespace Microsoft.DotNet.SignTool
             Stopwatch gatherInfoTime = Stopwatch.StartNew();
             foreach (var itemToSign in _itemsToSign)
             {
-                string fullPath = itemToSign.ItemSpec;
-                string collisionPriorityId = itemToSign.GetMetadata(SignToolConstants.CollisionPriorityId);
-                var contentHash = ContentUtil.GetContentHash(fullPath);
-                var fileUniqueKey = new SignedFileContentKey(contentHash, Path.GetFileName(fullPath));
+                var contentHash = ContentUtil.GetContentHash(itemToSign.FullPath);
+                var fileUniqueKey = new SignedFileContentKey(contentHash, Path.GetFileName(itemToSign.FullPath));
 
                 if (!_whichPackagesTheFileIsIn.TryGetValue(fileUniqueKey, out var packages))
                 {
                     packages = new HashSet<string>();
                 }
 
-                packages.Add(fullPath);
+                packages.Add(itemToSign.FullPath);
 
                 _whichPackagesTheFileIsIn[fileUniqueKey] = packages;
 
-                PathWithHash pathWithHash = new PathWithHash(fullPath, contentHash);
-                TrackFile(pathWithHash, null, collisionPriorityId);
+                PathWithHash pathWithHash = new PathWithHash(itemToSign.FullPath, contentHash);
+                TrackFile(pathWithHash, null, itemToSign.CollisionPriorityId);
             }
             gatherInfoTime.Stop();
             if (_telemetry != null)
@@ -513,14 +512,34 @@ namespace Microsoft.DotNet.SignTool
 
             if (hasSignInfo)
             {
-                bool dualCerts = _dualCertificates
-                        .Where(d => d.ItemSpec == signInfo.Certificate && 
-                        (d.GetMetadata(SignToolConstants.CollisionPriorityId) == "" ||
-                        d.GetMetadata(SignToolConstants.CollisionPriorityId) == _hashToCollisionIdMap[signedFileContentKey])).Any();
+                bool dualCertsAllowed = false;
+                string macSignOperation = null;
+                string macNotarizeOperation = null;
+                if (signInfo.Certificate != null && _additionalCertificateInformation.TryGetValue(signInfo.Certificate, out var additionalInfo))
+                {
+                    var additionalCertInfo = additionalInfo.FirstOrDefault(a => string.IsNullOrEmpty(a.CollisionPriorityId) || 
+                                                                       a.CollisionPriorityId == _hashToCollisionIdMap[signedFileContentKey]);
+                    if (additionalCertInfo != null)
+                    {
+                        dualCertsAllowed = additionalCertInfo.DualSigningAllowed;
+                        macSignOperation = additionalCertInfo.MacSigningOperation;
+                        macNotarizeOperation = additionalCertInfo.MacNotarizationOperation;
+                    }
+                }
 
-                if (isAlreadyAuthenticodeSigned && !dualCerts)
+                // If the file is already signed and we are not allowed to dual sign, and we are not doing a mac notarization operation,
+                // then we should not sign the file.
+                if (isAlreadyAuthenticodeSigned && !dualCertsAllowed && string.IsNullOrEmpty(macNotarizeOperation))
                 {
                     return new FileSignInfo(file, signInfo.WithIsAlreadySigned(isAlreadyAuthenticodeSigned), wixContentFilePath: wixContentFilePath);
+                }
+
+                // If the certificate indicates that the file has a split sign/notarize operation,
+                // then replace the certificate with the sign certificate and add the notarization operation.
+                if (!string.IsNullOrEmpty(macSignOperation))
+                {
+                    signInfo = signInfo.WithCertificateName(macSignOperation, _hashToCollisionIdMap[signedFileContentKey]);
+                    signInfo = signInfo.WithNotarization(macNotarizeOperation, _hashToCollisionIdMap[signedFileContentKey]);
                 }
 
                 if (signInfo.ShouldSign && peInfo != null)

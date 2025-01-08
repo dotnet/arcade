@@ -139,7 +139,8 @@ namespace Microsoft.DotNet.SignTool
             => $"File '{FileName}'" +
                (TargetFramework != null ? $" TargetFramework='{TargetFramework}'" : "") +
                (SignInfo.ShouldSign ? $" Certificate='{SignInfo.Certificate}'" : "") +
-               (SignInfo.ShouldStrongName ? $" StrongName='{SignInfo.StrongName}'" : "");
+               (SignInfo.ShouldStrongName ? $" StrongName='{SignInfo.StrongName}'" : "") +
+               (SignInfo.ShouldNotarize ? $" Notarize='{SignInfo.Notarization}'" : "");
 
         internal FileSignInfo WithSignableParts()
             => new FileSignInfo(File, SignInfo.WithIsAlreadySigned(false), TargetFramework, WixContentFilePath, true);
