@@ -55,14 +55,14 @@ namespace Microsoft.DotNet.SignTool
 
                 RunCommand($"gpg --import {tempDir}/microsoft.asc");
 
-                string debianBinary = WriteDebContainerEntry(filePath, "debian-binary", tempDir);
-                string controlTar = WriteDebContainerEntry(filePath, "control.tar", tempDir);
-                string dataTar = WriteDebContainerEntry(filePath, "data.tar", tempDir);
+                string debianBinary = ExtractDebContainerEntry(filePath, "debian-binary", tempDir);
+                string controlTar = ExtractDebContainerEntry(filePath, "control.tar", tempDir);
+                string dataTar = ExtractDebContainerEntry(filePath, "data.tar", tempDir);
                 RunCommand($"cat {debianBinary} {controlTar} {dataTar} > {tempDir}/combined-contents");
 
                 // 'gpg --verify' will return a non-zero exit code if the signature is invalid
                 // We don't want to throw an exception in that case, so we pass throwOnError: false
-                string gpgOrigin = WriteDebContainerEntry(filePath, "_gpgorigin", tempDir);
+                string gpgOrigin = ExtractDebContainerEntry(filePath, "_gpgorigin", tempDir);
                 string output = RunCommand($"gpg --verify {gpgOrigin} {tempDir}/combined-contents", throwOnError: false);
                 if (output.Contains("Good signature"))
                 {
@@ -217,7 +217,7 @@ namespace Microsoft.DotNet.SignTool
         }
 
 # if !NET472
-        private static string WriteDebContainerEntry(string debianPackage, string entryName, string workingDir)
+        private static string ExtractDebContainerEntry(string debianPackage, string entryName, string workingDir)
         {
             var (relativePath, content, contentSize) = ZipData.ReadDebContainerEntries(debianPackage, entryName).Single();
             string entryPath = Path.Combine(workingDir, relativePath);
