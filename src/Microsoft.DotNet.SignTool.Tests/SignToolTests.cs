@@ -1420,6 +1420,29 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.deb"
 
             ValidateProducedDebContent(Path.Combine(_tmpDir, "test.deb"), expectedFilesOriginalHashes, signableFiles, expectedControlFileContent);
         }
+
+        [SkipOnPlatform(TestPlatforms.Windows, "This test is not supported on Windows.")]
+        [Fact]
+        public void VerifyDebIntegrity()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("SignedDeb.deb")),
+                new TaskItem(GetResourcePath("IncorrectlySignedDeb.deb"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'IncorrectlySignedDeb.deb' Certificate='LinuxSign'"
+            });
+        }
 #endif
 
         [Fact]

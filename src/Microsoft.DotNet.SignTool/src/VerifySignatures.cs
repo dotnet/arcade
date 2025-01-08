@@ -221,15 +221,8 @@ namespace Microsoft.DotNet.SignTool
         {
             var (relativePath, content, contentSize) = ZipData.ReadDebContainerEntries(debianPackage, entryName).Single();
             string entryPath = Path.Combine(workingDir, relativePath);
-
-            // The relative path of the _gpgorigin file ends with a '/', which is not a valid path given that it is a file
-            // Remove the following workaround once https://github.com/dotnet/arcade/issues/15384 is resolved.
-            if (entryName == "_gpgorigin")
-            {
-                entryPath = entryPath.TrimEnd('/');
-            }
-
             File.WriteAllBytes(entryPath, ((MemoryStream)content).ToArray());
+
             return entryPath;
         }
 # endif
