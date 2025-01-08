@@ -78,7 +78,7 @@
 
     <!-- This tracks the dependent targets of PublishToAzureDevOpsArtifacts and PublishSymbols. We can't rename this
          property as it is used by other repositories already. -->
-    <PublishDependsOnTargets>BeforePublish;AutoGenerateSymbolPackages;GenerateChecksumsFromArtifacts</PublishDependsOnTargets>
+    <PublishDependsOnTargets>BeforePublish;AutoGenerateSymbolPackages</PublishDependsOnTargets>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -180,7 +180,7 @@
 
   <Target Name="PublishToAzureDevOpsArtifacts"
           Condition="'$(DotNetPublishUsingPipelines)' == 'true'"
-          DependsOnTargets="$(PublishDependsOnTargets)">
+          DependsOnTargets="$(PublishDependsOnTargets);GenerateChecksumsFromArtifacts">
     <!-- 
       Sadly AzDO doesn't have a variable to tell the account name. Also
       the format of CollectionURI is not precise across different agent 
