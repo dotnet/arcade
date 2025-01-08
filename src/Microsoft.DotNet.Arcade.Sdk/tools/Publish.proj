@@ -76,9 +76,9 @@
     <AutoGenerateSymbolPackages Condition="'$(AutoGenerateSymbolPackages)' == '' and 
       ('$(DotNetBuildSourceOnly)' != 'true' or ('$(DotNetBuildInnerRepo)' == 'true' and '$(DotNetBuildOrchestrator)' != 'true'))">true</AutoGenerateSymbolPackages>
 
-    <PublishDependsOnTargets>$(PublishDependsOnTargets);BeforePublish;AutoGenerateSymbolPackages</PublishDependsOnTargets>
-    <PublishDependsOnTargets Condition="$(PublishToSymbolServer)">$(PublishDependsOnTargets);PublishSymbols</PublishDependsOnTargets>
-    <PublishDependsOnTargets Condition="$(DotNetPublishUsingPipelines)">$(PublishDependsOnTargets);PublishToAzureDevOpsArtifacts</PublishDependsOnTargets>
+    <!-- This tracks the dependent targets of PublishToAzureDevOpsArtifacts and PublishSymbols. We can't rename this
+         property as it is used by other repositories already. -->
+    <PublishDependsOnTargets>BeforePublish;AutoGenerateSymbolPackages</PublishDependsOnTargets>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -104,12 +104,17 @@
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets"/>
   <Import Project="$(NuGetPackageRoot)microsoft.symboluploader.build.task\$(MicrosoftSymbolUploaderBuildTaskVersion)\build\PublishSymbols.targets" Condition="$(PublishToSymbolServer)"/>
 
-  <Target Name="Publish" DependsOnTargets="$(PublishDependsOnTargets)" />
+  <Target Name="Publish" DependsOnTargets="PublishSymbols;PublishToAzureDevOpsArtifacts" />
 
-  <Target Name="BeforePublish">
-    <ItemGroup Condition="'@(Artifact)' != ''">
-      <_ExistingSymbolPackage Include="@(Artifact)" Condition="'%(Artifact.SkipPublish)' != 'true' and $([System.String]::Copy('%(Filename)%(Extension)').EndsWith('.symbols.nupkg'))" />
+  <Target Name="BeforePublish" Condition="'@(Artifact)' != ''">
+    <ItemGroup>
+      <!-- Exclude all existing *.symbols.nupkg in source-only build - we create a unified symbols archive instead. -->
+      <_ExistingSymbolPackage Include="@(Artifact)" Condition="'$(DotNetBuildSourceOnly)' != 'true' and '%(Artifact.SkipPublish)' != 'true' and $([System.String]::Copy('%(Filename)%(Extension)').EndsWith('.symbols.nupkg'))" />
       <_PackageToPublish Include="@(Artifact)" Exclude="@(_ExistingSymbolPackage)" Condition="'%(Artifact.SkipPublish)' != 'true' and '%(Extension)' == '.nupkg'" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ItemsToPushToBlobFeed Include="@(_PackageToPublish);@(_ExistingSymbolPackage)" Exclude="@(ItemsToPushToBlobFeed)" />
     </ItemGroup>
   </Target>
 
@@ -150,11 +155,10 @@
       -->
       <_SymbolPackageToGenerate Remove="$(SymbolPackagesDir)**/Microsoft.DotNet.Darc.*" />
       <_SymbolPackageToGenerate Remove="$(SymbolPackagesDir)**/Microsoft.DotNet.Maestro.Tasks.*" />
+    </ItemGroup>
 
-      <!-- Exclude all existing *.symbols.nupkg in source-only build - we create a unified symbols archive instead. -->
-      <_ExistingSymbolPackage Remove="@(_ExistingSymbolPackage)" Condition="'$(DotNetBuildSourceOnly)' == 'true'"/>
-
-      <ItemsToPushToBlobFeed Include="@(_PackageToPublish);@(_ExistingSymbolPackage);@(_SymbolPackageToGenerate)" Exclude="@(ItemsToPushToBlobFeed)" />
+    <ItemGroup>
+      <ItemsToPushToBlobFeed Include="@(_SymbolPackageToGenerate)" Exclude="@(ItemsToPushToBlobFeed)" />
     </ItemGroup>
   </Target>
 
@@ -179,7 +183,8 @@
   </Target>
 
   <Target Name="PublishToAzureDevOpsArtifacts"
-          DependsOnTargets="GenerateChecksumsFromArtifacts">
+          Condition="'$(DotNetPublishUsingPipelines)' == 'true'"
+          DependsOnTargets="$(PublishDependsOnTargets);GenerateChecksumsFromArtifacts">
     <!-- 
       Sadly AzDO doesn't have a variable to tell the account name. Also
       the format of CollectionURI is not precise across different agent 
@@ -314,7 +319,9 @@
       Condition="'@(FilesToPublishToSymbolServer)' != ''"/>
   </Target>
 
-  <Target Name="PublishSymbols">
+  <Target Name="PublishSymbols"
+          Condition="'$(PublishToSymbolServer)' == 'true'"
+          DependsOnTargets="$(PublishDependsOnTargets)">
     <PropertyGroup>
       <DotNetSymbolExpirationInDays Condition="'$(DotNetSymbolExpirationInDays)' == ''">3650</DotNetSymbolExpirationInDays>
       <DryRun>false</DryRun>
