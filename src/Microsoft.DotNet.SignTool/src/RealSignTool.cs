@@ -134,14 +134,17 @@ namespace Microsoft.DotNet.SignTool
         {
             var filesToLocallyStrongNameSign = files.Where(f => f.SignInfo.ShouldLocallyStrongNameSign);
 
-            _log.LogMessage($"Locally strong naming {filesToLocallyStrongNameSign.Count()} files.");
-
-            foreach (var file in filesToLocallyStrongNameSign)
+            if (filesToLocallyStrongNameSign.Any())
             {
-                if (!LocalStrongNameSign(file))
+                _log.LogMessage($"Locally strong naming {filesToLocallyStrongNameSign.Count()} files.");
+
+                foreach (var file in filesToLocallyStrongNameSign)
                 {
-                    _log.LogMessage(MessageImportance.High, $"Failed to locally strong name sign '{file.FileName}'");
-                    return false;
+                    if (!LocalStrongNameSign(file))
+                    {
+                        _log.LogMessage(MessageImportance.High, $"Failed to locally strong name sign '{file.FileName}'");
+                        return false;
+                    }
                 }
             }
 

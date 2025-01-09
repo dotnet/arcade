@@ -65,10 +65,10 @@
     <FileExtensionSignInfo Include=".tgz" CertificateName="None" />
     <FileExtensionSignInfo Include=".tar.gz" CertificateName="None" />
     <!-- Note, these can only be signed on Mac -->
-    <FileExtensionSignInfo Include=".pkg" CertificateName="MacDeveloperHarden" />
+    <FileExtensionSignInfo Include=".pkg" CertificateName="MacDeveloper" />
     <!-- .app bundles are technically directories, but the Microsoft.DotNet.MacOsPkg
     tool packs these bundles into zips when unpacking .pkgs -->
-    <FileExtensionSignInfo Include=".app" CertificateName="MacDeveloperHarden" />
+    <FileExtensionSignInfo Include=".app" CertificateName="MacDeveloper" />
     <FileExtensionSignInfo Include=".dylib" CertificateName="MacDeveloperHarden" />
   </ItemGroup>
 

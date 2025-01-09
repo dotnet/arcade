@@ -137,9 +137,9 @@ namespace Microsoft.DotNet.SignTool
             var zippedPaths = ZipMacFiles(filesToSign);
 
             // First the signing pass
-            var signFilePath = Path.Combine(dir, $"Round{round}-Sign.proj");
-            File.WriteAllText(signFilePath, GenerateBuildFileContent(filesToSign, zippedPaths, false));
-            status = RunMSBuild(buildEngine, signFilePath, Path.Combine(_args.LogDir, $"SigningRound{round}.binlog"));
+            var signProjectPath = Path.Combine(dir, $"Round{round}-Sign.proj");
+            File.WriteAllText(signProjectPath, GenerateBuildFileContent(filesToSign, zippedPaths, false));
+            status = RunMSBuild(buildEngine, signProjectPath, Path.Combine(_args.LogDir, $"SigningRound{round}.binlog"));
 
             if (!status)
             {
@@ -151,9 +151,9 @@ namespace Microsoft.DotNet.SignTool
             if (filesToNotarize.Any())
             {
                 // Now notarize. No need to unzip in between
-                var notarizeFilePath = Path.Combine(dir, $"Round{round}-Notarize.proj");
-                File.WriteAllText(signFilePath, GenerateBuildFileContent(filesToNotarize, zippedPaths, true));
-                status = RunMSBuild(buildEngine, signFilePath, Path.Combine(_args.LogDir, $"NotarizationRound{round}.binlog"));
+                var notarizeProjectPath = Path.Combine(dir, $"Round{round}-Notarize.proj");
+                File.WriteAllText(notarizeProjectPath, GenerateBuildFileContent(filesToNotarize, zippedPaths, true));
+                status = RunMSBuild(buildEngine, notarizeProjectPath, Path.Combine(_args.LogDir, $"NotarizationRound{round}.binlog"));
             }
 
             // Now unzip
