@@ -169,7 +169,6 @@ jobs:
 
             // get users to cc (append PR author if different from user who issued the backport command)
             let cc_users = `@${comment_user}`;
-
             if (comment_user != context.payload.issue.user.login) cc_users += ` @${context.payload.issue.user.login}`;
 
             // replace the special placeholder tokens with values
