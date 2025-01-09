@@ -100,7 +100,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 ((TargetURL is null && other.TargetURL is null) || TargetURL.Equals(other.TargetURL, StringComparison.OrdinalIgnoreCase)) &&
                 (Type == other.Type) &&
                 ((Token is null && other.Token is null) || (Token != null && Token.Equals(other.Token))) &&
-                LatestLinkShortUrlPrefixes.OrderBy(s => s).SequenceEqual(other.LatestLinkShortUrlPrefixes.OrderBy(s => s)) &&
+                LatestLinkShortUrlPrefixes.SequenceEqual(other.LatestLinkShortUrlPrefixes) &&
                 (AssetSelection == other.AssetSelection) &&
                 (Isolated == other.Isolated) &&
                 (Internal == other.Internal) &&
