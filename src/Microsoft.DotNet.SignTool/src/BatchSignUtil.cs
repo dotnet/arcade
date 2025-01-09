@@ -27,8 +27,6 @@ namespace Microsoft.DotNet.SignTool
         private readonly int _repackParallelism;
         private readonly long _maximumParallelFileSizeInBytes;
 
-        internal bool SkipZipContainerSignatureMarkerCheck { get; set; }
-
         internal BatchSignUtil(IBuildEngine buildEngine,
             TaskLoggingHelper log,
             SignTool signTool,
@@ -126,10 +124,12 @@ namespace Microsoft.DotNet.SignTool
             bool signGroup(IEnumerable<FileSignInfo> files, out int signedCount)
             {
                 var filesToSign = files.Where(fileInfo => fileInfo.SignInfo.ShouldSign).ToArray();
+                var filesToNotarize = files.Where(fileInfo => fileInfo.SignInfo.ShouldNotarize).ToArray();
                 signedCount = filesToSign.Length;
                 if (filesToSign.Length == 0) return true;
 
-                _log.LogMessage(MessageImportance.High, $"Round {round}: Signing {filesToSign.Length} files.");
+                _log.LogMessage(MessageImportance.High, $"Round {round}: Signing {filesToSign.Length} files" +
+                    $"{(filesToNotarize.Length > 0? $", Notarizing {filesToNotarize.Length} files" : "")}");
 
                 foreach (var file in filesToSign)
                 {
@@ -573,63 +573,91 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
+        /// <summary>
+        /// Recursively verify that files are signed properly.
+        /// </summary>
+        /// <param name="log"></param>
+        /// <param name="file"></param>
         private void VerifyAfterSign(TaskLoggingHelper log, FileSignInfo file)
         {
-            if (file.IsPEFile())
+            // No need to check if the file should not have been signed.
+            if (file.SignInfo.ShouldSign)
             {
-                using (var stream = File.OpenRead(file.FullPath))
+                if (file.IsPEFile())
                 {
-                    if (!_signTool.VerifySignedPEFile(stream))
+                    using (var stream = File.OpenRead(file.FullPath))
                     {
-                        _log.LogError($"Assembly {file.FullPath} is NOT signed properly");
+                        if (!_signTool.VerifySignedPEFile(stream))
+                        {
+                            _log.LogError($"Assembly {file.FullPath} is NOT signed properly");
+                        }
+                        else
+                        {
+                            _log.LogMessage(MessageImportance.Low, $"Assembly {file.FullPath} is signed properly");
+                        }
+                    }
+                }
+                else if (file.IsDeb())
+                {
+                    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                    {
+                        _log.LogMessage(MessageImportance.Low, $"Skipping signature verification of {file.FullPath} on non-Linux platform.");
+                    }
+                    else if (!_signTool.VerifySignedDeb(log, file.FullPath))
+                    {
+                        _log.LogError($"Deb package {file.FullPath} is not signed properly.");
+                    }
+                }
+                else if (file.IsPowerShellScript())
+                {
+                    if (!_signTool.VerifySignedPowerShellFile(file.FullPath))
+                    {
+                        _log.LogError($"Powershell file {file.FullPath} does not have a signature mark.");
+                    }
+                }
+                else if (file.IsPkg() || file.IsAppBundle())
+                {
+                    if (!_signTool.VerifySignedPkgOrAppBundle(file.FullPath, _signTool.PkgToolPath))
+                    {
+                        _log.LogError($"Powershell file {file.FullPath} does not have a signature marker.");
                     }
                     else
                     {
-                        _log.LogMessage(MessageImportance.Low, $"Assembly {file.FullPath} is signed properly");
+                        _log.LogMessage(MessageImportance.Low, $"Powershell file {file.FullPath} has a signature marker.");
+                    }
+                }
+                else if (file.IsNupkg())
+                {
+                    if (!_signTool.VerifySignedNuGet(file.FullPath))
+                    {
+                        _log.LogError($"Container {file.FullPath} does not have signature marker.");
+                    }
+                    else
+                    {
+                        _log.LogMessage(MessageImportance.Low, $"Container {file.FullPath} has signature marker.");
+                    }
+                } 
+                else if (file.IsVsix())
+                {
+                    if (!_signTool.VerifySignedVSIX(file.FullPath))
+                    {
+                        _log.LogError($"Container {file.FullPath} does not have signature marker.");
+                    }
+                    else
+                    {
+                        _log.LogMessage(MessageImportance.Low, $"Container {file.FullPath} has signature marker.");
                     }
                 }
             }
-            else if (file.IsDeb())
-            {
-                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                {
-                    _log.LogMessage(MessageImportance.Low, $"Skipping signature verification of {file.FullPath} on non-Linux platform.");
-                }
-                else if (!_signTool.VerifySignedDeb(log, file.FullPath))
-                {
-                    _log.LogError($"Deb package {file.FullPath} is not signed properly.");
-                }
-            }
-            else if (file.IsPowerShellScript())
-            {
-                if (!_signTool.VerifySignedPowerShellFile(file.FullPath))
-                {
-                    _log.LogError($"Powershell file {file.FullPath} does not have a signature mark.");
-                }
-            }
-            else if (file.IsZipContainer())
+
+            if (file.IsZipContainer())
             {
                 var zipData = _batchData.ZipDataMap[file.FileContentKey];
-                bool signedContainer = false;
 
+                // Recurse into the container and verify the contents.
+                // This may include locating and verifying the signature marker for zip files.
                 foreach (var (relativeName, _, _) in ZipData.ReadEntries(file.FullPath, _signTool.TempDir, _signTool.TarToolPath, _signTool.PkgToolPath, ignoreContent: true))
                 {
-                    if (!SkipZipContainerSignatureMarkerCheck)
-                    {
-                        if (file.IsNupkg() && _signTool.VerifySignedNugetFileMarker(relativeName))
-                        {
-                            signedContainer = true;
-                        }
-                        else if (file.IsVsix() && _signTool.VerifySignedVSIXFileMarker(relativeName))
-                        {
-                            signedContainer = true;
-                        }
-                        else if ((file.IsPkg() || file.IsAppBundle()) && _signTool.VerifySignedPkgOrAppBundle(relativeName, _signTool.PkgToolPath))
-                        {
-                            signedContainer = true;
-                        }
-                    }
-
                     var zipPart = zipData.FindNestedPart(relativeName);
                     if (!zipPart.HasValue)
                     {
@@ -637,18 +665,6 @@ namespace Microsoft.DotNet.SignTool
                     }
 
                     VerifyAfterSign(_log, zipPart.Value.FileSignInfo);
-                }
-
-                if (!SkipZipContainerSignatureMarkerCheck)
-                {
-                    if ((file.IsNupkg() || file.IsPkg() || file.IsAppBundle() || file.IsVsix()) && !signedContainer)
-                    {
-                        _log.LogError($"Container {file.FullPath} does not have signature marker.");
-                    }
-                    else
-                    {
-                        _log.LogMessage(MessageImportance.Low, $"Container {file.FullPath} has a signature marker.");
-                    }
                 }
             }
         }

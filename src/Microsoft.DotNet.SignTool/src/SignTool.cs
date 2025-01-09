@@ -38,8 +38,8 @@ namespace Microsoft.DotNet.SignTool
         public abstract bool VerifySignedDeb(TaskLoggingHelper log, string filePath);
         public abstract bool VerifySignedPEFile(Stream stream);
         public abstract bool VerifySignedPowerShellFile(string filePath);
-        public abstract bool VerifySignedNugetFileMarker(string filePath);
-        public abstract bool VerifySignedVSIXFileMarker(string filePath);
+        public abstract bool VerifySignedNuGet(string filePath);
+        public abstract bool VerifySignedVSIX(string filePath);
         public abstract bool VerifySignedPkgOrAppBundle(string filePath, string pkgToolPath);
 
         public abstract bool VerifyStrongNameSign(string fileFullPath);
@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.SignTool
         {
             var zipPaths = new Dictionary<string, string>();
             var osxFilesToZip = filesToSign.Where(fsi => SignToolConstants.MacSigningOperationsRequiringZipping.Contains(fsi.SignInfo.Certificate) ||
-                                                          SignToolConstants.MacSigningOperationsRequiringZipping.Contains(fsi.SignInfo.Notarization));
+                                                          SignToolConstants.MacSigningOperationsRequiringZipping.Contains(fsi.SignInfo.NotarizationAppName));
 
             foreach (var file in osxFilesToZip)
             {
@@ -146,18 +146,17 @@ namespace Microsoft.DotNet.SignTool
                 return false;
             }
 
+            // Now unzip. Notarization does not expect zipped packages.
+            UnzipMacFiles(zippedPaths);
+
             // Then an additional notarization pass.
-            var filesToNotarize = filesToSign.Where(f => !string.IsNullOrEmpty(f.SignInfo.Notarization));
+            var filesToNotarize = filesToSign.Where(f => !string.IsNullOrEmpty(f.SignInfo.NotarizationAppName));
             if (filesToNotarize.Any())
             {
-                // Now notarize. No need to unzip in between
                 var notarizeProjectPath = Path.Combine(dir, $"Round{round}-Notarize.proj");
-                File.WriteAllText(notarizeProjectPath, GenerateBuildFileContent(filesToNotarize, zippedPaths, true));
+                File.WriteAllText(notarizeProjectPath, GenerateBuildFileContent(filesToNotarize, null, true));
                 status = RunMSBuild(buildEngine, notarizeProjectPath, Path.Combine(_args.LogDir, $"NotarizationRound{round}.binlog"));
             }
-
-            // Now unzip
-            UnzipMacFiles(zippedPaths);
 
             return status;
         }
@@ -181,12 +180,16 @@ namespace Microsoft.DotNet.SignTool
 
             foreach (var fileToSign in filesToSign)
             {
-                if (!zippedPaths.TryGetValue(fileToSign.FullPath, out string filePath))
+                if (zippedPaths == null || !zippedPaths.TryGetValue(fileToSign.FullPath, out string filePath))
                 {
                     filePath = fileToSign.FullPath;
                 }
                 AppendLine(builder, depth: 2, text: $@"<FilesToSign Include=""{Uri.EscapeDataString(filePath)}"">");
-                AppendLine(builder, depth: 3, text: $@"<Authenticode>{(notarize ? fileToSign.SignInfo.Notarization : fileToSign.SignInfo.Certificate)}</Authenticode>");
+                AppendLine(builder, depth: 3, text: $@"<Authenticode>{(notarize ? SignToolConstants.MacNotarizationOperation : fileToSign.SignInfo.Certificate)}</Authenticode>");
+                if (notarize)
+                {
+                    AppendLine(builder, depth: 3, text: $@"<MacAppName>{fileToSign.SignInfo.NotarizationAppName}</MacAppName>");
+                }
                 if (fileToSign.SignInfo.ShouldStrongName && !fileToSign.SignInfo.ShouldLocallyStrongNameSign)
                 {
                     AppendLine(builder, depth: 3, text: $@"<StrongName>{fileToSign.SignInfo.StrongName}</StrongName>");

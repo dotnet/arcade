@@ -291,7 +291,7 @@ namespace Microsoft.DotNet.SignTool
                 FileName = "dotnet",
                 Arguments = $@"exec ""{pkgToolPath}"" {args}",
                 UseShellExecute = false,
-                RedirectStandardError = true,
+                RedirectStandardError = true
             });
 
             process.WaitForExit();

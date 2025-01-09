@@ -203,8 +203,10 @@ namespace Microsoft.DotNet.MacOsPkg
 
         internal static void VerifySignature(string inputPath)
         {
+            Console.WriteLine($"Verifying signature of {inputPath}");
             string full_path = Path.GetFullPath(inputPath);
             string output = ExecuteHelper.Run("pkgutil", $"--check-signature {full_path}");
+            Console.WriteLine(output);
             if (output.Contains("Status: no signature"))
             {
                 throw new Exception("No signature found in package");

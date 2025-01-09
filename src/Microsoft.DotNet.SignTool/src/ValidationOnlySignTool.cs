@@ -69,12 +69,12 @@ namespace Microsoft.DotNet.SignTool
             return true;
         }
 
-        public override bool VerifySignedNugetFileMarker(string filePath)
+        public override bool VerifySignedNuGet(string filePath)
         {
             return true;
         }
 
-        public override bool VerifySignedVSIXFileMarker(string filePath)
+        public override bool VerifySignedVSIX(string filePath)
         {
             return true;
         }

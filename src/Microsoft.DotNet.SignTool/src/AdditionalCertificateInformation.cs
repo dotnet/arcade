@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.SignTool.src
         /// <summary>
         /// If the certificate name represents a sign+notarize operation, this is the name of the notarize operation.
         /// </summary>
-        public string MacNotarizationOperation { get; set; }
+        public string MacNotarizationAppName { get; set; }
         public string CollisionPriorityId { get; set; }
     }
 }

@@ -1280,7 +1280,7 @@ $@"
             {
                 {  "MacDeveloperHardenWithNotarization",
                     new List<AdditionalCertificateInformation>() {
-                        new AdditionalCertificateInformation() { MacNotarizationOperation = "MacNotarize", MacSigningOperation = "MacDeveloperHarden" }
+                        new AdditionalCertificateInformation() { MacNotarizationAppName = "com.microsoft.dotnet", MacSigningOperation = "MacDeveloperHarden" }
                     } 
                 }
             };
@@ -1298,7 +1298,7 @@ $@"
                 "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'NestedPkg.pkg' Certificate='MacDeveloperHarden'",
-                "File 'test.pkg' Certificate='MacDeveloperHarden' Notarize='MacNotarize'",
+                "File 'test.pkg' Certificate='MacDeveloperHarden' NotarizationAppName='com.microsoft.dotnet'",
             }, additionalCertificateInfo: certificatesSignInfo);
 
             // OSX files need to be zipped first before being signed
@@ -1330,7 +1330,8 @@ $@"
                 ",
                 $@"
                 <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.zip"))}"">
-                <Authenticode>MacNotarize</Authenticode>
+                <Authenticode>8020</Authenticode>
+                <MacAppName>com.microsoft.dotnet</MacAppName>
                 </FilesToSign>",
             }, additionalCertificateInfo: certificatesSignInfo);
         }
@@ -2333,7 +2334,7 @@ $@"
                 new TaskItem("MacDeveloperHardenWithNotarization", new Dictionary<string, string>
                 {
                     { "MacCertificate", "MacDeveloperHarden" },
-                    { "MacNotarizationOperation", "MacNotarize" },
+                    { "MacNotarizationAppName", "com.microsoft.dotnet" },
                     { "CollisionPriorityId", "123" }
                 })
             };
@@ -2508,7 +2509,13 @@ $@"
                 new ItemToSign(GetResourcePath("Simple.nupkg"), "123"),
                 // This symbols nupkg has the same hash as Simple.nupkg.
                 // It should still get signed with a different signature.
-                new ItemToSign(GetResourcePath("Simple.symbols.nupkg"), "123")
+                new ItemToSign(GetResourcePath("Simple.symbols.nupkg"), "123"),
+                // A few extra interesting cases. This has no file extension
+                new ItemToSign(GetResourcePath("filewithoutextension"), "123"),
+                // This will be marked as not having any cert.
+                new ItemToSign(GetResourcePath("SPCNoPKT.dll"), "123"),
+                // This will be marked to have hardening and notarization
+                new ItemToSign(GetResourcePath("Simple.exe"), "1234")
             };
 
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
@@ -2535,6 +2542,19 @@ $@"
                 { new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETFramework,Version=v4.6.1", "123"), "DLLCertificate3" },
                 { new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETStandard,Version=v2.0", "123"), "DLLCertificate4" },
                 { new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETCoreApp,Version=v2.0", "123"), "DLLCertificate5" },
+                { new ExplicitCertificateKey("filewithoutextension", collisionPriorityId: "123"), "MacDeveloperHarden" },
+                { new ExplicitCertificateKey("SPCNoPKT.dll", collisionPriorityId: "123"), "None" },
+                { new ExplicitCertificateKey("Simple.exe", collisionPriorityId: "1234"), "MacDeveloperHardenWithNotarization" },
+            };
+
+            // Set up the cert to allow for signing and notarization.
+            var certificatesSignInfo = new Dictionary<string, List<AdditionalCertificateInformation>>()
+            {
+                {  "MacDeveloperHardenWithNotarization",
+                    new List<AdditionalCertificateInformation>() {
+                        new AdditionalCertificateInformation() { MacNotarizationAppName = "dotnet", MacSigningOperation = "MacDeveloperHarden" }
+                    }
+                }
             };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
@@ -2555,14 +2575,18 @@ $@"
                 "File 'Simple.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='DLLCertificate2'",
                 "File 'Simple.nupkg' Certificate='NUPKGCertificate'",
                 "File 'Simple.symbols.nupkg' Certificate='NUPKGCertificate2'",
+                "File 'filewithoutextension' Certificate='MacDeveloperHarden'",
+                "File 'Simple.exe' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='MacDeveloperHarden' NotarizationAppName='dotnet'",
             },
+            additionalCertificateInfo: certificatesSignInfo,
             expectedWarnings: new[]
             {
                 $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "EmptyPKT.dll")}' with Microsoft certificate 'DLLCertificate'. The library is considered 3rd party library due to its copyright: ''.",
                 $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "9", "lib/net461/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate3'. The library is considered 3rd party library due to its copyright: ''.",
                 $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "10", "lib/netstandard2.0/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate4'. The library is considered 3rd party library due to its copyright: ''.",
                 $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "16", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate5'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "23", "Simple.dll")}' with Microsoft certificate 'DLLCertificate2'. The library is considered 3rd party library due to its copyright: ''."
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "23", "Simple.dll")}' with Microsoft certificate 'DLLCertificate2'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "Simple.exe")}' with Microsoft certificate 'MacDeveloperHarden'. The library is considered 3rd party library due to its copyright: ''."
             });
         }
 

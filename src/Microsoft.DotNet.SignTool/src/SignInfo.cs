@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         internal string StrongName { get; }
 
-        internal string Notarization { get; }
+        internal string NotarizationAppName { get; }
 
         internal bool ShouldIgnore { get; }
 
@@ -51,9 +51,9 @@ namespace Microsoft.DotNet.SignTool
 
         public bool ShouldStrongName => !IsAlreadyStrongNamed && !string.IsNullOrEmpty(StrongName);
 
-        public bool ShouldNotarize => !string.IsNullOrEmpty(Notarization) && !ShouldIgnore;
+        public bool ShouldNotarize => !string.IsNullOrEmpty(NotarizationAppName) && !ShouldIgnore;
 
-        public SignInfo(string certificate, string strongName, string notarization, string collisionPriorityId, bool shouldIgnore, bool isAlreadySigned, bool isAlreadyStrongNamed)
+        public SignInfo(string certificate, string strongName, string notarizationAppName, string collisionPriorityId, bool shouldIgnore, bool isAlreadySigned, bool isAlreadyStrongNamed)
         {
             ShouldIgnore = shouldIgnore;
             IsAlreadySigned = isAlreadySigned;
@@ -61,11 +61,11 @@ namespace Microsoft.DotNet.SignTool
             StrongName = strongName;
             CollisionPriorityId = collisionPriorityId;
             IsAlreadyStrongNamed = isAlreadyStrongNamed;
-            Notarization = notarization;
+            NotarizationAppName = notarizationAppName;
         }
 
         private SignInfo(bool ignoreThisFile, bool alreadySigned, bool isAlreadyStrongNamed)
-            : this(certificate: null, strongName: null, notarization: null, collisionPriorityId: null, ignoreThisFile, alreadySigned, isAlreadyStrongNamed)
+            : this(certificate: null, strongName: null, notarizationAppName: null, collisionPriorityId: null, ignoreThisFile, alreadySigned, isAlreadyStrongNamed)
         {
         }
 
@@ -75,20 +75,20 @@ namespace Microsoft.DotNet.SignTool
         }
 
         internal SignInfo WithCertificateName(string value, string collisionPriorityId)
-            => new SignInfo(value, StrongName, Notarization, collisionPriorityId, ShouldIgnore, IsAlreadySigned, IsAlreadyStrongNamed);
+            => new SignInfo(value, StrongName, NotarizationAppName, collisionPriorityId, false, false, IsAlreadyStrongNamed);
 
-        internal SignInfo WithNotarization(string value, string collisionPriorityId)
-            => new SignInfo(Certificate, StrongName, value, collisionPriorityId, ShouldIgnore, IsAlreadySigned, IsAlreadyStrongNamed);
+        internal SignInfo WithNotarization(string appName, string collisionPriorityId)
+            => new SignInfo(Certificate, StrongName, appName, collisionPriorityId, ShouldIgnore, IsAlreadySigned, IsAlreadyStrongNamed);
 
         internal SignInfo WithCollisionPriorityId(string collisionPriorityId)
-            => new SignInfo(Certificate, StrongName, Notarization, collisionPriorityId, ShouldIgnore, IsAlreadySigned, IsAlreadyStrongNamed);
+            => new SignInfo(Certificate, StrongName, NotarizationAppName, collisionPriorityId, ShouldIgnore, IsAlreadySigned, IsAlreadyStrongNamed);
 
         internal SignInfo WithIsAlreadySigned(bool value = false)
             => Certificate != null ? 
-              new SignInfo(Certificate, StrongName, Notarization, CollisionPriorityId, value, value, IsAlreadyStrongNamed) :
-              new SignInfo(Certificate, StrongName, Notarization, CollisionPriorityId, true, value, IsAlreadyStrongNamed);
+              new SignInfo(Certificate, StrongName, NotarizationAppName, CollisionPriorityId, value, value, IsAlreadyStrongNamed) :
+              new SignInfo(Certificate, StrongName, NotarizationAppName, CollisionPriorityId, true, value, IsAlreadyStrongNamed);
 
         internal SignInfo WithIsAlreadyStrongNamed(bool value = false) =>
-              new SignInfo(Certificate, StrongName, Notarization, CollisionPriorityId, ShouldIgnore, IsAlreadySigned, value);
+              new SignInfo(Certificate, StrongName, NotarizationAppName, CollisionPriorityId, ShouldIgnore, IsAlreadySigned, value);
     }
 }

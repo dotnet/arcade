@@ -50,12 +50,6 @@ namespace Microsoft.DotNet.SignTool
         public bool AllowEmptySignList { get; set; }
 
         /// <summary>
-        /// By default in non-DryRun cases we verify the vsix and nuget packages contain a signature file
-        /// This option disables that check in cases you want to sign the container at a later step. 
-        /// </summary>
-        public bool SkipZipContainerSignatureMarkerCheck { get; set; }
-
-        /// <summary>
         /// For some cases you may need to run the sign tool more than once and if you do you want to
         /// share the same cache directory which contains already signed binaries. In those cases
         /// set this property to true to reuse that file cache.
@@ -291,8 +285,6 @@ namespace Microsoft.DotNet.SignTool
                     maximumParallelFileSizeInBytes: MaximumParallelFileSize * 1024 * 1024,
                     telemetry: telemetry);
 
-                util.SkipZipContainerSignatureMarkerCheck = this.SkipZipContainerSignatureMarkerCheck;
-
                 if (Log.HasLoggedErrors) return;
 
                 util.Go(DoStrongNameCheck);
@@ -330,12 +322,12 @@ namespace Microsoft.DotNet.SignTool
                     var dualSigningAllowed = certificateSignInfo.GetMetadata("DualSigningAllowed");
                     bool dualSignAllowedValue = false;
                     var macSigningOperation = certificateSignInfo.GetMetadata("MacCertificate");
-                    var macNotarizationOperation = certificateSignInfo.GetMetadata("MacNotarizationOperation");
+                    var macNotarizationAppName = certificateSignInfo.GetMetadata("MacNotarizationAppName");
                     var collisionPriorityId = certificateSignInfo.GetMetadata(SignToolConstants.CollisionPriorityId);
 
-                    if (string.IsNullOrEmpty(macSigningOperation) != string.IsNullOrEmpty(macNotarizationOperation))
+                    if (string.IsNullOrEmpty(macSigningOperation) != string.IsNullOrEmpty(macNotarizationAppName))
                     {
-                        Log.LogError($"Both MacCertificate and MacNotarizationOperation must be specified");
+                        Log.LogError($"Both MacCertificate and MacNotarizationAppName must be specified");
                         continue;
                     }
                     if (!string.IsNullOrEmpty(dualSigningAllowed) && !bool.TryParse(dualSigningAllowed, out dualSignAllowedValue))
@@ -348,7 +340,7 @@ namespace Microsoft.DotNet.SignTool
                     {
                         DualSigningAllowed = dualSignAllowedValue,
                         MacSigningOperation = macSigningOperation,
-                        MacNotarizationOperation = macNotarizationOperation,
+                        MacNotarizationAppName = macNotarizationAppName,
                         CollisionPriorityId = collisionPriorityId
                     };
 

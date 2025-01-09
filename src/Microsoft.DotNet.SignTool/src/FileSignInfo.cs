@@ -140,7 +140,7 @@ namespace Microsoft.DotNet.SignTool
                (TargetFramework != null ? $" TargetFramework='{TargetFramework}'" : "") +
                (SignInfo.ShouldSign ? $" Certificate='{SignInfo.Certificate}'" : "") +
                (SignInfo.ShouldStrongName ? $" StrongName='{SignInfo.StrongName}'" : "") +
-               (SignInfo.ShouldNotarize ? $" Notarize='{SignInfo.Notarization}'" : "");
+               (SignInfo.ShouldNotarize ? $" NotarizationAppName='{SignInfo.NotarizationAppName}'" : "");
 
         internal FileSignInfo WithSignableParts()
             => new FileSignInfo(File, SignInfo.WithIsAlreadySigned(false), TargetFramework, WixContentFilePath, true);

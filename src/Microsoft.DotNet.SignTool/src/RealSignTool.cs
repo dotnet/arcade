@@ -107,27 +107,28 @@ namespace Microsoft.DotNet.SignTool
 
         public override bool VerifySignedDeb(TaskLoggingHelper log, string filePath)
         {
-            return VerifySignatures.VerifySignedDeb(log, filePath);
+            return VerifySignatures.IsSignedDeb(log, filePath);
         }
 
         public override bool VerifySignedPowerShellFile(string filePath)
         {
-            return VerifySignatures.VerifySignedPowerShellFile(filePath);
+            return VerifySignatures.IsSignedPowershellFile(filePath);
         }
 
-        public override bool VerifySignedNugetFileMarker(string filePath)
+        public override bool VerifySignedNuGet(string filePath)
         {
-            return VerifySignatures.VerifySignedNupkgByFileMarker(filePath);
+            return VerifySignatures.IsSignedNupkg(filePath);
         }
 
-        public override bool VerifySignedVSIXFileMarker(string filePath)
+        public override bool VerifySignedVSIX(string filePath)
         {
+            // Open the VSIX and check for the digital signature file.
             return VerifySignatures.VerifySignedVSIXByFileMarker(filePath);
         }
 
         public override bool VerifySignedPkgOrAppBundle(string fullPath, string pkgToolPath)
         {
-            return VerifySignatures.VerifySignedPkgOrAppBundle(fullPath, pkgToolPath);
+            return VerifySignatures.IsSignedPkgOrAppBundle(fullPath, pkgToolPath);
         }
 
         public override bool LocalStrongNameSign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> files)

@@ -17,6 +17,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -29,7 +30,7 @@ namespace Microsoft.DotNet.SignTool
 #else
         private static readonly HttpClient client = new(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(10) });
 #endif
-        internal static bool VerifySignedDeb(TaskLoggingHelper log, string filePath)
+        internal static bool IsSignedDeb(TaskLoggingHelper log, string filePath)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
@@ -82,7 +83,7 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
-        internal static bool VerifySignedPowerShellFile(string filePath)
+        internal static bool IsSignedPowershellFile(string filePath)
         {
             return File.ReadLines(filePath).Any(line => line.IndexOf("# SIG # Begin Signature Block", StringComparison.OrdinalIgnoreCase) >= 0);
         }
@@ -90,7 +91,7 @@ namespace Microsoft.DotNet.SignTool
         {
             return Path.GetFileName(filePath).Equals(".signature.p7s", StringComparison.OrdinalIgnoreCase);
         }
-        internal static bool VerifySignedNupkgIntegrity(string filePath)
+        internal static bool IsSignedNupkg(string filePath)
         {
             bool isSigned = false;
             using (BinaryReader binaryReader = new BinaryReader(File.OpenRead(filePath)))
@@ -128,49 +129,13 @@ namespace Microsoft.DotNet.SignTool
 
         internal static bool VerifySignedVSIXByFileMarker(string filePath)
         {
-            return filePath.StartsWith("package/services/digital-signature/", StringComparison.OrdinalIgnoreCase);
+            using var archive = new ZipArchive(File.OpenRead(filePath), ZipArchiveMode.Read, leaveOpen: false);
+            return archive.GetFiles().Any(f => f.StartsWith("package/services/digital-signature/", StringComparison.OrdinalIgnoreCase));
         }
 
-        internal static bool VerifySignedPkgOrAppBundle(string fullPath, string pkgToolPath)
+        internal static bool IsSignedPkgOrAppBundle(string fullPath, string pkgToolPath)
         {
             return ZipData.RunPkgProcess(fullPath, null, "verify", pkgToolPath);
-        }
-
-        internal static bool IsSignedContainer(string fullPath, string tempDir, string tarToolPath, string pkgToolPath)
-        {
-            if (FileSignInfo.IsZipContainer(fullPath))
-            {
-                if ((FileSignInfo.IsPkg(fullPath) || FileSignInfo.IsAppBundle(fullPath)) && VerifySignedPkgOrAppBundle(fullPath, pkgToolPath))
-                {
-                    return true;
-                }
-
-                bool signedContainer = false;
-
-                foreach (var (relativePath, _, _) in ZipData.ReadEntries(fullPath, tempDir, tarToolPath, pkgToolPath, ignoreContent: false))
-                {
-                    if (FileSignInfo.IsNupkg(fullPath) && VerifySignedNupkgByFileMarker(relativePath))
-                    {
-                        if (!VerifySignedNupkgIntegrity(fullPath))
-                        {
-                            return false;
-                        }
-                        signedContainer = true;
-                        break;
-                    }
-                    else if (FileSignInfo.IsVsix(fullPath) && VerifySignedVSIXByFileMarker(relativePath))
-                    {
-                        signedContainer = true;
-                        break;
-                    }
-                }
-
-                if (!signedContainer)
-                {
-                    return false;
-                }
-            }
-            return true;
         }
 
         internal static bool IsDigitallySigned(string fullPath)

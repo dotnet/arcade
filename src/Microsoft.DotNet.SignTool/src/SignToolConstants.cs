@@ -145,5 +145,7 @@ namespace Microsoft.DotNet.SignTool
         /// Attribute for the CollisionPriorityId
         /// </summary>
         public const string CollisionPriorityId = "CollisionPriorityId";
+        
+        public const string MacNotarizationOperation = "8020";
     }
 }

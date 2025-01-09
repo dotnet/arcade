@@ -374,7 +374,7 @@ namespace Microsoft.DotNet.SignTool
             if (FileSignInfo.IsPEFile(file.FullPath))
             {
                 isAlreadyAuthenticodeSigned = ContentUtil.IsAuthenticodeSigned(file.FullPath);
-                isAlreadyStrongNamed = StrongName.IsSigned(file.FullPath, snPath:_snPath, log: _log);
+                isAlreadyStrongNamed = StrongName.IsSigned(file.FullPath, snPath: _snPath, log: _log);
 
 
                 if (!isAlreadyAuthenticodeSigned)
@@ -440,10 +440,22 @@ namespace Microsoft.DotNet.SignTool
                 fileSpec = matchedNameTokenFramework ? $" (PublicKeyToken = {peInfo.PublicKeyToken}, Framework = {peInfo.TargetFramework})" :
                         matchedNameToken ? $" (PublicKeyToken = {peInfo.PublicKeyToken})" : string.Empty;
             }
-            else if (FileSignInfo.IsPackage(file.FullPath))
+            else if (FileSignInfo.IsPkg(file.FullPath) || FileSignInfo.IsAppBundle(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = VerifySignatures.IsSignedContainer(file.FullPath, _pathToContainerUnpackingDirectory, _tarToolPath, _pkgToolPath);
-                if(!isAlreadyAuthenticodeSigned)
+                isAlreadyAuthenticodeSigned = VerifySignatures.IsSignedPkgOrAppBundle(file.FullPath, _pkgToolPath);
+                if (!isAlreadyAuthenticodeSigned)
+                {
+                    _log.LogMessage(MessageImportance.Low, $"Container {file.FullPath} does not have a signature marker.");
+                }
+                else
+                {
+                    _log.LogMessage(MessageImportance.Low, $"Container {file.FullPath} has a signature marker.");
+                }
+            }
+            else if (FileSignInfo.IsNupkg(file.FullPath))
+            {
+                isAlreadyAuthenticodeSigned = VerifySignatures.IsSignedNupkg(file.FullPath);
+                if (!isAlreadyAuthenticodeSigned)
                 {
                     _log.LogMessage(MessageImportance.Low, $"Container {file.FullPath} does not have a signature marker.");
                 }
@@ -464,9 +476,9 @@ namespace Microsoft.DotNet.SignTool
                     _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} is digitally signed.");
                 }
             }
-            else if(FileSignInfo.IsDeb(file.FullPath))
+            else if (FileSignInfo.IsDeb(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = VerifySignatures.VerifySignedDeb(_log, file.FullPath);
+                isAlreadyAuthenticodeSigned = VerifySignatures.IsSignedDeb(_log, file.FullPath);
                 if (!isAlreadyAuthenticodeSigned)
                 {
                     _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} is not signed.");
@@ -476,9 +488,9 @@ namespace Microsoft.DotNet.SignTool
                     _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} is signed.");
                 }
             }
-            else if(FileSignInfo.IsPowerShellScript(file.FullPath))
+            else if (FileSignInfo.IsPowerShellScript(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = VerifySignatures.VerifySignedPowerShellFile(file.FullPath);
+                isAlreadyAuthenticodeSigned = VerifySignatures.IsSignedPowershellFile(file.FullPath);
                 if (!isAlreadyAuthenticodeSigned)
                 {
                     _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} does not have a signature block.");
@@ -514,7 +526,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 bool dualCertsAllowed = false;
                 string macSignOperation = null;
-                string macNotarizeOperation = null;
+                string macNotarizationAppName = null;
                 if (signInfo.Certificate != null && _additionalCertificateInformation.TryGetValue(signInfo.Certificate, out var additionalInfo))
                 {
                     var additionalCertInfo = additionalInfo.FirstOrDefault(a => string.IsNullOrEmpty(a.CollisionPriorityId) || 
@@ -523,13 +535,13 @@ namespace Microsoft.DotNet.SignTool
                     {
                         dualCertsAllowed = additionalCertInfo.DualSigningAllowed;
                         macSignOperation = additionalCertInfo.MacSigningOperation;
-                        macNotarizeOperation = additionalCertInfo.MacNotarizationOperation;
+                        macNotarizationAppName = additionalCertInfo.MacNotarizationAppName;
                     }
                 }
 
                 // If the file is already signed and we are not allowed to dual sign, and we are not doing a mac notarization operation,
                 // then we should not sign the file.
-                if (isAlreadyAuthenticodeSigned && !dualCertsAllowed && string.IsNullOrEmpty(macNotarizeOperation))
+                if (isAlreadyAuthenticodeSigned && !dualCertsAllowed && string.IsNullOrEmpty(macNotarizationAppName))
                 {
                     return new FileSignInfo(file, signInfo.WithIsAlreadySigned(isAlreadyAuthenticodeSigned), wixContentFilePath: wixContentFilePath);
                 }
@@ -539,7 +551,7 @@ namespace Microsoft.DotNet.SignTool
                 if (!string.IsNullOrEmpty(macSignOperation))
                 {
                     signInfo = signInfo.WithCertificateName(macSignOperation, _hashToCollisionIdMap[signedFileContentKey]);
-                    signInfo = signInfo.WithNotarization(macNotarizeOperation, _hashToCollisionIdMap[signedFileContentKey]);
+                    signInfo = signInfo.WithNotarization(macNotarizationAppName, _hashToCollisionIdMap[signedFileContentKey]);
                 }
 
                 if (signInfo.ShouldSign && peInfo != null)
