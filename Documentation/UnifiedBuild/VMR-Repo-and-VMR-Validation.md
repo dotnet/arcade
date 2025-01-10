@@ -10,7 +10,7 @@ The purpose of this document is to lay out a strategy for:
 ## Principles
 
 - Repositories have invested heavily in repo-specific testing over the life of .NET. This validation must not be compromised.
-- Validation failures that block PR merge should be actionable. This may mean that action needs to be taken in another repository. For example, a flow from runtime->aspnetcore with a bug can be dealt with in runtime.
+- Validation failures that block PR merge should be actionable.
 
 ## Current State
 
@@ -34,7 +34,7 @@ Broadly, the following validation currently takes place:
  
 ### Optional full-VMR validation is added for MSFT configurations
 
-We will introduce the ability to trigger optional full VMR insertion validation on PRs. These will run a desired subset of the MSFT/source-only VMR builds and validation. We believe this is a net-net win overall for the product.
+We will introduce the ability to trigger optional full VMR insertion validation on PRs. These will run a desired subset of the MSFT/source-only VMR builds and validation. We believe this is a net-net win overall for the product. If there are failures on the PR, the developer who submitted the PR or team who is responsible for that PR (e.g. in case of a dependabot PR) would interpret the results and decide what to do. This might mean checking in and dealing with the failure on VMR insertion, changing the PR to avoid the issue, or making a change directly in the VMR.
 
 **Scheduling: Can be implemented now.**
 
@@ -51,8 +51,9 @@ On insertion into a VMR, we will run a selected representative subset of scenari
 - A full-stack matrix that sparsely covers at all OSs and architectures w/ scenario testing.
 - Some representative set of short stacks (e.g at least one of each OS and at least one of each arch) w/ scenario testing.
 - Some set of builds that build repo test projects, some set of builds which exclude repo test projects.
+- Change validation to ensure that special files are not edited (e.g. inlined submodules or automation generated files). See [Add VMR change validation](https://github.com/dotnet/arcade-services/issues/2950)
 
-**Scheduling: NA, Completed**
+**Scheduling: NA, Completed (initial set)**
 
 ### VMR PR/CI does not run repo-specific validation
 
@@ -62,9 +63,9 @@ It will be challenging to mimic the repo-specific testing setups in VMR PR/CI bu
 
 ### VMR changes lean heavily on scenario testing for correctness validation
 
-VMR PR/CI will lean heavily on scenario testing for correctness validation. These scenario tests are designed to cover large swaths of product functionality, rather than focusing on a specific component. Where necessary, scenario test quality will be increased.
+VMR PR/CI will lean heavily on scenario testing for correctness validation. These scenario tests are designed to cover large swaths of product functionality, rather than focusing on a specific component. Where necessary, scenario test quality will be increased. There are certainly gaps today that need filling.
 
-**Scheduling: NA, **
+**Scheduling: Already running but need additional tests to be added over time.**
 
 ### Backflow + Existing repo CI/PR validation is used for correctness validation
 
