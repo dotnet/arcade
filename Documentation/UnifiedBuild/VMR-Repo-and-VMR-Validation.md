@@ -15,7 +15,10 @@ The purpose of this document is to lay out a strategy for:
 ## Current State
 
 Broadly, the following validation currently takes place:
-- Repositories that participate in source build (i.e. this would exclude windowsdesktop, winforms, etc.) have a repo source-build job that runs on PRs and CI. This job performs an *approximation* of the source-only build that would take place in the VMR when the code reaches the SDK. This job **is** valuable at times. It is helpful in catching new prebuilts introduced by repository changes as well as some set of build differences that appear when `DotNetBuildSourceOnly == true`. This is especially important because the time betweeen a repo check-in and VMR/source-build insertion has historically been quite long. It is important to detect issues early. However, this job is also fragile. The same prebuilt detection will catch package restores that would be provided by VMR built package flow (e.g. runtime->roslyn) or previously source built artifacts, requiring costly analysis and baseline updates. Furthermore, the toolset used may be different between the VMR and the isolated repository, leading to confusion, especially around target frameworks.
+- Repositories that participate in source build (i.e. this would exclude windowsdesktop, winforms, etc.) have a repo source-build job that runs on PRs and CI. This job performs an *approximation* of the source-only build that would take place in the VMR when the code reaches the SDK. This job **is** valuable at times. It is helpful in catching new prebuilts introduced by repository changes as well as some set of build differences that appear when `DotNetBuildSourceOnly == true`. This is especially important because the time betweeen a repo check-in and VMR/source-build insertion has historically been quite long. It is important to detect issues early. However, this job is also fragile:
+  - The same prebuilt detection will catch package restores that would be provided by VMR built package flow (e.g. runtime->roslyn) or previously source built artifacts, requiring costly analysis and baseline updates.
+  - The TFM targeted in a full VMR build often ends up different than the repo source build leg.
+  - The toolset used may be different between the VMR and the isolated repository, leading to unexpected errors.
 - Repositories maintain CI and PR workflows that run repo-level testing (unit tests, scenario tests, etc.) that has been built up over years.
 - The sdk repo (currently the source of VMR codeflow) runs a variety of VMR builds on every check-in against main, in source-only and MSFT configurations.
 - A set of scenario tests run against the VMR output in the VMR builds in the SDK. These scenario tests are designed to cover a broad swath of functionality against a finished product, rather than a repository build layout.
@@ -46,20 +49,33 @@ Aside from source-build jobs, existing repository PR/CI validation will not be r
 
 ### VMR PR/CI builds a selected subset of verticals and scenarios
 
-On insertion into a VMR, we will run a selected representative subset of scenarios. This representative subset may change over time as the product changes, however, a rough sketch may look like:
+On insertion into a VMR (either at PR or CI time), we will run a selected representative subset of scenarios. This representative subset may change over time as the product changes, however, a rough sketch may look like:
 - Some set of source-only legs w/ scenario testing
 - A full-stack matrix that sparsely covers all OSs and architectures w/ scenario testing.
 - Some representative set of short stacks (e.g at least one of each OS and at least one of each arch) w/ scenario testing.
 - Some set of builds that build repo test projects, some set of builds which exclude repo test projects.
 - Change validation to ensure that special files are not edited (e.g. inlined submodules or automation generated files). See [Add VMR change validation](https://github.com/dotnet/arcade-services/issues/2950)
+- "Freshness" testing described in https://github.com/dotnet/arcade/issues/15180.
 
-**Scheduling: NA, Completed (initial set)**
+**Scheduling: Ready, Completed (initial set of PR build validation)**
 
-### VMR PR/CI does not run repo-specific validation
+### VMR PR/CI does not run repo-specific validation by default
 
 It will be challenging to mimic the repo-specific testing setups in VMR PR/CI builds. In addition, the quantity of testing is unlikely to be practical for full VMR validation. Running repo unit tests in VMR PRs is not a goal of Unified Build.
 
 **Scheduling: NA, NOP**
+
+### (Potential Future Improvement) VMR PRs have specialized repo specific pipelines
+
+If need arises, e.g. frequent breaks or reduced developer productivity in the VMR, the following system could be implemented to give repo-specific validation:
+  - We implement on-demand VMR PR pipelines - 1 per repo in the VMR - to enable additional validation when requested.
+  - Each of these would be based on the same YAML file from the VMR and would contain an ID of a target repo pipeline (e.g. dotnet-runtime) which exists and runs in the original repo.
+  - This VMR pipeline would trigger the target pipeline, pass to it the VMR SHA.
+  - The repo pipeline would have a special checkout step that would run when the pipeline is triggered remotely like this
+  - The checkout step replaces the checked out sources with the contents from the VMR and the build proceeds as usual.
+  - The pipeline runs some set of validation (e.g. build and unit tests) as defined by the repo owner.
+
+**Scheduling: Long Term Improvement, if needed**
 
 ### VMR changes lean heavily on scenario testing for correctness validation
 
