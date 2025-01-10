@@ -128,8 +128,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string actualTargetUrl = feedBaseUrl + asset;
 
             AkaMSLink newLink = new AkaMSLink(GetLatestShortUrlForBlob(shortUrlPrefix, asset, flatten), actualTargetUrl);
-            _logger.LogMessage(MessageImportance.High, $"  {Path.GetFileName(asset)}");
-
             _logger.LogMessage(MessageImportance.High, $"  aka.ms/{newLink.ShortUrl} -> {newLink.TargetUrl}");
 
             return newLink;
