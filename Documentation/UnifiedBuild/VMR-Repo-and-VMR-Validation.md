@@ -15,7 +15,7 @@ The purpose of this document is to lay out a strategy for:
 ## Current State
 
 Broadly, the following validation currently takes place:
-- Repositories that participate source build (i.e. this would exclude windowsdesktop, winforms, etc.) have a repo source-build job that runs on PRs and CI. This job performs an *approximation* of the source-only build that would take place in the VMR when the code reaches the SDK. This job **is** valuable at times. It is helpful in catching new prebuilts introduced by repository changes as well as some set of build differences that appear when `DotNetBuildSourceOnly == true`. This is especially important because the time betweeen a repo check-in and VMR/source-build insertion has historically been quite long. It is important to detect issues early. However, this job is also fragile. The same prebuilt detection will catch package restores that would be provided by VMR built package flow (e.g. runtime->roslyn) or previously source built artifacts, requiring costly analysis and baseline updates. Furthermore, the toolset used to may be different between the VMR and the isolated repository, leading to confusion, especially around target frameworks.
+- Repositories that participate in source build (i.e. this would exclude windowsdesktop, winforms, etc.) have a repo source-build job that runs on PRs and CI. This job performs an *approximation* of the source-only build that would take place in the VMR when the code reaches the SDK. This job **is** valuable at times. It is helpful in catching new prebuilts introduced by repository changes as well as some set of build differences that appear when `DotNetBuildSourceOnly == true`. This is especially important because the time betweeen a repo check-in and VMR/source-build insertion has historically been quite long. It is important to detect issues early. However, this job is also fragile. The same prebuilt detection will catch package restores that would be provided by VMR built package flow (e.g. runtime->roslyn) or previously source built artifacts, requiring costly analysis and baseline updates. Furthermore, the toolset used may be different between the VMR and the isolated repository, leading to confusion, especially around target frameworks.
 - Repositories maintain CI and PR workflows that run repo-level testing (unit tests, scenario tests, etc.) that has been built up over years.
 - The sdk repo (currently the source of VMR codeflow) runs a variety of VMR builds on every check-in against main, in source-only and MSFT configurations.
 - A set of scenario tests run against the VMR output in the VMR builds in the SDK. These scenario tests are designed to cover a broad swath of functionality against a finished product, rather than a repository build layout.
@@ -48,7 +48,7 @@ Aside from source-build jobs, existing repository PR/CI validation will not be r
 
 On insertion into a VMR, we will run a selected representative subset of scenarios. This representative subset may change over time as the product changes, however, a rough sketch may look like:
 - Some set of source-only legs w/ scenario testing
-- A full-stack matrix that sparsely covers at all OSs and architectures w/ scenario testing.
+- A full-stack matrix that sparsely covers all OSs and architectures w/ scenario testing.
 - Some representative set of short stacks (e.g at least one of each OS and at least one of each arch) w/ scenario testing.
 - Some set of builds that build repo test projects, some set of builds which exclude repo test projects.
 
