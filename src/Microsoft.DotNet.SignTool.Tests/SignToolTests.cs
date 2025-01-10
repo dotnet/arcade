@@ -324,10 +324,10 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             var task = new SignToolTask { BuildEngine = buildEngine };
 
-            // The path to MSBuild and DotNet will always be null in these tests, this will force
+            // The path to DotNet will always be null in these tests, this will force
             // the signing logic to call our FakeBuildEngine.BuildProjectFile with a path
             // to the XML that store the content of the would be Microbuild sign request.
-            var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, dotnetPath: null, _tmpDir, enclosingDir: "", "", wixToolsPath: wixToolsPath, tarToolPath: s_tarToolPath);
+            var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, dotnetPath: null, _tmpDir, enclosingDir: "", "", wixToolsPath: wixToolsPath, tarToolPath: s_tarToolPath);
 
             var signTool = new FakeSignTool(signToolArgs, task.Log);
             var configuration = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, tarToolPath: s_tarToolPath, snPath: s_snPath, task.Log);
@@ -477,7 +477,6 @@ namespace Microsoft.DotNet.SignTool.Tests
                 TempDir = "TempDir",
                 DryRun = false,
                 TestSign = true,
-                MSBuildPath = CreateTestResource("msbuild.fake"),
                 DotNetPath = CreateTestResource("dotnet.fake"),
                 SNBinaryPath = CreateTestResource("fake.sn.exe")
             };
@@ -497,7 +496,6 @@ namespace Microsoft.DotNet.SignTool.Tests
                 TempDir = "TempDir",
                 DryRun = false,
                 TestSign = true,
-                MSBuildPath = CreateTestResource("msbuild.fake"),
                 DotNetPath = CreateTestResource("dotnet.fake"),
                 DoStrongNameCheck = false,
                 SNBinaryPath = null,
@@ -1629,8 +1627,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
                 LogDir = "LogDir",
                 TempDir = "TempDir",
                 DryRun = true,
-                MSBuildPath = CreateTestResource("msbuild.fake"),
-                DotNetPath = null,
+                DotNetPath = CreateTestResource("dotnet.fake"),
                 DoStrongNameCheck = false,
                 SNBinaryPath = null,
                 WixToolsPath = badPath
@@ -2213,7 +2210,6 @@ $@"
                 LogDir = "LogDir",
                 TempDir = "TempDir",
                 DryRun = true,
-                MSBuildPath = CreateTestResource("msbuild.fake"),
                 DotNetPath = CreateTestResource("dotnet.fake"),
                 MicroBuildCorePath = "MicroBuildCorePath",
                 DoStrongNameCheck = false,
@@ -2248,7 +2244,6 @@ $@"
                 LogDir = "LogDir",
                 TempDir = "TempDir",
                 DryRun = true,
-                MSBuildPath = CreateTestResource("msbuild.fake"),
                 DotNetPath = CreateTestResource("dotnet.fake"),
                 DoStrongNameCheck = false,
                 SNBinaryPath = null,
