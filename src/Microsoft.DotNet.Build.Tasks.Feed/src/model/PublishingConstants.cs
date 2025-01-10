@@ -281,23 +281,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         };
         #endregion
 
-        // Define regex patterns for keep and throw away
         public static readonly ImmutableList<Regex> DefaultAkaMSCreateLinkPatterns = [
-            new Regex(@"\.rpm$", RegexOptions.IgnoreCase),
-            new Regex(@"\.zip$", RegexOptions.IgnoreCase),
-            new Regex(@"\.sha512$", RegexOptions.IgnoreCase),
-            new Regex(@"\.version$", RegexOptions.IgnoreCase),
-            new Regex(@"\.deb$", RegexOptions.IgnoreCase),
-            new Regex(@"\.gz$", RegexOptions.IgnoreCase),
-            new Regex(@"\.pkg$", RegexOptions.IgnoreCase),
-            new Regex(@"\.msi$", RegexOptions.IgnoreCase),
-            new Regex(@"\.exe$", RegexOptions.IgnoreCase),
-            new Regex(@"\.svg$", RegexOptions.IgnoreCase),
-            new Regex(@"\.tgz$", RegexOptions.IgnoreCase),
-            new Regex(@"\.jar$", RegexOptions.IgnoreCase),
-            new Regex(@"\.pom$", RegexOptions.IgnoreCase),
-            new Regex(@"productCommit", RegexOptions.IgnoreCase),
-            new Regex(@"productVersion", RegexOptions.IgnoreCase)
+            new Regex(@"\.rpm(\.sha512)?$", RegexOptions.IgnoreCase),
+            new Regex(@"\.zip(\.sha512)?$", RegexOptions.IgnoreCase),
+            new Regex(@"\.version(\.sha512)?$", RegexOptions.IgnoreCase),
+            new Regex(@"\.deb(\.sha512)?$", RegexOptions.IgnoreCase),
+            new Regex(@"\.gz(\.sha512)?$", RegexOptions.IgnoreCase),
+            new Regex(@"\.pkg(\.sha512)?$", RegexOptions.IgnoreCase),
+            new Regex(@"\.msi(\.sha512)?$", RegexOptions.IgnoreCase),
+            new Regex(@"\.exe(\.sha512)?$", RegexOptions.IgnoreCase),
+            new Regex(@"\.svg(\.sha512)?$", RegexOptions.IgnoreCase),
+            new Regex(@"\.tgz(\.sha512)?$", RegexOptions.IgnoreCase),
+            new Regex(@"\.jar(\.sha512)?$", RegexOptions.IgnoreCase),
+            new Regex(@"\.pom(\.sha512)?$", RegexOptions.IgnoreCase),
+            new Regex(@"productcommit", RegexOptions.IgnoreCase),
+            new Regex(@"productversion", RegexOptions.IgnoreCase)
         ];
 
         public static readonly ImmutableList<Regex> DefaultAkaMSDoNotCreateLinkPatterns = [

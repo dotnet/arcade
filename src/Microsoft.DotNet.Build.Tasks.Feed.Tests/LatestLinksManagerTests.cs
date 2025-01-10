@@ -79,14 +79,22 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         {
             var taskLoggingHelper = new Microsoft.Build.Utilities.TaskLoggingHelper(new StubTask());
             // Arrange
-            var assetsToPublish = new HashSet<string> { "assets/symbols/Microsoft.stuff.symbols.nupkg", "assets/Microsoft.stuff.zip", "assets/Microsoft.stuff.json", "assets/Microsoft.stuff.json.zip" };
+            var assetsToPublish = new HashSet<string>
+            {
+                "assets/symbols/Microsoft.stuff.symbols.nupkg",
+                "assets/Microsoft.stuff.zip",
+                "assets/Microsoft.stuff.zip.sha512",
+                "assets/Microsoft.stuff.json",
+                "assets/Microsoft.stuff.json.zip",
+                "assets/Microsoft.stuff.sha512"
+            };
             var feedConfig = new TargetFeedConfig(
                 contentType: TargetFeedContentType.Other,
                 targetURL: "https://example.com/feed",
                 type: FeedType.AzureStorageContainer,
                 token: "",
                 latestLinkShortUrlPrefixes: ImmutableList.Create("prefix1", "prefix2"),
-                akaMSCreateLinkPatterns: [new Regex(@"\.zip")],
+                akaMSCreateLinkPatterns: [new Regex(@"\.zip(\.sha512)?")],
                 akaMSDoNotCreateLinkPatterns: [new Regex("json")],
                 assetSelection: AssetSelection.All,
                 isolated: false,
@@ -104,7 +112,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             links.Should().BeEquivalentTo(new List<AkaMSLink>
             {
                 new AkaMSLink("prefix1/Microsoft.stuff.zip", "https://example.com/feed/assets/Microsoft.stuff.zip"),
-                new AkaMSLink("prefix2/Microsoft.stuff.zip", "https://example.com/feed/assets/Microsoft.stuff.zip")
+                new AkaMSLink("prefix2/Microsoft.stuff.zip", "https://example.com/feed/assets/Microsoft.stuff.zip"),
+                new AkaMSLink("prefix1/Microsoft.stuff.zip.sha512", "https://example.com/feed/assets/Microsoft.stuff.zip.sha512"),
+                new AkaMSLink("prefix2/Microsoft.stuff.zip.sha512", "https://example.com/feed/assets/Microsoft.stuff.zip.sha512")
             });
         }
 
