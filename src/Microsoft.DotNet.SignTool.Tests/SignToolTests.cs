@@ -15,8 +15,6 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xunit;
 using Xunit.Abstractions;
-using FluentAssertions;
-using System.Security.Cryptography;
 using Microsoft.DotNet.Build.Tasks.Installers;
 
 namespace Microsoft.DotNet.SignTool.Tests

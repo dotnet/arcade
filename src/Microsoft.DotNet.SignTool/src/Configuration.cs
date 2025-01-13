@@ -467,8 +467,8 @@ namespace Microsoft.DotNet.SignTool
             }
             else if (FileSignInfo.IsRpm(file.FullPath))
             {
-                isAlreadySigned = VerifySignatures.VerifySignedRpm(_log, file.FullPath);
-                if (!isAlreadySigned)
+                isAlreadyAuthenticodeSigned = VerifySignatures.VerifySignedRpm(_log, file.FullPath);
+                if (!isAlreadyAuthenticodeSigned)
                 {
                     _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} is not signed.");
                 }
