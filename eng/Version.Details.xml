@@ -22,25 +22,25 @@
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
       <Sha>d617bc8ed2787c235a57cf0dcdfd087b86ff9521</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="10.0.100-alpha.1.25055.1">
+    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="10.0.100-alpha.1.25062.9">
       <Uri>https://github.com/dotnet/templating</Uri>
-      <Sha>a39cec86c11fbfd49b0b3544d69df2a9df3454ae</Sha>
+      <Sha>4a9cd8c45d20e89f5230050bf34492964f2260cb</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.25058.4">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.25061.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>e7cb34898a1b610eb2a22591a2178da6f1fb7e3c</Sha>
+      <Sha>98b4ae348fa01b99dc6fbfc8f601efd9b90090db</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="10.0.0-beta.25058.4">
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="10.0.0-beta.25061.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>e7cb34898a1b610eb2a22591a2178da6f1fb7e3c</Sha>
+      <Sha>98b4ae348fa01b99dc6fbfc8f601efd9b90090db</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.ProductConstructionService.Client" Version="1.1.0-beta.25057.1">
+    <Dependency Name="Microsoft.DotNet.ProductConstructionService.Client" Version="1.1.0-beta.25059.5">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>2c0f6d6d200979fb5be7ca4c2145066226d19c70</Sha>
+      <Sha>de38cfb0755e1a4b971e350d87f411474e15d15a</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.1.0-beta.25057.1">
+    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.1.0-beta.25059.5">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>2c0f6d6d200979fb5be7ca4c2145066226d19c70</Sha>
+      <Sha>de38cfb0755e1a4b971e350d87f411474e15d15a</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="10.0.0-prerelease.24610.1">
       <Uri>https://github.com/dotnet/xharness</Uri>
@@ -132,9 +132,9 @@
       <Sha>ef4c24166691977558e5312758df4313ab310dc0</Sha>
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.arcade" Version="10.0.0-beta.25058.4">
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.arcade" Version="10.0.0-beta.25061.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>e7cb34898a1b610eb2a22591a2178da6f1fb7e3c</Sha>
+      <Sha>98b4ae348fa01b99dc6fbfc8f601efd9b90090db</Sha>
       <SourceBuild RepoName="arcade" ManagedOnly="true" />
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
@@ -162,15 +162,15 @@
       <SourceBuild RepoName="sdk" ManagedOnly="true" />
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-externals" Version="10.0.560902">
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-externals" Version="10.0.605604">
       <Uri>https://github.com/dotnet/source-build-externals</Uri>
-      <Sha>8b6c934b975aed0bd3cdc863ad6a86b19c51c52c</Sha>
+      <Sha>aea551f930d24442a37d2b64c279f97d19868b7b</Sha>
       <SourceBuild RepoName="source-build-externals" ManagedOnly="true" />
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="10.0.605801">
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="10.0.606004">
       <Uri>https://github.com/dotnet/source-build-reference-packages</Uri>
-      <Sha>9afc40d226e1a456c287381bf6aa2dc2d68aad3f</Sha>
+      <Sha>1d0bf118044fc096231bfba85b0cd68aad0d1507</Sha>
       <SourceBuild RepoName="source-build-reference-packages" ManagedOnly="true" />
     </Dependency>
     <!-- Transitive dependency needed for source build. -->
