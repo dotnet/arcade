@@ -472,7 +472,7 @@ namespace Microsoft.DotNet.SignTool.Tests
                 string layoutFilePath = Path.Combine(layout, targetSystemFilePath);
                 File.Exists(layoutFilePath).Should().BeTrue();
 
-                using MD5 md5 = MD5.Create();
+                using MD5 md5 = MD5.Create(); // lgtm [cs/weak-crypto] Azure Storage specifies use of MD5
                 using FileStream fileStream = File.OpenRead(layoutFilePath);
                 string newHash = Convert.ToHexString(md5.ComputeHash(fileStream));
 
