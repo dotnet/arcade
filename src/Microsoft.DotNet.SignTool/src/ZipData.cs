@@ -624,7 +624,7 @@ namespace Microsoft.DotNet.SignTool
                 PackageVersion = headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.PackageVersion).Value.ToString(),
                 PackageRelease = headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.PackageRelease).Value.ToString(),
                 PackageOS = headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.OperatingSystem).Value.ToString(),
-                PackageArchitecture = RpmPackageArchitectureToDotNet(headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.Architecture).Value.ToString()),
+                PackageArchitecture = RpmBuilder.GetDotNetArchitectureFromRpmHeaderArchitecture(headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.Architecture).Value.ToString()),
                 Payload = payload,
                 RawPayloadFileKinds = rawPayloadFileKinds,
                 Requires = requireNames != null ? requireNames.Zip(requireVersions, (name, version) => new TaskItem($"{name}", new Dictionary<string, string> { { "Version", version } })).Where(t => !t.ItemSpec.StartsWith("rpmlib")).ToArray() : [],
@@ -663,23 +663,6 @@ namespace Microsoft.DotNet.SignTool
                     content.CopyTo(outputFileStream);
                 }
             }
-        }
-
-        private static string RpmPackageArchitectureToDotNet(string rpmPackageArchitecture)
-        {
-            return rpmPackageArchitecture switch
-            {
-                "noarch" => "any",
-                "i386" => "x86",
-                "i486" => "x86",
-                "i586" => "x86",
-                "i686" => "x86",
-                "x86_64" => "x64",
-                "armv6hl" => "arm",
-                "armv7hl" => "arm",
-                "aarch64" => "arm64",
-                _ => rpmPackageArchitecture
-            };
         }
 
         private static bool RunExternalProcess(string cmd, string args, out string output, string workingDir = null)
