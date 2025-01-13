@@ -22,9 +22,9 @@
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
       <Sha>d617bc8ed2787c235a57cf0dcdfd087b86ff9521</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="10.0.100-alpha.1.25055.1">
+    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="10.0.100-alpha.1.25062.9">
       <Uri>https://github.com/dotnet/templating</Uri>
-      <Sha>a39cec86c11fbfd49b0b3544d69df2a9df3454ae</Sha>
+      <Sha>4a9cd8c45d20e89f5230050bf34492964f2260cb</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.25061.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
@@ -162,9 +162,9 @@
       <SourceBuild RepoName="sdk" ManagedOnly="true" />
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-externals" Version="10.0.560902">
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-externals" Version="10.0.605604">
       <Uri>https://github.com/dotnet/source-build-externals</Uri>
-      <Sha>8b6c934b975aed0bd3cdc863ad6a86b19c51c52c</Sha>
+      <Sha>aea551f930d24442a37d2b64c279f97d19868b7b</Sha>
       <SourceBuild RepoName="source-build-externals" ManagedOnly="true" />
     </Dependency>
     <!-- Intermediate is necessary for source build. -->
