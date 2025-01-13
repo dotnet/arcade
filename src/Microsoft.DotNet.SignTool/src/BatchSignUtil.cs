@@ -588,6 +588,10 @@ namespace Microsoft.DotNet.SignTool
                 {
                     _log.LogError($"Deb package {file.FullPath} is not signed properly.");
                 }
+                else
+                {
+                    _log.LogMessage(MessageImportance.Low, $"Deb package {file.FullPath} is signed properly");
+                }
 #endif
             }
             else if (file.IsRpm())
@@ -599,6 +603,10 @@ namespace Microsoft.DotNet.SignTool
                 else if (!_signTool.VerifySignedRpm(log, file.FullPath))
                 {
                     _log.LogError($"Rpm package {file.FullPath} is not signed properly.");
+                }
+                else
+                {
+                    _log.LogMessage(MessageImportance.Low, $"Rpm package {file.FullPath} is signed properly");
                 }
             }
             else if (file.IsPowerShellScript())
