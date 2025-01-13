@@ -113,6 +113,7 @@ namespace Microsoft.DotNet.SignTool
             ".pyd",
 
             ".deb",
+            ".rpm",
         };
 
         /// <summary>

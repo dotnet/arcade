@@ -24,6 +24,9 @@ namespace Microsoft.DotNet.SignTool
         internal static bool IsDeb(string path)
             => Path.GetExtension(path) == ".deb";
 
+        internal static bool IsRpm(string path)
+            => Path.GetExtension(path) == ".rpm";
+
         internal static bool IsPEFile(string path)
             => Path.GetExtension(path) == ".exe" || Path.GetExtension(path) == ".dll";
 
@@ -60,9 +63,11 @@ namespace Microsoft.DotNet.SignTool
             => IsVsix(path) || IsNupkg(path);
 
         internal static bool IsZipContainer(string path)
-            => IsPackage(path) || IsMPack(path) || IsZip(path) || IsTarGZip(path) || IsDeb(path);
+            => IsPackage(path) || IsMPack(path) || IsZip(path) || IsTarGZip(path) || IsDeb(path) || IsRpm(path);
 
         internal bool IsDeb() => IsDeb(FileName);
+
+        internal bool IsRpm() => IsRpm(FileName);
 
         internal bool IsPEFile() => IsPEFile(FileName);
 

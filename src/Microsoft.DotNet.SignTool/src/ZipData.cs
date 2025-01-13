@@ -12,6 +12,7 @@ using System.Linq;
 using System.Data;
 using System.Diagnostics;
 using Microsoft.DotNet.Build.Tasks.Installers;
+using System.Runtime.InteropServices;
 
 #if NET472
 using System.IO.Packaging;
@@ -72,6 +73,19 @@ namespace Microsoft.DotNet.SignTool
                 return ReadDebContainerEntries(archivePath, "data.tar");
 #endif
             }
+            else if (FileSignInfo.IsRpm(archivePath))
+            {
+#if NET472
+                throw new NotImplementedException("RPM signing is not supported on .NET Framework");
+#else
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    throw new NotImplementedException("RPM signing is only supported on Linux platform");
+                }
+
+                return ReadRpmContainerEntries(archivePath);
+#endif
+            }
 
             return ReadZipEntries(archivePath);
         }
@@ -102,6 +116,19 @@ namespace Microsoft.DotNet.SignTool
                 throw new NotImplementedException("Debian signing is not supported on .NET Framework");
 #else
                 RepackDebContainer(log, tempDir);
+#endif
+            }
+            else if (FileSignInfo.IsRpm())
+            {
+#if NET472
+                throw new NotImplementedException("RPM signing is not supported on .NET Framework");
+#else
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    throw new NotImplementedException("RPM signing is only supported on Linux platform");
+                }
+
+                RepackRpmContainer(log, tempDir);
 #endif
             }
             else 
@@ -519,6 +546,153 @@ namespace Microsoft.DotNet.SignTool
                     yield return (relativePath, entry.DataStream, entry.DataStream.Length);
                 }
             }
+        }
+
+        private static IEnumerable<(string relativePath, Stream content, long contentSize)> ReadRpmContainerEntries(string archivePath)
+        {
+            using var stream = File.Open(archivePath, FileMode.Open);
+            using RpmPackage rpmPackage = RpmPackage.Read(stream);
+            using var dataStream = File.OpenWrite(Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString()));
+            using var archive = new CpioReader(rpmPackage.ArchiveStream, leaveOpen: false);
+
+            while (archive.GetNextEntry() is CpioEntry entry)
+            {
+                yield return (entry.Name, entry.DataStream, entry.DataStream.Length);
+            }
+        }
+
+        private void RepackRpmContainer(TaskLoggingHelper log, string tempDir)
+        {
+            // Unpack original package - create the layout
+            string workingDir = Path.Combine(tempDir, Guid.NewGuid().ToString().Split('-')[0]);
+            Directory.CreateDirectory(workingDir);
+            string layout = Path.Combine(workingDir, "layout");
+            Directory.CreateDirectory(layout);
+            ExtractRpmPayloadContents(FileSignInfo.FullPath, layout);
+
+            // Update signed files in layout
+            foreach (var signedPart in NestedParts.Values)
+            {
+                File.Copy(signedPart.FileSignInfo.FullPath, Path.Combine(layout, signedPart.RelativeName), overwrite: true);
+            }
+
+            // Create payload.cpio
+            string payload = Path.Combine(workingDir, "payload.cpio");
+
+            RunExternalProcess("bash", $"-c \"find . -depth ! -wholename '.' -print  | cpio -H newc -o --quiet > '{payload}'\"", out string _, layout);
+
+            // Collect file types for all files in layout
+            RunExternalProcess("bash", $"-c \"find . -depth ! -wholename '.'  -exec file {{}} \\;\"", out string output, layout);
+            ITaskItem[] rawPayloadFileKinds =
+                output.Split('\n', StringSplitOptions.RemoveEmptyEntries)
+                      .Select(t => new TaskItem(t))
+                      .ToArray();
+
+            IReadOnlyList<RpmHeader<RpmHeaderTag>.Entry> headerEntries = GetRpmHeaderEntries(FileSignInfo.FullPath);
+            string[] requireNames = (string[])headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.RequireName).Value;
+            string[] requireVersions = (string[])headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.RequireVersion).Value;
+            string[] changelogLines = (string[])headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.ChangelogText).Value;
+            string[] conflictNames = (string[])headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.ConflictName).Value;
+
+            List<ITaskItem> scripts = [];
+            foreach (var scriptTag in new[] { RpmHeaderTag.Prein, RpmHeaderTag.Preun, RpmHeaderTag.Postin, RpmHeaderTag.Postun })
+            {
+                string contents = (string)headerEntries.FirstOrDefault(e => e.Tag == scriptTag).Value;
+                if (contents != null)
+                {
+                    string kind = Enum.GetName(scriptTag);
+                    string file = Path.Combine(workingDir, kind);
+                    File.WriteAllText(file, contents);
+                    scripts.Add(new TaskItem(file, new Dictionary<string, string> { { "Kind", kind } }));
+                }
+            }
+
+            // Create RPM package
+            CreateRpmPackage createRpmPackageTask = new()
+            {
+                OutputRpmPackagePath = FileSignInfo.FullPath,
+                Vendor = headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.Vendor).Value.ToString(),
+                Packager = headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.Packager).Value.ToString(),
+                PackageName = headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.PackageName).Value.ToString(),
+                PackageVersion = headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.PackageVersion).Value.ToString(),
+                PackageRelease = headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.PackageRelease).Value.ToString(),
+                PackageOS = headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.OperatingSystem).Value.ToString(),
+                PackageArchitecture = RpmPackageArchitectureToDotNet(headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.Architecture).Value.ToString()),
+                Payload = payload,
+                RawPayloadFileKinds = rawPayloadFileKinds,
+                Requires = requireNames != null ? requireNames.Zip(requireVersions, (name, version) => new TaskItem($"{name}", new Dictionary<string, string> { { "Version", version } })).Where(t => !t.ItemSpec.StartsWith("rpmlib")).ToArray() : [],
+                Conflicts = conflictNames != null ? conflictNames.Select(c => new TaskItem(c)).ToArray() : [],
+                OwnedDirectories = ((string[])headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.DirectoryNames).Value).Select(d => new TaskItem(d)).ToArray(),
+                ChangelogLines = changelogLines != null ? changelogLines.Select(c => new TaskItem(c)).ToArray() : [],
+                License = headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.License).Value.ToString(),
+                Summary = headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.Summary).Value.ToString(),
+                Description = headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.Description).Value.ToString(),
+                PackageUrl = headerEntries.FirstOrDefault(e => e.Tag == RpmHeaderTag.Url).Value.ToString(),
+                Scripts = scripts.ToArray(),
+            };
+
+            if (!createRpmPackageTask.Execute())
+            {
+                throw new Exception($"Failed to create RPM package: {FileSignInfo.FileName}");
+            }
+        }
+
+        internal static IReadOnlyList<RpmHeader<RpmHeaderTag>.Entry> GetRpmHeaderEntries(string rpmPackage)
+        {
+            using var stream = File.Open(rpmPackage, FileMode.Open);
+            return RpmPackage.Read(stream).Header.Entries;
+        }
+
+        internal static void ExtractRpmPayloadContents(string rpmPackage, string layout)
+        {
+            foreach (var (relativePath, content, contentSize) in ReadRpmContainerEntries(rpmPackage))
+            {
+                string outputPath = Path.Combine(layout, relativePath);
+                Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+
+                if (content != null)
+                {
+                    using FileStream outputFileStream = File.Create(outputPath);
+                    content.CopyTo(outputFileStream);
+                }
+            }
+        }
+
+        private static string RpmPackageArchitectureToDotNet(string rpmPackageArchitecture)
+        {
+            return rpmPackageArchitecture switch
+            {
+                "noarch" => "any",
+                "i386" => "x86",
+                "i486" => "x86",
+                "i586" => "x86",
+                "i686" => "x86",
+                "x86_64" => "x64",
+                "armv6hl" => "arm",
+                "armv7hl" => "arm",
+                "aarch64" => "arm64",
+                _ => rpmPackageArchitecture
+            };
+        }
+
+        private static bool RunExternalProcess(string cmd, string args, out string output, string workingDir = null)
+        {
+            ProcessStartInfo psi = new()
+            {
+                FileName = cmd,
+                Arguments = args,
+                RedirectStandardOutput = true,
+                RedirectStandardError = false,
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                WorkingDirectory = workingDir
+            };
+
+            using Process process = Process.Start(psi);
+            output = process.StandardOutput.ReadToEnd();
+            process.WaitForExit();
+
+            return process.ExitCode == 0;
         }
 #endif
     }

@@ -204,8 +204,8 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
             foreach (var script in _scripts)
             {
-                entries.Add(new((RpmHeaderTag)Enum.Parse(typeof(RpmHeaderTag), script.Key), RpmHeaderEntryType.String, "/bin/sh"));
-                entries.Add(new((RpmHeaderTag)Enum.Parse(typeof(RpmHeaderTag), $"{script.Key}prog"), RpmHeaderEntryType.String, script.Value));
+                entries.Add(new((RpmHeaderTag)Enum.Parse(typeof(RpmHeaderTag), script.Key), RpmHeaderEntryType.String, script.Value));
+                entries.Add(new((RpmHeaderTag)Enum.Parse(typeof(RpmHeaderTag), $"{script.Key}prog"), RpmHeaderEntryType.String, "/bin/sh"));
             }
 
             MemoryStream cpioArchive = new();

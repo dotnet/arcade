@@ -507,6 +507,17 @@ namespace Microsoft.DotNet.SignTool
                         log.LogError($"Deb package {fileName} must be signed with a LinuxSign certificate.");
                     }
                 }
+                else if (fileName.IsRpm())
+                {
+                    if (isInvalidEmptyCertificate)
+                    {
+                        log.LogError($"Rpm package {fileName} should have a certificate name.");
+                    }
+                    if (!IsLinuxSignCertificate(fileName.SignInfo.Certificate))
+                    {
+                        log.LogError($"Rpm package {fileName} must be signed with a LinuxSign certificate.");
+                    }
+                }
                 else if (fileName.IsNupkg())
                 {
                     if(isInvalidEmptyCertificate)
@@ -569,6 +580,17 @@ namespace Microsoft.DotNet.SignTool
                     _log.LogMessage(MessageImportance.Low, $"Skipping signature verification of {file.FullPath} on non-Linux platform.");
                 }
                 else if (!_signTool.VerifySignedDeb(log, file.FullPath))
+                {
+                    _log.LogError($"Deb package {file.FullPath} is not signed properly.");
+                }
+            }
+            else if (file.IsRpm())
+            {
+                if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
+                    _log.LogMessage(MessageImportance.Low, $"Skipping signature verification of {file.FullPath} on non-Linux platform.");
+                }
+                else if (!_signTool.VerifySignedRpm(log, file.FullPath))
                 {
                     _log.LogError($"Deb package {file.FullPath} is not signed properly.");
                 }

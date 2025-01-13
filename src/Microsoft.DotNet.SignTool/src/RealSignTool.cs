@@ -134,6 +134,11 @@ namespace Microsoft.DotNet.SignTool
             return VerifySignatures.VerifySignedDeb(log, filePath);
         }
 
+        public override bool VerifySignedRpm(TaskLoggingHelper log, string filePath)
+        {
+            return VerifySignatures.VerifySignedRpm(log, filePath);
+        }
+
         public override bool VerifySignedPowerShellFile(string filePath)
         {
             return VerifySignatures.VerifySignedPowerShellFile(filePath);
