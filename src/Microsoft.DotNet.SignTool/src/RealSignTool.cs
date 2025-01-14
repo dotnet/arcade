@@ -8,7 +8,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection.PortableExecutable;
-using System.Runtime.InteropServices;
 using System.Collections.Generic;
 
 namespace Microsoft.DotNet.SignTool
@@ -18,7 +17,6 @@ namespace Microsoft.DotNet.SignTool
     /// </summary>
     internal sealed class RealSignTool : SignTool
     {
-        private readonly string _msbuildPath;
         private readonly string _dotnetPath;
         private readonly string _logDir;
         private readonly string _snPath;
@@ -37,7 +35,6 @@ namespace Microsoft.DotNet.SignTool
         internal RealSignTool(SignToolArgs args, TaskLoggingHelper log) : base(args, log)
         {
             TestSign = args.TestSign;
-            _msbuildPath = args.MSBuildPath;
             _dotnetPath = args.DotNetPath;
             _snPath = args.SNBinaryPath;
             _logDir = args.LogDir;
@@ -45,25 +42,17 @@ namespace Microsoft.DotNet.SignTool
 
         public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, string binLogPath)
         {
-            if (_msbuildPath == null && _dotnetPath == null)
+            if (_dotnetPath == null)
             {
                 return buildEngine.BuildProjectFile(projectFilePath, null, null, null);
             }
 
             Directory.CreateDirectory(_logDir);
 
-            string processFileName = _dotnetPath;
-            string processArguments = $@"build ""{projectFilePath}"" -bl:""{binLogPath}""";
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                processFileName = _msbuildPath;
-                processArguments = $@"""{projectFilePath}"" /bl:""{binLogPath}""";
-            }
-
             var process = Process.Start(new ProcessStartInfo()
             {
-                FileName = processFileName,
-                Arguments = processArguments,
+                FileName = _dotnetPath,
+                Arguments = $@"build ""{projectFilePath}"" -bl:""{binLogPath}""",
                 UseShellExecute = false,
                 WorkingDirectory = TempDir,
             });
