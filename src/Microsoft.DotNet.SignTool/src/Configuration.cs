@@ -1,20 +1,17 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
-using System.Runtime.ConstrainedExecution;
 using System.Runtime.Versioning;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -223,20 +220,9 @@ namespace Microsoft.DotNet.SignTool
                 return fileSignInfo;
             }
 
-            if (fileSignInfo.IsContainer())
+            if (fileSignInfo.IsUnpackableContainer())
             {
-                if (fileSignInfo.IsZipContainer())
-                {
-                    if (TryBuildZipData(fileSignInfo, out var zipData))
-                    {
-                        _zipDataMap[fileSignInfo.FileContentKey] = zipData;
-                    }
-                    else
-                    {
-                        _log.LogError($"Failed to build zip data for {fileSignInfo.FullPath}");
-                    }
-                }
-                else if (fileSignInfo.IsWixContainer())
+                if (fileSignInfo.IsUnpackableWixContainer())
                 {
                     _log.LogMessage($"Trying to gather data for wix container {fileSignInfo.FullPath}");
                     if (TryBuildWixData(fileSignInfo, out var msiData))
@@ -248,12 +234,23 @@ namespace Microsoft.DotNet.SignTool
                         _log.LogError($"Failed to build wix data for {fileSignInfo.FullPath}");
                     }
                 }
+                else
+                {
+                    if (TryBuildZipData(fileSignInfo, out var zipData))
+                    {
+                        _zipDataMap[fileSignInfo.FileContentKey] = zipData;
+                    }
+                    else
+                    {
+                        _log.LogError($"Failed to build zip data for {fileSignInfo.FullPath}");
+                    }
+                }
             }
             _log.LogMessage(MessageImportance.Low, $"Caching file {fileSignInfo.FileContentKey.FileName} {fileSignInfo.FileContentKey.StringHash}");
             _filesByContentKey.Add(fileSignInfo.FileContentKey, fileSignInfo);
 
             bool hasSignableParts = false;
-            if (fileSignInfo.IsContainer())
+            if (fileSignInfo.IsUnpackableContainer())
             {
                 // Only sign containers if the file itself is unsigned, or 
                 // an item in the container is unsigned.
@@ -463,7 +460,7 @@ namespace Microsoft.DotNet.SignTool
                     _log.LogMessage(MessageImportance.Low, $"Container {file.FullPath} has a signature marker.");
                 }
             }
-            else if (FileSignInfo.IsWix(file.FullPath))
+            else if (FileSignInfo.IsWixInstaller(file.FullPath))
             {
                 isAlreadyAuthenticodeSigned = VerifySignatures.IsDigitallySigned(file.FullPath);
                 if (!isAlreadyAuthenticodeSigned)
@@ -757,7 +754,7 @@ namespace Microsoft.DotNet.SignTool
             }
             else
             {
-                Debug.Assert(zipFileSignInfo.IsZipContainer());
+                Debug.Assert(zipFileSignInfo.IsUnpackableContainer());
             }
 
             try

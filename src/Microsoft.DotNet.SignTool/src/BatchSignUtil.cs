@@ -154,7 +154,7 @@ namespace Microsoft.DotNet.SignTool
             bool signEngines(IEnumerable<FileSignInfo> files, out int signedCount)
             {
                 var enginesToSign = files.Where(fileInfo => fileInfo.SignInfo.ShouldSign && 
-                                                fileInfo.IsWixContainer() &&
+                                                fileInfo.IsUnpackableWixContainer() &&
                                                 Path.GetExtension(fileInfo.FullPath) == ".exe").ToArray();
                 signedCount = enginesToSign.Length;
                 if (enginesToSign.Length == 0)
@@ -279,14 +279,9 @@ namespace Microsoft.DotNet.SignTool
 
             void repackContainer(FileSignInfo file)
             {
-                if (file.IsZipContainer())
+                if (file.IsUnpackableContainer())
                 {
                     _log.LogMessage($"Repacking container: '{file.FileName}'");
-                    _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath, _signTool.TarToolPath, _signTool.PkgToolPath);
-                }
-                else if (file.IsWixContainer())
-                {
-                    _log.LogMessage($"Packing wix container: '{file.FileName}'");
                     _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath, _signTool.TarToolPath, _signTool.PkgToolPath);
                 }
                 else
@@ -299,7 +294,7 @@ namespace Microsoft.DotNet.SignTool
             // signed, don't need signing, and are repacked.
             bool isReady(FileSignInfo file)
             {
-                if (file.IsContainer())
+                if (file.IsUnpackableContainer())
                 {
                     var zipData = _batchData.ZipDataMap[file.FileContentKey];
                     return zipData.NestedParts.Values.All(x => (!x.FileSignInfo.SignInfo.ShouldSign ||
@@ -650,21 +645,13 @@ namespace Microsoft.DotNet.SignTool
                 }
             }
 
-            if (file.IsZipContainer())
+            if (file.IsUnpackableContainer())
             {
                 var zipData = _batchData.ZipDataMap[file.FileContentKey];
 
-                // Recurse into the container and verify the contents.
-                // This may include locating and verifying the signature marker for zip files.
-                foreach (var (relativeName, _, _) in ZipData.ReadEntries(file.FullPath, _signTool.TempDir, _signTool.TarToolPath, _signTool.PkgToolPath, ignoreContent: true))
+                foreach (var nestedPart in zipData.NestedParts.Values)
                 {
-                    var zipPart = zipData.FindNestedPart(relativeName);
-                    if (!zipPart.HasValue)
-                    {
-                        continue;
-                    }
-
-                    VerifyAfterSign(_log, zipPart.Value.FileSignInfo);
+                    VerifyAfterSign(log, nestedPart.FileSignInfo);
                 }
             }
         }

@@ -1275,11 +1275,11 @@ $@"
             };
 
             // Set up the cert to allow for signing and notarization.
-            var certificatesSignInfo = new Dictionary<string, List<AdditionalCertificateInformation>>()
+            var additionalCertificateInfo = new Dictionary<string, List<AdditionalCertificateInformation>>()
             {
                 {  "MacDeveloperHardenWithNotarization",
                     new List<AdditionalCertificateInformation>() {
-                        new AdditionalCertificateInformation() { MacNotarizationAppName = "com.microsoft.dotnet", MacSigningOperation = "MacDeveloperHarden" }
+                        new AdditionalCertificateInformation() { MacNotarizationAppName = "dotnet", MacSigningOperation = "MacDeveloperHarden" }
                     } 
                 }
             };
@@ -1298,7 +1298,7 @@ $@"
                 "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'NestedPkg.pkg' Certificate='MacDeveloperHarden'",
                 "File 'test.pkg' Certificate='MacDeveloperHarden' NotarizationAppName='com.microsoft.dotnet'",
-            }, additionalCertificateInfo: certificatesSignInfo);
+            }, additionalCertificateInfo: additionalCertificateInfo);
 
             // OSX files need to be zipped first before being signed
             // This is why the .pkgs are listed as .zip files below
@@ -1332,7 +1332,7 @@ $@"
                 <Authenticode>8020</Authenticode>
                 <MacAppName>com.microsoft.dotnet</MacAppName>
                 </FilesToSign>",
-            }, additionalCertificateInfo: certificatesSignInfo);
+            }, additionalCertificateInfo: additionalCertificateInfo);
         }
 
         [MacOSOnlyFact]
@@ -2421,6 +2421,35 @@ $@"
                 $"File 'SignedLibrary.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='{dualCertName}'",
             },
             additionalCertificateInfo: additionalCertInfo);
+        }
+
+        [Fact]
+        public void ValidateCertNotAppendedWithNonMatchingCollisionId()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new List<ItemToSign>()
+            {
+                new ItemToSign(GetResourcePath("SignedLibrary.dll")),
+            };
+
+            const string dualCertName = "DualCertificateName";
+            var additionalCertInfo = new Dictionary<string, List<AdditionalCertificateInformation>>()
+            {
+                { dualCertName, new List<AdditionalCertificateInformation>(){new AdditionalCertificateInformation()
+                {
+                    DualSigningAllowed = true,
+                    CollisionPriorityId = "123"
+                } } },
+            };
+
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "31bf3856ad364e35", new List<SignInfo>{ new SignInfo(certificate: dualCertName, strongName: null) } }
+            };
+
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new string[] { }, additionalCertificateInfo: additionalCertInfo);
         }
 
         [Fact]

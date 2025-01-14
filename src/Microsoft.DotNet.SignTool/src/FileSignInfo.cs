@@ -5,7 +5,6 @@ using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -56,7 +55,7 @@ namespace Microsoft.DotNet.SignTool
                 || (Path.GetExtension(path).Equals(".gz", StringComparison.OrdinalIgnoreCase)
                     && Path.GetExtension(Path.GetFileNameWithoutExtension(path)).Equals(".tar", StringComparison.OrdinalIgnoreCase));
 
-        internal static bool IsWix(string path)
+        internal static bool IsWixInstaller(string path)
             => (Path.GetExtension(path).Equals(".msi", StringComparison.OrdinalIgnoreCase)
                 || Path.GetExtension(path).Equals(".wixlib", StringComparison.OrdinalIgnoreCase));
 
@@ -64,12 +63,6 @@ namespace Microsoft.DotNet.SignTool
             => Path.GetExtension(path).Equals(".ps1", StringComparison.OrdinalIgnoreCase)
             || Path.GetExtension(path).Equals(".psd1", StringComparison.OrdinalIgnoreCase)
             || Path.GetExtension(path).Equals(".psm1", StringComparison.OrdinalIgnoreCase);
-
-        internal static bool IsPackage(string path)
-            => IsVsix(path) || IsNupkg(path) || IsPkg(path) || IsAppBundle(path);
-
-        internal static bool IsZipContainer(string path)
-            => IsPackage(path) || IsMPack(path) || IsZip(path) || IsTarGZip(path) || IsDeb(path);
 
         internal bool IsDeb() => IsDeb(FileName);
 
@@ -93,25 +86,32 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool IsTarGZip() => IsTarGZip(FileName);
 
-        internal bool IsZipContainer() => IsZipContainer(FileName);
+        internal bool IsWixInstaller() => IsWixInstaller(FileName);
 
-        internal bool IsWix() => IsWix(FileName);
+        internal bool IsMPack() => IsMPack(FileName);
 
         // A wix file is an Container if it has the proper extension AND the content
         // (ie *.wixpack.zip) is available, otherwise it's treated like a normal file
-        internal bool IsWixContainer() =>
+        internal bool IsUnpackableWixContainer() =>
             WixContentFilePath != null
-            && (IsWix(FileName) 
+            && (IsWixInstaller(FileName) 
                 || Path.GetExtension(FileName).Equals(".exe", StringComparison.OrdinalIgnoreCase));
 
         internal bool IsExecutableWixContainer() =>
-            IsWixContainer() &&
+            IsUnpackableWixContainer() &&
             (Path.GetExtension(FileName).Equals(".exe", StringComparison.OrdinalIgnoreCase) ||
              Path.GetExtension(FileName).Equals(".msi", StringComparison.OrdinalIgnoreCase));
 
-        internal bool IsContainer() => IsZipContainer() || IsWixContainer();
-
-        internal bool IsPackage() => IsPackage(FileName);
+        internal bool IsUnpackableContainer() => IsZip() || 
+                                                 IsUnpackableWixContainer() || 
+                                                 IsMPack() || 
+                                                 IsTarGZip() || 
+                                                 IsDeb() ||
+                                                 IsPkg() ||
+                                                 IsAppBundle() ||
+                                                 IsNupkg() ||
+                                                 IsVsix() ||
+                                                 IsSymbolsNupkg();
 
         internal bool IsPowerShellScript() => IsPowerShellScript(FileName);
 

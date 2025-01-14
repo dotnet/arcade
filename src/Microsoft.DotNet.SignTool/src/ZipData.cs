@@ -78,8 +78,10 @@ namespace Microsoft.DotNet.SignTool
                 return ReadDebContainerEntries(archivePath, "data.tar");
 #endif
             }
-
-            return ReadZipEntries(archivePath);
+            else
+            {
+                return ReadZipEntries(archivePath);
+            }
         }
 
         /// <summary>
@@ -98,7 +100,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 RepackTarGZip(log, tempDir, tarToolPath);
             }
-            else if (FileSignInfo.IsWixContainer())
+            else if (FileSignInfo.IsUnpackableWixContainer())
             {
                 RepackWixPack(log, tempDir, wixToolsPath);
             }
@@ -164,22 +166,23 @@ namespace Microsoft.DotNet.SignTool
 
         private static IEnumerable<(string relativePath, Stream content, long contentSize)> ReadZipEntries(string archivePath)
         {
-            using var archive = new ZipArchive(File.OpenRead(archivePath), ZipArchiveMode.Read, leaveOpen: false);
-
-            foreach (var entry in archive.Entries)
+            using (var archive = new ZipArchive(File.OpenRead(archivePath), ZipArchiveMode.Read, leaveOpen: false))
             {
-                string relativePath = entry.FullName; // lgtm [cs/zipslip] Archive from trusted source
+                foreach (var entry in archive.Entries)
+                {
+                    string relativePath = entry.FullName; // lgtm [cs/zipslip] Archive from trusted source
 
-                // `entry` might be just a pointer to a folder. We skip those.
-                if (relativePath.EndsWith("/") && entry.Name == "")
-                {
-                    yield return (relativePath, null, 0);
-                }
-                else
-                {
-                    var contentStream = entry.Open();
-                    yield return (relativePath, contentStream, entry.Length);
-                    contentStream.Close();
+                    // `entry` might be just a pointer to a folder. We skip those.
+                    if (relativePath.EndsWith("/") && entry.Name == "")
+                    {
+                        yield return (relativePath, null, 0);
+                    }
+                    else
+                    {
+                        var contentStream = entry.Open();
+                        yield return (relativePath, contentStream, entry.Length);
+                        contentStream.Close();
+                    }
                 }
             }
         }
