@@ -181,6 +181,19 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
             get { return bool.Parse(Attributes.GetOrDefault(nameof(DualSigningAllowed))); }
             set { Attributes[nameof(DualSigningAllowed)] = value.ToString().ToLower(); }
         }
+
+        public string MacCertificate
+        {
+            get { return Attributes.GetOrDefault(nameof(MacCertificate)); }
+            set { Attributes[nameof(MacCertificate)] = value; }
+        }
+
+        public string MacNotarizationAppName
+        {
+            get { return Attributes.GetOrDefault(nameof(MacNotarizationAppName)); }
+            set { Attributes[nameof(MacNotarizationAppName)] = value; }
+        }
+
         public override string ToString() => $"Certificate \"{Include}\" has DualSigningAllowed set to {DualSigningAllowed}";
 
         public XElement ToXml() => new XElement(

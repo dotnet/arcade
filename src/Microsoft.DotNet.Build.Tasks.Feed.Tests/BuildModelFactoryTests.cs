@@ -393,6 +393,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 new TaskItem("MyOtherCert", new Dictionary<string, string>()
                 {
                     { "DualSigningAllowed", "true" }
+                }),
+                new TaskItem("MySpecialCert", new Dictionary<string, string>()
+                {
+                    { "MacCertificate", "MacMac" },
+                    { "MacNotarizationAppName", "dotnet" }
                 })
             };
 
@@ -522,11 +527,22 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     {
                         item.Include.Should().Be("MyCert");
                         item.DualSigningAllowed.Should().Be(false);
+                        item.MacCertificate.Should().BeNullOrEmpty();
+                        item.MacNotarizationAppName.Should().BeNullOrEmpty();
                     },
                     item =>
                     {
                         item.Include.Should().Be("MyOtherCert");
                         item.DualSigningAllowed.Should().Be(true);
+                        item.MacCertificate.Should().BeNullOrEmpty();
+                        item.MacNotarizationAppName.Should().BeNullOrEmpty();
+                    },
+                    item =>
+                    {
+                        item.Include.Should().Be("MyOtherCert");
+                        item.DualSigningAllowed.Should().Be(false);
+                        item.MacCertificate.Should().Be("MacMac");
+                        item.MacNotarizationAppName.Should().Be("dotnet");
                     });
                 modelFromFile.SigningInformation.FileExtensionSignInfo.Should().SatisfyRespectively(
                     item =>

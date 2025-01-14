@@ -4,6 +4,7 @@
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using Microsoft.DotNet.VersionTools.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -101,7 +102,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 foreach (var signInfo in certificatesSignInfo)
                 {
                     var attributes = signInfo.CloneCustomMetadata() as IDictionary<string, string>;
-                    parsedCertificatesSignInfoModel.Add(new CertificatesSignInfoModel { Include = signInfo.ItemSpec, DualSigningAllowed = bool.Parse(attributes["DualSigningAllowed"]) });
+                    parsedCertificatesSignInfoModel.Add(new CertificatesSignInfoModel { Include = signInfo.ItemSpec,
+                                                                                        DualSigningAllowed = bool.Parse(attributes.GetOrDefault("DualSigningAllowed")),
+                                                                                        MacCertificate = attributes.GetOrDefault("MacCertificate"),
+                                                                                        MacNotarizationAppName = attributes.GetOrDefault("MacNotarizationAppName"),
+                    });
                 }
             }
 
