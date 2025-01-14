@@ -14,7 +14,7 @@ using Microsoft.Arcade.Common;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.DotNet.Arcade.Test.Common;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
-using Microsoft.DotNet.Maestro.Client.Models;
+using Microsoft.DotNet.ProductConstructionService.Client.Models;
 using Xunit;
 using static Microsoft.DotNet.Internal.SymbolHelper.SymbolPromotionHelper;
 
@@ -48,16 +48,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var feedConfigsForSymbols = new HashSet<TargetFeedConfig>
             {
                 new TargetFeedConfig(
-                TargetFeedContentType.Symbols,
-                "TargetUrl",
-                FeedType.AzDoNugetFeed,
-                default,
-                new List<string>(),
-                AssetSelection.All,
-                isolated: true,
-                @internal: false,
-                allowOverwrite: true,
-                symbolTargetVisibility)
+                    TargetFeedContentType.Symbols,
+                    "TargetUrl",
+                    FeedType.AzDoNugetFeed,
+                    default,
+                    default,
+                    default,
+                    default,
+                    AssetSelection.All,
+                    isolated: true,
+                    @internal: false,
+                    allowOverwrite: true,
+                    symbolTargetVisibility)
             };
             SymbolPublishVisibility visibility = publishTask.GetSymbolPublishingVisibility(feedConfigsForSymbols);
             Assert.Equal(symbolTargetVisibility, visibility);
@@ -89,6 +91,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     "testUrl" + v,
                     FeedType.AzDoNugetFeed,
                     default,
+                    [],
+                    [],
                     [],
                     AssetSelection.All,
                     isolated: true,
@@ -184,7 +188,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             Assert.Contains("to last 3650 days", registerLog.Message);
         }
 
-        private static (MockBuildEngine, PublishArtifactsInManifestV3, ReadOnlyDictionary<string, Asset>, string, string, Maestro.Client.Models.Build) GetCanonicalSymbolTestAssets(SymbolPublishVisibility targetServer = SymbolPublishVisibility.Public)
+        private static (MockBuildEngine, PublishArtifactsInManifestV3, ReadOnlyDictionary<string, Asset>, string, string, ProductConstructionService.Client.Models.Build) GetCanonicalSymbolTestAssets(SymbolPublishVisibility targetServer = SymbolPublishVisibility.Public)
         {
             var symbolPackages = new Dictionary<string, Asset>()
             {
@@ -202,6 +206,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 FeedType.AzDoNugetFeed,
                 default,
                 latestLinkShortUrlPrefixes: [],
+                akaMSCreateLinkPatterns: [],
+                akaMSDoNotCreateLinkPatterns: [],
                 AssetSelection.All,
                 isolated: true,
                 @internal: false,
@@ -220,7 +226,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             };
             task.FeedConfigs.Add(TargetFeedContentType.Symbols, feedConfigsForSymbols);
 
-            Maestro.Client.Models.Build buildInfo = new(id: 4242, DateTimeOffset.Now, staleness: 0, released: false, stable: true, commit: "abcd", [], [], [], []);
+            ProductConstructionService.Client.Models.Build buildInfo = new(id: 4242, DateTimeOffset.Now, staleness: 0, released: false, stable: true, commit: "abcd", [], [], [], []);
 
             return (buildEngine, task, symbolPackages, symbolFilesDir, exclusionFile, buildInfo);
         }
