@@ -41,11 +41,7 @@ namespace Microsoft.DotNet.SignTool.Tests
         {
             var xml = XDocument.Load(projectFileName);
 
-            // When signing OSX files, we have an item group that contains a package reference.
-            // This item group contains a label, so we need to look for the itemgroup that doesn't have a label.
-            var itemGroupNode = xml
-                .Descendants("ItemGroup")
-                .Where(ig => ig.Attribute("Label") == null);
+            var itemGroupNode = xml.Descendants("ItemGroup");
 
             if (itemGroupNode.Count() == 0)
             {

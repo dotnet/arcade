@@ -13,7 +13,6 @@ using FluentAssertions;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.DotNet.SignTool.src;
 using Xunit;
 using Xunit.Abstractions;
 

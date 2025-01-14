@@ -15,7 +15,6 @@ using System.Threading.Tasks;
 using System.Resources;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
-using Microsoft.DotNet.SignTool.src;
 
 namespace Microsoft.DotNet.SignTool
 {

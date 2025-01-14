@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Microsoft.DotNet.SignTool.src
+namespace Microsoft.DotNet.SignTool
 {
     public class AdditionalCertificateInformation
     {
