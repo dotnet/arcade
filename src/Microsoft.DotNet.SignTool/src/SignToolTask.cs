@@ -11,9 +11,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Resources;
 using System.Runtime.Versioning;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -200,12 +199,12 @@ namespace Microsoft.DotNet.SignTool
                     return;
                 }
 
-                if(!Path.IsPathRooted(TempDir))
+                if (!Path.IsPathRooted(TempDir))
                 {
                     Log.LogWarning($"TempDir ('{TempDir}' is not rooted, this can cause unexpected behavior in signtool.  Please provide a fully qualified 'TempDir' path.");
                 }
 
-                if(PkgToolPath == null && RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                if (PkgToolPath == null && RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                 {
                     Log.LogError($"PkgToolPath ('{PkgToolPath}') does not exist & is required for unpacking, repacking, and notarizing .pkg files and .app bundles on MacOS.");
                 }
