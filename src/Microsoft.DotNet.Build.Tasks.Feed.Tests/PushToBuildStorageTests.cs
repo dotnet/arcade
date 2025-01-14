@@ -80,14 +80,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         private void CreateMockServiceCollection(IServiceCollection collection)
         {
             Mock<IFileSystem> fileSystemMock = new();
-            Mock<ISigningInformationModelFactory> signingInformationModelFactoryMock = new();
             Mock<IBlobArtifactModelFactory> blobArtifactModelFactoryMock = new();
             Mock<IPackageArtifactModelFactory> packageArtifactModelFactoryMock = new();
             Mock<IBuildModelFactory> buildModelFactoryMock = new();
             Mock<IPackageArchiveReaderFactory> packageArchiveReaderFactoryMock = new();
             Mock<INupkgInfoFactory> nupkgInfoFactoryMock = new();
 
-            collection.TryAddSingleton(signingInformationModelFactoryMock.Object);
             collection.TryAddSingleton(blobArtifactModelFactoryMock.Object);
             collection.TryAddSingleton(packageArtifactModelFactoryMock.Object);
             collection.TryAddSingleton(buildModelFactoryMock.Object);
@@ -541,7 +539,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 .AddSingleton<IBuildModelFactory, BuildModelFactory>()
                 .AddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>()
                 .AddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>()
-                .AddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>()
                 .AddSingleton(nupkgInfoFactoryMock.Object);
             CreateMockServiceCollection(collection);
             task.ConfigureServices(collection);

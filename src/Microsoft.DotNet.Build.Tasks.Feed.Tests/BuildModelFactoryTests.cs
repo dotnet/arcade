@@ -50,7 +50,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             _taskLoggingHelper = new TaskLoggingHelper(_stubTask);
 
             ServiceProvider provider = new ServiceCollection()
-                .AddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>()
                 .AddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>()
                 .AddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>()
                 .AddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>()
@@ -424,8 +423,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         modelFromItems.Identity.Attributes.Select(kv => $"{kv.Key}={kv.Value}").ToArray(),
                         modelFromItems.Identity.IsStable,
                         modelFromItems.Identity.PublishingVersion,
-                        modelFromItems.Identity.IsReleaseOnlyPackageVersion,
-                        modelFromItems.SigningInformation);
+                        modelFromItems.Identity.IsReleaseOnlyPackageVersion);
 
                 // Read the xml file back in and create a model from it.
                 var modelFromFile = _buildModelFactory.ManifestFileToModel(tempXmlFile);
@@ -479,61 +477,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         package.Attributes.Should().Contain("ShouldWePushDaNorpKeg", "YES");
                         package.Attributes.Should().Contain("RepoOrigin", _testRepoOrigin);
                     });
-
-                modelFromFile.SigningInformation.Should().NotBeNull();
-                modelFromFile.SigningInformation.ItemsToSign.Should().SatisfyRespectively(
-                    item =>
-                    {
-                        item.Include.Should().Be("bing.zip");
-                    },
-                    item =>
-                    {
-                        item.Include.Should().Be("test-package-a.1.0.0.nupkg");
-                    });
-                modelFromFile.SigningInformation.StrongNameSignInfo.Should().SatisfyRespectively(
-                    item =>
-                    {
-                        item.Include.Should().Be("test-package-a.1.0.0.nupkg");
-                        item.CertificateName.Should().Be("IHasACert");
-                        item.PublicKeyToken.Should().Be("abcdabcdabcdabcd");
-                    });
-                modelFromFile.SigningInformation.FileSignInfo.Should().SatisfyRespectively(
-                    item =>
-                    {
-                        item.Include.Should().Be("Microsoft.DiaSymReader.dll");
-                        item.CertificateName.Should().Be("Microsoft101240624"); // lgtm [cs/common-default-passwords] Safe, these certificate names
-                        item.TargetFramework.Should().Be(".NETStandard,Version=v1.1");
-                        item.PublicKeyToken.Should().Be("31bf3856ad364e35");
-                    },
-                    item =>
-                    {
-                        item.Include.Should().Be("Microsoft.DiaSymReader.dll");
-                        item.CertificateName.Should().Be("MicrosoftWin8WinBlue");
-                        item.TargetFramework.Should().Be(".NETFramework,Version=v2.0");
-                        item.PublicKeyToken.Should().Be("31bf3856ad364e35");
-                    },
-                    item =>
-                    {
-                        item.Include.Should().Be("test-package-a.1.0.0.nupkg");
-                        item.CertificateName.Should().Be("IHasACert2");
-                    });
-                modelFromFile.SigningInformation.CertificatesSignInfo.Should().SatisfyRespectively(
-                    item =>
-                    {
-                        item.Include.Should().Be("MyCert");
-                        item.DualSigningAllowed.Should().Be(false);
-                    },
-                    item =>
-                    {
-                        item.Include.Should().Be("MyOtherCert");
-                        item.DualSigningAllowed.Should().Be(true);
-                    });
-                modelFromFile.SigningInformation.FileExtensionSignInfo.Should().SatisfyRespectively(
-                    item =>
-                    {
-                        item.Include.Should().Be(".dll");
-                        item.CertificateName.Should().Be("MyCert");
-                    });
             }
             finally
             {
@@ -571,12 +514,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 true);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
-            model.SigningInformation.Should().NotBeNull();
-            model.SigningInformation.ItemsToSign.Should().BeEmpty();
-            model.SigningInformation.CertificatesSignInfo.Should().BeEmpty();
-            model.SigningInformation.FileExtensionSignInfo.Should().BeEmpty();
-            model.SigningInformation.FileSignInfo.Should().BeEmpty();
-            model.SigningInformation.StrongNameSignInfo.Should().BeEmpty();
         }
 
         /// <summary>
@@ -646,46 +583,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 _testRepoOrigin, false, VersionTools.BuildManifest.Model.PublishingInfraVersion.Latest, true);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
-            model.SigningInformation.Should().NotBeNull();
-            model.SigningInformation.ItemsToSign.Should().SatisfyRespectively(
-                item =>
-                {
-                    item.Include.Should().Be("test-package-a.1.0.0.nupkg");
-                },
-                item =>
-                {
-                    item.Include.Should().Be("zip.zip");
-                });
-            model.SigningInformation.StrongNameSignInfo.Should().SatisfyRespectively(
-                item =>
-                {
-                    item.Include.Should().Be("test-package-a.1.0.0.nupkg");
-                    item.CertificateName.Should().Be("IHasACert");
-                    item.PublicKeyToken.Should().Be("abcdabcdabcdabcd");
-                });
-            model.SigningInformation.FileSignInfo.Should().SatisfyRespectively(
-                item =>
-                {
-                    item.Include.Should().Be("test-package-a.1.0.0.nupkg");
-                    item.CertificateName.Should().Be("IHasACert2");
-                });
-            model.SigningInformation.CertificatesSignInfo.Should().SatisfyRespectively(
-                item =>
-                {
-                    item.Include.Should().Be("MyCert");
-                    item.DualSigningAllowed.Should().Be(false);
-                },
-                item =>
-                {
-                    item.Include.Should().Be("MyOtherCert");
-                    item.DualSigningAllowed.Should().Be(true);
-                });
-            model.SigningInformation.FileExtensionSignInfo.Should().SatisfyRespectively(
-                item =>
-                {
-                    item.Include.Should().Be(".dll");
-                    item.CertificateName.Should().Be("MyCert");
-                });
         }
 
         /// <summary>
