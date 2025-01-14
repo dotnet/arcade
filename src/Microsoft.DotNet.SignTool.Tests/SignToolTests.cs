@@ -1637,10 +1637,10 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.deb"
         public void VerifyDebIntegrity()
         {
             // List of files to be considered for signing
-            var itemsToSign = new ITaskItem[]
+            var itemsToSign = new List<ItemToSign>
             {
-                new TaskItem(GetResourcePath("SignedDeb.deb")),
-                new TaskItem(GetResourcePath("IncorrectlySignedDeb.deb"))
+                new ItemToSign(GetResourcePath("SignedDeb.deb")),
+                new ItemToSign(GetResourcePath("IncorrectlySignedDeb.deb"))
             };
 
             // Default signing information
