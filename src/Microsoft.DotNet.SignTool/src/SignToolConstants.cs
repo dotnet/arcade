@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// List of known signable extensions. Copied, removing duplicates, from here:
         /// https://microsoft.sharepoint.com/teams/prss/Codesign/SitePages/Signable%20Files.aspx
-        /// ".deb" is not in the list linked above, but it is a known signable extension.
+        /// ".deb" and ".rpm" are not in the list linked above, but they are known signable extension.
         /// </summary>
         public static readonly HashSet<string> SignableExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
