@@ -30,6 +30,10 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         internal string StrongName { get; }
 
+        /// <summary>
+        /// The app name com.microsoft.[APP NAME] that should be used to notarize the binary.
+        /// If empty, the binary is not notarized.
+        /// </summary>
         internal string NotarizationAppName { get; }
 
         internal bool ShouldIgnore { get; }
@@ -78,7 +82,7 @@ namespace Microsoft.DotNet.SignTool
             => new SignInfo(value, StrongName, NotarizationAppName, collisionPriorityId, false, false, IsAlreadyStrongNamed);
 
         internal SignInfo WithNotarization(string appName, string collisionPriorityId)
-            => new SignInfo(Certificate, StrongName, appName, collisionPriorityId, ShouldIgnore, IsAlreadySigned, IsAlreadyStrongNamed);
+            => new SignInfo(Certificate, StrongName, appName, collisionPriorityId, false, false, IsAlreadyStrongNamed);
 
         internal SignInfo WithCollisionPriorityId(string collisionPriorityId)
             => new SignInfo(Certificate, StrongName, NotarizationAppName, collisionPriorityId, ShouldIgnore, IsAlreadySigned, IsAlreadyStrongNamed);

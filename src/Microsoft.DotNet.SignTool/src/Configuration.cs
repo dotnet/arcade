@@ -544,7 +544,7 @@ namespace Microsoft.DotNet.SignTool
 
                 // If the certificate indicates that the file has a split sign/notarize operation,
                 // then replace the certificate with the sign certificate and add the notarization operation.
-                if (!string.IsNullOrEmpty(macSignOperation))
+                if (!string.IsNullOrEmpty(macNotarizationAppName))
                 {
                     signInfo = signInfo.WithCertificateName(macSignOperation, _hashToCollisionIdMap[signedFileContentKey]);
                     signInfo = signInfo.WithNotarization(macNotarizationAppName, _hashToCollisionIdMap[signedFileContentKey]);
@@ -585,7 +585,7 @@ namespace Microsoft.DotNet.SignTool
                 return new FileSignInfo(file, signInfo,  (peInfo != null && peInfo.TargetFramework != "") ? peInfo.TargetFramework : null, wixContentFilePath: wixContentFilePath);
             }
 
-            if (SignToolConstants.SignableExtensions.Contains(extension) || SignToolConstants.SignableOSXExtensions.Contains(extension))
+            if (SignToolConstants.SignableExtensions.Contains(extension))
             {
                 // Extract the relative path inside the package / otherwise just return the full path of the file
                 LogError(SigningToolErrorCode.SIGN002, signedFileContentKey);

@@ -114,21 +114,10 @@ namespace Microsoft.DotNet.SignTool
             ".pyd",
 
             ".deb",
+            ".pkg",
+            ".app",
+            ".dylib"
         };
-
-        /// <summary>
-        /// List of known signable extensions for OSX files.
-        /// We only consider these signable on an OSX platform
-        /// </summary>
-        public static readonly HashSet<string> SignableOSXExtensions =
-            RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
-                ? new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-                {
-                    ".pkg",
-                    ".app",
-                    ".dylib"
-                }
-                : new HashSet<string>();
 
 
         public static readonly HashSet<string> MacSigningOperationsRequiringZipping =
@@ -146,6 +135,9 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         public const string CollisionPriorityId = "CollisionPriorityId";
         
+        /// <summary>
+        /// Notarization operation microbuild ID. Microbuild does not currently support the friendly name, MacNotarize
+        /// </summary>
         public const string MacNotarizationOperation = "8020";
     }
 }

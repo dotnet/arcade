@@ -62,8 +62,7 @@ namespace Microsoft.DotNet.SignTool
         private Dictionary<string, string> ZipMacFiles(IEnumerable<FileSignInfo> filesToSign)
         {
             var zipPaths = new Dictionary<string, string>();
-            var osxFilesToZip = filesToSign.Where(fsi => SignToolConstants.MacSigningOperationsRequiringZipping.Contains(fsi.SignInfo.Certificate) ||
-                                                          SignToolConstants.MacSigningOperationsRequiringZipping.Contains(fsi.SignInfo.NotarizationAppName));
+            var osxFilesToZip = filesToSign.Where(fsi => SignToolConstants.MacSigningOperationsRequiringZipping.Contains(fsi.SignInfo.Certificate));
 
             foreach (var file in osxFilesToZip)
             {
