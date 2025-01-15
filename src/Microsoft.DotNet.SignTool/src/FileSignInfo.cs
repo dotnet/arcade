@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.SignTool
                                                  IsNupkg() ||
                                                  IsVsix() ||
                                                  IsSymbolsNupkg() ||
-                                                 IsRpm(path);
+                                                 IsRpm();
 
         internal bool IsPowerShellScript() => IsPowerShellScript(FileName);
 

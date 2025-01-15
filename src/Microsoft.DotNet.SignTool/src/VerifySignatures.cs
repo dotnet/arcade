@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.SignTool
 # endif
         }
 
-        internal static bool VerifySignedRpm(TaskLoggingHelper log, string filePath)
+        internal static bool IsSignedRpm(TaskLoggingHelper log, string filePath)
         {
             // RPM signature verification is not yet implemented
             log.LogMessage(MessageImportance.Low, $"Skipping signature verification of {filePath} - not yet implemented.");
@@ -140,9 +140,15 @@ namespace Microsoft.DotNet.SignTool
             return archive.GetFiles().Any(f => f.StartsWith("package/services/digital-signature/", StringComparison.OrdinalIgnoreCase));
         }
 
-        internal static bool IsSignedPkgOrAppBundle(string fullPath, string pkgToolPath)
+        internal static bool IsSignedPkgOrAppBundle(TaskLoggingHelper log, string filePath, string pkgToolPath)
         {
-            return ZipData.RunPkgProcess(fullPath, null, "verify", pkgToolPath);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                log.LogMessage(MessageImportance.Low, $"Skipping signature verification of {filePath} for Windows.");
+                return false;
+            }
+
+            return ZipData.RunPkgProcess(filePath, null, "verify", pkgToolPath);
         }
 
         internal static bool IsDigitallySigned(string fullPath)

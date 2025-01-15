@@ -438,7 +438,7 @@ namespace Microsoft.DotNet.SignTool
             }
             else if (FileSignInfo.IsPkg(file.FullPath) || FileSignInfo.IsAppBundle(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = VerifySignatures.IsSignedPkgOrAppBundle(file.FullPath, _pkgToolPath);
+                isAlreadyAuthenticodeSigned = VerifySignatures.IsSignedPkgOrAppBundle(_log, file.FullPath, _pkgToolPath);
                 if (!isAlreadyAuthenticodeSigned)
                 {
                     _log.LogMessage(MessageImportance.Low, $"Container {file.FullPath} does not have a signature marker.");
@@ -486,7 +486,7 @@ namespace Microsoft.DotNet.SignTool
             }
             else if (FileSignInfo.IsRpm(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = VerifySignatures.VerifySignedRpm(_log, file.FullPath);
+                isAlreadyAuthenticodeSigned = VerifySignatures.IsSignedRpm(_log, file.FullPath);
                 if (!isAlreadyAuthenticodeSigned)
                 {
                     _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} is not signed.");

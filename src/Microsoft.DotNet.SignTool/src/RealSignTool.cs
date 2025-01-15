@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.SignTool
 
         public override bool VerifySignedRpm(TaskLoggingHelper log, string filePath)
         {
-            return VerifySignatures.VerifySignedRpm(log, filePath);
+            return VerifySignatures.IsSignedRpm(log, filePath);
         }
 
         public override bool VerifySignedPowerShellFile(string filePath)
@@ -120,9 +120,9 @@ namespace Microsoft.DotNet.SignTool
             return VerifySignatures.VerifySignedVSIXByFileMarker(filePath);
         }
 
-        public override bool VerifySignedPkgOrAppBundle(string fullPath, string pkgToolPath)
+        public override bool VerifySignedPkgOrAppBundle(TaskLoggingHelper log, string fullPath, string pkgToolPath)
         {
-            return VerifySignatures.IsSignedPkgOrAppBundle(fullPath, pkgToolPath);
+            return VerifySignatures.IsSignedPkgOrAppBundle(log, fullPath, pkgToolPath);
         }
 
         public override bool LocalStrongNameSign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> files)

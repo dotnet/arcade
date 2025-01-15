@@ -642,7 +642,7 @@ namespace Microsoft.DotNet.SignTool
                 }
                 else if (file.IsPkg() || file.IsAppBundle())
                 {
-                    if (!_signTool.VerifySignedPkgOrAppBundle(file.FullPath, _signTool.PkgToolPath))
+                    if (!_signTool.VerifySignedPkgOrAppBundle(_log, file.FullPath, _signTool.PkgToolPath))
                     {
                         _log.LogError($"Powershell file {file.FullPath} does not have a signature marker.");
                     }
