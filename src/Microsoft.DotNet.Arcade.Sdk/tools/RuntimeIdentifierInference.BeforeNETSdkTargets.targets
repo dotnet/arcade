@@ -16,6 +16,21 @@
     <_EnableArcadeRuntimeIdentifierInference Condition="'$(_EnableArcadeRuntimeIdentifierInference)' == '' and ('$(IsRidAgnostic)' == 'true' or '$(_RidAgnosticProject)' == 'true')">false</_EnableArcadeRuntimeIdentifierInference>
 
     <!--
+      We only need to infer if the project would use the RID
+    -->
+    <_BuildFlavorRequiredRid
+      Condition="
+        '$(SelfContained)' == 'true' or
+        ('$(_IsPublishing)' == 'true' and
+          (
+            '$(PublishReadyToRun)' == 'true' or
+            '$(PublishSingleFile)' == 'true' or
+            '$(PublishAot)' == 'true'
+          )
+        )">true</_BuildFlavorRequiredRid>
+    <_EnableArcadeRuntimeIdentifierInference Condition="'$(_EnableArcadeRuntimeIdentifierInference)' == '' and '$(_BuildFlavorRequiredRid)' != 'true'">false</_EnableArcadeRuntimeIdentifierInference>
+
+    <!--
       When we're doing a build of a single vertical, we may not have a runtime or host available for any RID outside of our current target.
       For many of our projects, we don't actually need to build any RID-specific assets, but the SDK may still try to pull down assets for other RIDs,
       in particular for the RID matching the SDK's RID.
