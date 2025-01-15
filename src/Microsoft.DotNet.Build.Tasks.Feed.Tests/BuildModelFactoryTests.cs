@@ -539,7 +539,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     },
                     item =>
                     {
-                        item.Include.Should().Be("MyOtherCert");
+                        item.Include.Should().Be("MySpecialCert");
                         item.DualSigningAllowed.Should().Be(false);
                         item.MacCertificate.Should().Be("MacMac");
                         item.MacNotarizationAppName.Should().Be("dotnet");

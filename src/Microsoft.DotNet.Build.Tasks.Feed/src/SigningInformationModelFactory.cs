@@ -103,7 +103,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     var attributes = signInfo.CloneCustomMetadata() as IDictionary<string, string>;
                     parsedCertificatesSignInfoModel.Add(new CertificatesSignInfoModel { Include = signInfo.ItemSpec,
-                                                                                        DualSigningAllowed = bool.Parse(attributes.GetOrDefault("DualSigningAllowed")),
+                                                                                        DualSigningAllowed = bool.Parse(attributes.GetOrDefault("DualSigningAllowed") ?? "false"),
                                                                                         MacCertificate = attributes.GetOrDefault("MacCertificate"),
                                                                                         MacNotarizationAppName = attributes.GetOrDefault("MacNotarizationAppName"),
                     });
