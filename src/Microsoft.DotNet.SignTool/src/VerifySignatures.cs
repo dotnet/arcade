@@ -83,6 +83,13 @@ namespace Microsoft.DotNet.SignTool
 # endif
         }
 
+        internal static bool VerifySignedRpm(TaskLoggingHelper log, string filePath)
+        {
+            // RPM signature verification is not yet implemented
+            log.LogMessage(MessageImportance.Low, $"Skipping signature verification of {filePath} - not yet implemented.");
+            return true;
+        }
+
         internal static bool IsSignedPowershellFile(string filePath)
         {
             return File.ReadLines(filePath).Any(line => line.IndexOf("# SIG # Begin Signature Block", StringComparison.OrdinalIgnoreCase) >= 0);

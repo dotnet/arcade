@@ -24,6 +24,9 @@ namespace Microsoft.DotNet.SignTool
         internal static bool IsDeb(string path)
             => Path.GetExtension(path) == ".deb";
 
+        internal static bool IsRpm(string path)
+            => Path.GetExtension(path) == ".rpm";
+
         internal static bool IsPEFile(string path)
             => Path.GetExtension(path) == ".exe" || Path.GetExtension(path) == ".dll";
 
@@ -65,6 +68,8 @@ namespace Microsoft.DotNet.SignTool
             || Path.GetExtension(path).Equals(".psm1", StringComparison.OrdinalIgnoreCase);
 
         internal bool IsDeb() => IsDeb(FileName);
+
+        internal bool IsRpm() => IsRpm(FileName);
 
         internal bool IsPEFile() => IsPEFile(FileName);
 
@@ -111,7 +116,8 @@ namespace Microsoft.DotNet.SignTool
                                                  IsAppBundle() ||
                                                  IsNupkg() ||
                                                  IsVsix() ||
-                                                 IsSymbolsNupkg();
+                                                 IsSymbolsNupkg() ||
+                                                 IsRpm(path);
 
         internal bool IsPowerShellScript() => IsPowerShellScript(FileName);
 
