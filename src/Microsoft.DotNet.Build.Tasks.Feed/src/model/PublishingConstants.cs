@@ -891,7 +891,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
             // .NET 9.0.3xx SDK,
             new TargetChannelConfig(
-                id: 5388,
+                id: 6417,
                 isInternal: false,
                 publishingInfraVersion: PublishingInfraVersion.Latest,
                 akaMSChannelNames: ["9.0.3xx"],
@@ -899,6 +899,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
                 targetFeeds: DotNet9Feeds,
                 symbolTargetType: SymbolPublishVisibility.Public),
+
+            // .NET 9.0.3xx SDK Internal,
+            new TargetChannelConfig(
+                id: 6418,
+                isInternal: true,
+                publishingInfraVersion: PublishingInfraVersion.Latest,
+                akaMSChannelNames: ["internal/9.0.3xx"],
+                akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
+                akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
+                targetFeeds: DotNet9InternalFeeds,
+                symbolTargetType: SymbolPublishVisibility.Internal),
 
             // .NET 9 RC 1
             new TargetChannelConfig(
