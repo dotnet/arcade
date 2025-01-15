@@ -1693,9 +1693,9 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.deb"
         public void CheckRpmSigning()
         {
             // List of files to be considered for signing
-            var itemsToSign = new ITaskItem[]
+            var itemsToSign = new List<ItemToSign>
             {
-                new TaskItem(GetResourcePath("test.rpm"))
+                new ItemToSign(GetResourcePath("test.rpm"))
             };
 
             // Default signing information
