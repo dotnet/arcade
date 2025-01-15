@@ -465,7 +465,19 @@ namespace Microsoft.DotNet.SignTool
                     _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} is signed.");
                 }
             }
-            else if(FileSignInfo.IsPowerShellScript(file.FullPath))
+            else if (FileSignInfo.IsRpm(file.FullPath))
+            {
+                isAlreadyAuthenticodeSigned = VerifySignatures.VerifySignedRpm(_log, file.FullPath);
+                if (!isAlreadyAuthenticodeSigned)
+                {
+                    _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} is not signed.");
+                }
+                else
+                {
+                    _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} is signed.");
+                }
+            }
+            else if (FileSignInfo.IsPowerShellScript(file.FullPath))
             {
                 isAlreadyAuthenticodeSigned = VerifySignatures.VerifySignedPowerShellFile(file.FullPath);
                 if (!isAlreadyAuthenticodeSigned)

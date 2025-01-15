@@ -65,6 +65,11 @@ namespace Microsoft.DotNet.SignTool
             return true;
         }
 
+        public override bool VerifySignedRpm(TaskLoggingHelper log, string filePath)
+        {
+            return true;
+        }
+
         public override bool VerifySignedPowerShellFile(string filePath)
         {
             return true;
