@@ -644,11 +644,11 @@ namespace Microsoft.DotNet.SignTool
                 {
                     if (!_signTool.VerifySignedPkgOrAppBundle(file.FullPath, _signTool.PkgToolPath))
                     {
-                        _log.LogError($"Powershell file {file.FullPath} does not have a signature marker.");
+                        _log.LogError($"Pkg or app file {file.FullPath} does not have a signature marker.");
                     }
                     else
                     {
-                        _log.LogMessage(MessageImportance.Low, $"Powershell file {file.FullPath} has a signature marker.");
+                        _log.LogMessage(MessageImportance.Low, $"Pkg or app file {file.FullPath} has a signature marker.");
                     }
                 }
                 else if (file.IsNupkg())

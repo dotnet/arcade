@@ -306,7 +306,7 @@ namespace Microsoft.DotNet.SignTool
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                throw new Exception($"Pkg tooling is only support on MacOS.");
+                throw new Exception($"Pkg tooling is only supported on MacOS.");
             }
 
             string args = $@"{action} ""{srcPath}""";
