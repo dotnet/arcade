@@ -36,9 +36,8 @@
     <_DefaultItemsToSign Include="$(VisualStudioSetupOutputPath)**\*.vsix" />
     <_DefaultItemsToSign Include="$(VisualStudioBuildPackagesDir)**\*.nupkg" />
 
-    <!-- If PostBuildSign == true, these are added to ItemsToSignPostBuild, otherwise these are added to ItemsToSign -->
+    <!-- PostBuildSign switch is kept for avoiding breaks in repos that use it to avoid signing. -->
     <ItemsToSign Include="@(_DefaultItemsToSign)" Condition="'$(PostBuildSign)' != 'true'" />
-    <ItemsToSignPostBuild Include="@(_DefaultItemsToSign->'%(Filename)%(Extension)')" Condition="'$(PostBuildSign)' == 'true'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -89,9 +88,6 @@
     <!-- Control whether an empty ItemsToSign item group is allowed when calling SignToolTask. -->
     <AllowEmptySignList Condition="'$(PostBuildSign)' != 'true'">false</AllowEmptySignList>
     <AllowEmptySignList Condition="'$(PostBuildSign)' == 'true'">true</AllowEmptySignList>
-    <!-- Control whether an empty ItemsToSignPostBuild item group is allowed during publishing -->
-    <AllowEmptySignPostBuildList Condition="'$(PostBuildSign)' != 'true'">true</AllowEmptySignPostBuildList>
-    <AllowEmptySignPostBuildList Condition="'$(PostBuildSign)' == 'true'">false</AllowEmptySignPostBuildList>
 
     <NETCORE_ENGINEERING_TELEMETRY>Signing</NETCORE_ENGINEERING_TELEMETRY>
   </PropertyGroup>
@@ -109,9 +105,7 @@
 
   <!-- Respect Artifact item repo extension point -->
   <ItemGroup Condition="'@(Artifact)' != ''">
-    <!-- If PostBuildSign == true, these are added to ItemsToSignPostBuild, otherwise these are added to ItemsToSign -->
     <ItemsToSign Include="@(Artifact)" Condition="'$(PostBuildSign)' != 'true'" />
-    <ItemsToSignPostBuild Include="@(Artifact->'%(Filename)%(Extension)')" Condition="'$(PostBuildSign)' == 'true'" />
   </ItemGroup>
 
 </Project>

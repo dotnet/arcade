@@ -135,9 +135,6 @@
         <OriginalPackage>%(_PackageToPublish.Identity)</OriginalPackage>
         <IsShipping>%(_PackageToPublish.IsShipping)</IsShipping>
       </_SymbolPackageToGenerate>
-
-      <!-- If PostBuildSign is true, then we need to include newly generated packages in ItemsToSignPostBuild. -->
-      <ItemsToSignPostBuild Include="@(_SymbolPackageToGenerate->'%(Filename)%(Extension)')" Condition="'$(PostBuildSign)' == 'true'" />
     </ItemGroup>
 
     <!--
@@ -254,9 +251,6 @@
       </ItemsToPushToBlobFeed>
     </ItemGroup>
 
-    <Error Condition="'$(AllowEmptySignPostBuildList)' != 'true' AND '@(ItemsToSignPostBuild)' == ''" 
-           Text="List of files to sign post-build is empty. Make sure that ItemsToSignPostBuild is configured correctly." />
-
     <!--
       The user can set `PublishingVersion` via eng\Publishing.props
     -->
@@ -265,11 +259,6 @@
       AzureDevOpsProject="$(SYSTEM_TEAMPROJECT)"
       AzureDevOpsBuildId="$(BUILD_BUILDID)"
       ItemsToPush="@(ItemsToPushToBlobFeed)"
-      ItemsToSign="@(ItemsToSignPostBuild)"
-      StrongNameSignInfo="@(StrongNameSignInfo)"
-      CertificatesSignInfo="@(CertificatesSignInfo)"
-      FileSignInfo="@(FileSignInfo)"
-      FileExtensionSignInfo="@(FileExtensionSignInfo)"
       ManifestBuildData="@(ManifestBuildData)"
       ManifestRepoUri="$(BUILD_REPOSITORY_NAME)"
       ManifestBranch="$(BUILD_SOURCEBRANCH)"
