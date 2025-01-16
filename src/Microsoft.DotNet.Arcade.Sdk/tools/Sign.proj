@@ -8,6 +8,7 @@
     Optional variables:
       EnableDefaultArtifacts            Includes *.nupkg, *.vsix and *.wixpack.zip under "/artifacts/packages/**" for sigining.
                                         Defaults to true.
+      DefaultArtifactVisibility         The default visibility for Artifact items. Defaults to External.
 
     Optional items:
       Artifact (with Metadata)          Path to the artifact to publish. Declare the item in Signing.props to sign and publish the artifact.
