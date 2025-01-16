@@ -392,6 +392,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 new TaskItem("MyOtherCert", new Dictionary<string, string>()
                 {
                     { "DualSigningAllowed", "true" }
+                }),
+                new TaskItem("MySpecialCert", new Dictionary<string, string>()
+                {
+                    { "MacCertificate", "MacMac" },
+                    { "MacNotarizationAppName", "dotnet" }
                 })
             };
 
