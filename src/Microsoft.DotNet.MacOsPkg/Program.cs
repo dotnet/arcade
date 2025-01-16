@@ -2,7 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+#if NETCOREAPP
 using System.CommandLine;
+#endif
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.DotNet.MacOsPkg;
@@ -16,11 +18,16 @@ public class Program
             Console.Error.WriteLine("This tool is only supported on macOS.");
             return 1;
         }
-
+#if NETCOREAPP
         CliRootCommand rootCommand = Setup();
         return new CliConfiguration(rootCommand).Invoke(args);
+#else
+        // This code is unreachable. Here to keep the compiler happy.
+        throw new PlatformNotSupportedException("This tool is only supported on .NET Core.");
+#endif
     }
 
+#if NETCOREAPP
     /// <summary>
     /// Set up the command line interface and associated actions.
     /// </summary>
@@ -161,4 +168,5 @@ public class Program
         }
         return 0;
     }
+#endif
 }

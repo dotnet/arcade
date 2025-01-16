@@ -13,7 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="System.CommandLine" PrivateAssets="all" />
+    <PackageReference Include="System.CommandLine" Condition="'$(TargetFramework)' == '$(NetToolCurrent)'"/>
   </ItemGroup>
 
   <PropertyGroup Condition="'$(TargetFramework)' == '$(NetToolCurrent)'">
