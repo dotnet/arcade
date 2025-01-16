@@ -369,8 +369,8 @@ namespace Microsoft.DotNet.SignTool
 
             if (FileSignInfo.IsPEFile(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = IsSignedWithLogging(file, VerifySignatures.IsSignedPE(file.FullPath));
-                isAlreadyStrongNamed = IsStrongNameSignedWithLogging(file);
+                isAlreadyAuthenticodeSigned = IsSigned(file, VerifySignatures.IsSignedPE(file.FullPath));
+                isAlreadyStrongNamed = IsStrongNameSigned(file);
 
                 peInfo = GetPEInfo(file.FullPath);
 
@@ -419,27 +419,27 @@ namespace Microsoft.DotNet.SignTool
             }
             else if (FileSignInfo.IsPkg(file.FullPath) || FileSignInfo.IsAppBundle(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = IsSignedWithLogging(file, VerifySignatures.IsSignedPkgOrAppBundle(_log, file.FullPath, _pkgToolPath));
+                isAlreadyAuthenticodeSigned = IsSigned(file, VerifySignatures.IsSignedPkgOrAppBundle(_log, file.FullPath, _pkgToolPath));
             }
             else if (FileSignInfo.IsNupkg(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = IsSignedWithLogging(file, VerifySignatures.IsSignedNupkg(file.FullPath));
+                isAlreadyAuthenticodeSigned = IsSigned(file, VerifySignatures.IsSignedNupkg(file.FullPath));
             }
             else if (FileSignInfo.IsWixInstaller(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = IsSignedWithLogging(file, VerifySignatures.IsWixSigned(file.FullPath));
+                isAlreadyAuthenticodeSigned = IsSigned(file, VerifySignatures.IsWixSigned(file.FullPath));
             }
             else if (FileSignInfo.IsDeb(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = IsSignedWithLogging(file, VerifySignatures.IsSignedDeb(_log, file.FullPath));
+                isAlreadyAuthenticodeSigned = IsSigned(file, VerifySignatures.IsSignedDeb(_log, file.FullPath));
             }
             else if (FileSignInfo.IsRpm(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = IsSignedWithLogging(file, VerifySignatures.IsSignedRpm(_log, file.FullPath));;
+                isAlreadyAuthenticodeSigned = IsSigned(file, VerifySignatures.IsSignedRpm(_log, file.FullPath));;
             }
             else if (FileSignInfo.IsPowerShellScript(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = IsSignedWithLogging(file, VerifySignatures.IsSignedPowershellFile(file.FullPath));
+                isAlreadyAuthenticodeSigned = IsSigned(file, VerifySignatures.IsSignedPowershellFile(file.FullPath));
             }
 
             // We didn't find any specific information for PE files using PKT + TargetFramework
@@ -542,7 +542,7 @@ namespace Microsoft.DotNet.SignTool
 
             return new FileSignInfo(file, SignInfo.Ignore, wixContentFilePath: wixContentFilePath);
 
-            bool IsSignedWithLogging(PathWithHash file, SigningStatus signingStatus)
+            bool IsSigned(PathWithHash file, SigningStatus signingStatus)
             {
                 switch (signingStatus)
                 {
@@ -560,7 +560,7 @@ namespace Microsoft.DotNet.SignTool
                 }
             }
 
-            bool IsStrongNameSignedWithLogging(PathWithHash file)
+            bool IsStrongNameSigned(PathWithHash file)
             {
                 bool isAlreadyStrongNamed = StrongName.IsSigned(file.FullPath, snPath: _snPath, log: _log);
                 if (!isAlreadyStrongNamed)
