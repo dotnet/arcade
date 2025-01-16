@@ -35,15 +35,15 @@ namespace Microsoft.DotNet.SignTool
 
         public abstract bool LocalStrongNameSign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> files);
 
-        public abstract bool VerifySignedDeb(TaskLoggingHelper log, string filePath);
-        public abstract bool VerifySignedRpm(TaskLoggingHelper log, string filePath);
-        public abstract bool VerifySignedPEFile(Stream stream);
-        public abstract bool VerifySignedPowerShellFile(string filePath);
-        public abstract bool VerifySignedNuGet(string filePath);
-        public abstract bool VerifySignedVSIX(string filePath);
-        public abstract bool VerifySignedPkgOrAppBundle(TaskLoggingHelper log, string filePath, string pkgToolPath);
+        public abstract SigningStatus VerifySignedDeb(TaskLoggingHelper log, string filePath);
+        public abstract SigningStatus VerifySignedRpm(TaskLoggingHelper log, string filePath);
+        public abstract SigningStatus VerifySignedPEFile(Stream stream);
+        public abstract SigningStatus VerifySignedPowerShellFile(string filePath);
+        public abstract SigningStatus VerifySignedNuGet(string filePath);
+        public abstract SigningStatus VerifySignedVSIX(string filePath);
+        public abstract SigningStatus VerifySignedPkgOrAppBundle(TaskLoggingHelper log, string filePath, string pkgToolPath);
 
-        public abstract bool VerifyStrongNameSign(string fileFullPath);
+        public abstract SigningStatus VerifyStrongNameSign(string fileFullPath);
 
         public abstract bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, string binLogPath);
 
@@ -122,7 +122,14 @@ namespace Microsoft.DotNet.SignTool
                 }
                 else
                 {
+                    // Delete the file first so that we can overwrite it. ExtractToDirectory's overwrite is not
+                    // available on framework.
+#if NETFRAMEWORK
+                    File.Delete(item.Key);
                     ZipFile.ExtractToDirectory(item.Value, Path.GetDirectoryName(item.Key));
+#else
+                    ZipFile.ExtractToDirectory(item.Value, Path.GetDirectoryName(item.Key), true);
+#endif
                 }
             }
         }

@@ -5,6 +5,7 @@ using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -108,16 +109,16 @@ namespace Microsoft.DotNet.SignTool
              Path.GetExtension(FileName).Equals(".msi", StringComparison.OrdinalIgnoreCase));
 
         internal bool IsUnpackableContainer() => IsZip() || 
-                                                 IsUnpackableWixContainer() || 
+                                                 (IsUnpackableWixContainer() && RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) || 
                                                  IsMPack() || 
                                                  IsTarGZip() || 
                                                  IsDeb() ||
-                                                 IsPkg() ||
-                                                 IsAppBundle() ||
+                                                 (IsPkg() && RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) ||
+                                                 (IsAppBundle() && RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) ||
                                                  IsNupkg() ||
                                                  IsVsix() ||
                                                  IsSymbolsNupkg() ||
-                                                 IsRpm();
+                                                 (IsRpm() && RuntimeInformation.IsOSPlatform(OSPlatform.Linux));
 
         internal bool IsPowerShellScript() => IsPowerShellScript(FileName);
 

@@ -369,27 +369,8 @@ namespace Microsoft.DotNet.SignTool
 
             if (FileSignInfo.IsPEFile(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = ContentUtil.IsAuthenticodeSigned(file.FullPath);
-                isAlreadyStrongNamed = StrongName.IsSigned(file.FullPath, snPath: _snPath, log: _log);
-
-
-                if (!isAlreadyAuthenticodeSigned)
-                {
-                    _log.LogMessage(MessageImportance.Low, $"PE file {file.FullPath} does not have a signature marker.");
-                }
-                else
-                {
-                    _log.LogMessage(MessageImportance.Low, $"PE file {file.FullPath} has a signature marker.");
-                }
-
-                if (!isAlreadyStrongNamed)
-                {
-                    _log.LogMessage(MessageImportance.Low, $"PE file {file.FullPath} does not have a valid strong name signature.");
-                }
-                else
-                {
-                    _log.LogMessage(MessageImportance.Low, $"PE file {file.FullPath} has a valid strong name signature.");
-                }
+                isAlreadyAuthenticodeSigned = IsSignedWithLogging(file, VerifySignatures.IsSignedPE(file.FullPath));
+                isAlreadyStrongNamed = IsStrongNameSignedWithLogging(file);
 
                 peInfo = GetPEInfo(file.FullPath);
 
@@ -438,75 +419,27 @@ namespace Microsoft.DotNet.SignTool
             }
             else if (FileSignInfo.IsPkg(file.FullPath) || FileSignInfo.IsAppBundle(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = VerifySignatures.IsSignedPkgOrAppBundle(_log, file.FullPath, _pkgToolPath);
-                if (!isAlreadyAuthenticodeSigned)
-                {
-                    _log.LogMessage(MessageImportance.Low, $"Container {file.FullPath} does not have a signature marker.");
-                }
-                else
-                {
-                    _log.LogMessage(MessageImportance.Low, $"Container {file.FullPath} has a signature marker.");
-                }
+                isAlreadyAuthenticodeSigned = IsSignedWithLogging(file, VerifySignatures.IsSignedPkgOrAppBundle(_log, file.FullPath, _pkgToolPath));
             }
             else if (FileSignInfo.IsNupkg(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = VerifySignatures.IsSignedNupkg(file.FullPath);
-                if (!isAlreadyAuthenticodeSigned)
-                {
-                    _log.LogMessage(MessageImportance.Low, $"Container {file.FullPath} does not have a signature marker.");
-                }
-                else
-                {
-                    _log.LogMessage(MessageImportance.Low, $"Container {file.FullPath} has a signature marker.");
-                }
+                isAlreadyAuthenticodeSigned = IsSignedWithLogging(file, VerifySignatures.IsSignedNupkg(file.FullPath));
             }
             else if (FileSignInfo.IsWixInstaller(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = VerifySignatures.IsDigitallySigned(file.FullPath);
-                if (!isAlreadyAuthenticodeSigned)
-                {
-                    _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} is not digitally signed.");
-                }
-                else
-                {
-                    _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} is digitally signed.");
-                }
+                isAlreadyAuthenticodeSigned = IsSignedWithLogging(file, VerifySignatures.IsWixSigned(file.FullPath));
             }
             else if (FileSignInfo.IsDeb(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = VerifySignatures.IsSignedDeb(_log, file.FullPath);
-                if (!isAlreadyAuthenticodeSigned)
-                {
-                    _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} is not signed.");
-                }
-                else
-                {
-                    _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} is signed.");
-                }
+                isAlreadyAuthenticodeSigned = IsSignedWithLogging(file, VerifySignatures.IsSignedDeb(_log, file.FullPath));
             }
             else if (FileSignInfo.IsRpm(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = VerifySignatures.IsSignedRpm(_log, file.FullPath);
-                if (!isAlreadyAuthenticodeSigned)
-                {
-                    _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} is not signed.");
-                }
-                else
-                {
-                    _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} is signed.");
-                }
+                isAlreadyAuthenticodeSigned = IsSignedWithLogging(file, VerifySignatures.IsSignedRpm(_log, file.FullPath));;
             }
             else if (FileSignInfo.IsPowerShellScript(file.FullPath))
             {
-                isAlreadyAuthenticodeSigned = VerifySignatures.IsSignedPowershellFile(file.FullPath);
-                if (!isAlreadyAuthenticodeSigned)
-                {
-                    _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} does not have a signature block.");
-                }
-                else
-                {
-                    _log.LogMessage(MessageImportance.Low, $"File {file.FullPath} has a signature block.");
-                }
+                isAlreadyAuthenticodeSigned = IsSignedWithLogging(file, VerifySignatures.IsSignedPowershellFile(file.FullPath));
             }
 
             // We didn't find any specific information for PE files using PKT + TargetFramework
@@ -608,6 +541,39 @@ namespace Microsoft.DotNet.SignTool
             }
 
             return new FileSignInfo(file, SignInfo.Ignore, wixContentFilePath: wixContentFilePath);
+
+            bool IsSignedWithLogging(PathWithHash file, SigningStatus signingStatus)
+            {
+                switch (signingStatus)
+                {
+                    case SigningStatus.Signed:
+                        _log.LogMessage(MessageImportance.Low, $"File '{file.FullPath}' is already signed.");
+                        return true;
+                    case SigningStatus.NotSigned:
+                        _log.LogMessage(MessageImportance.Low, $"File '{file.FullPath}' is not signed.");
+                        return false;
+                    case SigningStatus.Unknown:
+                        _log.LogMessage(MessageImportance.Low, $"File '{file.FullPath}' signing status is unknown, treating as unsigned.");
+                        return false;
+                    default:
+                        throw new Exception($"Unexpected signing status {signingStatus}");
+                }
+            }
+
+            bool IsStrongNameSignedWithLogging(PathWithHash file)
+            {
+                bool isAlreadyStrongNamed = StrongName.IsSigned(file.FullPath, snPath: _snPath, log: _log);
+                if (!isAlreadyStrongNamed)
+                {
+                    _log.LogMessage(MessageImportance.Low, $"PE file {file.FullPath} does not have a valid strong name signature.");
+                }
+                else
+                {
+                    _log.LogMessage(MessageImportance.Low, $"PE file {file.FullPath} has a valid strong name signature.");
+                }
+
+                return isAlreadyStrongNamed;
+            }
         }
 
         private void LogWarning(SigningToolErrorCode code, string message)

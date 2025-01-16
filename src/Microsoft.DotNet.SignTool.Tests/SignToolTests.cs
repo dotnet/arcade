@@ -1256,8 +1256,46 @@ $@"
             });
         }
 
+        /// <summary>
+        /// Verifies that signing of pkgs can be done on Windows, even though
+        /// we will not unpack or repack them.
+        /// </summary>
+        [WindowsOnlyFact]
+        public void SignJustPkgWithoutUnpack()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new List<ItemToSign>()
+            {
+                new ItemToSign(GetResourcePath("test.pkg"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo(certificate: "ArcadeCertTest", strongName: "ArcadeStrongTest") } }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'test.pkg' Certificate='MacDeveloperHarden'",
+            });
+
+            // OSX files need to be zipped first before being signed
+            // This is why the .pkgs are listed as .zip files below
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                $@"
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.zip"))}"">
+                <Authenticode>MacDeveloperHarden</Authenticode>
+                </FilesToSign>",
+            });
+        }
+
         [MacOSOnlyFact]
-        public void SignPkgFile()
+        public void UnpackAndSignPkg()
         {
             // List of files to be considered for signing
             var itemsToSign = new List<ItemToSign>()
@@ -1687,6 +1725,34 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.deb"
             expectedControlFileContent +="Maintainer: Arcade <test@example.com>\nInstalled-Size: 49697\nDescription: A simple test package\n This is a simple generated .deb package for testing purposes.\n";
 
             ValidateProducedDebContent(Path.Combine(_tmpDir, "test.deb"), expectedFilesOriginalHashes, signableFiles, expectedControlFileContent);
+        }
+
+        [WindowsOnlyFact]
+        public void CheckRpmSigningOnWindows()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new List<ItemToSign>
+            {
+                new ItemToSign(GetResourcePath("test.rpm"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'test.rpm' Certificate='LinuxSign'"
+            });
+
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+$@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.rpm"))}"">
+  <Authenticode>LinuxSign</Authenticode>
+</FilesToSign>"
+            });
         }
 
         [LinuxOnlyFact]

@@ -593,85 +593,39 @@ namespace Microsoft.DotNet.SignTool
                 {
                     using (var stream = File.OpenRead(file.FullPath))
                     {
-                        if (!_signTool.VerifySignedPEFile(stream))
-                        {
-                            _log.LogError($"Assembly {file.FullPath} is NOT signed properly");
-                        }
-                        else
-                        {
-                            _log.LogMessage(MessageImportance.Low, $"Assembly {file.FullPath} is signed properly");
-                        }
+                        var status = _signTool.VerifySignedPEFile(stream);
+                        LogSigningStatus(file, status, "PE file");
                     }
                 }
                 else if (file.IsDeb())
                 {
-# if NET472
-                    _log.LogMessage(MessageImportance.Low, $"Cannot verify deb package {file.FullPath} signature on .NET Framework.");
-#else
-                    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    {
-                        _log.LogMessage(MessageImportance.Low, $"Cannot verify deb package {file.FullPath} signature on Windows.");
-                    }
-                    else if (!_signTool.VerifySignedDeb(log, file.FullPath))
-                    {
-                        _log.LogError($"Deb package {file.FullPath} is not signed properly.");
-                    }
-#endif
+                    var status = _signTool.VerifySignedDeb(log, file.FullPath);
+                    LogSigningStatus(file, status, "Debian package");
                 }
                 else if (file.IsRpm())
                 {
-                    if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                    {
-                        _log.LogMessage(MessageImportance.Low, $"Skipping signature verification of {file.FullPath} on non-Linux platform.");
-                    }
-                    else if (!_signTool.VerifySignedRpm(log, file.FullPath))
-                    {
-                        _log.LogError($"Rpm package {file.FullPath} is not signed properly.");
-                    }
-                    else
-                    {
-                        _log.LogMessage(MessageImportance.Low, $"Rpm package {file.FullPath} is signed properly");
-                    }
+                    var status = _signTool.VerifySignedRpm(log, file.FullPath);
+                    LogSigningStatus(file, status, "RPM package");
                 }
                 else if (file.IsPowerShellScript())
                 {
-                    if (!_signTool.VerifySignedPowerShellFile(file.FullPath))
-                    {
-                        _log.LogError($"Powershell file {file.FullPath} does not have a signature mark.");
-                    }
+                    var status = _signTool.VerifySignedPowerShellFile(file.FullPath);
+                    LogSigningStatus(file, status, "Powershell file");
                 }
                 else if (file.IsPkg() || file.IsAppBundle())
                 {
-                    if (!_signTool.VerifySignedPkgOrAppBundle(_log, file.FullPath, _signTool.PkgToolPath))
-                    {
-                        _log.LogError($"Pkg or app file {file.FullPath} does not have a signature marker.");
-                    }
-                    else
-                    {
-                        _log.LogMessage(MessageImportance.Low, $"Pkg or app file {file.FullPath} has a signature marker.");
-                    }
+                    var status = _signTool.VerifySignedPkgOrAppBundle(_log, file.FullPath, _signTool.PkgToolPath);
+                    LogSigningStatus(file, status, "Pkg or app");
                 }
                 else if (file.IsNupkg())
                 {
-                    if (!_signTool.VerifySignedNuGet(file.FullPath))
-                    {
-                        _log.LogError($"Container {file.FullPath} does not have signature marker.");
-                    }
-                    else
-                    {
-                        _log.LogMessage(MessageImportance.Low, $"Container {file.FullPath} has signature marker.");
-                    }
+                    var status = _signTool.VerifySignedNuGet(file.FullPath);
+                    LogSigningStatus(file, status, "Nuget package");
                 } 
                 else if (file.IsVsix())
                 {
-                    if (!_signTool.VerifySignedVSIX(file.FullPath))
-                    {
-                        _log.LogError($"Container {file.FullPath} does not have signature marker.");
-                    }
-                    else
-                    {
-                        _log.LogMessage(MessageImportance.Low, $"Container {file.FullPath} has signature marker.");
-                    }
+                    var status = _signTool.VerifySignedVSIX(file.FullPath);
+                    LogSigningStatus(file, status, "VSIX package");
                 }
             }
 
@@ -682,6 +636,22 @@ namespace Microsoft.DotNet.SignTool
                 foreach (var nestedPart in zipData.NestedParts.Values)
                 {
                     VerifyAfterSign(log, nestedPart.FileSignInfo);
+                }
+            }
+
+            void LogSigningStatus(FileSignInfo file, SigningStatus status, string fileType)
+            {
+                if (status == SigningStatus.NotSigned)
+                {
+                    _log.LogError($"{fileType} {file.FullPath} is not signed properly.");
+                }
+                else if (status == SigningStatus.Unknown)
+                {
+                    _log.LogMessage(MessageImportance.Low, $"Signing status of {file.FullPath} could not be determined.");
+                }
+                else
+                {
+                    _log.LogMessage(MessageImportance.Low, $"{fileType} {file.FullPath} is signed properly");
                 }
             }
         }
@@ -696,13 +666,16 @@ namespace Microsoft.DotNet.SignTool
                     continue;
                 }
 
-                if (file.IsManaged() && !file.IsCrossgened() && !_signTool.VerifyStrongNameSign(file.FullPath))
+                if (file.IsManaged() && !file.IsCrossgened())
                 {
-                    _log.LogError($"Assembly {file.FullPath} is not strong-name signed correctly.");
-                }
-                else
-                {
-                    _log.LogMessage(MessageImportance.Low, $"Assembly {file.FullPath} strong-name signature is valid.");
+                    if (_signTool.VerifyStrongNameSign(file.FullPath) != SigningStatus.Signed)
+                    {
+                        _log.LogError($"Assembly {file.FullPath} is not strong-name signed correctly.");
+                    }
+                    else
+                    {
+                        _log.LogMessage(MessageImportance.Low, $"Assembly {file.FullPath} strong-name signature is valid.");
+                    }
                 }
             }
         }
