@@ -9,15 +9,17 @@ using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.DotNet.MacOsPkg;
 
+#if !NETCOREAPP
+
+// This code is unreachable. Here to keep the compiler happy.
+throw new PlatformNotSupportedException("This tool is only supported on .NET Core.");
+
+#else
+
 public class Program
 {
     public static int Main(string[] args)
     {
-#if !NETCOREAPP
-        // This code is unreachable. Here to keep the compiler happy.
-        throw new PlatformNotSupportedException("This tool is only supported on .NET Core.");
-#else
-
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
             Console.Error.WriteLine("This tool is only supported on macOS.");
@@ -26,10 +28,8 @@ public class Program
 
         CliRootCommand rootCommand = Setup();
         return new CliConfiguration(rootCommand).Invoke(args);
-#endif
     }
 
-#if NETCOREAPP
     /// <summary>
     /// Set up the command line interface and associated actions.
     /// </summary>
@@ -170,5 +170,5 @@ public class Program
         }
         return 0;
     }
-#endif
 }
+#endif
