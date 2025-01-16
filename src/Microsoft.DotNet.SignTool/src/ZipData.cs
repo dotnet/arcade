@@ -11,8 +11,9 @@ using System.IO.Compression;
 using System.Linq;
 using System.Data;
 using System.Diagnostics;
-using Microsoft.DotNet.Build.Tasks.Installers;
 using System.Runtime.InteropServices;
+using NuGet.Packaging;
+using Microsoft.DotNet.Build.Tasks.Installers;
 
 #if NET472
 using System.IO.Packaging;
@@ -53,7 +54,7 @@ namespace Microsoft.DotNet.SignTool
             return null;
         }
 
-        public static IEnumerable<(string relativePath, Stream content, long contentSize)> ReadEntries(string archivePath, string tempDir, string tarToolPath, bool ignoreContent = false)
+        public static IEnumerable<(string relativePath, Stream content, long contentSize)> ReadEntries(string archivePath, string tempDir, string tarToolPath, string pkgToolPath, bool ignoreContent = false)
         {
             if (FileSignInfo.IsTarGZip(archivePath))
             {
@@ -64,6 +65,10 @@ namespace Microsoft.DotNet.SignTool
                 return ReadTarGZipEntries(archivePath)
                     .Select(entry => (entry.Name, entry.DataStream, entry.Length));
 #endif
+            }
+            else if (FileSignInfo.IsPkg(archivePath) || FileSignInfo.IsAppBundle(archivePath))
+            {
+                return ReadPkgOrAppBundleEntries(archivePath, tempDir, pkgToolPath, ignoreContent);
             }
             else if (FileSignInfo.IsDeb(archivePath))
             {
@@ -86,14 +91,16 @@ namespace Microsoft.DotNet.SignTool
                 return ReadRpmContainerEntries(archivePath);
 #endif
             }
-
-            return ReadZipEntries(archivePath);
+            else
+            {
+                return ReadZipEntries(archivePath);
+            }
         }
 
         /// <summary>
         /// Repack the zip container with the signed files.
         /// </summary>
-        public void Repack(TaskLoggingHelper log, string tempDir, string wixToolsPath, string tarToolPath)
+        public void Repack(TaskLoggingHelper log, string tempDir, string wixToolsPath, string tarToolPath, string pkgToolPath)
         {
 #if NET472
             if (FileSignInfo.IsVsix())
@@ -106,9 +113,13 @@ namespace Microsoft.DotNet.SignTool
             {
                 RepackTarGZip(log, tempDir, tarToolPath);
             }
-            else if (FileSignInfo.IsWixContainer())
+            else if (FileSignInfo.IsUnpackableWixContainer())
             {
                 RepackWixPack(log, tempDir, wixToolsPath);
+            }
+            else if (FileSignInfo.IsPkg() || FileSignInfo.IsAppBundle())
+            {
+                RepackPkgOrAppBundles(log, tempDir, pkgToolPath);
             }
             else if (FileSignInfo.IsDeb())
             {
@@ -181,22 +192,23 @@ namespace Microsoft.DotNet.SignTool
 
         private static IEnumerable<(string relativePath, Stream content, long contentSize)> ReadZipEntries(string archivePath)
         {
-            using var archive = new ZipArchive(File.OpenRead(archivePath), ZipArchiveMode.Read, leaveOpen: false);
-
-            foreach (var entry in archive.Entries)
+            using (var archive = new ZipArchive(File.OpenRead(archivePath), ZipArchiveMode.Read, leaveOpen: false))
             {
-                string relativePath = entry.FullName; // lgtm [cs/zipslip] Archive from trusted source
+                foreach (var entry in archive.Entries)
+                {
+                    string relativePath = entry.FullName; // lgtm [cs/zipslip] Archive from trusted source
 
-                // `entry` might be just a pointer to a folder. We skip those.
-                if (relativePath.EndsWith("/") && entry.Name == "")
-                {
-                    yield return (relativePath, null, 0);
-                }
-                else
-                {
-                    var contentStream = entry.Open();
-                    yield return (relativePath, contentStream, entry.Length);
-                    contentStream.Close();
+                    // `entry` might be just a pointer to a folder. We skip those.
+                    if (relativePath.EndsWith("/") && entry.Name == "")
+                    {
+                        yield return (relativePath, null, 0);
+                    }
+                    else
+                    {
+                        var contentStream = entry.Open();
+                        yield return (relativePath, contentStream, entry.Length);
+                        contentStream.Close();
+                    }
                 }
             }
         }
@@ -289,6 +301,97 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
+        internal static bool RunPkgProcess(string srcPath, string dstPath, string action, string pkgToolPath)
+        {
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                throw new Exception($"Pkg tooling is only supported on MacOS.");
+            }
+
+            string args = $@"{action} ""{srcPath}""";
+            
+            if (action != "verify")
+            {
+                args += $@" ""{dstPath}""";
+            }
+
+            var process = Process.Start(new ProcessStartInfo()
+            {
+                FileName = "dotnet",
+                Arguments = $@"exec ""{pkgToolPath}"" {args}",
+                UseShellExecute = false,
+                RedirectStandardError = true
+            });
+
+            process.WaitForExit();
+            return process.ExitCode == 0;
+        }
+
+        private static IEnumerable<(string relativePath, Stream content, long contentSize)> ReadPkgOrAppBundleEntries(string archivePath, string tempDir, string pkgToolPath, bool ignoreContent)
+        {
+            string extractDir = Path.Combine(tempDir, Guid.NewGuid().ToString());
+            try
+            {
+                if (!RunPkgProcess(archivePath, extractDir, "unpack", pkgToolPath))
+                {
+                    throw new Exception($"Failed to unpack pkg {archivePath}");
+                }
+
+                foreach (var path in Directory.EnumerateFiles(extractDir, "*.*", SearchOption.AllDirectories))
+                {
+                    var relativePath = path.Substring(extractDir.Length + 1).Replace(Path.DirectorySeparatorChar, '/');
+                    using var stream = ignoreContent ? null : (Stream)File.Open(path, FileMode.Open);
+                    yield return (relativePath, stream, stream?.Length ?? 0);
+                }
+            }
+            finally
+            {
+                if (Directory.Exists(extractDir))
+                {
+                    Directory.Delete(extractDir, recursive: true);
+                }
+            }
+        }
+
+        private void RepackPkgOrAppBundles(TaskLoggingHelper log, string tempDir, string pkgToolPath)
+        {
+            string extractDir = Path.Combine(tempDir, Guid.NewGuid().ToString());
+            try
+            {
+                if (!RunPkgProcess(srcPath: FileSignInfo.FullPath, dstPath: extractDir, "unpack", pkgToolPath))
+                {
+                    return;
+                }
+
+                foreach (var path in Directory.EnumerateFiles(extractDir, "*.*", SearchOption.AllDirectories))
+                {
+                    var relativePath = path.Substring(extractDir.Length + 1).Replace(Path.DirectorySeparatorChar, '/');
+
+                    var signedPart = FindNestedPart(relativePath);
+                    if (!signedPart.HasValue)
+                    {
+                        log.LogMessage(MessageImportance.Low, $"Didn't find signed part for nested file: {FileSignInfo.FullPath} -> {relativePath}");
+                        continue;
+                    }
+
+                    log.LogMessage(MessageImportance.Low, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {FileSignInfo.FullPath} -> {relativePath}.");
+                    File.Copy(signedPart.Value.FileSignInfo.FullPath, path, overwrite: true);
+                }
+
+                if (!RunPkgProcess(srcPath: extractDir, dstPath: FileSignInfo.FullPath, "pack", pkgToolPath))
+                {
+                    return;
+                }
+            }
+            finally
+            {
+                if (Directory.Exists(extractDir))
+                {
+                    Directory.Delete(extractDir, recursive: true);
+                }
+            }
+        }
+
 #if NETFRAMEWORK
         private static bool RunTarProcess(string srcPath, string dstPath, string tarToolPath)
         {
@@ -312,7 +415,7 @@ namespace Microsoft.DotNet.SignTool
 
                 if (!RunTarProcess(archivePath, extractDir, tarToolPath))
                 {
-                    yield break;
+                    throw new Exception($"Failed to unpack tar archive: {archivePath}");
                 }
 
                 foreach (var path in Directory.EnumerateFiles(extractDir, "*.*", SearchOption.AllDirectories))

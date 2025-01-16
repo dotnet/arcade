@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -113,20 +114,31 @@ namespace Microsoft.DotNet.SignTool
             ".pyd",
 
             ".deb",
+            ".pkg",
+            ".app",
+            ".dylib",
             ".rpm",
         };
 
-        /// <summary>
-        /// List of known signable extensions for OSX files.
-        /// </summary>
-        public static readonly HashSet<string> SignableOSXExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            ".pkg"
-        };
+
+        public static readonly HashSet<string> MacSigningOperationsRequiringZipping =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+                {
+                    "MacDeveloperHarden",
+                    "MacDeveloper",
+                    "MacDeveloperVNext",
+                    "MacDeveloperVNextHarden",
+                    "MacNotarize",
+                };
 
         /// <summary>
         /// Attribute for the CollisionPriorityId
         /// </summary>
         public const string CollisionPriorityId = "CollisionPriorityId";
+        
+        /// <summary>
+        /// Notarization operation microbuild ID. Microbuild does not currently support the friendly name, MacNotarize
+        /// </summary>
+        public const string MacNotarizationOperation = "8020";
     }
 }
