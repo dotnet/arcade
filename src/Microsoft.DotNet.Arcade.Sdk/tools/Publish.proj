@@ -225,7 +225,7 @@
     <ItemGroup>
       <ItemsToPushToBlobFeed>
         <!-- Default artifact visibility is External -->
-        <Visibility Condition="'%(ItemsToPushToBlobFeed.Visibility)' == ''">External</Visibility>
+        <Visibility Condition="'%(ItemsToPushToBlobFeed.Visibility)' == ''">$([MSBuild]::ValueOrDefault('$(DefaultArtifactVisibility)', 'External'))</Visibility>
         <!-- Default to IsShipping=true -->
         <IsShipping Condition="'%(ItemsToPushToBlobFeed.IsShipping)' == ''">true</IsShipping>
       </ItemsToPushToBlobFeed>
