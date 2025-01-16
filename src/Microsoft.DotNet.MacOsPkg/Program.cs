@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-#if NETCOREAPP
+#if NET
 using System.CommandLine;
 #endif
 using System.IO;
