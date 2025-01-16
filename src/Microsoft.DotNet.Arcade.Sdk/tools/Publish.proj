@@ -13,6 +13,7 @@
       DotNetSymbolExpirationInDays      Symbol expiration time in days (defaults to 10 years).
       SkipPackageChecks                 Skips package safety checks.
       EnableDefaultArtifacts            Includes packages under "/artifacts/packages/**" for publishing. Defaults to true.
+      DefaultArtifactVisibility         The default visibility for Artifact items. Defaults to External.
       DotNetBuildPass                   While building the repo as part of the entire .NET stack, this parameter specifies which build pass the current build is part of.
                                           The build pass number gets added to the asset manifest file name to avoid collisions.
 

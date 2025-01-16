@@ -4,6 +4,8 @@
   <PropertyGroup>
     <!-- By default, search for sign aritfacts under the list of known directories. -->
     <EnableDefaultArtifacts>true</EnableDefaultArtifacts>
+    <!-- By default, artifacts are externally visible -->
+    <DefaultArtifactVisibility>External</DefaultArtifactVisibility>
   </PropertyGroup>
 
   <!-- Repo extension point to sign and/or publish. Artifacts are shipping and blobs by default. -->
@@ -11,7 +13,7 @@
     <Artifact>
       <PublishFlatContainer>true</PublishFlatContainer>
       <IsShipping>true</IsShipping>
-      <Visibility>External</Visibility>
+      <Visibility>$(DefaultArtifactVisibility)</Visibility>
     </Artifact>
   </ItemDefinitionGroup>
 
