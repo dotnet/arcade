@@ -13,17 +13,19 @@ public class Program
 {
     public static int Main(string[] args)
     {
+#if !NETCOREAPP
+        // This code is unreachable. Here to keep the compiler happy.
+        throw new PlatformNotSupportedException("This tool is only supported on .NET Core.");
+#else
+
         if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
             Console.Error.WriteLine("This tool is only supported on macOS.");
             return 1;
         }
-#if NETCOREAPP
+
         CliRootCommand rootCommand = Setup();
         return new CliConfiguration(rootCommand).Invoke(args);
-#else
-        // This code is unreachable. Here to keep the compiler happy.
-        throw new PlatformNotSupportedException("This tool is only supported on .NET Core.");
 #endif
     }
 
