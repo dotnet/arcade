@@ -2,10 +2,19 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+
+#if !NET
+
+// This code is unreachable. Here to keep the compiler happy.
+throw new PlatformNotSupportedException("This tool is only supported on .NET Core.");
+
+#else
+
+using System.Runtime.InteropServices;
 using System.CommandLine;
 using System.IO;
-using System.Runtime.InteropServices;
-using Microsoft.DotNet.MacOsPkg;
+
+namespace Microsoft.DotNet.MacOsPkg;
 
 public class Program
 {
@@ -162,3 +171,4 @@ public class Program
         return 0;
     }
 }
+#endif
