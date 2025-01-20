@@ -22,9 +22,8 @@
          Undefined when NetMinimum and NetPrevious are identical. -->
     <NetPrevious />
 
-    <!-- Lowest supported version of .NET at the time of the release of NetCurrent.
-         Undefined when NetCurrent and NetMinimum are identical. -->
-    <NetMinimum />
+    <!-- Lowest supported version of .NET at the time of the release of NetCurrent. -->
+    <NetMinimum>net8.0</NetMinimum>
 
     <!-- .NET Framework -->
     <NetFrameworkMinimum>net462</NetFrameworkMinimum>
