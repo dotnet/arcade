@@ -15,10 +15,16 @@
        <TargetFrameworks>$(NetCurrent);$(NetPrevious);$(NetFrameworkMinimum);net472</TargetFrameworks>
   -->
   <PropertyGroup>
-    <!-- .NET -->
+    <!-- The TFM of the major release of .NET that the Arcade SDK aligns with. -->
     <NetCurrent>net8.0</NetCurrent>
-    <NetPrevious>net7.0</NetPrevious>
-    <NetMinimum>net6.0</NetMinimum>
+
+    <!-- The previously released version of .NET.
+         Undefined when NetMinimum and NetPrevious are identical. -->
+    <NetPrevious />
+
+    <!-- Lowest supported version of .NET at the time of the release of NetCurrent.
+         Undefined when NetCurrent and NetMinimum are identical. -->
+    <NetMinimum />
 
     <!-- .NET Framework -->
     <NetFrameworkMinimum>net462</NetFrameworkMinimum>
