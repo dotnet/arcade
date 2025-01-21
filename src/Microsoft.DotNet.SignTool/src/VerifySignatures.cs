@@ -142,9 +142,9 @@ namespace Microsoft.DotNet.SignTool
 
         internal static SigningStatus IsSignedPkgOrAppBundle(TaskLoggingHelper log, string filePath, string pkgToolPath)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                log.LogMessage(MessageImportance.Low, $"Skipping signature verification of {filePath} for Windows.");
+                log.LogMessage(MessageImportance.Low, $"Skipping signature verification of {filePath} for non-OSX.");
                 return SigningStatus.Unknown;
             }
 
