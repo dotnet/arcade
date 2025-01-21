@@ -1288,7 +1288,7 @@ $@"
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 $@"
-                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.zip"))}"">
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.pkg.zip"))}"">
                 <Authenticode>MacDeveloperHarden</Authenticode>
                 </FilesToSign>",
             });
@@ -1341,11 +1341,11 @@ $@"
                 </FilesToSign>
                 ",
                 $@"
-                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "1", "NestedPkg.zip"))}"">
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "1", "NestedPkg.pkg.zip"))}"">
                 <Authenticode>MacDeveloperHarden</Authenticode>
                 </FilesToSign>",
                 $@"
-                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.zip"))}"">
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.pkg.zip"))}"">
                 <Authenticode>MacDeveloperHarden</Authenticode>
                 </FilesToSign>",
             });
@@ -1411,16 +1411,16 @@ $@"
                 </FilesToSign>
                 ",
                 $@"
-                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "1", "NestedPkg.zip"))}"">
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "1", "NestedPkg.pkg.zip"))}"">
                 <Authenticode>MacDeveloperHarden</Authenticode>
                 </FilesToSign>",
                 $@"
-                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.zip"))}"">
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.pkg.zip"))}"">
                 <Authenticode>MacDeveloperHarden</Authenticode>
                 </FilesToSign>
                 ",
                 $@"
-                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.zip"))}"">
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.pkg.zip"))}"">
                 <Authenticode>8020</Authenticode>
                 <MacAppName>com.microsoft.dotnet</MacAppName>
                 </FilesToSign>",
@@ -1473,7 +1473,7 @@ $@"
                 </FilesToSign>
                 ",
                 $@"
-                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "NestedPkg.zip"))}"">
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "NestedPkg.pkg.zip"))}"">
                 <Authenticode>MacDeveloperHarden</Authenticode>
                 </FilesToSign>"
             });
@@ -1514,12 +1514,12 @@ $@"
                 </FilesToSign>
                 ",
                 $@"
-                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "2", "Payload", "test.zip"))}"">
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "2", "Payload", "test.app.zip"))}"">
                 <Authenticode>MacDeveloperHarden</Authenticode>
                 </FilesToSign>
                 ",
                 $@"
-                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "WithApp.zip"))}"">
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "WithApp.pkg.zip"))}"">
                 <Authenticode>MacDeveloperHarden</Authenticode>
                 </FilesToSign>"
             });

@@ -11,6 +11,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using NuGet.Packaging;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -131,6 +132,8 @@ namespace Microsoft.DotNet.SignTool
                     ZipFile.ExtractToDirectory(item.Value, Path.GetDirectoryName(item.Key), true);
 #endif
                 }
+
+                File.Delete(item.Value);
             }
         }
 
@@ -219,7 +222,14 @@ namespace Microsoft.DotNet.SignTool
 
         protected virtual string GetZipFilePath(string fullPath)
         {
-            return Path.Combine(Path.GetDirectoryName(fullPath), Path.GetFileNameWithoutExtension(fullPath) + ".zip");
+            var zipFilePath = Path.Combine(Path.GetDirectoryName(fullPath), Path.GetFileName(fullPath) + ".zip");
+            // If the file already exists, it means that the user asked for another file to be signed with a colliding name.
+            // This is very unlikely. Throw in this case.
+            if (File.Exists(zipFilePath))
+            {
+                throw new NotImplementedException($"The zip file path '{zipFilePath}' already exists.");
+            }
+            return zipFilePath;
         }
 
         private static void AppendLine(StringBuilder builder, int depth, string text)
