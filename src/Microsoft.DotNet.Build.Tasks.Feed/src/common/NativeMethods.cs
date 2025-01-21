@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     internal partial class NativeMethods
     {
 #if NET
-        [LibraryImport("kernel32.dll", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+        [LibraryImport("kernel32.dll", EntryPoint = "CreateHardLinkW", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
         [return: MarshalAs(UnmanagedType.Bool)]
         internal static partial bool CreateHardLink(string newFileName, string exitingFileName, IntPtr securityAttributes);
 #else
