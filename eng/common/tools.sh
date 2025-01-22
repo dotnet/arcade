@@ -403,8 +403,13 @@ function InitializeToolset {
     bl="/bl:$log_dir/ToolsetRestore.binlog"
   fi
 
+  local restoreConfigFileArg=""
+  if [[ "$restore_config_file" == true ]]; then
+    restoreConfigFileArg="/p:\"RestoreConfigFile=$restore_config_file\""
+  fi
+
   echo '<Project Sdk="Microsoft.DotNet.Arcade.Sdk"/>' > "$proj"
-  MSBuild-Core "$proj" $bl /t:__WriteToolsetLocation /clp:ErrorsOnly\;NoSummary /p:__ToolsetLocationOutputFile="$toolset_location_file"
+  MSBuild-Core "$proj" $bl $restoreConfigFileArg /t:__WriteToolsetLocation /clp:ErrorsOnly\;NoSummary /p:__ToolsetLocationOutputFile="$toolset_location_file"
 
   local toolset_build_proj=`cat "$toolset_location_file"`
 

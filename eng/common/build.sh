@@ -86,6 +86,7 @@ prepare_machine=false
 verbosity='minimal'
 runtime_source_feed=''
 runtime_source_feed_key=''
+restore_config_file=''
 
 properties=''
 while [[ $# > 0 ]]; do
@@ -177,8 +178,12 @@ while [[ $# > 0 ]]; do
       runtime_source_feed=$2
       shift
       ;;
-     -runtimesourcefeedkey)
+    -runtimesourcefeedkey)
       runtime_source_feed_key=$2
+      shift
+      ;;
+    -restore-config-file)
+      restore_config_file=$2
       shift
       ;;
     *)
@@ -224,8 +229,14 @@ function Build {
     bl="/bl:\"$log_dir/Build.binlog\""
   fi
 
+  local restoreConfigFileArg=""
+  if [[ "$restore_config_file" == true ]]; then
+    restoreConfigFileArg="/p:\"RestoreConfigFile=$restore_config_file\""
+  fi
+
   MSBuild $_InitializeToolset \
     $bl \
+    $restoreConfigFileArg \
     /p:Configuration=$configuration \
     /p:RepoRoot="$repo_root" \
     /p:Restore=$restore \
