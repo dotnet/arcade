@@ -24,15 +24,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private SymbolPublishVisibility SymbolServerVisibility { get; }
 
-        private ImmutableList<string> FilesToExclude { get; }
-
         private bool Flatten { get; }
 
         public TaskLoggingHelper Log { get; }
 
-        private string _azureDevOpsOrg;
-
-        public string AzureDevOpsOrg => _azureDevOpsOrg ?? "dnceng";
+        public string AzureDevOpsOrg => "dnceng";
 
         public SetupTargetFeedConfigV3(
             TargetChannelConfig targetChannelConfig,
@@ -44,15 +40,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             ITaskItem[] feedKeys,
             ITaskItem[] feedSasUris,
             ITaskItem[] feedOverrides,
-            List<string> latestLinkShortUrlPrefixes,
+            ImmutableList<string> latestLinkShortUrlPrefixes,
             IBuildEngine buildEngine,
             SymbolPublishVisibility symbolPublishVisibility,
             string stablePackagesFeed = null,
             string stableSymbolsFeed = null,
             ImmutableList<string> filesToExclude = null,
             bool flatten = true,
-            TaskLoggingHelper log = null,
-            string azureDevOpsOrg = null) 
+            TaskLoggingHelper log = null) 
             : base(isInternalBuild, isStableBuild, repositoryName, commitSha, publishInstallersAndChecksums, null, null, null, null, null, null, null, latestLinkShortUrlPrefixes, null)
         {
             _targetChannelConfig = targetChannelConfig;
@@ -60,14 +55,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             StableSymbolsFeed = stableSymbolsFeed;
             StablePackagesFeed = stablePackagesFeed;
             SymbolServerVisibility = symbolPublishVisibility;
-            FilesToExclude = filesToExclude ?? ImmutableList<string>.Empty;
             Flatten = flatten;
             FeedKeys = feedKeys.ToImmutableDictionary(i => i.ItemSpec, i => i.GetMetadata("Key"));
             FeedSasUris = feedSasUris.ToImmutableDictionary(i => i.ItemSpec, i => ConvertFromBase64(i.GetMetadata("Base64Uri")));
             FeedOverrides = feedOverrides.ToImmutableDictionary(i => i.ItemSpec, i => i.GetMetadata("Replacement"));
             AzureDevOpsFeedsKey = FeedKeys.TryGetValue("https://pkgs.dev.azure.com/dnceng", out string key) ? key : null;
             Log = log;
-            _azureDevOpsOrg = azureDevOpsOrg;
         }
 
         private static string ConvertFromBase64(string value)
@@ -107,11 +100,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
                     LatestLinkShortUrlPrefixes,
+                    _targetChannelConfig.AkaMSCreateLinkPatterns,
+                    _targetChannelConfig.AkaMSDoNotCreateLinkPatterns,
                     assetSelection: AssetSelection.ShippingOnly,
                     symbolPublishVisibility: SymbolServerVisibility,
                     isolated: true,
                     @internal: IsInternalBuild,
-                    filenamesToExclude: FilesToExclude,
                     flatten: Flatten);
 
                 yield return new TargetFeedConfig(
@@ -120,10 +114,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
                     LatestLinkShortUrlPrefixes,
+                    _targetChannelConfig.AkaMSCreateLinkPatterns,
+                    _targetChannelConfig.AkaMSDoNotCreateLinkPatterns,
                     symbolPublishVisibility: SymbolServerVisibility,
                     isolated: true,
                     @internal: IsInternalBuild,
-                    filenamesToExclude: FilesToExclude,
                     flatten: Flatten);
             }
 
@@ -179,12 +174,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         feedType,
                         sasUri ?? key,
                         LatestLinkShortUrlPrefixes,
+                        _targetChannelConfig.AkaMSCreateLinkPatterns,
+                        _targetChannelConfig.AkaMSDoNotCreateLinkPatterns,
                         spec.Assets,
                         false,
                         IsInternalBuild,
                         false,
                         SymbolServerVisibility,
-                        filenamesToExclude: FilesToExclude,
                         flatten: Flatten
                     );
                 }

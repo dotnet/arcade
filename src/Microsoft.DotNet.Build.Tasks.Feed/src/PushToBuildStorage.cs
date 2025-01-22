@@ -82,6 +82,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public string PublishingVersion { get; set; }
 
+        /// <summary>
+        /// Gets or sets a value that indicates whether to use hard links for the copied files
+        /// rather than copy the files, if it's possible to do so.
+        /// </summary>
+        public bool UseHardlinksIfPossible { get; set; } = true;
+
         public enum ItemType
         {
             AssetManifest = 0,
@@ -91,7 +97,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public override void ConfigureServices(IServiceCollection collection)
         {
-            collection.TryAddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>();
             collection.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
             collection.TryAddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>();
             collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
@@ -102,7 +107,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         public bool ExecuteTask(IFileSystem fileSystem,
-            ISigningInformationModelFactory signingInformationModelFactory,
             IBlobArtifactModelFactory blobArtifactModelFactory,
             IPackageArtifactModelFactory packageArtifactModelFactory,
             IBuildModelFactory buildModelFactory)
@@ -235,9 +239,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
                     }
 
-                    SigningInformationModel signingInformationModel = signingInformationModelFactory.CreateSigningInformationModelFromItems(
-                        ItemsToSign, StrongNameSignInfo, FileSignInfo, FileExtensionSignInfo, CertificatesSignInfo, blobArtifacts, packageArtifacts);
-
                     buildModelFactory.CreateBuildManifest(
                         blobArtifacts,
                         packageArtifacts,
@@ -249,8 +250,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         ManifestBuildData,
                         IsStableBuild,
                         targetPublishingVersion,
-                        IsReleaseOnlyPackageVersion,
-                        signingInformationModel: signingInformationModel);
+                        IsReleaseOnlyPackageVersion);
 
                     PushToLocalStorageOrAzDO(ItemType.AssetManifest, new TaskItem(AssetManifestPath));
                 }
@@ -274,19 +274,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     case ItemType.AssetManifest:
                         Directory.CreateDirectory(AssetManifestsLocalStorageDir);
-                        File.Copy(path, Path.Combine(AssetManifestsLocalStorageDir, filename), true);
+                        CopyFileAsHardLinkIfPossible(path, Path.Combine(AssetManifestsLocalStorageDir, filename), true);
                         break;
 
                     case ItemType.PackageArtifact:
                         if (string.Equals(item.GetMetadata("IsShipping"), "true", StringComparison.OrdinalIgnoreCase))
                         {
                             Directory.CreateDirectory(ShippingPackagesLocalStorageDir);
-                            File.Copy(path, Path.Combine(ShippingPackagesLocalStorageDir, filename), true);
+                            CopyFileAsHardLinkIfPossible(path, Path.Combine(ShippingPackagesLocalStorageDir, filename), true);
                         }
                         else
                         {
                             Directory.CreateDirectory(NonShippingPackagesLocalStorageDir);
-                            File.Copy(path, Path.Combine(NonShippingPackagesLocalStorageDir, filename), true);
+                            CopyFileAsHardLinkIfPossible(path, Path.Combine(NonShippingPackagesLocalStorageDir, filename), true);
                         }
                         break;
 
@@ -297,7 +297,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                                     string.IsNullOrEmpty(relativeBlobPath) ? filename : relativeBlobPath);
 
                         Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
-                        File.Copy(path, destinationPath, true);
+                        CopyFileAsHardLinkIfPossible(path, destinationPath, true);
                         break;
 
                     default:
@@ -339,6 +339,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             return allowedVisibilities.Select(item => (ArtifactVisibility)Enum.Parse(typeof(ArtifactVisibility), item.ItemSpec)).ToArray();
+        }
+
+        private void CopyFileAsHardLinkIfPossible(string sourceFileName, string destFileName, bool overwrite)
+        {
+            if (UseHardlinksIfPossible)
+            {
+                Log.LogMessage(MessageImportance.Normal, "Creating hard link to copy \"{0}\" to \"{1}\".", sourceFileName, destFileName);
+
+                string errorMessage = string.Empty;
+                if (NativeMethods.MakeHardLink(destFileName, sourceFileName, ref errorMessage))
+                {
+                    return;
+                }
+
+                Log.LogMessage(MessageImportance.Normal, "Could not use a link to copy \"{0}\" to \"{1}\". Copying the file instead. {2}", sourceFileName, destFileName, errorMessage);
+            }
+
+            File.Copy(sourceFileName, destFileName, overwrite);
         }
     }
 }
