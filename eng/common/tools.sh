@@ -71,6 +71,9 @@ runtime_source_feed_key=${runtime_source_feed_key:-''}
 # True if the build is a product build
 product_build=${product_build:-false}
 
+# Defines whether the nuget.config file used to restore the repo is overridden
+restoreConfigFile=${restoreConfigFile:-''}
+
 # Resolve any symlinks in the given path.
 function ResolvePath {
   local path=$1

@@ -70,6 +70,9 @@ $ErrorActionPreference = 'Stop'
 
 [String[]]$properties = if (Test-Path variable:properties) { $properties } else { @() }
 
+# Defines whether the nuget.config file used to restore the repo is overridden
+[string]$restoreConfigFile = if (Test-Path variable:restoreConfigFile) { $restoreConfigFile } else { $null }
+
 function Create-Directory ([string[]] $path) {
     New-Item -Path $path -Force -ItemType 'Directory' | Out-Null
 }
