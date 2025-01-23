@@ -47,31 +47,15 @@ namespace Microsoft.DotNet.SignTool
             // https://microsoft.sharepoint.com/teams/prss/esrp/info/SitePages/Linux%20GPG%20Signing.aspx
             try
             {
-                // Download the Microsoft public key
-                using (Stream stream = client.GetStreamAsync("https://packages.microsoft.com/keys/microsoft.asc").Result)
-                {
-                    using (FileStream fileStream = File.Create($"{tempDir}/microsoft.asc"))
-                    {
-                        stream.CopyTo(fileStream);
-                    }
-                }
-
-                RunCommand($"gpg --import {tempDir}/microsoft.asc");
+                DownloadAndConfigureMicrosoftPublicKey(tempDir);
 
                 string debianBinary = ExtractDebContainerEntry(filePath, "debian-binary", tempDir);
                 string controlTar = ExtractDebContainerEntry(filePath, "control.tar", tempDir);
                 string dataTar = ExtractDebContainerEntry(filePath, "data.tar", tempDir);
                 RunCommand($"cat {debianBinary} {controlTar} {dataTar} > {tempDir}/combined-contents");
 
-                // 'gpg --verify' will return a non-zero exit code if the signature is invalid
-                // We don't want to throw an exception in that case, so we pass throwOnError: false
                 string gpgOrigin = ExtractDebContainerEntry(filePath, "_gpgorigin", tempDir);
-                string output = RunCommand($"gpg --verify {gpgOrigin} {tempDir}/combined-contents", throwOnError: false);
-                if (output.Contains("Good signature"))
-                {
-                    return SigningStatus.Signed;
-                }
-                return SigningStatus.NotSigned;
+                return GPGVerifySignature(gpgOrigin, $"{tempDir}/combined-contents");
             }
             catch(Exception e)
             {
@@ -103,16 +87,7 @@ namespace Microsoft.DotNet.SignTool
 
             try
             {
-                // Download the Microsoft public key
-                using (Stream stream = client.GetStreamAsync("https://packages.microsoft.com/keys/microsoft.asc").Result)
-                {
-                    using (FileStream fileStream = File.Create($"{tempDir}/microsoft.asc"))
-                    {
-                        stream.CopyTo(fileStream);
-                    }
-                }
-
-                RunCommand($"gpg --import {tempDir}/microsoft.asc");
+                DownloadAndConfigureMicrosoftPublicKey(tempDir);
 
                 string signableContent = Path.Combine(tempDir, "signableContent");
                 string pgpSignableContent = Path.Combine(tempDir, "pgpSignableContent");
@@ -136,15 +111,7 @@ namespace Microsoft.DotNet.SignTool
                     RpmPackage.GetSignableContent(rpmPackageStream).CopyTo(signableContentStream);
                 }
 
-                // 'gpg --verify' will return a non-zero exit code if the signature is invalid
-                // We don't want to throw an exception in that case, so we pass throwOnError: false
-                string output = RunCommand($"gpg --verify {pgpSignableContent} {signableContent}", throwOnError: false);
-                if (output.Contains("Good signature"))
-                {
-                    return SigningStatus.Signed;
-                }
-                return SigningStatus.NotSigned;
-
+                return GPGVerifySignature(pgpSignableContent, signableContent);
             }
             catch (Exception e)
             {
@@ -291,6 +258,30 @@ namespace Microsoft.DotNet.SignTool
         }
 
 # if !NET472
+        private static void DownloadAndConfigureMicrosoftPublicKey(string tempDir)
+        {
+            using (Stream stream = client.GetStreamAsync("https://packages.microsoft.com/keys/microsoft.asc").Result)
+            {
+                using (FileStream fileStream = File.Create($"{tempDir}/microsoft.asc"))
+                {
+                    stream.CopyTo(fileStream);
+                }
+            }
+            RunCommand($"gpg --import {tempDir}/microsoft.asc");
+        }
+
+        private static SigningStatus GPGVerifySignature(string signatureFile, string contentFile)
+        {
+            // 'gpg --verify' will return a non-zero exit code if the signature is invalid
+            // We don't want to throw an exception in that case, so we pass throwOnError: false
+            string output = RunCommand($"gpg --verify {signatureFile} {contentFile}", throwOnError: false);
+            if (output.Contains("Good signature"))
+            {
+                return SigningStatus.Signed;
+            }
+            return SigningStatus.NotSigned;
+        }
+
         private static string ExtractDebContainerEntry(string debianPackage, string entryName, string workingDir)
         {
             var (relativePath, content, contentSize) = ZipData.ReadDebContainerEntries(debianPackage, entryName).Single();
