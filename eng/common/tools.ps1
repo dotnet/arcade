@@ -912,7 +912,7 @@ $EngRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
 # Align artifacts root with Arcade SDK behavior
 $StagingRoot = $RepoRoot
 
-if ($null -ne $env:ARCADE_STAGINGIRECTORY) {
+if ($null -ne $env:ARCADE_STAGINGDIRECTORY) {
   $StagingRoot = $env:ARCADE_STAGINGDIRECTORY
 }
 
@@ -934,7 +934,6 @@ $globalJsonHasRuntimes = if ($GlobalJson.tools.PSObject.Properties.Name -Match '
 Create-Directory $ToolsetDir
 Create-Directory $TempDir
 Create-Directory $LogDir
-
 Write-PipelineSetVariable -Name 'Artifacts' -Value $ArtifactsDir
 Write-PipelineSetVariable -Name 'Artifacts.Toolset' -Value $ToolsetDir
 Write-PipelineSetVariable -Name 'Artifacts.Log' -Value $LogDir
