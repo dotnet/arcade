@@ -539,7 +539,7 @@ repo_root="${repo_root}/"
 staging_root="${repo_root}/"
 # Align artifacts root with Arcade SDK behavior
 if [[ -n "${ARCADE_STAGINGDIRECTORY:-}" ]]; then
-  staging_root="${ARCADE_STAGINGDIRECTORY}/"
+  staging_root="$ARCADE_STAGINGDIRECTORY/"
 fi
 
 artifacts_dir="${staging_root}artifacts"
@@ -547,7 +547,7 @@ toolset_dir="$artifacts_dir/toolset"
 if [[ -n "${ARCADE_STAGINGDIRECTORY:-}" ]]; then
   # Toolset directory has to stay in the repo root so that it can discover NuGet.config for package restores
   # Prefixing with '.' for easy identification.    
-  toolset_dir="${repo_root}/.toolset"
+  toolset_dir="${repo_root}.toolset"
 fi
 
 tools_dir="${repo_root}.tools"
