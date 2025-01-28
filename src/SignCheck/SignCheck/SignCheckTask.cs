@@ -3,6 +3,11 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+#if NET472
+using AppDomainIsolatedTask = Microsoft.Build.Utilities.AppDomainIsolatedTask;
+#else
+using BuildTask = Microsoft.Build.Utilities.Task;
+#endif
 using Microsoft.SignCheck.Logging;
 using System;
 using System.Collections.Generic;
@@ -11,12 +16,16 @@ using System.Linq;
 
 namespace SignCheck
 {
-    [Microsoft.Build.Framework.LoadInSeparateAppDomain]
+#if NETFRAMEWORK
+    [LoadInSeparateAppDomain]
     [RunInSTA]
     public class SignCheckTask : AppDomainIsolatedTask
     {
         static SignCheckTask() => Microsoft.DotNet.AssemblyResolution.Initialize();
-
+#else
+    public class SignCheckTask : BuildTask
+    {
+#endif
         public bool EnableJarSignatureVerification
         {
             get;
@@ -90,7 +99,24 @@ namespace SignCheck
 
         public override bool Execute()
         {
+#if NETFRAMEWORK
             Microsoft.DotNet.AssemblyResolution.Log = Log;
+#endif
+            try
+            {
+                bool succeeded = ExecuteImpl();
+                return succeeded && !Log.HasLoggedErrors;
+            }
+            finally
+            {
+#if NETFRAMEWORK
+            Microsoft.DotNet.AssemblyResolution.Log = null;
+#endif
+            }
+        }
+
+        private bool ExecuteImpl()
+        {
             Options options = new Options();
             options.EnableJarSignatureVerification = EnableJarSignatureVerification;
             options.EnableXmlSignatureVerification = EnableXmlSignatureVerification;
@@ -149,8 +175,7 @@ namespace SignCheck
             
             var sc = new SignCheck(options);
             int result = sc.Run();
-            Microsoft.DotNet.AssemblyResolution.Log = null;
-            return (result == 0 && !Log.HasLoggedErrors);
+            return result == 0;
         }
     }
 }

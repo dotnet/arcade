@@ -3,7 +3,7 @@
   <Import Project="$(MSBuildThisFileDirectory)..\Microsoft.SignCheck\ResxWorkaround.props" />
 
   <PropertyGroup>
-    <TargetFramework>$(NetFrameworkToolCurrent)</TargetFramework>
+    <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
     <OutputType>Exe</OutputType>
     <Platforms>x86</Platforms>
     <IsTool>True</IsTool>
@@ -22,9 +22,12 @@
     <ProjectReference Include="..\Microsoft.SignCheck\Microsoft.DotNet.SignCheckLibrary.csproj" Publish="true" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
+    <Reference Include="System.Net.Http" />
+    <Compile Include="..\..\Common\Internal\AssemblyResolution.cs" Link="src\AssemblyResolution.cs" />
+  </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="..\..\Common\Internal\AssemblyResolution.cs"
-             Link="src\AssemblyResolution.cs" />
     <Compile Update="SignCheckResources.Designer.cs"
              DesignTime="True"
              AutoGen="True"

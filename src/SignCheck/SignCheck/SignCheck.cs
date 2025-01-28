@@ -3,9 +3,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using CommandLine;
 using Microsoft.SignCheck.Logging;
@@ -462,10 +462,10 @@ namespace SignCheck
         {
             try
             {
-                ServicePointManager.CheckCertificateRevocationList = true;
-
-                using (var wc = new WebClient())
+                using (var httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }))
                 {
+                    httpClient.Timeout = TimeSpan.FromSeconds(10000); // 10 seconds
+
                     string downloadPath = Path.Combine(_appData, Path.GetFileName(uri.LocalPath));
 
                     if (File.Exists(downloadPath))
@@ -475,7 +475,14 @@ namespace SignCheck
                     }
 
                     Log.WriteMessage(LogVerbosity.Detailed, SignCheckResources.scDownloading, uri.AbsoluteUri, downloadPath);
-                    await wc.DownloadFileTaskAsync(uri, downloadPath);
+
+                    using (var stream = await httpClient.GetStreamAsync(uri))
+                    {
+                        using (var fileStream = new FileStream(downloadPath, FileMode.Create, FileAccess.Write))
+                        {
+                            await stream.CopyToAsync(fileStream);
+                        }
+                    }
                 }
             }
             catch (Exception e)
