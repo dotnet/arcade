@@ -6,13 +6,16 @@
     <HelixProperties Include="AzurePipelinesTestRunId" Value="$(TestRunId)" />
   </ItemGroup>
 
+  <!-- Install setuptools if not already installed. Unnecessary if running in a Linux Docker container. -->
   <PropertyGroup>
     <HelixPostCommands Condition="$(IsPosixShell)">
       $(HelixPostCommands);
+      [ -n ${HELIX_DOCKER_ENTRYPOINT:-} ] || %HELIX_PYTHONPATH% -m pip --disable-pip-version-check install setuptools;
       $HELIX_PYTHONPATH $HELIX_CORRELATION_PAYLOAD/reporter/run.py $(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI) $(SYSTEM_TEAMPROJECT) $(TestRunId) $(SYSTEM_ACCESSTOKEN) || exit $?
     </HelixPostCommands>
     <HelixPostCommands Condition="!$(IsPosixShell)">
       $(HelixPostCommands);
+      %HELIX_PYTHONPATH% -m pip --disable-pip-version-check install setuptools;
       %HELIX_PYTHONPATH% %HELIX_CORRELATION_PAYLOAD%\reporter\run.py $(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI) $(SYSTEM_TEAMPROJECT) $(TestRunId) $(SYSTEM_ACCESSTOKEN) || exit /b
     </HelixPostCommands>
   </PropertyGroup>

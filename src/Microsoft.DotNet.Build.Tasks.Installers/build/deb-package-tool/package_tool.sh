@@ -22,12 +22,13 @@ execute(){
         exit 1
     fi
 
+    install_setuptools
     parse_config_and_set_env_vars
     clean_or_create_build_dirs
     package_all
     generate_all
     create_source_tarball
-    
+
     # Actually Build Package Files
     (cd ${PACKAGE_SOURCE_DIR}; debuild -us -uc)
 }
@@ -63,7 +64,7 @@ parse_args_and_set_env_vars(){
           ;;
       esac
     done
-    
+
      # Special Input Directories + Paths
     ABSOLUTE_PLACEMENT_DIR="${INPUT_DIR}/\$"
     PACKAGE_ROOT_PLACEMENT_DIR="${INPUT_DIR}/package_root"
@@ -73,7 +74,7 @@ parse_args_and_set_env_vars(){
 }
 
 print_help(){
-    echo "Usage: package_tool [-i <INPUT_DIR>] [-o <OUTPUT_DIRECTORY>] 
+    echo "Usage: package_tool [-i <INPUT_DIR>] [-o <OUTPUT_DIRECTORY>]
     [-n <PACKAGE_NAME>] [-v <PACKAGE_VERSION>] [-h]
 
     REQUIRED:
@@ -114,13 +115,18 @@ validate_inputs(){
         echo $CONFIG
         ret=1
     fi
-    
+
     return $ret
+}
+
+install_setuptools(){
+    # Install setuptools if not already installed. Unnecessary if running in a Docker container.
+    [ -n ${HELIX_DOCKER_ENTRYPOINT:-} ] || python3 -m pip --disable-pip-version-check install setuptools
 }
 
 parse_config_and_set_env_vars(){
     extract_base_cmd="python3 $SCRIPT_DIR/scripts/extract_json_value.py"
-    
+
     # Arguments Take Precedence over Config
     [ -z "$PACKAGE_VERSION" ] && PACKAGE_VERSION="$($extract_base_cmd $CONFIG "release.package_version")"
     [ -z "$PACKAGE_NAME" ] && PACKAGE_NAME="$($extract_base_cmd $CONFIG "package_name")"
@@ -151,7 +157,7 @@ package_all(){
     package_absolute_placement
     package_samples
     package_docs
-    package_install_scripts 
+    package_install_scripts
 }
 
 generate_all(){
@@ -179,18 +185,18 @@ package_package_root_placement(){
 package_absolute_placement(){
     if [[ -d "$ABSOLUTE_PLACEMENT_DIR" ]]; then
         abs_in_package_dir="\$"
-    
+
         add_dir_to_install ${ABSOLUTE_PLACEMENT_DIR} $abs_in_package_dir
-    
+
         # Get List of all files in directory tree, relative to ABSOLUTE_PLACEMENT_DIR
         abs_files=( $(_get_files_in_dir_tree $ABSOLUTE_PLACEMENT_DIR) )
-    
+
         # For each file add a a system placement
         for abs_file in ${abs_files[@]}
         do
             parent_dir=$(dirname $abs_file)
             filename=$(basename $abs_file)
-    
+
             add_system_file_placement "$abs_in_package_dir/$abs_file" "/$parent_dir"
         done
     fi
@@ -224,7 +230,7 @@ generate_config_templates(){
 generate_manpages(){
     if [[ -f "$DOCS_JSON_PATH" ]]; then
         mkdir -p $DOCS_DIR
-        
+
         # Generate the manpages from json spec
         python3 ${SCRIPT_DIR}/scripts/manpage_generator.py ${DOCS_JSON_PATH} ${DOCS_DIR}
     fi
