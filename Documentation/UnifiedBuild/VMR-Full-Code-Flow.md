@@ -482,9 +482,11 @@ Since repositories will only accept dependency updates from the VMR, we will nee
 The rules for managing `eng/common`:
 
 - `dotnet/arcade` stays the home for this folder as the contents are tied to the Arcade version often.
-- `eng/common` is mapped from Arcade into VMR's root (and also mirrored to `src/arcade/eng/common`).
-- Changes of `eng/common` in the VMR are only allowed when also changing Arcade's ❓❓❓.
+- When code is flowing from arcade to the VMR, we treat it as any other code flow subscription, and just update `src/arcade`.
+- Changes of `eng/common` in the VMR`s root are **not** allowed.
+- Changes of `src/arcade/eng/common` will backflow to all repos updating `Microsoft.DotNet.Arcade.Sdk` like in any other Backflow subscription
 - Repositories can opt-out from getting Arcade updates from the VMR by ignoring the `Microsoft.DotNet.Arcade.Sdk` package in their code flow subscription.
+- Like in any normal repo VMR's root `eng/common` only gets updated during dependency update subscriptions (VMR -> VMR)
 
 A diagram of how the code flow including the `eng/common` folder looks like:
 
@@ -499,7 +501,7 @@ sequenceDiagram
     arcade->>arcade: eng/common is changed
     arcade->>VMR: Forward flow to VMR
     activate VMR
-    Note over VMR: eng/common is copied to:<br>src/arcade/eng/common<br>and eng/common
+    Note over VMR: eng/common is copied to:<br>src/arcade/eng/common
     deactivate VMR
 
     VMR->>runtime: Backflow<br>includes eng/common
@@ -515,12 +517,13 @@ sequenceDiagram
     participant runtime as dotnet/runtime
     participant VMR as VMR
 
-    VMR->>VMR: eng/common and<br>src/arcade/eng/common are changed
+    VMR->>VMR: src/arcade/eng/common is changed
 
     par Code flow
-    VMR->>arcade: Backflow to arcade<br>includes eng/common
+    VMR->>VMR: Normal dependency flow updates VMR's eng/common
+    VMR->>arcade: Backflow to arcade<br>includes src/arcade/eng/common
     and
-    VMR->>runtime: Backflow<br>includes eng/common
+    VMR->>runtime: Backflow<br>includes src/arcade/eng/common
     end
 ```
 
