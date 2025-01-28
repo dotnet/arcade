@@ -35,8 +35,6 @@
       <InputFiles Condition="'$(BuildManifestFile)' != ''">@(ItemsToSign)</InputFiles>
     </PropertyGroup>
 
-    <Error Condition="'$(MSBuildRuntimeType)' == 'Core'" Text="Signing validation task does not run on core." />
-
     <Message Text="Using build manifest file '$(BuildManifestFile)'" Condition="Exists('$(BuildManifestFile)')" />
       <!--
         Documentation for these arguments is available here:
