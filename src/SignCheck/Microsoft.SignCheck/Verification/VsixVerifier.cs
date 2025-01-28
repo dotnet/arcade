@@ -32,6 +32,7 @@ namespace Microsoft.SignCheck.Verification
             return svr;
         }
 
+#if NETFRAMEWORK
         private bool TryGetTimestamp(PackageDigitalSignature packageSignature, out Timestamp timestamp)
         {
             bool isValidTimestampSignature = false;
@@ -118,9 +119,13 @@ namespace Microsoft.SignCheck.Verification
 
             return isValidTimestampSignature;
         }
+#endif
 
         private bool IsSigned(string path, SignatureVerificationResult result)
         {
+#if NETCOREAPP
+            return false;
+#else
             PackageDigitalSignature packageSignature = null;
 
             using (var vsixStream = new FileStream(path, FileMode.Open, FileAccess.Read))
@@ -183,6 +188,7 @@ namespace Microsoft.SignCheck.Verification
             }
 
             return true;
+#endif
         }
     }
 }

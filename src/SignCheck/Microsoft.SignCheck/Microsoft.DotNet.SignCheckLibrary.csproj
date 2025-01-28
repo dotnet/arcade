@@ -3,7 +3,7 @@
   <Import Project="ResxWorkaround.props" />
 
   <PropertyGroup>
-    <TargetFramework>$(NetFrameworkMinimum)</TargetFramework>
+    <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkMinimum)</TargetFrameworks>
     <Platforms>x86</Platforms>
     <SignAssembly>false</SignAssembly>
     <RootNamespace>Microsoft.SignCheck</RootNamespace>
@@ -14,11 +14,12 @@
 
   <ItemGroup>
     <PackageReference Include="LZMA-SDK" />
-    <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" />
+    <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Condition="$(TargetFramework) != $(NetToolCurrent)"/>
     <PackageReference Include="NuGet.Frameworks" />
     <PackageReference Include="NuGet.Packaging" />
     <PackageReference Include="System.IO.Packaging" />
     <PackageReference Include="Microsoft.Signed.Wix" />
+    <PackageReference Include="System.Security.Cryptography.Xml" />
   </ItemGroup>
 
   <ItemGroup>

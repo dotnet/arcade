@@ -20,6 +20,7 @@ namespace Microsoft.SignCheck.Verification
             // Defer to the base class to check the AuthentiCode signature
             SignatureVerificationResult svr = base.VerifySignature(path, parent, virtualPath);
 
+#if NETFRAMEWORK
             if (VerifyRecursive)
             {
                 StructuredStorage.OpenAndExtractStorages(path, svr.TempPath);
@@ -31,7 +32,7 @@ namespace Microsoft.SignCheck.Verification
 
                 DeleteDirectory(svr.TempPath);
             }
-
+#endif
             return svr;
         }
     }

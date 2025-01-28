@@ -5,8 +5,11 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.Deployment.WindowsInstaller;
+
+#if NETFRAMEWORK
 using Microsoft.VisualStudio.OLE.Interop;
 using STATSTG = Microsoft.VisualStudio.OLE.Interop.STATSTG;
+#endif
 
 namespace Microsoft.SignCheck.Interop
 {
@@ -20,6 +23,7 @@ namespace Microsoft.SignCheck.Interop
 
         public const int S_OK = 0;
 
+#if NETFRAMEWORK
         /// <summary>
         /// Returns true if the storage represents a patch (MSP)
         /// </summary>
@@ -130,6 +134,7 @@ namespace Microsoft.SignCheck.Interop
                 Marshal.ReleaseComObject(stg);
             }
         }
+#endif
 
         public static void SaveStream(Record record, string dir)
         {
