@@ -17,13 +17,13 @@ namespace Xunit.ConsoleClient
             var internalDiagnosticsMessageSink = DiagnosticMessageSink.ForInternalDiagnostics(consoleLock, args.Contains("-internaldiagnostics"), args.Contains("-nocolor"));
 
             using (AssemblyHelper.SubscribeResolveForAssembly(typeof(Program), internalDiagnosticsMessageSink))
-                 return callEntryPoint(consoleLock, args);
+                return CallEntryPoint(consoleLock, args);
         }
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static int callEntryPoint(object consoleLock , string[] args)
+        [MethodImpl(MethodImplOptions.NoInlining)] // separate method to workaround Mono JIT eagerly resolving types of ConsoleRunner fields
+        private static int CallEntryPoint(object consoleLock, string[] args)
         {
-                 return new ConsoleRunner(consoleLock).EntryPoint(args);
+            return new ConsoleRunner(consoleLock).EntryPoint(args);
         }
     }
 }
