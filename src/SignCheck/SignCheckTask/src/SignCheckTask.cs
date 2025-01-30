@@ -14,7 +14,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace SignCheck
+namespace SignCheckTask
 {
 #if NETFRAMEWORK
     [LoadInSeparateAppDomain]
