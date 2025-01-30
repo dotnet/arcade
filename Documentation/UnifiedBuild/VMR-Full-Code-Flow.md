@@ -500,11 +500,7 @@ sequenceDiagram
 
     arcade->>arcade: eng/common is changed
     arcade->>VMR: Forward flow to VMR
-    activate VMR
-    Note over VMR: eng/common is copied to:<br>src/arcade/eng/common
-    deactivate VMR
-
-    VMR->>runtime: Backflow<br>includes eng/common
+    VMR->>runtime: Backflow<br>includes src/arcade/eng/common
 ```
 
 A diagram of a similar code flow but the `eng/common` change would happen in the VMR:
@@ -521,7 +517,7 @@ sequenceDiagram
 
     par Code flow
     VMR->>VMR: Normal dependency flow updates VMR's eng/common
-    VMR->>arcade: Backflow to arcade<br>includes src/arcade/eng/common
+    VMR->>arcade: Backflow to arcade
     and
     VMR->>runtime: Backflow<br>includes src/arcade/eng/common
     end
