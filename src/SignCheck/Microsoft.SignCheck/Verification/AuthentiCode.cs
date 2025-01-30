@@ -11,6 +11,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography.Pkcs;
+using Microsoft.SignCheck.Logging;
 
 namespace Microsoft.SignCheck.Verification
 {
@@ -18,6 +19,7 @@ namespace Microsoft.SignCheck.Verification
     {
         public static uint IsSigned(string path)
         {
+#if NETFRAMEWORK
             WinTrustFileInfo fileInfo = new WinTrustFileInfo()
             {
                 cbStruct = (uint)Marshal.SizeOf(typeof(WinTrustFileInfo)),
@@ -56,8 +58,12 @@ namespace Microsoft.SignCheck.Verification
             Marshal.FreeHGlobal(pData);
 
             return result;
+#else
+            throw new PlatformNotSupportedException();
+#endif
         }
 
+#if NETFRAMEWORK
         /// <summary>
         /// Searches the unsigned attributes in the counter signature for a timestamp token.
         /// </summary>
@@ -200,6 +206,6 @@ namespace Microsoft.SignCheck.Verification
 
             return timestamps;
         }
-        
+#endif   
     }
 }
