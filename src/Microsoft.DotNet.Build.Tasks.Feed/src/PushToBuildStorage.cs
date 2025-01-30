@@ -146,6 +146,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     var itemsToPushNoExcludes = ItemsToPush.
                         Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase));
 
+                    // This block should eventually be removed, and symbol packages should just always have kind Blob.
+                    // This may require updates in repos though.
                     ITaskItem[] symbolItems = itemsToPushNoExcludes
                         .Where(i => i.ItemSpec.EndsWith("symbols.nupkg"))
                         .Select(i =>
@@ -159,9 +161,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     var blobItems = itemsToPushNoExcludes
                         .Where(i =>
                         {
+                            var kind = i.GetMetadata("Kind");
+                            if (!string.IsNullOrEmpty(kind))
+                            {
+                                return string.Equals(kind, "Blob", StringComparison.OrdinalIgnoreCase);
+                            }
+
                             var isFlatString = i.GetMetadata("PublishFlatContainer");
-                            if (!string.IsNullOrEmpty(isFlatString) &&
-                                bool.TryParse(isFlatString, out var isFlat))
+                            if (!string.IsNullOrEmpty(isFlatString) && bool.TryParse(isFlatString, out var isFlat))
                             {
                                 return isFlat;
                             }
@@ -172,7 +179,23 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         .ToArray();
 
                     ITaskItem[] packageItems = itemsToPushNoExcludes
-                        .Except(blobItems)
+                        .Where(i =>
+                        {
+                            var kind = i.GetMetadata("Kind");
+                            if (!string.IsNullOrEmpty(kind))
+                            {
+                                return string.Equals(kind, "Package", StringComparison.OrdinalIgnoreCase);
+                            }
+
+                            var isFlatString = i.GetMetadata("PublishFlatContainer");
+                            if (!string.IsNullOrEmpty(isFlatString) && bool.TryParse(isFlatString, out var isFlat))
+                            {
+                                return !isFlat;
+                            }
+
+                            return true; // Default to package if not set
+                        })
+                        .Except(blobItems) // This is unnecessary after symbol packages are handled properly.
                         .ToArray();
 
                     foreach (var packagePath in packageItems)
