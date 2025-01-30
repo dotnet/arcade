@@ -208,9 +208,9 @@
       <!-- Directory where pdbs pointed in `FilesToPublishToSymbolServer` are copied before publishing to AzDO artifacts. -->
       <PDBsToPublishTempLocation>$(ArtifactsTmpDir)PDBsToPublish/</PDBsToPublishTempLocation>
 
-      <!-- Use the AGENT_JOBNAME variable when available as that is guaranteed to be a unique identifier.
+      <!-- Use the SYSTEM_PHASENAME variable when available as that is guaranteed to be a unique identifier.
            For local scenarios and when the variable isn't available, use "<os>-<arch>-<buildpass>"" as the manifest name. -->
-      <AssetManifestFileName Condition="'$(AssetManifestFileName)' == '' and '$(AGENT_JOBNAME)' != ''">$(AGENT_JOBNAME).xml</AssetManifestFileName>
+      <AssetManifestFileName Condition="'$(AssetManifestFileName)' == '' and '$(SYSTEM_PHASENAME)' != ''">$(SYSTEM_PHASENAME).xml</AssetManifestFileName>
       <AssetManifestFileName Condition="'$(AssetManifestFileName)' == ''">$(AssetManifestOS)-$(AssetManifestArch)$(AssetManifestPass).xml</AssetManifestFileName>
       <AssetManifestFilePath Condition="'$(AssetManifestFilePath)' == ''">$(ArtifactsLogDir)AssetManifest\$(AssetManifestFileName)</AssetManifestFilePath>
     </PropertyGroup>
