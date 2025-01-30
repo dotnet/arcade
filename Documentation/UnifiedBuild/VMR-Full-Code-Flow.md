@@ -484,7 +484,7 @@ The rules for managing `eng/common`:
 - `dotnet/arcade` stays the home for this folder as the contents are tied to the Arcade version often.
 - When code is flowing from arcade to the VMR, we treat it as any other code flow subscription, and just update `src/arcade`.
 - Changes of `eng/common` in the VMR`s root will be overwritten like in any other repo.
-- Changes of `src/arcade/eng/common` will backflow to all repos updating `Microsoft.DotNet.Arcade.Sdk` like in any other Backflow subscription
+- Any subscription from the VMR (code-enabled or normal) will contain `Microsoft.DotNet.Arcade.Sdk`. So any arcadified repo will receive the Arcade update from there. The `src/arcade` folder will be used as the source of truth for version file updates (`eng/common`, `global.json`, ...).
 - Repositories can opt-out from getting Arcade updates from the VMR by ignoring the `Microsoft.DotNet.Arcade.Sdk` package in their code flow subscription.
 - Like in any normal repo VMR's root `eng/common` only gets updated during dependency update subscriptions (VMR -> VMR)
 
