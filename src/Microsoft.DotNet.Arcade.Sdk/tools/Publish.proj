@@ -119,8 +119,8 @@
       <!-- Exclude all existing *.symbols.nupkg in source-only build - we create a unified symbols archive instead. -->
       <_ExistingSymbolPackage Include="@(Artifact)" Condition="'$(DotNetBuildSourceOnly)' != 'true' and '%(Artifact.SkipPublish)' != 'true' and $([System.String]::Copy('%(Filename)%(Extension)').EndsWith('.symbols.nupkg'))">
         <!-- Update the kind of the symbol packages to blob -->
-        <Kind>Blob</Blob>
-      <_ExistingSymbolPackage>
+        <Kind>Blob</Kind>
+      </_ExistingSymbolPackage>
       <_PackageToPublish Include="@(Artifact)" Exclude="@(_ExistingSymbolPackage)" Condition="'%(Artifact.SkipPublish)' != 'true' and '%(Extension)' == '.nupkg'" />
     </ItemGroup>
 
@@ -241,12 +241,18 @@
       <ItemsToPushToBlobFeed Include="@(Artifact)" Condition="'%(Artifact.SkipPublish)' != 'true' and '%(Extension)' != '.nupkg'" />
     </ItemGroup>
 
+    <!-- Update/add attributes of ItemsToPushToBlobFeed if they were not provided. -->
     <ItemGroup>
       <ItemsToPushToBlobFeed>
         <!-- Default artifact visibility is External -->
         <Visibility Condition="'%(ItemsToPushToBlobFeed.Visibility)' == ''">$([MSBuild]::ValueOrDefault('$(DefaultArtifactVisibility)', 'External'))</Visibility>
         <!-- Default to IsShipping=true -->
         <IsShipping Condition="'%(ItemsToPushToBlobFeed.IsShipping)' == ''">true</IsShipping>
+        <!-- An item is a Blob if Kind wasn't already set, and PublishFlatContainer is true.
+             An item is a Package if Kind wasn't already set, and PublishFlatContainer is false or not set.
+             An item is a Package if Kind wasn't already set, and PublishFlatContainer is not set. -->
+        <Kind Condition="'%(ItemsToPushToBlobFeed.Kind)' == '' and '%(ItemsToPushToBlobFeed.PublishFlatContainer)' == 'true'">Blob</Kind>
+        <Kind Condition="'%(ItemsToPushToBlobFeed.Kind)' == '' and '%(ItemsToPushToBlobFeed.PublishFlatContainer)' != 'true'">Package</Kind>
       </ItemsToPushToBlobFeed>
     </ItemGroup>
 
