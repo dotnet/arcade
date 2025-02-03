@@ -33,6 +33,7 @@ Build() {
         /bl:"$log" \
         /t:"$target" \
         /p:Configuration="$configuration" \
+        /p:RepoRoot="$repo_root" \
         /p:BaseIntermediateOutputPath="$output_path" \
         /v:"$verbosity" \
         $properties
