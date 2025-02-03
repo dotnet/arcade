@@ -12,7 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-
+using System.Security;
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
     public class PushToBuildStorage : MSBuildTaskBase
@@ -320,11 +320,26 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return allowedVisibilities.Select(item => (ArtifactVisibility)Enum.Parse(typeof(ArtifactVisibility), item.ItemSpec)).ToArray();
         }
 
-        // Parts of the below method are copied from msbuild's Copy task.
+        // The below method implementation is copied from msbuild's Copy task and adjusted.
         private void CopyFileAsHardLinkIfPossible(string sourceFileName, string destFileName, bool overwrite)
         {
+            FileInfo destFile = new(destFileName);
+
             if (UseHardlinksIfPossible)
             {
+                // NativeMethods.MakeHardLink cannot overwrite an existing file or link
+                // so we need to delete the existing entry before we create the hard link.
+                if (destFile.Exists && !destFile.IsReadOnly)
+                {
+                    try
+                    {
+                        File.Delete(destFile.FullName);
+                    }
+                    catch (Exception ex) when (IsIoRelatedException(ex))
+                    {
+                    }
+                }
+
                 Log.LogMessage(MessageImportance.Normal, $"Creating hard link to copy \"{sourceFileName}\" to \"{destFileName}\".");
 
                 string errorMessage = string.Empty;
@@ -346,15 +361,32 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 // Ensure the read-only attribute on the specified file is off, so
                 // the file is writeable.
-                FileInfo destFile = new(destFileName);
                 if (destFile.Exists)
                 {
                     if (destFile.IsReadOnly)
                     {
-                        Log.LogMessage(MessageImportance.Low, $"Removing read-only attribute from \"{destFile.Name}\".");
-                        File.SetAttributes(destFile.Name, FileAttributes.Normal);
+                        Log.LogMessage(MessageImportance.Low, $"Removing read-only attribute from \"{destFile.FullName}\".");
+                        File.SetAttributes(destFile.FullName, FileAttributes.Normal);
                     }
                 }
+            }
+
+            // Determine whether the exception is file-IO related.
+            static bool IsIoRelatedException(Exception e)
+            {
+                // These all derive from IOException
+                //     DirectoryNotFoundException
+                //     DriveNotFoundException
+                //     EndOfStreamException
+                //     FileLoadException
+                //     FileNotFoundException
+                //     PathTooLongException
+                //     PipeException
+                return e is UnauthorizedAccessException
+                    || e is NotSupportedException
+                    || (e is ArgumentException && !(e is ArgumentNullException))
+                    || e is SecurityException
+                    || e is IOException;
             }
         }
     }
