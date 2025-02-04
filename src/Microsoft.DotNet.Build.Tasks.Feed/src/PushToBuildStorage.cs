@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -21,8 +22,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public ITaskItem[] ItemsToPush { get; set; }
 
         public string AssetsTemporaryDirectory { get; set; }
-
-        public bool PublishFlatContainer { get; set; }
 
         public string ManifestRepoName { get; set; }
 
@@ -148,81 +147,85 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     var itemsToPushNoExcludes = ItemsToPush.
                         Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase));
 
-                    if (PublishFlatContainer)
+                    // This block should eventually be removed, and symbol packages should just always have kind Blob.
+                    // This may require updates in repos though.
+                    ITaskItem[] symbolItems = itemsToPushNoExcludes
+                        .Where(i => i.ItemSpec.EndsWith("symbols.nupkg"))
+                        .Select(i =>
+                        {
+                            string fileName = Path.GetFileName(i.ItemSpec);
+                            i.SetMetadata("RelativeBlobPath", $"{AssetsVirtualDir}symbols/{fileName}");
+                            return i;
+                        })
+                        .ToArray();
+
+                    var blobItems = itemsToPushNoExcludes
+                        .Where(i =>
+                        {
+                            var kind = i.GetMetadata("Kind");
+                            if (!string.IsNullOrEmpty(kind))
+                            {
+                                return string.Equals(kind, "Blob", StringComparison.OrdinalIgnoreCase);
+                            }
+
+                            var isFlatString = i.GetMetadata("PublishFlatContainer");
+                            if (!string.IsNullOrEmpty(isFlatString) && bool.TryParse(isFlatString, out var isFlat))
+                            {
+                                return isFlat;
+                            }
+
+                            return false;
+                        })
+                        .Union(symbolItems)
+                        .ToArray();
+
+                    ITaskItem[] packageItems = itemsToPushNoExcludes
+                        .Where(i =>
+                        {
+                            var kind = i.GetMetadata("Kind");
+                            if (!string.IsNullOrEmpty(kind))
+                            {
+                                return string.Equals(kind, "Package", StringComparison.OrdinalIgnoreCase);
+                            }
+
+                            var isFlatString = i.GetMetadata("PublishFlatContainer");
+                            if (!string.IsNullOrEmpty(isFlatString) && bool.TryParse(isFlatString, out var isFlat))
+                            {
+                                return !isFlat;
+                            }
+
+                            return true; // Default to package if not set
+                        })
+                        .Except(blobItems) // This is unnecessary after symbol packages are handled properly.
+                        .ToArray();
+
+                    foreach (var packagePath in packageItems)
                     {
-                        // Act as if %(PublishFlatContainer) were true for all items.
-                        blobArtifacts = itemsToPushNoExcludes
-                            .Select(i => blobArtifactModelFactory.CreateBlobArtifactModel(i, ManifestRepoOrigin));
-                        foreach (var blobItem in itemsToPushNoExcludes)
+                        if (!fileSystem.FileExists(packagePath.ItemSpec))
                         {
-                            if (!fileSystem.FileExists(blobItem.ItemSpec))
-                            {
-                                Log.LogError($"Could not find file {blobItem.ItemSpec}.");
-                                continue;
-                            }
-
-                            PushToLocalStorageOrAzDO(ItemType.BlobArtifact, blobItem);
+                            Log.LogError($"Could not find file {packagePath.ItemSpec}.");
+                            continue;
                         }
+
+                        PushToLocalStorageOrAzDO(ItemType.PackageArtifact, packagePath);
                     }
-                    else
+
+                    foreach (var blobItem in blobItems)
                     {
-                        ITaskItem[] symbolItems = itemsToPushNoExcludes
-                            .Where(i => i.ItemSpec.EndsWith("symbols.nupkg"))
-                            .Select(i =>
-                            {
-                                string fileName = Path.GetFileName(i.ItemSpec);
-                                i.SetMetadata("RelativeBlobPath", $"{AssetsVirtualDir}symbols/{fileName}");
-                                return i;
-                            })
-                            .ToArray();
-
-                        var blobItems = itemsToPushNoExcludes
-                            .Where(i =>
-                            {
-                                var isFlatString = i.GetMetadata("PublishFlatContainer");
-                                if (!string.IsNullOrEmpty(isFlatString) &&
-                                    bool.TryParse(isFlatString, out var isFlat))
-                                {
-                                    return isFlat;
-                                }
-
-                                return false;
-                            })
-                            .Union(symbolItems)
-                            .ToArray();
-
-                        ITaskItem[] packageItems = itemsToPushNoExcludes
-                            .Except(blobItems)
-                            .ToArray();
-
-                        foreach (var packagePath in packageItems)
+                        if (!fileSystem.FileExists(blobItem.ItemSpec))
                         {
-                            if (!fileSystem.FileExists(packagePath.ItemSpec))
-                            {
-                                Log.LogError($"Could not find file {packagePath.ItemSpec}.");
-                                continue;
-                            }
-
-                            PushToLocalStorageOrAzDO(ItemType.PackageArtifact, packagePath);
+                            Log.LogError($"Could not find file {blobItem.ItemSpec}.");
+                            continue;
                         }
 
-                        foreach (var blobItem in blobItems)
-                        {
-                            if (!fileSystem.FileExists(blobItem.ItemSpec))
-                            {
-                                Log.LogError($"Could not find file {blobItem.ItemSpec}.");
-                                continue;
-                            }
-
-                            PushToLocalStorageOrAzDO(ItemType.BlobArtifact, blobItem);
-                        }
-
-                        packageArtifacts = packageItems.Select(
-                            i => packageArtifactModelFactory.CreatePackageArtifactModel(i, ManifestRepoOrigin));
-                        blobArtifacts = blobItems.Select(
-                                i => blobArtifactModelFactory.CreateBlobArtifactModel(i, ManifestRepoOrigin))
-                            .Where(blob => blob != null);
+                        PushToLocalStorageOrAzDO(ItemType.BlobArtifact, blobItem);
                     }
+
+                    packageArtifacts = packageItems.Select(
+                        i => packageArtifactModelFactory.CreatePackageArtifactModel(i, ManifestRepoOrigin));
+                    blobArtifacts = blobItems.Select(
+                            i => blobArtifactModelFactory.CreateBlobArtifactModel(i, ManifestRepoOrigin))
+                        .Where(blob => blob != null);
 
                     ArtifactVisibility[] visibilitiesToPublish = GetVisibilitiesToPublish(ArtifactVisibilitiesToPublish);
 
@@ -341,11 +344,26 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return allowedVisibilities.Select(item => (ArtifactVisibility)Enum.Parse(typeof(ArtifactVisibility), item.ItemSpec)).ToArray();
         }
 
-        // Parts of the below method are copied from msbuild's Copy task.
+        // The below method implementation is copied from msbuild's Copy task and adjusted.
         private void CopyFileAsHardLinkIfPossible(string sourceFileName, string destFileName, bool overwrite)
         {
+            FileInfo destFile = new(destFileName);
+
             if (UseHardlinksIfPossible)
             {
+                // NativeMethods.MakeHardLink cannot overwrite an existing file or link
+                // so we need to delete the existing entry before we create the hard link.
+                if (destFile.Exists && !destFile.IsReadOnly)
+                {
+                    try
+                    {
+                        File.Delete(destFile.FullName);
+                    }
+                    catch (Exception ex) when (IsIoRelatedException(ex))
+                    {
+                    }
+                }
+
                 Log.LogMessage(MessageImportance.Normal, $"Creating hard link to copy \"{sourceFileName}\" to \"{destFileName}\".");
 
                 string errorMessage = string.Empty;
@@ -367,15 +385,32 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 // Ensure the read-only attribute on the specified file is off, so
                 // the file is writeable.
-                FileInfo destFile = new(destFileName);
                 if (destFile.Exists)
                 {
                     if (destFile.IsReadOnly)
                     {
-                        Log.LogMessage(MessageImportance.Low, $"Removing read-only attribute from \"{destFile.Name}\".");
-                        File.SetAttributes(destFile.Name, FileAttributes.Normal);
+                        Log.LogMessage(MessageImportance.Low, $"Removing read-only attribute from \"{destFile.FullName}\".");
+                        File.SetAttributes(destFile.FullName, FileAttributes.Normal);
                     }
                 }
+            }
+
+            // Determine whether the exception is file-IO related.
+            static bool IsIoRelatedException(Exception e)
+            {
+                // These all derive from IOException
+                //     DirectoryNotFoundException
+                //     DriveNotFoundException
+                //     EndOfStreamException
+                //     FileLoadException
+                //     FileNotFoundException
+                //     PathTooLongException
+                //     PipeException
+                return e is UnauthorizedAccessException
+                    || e is NotSupportedException
+                    || (e is ArgumentException && !(e is ArgumentNullException))
+                    || e is SecurityException
+                    || e is IOException;
             }
         }
     }

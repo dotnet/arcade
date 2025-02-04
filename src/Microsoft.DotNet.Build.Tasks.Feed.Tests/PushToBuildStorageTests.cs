@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         private static string SAMPLE_MANIFEST = Path.Combine("C:", "manifests", "SampleManifest.xml");
         private const string NUPKG_VERSION = "6.0.492";
 
-        private TaskItem[] TaskItems = new TaskItem[]
+        private TaskItem[] TaskItemsWithPublishFlatContainer = new TaskItem[]
         {
             new TaskItem(PACKAGE_A, new Dictionary<string, string>
             {
@@ -51,7 +51,58 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             }),
         };
 
-        private PushToBuildStorage ConstructPushToBuildStorageTask(bool setAdditionalData = true)
+        private TaskItem[] TaskItemsWithKindAndPublishFlatContainer = new TaskItem[]
+        {
+            new TaskItem(PACKAGE_A, new Dictionary<string, string>
+            {
+                { "RelativeBlobPath", PACKAGE_A },
+                { "IsShipping", "false" },
+                { "ManifestArtifactData", "Nonshipping=true" },
+            }),
+            new TaskItem(PACKAGE_B, new Dictionary<string, string>
+            {
+                { "RelativeBlobPath", PACKAGE_B },
+                { "IsShipping", "true" },
+                { "ManifestArtifactData", "Nonshipping=false" },
+                { "PublishFlatContainer", "true" },
+                { "Kind", "Package" }, // Package overrides PublishFlatContainer value
+            }),
+            new TaskItem(SAMPLE_MANIFEST, new Dictionary<string, string>
+            {
+                { "IsShipping", "false" },
+                { "RelativeBlobPath", SAMPLE_MANIFEST },
+                { "ManifestArtifactData", "Nonshipping=false" },
+                { "PublishFlatContainer", "false" },
+                { "Kind", "Blob" }, // Blob overrides PublishFlatContainer value 
+            }),
+        };
+
+        private TaskItem[] TaskItemsWithKind = new TaskItem[]
+        {
+            new TaskItem(PACKAGE_A, new Dictionary<string, string>
+            {
+                { "RelativeBlobPath", PACKAGE_A },
+                { "IsShipping", "false" },
+                { "ManifestArtifactData", "Nonshipping=true" },
+                // Should default to package.
+            }),
+            new TaskItem(PACKAGE_B, new Dictionary<string, string>
+            {
+                { "RelativeBlobPath", PACKAGE_B },
+                { "IsShipping", "true" },
+                { "ManifestArtifactData", "Nonshipping=false" },
+                { "Kind", "Package" },
+            }),
+            new TaskItem(SAMPLE_MANIFEST, new Dictionary<string, string>
+            {
+                { "IsShipping", "false" },
+                { "RelativeBlobPath", SAMPLE_MANIFEST },
+                { "ManifestArtifactData", "Nonshipping=false" },
+                { "Kind", "Blob" },
+            }),
+        };
+
+        private PushToBuildStorage ConstructPushToBuildStorageTask(bool setAdditionalData, TaskItem[] taskItems)
         {
             var task = new PushToBuildStorage
             {
@@ -59,7 +110,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 AssetManifestPath = TARGET_MANIFEST_PATH,                
                 IsStableBuild = true,
                 IsReleaseOnlyPackageVersion = false,
-                ItemsToPush = TaskItems,
+                ItemsToPush = taskItems,
                 ManifestBuildData = new string[] { $"InitialAssetsLocation=cloud" },
                 ManifestBuildId = "12345.6"
             };
@@ -101,8 +152,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             string commit = null,
             bool isReleaseOnlyPackageVersion = false,
             bool isStable = false,
-            bool includePackages = false,
-            bool publishFlatContainer = false)
+            bool includePackages = false)
         {
             publishingInfraVersion ??= ((int)PublishingInfraVersion.Latest).ToString();
 
@@ -135,7 +185,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             sb.Append($"IsStable=\"{isStable.ToString().ToLower()}\"");
 
-            if(!includePackages && !publishFlatContainer)
+            if(!includePackages)
             {
                 sb.Append($" />");
             }
@@ -151,17 +201,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 sb.Append($"</Build>");
             }
 
-            if(publishFlatContainer)
-            {
-                sb.Append($">");
-
-                sb.Append($"<Blob Id=\"{SAMPLE_MANIFEST}\" Nonshipping=\"false\" />");
-                sb.Append($"<Blob Id=\"{PACKAGE_A}\" Nonshipping=\"true\" />");
-                sb.Append($"<Blob Id=\"{PACKAGE_B}\" Nonshipping=\"false\" />");
-                
-                sb.Append($"</Build>");
-            }
-
             return sb.ToString();
         }
 
@@ -169,7 +208,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         public void HasRecordedPublishingVersion()
         {
             var expectedManifestContent = BuildExpectedManifestContent();
-            var task = ConstructPushToBuildStorageTask(setAdditionalData: false);
+            var task = ConstructPushToBuildStorageTask(setAdditionalData: false, TaskItemsWithPublishFlatContainer);
             task.ItemsToPush = new TaskItem[0];
             task.IsStableBuild = false;
 
@@ -199,7 +238,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var publishingInfraVersion = "456";
             var expectedManifestContent = BuildExpectedManifestContent(
                 publishingInfraVersion: publishingInfraVersion);
-            var task = ConstructPushToBuildStorageTask(setAdditionalData: false);
+            var task = ConstructPushToBuildStorageTask(setAdditionalData: false, taskItems: TaskItemsWithKind);
             task.ItemsToPush = new TaskItem[0];
             task.IsStableBuild = false;
             task.PublishingVersion = publishingInfraVersion;
@@ -234,56 +273,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 isStable: true,
                 includePackages: true);
 
-            PushToBuildStorage task = ConstructPushToBuildStorageTask();
-
-            // Mocks
-            Mock<IFileSystem> fileSystemMock = new Mock<IFileSystem>();
-            IList<string> actualPath = new List<string>();
-            IList<string> actualBuildModel = new List<string>();
-            IList<string> files = new List<string> { PACKAGE_A, PACKAGE_B, SAMPLE_MANIFEST };
-            fileSystemMock.Setup(m => m.WriteToFile(Capture.In(actualPath), Capture.In(actualBuildModel))).Verifiable();
-            fileSystemMock.Setup(m => m.FileExists(Capture.In(files))).Returns(true);
-
-            Mock<INupkgInfoFactory> nupkgInfoFactoryMock = new Mock<INupkgInfoFactory>();
-            IList<string> actualNupkgInfoPath = new List<string>();
-            nupkgInfoFactoryMock.Setup(m => m.CreateNupkgInfo(PACKAGE_A)).Returns(new NupkgInfo(new PackageIdentity(
-                id: Path.GetFileNameWithoutExtension(PACKAGE_A),
-                version: NUPKG_VERSION
-            )));
-            nupkgInfoFactoryMock.Setup(m => m.CreateNupkgInfo(PACKAGE_B)).Returns(new NupkgInfo(new PackageIdentity(
-                id: Path.GetFileNameWithoutExtension(PACKAGE_B),
-                version: NUPKG_VERSION
-            )));
-
-            // Dependency Injection setup
-            var collection = new ServiceCollection()
-                .AddSingleton(fileSystemMock.Object)
-                .AddSingleton<IBuildModelFactory, BuildModelFactory>()
-                .AddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>()
-                .AddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>()
-                .AddSingleton(nupkgInfoFactoryMock.Object);
-            CreateMockServiceCollection(collection);
-            task.ConfigureServices(collection);
-            using var provider = collection.BuildServiceProvider();
-
-            // Act and Assert
-            task.InvokeExecute(provider).Should().BeTrue();
-            actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
-            actualBuildModel[0].Should().Be(expectedManifestContent);
-        }
-
-        [Fact]
-        public void PublishFlatContainerManifest()
-        {
-            PushToBuildStorage task = ConstructPushToBuildStorageTask();
-            task.PublishFlatContainer = true;
-
-            string expectedManifestContent = BuildExpectedManifestContent(
-                name: "https://dnceng@dev.azure.com/dnceng/internal/test-repo",
-                branch: "/refs/heads/branch",
-                commit: "1234567890abcdef",
-                isStable: true,
-                publishFlatContainer: true);
+            PushToBuildStorage task = ConstructPushToBuildStorageTask(setAdditionalData: true, taskItems: TaskItemsWithPublishFlatContainer);
 
             // Mocks
             Mock<IFileSystem> fileSystemMock = new Mock<IFileSystem>();
@@ -324,7 +314,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void IsNotStableBuildPath()
         {
-            PushToBuildStorage task = ConstructPushToBuildStorageTask();
+            PushToBuildStorage task = ConstructPushToBuildStorageTask(setAdditionalData: true, taskItems: TaskItemsWithKindAndPublishFlatContainer);
             task.IsStableBuild = false;
 
             string expectedManifestContent = BuildExpectedManifestContent(
@@ -371,7 +361,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void IsReleaseOnlyPackageVersionPath()
         {
-            PushToBuildStorage task = ConstructPushToBuildStorageTask();
+            PushToBuildStorage task = ConstructPushToBuildStorageTask(setAdditionalData: true, taskItems: TaskItemsWithKindAndPublishFlatContainer);
             task.IsReleaseOnlyPackageVersion = true;
 
             string expectedManifestContent = BuildExpectedManifestContent(

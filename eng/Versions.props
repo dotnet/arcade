@@ -12,10 +12,10 @@
     <!-- arcade -->
     <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>9.0.0-beta.24223.1</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
     <!-- arcade-services -->
-    <MicrosoftDotNetProductConstructionServiceClientVersion>1.1.0-beta.25074.4</MicrosoftDotNetProductConstructionServiceClientVersion>
-    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.25074.4</MicrosoftDotNetMaestroTasksVersion>
+    <MicrosoftDotNetProductConstructionServiceClientVersion>1.1.0-beta.25103.1</MicrosoftDotNetProductConstructionServiceClientVersion>
+    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.25103.1</MicrosoftDotNetMaestroTasksVersion>
     <!-- command-line-api -->
-    <SystemCommandLineVersion>2.0.0-beta4.24126.1</SystemCommandLineVersion>
+    <SystemCommandLineVersion>2.0.0-beta4.25072.1</SystemCommandLineVersion>
     <!-- corefx -->
     <MicrosoftBclHashCodeVersion>1.1.1</MicrosoftBclHashCodeVersion>
     <SystemMemoryVersion Condition="'$(DotNetBuildSourceOnly)' != 'true'">4.5.5</SystemMemoryVersion>
@@ -87,10 +87,10 @@
     <!-- diagnostics -->
     <MicrosoftSymbolManifestGeneratorVersion>8.0.0-preview.24461.2</MicrosoftSymbolManifestGeneratorVersion>
     <!-- templating -->
-    <MicrosoftTemplateEngineAuthoringTasksVersion>10.0.100-alpha.1.25075.2</MicrosoftTemplateEngineAuthoringTasksVersion>
+    <MicrosoftTemplateEngineAuthoringTasksVersion>10.0.100-preview.2.25080.1</MicrosoftTemplateEngineAuthoringTasksVersion>
     <!-- vstest -->
     <MicrosoftNetTestSdkVersion>17.5.0</MicrosoftNetTestSdkVersion>
     <!-- xharness -->
-    <MicrosoftDotNetXHarnessCLIVersion>10.0.0-prerelease.25074.1</MicrosoftDotNetXHarnessCLIVersion>
+    <MicrosoftDotNetXHarnessCLIVersion>10.0.0-prerelease.25077.1</MicrosoftDotNetXHarnessCLIVersion>
   </PropertyGroup>
 </Project>
