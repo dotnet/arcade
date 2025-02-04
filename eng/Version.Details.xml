@@ -34,13 +34,13 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>0b971a5e11be58af22ca83fbc111a1207bb62920</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.ProductConstructionService.Client" Version="1.1.0-beta.25081.4">
+    <Dependency Name="Microsoft.DotNet.ProductConstructionService.Client" Version="1.1.0-beta.25103.1">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>ea1313acb6401547660bfdedda22ca700a7e5002</Sha>
+      <Sha>e629d2ed353de09f323062d419ad447ca2c61527</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.1.0-beta.25081.4">
+    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.1.0-beta.25103.1">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>ea1313acb6401547660bfdedda22ca700a7e5002</Sha>
+      <Sha>e629d2ed353de09f323062d419ad447ca2c61527</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="10.0.0-prerelease.25074.1">
       <Uri>https://github.com/dotnet/xharness</Uri>
