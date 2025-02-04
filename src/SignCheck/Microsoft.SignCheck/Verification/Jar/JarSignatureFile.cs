@@ -256,7 +256,6 @@ namespace Microsoft.SignCheck.Verification.Jar
                 {
                     foreach (CryptographicAttributeObject unsignedAttribute in signerInfo.UnsignedAttributes)
                     {
-#if NETFRAMEWORK
                         if (String.Equals(unsignedAttribute.Oid.Value, WinCrypt.szOID_SIGNATURE_TIMESTAMP_ATTRIBUTE, StringComparison.OrdinalIgnoreCase))
                         {
                             Pkcs9AttributeObject timestampAttribute = new Pkcs9AttributeObject(unsignedAttribute.Values[0]);
@@ -284,9 +283,6 @@ namespace Microsoft.SignCheck.Verification.Jar
                                 }
                             }
                         }
-#else
-                        throw new PlatformNotSupportedException("Timestamp verification is not supported on .NET Core.");
-#endif
                     }
                 }
             }

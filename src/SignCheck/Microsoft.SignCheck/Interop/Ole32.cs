@@ -3,8 +3,6 @@
 
 using System;
 using System.Runtime.InteropServices;
-
-#if NETFRAMEWORK
 using Microsoft.VisualStudio.OLE.Interop;
 
 namespace Microsoft.SignCheck.Interop
@@ -29,4 +27,3 @@ namespace Microsoft.SignCheck.Interop
             out IStorage ppstgOpen);
     }
 }
-#endif

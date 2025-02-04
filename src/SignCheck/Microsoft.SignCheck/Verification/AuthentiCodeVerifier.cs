@@ -27,13 +27,6 @@ namespace Microsoft.SignCheck.Verification
 
         public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
         {
-#if NETCOREAPP
-            var svr = SignatureVerificationResult.UnsupportedFileTypeResult(path, parent, virtualPath);
-            string fullPath = svr.FullPath;
-            svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, SignCheckResources.NA);
-
-            return svr;
-#else
             SignatureVerificationResult svr = VerifyAuthentiCode(path, parent, virtualPath);
 
             if (FinalizeResult)
@@ -44,10 +37,8 @@ namespace Microsoft.SignCheck.Verification
             }
 
             return svr;
-#endif
         }
 
-#if NETFRAMEWORK
         protected SignatureVerificationResult VerifyAuthentiCode(string path, string parent, string virtualPath)
         {
             var svr = new SignatureVerificationResult(path, parent, virtualPath);
@@ -90,6 +81,5 @@ namespace Microsoft.SignCheck.Verification
 
             return svr;
         }
-#endif
     }
 }

@@ -1,8 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-#if NETFRAMEWORK
-
 using System;
 using System.Runtime.InteropServices;
 using FILETIME = System.Runtime.InteropServices.ComTypes.FILETIME;
@@ -317,5 +315,3 @@ namespace Microsoft.SignCheck.Interop
         public IntPtr rgExtension;
     }
 }
-
-#endif
