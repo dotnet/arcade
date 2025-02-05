@@ -85,6 +85,23 @@
       <ExeBundleInstallerFile>$(PackageOutputPath)$(InstallerFileNameWithoutExtension).exe</ExeBundleInstallerFile>
       <ExeBundleInstallerEngineFile>$(PackageOutputPath)$(InstallerFileNameWithoutExtension)-engine.exe</ExeBundleInstallerEngineFile>
     </PropertyGroup>
+
+    <!--
+      Packages produced for Azure Linux must be signed with a special certificate.
+      RPM v4 doesn't support multiple signatures, so we must have two separate copies of the RPM for us to sign.
+      To solve this, we make a copy of the RPM for Azure Linux, with the .azl.rpm extension (which the Arcade SDK will sign with the correct certificate).
+      If Azure Linux ever switches to RPM v6, we should be able to remove this workaround if our signing tooling adds support for multiple signatures
+      (something RPM v6 supports but RPM v4 does not).
+    -->
+    <PropertyGroup Condition="'$(GenerateRpm)' == 'true'">
+      <CreateRPMForAzureLinux>true</CreateRPMForAzureLinux>
+      <!-- PackageTargetOS is a distro-specific version suffix, used for deps packages, including the one for Azure Linux. -->
+      <CreateRPMForAzureLinux Condition="'$(PackageTargetOS)' != ''">false</CreateRPMForAzureLinux>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(CreateRPMForAzureLinux)' == 'true'">
+      <_InstallerFileAzureLinux>$(PackageOutputPath)$(InstallerFileNameWithoutExtension).azl$(InstallerExtension)</_InstallerFileAzureLinux>
+    </PropertyGroup>
   </Target>
 
   <!--
@@ -393,6 +410,19 @@
           UseHardlinksIfPossible="False" />
 
     <Message Text="$(MSBuildProjectName) -> $(_InstallerFile)" Importance="high" />
+  </Target>
+
+  <Target Name="_BuildAzureLinuxRpm"
+          AfterTargets="GenerateRpm"
+          Condition="'$(CreateRPMForAzureLinux)' == 'true'">
+    <!-- AzureLinux -->
+    <Copy SourceFiles="$(_InstallerFile)"
+          DestinationFiles="$(_InstallerFileAzureLinux)"
+          OverwriteReadOnlyFiles="True"
+          SkipUnchangedFiles="False"
+          UseHardlinksIfPossible="False" />
+
+    <Message Text="$(MSBuildProjectName) -> $(_InstallerFileAzureLinux)" Importance="high" />
   </Target>
 
   <Target Name="GetRpmInstallerJsonProperties"
