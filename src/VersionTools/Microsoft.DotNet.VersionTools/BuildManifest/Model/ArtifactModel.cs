@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
 
         public override bool Equals(object obj)
         {
-            if (obj is PackageArtifactModel other)
+            if (obj is ArtifactModel other)
             {
                 if (ReferenceEquals(this, obj))
                 {
