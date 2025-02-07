@@ -120,12 +120,32 @@
       <_ExistingSymbolPackage Include="@(Artifact)" Condition="'$(DotNetBuildSourceOnly)' != 'true' and '%(Artifact.SkipPublish)' != 'true' and $([System.String]::Copy('%(Filename)%(Extension)').EndsWith('.symbols.nupkg'))">
         <!-- Update the kind of the symbol packages to blob -->
         <Kind>Blob</Kind>
+        <RelativeBlobPath>assets/symbols/%(Filename)%(Extension)</RelativeBlobPath>
       </_ExistingSymbolPackage>
       <_PackageToPublish Include="@(Artifact)" Exclude="@(_ExistingSymbolPackage)" Condition="'%(Artifact.SkipPublish)' != 'true' and '%(Extension)' == '.nupkg'" />
     </ItemGroup>
 
     <ItemGroup>
       <ItemsToPushToBlobFeed Include="@(_PackageToPublish);@(_ExistingSymbolPackage)" Exclude="@(ItemsToPushToBlobFeed)" />
+    </ItemGroup>
+
+    <!-- 
+        Publish Windows PDBs produced by SymStore.targets (by default, only shipping PDBs are placed there).
+        SymbolUploader doesn't support embedded PDBs yet, so let SymStore.targets do the conversion for now.
+        https://github.com/dotnet/symstore/issues/143
+      -->
+    <ItemGroup>
+      <FilesToPublishToSymbolServer Include="$(ArtifactsSymStoreDirectory)**\*.pdb"/>
+
+      <!-- Support existing uses of FilesToPublishToSymbolServer by translating this ItemGroup into ItemsToPushToBlobFeed,
+           with type PDB. Repositories can also add these items manually if desired.
+           Note that we are careful here to include the relative paths of those PDBs. Unlike most artifacts
+           that we deal with, many PDBs can have the same name but different contents. -->
+      <_SymbolsToPushToBlobFeed Include="@(FilesToPublishToSymbolServer)">
+        <Kind>PDB</Kind>
+        <RelativePDBPath>%(RecursiveDir)%(Filename)%(Extension)</RelativePDBPath>
+      </_SymbolsToPushToBlobFeed>
+      <ItemsToPushToBlobFeed Include="@(_SymbolsToPushToBlobFeed)" />
     </ItemGroup>
   </Target>
 
@@ -145,6 +165,7 @@
         <OriginalPackage>%(_PackageToPublish.Identity)</OriginalPackage>
         <IsShipping>%(_PackageToPublish.IsShipping)</IsShipping>
         <Kind>Blob</Kind>
+        <RelativeBlobPath>assets/symbols/%(Filename)%(Extension)</RelativeBlobPath>
       </_SymbolPackageToGenerate>
     </ItemGroup>
 
@@ -301,38 +322,6 @@
       AssetManifestsLocalStorageDir="$(SourceBuiltAssetManifestsDir)"
       ArtifactVisibilitiesToPublish="@(ArtifactVisibilityToPublish)"
       UseHardlinksIfPossible="$(PublishingUseHardlinksIfPossible)" />
-
-    <!-- 
-        Publish Windows PDBs produced by SymStore.targets (by default, only shipping PDBs are placed there).
-        SymbolUploader doesn't support embedded PDBs yet, so let SymStore.targets do the conversion for now.
-        https://github.com/dotnet/symstore/issues/143
-      -->
-    <ItemGroup>
-      <FilesToPublishToSymbolServer Include="$(ArtifactsSymStoreDirectory)**\*.pdb"/>
-    </ItemGroup>
-
-    <!--
-      The below lines comprise workarounds for two issues:
-        - AzDO logging commands don't let us add subfolders by executing different `##vso` commands:
-          https://github.com/microsoft/azure-pipelines-tasks/issues/11689 . Therefore a parent folder
-          containing all desired subfolders is published. The primary goal of these artifacts isn't
-          to be browsable by humans. The target that publish the symbols will filter and publish only
-          the PDB files.
-
-        - It's possible that the user have PDBs outside the Arcade.SDK standard folder 
-           (artifacts/SymStore/$Configuration) and we need to maintain that support. For that reason,
-           and the one mentioned above, we copy all files in `FilesToPublishToSymbolServer` to a temporary
-           folder before adding them to the AzDO artifact container.
-    -->
-		<Copy
-			SourceFiles="@(FilesToPublishToSymbolServer)"
-			DestinationFiles="@(FilesToPublishToSymbolServer->'$(PDBsToPublishTempLocation)%(RecursiveDir)%(Filename)%(Extension)')"
-		/>
-
-    <Message
-      Text="##vso[artifact.upload containerfolder=PdbArtifacts;artifactname=PdbArtifacts]$(PDBsToPublishTempLocation)"
-      Importance="high" 
-      Condition="'@(FilesToPublishToSymbolServer)' != ''"/>
   </Target>
 
   <Target Name="PublishSymbols"
