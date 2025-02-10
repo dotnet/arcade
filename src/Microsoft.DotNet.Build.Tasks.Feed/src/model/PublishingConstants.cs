@@ -64,11 +64,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         }
 
         #region Target Channel Config Feeds
-        public const string FeedStagingForInstallers = "https://ci.dot.net/public";
-        public const string FeedStagingForChecksums = "https://ci.dot.net/public-checksums";
+        public const string FeedStagingForInstallers = "https://dotnetbuilds.blob.core.windows.net/public";
+        public const string FeedStagingForChecksums = "https://dotnetbuilds.blob.core.windows.net/public-checksums";
 
-        public const string FeedStagingInternalForInstallers = "https://ci.dot.net/internal";
-        public const string FeedStagingInternalForChecksums = "https://ci.dot.net/internal-checksums";
+        public const string FeedStagingInternalForInstallers = "https://dotnetbuilds.blob.core.windows.net/internal";
+        public const string FeedStagingInternalForChecksums = "https://dotnetbuilds.blob.core.windows.net/internal-checksums";
 
         private const string FeedGeneralTesting = "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json";
 
