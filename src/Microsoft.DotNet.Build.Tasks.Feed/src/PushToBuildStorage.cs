@@ -3,6 +3,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Security;
 using System.Xml.Linq;
 using Microsoft.Arcade.Common;
@@ -18,8 +19,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     {
         [Required]
         public ITaskItem[] ItemsToPush { get; set; }
-
-        public string AssetsTemporaryDirectory { get; set; }
 
         public string ManifestRepoName { get; set; }
 
@@ -61,13 +60,38 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool IsReleaseOnlyPackageVersion { get; set; }
 
+        /// <summary>
+        /// Represents where assets should be copied locally, either for staging for upload
+        /// or for propagation to another phase of the VMR build.
+        /// </summary>
         public string AssetsLocalStorageDir { get; set; }
 
+        /// <summary>
+        /// Represents where shipping packages should be copied locally, either for staging for upload
+        /// or for propagation to another phase of the VMR build.
+        /// </summary>
         public string ShippingPackagesLocalStorageDir { get; set; }
 
+        /// <summary>
+        /// Represents where nonshipping packages should be copied locally, either for staging for upload
+        /// or for propagation to another phase of the VMR build.
+        /// </summary>
         public string NonShippingPackagesLocalStorageDir { get; set; }
 
+        /// <summary>
+        /// Represents where asset manifests should be copied locally, either for staging for upload
+        /// or for propagation to another phase of the VMR build.
+        /// </summary>
         public string AssetManifestsLocalStorageDir { get; set; }
+
+        /// <summary>
+        /// Represents where pdb artifacts should be copied locally, either for staging for upload
+        /// or for propagation to another phase of the VMR build.
+        /// 
+        /// NOTE: In non-VMR builds, this represents the location of the PDBs that are copied
+        /// to before uploading to the PDBArtifacts dir.
+        /// </summary>
+        public string PdbArtifactsLocalStorageDir { get; set; }
 
         public bool PushToLocalStorage { get; set; }
 
@@ -112,6 +136,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             try
             {
+                if (string.IsNullOrEmpty(PdbArtifactsLocalStorageDir))
+                {
+                    throw new Exception($"PdbArtifactsLocalStorageDir must be specified.");
+                }
+
                 if (PushToLocalStorage)
                 {
                     if (string.IsNullOrEmpty(AssetsLocalStorageDir) ||
@@ -127,12 +156,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 else
                 {
                     Log.LogMessage(MessageImportance.High, "Performing push to Azure DevOps artifacts storage.");
-                }
-
-                if (!string.IsNullOrWhiteSpace(AssetsTemporaryDirectory))
-                {
-                    Log.LogMessage(MessageImportance.High, $"It's no longer necessary to specify a value for the {nameof(AssetsTemporaryDirectory)} property. " +
-                        $"Please consider patching your code to not use it.");
                 }
 
                 if (ItemsToPush == null)
@@ -204,6 +227,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         PushToLocalStorageOrAzDO(pdbArtifact);
                     }
 
+                    if (!PushToLocalStorage && buildModel.Artifacts.Pdbs.Any())
+                    {
+                        // Upload the full set of PDBs
+                        Log.LogMessage(MessageImportance.High,
+                            $"##vso[artifact.upload containerfolder=PdbArtifacts;artifactname=PdbArtifacts]{PdbArtifactsLocalStorageDir}");
+                    }
+
                     // Write the manifest, then create an artifact for it.
                     Log.LogMessage(MessageImportance.High, $"Writing build manifest file '{AssetManifestPath}'...");
                     fileSystem.WriteToFile(AssetManifestPath, buildModel.ToXml().ToString(SaveOptions.DisableFormatting));
@@ -265,7 +295,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     case PdbArtifactModel _:
                         string relativePdbPath = artifactModel.Id;
                         string pdbDestinationPath = Path.Combine(
-                                                    AssetsLocalStorageDir,
+                                                    PdbArtifactsLocalStorageDir,
                                                     string.IsNullOrEmpty(relativePdbPath) ? filename : relativePdbPath);
 
                         Directory.CreateDirectory(Path.GetDirectoryName(pdbDestinationPath));
@@ -298,8 +328,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         break;
 
                     case PdbArtifactModel _:
-                        Log.LogMessage(MessageImportance.High,
-                            $"##vso[artifact.upload containerfolder={artifactModel.Id};artifactname=BlobArtifacts]{path}");
+                        // Copy the PDB artifact to the temp local dir.
+                        File.Copy(path, Path.Combine(PdbArtifactsLocalStorageDir, artifactModel.Id), true);
                         break;
 
                     default:

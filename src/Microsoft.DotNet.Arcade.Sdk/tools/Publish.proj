@@ -234,12 +234,15 @@
       
       <!-- Directory where pdbs pointed in `FilesToPublishToSymbolServer` are copied before publishing to AzDO artifacts. -->
       <PDBsToPublishTempLocation>$(ArtifactsTmpDir)PDBsToPublish/</PDBsToPublishTempLocation>
+      <PdbArtifactsSourceBuiltOrTempDir Condition="'$(PushToLocalStorage)' == 'true'">$(SourceBuiltPdbArtifactsDir)</PdbArtifactsSourceBuiltOrTempDir>
+      <PdbArtifactsSourceBuiltOrTempDir Condition="'$(PushToLocalStorage)' != 'true'">$(PDBsToPublishTempLocation)</PdbArtifactsSourceBuiltOrTempDir>
 
       <!-- Use the SYSTEM_PHASENAME variable when available as that is guaranteed to be a unique identifier.
            For local scenarios and when the variable isn't available, use "<os>-<arch>-<buildpass>"" as the manifest name. -->
       <AssetManifestFileName Condition="'$(AssetManifestFileName)' == '' and '$(SYSTEM_PHASENAME)' != ''">$(SYSTEM_PHASENAME).xml</AssetManifestFileName>
       <AssetManifestFileName Condition="'$(AssetManifestFileName)' == ''">$(AssetManifestOS)-$(AssetManifestArch)$(AssetManifestPass).xml</AssetManifestFileName>
       <AssetManifestFilePath Condition="'$(AssetManifestFilePath)' == ''">$(ArtifactsLogDir)AssetManifest\$(AssetManifestFileName)</AssetManifestFilePath>
+
     </PropertyGroup>
     
     <!--
@@ -320,6 +323,7 @@
       ShippingPackagesLocalStorageDir="$(SourceBuiltShippingPackagesDir)"
       NonShippingPackagesLocalStorageDir="$(SourceBuiltNonShippingPackagesDir)"
       AssetManifestsLocalStorageDir="$(SourceBuiltAssetManifestsDir)"
+      PdbArtifactsLocalStorageDir="$(PdbArtifactsSourceBuiltOrTempDir)"
       ArtifactVisibilitiesToPublish="@(ArtifactVisibilityToPublish)"
       UseHardlinksIfPossible="$(PublishingUseHardlinksIfPossible)" />
   </Target>
