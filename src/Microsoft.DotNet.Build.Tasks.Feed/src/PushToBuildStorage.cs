@@ -328,8 +328,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         break;
 
                     case PdbArtifactModel _:
+                        string pdbArtifactTarget = Path.Combine(PdbArtifactsLocalStorageDir, artifactModel.Id);
+                        Directory.CreateDirectory(Path.GetDirectoryName(pdbArtifactTarget));
                         // Copy the PDB artifact to the temp local dir.
-                        File.Copy(path, Path.Combine(PdbArtifactsLocalStorageDir, artifactModel.Id), true);
+                        File.Copy(path, pdbArtifactTarget, false);
                         break;
 
                     default:
