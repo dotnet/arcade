@@ -1139,7 +1139,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 async (feed, httpClient, package, feedAccount, feedVisibility, feedName) =>
                 {
                     string localPackagePath =
-                        Path.Combine(PackageAssetsBasePath, $"{package.Id}.{package.Version}.nupkg");
+                        Path.Combine(PackageAssetsBasePath, package.NuPkgFilename);
                     if (!File.Exists(localPackagePath))
                     {
                         Log.LogError($"Could not locate '{package.Id}.{package.Version}' at '{localPackagePath}'");
@@ -1182,7 +1182,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 try
                 {
                     await clientThrottle.WaitAsync();
-                    var packageFilename = $"{package.Id}.{package.Version}.nupkg";
+                    var packageFilename = package.NuPkgFilename;
                     string temporaryPackageDirectory =
                         Path.GetFullPath(Path.Combine(ArtifactsBasePath, Guid.NewGuid().ToString()));
                     EnsureTemporaryDirectoryExists(temporaryPackageDirectory);
