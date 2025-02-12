@@ -12,7 +12,7 @@ using NuGet.Packaging.Signing;
 
 namespace Microsoft.SignCheck.Verification
 {
-    public class NupkgVerifier : ArchiveVerifier
+    public class NupkgVerifier : ZipVerifier
     {
         public NupkgVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options) : base(log, exclusions, options, fileExtension: ".nupkg")
         {
