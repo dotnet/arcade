@@ -31,7 +31,7 @@
   <PropertyGroup Condition="'$(IsTestProject)' == 'true' or '$(IsTestUtilityProject)' == 'true'">
     <ExcludeFromSourceOnlyBuild Condition="'$(ExcludeFromSourceOnlyBuild)' == '' and '$(DotNetBuildTests)' != 'true'">true</ExcludeFromSourceOnlyBuild>
 
-    <ExcludeFromDotNetBuild Condition="'$(ExcludeFromDotNetBuild)' == '' and '$(DotNetBuildTests)' != 'true'">true</ExcludeFromDotNetBuild>
+    <ExcludeFromDotNetBuild Condition="'$(ExcludeFromDotNetBuild)' == '' and '$(DotNetBuildTests)' != 'true' and '$(IsShipping)' == 'false'">true</ExcludeFromDotNetBuild>
   </PropertyGroup>
 
   <!--
