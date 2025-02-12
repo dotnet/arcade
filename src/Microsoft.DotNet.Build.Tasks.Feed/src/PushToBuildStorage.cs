@@ -109,13 +109,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public bool UseHardlinksIfPossible { get; set; } = true;
 
-        public enum ItemType
-        {
-            AssetManifest = 0,
-            PackageArtifact,
-            BlobArtifact
-        }
-
         public override void ConfigureServices(IServiceCollection collection)
         {
             collection.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
@@ -136,11 +129,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             try
             {
-                if (string.IsNullOrEmpty(PdbArtifactsLocalStorageDir))
-                {
-                    throw new Exception($"PdbArtifactsLocalStorageDir must be specified.");
-                }
-
                 if (PushToLocalStorage)
                 {
                     if (string.IsNullOrEmpty(AssetsLocalStorageDir) ||
@@ -193,6 +181,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         Log.LogError($"Failed to construct build model from input artifacts.");
                         return false;
+                    }
+
+                    if (buildModel.Artifacts.Pdbs.Any() && string.IsNullOrEmpty(PdbArtifactsLocalStorageDir))
+                    {
+                        throw new Exception($"PdbArtifactsLocalStorageDir must be specified.");
                     }
 
                     foreach (var package in buildModel.Artifacts.Packages)

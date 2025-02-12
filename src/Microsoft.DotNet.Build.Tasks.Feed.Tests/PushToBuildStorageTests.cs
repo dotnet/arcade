@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
 using NuGet.Versioning;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -111,7 +112,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var task = new PushToBuildStorage
             {
                 BuildEngine = new MockBuildEngine(),
-                AssetManifestPath = TARGET_MANIFEST_PATH,                
+                AssetManifestPath = TARGET_MANIFEST_PATH,
                 IsStableBuild = true,
                 IsReleaseOnlyPackageVersion = false,
                 ItemsToPush = taskItems,
@@ -119,7 +120,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 ManifestBuildId = "12345.6"
             };
 
-            if(setAdditionalData)
+            if (setAdditionalData)
             {
                 task.AzureDevOpsBuildId = 123456;
                 task.AzureDevOpsCollectionUri = "https://dev.azure.com/dnceng/";
