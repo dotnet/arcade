@@ -46,7 +46,9 @@ public class Program
         };
         unpackCommand.SetAction(result =>
         {
-            return UnpackCommand(result, unpackSrcArgument, unpackDestinationArgument);
+            var srcPath = result.GetValue(unpackSrcArgument);
+            var dstPath = result.GetValue(unpackDestinationArgument);
+            return MacOsPkgCore.Unpack(srcPath, dstPath);
         });
 
         var packSrcArgument = new CliArgument<string>("src") { Description = "Source path to pack." };
@@ -57,7 +59,9 @@ public class Program
         };
         packCommand.SetAction(result =>
         {
-            return PackCommand(result, packSrcArgument, packDstArgument);
+            var srcPath = result.GetValue(packSrcArgument);
+            var dstPath = result.GetValue(packDstArgument);
+            return MacOsPkgCore.Pack(srcPath, dstPath);
         });
 
         var pkgOrAppArgument = new CliArgument<string>("src") { Description = "Input pkg or app to verify." };
@@ -67,109 +71,14 @@ public class Program
         };
         verifyCommand.SetAction(result =>
         {
-            return VerifyCommand(result, pkgOrAppArgument);
+            var srcPath = result.GetValue(pkgOrAppArgument);
+            return MacOsPkgCore.VerifySignature(srcPath);
         });
 
         rootCommand.Subcommands.Add(unpackCommand);
         rootCommand.Subcommands.Add(packCommand);
         rootCommand.Subcommands.Add(verifyCommand);
         return rootCommand;
-    }
-
-    private static int VerifyCommand(ParseResult result, CliArgument<string> pkgOrAppArgument)
-    {
-        var srcPath = result.GetValue(pkgOrAppArgument) ?? throw new Exception("src must be non-empty");
-        try
-        {
-            if (!File.Exists(srcPath) || !Utilities.IsPkg(srcPath) && !Utilities.IsAppBundle(srcPath))
-            {
-                throw new Exception("Input path must be a .pkg or .app (zipped) file.");
-            }
-
-            if (Utilities.IsPkg(srcPath))
-            {
-                Package.VerifySignature(srcPath);
-            }
-            else if (Utilities.IsAppBundle(srcPath))
-            {
-                AppBundle.VerifySignature(srcPath);
-            }
-        }
-        catch (Exception e)
-        {
-            Console.Error.WriteLine(e);
-            return 1;
-        }
-
-        return 0;
-    }
-
-    private static int PackCommand(ParseResult result, CliArgument<string> packSrcArgument, CliArgument<string> packDstArgument)
-    {
-        var srcPath = result.GetValue(packSrcArgument) ?? throw new Exception("src must be non-empty");
-        var dstPath = result.GetValue(packDstArgument) ?? throw new Exception("dst must be non-empty");
-
-        try
-        {
-            if (!Directory.Exists(srcPath))
-            {
-                throw new Exception("Input path must be a valid directory.");
-            }
-
-            if (!Utilities.IsPkg(dstPath) && !Utilities.IsAppBundle(dstPath))
-            {
-                throw new Exception("Output path must be a .pkg or .app (zipped) file.");
-            }
-
-            Utilities.CleanupPath(dstPath);
-            Utilities.CreateParentDirectory(dstPath);
-
-            if (Utilities.IsPkg(dstPath))
-            {
-                Package.Pack(srcPath, dstPath);
-            }
-            else if (Utilities.IsAppBundle(dstPath))
-            {
-                AppBundle.Pack(srcPath, dstPath);
-            }
-        }
-        catch (Exception e)
-        {
-            Console.Error.WriteLine(e);
-            return 1;
-        }
-
-        return 0;
-    }
-
-    private static int UnpackCommand(ParseResult result, CliArgument<string> unpackSrcArgument, CliArgument<string> unpackDestinationArgument)
-    {
-        var srcPath = result.GetValue(unpackSrcArgument) ?? throw new Exception("src must be non-empty");
-        var dstPath = result.GetValue(unpackDestinationArgument) ?? throw new Exception("dst must be non-empty");
-
-        try
-        {
-            if (!File.Exists(srcPath) || (!Utilities.IsPkg(srcPath) && !Utilities.IsAppBundle(srcPath)))
-            {
-                throw new Exception("Input path must be an existing .pkg or .app (zipped) file.");
-            }
-            Utilities.CleanupPath(dstPath);
-            Utilities.CreateParentDirectory(dstPath);
-            if (Utilities.IsPkg(srcPath))
-            {
-                Package.Unpack(srcPath, dstPath);
-            }
-            else if (Utilities.IsAppBundle(srcPath))
-            {
-                AppBundle.Unpack(srcPath, dstPath);
-            }
-        }
-        catch (Exception e)
-        {
-            Console.Error.WriteLine(e);
-            return 1;
-        }
-        return 0;
     }
 }
 #endif

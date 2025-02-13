@@ -9,8 +9,4 @@
     <PackageTags>Arcade Build Library MacOS Pkg</PackageTags>
   </PropertyGroup>
 
-  <ItemGroup>
-    <InternalsVisibleTo Include="Microsoft.DotNet.MacOsPkg.Cli" />
-  </ItemGroup>
-
 </Project>
