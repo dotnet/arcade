@@ -356,7 +356,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 .AddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>()
                 .AddSingleton<IPdbArtifactModelFactory, PdbArtifactModelFactory>()
                 .AddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>()
-                .AddSingleton<IPdbArtifactModelFactory, PdbArtifactModelFactory>()
                 .AddSingleton(nupkgInfoFactoryMock.Object);
             CreateMockServiceCollection(collection);
             task.ConfigureServices(collection);
