@@ -171,6 +171,9 @@ dotnet_diagnostic.IDE0073.severity = error
 # Build Checks
 [*.csproj]
 build_check.BC0201.AllowUninitializedPropertiesInConditions=true
-build_check.BC0201.Severity=warning
-build_check.BC0202.Severity=warning
-build_check.BC0203.Severity=warning
+build_check.BC0201.Severity=suggestion
+build_check.BC0202.Severity=suggestion
+build_check.BC0203.Severity=suggestion
+build_check.BC0201.Scope=ProjectFileOnly
+build_check.BC0202.Scope=ProjectFileOnly
+build_check.BC0203.Scope=ProjectFileOnly
