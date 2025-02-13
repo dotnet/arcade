@@ -1094,7 +1094,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 akaMSChannelNames: [],
                 akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
                 akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
-                targetFeeds: DotNetExperimentalFeedsInternal,
+                targetFeeds: DotNetExperimentalInternalFeeds,
                 symbolTargetType: SymbolPublishVisibility.Internal,
                 flatten: false),
 
