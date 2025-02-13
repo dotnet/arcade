@@ -13,8 +13,9 @@ throw new PlatformNotSupportedException("This tool is only supported on .NET Cor
 using System.Runtime.InteropServices;
 using System.CommandLine;
 using System.IO;
+using Microsoft.DotNet.MacOsPkg.Core;
 
-namespace Microsoft.DotNet.MacOsPkg;
+namespace Microsoft.DotNet.MacOsPkg.Cli;
 
 public class Program
 {

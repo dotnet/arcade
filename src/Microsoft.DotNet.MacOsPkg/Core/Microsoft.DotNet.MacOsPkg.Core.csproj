@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(NetToolCurrent)</TargetFrameworks>
+    <OutputType>Library</OutputType>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <Description>The MacOsPkg Library is used for unpacking, packing, and validating MacOS .pkg files and nested .app bundles.</Description>
+    <PackageTags>Arcade Build Library MacOS Pkg</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.DotNet.MacOsPkg.Cli" />
+  </ItemGroup>
+
+</Project>
