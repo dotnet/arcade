@@ -14,7 +14,7 @@ using Microsoft.SignCheck.Logging;
 
 namespace Microsoft.SignCheck.Verification
 {
-    public class VsixVerifier : ArchiveVerifier
+    public class VsixVerifier : ZipVerifier
     {
         public VsixVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options) : base(log, exclusions, options, fileExtension: ".vsix")
         {
