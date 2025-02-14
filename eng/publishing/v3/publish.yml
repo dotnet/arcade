@@ -31,7 +31,7 @@ stages:
           -PromoteToChannelIds ${{ parameters.PromoteToChannelIds }}
           -DarcVersion $(DarcVersion)
 
-    - task: DownloadPipelineArtifact@0
+    - task: DownloadPipelineArtifact@2
       displayName: Download Build Assets
       continueOnError: true
       enabled: true
@@ -42,10 +42,10 @@ stages:
         pipeline: $(AzDOPipelineId)
         buildId: $(AzDOBuildId)
         downloadType: 'specific'
-        artifact: AssetManifests
+        artifactName: AssetManifests
         downloadPath: '$(Build.ArtifactStagingDirectory)/AssetManifests'
 
-    - task: DownloadPipelineArtifact@0
+    - task: DownloadPipelineArtifact@2
       displayName: Download Build Assets
       continueOnError: true
       enabled: true
@@ -56,12 +56,12 @@ stages:
         pipeline: $(AzDOPipelineId)
         buildId: $(AzDOBuildId)
         downloadType: 'specific'
-        artifact: BlobArtifacts
+        artifactName: BlobArtifacts
         itemPattern: |
           MergedManifest.xml
         downloadPath: '$(Build.ArtifactStagingDirectory)/BlobArtifacts'
 
-    - task: DownloadPipelineArtifact@0
+    - task: DownloadPipelineArtifact@2
       displayName: Download Build Assets
       continueOnError: true
       enabled: true
@@ -72,10 +72,10 @@ stages:
         pipeline: $(AzDOPipelineId)
         buildId: $(AzDOBuildId)
         downloadType: 'specific'
-        artifact: PdbArtifacts
+        artifactName: PdbArtifacts
         downloadPath: '$(Build.ArtifactStagingDirectory)/PdbArtifacts'
 
-    - task: DownloadPipelineArtifact@0
+    - task: DownloadPipelineArtifact@2
       displayName: Download Build Assets
       continueOnError: true
       enabled: true
@@ -86,7 +86,7 @@ stages:
         pipeline: $(AzDOPipelineId)
         buildId: $(AzDOBuildId)
         downloadType: 'specific'
-        artifact: ReleaseConfigs
+        artifactName: ReleaseConfigs
         itemPattern: |
           SymbolPublishingExclusionsFile.txt
         downloadPath: '$(Build.ArtifactStagingDirectory)/ReleaseConfigs'
