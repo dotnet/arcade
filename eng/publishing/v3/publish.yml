@@ -42,12 +42,54 @@ stages:
         pipeline: $(AzDOPipelineId)
         buildId: $(AzDOBuildId)
         downloadType: 'specific'
+        artifact: AssetManifests
+        downloadPath: '$(Build.ArtifactStagingDirectory)/AssetManifests'
+
+    - task: DownloadPipelineArtifact@0
+      displayName: Download Build Assets
+      continueOnError: true
+      enabled: true
+      inputs:
+        buildType: specific
+        buildVersionToDownload: specific
+        project: $(AzDOProject)
+        pipeline: $(AzDOPipelineId)
+        buildId: $(AzDOBuildId)
+        downloadType: 'specific'
+        artifact: BlobArtifacts
         itemPattern: |
-          AssetManifests/**
-          BlobArtifacts/MergedManifest.xml
-          PdbArtifacts/**
-          ReleaseConfigs/SymbolPublishingExclusionsFile.txt
-        downloadPath: '$(Build.ArtifactStagingDirectory)'
+          MergedManifest.xml
+        downloadPath: '$(Build.ArtifactStagingDirectory)/BlobArtifacts'
+
+    - task: DownloadPipelineArtifact@0
+      displayName: Download Build Assets
+      continueOnError: true
+      enabled: true
+      inputs:
+        buildType: specific
+        buildVersionToDownload: specific
+        project: $(AzDOProject)
+        pipeline: $(AzDOPipelineId)
+        buildId: $(AzDOBuildId)
+        downloadType: 'specific'
+        artifact: PdbArtifacts
+        downloadPath: '$(Build.ArtifactStagingDirectory)/PdbArtifacts'
+
+    - task: DownloadPipelineArtifact@0
+      displayName: Download Build Assets
+      continueOnError: true
+      enabled: true
+      inputs:
+        buildType: specific
+        buildVersionToDownload: specific
+        project: $(AzDOProject)
+        pipeline: $(AzDOPipelineId)
+        buildId: $(AzDOBuildId)
+        downloadType: 'specific'
+        artifact: ReleaseConfigs
+        itemPattern: |
+          SymbolPublishingExclusionsFile.txt
+        downloadPath: '$(Build.ArtifactStagingDirectory)/ReleaseConfigs'
 
     - task: NuGetToolInstaller@1
       displayName: 'Install NuGet.exe'
