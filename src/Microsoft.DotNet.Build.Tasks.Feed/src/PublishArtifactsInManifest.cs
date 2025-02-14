@@ -235,6 +235,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
             collection.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
+            collection.TryAddSingleton<IPdbArtifactModelFactory, PdbArtifactModelFactory>();
             collection.TryAddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>();
             collection.TryAddSingleton<INupkgInfoFactory, NupkgInfoFactory>();
             collection.TryAddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>();

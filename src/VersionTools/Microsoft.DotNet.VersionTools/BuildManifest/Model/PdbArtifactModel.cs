@@ -9,22 +9,34 @@ using System.Xml.Linq;
 
 namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
 {
-    public class BlobArtifactModel : ArtifactModel
+    public class PdbArtifactModel : ArtifactModel
     {
         private static readonly string[] AttributeOrder =
         {
             nameof(Id)
         };
 
-        public override string ToString() => $"Blob {Id}";
+        public override string ToString() => $"Pdb {Id}";
+
+        public override int GetHashCode()
+        {
+            int hash = 1;
+
+            foreach (var item in Attributes)
+            {
+                hash *= (item.Key, item.Value).GetHashCode();
+            }
+
+            return hash;
+        }
 
         public override XElement ToXml() => new XElement(
-            "Blob",
+            "Pdb",
             Attributes
                 .ThrowIfMissingAttributes(AttributeOrder)
                 .CreateXmlAttributes(AttributeOrder));
 
-        public static BlobArtifactModel Parse(XElement xml) => new BlobArtifactModel
+        public static PdbArtifactModel Parse(XElement xml) => new PdbArtifactModel
         {
             Attributes = xml
                 .CreateAttributeDictionary()
