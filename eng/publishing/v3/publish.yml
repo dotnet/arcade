@@ -46,7 +46,7 @@ stages:
         downloadPath: '$(Build.ArtifactStagingDirectory)/AssetManifests'
 
     - task: DownloadPipelineArtifact@2
-      displayName: Download Merged Manifests
+      displayName: Download Merged Manifest
       continueOnError: true
       enabled: true
       inputs:
