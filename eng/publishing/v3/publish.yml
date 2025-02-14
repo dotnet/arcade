@@ -31,7 +31,7 @@ stages:
           -PromoteToChannelIds ${{ parameters.PromoteToChannelIds }}
           -DarcVersion $(DarcVersion)
 
-    - task: DownloadBuildArtifacts@0
+    - task: DownloadPipelineArtifacts@0
       displayName: Download Build Assets
       continueOnError: true
       enabled: true
