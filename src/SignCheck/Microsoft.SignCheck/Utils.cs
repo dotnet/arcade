@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 
 namespace Microsoft.SignCheck
 {
-    public class Utils
+    public static class Utils
     {
         /// <summary>
         /// Generate a hash for a string value using a given hash algorithm.
@@ -72,10 +72,12 @@ namespace Microsoft.SignCheck
 
         /// <summary>
         /// Gets the value of a named group from a regex match.
+        /// Returns null if the match is unsuccessful.
         /// </summary>
         /// <param name="match">The regex match.</param>
         /// <param name="groupName">The name of the group.</param>
-        public static string GetRegexValue(Match match, string groupName) =>
+        /// <returns>The value of the named group or null if the match is unsuccessful.</returns>
+        public static string GroupValueOrDefault(this Match match, string groupName) =>
             match.Success ? match.Groups[groupName].Value : null;
 
         /// <summary>

@@ -141,7 +141,7 @@ namespace Microsoft.SignCheck.Verification
             string timestampRegex = @"(?<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \+\d{4})";
 
             Regex signedOnRegex = new Regex(@"Signed with a trusted timestamp on: " + timestampRegex);
-            string signedOnString = Utils.GetRegexValue(signedOnRegex.Match(signingVerificationOutput), "timestamp");
+            string signedOnString = signedOnRegex.Match(signingVerificationOutput).GroupValueOrDefault("timestamp");
             if(!DateTime.TryParse(signedOnString, out DateTime signedOnTimestamp))
             {
                 signedOnTimestamp = DateTime.MaxValue;
@@ -152,7 +152,7 @@ namespace Microsoft.SignCheck.Verification
 
             return matches.Select(match =>
                 {
-                    string certificateString = Utils.GetRegexValue(match, "timestamp");
+                    string certificateString = match.GroupValueOrDefault("timestamp");
                     if (!DateTime.TryParse(certificateString, out DateTime certificateTimestamp))
                     {
                         certificateTimestamp = DateTime.MinValue;
@@ -162,7 +162,7 @@ namespace Microsoft.SignCheck.Verification
                         EffectiveDate = signedOnTimestamp,
                         ExpiryDate = certificateTimestamp,
                         SignedOn = signedOnTimestamp,
-                        SignatureAlgorithm = Utils.GetRegexValue(match, "algorithm")
+                        SignatureAlgorithm = match.GroupValueOrDefault("algorithm")
                     };
                 });
         }
