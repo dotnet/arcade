@@ -77,8 +77,9 @@ namespace Microsoft.DotNet.SignTool
                 bool success = true;
                 if (!process.WaitForExit(_dotnetTimeout))
                 {
-                    process.Kill();
                     _log.LogError($"MSBuild process did not exit within '{_dotnetTimeout}' ms.");
+                    process.Kill();
+                    process.WaitForExit();
                     success = false;
                 }
 
@@ -89,13 +90,13 @@ namespace Microsoft.DotNet.SignTool
                     success = false;
                 }
 
-                string outputStr = output.ToString();
+                string outputStr = output.ToString().Trim();
                 if (!string.IsNullOrWhiteSpace(outputStr))
                 {
                     File.WriteAllText(logPath, outputStr);
                 }
                 
-                string errorStr = error.ToString();
+                string errorStr = error.ToString().Trim();
                 if (!string.IsNullOrWhiteSpace(errorStr))
                 {
                     File.WriteAllText(errorLogPath, errorStr);
