@@ -157,6 +157,7 @@
     <ItemGroup>
       <_PackageToPublish Update="@(_PackageToPublish)">
         <SymbolPackageToGenerate Condition="!Exists('%(RootDir)%(Directory)%(Filename).symbols.nupkg')">$(SymbolPackagesDir)%(Filename).symbols.nupkg</SymbolPackageToGenerate>
+        <SymbolPackageRelativeBlobPath>assets/symbols/%(Filename).symbols.nupkg</SymbolPackageRelativeBlobPath>
       </_PackageToPublish>
 
       <_SymbolPackageToGenerate Include="@(_PackageToPublish->'%(SymbolPackageToGenerate)')"
@@ -165,7 +166,7 @@
         <OriginalPackage>%(_PackageToPublish.Identity)</OriginalPackage>
         <IsShipping>%(_PackageToPublish.IsShipping)</IsShipping>
         <Kind>Blob</Kind>
-        <RelativeBlobPath>assets/symbols/%(Filename)%(Extension)</RelativeBlobPath>
+        <RelativeBlobPath>%(_PackageToPublish.SymbolPackageRelativeBlobPath)</RelativeBlobPath>
       </_SymbolPackageToGenerate>
     </ItemGroup>
 
