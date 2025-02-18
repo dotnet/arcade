@@ -32,20 +32,6 @@ stages:
           -DarcVersion $(DarcVersion)
 
     - task: DownloadPipelineArtifact@2
-      displayName: Download Asset Manifests
-      continueOnError: true
-      enabled: true
-      inputs:
-        buildType: specific
-        buildVersionToDownload: specific
-        project: $(AzDOProject)
-        pipeline: $(AzDOPipelineId)
-        buildId: $(AzDOBuildId)
-        downloadType: 'specific'
-        artifact: AssetManifests
-        downloadPath: '$(Build.ArtifactStagingDirectory)/AssetManifests'
-
-    - task: DownloadPipelineArtifact@2
       displayName: Download Merged Manifest
       continueOnError: true
       enabled: true
@@ -58,7 +44,7 @@ stages:
         downloadType: 'specific'
         artifact: BlobArtifacts
         itemPattern: |
-          MergedManifest.xml
+          BlobArtifacts/MergedManifest.xml
         downloadPath: '$(Build.ArtifactStagingDirectory)/BlobArtifacts'
 
     - task: DownloadPipelineArtifact@2
@@ -88,7 +74,7 @@ stages:
         downloadType: 'specific'
         artifact: ReleaseConfigs
         itemPattern: |
-          SymbolPublishingExclusionsFile.txt
+          ReleaseConfigs/SymbolPublishingExclusionsFile.txt
         downloadPath: '$(Build.ArtifactStagingDirectory)/ReleaseConfigs'
 
     - task: NuGetToolInstaller@1
