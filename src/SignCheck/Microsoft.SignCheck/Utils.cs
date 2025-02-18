@@ -2,13 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Microsoft.SignCheck
 {
-    public class Utils
+    public static class Utils
     {
         /// <summary>
         /// Generate a hash for a string value using a given hash algorithm.
@@ -67,6 +68,43 @@ namespace Microsoft.SignCheck
             {
                 return String.Concat(escapedPattern, "$");
             }            
+        }
+
+        /// <summary>
+        /// Gets the value of a named group from a regex match.
+        /// Returns null if the match is unsuccessful.
+        /// </summary>
+        /// <param name="match">The regex match.</param>
+        /// <param name="groupName">The name of the group.</param>
+        /// <returns>The value of the named group or null if the match is unsuccessful.</returns>
+        public static string GroupValueOrDefault(this Match match, string groupName) =>
+            match.Success ? match.Groups[groupName].Value : null;
+
+        /// <summary>
+        /// Captures the console output of an action.
+        /// </summary>
+        /// <param name="action">The action to execute.</param>
+        /// <returns>A tuple containing the result of the action, the standard output, and the error output.</returns>
+        public static (bool, string, string) CaptureConsoleOutput(Func<bool> action)
+        {
+            var consoleOutput = Console.Out;
+            StringWriter outputWriter = new StringWriter();
+            Console.SetOut(outputWriter);
+
+            var errorOutput = Console.Error;
+            StringWriter errorOutputWriter = new StringWriter();
+            Console.SetError(errorOutputWriter);
+
+            try
+            {
+                bool result = action();
+                return (result, outputWriter.ToString(), errorOutputWriter.ToString());
+            }
+            finally
+            {
+                Console.SetOut(consoleOutput);
+                Console.SetError(errorOutput);
+            }
         }
     }
 }

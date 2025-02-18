@@ -102,8 +102,10 @@ namespace Microsoft.SignCheck.Verification
             AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".ps1"));
             AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".ps1xml"));
             AddFileVerifier(new VsixVerifier(log, exclusions, options));
+#else
+            AddFileVerifier(new PkgVerifier(log, exclusions, options, ".pkg"));
+            AddFileVerifier(new PkgVerifier(log, exclusions, options, ".app"));
 #endif
-
             AddFileVerifier(new LzmaVerifier(log, exclusions, options));
             AddFileVerifier(new NupkgVerifier(log, exclusions, options));
             AddFileVerifier(new XmlVerifier(log, exclusions, options));
