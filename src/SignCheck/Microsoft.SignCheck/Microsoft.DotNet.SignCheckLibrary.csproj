@@ -57,6 +57,11 @@
     <Compile Remove="Verification\Jar\JarSignatureFile.cs" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' != '$(NetToolCurrent)'">
+    <!-- Unsupported file types -->
+    <Compile Remove="Verification\TarVerifier.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Update="SignCheckResources.Designer.cs"
              DesignTime="True"

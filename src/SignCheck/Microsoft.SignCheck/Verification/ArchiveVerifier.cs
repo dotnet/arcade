@@ -101,6 +101,19 @@ namespace Microsoft.SignCheck.Verification
         }
 
         /// <summary>
+        /// Verifies the signature of an unsupported file type.
+        /// </summary>
+        protected SignatureVerificationResult VerifyUnsupportedFileType(string path, string parent, string virtualPath)
+        {
+            var svr = SignatureVerificationResult.UnsupportedFileTypeResult(path, parent, virtualPath);
+            string fullPath = svr.FullPath;
+            svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, SignCheckResources.NA);
+
+            VerifyContent(svr);
+            return svr;
+        }
+
+        /// <summary>
         /// Represents an entry in an archive.
         /// </summary>
         protected class ArchiveEntry
