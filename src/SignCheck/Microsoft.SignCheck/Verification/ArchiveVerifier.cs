@@ -23,6 +23,19 @@ namespace Microsoft.SignCheck.Verification
         protected abstract IEnumerable<ArchiveEntry> ReadArchiveEntries(string archivePath);
 
         /// <summary>
+        /// Verifies the signature of an unsupported file type.
+        /// </summary>
+        protected SignatureVerificationResult VerifyUnsupportedFileType(string path, string parent, string virtualPath)
+        {
+            var svr = SignatureVerificationResult.UnsupportedFileTypeResult(path, parent, virtualPath);
+            string fullPath = svr.FullPath;
+            svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, SignCheckResources.NA);
+
+            VerifyContent(svr);
+            return svr;
+        }
+
+        /// <summary>
         /// Verify the contents of a package archive and add the results to the container result.
         /// </summary>
         /// <param name="svr">The container result</param>
