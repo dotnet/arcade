@@ -34,6 +34,12 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
             set { Attributes[nameof(OriginBuildName)] = value; }
         }
 
+        public string CouldBeStable
+        {
+            get { return Attributes.GetOrDefault(nameof(CouldBeStable)); }
+            set { Attributes[nameof(CouldBeStable)] = value; }
+        }
+
         public override string ToString() => $"Package {Id} {Version}";
 
         public override XElement ToXml() => new XElement(
