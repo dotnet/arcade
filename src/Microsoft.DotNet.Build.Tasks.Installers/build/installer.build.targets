@@ -234,7 +234,7 @@
       <_ConflictsProperty Condition="'@(LinuxPackageConflicts)' != ''">@(LinuxPackageConflicts->'%(Identity)',', ')</_ConflictsProperty>
     </PropertyGroup>
 
-    <ItemGroup>
+    <ItemGroup Condition="'$(_ConflictsProperty)' != ''">
       <_ConflictsControlProperty Include="Conflicts" Value="$(_ConflictsProperty)" />
     </ItemGroup>
 
