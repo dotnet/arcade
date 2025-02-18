@@ -13,6 +13,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Microsoft.DotNet.MacOsPkg\Core\Microsoft.DotNet.MacOsPkg.Core.csproj" Condition="'$(TargetFramework)' == '$(NetToolCurrent)'" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="LZMA-SDK" />
     <PackageReference Include="Microsoft.VisualStudio.OLE.Interop" Condition="$(TargetFramework) != $(NetToolCurrent)"/>
     <PackageReference Include="NuGet.Frameworks" />
@@ -55,6 +59,10 @@
     <Compile Remove="Verification\VsixVerifier.cs" />
     <Compile Remove="Verification\Jar\JarFile.cs" />
     <Compile Remove="Verification\Jar\JarSignatureFile.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' != '$(NetToolCurrent)'">
+    <Compile Remove="Verification\PkgVerifier.cs" />
   </ItemGroup>
 
   <ItemGroup>
