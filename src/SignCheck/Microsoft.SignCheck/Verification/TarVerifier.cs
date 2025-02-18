@@ -14,7 +14,7 @@ namespace Microsoft.SignCheck.Verification
     {
         public TarVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options, string fileExtension) : base(log, exclusions, options, fileExtension)
         {
-            if (fileExtension != ".tar" && fileExtension != ".gz")
+            if (fileExtension != ".tar" && fileExtension != ".gz" && fileExtension != ".tgz")
             {
                 throw new ArgumentException("fileExtension must be .tar or .gz");
             }
