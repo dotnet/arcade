@@ -14,6 +14,7 @@
       SkipPackageChecks                 Skips package safety checks.
       EnableDefaultArtifacts            Includes packages under "/artifacts/packages/**" for publishing. Defaults to true.
       DefaultArtifactVisibility         The default visibility for Artifact items. Defaults to External.
+      PublishOnlyRidSpecificArtifacts   Only externally publish packages for this build's TargetRid.
       DotNetBuildPass                   While building the repo as part of the entire .NET stack, this parameter specifies which build pass the current build is part of.
                                           The build pass number gets added to the asset manifest file name to avoid collisions.
 
@@ -101,10 +102,42 @@
     <AssetManifestPass Condition="'$(DotNetBuildPass)' != '' and '$(DotNetBuildPass)' != '1'">-Pass$(DotNetBuildPass)</AssetManifestPass>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(EnableDefaultArtifacts)' == 'true'">
-    <Artifact Include="$(ArtifactsShippingPackagesDir)**/*.nupkg" Kind="Package" />
-    <Artifact Include="$(ArtifactsNonShippingPackagesDir)**/*.nupkg" IsShipping="false" Kind="Package" />
-  </ItemGroup>
+  <Choose Condition="'$(EnableDefaultArtifacts)' == 'true'">
+    <When Condition="'$(PublishOnlyRidSpecificArtifacts)' == 'true'">
+      <!--
+        Only publish packages that contain this build's Target RID in the name.
+      -->
+      <ItemGroup>
+        <Artifact Include="$(ArtifactsShippingPackagesDir)**/*.$(TargetRid).*.nupkg" Kind="Package" />
+        <Artifact Include="$(ArtifactsNonShippingPackagesDir)**/*.$(TargetRid).*.nupkg" IsShipping="false" Kind="Package" />
+        <!--
+          Integration with Microsoft.DotNet.Build.Tasks.Installers: Publish packages of the following formats as well.
+          These are arch-specific Visual Studio insertion packages. As they're Windows-only, they only include architecture in the name:
+          - VS.Redist.Common.*.$(TargetArchitecture).*.nupkg
+          - VS.Redist.Common.*.$(TargetArchitecture)-*.*.nupkg
+          
+          These packages are always non-shipping, so only look there.
+        -->
+        <Artifact Include="$(ArtifactsNonShippingPackagesDir)**/VS.Redist.Common.*.$(TargetArchitecture).*.nupkg" IsShipping="false" Kind="Package" />
+        <Artifact Include="$(ArtifactsNonShippingPackagesDir)**/VS.Redist.Common.*.$(TargetArchitecture)-*.*.nupkg" IsShipping="false" Kind="Package" />
+      </ItemGroup>
+
+      <!--
+        In the VMR, don't publish packages that didn't match the above conditions externally.
+        Instead, add them with Vertical visibility as they still may be needed to build RID-specific packages in other repos.
+      -->
+      <ItemGroup Condition="'$(DotNetBuildOrchestrator)' == 'true'">
+        <Artifact Include="$(ArtifactsShippingPackagesDir)**/*.nupkg" Exclude="@(Artifact)" Kind="Package" Visibility="Vertical" />
+        <Artifact Include="$(ArtifactsNonShippingPackagesDir)**/*.nupkg" Exclude="@(Artifact)" IsShipping="false" Kind="Package" Visibility="Vertical" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <Artifact Include="$(ArtifactsShippingPackagesDir)**/*.nupkg" Kind="Package" />
+        <Artifact Include="$(ArtifactsNonShippingPackagesDir)**/*.nupkg" IsShipping="false" Kind="Package" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
 
   <!-- Allow for repo specific Publish properties such as add additional files to be published -->
   <Import Project="$(RepositoryEngineeringDir)Publishing.props" Condition="Exists('$(RepositoryEngineeringDir)Publishing.props')" />
