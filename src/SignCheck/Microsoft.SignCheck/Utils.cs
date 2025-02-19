@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -71,6 +72,30 @@ namespace Microsoft.SignCheck
         }
 
         /// <summary>
+        /// Gets the DateTime value from a string
+        /// Returns the specified default value if the match is unsuccessful or the timestamp value is 0.
+        /// </summary>
+        /// <param name="timestamp">The timestamp string to parse.</param>
+        /// <param name="defaultValue">The default DateTime value to return if parsing fails.</param>
+        /// <returns>The parsed DateTime value or the default value.</returns>
+        public static DateTime DateTimeOrDefault(this string timestamp, DateTime defaultValue)
+        {
+            // Try to parse the timestamp as a Unix timestamp (seconds since epoch)
+            if (long.TryParse(timestamp, out long unixTime) && unixTime > 0)
+            {
+                return DateTimeOffset.FromUnixTimeSeconds(unixTime).UtcDateTime;
+            }
+
+            // Try to parse the timestamp as a DateTime string
+            if (DateTime.TryParse(timestamp, out DateTime dateTime))
+            {
+                return dateTime;
+            }
+
+            return defaultValue;
+        }
+
+        /// <summary>
         /// Gets the value of a named group from a regex match.
         /// Returns null if the match is unsuccessful.
         /// </summary>
@@ -104,6 +129,34 @@ namespace Microsoft.SignCheck
             {
                 Console.SetOut(consoleOutput);
                 Console.SetError(errorOutput);
+            }
+        }
+
+        /// <summary>
+        /// Runs a bash command and returns the output, error, and exit code.
+        /// </summary>
+        /// <param name="command">The command to run.</param>
+        /// <returns>A tuple containing the exit code, output, and error.</returns>
+        public static (int exitCode, string output, string error) RunBashCommand(string command)
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "bash",
+                Arguments = $"-c \"{command}\"",
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+
+            using (var process = Process.Start(psi))
+            {
+                string output = process.StandardOutput.ReadToEnd();
+                string error = process.StandardError.ReadToEnd();
+
+                process.WaitForExit(10000); // 10 seconds
+                
+                return (process.ExitCode, output, error);
             }
         }
     }

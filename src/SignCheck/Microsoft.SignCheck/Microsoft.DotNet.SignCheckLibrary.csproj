@@ -13,6 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Microsoft.DotNet.Build.Tasks.Installers\Microsoft.DotNet.Build.Tasks.Installers.csproj" Condition="'$(TargetFramework)' == '$(NetToolCurrent)'" />
     <ProjectReference Include="..\..\Microsoft.DotNet.MacOsPkg\Core\Microsoft.DotNet.MacOsPkg.Core.csproj" Condition="'$(TargetFramework)' == '$(NetToolCurrent)'" />
   </ItemGroup>
 
@@ -63,6 +64,7 @@
 
   <ItemGroup Condition="'$(TargetFramework)' != '$(NetToolCurrent)'">
     <!-- Unsupported file types -->
+    <Compile Remove="Verification\DebVerifier.cs" />
     <Compile Remove="Verification\PkgVerifier.cs" />
     <Compile Remove="Verification\TarVerifier.cs" />
   </ItemGroup>
