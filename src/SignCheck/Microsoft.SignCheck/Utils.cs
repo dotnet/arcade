@@ -4,6 +4,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -12,6 +13,9 @@ namespace Microsoft.SignCheck
 {
     public static class Utils
     {
+#if NETCOREAPP
+        private static readonly HttpClient s_client = new(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(10) });
+#endif
         /// <summary>
         /// Generate a hash for a string value using a given hash algorithm.
         /// </summary>
@@ -159,5 +163,28 @@ namespace Microsoft.SignCheck
                 return (process.ExitCode, output, error);
             }
         }
+
+#if NETCOREAPP
+        /// <summary>
+        /// Download the Microsoft public key and import it into the keyring.
+        /// </summary>
+        public static void DownloadAndConfigureMicrosoftPublicKey(string tempDir)
+        {
+            using (Stream stream = s_client.GetStreamAsync("https://packages.microsoft.com/keys/microsoft.asc").Result)
+            {
+                using (FileStream fileStream = File.Create($"{tempDir}/microsoft.asc"))
+                {
+                    stream.CopyTo(fileStream);
+                }
+            }
+
+            (int exitCode, _, string error) = RunBashCommand($"gpg --import {tempDir}/microsoft.asc");
+
+            if (exitCode != 0)
+            {
+                throw new Exception($"Failed to import Microsoft public key: {(string.IsNullOrEmpty(error) ? "unknown error" : error)}");
+            }
+        }
+#endif
     }
 }

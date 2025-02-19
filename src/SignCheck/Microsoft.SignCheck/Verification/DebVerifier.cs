@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Microsoft.DotNet.Build.Tasks.Installers;
@@ -16,8 +15,6 @@ namespace Microsoft.SignCheck.Verification
 {
     public class DebVerifier : ArchiveVerifier
     {
-        private static readonly HttpClient s_client = new(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(10) });
-
         public DebVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options) : base(log, exclusions, options, ".deb") { }
 
         public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
@@ -39,7 +36,7 @@ namespace Microsoft.SignCheck.Verification
             // https://microsoft.sharepoint.com/teams/prss/esrp/info/SitePages/Linux%20GPG%20Signing.aspx
             try
             {
-                DownloadAndConfigureMicrosoftPublicKey(tempDir);
+                Utils.DownloadAndConfigureMicrosoftPublicKey(tempDir);
 
                 string debianBinary = ExtractDebContainerEntry(path, "debian-binary", tempDir);
                 string controlTar = ExtractDebContainerEntry(path, "control.tar", tempDir);
@@ -113,21 +110,6 @@ namespace Microsoft.SignCheck.Verification
                     };
                 }
             }
-        }
-
-        /// <summary>
-        /// Download the Microsoft public key and import it into the keyring.
-        /// </summary>
-        public static void DownloadAndConfigureMicrosoftPublicKey(string tempDir)
-        {
-            using (Stream stream = s_client.GetStreamAsync("https://packages.microsoft.com/keys/microsoft.asc").Result)
-            {
-                using (FileStream fileStream = File.Create($"{tempDir}/microsoft.asc"))
-                {
-                    stream.CopyTo(fileStream);
-                }
-            }
-            Utils.RunBashCommand($"gpg --import {tempDir}/microsoft.asc");
         }
 
         /// <summary>
