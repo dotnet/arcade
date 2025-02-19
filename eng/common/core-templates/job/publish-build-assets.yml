@@ -76,12 +76,11 @@ jobs:
       fetchDepth: 3
       clean: true
       
-    - task: DownloadBuildArtifacts@0
-      displayName: Download artifact
+    - task: DownloadPipelineArtifact@2
+      displayName: Download Asset Manifests
       inputs:
         artifactName: AssetManifests
-        downloadPath: '$(Build.StagingDirectory)/Download'
-        checkDownloadedFiles: true
+        targetPath: '$(Build.StagingDirectory)/Download'
       condition: ${{ parameters.condition }}
       continueOnError: ${{ parameters.continueOnError }}
     
