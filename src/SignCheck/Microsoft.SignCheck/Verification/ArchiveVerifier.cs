@@ -23,6 +23,19 @@ namespace Microsoft.SignCheck.Verification
         protected abstract IEnumerable<ArchiveEntry> ReadArchiveEntries(string archivePath);
 
         /// <summary>
+        /// Verifies the signature of an unsupported file type.
+        /// </summary>
+        protected SignatureVerificationResult VerifyUnsupportedFileType(string path, string parent, string virtualPath)
+        {
+            var svr = SignatureVerificationResult.UnsupportedFileTypeResult(path, parent, virtualPath);
+            string fullPath = svr.FullPath;
+            svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, SignCheckResources.NA);
+
+            VerifyContent(svr);
+            return svr;
+        }
+
+        /// <summary>
         /// Verify the contents of a package archive and add the results to the container result.
         /// </summary>
         /// <param name="svr">The container result</param>
@@ -35,33 +48,47 @@ namespace Microsoft.SignCheck.Verification
                 Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagExtractingFileContents, tempPath);
                 Dictionary<string, string> archiveMap = new Dictionary<string, string>();
 
-                foreach (ArchiveEntry archiveEntry in ReadArchiveEntries(svr.FullPath))
+                try
                 {
-                    string aliasFullName = GenerateArchiveEntryAlias(archiveEntry, tempPath);
-                    if (File.Exists(aliasFullName))
+                    foreach (ArchiveEntry archiveEntry in ReadArchiveEntries(svr.FullPath))
                     {
-                        Log.WriteMessage(LogVerbosity.Normal, SignCheckResources.FileAlreadyExists, aliasFullName);
+                        string aliasFullName = GenerateArchiveEntryAlias(archiveEntry, tempPath);
+                        if (File.Exists(aliasFullName))
+                        {
+                            Log.WriteMessage(LogVerbosity.Normal, SignCheckResources.FileAlreadyExists, aliasFullName);
+                        }
+                        else
+                        {
+                            CreateDirectory(Path.GetDirectoryName(aliasFullName));
+                            WriteArchiveEntry(archiveEntry, aliasFullName);
+                            archiveMap[archiveEntry.RelativePath] = aliasFullName;
+                        }
                     }
-                    else
+
+                    // We can only verify once everything is extracted. This is mainly because MSIs can have mutliple external CAB files
+                    // and we need to ensure they are extracted before we verify the MSIs.
+                    foreach (string fullName in archiveMap.Keys)
                     {
-                        CreateDirectory(Path.GetDirectoryName(aliasFullName));
-                        WriteArchiveEntry(archiveEntry, aliasFullName);
-                        archiveMap[archiveEntry.RelativePath] = aliasFullName;
+                        SignatureVerificationResult result = VerifyFile(archiveMap[fullName], svr.Filename,
+                            Path.Combine(svr.VirtualPath, fullName), fullName);
+
+                        // Tag the full path into the result detail
+                        result.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, fullName);
+                        svr.NestedResults.Add(result);
                     }
                 }
-
-                // We can only verify once everything is extracted. This is mainly because MSIs can have mutliple external CAB files
-                // and we need to ensure they are extracted before we verify the MSIs.
-                foreach (string fullName in archiveMap.Keys)
+                catch (PlatformNotSupportedException)
                 {
-                    SignatureVerificationResult result = VerifyFile(archiveMap[fullName], svr.Filename,
-                        Path.Combine(svr.VirtualPath, fullName), fullName);
-
-                    // Tag the full path into the result detail
-                    result.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, fullName);
-                    svr.NestedResults.Add(result);
+                    // Log the error and return an unsupported file type result
+                    // because some archive types are not supported on all platforms
+                    string parent = Path.GetDirectoryName(svr.FullPath) ?? SignCheckResources.NA;
+                    svr = SignatureVerificationResult.UnsupportedFileTypeResult(svr.FullPath, parent, svr.VirtualPath);
+                    svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, SignCheckResources.NA);
                 }
-                DeleteDirectory(tempPath);
+                finally
+                {
+                    DeleteDirectory(tempPath);
+                }
             }
         }
 
