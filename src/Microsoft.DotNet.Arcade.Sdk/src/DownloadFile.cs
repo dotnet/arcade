@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -124,8 +125,10 @@ namespace Microsoft.DotNet.Arcade.Sdk
             Log.LogMessage($"Downloading '{uri}' to '{DestinationPath}'");
 
             // Configure the cert revocation check in a fail-open state to avoid intermittent failures
-            // on Mac if the endpoint is not available.
+            // on Mac if the endpoint is not available. This is only available on .NET Core, but has only been
+            // observed on Mac anyway.
 
+#if NET
             using SocketsHttpHandler handler = new SocketsHttpHandler();
             handler.SslOptions.CertificateChainPolicy = new X509ChainPolicy
             {
@@ -148,6 +151,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
             };
 
             using (var httpClient = new HttpClient(handler))
+#else
+            using (var httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }))
+#endif
             {
                 httpClient.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
                 try
