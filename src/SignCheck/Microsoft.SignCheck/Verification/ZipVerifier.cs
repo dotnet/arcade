@@ -16,14 +16,7 @@ namespace Microsoft.SignCheck.Verification
         }
 
         public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
-        {
-            var svr = SignatureVerificationResult.UnsupportedFileTypeResult(path, parent, virtualPath);
-            string fullPath = svr.FullPath;
-            svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, SignCheckResources.NA);
-
-            VerifyContent(svr);
-            return svr;
-        }
+            => VerifyUnsupportedFileType(path, parent, virtualPath);
 
         protected override IEnumerable<ArchiveEntry> ReadArchiveEntries(string archivePath)
         {
