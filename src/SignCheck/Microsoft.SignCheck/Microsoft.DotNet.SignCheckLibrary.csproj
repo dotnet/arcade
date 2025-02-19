@@ -12,9 +12,9 @@
     <ExcludeFromSourceOnlyBuild>true</ExcludeFromSourceOnlyBuild>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Microsoft.DotNet.Build.Tasks.Installers\Microsoft.DotNet.Build.Tasks.Installers.csproj" Condition="'$(TargetFramework)' == '$(NetToolCurrent)'" />
-    <ProjectReference Include="..\..\Microsoft.DotNet.MacOsPkg\Core\Microsoft.DotNet.MacOsPkg.Core.csproj" Condition="'$(TargetFramework)' == '$(NetToolCurrent)'" />
+  <ItemGroup Condition="'$(TargetFramework)' == '$(NetToolCurrent)'">
+    <ProjectReference Include="..\..\Microsoft.DotNet.Build.Tasks.Installers\Microsoft.DotNet.Build.Tasks.Installers.csproj" />
+    <ProjectReference Include="..\..\Microsoft.DotNet.MacOsPkg\Core\Microsoft.DotNet.MacOsPkg.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
