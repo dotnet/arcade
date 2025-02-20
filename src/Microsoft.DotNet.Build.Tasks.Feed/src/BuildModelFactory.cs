@@ -25,6 +25,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string repoBranch,
             string repoCommit,
             string repoOrigin,
+            bool preserveRepoOrigin,
             bool isStableBuild,
             PublishingInfraVersion publishingVersion,
             bool isReleaseOnlyPackageVersion);
@@ -72,6 +73,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string repoBranch,
             string repoCommit,
             string repoOrigin,
+            bool preserveRepoOrigin,
             bool isStableBuild,
             PublishingInfraVersion publishingVersion,
             bool isReleaseOnlyPackageVersion)
@@ -107,17 +109,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             var blobArtifacts = itemsToPushNoExcludes
                 .Where(i => i.GetMetadata(ArtifactKindMetadata).Equals(nameof(ArtifactKind.Blob), StringComparison.OrdinalIgnoreCase))
-                .Select(i => _blobArtifactModelFactory.CreateBlobArtifactModel(i, repoOrigin))
+                .Select(i => _blobArtifactModelFactory.CreateBlobArtifactModel(i, preserveRepoOrigin && i.GetMetadata("RepoOrigin") is string origin and not "" ? origin : repoOrigin))
                 .Where(b => artifactVisibilitiesToInclude.HasFlag(b.Visibility));
 
             var packageArtifacts = itemsToPushNoExcludes
                 .Where(i => i.GetMetadata(ArtifactKindMetadata).Equals(nameof(ArtifactKind.Package), StringComparison.OrdinalIgnoreCase))
-                .Select(i => _packageArtifactModelFactory.CreatePackageArtifactModel(i, repoOrigin))
+                .Select(i => _packageArtifactModelFactory.CreatePackageArtifactModel(i, preserveRepoOrigin && i.GetMetadata("RepoOrigin") is string origin and not "" ? origin : repoOrigin))
                 .Where(b => artifactVisibilitiesToInclude.HasFlag(b.Visibility));
 
             var pdbArtifacts = itemsToPushNoExcludes
                 .Where(i => i.GetMetadata(ArtifactKindMetadata).Equals(nameof(ArtifactKind.Pdb), StringComparison.OrdinalIgnoreCase))
-                .Select(i => _pdbArtifactModelFactory.CreatePdbArtifactModel(i, repoOrigin))
+                .Select(i => _pdbArtifactModelFactory.CreatePdbArtifactModel(i, preserveRepoOrigin && i.GetMetadata("RepoOrigin") is string origin and not "" ? origin : repoOrigin))
                 .Where(b => artifactVisibilitiesToInclude.HasFlag(b.Visibility));
 
             return CreateModel(

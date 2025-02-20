@@ -80,6 +80,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                                                repoBranch: _testBuildBranch,
                                                repoCommit: _testBuildCommit,
                                                repoOrigin: _testRepoOrigin,
+                                               preserveRepoOrigin: false,
                                                isStableBuild: false,
                                                publishingVersion: PublishingInfraVersion.Latest,
                                                isReleaseOnlyPackageVersion: true);
@@ -157,6 +158,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                                                        repoBranch: _testBuildBranch,
                                                        repoCommit: _testBuildCommit,
                                                        repoOrigin: _testRepoOrigin,
+                                                       preserveRepoOrigin: false,
                                                        isStableBuild: false,
                                                        publishingVersion: PublishingInfraVersion.Latest,
                                                        isReleaseOnlyPackageVersion: true);
@@ -247,6 +249,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                                                        repoBranch: _testBuildBranch,
                                                        repoCommit: _testBuildCommit,
                                                        repoOrigin: _testRepoOrigin,
+                                                       preserveRepoOrigin: false,
                                                        isStableBuild: false,
                                                        publishingVersion: PublishingInfraVersion.Latest,
                                                        isReleaseOnlyPackageVersion: true);
@@ -300,6 +303,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                                            repoBranch: _testBuildBranch,
                                            repoCommit: _testBuildCommit,
                                            repoOrigin: _testRepoOrigin,
+                                           preserveRepoOrigin: false,
                                            isStableBuild: false,
                                            publishingVersion: PublishingInfraVersion.Latest,
                                            isReleaseOnlyPackageVersion: true);
@@ -336,6 +340,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                                            repoBranch: _testBuildBranch,
                                            repoCommit: _testBuildCommit,
                                            repoOrigin: _testRepoOrigin,
+                                           preserveRepoOrigin: false,
                                            isStableBuild: false,
                                            publishingVersion: PublishingInfraVersion.Latest,
                                            isReleaseOnlyPackageVersion: true);
@@ -369,6 +374,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                                            repoBranch: _testBuildBranch,
                                            repoCommit: _testBuildCommit,
                                            repoOrigin: _testRepoOrigin,
+                                           preserveRepoOrigin: false,
                                            isStableBuild: false,
                                            publishingVersion: PublishingInfraVersion.Latest,
                                            isReleaseOnlyPackageVersion: true);
@@ -411,6 +417,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                                                        repoBranch: _testBuildBranch,
                                                        repoCommit: _testBuildCommit,
                                                        repoOrigin: _testRepoOrigin,
+                                                       preserveRepoOrigin: false,
                                                        isStableBuild: false,
                                                        publishingVersion: PublishingInfraVersion.Latest,
                                                        isReleaseOnlyPackageVersion: true);
@@ -494,6 +501,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                                                                     repoBranch: _testBuildBranch,
                                                                     repoCommit: _testBuildCommit,
                                                                     repoOrigin: _testRepoOrigin,
+                                                                    preserveRepoOrigin: false,
                                                                     isStableBuild: true,
                                                                     publishingVersion: PublishingInfraVersion.Latest,
                                                                     isReleaseOnlyPackageVersion: false);
@@ -579,6 +587,113 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             }
         }
 
+        [Fact]
+        public void PreserveRepoOrigin()
+        {
+            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.1.0.0.nupkg"));
+
+            const string bopSymbolsNupkg = "foo/bar/baz/bop.symbols.nupkg";
+            string bobSymbolsExpectedId = $"assets/symbols/{Path.GetFileName(bopSymbolsNupkg)}";
+            const string zipArtifact = "foo/bar/baz/bing.zip";
+            // New PDB artifact
+            const string pdbArtifact = "foo/bar/baz/bing.pdb";
+
+            var artifacts = new ITaskItem[]
+            {
+                new TaskItem(bopSymbolsNupkg, new Dictionary<string, string>
+                {
+                    { "ManifestArtifactData", "NonShipping=true;Category=SMORKELER" },
+                    { "RelativeBlobPath", bobSymbolsExpectedId},
+                    { "RepoOrigin", "runtime" },
+                    { "ThisIsntArtifactMetadata", "YouGoofed!" },
+                    { "Kind", "Blob" }
+                }),
+                // Include a package and a fake zip too
+                // Note that the relative blob path is a "first class" attribute,
+                // not parsed from ManifestArtifactData
+                new TaskItem(zipArtifact, new Dictionary<string, string>
+                {
+                    { "RelativeBlobPath", zipArtifact },
+                    { "ManifestArtifactData", "ARandomBitOfMAD=" },
+                    { "Kind", "Blob" }
+                }),
+                new TaskItem(localPackagePath, new Dictionary<string, string>()
+                {
+                    // This isn't recognized or used for a nupkg
+                    { "RelativeBlobPath", zipArtifact },
+                    { "RepoOrigin", "runtime" },
+                    { "ManifestArtifactData", "ShouldWePushDaNorpKeg=YES" },
+                    { "Kind", "Package" }
+                }),
+                // New PDB artifact with RelativePdbPath
+                new TaskItem(pdbArtifact, new Dictionary<string, string>
+                {
+                    { "RelativePdbPath", pdbArtifact },
+                    { "RepoOrigin", "runtime" },
+                    { "ManifestArtifactData", "NonShipping=false;Category=PDB" },
+                    { "Kind", "PDB" }
+                })
+            };
+
+            var modelFromItems = _buildModelFactory.CreateModel(artifacts: artifacts,
+                                                                artifactVisibilitiesToInclude: ArtifactVisibility.All,
+                                                                buildId: _testAzdoBuildId,
+                                                                manifestBuildData: _defaultManifestBuildData,
+                                                                repoUri: _testAzdoRepoUri,
+                                                                repoBranch: _testBuildBranch,
+                                                                repoCommit: _testBuildCommit,
+                                                                repoOrigin: _testRepoOrigin,
+                                                                preserveRepoOrigin: true,
+                                                                isStableBuild: true,
+                                                                publishingVersion: PublishingInfraVersion.Latest,
+                                                                isReleaseOnlyPackageVersion: false);
+
+            modelFromItems.Should().NotBeNull();
+            _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
+
+            modelFromItems.Artifacts.Blobs.Should().SatisfyRespectively(
+                blob =>
+                {
+                    blob.Id.Should().Be(bobSymbolsExpectedId);
+                    blob.NonShipping.Should().BeTrue();
+                    blob.Attributes.Should().Contain("Id", bobSymbolsExpectedId);
+                    blob.Attributes.Should().Contain("Category", "SMORKELER");
+                    blob.Attributes.Should().Contain("NonShipping", "true");
+                    blob.Attributes.Should().Contain("RepoOrigin", "runtime");
+                },
+                blob =>
+                {
+                    blob.Id.Should().Be(zipArtifact);
+                    blob.NonShipping.Should().BeFalse();
+                    blob.Attributes.Should().Contain("Id", zipArtifact);
+                    blob.Attributes.Should().Contain("ARandomBitOfMAD", string.Empty);
+                    blob.Attributes.Should().Contain("RepoOrigin", _testRepoOrigin);
+                });
+
+            modelFromItems.Artifacts.Packages.Should().SatisfyRespectively(
+                package =>
+                {
+                    package.Id.Should().Be("test-package-a");
+                    package.Version.Should().Be("1.0.0");
+                    package.NonShipping.Should().BeFalse();
+                    package.Attributes.Should().Contain("Id", "test-package-a");
+                    package.Attributes.Should().Contain("Version", "1.0.0");
+                    package.Attributes.Should().Contain("ShouldWePushDaNorpKeg", "YES");
+                    package.Attributes.Should().Contain("RepoOrigin", "runtime");
+                });
+
+            modelFromItems.Artifacts.Pdbs.Should().SatisfyRespectively(
+                pdb =>
+                {
+                    pdb.Id.Should().Be(pdbArtifact);
+                    pdb.NonShipping.Should().BeFalse();
+                    pdb.Attributes.Should().Contain("NonShipping", "false");
+                    pdb.Attributes.Should().Contain("Category", "PDB");
+                    pdb.Attributes.Should().Contain("Id", pdbArtifact);
+                    pdb.Attributes.Should().Contain("RepoOrigin", "runtime");
+                });
+        }
+
         /// <summary>
         /// Validates that errors are logged and null is returned when Kind metadata is missing from an artifact.
         /// </summary>
@@ -605,6 +720,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 repoBranch: _testBuildBranch,
                 repoCommit: _testBuildCommit,
                 repoOrigin: _testRepoOrigin,
+                preserveRepoOrigin: false,
                 isStableBuild: false,
                 publishingVersion: PublishingInfraVersion.Latest,
                 isReleaseOnlyPackageVersion: true);

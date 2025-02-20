@@ -96,12 +96,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public bool PushToLocalStorage { get; set; }
 
         /// <summary>
-        /// When <see cref="PushToLocalStorage" /> is <c>true</c>, this property indicates whether the
+        /// Preserve provided artifact's RepoOrigin metadata if it already exists.
+        /// When <see cref="PushToLocalStorage" /> is <c>true</c>, this property also indicates whether the
         /// final path for any packages published to <see cref="ShippingPackagesLocalStorageDir"/>
         /// or <see cref="NonShippingPackagesLocalStorageDir"/> should have the artifact's RepoOrigin
         /// appended as a subfolder to the published path.
         /// </summary>
-        public bool PackagesLocalStorageIncludesRepoOrigin { get; set; }
+        public bool PreserveRepoOrigin { get; set; }
 
         public ITaskItem[] ArtifactVisibilitiesToPublish { get; set; }
 
@@ -181,6 +182,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         ManifestBranch,
                         ManifestCommit,
                         ManifestRepoOrigin,
+                        PreserveRepoOrigin,
                         IsStableBuild,
                         targetPublishingVersion,
                         IsReleaseOnlyPackageVersion);
@@ -276,7 +278,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             ? NonShippingPackagesLocalStorageDir
                             : ShippingPackagesLocalStorageDir;
 
-                        if (PackagesLocalStorageIncludesRepoOrigin)
+                        if (PreserveRepoOrigin)
                         {
                             packageDestinationPath = Path.Combine(packageDestinationPath, artifactModel.RepoOrigin);
                         }
