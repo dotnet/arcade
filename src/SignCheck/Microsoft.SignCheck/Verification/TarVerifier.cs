@@ -26,22 +26,41 @@ namespace Microsoft.SignCheck.Verification
         protected override IEnumerable<ArchiveEntry> ReadArchiveEntries(string archivePath)
         {
             using (var fileStream = File.Open(archivePath, FileMode.Open))
-            using (var gzipStream = new GZipStream(fileStream, CompressionMode.Decompress))
-            using (var reader = new TarReader(gzipStream))
             {
-                TarEntry entry;
-                while ((entry = reader.GetNextEntry()) != null)
+                TarReader reader = null;
+                GZipStream gzipStream = null;
+
+                try
                 {
-                    // Skip directories
-                    if (!entry.Name.EndsWith("/"))
+                    if (FileExtension == ".tar")
                     {
-                        yield return new ArchiveEntry()
-                        {
-                            RelativePath = entry.Name,
-                            ContentStream = entry.DataStream,
-                            ContentSize = entry.Length
-                        };
+                        reader = new TarReader(fileStream);
                     }
+                    else
+                    {
+                        gzipStream = new GZipStream(fileStream, CompressionMode.Decompress);
+                        reader = new TarReader(gzipStream);
+                    }
+
+                    TarEntry entry;
+                    while ((entry = reader.GetNextEntry()) != null)
+                    {
+                        // Skip directories
+                        if (!entry.Name.EndsWith("/"))
+                        {
+                            yield return new ArchiveEntry()
+                            {
+                                RelativePath = entry.Name,
+                                ContentStream = entry.DataStream,
+                                ContentSize = entry.Length
+                            };
+                        }
+                    }
+                }
+                finally
+                {
+                    reader?.Dispose();
+                    gzipStream?.Dispose();
                 }
             }
         }
