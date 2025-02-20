@@ -109,6 +109,7 @@ namespace Microsoft.SignCheck.Verification
             AddFileVerifier(new TarVerifier(log, exclusions, options, ".tar"));
             AddFileVerifier(new TarVerifier(log, exclusions, options, ".tgz"));
             AddFileVerifier(new TarVerifier(log, exclusions, options, ".gz"));
+            AddFileVerifier(new RpmVerifier(log, exclusions, options));
 #endif
             AddFileVerifier(new LzmaVerifier(log, exclusions, options));
             AddFileVerifier(new NupkgVerifier(log, exclusions, options));
