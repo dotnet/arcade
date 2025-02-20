@@ -13,7 +13,7 @@ namespace Microsoft.SignCheck
 {
     public static class Utils
     {
-#if NETCOREAPP
+#if NET
         private static readonly HttpClient s_client = new(new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(10) });
 #endif
         /// <summary>
@@ -164,7 +164,7 @@ namespace Microsoft.SignCheck
             }
         }
 
-#if NETCOREAPP
+#if NET
         /// <summary>
         /// Download the Microsoft public key and import it into the keyring.
         /// </summary>
