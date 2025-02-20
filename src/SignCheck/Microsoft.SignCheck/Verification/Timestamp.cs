@@ -59,7 +59,7 @@ namespace Microsoft.SignCheck.Verification
             }
             else
             {
-                if (SignedOn == DateTime.MaxValue || ExpiryDate == DateTime.MinValue)
+                if (SignedOn == DateTime.MaxValue || ExpiryDate == DateTime.MinValue || EffectiveDate == DateTime.MaxValue)
                 {
                     svr.AddDetail(DetailKeys.Error, SignCheckResources.ErrorInvalidOrMissingTimestamp);
                 }
