@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
     <IsPackable>true</IsPackable>
-    <SignAssembly>false</SignAssembly>
     <IsBuildTaskProject>true</IsBuildTaskProject>
     <Description>Build artifact signing validation tool</Description>
     <PackageTags>Arcade Signing Validation Tool</PackageTags>
