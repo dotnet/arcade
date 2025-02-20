@@ -14,7 +14,7 @@
       SkipPackageChecks                 Skips package safety checks.
       EnableDefaultArtifacts            Includes packages under "/artifacts/packages/**" for publishing. Defaults to true.
       DefaultArtifactVisibility         The default visibility for Artifact items. Defaults to External.
-      PublishOnlyRidSpecificArtifacts   Only externally publish packages for this build's TargetRid.
+      EnableDefaultRidSpecificArtifacts   Only externally publish packages for this build's TargetRid.
       DotNetBuildPass                   While building the repo as part of the entire .NET stack, this parameter specifies which build pass the current build is part of.
                                           The build pass number gets added to the asset manifest file name to avoid collisions.
 
@@ -103,7 +103,7 @@
   </PropertyGroup>
 
   <Choose Condition="'$(EnableDefaultArtifacts)' == 'true'">
-    <When Condition="'$(PublishOnlyRidSpecificArtifacts)' == 'true'">
+    <When Condition="'$(EnableDefaultRidSpecificArtifacts)' == 'true'">
       <!--
         Only publish packages that contain this build's Target RID in the name.
       -->
