@@ -297,11 +297,11 @@
 																			   '$(IsStableBuild)' == 'true' and
 																			   '$(IsReleaseOnlyPackageVersion)' != 'true' and
 																			   '%(ItemsToPushToBlobFeed.IsShipping)' == 'true'">%(ItemsToPushToBlobFeed.ManifestArtifactData);CouldBeStable=true</ManifestArtifactData>
+        <!-- We narrowly set CouldBeStable=false only for packages we know won't generate a stable version because of IsReleaseOnlyPackageVersion == true.
+             This allows for the default 'stable asset to non-isolated feed' detection behavior to still pick up accidental cases of stabilization. -->
 				<ManifestArtifactData Condition="'$(PublishingVersion)' == '4' and
                                          '%(ItemsToPushToBlobFeed.Kind)' == 'Package' and
-																				 ('$(IsStableBuild)' == 'false' or
-																				  '$(IsReleaseOnlyPackageVersion)' == 'true' or
-																				  '%(ItemsToPushToBlobFeed.IsShipping)' == 'false')">%(ItemsToPushToBlobFeed.ManifestArtifactData);CouldBeStable=false</ManifestArtifactData>
+																				 ('$(IsReleaseOnlyPackageVersion)' == 'true'">%(ItemsToPushToBlobFeed.ManifestArtifactData);CouldBeStable=false</ManifestArtifactData>
       </ItemsToPushToBlobFeed>
     </ItemGroup>
 
