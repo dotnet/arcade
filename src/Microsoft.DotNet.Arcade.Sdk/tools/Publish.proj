@@ -292,12 +292,12 @@
 				     This only applies currently to Packages. Blobs are required to provide paths that are always non-stable. Pdbs don't have a stability concept.
 
              NOTE: This flag doesn't strictly mean that the package is stable versioned. A repo might suppress a stable version for a given package. -->
-			  <ManifestArtifactData Condition="'$(PublishVersion)' == '4' and
+			  <ManifestArtifactData Condition="'$(PublishingVersion)' == '4' and
                                          '%(ItemsToPushToBlobFeed.Kind)' == 'Package' and
 																			   '$(IsStableBuild)' == 'true' and
 																			   '$(IsReleaseOnlyPackageVersion)' != 'true' and
 																			   '%(ItemsToPushToBlobFeed.IsShipping)' == 'true'">%(ItemsToPushToBlobFeed.ManifestArtifactData);CouldBeStable=true</ManifestArtifactData>
-				<ManifestArtifactData Condition="'$(PublishVersion)' == '4' and
+				<ManifestArtifactData Condition="'$(PublishingVersion)' == '4' and
                                          '%(ItemsToPushToBlobFeed.Kind)' == 'Package' and
 																				 ('$(IsStableBuild)' == 'false' or
 																				  '$(IsReleaseOnlyPackageVersion)' == 'true' or
