@@ -12,7 +12,8 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
     {
         UnsupportedV1 = 1,
         UnsupportedV2 = 2,
-        Latest = 3,
+        V3 = 3,
+        Latest = V3,
         Dev = 4
     }
 
