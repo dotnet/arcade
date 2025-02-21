@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
-    <SignAssembly>false</SignAssembly>
     <NoWarn>$(NoWarn);xUnit2013</NoWarn>
   </PropertyGroup>
 
