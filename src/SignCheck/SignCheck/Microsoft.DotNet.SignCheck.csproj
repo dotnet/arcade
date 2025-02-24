@@ -6,6 +6,7 @@
     <TargetFramework>$(NetFrameworkToolCurrent)</TargetFramework>
     <OutputType>Exe</OutputType>
     <IsTool>true</IsTool>
+    <SignAssembly>false</SignAssembly>
     <IsPackable>true</IsPackable>
     <!-- <NoWarn>$(NoWarn);NU5128</NoWarn> -->
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>

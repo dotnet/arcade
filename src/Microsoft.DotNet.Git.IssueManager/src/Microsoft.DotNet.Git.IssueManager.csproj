@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(NetMinimum);$(NetFrameworkMinimum)</TargetFrameworks>
+    <SignAssembly>false</SignAssembly>
     <IsPackable>true</IsPackable>
     <ExcludeFromSourceOnlyBuild>true</ExcludeFromSourceOnlyBuild>
   </PropertyGroup>
