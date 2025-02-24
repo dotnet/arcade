@@ -316,23 +316,37 @@
       </ItemsToPushToBlobFeed>
     </ItemGroup>
 
+    <!-- Note that the below ItemsToPushToBlobFeed metadata updates are in separate item groups to preserve previous information. -->
     <ItemGroup>
       <ItemsToPushToBlobFeed>
-        <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.IsShipping)' == 'false'">%(ItemsToPushToBlobFeed.ManifestArtifactData);NonShipping=true</ManifestArtifactData>
+        <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.IsShipping)' != 'true'">%(ItemsToPushToBlobFeed.ManifestArtifactData);NonShipping=true</ManifestArtifactData>
         <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.IsShipping)' == 'true' and '$(ProducesDotNetReleaseShippingAssets)' == 'true'">%(ItemsToPushToBlobFeed.ManifestArtifactData);DotNetReleaseShipping=true</ManifestArtifactData>
-		    <!-- Propagate stability data to the asset level for packages. We do this so that VMR builds which have some repo builds that are not stable, and others that are, do not end up having to use the default logic
-			       where ALL assets that are shipping in a stable build go to isolated feeds. Instead, we can just choose CouldBeStable==true, CouldBeStable==false.
-				     This only applies currently to Packages. Blobs are required to provide paths that are always non-stable. Pdbs don't have a stability concept.
+      </ItemsToPushToBlobFeed>
+    </ItemGroup>
 
-             NOTE: This flag doesn't strictly mean that the package is stable versioned. A repo might suppress a stable version for a given package. -->
+    <ItemGroup>
+      <ItemsToPushToBlobFeed>
+        <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.Visibility)' != ''">%(ItemsToPushToBlobFeed.ManifestArtifactData);Visibility=%(ItemsToPushToBlobFeed.Visibility)</ManifestArtifactData>
+      </ItemsToPushToBlobFeed>
+    </ItemGroup>
+
+    <!-- Propagate stability data to the asset level for packages. We do this so that VMR builds which have some repo builds that are not stable, and others that are, do not end up having to use the default logic
+          where ALL assets that are shipping in a stable build go to isolated feeds. Instead, we can just choose CouldBeStable==true, CouldBeStable==false.
+          This only applies currently to Packages. Blobs are required to provide paths that are always non-stable. Pdbs don't have a stability concept.
+
+          NOTE: This flag doesn't strictly mean that the package is stable versioned. A repo might suppress a stable version for a given package. -->
+    <ItemGroup>
+      <ItemsToPushToBlobFeed>
 			  <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.Kind)' == 'Package' and
 																			   '$(IsStableBuild)' == 'true' and
 																			   '$(IsReleaseOnlyPackageVersion)' != 'true' and
 																			   '%(ItemsToPushToBlobFeed.IsShipping)' == 'true'">%(ItemsToPushToBlobFeed.ManifestArtifactData);CouldBeStable=true</ManifestArtifactData>
 				<ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.Kind)' == 'Package' and
-																				 ('$(IsStableBuild)' == 'false' or
+																				 (
+                                          '$(IsStableBuild)' != 'true' or
 																				  '$(IsReleaseOnlyPackageVersion)' == 'true' or
-																				  '%(ItemsToPushToBlobFeed.IsShipping)' == 'false')">%(ItemsToPushToBlobFeed.ManifestArtifactData);CouldBeStable=false</ManifestArtifactData>
+																				  '%(ItemsToPushToBlobFeed.IsShipping)' != 'true'
+                                         )">%(ItemsToPushToBlobFeed.ManifestArtifactData);CouldBeStable=false</ManifestArtifactData>
       </ItemsToPushToBlobFeed>
     </ItemGroup>
 
@@ -342,12 +356,6 @@
            Text="Visibility 'Internal' is not supported for shipping artifacts." />
     <Error Condition="'@(ItemsToPublishToBlobFeed->AnyHaveMetadataValue('Visibility','Vertical'))' == 'true' and '$(DotNetBuild)' != 'true'"
            Text="Visibility 'Vertical' is only supported in vertical builds." />
-
-    <ItemGroup>
-      <ItemsToPushToBlobFeed>
-        <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.Visibility)' != ''">%(ItemsToPushToBlobFeed.ManifestArtifactData);Visibility=%(ItemsToPushToBlobFeed.Visibility)</ManifestArtifactData>
-      </ItemsToPushToBlobFeed>
-    </ItemGroup>
 
     <!--
       The user can set `PublishingVersion` via eng\Publishing.props
