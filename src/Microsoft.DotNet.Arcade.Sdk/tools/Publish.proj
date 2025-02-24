@@ -301,7 +301,7 @@
              This allows for the default 'stable asset to non-isolated feed' detection behavior to still pick up accidental cases of stabilization. -->
 				<ManifestArtifactData Condition="'$(PublishingVersion)' == '4' and
                                          '%(ItemsToPushToBlobFeed.Kind)' == 'Package' and
-																				 ('$(IsReleaseOnlyPackageVersion)' == 'true'">%(ItemsToPushToBlobFeed.ManifestArtifactData);CouldBeStable=false</ManifestArtifactData>
+																				 '$(IsReleaseOnlyPackageVersion)' == 'true'">%(ItemsToPushToBlobFeed.ManifestArtifactData);CouldBeStable=false</ManifestArtifactData>
       </ItemsToPushToBlobFeed>
     </ItemGroup>
 
