@@ -93,7 +93,8 @@
         PkgToolPath="$(PkgToolPath)"
         RepackParallelism="$(SignToolRepackParallelism)"
         MaximumParallelFileSize="$(SignToolRepackMaximumParallelFileSize)"
-        DotNetTimeout="$(SignToolDotNetTimeout)" />
+        DotNetTimeout="$(SignToolDotNetTimeout)"
+        MSBuildVerbosity="$(SignToolMSBuildVerbosity)" />
   </Target>
 
 </Project>
