@@ -48,7 +48,7 @@ steps:
 
     officialBuildArgs=
     if [ '${{ and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}' = 'True' ]; then
-      officialBuildArgs='/p:DotNetPublishUsingPipelines=true /p:OfficialBuildId=$(BUILD.BUILDNUMBER)'
+      officialBuildArgs='/p:OfficialBuildId=$(BUILD.BUILDNUMBER)'
     fi
 
     targetRidArgs=
