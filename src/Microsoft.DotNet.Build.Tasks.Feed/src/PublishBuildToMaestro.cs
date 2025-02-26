@@ -57,7 +57,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         internal IVersionIdentifierProxy _versionIdentifier = new VersionIdentifierProxy();
         internal IGetEnvProxy _getEnvProxy = new GetEnvProxy();
         private IBuildModelFactory _buildModelFactory;
-        private IBlobArtifactModelFactory _blobArtifactModelFactory;
         private IFileSystem _fileSystem;
 
         public const string NonShippingAttributeName = "NonShipping";
@@ -70,12 +69,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         public bool ExecuteTask(IBuildModelFactory buildModelFactory,
-                                IFileSystem fileSystem,
-                                IBlobArtifactModelFactory blobArtifactModelFactory)
+                                IFileSystem fileSystem)
         {
             _buildModelFactory = buildModelFactory;
             _fileSystem = fileSystem;
-            _blobArtifactModelFactory = blobArtifactModelFactory;
 
             ExecuteAsync().GetAwaiter().GetResult();
             return !Log.HasLoggedErrors;
@@ -89,7 +86,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public override void ConfigureServices(IServiceCollection collection)
         {
             collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
-            collection.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
             collection.TryAddSingleton<IFileSystem, FileSystem>();
         }
 
@@ -134,7 +130,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     var mergedManifestAsset = AddManifestAsAsset(mergedManifest, mergedManifestPath);
 
                     // Write the merged manifest
-                    File.WriteAllText(mergedManifestPath, mergedManifest.ToXml().ToString());
+                    _fileSystem.WriteToFile(mergedManifestPath, mergedManifest.ToXml().ToString());
 
                     Log.LogMessage(MessageImportance.High,
                                 $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{mergedManifestPath}");
