@@ -86,7 +86,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public override void ConfigureServices(IServiceCollection collection)
         {
             collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
+            collection.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
+            collection.TryAddSingleton<IPdbArtifactModelFactory, PdbArtifactModelFactory>();
+            collection.TryAddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>();
+            collection.TryAddSingleton<INupkgInfoFactory, NupkgInfoFactory>();
+            collection.TryAddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>();
             collection.TryAddSingleton<IFileSystem, FileSystem>();
+            collection.TryAddSingleton(Log);
         }
 
         public async Task<bool> PushMetadataAsync(CancellationToken cancellationToken)
