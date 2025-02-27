@@ -527,12 +527,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        /// <summary>
-        /// Get repo name from the Azure DevOps repo url
-        /// </summary>
-        /// <param name="repoUrl"></param>
-        /// <returns></returns>
-        public static string GetGithubRepoName(string repoUrl)
+        public static string GetRepoName(string repoUrl)
         {
             // In case the URL comes in ending with a '/', prevent an indexing exception
             repoUrl = repoUrl.TrimEnd('/');
@@ -545,6 +540,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 repoName = repoName.Remove(repoName.LastIndexOf("-trusted"));
             }
+
+            return repoName;
+        }
+
+        /// <summary>
+        /// Get repo name from the Azure DevOps repo url
+        /// </summary>
+        /// <param name="repoUrl"></param>
+        /// <returns></returns>
+        public static string GetGithubRepoName(string repoUrl)
+        {
+            var repoName = GetRepoName(repoUrl);
 
             StringBuilder builder = new StringBuilder(repoName);
             int index = repoName.IndexOf('-');
@@ -565,7 +572,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <returns>A blob with data about the merged manifest</returns>
         internal BlobArtifactModel AddManifestAsAsset(BuildModel mergedModel, string manifestFileName)
         {
-            string repoName = mergedModel.Identity.AzureDevOpsRepository.TrimEnd('/').Replace('/', '-');
+            string repoName = mergedModel.Identity.Name ?? GetRepoName(mergedModel.Identity.AzureDevOpsRepository);
             string buildNumber = mergedModel.Identity.AzureDevOpsBuildNumber;
             string id = $"assets/manifests/{repoName}/{buildNumber}/{Path.GetFileName(manifestFileName)}";
 
@@ -573,7 +580,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 Id = $"{id}",
                 NonShipping = true,
-                RepoOrigin = mergedModel.Identity.AzureDevOpsRepository,
+                RepoOrigin = repoName,
             };
 
             mergedModel.Artifacts.Blobs.Add(mergedManifestAsset);
