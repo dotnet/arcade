@@ -28,50 +28,29 @@ The dependency tree looks something like this:
 ```mermaid
 graph TD
     sdk --> dotnet
-    arcade --> sdk
     aspire --> sdk
-    arcade --> aspire
     aspnetcore --> sdk
-    arcade --> aspnetcore
     runtime --> aspnetcore
-    arcade --> runtime
     cecil --> runtime
-    arcade --> cecil
     command-line-api --> runtime
-    arcade --> command-line-api
     emsdk --> runtime
-    arcade --> emsdk
     xdt --> aspnetcore
-    arcade --> xdt
     efcore --> aspnetcore
-    arcade --> efcore
     runtime --> efcore
     runtime --> winforms
     deployment-tools --> sdk
-    arcade --> deployment-tools
     fsharp --> sdk
-    arcade --> fsharp
     msbuild --> sdk
-    arcade --> msbuild
     nuget-client --> sdk
-    arcade --> nuget-client
     razor --> sdk
-    arcade --> razor
     roslyn-analyzers --> sdk
-    arcade --> roslyn-analyzers
     roslyn --> sdk
-    arcade --> roslyn
     sourcelink --> sdk
-    arcade --> sourcelink
     command-line-api --> sourcelink
     symreader --> sdk
-    arcade --> symreader
     templating --> sdk
-    arcade --> templating
     vstest --> sdk
-    arcade --> vstest
     diagnostics --> vstest
-    arcade --> diagnostics
     windowsdesktop --> sdk
     wpf --> windowsdesktop
     winforms --> wpf
@@ -87,19 +66,20 @@ The new dependency tree will look like this:
 
 ```mermaid
 graph TD
-    VMR[VMR<br />dotnet/dotnet]
-
-    arcade --> VMR
-    aspire --> VMR
-    aspnetcore --> VMR
-    other[...] --> VMR
-    xdt --> VMR
-    
-    VMR --> arcade
-    VMR --> aspire
-    VMR --> aspnetcore
+    VMR[dotnet/dotnet] --> aspnetcore
     VMR --> other
-    VMR --> xdt
+    VMR --> runtime
+    VMR --> sdk
+
+    aspnetcore
+    other[...]
+    runtime
+    sdk
+
+    aspnetcore --> VMR
+    other --> VMR
+    runtime --> VMR
+    sdk --> VMR
 ```
 
 More details can be found [here](https://github.com/dotnet/arcade/blob/main/Documentation/UnifiedBuild/VMR-Code-And-Build-Workflow.md).
