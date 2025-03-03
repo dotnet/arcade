@@ -170,11 +170,6 @@ dotnet_diagnostic.IDE0073.severity = error
 
 # Build Checks
 [*.{csproj,proj,metaproj}]
-# the environment for running these checks needs adjustments on msbuild side
-build_check.BC0201.Severity=none
-build_check.BC0202.Severity=none
-build_check.BC0203.Severity=none
-
 build_check.BC0101.Severity=suggestion
 build_check.BC0102.Severity=suggestion
 build_check.BC0103.Severity=suggestion
@@ -182,3 +177,7 @@ build_check.BC0104.Severity=suggestion
 build_check.BC0105.Severity=suggestion
 build_check.BC0106.Severity=suggestion
 build_check.BC0107.Severity=suggestion
+
+build_check.BC0201.Severity=suggestion
+build_check.BC0202.Severity=suggestion
+build_check.BC0203.Severity=suggestion
