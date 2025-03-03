@@ -20,6 +20,7 @@ namespace Microsoft.DotNet.SignTool
     {
         private readonly string _dotnetPath;
         private readonly string _logDir;
+        private readonly string _msbuildVerbosity;
         private readonly string _snPath;
         private readonly int _dotnetTimeout;
 
@@ -38,6 +39,7 @@ namespace Microsoft.DotNet.SignTool
         {
             TestSign = args.TestSign;
             _dotnetPath = args.DotNetPath;
+            _msbuildVerbosity = args.MSBuildVerbosity;
             _snPath = args.SNBinaryPath;
             _logDir = args.LogDir;
             _dotnetTimeout = args.DotNetTimeout;
@@ -57,7 +59,7 @@ namespace Microsoft.DotNet.SignTool
                 process.StartInfo = new ProcessStartInfo()
                 {
                     FileName = _dotnetPath,
-                    Arguments = $@"build ""{projectFilePath}"" -bl:""{binLogPath}""",
+                    Arguments = $@"build ""{projectFilePath}"" -v:""{_msbuildVerbosity}"" -bl:""{binLogPath}""",
                     UseShellExecute = false,
                     WorkingDirectory = TempDir,
                     RedirectStandardOutput = true,
