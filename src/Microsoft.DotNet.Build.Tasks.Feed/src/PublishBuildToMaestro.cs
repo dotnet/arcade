@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{mergedManifestPath}");
 
                     // populate buildData and assetData using merged manifest data 
-                    BuildData buildData = GetMaestroBuildDataFromMergedManifest(mergedManifest, cancellationToken);
+                    BuildData buildData = GetMaestroBuildDataFromMergedManifest(mergedManifest, mergedManifestAsset, cancellationToken);
 
                     IProductConstructionServiceApi client = PcsApiFactory.GetAuthenticated(
                         MaestroApiEndpoint,
@@ -324,6 +324,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         internal BuildData GetMaestroBuildDataFromMergedManifest(
             BuildModel buildModel,
+            BlobArtifactModel mergedManifestAsset,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -363,19 +364,27 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             foreach (var blob in buildModel.Artifacts.Blobs)
             {
-                string version = GetVersion(blob.Id);
+                string version = string.Empty;
 
-                if (string.IsNullOrEmpty(version))
+                // The merged manifest will not have an identifiable version number,
+                // and really we don't need to identify the version of it anyway,
+                // since we don't need to create stable asset links for it.
+                if (blob != mergedManifestAsset)
                 {
-                    Log.LogWarning($"Version could not be extracted from '{blob.Id}'");
-                    version = string.Empty;
+                    version = GetVersion(blob.Id);
+
+                    if (string.IsNullOrEmpty(version))
+                    {
+                        Log.LogWarning($"Version could not be extracted from '{blob.Id}'");
+                        version = string.Empty;
+                    }
                 }
 
                 AddAsset(
                     assets,
                     blob.Id,
                     version,
-                    buildModel.Identity.InitialAssetsLocation, // What is this FOR?
+                    buildModel.Identity.InitialAssetsLocation,
                     LocationType.Container,
                     blob.NonShipping);
             }
