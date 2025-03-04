@@ -1,3 +1,1 @@
-tools/net/runtimes/linux-musl-arm64/native/libgit2-a418d9d.so
-tools/net/runtimes/linux-musl-arm/native/libgit2-a418d9d.so
-tools/net/runtimes/linux-musl-x64/native/libgit2-a418d9d.so
+libgit2-a418d9d.so
