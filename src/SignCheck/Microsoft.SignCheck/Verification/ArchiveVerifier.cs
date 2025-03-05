@@ -23,6 +23,32 @@ namespace Microsoft.SignCheck.Verification
         protected abstract IEnumerable<ArchiveEntry> ReadArchiveEntries(string archivePath);
 
         /// <summary>
+        /// Verifies the signature of a supported file type.
+        /// </summary>
+        /// <param name="path">The path of the file to verify.</param>
+        /// <param name="parent">The parent directory of the file.</param>
+        /// <param name="virtualPath">The virtual path of the file.</param>
+        protected SignatureVerificationResult VerifySupportedFileType(string path, string parent, string virtualPath) 
+        {
+            try
+            {
+                SignatureVerificationResult svr = new SignatureVerificationResult(path, parent, virtualPath);
+                string fullPath = svr.FullPath;
+
+                svr.IsSigned = IsSigned(fullPath, svr);
+                svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
+
+                VerifyContent(svr);
+                return svr;
+            }
+            catch (PlatformNotSupportedException)
+            {
+                // Verification is not supported on all platforms for all file types
+                return VerifyUnsupportedFileType(path, parent, virtualPath);
+            }
+        }
+
+        /// <summary>
         /// Verifies the signature of an unsupported file type.
         /// </summary>
         protected SignatureVerificationResult VerifyUnsupportedFileType(string path, string parent, string virtualPath)
@@ -33,6 +59,16 @@ namespace Microsoft.SignCheck.Verification
 
             VerifyContent(svr);
             return svr;
+        }
+
+        /// <summary>
+        /// Verifies the signature of the archive.
+        /// </summary>
+        /// <param name="path">The path of the archive.</param>
+        /// <param name="svr">The signature verification result.</param>
+        protected virtual bool IsSigned(string path, SignatureVerificationResult svr)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -97,7 +133,7 @@ namespace Microsoft.SignCheck.Verification
         /// </summary>
         /// <param name="archiveEntry"></param>
         /// <param name="targetPath"></param>
-        protected void WriteArchiveEntry(ArchiveEntry archiveEntry, string targetPath)
+        protected virtual void WriteArchiveEntry(ArchiveEntry archiveEntry, string targetPath)
         {
             using (var fileStream = new FileStream(targetPath, FileMode.Create, FileAccess.Write))
             {

@@ -21,9 +21,6 @@ parameters:
   runAsPublic: false
 
   # Optional: whether the build's artifacts will be published using release pipelines or direct feed publishing
-  publishUsingPipelines: false
-
-  # Optional: whether the build's artifacts will be published using release pipelines or direct feed publishing
   publishAssetsImmediately: false
 
   artifactsPublishingAdditionalParameters: ''
@@ -80,7 +77,7 @@ jobs:
       displayName: Download Asset Manifests
       inputs:
         artifactName: AssetManifests
-        targetPath: '$(Build.StagingDirectory)/Download'
+        targetPath: '$(Build.StagingDirectory)/AssetManifests'
       condition: ${{ parameters.condition }}
       continueOnError: ${{ parameters.continueOnError }}
     
@@ -94,9 +91,8 @@ jobs:
         scriptLocation: scriptPath
         scriptPath: $(Build.SourcesDirectory)/eng/common/sdk-task.ps1
         arguments: -task PublishBuildAssets -restore -msbuildEngine dotnet
-          /p:ManifestsPath='$(Build.StagingDirectory)/Download/AssetManifests'
+          /p:ManifestsPath='$(Build.StagingDirectory)/AssetManifests'
           /p:MaestroApiEndpoint=https://maestro.dot.net
-          /p:PublishUsingPipelines=${{ parameters.publishUsingPipelines }}
           /p:OfficialBuildId=$(Build.BuildNumber)
       condition: ${{ parameters.condition }}
       continueOnError: ${{ parameters.continueOnError }}

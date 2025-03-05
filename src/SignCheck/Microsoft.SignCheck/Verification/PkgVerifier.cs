@@ -25,27 +25,7 @@ namespace Microsoft.SignCheck.Verification
         }
 
         public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath) 
-        {
-            SignatureVerificationResult svr = new SignatureVerificationResult(path, parent, virtualPath);
-            string fullPath = svr.FullPath;
-
-            try
-            {
-                svr.IsSigned = IsSigned(fullPath, svr);
-                svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
-            }
-            catch (PlatformNotSupportedException)
-            {
-                // Log the error and return an unsupported file type result
-                // because processing pkgs and apps is not supported on non-OSX platforms
-                svr = SignatureVerificationResult.UnsupportedFileTypeResult(path, parent, virtualPath);
-                svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, SignCheckResources.NA);
-            }
-
-            VerifyContent(svr);
-
-            return svr;
-        }
+            => VerifySupportedFileType(path, parent, virtualPath);
         
         protected override IEnumerable<ArchiveEntry> ReadArchiveEntries(string archivePath)
         {
@@ -84,7 +64,7 @@ namespace Microsoft.SignCheck.Verification
             }
         }
 
-        private bool IsSigned(string path, SignatureVerificationResult svr)
+        protected override bool IsSigned(string path, SignatureVerificationResult svr)
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
@@ -141,26 +121,17 @@ namespace Microsoft.SignCheck.Verification
             string timestampRegex = @"(?<timestamp>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2} \+\d{4})";
 
             Regex signedOnRegex = new Regex(@"Signed with a trusted timestamp on: " + timestampRegex);
-            string signedOnString = signedOnRegex.Match(signingVerificationOutput).GroupValueOrDefault("timestamp");
-            if(!DateTime.TryParse(signedOnString, out DateTime signedOnTimestamp))
-            {
-                signedOnTimestamp = DateTime.MaxValue;
-            }
+            DateTime signedOnTimestamp = signedOnRegex.Match(signingVerificationOutput).GroupValueOrDefault("timestamp").DateTimeOrDefault(DateTime.MaxValue);
 
             Regex certificateChainRegex = new Regex(@"Expires: " + timestampRegex + "\n (?<algorithm>.+) Fingerprint:");
             IEnumerable<Match> matches = certificateChainRegex.Matches(signingVerificationOutput).ToList();
 
             return matches.Select(match =>
                 {
-                    string certificateString = match.GroupValueOrDefault("timestamp");
-                    if (!DateTime.TryParse(certificateString, out DateTime certificateTimestamp))
-                    {
-                        certificateTimestamp = DateTime.MinValue;
-                    }
                     return new Timestamp()
                     {
                         EffectiveDate = signedOnTimestamp,
-                        ExpiryDate = certificateTimestamp,
+                        ExpiryDate = match.GroupValueOrDefault("timestamp").DateTimeOrDefault(DateTime.MinValue),
                         SignedOn = signedOnTimestamp,
                         SignatureAlgorithm = match.GroupValueOrDefault("algorithm")
                     };

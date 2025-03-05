@@ -4,7 +4,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkMinimum)</TargetFrameworks>
-    <SignAssembly>false</SignAssembly>
     <RootNamespace>Microsoft.SignCheck</RootNamespace>
     <!-- This assembly is bundled in the Microsoft.DotNet.SignCheck package and is not mean to be used as a class library package. -->
     <IsPackable>false</IsPackable>
@@ -12,8 +11,9 @@
     <ExcludeFromSourceOnlyBuild>true</ExcludeFromSourceOnlyBuild>
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Microsoft.DotNet.MacOsPkg\Core\Microsoft.DotNet.MacOsPkg.Core.csproj" Condition="'$(TargetFramework)' == '$(NetToolCurrent)'" />
+  <ItemGroup Condition="'$(TargetFramework)' == '$(NetToolCurrent)'">
+    <ProjectReference Include="..\..\Microsoft.DotNet.Build.Tasks.Installers\Microsoft.DotNet.Build.Tasks.Installers.csproj" />
+    <ProjectReference Include="..\..\Microsoft.DotNet.MacOsPkg\Core\Microsoft.DotNet.MacOsPkg.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -63,8 +63,11 @@
 
   <ItemGroup Condition="'$(TargetFramework)' != '$(NetToolCurrent)'">
     <!-- Unsupported file types -->
+    <Compile Remove="Verification\DebVerifier.cs" />
+    <Compile Remove="Verification\LinuxPackageVerifier.cs" />
     <Compile Remove="Verification\PkgVerifier.cs" />
     <Compile Remove="Verification\TarVerifier.cs" />
+    <Compile Remove="Verification\RpmVerifier.cs" />
   </ItemGroup>
 
   <ItemGroup>
