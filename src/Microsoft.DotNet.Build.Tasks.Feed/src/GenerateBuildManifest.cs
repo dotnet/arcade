@@ -88,11 +88,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string RepoOrigin { get; set; }
 
         /// <summary>
-        /// Indicates whether the RepoOrigin for provided assets should be preserved in the manifest.
-        /// </summary>
-        public bool PreserveRepoOrigin { get; set; }
-
-        /// <summary>
         /// Is this manifest for a stable build?
         /// </summary>
         public bool IsStableBuild { get; set; }
@@ -144,7 +139,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     RepoBranch,
                     RepoCommit,
                     RepoOrigin,
-                    PreserveRepoOrigin,
                     IsStableBuild,
                     targetPublishingVersion,
                     IsReleaseOnlyPackageVersion);

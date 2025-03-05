@@ -80,7 +80,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                                                repoBranch: _testBuildBranch,
                                                repoCommit: _testBuildCommit,
                                                repoOrigin: _testRepoOrigin,
-                                               preserveRepoOrigin: false,
                                                isStableBuild: false,
                                                publishingVersion: PublishingInfraVersion.Latest,
                                                isReleaseOnlyPackageVersion: true);
@@ -158,7 +157,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                                                        repoBranch: _testBuildBranch,
                                                        repoCommit: _testBuildCommit,
                                                        repoOrigin: _testRepoOrigin,
-                                                       preserveRepoOrigin: false,
                                                        isStableBuild: false,
                                                        publishingVersion: PublishingInfraVersion.Latest,
                                                        isReleaseOnlyPackageVersion: true);
@@ -249,7 +247,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                                                        repoBranch: _testBuildBranch,
                                                        repoCommit: _testBuildCommit,
                                                        repoOrigin: _testRepoOrigin,
-                                                       preserveRepoOrigin: false,
                                                        isStableBuild: false,
                                                        publishingVersion: PublishingInfraVersion.Latest,
                                                        isReleaseOnlyPackageVersion: true);
@@ -303,7 +300,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                                            repoBranch: _testBuildBranch,
                                            repoCommit: _testBuildCommit,
                                            repoOrigin: _testRepoOrigin,
-                                           preserveRepoOrigin: false,
                                            isStableBuild: false,
                                            publishingVersion: PublishingInfraVersion.Latest,
                                            isReleaseOnlyPackageVersion: true);
@@ -340,7 +336,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                                            repoBranch: _testBuildBranch,
                                            repoCommit: _testBuildCommit,
                                            repoOrigin: _testRepoOrigin,
-                                           preserveRepoOrigin: false,
                                            isStableBuild: false,
                                            publishingVersion: PublishingInfraVersion.Latest,
                                            isReleaseOnlyPackageVersion: true);
@@ -374,7 +369,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                                            repoBranch: _testBuildBranch,
                                            repoCommit: _testBuildCommit,
                                            repoOrigin: _testRepoOrigin,
-                                           preserveRepoOrigin: false,
                                            isStableBuild: false,
                                            publishingVersion: PublishingInfraVersion.Latest,
                                            isReleaseOnlyPackageVersion: true);
@@ -417,7 +411,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                                                        repoBranch: _testBuildBranch,
                                                        repoCommit: _testBuildCommit,
                                                        repoOrigin: _testRepoOrigin,
-                                                       preserveRepoOrigin: false,
                                                        isStableBuild: false,
                                                        publishingVersion: PublishingInfraVersion.Latest,
                                                        isReleaseOnlyPackageVersion: true);
@@ -501,7 +494,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                                                                     repoBranch: _testBuildBranch,
                                                                     repoCommit: _testBuildCommit,
                                                                     repoOrigin: _testRepoOrigin,
-                                                                    preserveRepoOrigin: false,
                                                                     isStableBuild: true,
                                                                     publishingVersion: PublishingInfraVersion.Latest,
                                                                     isReleaseOnlyPackageVersion: false);
@@ -643,7 +635,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                                                                 repoBranch: _testBuildBranch,
                                                                 repoCommit: _testBuildCommit,
                                                                 repoOrigin: _testRepoOrigin,
-                                                                preserveRepoOrigin: true,
                                                                 isStableBuild: true,
                                                                 publishingVersion: PublishingInfraVersion.Latest,
                                                                 isReleaseOnlyPackageVersion: false);
@@ -720,7 +711,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 repoBranch: _testBuildBranch,
                 repoCommit: _testBuildCommit,
                 repoOrigin: _testRepoOrigin,
-                preserveRepoOrigin: false,
                 isStableBuild: false,
                 publishingVersion: PublishingInfraVersion.Latest,
                 isReleaseOnlyPackageVersion: true);
