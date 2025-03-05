@@ -90,7 +90,6 @@ namespace Microsoft.SignCheck.Logging
             if (ResultsWriter != null)
             {
                 ResultsWriter.WriteEndElement();
-                ResultsWriter.Flush();
                 ResultsWriter.Close();
             }
         }
