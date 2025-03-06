@@ -19,8 +19,10 @@ See also [Unified Build Terminology](./Terminology.md).
 
 Currently, the .NET SDK is built out of a set of individual repositories which flow dependencies among each other using Maestro dependency update PRs.
 The flow ends in `dotnet/sdk` where we can gather the whole dependency tree and assemble the full .NET SDK.  
-Since .NET 8, we are also mirroring sources representing this dependency tree into the [VMR](https://github.com/dotnet/dotnet) for every commit made to `dotnet/sdk`.
-Every product repository has [a corresponding folder](https://github.com/dotnet/dotnet/tree/main/src) in the VMR.
+
+> [!NOTE]
+> Since .NET 8, we are also mirroring sources representing this dependency tree into the [VMR](https://github.com/dotnet/dotnet) for every commit made to `dotnet/sdk`.
+> Every product repository has [a corresponding folder](https://github.com/dotnet/dotnet/tree/main/src) in the VMR.
 The process is described in more detail [here](https://github.com/dotnet/arcade/blob/main/Documentation/UnifiedBuild/VMR-Code-And-Build-Workflow.md#internal-code-flow-and-releases) and [here](https://github.com/dotnet/arcade/blob/main/Documentation/UnifiedBuild/VMR-Design-And-Operation.md#source-synchronization-process).
 
 Today's dependency tree for *product repositories* (minus `arcade`) looks something like this:
@@ -60,10 +62,10 @@ graph TD
     xliff-tasks --> sdk
 ```
 
-Newly, the SDK will be built from sources of the VMR instead and sources of repositories will not be synchronized into the VMR from `dotnet/sdk` but
-- every repo will flow its sources using the new source-enable Maestro subscriptions directly into the VMR,
-- the official builds of the product repos will stop producing packages,
-- the VMR will become the official build of the product repos,
+Newly, the SDK will be built from the VMR instead:
+- **every repo will flow** its sources using the new source-enable Maestro subscriptions directly **into the VMR** (under `src/[reponame]`),
+- the **official builds of the product repos will stop producing packages**,
+- **the VMR will become the official build** of the product repos,
 - former dependents on product repositories will depend on and get their package from the VMR instead (including the product repositories themselves).
 
 The new dependency tree will look like this:
