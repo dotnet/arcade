@@ -35,6 +35,14 @@ namespace Microsoft.DotNet.StrongName
             Signing.ClearStrongNameSignedBit(file);
 
         /// <summary>
+        /// Gets the public key token from a strong named file.
+        /// </summary>
+        /// <param name="file">Path to file</param>
+        /// <returns>Public key token</returns>
+        public static int GetStrongNameTokenFromAssembly(string file, out string tokenStr) =>
+            Signing.GetStrongNameTokenFromAssembly(file, out tokenStr);
+
+        /// <summary>
         /// Strong names an existing previously signed or delay-signed binary with keyfile.
         /// Fall back to legacy signing if available and new signing fails.
         /// </summary>

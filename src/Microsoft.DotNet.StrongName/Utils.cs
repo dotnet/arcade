@@ -210,6 +210,22 @@ namespace Microsoft.DotNet.StrongName
         }
 
         /// <summary>
+        /// Gets the public key blob from the assembly definition.
+        /// </summary>
+        /// <param name="metadataReader">Metadata reader</param>
+        /// <returns>Public key blob</returns>
+        internal static ImmutableArray<byte> GetPublicKeyBlob(this MetadataReader metadataReader)
+        {
+            var publicKey = metadataReader.GetAssemblyDefinition().PublicKey;
+            if (publicKey.IsNil)
+            {
+                return ImmutableArray<byte>.Empty;
+            }
+
+            return metadataReader.GetBlobContent(publicKey);
+        }
+
+        /// <summary>
         /// Sets <paramref name="count"/> bytes starting at <paramref name="index"/> in buffer to value
         /// </summary>
         /// <param name="buffer">Buffer to alter</param>

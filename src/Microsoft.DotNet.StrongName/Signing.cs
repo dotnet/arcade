@@ -38,6 +38,48 @@ namespace Microsoft.DotNet.StrongName
         }
 
         /// <summary>
+        /// Gets the public key token from a strong named file.
+        /// </summary>
+        /// <param name="file">Path to file</param>
+        /// <returns>Public key token</returns>
+        internal static int GetStrongNameTokenFromAssembly(string file, out string tokenStr)
+        {
+            tokenStr = null;
+
+            try
+            {
+                using (var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var peReader = new PEReader(stream))
+                {
+                    if (!peReader.HasMetadata)
+                    {
+                        return -1;
+                    }
+
+                    var metadataReader = peReader.GetMetadataReader();
+                    if (!metadataReader.IsAssembly)
+                    {
+                        return -1;
+                    }
+
+                    ImmutableArray<byte> publicKeyBlob = metadataReader.GetPublicKeyBlob();
+                    if (!TryParseKey(publicKeyBlob, out ImmutableArray<byte> snKey, out _))
+                    {
+                        return -1;
+                    }
+                    
+                    byte[] token = GetPublicKeyToken(snKey.ToArray());
+                    tokenStr = BitConverter.ToString(token).Replace("-", "").ToLowerInvariant();
+                    return 0; // S_OK
+                }
+            }
+            catch(Exception)
+            {
+                return -1;
+            }
+        }
+
+        /// <summary>
         /// Strong names an existing previously signed or delay-signed binary with keyfile.
         /// Fall back to legacy signing if available and new signing fails.
         /// </summary>
@@ -138,7 +180,7 @@ namespace Microsoft.DotNet.StrongName
 
                 // Verify the public key of the assembly matches the private key we're using to sign.
                 // We do not support signing with the ECMA key
-                ImmutableArray<byte> publicKeyBlob = metadataReader.GetBlobContent(metadataReader.GetAssemblyDefinition().PublicKey);
+                ImmutableArray<byte> publicKeyBlob = metadataReader.GetPublicKeyBlob();
                 if (publicKeyBlob.SequenceEqual(Constants.NeutralPublicKey))
                 {
                     throw new NotImplementedException("Cannot sign with the ECMA key.");
@@ -307,6 +349,24 @@ namespace Microsoft.DotNet.StrongName
             catch (Exception)
             {
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Computes the public key token from the public key.
+        /// </summary>
+        /// <param name="publicKey">The public key.</param>
+        /// <returns>The public key token.</returns>
+        private static byte[] GetPublicKeyToken(byte[] publicKey)
+        {
+            using (SHA1 sha1 = SHA1.Create())
+            {
+                byte[] hash = sha1.ComputeHash(publicKey);
+                byte[] token = new byte[8];
+                Array.Copy(hash, hash.Length - 8, token, 0, 8);
+                Array.Reverse(token); // Reverse the bytes to match the expected format
+
+                return token;
             }
         }
     }
