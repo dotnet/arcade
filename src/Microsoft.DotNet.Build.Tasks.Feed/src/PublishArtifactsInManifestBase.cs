@@ -444,8 +444,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return true;
             }
 
-            using HttpClient client = CreateAzdoClient(AzureDevOpsOrg, setAutomaticDecompression: true, AzureDevOpsProject);
-            client.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
+            using HttpClient downloadClient = CreateAzdoClient();
 
             IEnumerable<Task<bool>> publishingTasks = symbolAssetNames.Select(assetName => PublishSymbolPackageWithDownload(assetName));
             IEnumerable<bool> results = await Task.WhenAll(publishingTasks);
@@ -462,7 +461,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Log.LogMessage(MessageImportance.High, $"Downloading symbol: {symbolPackageName} to {localSymbolPath}");
                     Stopwatch gatherDownloadTime = Stopwatch.StartNew();
                     await DownloadFileAsync(
-                        client,
+                        downloadClient,
                         BlobArtifactsArtifactName,
                         symbolPackageName,
                         localSymbolPath);
@@ -832,52 +831,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             };
         }
 
-        /// <summary>
-        /// Creates Azdo client
-        /// </summary>
-        /// <param name="accountName">Name of the org</param>
-        /// <param name="setAutomaticDecompression">If client is used for downloading the artifact then AutomaticDecompression has to be set, else it is not required</param>
-        /// <param name="projectName">Azure devOps project name</param>
-        /// <param name="versionOverride">Default version is 6.0</param>
-        /// <returns>HttpClient</returns>
-        public HttpClient CreateAzdoClient(
-            string accountName,
-            bool setAutomaticDecompression,
-            string projectName = null,
-            string versionOverride = null)
+        private HttpClient CreateAzdoClient(string tokenOverride = null)
         {
             HttpClientHandler handler = new HttpClientHandler { CheckCertificateRevocationList = true };
-            if (setAutomaticDecompression)
-            {
-                handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-            }
+            // Must set automatic decompression when dealing with build artifacts. Not required for pipeline artifacts.
+            handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 
-            string address = $"https://dev.azure.com/{accountName}/";
-
-            if (!string.IsNullOrEmpty(projectName))
-            {
-                address += $"{projectName}/";
-            }
-
-            var client = new HttpClient(handler)
-            {
-                BaseAddress = new Uri(address)
-            };
+            var client = new HttpClient(handler);
             client.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                 "Basic",
                 Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "",
-                    AzdoApiToken))));
-            client.DefaultRequestHeaders.Add(
-                "Accept",
-                $"application/xml;api-version={versionOverride ?? AzureDevOpsFeedsApiVersion}");
+                    tokenOverride ?? AzdoApiToken))));
             return client;
         }
 
         /// <summary>
         /// Download artifact file using Azure API
         /// </summary>
-        /// <param name="client">Azdo client</param>
+        /// <param name="apiClient">Azdo client</param>
         /// <param name="artifactName">If it is PackageArtifacts or BlobArtifacts</param>
         /// <param name="containerId">ContainerId where the packageArtifact and BlobArtifacts are stored</param>
         /// <param name="fileName">Name the file we are trying to download</param>
@@ -902,12 +874,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             string uri = helper.ConstructDownloadUrl(fileName);
 
+
+            Log.LogMessage(MessageImportance.Low, $"Downloading file from '{uri}' to '{path}'");
+
             Exception mostRecentlyCaughtException = null;
             bool success = await RetryHandler.RunAsync(async attempt =>
             {
                 try
                 {
-                    Log.LogMessage(MessageImportance.Low, $"Download file uri = {uri}");
                     using CancellationTokenSource timeoutTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(TimeoutInMinutes));
                     using HttpResponseMessage response = await client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, timeoutTokenSource.Token);
                     response.EnsureSuccessStatusCode();
@@ -926,7 +900,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             if (!success)
             {
                 throw new Exception(
-                    $"Failed to download local file '{path}' after {RetryHandler.MaxAttempts} attempts. See inner exception for details.",
+                    $"Failed to download '{path}' after {RetryHandler.MaxAttempts} attempts. See inner exception for details.",
                     mostRecentlyCaughtException);
             }
         }
@@ -1176,8 +1150,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             SemaphoreSlim clientThrottle)
         {
             bool failed = false;
-            using HttpClient httpClient = CreateAzdoClient(AzureDevOpsOrg, false, AzureDevOpsProject);
-            using HttpClient client = CreateAzdoClient(AzureDevOpsOrg, true);
+            using HttpClient downloadFileClient = CreateAzdoClient();
+            using HttpClient feedPublishingClient = CreateAzdoClient(feedConfig.Token);
 
             await Task.WhenAll(packagesToPublish.Select(async package =>
             {
@@ -1194,7 +1168,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     Stopwatch gatherPackageDownloadTime = Stopwatch.StartNew();
                     await DownloadFileAsync(
-                        client,
+                        downloadFileClient,
                         PackageArtifactsArtifactName,
                         packageFilename,
                         localPackagePath);
@@ -1225,19 +1199,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         feedConfig,
                         LocationType.NugetFeed);
 
-                    using HttpClient httpClient = new HttpClient(new HttpClientHandler
-                    {
-                        CheckCertificateRevocationList = true
-                    });
-
-                    httpClient.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
-                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-                        "Basic",
-                        Convert.ToBase64String(
-                            Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", feedConfig.Token))));
-
                     Stopwatch gatherPackagePublishingTime = Stopwatch.StartNew();
-                    await PushPackageToNugetFeed(httpClient, feedConfig, localPackagePath, package.Id, package.Version);
+                    await PushPackageToNugetFeed(feedPublishingClient, feedConfig, localPackagePath, package.Id, package.Version);
                     gatherPackagePublishingTime.Stop();
                     Log.LogMessage(MessageImportance.Low, $"Publishing package {localPackagePath} took {gatherPackagePublishingTime.ElapsedMilliseconds / 1000.0} (seconds)");
 
@@ -1510,14 +1473,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             SemaphoreSlim clientThrottle)
         {
             bool failed = false;
-            using HttpClient httpClient = CreateAzdoClient(AzureDevOpsOrg, false, AzureDevOpsProject);
 
             var pushOptions = new PushOptions
             {
                 AllowOverwrite = feedConfig.AllowOverwrite,
                 PassIfExistingItemIdentical = true,
             };
-            using HttpClient client = CreateAzdoClient(AzureDevOpsOrg, true, AzureDevOpsProject);
+            using HttpClient downloadClient = CreateAzdoClient();
 
             await Task.WhenAll(assetsToPublish.Select(async asset =>
             {
@@ -1530,7 +1492,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     Stopwatch gatherBlobDownloadTime = Stopwatch.StartNew();
                     await DownloadFileAsync(
-                        client,
+                        downloadClient,
                         BlobArtifactsArtifactName,
                         fileName,
                         localBlobPath);
