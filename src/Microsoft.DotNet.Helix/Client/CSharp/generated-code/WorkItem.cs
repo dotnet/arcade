@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -270,9 +271,19 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 _req.Uri = _url;
                 _req.Method = RequestMethod.Get;
-
                 using (var _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false))
                 {
+                    if (_res.Status == 302)
+                    {
+                        _res.Headers.TryGetValue("Location", out var _location);
+                        if (_location != null)
+                        {
+                            // when trying to use Client again it adds Authorization header
+                            // but that fails for the blob storage
+                            HttpClient client = new HttpClient();
+                            return await client.GetStreamAsync(_location);
+                        }
+                    }
                     if (_res.Status < 200 || _res.Status >= 300)
                     {
                         await OnConsoleLogFailed(_req, _res).ConfigureAwait(false);
