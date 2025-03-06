@@ -347,7 +347,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     PublishArtifactsInManifestBase.BlobArtifactsArtifactName,
                     _testTextFile,
                     path));
-            Assert.Contains($"Failed to download local file '{path}' after {publishTask.RetryHandler.MaxAttempts} attempts. See inner exception for details.", actualError.Message);
+            Assert.Contains($"Failed to download '{path}' after {publishTask.RetryHandler.MaxAttempts} attempts. See inner exception for details.", actualError.Message);
         }
 
         [Theory]
