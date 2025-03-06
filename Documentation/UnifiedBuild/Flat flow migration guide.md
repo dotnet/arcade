@@ -190,6 +190,9 @@ If repo Y is part of the VMR, you will depend on the VMR instead of repo Y.
 The packages will be produced by the official VMR build and published to the `.NET 10 UB` channel.  
 The target feed for some packages might change from `dotnet-eng` to [`dotnet10-transport`](https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet10-transport/nuget/v3/index.json).
 
+### I have an ongoing dependency PR in my repository with additional changes/work. What should I do?
+Finish the PR as you would normally. If there are conflicts with the newly merged backflow PRs, feel free to tag **@dotnet/product-construction** on the PR and we will help you resolve those.
+
 ### Whom to contact and when?
 If you need help or have questions around the new flow, please either use the [First Responder channel](https://teams.microsoft.com/l/channel/19%3Aafba3d1545dd45d7b79f34c1821f6055%40thread.skype/First%20Responders?groupId=4d73664c-9f2f-450d-82a5-c2f02756606d), or tag the **@dotnet/product-construction** team on your PR/issue.
 Alternatively, you can also contact the [.NET Product Construction Services team](mailto:dotnetprodconsvcs@microsoft.com) via e-mail.
