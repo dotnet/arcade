@@ -8,7 +8,7 @@ This only applies to repositories that are part of the VMR (specifically on `mai
 
 ## Terminology
 
-- **Product repository** / **VMR repository** - A repository that is part of SDK and is synchronized in the VMR.
+- **Product repository** / **VMR repository** - A repository that is required to build the .NET SDK, and which is synchronized [into the VMR](https://github.com/dotnet/dotnet/tree/main/src).
 - **Dependency flow** / **Binary flow** - Old type of Maestro subscriptions that are only flowing dependency updates, e.g. [this one](https://github.com/dotnet/sdk/pull/47085).
 - **Code flow** / **Source-enabled dependency flow** - New type of Maestro subscriptions that are, together with dependency updates, also flowing sources to/from the VMR.
 - **Flat flow** - A new structure of subscriptions between product repositories and the VMR.
@@ -62,11 +62,12 @@ graph TD
     xliff-tasks --> sdk
 ```
 
-Newly, the SDK will be built from the VMR instead:
-- **every repo will flow** its sources using the new source-enable Maestro subscriptions directly **into the VMR** (under `src/[reponame]`),
-- the **official builds of the product repos will stop producing packages**,
-- **the VMR will become the official build** of the product repos,
-- former dependents on product repositories will depend on and get their package from the VMR instead (including the product repositories themselves).
+> [!CAUTION]
+> Newly, the SDK will be built from the VMR instead:
+> - **every repo will flow** its sources using the new source-enable Maestro subscriptions directly **into the VMR** (under `src/[reponame]`),
+> - the **official builds of the product repos will stop producing packages**,
+> - **the VMR will become the official build** of the product repos,
+> - former dependents on product repositories will depend on and get their package from the VMR instead (including the product repositories themselves).
 
 The new dependency tree will look like this:
 
@@ -89,6 +90,12 @@ graph TD
 ```
 
 An in-depth description of this can be found [here](https://github.com/dotnet/arcade/blob/main/Documentation/UnifiedBuild/VMR-Code-And-Build-Workflow.md).
+
+## Migration timeline
+
+- **April 9th** - Migration is announced and introduced to developers in a *.NET Platform Talks* session.
+- **April 24th - 26th** - Migration is executed by the Unified Build team.
+- **after** - Repository owners are asked to wind down their official builds.
 
 ## Migration process
 
@@ -132,4 +139,4 @@ The target feed for some packages might change from `dotnet-eng` to [`dotnet10-t
 
 ### Whom to contact and when?
 If you need help or have questions around the new flow, please either use the [First Responder channel](https://teams.microsoft.com/l/channel/19%3Aafba3d1545dd45d7b79f34c1821f6055%40thread.skype/First%20Responders?groupId=4d73664c-9f2f-450d-82a5-c2f02756606d), or tag the **@dotnet/product-construction** team on your PR/issue.
-Alternatively, you can also contanct the [.NET Product Construction Services team](mailto:dotnetprodconsvcs@microsoft.com).
+Alternatively, you can also contact the [.NET Product Construction Services team](mailto:dotnetprodconsvcs@microsoft.com) via e-mail.
