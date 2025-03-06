@@ -103,6 +103,57 @@ On the day of migration, the Unified Build team will run a script that will redi
 - If your repo depended on a VMR repository, it will be subscribed to the VMR instead.
 - If your repo depended on several VMR repositories, it will be subscribed to the VMR just once.
 
+## Example
+
+Let's consider the following made up example where we are migrating the `winforms` repository, which:
+- Is part of the VMR,
+- Builds officially via the `winforms-ci` internal pipeline and is published to the `.NET 10` channel,
+- Depends on `arcade` and `runtime` (VMR repositories),
+- Depends on `winforms-assets` (a made-up, non-VMR repository),
+- Flows into one VMR repository `wpf` and one non-VMR repository `winforms-tests`.
+
+So the setup looks like this:
+
+```mermaid
+graph TD
+    arcade[dotnet/arcade] --> winforms:::active
+    runtime[dotnet/runtime] --> winforms
+    winformsAssets[winforms-assets]--> winforms
+    net10 --> wpf[dotnet/wpf]
+
+    winforms -.-> winformsCi(dotnet-winforms-ci<br/>pipeline):::pipeline
+    winformsCi -.-> net10(.NET 10 channel):::channel
+    net10 --> winformsTests[winforms-tests]
+
+    classDef active fill:#ffcc00,stroke:#aa8800,color:#000;
+    classDef pipeline fill:#00ffcc,color:#000;
+    classDef channel fill:#00ccff,color:#000;
+```
+
+After the migration, the setup will look like this:
+
+```mermaid
+graph TD
+    winformsAssets[winforms-assets]--> winforms:::active
+    
+    arcade[dotnet/arcade] --> vmr[dotnet/dotnet]
+    runtime[dotnet/runtime] --> vmr
+    winforms --> vmr
+
+    vmr -.-> vmrCi(dotnet-unified-build<br/>pipeline):::pipeline
+    vmrCi -.-> net10ub(.NET 10 UB channel):::channel
+
+    net10ub --> wpf[dotnet/wpf]
+    net10ub --> winformsTests[winforms-tests]
+    net10ub --> winforms
+
+    classDef active fill:#ffcc00,stroke:#aa8800,color:#000;
+    classDef pipeline fill:#00ffcc,color:#000;
+    classDef channel fill:#00ccff,color:#000;
+```
+
+The `runtime` and `arcade` dependencies will flow into `winforms` through the VMR, and the `winforms-assets` dependency will still flow directly into `winforms` (as it's not part of the VMR).
+
 ## FAQ
 
 ### How can I see dependency subscriptions for my repository?
