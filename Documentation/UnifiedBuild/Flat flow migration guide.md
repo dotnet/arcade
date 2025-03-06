@@ -3,8 +3,7 @@
 > [!NOTE]
 > This is part of the [Unified Build](https://github.com/dotnet/arcade/tree/main/Documentation/UnifiedBuild) effort.
 
-This document describes the migration of [VMR repositories](https://github.com/dotnet/dotnet/tree/main/src) from their current Maestro dependency flow to the new VMR-based flat flow.
-This only applies to repositories that are part of the VMR (specifically on `main`).
+This document describes the migration of [.NET repositories](https://github.com/dotnet/dotnet/tree/main/src) from their current Maestro dependency flow to the new VMR-based flat flow which **will happen on the week of April 24th**.
 
 ## Terminology
 
