@@ -11,6 +11,8 @@ This only applies to repositories that are part of the VMR (specifically on `mai
 - **Product repository** / **VMR repository** - A repository that is required to build the .NET SDK, and which is synchronized [into the VMR](https://github.com/dotnet/dotnet/tree/main/src).
 - **Dependency flow** / **Binary flow** - Old type of Maestro subscriptions that are only flowing dependency updates, e.g. [this one](https://github.com/dotnet/sdk/pull/47085).
 - **Code flow** / **Source-enabled dependency flow** - New type of Maestro subscriptions that are, together with dependency updates, also flowing sources to/from the VMR.
+- **Backflow** - A PR that flows changes from the VMR back to the product repository, carrying source updates as well as dependency updates (packages built in the VMR).
+- **Forward flow** - A PR that flows changes from the product repository to the VMR, carrying repository source updates.
 - **Flat flow** - A new structure of subscriptions between product repositories and the VMR.
 
 See also [Unified Build Terminology](./Terminology.md).
@@ -67,7 +69,7 @@ graph TD
 > - **every repo will flow** its sources using the new source-enable Maestro subscriptions directly **into the VMR** (under `src/[reponame]`),
 > - the **official builds of the product repos will stop producing packages**,
 > - **the VMR will become the official build** of the product repos,
-> - former dependents on product repositories will depend on and get their package from the VMR instead (including the product repositories themselves).
+> - former dependents on product repositories will depend on and get their packages from the VMR instead (including the product repositories themselves).
 
 The new dependency tree will look like this:
 
@@ -107,7 +109,7 @@ On the day of migration, the Unified Build team will run a script that will redi
 
 Let's consider the following made up example where we are migrating the `winforms` repository, which:
 - Is part of the VMR,
-- Builds officially via the `winforms-ci` internal pipeline and is published to the `.NET 10` channel,
+- Builds officially via the `dotnet-winforms-ci` internal pipeline and is published to the `.NET 10` channel,
 - Depends on `arcade` and `runtime` (VMR repositories),
 - Depends on `winforms-assets` (a made-up, non-VMR repository),
 - Flows into one VMR repository `wpf` and one non-VMR repository `winforms-tests`.
@@ -182,6 +184,7 @@ Yes, but they should not overlap with those produced in VMR's official build.
 Arcade's official build will stay as-is and people can depend on it the same way as before.
 It will, however, be also built in VMR's official build so it's possible to subscribe to the VMR too.  
 Arcade will also keep its validation loop through `dotnet/arcade-validation`.
+It technically does not matter if you depend on `dotnet/dotnet` or `dotnet/arcade` as the packages produced should be practically the same.
 
 ### My repo X depends on repo Y's packages. How will I get the new packages?
 If repo Y is part of the VMR, you will depend on the VMR instead of repo Y.
