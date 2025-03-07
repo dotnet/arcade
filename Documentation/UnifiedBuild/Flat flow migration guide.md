@@ -119,7 +119,10 @@ An in-depth description of this can be found [here](https://github.com/dotnet/ar
 
 ## Migration process
 
-On the day of migration, the Unified Build team will run a script that will redirect the subscriptions connected to VMR repositories:
+
+### Phase I - Subscription migration
+
+In the first phase, the Unified Build team will run a script that will redirect the subscriptions connected to VMR repositories:
 - If your repo depends on a VMR repository, it will be subscribed to the VMR instead.
   - There will be [several exceptions](https://github.com/dotnet/source-build/issues/3737) when VMR repositories will keep their official builds.
     In that case, your repo will stay subscribed to the original repository.
@@ -128,6 +131,18 @@ On the day of migration, the Unified Build team will run a script that will redi
   - E.g. if you depend on `runtime` and `aspnetcore`, you will be subscribed to `dotnet/dotnet` only.
     All packages will flow from the VMR together in a single backflow PR.
 - VMR will be subscribed to all VMR repositories and their sources will start flowing to the VMR (this is the forward flow).
+
+### Phase II - Official build deprecation
+
+After the migration is done, VMR repositories will still be building in their internal pipelines.
+However, for most of them, this will be extra and unnecessary.
+The owners of the VMR repositories will be asked to wind down their official builds.
+This can happen on their own schedule, but it is recommended to do it as soon as possible.
+
+Further documentation will be supplied to repository owners on how to do this but, in essence,
+a no-op build for every commit will still be required at first so that the build is still registered in Maestro and published into a channel.
+This is so that subscriptions still trigger the same way and we don't alter the infrastructure too much at once.
+However, it is expected that in future, no builds will be required and Maestro will trigger subscriptions right after commits mirror to the internal AzDO repositories.
 
 ## Example
 
