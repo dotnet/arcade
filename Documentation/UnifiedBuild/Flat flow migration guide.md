@@ -101,8 +101,14 @@ An in-depth description of this can be found [here](https://github.com/dotnet/ar
 ## Migration process
 
 On the day of migration, the Unified Build team will run a script that will redirect the subscriptions connected to VMR repositories:
-- If your repo depended on a VMR repository, it will be subscribed to the VMR instead.
-- If your repo depended on several VMR repositories, it will be subscribed to the VMR just once.
+- If your repo depends on a VMR repository, it will be subscribed to the VMR instead.
+  - There will be [several exceptions](https://github.com/dotnet/source-build/issues/3737) when VMR repositories will keep their official builds.
+    In that case, your repo will stay subscribed to the original repository.
+    Once those repos turn off their official builds, the subscriptions will be migrated for you.
+- If your repo depends on several VMR repositories, it will be subscribed to the VMR just once.
+  - E.g. if you depend on `runtime` and `aspnetcore`, you will be subscribed to `dotnet/dotnet` only.
+    All packages will flow from the VMR together in a single backflow PR.
+- VMR will be subscribed to all VMR repositories and their sources will start flowing to the VMR (this is the forward flow).
 
 ## Example
 
@@ -173,7 +179,10 @@ The dependency PRs look almost the same as the old ones and are still [authored 
 The forward flow PRs will be opened [against the VMR](https://github.com/dotnet/dotnet/pulls/app%2Fdotnet-maestro) while the backflow PRs will be opened in your repository and named something like `[branch] Source code changes from dotnet/dotnet`.
 
 ### Can my VMR repository still subscribe to other repositories?
-Yes, you can still set up regular subscriptions to other repositories, **but not to other VMR repositories** - those will flow into your repository through the VMR.
+Yes, you can still set up regular subscriptions to other repositories.
+However, **consider subscribing to other VMR repositories** - most of those will turn off their official builds and their packages will flow into your repository from the VMR.
+Subscriptions to repositories that will move their official builds into the VMR will be migrated for you during this process.
+Subscriptions to repositories that will deprecate their official builds later will change the subscriptions to their dependents then.
 
 ### Can my product repository still produce packages?
 Yes, but they should not overlap with those produced in VMR's official build.
@@ -182,8 +191,27 @@ Yes, but they should not overlap with those produced in VMR's official build.
 ### What happens to Arcade?
 Arcade's official build will stay as-is and people can depend on it the same way as before.
 It will, however, be also built in VMR's official build so it's possible to subscribe to the VMR too.  
+It technically won't matter if you depend on `dotnet/dotnet` or `dotnet/arcade` as the packages produced should be practically the same.
+
 Arcade will also keep its validation loop through `dotnet/arcade-validation`.
-It technically does not matter if you depend on `dotnet/dotnet` or `dotnet/arcade` as the packages produced should be practically the same.
+
+### What happens if my repo subscribes to an older Arcade (e.g. 9.0)?
+If your repository is not part of the VMR, nothing will change, you will still be subscribed to the same Arcade (channel).
+
+If your repository is part of the VMR, the following situation arises.
+Since you will be subscribed to the VMR, the backflow PRs would try to update your repository to the same Arcade version as VMR (latest).
+For this reason, **if your VMR repository depends on older Arcade**:
+- The newly created backflow subscriptions will be configured to exclude Arcade (setting on the subscription itself).
+- Your repository will stay subscribed to Arcade and receive Arcade updates the same way as before.
+
+> [!NOTE]
+> The above means that your repo builds using a different Arcade than what happens during the VMR build.
+> This has already been the case for some time though (for Source Build scenarios) and the build might just work.
+> It is not ideal and you should strive to eventually update your repository to use the latest Arcade.
+> However, in some repositories, this is very difficult or not desired and you can keep operating as before.
+>
+> It is though recommended to consider adding VMR-insertion based validation into your repository PR builds.
+> If you need help with this, please reach out to us.
 
 ### My repo X depends on repo Y's packages. How will I get the new packages?
 If repo Y is part of the VMR, you will depend on the VMR instead of repo Y.
@@ -194,5 +222,8 @@ The target feed for some packages might change from `dotnet-eng` to [`dotnet10-t
 Finish the PR as you would normally. If there are conflicts with the newly merged backflow PRs, feel free to tag **@dotnet/product-construction** on the PR and we will help you resolve those.
 
 ### Whom to contact and when?
-If you need help or have questions around the new flow, please either use the [First Responder channel](https://teams.microsoft.com/l/channel/19%3Aafba3d1545dd45d7b79f34c1821f6055%40thread.skype/First%20Responders?groupId=4d73664c-9f2f-450d-82a5-c2f02756606d), or tag the **@dotnet/product-construction** team on your PR/issue.
-Alternatively, you can also contact the [.NET Product Construction Services team](mailto:dotnetprodconsvcs@microsoft.com) via e-mail.
+If you need help or have questions around the new flow, please either
+- tag the **@dotnet/product-construction** team on your PR/issue,
+- use the [First Responder channel](https://teams.microsoft.com/l/channel/19%3Aafba3d1545dd45d7b79f34c1821f6055%40thread.skype/First%20Responders?groupId=4d73664c-9f2f-450d-82a5-c2f02756606d),
+- open an issue in [dotnet/arcade-services](https://github.com/dotnet/arcade-services/issues/new?template=BLANK_ISSUE),
+- or contact the [.NET Product Construction Services team](mailto:dotnetprodconsvcs@microsoft.com) via e-mail.
