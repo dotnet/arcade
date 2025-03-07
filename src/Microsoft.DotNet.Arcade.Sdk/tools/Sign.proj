@@ -8,6 +8,7 @@
     Optional variables:
       EnableDefaultArtifacts            Includes *.nupkg, *.vsix and *.wixpack.zip under "/artifacts/packages/**" for sigining.
                                         Defaults to true.
+      EnableDefaultRidSpecificArtifacts Do not sign *.nupkg packages under "/artifacts/packages/**" that do not contain the current TargetRid.
       DefaultArtifactVisibility         The default visibility for Artifact items. Defaults to External.
 
     Optional items:
@@ -92,7 +93,8 @@
         PkgToolPath="$(PkgToolPath)"
         RepackParallelism="$(SignToolRepackParallelism)"
         MaximumParallelFileSize="$(SignToolRepackMaximumParallelFileSize)"
-        DotNetTimeout="$(SignToolDotNetTimeout)" />
+        DotNetTimeout="$(SignToolDotNetTimeout)"
+        MSBuildVerbosity="$(SignToolMSBuildVerbosity)" />
   </Target>
 
 </Project>
