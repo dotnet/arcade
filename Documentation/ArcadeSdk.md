@@ -27,7 +27,7 @@ The toolset has following requirements on the repository layout.
 
 ## Single build output
 
-All build outputs are located under a single directory called `artifacts`. 
+All build outputs are located under a single directory called `artifacts` (see [Arcade Environment Variables](#advanced-arcade-behavior) for changing the `artifacts` location). 
 The Arcade SDK defines the following output structure:
 
 ```text
@@ -1099,6 +1099,12 @@ If set to `true` the GetResourceString method is not included in the generated c
 
 #### `FlagNetStandard1XDependencies` (bool)
 If set to `true` the `FlagNetStandard1xDependencies` target validates that the dependency graph doesn't contain any netstandard1.x packages.
+
+## Advanced Arcade Behavior
+
+### Arcade Environment Variables
+
+`ARCADE_STAGINGDIRECTORY` - Set to a path to control where `artifacts` and `.packages` are produced. NOTE: Use this variable carefully as many systems may have taken a dependency on `artifacts` residing in the default Arcade location (`<repo root>\artifacts`).  This variable is useful for scenarios where you want to avoid a scan unnecessarily examining these files.
 
 <!-- Begin Generated Content: Doc Feedback -->
 <sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CArcadeSdk.md)](https://helix.dot.net/f/p/5?p=Documentation%5CArcadeSdk.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CArcadeSdk.md)</sub>
