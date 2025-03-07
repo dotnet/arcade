@@ -22,7 +22,7 @@
   <ItemGroup>
     <!-- arcade-services -->
     <PackageVersion Include="Microsoft.DotNet.ProductConstructionService.Client" Version="$(MicrosoftDotNetProductConstructionServiceClientVersion)" />
-    <PackageVersion Include="Microsoft.DotNet.DarcLib" Version="$(MicrosoftDotNetProductConstructionServiceClientVersion)" />
+    <PackageVersion Include="Microsoft.DotNet.DarcLib" Version="$(MicrosoftDotNetDarcLibVersion)" />
     <!-- command-line-api -->
     <PackageVersion Include="System.CommandLine" Version="$(SystemCommandLineVersion)" />
     <!-- corefx -->
