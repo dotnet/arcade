@@ -111,16 +111,9 @@ graph TD
 
 An in-depth description of this can be found [here](https://github.com/dotnet/arcade/blob/main/Documentation/UnifiedBuild/VMR-Code-And-Build-Workflow.md).
 
-## Migration timeline
-
-- **April 9th** - Migration is announced and introduced to developers in a *.NET Platform Talks* session.
-- **April 24th - 26th** - Migration is executed by the Unified Build team.
-- **after** - Repository owners are asked to wind down their official builds.
-
 ## Migration process
 
-
-### Phase I - Subscription migration
+### Phase I - Subscription migration - April 24th
 
 In the first phase, the Unified Build team will run a script that will redirect the subscriptions connected to VMR repositories:
 - If your repo depends on a VMR repository, it will be subscribed to the VMR instead.
@@ -134,7 +127,7 @@ In the first phase, the Unified Build team will run a script that will redirect 
 
 ### Phase II - Official build deprecation
 
-After the migration is done, VMR repositories will still be building in their internal pipelines.
+After the main migration is done, VMR repositories will still be building in their internal pipelines.
 However, for most of them, this will be extra and unnecessary.
 The owners of the VMR repositories will be asked to wind down their official builds.
 This can happen on their own schedule, but it is recommended to do it as soon as possible.
