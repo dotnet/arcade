@@ -846,6 +846,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return client;
         }
 
+        private SemaphoreSlim _createArtifactSemaphore = new SemaphoreSlim(1,1);
+
         /// <summary>
         /// Download artifact file using Azure API
         /// </summary>
@@ -863,12 +865,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             // Look up or create a helper for the specified artifact type.
             if (!_artifactUrlHelpers.TryGetValue(artifactName, out IArtifactUrlHelper helper))
             {
-                helper = await CreateArtifactUrlHelper(client, artifactName);
-                // Attempt to add the helper to the dictionary. the helper creation can be done multiple
-                // times. If we fail to add it, grab the one that was added by another thread.
-                if (!_artifactUrlHelpers.TryAdd(artifactName, helper))
+                // Since the helper creation makes an http call, let's only do this once
+                // per artifact name by locking
+
+                await _createArtifactSemaphore.WaitAsync();
+                try
                 {
-                    helper = _artifactUrlHelpers[artifactName];
+                    if (!_artifactUrlHelpers.TryGetValue(artifactName, out helper))
+                    {
+                        helper = await CreateArtifactUrlHelper(client, artifactName);
+                        _artifactUrlHelpers[artifactName] = helper;
+                    }
+                }
+                finally
+                {
+                    _createArtifactSemaphore.Release();
                 }
             }
 

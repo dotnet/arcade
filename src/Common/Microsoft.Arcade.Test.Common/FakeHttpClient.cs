@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Arcade.Test.Common
             => new HttpClient( // lgtm [cs/httpclient-checkcertrevlist-disabled] HttpClient used in unit tests
                 new FakeHttpMessageHandler(FakeHttpMessageHandler));
 
-        private class FakeResponseOnlyHttpMessageHandler : HttpMessageHandler
+        public class FakeResponseOnlyHttpMessageHandler : HttpMessageHandler
         {
             private readonly IEnumerator<HttpResponseMessage> _responseEnumerator;
 
@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Arcade.Test.Common
             }
         }
 
-        private class FakeHttpMessageHandler : HttpMessageHandler
+        public class FakeHttpMessageHandler : HttpMessageHandler
         {
             private readonly Dictionary<string, IEnumerator<HttpResponseMessage>> _responseEnumerators;
 
