@@ -43,7 +43,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Metadata Internal (optional): If true, the feed is only internally accessible.
         ///                               If false, the feed is publicly visible and internal builds wwill be rejected.
         ///                               If not provided, then this task will attempt to determine whether the feed URL is publicly visible or not.
-        ///                               Unless SkipSafetyChecks is passed, the publishing infrastructure will check the accessibility of the feed.
         /// Metadata Isolated (optional): If true, stable packages can be pushed to this feed.
         ///                               If false, stable packages will be rejected.
         ///                               If not provided then defaults to false.
@@ -122,7 +121,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Whether this build is internal or not. If true, extra checks are done to avoid accidental
         /// publishing of assets to public feeds or storage accounts.
         /// </summary>
-        public bool InternalBuild { get; set; }
+        public bool IsInternalBuild { get; set; }
 
         public bool PublishInstallersAndChecksums { get; set; } = false;
 
@@ -149,11 +148,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public bool PublishSpecialClrFiles { get; set; }
 
         /// <summary>
-        /// If true, safety checks only print messages and do not error
-        /// - Internal asset to public feed
-        /// - Stable packages to non-isolated feeds
+        /// If true, allows publishing of a stable package to a non isolated feed
         /// </summary>
-        public bool SkipSafetyChecks { get; set; } = false;
+        public bool SkipStablePackagesNonIsolatedFeedsCheck { get; set; } = false;
+
+        /// <summary>
+        /// If true, allows publishing of internal assets to public feeds
+        /// </summary>
+        public bool SkipInternalAssetToPublicFeedCheck { get; set; } = false;
 
         public string AkaMSClientId { get; set; }
 
@@ -345,8 +347,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 MaestroApiEndpoint = this.MaestroApiEndpoint,
                 BuildAssetRegistryToken = this.BuildAssetRegistryToken,
                 NugetPath = this.NugetPath,
-                InternalBuild = this.InternalBuild,
-                SkipSafetyChecks = this.SkipSafetyChecks,
+                IsInternalBuild = this.IsInternalBuild,
+                SkipInternalAssetToPublicFeedCheck = this.SkipInternalAssetToPublicFeedCheck,
+                SkipStablePackagesNonIsolatedFeedsCheck = this.SkipStablePackagesNonIsolatedFeedsCheck,
                 AkaMSClientId = this.AkaMSClientId,
                 AkaMSClientCertificate = !string.IsNullOrEmpty(AkaMSClientCertificate) ?
 #if NET9_0_OR_GREATER

@@ -120,14 +120,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Whether this build is internal or not. If true, extra checks are done to avoid accidental
         /// publishing of assets to public feeds or storage accounts.
         /// </summary>
-        public bool InternalBuild { get; set; } = false;
+        public bool IsInternalBuild { get; set; } = false;
 
         /// <summary>
-        /// If true, safety checks only print messages and do not error
-        /// - Internal asset to public feed
-        /// - Stable packages to non-isolated feeds
+        /// If true, allows publishing of a stable package to a non isolated feed
         /// </summary>
-        public bool SkipSafetyChecks { get; set; } = false;
+        public bool SkipStablePackagesNonIsolatedFeedsCheck { get; set; } = false;
+
+        /// <summary>
+        /// If true, allows publishing of internal assets to public feeds
+        /// </summary>
+        public bool SkipInternalAssetToPublicFeedCheck { get; set; } = false;
 
         /// <summary>
         /// Which build model (i.e., parsed build manifest) the publishing task will operate on.
@@ -353,17 +356,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         /// <summary>
-        /// Protect against accidental publishing of internal assets to non-internal feeds.
+        /// Run a check to verify that we're not publishing an internal build to non-internal feeds.
         /// </summary>
-        protected void CheckForInternalBuildsOnPublicFeeds(TargetFeedConfig feedConfig)
+        protected void CheckForInternalBuildsOnPublicFeeds()
         {
             // If separated out for clarity.
-            if (!SkipSafetyChecks)
+            if (!SkipInternalAssetToPublicFeedCheck && IsInternalBuild)
             {
-                if (InternalBuild && !feedConfig.Internal)
+                var publicFeeds = FeedConfigs.Values
+                    .SelectMany(f => f)
+                    .Where(f => f.Internal == false);
+
+                foreach (TargetFeedConfig feedConfig in publicFeeds)
                 {
-                    Log.LogError($"Use of non-internal feed '{feedConfig.TargetURL}' is invalid for an internal build. This can be overridden with '{nameof(SkipSafetyChecks)}= true'");
-                }
+                    Log.LogError($"Internal builds shouldn't be published to public feed '{feedConfig.TargetURL}'. This behavior can be overridden with '{nameof(SkipInternalAssetToPublicFeedCheck)}= true'");
+                }         
             }
         }
 
@@ -376,7 +383,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public void CheckForStableAssetsInNonIsolatedFeeds()
         {
-            if (BuildModel.Identity.IsReleaseOnlyPackageVersion || SkipSafetyChecks)
+            if (BuildModel.Identity.IsReleaseOnlyPackageVersion || SkipStablePackagesNonIsolatedFeedsCheck)
             {
                 return;
             }
