@@ -5,6 +5,25 @@
 
 This document describes the migration of [.NET repositories](https://github.com/dotnet/dotnet/tree/main/src) from their current Maestro dependency flow to the new VMR-based flat flow which **will happen on the week of April 24th**.
 
+## Table of contents
+  - [Terminology](#terminology)
+  - [High-level overview of the change](#high-level-overview-of-the-change)
+  - [Migration timeline](#migration-timeline)
+  - [Migration process](#migration-process)
+  - [Example](#example)
+  - [FAQ](#faq)
+    - [How can I see dependency subscriptions for my repository?](#how-can-i-see-dependency-subscriptions-for-my-repository)
+    - [My repository is not part of the VMR. Am I still affected?](#my-repository-is-not-part-of-the-vmr-am-i-still-affected)
+    - [Where can I find the official build of the VMR?](#where-can-i-find-the-official-build-of-the-vmr)
+    - [Where can I find the new dependency PRs?](#where-can-i-find-the-new-dependency-prs)
+    - [Can my VMR repository still subscribe to other repositories?](#can-my-vmr-repository-still-subscribe-to-other-repositories)
+    - [Can my product repository still produce packages?](#can-my-product-repository-still-produce-packages)
+    - [What happens to Arcade?](#what-happens-to-arcade)
+    - [What happens if my repo subscribes to an older Arcade (e.g. 9.0)?](#what-happens-if-my-repo-subscribes-to-an-older-arcade-eg-90)
+    - [My repo X depends on repo Y's packages. How will I get the new packages?](#my-repo-x-depends-on-repo-ys-packages-how-will-i-get-the-new-packages)
+    - [I have an ongoing dependency PR in my repository with additional changes/work. What should I do?](#i-have-an-ongoing-dependency-pr-in-my-repository-with-additional-changeswork-what-should-i-do)
+    - [Whom to contact and when?](#whom-to-contact-and-when)
+
 ## Terminology
 
 - **Product repository** / **VMR repository** - A repository that is required to build the .NET SDK, and which is synchronized [into the VMR](https://github.com/dotnet/dotnet/tree/main/src).
