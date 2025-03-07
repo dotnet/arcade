@@ -10,6 +10,44 @@ Dependabot should be used when possible.
 However, Renovate supports a much broader range of [dependency types](https://docs.renovatebot.com/modules/datasource/), most notably Docker and GitHub releases.
 For example, Renovate can automatically generate a PR to update a referenced Docker image when a newer version is available.
 
+### Example Scenarios
+
+Here are two scenarios demonstrating the usefulness of Renovate automatically making dependency updates:
+
+#### Container Tags
+
+Repos that reference container tags from the [dotnet/dotnet-buildtools-prereqs-docker](https://github.com/dotnet/dotnet-buildtools-prereqs-docker) repo need to maintain those tags to ensure they are supported.
+
+This can be as simple as automatically updating to a new major version of Linux distro:
+
+```diff
+-mcr.microsoft.com/dotnet-buildtools/prereqs:debian-11-helix-amd64
++mcr.microsoft.com/dotnet-buildtools/prereqs:debian-12-helix-amd64
+```
+
+Or automatically pinning to the latest version of a tag by it's digest value:
+
+```diff
+-mcr.microsoft.com/dotnet-buildtools/prereqs:debian-12-helix-amd64@sha256:b99da50c4cb425e72ee69c2b8c1fdf99e0f71059aee19798e2f9310141ea48fb
++mcr.microsoft.com/dotnet-buildtools/prereqs:debian-12-helix-amd64@sha256:6bb6fef390e6f09a018f385e346b0fe5999d7662acd84ca2655e9a3c3e622b71
+```
+
+Renovate can detect when these new container images are available and submit PRs to update sources accordingly.
+
+Related issue: [Automatically update image references in consuming repos (#1321)](https://github.com/dotnet/dotnet-buildtools-prereqs-docker/issues/1321)
+
+#### GitHub Release
+
+There are many cases where a version of OSS published via GitHub releases is being referenced by a .NET repository.
+Those versions can be kept updated automatically as new releases occur.
+
+For example, there are Dockerfiles in the [dotnet/dotnet-buildtools-prereqs-docker](https://github.com/dotnet/dotnet-buildtools-prereqs-docker) repo which reference the LLVM version that can be maintained by having Renovate automatically check for new [LLVM releases](https://github.com/llvm/llvm-project/releases).
+
+```diff
+-LLVM_VERSION=19.1.7
++LLVM_VERSION=20.1.0
+```
+
 ## Design
 
 ### Fork Mode
