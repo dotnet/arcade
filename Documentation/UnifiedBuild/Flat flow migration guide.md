@@ -151,7 +151,7 @@ graph TD
     winformsCi -.-> net10(.NET 10 channel):::channel
     net10 --> winformsTests[winforms-tests]
 
-    classDef active fill:#ffcc00,stroke:#aa8800,color:#000;
+    classDef active stroke:#aa8800;
     classDef pipeline fill:#00ffcc,color:#000;
     classDef channel fill:#00ccff,color:#000;
 ```
@@ -173,7 +173,7 @@ graph TD
     net10ub --> winformsTests[winforms-tests]
     net10ub --> winforms
 
-    classDef active fill:#ffcc00,stroke:#aa8800,color:#000;
+    classDef active stroke:#aa8800;
     classDef pipeline fill:#00ffcc,color:#000;
     classDef channel fill:#00ccff,color:#000;
 ```
