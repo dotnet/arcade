@@ -6,10 +6,12 @@
 This document describes the migration of [.NET repositories](https://github.com/dotnet/dotnet/tree/main/src) from their current Maestro dependency flow to the new VMR-based flat flow which **will happen on the week of April 24th**.
 
 ## Table of contents
+- [Table of contents](#table-of-contents)
 - [Terminology](#terminology)
 - [High-level overview of the change](#high-level-overview-of-the-change)
-- [Migration timeline](#migration-timeline)
 - [Migration process](#migration-process)
+  - [Phase I - Subscription migration - April 24th](#phase-i---subscription-migration---april-24th)
+  - [Phase II - Official build deprecation](#phase-ii---official-build-deprecation)
 - [Example](#example)
 - [FAQ](#faq)
   - [How can I see dependency subscriptions for my repository?](#how-can-i-see-dependency-subscriptions-for-my-repository)
