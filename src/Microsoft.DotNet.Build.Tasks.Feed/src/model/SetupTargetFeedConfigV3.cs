@@ -38,7 +38,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string commitSha,
             bool publishInstallersAndChecksums,
             ITaskItem[] feedKeys,
-            ITaskItem[] feedSasUris,
             ITaskItem[] feedOverrides,
             ImmutableList<string> latestLinkShortUrlPrefixes,
             IBuildEngine buildEngine,
@@ -57,7 +56,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             SymbolServerVisibility = symbolPublishVisibility;
             Flatten = flatten;
             FeedKeys = feedKeys.ToImmutableDictionary(i => i.ItemSpec, i => i.GetMetadata("Key"));
-            FeedSasUris = feedSasUris.ToImmutableDictionary(i => i.ItemSpec, i => ConvertFromBase64(i.GetMetadata("Base64Uri")));
             FeedOverrides = feedOverrides.ToImmutableDictionary(i => i.ItemSpec, i => i.GetMetadata("Replacement"));
             AzureDevOpsFeedsKey = FeedKeys.TryGetValue("https://pkgs.dev.azure.com/dnceng", out string key) ? key : null;
             Log = log;
@@ -73,8 +71,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         public ImmutableDictionary<string, string> FeedOverrides { get; set; }
-
-        public ImmutableDictionary<string, string> FeedSasUris { get; set; }
 
         public ImmutableDictionary<string, string> FeedKeys { get; set; }
 
@@ -156,7 +152,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         feed = newFeed;
                     }
                     var key = GetFeedKey(feed);
-                    var sasUri = GetFeedSasUri(feed);
 
                     var feedType = feed.StartsWith("https://pkgs.dev.azure.com")
                         ? FeedType.AzDoNugetFeed : FeedType.AzureStorageContainer;
@@ -172,7 +167,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         type,
                         feed,
                         feedType,
-                        sasUri ?? key,
+                        key,
                         LatestLinkShortUrlPrefixes,
                         _targetChannelConfig.AkaMSCreateLinkPatterns,
                         _targetChannelConfig.AkaMSDoNotCreateLinkPatterns,
@@ -253,19 +248,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             return feed;
-        }
-
-        private string GetFeedSasUri(string feed)
-        {
-            foreach (var prefix in FeedSasUris.Keys.OrderByDescending(f => f.Length))
-            {
-                if (feed.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                {
-                    return FeedSasUris[prefix];
-                }
-            }
-
-            return null;
         }
 
         private string GetFeedKey(string feed)
