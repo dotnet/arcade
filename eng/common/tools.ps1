@@ -645,7 +645,7 @@ function GetNuGetPackageCachePath() {
     if ($useGlobalNuGetCache) {
       $env:NUGET_PACKAGES = Join-Path $env:UserProfile '.nuget\packages\'
     } else {
-      $env:NUGET_PACKAGES = Join-Path $RepoRoot '.packages\'
+      $env:NUGET_PACKAGES = Join-Path $StagingRoot '.packages\'
       $env:RESTORENOHTTPCACHE = $true
     }
   }
@@ -908,8 +908,22 @@ function Get-Darc($version) {
 
 $RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..\')
 $EngRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
-$ArtifactsDir = Join-Path $RepoRoot 'artifacts'
+
+# Align artifacts root with Arcade SDK behavior
+$StagingRoot = $RepoRoot
+
+if ($null -ne $env:ARCADE_STAGINGDIRECTORY) {
+  $StagingRoot = $env:ARCADE_STAGINGDIRECTORY
+}
+
+$ArtifactsDir = Join-Path $StagingRoot 'artifacts'
 $ToolsetDir = Join-Path $ArtifactsDir 'toolset'
+if($null -ne $env:ARCADE_STAGINGDIRECTORY)
+{
+    # Toolset directory has to stay in the repo root so that it can discover NuGet.config for package restores
+    # Prefixing with '.' for easy identification.
+    $ToolsetDir = Join-Path $RepoRoot '.toolset'
+}
 $ToolsDir = Join-Path $RepoRoot '.tools'
 $LogDir = Join-Path (Join-Path $ArtifactsDir 'log') $configuration
 $TempDir = Join-Path (Join-Path $ArtifactsDir 'tmp') $configuration
@@ -920,7 +934,6 @@ $globalJsonHasRuntimes = if ($GlobalJson.tools.PSObject.Properties.Name -Match '
 Create-Directory $ToolsetDir
 Create-Directory $TempDir
 Create-Directory $LogDir
-
 Write-PipelineSetVariable -Name 'Artifacts' -Value $ArtifactsDir
 Write-PipelineSetVariable -Name 'Artifacts.Toolset' -Value $ToolsetDir
 Write-PipelineSetVariable -Name 'Artifacts.Log' -Value $LogDir
