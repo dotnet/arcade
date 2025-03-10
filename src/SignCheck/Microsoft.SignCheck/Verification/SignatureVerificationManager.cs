@@ -109,6 +109,7 @@ namespace Microsoft.SignCheck.Verification
 #endif
             AddFileVerifier(new ExeVerifier(log, exclusions, options, ".exe"));
             AddFileVerifier(new LzmaVerifier(log, exclusions, options));
+            AddFileVerifier(new NoExtensionVerifier(log, exclusions, options));
             AddFileVerifier(new NupkgVerifier(log, exclusions, options));
             AddFileVerifier(new PortableExecutableVerifier(log, exclusions, options, ".dll"));
             AddFileVerifier(new XmlVerifier(log, exclusions, options));
@@ -181,7 +182,7 @@ namespace Microsoft.SignCheck.Verification
         /// <returns>A FileVerifier that can verify the file or null if verifier could be found.</returns>
         public static FileVerifier GetFileVerifier(string path)
         {
-            string extension = Path.GetExtension(path);
+            string extension = Path.GetExtension(path) ?? string.Empty;
             FileVerifier fileVerifier = GetFileVerifierByExtension(extension);
 
             if (fileVerifier == null)
@@ -204,9 +205,9 @@ namespace Microsoft.SignCheck.Verification
         /// <returns>A FileVerifier that can verify the file or null if the verifier could not be found.</returns>
         public static FileVerifier GetFileVerifierByExtension(string extension)
         {
-            if (!String.IsNullOrEmpty(extension))
+            if (extension != null)
             {
-                // If the file has an extension, try to find a matching verifier
+                // Try to find a matching verifier
                 if (_fileVerifiers.ContainsKey(extension))
                 {
                     return _fileVerifiers[extension];
