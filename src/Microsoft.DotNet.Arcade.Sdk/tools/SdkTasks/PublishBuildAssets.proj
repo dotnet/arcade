@@ -26,8 +26,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" />
   </ItemGroup>
-  
-  <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets"/>
 
   <Target Name="Execute">
     <Error Text="The ManifestsPath property must be set on the command line." Condition="'$(ManifestsPath)' == ''" />
