@@ -161,7 +161,7 @@ graph TD
     winformsCi -.-> net10(.NET 10 channel):::channel
     net10 --> winformsTests[winforms-tests]
 
-    classDef active stroke:#aa8800;
+    classDef active fill:#ffcc00,stroke:#aa8800,color:#000;
     classDef pipeline fill:#00ffcc,color:#000;
     classDef channel fill:#00ccff,color:#000;
 ```
@@ -171,24 +171,22 @@ After the migration, the setup will look like this:
 ```mermaid
 graph TD
     winformsAssets[winforms-assets]--> winforms:::active
-    
+
     arcade[dotnet/arcade] --> vmr[dotnet/dotnet]
     runtime[dotnet/runtime] --> vmr
+    vmr --> runtime
+    vmr --> arcade
     winforms --> vmr
 
-    vmr -.-> vmrCi(dotnet-unified-build<br/>pipeline):::pipeline
-    vmrCi -.-> net10ub(.NET 10 UB channel):::channel
+    vmr --> wpf[dotnet/wpf]
+    wpf --> vmr
+    vmr --> winformsTests[winforms-tests]
+    vmr --> winforms
 
-    net10ub --> wpf[dotnet/wpf]
-    net10ub --> winformsTests[winforms-tests]
-    net10ub --> winforms
-
-    classDef active stroke:#aa8800;
-    classDef pipeline fill:#00ffcc,color:#000;
-    classDef channel fill:#00ccff,color:#000;
+    classDef active fill:#ffcc00,stroke:#aa8800,color:#000;
 ```
 
-The `runtime` and `arcade` dependencies will flow into `winforms` through the VMR, and the `winforms-assets` dependency will still flow directly into `winforms` (as it's not part of the VMR).
+The `runtime` and `arcade` dependencies will flow into `winforms` through the VMR, and the `winforms-assets` dependency will still flow directly into `winforms` (as it's not part of the VMR). The `winforms-tests` repository will newly depend on the VMR instead of `winforms` and will get its packages from the VMR.
 
 ## FAQ
 
