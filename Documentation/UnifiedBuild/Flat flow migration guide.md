@@ -194,7 +194,7 @@ The `runtime` and `arcade` dependencies will flow into `winforms` through the VM
 Either use the [Maestro website](https://maestro.dot.net/subscriptions) or use the [`darc get-subscriptions`](../Darc.md) command.
 
 ### My repository is not part of the VMR. Am I still affected?
-If your repository has subscriptions to a repository that is [part of the VMR](https://github.com/dotnet/dotnet/tree/main/src), this repository will get built as part of the [VMR build](https://dev.azure.com/dnceng/internal/_build?definitionId=1330).
+If your repository has subscriptions to a repository that is [part of the VMR] (https://github.com/dotnet/dotnet/tree/main/src) and is **not** keeping its official build, your repository will be subscribed to the [VMR](https://github.com/dotnet/dotnet) (`dotnet/dotnet`) instead
 Your repository will be subscribed to the [VMR](https://github.com/dotnet/dotnet) (`dotnet/dotnet`) instead.
 Some VMR repositories will keep their original official build though.
 
@@ -212,7 +212,9 @@ Subscriptions to repositories that will move their official builds into the VMR 
 Subscriptions to repositories that will deprecate their official builds later will change the subscriptions to their dependents then.
 
 ### Can my product repository still produce packages?
-Yes, but they should not overlap with those produced in VMR's official build.
+Yes, though keep in mind two things:
+- These package identities must not overlap with the VMR produced packages. The VMR already takes steps to ensure that version numbers do not overlap.
+- Repositories that ship via the dotnet release process (e.g. runtime or aspnetcore) must ship all of their outputs via the VMR.
 [Reach out to us](#whom-to-contact-and-when) if you need help with this.
 
 ### What happens to Arcade?
