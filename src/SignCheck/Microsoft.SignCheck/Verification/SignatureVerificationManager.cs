@@ -86,21 +86,31 @@ namespace Microsoft.SignCheck.Verification
             Log = log;
             Options = options;
 
-            AddFileVerifier(new CabVerifier(log, exclusions, options, ".cab"));
-            AddFileVerifier(new PortableExecutableVerifier(log, exclusions, options, ".dll"));
-            AddFileVerifier(new ExeVerifier(log, exclusions, options, ".exe"));
-            AddFileVerifier(new JarVerifier(log, exclusions, options));
+#if NETFRAMEWORK
             AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".js"));
-            AddFileVerifier(new LzmaVerifier(log, exclusions, options));
-            AddFileVerifier(new MsiVerifier(log, exclusions, options));
-            AddFileVerifier(new MspVerifier(log, exclusions, options));
-            AddFileVerifier(new MsuVerifier(log, exclusions, options));
-            AddFileVerifier(new NupkgVerifier(log, exclusions, options));
             AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".psd1"));
             AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".psm1"));
             AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".ps1"));
             AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".ps1xml"));
+            AddFileVerifier(new CabVerifier(log, exclusions, options, ".cab"));
+            AddFileVerifier(new JarVerifier(log, exclusions, options));
+            AddFileVerifier(new MsiVerifier(log, exclusions, options));
+            AddFileVerifier(new MspVerifier(log, exclusions, options));
+            AddFileVerifier(new MsuVerifier(log, exclusions, options));
             AddFileVerifier(new VsixVerifier(log, exclusions, options));
+#else
+            AddFileVerifier(new DebVerifier(log, exclusions, options));
+            AddFileVerifier(new PkgVerifier(log, exclusions, options, ".pkg"));
+            AddFileVerifier(new PkgVerifier(log, exclusions, options, ".app"));
+            AddFileVerifier(new TarVerifier(log, exclusions, options, ".tar"));
+            AddFileVerifier(new TarVerifier(log, exclusions, options, ".tgz"));
+            AddFileVerifier(new TarVerifier(log, exclusions, options, ".gz"));
+            AddFileVerifier(new RpmVerifier(log, exclusions, options));
+#endif
+            AddFileVerifier(new ExeVerifier(log, exclusions, options, ".exe"));
+            AddFileVerifier(new LzmaVerifier(log, exclusions, options));
+            AddFileVerifier(new NupkgVerifier(log, exclusions, options));
+            AddFileVerifier(new PortableExecutableVerifier(log, exclusions, options, ".dll"));
             AddFileVerifier(new XmlVerifier(log, exclusions, options));
             AddFileVerifier(new ZipVerifier(log, exclusions, options));
         }
@@ -257,7 +267,7 @@ namespace Microsoft.SignCheck.Verification
                         fileVerifier = GetFileVerifierByExtension(".cab");
                     }
                 }
-
+#if NETFRAMEWORK
                 reader.BaseStream.Seek(0, SeekOrigin.Begin);
                 if (stream.Length > 2)
                 {
@@ -276,6 +286,7 @@ namespace Microsoft.SignCheck.Verification
                         }
                     }
                 }
+#endif
             }
 
             return fileVerifier;

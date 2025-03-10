@@ -105,9 +105,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public override void ConfigureServices(IServiceCollection collection)
         {
             collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
-            collection.TryAddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>();
             collection.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
             collection.TryAddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>();
+            collection.TryAddSingleton<IPdbArtifactModelFactory, PdbArtifactModelFactory>();
             collection.TryAddSingleton<INupkgInfoFactory, NupkgInfoFactory>();
             collection.TryAddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>();
             collection.TryAddSingleton<IFileSystem, FileSystem>();
@@ -130,13 +130,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                 }
                 
-                var buildModel = buildModelFactory.CreateModelFromItems(
+                var buildModel = buildModelFactory.CreateModel(
                     Artifacts,
-                    ItemsToSign,
-                    StrongNameSignInfo,
-                    FileSignInfo,
-                    FileExtensionSignInfo,
-                    CertificatesSignInfo,
+                    ArtifactVisibility.All,
                     BuildId,
                     BuildData,
                     RepoUri,

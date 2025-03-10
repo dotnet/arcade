@@ -25,15 +25,6 @@ namespace Microsoft.DotNet.SignTool
 
         public override bool LocalStrongNameSign(IBuildEngine buildEngine, int round, IEnumerable<FileSignInfo> files)
         {
-            // On non-Windows, we skip strong name signing because sn.exe is not available.
-            // We could skip it always in the validation sign tool, but it is useful to
-            // get some level of validation.
-
-            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                return true;
-            }
-
             foreach (var file in files)
             {
                 if (file.SignInfo.ShouldLocallyStrongNameSign)
@@ -48,20 +39,23 @@ namespace Microsoft.DotNet.SignTool
             return true;
         }
 
-        public override void RemovePublicSign(string assemblyPath)
+        public override void RemoveStrongNameSign(string assemblyPath)
         {
         }
 
-        public override bool VerifySignedDeb(TaskLoggingHelper log, string filePath)
-            => true;
+        public override SigningStatus VerifySignedDeb(TaskLoggingHelper log, string filePath)
+            => SigningStatus.Signed;
 
-        public override bool VerifySignedPEFile(Stream assemblyStream)
-            => true;
+        public override SigningStatus VerifySignedRpm(TaskLoggingHelper log, string filePath)
+            => SigningStatus.Signed;
 
-        public override bool VerifyStrongNameSign(string fileFullPath)
-            => true;
+        public override SigningStatus VerifySignedPEFile(Stream assemblyStream)
+            => SigningStatus.Signed;
 
-        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, string binLogPath)
+        public override SigningStatus VerifyStrongNameSign(string fileFullPath)
+            => SigningStatus.Signed;
+
+        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, string binLogPath, string logPath, string errorLogPath)
         {
             if (TestSign)
             {
@@ -73,19 +67,12 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
-        public override bool VerifySignedPowerShellFile(string filePath)
-        {
-            return true;
-        }
+        public override SigningStatus VerifySignedPowerShellFile(string filePath) => SigningStatus.Signed;
 
-        public override bool VerifySignedNugetFileMarker(string filePath)
-        {
-            return true;
-        }
+        public override SigningStatus VerifySignedNuGet(string filePath) => SigningStatus.Signed;
 
-        public override bool VerifySignedVSIXFileMarker(string filePath)
-        {
-            return true;
-        }
+        public override SigningStatus VerifySignedVSIX(string filePath) => SigningStatus.Signed;
+
+        public override SigningStatus VerifySignedPkgOrAppBundle(TaskLoggingHelper log, string filePath, string pkgToolPath) => SigningStatus.Signed;
     }
 }

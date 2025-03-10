@@ -11,6 +11,9 @@ using System.Reflection.Metadata;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
+using System.Diagnostics;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -102,17 +105,6 @@ namespace Microsoft.DotNet.SignTool
             using (var peReader = new PEReader(stream))
             {
                 return ((int)peReader.PEHeaders.CorHeader.Flags & CROSSGEN_FLAG) == CROSSGEN_FLAG;
-            }
-        }
-
-        public static bool IsAuthenticodeSigned(Stream assemblyStream)
-        {
-            using (var peReader = new PEReader(assemblyStream))
-            {
-                var headers = peReader.PEHeaders;
-                var entry = headers.PEHeader.CertificateTableDirectory;
-
-                return entry.Size > 0;
             }
         }
 

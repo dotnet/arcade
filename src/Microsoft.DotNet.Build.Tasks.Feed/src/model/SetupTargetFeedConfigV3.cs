@@ -24,8 +24,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private SymbolPublishVisibility SymbolServerVisibility { get; }
 
-        private ImmutableList<string> FilesToExclude { get; }
-
         private bool Flatten { get; }
 
         public TaskLoggingHelper Log { get; }
@@ -41,7 +39,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             bool publishInstallersAndChecksums,
             ITaskItem[] feedKeys,
             ITaskItem[] feedOverrides,
-            List<string> latestLinkShortUrlPrefixes,
+            ImmutableList<string> latestLinkShortUrlPrefixes,
             IBuildEngine buildEngine,
             SymbolPublishVisibility symbolPublishVisibility,
             string stablePackagesFeed = null,
@@ -56,7 +54,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             StableSymbolsFeed = stableSymbolsFeed;
             StablePackagesFeed = stablePackagesFeed;
             SymbolServerVisibility = symbolPublishVisibility;
-            FilesToExclude = filesToExclude ?? ImmutableList<string>.Empty;
             Flatten = flatten;
             FeedKeys = feedKeys.ToImmutableDictionary(i => i.ItemSpec, i => i.GetMetadata("Key"));
             FeedOverrides = feedOverrides.ToImmutableDictionary(i => i.ItemSpec, i => i.GetMetadata("Replacement"));
@@ -99,11 +96,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
                     LatestLinkShortUrlPrefixes,
+                    _targetChannelConfig.AkaMSCreateLinkPatterns,
+                    _targetChannelConfig.AkaMSDoNotCreateLinkPatterns,
                     assetSelection: AssetSelection.ShippingOnly,
                     symbolPublishVisibility: SymbolServerVisibility,
                     isolated: true,
                     @internal: IsInternalBuild,
-                    filenamesToExclude: FilesToExclude,
                     flatten: Flatten);
 
                 yield return new TargetFeedConfig(
@@ -112,10 +110,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
                     LatestLinkShortUrlPrefixes,
+                    _targetChannelConfig.AkaMSCreateLinkPatterns,
+                    _targetChannelConfig.AkaMSDoNotCreateLinkPatterns,
                     symbolPublishVisibility: SymbolServerVisibility,
                     isolated: true,
                     @internal: IsInternalBuild,
-                    filenamesToExclude: FilesToExclude,
                     flatten: Flatten);
             }
 
@@ -170,12 +169,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         feedType,
                         key,
                         LatestLinkShortUrlPrefixes,
+                        _targetChannelConfig.AkaMSCreateLinkPatterns,
+                        _targetChannelConfig.AkaMSDoNotCreateLinkPatterns,
                         spec.Assets,
                         false,
                         IsInternalBuild,
                         false,
                         SymbolServerVisibility,
-                        filenamesToExclude: FilesToExclude,
                         flatten: Flatten
                     );
                 }

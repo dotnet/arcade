@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
@@ -11,8 +12,8 @@ using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 #if !NET472_OR_GREATER
-using Microsoft.DotNet.Maestro.Client;
-using Microsoft.DotNet.Maestro.Client.Models;
+using Microsoft.DotNet.ProductConstructionService.Client;
+using Microsoft.DotNet.ProductConstructionService.Client.Models;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
@@ -90,13 +91,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 // Fetch Maestro record of the build. We're going to use it to get the BAR ID
                 // of the assets being published so we can add a new location for them.
-                IMaestroApi client = MaestroApiFactory.GetAuthenticated(
+                IProductConstructionServiceApi client = PcsApiFactory.GetAuthenticated(
                     MaestroApiEndpoint,
                     BuildAssetRegistryToken,
                     MaestroManagedIdentityId,
                     disableInteractiveAuth: !AllowInteractiveAuthentication);
 
-                Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
+                ProductConstructionService.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
                 ReadOnlyDictionary<string, Asset> buildAssets = CreateBuildAssetDictionary(buildInformation);
 
                 if (Log.HasLoggedErrors)
@@ -149,10 +150,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         publishInstallersAndChecksums: PublishInstallersAndChecksums,
                         feedKeys: FeedKeys,
                         feedOverrides: AllowFeedOverrides ? FeedOverrides : Array.Empty<ITaskItem>(),
-                        latestLinkShortUrlPrefixes: shortLinkUrls,
+                        latestLinkShortUrlPrefixes: shortLinkUrls.ToImmutableList(),
                         buildEngine: BuildEngine,
                         targetChannelConfig.SymbolTargetType,
-                        filesToExclude: targetChannelConfig.FilenamesToExclude,
                         flatten: targetChannelConfig.Flatten,
                         log: Log);
 
@@ -229,6 +229,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 #else
 public class PublishArtifactsInManifestV3 : Microsoft.Build.Utilities.Task
 {
-    public override bool Execute() => throw new NotSupportedException("PublishArtifactsInManifestV3 depends on Maestro.Client, which has discontinued support for desktop frameworks.");
+    public override bool Execute() => throw new NotSupportedException("PublishArtifactsInManifestV3 depends on ProductConstructionService.Client, which has discontinued support for desktop frameworks.");
 }
 #endif
