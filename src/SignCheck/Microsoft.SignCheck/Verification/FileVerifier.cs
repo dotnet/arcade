@@ -121,7 +121,7 @@ namespace Microsoft.SignCheck.Verification
         /// <returns>A FileVerifier that can be used to verify the signature of the specified file.</returns>
         protected FileVerifier GetFileVerifier(string path)
         {
-            string extension = Path.GetExtension(path);
+            string extension = Path.GetExtension(path) ?? string.Empty;
             FileVerifier fileVerifier = SignatureVerificationManager.GetFileVerifierByExtension(extension);
 
             if (fileVerifier == null)
