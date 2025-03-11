@@ -53,6 +53,7 @@ steps:
         feedSource: https://dnceng.pkgs.visualstudio.com/_packaging/MicroBuildToolset/nuget/v3/index.json
         ${{ if and(eq(parameters.enableMicrobuildForMacAndLinux, 'true'), ne(variables['Agent.Os'], 'Windows_NT')) }}:
           azureSubscription: 'MicroBuild Signing Task (DevDiv)'
+          useEsrpCli: true
       env:
         TeamName: $(_TeamName)
         MicroBuildOutputFolderOverride: ${{ parameters.microBuildOutputFolder }}
