@@ -137,7 +137,7 @@ This can happen on their own schedule, but it is recommended to do it as soon as
 Further documentation will be supplied to repository owners on how to do this but, in essence,
 a no-op build for every commit will still be required at first so that the build is still registered in Maestro and published into a channel.
 This is so that subscriptions still trigger the same way and we don't alter the infrastructure too much at once.
-However, it is expected that in future, no builds will be required and Maestro will trigger subscriptions right after commits mirror to the internal AzDO repositories.
+However, it is expected that in the future, no builds will be required and Maestro will trigger subscriptions right after commits mirror to the internal AzDO repositories.
 
 ## Example
 
@@ -191,7 +191,7 @@ The `runtime` and `arcade` dependencies will flow into `winforms` through the VM
 Either use the [Maestro website](https://maestro.dot.net/subscriptions) or use the [`darc get-subscriptions`](../Darc.md) command.
 
 ### My repository is not part of the VMR. Am I still affected?
-If your repository has subscriptions to a repository that is [part of the VMR] (https://github.com/dotnet/dotnet/tree/main/src) and is **not** keeping its official build, your repository will be subscribed to the [VMR](https://github.com/dotnet/dotnet) (`dotnet/dotnet`) instead.
+If your repository has subscriptions to a repository that is [part of the VMR](https://github.com/dotnet/dotnet/tree/main/src) and is **not** keeping its official build, your repository will be subscribed to the [VMR](https://github.com/dotnet/dotnet) (`dotnet/dotnet`) instead.
 Some VMR repositories will keep their original official build though.
 
 ### Where can I find the official build of the VMR?
