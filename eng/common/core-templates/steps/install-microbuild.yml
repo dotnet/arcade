@@ -5,7 +5,7 @@ parameters:
   # Will be ignored if 'enableMicrobuild' is false or 'Agent.Os' is 'Windows_NT'
   enableMicrobuildForMacAndLinux: false
   # Location of the MicroBuild output folder
-  microBuildOutputFolder: '$(Agent.TempDirectory)'
+  microBuildOutputFolder: '$(Build.SourcesDirectory)'
   continueOnError: false
 
 steps:
@@ -41,7 +41,7 @@ steps:
         inputs:
           packageType: sdk
           version: 8.0.x
-          installationPath: ${{ parameters.microBuildOutputFolder }}/dotnet
+          installationPath: ${{ parameters.microBuildOutputFolder }}/.dotnet
           workingDirectory: ${{ parameters.microBuildOutputFolder }}
         condition: and(succeeded(), ne(variables['Agent.Os'], 'Windows_NT'))
 
