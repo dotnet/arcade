@@ -155,24 +155,21 @@ graph TD
     arcade[dotnet/arcade] --> winforms:::active
     runtime[dotnet/runtime] --> winforms
     winformsAssets[winforms-assets]--> winforms
-    net10 --> wpf[dotnet/wpf]
-
-    winforms -.-> winformsCi(dotnet-winforms-ci<br/>pipeline):::pipeline
-    winformsCi -.-> net10(.NET 10 channel):::channel
-    net10 --> winformsTests[winforms-tests]
+    winforms --> wpf[dotnet/wpf]
+    winforms --> winformsTests[winforms-tests]
 
     classDef active fill:#ffcc00,stroke:#aa8800,color:#000;
-    classDef pipeline fill:#00ffcc,color:#000;
-    classDef channel fill:#00ccff,color:#000;
 ```
 
 After the migration, the setup will look like this:
 
 ```mermaid
 graph TD
+    vmr[dotnet/dotnet]
+
     winformsAssets[winforms-assets]--> winforms:::active
 
-    arcade[dotnet/arcade] --> vmr[dotnet/dotnet]
+    arcade[dotnet/arcade] --> vmr
     runtime[dotnet/runtime] --> vmr
     vmr --> runtime
     vmr --> arcade
@@ -180,8 +177,8 @@ graph TD
 
     vmr --> wpf[dotnet/wpf]
     wpf --> vmr
-    vmr --> winformsTests[winforms-tests]
     vmr --> winforms
+    vmr --> winformsTests[winforms-tests]
 
     classDef active fill:#ffcc00,stroke:#aa8800,color:#000;
 ```
@@ -194,8 +191,7 @@ The `runtime` and `arcade` dependencies will flow into `winforms` through the VM
 Either use the [Maestro website](https://maestro.dot.net/subscriptions) or use the [`darc get-subscriptions`](../Darc.md) command.
 
 ### My repository is not part of the VMR. Am I still affected?
-If your repository has subscriptions to a repository that is [part of the VMR] (https://github.com/dotnet/dotnet/tree/main/src) and is **not** keeping its official build, your repository will be subscribed to the [VMR](https://github.com/dotnet/dotnet) (`dotnet/dotnet`) instead
-Your repository will be subscribed to the [VMR](https://github.com/dotnet/dotnet) (`dotnet/dotnet`) instead.
+If your repository has subscriptions to a repository that is [part of the VMR] (https://github.com/dotnet/dotnet/tree/main/src) and is **not** keeping its official build, your repository will be subscribed to the [VMR](https://github.com/dotnet/dotnet) (`dotnet/dotnet`) instead.
 Some VMR repositories will keep their original official build though.
 
 ### Where can I find the official build of the VMR?
