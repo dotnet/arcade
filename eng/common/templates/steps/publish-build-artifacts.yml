@@ -27,6 +27,7 @@ parameters:
 
 - name: retryCountOnTaskFailure
   type: string
+  default: 10
 
 steps:
 - ${{ if eq(parameters.is1ESPipeline, true) }}:
