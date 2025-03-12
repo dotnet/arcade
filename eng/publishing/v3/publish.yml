@@ -4,6 +4,8 @@ parameters:
   BARBuildId: ''
   symbolPublishingAdditionalParameters: ''
   buildQuality: 'daily'
+  SkipInternalAssetToPublicFeedCheck: true
+
 stages:
 - stage: publish
   displayName: Publishing
@@ -126,7 +128,7 @@ stages:
           /p:PublishingInfraVersion=3
           /p:BARBuildId=${{ parameters.BARBuildId }}
           /p:TargetChannels='${{ parameters.PromoteToChannelIds }}'
-          /p:IsInternalBuild=${{ contains(variables['AzDOBranch'], 'internal/') }}
+          /p:IsInternalBuild=$(IsInternalBuild)
           /p:NugetPath=$(NuGetExeToolPath)
           /p:MaestroApiEndpoint='$(MaestroApiEndPoint)'
           /p:BuildAssetRegistryToken='$(AuthenticateMaestro.MaestroToken)'
@@ -152,7 +154,8 @@ stages:
           /p:AzureProject='$(AzDOProject)'
           /p:UseStreamingPublishing='true'
           /p:StreamingPublishingMaxClients=16
-          /p:NonStreamingPublishingMaxClients=12
+          /p:NonStreamingPublishingMaxClients=12       
+          /p:SkipInternalAssetToPublicFeedCheck='$(SkipInternalAssetToPublicFeedCheck)'
 
     - template: /eng/common/templates-official/steps/publish-logs.yml@self
       parameters:
