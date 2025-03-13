@@ -102,6 +102,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public bool PreserveRepoOrigin { get; set; }
 
+        /// <summary>
+        /// The visibility of the artifacts to put in the manifest.
+        /// </summary>
         public ITaskItem[] ArtifactVisibilitiesToPublish { get; set; }
 
         /// <summary>

@@ -102,6 +102,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public bool IsReleaseOnlyPackageVersion { get; set; }
 
+        /// <summary>
+        /// The visibility of the artifacts to put in the manifest.
+        /// </summary>
+        public ITaskItem[] ArtifactVisibilitiesToPublish { get; set; }
+
+
         public override void ConfigureServices(IServiceCollection collection)
         {
             collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
@@ -132,7 +138,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 
                 var buildModel = buildModelFactory.CreateModel(
                     Artifacts,
-                    ArtifactVisibility.All,
+                    GetVisibilitiesToPublish(ArtifactVisibilitiesToPublish),
                     BuildId,
                     BuildData,
                     RepoUri,
@@ -154,5 +160,28 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return !Log.HasLoggedErrors;
         }
 
+        private static ArtifactVisibility GetVisibilitiesToPublish(ITaskItem[] allowedVisibilities)
+        {
+            if (allowedVisibilities is null || allowedVisibilities.Length == 0)
+            {
+                return ArtifactVisibility.External;
+            }
+
+            ArtifactVisibility visibility = 0;
+
+            foreach (var item in allowedVisibilities)
+            {
+                if (Enum.TryParse(item.ItemSpec, true, out ArtifactVisibility parsedVisibility))
+                {
+                    visibility |= parsedVisibility;
+                }
+                else
+                {
+                    throw new ArgumentException($"Invalid visibility: {item.ItemSpec}");
+                }
+            }
+
+            return visibility;
+        }
     }
 }
