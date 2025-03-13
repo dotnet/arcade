@@ -957,7 +957,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             helper = new PipelineArtifactDownloadHelper(artifactInfo.resource.downloadUrl);
                             return true;
                         default:
-                            throw new Exception($"Artifact '{artifactName}' is not a build or pipeline artifact");
+                            throw new Exception($"Artifact '{artifactName}' is not a build or pipeline artifact but a '{artifactInfo.resource.type}'");
                     }
                 }
                 catch (Exception toStore) when (toStore is HttpRequestException || toStore is TaskCanceledException)
