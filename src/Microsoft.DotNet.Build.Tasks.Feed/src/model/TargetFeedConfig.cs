@@ -189,7 +189,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
     {
         All,
         ShippingOnly,
-        NonShippingOnly,
-        CouldBeStable, // V4 only. Assets that could be stable (whether shipping or non-shipping)
+        NonShippingOnly
     }
 }

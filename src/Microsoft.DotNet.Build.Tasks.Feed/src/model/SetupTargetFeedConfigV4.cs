@@ -9,7 +9,6 @@ using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
-using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -31,14 +30,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureDevOpsOrg => "dnceng";
 
-        private readonly BuildModel _buildModel;
-
         public SetupTargetFeedConfigV4(
             TargetChannelConfig targetChannelConfig,
-            BuildModel buildModel,
             bool isInternalBuild,
+            bool isStableBuild,
             string repositoryName,
             string commitSha,
+            bool publishInstallersAndChecksums,
             ITaskItem[] feedKeys,
             ITaskItem[] feedSasUris,
             ITaskItem[] feedOverrides,
@@ -50,22 +48,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             ImmutableList<string> filesToExclude = null,
             bool flatten = true,
             TaskLoggingHelper log = null)
-            : base(isInternalBuild: isInternalBuild,
-                   repositoryName: repositoryName,
-                   commitSha: commitSha,
-                   publishInstallersAndChecksums: true,
-                   installersTargetStaticFeed: null,
-                   installersAzureAccountKey: null,
-                   checksumsTargetStaticFeed: null,
-                   checksumsAzureAccountKey: null,
-                   azureDevOpsStaticShippingFeed: null,
-                   azureDevOpsStaticTransportFeed: null,
-                   azureDevOpsStaticSymbolsFeed: null,
-                   latestLinkShortUrlPrefixes: latestLinkShortUrlPrefixes,
-                   azureDevOpsFeedsKey: null)
+            : base(isInternalBuild, isStableBuild, repositoryName, commitSha, publishInstallersAndChecksums, null, null, null, null, null, null, null, latestLinkShortUrlPrefixes, null)
         {
             _targetChannelConfig = targetChannelConfig;
-            _buildModel = buildModel;
             BuildEngine = buildEngine;
             StableSymbolsFeed = stableSymbolsFeed;
             StablePackagesFeed = stablePackagesFeed;
@@ -100,14 +85,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private IEnumerable<TargetFeedConfig> Feeds()
         {
-            // We create stable feeds if any of the package assets within the build
-            // could be stable. In V4, build stability is ignored.
+            // If the build is stable, we need to create two new feeds (if not provided)
+            // that can contain stable packages. These packages cannot be pushed to the normal
+            // feeds specified in the feed config because it would mean pushing the same package more than once
+            // to the same feed on successive builds, which is not allowed.
 
-            bool generateStableFeeds = _buildModel.Artifacts.Packages.Any(p => p.CouldBeStable.HasValue && p.CouldBeStable.Value == true);
-
-            if (generateStableFeeds)
+            if (IsStableBuild)
             {
                 CreateStablePackagesFeedIfNeeded();
+                CreateStableSymbolsFeedIfNeeded();
 
                 yield return new TargetFeedConfig(
                     TargetFeedContentType.Package,
@@ -117,7 +103,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     LatestLinkShortUrlPrefixes,
                     _targetChannelConfig.AkaMSCreateLinkPatterns,
                     _targetChannelConfig.AkaMSDoNotCreateLinkPatterns,
-                    assetSelection: AssetSelection.CouldBeStable,
+                    assetSelection: AssetSelection.ShippingOnly,
+                    symbolPublishVisibility: SymbolServerVisibility,
+                    isolated: true,
+                    @internal: IsInternalBuild,
+                    flatten: Flatten);
+
+                yield return new TargetFeedConfig(
+                    TargetFeedContentType.Symbols,
+                    StableSymbolsFeed,
+                    FeedType.AzDoNugetFeed,
+                    AzureDevOpsFeedsKey,
+                    LatestLinkShortUrlPrefixes,
+                    _targetChannelConfig.AkaMSCreateLinkPatterns,
+                    _targetChannelConfig.AkaMSDoNotCreateLinkPatterns,
                     symbolPublishVisibility: SymbolServerVisibility,
                     isolated: true,
                     @internal: IsInternalBuild,
@@ -128,6 +127,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 foreach (var type in spec.ContentTypes)
                 {
+                    if (!PublishInstallersAndChecksums)
+                    {
+                        if (PublishingConstants.InstallersAndChecksums.Contains(type))
+                        {
+                            continue;
+                        }
+                    }
+
+                    // If dealing with a stable build, the package feed targeted for shipping packages and symbols
+                    // should be skipped, as it is added above.
+                    if (IsStableBuild && ((type is TargetFeedContentType.Package && spec.Assets == AssetSelection.ShippingOnly) || type is TargetFeedContentType.Symbols))
+                    {
+                        continue;
+                    }
+
                     var oldFeed = spec.FeedUrl;
                     var feed = GetFeedOverride(oldFeed);
                     if (type is TargetFeedContentType.Package &&
@@ -171,6 +185,34 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         flatten: Flatten
                     );
                 }
+            }
+        }
+
+        /// <summary>
+        /// Create the stable symbol packages feed if one is not already explicitly provided
+        /// </summary>
+        /// <exception cref="Exception">Throws if the feed cannot be created</exception>
+        private void CreateStableSymbolsFeedIfNeeded()
+        {
+            if (string.IsNullOrEmpty(StableSymbolsFeed))
+            {
+                var symbolsFeedTask = new CreateAzureDevOpsFeed()
+                {
+                    BuildEngine = BuildEngine,
+                    AzureDevOpsOrg = AzureDevOpsOrg,
+                    AzureDevOpsProject = IsInternalBuild ? "internal" : "public",
+                    AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
+                    RepositoryName = RepositoryName,
+                    CommitSha = CommitSha,
+                    ContentIdentifier = "sym"
+                };
+
+                if (!symbolsFeedTask.Execute())
+                {
+                    throw new Exception($"Problems creating an AzureDevOps (symbols) feed for repository '{RepositoryName}' and commit '{CommitSha}'.");
+                }
+
+                StableSymbolsFeed = symbolsFeedTask.TargetFeedURL;
             }
         }
 

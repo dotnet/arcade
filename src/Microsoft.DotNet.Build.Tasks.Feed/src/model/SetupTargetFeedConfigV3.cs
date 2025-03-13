@@ -30,9 +30,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureDevOpsOrg => "dnceng";
 
-        protected bool IsStableBuild { get; set; }
-
-
         public SetupTargetFeedConfigV3(
             TargetChannelConfig targetChannelConfig,
             bool isInternalBuild,
@@ -51,21 +48,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             ImmutableList<string> filesToExclude = null,
             bool flatten = true,
             TaskLoggingHelper log = null) 
-            : base(isInternalBuild: isInternalBuild,
-                   repositoryName: repositoryName,
-                   commitSha: commitSha,
-                   publishInstallersAndChecksums: publishInstallersAndChecksums,
-                   installersTargetStaticFeed: null,
-                   installersAzureAccountKey: null,
-                   checksumsTargetStaticFeed: null,
-                   checksumsAzureAccountKey: null,
-                   azureDevOpsStaticShippingFeed: null,
-                   azureDevOpsStaticTransportFeed: null,
-                   azureDevOpsStaticSymbolsFeed: null,
-                   latestLinkShortUrlPrefixes: latestLinkShortUrlPrefixes,
-                   azureDevOpsFeedsKey: null)
+            : base(isInternalBuild, isStableBuild, repositoryName, commitSha, publishInstallersAndChecksums, null, null, null, null, null, null, null, latestLinkShortUrlPrefixes, null)
         {
-            IsStableBuild = isStableBuild;
             _targetChannelConfig = targetChannelConfig;
             BuildEngine = buildEngine;
             StableSymbolsFeed = stableSymbolsFeed;
