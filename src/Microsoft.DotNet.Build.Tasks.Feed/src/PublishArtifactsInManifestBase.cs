@@ -937,9 +937,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         return false;
                     }
 
-                    switch (artifactInfo.resource.type)
+                    switch (artifactInfo.resource.type.ToLowerInvariant())
                     {
-                        case "Container":
+                        case "container":
                             string[] segment = artifactInfo.resource.data.Split('/');
                             if (segment.Length < 2)
                             {
@@ -953,7 +953,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 AzureDevOpsOrg,
                                 AzureApiVersionForFileDownload);
                             return true;
-                        case "PipelineArtifact":
+                        case "pipelineartifact":
                             helper = new PipelineArtifactDownloadHelper(artifactInfo.resource.downloadUrl);
                             return true;
                         default:
