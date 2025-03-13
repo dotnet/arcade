@@ -164,9 +164,13 @@ while :; do
         armel)
             __BuildArch=armel
             __UbuntuArch=armel
-            __UbuntuRepo="http://ftp.debian.org/debian/"
+            __UbuntuRepo="http://archive.debian.org/debian/"
             __CodeName=buster
             __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
+            __LLDB_Package="liblldb-6.0-dev"
+            __UbuntuPackages="${__UbuntuPackages// libomp-dev/}"
+            __UbuntuPackages="${__UbuntuPackages// libomp5/}"
+            __UbuntuSuites=
             ;;
         armv6)
             __BuildArch=armv6
@@ -310,7 +314,7 @@ while :; do
             __KeyringFile="/usr/share/keyrings/debian-archive-keyring.gpg"
 
             if [[ -z "$__UbuntuRepo" ]]; then
-                __UbuntuRepo="http://ftp.debian.org/debian/"
+                __UbuntuRepo="http://archive.debian.org/debian/"
             fi
             ;;
         bullseye) # Debian 11
@@ -448,10 +452,6 @@ if [[ "$__AlpineVersion" =~ 3\.1[345] ]]; then
     # compiler-rt--static was merged in compiler-rt package in alpine 3.16
     # for older versions, we need compiler-rt--static, so replace the name
     __AlpinePackages="${__AlpinePackages/compiler-rt/compiler-rt-static}"
-fi
-
-if [[ "$__BuildArch" == "armel" ]]; then
-    __LLDB_Package="lldb-3.5-dev"
 fi
 
 __UbuntuPackages+=" ${__LLDB_Package:-}"
