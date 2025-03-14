@@ -5,7 +5,7 @@ parameters:
   # Will be ignored if 'enableMicrobuild' is false or 'Agent.Os' is 'Windows_NT'
   enableMicrobuildForMacAndLinux: false
   # Location of the MicroBuild output folder
-  microBuildOutputFolder: '$(Agent.TempDirectory)'
+  microBuildOutputFolder: '$(Build.SourcesDirectory)'
   continueOnError: false
 
 steps:
@@ -41,7 +41,7 @@ steps:
         inputs:
           packageType: sdk
           version: 8.0.x
-          installationPath: ${{ parameters.microBuildOutputFolder }}/dotnet
+          installationPath: ${{ parameters.microBuildOutputFolder }}/.dotnet
           workingDirectory: ${{ parameters.microBuildOutputFolder }}
         condition: and(succeeded(), ne(variables['Agent.Os'], 'Windows_NT'))
 
@@ -53,6 +53,7 @@ steps:
         feedSource: https://dnceng.pkgs.visualstudio.com/_packaging/MicroBuildToolset/nuget/v3/index.json
         ${{ if and(eq(parameters.enableMicrobuildForMacAndLinux, 'true'), ne(variables['Agent.Os'], 'Windows_NT')) }}:
           azureSubscription: 'MicroBuild Signing Task (DevDiv)'
+          useEsrpCli: true
       env:
         TeamName: $(_TeamName)
         MicroBuildOutputFolderOverride: ${{ parameters.microBuildOutputFolder }}
