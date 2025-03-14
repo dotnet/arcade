@@ -2,7 +2,7 @@ Param(
     [Parameter(Mandatory=$true)][string] $ManifestDirPath    # Manifest directory where sbom will be placed
 )
 
-. $PSScriptRoot\pip
+. $PSScriptRoot\pipeline-logging-functions.ps1
 
 # Normally - we'd listen to the manifest path given, but 1ES templates will overwrite if this level gets uploaded directly
 # with their own overwriting ours. So we create it as a sub directory of the requested manifest path.
