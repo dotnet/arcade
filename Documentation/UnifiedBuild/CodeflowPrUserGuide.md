@@ -26,10 +26,6 @@ The Codeflow mechanism relies on metadata files that can be found in each dotnet
 - **`Version.Details.xml`**
   - This file already existed - it contains versioning information for dependencies between repositories. A new <Source> tag is added to track the latest codeflow from the VMR.
 
-## What to Do in Case of Conflicts
-
-If you have an ongoing dependency PR in your repository with additional changes/work: 
-- Finish the PR as you would normally. If there are conflicts with the newly merged backflow PRs, you may tag **@dotnet/product-construction** in your PR and we will help you resolve those.
 
 ## FAQ
 
@@ -38,7 +34,7 @@ If you have an ongoing dependency PR in your repository with additional changes/
 - **How do I find the new codeflow subscriptions?**
   - A full list of subscriptions can be found at on the [maestro.dot.net](https://maestro.dot.net/subscriptions) webpage. Subscriptions can be managed with DARC commands in the same way they always were.
 - **What should I do in case of conflicts?**
-  - Follow the steps in [What to Do in Case of Conflicts](#what-to-do-in-case-of-conflicts).
+  - If you have an ongoing dependency PR in your repository with additional changes/work: Finish the PR as you would normally. If there are conflicts with the newly merged backflow PRs, you may tag **@dotnet/product-construction** in your PR and we will help you resolve those.
 
 ## Contacts & Support
 
