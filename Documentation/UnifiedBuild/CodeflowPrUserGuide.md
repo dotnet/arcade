@@ -2,24 +2,34 @@
 
 ## What is Codeflow?
 
-Codeflow PRs are automated pull requests created by the [Product Construction Service (PCS)](https://github.com/dotnet/arcade-services), that are used to manage the dependencies that exist among dotnet repositories, as well as synchronizing all of the source code from dotnet repositories into a [Virtual MonoRepo (VMR)](https://github.com/dotnet/dotnet). Previously, automated PRs were used to update dependencies among dotnet repositoires, but source code was not synchronized. The introduction of the VMR allows us to build the entirety of dotnet rapidly in a single place.
+Codeflow PRs are created by source-enabled subscriptions, which are a new type of [Maestro dependency subscriptions]. 
 
-For additional information, refer to [VMR Code and Build Workflow](https://github.com/dotnet/arcade/blob/main/Documentation/UnifiedBuild/VMR-Code-And-Build-Workflow.md).
+
+Codeflow PRs are automated pull requests created by [Maestro](https://maestro.dot.net). They are a new type of automated dependency PRs that are created by source-enabled subscriptions. These subscriptions can be only created between a the [VMR (Virtual Monolithic Repository)](https://github.com/dotnet/dotnet/) and product repositories that have their [sources in the VMR](https://github.com/dotnet/dotnet/tree/main/src)
+
+Codeflow PRs have two roles:
+- Managing the dependencies that exist among dotnet repositories,
+- Synchronizing all of the source code from dotnet repositories into the [VMR](https://github.com/dotnet/dotnet#readme). 
+
+Previously, automated PRs were used to update dependencies among dotnet repositoires, but source code was not synchronized. The introduction of the VMR allows us to build the entirety of the dotnet sdk rapidly from a single source.
 
 Another consequence of Codeflow PRs is that the intricate dependency graph among dotnet repositories is replaced by a flat graph of dependencies (also called Flat Flow), where each product subscribes only to updates coming from the VMR.
 
+For additional information about codeflow and the VMR, refer to [VMR Code and Build Workflow](https://github.com/dotnet/arcade/blob/main/Documentation/UnifiedBuild/VMR-Code-And-Build-Workflow.md).
+
+
 ## Codeflow PR Metadata
 
-The Codeflow mechanism relies on metadata files that can be found in each dotnet repository that is managed by the PCS.
+The Codeflow mechanism relies on metadata files that can be found in each dotnet repository that is managed by the PCS. These files should not be modified by humans!
 - **`source-manifest.json`**
-  - Records the origin of source code changes that are synchronized into the VMR.
+  - A file contained in the [VMR](https://github.com/dotnet/dotnet) that records the latest source-code synchronization between every repository and the VMR.
 - **`Version.Details.xml`**
-  - Contains versioning information for dependencies, ensuring consistent package updates.
+  - This file already existed - it contains versioning information for dependencies between repositories. A new <Source> tag is added to track the latest codeflow from the VMR.
 
 ## What to Do in Case of Conflicts
 
-If a Codeflow PR encounters merge conflicts, follow these steps:
-[TBD]
+If you have an ongoing dependency PR in your repository with additional changes/work: 
+- Finish the PR as you would normally. If there are conflicts with the newly merged backflow PRs, you may tag **@dotnet/product-construction** in your PR and we will help you resolve those.
 
 ## FAQ
 
@@ -30,8 +40,18 @@ If a Codeflow PR encounters merge conflicts, follow these steps:
 - **What should I do in case of conflicts?**
   - Follow the steps in [What to Do in Case of Conflicts](#what-to-do-in-case-of-conflicts).
 
+## Contacts & Support
+
+If you need help or have questions around the new flow, please either:
+- tag the **@dotnet/product-construction** team on your PR/issue,
+- use the [First Responder channel](https://teams.microsoft.com/l/channel/19%3Aafba3d1545dd45d7b79f34c1821f6055%40thread.skype/First%20Responders?groupId=4d73664c-9f2f-450d-82a5-c2f02756606d),
+- open an issue in [dotnet/arcade-services](https://github.com/dotnet/arcade-services/issues/new?template=BLANK_ISSUE),
+- or contact the [.NET Product Construction Services team](mailto:dotnetprodconsvcs@microsoft.com) via e-mail.
+
+
 ## Additional Resources
 
 - [VMR Code and Build Workflow](https://github.com/dotnet/arcade/blob/main/Documentation/UnifiedBuild/VMR-Code-And-Build-Workflow.md)
 - [VMR Full Code Flow](https://github.com/dotnet/arcade/blob/main/Documentation/UnifiedBuild/VMR-Full-Code-Flow.md)
 - [Darc Documentation](https://github.com/dotnet/arcade/tree/main/Documentation/Darc)
+- [Branches, channels, and subscriptions](https://github.com/dotnet/arcade/blob/main/Documentation/BranchesChannelsAndSubscriptions.md)
