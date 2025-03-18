@@ -10,12 +10,13 @@
     <PackageReference Include="xunit.analyzers" Version="$(XUnitAnalyzersVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true" />
     <PackageReference Include="xunit.assert" Version="$(XUnitVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true" Condition="'$(UseDotNetXUnitAssert)' != 'true' or '$(TargetFrameworkIdentifier)' != '.NETCoreApp'" />
     <PackageReference Include="Microsoft.DotNet.XUnitAssert" Version="$(MicrosoftDotNetXUnitAssertVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true" Condition="'$(UseDotNetXUnitAssert)' == 'true' and '$(TargetFrameworkIdentifier)' == '.NETCoreApp'" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="$(XUnitRunnerVisualStudioVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true"/>
+    <PackageReference Include="xunit.runner.visualstudio" Version="$(XUnitRunnerVisualStudioVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true" Condition="'$(TargetFrameworkIdentifier)' != '.NETFramework'" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="$(XUnitRunnerVisualStudioVersionForNetFramework)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" />
   </ItemGroup>
 
   <!-- Workaround for https://github.com/xunit/xunit/issues/1651 -->
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
-    <None Remove="$(NuGetPackageRoot)xunit.runner.visualstudio\$(XUnitRunnerVisualStudioVersion)\build\net472\xunit.abstractions.dll" />
+    <None Remove="$(NuGetPackageRoot)xunit.runner.visualstudio\$(XUnitRunnerVisualStudioVersionForNetFramework)\build\net472\xunit.abstractions.dll" />
   </ItemGroup>
 
   <PropertyGroup>
