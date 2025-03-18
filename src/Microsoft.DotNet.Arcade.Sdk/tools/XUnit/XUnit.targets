@@ -15,7 +15,7 @@
 
   <!-- Workaround for https://github.com/xunit/xunit/issues/1651 -->
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
-    <None Remove="$(NuGetPackageRoot)xunit.runner.visualstudio\$(XUnitRunnerVisualStudioVersion)\build\net462\xunit.abstractions.dll" />
+    <None Remove="$(NuGetPackageRoot)xunit.runner.visualstudio\$(XUnitRunnerVisualStudioVersion)\build\net472\xunit.abstractions.dll" />
   </ItemGroup>
 
   <PropertyGroup>
