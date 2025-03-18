@@ -224,21 +224,22 @@ function Build {
     bl="/bl:\"$log_dir/Build.binlog\""
   fi
 
+  [[ $properties != *"/p:Configuration"* ]] && properties="$properties /p:Configuration=$configuration"
+  [[ $properties != *"/p:RepoRoot"* ]] && properties="$properties /p:RepoRoot=\"$repo_root\""
+  [[ $properties != *"/p:Restore"* ]] && properties="$properties /p:Restore=$restore"
+  [[ $properties != *"/p:Build"* ]] && properties="$properties /p:Build=$build"
+  [[ $properties != *"/p:DotNetBuildRepo"* ]] && properties="$properties /p:DotNetBuildRepo=$product_build"
+  [[ $properties != *"/p:DotNetBuildSourceOnly"* ]] && properties="$properties /p:DotNetBuildSourceOnly=$source_build"
+  [[ $properties != *"/p:Rebuild"* ]] && properties="$properties /p:Rebuild=$rebuild"
+  [[ $properties != *"/p:Test"* ]] && properties="$properties /p:Test=$test"
+  [[ $properties != *"/p:Pack"* ]] && properties="$properties /p:Pack=$pack"
+  [[ $properties != *"/p:IntegrationTest"* ]] && properties="$properties /p:IntegrationTest=$integration_test"
+  [[ $properties != *"/p:PerformanceTest"* ]] && properties="$properties /p:PerformanceTest=$performance_test"
+  [[ $properties != *"/p:Sign"* ]] && properties="$properties /p:Sign=$sign"
+  [[ $properties != *"/p:Publish"* ]] && properties="$properties /p:Publish=$publish"
+
   MSBuild $_InitializeToolset \
     $bl \
-    /p:Configuration=$configuration \
-    /p:RepoRoot="$repo_root" \
-    /p:Restore=$restore \
-    /p:Build=$build \
-    /p:DotNetBuildRepo=$product_build \
-    /p:DotNetBuildSourceOnly=$source_build \
-    /p:Rebuild=$rebuild \
-    /p:Test=$test \
-    /p:Pack=$pack \
-    /p:IntegrationTest=$integration_test \
-    /p:PerformanceTest=$performance_test \
-    /p:Sign=$sign \
-    /p:Publish=$publish \
     $properties
 
   ExitWithExitCode 0

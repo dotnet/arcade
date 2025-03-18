@@ -101,6 +101,12 @@
 
   <Target Name="RunInnerSourceBuildCommand"
           DependsOnTargets="PrepareInnerSourceBuildRepoRoot">
+    <ItemGroup Condition="'$(BaseInnerSourceBuildCommand)' == ''">
+      <InnerCommands Include="$(ARCADE_BUILD_TOOL_COMMAND.Split(' '))" />
+      <InnerSourceBuildCommand Include="@(InnerCommands)" Condition="!$(InnerBuildArgs.Contains('$([System.String]::Copy('%(Identity)').Split('=')[0])'))" />
+      <InnerSourceBuildCommand Remove="@(InnerCommands)" Condition="$([System.String]::Copy('%(Identity)').Contains('/bl:'))" />
+    </ItemGroup>
+
     <PropertyGroup>
       <!-- Prevent any projects from building in the outside build: they would use prebuilts. -->
       <PreventPrebuiltBuild>true</PreventPrebuiltBuild>
@@ -110,7 +116,7 @@
         appended. Allow the repo to override this default behavior if the repo is e.g. not onboarded
         enough on Arcade for this to work nicely.
       -->
-      <BaseInnerSourceBuildCommand Condition="'$(BaseInnerSourceBuildCommand)' == ''">$(ARCADE_BUILD_TOOL_COMMAND)</BaseInnerSourceBuildCommand>
+      <BaseInnerSourceBuildCommand Condition="'$(BaseInnerSourceBuildCommand)' == ''">@(InnerSourceBuildCommand->'%(Identity)', ' ')</BaseInnerSourceBuildCommand>
     </PropertyGroup>
 
     <Exec
