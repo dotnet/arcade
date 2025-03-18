@@ -9,10 +9,10 @@ As the name suggests, source-enabled subscriptions not only update dependencies 
 They ensure that repository sources remain in sync with the corresponding `src/` directory in the VMR.
 Source code changes can originate in either the repository or the VMR and are synchronized to the other side via source-enabled subscriptions.
 
-> [!IMPORTANT]  
-> Opening PRs against the VMR is **not yet permitted** and will be allowed in the near future. For now, source code changes should only be made in the repositories, barring exceptional cases.  
+> [!IMPORTANT]
+> Opening PRs against the VMR is **not yet permitted** and will be allowed in the near future. For now, source code changes should only be made in the repositories, barring exceptional cases.
 
-For more details on codeflow and the VMR, see [VMR Code and Build Workflow](https://github.com/dotnet/arcade/blob/main/Documentation/UnifiedBuild/VMR-Code-And-Build-Workflow.md).  
+For more details on codeflow and the VMR, see [VMR Code and Build Workflow](https://github.com/dotnet/arcade/blob/main/Documentation/UnifiedBuild/VMR-Code-And-Build-Workflow.md).
 
 ## Codeflow PR Metadata
 
