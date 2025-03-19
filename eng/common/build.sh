@@ -211,6 +211,19 @@ function InitializeCustomToolset {
   fi
 }
 
+function AddPropertyIfMissing {
+  while [[ $# > 0 ]]; do  
+    local property_name=$1
+    local property_value=$2
+    
+    if [[ ${properties,,} != *"/p:${property_name,,}"* ]]; then
+      properties="$properties /p:$property_name=$property_value"
+    fi
+    shift
+    shift
+  done
+}
+
 function Build {
   InitializeToolset
   InitializeCustomToolset
@@ -224,19 +237,19 @@ function Build {
     bl="/bl:\"$log_dir/Build.binlog\""
   fi
 
-  [[ $properties != *"/p:Configuration"* ]] && properties="$properties /p:Configuration=$configuration"
-  [[ $properties != *"/p:RepoRoot"* ]] && properties="$properties /p:RepoRoot=\"$repo_root\""
-  [[ $properties != *"/p:Restore"* ]] && properties="$properties /p:Restore=$restore"
-  [[ $properties != *"/p:Build"* ]] && properties="$properties /p:Build=$build"
-  [[ $properties != *"/p:DotNetBuildRepo"* ]] && properties="$properties /p:DotNetBuildRepo=$product_build"
-  [[ $properties != *"/p:DotNetBuildSourceOnly"* ]] && properties="$properties /p:DotNetBuildSourceOnly=$source_build"
-  [[ $properties != *"/p:Rebuild"* ]] && properties="$properties /p:Rebuild=$rebuild"
-  [[ $properties != *"/p:Test"* ]] && properties="$properties /p:Test=$test"
-  [[ $properties != *"/p:Pack"* ]] && properties="$properties /p:Pack=$pack"
-  [[ $properties != *"/p:IntegrationTest"* ]] && properties="$properties /p:IntegrationTest=$integration_test"
-  [[ $properties != *"/p:PerformanceTest"* ]] && properties="$properties /p:PerformanceTest=$performance_test"
-  [[ $properties != *"/p:Sign"* ]] && properties="$properties /p:Sign=$sign"
-  [[ $properties != *"/p:Publish"* ]] && properties="$properties /p:Publish=$publish"
+  AddPropertyIfMissing Configuration $configuration \
+                       RepoRoot \"$repo_root\" \
+                       Restore $restore \
+                       Build $build \
+                       DotNetBuildRepo $product_build \
+                       DotNetBuildSourceOnly $source_build \
+                       Rebuild $rebuild \
+                       Test $test \
+                       Pack $pack \
+                       IntegrationTest $integration_test \
+                       PerformanceTest $performance_test \
+                       Sign $sign \
+                       Publish $publish
 
   MSBuild $_InitializeToolset \
     $bl \
