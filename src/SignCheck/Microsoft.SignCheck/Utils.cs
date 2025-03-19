@@ -8,6 +8,9 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
+#if NET
+using System.Formats.Tar;
+#endif
 
 namespace Microsoft.SignCheck
 {
@@ -183,6 +186,22 @@ namespace Microsoft.SignCheck
             if (exitCode != 0)
             {
                 throw new Exception($"Failed to import Microsoft public key: {(string.IsNullOrEmpty(error) ? "unknown error" : error)}");
+            }
+        }
+
+        /// <summary>
+        /// Gets the next entry in a tar archive.
+        /// </summary>
+        public static TarEntry TryGetNextTarEntry(this TarReader reader)
+        {
+            try
+            {
+                return reader.GetNextEntry();
+            }
+            catch (EndOfStreamException)
+            {
+                // The stream is empty
+                return null;
             }
         }
 #endif
