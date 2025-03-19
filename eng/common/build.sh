@@ -240,6 +240,7 @@ function Build {
 
   MSBuild $_InitializeToolset \
     $bl \
+    /check \
     $properties
 
   ExitWithExitCode 0
