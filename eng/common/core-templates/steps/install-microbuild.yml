@@ -72,3 +72,27 @@ steps:
             eq(variables['_SignType'], 'real')
           )
         ))
+
+    - ${{ if eq(parameters.enableMicrobuildForMacAndLinux, 'true') }}:
+      - task: UseDotNet@2
+        displayName: Install .NET 9.0 SDK for ESRP CLI Workaround
+        inputs:
+          packageType: sdk
+          version: 9.0.x
+          installationPath: ${{ parameters.microBuildOutputFolder }}/.dotnet
+          workingDirectory: ${{ parameters.microBuildOutputFolder }}
+        condition: and(succeeded(), eq(variables['Agent.OS'], 'Linux'))
+
+      - task: PowerShell@2
+        displayName: Workaround for ESRP CLI on Linux
+        inputs:
+          targetType: 'inline'
+          script: |
+            Write-Host "Copying Linux Path"
+            $MBSIGN_APPFOLDER = '$(MBSIGN_APPFOLDER)'
+            $MBSIGN_APPFOLDER = $MBSIGN_APPFOLDER -replace '/build', ''
+            $MBSIGN_APPFOLDER = $MBSIGN_APPFOLDER + '/1.1.1032' + '/build'
+            $MBSIGN_APPFOLDER | Write-Host
+            $SignConfigPath = $MBSIGN_APPFOLDER + '/signconfig.xml'
+            Copy-Item -Path "$(MBSIGN_APPFOLDER)/signconfig.xml" -Destination $SignConfigPath -Force
+        condition: and(succeeded(), eq(variables['Agent.OS'], 'Linux'))
