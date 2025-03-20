@@ -87,9 +87,6 @@
     <XUnitVersion Condition="'$(XUnitVersion)' == ''">2.9.2</XUnitVersion>
     <XUnitAnalyzersVersion Condition="'$(XUnitAnalyzersVersion)' == ''">1.16.0</XUnitAnalyzersVersion>
     <XUnitRunnerConsoleVersion Condition="'$(XUnitRunnerConsoleVersion)' == ''">$(XUnitVersion)</XUnitRunnerConsoleVersion>
-    <!-- xunit.runner.visualstudio versions after 2.8.2 only support net472 for netfx targets so we default to the older version there -->
-    <XUnitRunnerVisualStudioVersionForNetFramework Condition="'$(XUnitRunnerVisualStudioVersionForNetFramework)' == '' and '$(XUnitRunnerVisualStudioVersion)' == ''">2.8.2</XUnitRunnerVisualStudioVersionForNetFramework>
-    <XUnitRunnerVisualStudioVersionForNetFramework Condition="'$(XUnitRunnerVisualStudioVersionForNetFramework)' == '' and '$(XUnitRunnerVisualStudioVersion)' != ''">$(XUnitRunnerVisualStudioVersion)</XUnitRunnerVisualStudioVersionForNetFramework>
     <XUnitRunnerVisualStudioVersion Condition="'$(XUnitRunnerVisualStudioVersion)' == ''">3.0.2</XUnitRunnerVisualStudioVersion>
 
     <MSTestVersion Condition="'$(MSTestVersion)' == ''">3.7.0</MSTestVersion>
