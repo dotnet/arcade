@@ -169,23 +169,32 @@ namespace Microsoft.SignCheck
 
 #if NET
         /// <summary>
-        /// Download the Microsoft public key and import it into the keyring.
+        /// Download the Microsoft and Azure Linux public keys and import them into the keyring.
         /// </summary>
-        public static void DownloadAndConfigureMicrosoftPublicKey(string tempDir)
+        public static void DownloadAndConfigurePublicKeys(string tempDir)
         {
-            using (Stream stream = s_client.GetStreamAsync("https://packages.microsoft.com/keys/microsoft.asc").Result)
+            string[] keyUrls = new string[]
             {
-                using (FileStream fileStream = File.Create($"{tempDir}/microsoft.asc"))
+                "https://packages.microsoft.com/keys/microsoft.asc", // Microsoft public key
+                "https://raw.githubusercontent.com/microsoft/azurelinux/3.0/SPECS/azurelinux-repos/MICROSOFT-RPM-GPG-KEY" // Azure linux public key
+            };
+            foreach (string keyUrl in keyUrls)
+            {
+                string keyPath = Path.Combine(tempDir, Path.GetFileName(keyUrl));
+                using (Stream stream = s_client.GetStreamAsync(keyUrl).Result)
                 {
-                    stream.CopyTo(fileStream);
+                    using (FileStream fileStream = File.Create(keyPath))
+                    {
+                        stream.CopyTo(fileStream);
+                    }
                 }
-            }
 
-            (int exitCode, _, string error) = RunBashCommand($"gpg --import {tempDir}/microsoft.asc");
+                (int exitCode, _, string error) = RunBashCommand($"gpg --import {keyPath}");
 
-            if (exitCode != 0)
-            {
-                throw new Exception($"Failed to import Microsoft public key: {(string.IsNullOrEmpty(error) ? "unknown error" : error)}");
+                if (exitCode != 0)
+                {
+                    throw new Exception($"Failed to import Microsoft public key: {(string.IsNullOrEmpty(error) ? "unknown error" : error)}");
+                }
             }
         }
 
