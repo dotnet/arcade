@@ -177,7 +177,6 @@ while [[ $# > 0 ]]; do
       ;;
     -buildcheck)
       build_check=true
-      shift
       ;;
     -runtimesourcefeed)
       runtime_source_feed=$2
