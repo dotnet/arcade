@@ -175,7 +175,7 @@ while [[ $# > 0 ]]; do
       node_reuse=$2
       shift
       ;;
-    -buildCheck)
+    -buildcheck)
       build_check=true
       shift
       ;;

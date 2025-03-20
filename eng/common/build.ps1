@@ -7,7 +7,7 @@ Param(
   [string] $msbuildEngine = $null,
   [bool] $warnAsError = $true,
   [bool] $nodeReuse = $true,
-  [bool] $buildCheck = $false,
+  [switch] $buildCheck = $false,
   [switch][Alias('r')]$restore,
   [switch] $deployDeps,
   [switch][Alias('b')]$build,
