@@ -71,6 +71,7 @@
     <!-- Setting 'Projects' overrides the ProjectToBuild list. -->
     <ProjectToBuild Remove="@(ProjectToBuild)" />
     <ProjectToBuild Include="$(Projects)" />
+    <ProjectToBuild Update="@(PackageReference)" Condition="'$(_DotNetBuildPassNormalized)' != '' DotNetBuildPass="$(_DotNetBuildPassNormalized)" />
   </ItemGroup>
 
   <!--
