@@ -153,6 +153,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.MacOsPkg.T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.StrongName", "src\Microsoft.DotNet.StrongName\Microsoft.DotNet.StrongName.csproj", "{B65809A4-C6DB-4994-BBDE-D5B8396958A6}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Microsoft.DotNet.XUnitExtensions.Shared", "src\Microsoft.DotNet.XUnitExtensions.Shared\Microsoft.DotNet.XUnitExtensions.Shared.shproj", "{3A0BC9CF-F9BF-4961-8615-1919C99FDD27}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -1052,5 +1054,9 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {32B9C883-432E-4FC8-A1BF-090EB033DD5B}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		src\Microsoft.DotNet.XUnitExtensions.Shared\Microsoft.DotNet.XUnitExtensions.Shared.projitems*{3a0bc9cf-f9bf-4961-8615-1919c99fdd27}*SharedItemsImports = 13
+		src\Microsoft.DotNet.XUnitExtensions.Shared\Microsoft.DotNet.XUnitExtensions.Shared.projitems*{f8e7fec3-b9e0-4a08-8608-f48379204f3a}*SharedItemsImports = 5
 	EndGlobalSection
 EndGlobal
