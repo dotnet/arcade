@@ -10,6 +10,7 @@ using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NuGet.Packaging;
+using System.IO;
 
 namespace Microsoft.DotNet.Build.Manifest
 {
@@ -178,7 +179,15 @@ namespace Microsoft.DotNet.Build.Manifest
         {
             try
             {
-                return BuildModel.Parse(XElement.Load(assetManifestPath));
+                using (var stream = _fileSystem.GetFileStream(assetManifestPath, FileMode.Open, FileAccess.Read))
+                {
+                    if (stream == null)
+                    {
+                        _log.LogError($"Could not open asset manifest file: {assetManifestPath}");
+                        return null;
+                    }
+                    return BuildModel.Parse(XElement.Load(stream));
+                }
             }
             catch (Exception e)
             {
