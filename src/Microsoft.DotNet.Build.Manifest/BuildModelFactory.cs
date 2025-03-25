@@ -9,6 +9,7 @@ using System.Xml.Linq;
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using NuGet.Packaging;
 
 namespace Microsoft.DotNet.Build.Manifest
 {
@@ -28,7 +29,7 @@ namespace Microsoft.DotNet.Build.Manifest
             bool isReleaseOnlyPackageVersion);
 
         BuildModel ManifestFileToModel(string assetManifestPath);
-        BuildModel CreateMergedModel(List<BuildModel> models);
+        BuildModel CreateMergedModel(List<BuildModel> models, ArtifactVisibility artifactVisibilitiesToInclude);
     }
 
     public class BuildModelFactory : IBuildModelFactory
@@ -236,7 +237,7 @@ namespace Microsoft.DotNet.Build.Manifest
         /// </summary>
         /// <param name="models">Manifests</param>
         /// <returns>Build model with the contents of all manifests. Please note, the identity and assets may be ref-equal</returns>
-        public BuildModel CreateMergedModel(List<BuildModel> models)
+        public BuildModel CreateMergedModel(List<BuildModel> models, ArtifactVisibility artifactVisibilitiesToInclude)
         {
             if (models == null || models.Count == 0)
             {
@@ -286,9 +287,12 @@ namespace Microsoft.DotNet.Build.Manifest
             // Concatenate artifacts from all manifests.
             foreach (BuildModel manifest in models)
             {
-                mergedModel.Artifacts.Blobs.AddRange(manifest.Artifacts.Blobs);
-                mergedModel.Artifacts.Packages.AddRange(manifest.Artifacts.Packages);
-                mergedModel.Artifacts.Pdbs.AddRange(manifest.Artifacts.Pdbs);
+                mergedModel.Artifacts.Blobs.AddRange(
+                    manifest.Artifacts.Blobs.Where(b => artifactVisibilitiesToInclude.HasFlag(b.Visibility)));
+                mergedModel.Artifacts.Packages.AddRange(
+                    manifest.Artifacts.Packages.Where(p => artifactVisibilitiesToInclude.HasFlag(p.Visibility)));
+                mergedModel.Artifacts.Pdbs.AddRange(
+                    manifest.Artifacts.Pdbs.Where(p => artifactVisibilitiesToInclude.HasFlag(p.Visibility)));
             }
 
             return mergedModel;

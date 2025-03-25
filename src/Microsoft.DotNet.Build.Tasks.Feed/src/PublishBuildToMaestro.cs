@@ -119,7 +119,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         return !Log.HasLoggedErrors;
                     }
 
-                    var mergedManifest = _buildModelFactory.CreateMergedModel(parsedManifests);
+                    var mergedManifest = _buildModelFactory.CreateMergedModel(parsedManifests, ArtifactVisibility.All);
 
                     // Update the merged manifest with any missing manifest build data based on the environment.
                     mergedManifest.Identity.AzureDevOpsAccount = mergedManifest.Identity.AzureDevOpsAccount ?? GetAzDevAccount();
