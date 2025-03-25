@@ -1,8 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-// TODO: Not yet supported for xunit.v3
-#if !USES_XUNIT_3
 using System;
 using System.Linq;
 #if !USES_XUNIT_3
@@ -42,7 +40,25 @@ namespace Microsoft.DotNet.XUnitExtensions
                 if (exceptionType == typeof(SkipTestException).FullName)
                 {
                     SkippedTestCount++;
-                    return innerBus.QueueMessage(new TestSkipped(testFailed.Test, testFailed.Messages.FirstOrDefault()));
+#if USES_XUNIT_3
+                    var testSkippedMessage = new TestSkipped()
+                    {
+                        AssemblyUniqueID = testFailed.AssemblyUniqueID,
+                        ExecutionTime = testFailed.ExecutionTime,
+                        FinishTime = testFailed.FinishTime,
+                        Output = testFailed.Output,
+                        Reason = testFailed.Messages.FirstOrDefault(),
+                        TestCaseUniqueID = testFailed.TestCaseUniqueID,
+                        TestClassUniqueID = testFailed.TestClassUniqueID,
+                        TestCollectionUniqueID = testFailed.TestCollectionUniqueID,
+                        TestMethodUniqueID = testFailed.TestMethodUniqueID,
+                        TestUniqueID = testFailed.TestUniqueID,
+                        Warnings = testFailed.Warnings,
+                    };
+#else
+                    var testSkippedMessage = new TestSkipped(testFailed.Test, testFailed.Messages.FirstOrDefault());
+#endif
+                    return innerBus.QueueMessage(testSkippedMessage);
                 }
             }
 
@@ -51,4 +67,3 @@ namespace Microsoft.DotNet.XUnitExtensions
         }
     }
 }
-#endif
