@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+#if !USES_XUNIT_3
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -74,3 +75,4 @@ namespace Microsoft.DotNet.XUnitExtensions
             (stressMode.HasFlag(RuntimeTestModes.JitMinOpts) && s_isJitMinOpts.Value);
     }
 }
+#endif

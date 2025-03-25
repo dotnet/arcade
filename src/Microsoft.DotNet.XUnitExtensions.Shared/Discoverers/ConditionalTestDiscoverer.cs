@@ -5,7 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+#if !USES_XUNIT_3
 using Xunit.Abstractions;
+#endif
 using Xunit.Sdk;
 
 namespace Microsoft.DotNet.XUnitExtensions
@@ -17,14 +19,24 @@ namespace Microsoft.DotNet.XUnitExtensions
         // This helper method evaluates the given condition member names for a given set of test cases.
         // If any condition member evaluates to 'false', the test cases are marked to be skipped.
         // The skip reason is the collection of all the condition members that evaluated to 'false'.
-        internal static string EvaluateSkipConditions(ITestMethod testMethod, object[] conditionArguments)
+        internal static string EvaluateSkipConditions(
+#if USES_XUNIT_3
+            IXunitTestMethod testMethod,
+#else
+            ITestMethod testMethod,
+#endif
+            object[] conditionArguments)
         {
             Type calleeType = null;
             string[] conditionMemberNames = null;
 
             if (CheckInputToSkipExecution(conditionArguments, ref calleeType, ref conditionMemberNames, testMethod)) return null;
 
+#if USES_XUNIT_3
+            MethodInfo testMethodInfo = testMethod.Method;
+#else
             MethodInfo testMethodInfo = testMethod.Method.ToRuntimeMethod();
+#endif
             Type testMethodDeclaringType = testMethodInfo.DeclaringType;
             List<string> falseConditions = new List<string>(conditionMemberNames.Count());
 
@@ -52,11 +64,15 @@ namespace Microsoft.DotNet.XUnitExtensions
                     if (symbols.Length == 2)
                     {
                         conditionMemberName = symbols[1];
+#if USES_XUNIT_3
+                        declaringType = testMethod.TestClass.Class.Assembly.ExportedTypes.Where(t => t.Name.Contains(symbols[0])).FirstOrDefault();
+#else
                         ITypeInfo type = testMethod.TestClass.Class.Assembly.GetTypes(false).Where(t => t.Name.Contains(symbols[0])).FirstOrDefault();
                         if (type != null)
                         {
                             declaringType = type.ToRuntimeType();
                         }
+#endif
                     }
                 }
 
@@ -91,7 +107,11 @@ namespace Microsoft.DotNet.XUnitExtensions
             return null;
         }
 
+#if USES_XUNIT_3
+        internal static bool TryEvaluateSkipConditions(ITestFrameworkDiscoveryOptions discoveryOptions, IXunitTestMethod testMethod, object[] conditionArguments, out string skipReason, out ExecutionErrorTestCase errorTestCase)
+#else
         internal static bool TryEvaluateSkipConditions(ITestFrameworkDiscoveryOptions discoveryOptions, IMessageSink diagnosticMessageSink, ITestMethod testMethod, object[] conditionArguments, out string skipReason, out ExecutionErrorTestCase errorTestCase)
+#endif
         {
             skipReason = null;
             errorTestCase = null;
@@ -102,12 +122,17 @@ namespace Microsoft.DotNet.XUnitExtensions
             }
             catch (ConditionalDiscovererException e)
             {
+#if USES_XUNIT_3
+                var details = TestIntrospectionHelper.GetTestCaseDetails(discoveryOptions, testMethod, new Xunit.FactAttribute());
+                errorTestCase = new ExecutionErrorTestCase(testMethod, details.TestCaseDisplayName, details.UniqueID, e.Message);
+#else
                 errorTestCase = new ExecutionErrorTestCase(
                     diagnosticMessageSink,
                     discoveryOptions.MethodDisplayOrDefault(),
                     discoveryOptions.MethodDisplayOptionsOrDefault(),
                     testMethod,
                     e.Message);
+#endif
                 return false;
             }
         }

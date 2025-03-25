@@ -1,13 +1,20 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+// TODO: Not yet supported for xunit.v3
+#if !USES_XUNIT_3
 using System;
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.DotNet.XUnitExtensions;
 using Xunit.Sdk;
 
 namespace Xunit
 {
+#if USES_XUNIT_3
+    [XunitTestCaseDiscoverer(typeof(ConditionalFactDiscoverer))]
+#else
     [XunitTestCaseDiscoverer("Microsoft.DotNet.XUnitExtensions.ConditionalFactDiscoverer", "Microsoft.DotNet.XUnitExtensions")]
+#endif
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
     public sealed class ConditionalFactAttribute : FactAttribute
     {
@@ -30,3 +37,4 @@ namespace Xunit
         }
     }
 }
+#endif
