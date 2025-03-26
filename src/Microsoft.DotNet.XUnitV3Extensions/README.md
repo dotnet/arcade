@@ -1,1 +1,1 @@
-# Microsoft.DotNet.XUnitExtensions
+# Microsoft.DotNet.XUnitV3Extensions
