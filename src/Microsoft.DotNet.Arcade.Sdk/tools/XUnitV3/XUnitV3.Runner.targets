@@ -16,34 +16,14 @@
       <_TestTimeout>%(TestToRun.TestTimeout)</_TestTimeout>
       <_TestRunnerAdditionalArguments>%(TestToRun.TestRunnerAdditionalArguments)</_TestRunnerAdditionalArguments>
 
-      <!-- Always use net472 for desktop to enable displaying source location from Portable PDBs in stack traces -->
-      <_TestRunnerTargetFramework>net472</_TestRunnerTargetFramework>
-      <_TestRunnerTargetFramework Condition="'$(_TestRuntime)' == 'Core'">netcoreapp2.0</_TestRunnerTargetFramework>
-      <_TestRunnerTargetFramework Condition="%(TestToRun.TargetFramework) == 'netcoreapp1.1' or %(TestToRun.TargetFramework) == 'netcoreapp1.0'">netcoreapp1.0</_TestRunnerTargetFramework>
+      <_TestRunner>%(TestToRun.RunCommand)</_TestRunner>
+      <_TestRunnerArgs Condition="'$(UseMicrosoftTestingPlatformRunner)' != 'true'">%(TestToRun.RunArguments) $(_TestRunnerAdditionalArguments) -xml "%(TestToRun.ResultsXmlPath)" -html "%(TestToRun.ResultsHtmlPath)"</_TestRunnerArgs>
+      <_TestRunnerArgs Condition="'$(UseMicrosoftTestingPlatformRunner)' == 'true'">%(TestToRun.RunArguments) $(_TestRunnerAdditionalArguments) --report-xunit --report-xunit-filename "%(TestToRun.ResultsXmlPath)" --report-xunit-html --report-xunit-html-filename "%(TestToRun.ResultsHtmlPath)"</_TestRunnerArgs>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(_TestRuntime)' == 'Core'">
-      <_TargetFileNameNoExt>$([System.IO.Path]::GetFileNameWithoutExtension('$(_TestAssembly)'))</_TargetFileNameNoExt>
-      <_TargetDir>$([System.IO.Path]::GetDirectoryName('$(_TestAssembly)'))\</_TargetDir>
-      <_CoreRuntimeConfigPath>$(_TargetDir)$(_TargetFileNameNoExt).runtimeconfig.json</_CoreRuntimeConfigPath>
-      <_CoreDepsPath>$(_TargetDir)$(_TargetFileNameNoExt).deps.json</_CoreDepsPath>
-
-      <_TestRunner Condition="'%(TestToRun.Architecture)'=='x86' And Exists('$(DotNetRoot)x86\dotnet.exe')">$(DotNetRoot)x86\dotnet.exe</_TestRunner>
-      <_TestRunner Condition="'$(_TestRunner)'==''">$(DotNetTool)</_TestRunner>
-
-      <_TestRunnerArgs>exec --depsfile "$(_CoreDepsPath)" --runtimeconfig "$(_CoreRuntimeConfigPath)" $(TestRuntimeAdditionalArguments) "$(NuGetPackageRoot)xunit.runner.console/$(XUnitVersion)/tools/$(_TestRunnerTargetFramework)/xunit.console.dll" "$(_TestAssembly)" -noautoreporters -xml "%(TestToRun.ResultsXmlPath)" -html "%(TestToRun.ResultsHtmlPath)" $(_TestRunnerAdditionalArguments)</_TestRunnerArgs>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(_TestRuntime)' != 'Core'">
-      <_XUnitConsoleExe>xunit.console.exe</_XUnitConsoleExe>
-      <_XUnitConsoleExe Condition="'%(TestToRun.Architecture)' == 'x86'">xunit.console.x86.exe</_XUnitConsoleExe>
-      <_XUnitConsoleExePath>$(NuGetPackageRoot)xunit.runner.console\$(XUnitVersion)\tools\$(_TestRunnerTargetFramework)\$(_XUnitConsoleExe)</_XUnitConsoleExePath>
-
-      <_TestRunnerArgs>"$(_TestAssembly)" -noshadow -xml "%(TestToRun.ResultsXmlPath)" -html "%(TestToRun.ResultsHtmlPath)" $(_TestRunnerAdditionalArguments)</_TestRunnerArgs>
-      <_TestRunnerArgs Condition="'$(_TestRuntime)' == 'Mono'">$(TestRuntimeAdditionalArguments) "$(_XUnitConsoleExePath)" $(_TestRunnerArgs)</_TestRunnerArgs>
-
-      <_TestRunner Condition="'$(_TestRuntime)' == 'Mono'">$(MonoTool)</_TestRunner>
-      <_TestRunner Condition="'$(_TestRuntime)' != 'Mono'">$(_XUnitConsoleExePath)</_TestRunner>
+      <_TestRunnerArgs Condition="'$(UseMicrosoftTestingPlatformRunner)' != 'true'">$(_TestRunnerArgs) -noAutoReporters</_TestRunnerArgs>
+      <_TestRunnerArgs Condition="'$(UseMicrosoftTestingPlatformRunner)' == 'true'">$(_TestRunnerArgs) --auto-reporters off</_TestRunnerArgs>
     </PropertyGroup>
 
     <PropertyGroup>
