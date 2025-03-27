@@ -3,6 +3,9 @@
 
   <PropertyGroup>
     <UseVSTestRunner Condition="'$(UseVSTestRunner)' != 'true'">false</UseVSTestRunner>
+
+    <!-- Default to using MTP -->
+    <UseMicrosoftTestingPlatformRunner Condition="'$(UseMicrosoftTestingPlatformRunner)' == ''">true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
 
   <ItemGroup>
