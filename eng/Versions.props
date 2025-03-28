@@ -16,10 +16,12 @@
     <MicrosoftDotNetDarcLibVersion>1.1.0-beta.25169.2</MicrosoftDotNetDarcLibVersion>
     <!-- command-line-api -->
     <SystemCommandLineVersion>2.0.0-beta4.24126.1</SystemCommandLineVersion>
-    <!-- corefx -->
-    <MicrosoftBclHashCodeVersion>1.1.1</MicrosoftBclHashCodeVersion>
+    <!-- maintenance-packages -->
+    <MicrosoftBclHashCodeVersion>6.0.0</MicrosoftBclHashCodeVersion>
     <SystemMemoryVersion Condition="'$(DotNetBuildSourceOnly)' != 'true'">4.5.5</SystemMemoryVersion>
-    <SystemMemoryVersion Condition="'$(DotNetBuildSourceOnly)' == 'true'">4.6.0</SystemMemoryVersion>
+    <SystemMemoryVersion Condition="'$(DotNetBuildSourceOnly)' == 'true'">4.6.2</SystemMemoryVersion>
+    <MicrosoftIORedistVersion>6.1.2</MicrosoftIORedistVersion>
+    <!-- corefx -->
     <SystemRuntimeInteropServicesRuntimeInformation>4.3.0</SystemRuntimeInteropServicesRuntimeInformation>
     <!-- deployment-tools -->
     <MicrosoftDeploymentDotNetReleasesVersion>2.0.0-preview.1.24305.1</MicrosoftDeploymentDotNetReleasesVersion>
