@@ -146,7 +146,7 @@ namespace Microsoft.SignCheck.Verification
         /// <returns></returns>
         public bool IsParentExcluded(string parent)
         {
-            return _exclusions.Any(e => IsMatch(e.ParentFiles.Select(pattern => $"*{pattern}*").ToArray(), parent));
+            return _exclusions.Any(e => IsMatch(e.ParentFiles.Select(pattern => !string.IsNullOrEmpty(pattern) ? $"*{pattern}*" : pattern).ToArray(), parent));
         }
 
         private bool IsMatch(string[] patterns, string value)
