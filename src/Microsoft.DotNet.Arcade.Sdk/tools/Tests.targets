@@ -71,6 +71,8 @@
         <ResultsStdOutPath>$(TestResultsLogDir)$(_ResultFileNameNoExt).log</ResultsStdOutPath>
         <TestRunSettingsFile>$(TestRunSettingsFile)</TestRunSettingsFile>
         <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments)</TestRunnerAdditionalArguments>
+        <RunArguments>$(RunArguments)</RunArguments>
+        <RunCommand>$(RunCommand)</RunCommand>
       </TestToRun>
     </ItemGroup>
   </Target>
