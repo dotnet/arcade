@@ -1,3 +1,6 @@
+
+music : good (https://youtu.be/r6FVk2k4qsM?si=Fmec9NbuzVopzuhZ)
+
 <Project>
 
   <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
