@@ -14,7 +14,7 @@
 
       <_TestRunner>%(TestToRun.RunCommand)</_TestRunner>
       <_TestRunnerArgs Condition="'$(UseMicrosoftTestingPlatformRunner)' != 'true'">%(TestToRun.RunArguments) $(_TestRunnerAdditionalArguments) -xml "%(TestToRun.ResultsXmlPath)" -html "%(TestToRun.ResultsHtmlPath)"</_TestRunnerArgs>
-      <_TestRunnerArgs Condition="'$(UseMicrosoftTestingPlatformRunner)' == 'true'">%(TestToRun.RunArguments) $(_TestRunnerAdditionalArguments) --report-xunit --report-xunit-filename "%(TestToRun.ResultsXmlPath)" --report-xunit-html --report-xunit-html-filename "%(TestToRun.ResultsHtmlPath)"</_TestRunnerArgs>
+      <_TestRunnerArgs Condition="'$(UseMicrosoftTestingPlatformRunner)' == 'true'">%(TestToRun.RunArguments) $(_TestRunnerAdditionalArguments) --results-directory "%(TestToRun.ResultsDirectory)" --report-xunit --report-xunit-filename "%(TestToRun.ResultsXmlFileName)" --report-xunit-html --report-xunit-html-filename "%(TestToRun.ResultsHtmlFileName)"</_TestRunnerArgs>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(_TestRuntime)' == 'Core'">
@@ -47,6 +47,7 @@
           WorkingDirectory="$(_TargetDir)"
           IgnoreExitCode="true"
           Timeout="$(_TestTimeout)"
+          EnvironmentVariables="DOTNET_ROOT=$(DotNetRoot);DOTNET_ROOT_X86=$(DotNetRoot)x86"
           ContinueOnError="WarnAndContinue">
       <Output TaskParameter="ExitCode" PropertyName="_TestErrorCode" />
     </Exec>
