@@ -45,6 +45,7 @@ namespace Microsoft.SignCheck.Verification
             }
         }
 
+#if !NET
         private static void ReadExist(FileStream stream, byte[] buffer, int offset, int count)
         {
             while (count > 0)
@@ -58,5 +59,6 @@ namespace Microsoft.SignCheck.Verification
                 count -= read;
             }
         }
+#endif
     }
 }
