@@ -547,7 +547,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         throw new HttpRequestException($"API rate limit exceeded, HttpResponse: {response.StatusCode} {responseBody}. Please retry");
                     }
                     Log.LogMessage(MessageImportance.High,
-                        $" Unable to translate AzDO to GitHub URL. HttpResponse: {response.StatusCode} {response.ReasonPhrase} for repoIdentity: {repoIdentity} and commit: {buildIdentity.Commit}.");
+                        $" Unable to translate AzDO to GitHub URL. HttpResponse: {response.StatusCode} {response.ReasonPhrase} for repoIdentity: {repoIdentity} and commit: {buildData.Commit}.");
                     buildData.GitHubRepository = null;
                     buildData.GitHubBranch = null;
                 }
