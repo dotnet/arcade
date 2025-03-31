@@ -181,9 +181,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
 
                     buildData.Dependencies = deps;
-                    LookupForMatchingGitHubRepository(mergedManifest.Identity);
-                    buildData.GitHubBranch = _gitHubBranch;
-                    buildData.GitHubRepository = _gitHubRepository;
+                    LookupForMatchingGitHubRepository(buildData);
 
                     ProductConstructionService.Client.Models.Build recordedBuild = await client.Builds.CreateAsync(buildData, cancellationToken);
                     BuildId = recordedBuild.Id;
@@ -505,11 +503,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Azure DevOps to GitHub. If not we continue to work with the original Url.
         /// </summary>
         /// <returns></returns>
-        private void LookupForMatchingGitHubRepository(BuildIdentity buildIdentity)
+        private void LookupAndAddForMatchingGitHubRepository(BuildData buildData)
         {
-            if (buildIdentity == null)
+            if (buildData == null)
             {
-                throw new ArgumentNullException(nameof(buildIdentity));
+                throw new ArgumentNullException(nameof(buildData));
             }
 
             using (var client = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }))
@@ -517,9 +515,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string repoIdentity = string.Empty;
                 string gitHubHost = "github.com";
 
-                if (!Uri.TryCreate(buildIdentity.AzureDevOpsRepository, UriKind.Absolute, out Uri repoAddr))
+                if (!Uri.TryCreate(buildData.AzureDevOpsRepository, UriKind.Absolute, out Uri repoAddr))
                 {
-                    throw new Exception($"Can't parse the repository URL: {buildIdentity.AzureDevOpsRepository}");
+                    throw new Exception($"Can't parse the repository URL: {buildData.AzureDevOpsRepository}");
                 }
 
                 if (repoAddr.Host.Equals(gitHubHost, StringComparison.OrdinalIgnoreCase))
@@ -528,19 +526,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
                 else
                 {
-                    repoIdentity = GetGithubRepoName(buildIdentity.AzureDevOpsRepository);
+                    repoIdentity = GetGithubRepoName(buildData.AzureDevOpsRepository);
                 }
 
                 client.BaseAddress = new Uri($"https://api.{gitHubHost}");
                 client.DefaultRequestHeaders.Add("User-Agent", "PushToBarTask");
 
                 HttpResponseMessage response =
-                    client.GetAsync($"/repos/{repoIdentity}/commits/{buildIdentity.Commit}").Result;
+                    client.GetAsync($"/repos/{repoIdentity}/commits/{buildData.Commit}").Result;
 
                 if (response.IsSuccessStatusCode)
                 {
-                    _gitHubRepository = $"https://github.com/{repoIdentity}";
-                    _gitHubBranch = buildIdentity.AzureDevOpsBranch;
+                    buildData.GitHubRepository = $"https://github.com/{repoIdentity}";
+                    buildData.GitHubBranch = buildData.AzureDevOpsBranch;
                 }
                 else
                 {
@@ -552,8 +550,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                     Log.LogMessage(MessageImportance.High,
                         $" Unable to translate AzDO to GitHub URL. HttpResponse: {response.StatusCode} {response.ReasonPhrase} for repoIdentity: {repoIdentity} and commit: {buildIdentity.Commit}.");
-                    _gitHubRepository = null;
-                    _gitHubBranch = null;
+                    buildData.GitHubRepository = null;
+                    buildData.GitHubBranch = null;
                 }
             }
         }
