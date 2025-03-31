@@ -34,7 +34,8 @@
     <PublishBuildToMaestro ManifestsPath="$(ManifestsPath)"
                            MaestroApiEndpoint="$(MaestroApiEndpoint)"
                            RepoRoot="$(RepoRoot)"
-                           AssetVersion="$(Version)"/>
+                           AssetVersion="$(Version)"
+                           IsAssetlessBuild="$(IsAssetlessBuild)"/>
   </Target>
 
 </Project>

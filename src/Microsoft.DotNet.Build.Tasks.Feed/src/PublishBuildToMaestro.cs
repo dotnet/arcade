@@ -36,6 +36,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Required]
         public string MaestroApiEndpoint { get; set; }
 
+        public bool IsAssetlessBuild { get; set; } = false;
+
         private bool IsStableBuild { get; set; } = false;
 
         public bool AllowInteractive { get; set; } = false;
@@ -104,46 +106,66 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 Log.LogMessage(MessageImportance.High, "Starting build metadata push to the Build Asset Registry...");
 
-                if (!Directory.Exists(ManifestsPath))
+                if (!Directory.Exists(ManifestsPath) && !IsAssetlessBuild)
                 {
                     Log.LogError($"Required folder '{ManifestsPath}' does not exist.");
                 }
                 else
                 {
-                    //get the list of manifests
-                    List<BuildModel> parsedManifests = LoadBuildModels(ManifestsPath, cancellationToken);
-
-                    if (parsedManifests.Count == 0)
+                    BuildData buildData;
+                    if (IsAssetlessBuild)
                     {
-                        Log.LogError(
-                            $"No manifests found matching the search pattern {SearchPattern} in {ManifestsPath}");
-                        return !Log.HasLoggedErrors;
+                        buildData = new(
+                            commit: GetAzDevCommit(),
+                            azureDevOpsAccount: GetAzDevAccount(),
+                            azureDevOpsProject: GetAzDevProject(),
+                            azureDevOpsBuildNumber: GetAzDevBuildNumber(),
+                            azureDevOpsRepository: GetAzDevRepositoryName(),
+                            azureDevOpsBranch: GetAzDevBranch(),
+                            stable: false,
+                            released: false)
+                        {
+                            AzureDevOpsBuildId = GetAzDevBuildId(),
+                            AzureDevOpsBuildDefinitionId = GetAzDevBuildDefinitionId()
+                        };
                     }
+                    else
+                    {
+                        //get the list of manifests
+                        List<BuildModel> parsedManifests = LoadBuildModels(ManifestsPath, cancellationToken);
 
-                    var mergedManifest = _buildModelFactory.CreateMergedModel(parsedManifests);
+                        if (parsedManifests.Count == 0)
+                        {
+                            Log.LogError(
+                                $"No manifests found matching the search pattern {SearchPattern} in {ManifestsPath}");
+                            return !Log.HasLoggedErrors;
+                        }
 
-                    // Update the merged manifest with any missing manifest build data based on the environment.
-                    mergedManifest.Identity.AzureDevOpsAccount = mergedManifest.Identity.AzureDevOpsAccount ?? GetAzDevAccount();
-                    mergedManifest.Identity.AzureDevOpsProject = mergedManifest.Identity.AzureDevOpsProject ?? GetAzDevProject();
-                    mergedManifest.Identity.AzureDevOpsBuildNumber = mergedManifest.Identity.AzureDevOpsBuildNumber ?? GetAzDevBuildNumber();
-                    mergedManifest.Identity.AzureDevOpsBuildId = mergedManifest.Identity.AzureDevOpsBuildId ?? GetAzDevBuildId();
-                    mergedManifest.Identity.AzureDevOpsRepository = mergedManifest.Identity.AzureDevOpsRepository ?? GetAzDevRepository();
-                    mergedManifest.Identity.AzureDevOpsBranch = mergedManifest.Identity.AzureDevOpsBranch ?? GetAzDevBranch();
-                    mergedManifest.Identity.AzureDevOpsBuildDefinitionId = mergedManifest.Identity.AzureDevOpsBuildDefinitionId ?? GetAzDevBuildDefinitionId();
+                        var mergedManifest = _buildModelFactory.CreateMergedModel(parsedManifests);
 
-                    string mergedManifestPath = Path.Combine(GetAzDevStagingDirectory(), MergedManifestFileName);
+                        // Update the merged manifest with any missing manifest build data based on the environment.
+                        mergedManifest.Identity.AzureDevOpsAccount = mergedManifest.Identity.AzureDevOpsAccount ?? GetAzDevAccount();
+                        mergedManifest.Identity.AzureDevOpsProject = mergedManifest.Identity.AzureDevOpsProject ?? GetAzDevProject();
+                        mergedManifest.Identity.AzureDevOpsBuildNumber = mergedManifest.Identity.AzureDevOpsBuildNumber ?? GetAzDevBuildNumber();
+                        mergedManifest.Identity.AzureDevOpsBuildId = mergedManifest.Identity.AzureDevOpsBuildId ?? GetAzDevBuildId();
+                        mergedManifest.Identity.AzureDevOpsRepository = mergedManifest.Identity.AzureDevOpsRepository ?? GetAzDevRepository();
+                        mergedManifest.Identity.AzureDevOpsBranch = mergedManifest.Identity.AzureDevOpsBranch ?? GetAzDevBranch();
+                        mergedManifest.Identity.AzureDevOpsBuildDefinitionId = mergedManifest.Identity.AzureDevOpsBuildDefinitionId ?? GetAzDevBuildDefinitionId();
 
-                    //add manifest as an asset to the buildModel
-                    var mergedManifestAsset = AddManifestAsAsset(mergedManifest, mergedManifestPath);
+                        string mergedManifestPath = Path.Combine(GetAzDevStagingDirectory(), MergedManifestFileName);
 
-                    // Write the merged manifest
-                    _fileSystem.WriteToFile(mergedManifestPath, mergedManifest.ToXml().ToString());
+                        //add manifest as an asset to the buildModel
+                        var mergedManifestAsset = AddManifestAsAsset(mergedManifest, mergedManifestPath);
 
-                    Log.LogMessage(MessageImportance.High,
-                                $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{mergedManifestPath}");
+                        // Write the merged manifest
+                        _fileSystem.WriteToFile(mergedManifestPath, mergedManifest.ToXml().ToString());
 
-                    // populate buildData and assetData using merged manifest data 
-                    BuildData buildData = GetMaestroBuildDataFromMergedManifest(mergedManifest, mergedManifestAsset, cancellationToken);
+                        Log.LogMessage(MessageImportance.High,
+                                    $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{mergedManifestPath}");
+
+                        // populate buildData and assetData using merged manifest data 
+                        buildData = GetMaestroBuildDataFromMergedManifest(mergedManifest, mergedManifestAsset, cancellationToken);
+                    }
 
                     IProductConstructionServiceApi client = PcsApiFactory.GetAuthenticated(
                         MaestroApiEndpoint,
