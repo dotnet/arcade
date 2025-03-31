@@ -30,13 +30,8 @@ namespace Microsoft.SignCheck.Verification
                 byte[] properties = new byte[5];
                 byte[] fileLengthBytes = new byte[8];
 
-#if NET
-                inFile.ReadExactly(properties, 0, 5);
-                inFile.ReadExactly(fileLengthBytes, 0, 8);
-#else
-                ReadExist(inFile, properties, 0, 5);
-                ReadExist(inFile, fileLengthBytes, 0, 8);
-#endif
+                ReadExactly(inFile, properties, 0, 5);
+                ReadExactly(inFile, fileLengthBytes, 0, 8);
 
                 long fileLength = BitConverter.ToInt64(fileLengthBytes, 0);
                 decoder.SetDecoderProperties(properties);
@@ -45,8 +40,13 @@ namespace Microsoft.SignCheck.Verification
             }
         }
 
-#if !NET
-        private static void ReadExist(FileStream stream, byte[] buffer, int offset, int count)
+#if NET
+        private static void ReadExactly(FileStream stream, byte[] buffer, int offset, int count)
+        {
+            stream.ReadExactly(buffer, offset, count);
+        }
+#else
+        private static void ReadExactly(FileStream stream, byte[] buffer, int offset, int count)
         {
             while (count > 0)
             {
