@@ -69,7 +69,7 @@ namespace Microsoft.SignCheck.Verification
             return _exclusions.Contains(exclusion);
         }
 
-        public bool IsExcluded(string path, string parent, string virtualPath, string containerPath, IEnumerable<Exclusion> exclusions)
+        private bool IsExcluded(string path, string parent, string virtualPath, string containerPath, IEnumerable<Exclusion> exclusions)
         {
             foreach (Exclusion e in exclusions)
             {
@@ -113,7 +113,8 @@ namespace Microsoft.SignCheck.Verification
         /// <returns></returns>
         public bool IsExcluded(string path, string parent, string virtualPath, string containerPath)
         {
-            return IsExcluded(path, parent, virtualPath, containerPath, _exclusions);
+            IEnumerable<Exclusion> exclusions = _exclusions.Where(e => !e.Comment.Contains("IGNORE-STRONG-NAME"));
+            return IsExcluded(path, parent, virtualPath, containerPath, exclusions);
         }
 
         /// <summary>
@@ -127,6 +128,14 @@ namespace Microsoft.SignCheck.Verification
             IEnumerable<Exclusion> doNotSignExclusions = _exclusions.Where(e => e.Comment.Contains("DO-NOT-SIGN")).ToArray();
 
             return (doNotSignExclusions.Count() > 0) && (IsExcluded(path, parent, virtualPath, containerPath, doNotSignExclusions));
+        }
+
+        public bool IsIgnoreStrongName(string path, string parent, string virtualPath, string containerPath)
+        {
+            // Get all the exclusions with NO-STRONG-NAME markers and check only against those
+            IEnumerable<Exclusion> noStrongNameExclusions = _exclusions.Where(e => e.Comment.Contains("IGNORE-STRONG-NAME"));
+
+            return (noStrongNameExclusions.Count() > 0) && (IsExcluded(path, parent, virtualPath, containerPath, noStrongNameExclusions));
         }
 
         /// <summary>
