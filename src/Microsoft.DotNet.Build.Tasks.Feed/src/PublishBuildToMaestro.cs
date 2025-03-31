@@ -53,8 +53,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private const string MergedManifestFileName = "MergedManifest.xml";
         private const string NoCategory = "NONE";
         private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
-        private string _gitHubRepository = "";
-        private string _gitHubBranch = "";
 
         // Set up proxy objects to allow unit test mocking
         internal IVersionIdentifierProxy _versionIdentifier = new VersionIdentifierProxy();
@@ -181,7 +179,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
 
                     buildData.Dependencies = deps;
-                    LookupForMatchingGitHubRepository(buildData);
+                    LookupAndAddForMatchingGitHubRepository(buildData);
 
                     ProductConstructionService.Client.Models.Build recordedBuild = await client.Builds.CreateAsync(buildData, cancellationToken);
                     BuildId = recordedBuild.Id;
