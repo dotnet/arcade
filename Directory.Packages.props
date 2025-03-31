@@ -18,8 +18,6 @@
     <XUnitAnalyzersVersion>1.16.0</XUnitAnalyzersVersion>
     <XUnitRunnerConsoleVersion>$(XUnitVersion)</XUnitRunnerConsoleVersion>
     <XUnitRunnerVisualStudioVersion>3.0.2</XUnitRunnerVisualStudioVersion>
-    <XUnitV3Version>2.0.0</XUnitV3Version>
-    <XUnitV3RunnerConsoleVersion>$(XUnitV3Version)</XUnitV3RunnerConsoleVersion>
   </PropertyGroup>
 
   <ItemGroup>
