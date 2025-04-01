@@ -28,7 +28,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 {
     public class PublishBuildToMaestro : MSBuildTaskBase, ICancelableTask
     {
-        [Required]
         public string ManifestsPath { get; set; }
 
         public string BuildAssetRegistryToken { get; set; }
