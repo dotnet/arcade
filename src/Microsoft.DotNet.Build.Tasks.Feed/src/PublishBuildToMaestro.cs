@@ -112,12 +112,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     BuildData buildData;
                     if (IsAssetlessBuild)
                     {
+                        string azDevAccount = GetAzDevAccount();
+                        string azDevProject = GetAzDevProject();
                         buildData = new(
                             commit: GetAzDevCommit(),
-                            azureDevOpsAccount: GetAzDevAccount(),
-                            azureDevOpsProject: GetAzDevProject(),
+                            azureDevOpsAccount: azDevAccount,
+                            azureDevOpsProject: azDevProject,
                             azureDevOpsBuildNumber: GetAzDevBuildNumber(),
-                            azureDevOpsRepository: GetAzDevRepositoryName(),
+                            azureDevOpsRepository: $"https://dev.azure.com/{azDevAccount}/{azDevProject}/_git/{GetAzDevRepositoryName()}",
                             azureDevOpsBranch: GetAzDevBranch(),
                             stable: false,
                             released: false)
