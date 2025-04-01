@@ -44,6 +44,7 @@
   <Target Name="_InnerGetTestsToRun"
           Outputs="%(_TestArchitectureItems.Identity)"
           Returns="@(TestToRun)"
+          DependsOnTargets="ComputeRunArguments"
           Condition="'$(TestRuntime)' != '' and '$(SkipTests)' != 'true' and
                      ('$(TestTargetFrameworks)' == '' or $([System.String]::new(';$(TestTargetFrameworks);').Contains(';$(TargetFramework);')))">
 
