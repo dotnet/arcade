@@ -66,10 +66,6 @@
         <Architecture>$(_TestArchitecture)</Architecture>
         <EnvironmentDisplay>$(TargetFramework)|$(_TestArchitecture)</EnvironmentDisplay>
         <ResultsFilePathWithoutExtension>$(_ResultFileNameNoExt)</ResultsFilePathWithoutExtension>
-        <ResultsDirectory>$(ArtifactsTestResultsDir.Replace("\\", "/"))</ResultsDirectory>
-        <ResultsXmlFileName>$(_ResultFileNameNoExt).xml</ResultsXmlFileName>
-        <ResultsTrxFileName>$(_ResultFileNameNoExt).trx</ResultsTrxFileName>
-        <ResultsHtmlFileName>$(_ResultFileNameNoExt).html</ResultsHtmlFileName>
         <ResultsXmlPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).xml</ResultsXmlPath>
         <ResultsTrxPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).trx</ResultsTrxPath>
         <ResultsHtmlPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).html</ResultsHtmlPath>

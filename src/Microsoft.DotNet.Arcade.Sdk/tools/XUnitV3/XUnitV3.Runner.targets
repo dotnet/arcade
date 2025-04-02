@@ -5,6 +5,14 @@
           Outputs="%(TestToRun.ResultsStdOutPath)"
           Condition="'@(TestToRun)' != ''">
     <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=Test" />
+
+    <PropertyGroup Condition="'$(UseMicrosoftTestingPlatformRunner)' == 'true'">
+      <_TestResultDirectory>$([System.IO.Path]::GetDirectoryName('%(TestToRun.ResultsTrxPath)'))</_TestResultDirectory>
+      <_TestResultTrxFileName>$([System.IO.Path]::GetFileName('%(TestToRun.ResultsTrxPath)'))</_TestResultTrxFileName>
+      <_TestResultXmlFileName>$([System.IO.Path]::GetFileName('%(TestToRun.ResultsXmlFileName)'))</_TestResultXmlFileName>
+      <_TestResultHtmlFileName>$([System.IO.Path]::GetFileName('%(TestToRun.ResultsHtmlFileName)'))</_TestResultHtmlFileName>
+    </PropertyGroup>
+
     <PropertyGroup>
       <_TestEnvironment>%(TestToRun.EnvironmentDisplay)</_TestEnvironment>
       <_TestAssembly>%(TestToRun.Identity)</_TestAssembly>
@@ -14,7 +22,7 @@
 
       <_TestRunner>%(TestToRun.RunCommand)</_TestRunner>
       <_TestRunnerArgs Condition="'$(UseMicrosoftTestingPlatformRunner)' != 'true'">%(TestToRun.RunArguments) $(_TestRunnerAdditionalArguments) -xml "%(TestToRun.ResultsXmlPath)" -html "%(TestToRun.ResultsHtmlPath)"</_TestRunnerArgs>
-      <_TestRunnerArgs Condition="'$(UseMicrosoftTestingPlatformRunner)' == 'true'">%(TestToRun.RunArguments) $(_TestRunnerAdditionalArguments) --results-directory "%(TestToRun.ResultsDirectory)" --report-xunit --report-xunit-filename "%(TestToRun.ResultsXmlFileName)" --report-xunit-html --report-xunit-html-filename "%(TestToRun.ResultsHtmlFileName)"</_TestRunnerArgs>
+      <_TestRunnerArgs Condition="'$(UseMicrosoftTestingPlatformRunner)' == 'true'">%(TestToRun.RunArguments) $(_TestRunnerAdditionalArguments) --results-directory "$(_TestResultDirectory)" --report-xunit --report-xunit-filename "$(_TestResultXmlFileName)" --report-xunit-html --report-xunit-html-filename "$(_TestResultHtmlFileName)"</_TestRunnerArgs>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(_TestRuntime)' == 'Core'">
