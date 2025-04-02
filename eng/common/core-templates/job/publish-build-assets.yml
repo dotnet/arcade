@@ -29,6 +29,7 @@ parameters:
 
   is1ESPipeline: ''
 
+  # Optional: weather or not the build has assets it wants to publish to BAR
   isAssetlessBuild: false
 
 jobs:
@@ -149,6 +150,7 @@ jobs:
             -WaitPublishingFinish true
             -ArtifactsPublishingAdditionalParameters '${{ parameters.artifactsPublishingAdditionalParameters }}'
             -SymbolPublishingAdditionalParameters '${{ parameters.symbolPublishingAdditionalParameters }}'
+            -SkipAssetsPublishing '${{ parameters.isAssetlessBuild }}'
 
     - ${{ if eq(parameters.enablePublishBuildArtifacts, 'true') }}:
       - template: /eng/common/core-templates/steps/publish-logs.yml
