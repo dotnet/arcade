@@ -8,7 +8,7 @@
     <!-- Don't allow netstandard1.x dependencies in this repository. -->
     <FlagNetStandard1XDependencies>true</FlagNetStandard1XDependencies>
   </PropertyGroup>
-    <!-- maintenance-packages -->
+  <!-- maintenance-packages -->
   <PropertyGroup Condition="'$(DotNetBuildSourceOnly)' == 'true'">
     <MicrosoftBclHashCodeVersion>6.0.0</MicrosoftBclHashCodeVersion>
     <SystemMemoryVersion>4.6.2</SystemMemoryVersion>
