@@ -87,7 +87,6 @@ namespace Microsoft.SignCheck.Verification
             Options = options;
 
 #if NETFRAMEWORK
-            AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".js"));
             AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".psd1"));
             AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".psm1"));
             AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".ps1"));
@@ -99,6 +98,7 @@ namespace Microsoft.SignCheck.Verification
             AddFileVerifier(new MsuVerifier(log, exclusions, options));
             AddFileVerifier(new VsixVerifier(log, exclusions, options));
 #else
+            AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".js"));
             AddFileVerifier(new DebVerifier(log, exclusions, options));
             AddFileVerifier(new MachOVerifier(log, exclusions, options, ".dylib"));
             AddFileVerifier(new MachOVerifier(log, exclusions, options, ".macho"));
