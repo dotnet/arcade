@@ -61,7 +61,7 @@ parameters:
       downloadArtifacts: true
 
   - name: isAssetlessBuild
-    type boolean
+    type: boolean
     displayName: Is Assetless Build
     default: false
 
