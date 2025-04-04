@@ -18,7 +18,7 @@ variables:
 resources:
   containers:
   - container: LinuxContainer
-    image: mcr.microsoft.com/dotnet-buildtools/prereqs:centos-7
+    image: mcr.microsoft.com/dotnet-buildtools/prereqs:centos-stream-9
 
 stages:
 - stage: build
