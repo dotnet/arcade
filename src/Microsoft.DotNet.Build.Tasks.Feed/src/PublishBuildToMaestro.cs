@@ -34,9 +34,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Required]
         public string MaestroApiEndpoint { get; set; }
 
-        public bool IsAssetlessBuild { get; set; } = false;
-
         private bool IsStableBuild { get; set; } = false;
+
+        public bool IsAssetlessBuild { get; set; } = false;
 
         public bool AllowInteractive { get; set; } = false;
 
@@ -51,6 +51,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private const string MergedManifestFileName = "MergedManifest.xml";
         private const string NoCategory = "NONE";
         private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
+        private string _gitHubRepository = "";
+        private string _gitHubBranch = "";
 
         // Set up proxy objects to allow unit test mocking
         internal IVersionIdentifierProxy _versionIdentifier = new VersionIdentifierProxy();
@@ -108,24 +110,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
                 else
                 {
-                    BuildData buildData;
+                    BuildModel buildModel;
+                    BlobArtifactModel mergedManifestAsset;
+
                     if (IsAssetlessBuild)
                     {
-                        string azDevAccount = GetAzDevAccount();
-                        string azDevProject = GetAzDevProject();
-                        buildData = new(
-                            commit: GetAzDevCommit(),
-                            azureDevOpsAccount: azDevAccount,
-                            azureDevOpsProject: azDevProject,
-                            azureDevOpsBuildNumber: GetAzDevBuildNumber(),
-                            azureDevOpsRepository: $"https://dev.azure.com/{azDevAccount}/{azDevProject}/_git/{GetAzDevRepositoryName()}",
-                            azureDevOpsBranch: GetAzDevBranch(),
-                            stable: false,
-                            released: false)
-                        {
-                            AzureDevOpsBuildId = GetAzDevBuildId(),
-                            AzureDevOpsBuildDefinitionId = GetAzDevBuildDefinitionId()
-                        };
+                        buildModel = new(FillInMissingBuildIdentityProperties(new BuildIdentity()));
+                        mergedManifestAsset = null;
                     }
                     else
                     {
@@ -138,31 +129,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 $"No manifests found matching the search pattern {SearchPattern} in {ManifestsPath}");
                             return !Log.HasLoggedErrors;
                         }
-                        var mergedManifest = _buildModelFactory.CreateMergedModel(parsedManifests, ArtifactVisibility.All);
 
-                        // Update the merged manifest with any missing manifest build data based on the environment.
-                        mergedManifest.Identity.AzureDevOpsAccount = mergedManifest.Identity.AzureDevOpsAccount ?? GetAzDevAccount();
-                        mergedManifest.Identity.AzureDevOpsProject = mergedManifest.Identity.AzureDevOpsProject ?? GetAzDevProject();
-                        mergedManifest.Identity.AzureDevOpsBuildNumber = mergedManifest.Identity.AzureDevOpsBuildNumber ?? GetAzDevBuildNumber();
-                        mergedManifest.Identity.AzureDevOpsBuildId = mergedManifest.Identity.AzureDevOpsBuildId ?? GetAzDevBuildId();
-                        mergedManifest.Identity.AzureDevOpsRepository = mergedManifest.Identity.AzureDevOpsRepository ?? GetAzDevRepository();
-                        mergedManifest.Identity.AzureDevOpsBranch = mergedManifest.Identity.AzureDevOpsBranch ?? GetAzDevBranch();
-                        mergedManifest.Identity.AzureDevOpsBuildDefinitionId = mergedManifest.Identity.AzureDevOpsBuildDefinitionId ?? GetAzDevBuildDefinitionId();
+                        buildModel = _buildModelFactory.CreateMergedModel(parsedManifests, ArtifactVisibility.All);
+
+                        FillInMissingBuildIdentityProperties(buildModel.Identity);
 
                         string mergedManifestPath = Path.Combine(GetAzDevStagingDirectory(), MergedManifestFileName);
 
                         //add manifest as an asset to the buildModel
-                        var mergedManifestAsset = AddManifestAsAsset(mergedManifest, mergedManifestPath);
+                        mergedManifestAsset = AddManifestAsAsset(buildModel, mergedManifestPath);
 
                         // Write the merged manifest
-                        _fileSystem.WriteToFile(mergedManifestPath, mergedManifest.ToXml().ToString());
+                        _fileSystem.WriteToFile(mergedManifestPath, buildModel.ToXml().ToString());
 
                         Log.LogMessage(MessageImportance.High,
                                     $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{mergedManifestPath}");
-
-                        // populate buildData and assetData using merged manifest data 
-                        buildData = GetMaestroBuildDataFromMergedManifest(mergedManifest, mergedManifestAsset, cancellationToken);
                     }
+                    // populate buildData and assetData using merged manifest data 
+                    BuildData buildData = GetMaestroBuildDataFromMergedManifest(buildModel, mergedManifestAsset, cancellationToken);
 
                     IProductConstructionServiceApi client = PcsApiFactory.GetAuthenticated(
                         MaestroApiEndpoint,
@@ -178,7 +162,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
 
                     buildData.Dependencies = deps;
-                    LookupAndAddForMatchingGitHubRepository(buildData);
+                    LookupForMatchingGitHubRepository(buildModel.Identity);
+                    buildData.GitHubBranch = _gitHubBranch;
+                    buildData.GitHubRepository = _gitHubRepository;
 
                     ProductConstructionService.Client.Models.Build recordedBuild = await client.Builds.CreateAsync(buildData, cancellationToken);
                     BuildId = recordedBuild.Id;
@@ -211,6 +197,26 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             return !Log.HasLoggedErrors;
+        }
+
+        private BuildIdentity FillInMissingBuildIdentityProperties(BuildIdentity buildIdentity)
+        {
+            if (buildIdentity == null)
+            {
+                throw new ArgumentNullException(nameof(buildIdentity));
+            }
+            string azDevAccount = GetAzDevAccount();
+            string azDevProject = GetAzDevProject();
+
+            buildIdentity.AzureDevOpsAccount = buildIdentity.AzureDevOpsAccount ?? azDevAccount;
+            buildIdentity.AzureDevOpsProject = buildIdentity.AzureDevOpsProject ?? azDevProject;
+            buildIdentity.AzureDevOpsBuildNumber = buildIdentity.AzureDevOpsBuildNumber ?? GetAzDevBuildNumber();
+            buildIdentity.AzureDevOpsBuildId = buildIdentity.AzureDevOpsBuildId ?? GetAzDevBuildId();
+            buildIdentity.AzureDevOpsRepository = buildIdentity.AzureDevOpsRepository 
+                ?? $"https://dev.azure.com/{azDevAccount}/{azDevProject}/_git/{GetAzDevRepositoryName()}";
+            buildIdentity.AzureDevOpsBranch = buildIdentity.AzureDevOpsBranch ?? GetAzDevBranch();
+
+            return buildIdentity;
         }
 
         private async Task<IEnumerable<DefaultChannel>> GetBuildDefaultChannelsAsync(IProductConstructionServiceApi client,
@@ -500,11 +506,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Azure DevOps to GitHub. If not we continue to work with the original Url.
         /// </summary>
         /// <returns></returns>
-        private void LookupAndAddForMatchingGitHubRepository(BuildData buildData)
+        private void LookupForMatchingGitHubRepository(BuildIdentity buildIdentity)
         {
-            if (buildData == null)
+            if (buildIdentity == null)
             {
-                throw new ArgumentNullException(nameof(buildData));
+                throw new ArgumentNullException(nameof(buildIdentity));
             }
 
             using (var client = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }))
@@ -512,9 +518,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string repoIdentity = string.Empty;
                 string gitHubHost = "github.com";
 
-                if (!Uri.TryCreate(buildData.AzureDevOpsRepository, UriKind.Absolute, out Uri repoAddr))
+                if (!Uri.TryCreate(buildIdentity.AzureDevOpsRepository, UriKind.Absolute, out Uri repoAddr))
                 {
-                    throw new Exception($"Can't parse the repository URL: {buildData.AzureDevOpsRepository}");
+                    throw new Exception($"Can't parse the repository URL: {buildIdentity.AzureDevOpsRepository}");
                 }
 
                 if (repoAddr.Host.Equals(gitHubHost, StringComparison.OrdinalIgnoreCase))
@@ -523,19 +529,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
                 else
                 {
-                    repoIdentity = GetGithubRepoName(buildData.AzureDevOpsRepository);
+                    repoIdentity = GetGithubRepoName(buildIdentity.AzureDevOpsRepository);
                 }
 
                 client.BaseAddress = new Uri($"https://api.{gitHubHost}");
                 client.DefaultRequestHeaders.Add("User-Agent", "PushToBarTask");
 
                 HttpResponseMessage response =
-                    client.GetAsync($"/repos/{repoIdentity}/commits/{buildData.Commit}").Result;
+                    client.GetAsync($"/repos/{repoIdentity}/commits/{buildIdentity.Commit}").Result;
 
                 if (response.IsSuccessStatusCode)
                 {
-                    buildData.GitHubRepository = $"https://github.com/{repoIdentity}";
-                    buildData.GitHubBranch = buildData.AzureDevOpsBranch;
+                    _gitHubRepository = $"https://github.com/{repoIdentity}";
+                    _gitHubBranch = buildIdentity.AzureDevOpsBranch;
                 }
                 else
                 {
@@ -546,9 +552,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         throw new HttpRequestException($"API rate limit exceeded, HttpResponse: {response.StatusCode} {responseBody}. Please retry");
                     }
                     Log.LogMessage(MessageImportance.High,
-                        $" Unable to translate AzDO to GitHub URL. HttpResponse: {response.StatusCode} {response.ReasonPhrase} for repoIdentity: {repoIdentity} and commit: {buildData.Commit}.");
-                    buildData.GitHubRepository = null;
-                    buildData.GitHubBranch = null;
+                        $" Unable to translate AzDO to GitHub URL. HttpResponse: {response.StatusCode} {response.ReasonPhrase} for repoIdentity: {repoIdentity} and commit: {buildIdentity.Commit}.");
+                    _gitHubRepository = null;
+                    _gitHubBranch = null;
                 }
             }
         }
