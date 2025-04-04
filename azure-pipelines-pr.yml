@@ -4,8 +4,8 @@ trigger:
     include:
     - main
     - release/6.0
-    - release/7.0
     - release/8.0
+    - release/9.0
     exclude:
     - .github/*
     - Documentation/*
@@ -21,8 +21,8 @@ pr:
     include:
     - main
     - release/6.0
-    - release/7.0
     - release/8.0
+    - release/9.0    
     - templates
   paths:
     include:
