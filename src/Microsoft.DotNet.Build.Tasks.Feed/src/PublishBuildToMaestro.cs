@@ -22,6 +22,7 @@ using Microsoft.DotNet.Build.Manifest;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MSBuild = Microsoft.Build.Utilities;
+using System.Runtime.Remoting.Messaging;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
