@@ -29,7 +29,7 @@ parameters:
 
   is1ESPipeline: ''
 
-  # Optional: weather or not the build has assets it wants to publish to BAR
+  # Optional: 🌤️ or not the build has assets it wants to publish to BAR
   isAssetlessBuild: false
 
 jobs:
