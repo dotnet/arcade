@@ -208,6 +208,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string azDevAccount = GetAzDevAccount();
             string azDevProject = GetAzDevProject();
 
+            buildIdentity.Commit = buildIdentity.Commit ?? GetAzDevCommit();
             buildIdentity.AzureDevOpsAccount = buildIdentity.AzureDevOpsAccount ?? azDevAccount;
             buildIdentity.AzureDevOpsProject = buildIdentity.AzureDevOpsProject ?? azDevProject;
             buildIdentity.AzureDevOpsBuildNumber = buildIdentity.AzureDevOpsBuildNumber ?? GetAzDevBuildNumber();
