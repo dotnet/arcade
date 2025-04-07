@@ -19,6 +19,10 @@ namespace Microsoft.SignCheck.Verification
         private static readonly char[] _wildCards = new char[] { '*', '?' };
         private List<Exclusion> _exclusions = new List<Exclusion>();
 
+        private const string DoNotSign = "DO-NOT-SIGN";
+        private const string General = "GENERAL";
+        private const string IgnoreStrongName = "IGNORE-STRONG-NAME";
+
         public int Count
         {
             get
@@ -109,8 +113,8 @@ namespace Microsoft.SignCheck.Verification
         /// <returns></returns>
         public bool IsExcluded(string path, string parent, string virtualPath, string containerPath)
         {
-            IEnumerable<Exclusion> exclusions = _exclusions.Where(e => !e.Comment.Contains("IGNORE-STRONG-NAME"));
-            return IsExcluded(path, parent, virtualPath, containerPath, "GENERAL", exclusions);
+            IEnumerable<Exclusion> exclusions = _exclusions.Where(e => !e.Comment.Contains(IgnoreStrongName));
+            return IsExcluded(path, parent, virtualPath, containerPath, General, exclusions);
         }
 
         /// <summary>
@@ -121,17 +125,17 @@ namespace Microsoft.SignCheck.Verification
         public bool IsDoNotSign(string path, string parent, string virtualPath, string containerPath)
         {
             // Get all the exclusions with DO-NOT-SIGN markers and check only against those
-            IEnumerable<Exclusion> doNotSignExclusions = _exclusions.Where(e => e.Comment.Contains("DO-NOT-SIGN")).ToArray();
+            IEnumerable<Exclusion> doNotSignExclusions = _exclusions.Where(e => e.Comment.Contains(DoNotSign)).ToArray();
 
-            return (doNotSignExclusions.Count() > 0) && (IsExcluded(path, parent, virtualPath, containerPath, "DO-NOT-SIGN", doNotSignExclusions));
+            return (doNotSignExclusions.Count() > 0) && (IsExcluded(path, parent, virtualPath, containerPath, DoNotSign, doNotSignExclusions));
         }
 
         public bool IsIgnoreStrongName(string path, string parent, string virtualPath, string containerPath)
         {
             // Get all the exclusions with NO-STRONG-NAME markers and check only against those
-            IEnumerable<Exclusion> noStrongNameExclusions = _exclusions.Where(e => e.Comment.Contains("IGNORE-STRONG-NAME"));
+            IEnumerable<Exclusion> noStrongNameExclusions = _exclusions.Where(e => e.Comment.Contains(IgnoreStrongName));
 
-            return (noStrongNameExclusions.Count() > 0) && (IsExcluded(path, parent, virtualPath, containerPath, "IGNORE-STRONG-NAME", noStrongNameExclusions));
+            return (noStrongNameExclusions.Count() > 0) && (IsExcluded(path, parent, virtualPath, containerPath, IgnoreStrongName, noStrongNameExclusions));
         }
 
         /// <summary>
