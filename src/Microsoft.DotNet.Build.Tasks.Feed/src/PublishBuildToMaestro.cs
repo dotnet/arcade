@@ -22,7 +22,6 @@ using Microsoft.DotNet.Build.Manifest;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MSBuild = Microsoft.Build.Utilities;
-using System.Runtime.Remoting.Messaging;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -376,16 +375,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 GitHubBranch = buildModel.Identity.Branch,
             };
 
-            Log.LogMessage(MessageImportance.High, $"commit: {buildModel.Identity.Commit}");
-            Log.LogMessage(MessageImportance.High, $"repo: {buildModel.Identity.AzureDevOpsRepository}");
-            Log.LogMessage(MessageImportance.High, $"branch: {buildModel.Identity.AzureDevOpsBranch}");
-            Log.LogMessage(MessageImportance.High, $"build number: {buildModel.Identity.AzureDevOpsBuildNumber}");
-            Log.LogMessage(MessageImportance.High, $"build id: {buildModel.Identity.AzureDevOpsBuildId}");
-
             foreach (var package in buildModel.Artifacts.Packages)
             {
-                Log.LogMessage(MessageImportance.High, $"I'm in packages even tho I shouldn't be");
-
                 AddAsset(
                     assets,
                     package.Id,
@@ -397,8 +388,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             foreach (var blob in buildModel.Artifacts.Blobs)
             {
-                Log.LogMessage(MessageImportance.High, $"I'm in artifacts even tho I shouldn't be");
-
                 string version = string.Empty;
 
                 // The merged manifest will not have an identifiable version number,
@@ -428,8 +417,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             // somewhat useful for tracking. They're not blobs though.
 
             buildInfo.Assets = buildInfo.Assets.Concat(assets).ToList();
-
-            Log.LogMessage(MessageImportance.High, $"num of assets = {buildInfo.Assets}");
 
             return buildInfo;
         }
