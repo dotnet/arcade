@@ -119,54 +119,22 @@ namespace Microsoft.SignCheck.Verification
             return defaultValue;
         }
 
-        public bool TryGetIsFileExcluded(
-            string exclusionsClassification,
-            IEnumerable<string> values,
-            out bool isExcluded)
-        {
-            if (TryGetIsExcluded(_fileExcludedCache, _fileNotExcludedCache, exclusionsClassification, values, out isExcluded))
-            {
-                return true;
-            }
+        public bool TryGetIsFileExcluded(string exclusionsClassification, IEnumerable<string> values, out bool isExcluded)
+            => TryGetIsExcluded(_fileExcludedCache, _fileNotExcludedCache, exclusionsClassification, values, out isExcluded); 
 
-            return false;
-        }
-
-        public bool TryGetIsParentExcluded(
-            string exclusionsClassification,
-            string parent,
-            out bool isExcluded)
-        {
-            if (TryGetIsExcluded(_parentExcludedCache, _parentNotExcludedCache, exclusionsClassification, new[] { parent }, out isExcluded))
-            {
-                return true;
-            }
-
-            return false;
-        }
+        public bool TryGetIsParentExcluded(string exclusionsClassification, string parent, out bool isExcluded)
+            => TryGetIsExcluded(_parentExcludedCache, _parentNotExcludedCache, exclusionsClassification, new[] { parent }, out isExcluded);
 
         public void AddToFileCache(string exclusionsClassification, IEnumerable<string> values, bool isExcluded)
         {
-            if (isExcluded)
-            {
-                AddToCache(_fileExcludedCache, exclusionsClassification, values);
-            }
-            else
-            {
-                AddToCache(_fileNotExcludedCache, exclusionsClassification, values);
-            }
+            Dictionary<string, HashSet<string>> cache = isExcluded ? _fileExcludedCache : _fileNotExcludedCache;
+            AddToCache(cache, exclusionsClassification, values);
         }
 
         public void AddToParentCache(string exclusionsClassification, string parent, bool isExcluded)
         {
-            if (isExcluded)
-            {
-                AddToCache(_parentExcludedCache, exclusionsClassification, new[] { parent });
-            }
-            else
-            {
-                AddToCache(_parentNotExcludedCache, exclusionsClassification, new[] { parent });
-            }
+            Dictionary<string, HashSet<string>> cache = isExcluded ? _parentExcludedCache : _parentNotExcludedCache;
+            AddToCache(cache, exclusionsClassification, new[] { parent });
         }
 
         private bool TryGetIsExcluded(
