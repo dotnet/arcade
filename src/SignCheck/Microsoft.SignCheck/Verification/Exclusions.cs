@@ -12,8 +12,8 @@ namespace Microsoft.SignCheck.Verification
     public class Exclusions
     {
         /// <summary>
-        /// Cache for file and parent exclusions. This is used to speed up the
-        /// exclusion check because regex lookups are expensive.
+        /// Cache for regex exclusions.
+        /// Helps avoid recompiling the regex for the same pattern multiple times.
         /// </summary>
         private Dictionary<string, Regex> _regexCache = new Dictionary<string, Regex>();
         private static readonly char[] _wildCards = new char[] { '*', '?' };
