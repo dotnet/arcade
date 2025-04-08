@@ -63,6 +63,15 @@ use darc to achieve them, as well as a general reference guide to darc commands.
   - [set-goal](#set-goal) - Sets goal for a Definition in a Channel.
   - [get-goal](#get-goal) - Gets the goal for a Definition in a Channel.
 
+  Darc also has a suite of new VMR commands. These all have the following format `darc vmr <command>`:
+  - [Vmr common parameters](#vmr-common-parameters)
+  - [initialize](#initialize) - Initializes new repo(s) that haven't been synchronized into the VMR yet.
+  - [backflow](#backflow) - Flows source code from the current commit of a locally checked out VMR into a target local repository.
+  - [forwardflow](#forwardflow) - Flows source code from the current commit of a local repository into a local VMR.
+  - [generate-tpn](#generate-tpn) - Generates a new THIRD-PARTY-NOTICES.txt.
+  - [get-version](#get-version) - Gets the current version (a SHA) of a repository in the VMR.
+  - [push](#push) - Pushes given VMR branch to a given remote.
+  - [diff](#diff) - Diffs the VMR and the product repositories.
 
 ## Scenarios
 
@@ -1211,22 +1220,25 @@ successful, the id of the new subscription is returned.
 
 **Parameters**
 
-- `-channel` - **(Required if -q is passed)** Name of channel that is the source of the subscription. For a
+- `-channel` - **(Required if -q is passed and --read-stdin is not)** Name of channel that is the source of the subscription. For a
   list of channels, see [get-channels](#get-channels)
-- `--source-repo` - **(Required if -q is passed)** Source repository for the subscription.  Builds of this
+- `--source-repo` - **(Required if -q is passed and --read-stdin is not)** Source repository for the subscription.  Builds of this
   repository that appear on the specified `--channel` will have matching outputs
   applied to the inputs (specified in eng/Version.Details.xml) of `--target-repo` and `--target-branch`.
-- `--target-repo` - **(Required if -q is passed)** Target repository for the subscription.  Builds of
+- `--target-repo` - **(Required if -q is passed and --read-stdin is not)** Target repository for the subscription.  Builds of
   `--source-repo` that appear on the specified `--channel` will have matching
   outputs applied to the inputs (specified in eng/Version.Details.xml) of this
   repo's `--target-branch`
-- `--target-branch` - **(Required if -q is passed)** Target branch for the subscription. Builds of
+- `--target-branch` - **(Required if -q is passed and --read-stdin is not)** Target branch for the subscription. Builds of
   `--source-repo` that appear on the specified `--channel` will have matching
   outputs applied to the inputs (specified in eng/Version.Details.xml) on this
   branch of `--target-repo`.
-- `--update-frequency` - **(Required if -q is passed)** Frequency of updates. Valid values are: 'none',
+- `--update-frequency` - **(Required if -q is passed and --read-stdin is not)** Frequency of updates. Valid values are: 'none',
   'everyDay', or 'everyBuild'.  everyDay is applied at 5am.  Subscriptions with
   'none' frequency can still be triggered using [trigger-subscriptions](#trigger-subscriptions)
+- `--batchable` - Whether this subscription's content can be updated in batches. If set, all batchable subscriptions targeting the same
+  repo/branch will be batched in the same PR. Not supported when the subscription specifies merge
+  policies and in backflow subscriptions.
 - `--all-checks-passed` - Merge policy. A PR is automatically merged by Maestro++ if there is at least one
   check and all are passed. Optionally provide a comma separated list of
   ignored check with --ignore-checks.
@@ -1239,6 +1251,17 @@ successful, the id of the new subscription is returned.
 - `--standard-automerge` - Merge policy. A PR is automatically merged if all
   checks are passed and no changes are requested.
 - `-q, --quiet` - Non-interactive mode (requires all elements to be passed on the command line).
+- `--read-stdin` - Interactive mode style (YAML), but read input from stdin. Implies -q.
+- `--trigger` - Automatically trigger the subscription on creation.
+- `--no-trigger` - Do not trigger the subscription on creation.
+- `--validate-coherency` - PR is not merged if the coherency algorithm failed.
+- `--source-enabled` - (Default: false) Makes the created subscription a codeflow subscription.
+- `--source-directory` - **(Required if --source-enabled. Only one of --source-directory and target-directory should be specified)** Name 
+  of the VMR source directory which are the repository sources synchronized from. Used for Backflow subscriptions.
+- `--target-directory` - **(Required if --source-enabled. Only one of --source-directory and target-directory should be specified)** Name 
+  of the VMR target directory which are the repository sources synchronized to. Used for Forward flow subscriptions
+- `--excluded-assets` - Semicolon-delineated list of asset filters (package name with asterisks allowed) to be excluded from source-enabled
+  code flow.
 
 **Sample**:
 ```
@@ -1256,7 +1279,8 @@ Successfully created new subscription with id '4f300f68-8800-4b14-328e-08d68308f
   merge policies:
   - All PR checks must be successful, ignoring typical checks in GitHub in AzDO
     that do not indicate the quality of the PR (e.g. the WIP check) as well as a
-    check that no changes have been requested on the PR.
+    check that no changes have been requested on the PR. For codeflow subscriptions,
+    it also adds additional validation for version files.
 
   YAML format for interactive mode:
   ```
@@ -2981,6 +3005,117 @@ PS C:\enlistments\core-setup> darc verify
 Dependency verification succeeded.
 ```
 
+### **`Vmr common parameters`**
+
+There are an additional few common parameters available on every vmr command:
+
+- `--tmp` - Temporary path where intermediate files are stored (e.g. cloned repos, patch files); defaults to usual TEMP.
+- `--vmr` - Path to the VMR; defaults to nearest git root above the current working directory.
+
+### **`initialize`**
+
+Initializes new repo(s) that haven't been synchronized into the VMR yet.
+
+**Parameters**
+- `-r, --recursive` - Process also dependencies (from eng/Version.Details.xml) recursively.
+- `--source-mappings` - Required. A path to the source-mappings.json file to be used for syncing.
+- `--enable-build-lookup` - Look up package versions and build number from BAR when populating version files.
+- `--additional-remotes` - List of additional remote URIs to add to mappings in the format [mapping name]:[remote URI]. Example:
+  installer:https://github.com/myfork/installer sdk:/local/path/to/sdk
+- `--tpn-template` - Path to a template for generating VMRs THIRD-PARTY-NOTICES file. Leave empty to skip generation.
+- `--generate-codeowners` - Generate a common CODEOWNERS file for all repositories. Defaults to false.
+- `--generate-credscansuppressions` - Generate a common .config/CredScanSuppressions.json file for all repositories. Defaults to false.
+- `--discard-patches` - Delete .patch files created during the sync. Defaults to false.
+
+**Sample**
+```
+PS C:\enlistments\core-setup> darc vmr initialize -r --source-mappings <path to source mappings> arcade-services:https://github.com/myfork/arcade-services
+```
+
+### **backflow**
+
+Flows source code from the current commit of a locally checked out VMR into a target local repository. Must be called from
+the VMR directory.
+
+**Parameters**
+- `--additional-remote` - List of additional remote URIs to add to mappings in the format [mapping name]:[remote URI]. Can be used multiple times.
+Example: --additional-remote runtime:https://github.com/myfork/runtime`
+- `--ref` - Git reference (commit, branch, tag) to flow. Defaults to HEAD of the repository in the current working directory.
+- `default` - Required. Path to a local repository to flow the current VMR commit to
+
+**Sample**
+```
+darc vmr backflow C:\Path\Repo
+```
+
+### **forwardflow**
+
+Flows source code from the current commit of a local repository into a local VMR. Must be called from the local repository
+folder.
+
+**Parameters**
+- `--additional-remote` - List of additional remote URIs to add to mappings in the format [mapping name]:[remote URI]. Can be used multiple times.
+Example: --additional-remote runtime:https://github.com/myfork/runtime`
+- `--ref` - Git reference (commit, branch, tag) to flow. Defaults to HEAD of the repository in the current working directory.
+- `default` - Required. Path to the VMR to flow the current commit to.
+
+**Sample**
+```
+darc vmr forwardflow C:\Path\VMR
+```
+### **generate-tpn**
+
+Generates a new THIRD-PARTY-NOTICES.txt.
+
+**Parameters**
+- `--tpn-template` - Required. Path to a header template for generating THIRD-PARTY-NOTICES file.
+
+**Sample**
+```
+darc vmr generate-tpn --tpn-template C:\Path\VMR\tpn-template.json --vmr C:\Path\VMR
+```
+
+### **get-version**
+
+Gets the current version (a SHA) of a repository in the VMR.
+
+**Parameters**
+
+None
+
+**Sample**
+```
+darc get-version --vmr C:\Path\VMR
+```
+
+### **push**
+
+Pushes given VMR branch to a given remote.
+
+**Parameters**
+
+- `--remote-url` - Required. URL to push to.
+- `--branch` - Required. Branch to push.
+- `--skip-commit-verification` - Don't verify that each commit in the VMR can be found in the corresponding public repository on GitHub before pushing.
+- `--commit-verification-pat` - Token for authenticating to GitHub GraphQL API. Needs to have only basic scope as it will be used to look for commits in public GitHub repos.
+
+**Sample**
+```
+darc vmr push --remote-url https://github.com/myfork/dotnet --branch main --skip-commit-verification
+```
+
+### **diff**
+
+Diffs the VMR and the product repositories. Outputs the diff to stdout or saves it to a patch file (or multiple if patch > 1 GB), if --output-path is provided
+
+**Parameters**
+- `--output-path` - Path where git patch(es) will be created (patches are split to be under 1GB)
+- `default` - Required. Repositories and git refs to calculate the diff for in the following format: remote:branch..remote:branch, where remote can be a local path or remote URI. Alternatively, only one target can be provided in which case current directory will be used as the source for the diff
+
+**Sample**
+```
+darc vmr diff C:\Path\VMR..https://github.com/dotnet/runtime:main
+```
 
 <!-- Begin Generated Content: Doc Feedback -->
 <sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CDarc.md)](https://helix.dot.net/f/p/5?p=Documentation%5CDarc.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CDarc.md)</sub>
