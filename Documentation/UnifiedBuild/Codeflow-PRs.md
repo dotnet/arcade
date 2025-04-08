@@ -58,8 +58,7 @@ The forward flow PRs will be opened [against the VMR](https://github.com/dotnet/
     Furthermore, if you depend on multiple VMR repositories, you will get all the packages in a single backflow subscription (PR).
 
 - **What if I cannot accept a specific package update?**
-  - If your product repo is in the VMR but needs to stay on an older version of a certain package built in the VMR, the backflow PRs will keep updating it. You can specify this package in `Excluded assets` on the subscription for it to be ignored during backflow PRs.  
-    Alternatively, you can also pin the package in `Version.Details.xml` by adding the `Pinned="true"` attribute.
+  - If your product repo is in the VMR but needs to stay on an older version of a certain package built in the VMR, the backflow PRs will keep updating it. You can specify this package in `Excluded assets` on the subscription settings (use `darc update-subscription`) for it to be ignored during backflow PRs.  
     
     *Note: Excluding `Microsoft.DotNet.Arcade.Sdk` will also turn off udpates of the SDK, `eng/common` and other related toolset files.*
 
