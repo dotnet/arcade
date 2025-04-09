@@ -2,4 +2,11 @@
    <PropertyGroup>
       <PublishingVersion>3</PublishingVersion>
    </PropertyGroup>
+
+   <!-- Update all Artifacts with Kind=Package to have additional metadata item Category="InfrastructurePackage" --> 
+   <ItemGroup>
+    <Artifact>
+      <Category Condition="'%(Artifact.Kind)' == 'Package'">InfrastructurePackage</Category>
+    </Artifact>
+   </ItemGroup>
 </Project>
