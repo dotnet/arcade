@@ -23,7 +23,7 @@ use darc to achieve them, as well as a general reference guide to darc commands.
   - [Checking Merge Policies on Github](#checking-merge-policies-on-github)
 
 - [Command Reference](#command-reference)
-  - [Common Parameters](#common-parameters)
+  - [Parameters](#parameters)
   - [add-channel](#add-channel) - Creates a new channel.
   - [add-dependency](#add-dependency) - Add a new dependency to Version.Details.xml.
   - [add-default-channel](#add-default-channel) - Add a channel that a build of a branch+repository is automatically applied to.
@@ -64,8 +64,8 @@ use darc to achieve them, as well as a general reference guide to darc commands.
   - [get-goal](#get-goal) - Gets the goal for a Definition in a Channel.
 
   Darc also has a suite of new VMR commands. These all have the following format `darc vmr <command>`:
-  - [Vmr common parameters](#vmr-common-parameters)
   - [initialize](#initialize) - Initializes new repo(s) that haven't been synchronized into the VMR yet.
+  - [update](#update) - Updates given repo(s) in the VMR to match given refs.
   - [backflow](#backflow) - Flows source code from the current commit of a locally checked out VMR into a target local repository.
   - [forwardflow](#forwardflow) - Flows source code from the current commit of a local repository into a local VMR.
   - [generate-tpn](#generate-tpn) - Generates a new THIRD-PARTY-NOTICES.txt.
@@ -159,7 +159,7 @@ PATs that may be used:
 > dotnet tool install --global Microsoft.DncEng.PatGeneratorTool --add-source https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json --prerelease
 > ```
 
-These tokens can either be passed on the command line using parameters (see [Common parameters](#common-parameters)), or
+These tokens can either be passed on the command line using parameters (see [Parameters](#parameters)), or
 cached locally on the machine using the [`darc authenticate`](#authenticate) command.
 
 After supplying your secrets, a simple `darc get-channels` operations should succeed.
@@ -964,31 +964,9 @@ You will find them on the `Checks` tab of each updates PRs created by maestro. D
 
 ## Command Reference
 
-### **`Common parameters`**
+### **`Parameters`**
 
-There are a few common parameters available on every command:
-
-- `-p, --password` - Build Asset Registry password.  You can obtain this
-  password by going to https://maestro.dot.net/, logging
-  in using the link in the top right, then generating a token using the menu in
-  the top right.  This setting overrides whatever BAR password was provided through `darc authenticate`.
-- `--github-pat` - Personal access token used to authenticate GitHub. This is a GitHub PAT used
-  to avoid rate limiting when accessing github to download arcade script files
-  or version files. You only need a GitHub PAT with **no** authorization scopes
-  checked. This setting overrides whatever GitHub PAT was provided through
-  `darc authenticate`.
-- `--azdev-pat` - Personal access token used to authenticate to Azure DevOps.
-  This token should have Build Execute and Code Read permissions. This setting overrides whatever
-  Azure DevOps PAT was provided through `darc authenticate`. If no PAT is set, local credentials are used.
-- `--bar-uri` - URI of the build asset registry service to use.  Typically left
-  as its default (https://maestro.dot.net) This setting
-  overrides the Build Asset Registry URI provided through `darc authenticate`.
-- `--verbose` - Turn on additional output.
-- `--debug` - Turn on debug output
-- `--help` - Display help
-- `--version` - Display version of darc.
-
-Individual darc commands are described below.
+All darc command have a `--help` option that lists and describes all of their parameters
 
 ### **`add-channel`**
 
@@ -1003,14 +981,6 @@ PS D:\enlistments\arcade> darc add-channel --name "Foo"
 
 Successfully created new channel with name 'Foo'.
 ```
-
-**Parameters**
-
-- `-n, --name` -  **(Required)**. Name of channel to create.
-- `-c, --classification` - Classification of channel. Defaults to 'dev'.  Today,
-  this classification does not affect any functionality
-- `-i, --internal` - Channel is internal only. This option is currently
-  non-functional
 
 **See also**:
 - [delete-channel](#delete-channel)
@@ -1027,11 +997,6 @@ PS D:\enlistments\arcade> darc set-goal --minutes 38 --definition-id 6 --channel
 
 38
 ```
-**Parameters**
-
-- `-c, --channel` - **(Required)** Name of the channel.
-- `-d, --definition-id` - **(Required)** Azure DevOps Definition Id.
-- `-m, --minutes` - **(Required)** Goal time in minutes.
 
 ### **`get-goal`**
 
@@ -1043,10 +1008,6 @@ PS D:\enlistments\arcade> darc get-goal --definition-id 6 --channel ".Net 5 Dev"
 
 38
 ```
-**Parameters**
-
-- `-c, --channel` - **(Required)** Name of the channel.
-- `-d, --definition-id` - **(Required)** Azure DevOps Definition Id.
 
 
 ### **`add-dependency`**
@@ -1060,18 +1021,6 @@ if there is a corresponding subscription targeting that repo.
 
 When adding a new dependency, only name and type are required.  For a detailed
 discussion on adding new dependencies to a repository, see [Adding dependencies to a repository](#adding-dependencies-to-a-repository)
-
-**Parameters**
-
-- -n, --name - **(Required)** Name of dependency to add. This is the name of the
-  package you wish to track.  For example, this might be "Microsoft.NETCore.App"
-  or 'System.Security.Cryptography.Cng'
-- -t, --type - **(Required)** 'toolset' or 'product'. See [Adding dependencies
-  to a repository](#adding-dependencies-to-a-repository) for a discussion on
-  dependency types.
-- -v, --version - Dependency version.
-- -r, --repo - Repository where the dependency was built.
-- -c, --commit - SHA at which the dependency was produced.
 
 **Sample**
 
@@ -1165,12 +1114,6 @@ templates, then this name may be different.
 
 Default channel mappings can be deleted with [delete-default-channel](#delete-default-channel).
 
-**Parameters**
-- `--channel` - **(Required)** Name of channel that a build of 'branch' and 'repo' should be applied to.
-- `--branch` - **(Required)** Build of 'repo' on this branch will be
-  automatically applied to 'channel'.  Should generally be "refs/heads/branchName"
-- `--repo` - **(Required)** Build of this repo on 'branch' will be automatically applied to 'channel'
-
 **Sample**
 ```
 PS D:\enlistments\arcade> darc add-default-channel --channel ".Net 5 Dev" --branch refs/heads/master --repo https://github.com/dotnet/arcade
@@ -1187,21 +1130,24 @@ PS D:\enlistments\arcade> darc add-default-channel --channel ".Net 5 Dev" --bran
 
 Adds a new subscription to Maestro++.
 
-A subscription describes an update
+There are two types of subscriptions: dependency flow and code flow subscriptions.
+
+Information about code flow subscriptions can be found at [Codeflow-PRs](UnifiedBuild/Codeflow-PRs.md)
+
+A  dependency flow subscription describes an update
 operation for a specific repository+branch combination, mapping outputs of a
 repository that have been applied to a channel (virtual branch) onto matching
 inputs of the target repository+branch.
 
-For example, a build of dotnet/corefx might be applied to the ".NET 5 Dev"
-channel. dotnet/core-setup maps new outputs of corefx on the ".NET 5 Dev"
-channel onto its master branch.
+For example, a build of dotnet/runtime might be applied to the ".NET 9"
+channel. dotnet/sdk maps new outputs of runtime on the ".NET 9"
+channel onto its main branch.
 
 A subscription has a few parts:
 - Mapping of source repo + source channel => target repo + target branch
 - An update rate (e.g. every day, every build, not at all)
 - Whether a subscription is batchable or not. If batchable, all batchable
   subscriptions targeting the same repo+branch combination will share a PR.
-  *Note: Batchable subscriptions are currently unsupported in darc*
 - A set of auto merge policies, if the subscription is not batchable.  If batchable,
   merge policies are set on a repository level rather than a per-subscription
   level, as they end up shared between several subscriptions. *Note: repository
@@ -1217,51 +1163,6 @@ A subscription has a few parts:
 Upon saving and closing the editor, or running the darc command if in command
 line mode (`-q`), the darc tool submits the new subscription to Maestro++. If
 successful, the id of the new subscription is returned.
-
-**Parameters**
-
-- `-channel` - **(Required if -q is passed and --read-stdin is not)** Name of channel that is the source of the subscription. For a
-  list of channels, see [get-channels](#get-channels)
-- `--source-repo` - **(Required if -q is passed and --read-stdin is not)** Source repository for the subscription.  Builds of this
-  repository that appear on the specified `--channel` will have matching outputs
-  applied to the inputs (specified in eng/Version.Details.xml) of `--target-repo` and `--target-branch`.
-- `--target-repo` - **(Required if -q is passed and --read-stdin is not)** Target repository for the subscription.  Builds of
-  `--source-repo` that appear on the specified `--channel` will have matching
-  outputs applied to the inputs (specified in eng/Version.Details.xml) of this
-  repo's `--target-branch`
-- `--target-branch` - **(Required if -q is passed and --read-stdin is not)** Target branch for the subscription. Builds of
-  `--source-repo` that appear on the specified `--channel` will have matching
-  outputs applied to the inputs (specified in eng/Version.Details.xml) on this
-  branch of `--target-repo`.
-- `--update-frequency` - **(Required if -q is passed and --read-stdin is not)** Frequency of updates. Valid values are: 'none',
-  'everyDay', or 'everyBuild'.  everyDay is applied at 5am.  Subscriptions with
-  'none' frequency can still be triggered using [trigger-subscriptions](#trigger-subscriptions)
-- `--batchable` - Whether this subscription's content can be updated in batches. If set, all batchable subscriptions targeting the same
-  repo/branch will be batched in the same PR. Not supported when the subscription specifies merge
-  policies and in backflow subscriptions.
-- `--all-checks-passed` - Merge policy. A PR is automatically merged by Maestro++ if there is at least one
-  check and all are passed. Optionally provide a comma separated list of
-  ignored check with --ignore-checks.
-- `--ignore-checks` - Merge policy. For use with --all-checks-passed. A set of checks that are
-  ignored. Typically, in github repos the "WIP" and "license/cla" checks are ignored.
-- `--no-extra-commits` - Merge policy. A PR is automatically merged if no non-bot
-  commits exist in the PR.
-- `--no-requested-changes` - Merge policy.  A PR is automatically merged as long
-  as no changes are requested on the PR.
-- `--standard-automerge` - Merge policy. A PR is automatically merged if all
-  checks are passed and no changes are requested.
-- `-q, --quiet` - Non-interactive mode (requires all elements to be passed on the command line).
-- `--read-stdin` - Interactive mode style (YAML), but read input from stdin. Implies -q.
-- `--trigger` - Automatically trigger the subscription on creation.
-- `--no-trigger` - Do not trigger the subscription on creation.
-- `--validate-coherency` - PR is not merged if the coherency algorithm failed.
-- `--source-enabled` - (Default: false) Makes the created subscription a codeflow subscription.
-- `--source-directory` - **(Required if --source-enabled. Only one of --source-directory and target-directory should be specified)** Name 
-  of the VMR source directory which are the repository sources synchronized from. Used for Backflow subscriptions.
-- `--target-directory` - **(Required if --source-enabled. Only one of --source-directory and target-directory should be specified)** Name 
-  of the VMR target directory which are the repository sources synchronized to. Used for Forward flow subscriptions
-- `--excluded-assets` - Semicolon-delineated list of asset filters (package name with asterisks allowed) to be excluded from source-enabled
-  code flow.
 
 **Sample**:
 ```
@@ -1342,56 +1243,7 @@ parameters:
 - BAR build id of the build to assign to the specified channel. This can be
   found by looking at the "Publish to Build Asset Registry" leg of an official build.
 
-**Parameters**
-
-- `--id` - **(Required)**. BAR id of build to assign to channel.
-- `--channel` - **(Required)**. Channel to assign build to.
-- `--publishing-infra-version` - Version of publishing, for single stage [publishing infrastructure use 3](https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md#what-is-v3-publishing-how-is-it-different-from-v2) else for multi stage publishing infra with each stage representing available channel(s) use 2. Default is 2. 
-- `--signing-validation-parameters` - Additional (MSBuild) properties to be passed to signing validation
-- `--symbol-publishing-parameters` -Additional (MSBuild) properties to be passed to symbol publishing
-- `--default-channels` - Assign build to the default channel(s). Required if --channel is not specified.
-- `--source-branch` - Branch that should be used as base for the promotion build.
-- `--source-sha` - SHA that should be used as base for the promotion build.
-- `--validate-signing` - Perform signing validation.
-- `--validate-nuget` - Perform NuGet metadata validation.
-- `--validate-sourcelink` - Perform SourceLink validation.
-- `--validate-SDL` - Perform SDL validation.
-- `--sdl-validation-parameters` - Custom parameters for SDL validation.
-- `--sdl-validation-continue-on-error` - Ignore SDL validation errors.
-- `--skip-assets-publishing` - Add the build to the channel without publishing assets to the
-  channel's feeds.
-- `--no-wait` - If set, Darc won't wait for the asset publishing and channel assignment.
-  The operation continues asynchronously in AzDO.
-
 **Sample**
-**If using --publishing-infra-version 2**
-```
-
-darc add-build-to-channel --id 13078 --channel ".NET Core 3 Release"
-Assigning the following build to channel '.NET Core 3 Release':
-
-Repository:    https://github.com/dotnet/core-setup
-Branch:        refs/heads/release/3.0
-Commit:        e4e28a834dcbf63b8ef098b32996a35bbb9f3699
-Build Number:  20190603.02
-Date Produced: 6/3/2019 10:09 AM
-Build Link:    https://dev.azure.com/dnceng/internal/_build/results?buildId=209556
-BAR Build Id:  13078
-Channels:
-The following repos/branches will apply this build immediately:
-  https://github.com/dotnet/core-sdk @ release/3.0.1xx
-  https://github.com/aspnet/Extensions @ release/3.0-preview6
-  https://github.com/dotnet/toolset @ release/3.0.1xx
-  https://github.com/dotnet/winforms-datavisualization @ release/3.0
-The following repos/branches will apply this change at a later time, or not by default.
-To flow immediately, run the specified command
-  https://github.com/dotnet/winforms @ release/3.0 (update freq: None)
-    darc trigger-subscriptions --id 22859ac6-b4a6-4fce-54c7-08d6c734018a
-If the above example build doesn't happen to be the latest in a channel but you want trigger-subscriptions to use it:
-    darc trigger-subscriptions --id 22859ac6-b4a6-4fce-54c7-08d6c734018a --build 13078
-```
-
-**If using --publishing-infra-version 3**
 ```
 
 darc add-build-to-channel --id 65256 --channel ".NET 6 Dev" --publishing-infra-version 3
@@ -1429,10 +1281,6 @@ various password settings. These values are overridden by the `--password`,
 See [Setting up Your Darc Client](#setting-up-your-darc-client) for more
 information.
 
-**Parameters**
-
-None.
-
 **Sample**
 ```
 PS D:\enlistments\arcade> darc authenticate
@@ -1456,31 +1304,12 @@ build_asset_registry_base_uri=https://maestro.dot.net/
 
 Clone a remote repo and all of its dependency repos. This is typically used for source build purposes.
 
-**Parameters**
-
-- `--repo` - Remote repository to start the clone operation at.  If none specified, clone all that the current repo depends on.
-- `-v, --version` - Branch, commit or tag to start at in the remote repository.  Required if repo is specified.
-- `--repos-folder` - Full path to folder where all the repos will be cloned to, e.g. C:\repos.  Default: current directory.
-- `--git-dir-folder` - Advanced: Full path to folder where .git folders will be stored, e.g. C:\myrepos\.git\modules.  Default: each repo's folder.
-- `--include-toolset` - Include toolset dependencies.
-- `--ignore-repos` - Semicolon-separated list of repo URIs to ignore.  e.g. 'https://dev.azure.com/devdiv/DevDiv/_git/DotNet-Trusted;https://github.com/dotnet/arcade-services'
-- `-d, --depth` - (Default: 4294967295) Depth to clone the repos to.  Defaults to infinite.
-
 ### **`default-channel-status`**
 
 Enables or disables a default channel association. Default channels associations
 that are disabled will not apply to new builds. This effectively turns off flow
 out of the repository. Builds may still be applied manually to any channel.
 using [add-build-to-channel](#add-build-to-channel).
-
-**Parameters**
-
-- `-e, --enable` - Enable default channel.
-- '-d, --disable` - Disable default channel.
-- '--id` - (Default: -1) Existing default channel id
-- '--channel` - Existing default channel association target channel name.
-- '--branch` - Existing default channel association source branch name.
-- '--repo` - Existing default channel association source repository name.
 
 **Sample**:
 ```
@@ -1508,10 +1337,6 @@ Delete a channel. This channel must not be in use by any subscriptions.
 
 *This is not a typical operation and you should consult with the (`@dnceng`)
 engineering team before doing so.*
-
-**Parameters**
-
-- `-n, --name` - **(Required)** Name of channel to delete.
 
 **Sample**:
 ```
@@ -1602,29 +1427,6 @@ The output directory structure is as follows:
   contains all non-package outputs, while 'packages' contains all NuGet
   packages.
   - A manifest file will be generated under the root folder containing information about all gathered builds
-
-**Parameters**
-
-- `-i, --id`- BAR ID(s) of the root build(s) that we want to gather. comma separated.
-- `-r, --repo` - Gather a build drop for a build of this repo. Requires --commit or --channel.
-- `-c, --commit` - Commit to gather a drop for.
-- `-o, --output-dir` - Required. Output directory to place build drop.
-- `--max-downloads` - (Default: 4) Maximum concurrent downloads.
-- `--download-timeout` - (Default: 30) Timeout in seconds for downloading each asset.
-- `-f, --full` - Gather the full drop (build and all input builds).
-- `--release-name`- (Default: 3.0.0-previewN) Name of release to use when generating release json.
-- `--continue-on-error` - Continue on error rather than halting.
-- `--non-shipping`- Include non-shipping assets.
-- `--overwrite- Overwrite existing files at the destination.
-- `--dry-run` - Do not actually download files, but print what we would do.
-- `--include-toolset`- Include toolset dependencies.
-- `--channel` - Download the latest from this channel. Matched on substring.
-- `--no-workarounds` - Do not allow workarounds when gathering the drop.
-- `--skip-existing` - Skip files that already exist at the destination.
-- `--include-released` - Include builds that are marked as released
-- `--latest-location` - Download assets from their latest known location.
-- `--sas-suffixes` - List of potential uri suffixes that can be used if anonymous access to a blob uri fails.                               Appended directly to the end of the URI (use full SAS suffix starting with '?'.
-- `--asset-filter` - Only download assets matching the given regex filter
 
 **Sample**:
 
@@ -1849,14 +1651,6 @@ Gathering drop for build 20190201.2 of https://github.com/dotnet/core-sdk
 Get information about an asset. Given an asset name and optional version,
 channel, and maximum age, find out general information about the asset.
 
-**Parameters**
-
-- '--name` - **(Required)**. Name of asset to look up. This is typically a
-  package name.
-- '--version` - Look up specific version of an asset.
-- '--channel` - Look up the asset produced from builds applied to this channel.
-- '--max-age` - (Default: 30) Show builds with a max age of this many days.
-
 **Sample**:
 ```
 PS D:\enlistments\websdk> darc get-asset --name 'Microsoft.Extensions.Logging.Abstractions' --channel "3 Rel" --max-age 1
@@ -1873,19 +1667,11 @@ Channels:
 - .NET Core 3 Release
 ```
 
-**See also**:
-
-None.
-
 ### **`get-build`**
 
 Retrieves a specific build of a repository. Find the BAR build ID of a new build
 in the logs of the "Publish Build Assets" step of the  "Publish to Build Asset
 Registry" leg of an official build.
-
-**Parameters**
-
-- '--id` - **(Required)**. Build id.
 
 **Sample**:
 ```
@@ -1944,10 +1730,6 @@ part of the .NET 5 stack. By subscribing to that repository's `.NET 5
 Dev` channel, they map .NET 5 daily development outputs onto their own
 target branch.
 
-**Parameters**
-
-None.
-
 **Sample**:
 ```
 PS D:\enlistments\arcade> darc get-channels
@@ -1977,12 +1759,6 @@ in most cases.  In general, until release shutdown, each build of a branch
 should always be applied to its "normal" channel. The internal ID of the default
 channel association is also presented for convenience with other operations like
 [default-channel-status](#default-channel-status).
-
-**Parameters**
-
-- `--source-repo` - Filter by a specific source repository. Matches on substring.
-- `--branch` - Filter by a branch. Matches on substring.
-- `--channel` - Filter by a channel name. Matches on substring.
 
 **Sample**
 ```
@@ -2028,10 +1804,6 @@ information.  By default, the command lists all dependencies.
 
 For information on toolset vs. product dependencies, see [Toolset vs. Product
 Dependencies](#toolset-vs-product-dependencies)
-
-**Parameters**
-
-- `n, --name` - Name of dependency to query for.
 
 **Sample**
 ```
@@ -2100,23 +1872,6 @@ the paths to those incoherences are displayed. Incoherencies are cases where eit
   By default, if no parameters are passed, the head sha of the current
   repository is used as the starting point.
 
-**Parameters**'
-- `-l, --local` - Get the graph using only local information.  Requires that repos-folder be passed.
-- `--repo` - If set, gather dependency information from the remote repository. Requires --version.
-- `-v, --version` - Branch, commit or tag to look up if looking up version information remotely.
-- `--asset-name` - Get the graph based on a single asset and not the whole Version.Details.xml contents.
-- `--repos-folder` - Full path to folder where all the repos are locally stored. i.e. C:\repos
-- `--remotes-map` - ';' separated key value pair defining the remote to local path mapping.
-- `-f, --flat` - Returns a unique set of repository+sha combination.
-- `--graphviz` - Writes the repository graph in GraphViz (dot) form, into the specified file.
-- `--output-file` - Writes the non-GraphViz (dot) output to the specified file into the specified file.
-- `--include-toolset` - Include toolset dependencies.
-- `--skip-builds` - Do not look up build information.
-- `--delta-from` - (Default: newest-in-graph) Determine the delta of each node
-  in the graph from a target. Valid values: [none, newest-in-channel,
-  newest-in-graph]
-- `--coherency` - Report coherency information.
-
 **Sample**
 
 Full mode:
@@ -2170,13 +1925,6 @@ Get dependency flow graph in graphviz form. This graph represents inter-reposito
 repository inter-dependencies. This visualization can be useful to understand
 the flow of changes in between repositories. Pictorial graphs can be generated
 using dot.exe or other GraphViz tools.
-
-**Parameters**
-
-- `--graphviz` - Writes the flow graph in GraphViz (dot) form, into the specified file.
-- `--include-disabled-subscriptions` - Include edges that have disabled subscriptions
-- `--frequencies` - (Default: everyWeek twiceDaily everyDay everyBuild none) Include only subscriptions with the specific update frequencies in the graph.
-- `--channel` - Only include nodes/edges with flow on this channel.
 
 **Sample**
 ```
@@ -2330,11 +2078,6 @@ digraph repositoryGraph {
 Evaluate the dependency flow-related health of the .NET Core repositories,
 channels, etc. `get-health` evaluates a number of metrics (e.g. cycles in
 dependency flow).  Each metric either passes, fails, or generates warnings.
-
-**Parameters**
-
-- `--repo` - Narrow health checkups by this repository.
-- `--channel` - Narrow health checkups by this channel.
 
 **Sample**
 ```
@@ -2609,20 +2352,11 @@ Product dependency cycle health for https://github.com/dotnet/roslyn @ release/d
 Product dependency cycle health for https://github.com/aspnet/Blazor @ release/0.10.0-preview6 - (Passed)
 ```
 
-**See Also**
-
-None.
-
 ### **`get-latest-build`**
 
 Retrieves the latest builds matching the specified criteria. If more than one
 build matches then multiple builds are returned. This is useful for a quick
 check of what the latest build of a repository is, especially if it has not been assigned to a channel.
-
-**Parameters**
-
-- `--repo` - **(Required)**. Name of repository to determine the latest build for. Match on substring
-- `--channel` - Name of channel to query for the latest build on. Match on substring
 
 **Sample**:
 ```
@@ -2638,10 +2372,6 @@ Channels:
 - .NET 5 Dev
 ```
 
-**See also**:
-
-None.
-
 ### **`get-repository-policies`**
 
 Retrieves information about repository merge policies. Merge policies dictate
@@ -2649,12 +2379,6 @@ the checks that must be satisfied for a pull request to be automatically merged.
 These merge policies come from two sources:
 - Non-batchable subscriptions specify their own merge policies.
 - Batchable subscriptions share a merge policy per repo+branch combination.
-
-**Parameters**
-
-- `--repo` - Name of repository to get repository merge policies for. Match on substring
-- `--branch` - Name of repository to get repository merge policies for. Match on substring
-- `--all` - List all repositories. Otherwise, branches not targeted by a batchable subscription are not listed.
 
 **Sample**:
 ```
@@ -2689,18 +2413,9 @@ https://github.com/aspnet/AspNetCore (.NET 5 Dev) ==> 'https://github.com/dotnet
 Builds of https://github.com/aspnet/AspNetCore that have been applied to channel ".NET 5 Dev" will be applied to the master branch of https://github.com/dotnet/core-sdk.
 ```
 
-**Parameters**
-
 If no parameters are specified, `get-subscriptions` will show a full list of
 Maestro++ subscriptions. This list can be filtered by various input parameters
 to be more useful.
-
-- `--target-repo` - Filter by target repo (matches substring unless --exact or --regex is passed).
-- `--source-repo` - Filter by source repo (matches substring unless --exact or --regex is passed).
-- `--channel` - Filter by source channel (matches substring unless --exact or --regex is passed).
-- `--target-branch` - Filter by target branch (matches substring unless --exact or --regex is passed).
-- `--exact` - Match subscription parameters exactly (cannot be used with --regex).
-- `--regex` - Match subscription parameters using regex (cannot be used with --exact).
 
 **Sample**:
 ```
@@ -2743,21 +2458,6 @@ the dependency update pull request is automatically merged.
 If -q is not passed, the command pops up a edit dialog so that the repository
 policies may be edited.
 
-**Parameters**
-
-- `--repo` - Name of repository to set repository merge policies for.
-- `--branch` - Name of repository to get repository merge policies for.
-- `--standard-automerge` - Use standard auto-merge policies. GitHub ignores WIP
-  and license/cla checks,Azure DevOps ignores comment, reviewer and work item
-  linking. Neither will auto-merge if changes are requested.
-- `--all-checks-passed` - PR is automatically merged if there is at least one
-  check and all are passed. Optionally provide a comma separated list of ignored
-  checks with --ignore-checks.
-- `--ignore-checks` - For use with --all-checks-passed. A set of checks that are ignored.
-- `--no-requested-changes` - PR is not merged if there are changes requested or the PR has been rejected.
-- `--no-extra-commits` - PR is automatically merged if no non-bot commits exist in the PR.
-- `-q, --quiet`- Non-interactive mode (requires all elements to be passed on the command line).
-
 **Sample**:
 ```
 PS D:\enlistments\websdk> darc set-repository-policies --repo https://github.com/dotnet/corefx --branch master --standard-automerge -q
@@ -2780,12 +2480,6 @@ https://github.com/dotnet/corefxlab @ master
 
 Enables or disables a subscription matching the id. You can find out whether a
 subscription is disabled or enabled using get-subscriptions.
-
-**Parameters**
-
-- `--id` - **(Required)**. Subscription's id.
-- `-e, --enable` - Enable subscription. Either --enable or --disable is required.
-- `-d, --disable` - Disable subscription. Either --enable or --disable is required.
 
 **Sample**:
 ```
@@ -2830,19 +2524,6 @@ to filter the available subscriptions to the desired set, though at least one
 input must be specified. Unless `-q, --quiet` is specified, darc will ask for
 confirmation before sending the trigger request.
 
-**Parameters**
-
-- `--id` - Trigger subscription by id.  Not compatible with other filtering parameters.
-- `--build` - If specified, selects a specific BAR build id to use; otherwise will use the latest available from the supplied `--source-repo` id.
-- `--target-repo` - Filter by target repo (matches substring unless --exact or --regex is passed).
-- `--source-repo` - Filter by source repo (matches substring unless --exact or --regex is passed).
-- `--channel` - Filter by source channel (matches substring unless --exact or --regex is passed).
-- `--target-branch` - Filter by target branch (matches substring unless --exact or --regex is passed).
-- `--exact` - Match subscription parameters exactly (cannot be used with --regex).
-- `--regex` - Match subscription parameters using regex (cannot be used with
-  --exact).
-- `-q, --quiet` - Trigger subscriptions without confirmation.  Be careful!
-
 **Sample**:
 ```
 PS D:\enlistments\arcade> darc trigger-subscriptions --source-repo arcade --target-repo arcade-services
@@ -2885,15 +2566,6 @@ This command is especially useful after adding new dependencies to a repository.
 See [Updating dependencies in your local
 repository](#updating-dependencies-in-your-local-repository) for more
 information.
-
-**Parameters**
-
-- `-c, --channel` - Channel to pull dependencies from.
-- `-n, --name` - Optional name of dependency to update.  Otherwise all dependencies existing on 'channel' are updated.
-- `-v, --version` - The new version of dependency with the name specified by --name.
-- `--source-repo` - Only update dependencies whose source uri contains this string.
-- `--packages-folder` - An optional path to a folder which contains the NuGet packages whose versions will be used to update existing dependencies.
-- `--dry-run` - Show what will be updated, but make no changes.
 
 **Sample**
 ```
@@ -2951,10 +2623,6 @@ subscription may be altered. Because of the way that Maestro++ tracks pull
 requests, the *target* parameters of a subscription (target repository and
 target branch) may not be edited.
 
-**Parameters**
-
-- `--id` - **(Required)**. Subscription's id.
-
 **Sample**:
 ```
 PS D:\enlistments\websdk> darc get-subscriptions --source-repo aspnetcore --target-repo websdk --channel Dev
@@ -2995,122 +2663,82 @@ Verifies the local repository state is valid.  This checks that:
 - Version numbers match between Version.Details.xml and corresponding
   expression of those dependencies in Versions.props/global.json
 
-**Parameters**
-
-None.
-
 **Sample**
 ```
 PS C:\enlistments\core-setup> darc verify
 Dependency verification succeeded.
 ```
 
-### **`Vmr common parameters`**
-
-There are an additional few common parameters available on every vmr command:
-
-- `--tmp` - Temporary path where intermediate files are stored (e.g. cloned repos, patch files); defaults to usual TEMP.
-- `--vmr` - Path to the VMR; defaults to nearest git root above the current working directory.
-
 ### **`initialize`**
 
-Initializes new repo(s) that haven't been synchronized into the VMR yet.
-
-**Parameters**
-- `-r, --recursive` - Process also dependencies (from eng/Version.Details.xml) recursively.
-- `--source-mappings` - Required. A path to the source-mappings.json file to be used for syncing.
-- `--enable-build-lookup` - Look up package versions and build number from BAR when populating version files.
-- `--additional-remotes` - List of additional remote URIs to add to mappings in the format [mapping name]:[remote URI]. Example:
-  installer:https://github.com/myfork/installer sdk:/local/path/to/sdk
-- `--tpn-template` - Path to a template for generating VMRs THIRD-PARTY-NOTICES file. Leave empty to skip generation.
-- `--generate-codeowners` - Generate a common CODEOWNERS file for all repositories. Defaults to false.
-- `--generate-credscansuppressions` - Generate a common .config/CredScanSuppressions.json file for all repositories. Defaults to false.
-- `--discard-patches` - Delete .patch files created during the sync. Defaults to false.
+Initializes new repo(s) that haven't been synchronized into the VMR yet. The new repo(s) should be added to source-mappings.json before using this command
 
 **Sample**
 ```
-PS C:\enlistments\core-setup> darc vmr initialize -r --source-mappings <path to source mappings> arcade-services:https://github.com/myfork/arcade-services
+darc vmr initialize -r --source-mappings <path to source mappings> arcade-services
 ```
 
-### **backflow**
+### **`update`**
+
+Updates given repo(s) in the VMR to match given refs. This command was primarely used in the dotnet/sdk pipelines to recursevly update the VMR with the latest commits.
+The command shouldn't be used for local development, [backflow](#backflow) and [forwardflow](#forwardflow) commands are reccomended for this scenario
+
+**Sample**
+```
+darc vmr update --recursive sdk:<sha>
+```
+
+### **`backflow`**
 
 Flows source code from the current commit of a locally checked out VMR into a target local repository. Must be called from
 the VMR directory.
-
-**Parameters**
-- `--additional-remote` - List of additional remote URIs to add to mappings in the format [mapping name]:[remote URI]. Can be used multiple times.
-Example: --additional-remote runtime:https://github.com/myfork/runtime`
-- `--ref` - Git reference (commit, branch, tag) to flow. Defaults to HEAD of the repository in the current working directory.
-- `default` - Required. Path to a local repository to flow the current VMR commit to
 
 **Sample**
 ```
 darc vmr backflow C:\Path\Repo
 ```
 
-### **forwardflow**
+### **`forwardflow`**
 
 Flows source code from the current commit of a local repository into a local VMR. Must be called from the local repository
 folder.
-
-**Parameters**
-- `--additional-remote` - List of additional remote URIs to add to mappings in the format [mapping name]:[remote URI]. Can be used multiple times.
-Example: --additional-remote runtime:https://github.com/myfork/runtime`
-- `--ref` - Git reference (commit, branch, tag) to flow. Defaults to HEAD of the repository in the current working directory.
-- `default` - Required. Path to the VMR to flow the current commit to.
 
 **Sample**
 ```
 darc vmr forwardflow C:\Path\VMR
 ```
-### **generate-tpn**
+### **`generate-tpn`**
 
 Generates a new THIRD-PARTY-NOTICES.txt.
-
-**Parameters**
-- `--tpn-template` - Required. Path to a header template for generating THIRD-PARTY-NOTICES file.
 
 **Sample**
 ```
 darc vmr generate-tpn --tpn-template C:\Path\VMR\tpn-template.json --vmr C:\Path\VMR
 ```
 
-### **get-version**
+### **`get-version`**
 
 Gets the current version (a SHA) of a repository in the VMR.
-
-**Parameters**
-
-None
 
 **Sample**
 ```
 darc get-version --vmr C:\Path\VMR
 ```
 
-### **push**
+### **`push`**
 
 Pushes given VMR branch to a given remote.
-
-**Parameters**
-
-- `--remote-url` - Required. URL to push to.
-- `--branch` - Required. Branch to push.
-- `--skip-commit-verification` - Don't verify that each commit in the VMR can be found in the corresponding public repository on GitHub before pushing.
-- `--commit-verification-pat` - Token for authenticating to GitHub GraphQL API. Needs to have only basic scope as it will be used to look for commits in public GitHub repos.
+Note: this command was used prior to onboarding repos onto flat flow to push newly updated vmr branches from AzDo agents to their remotes.
 
 **Sample**
 ```
 darc vmr push --remote-url https://github.com/myfork/dotnet --branch main --skip-commit-verification
 ```
 
-### **diff**
+### **`diff`**
 
-Diffs the VMR and the product repositories. Outputs the diff to stdout or saves it to a patch file (or multiple if patch > 1 GB), if --output-path is provided
-
-**Parameters**
-- `--output-path` - Path where git patch(es) will be created (patches are split to be under 1GB)
-- `default` - Required. Repositories and git refs to calculate the diff for in the following format: remote:branch..remote:branch, where remote can be a local path or remote URI. Alternatively, only one target can be provided in which case current directory will be used as the source for the diff
+Diffs the VMR and the product repositories. Outputs the diff to stdout or saves it to a patch file (or multiple if patch > 1 GB), if --output-path is provided.
+If input repos are not local, they'll be cloned locally and cleaned up afterwards, so the command might not be instant.
 
 **Sample**
 ```

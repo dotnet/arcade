@@ -10,7 +10,7 @@ For .NET Core 3, the engineering system must be able to support a number of core
 - Builds involving stabilized assets (that are only published after validation).
 - Internal only builds.
 - Non-validated builds (only requirement for producing a new product is that "it builds").
-- Speculative builds (see https://github.com/dotnet/arcade/blob/main/Documentation/Maestro.md#speculative-version-flow).
+- Speculative builds (see [Maestro.md](Maestro.md#speculative-version-flow)).
 - Upstack builds on PRs.
 
 In Prodcon v2, there are a number of central principals that shape how the product is constructed:
@@ -145,38 +145,38 @@ There are a variety of scenarios that require changes in channels, branches and 
 
 Onboarding of new repositories adds new nodes to the product dependency graph. Initially the number of nodes in the dependency graph is 0. There are no branches of any repos producing assets for any channel, and thus there are no subscriptions consuming those assets (because there would be no place to move them). Onboarding the initial repository involves the following:
 
-1. Define potential content - The dotnet/coreclr repo's main branch should be onboarded.
-2. Onboard dotnet/coreclr to Arcade style publishing.  Arcade publishing will push build assets to shared storage locations and notify the [Build Asset Registry (BAR)](https://github.com/dotnet/arcade/blob/main/Documentation/Maestro/BuildAssetRegistry.md) of new builds.
-3. Create content - Build dotnet/coreclr's main branch (let's say its ID is 'dotnet/coreclr#1')  Through arcade publishing a new entry for this build will be created in the [BAR](https://github.com/dotnet/arcade/blob/main/Documentation/Maestro/BuildAssetRegistry.md).  'dotnet/coreclr#1' will not initially have a channel..
-4. Create a new channel for content - Create '.NET Core 3.0.0' channel in the [BAR](https://github.com/dotnet/arcade/blob/main/Documentation/Maestro/BuildAssetRegistry.md)
+1. Define potential content - The dotnet/runtime repo's main branch should be onboarded.
+2. Onboard dotnet/runtime to Arcade style publishing.  Arcade publishing will push build assets to shared storage locations and notify the Build Asset Registry (BAR) of new builds.
+3. Create content - Build dotnet/runtime's main branch (let's say its ID is 'dotnet/runtime#1')  Through arcade publishing a new entry for this build will be created in the BAR. 'dotnet/runtime#1' will not initially have a channel..
+4. Create a new channel for content - Create '.NET Core 3.0.0' channel in the BAR
     ```
     darc add-channel --name '.NET Core 3.0.0'
     ```
-5. Assign existing dotnet/coreclr builds to the channel if desired - dotnet/coreclr's main branch creates content for '.NET Core 3.0.0' channel, so use the [BAR](https://github.com/dotnet/arcade/blob/main/Documentation/Maestro/BuildAssetRegistry.md) to assign 'dotnet/coreclr#1' to '.NET Core 3.0.0'
+5. Assign existing dotnet/runtime builds to the channel if desired - dotnet/runtime's main branch creates content for '.NET Core 3.0.0' channel, so use the BAR to assign 'dotnet/runtime#1' to '.NET Core 3.0.0'
     ```
     darc add-build-to-channel --id '<barId>' --channel '.NET Core 3.0.0'
     ```
-6. Assign future builds of a specific branch a default channel (if desired) - Use the [BAR](https://github.com/dotnet/arcade/blob/main/Documentation/Maestro/BuildAssetRegistry.md) to map dotnet/coreclr main onto '.NET Core 3.0.0'.
+6. Assign future builds of a specific branch a default channel (if desired) - Use the BAR to map dotnet/runtime main onto '.NET Core 3.0.0'.
 
     ```
-    darc add-default-channel --repo https://github.com/dotnet/coreclr --branch main --channel '.NET Core 3.0.0'
+    darc add-default-channel --repo https://github.com/dotnet/runtime --branch main --channel '.NET Core 3.0.0'
     ```
 
 Once the repository graph has more than one node (or if there is a circular dependency, like in the case of dotnet/arcade), it becomes possible to create subscriptions.  Onboarding new repositories after the initial node involves the steps above with the following alterations/additions:
 
 1. No new channel is necessary if repository/branch being onboarded is producing assets for an existing channel
-2. Repository should be onboarded onto the formal [dependency description format](https://github.com/dotnet/arcade/blob/main/Documentation/DependencyDescriptionFormat.md), enabling automated update of dependencies via Darc.
+2. Repository should be onboarded onto the formal [dependency description format](DependencyDescriptionFormat.md), enabling automated update of dependencies via Darc.
 
-Let's say dotnet/corefx's main branch is the second branch to be onboarded.  dotnet/corefx has a dependency on dotnet/coreclr's output assets.
+Let's say dotnet/corefx's main branch is the second branch to be onboarded.  dotnet/corefx has a dependency on dotnet/runtime's output assets.
 
 1. Define potential content - The dotnet/corefx repo's main branch should be onboarded.
-2. Onboard dotnet/corefx to Arcade style publishing.  Arcade publishing will push build assets to shared storage locations and notify the [BAR](https://github.com/dotnet/arcade/blob/main/Documentation/Maestro/BuildAssetRegistry.md) of new builds.
-3. Onboard dotnet/corefx to Arcade style dependency management - Create a Dependency.Versions.xml and associated dependency props files in the main branch. Use Darc to add dependencies for specific dotnet/coreclr dependencies (e.g. Microsoft.NETCore.Runtime.Coreclr). These dependencies were produced by dotnet/coreclr builds and assigned to the '.NET Core 3.0.0' channel.
-4. Create content - Build dotnet/corefx's main branch (let's say its ID is 'dotnet/corefx#3')  Through arcade publishing a new entry for this build will be created in the [BAR](https://github.com/dotnet/arcade/blob/main/Documentation/Maestro/BuildAssetRegistry.md).  'dotnet/corefx#3' will not initially have a channel..
-6. Assign new dotnet/corefx build to the channel - dotnet/corefx's main branch creates content for '.NET Core 3.0.0' channel, so use the [BAR](https://github.com/dotnet/arcade/blob/main/Documentation/Maestro/BuildAssetRegistry.md) to assign 'dotnet/corefx#3' to '.NET Core 3.0.0'
-7. Assign future builds of a specific branch a default channel (if desired) - Use the [BAR](https://github.com/dotnet/arcade/blob/main/Documentation/Maestro/BuildAssetRegistry.md) to map dotnet/corefx main onto '.NET Core 3.0.0'.
-8. Add a subscription to automatically pull new dotnet/coreclr dependencies into dotnet/corefx's main branch. Subscription info
-   - Mapping - Any dotnet/coreclr .NET Core 3.0.0 asset -> dotnet/corefx's main branch
+2. Onboard dotnet/corefx to Arcade style publishing.  Arcade publishing will push build assets to shared storage locations and notify the BAR of new builds.
+3. Onboard dotnet/corefx to Arcade style dependency management - Create a Dependency.Versions.xml and associated dependency props files in the main branch. Use Darc to add dependencies for specific dotnet/runtime dependencies (e.g. Microsoft.NETCore.Runtime.Coreclr). These dependencies were produced by dotnet/runtime builds and assigned to the '.NET Core 3.0.0' channel.
+4. Create content - Build dotnet/corefx's main branch (let's say its ID is 'dotnet/corefx#3')  Through arcade publishing a new entry for this build will be created in the BAR.  'dotnet/corefx#3' will not initially have a channel..
+6. Assign new dotnet/corefx build to the channel - dotnet/corefx's main branch creates content for '.NET Core 3.0.0' channel, so use the BAR to assign 'dotnet/corefx#3' to '.NET Core 3.0.0'
+7. Assign future builds of a specific branch a default channel (if desired) - Use the BAR to map dotnet/corefx main onto '.NET Core 3.0.0'.
+8. Add a subscription to automatically pull new dotnet/runtime dependencies into dotnet/corefx's main branch. Subscription info
+   - Mapping - Any dotnet/runtime .NET Core 3.0.0 asset -> dotnet/corefx's main branch
    - Quality metric - No quality metric (implies build passes)
    - Trigger - Nightly at 2am
 
@@ -735,11 +735,11 @@ An upstack build on a PR is a typical channel branch with the following modifica
 
 ### Unified Build
 
-Unified Build is a new way of constructing .NET used for .NET 10 onwards. Documentation on this topic can be found at https://github.com/dotnet/arcade/tree/main/Documentation/UnifiedBuild
+Unified Build is a new way of constructing .NET used for .NET 10 onwards. Documentation on this topic can be found at [UnifiedBuild](UnifiedBuild)
 
 ## Tooling
 
-Documentation on the tooling used to create and manipulate channels and subscriptions can be found at [Darc.md](https://github.com/dotnet/arcade/blob/main/Documentation/Darc.md)
+Documentation on the tooling used to create and manipulate channels and subscriptions can be found at [Darc.md](Darc.md)
 
 <!-- Begin Generated Content: Doc Feedback -->
 <sub>Was this helpful? [![Yes](https://helix.dot.net/f/ip/5?p=Documentation%5CBranchesChannelsAndSubscriptions.md)](https://helix.dot.net/f/p/5?p=Documentation%5CBranchesChannelsAndSubscriptions.md) [![No](https://helix.dot.net/f/in)](https://helix.dot.net/f/n/5?p=Documentation%5CBranchesChannelsAndSubscriptions.md)</sub>
