@@ -209,6 +209,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         {
             (TargetFeedContentType.Package, FeedDotNet10Shipping, AssetSelection.ShippingOnly),
             (TargetFeedContentType.Package, FeedDotNet10Transport, AssetSelection.NonShippingOnly),
+            (TargetFeedContentType.InfrastructurePackage, FeedDotNetEng, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.InfrastructurePackage, FeedDotNetEng, AssetSelection.NonShippingOnly),
+            (TargetFeedContentType.CorePackage, FeedDotNet10Shipping, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.CorePackage, FeedDotNet10Transport, AssetSelection.NonShippingOnly),
+            (TargetFeedContentType.LibraryPackage, FeedDotNetLibrariesShipping, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.LibraryPackage, FeedDotNetLibrariesTransport, AssetSelection.NonShippingOnly),
+            (TargetFeedContentType.ToolingPackage, FeedDotNetTools, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.ToolingPackage, FeedDotNetTools, AssetSelection.NonShippingOnly),
             (InstallersAndSymbols, FeedStagingForInstallers),
             (TargetFeedContentType.Checksum, FeedStagingForChecksums),
         };
