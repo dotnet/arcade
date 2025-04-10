@@ -83,10 +83,7 @@ installed globally on the machine. The client can be installed using the
 The version of the tool that will be installed will match the version of the Maestro++
 service at the time of the installation.
 
-#### Step 1: Ensure you're part of the **dotnetes-maestro-users** CoreIdentity group:
-Go to https://coreidentity.microsoft.com/manage/Entitlement/entitlement/dotnetesmaes-z54r and request to join.
-
-#### Step 2: Install the darc client (from scripts in any arcadified repository):
+#### Step 1: Install the darc client (from scripts in any arcadified repository):
 ```
 D:\repos\arcade> .\eng\common\darc-init.ps1
   Attempting to install 'sdk v9.0.100-preview.4.24267.66' from public location.
@@ -138,6 +135,11 @@ No verb selected.
 
 ...
 ```
+
+#### Step 2: Authentication:
+Darc uses Product Construction Service (PCS) API to complete most of it's commands, which requires authentication.
+All .NET FTEs should have access to it by default. You can test this by running `darc get-build --id 1`.
+If you`re still getting some authentication errors, you can go to https://coreidentity.microsoft.com/manage/Entitlement/entitlement/dotnetesmaes-z54r and request to join.
 
 #### Step 3: Set additional PATs for Azure DevOps and GitHub operations
 
