@@ -44,6 +44,7 @@
   <Target Name="_InnerGetTestsToRun"
           Outputs="%(_TestArchitectureItems.Identity)"
           Returns="@(TestToRun)"
+          DependsOnTargets="ComputeRunArguments"
           Condition="'$(TestRuntime)' != '' and '$(SkipTests)' != 'true' and
                      ('$(TestTargetFrameworks)' == '' or $([System.String]::new(';$(TestTargetFrameworks);').Contains(';$(TargetFramework);')))">
 
@@ -71,6 +72,8 @@
         <ResultsStdOutPath>$(TestResultsLogDir)$(_ResultFileNameNoExt).log</ResultsStdOutPath>
         <TestRunSettingsFile>$(TestRunSettingsFile)</TestRunSettingsFile>
         <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments)</TestRunnerAdditionalArguments>
+        <RunArguments>$(RunArguments)</RunArguments>
+        <RunCommand>$(RunCommand)</RunCommand>
       </TestToRun>
     </ItemGroup>
   </Target>
