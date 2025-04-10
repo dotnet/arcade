@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <!-- Because the condition here is rather complex, it should read as the following:
-      - Don't collect intermediates if running the product build or the inedermediat nupkg cache feature is explicitly disabled
+      - Don't collect intermediates if running the product build or the intermediate nupkg cache feature is explicitly disabled
       - Otherwise, collect if Building from source and we're in the inner build -->
   <Target Name="CollectSourceBuildIntermediateNupkgDependencies"
           Condition="
@@ -34,7 +34,7 @@
   </Target>
 
   <!-- Because the condition here i rather complex, it should read as the following:
-      - Don't collect intermediates if running the product build or the inedermediat nupkg cache feature is explicitly disabled
+      - Don't collect intermediates if running the product build or the intermediate nupkg cache feature is explicitly disabled
       - Otherwise, collect if Building from source and we're in the inner build -->
   <Target Name="SetUpSourceBuildIntermediateNupkgCache"
           Condition="
