@@ -23,6 +23,7 @@
 
   <PropertyGroup>
     <XUnitDesktopSettingsFile Condition="'$(XUnitDesktopSettingsFile)' == ''">$(MSBuildThisFileDirectory)xunit.runner.json</XUnitDesktopSettingsFile>
+    <XUnitCoreSettingsFile Condition="'$(XUnitCoreSettingsFile)' == ''">$(MSBuildThisFileDirectory)xunit.runner.json</XUnitCoreSettingsFile>
   </PropertyGroup>
 
   <!--
