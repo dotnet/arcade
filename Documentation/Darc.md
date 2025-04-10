@@ -137,9 +137,9 @@ No verb selected.
 ```
 
 #### Step 2: Authentication:
-Darc uses Product Construction Service (PCS) API to complete most of it's commands, which requires authentication.
-All .NET FTEs should have access to it by default. You can test this by running `darc get-build --id 1`.
-If you`re still getting some authentication errors, you can go to https://coreidentity.microsoft.com/manage/Entitlement/entitlement/dotnetesmaes-z54r and request to join.
+Darc talks to the Maestro API which requires authentication.
+Devs on the .NET team should have access to it through the "all FTE" security group. You can test this by running `darc get-channels` or by visiting [https://maestro.dot.net/](https://maestro.dot.net/).
+If you don't have access (because you are not part of the .NET team directly), request the access to https://coreidentity.microsoft.com/manage/Entitlement/entitlement/dotnetesmaes-z54r.
 
 #### Step 3: Set additional PATs for Azure DevOps and GitHub operations
 
