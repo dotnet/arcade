@@ -187,6 +187,7 @@
         <OriginalPackage>%(_PackageToPublish.Identity)</OriginalPackage>
         <IsShipping>%(_PackageToPublish.IsShipping)</IsShipping>
         <Kind>Blob</Kind>
+        <Category>Symbols</Category>
         <RelativeBlobPath>%(_PackageToPublish.SymbolPackageRelativeBlobPath)</RelativeBlobPath>
       </_SymbolPackageToGenerate>
     </ItemGroup>
