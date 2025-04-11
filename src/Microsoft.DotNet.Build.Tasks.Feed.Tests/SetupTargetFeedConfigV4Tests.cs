@@ -179,7 +179,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     commitSha: "c0c0c0c0",
                     FeedKeys,
                     Array.Empty<ITaskItem>(),
-                    Array.Empty<ITaskItem>(),
                     [$"{LatestLinkShortUrlPrefix}/{BuildQuality}"],
                     buildEngine,
                     symbolVisibility,
@@ -271,7 +270,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     commitSha: "c0c0c0c0",
                     FeedKeys,
                     Array.Empty<ITaskItem>(),
-                    Array.Empty<ITaskItem>(),
                     latestLinkShortUrlPrefixes: [$"{LatestLinkShortUrlPrefix}/{BuildQuality}"],
                     buildEngine: buildEngine,
                     symbolVisibility
@@ -362,7 +360,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     repositoryName: "test-repo",
                     commitSha: "c0c0c0c0",
                     FeedKeys,
-                    Array.Empty<ITaskItem>(),
                     Array.Empty<ITaskItem>(),
                     latestLinkShortUrlPrefixes: [$"{LatestLinkShortUrlPrefix}/{BuildQuality}"],
                     buildEngine: buildEngine,
