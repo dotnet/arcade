@@ -31,7 +31,7 @@ steps:
 
       - task: UsePythonVersion@0
         inputs:
-          versionSpec: '3.12.x'
+          versionSpec: '3.12'
         displayName: 'Use Python 3.12.x'
         condition: and(succeeded(), eq(variables['InstallPython.installPython'], 'true'), ne(variables['Agent.Os'], 'Windows_NT'))
 
