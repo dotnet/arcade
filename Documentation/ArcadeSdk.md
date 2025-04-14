@@ -986,11 +986,6 @@ When `UsingToolNuGetRepack` is true _shipping_ packages are repackaged as releas
 
 Set to `true` in projects that build Visual Studio Build (CoreXT) packages. These packages are non-shipping, but their content is shipping. They are inserted into and referenced from the internal DevDiv `VS` repository.
 
-### `PublishWindowsPdb` (bool)
-
-`true` (default) if the PDBs produced by the project should be converted to Windows PDB and published to Microsoft symbol servers.
-Set to `false` to override the default (uncommon).
-
 ### `ApplyNgenOptimization` (`partial`, `full` or empty)
 
 Set to `partial` or `full` in a shipping project to require IBC optimization data to be available for the project and embed them into the binary during official build. The value of `partial` indicates partial NGEN, whereas `full` means full NGEN optimization.
