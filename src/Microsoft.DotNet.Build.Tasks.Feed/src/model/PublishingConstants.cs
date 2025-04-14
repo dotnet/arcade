@@ -1,7 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using Microsoft.DotNet.Build.Manifest;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel;
@@ -75,6 +75,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         private const string FeedGeneralTesting = "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json";
 
         private const string FeedDotNetExperimental = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-experimental/nuget/v3/index.json";
+
+        private const string FeedDotNetExperimentalInternal = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-experimental-internal/nuget/v3/index.json";
 
         public const string FeedDotNetEng = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json";
 
@@ -257,6 +259,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             (TargetFeedContentType.Package, FeedDotNetExperimental, AssetSelection.NonShippingOnly),
             (InstallersAndSymbols, FeedStagingForInstallers),
             (TargetFeedContentType.Checksum, FeedStagingForChecksums),
+        };
+
+        private static TargetFeedSpecification[] DotNetExperimentalInternalFeeds =
+        {
+            (TargetFeedContentType.Package, FeedDotNetExperimentalInternal, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNetExperimentalInternal, AssetSelection.NonShippingOnly),
+            (InstallersAndSymbols, FeedStagingInternalForInstallers),
+            (TargetFeedContentType.Checksum, FeedStagingInternalForChecksums),
         };
 
         private static TargetFeedSpecification[] DotNetLibrariesFeeds =
@@ -816,11 +826,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 id: 5708,
                 isInternal: false,
                 publishingInfraVersion: PublishingInfraVersion.Latest,
-                akaMSChannelNames: [],
+                akaMSChannelNames: ["10.0.1xx-ub", "10.0-ub"],
                 akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
                 akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
                 targetFeeds: DotNet10Feeds,
-                symbolTargetType: SymbolPublishVisibility.Public),
+                symbolTargetType: SymbolPublishVisibility.Public,
+                // Temporarily work around https://github.com/dotnet/source-build/issues/5004
+                flatten: false),
 
             // .NET 10 Preview 1,
             new TargetChannelConfig(
@@ -1074,6 +1086,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
                 targetFeeds: DotNetExperimentalFeeds,
                 symbolTargetType: SymbolPublishVisibility.Public,
+                flatten: false),
+
+            // .NET Experimental Internal,
+            new TargetChannelConfig(
+                id: 6820,
+                isInternal: true,
+                publishingInfraVersion: PublishingInfraVersion.Latest,
+                akaMSChannelNames: [],
+                akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
+                akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
+                targetFeeds: DotNetExperimentalInternalFeeds,
+                symbolTargetType: SymbolPublishVisibility.Internal,
                 flatten: false),
 
             // .NET Core Tooling Dev,
@@ -1477,6 +1501,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             // VS 17.14
             new TargetChannelConfig(
                 id: 6136,
+                isInternal: false,
+                publishingInfraVersion: PublishingInfraVersion.Latest,
+                akaMSChannelNames: [],
+                akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
+                akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
+                targetFeeds: DotNetToolsFeeds,
+                symbolTargetType: SymbolPublishVisibility.Public,
+                flatten: false),
+            // VS 17.15
+            new TargetChannelConfig(
+                id: 6989,
                 isInternal: false,
                 publishingInfraVersion: PublishingInfraVersion.Latest,
                 akaMSChannelNames: [],

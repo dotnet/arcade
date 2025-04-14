@@ -1,21 +1,18 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using FluentAssertions;
-using Microsoft.Arcade.Common;
-using Microsoft.Arcade.Test.Common;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Microsoft.DotNet.Internal.DependencyInjection.Testing;
-using Microsoft.DotNet.VersionTools.Automation;
-using Microsoft.DotNet.VersionTools.BuildManifest.Model;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
-using Moq;
-using NuGet.Versioning;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using FluentAssertions;
+using Microsoft.Arcade.Common;
+using Microsoft.Arcade.Test.Common;
+using Microsoft.Build.Utilities;
+using Microsoft.DotNet.Build.Manifest;
+using Microsoft.DotNet.Internal.DependencyInjection.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Moq;
 using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
@@ -35,12 +32,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 { "RelativeBlobPath", PACKAGE_A },
                 { "IsShipping", "false" },
                 { "ManifestArtifactData", "Nonshipping=true" },
+                { "Kind", "Package" }
             }),
             new TaskItem(PACKAGE_B, new Dictionary<string, string>
             {
                 { "RelativeBlobPath", PACKAGE_B },
                 { "IsShipping", "true" },
                 { "ManifestArtifactData", "Nonshipping=false" },
+                { "Kind", "Package" }
             }),
             new TaskItem(SAMPLE_MANIFEST, new Dictionary<string, string>
             {
@@ -48,6 +47,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 { "RelativeBlobPath", SAMPLE_MANIFEST },
                 { "ManifestArtifactData", "Nonshipping=false" },
                 { "PublishFlatContainer", "true" },
+                { "Kind", "Blob" }
             }),
         };
 
@@ -58,13 +58,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 { "RelativeBlobPath", PACKAGE_A },
                 { "IsShipping", "false" },
                 { "ManifestArtifactData", "Nonshipping=true" },
+                { "Kind", "Package" },
             }),
             new TaskItem(PACKAGE_B, new Dictionary<string, string>
             {
                 { "RelativeBlobPath", PACKAGE_B },
                 { "IsShipping", "true" },
                 { "ManifestArtifactData", "Nonshipping=false" },
-                { "PublishFlatContainer", "true" },
                 { "Kind", "Package" }, // Package overrides PublishFlatContainer value
             }),
             new TaskItem(SAMPLE_MANIFEST, new Dictionary<string, string>
@@ -72,8 +72,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 { "IsShipping", "false" },
                 { "RelativeBlobPath", SAMPLE_MANIFEST },
                 { "ManifestArtifactData", "Nonshipping=false" },
+                // Keep PublishFlatContainer to ensure that it does not affect the manifest generation.
                 { "PublishFlatContainer", "false" },
-                { "Kind", "Blob" }, // Blob overrides PublishFlatContainer value 
+                { "Kind", "Blob" },
             }),
         };
 
@@ -107,7 +108,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var task = new PushToBuildStorage
             {
                 BuildEngine = new MockBuildEngine(),
-                AssetManifestPath = TARGET_MANIFEST_PATH,                
+                AssetManifestPath = TARGET_MANIFEST_PATH,
                 IsStableBuild = true,
                 IsReleaseOnlyPackageVersion = false,
                 ItemsToPush = taskItems,
@@ -115,7 +116,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 ManifestBuildId = "12345.6"
             };
 
-            if(setAdditionalData)
+            if (setAdditionalData)
             {
                 task.AzureDevOpsBuildId = 123456;
                 task.AzureDevOpsCollectionUri = "https://dev.azure.com/dnceng/";
@@ -132,12 +133,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         {
             Mock<IFileSystem> fileSystemMock = new();
             Mock<IBlobArtifactModelFactory> blobArtifactModelFactoryMock = new();
+            Mock<IPdbArtifactModelFactory> pdbArtifactModelFactoryMock = new();
             Mock<IPackageArtifactModelFactory> packageArtifactModelFactoryMock = new();
             Mock<IBuildModelFactory> buildModelFactoryMock = new();
             Mock<IPackageArchiveReaderFactory> packageArchiveReaderFactoryMock = new();
             Mock<INupkgInfoFactory> nupkgInfoFactoryMock = new();
 
             collection.TryAddSingleton(blobArtifactModelFactoryMock.Object);
+            collection.TryAddSingleton(pdbArtifactModelFactoryMock.Object);
             collection.TryAddSingleton(packageArtifactModelFactoryMock.Object);
             collection.TryAddSingleton(buildModelFactoryMock.Object);
             collection.TryAddSingleton(fileSystemMock.Object);
@@ -300,6 +303,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 .AddSingleton<IBuildModelFactory, BuildModelFactory>()
                 .AddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>()
                 .AddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>()
+                .AddSingleton<IPdbArtifactModelFactory, PdbArtifactModelFactory>()
                 .AddSingleton(nupkgInfoFactoryMock.Object);
             CreateMockServiceCollection(collection);
             task.ConfigureServices(collection);
@@ -346,6 +350,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 .AddSingleton(fileSystemMock.Object)
                 .AddSingleton<IBuildModelFactory, BuildModelFactory>()
                 .AddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>()
+                .AddSingleton<IPdbArtifactModelFactory, PdbArtifactModelFactory>()
                 .AddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>()
                 .AddSingleton(nupkgInfoFactoryMock.Object);
             CreateMockServiceCollection(collection);
@@ -397,6 +402,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 .AddSingleton<IBuildModelFactory, BuildModelFactory>()
                 .AddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>()
                 .AddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>()
+                .AddSingleton<IPdbArtifactModelFactory, PdbArtifactModelFactory>()
                 .AddSingleton(nupkgInfoFactoryMock.Object);
             CreateMockServiceCollection(collection);
             task.ConfigureServices(collection);
