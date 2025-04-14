@@ -113,9 +113,9 @@
     <_PreReleaseLabel>$(PreReleaseVersionLabel)</_PreReleaseLabel>
     <_PreReleaseLabel Condition="'$(SemanticVersioningV1)' != 'true' and '$(PreReleaseVersionIteration)' != ''">$(PreReleaseVersionLabel)$(_SemVerLabelSeparator)$(PreReleaseVersionIteration)</_PreReleaseLabel>
     <_PreReleaseLabel Condition="'$(SemanticVersioningV1)' == 'true'">$(PreReleaseVersionLabel)$(PreReleaseVersionIteration)</_PreReleaseLabel>
-    <_PreReleaseLabel Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OfficialBuild)' != 'true'">test$(_SemVerLabelSeparator)ci</_PreReleaseLabel>
+    <_PreReleaseLabel Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OfficialBuild)' != 'true'">testci</_PreReleaseLabel>
     <!-- Allow a non CI build to have an official build version label when OfficialBuild is explicitly passed-in. -->
-    <_PreReleaseLabel Condition="'$(ContinuousIntegrationBuild)' != 'true' and '$(OfficialBuild)' != 'true'">test$(_SemVerLabelSeparator)dev</_PreReleaseLabel>
+    <_PreReleaseLabel Condition="'$(ContinuousIntegrationBuild)' != 'true' and '$(OfficialBuild)' != 'true'">testdev</_PreReleaseLabel>
 
     <_BuildNumberLabels Condition="'$(VersionSuffixDateStamp)' != '' and '$(SemanticVersioningV1)' != 'true'">.$(VersionSuffixDateStamp)$(_SemVerLabelSeparator)$(VersionSuffixBuildOfTheDay)</_BuildNumberLabels>
     <_BuildNumberLabels Condition="'$(VersionSuffixDateStamp)' != '' and '$(SemanticVersioningV1)' == 'true'">-$(VersionSuffixDateStamp)$(_SemVerLabelSeparator)$(VersionSuffixBuildOfTheDayPadded)</_BuildNumberLabels>
