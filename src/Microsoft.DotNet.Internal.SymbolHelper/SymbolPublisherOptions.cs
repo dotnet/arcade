@@ -17,8 +17,6 @@ public sealed class SymbolPublisherOptions
     /// <param name="azdoOrg">The Azure DevOps organization to publish to.</param>
     /// <param name="credential">The token credential with symbol write scope.</param>
     /// <param name="packageFileExcludeList">The list of package files to exclude from package publishing. Doesn't contribute to loose file publishing. Empty by default.</param>
-    /// <param name="convertPortablePdbs">A flag indicating whether to convert portable PDBs to windows PDBs. Defaults to false. </param>
-    /// <param name="treatPdbConversionIssuesAsInfo">A flag indicating whether to treat PDB conversion issues as informational rather than warn/error. Defaults to false.</param>
     /// <param name="pdbConversionTreatAsWarning">The list of PDB conversion issue IDs to treat as warnings. Defaults to empty.</param>
     /// <param name="operationTimeoutInMins">Symbol client per-operation timeout in minutes. Defaults to 10 mins.</param>
     /// <param name="dotnetInternalPublishSpecialClrFiles">A flag indicating whether to publish CLR files under their special diagnostic indexes. Defaults to false.</param>
@@ -28,8 +26,6 @@ public sealed class SymbolPublisherOptions
         string azdoOrg,
         TokenCredential credential,
         IEnumerable<string>? packageFileExcludeList = null,
-        bool convertPortablePdbs = false,
-        bool treatPdbConversionIssuesAsInfo = false,
         IEnumerable<int>? pdbConversionTreatAsWarning = null,
         uint operationTimeoutInMins = 10,
         bool dotnetInternalPublishSpecialClrFiles = false,
@@ -39,8 +35,6 @@ public sealed class SymbolPublisherOptions
         AzdoOrg = azdoOrg is not null and not "" ? azdoOrg : throw new ArgumentException("Organization can't be null or empty", nameof(azdoOrg));
         Credential = credential ?? throw new ArgumentNullException(nameof(credential));
         PackageFileExcludeList = packageFileExcludeList is null ? FrozenSet<string>.Empty : packageFileExcludeList.ToFrozenSet();
-        ConvertPortablePdbs = convertPortablePdbs;
-        TreatPdbConversionIssuesAsInfo = treatPdbConversionIssuesAsInfo;
         PdbConversionTreatAsWarning = pdbConversionTreatAsWarning is null ? FrozenSet<int>.Empty : pdbConversionTreatAsWarning.ToFrozenSet();
         OperationTimeoutInMins = operationTimeoutInMins;
         DotnetInternalPublishSpecialClrFiles = dotnetInternalPublishSpecialClrFiles;
@@ -62,16 +56,6 @@ public sealed class SymbolPublisherOptions
     /// List of package-root-relative files to exclude from publishing if found in symbol packages.
     /// </summary>
     public FrozenSet<string> PackageFileExcludeList { get; }
-
-    /// <summary>
-    /// A flag indicating whether the client should try to convert portable PDBs to classic on upload.
-    /// </summary>
-    public bool ConvertPortablePdbs { get; }
-
-    /// <summary>
-    /// A flag indicating whether to treat PDB conversion issues as information.
-    /// </summary>
-    public bool TreatPdbConversionIssuesAsInfo { get; }
 
     /// <summary>
     /// List of PDB conversion issue IDs to treat as warnings.

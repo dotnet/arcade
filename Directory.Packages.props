@@ -36,8 +36,6 @@
     <PackageVersion Include="Microsoft.Deployment.DotNet.Releases" Version="$(MicrosoftDeploymentDotNetReleasesVersion)" />
     <!-- dotnet-symuploader -->
     <PackageVersion Include="Microsoft.SymbolUploader" Version="$(MicrosoftSymbolUploaderVersion)" />
-    <!-- symreader-converter -->
-    <PackageVersion Include="Microsoft.DiaSymReader.Converter" Version="$(MicrosoftDiaSymReaderConverterVersion)" />
     <!-- diagnostics -->
     <PackageVersion Include="Microsoft.SymbolManifestGenerator" Version="$(MicrosoftSymbolManifestGeneratorVersion)" />
     <!-- msbuild -->

@@ -46,7 +46,6 @@
       <PublishToSymbolServer Condition="'@(FilesToPublishToSymbolServer)' == '' and '@(PackagesToPublishToSymbolServer)' == ''">false</PublishToSymbolServer>
       <PublishSpecialClrFiles Condition="'$(PublishSpecialClrFiles)' == ''">true</PublishSpecialClrFiles>
       <DryRun Condition="'$(DryRun)' == ''">false</DryRun>
-      <TreatPdbConversionIssuesAsInfo Condition="'$(TreatPdbConversionIssuesAsInfo)' == ''">false</TreatPdbConversionIssuesAsInfo>
     </PropertyGroup>
 
     <Message
@@ -102,8 +101,7 @@
                     DryRun="$(DryRun)"
                     PdbConversionTreatAsWarning=""
                     PublishSpecialClrFiles="$(PublishSpecialClrFiles)"
-                    Condition="$(PublishToSymbolServer)"
-                    TreatPdbConversionIssuesAsInfo="$(TreatPdbConversionIssuesAsInfo)"/>
+                    Condition="$(PublishToSymbolServer)" />
   </Target>
 
   <ItemGroup>

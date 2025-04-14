@@ -13,7 +13,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Azure.Core;
-using Microsoft.DiaSymReader.Tools;
 using Microsoft.SymbolStore;
 
 namespace Microsoft.DotNet.Internal.SymbolHelper;
@@ -26,12 +25,10 @@ namespace Microsoft.DotNet.Internal.SymbolHelper;
 /// can be finalized with some TTL if all uploads. Otherwise, if assets fail to upload, the request can be
 /// deleted.
 /// There's a few options for the helper that can be controlled by the <see cref="SymbolPublisherOptions"/> passed in,
-/// notably the ability to convert portable PDBs to Windows PDBs and the ability to generate a special manifest
-/// for the official runtime builds.
+/// notably the ability to generate a special manifest for the official runtime builds.
 /// </summary>
 public sealed class SymbolUploadHelper
 {
-    public const string ConversionFolderName = "_convertedPdbs";
     private const string AzureDevOpsResource = "499b84ac-1321-427f-aa17-267ca6975798";
     private const string PathEnvVarName = "AzureDevOpsToken";
     private static readonly FrozenSet<string> s_validExtensions = FrozenSet.ToFrozenSet(["", ".exe", ".dll", ".pdb", ".so", ".dbg", ".dylib", ".dwarf", ".r2rmap"]);
@@ -41,13 +38,10 @@ public sealed class SymbolUploadHelper
     private readonly TokenCredential _credential;
     private readonly string _commonArgs;
     private readonly string _symbolToolPath;
-    private readonly PdbConverter? _pdbConverter;
     private readonly uint _symbolToolTimeoutInMins;
     private readonly bool _shouldGenerateManifest;
-    private readonly bool _shouldConvertPdbs;
     private readonly bool _isDryRun;
     private readonly FrozenSet<string> _packageFileExclusions;
-    private readonly bool _treatPdbConversionIssuesAsInfo;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SymbolUploadHelper"/> class.
@@ -90,32 +84,8 @@ public sealed class SymbolUploadHelper
         // All other builds should not set this flag in the interest of perf.
         _shouldGenerateManifest = options.DotnetInternalPublishSpecialClrFiles;
 
-        // This is an extremely slow operation and should be used sparingly. We usually only want to do this
-        // in the staging/release pipeline, not in the nightly build pipeline.
-        _shouldConvertPdbs = options.ConvertPortablePdbs;
         _isDryRun = options.IsDryRun;
         _packageFileExclusions = options.PackageFileExcludeList;
-
-        if (_shouldConvertPdbs)
-        {
-            _treatPdbConversionIssuesAsInfo = options.TreatPdbConversionIssuesAsInfo;
-            _pdbConverter = new PdbConverter(diagnostic =>
-            {
-                string message = diagnostic.ToString();
-                if (_treatPdbConversionIssuesAsInfo)
-                {
-                    _globalTracer.Information(message);
-                }
-                else if (options.PdbConversionTreatAsWarning.Contains((int)diagnostic.Id))
-                {
-                    _globalTracer.Warning(message);
-                }
-                else
-                {
-                    _globalTracer.Error(message);
-                }
-            });
-        }
     }
 
     public async Task<int> GetClientDiagnosticInfo()
@@ -142,8 +112,7 @@ public sealed class SymbolUploadHelper
     }
 
     /// <summary>
-    /// Adds directory to a symbol request. This will convert portable PDBs as long as the PE is next to the 
-    /// PDB and the options specified conversion.
+    /// Adds directory to a symbol request.
     /// </summary>
     /// <param name="name">The name of the symbol request to append to. Must be non-finalized.</param>
     /// <param name="files">The files to add.</param>
@@ -152,24 +121,8 @@ public sealed class SymbolUploadHelper
     {
         ScopedTracer logger = _tracerFactory.CreateTracer(nameof(AddDirectory));
         SymbolRequestHelpers.ValidateRequestName(name, logger);
-        try
-        {
-            if (_shouldConvertPdbs)
-            {
-                ConvertPortablePdbsInDirectory(logger, pathToAdd);
-            }
 
-            return await AddDirectoryCore(name!, pathToAdd, manifestPath: null, logger).ConfigureAwait(false);
-        }
-        finally
-        {
-            string convertedFolder = GetConvertedPdbFolder(pathToAdd);
-            if (_shouldConvertPdbs && !Directory.Exists(convertedFolder))
-            {
-                logger.Information("Cleaning up symbol conversion directory {0}", convertedFolder);
-                try { Directory.Delete(convertedFolder, recursive: true); } catch { }
-            }
-        }    
+        return await AddDirectoryCore(name!, pathToAdd, manifestPath: null, logger).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -296,11 +249,6 @@ public sealed class SymbolUploadHelper
                 await entryStream.CopyToAsync(entryFile).ConfigureAwait(false);
             }
 
-            if (_shouldConvertPdbs)
-            {
-                ConvertPortablePdbsInDirectory(logger, packageExtractDir);
-            }
-
             string? manifest = null;
             if (_shouldGenerateManifest)
             {
@@ -349,54 +297,6 @@ public sealed class SymbolUploadHelper
             return s_validExtensions.Contains(extension);
         }
     }
-
-    private void ConvertPortablePdbsInDirectory(ScopedTracer logger, string filesDir)
-    {
-        Action<string> logWarning = _treatPdbConversionIssuesAsInfo ? logger.Information : logger.Error;
-        string convertedPdbFolder = GetConvertedPdbFolder(filesDir);
-        _ = Directory.CreateDirectory(convertedPdbFolder);
-        foreach (string file in Directory.EnumerateFiles(filesDir, "*.pdb", SearchOption.AllDirectories))
-        {
-            using Stream pdbStream = File.OpenRead(file);
-            if (!PdbConverter.IsPortable(pdbStream))
-            {
-                continue;
-            }
-
-            logger.Verbose("Converting {0} to classic PDB format", file);
-
-            string pePath = Path.ChangeExtension(file, ".dll");
-            // Try to fall back to the framework exe scenario.
-            if (!File.Exists(pePath))
-            {
-                pePath = Path.ChangeExtension(file, ".exe");
-            }
-
-            if (!File.Exists(pePath))
-            {
-                logWarning($"Conversion error: could not find matching PE file for {file}");
-                continue;
-            }
-
-            string convertedPdbPath = Path.Combine(convertedPdbFolder, Path.GetFileName(file));
-
-            try
-            {
-                using Stream peStream = File.OpenRead(pePath);
-                using Stream convertedPdbStream = File.Create(convertedPdbPath);
-                _pdbConverter!.ConvertPortableToWindows(peStream, pdbStream, convertedPdbStream);
-            }
-            catch (Exception ex)
-            {
-                logWarning($"Conversion error: {ex.Message}");
-                continue;
-            }
-
-            logger.Verbose("Converted successfully to {0}.", convertedPdbPath);
-        }
-    }
-    
-    private static string GetConvertedPdbFolder(string filesDir) => Path.Combine(filesDir, ConversionFolderName);
 
     private DirectoryInfo CreateTempDirectory()
     {
