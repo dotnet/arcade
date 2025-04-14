@@ -37,7 +37,7 @@ class Program
             DefaultValueFactory = _ => true
         };
 
-        Command trimAssetVersionCommand = new("trim-assets-version", "Trim versions from provided assets. Currently, only NuGet packages are supported.");
+        System.CommandLine.Command trimAssetVersionCommand = new("trim-assets-version", "Trim versions from provided assets. Currently, only NuGet packages are supported.");
         trimAssetVersionCommand.Options.Add(assetsDirectoryOption);
         trimAssetVersionCommand.Options.Add(searchPatternOption);
         trimAssetVersionCommand.Options.Add(recursiveOption);
