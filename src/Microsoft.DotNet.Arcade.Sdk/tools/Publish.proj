@@ -139,6 +139,8 @@
       <_ExistingSymbolPackage Include="@(Artifact)" Condition="'$(DotNetBuildSourceOnly)' != 'true' and '%(Artifact.SkipPublish)' != 'true' and $([System.String]::Copy('%(Filename)%(Extension)').EndsWith('.symbols.nupkg'))">
         <!-- Update the kind of the symbol packages to blob -->
         <Kind>Blob</Kind>
+        <!-- Set the category to Symbols (otherwise it will inherit the original package category -->
+        <Category>Symbols</Category>
         <RelativeBlobPath>$(SymbolPackageBaseRelativeBlobPath)%(Filename)%(Extension)</RelativeBlobPath>
       </_ExistingSymbolPackage>
       <_PackageToPublish Include="@(Artifact)" Exclude="@(_ExistingSymbolPackage)" Condition="'%(Artifact.SkipPublish)' != 'true' and '%(Extension)' == '.nupkg'" />
@@ -185,6 +187,7 @@
         <OriginalPackage>%(_PackageToPublish.Identity)</OriginalPackage>
         <IsShipping>%(_PackageToPublish.IsShipping)</IsShipping>
         <Kind>Blob</Kind>
+        <Category>Symbols</Category>
         <RelativeBlobPath>%(_PackageToPublish.SymbolPackageRelativeBlobPath)</RelativeBlobPath>
       </_SymbolPackageToGenerate>
     </ItemGroup>
@@ -309,6 +312,13 @@
       <ItemsToPushToBlobFeed>
         <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.IsShipping)' != 'true'">%(ItemsToPushToBlobFeed.ManifestArtifactData);NonShipping=true</ManifestArtifactData>
         <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.IsShipping)' == 'true' and '$(ProducesDotNetReleaseShippingAssets)' == 'true'">%(ItemsToPushToBlobFeed.ManifestArtifactData);DotNetReleaseShipping=true</ManifestArtifactData>
+      </ItemsToPushToBlobFeed>
+    </ItemGroup>
+
+    <!-- Set the category -->
+    <ItemGroup>
+      <ItemsToPushToBlobFeed>
+        <ManifestArtifactData Condition="'%(ItemsToPushToBlobFeed.Category)' != ''">%(ItemsToPushToBlobFeed.ManifestArtifactData);Category=%(ItemsToPushToBlobFeed.Category)</ManifestArtifactData>
       </ItemsToPushToBlobFeed>
     </ItemGroup>
 
