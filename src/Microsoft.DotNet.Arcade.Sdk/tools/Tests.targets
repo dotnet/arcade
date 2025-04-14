@@ -23,9 +23,8 @@
     <TestRunnerTargets Condition="!Exists($(TestRunnerTargets))">$(MSBuildThisFileDirectory)$(TestRunnerName)\$(TestRunnerName).targets</TestRunnerTargets>
   </PropertyGroup>
 
-  <Target Name="ErrorForMissingTestRunner"
-          Condition="'$(IsTestProject)' == 'true' AND '$(TestRunnerName)' != ''">
-    <Error Condition="!Exists($(TestRunnerTargets))" Text="Test runner $(TestRunnerName) is invalid."/>
+  <Target Name="ErrorForMissingTestRunner">
+    <Error Condition="'$(IsTestProject)' == 'true' AND '$(TestRunnerName)' != '' AND !Exists($(TestRunnerTargets))" Text="Test runner $(TestRunnerName) is invalid."/>
   </Target>
 
   <PropertyGroup Condition="'$(IsTestProject)' == 'true' and '$(TestArchitectures)' == ''">
