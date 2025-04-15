@@ -6,9 +6,9 @@
     <!-- Needed for when this dependency gets updated in 
          https://github.com/dotnet/source-build-externals, otherwise
          a prebuilt will be introduced until the VMR is rebootstrapped. -->
-    <Dependency Name="Microsoft.ApplicationInsights" Version="2.22.0">
+    <Dependency Name="Microsoft.ApplicationInsights" Version="2.23.0">
       <Uri>https://github.com/microsoft/ApplicationInsights-dotnet</Uri>
-      <Sha>43825e06a22cdfb702fc199a7ba99a7d541d48c6</Sha>
+      <Sha>2faa7e8b157a431daa2e71785d68abd5fa817b53</Sha>
     </Dependency>
     <Dependency Name="Microsoft.CodeAnalysis.CSharp" Version="4.8.0">
       <Uri>https://github.com/dotnet/roslyn</Uri>
