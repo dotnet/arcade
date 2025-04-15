@@ -340,7 +340,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         ];
 
         private static readonly ImmutableList<Regex> DotNet10AkaMSDoNotCreateLinkPatterns = [
-            ...DefaultAkaMSDoNotCreateLinkPatterns,
+            ..DefaultAkaMSDoNotCreateLinkPatterns,
             new Regex(@"productversion", RegexOptions.IgnoreCase)
         ];
 
