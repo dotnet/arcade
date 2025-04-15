@@ -26,7 +26,7 @@
     <MicrosoftDotNetProductConstructionServiceClientVersion>1.1.0-beta.25211.4</MicrosoftDotNetProductConstructionServiceClientVersion>
     <MicrosoftDotNetDarcLibVersion>1.1.0-beta.25211.4</MicrosoftDotNetDarcLibVersion>
     <!-- command-line-api -->
-    <SystemCommandLineVersion>2.0.0-beta4.24126.1</SystemCommandLineVersion>
+    <SystemCommandLineVersion>2.0.0-beta5.25210.1</SystemCommandLineVersion>
     <!-- corefx -->
     <SystemRuntimeInteropServicesRuntimeInformation>4.3.0</SystemRuntimeInteropServicesRuntimeInformation>
     <!-- deployment-tools -->
