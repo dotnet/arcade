@@ -44,7 +44,6 @@
   <Target Name="_InnerGetTestsToRun"
           Outputs="%(_TestArchitectureItems.Identity)"
           Returns="@(TestToRun)"
-          DependsOnTargets="ComputeRunArguments"
           Condition="'$(TestRuntime)' != '' and '$(SkipTests)' != 'true' and
                      ('$(TestTargetFrameworks)' == '' or $([System.String]::new(';$(TestTargetFrameworks);').Contains(';$(TargetFramework);')))">
 
@@ -82,9 +81,13 @@
     <ItemGroup>
       <_TargetFramework Include="$(TargetFrameworks)" />
     </ItemGroup>
+    <PropertyGroup>
+      <_TargetsToRun>_InnerGetTestsToRun</_TargetsToRun>
+      <_TargetsToRun Condition="'$(EnableMSTestRunner)'=='true' OR '$(EnableNUnitRunner)'=='true' OR '$(UseMicrosoftTestingPlatformRunner)'=='true'">ComputeRunArguments;$(_TargetsToRun)</_TargetsToRun>
+    </PropertyGroup>
     <MSBuild Projects="$(MSBuildProjectFile)"
              Condition="'$(TargetFrameworks)' != ''"
-             Targets="_InnerGetTestsToRun"
+             Targets="$(_TargetsToRun)"
              Properties="TargetFramework=%(_TargetFramework.Identity)">
       <Output ItemName="TestToRun" TaskParameter="TargetOutputs" />
     </MSBuild>
