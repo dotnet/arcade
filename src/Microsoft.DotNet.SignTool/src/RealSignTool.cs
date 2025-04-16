@@ -8,7 +8,9 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection.PortableExecutable;
+using System.Text;
 using System.Collections.Generic;
+using Microsoft.DotNet.StrongName;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -19,7 +21,9 @@ namespace Microsoft.DotNet.SignTool
     {
         private readonly string _dotnetPath;
         private readonly string _logDir;
+        private readonly string _msbuildVerbosity;
         private readonly string _snPath;
+        private readonly int _dotnetTimeout;
 
         /// <summary>
         /// The number of bytes from the start of the <see cref="CorHeader"/> to its <see cref="CorFlags"/>.
@@ -36,11 +40,13 @@ namespace Microsoft.DotNet.SignTool
         {
             TestSign = args.TestSign;
             _dotnetPath = args.DotNetPath;
+            _msbuildVerbosity = args.MSBuildVerbosity;
             _snPath = args.SNBinaryPath;
             _logDir = args.LogDir;
+            _dotnetTimeout = args.DotNetTimeout;
         }
 
-        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, string binLogPath)
+        public override bool RunMSBuild(IBuildEngine buildEngine, string projectFilePath, string binLogPath, string logPath, string errorLogPath)
         {
             if (_dotnetPath == null)
             {
@@ -49,28 +55,63 @@ namespace Microsoft.DotNet.SignTool
 
             Directory.CreateDirectory(_logDir);
 
-            var process = Process.Start(new ProcessStartInfo()
+            using (var process = new Process())
             {
-                FileName = _dotnetPath,
-                Arguments = $@"build ""{projectFilePath}"" -bl:""{binLogPath}""",
-                UseShellExecute = false,
-                WorkingDirectory = TempDir,
-            });
+                process.StartInfo = new ProcessStartInfo()
+                {
+                    FileName = _dotnetPath,
+                    Arguments = $@"build ""{projectFilePath}"" -v:""{_msbuildVerbosity}"" -bl:""{binLogPath}""",
+                    UseShellExecute = false,
+                    WorkingDirectory = TempDir,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                };
 
-            process.WaitForExit();
+                var output = new StringBuilder();
+                var error = new StringBuilder();
 
-            if (process.ExitCode != 0)
-            {
-                _log.LogError($"Failed to execute MSBuild on the project file {projectFilePath}");
-                return false;
+                process.OutputDataReceived += (sender, e) => output.AppendLine(e.Data);
+                process.ErrorDataReceived += (sender, e) => error.AppendLine(e.Data);
+
+                process.Start();
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine();
+
+                bool success = true;
+                if (!process.WaitForExit(_dotnetTimeout))
+                {
+                    _log.LogError($"MSBuild process did not exit within '{_dotnetTimeout}' ms.");
+                    process.Kill();
+                    process.WaitForExit();
+                    success = false;
+                }
+
+                if (process.ExitCode != 0)
+                {
+                    _log.LogError($"Failed to execute MSBuild on the project file '{projectFilePath}'" +
+                    $" with exit code '{process.ExitCode}'.");
+                    success = false;
+                }
+
+                string outputStr = output.ToString().Trim();
+                if (!string.IsNullOrWhiteSpace(outputStr))
+                {
+                    File.WriteAllText(logPath, outputStr);
+                }
+                
+                string errorStr = error.ToString().Trim();
+                if (!string.IsNullOrWhiteSpace(errorStr))
+                {
+                    File.WriteAllText(errorLogPath, errorStr);
+                }
+
+                return success;
             }
-
-            return true;
         }
 
         public override void RemoveStrongNameSign(string assemblyPath)
         {
-            StrongName.ClearStrongNameSignedBit(assemblyPath);
+            StrongNameHelper.ClearStrongNameSignedBit(assemblyPath);
         }
 
         public override SigningStatus VerifySignedPEFile(Stream assemblyStream)
@@ -91,7 +132,7 @@ namespace Microsoft.DotNet.SignTool
                 return SigningStatus.Signed;
             }
 
-            return StrongName.IsSigned(fileFullPath, snPath:_snPath, log: _log) ? SigningStatus.Signed : SigningStatus.NotSigned;
+            return StrongNameHelper.IsSigned(fileFullPath, snPath:_snPath) ? SigningStatus.Signed : SigningStatus.NotSigned;
         }
 
         public override SigningStatus VerifySignedDeb(TaskLoggingHelper log, string filePath)

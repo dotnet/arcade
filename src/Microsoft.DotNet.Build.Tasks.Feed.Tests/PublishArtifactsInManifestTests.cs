@@ -1,24 +1,24 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using FluentAssertions;
-using Microsoft.Arcade.Common;
-using Microsoft.Arcade.Test.Common;
-using Microsoft.DotNet.Build.Tasks.Feed.Model;
-using Microsoft.DotNet.Internal.DependencyInjection.Testing;
-using Microsoft.DotNet.VersionTools.BuildManifest.Model;
-using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions;
+using Microsoft.Arcade.Common;
+using Microsoft.Arcade.Test.Common;
+using Microsoft.DotNet.Build.Manifest;
+using Microsoft.DotNet.Build.Manifest.Tests;
+using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using Microsoft.DotNet.Internal.DependencyInjection.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
-using static Microsoft.DotNet.Build.Tasks.Feed.GeneralUtils;
 using static Microsoft.DotNet.Build.CloudTestTasks.AzureStorageUtils;
+using static Microsoft.DotNet.Build.Tasks.Feed.GeneralUtils;
 using MsBuildUtils = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
@@ -55,6 +55,32 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             var which = task.WhichPublishingTask(manifestFullPath);
             which.Should().BeOfType<PublishArtifactsInManifestV3>();
+        }
+
+        [Fact]
+        public void ConstructV4PublishingTask()
+        {
+            var manifestFullPath = TestInputs.GetFullPath(Path.Combine("Manifests", "SampleV4.xml"));
+
+            var buildEngine = new MockBuildEngine();
+            var task = new PublishArtifactsInManifest()
+            {
+                BuildEngine = buildEngine,
+                TargetChannels = GeneralTestingChannelId
+            };
+
+            // Dependency Injection setup
+            var collection = new ServiceCollection()
+                .AddSingleton<IFileSystem, FileSystem>()
+                .AddSingleton<IBuildModelFactory, BuildModelFactory>();
+            task.ConfigureServices(collection);
+            using var provider = collection.BuildServiceProvider();
+
+            // Act and Assert
+            task.InvokeExecute(provider);
+
+            var which = task.WhichPublishingTask(manifestFullPath);
+            which.Should().BeOfType<PublishArtifactsInManifestV4>();
         }
 
         [Theory]
