@@ -40,8 +40,10 @@
 
     <VersionsPropsPath>$(RepositoryEngineeringDir)Versions.props</VersionsPropsPath>
 
-    <ArtifactsDir Condition="'$(ArtifactsDir)' == ''">$([MSBuild]::NormalizeDirectory('$(RepoRoot)', 'artifacts'))</ArtifactsDir>
-    <ArtifactsToolsetDir>$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'toolset'))</ArtifactsToolsetDir>
+    <ArtifactsDir Condition="'$(ArtifactsDir)' == '' and '$(ARCADE_STAGINGDIRECTORY)' == ''">$([MSBuild]::NormalizeDirectory('$(RepoRoot)', 'artifacts'))</ArtifactsDir>
+    <ArtifactsDir Condition="'$(ArtifactsDir)' == '' and '$(ARCADE_STAGINGDIRECTORY)' != ''">$([MSBuild]::NormalizeDirectory('$(ARCADE_STAGINGDIRECTORY)', 'artifacts'))</ArtifactsDir>
+    <ArtifactsToolsetDir Condition="'$(ARCADE_STAGINGDIRECTORY)' == ''">$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'toolset'))</ArtifactsToolsetDir>
+    <ArtifactsToolsetDir Condition="'$(ARCADE_STAGINGDIRECTORY)' != ''">$([MSBuild]::NormalizeDirectory('$(RepoRoot)', '.toolset'))</ArtifactsToolsetDir>
     <ArtifactsObjDir>$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'obj'))</ArtifactsObjDir>
     <ArtifactsBinDir>$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'bin'))</ArtifactsBinDir>
     <ArtifactsLogDir>$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'log', '$(Configuration)'))</ArtifactsLogDir>
