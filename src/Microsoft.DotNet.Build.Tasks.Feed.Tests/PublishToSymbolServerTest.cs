@@ -110,7 +110,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             await task.HandleSymbolPublishingAsync(
                 buildInfo: buildInfo,
-                buildAssets: buildAsset,
+                assetNameToBARAssetMapping: buildAsset,
                 pdbArtifactsBasePath: path,
                 symbolPublishingExclusionsFile: "",
                 publishSpecialClrFiles: false,
