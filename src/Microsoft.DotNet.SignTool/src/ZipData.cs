@@ -488,7 +488,8 @@ namespace Microsoft.DotNet.SignTool
                             using FileStream signedStream = File.OpenRead(signedPart.Value.FileSignInfo.FullPath);
                             entry.DataStream = signedStream;
                             entry.DataStream.Position = 0;
-                            writer.WriteEntry(entry);
+                            // Workaround issue with tar writing showing weird results: https://github.com/dotnet/sdk/issues/48513#issuecomment-2814323912
+                            writer.WriteEntry(new PaxTarEntry(entry));
 
                             log.LogMessage(MessageImportance.Low, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {FileSignInfo.FullPath} -> {relativeName}.");
                             continue;
@@ -497,7 +498,8 @@ namespace Microsoft.DotNet.SignTool
                         log.LogMessage(MessageImportance.Low, $"Didn't find signed part for nested file: {FileSignInfo.FullPath} -> {relativeName}");
                     }
 
-                    writer.WriteEntry(entry);
+                    // Workaround issue with tar writing showing weird results: https://github.com/dotnet/sdk/issues/48513#issuecomment-2814323912
+                    writer.WriteEntry(new PaxTarEntry(entry));
                 }
             }
 
