@@ -58,6 +58,8 @@
       <_DotNetCoreRequired>false</_DotNetCoreRequired>
       <_DotNetCoreRequired Condition="'$(_DryRun)' != 'true'">true</_DotNetCoreRequired>
 
+      <_DotNetCorePath>$(DotNetTool)</_DotNetCorePath>
+
       <!-- SN is only available on Windows -->
       <SNBinaryPath Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(NuGetPackageRoot)sn\$(SNVersion)\sn.exe</SNBinaryPath>
       
@@ -69,8 +71,11 @@
            Text="List of files to sign is empty. Make sure that ItemsToSign is configured correctly." />
 
     <PropertyGroup Condition="$(_DotNetCoreRequired)">
-      <_DotNetCorePath>$(DotNetTool)</_DotNetCorePath>
+      <MicroBuildDotNetPath Condition="'$(MicroBuildDotNetPath)' == ''">$(DotNetTool)</MicroBuildDotNetPath>
     </PropertyGroup>
+
+    <Error Text="The value of MicroBuildDotNetPath is not set. Please set either MicroBuildOutputFolder (recommended) or MicroBuildDotNetPath." 
+           Condition="'$(MicroBuildDotNetPath)' == '' and '$(MicroBuildOutputFolder)' == '' and $(_DotNetCoreRequired)" />
 
     <!-- Keep TarToolPath TFM in sync with TarTool project TFM. -->
     <Microsoft.DotNet.SignTool.SignToolTask
@@ -86,6 +91,7 @@
         TempDir="$(ArtifactsTmpDir)"
         LogDir="$(ArtifactsLogDir)"
         DotNetPath="$(_DotNetCorePath)"
+        MicroBuildDotNetPath="$(MicroBuildDotNetPath)"
         SNBinaryPath="$(SNBinaryPath)"
         MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"
         WixToolsPath="$(WixInstallPath)"

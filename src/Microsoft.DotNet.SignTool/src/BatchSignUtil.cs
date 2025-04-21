@@ -282,7 +282,7 @@ namespace Microsoft.DotNet.SignTool
                 if (file.IsUnpackableContainer())
                 {
                     _log.LogMessage($"Repacking container: '{file.FileName}'");
-                    _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath, _signTool.TarToolPath, _signTool.PkgToolPath);
+                    _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath, _signTool.TarToolPath, _signTool.PkgToolPath, _signTool.DotNetPath);
                 }
                 else
                 {
@@ -614,7 +614,7 @@ namespace Microsoft.DotNet.SignTool
                 }
                 else if (file.IsPkg() || file.IsAppBundle())
                 {
-                    var status = _signTool.VerifySignedPkgOrAppBundle(_log, file.FullPath, _signTool.PkgToolPath);
+                    var status = _signTool.VerifySignedPkgOrAppBundle(_log, file.FullPath, _signTool.PkgToolPath, _signTool.DotNetPath);
                     LogSigningStatus(file, status, "Pkg or app");
                 }
                 else if (file.IsNupkg())

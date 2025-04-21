@@ -123,6 +123,13 @@
     <!-- Verbosity for DotNet MicroBuild build command. -->
     <SignToolMSBuildVerbosity Condition="'$(SignToolMSBuildVerbosity)' == ''">quiet</SignToolMSBuildVerbosity>
 
+    <!-- DotNet executable path to use for the MicroBuild execution. -->
+    <DotNetExecName Condition="'$(OS)' == 'Windows_NT'">dotnet.exe</DotNetTool>
+    <DotNetExecName Condition="'$(OS)' != 'Windows_NT'">dotnet</DotNetTool>
+    <MicroBuildDotNetPath Condition="'$(MicroBuildDotNetPath)' == '' and '$(MicroBuildOutputFolder)' != ''">
+      $([MSBuild]::NormalizeDirectory('$(MicroBuildOutputFolder)', '.dotnet', '$(DotNetExecName)'))
+    </MicroBuildDotNetPath>
+
     <NETCORE_ENGINEERING_TELEMETRY>Signing</NETCORE_ENGINEERING_TELEMETRY>
   </PropertyGroup>
 

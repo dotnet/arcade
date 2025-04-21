@@ -26,6 +26,7 @@ namespace Microsoft.DotNet.SignTool
         internal string WixToolsPath => _args.WixToolsPath;
         internal string TarToolPath => _args.TarToolPath;
         internal string PkgToolPath => _args.PkgToolPath;
+        internal string DotNetPath => _args.DotNetPath;
 
         internal SignTool(SignToolArgs args, TaskLoggingHelper log)
         {
@@ -43,7 +44,7 @@ namespace Microsoft.DotNet.SignTool
         public abstract SigningStatus VerifySignedPowerShellFile(string filePath);
         public abstract SigningStatus VerifySignedNuGet(string filePath);
         public abstract SigningStatus VerifySignedVSIX(string filePath);
-        public abstract SigningStatus VerifySignedPkgOrAppBundle(TaskLoggingHelper log, string filePath, string pkgToolPath);
+        public abstract SigningStatus VerifySignedPkgOrAppBundle(TaskLoggingHelper log, string filePath, string pkgToolPath, string dotnetPath);
 
         public abstract SigningStatus VerifyStrongNameSign(string fileFullPath);
 

@@ -4,22 +4,19 @@ parameters:
   # Enable install tasks for MicroBuild on Mac and Linux
   # Will be ignored if 'enableMicrobuild' is false or 'Agent.Os' is 'Windows_NT'
   enableMicrobuildForMacAndLinux: false
-  # Location of the MicroBuild output folder
-  microBuildOutputFolder: '$(Build.SourcesDirectory)'
   continueOnError: false
 
 steps:
   - ${{ if eq(parameters.enableMicrobuild, 'true') }}:
-    - ${{ if eq(parameters.enableMicrobuildForMacAndLinux, 'true') }}:
-      # Needed to download the MicroBuild plugin nupkgs on Mac and Linux when nuget.exe is unavailable
-      - task: UseDotNet@2
-        displayName: Install .NET 8.0 SDK for MicroBuild Plugin
-        inputs:
-          packageType: sdk
-          version: 8.0.x
-          installationPath: ${{ parameters.microBuildOutputFolder }}/.dotnet
-          workingDirectory: ${{ parameters.microBuildOutputFolder }}
-        condition: and(succeeded(), ne(variables['Agent.Os'], 'Windows_NT'))
+    # MicroBuild recommends using the latest LTS .NET SDK for the MicroBuild plugin
+    - task: UseDotNet@2
+      displayName: Install .NET 8.0 SDK for MicroBuild Plugin
+      inputs:
+        packageType: sdk
+        version: 8.0.x
+        installationPath: $(MicroBuildOutputFolder)/.dotnet
+        workingDirectory: $(MicroBuildOutputFolder)
+      condition: and(succeeded(), ne(variables['Agent.Os'], 'Windows_NT'))
 
     - task: MicroBuildSigningPlugin@4
       displayName: Install MicroBuild plugin
@@ -32,7 +29,7 @@ steps:
           useEsrpCli: true
       env:
         TeamName: $(_TeamName)
-        MicroBuildOutputFolderOverride: ${{ parameters.microBuildOutputFolder }}
+        MicroBuildOutputFolderOverride: $(MicroBuildOutputFolder)
         SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       continueOnError: ${{ parameters.continueOnError }}
       condition: and(
@@ -56,8 +53,8 @@ steps:
         inputs:
           packageType: sdk
           version: 9.0.x
-          installationPath: ${{ parameters.microBuildOutputFolder }}/.dotnet
-          workingDirectory: ${{ parameters.microBuildOutputFolder }}
+          installationPath: $(MicroBuildOutputFolder)/.dotnet
+          workingDirectory: $(MicroBuildOutputFolder)
         condition: and(succeeded(), eq(variables['Agent.OS'], 'Linux'))
 
       - task: PowerShell@2

@@ -119,9 +119,14 @@ namespace Microsoft.DotNet.SignTool
         public ITaskItem[] CertificatesSignInfo { get; set; }
 
         /// <summary>
-        /// Path to dotnet executable. Required if <see cref="DryRun"/> is <c>false</c>.
+        /// Path to dotnet executable for unpacking and repacking tasks.
         /// </summary>
         public string DotNetPath { get; set; }
+
+        /// <summary>
+        /// Path to the dotnet executable for running MicroBuild. Required if <see cref="DryRun"/> is <c>false</c>.
+        /// </summary>
+        public string MicroBuildDotNetPath { get; set; }
 
         /// <summary>
         /// Verbosity level for MSBuild.
@@ -202,11 +207,17 @@ namespace Microsoft.DotNet.SignTool
                     message: $"An empty list of files to sign was passed as parameter.");
             }
 
+            if (!File.Exists(DotNetPath))
+            {
+                Log.LogError($"DotNet path ('{DotNetPath}') does not exist.");
+                return;
+            }
+
             if (!DryRun)
             {
-                if (!File.Exists(DotNetPath))
+                if (!File.Exists(MicroBuildDotNetPath))
                 {
-                    Log.LogError($"DotNet was not found at this path: '{DotNetPath}'.");
+                    Log.LogError($"MicroBuildDotNetPath ('{MicroBuildDotNetPath}') does not exist.");
                     return;
                 }
 
@@ -237,7 +248,7 @@ namespace Microsoft.DotNet.SignTool
 
             if (Log.HasLoggedErrors) return;
 
-            var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, DotNetPath, MSBuildVerbosity, LogDir, enclosingDir, SNBinaryPath, WixToolsPath, TarToolPath, PkgToolPath, DotNetTimeout);
+            var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, DotNetPath, MicroBuildDotNetPath, MSBuildVerbosity, LogDir, enclosingDir, SNBinaryPath, WixToolsPath, TarToolPath, PkgToolPath, DotNetTimeout);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs, Log) : (SignTool)new RealSignTool(signToolArgs, Log);
 
             var itemsToSign = ItemsToSign.Select(i => new ItemToSign(i.ItemSpec, i.GetMetadata(SignToolConstants.CollisionPriorityId))).OrderBy(i => i.CollisionPriorityId).ToList();
@@ -252,6 +263,7 @@ namespace Microsoft.DotNet.SignTool
                     fileSignInfo,
                     extensionSignInfo,
                     dualCertificates,
+                    dotnetPath: DotNetPath,
                     tarToolPath: TarToolPath,
                     pkgToolPath: PkgToolPath,
                     snPath: SNBinaryPath,
