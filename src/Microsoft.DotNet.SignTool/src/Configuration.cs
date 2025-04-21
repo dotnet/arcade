@@ -481,6 +481,7 @@ namespace Microsoft.DotNet.SignTool
                     }
                 }
 
+                // Tracking issue to remove this warning - https://github.com/dotnet/arcade/issues/15761
                 if (signInfo.Certificate != null && signInfo.Certificate.Equals("BreakingSignatureChange", StringComparison.OrdinalIgnoreCase))
                 {
                     _log.LogWarning($"Skipping file '{file.FullPath}' because .js files are no longer signed by default. " +
