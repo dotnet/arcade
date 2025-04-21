@@ -132,7 +132,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             return !Log.HasLoggedErrors;
                         }
 
-                        buildModel = _buildModelFactory.CreateMergedModel(parsedManifests, ArtifactVisibility.All);
+                        // Always drop Internal artifacts when pushing a build to Maestro.
+                        buildModel = _buildModelFactory.CreateMergedModel(parsedManifests,
+                            (ArtifactVisibility.All & ~ArtifactVisibility.Internal));
 
                         FillInMissingBuildIdentityProperties(buildModel.Identity);
 
