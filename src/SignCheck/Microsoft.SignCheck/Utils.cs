@@ -56,7 +56,7 @@ namespace Microsoft.SignCheck
                 case "SHA512":
                     return SHA512.Create();
                 default:
-                    throw new ArgumentException("Unsupported hash algorithm name", nameof(hashName));
+                    throw new ArgumentException($"Unsupported hash algorithm name '{hashName}'", nameof(hashName));
             }
         }
 
