@@ -186,10 +186,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public readonly Dictionary<TargetFeedContentType, HashSet<TargetFeedConfig>> FeedConfigs =
             new Dictionary<TargetFeedContentType, HashSet<TargetFeedConfig>>();
 
-        private readonly Dictionary<TargetFeedContentType, HashSet<PackageArtifactModel>> PackagesByCategory =
+        public readonly Dictionary<TargetFeedContentType, HashSet<PackageArtifactModel>> PackagesByCategory =
             new Dictionary<TargetFeedContentType, HashSet<PackageArtifactModel>>();
 
-        private readonly Dictionary<TargetFeedContentType, HashSet<BlobArtifactModel>> BlobsByCategory =
+        public readonly Dictionary<TargetFeedContentType, HashSet<BlobArtifactModel>> BlobsByCategory =
             new Dictionary<TargetFeedContentType, HashSet<BlobArtifactModel>>();
 
         private readonly ConcurrentDictionary<(int AssetId, string AssetLocation, LocationType LocationType), ValueTuple> NewAssetLocations =
@@ -519,10 +519,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Decides how to publish the symbol, dll and pdb files
         /// </summary>
         /// <param name="buildInfo">Build information used to get symbol server publishing name.</param>
-        /// <param name="assetNameToBARAssetMapping">Name to asset map for this particular publishing build.</param>
         /// <param name="pdbArtifactsBasePath">Path to loose dll and pdb files folder.</param>
-        /// <param name="msdlToken">Token to authenticate MSDL.</param>
-        /// <param name="symWebToken">Token to authenticate SymWeb.</param>
+        /// <param name="assetNameToBARAssetMapping">Asset id to BAR asset mapping</param>
         /// <param name="symbolPublishingExclusionsFile">Path to file containing list of relative file paths for files in packages that can't be published.</param>
         /// <param name="clientThrottle">Semaphore to throttle concurrent AzDO asset download and symbol uploads.</param>
         /// <param name="publishSpecialClrFiles">If true, the special coreclr module indexed files like  DBI, DAC and SOS are published</param>
@@ -575,8 +573,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     $"\tTemp symbol org: {TempSymbolsAzureDevOpsOrg}" + Environment.NewLine +
                     $"\tFinal symbol visibility: {publishVisibility}" + Environment.NewLine +
                     $"\tRequest Name: {requestName}" + Environment.NewLine +
-                    $"\tSymbol packages:{Environment.NewLine}\t\t{string.Join($"{Environment.NewLine}\t\t", symbolPackagesToPublish.Select(s => s.Id))}" + Environment.NewLine +
-                    $"\tLoose symbol files: {Environment.NewLine}\t\t{string.Join($"{Environment.NewLine}\t\t", looseFiles)}");
+                    $"\tSymbol packages ({symbolPackagesToPublish.Count}):{Environment.NewLine}\t\t{string.Join($"{Environment.NewLine}\t\t", symbolPackagesToPublish.Select(s => s.Id))}" + Environment.NewLine +
+                    $"\tLoose symbol files ({looseFiles.Count()}): {Environment.NewLine}\t\t{string.Join($"{Environment.NewLine}\t\t", looseFiles)}");
 
             SymbolUploadHelper helper = await CreatePublishSymbolHelper(symbolPublishingExclusionsFile, publishSpecialClrFiles, dryRun);
 
