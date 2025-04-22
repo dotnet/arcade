@@ -134,7 +134,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         // Always drop Internal artifacts when pushing a build to Maestro.
                         buildModel = _buildModelFactory.CreateMergedModel(parsedManifests,
-                            (ArtifactVisibility.All & ~ArtifactVisibility.Internal));
+                            ArtifactVisibility.External);
 
                         FillInMissingBuildIdentityProperties(buildModel.Identity);
 
