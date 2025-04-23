@@ -84,6 +84,7 @@ steps:
     ${{ coalesce(parameters.platform.buildScript, './build.sh') }} --ci \
       --configuration $buildConfig \
       --restore --build --pack $publishArgs -bl \
+      ${{ parameters.platform.buildArguments }} \
       $officialBuildArgs \
       $internalRuntimeDownloadArgs \
       $internalRestoreArgs \
@@ -94,7 +95,6 @@ steps:
       /p:DotNetBuildSourceOnly=true \
       /p:DotNetBuildRepo=true \
       /p:AssetManifestFileName=$assetManifestFileName
-      ${{ parameters.platform.buildArguments }}
   displayName: Build
 
 # Upload build logs for diagnosis.
