@@ -94,6 +94,7 @@ steps:
       /p:DotNetBuildSourceOnly=true \
       /p:DotNetBuildRepo=true \
       /p:AssetManifestFileName=$assetManifestFileName
+      ${{ parameters.platform.buildArguments }}
   displayName: Build
 
 # Upload build logs for diagnosis.
