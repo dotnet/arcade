@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
+  <Source Uri="https://github.com/dotnet/dotnet" Mapping="arcade" Sha="721dc7a2a59416b21fc49447d264009d708d6000" BarId="265489" />
   <ProductDependencies>
   </ProductDependencies>
   <ToolsetDependencies>
@@ -22,17 +23,17 @@
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
       <Sha>d617bc8ed2787c235a57cf0dcdfd087b86ff9521</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="10.0.100-preview.4.25220.1">
-      <Uri>https://github.com/dotnet/templating</Uri>
-      <Sha>43b5827697e501c442eb75ffff832cd4df2514fe</Sha>
+    <Dependency Name="Microsoft.TemplateEngine.Authoring.Tasks" Version="10.0.100-preview.5.25223.119">
+      <Uri>https://github.com/dotnet/dotnet</Uri>
+      <Sha>721dc7a2a59416b21fc49447d264009d708d6000</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.25222.2">
-      <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>80d7b4ee29c31c0886b139ad02d85da48b543cd6</Sha>
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.25223.119">
+      <Uri>https://github.com/dotnet/dotnet</Uri>
+      <Sha>721dc7a2a59416b21fc49447d264009d708d6000</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="10.0.0-beta.25222.2">
-      <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>80d7b4ee29c31c0886b139ad02d85da48b543cd6</Sha>
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="10.0.0-beta.25223.119">
+      <Uri>https://github.com/dotnet/dotnet</Uri>
+      <Sha>721dc7a2a59416b21fc49447d264009d708d6000</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.ProductConstructionService.Client" Version="1.1.0-beta.25222.6">
       <Uri>https://github.com/dotnet/arcade-services</Uri>

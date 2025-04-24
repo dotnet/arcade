@@ -95,7 +95,7 @@
     <!-- diagnostics -->
     <MicrosoftSymbolManifestGeneratorVersion>8.0.0-preview.24461.2</MicrosoftSymbolManifestGeneratorVersion>
     <!-- templating -->
-    <MicrosoftTemplateEngineAuthoringTasksVersion>10.0.100-preview.4.25220.1</MicrosoftTemplateEngineAuthoringTasksVersion>
+    <MicrosoftTemplateEngineAuthoringTasksVersion>10.0.100-preview.5.25223.119</MicrosoftTemplateEngineAuthoringTasksVersion>
     <!-- vstest -->
     <MicrosoftNetTestSdkVersion>17.5.0</MicrosoftNetTestSdkVersion>
     <!-- xharness -->
