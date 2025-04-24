@@ -26,7 +26,7 @@
     <MicrosoftDotNetProductConstructionServiceClientVersion>1.1.0-beta.25222.6</MicrosoftDotNetProductConstructionServiceClientVersion>
     <MicrosoftDotNetDarcLibVersion>1.1.0-beta.25222.6</MicrosoftDotNetDarcLibVersion>
     <!-- command-line-api -->
-    <SystemCommandLineVersion>2.0.0-beta5.25210.1</SystemCommandLineVersion>
+    <SystemCommandLineVersion>2.0.0-beta5.25223.119</SystemCommandLineVersion>
     <!-- corefx -->
     <SystemRuntimeInteropServicesRuntimeInformation>4.3.0</SystemRuntimeInteropServicesRuntimeInformation>
     <!-- deployment-tools -->
@@ -50,17 +50,17 @@
     <NuGetProjectModelVersion>6.13.2</NuGetProjectModelVersion>
     <NuGetVersioningVersion>6.13.2</NuGetVersioningVersion>
     <!-- roslyn -->
-    <MicrosoftCodeAnalysisCSharpVersion>4.8.0</MicrosoftCodeAnalysisCSharpVersion>
-    <MicrosoftNetCompilersToolsetVersion>4.8.0</MicrosoftNetCompilersToolsetVersion>
+    <MicrosoftCodeAnalysisCSharpVersion>5.0.0-1.25223.119</MicrosoftCodeAnalysisCSharpVersion>
+    <MicrosoftNetCompilersToolsetVersion>5.0.0-1.25223.119</MicrosoftNetCompilersToolsetVersion>
     <!-- runtime -->
-    <MicrosoftBclAsyncInterfacesVersion>9.0.0-rc.2.24473.5</MicrosoftBclAsyncInterfacesVersion>
-    <MicrosoftExtensionsDependencyInjectionAbstractionsVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsDependencyInjectionAbstractionsVersion>
-    <MicrosoftExtensionsDependencyInjectionVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsDependencyInjectionVersion>
-    <MicrosoftExtensionsHttpVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsHttpVersion>
-    <MicrosoftExtensionsDependencyModelVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsDependencyModelVersion>
-    <MicrosoftExtensionsFileProvidersAbstractionsVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsFileProvidersAbstractionsVersion>
-    <MicrosoftExtensionsFileSystemGlobbingVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsFileSystemGlobbingVersion>
-    <MicrosoftExtensionsLoggingConsoleVersion>9.0.0-rc.2.24473.5</MicrosoftExtensionsLoggingConsoleVersion>
+    <MicrosoftBclAsyncInterfacesVersion>10.0.0-preview.4.25223.119</MicrosoftBclAsyncInterfacesVersion>
+    <MicrosoftExtensionsDependencyInjectionAbstractionsVersion>10.0.0-preview.4.25223.119</MicrosoftExtensionsDependencyInjectionAbstractionsVersion>
+    <MicrosoftExtensionsDependencyInjectionVersion>10.0.0-preview.4.25223.119</MicrosoftExtensionsDependencyInjectionVersion>
+    <MicrosoftExtensionsHttpVersion>10.0.0-preview.4.25223.119</MicrosoftExtensionsHttpVersion>
+    <MicrosoftExtensionsDependencyModelVersion>10.0.0-preview.4.25223.119</MicrosoftExtensionsDependencyModelVersion>
+    <MicrosoftExtensionsFileProvidersAbstractionsVersion>10.0.0-preview.4.25223.119</MicrosoftExtensionsFileProvidersAbstractionsVersion>
+    <MicrosoftExtensionsFileSystemGlobbingVersion>10.0.0-preview.4.25223.119</MicrosoftExtensionsFileSystemGlobbingVersion>
+    <MicrosoftExtensionsLoggingConsoleVersion>10.0.0-preview.4.25223.119</MicrosoftExtensionsLoggingConsoleVersion>
     <MicrosoftNETCorePlatformsVersion>5.0.0</MicrosoftNETCorePlatformsVersion>
     <MicrosoftNETRuntimeEmscripten2023Nodewin_x64>6.0.4</MicrosoftNETRuntimeEmscripten2023Nodewin_x64>
     <MicrosoftNETRuntimeEmscripten2023Pythonwin_x64>6.0.4</MicrosoftNETRuntimeEmscripten2023Pythonwin_x64>
@@ -74,17 +74,17 @@
     <MicrosoftNETWorkloadMonoToolChainManifest_60300Version_6022>6.0.22</MicrosoftNETWorkloadMonoToolChainManifest_60300Version_6022>
     <MicrosoftiOSTemplatesVersion>15.2.302-preview.14.122</MicrosoftiOSTemplatesVersion>
     <MicrosoftiOSTemplatesVersion160527>16.0.527</MicrosoftiOSTemplatesVersion160527>
-    <SystemCollectionsImmutableVersion>9.0.0-rc.2.24473.5</SystemCollectionsImmutableVersion>
+    <SystemCollectionsImmutableVersion>10.0.0-preview.4.25223.119</SystemCollectionsImmutableVersion>
     <SystemCompositionVersion>9.0.0-preview.6.24327.7</SystemCompositionVersion>
-    <SystemIOPackagingVersion>9.0.0-rc.2.24473.5</SystemIOPackagingVersion>
-    <SystemReflectionMetadataVersion>9.0.0-rc.2.24473.5</SystemReflectionMetadataVersion>
-    <SystemSecurityCryptographyPkcsVersion>9.0.0-rc.2.24473.5</SystemSecurityCryptographyPkcsVersion>
-    <SystemSecurityCryptographyXmlVersion>9.0.0-rc.2.24473.5</SystemSecurityCryptographyXmlVersion>
-    <SystemTextEncodingsWebVersion>9.0.0-rc.2.24473.5</SystemTextEncodingsWebVersion>
-    <SystemTextJsonVersion>9.0.0-rc.2.24473.5</SystemTextJsonVersion>
-    <SystemFormatsAsn1Version>9.0.0-rc.2.24473.5</SystemFormatsAsn1Version>
+    <SystemIOPackagingVersion>10.0.0-preview.4.25223.119</SystemIOPackagingVersion>
+    <SystemReflectionMetadataVersion>10.0.0-preview.4.25223.119</SystemReflectionMetadataVersion>
+    <SystemSecurityCryptographyPkcsVersion>10.0.0-preview.4.25223.119</SystemSecurityCryptographyPkcsVersion>
+    <SystemSecurityCryptographyXmlVersion>10.0.0-preview.4.25223.119</SystemSecurityCryptographyXmlVersion>
+    <SystemTextEncodingsWebVersion>10.0.0-preview.4.25223.119</SystemTextEncodingsWebVersion>
+    <SystemTextJsonVersion>10.0.0-preview.4.25223.119</SystemTextJsonVersion>
+    <SystemFormatsAsn1Version>10.0.0-preview.4.25223.119</SystemFormatsAsn1Version>
     <!-- sdk -->
-    <MicrosoftNETSdkWorkloadManifestReaderVersion>9.0.100-preview.6.24328.19</MicrosoftNETSdkWorkloadManifestReaderVersion>
+    <MicrosoftNETSdkWorkloadManifestReaderVersion>10.0.100-preview.5.25223.119</MicrosoftNETSdkWorkloadManifestReaderVersion>
     <!-- source-build-externals -->
     <!-- The version is overridden by the VMR to use the version from the previous (n-1) build of Arcade. -->
     <MicrosoftApplicationInsightsVersion>2.23.0</MicrosoftApplicationInsightsVersion>
@@ -95,7 +95,7 @@
     <!-- diagnostics -->
     <MicrosoftSymbolManifestGeneratorVersion>8.0.0-preview.24461.2</MicrosoftSymbolManifestGeneratorVersion>
     <!-- templating -->
-    <MicrosoftTemplateEngineAuthoringTasksVersion>10.0.100-preview.4.25220.1</MicrosoftTemplateEngineAuthoringTasksVersion>
+    <MicrosoftTemplateEngineAuthoringTasksVersion>10.0.100-preview.5.25223.119</MicrosoftTemplateEngineAuthoringTasksVersion>
     <!-- vstest -->
     <MicrosoftNetTestSdkVersion>17.5.0</MicrosoftNetTestSdkVersion>
     <!-- xharness -->
