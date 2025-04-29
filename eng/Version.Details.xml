@@ -132,48 +132,6 @@
       <Uri>https://github.com/dotnet/sdk</Uri>
       <Sha>ef4c24166691977558e5312758df4313ab310dc0</Sha>
     </Dependency>
-    <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.arcade" Version="10.0.0-beta.25228.1">
-      <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>79ecdf3ef50e5e8e9d2b02e7113ec37c4219eeb5</Sha>
-      <SourceBuild RepoName="arcade" ManagedOnly="true" />
-    </Dependency>
-    <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.command-line-api" Version="0.1.621001">
-      <Uri>https://github.com/dotnet/command-line-api</Uri>
-      <Sha>e9b0511d7f1128e2bc3be7a658a2a4ea977e602d</Sha>
-      <SourceBuild RepoName="command-line-api" ManagedOnly="true" />
-    </Dependency>
-    <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.deployment-tools" Version="9.0.0-preview.1.24305.1" CoherentParentDependency="Microsoft.NET.Sdk.WorkloadManifestReader">
-      <Uri>https://github.com/dotnet/deployment-tools</Uri>
-      <Sha>d882ae4af9fb09a89e36487a9c8cb7dfde713927</Sha>
-      <SourceBuild RepoName="deployment-tools" ManagedOnly="true" />
-    </Dependency>
-    <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.runtime.linux-x64" Version="9.0.0-rc.2.24473.5">
-      <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-runtime</Uri>
-      <Sha>990ebf52fc408ca45929fd176d2740675a67fab8</Sha>
-      <SourceBuild RepoName="runtime" ManagedOnly="false" />
-    </Dependency>
-    <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.sdk" Version="9.0.100-preview.6.24328.19">
-      <Uri>https://github.com/dotnet/sdk</Uri>
-      <Sha>ef4c24166691977558e5312758df4313ab310dc0</Sha>
-      <SourceBuild RepoName="sdk" ManagedOnly="true" />
-    </Dependency>
-    <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-externals" Version="10.0.621401">
-      <Uri>https://github.com/dotnet/source-build-externals</Uri>
-      <Sha>d64d8da45618323a39fb77860d1140bdbcd506ad</Sha>
-      <SourceBuild RepoName="source-build-externals" ManagedOnly="true" />
-    </Dependency>
-    <!-- Intermediate is necessary for source build. -->
-    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="10.0.622102">
-      <Uri>https://github.com/dotnet/source-build-reference-packages</Uri>
-      <Sha>361d41347b3ef9d19480e09e0b8a7c7a9644ed24</Sha>
-      <SourceBuild RepoName="source-build-reference-packages" ManagedOnly="true" />
-    </Dependency>
     <!-- Transitive dependency needed for source build. -->
     <Dependency Name="System.Collections.Immutable" Version="9.0.0-rc.2.24473.5">
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-runtime</Uri>
