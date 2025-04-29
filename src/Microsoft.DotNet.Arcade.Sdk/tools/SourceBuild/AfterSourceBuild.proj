@@ -33,7 +33,6 @@
   <Target Name="WritePrebuiltUsageData">
     <ItemGroup>
       <AllRestoredPackageFiles Include="$(CurrentRepoSourceBuildPackageCache)**/*.nupkg" />
-      <SourceBuiltPackageFiles Include="$(CurrentRepoSourceBuiltNupkgCacheDir)**/*.nupkg" />
       <SourceBuiltPackageFiles Include="$(AdditionalSourceBuiltNupkgCacheDir)**/*.nupkg" Condition=" '$(AdditionalSourceBuiltNupkgCacheDir)' != '' " />
       <SourceBuiltPackageFiles Include="$(ReferencePackageNupkgCacheDir)**/*.nupkg" Condition=" '$(ReferencePackageNupkgCacheDir)' != '' " />
       <SourceBuiltPackageFiles Include="$(PreviouslySourceBuiltNupkgCacheDir)**/*.nupkg" Condition=" '$(PreviouslySourceBuiltNupkgCacheDir)' != '' " />
