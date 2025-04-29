@@ -49,8 +49,6 @@
     <CurrentRepoSourceBuildArtifactsNonShippingPackagesDir>$([MSBuild]::NormalizeDirectory('$(CurrentRepoSourceBuildArtifactsPackagesDir)', 'NonShipping'))</CurrentRepoSourceBuildArtifactsNonShippingPackagesDir>
 
     <CurrentRepoSourceBuildNuGetSourceName>source-build-int-nupkg-cache</CurrentRepoSourceBuildNuGetSourceName>
-    <!-- If this path is updated, also update the component detection task in eng\common\templates\steps\source-build.yml -->
-    <CurrentRepoSourceBuiltNupkgCacheDir>$([MSBuild]::NormalizeDirectory('$(CurrentRepoSourceBuildArtifactsDir)', 'obj', 'source-built-upstream-cache'))</CurrentRepoSourceBuiltNupkgCacheDir>
 
     <PrebuiltBaselineDataFileDefault>$(RepositoryEngineeringDir)SourceBuildPrebuiltBaseline.xml</PrebuiltBaselineDataFileDefault>
     <PrebuiltBaselineDataFile Condition="Exists('$(PrebuiltBaselineDataFileDefault)')">$(PrebuiltBaselineDataFileDefault)</PrebuiltBaselineDataFile>
