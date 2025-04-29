@@ -398,7 +398,4 @@
       PublishManifestOnly="$(PublishManifestOnly)" />
   </Target>
 
-  <!-- Import the publish targets when in the inner or outer repo builds. -->
-  <Import Project="SourceBuild/SourceBuildArcadePublish.targets" Condition="'$(DotNetBuildRepo)' == 'true' and '$(UseArPowBuildInfra)' != 'false'" />
-
 </Project>
