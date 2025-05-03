@@ -16,8 +16,6 @@
 
   <!-- Repo extensibility point. -->
   <Import Project="$(RepositoryEngineeringDir)DotNetBuild.props" Condition="Exists('$(RepositoryEngineeringDir)DotNetBuild.props')" />
-  <!-- Remove the legacy extension point when all repositories updated to Arcade 9 and renamed their SourceBuild.props file. -->
-  <Import Project="$(RepositoryEngineeringDir)SourceBuild.props" Condition="Exists('$(RepositoryEngineeringDir)SourceBuild.props')" />
 
   <PropertyGroup>
     <!--
@@ -31,7 +29,8 @@
     <CurrentRepoSourceBuildSourceDir>$([MSBuild]::NormalizeDirectory('$(SourceBuildOutputDir)', 'src'))</CurrentRepoSourceBuildSourceDir>
     <CurrentRepoSourceBuildSourceDir Condition="'$(UseInnerClone)' != 'true'">$(RepoRoot)</CurrentRepoSourceBuildSourceDir>
     <CurrentRepoSourceBuildPackageCache>$([MSBuild]::NormalizeDirectory('$(SourceBuildOutputDir)', 'package-cache'))</CurrentRepoSourceBuildPackageCache>
-    <SourceBuildSelfPrebuiltReportDir>$([MSBuild]::NormalizeDirectory('$(SourceBuildOutputDir)', 'prebuilt-report'))</SourceBuildSelfPrebuiltReportDir>
+
+    <SourceBuildPrebuiltReportDir Condition="'$(SourceBuildPrebuiltReportDir)' == ''">$([MSBuild]::NormalizeDirectory('$(SourceBuildOutputDir)', 'prebuilt-report'))</SourceBuildPrebuiltReportDir>
     
     <!--
       Keep artifacts/ inside source dir so that ancestor-based file lookups find the inner repo, not
@@ -42,38 +41,6 @@
     -->
     <CurrentRepoSourceBuildArtifactsDir>$([MSBuild]::NormalizeDirectory('$(CurrentRepoSourceBuildSourceDir)', 'artifacts'))</CurrentRepoSourceBuildArtifactsDir>
     <CurrentRepoSourceBuildArtifactsLogsDir>$([MSBuild]::NormalizeDirectory('$(CurrentRepoSourceBuildArtifactsDir)', 'log', '$(Configuration)'))</CurrentRepoSourceBuildArtifactsLogsDir>
-    <CurrentRepoSourceBuildArtifactsPackagesDir>$([MSBuild]::NormalizeDirectory('$(CurrentRepoSourceBuildArtifactsDir)', 'packages', '$(Configuration)'))</CurrentRepoSourceBuildArtifactsPackagesDir>
-    <CurrentRepoSourceBuildArtifactsNonShippingPackagesDir>$([MSBuild]::NormalizeDirectory('$(CurrentRepoSourceBuildArtifactsPackagesDir)', 'NonShipping'))</CurrentRepoSourceBuildArtifactsNonShippingPackagesDir>
-
-    <CurrentRepoSourceBuildNuGetSourceName>source-build-int-nupkg-cache</CurrentRepoSourceBuildNuGetSourceName>
-
-    <PrebuiltBaselineDataFileDefault>$(RepositoryEngineeringDir)SourceBuildPrebuiltBaseline.xml</PrebuiltBaselineDataFileDefault>
-    <PrebuiltBaselineDataFile Condition="Exists('$(PrebuiltBaselineDataFileDefault)')">$(PrebuiltBaselineDataFileDefault)</PrebuiltBaselineDataFile>
   </PropertyGroup>
-
-  <Target Name="DiscoverRepoSymbols">
-    <PropertyGroup>
-      <SymbolsRoot>$(CurrentRepoSourceBuildArtifactsDir)</SymbolsRoot>
-      <!-- Fall back to repo root for source-build-externals or repos that don't have the regular SymbolsRoot as defined above -->
-      <SymbolsRoot Condition="!Exists('$(SymbolsRoot)') or '$(GitHubRepositoryName)' == 'source-build-externals'">$(RepoRoot)</SymbolsRoot>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <AbsoluteSymbolPath Include="$(SymbolsRoot)**\obj\**\*.pdb" />
-      <AbsoluteSymbolPath Condition="'@(AbsoluteSymbolPath)' != ''">
-        <RelativePath>$([MSBuild]::MakeRelative($(SymbolsRoot), %(FullPath)))</RelativePath>
-      </AbsoluteSymbolPath>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="CopyRepoSymbolsToIntermediates"
-          DependsOnTargets="DiscoverRepoSymbols"
-          Condition="'$(SourceBuiltSymbolsDir)' != ''">
-    <MakeDir Directories="$(SourceBuiltSymbolsDir)" />
-    <Copy
-      SourceFiles="@(AbsoluteSymbolPath)"
-      DestinationFolder="$(SourceBuiltSymbolsDir)%(RecursiveDir)"
-      UseHardlinksIfPossible="true" />
-  </Target>
 
 </Project>
