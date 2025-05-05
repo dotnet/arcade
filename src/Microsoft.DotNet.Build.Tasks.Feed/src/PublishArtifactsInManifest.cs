@@ -4,10 +4,9 @@
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using Microsoft.DotNet.Build.Manifest;
 #if !NET472_OR_GREATER
-using Microsoft.DotNet.Maestro.Client;
-using Microsoft.DotNet.VersionTools.Automation;
-using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using Microsoft.DotNet.ProductConstructionService.Client;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
@@ -221,11 +220,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public int NonStreamingPublishingMaxClients {get; set;}
 
-        /// <summary>
-        /// Just an internal flag to keep track whether we published assets via a V3 manifest or not.
-        /// </summary>
-        private static bool PublishedV3Manifest { get; set; }
-
         private IBuildModelFactory _buildModelFactory;
         private IFileSystem _fileSystem;
 
@@ -234,8 +228,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public override void ConfigureServices(IServiceCollection collection)
         {
             collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
-            collection.TryAddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>();
             collection.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
+            collection.TryAddSingleton<IPdbArtifactModelFactory, PdbArtifactModelFactory>();
             collection.TryAddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>();
             collection.TryAddSingleton<INupkgInfoFactory, NupkgInfoFactory>();
             collection.TryAddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>();
@@ -274,31 +268,22 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 // Check that all tasks returned true
                 if (results.All(t => t))
                 {
-                    // Currently a build can produce several build manifests and publish them independently.
-                    // It's also possible that somehow we have manifests using different versions of the publishing infra.
-                    //
-                    // The V3 infra, once all assets have been published, promotes the build to the target channels informed. 
+                    // Once all assets have been published, promotes the build to the target channels informed. 
                     // Since we can have multiple manifests (perhaps using different versions), things
-                    // get a bit more complicated. For now, we are going to just promote the build to the target 
-                    // channels if it creates at least one V3 manifest.
-                    //
-                    // There is an issue to merge all build manifests into a single one before publishing:
-                    //         https://github.com/dotnet/arcade/issues/5489
-                    if (PublishedV3Manifest)
+                    // get a bit more complicated.
+
+                    IProductConstructionServiceApi client = PcsApiFactory.GetAuthenticated(
+                        MaestroApiEndpoint,
+                        BuildAssetRegistryToken,
+                        MaestroManagedIdentityId,
+                        !AllowInteractiveAuthentication);
+                    ProductConstructionService.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
+
+                    var targetChannelsIds = TargetChannels.Split('-').Select(ci => int.Parse(ci));
+
+                    foreach (var targetChannelId in targetChannelsIds)
                     {
-                        IMaestroApi client = MaestroApiFactory.GetAuthenticated(
-                            MaestroApiEndpoint,
-                            BuildAssetRegistryToken,
-                            MaestroManagedIdentityId,
-                            !AllowInteractiveAuthentication);
-                        Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
-
-                        var targetChannelsIds = TargetChannels.Split('-').Select(ci => int.Parse(ci));
-
-                        foreach (var targetChannelId in targetChannelsIds)
-                        {
-                            await client.Channels.AddBuildToChannelAsync(BARBuildId, targetChannelId);
-                        }
+                        await client.Channels.AddBuildToChannelAsync(BARBuildId, targetChannelId);
                     }
 
                     return true;
@@ -335,6 +320,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 return ConstructPublishingV3Task(buildModel);
             }
+            else if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Dev)
+            {
+                return ConstructPublishingV4Task(buildModel);
+            }
             else
             {
                 Log.LogError($"The manifest version '{buildModel.Identity.PublishingVersion}' is not recognized by the publishing task.");
@@ -344,8 +333,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         internal PublishArtifactsInManifestBase ConstructPublishingV3Task(BuildModel buildModel)
         {
-            PublishedV3Manifest = true;
-
             return new PublishArtifactsInManifestV3(new AssetPublisherFactory(Log))
             {
                 BuildEngine = this.BuildEngine,
@@ -383,7 +370,57 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 ArtifactsBasePath =  this.ArtifactsBasePath,
                 AzdoApiToken = this.AzdoApiToken,
                 BuildId = this.BuildId,
-                AzureProject = this.AzureProject,
+                AzureDevOpsProject = this.AzureProject,
+                AzureDevOpsOrg = this.AzureDevOpsOrg,
+                TempSymbolsAzureDevOpsOrg = this.TempSymbolsAzureDevOpsOrg,
+                TempSymbolsAzureDevOpsOrgToken = this.TempSymbolsAzureDevOpsOrgToken,
+                SymbolRequestProject = this.SymbolRequestProject,
+                UseStreamingPublishing = this.UseStreamingPublishing,
+                StreamingPublishingMaxClients = this.StreamingPublishingMaxClients,
+                NonStreamingPublishingMaxClients = this.NonStreamingPublishingMaxClients
+            };
+        }
+
+        internal PublishArtifactsInManifestBase ConstructPublishingV4Task(BuildModel buildModel)
+        {
+            return new PublishArtifactsInManifestV4(new AssetPublisherFactory(Log))
+            {
+                BuildEngine = this.BuildEngine,
+                TargetChannels = this.TargetChannels,
+                BuildModel = buildModel,
+                BlobAssetsBasePath = this.BlobAssetsBasePath,
+                PackageAssetsBasePath = this.PackageAssetsBasePath,
+                BARBuildId = this.BARBuildId,
+                MaestroApiEndpoint = this.MaestroApiEndpoint,
+                BuildAssetRegistryToken = this.BuildAssetRegistryToken,
+                NugetPath = this.NugetPath,
+                InternalBuild = this.InternalBuild,
+                SkipSafetyChecks = this.SkipSafetyChecks,
+                AkaMSClientId = this.AkaMSClientId,
+                AkaMSClientCertificate = !string.IsNullOrEmpty(AkaMSClientCertificate) ?
+#if NET9_0_OR_GREATER
+                    X509CertificateLoader.LoadPkcs12(Convert.FromBase64String(File.ReadAllText(AkaMSClientCertificate)), password: null) : null,
+#else
+                    new X509Certificate2(Convert.FromBase64String(File.ReadAllText(AkaMSClientCertificate))) : null,
+#endif
+                AkaMSCreatedBy = this.AkaMSCreatedBy,
+                AkaMSGroupOwner = this.AkaMSGroupOwner,
+                AkaMsOwners = this.AkaMsOwners,
+                AkaMSTenant = this.AkaMSTenant,
+                ManagedIdentityClientId = this.ManagedIdentityClientId,
+                PublishInstallersAndChecksums = this.PublishInstallersAndChecksums,
+                FeedKeys = this.FeedKeys,
+                FeedSasUris = this.FeedSasUris,
+                FeedOverrides = this.FeedOverrides,
+                AllowFeedOverrides = this.AllowFeedOverrides,
+                PdbArtifactsBasePath = this.PdbArtifactsBasePath,
+                SymbolPublishingExclusionsFile = this.SymbolPublishingExclusionsFile,
+                PublishSpecialClrFiles = this.PublishSpecialClrFiles,
+                BuildQuality = this.BuildQuality,
+                ArtifactsBasePath = this.ArtifactsBasePath,
+                AzdoApiToken = this.AzdoApiToken,
+                BuildId = this.BuildId,
+                AzureDevOpsProject = this.AzureProject,
                 AzureDevOpsOrg = this.AzureDevOpsOrg,
                 TempSymbolsAzureDevOpsOrg = this.TempSymbolsAzureDevOpsOrg,
                 TempSymbolsAzureDevOpsOrgToken = this.TempSymbolsAzureDevOpsOrgToken,
@@ -398,6 +435,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 #else
 public class PublishArtifactsInManifest : Microsoft.Build.Utilities.Task
 {
-    public override bool Execute() => throw new System.NotSupportedException("PublishArtifactsInManifest depends on Maestro.Client, which has discontinued support for desktop frameworks.");
+    public override bool Execute() => throw new System.NotSupportedException("PublishArtifactsInManifest depends on ProductConstructionService.Client, which has discontinued support for desktop frameworks.");
 }
 #endif

@@ -11,18 +11,33 @@ using System.Reflection.Metadata;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
+using System.Diagnostics;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SignTool
 {
     internal static class ContentUtil
     {
+        /// <summary>
+        /// Returns the hash of the content of the file at the given path.
+        /// If the file is empty, returns the hash of an empty stream.
+        /// </summary>
+        /// <param name="fullPath">Path of file to hash</param>
+        /// <returns>Hash of content.</returns>
         public static ImmutableArray<byte> GetContentHash(string fullPath)
         {
             using (var stream = File.OpenRead(fullPath))
             {
+                if (stream.Length == 0)
+                {
+                    return EmptyFileContentHash;
+                }
                 return GetContentHash(stream);
             }
         }
+
+        public static readonly ImmutableArray<byte> EmptyFileContentHash = GetContentHash(new MemoryStream()).ToImmutableArray();
 
         public static ImmutableArray<byte> GetContentHash(Stream stream)
         {
@@ -43,27 +58,6 @@ namespace Microsoft.DotNet.SignTool
                 bytes[i / 2] = Convert.ToByte(hash.Substring(i, 2), 16);
             return bytes.ToImmutableArray<byte>();
 
-        }
-
-        /// <summary>
-        /// Returns true if the PE file meets all of the pre-conditions to be Open Source Signed.
-        /// Returns false and logs msbuild errors otherwise.
-        /// </summary>
-        public static bool IsPublicSigned(PEReader peReader)
-        {
-            if (!peReader.HasMetadata)
-            {
-                return false;
-            }
-
-            var mdReader = peReader.GetMetadataReader();
-            if (!mdReader.IsAssembly)
-            {
-                return false;
-            }
-
-            CorHeader header = peReader.PEHeaders.CorHeader;
-            return (header.Flags & CorFlags.StrongNameSigned) == CorFlags.StrongNameSigned;
         }
 
         public static bool IsManaged(string filePath)
@@ -90,17 +84,6 @@ namespace Microsoft.DotNet.SignTool
             using (var peReader = new PEReader(stream))
             {
                 return ((int)peReader.PEHeaders.CorHeader.Flags & CROSSGEN_FLAG) == CROSSGEN_FLAG;
-            }
-        }
-
-        public static bool IsAuthenticodeSigned(Stream assemblyStream)
-        {
-            using (var peReader = new PEReader(assemblyStream))
-            {
-                var headers = peReader.PEHeaders;
-                var entry = headers.PEHeader.CertificateTableDirectory;
-
-                return entry.Size > 0;
             }
         }
 

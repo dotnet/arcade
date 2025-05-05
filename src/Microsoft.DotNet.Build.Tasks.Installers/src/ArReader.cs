@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Build.Tasks.Installers
 {
-    internal sealed class ArReader(Stream stream, bool leaveOpen) : IDisposable
+    public sealed class ArReader(Stream stream, bool leaveOpen) : IDisposable
     {
         private bool readMagic;
         public ArEntry? GetNextEntry()
@@ -69,11 +69,10 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 throw new InvalidDataException("Invalid archive magic");
             }
 
-            MemoryStream dataStream = new MemoryStream();
-            for (ulong remaining = size; remaining > 0; remaining -= int.MaxValue)
-            {
-                stream.CopyTo(dataStream, (int)Math.Min(remaining, int.MaxValue));
-            }
+            byte[] data = new byte[size];
+            ReadExactly(data, 0, checked((int)size));
+
+            MemoryStream dataStream = new MemoryStream(data);
 
             if (size % 2 == 1)
             {

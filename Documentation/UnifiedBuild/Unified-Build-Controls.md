@@ -135,6 +135,7 @@ These controls may be used for **infrastructure or product purposes**.
 | -------- | -------- | -------- | -------- |
 | DotNetBuildWithOnlineSources | "true", "false", "" | "false" by default when `SourceOnly` switch is active. | When "true", do not remove non-local input sources. Infrastructure switch only. This switch is only exposed at the orchestrator level.</br>This replaces the existing `DotNetBuildOffline` switch. |
 | DotNetBuildSourceOnly | "true", "false", "" | "" | When "true", build only from source. Online sources may remain unless `DotNetBuildOffline` is set to true. This is both an infrastructure and a product switch.<br/>This is roughly equivalent to `DotNetBuildFromSource` in the current infrastructure, though other controls may be better suited. |
+| DotNetBuildTargetRidOnly | "true", "false", "" | "" | When not set, defaults to "true" if the repository build transitively depends on dotnet/runtime and `DotNetBuildOrchestrator` == "true"; otherwise "false". When "true", builds projects for the current `TargetRid` instead of using the current runtime identifier. |
 
 ### Output Controls
 
@@ -158,6 +159,7 @@ In addition to these default high level controls, there may be additional compon
 | ShortStack | "true", "false", "" | "" | If true, the build is a 'short stack' (runtime and its dependencies only). Other repo builds are skipped. |
 | ExcludeFromDotNetBuild | "true", "false", "" | "" | When "true" and `DotNetBuild` == "true", the project is not built.<br/>This is equivalent to `ExcludeFromBuild` being set to true when `DotNetBuild` == "true".<br/>This control applies to project properties. |
 | ExcludeFromSourceOnlyBuild | "true", "false", "" | "" | When "true" and `DotNetBuild` == "true" and `DotNetBuildSourceOnly` == "true" the project is not built.<br/>This is equivalent to `ExcludeFromBuild` being set to true when `DotNetBuild` == "true". Same as `ExcludeFromSourceBuild` today.<br/>This control applies to project properties. |
+| PortableBuild | "true", "false", "" | "" | When "false", the build is non-portable. |
 
 ### Organizational Controls
 
