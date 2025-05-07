@@ -104,6 +104,7 @@ These steps are needed for Arcade versions before `10.0.0`. After that, V3 is th
         /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
         /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
         /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+        /p:MicroBuildOutputFolder=$(MicroBuildOutputFolder)
     
     - script: eng\common\cibuild.cmd
         -configuration $(_BuildConfig)
@@ -118,6 +119,7 @@ These steps are needed for Arcade versions before `10.0.0`. After that, V3 is th
         /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
         /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
         /p:DotNetPublishUsingPipelines=$(_PublishUsingPipelines)
+        /p:MicroBuildDotNetPath=$(MicroBuildOutputFolder)
     
     - script: eng\common\cibuild.cmd
         -configuration $(_BuildConfig)

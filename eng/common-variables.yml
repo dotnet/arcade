@@ -18,6 +18,8 @@ variables:
       value: True
     - name: _SignType
       value: real
+    - name: MicroBuildOutputFolder
+      value: $(Agent.TempDirectory)
     # Publish-Build-Assets provides: BotAccount-dotnet-maestro-bot-PAT
     # DotNet-HelixApi-Access provides: HelixApiAccessToken
     - group: Publish-Build-Assets
@@ -29,5 +31,6 @@ variables:
         /p:TeamName=$(_TeamName)
         /p:DotNetPublishUsingPipelines=true
         /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+        /p:MicroBuildOutputFolder=$(MicroBuildOutputFolder)
     - name: PostBuildSign
       value: true
