@@ -73,6 +73,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string AzureDevOpsProject { get; set; }
 
         public int AzureDevOpsBuildId { get; set; }
+        
+        // Sign* parameters are deprecated and no longer used.
 
         public ITaskItem[] ItemsToSign { get; set; }
 
