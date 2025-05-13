@@ -213,6 +213,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             buildIdentity.AzureDevOpsProject = buildIdentity.AzureDevOpsProject ?? azDevProject;
             buildIdentity.AzureDevOpsBuildNumber = buildIdentity.AzureDevOpsBuildNumber ?? GetAzDevBuildNumber();
             buildIdentity.AzureDevOpsBuildId = buildIdentity.AzureDevOpsBuildId ?? GetAzDevBuildId();
+            buildIdentity.AzureDevOpsBuildDefinitionId = buildIdentity.AzureDevOpsBuildDefinitionId ?? GetAzDevBuildDefinitionId();
             buildIdentity.AzureDevOpsRepository = buildIdentity.AzureDevOpsRepository 
                 ?? $"https://dev.azure.com/{azDevAccount}/{azDevProject}/_git/{GetAzDevRepositoryName()}";
             buildIdentity.AzureDevOpsBranch = buildIdentity.AzureDevOpsBranch ?? GetAzDevBranch();
