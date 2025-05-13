@@ -87,7 +87,7 @@ namespace Microsoft.Arcade.Test.Common
                 throw new ArgumentException("targetPath is not relative to basePath");
             }
 
-            return targetPath.Replace(basePath, "").TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            return targetPath.Replace(basePath, "").TrimStart('/', '\\');
         }
 
         #endregion

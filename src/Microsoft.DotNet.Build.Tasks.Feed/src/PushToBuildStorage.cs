@@ -548,7 +548,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 throw new ArgumentException("targetPath is not relative to basePath");
             }
 
-            return targetPath.Substring(basePath.Length).TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+            return targetPath.Substring(basePath.Length).TrimStart('/', '\\');
         }
 
         /// <summary>
