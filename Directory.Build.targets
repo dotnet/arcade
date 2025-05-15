@@ -1,8 +1,12 @@
-<Project>
-
-  <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
-  <Import Project="$(RepositoryEngineeringDir)Microsoft.DotNet.XliffTasks.InTree.targets" Condition="'$(UsingInTreeToolXliff)' == 'true'" />
-  <Import Project="$(RepositoryEngineeringDir)Microsoft.DotNet.SwaggerGenerator.MSBuild.InTree.targets" Condition="'$(UsingInTreeToolSwaggerGeneratorMSBuild)' == 'true'" />
-  <Import Project="$(RepositoryEngineeringDir)BuildTask.targets" Condition="'$(IsBuildTaskProject)' == 'true'" />
-
-</Project>
+§
+§music : good (https://youtu.be/r6FVk2k4qsM?si=Fmec9NbuzVopzuhZ)
+§
+§<Project>
+§
+§  <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
+§  <Import Project="$(RepositoryEngineeringDir)Microsoft.DotNet.XliffTasks.InTree.targets" Condition="'$(UsingInTreeToolXliff)' == 'true'" />
+§  <Import Project="$(RepositoryEngineeringDir)Microsoft.DotNet.SwaggerGenerator.MSBuild.InTree.targets" Condition="'$(UsingInTreeToolSwaggerGeneratorMSBuild)' == 'true'" />
+§  <Import Project="$(RepositoryEngineeringDir)BuildTask.targets" Condition="'$(IsBuildTaskProject)' == 'true'" />
+§
+§</Project>[dependency_review](https://github.com/tr4200812)[@dependabot](https://github.com/tr4200812)[@tr4200812]
+§

@@ -13,3 +13,4 @@ original message. Further information, including the MSRC PGP key, can be found 
 Reports via MSRC may qualify for the .NET Core Bug Bounty. Details of the .NET Core Bug Bounty including terms and conditions are at [https://aka.ms/corebounty](https://aka.ms/corebounty).
 
 Please do not open issues for anything you think might have a security implication.
+n00i1kat
