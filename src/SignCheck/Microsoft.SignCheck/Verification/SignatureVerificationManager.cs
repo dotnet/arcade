@@ -87,7 +87,6 @@ namespace Microsoft.SignCheck.Verification
             Options = options;
 
 #if NETFRAMEWORK
-            AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".js"));
             AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".psd1"));
             AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".psm1"));
             AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".ps1"));
@@ -100,6 +99,10 @@ namespace Microsoft.SignCheck.Verification
             AddFileVerifier(new VsixVerifier(log, exclusions, options));
 #else
             AddFileVerifier(new DebVerifier(log, exclusions, options));
+            AddFileVerifier(new MachOVerifier(log, exclusions, options, ".dylib"));
+            AddFileVerifier(new MachOVerifier(log, exclusions, options, ".macho"));
+            AddFileVerifier(new MachOVerifier(log, exclusions, options, ".so"));
+            AddFileVerifier(new MachOVerifier(log, exclusions, options, ".a"));
             AddFileVerifier(new PkgVerifier(log, exclusions, options, ".pkg"));
             AddFileVerifier(new PkgVerifier(log, exclusions, options, ".app"));
             AddFileVerifier(new TarVerifier(log, exclusions, options, ".tar"));
@@ -108,6 +111,7 @@ namespace Microsoft.SignCheck.Verification
             AddFileVerifier(new RpmVerifier(log, exclusions, options));
 #endif
             AddFileVerifier(new ExeVerifier(log, exclusions, options, ".exe"));
+            AddFileVerifier(new JavaScriptVerifier(log, exclusions, options));
             AddFileVerifier(new LzmaVerifier(log, exclusions, options));
             AddFileVerifier(new NupkgVerifier(log, exclusions, options));
             AddFileVerifier(new PortableExecutableVerifier(log, exclusions, options, ".dll"));
@@ -265,6 +269,11 @@ namespace Microsoft.SignCheck.Verification
                     else if (magic4 == FileHeaders.Cab)
                     {
                         fileVerifier = GetFileVerifierByExtension(".cab");
+                    }
+                    else if (magic4 == FileHeaders.MachO32 || magic4 == FileHeaders.MachO64)
+                    {
+                        // Use the ".macho" extension as a placeholder for Mach-O files
+                        fileVerifier = GetFileVerifierByExtension(".macho");
                     }
                 }
 #if NETFRAMEWORK

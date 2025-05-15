@@ -12,6 +12,7 @@ using System.Reflection.PortableExecutable;
 using System.Runtime.Versioning;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.DotNet.StrongName;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -480,6 +481,15 @@ namespace Microsoft.DotNet.SignTool
                     }
                 }
 
+                // Tracking issue to remove this warning - https://github.com/dotnet/arcade/issues/15761
+                if (signInfo.Certificate != null && signInfo.Certificate.Equals("BreakingSignatureChange", StringComparison.OrdinalIgnoreCase))
+                {
+                    _log.LogWarning($"Skipping file '{file.FullPath}' because .js files are no longer signed by default. " +
+                        "To disable this warning, please explicitly define the FileExtensionSignInfo for the .js extension " +
+                        "or set the MSBuild property 'NoSignJS' to 'true'.");
+                    return new FileSignInfo(file, SignInfo.Ignore, wixContentFilePath: wixContentFilePath);
+                }
+
                 // If the file is already signed and we are not allowed to dual sign, and we are not doing a mac notarization operation,
                 // then we should not sign the file.
                 if (isAlreadyAuthenticodeSigned && !dualCertsAllowed && string.IsNullOrEmpty(macNotarizationAppName))
@@ -562,7 +572,7 @@ namespace Microsoft.DotNet.SignTool
 
             bool IsStrongNameSigned(PathWithHash file)
             {
-                bool isAlreadyStrongNamed = StrongName.IsSigned(file.FullPath, snPath: _snPath, log: _log);
+                bool isAlreadyStrongNamed = StrongNameHelper.IsSigned(file.FullPath, snPath: _snPath);
                 if (!isAlreadyStrongNamed)
                 {
                     _log.LogMessage(MessageImportance.Low, $"PE file {file.FullPath} does not have a valid strong name signature.");
