@@ -1,4 +1,14 @@
 trigger: none
+pr:
+  branches:
+    include:
+    - main
+    - release/*
+  paths:
+    exclude:
+    - documentation/*
+    - README.md
+    - CODEOWNERS
 
 variables:
 - template: /eng/common/templates/variables/pool-providers.yml@self
@@ -20,5 +30,4 @@ stages:
 - template: /eng/pipelines/templates/stages/vmr-build.yml@vmr
   parameters:
     isBuiltFromVmr: false
-    isSourceOnlyBuild: false
     scope: lite
