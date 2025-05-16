@@ -25,7 +25,7 @@ steps:
   clean: true
 
 - checkout: self
-  displayName: Clone dotnet/<repo>
+  displayName: Clone $(Build.Repository.Name)
   path: repo
   fetchDepth: 0
 
@@ -38,20 +38,20 @@ steps:
   displayName: Label PR commit
   workingDirectory: $(Agent.BuildDirectory)/repo
 
-- script: |
-    vmr_sha=$(grep -oP '(?<=Sha=")[^"]*' $(Agent.BuildDirectory)/repo/eng/Version.Details.xml)
-    echo "##vso[task.setvariable variable=vmr_sha]$vmr_sha"
-  displayName: Obtain the vmr sha from Version.Details.xml (Linux)
-  condition: ne(variables['Agent.OS'], 'Windows_NT')
-  workingDirectory: $(Agent.BuildDirectory)/repo
+- ${{ if ne(variables['Agent.Os'], 'Windows_NT') }}:
+  - script: |
+      vmr_sha=$(grep -oP '(?<=Sha=")[^"]*' $(Agent.BuildDirectory)/repo/eng/Version.Details.xml)
+      echo "##vso[task.setvariable variable=vmr_sha]$vmr_sha"
+    displayName: Obtain the vmr sha from Version.Details.xml (Unix)
+    workingDirectory: $(Agent.BuildDirectory)/repo
 
-- powershell: |
-    [xml]$xml = Get-Content -Path $(Agent.BuildDirectory)/repo/eng/Version.Details.xml
-    $vmr_sha = $xml.SelectSingleNode("//Source").Sha
-    Write-Output "##vso[task.setvariable variable=vmr_sha]$vmr_sha"
-  displayName: Obtain the vmr sha from Version.Details.xml (Windows)
-  condition: eq(variables['Agent.OS'], 'Windows_NT')
-  workingDirectory: $(Agent.BuildDirectory)/repo
+- ${{ else }}:
+  - powershell: |
+      [xml]$xml = Get-Content -Path $(Agent.BuildDirectory)/repo/eng/Version.Details.xml
+      $vmr_sha = $xml.SelectSingleNode("//Source").Sha
+      Write-Output "##vso[task.setvariable variable=vmr_sha]$vmr_sha"
+    displayName: Obtain the vmr sha from Version.Details.xml (Windows)
+    workingDirectory: $(Agent.BuildDirectory)/repo
 
 - script: |
     git fetch --all
@@ -65,43 +65,42 @@ steps:
   displayName: Set git author to dotnet-maestro[bot]
   workingDirectory: ${{ parameters.vmrPath }}
 
-- script: |
-    ./eng/common/vmr-sync.sh                         \
-      --vmr ${{ parameters.vmrPath }}         \
-      --tmp $(Agent.TempDirectory)            \
-      --azdev-pat '$(dn-bot-all-orgs-code-r)' \
-      --ci                                    \
-      --debug
+- ${{ if ne(variables['Agent.Os'], 'Windows_NT') }}:
+  - script: |
+      ./eng/common/vmr-sync.sh                         \
+        --vmr ${{ parameters.vmrPath }}         \
+        --tmp $(Agent.TempDirectory)            \
+        --azdev-pat '$(dn-bot-all-orgs-code-r)' \
+        --ci                                    \
+        --debug
 
-    if [ "$?" -ne 0 ]; then
-      echo "##vso[task.logissue type=error]Failed to synchronize the VMR"
-      exit 1
-    fi
-  displayName: Sync repo into VMR (Unix)
-  condition: ne(variables['Agent.OS'], 'Windows_NT')
-  workingDirectory: $(Agent.BuildDirectory)/repo
+      if [ "$?" -ne 0 ]; then
+        echo "##vso[task.logissue type=error]Failed to synchronize the VMR"
+        exit 1
+      fi
+    displayName: Sync repo into VMR (Unix)
+    workingDirectory: $(Agent.BuildDirectory)/repo
 
-- script: |
-    git config --global diff.astextplain.textconv echo
-    git config --system core.longpaths true
-  displayName: Configure Windows git (longpaths, astextplain)
-  condition: eq(variables['Agent.OS'], 'Windows_NT')
+- ${{ else }}:
+  - script: |
+      git config --global diff.astextplain.textconv echo
+      git config --system core.longpaths true
+    displayName: Configure Windows git (longpaths, astextplain)
 
-- powershell: |
-    ./eng/common/vmr-sync.ps1                      `
-      -vmr ${{ parameters.vmrPath }}        `
-      -tmp $(Agent.TempDirectory)           `
-      -azdevPat '$(dn-bot-all-orgs-code-r)' `
-      -ci                                   `
-      -debugOutput
+  - powershell: |
+      ./eng/common/vmr-sync.ps1                      `
+        -vmr ${{ parameters.vmrPath }}        `
+        -tmp $(Agent.TempDirectory)           `
+        -azdevPat '$(dn-bot-all-orgs-code-r)' `
+        -ci                                   `
+        -debugOutput
 
-    if ($LASTEXITCODE -ne 0) {
-      echo "##vso[task.logissue type=error]Failed to synchronize the VMR"
-      exit 1
-    }
-  displayName: Sync repo into VMR (Windows)
-  condition: eq(variables['Agent.OS'], 'Windows_NT')
-  workingDirectory: $(Agent.BuildDirectory)/repo
+      if ($LASTEXITCODE -ne 0) {
+        echo "##vso[task.logissue type=error]Failed to synchronize the VMR"
+        exit 1
+      }
+    displayName: Sync repo into VMR (Windows)
+    workingDirectory: $(Agent.BuildDirectory)/repo
 
 - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
   - task: CopyFiles@2
@@ -120,88 +119,88 @@ steps:
 - ${{ each assetName in parameters.additionalSyncs }}:
   # The vmr-sync script ends up staging files in the local VMR so we have to commit those
   - script:
-      git commit --allow-empty -am "Forward-flow dotnet/<repo>"
+      git commit --allow-empty -am "Forward-flow $(Build.Repository.Name)"
     displayName: Commit local VMR changes
     workingDirectory: ${{ parameters.vmrPath }}
 
-  - script: |
-      set -ex
+  - ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+    - script: |
+        set -ex
 
-      echo "Searching for details of asset ${{ assetName }}..."
+        echo "Searching for details of asset ${{ assetName }}..."
 
-      # Use darc to get dependencies information
-      dependencies=$(./.dotnet/dotnet darc get-dependencies --name '${{ assetName }}' --ci)
+        # Use darc to get dependencies information
+        dependencies=$(./.dotnet/dotnet darc get-dependencies --name '${{ assetName }}' --ci)
 
-      # Extract repository URL and commit hash
-      repository=$(echo "$dependencies" | grep 'Repo:' | sed 's/Repo:[[:space:]]*//' | head -1)
+        # Extract repository URL and commit hash
+        repository=$(echo "$dependencies" | grep 'Repo:' | sed 's/Repo:[[:space:]]*//' | head -1)
 
-      if [ -z "$repository" ]; then
-        echo "##vso[task.logissue type=error]Asset ${{ assetName }} not found in the dependency list"
-        exit 1
-      fi
-
-      commit=$(echo "$dependencies" | grep 'Commit:' | sed 's/Commit:[[:space:]]*//' | head -1)
-
-      echo "Updating the VMR from $repository / $commit..."
-      cd ..
-      git clone $repository ${{ assetName }}
-      cd ${{ assetName }}
-      git checkout $commit
-      git branch "sync/$commit"
-
-      ./eng/common/vmr-sync.sh                         \
-        --vmr ${{ parameters.vmrPath }}         \
-        --tmp $(Agent.TempDirectory)            \
-        --azdev-pat '$(dn-bot-all-orgs-code-r)' \
-        --ci                                    \
-        --debug
-
-      if [ "$?" -ne 0 ]; then
-        echo "##vso[task.logissue type=error]Failed to synchronize the VMR"
-        exit 1
-      fi
-    displayName: Sync ${{ assetName }} into (Unix)
-    condition: ne(variables['Agent.OS'], 'Windows_NT')
-    workingDirectory: $(Agent.BuildDirectory)/repo
-
-  - powershell: |
-      $ErrorActionPreference = 'Stop'
-
-      Write-Host "Searching for details of asset ${{ assetName }}..."
-
-      $dependencies = .\.dotnet\dotnet darc get-dependencies --name '${{ assetName }}' --ci
-
-      $repository = $dependencies | Select-String -Pattern 'Repo:\s+([^\s]+)' | Select-Object -First 1
-      $repository -match 'Repo:\s+([^\s]+)' | Out-Null
-      $repository = $matches[1]
-
-      if ($repository -eq $null) {
-          Write-Error "Asset ${{ assetName }} not found in the dependency list"
+        if [ -z "$repository" ]; then
+          echo "##vso[task.logissue type=error]Asset ${{ assetName }} not found in the dependency list"
           exit 1
-      }
+        fi
 
-      $commit = $dependencies | Select-String -Pattern 'Commit:\s+([^\s]+)' | Select-Object -First 1
-      $commit -match 'Commit:\s+([^\s]+)' | Out-Null
-      $commit = $matches[1]
+        commit=$(echo "$dependencies" | grep 'Commit:' | sed 's/Commit:[[:space:]]*//' | head -1)
 
-      Write-Host "Updating the VMR from $repository / $commit..."
-      cd ..
-      git clone $repository ${{ assetName }}
-      cd ${{ assetName }}
-      git checkout $commit
-      git branch "sync/$commit"
+        echo "Updating the VMR from $repository / $commit..."
+        cd ..
+        git clone $repository ${{ assetName }}
+        cd ${{ assetName }}
+        git checkout $commit
+        git branch "sync/$commit"
 
-      .\eng\common\vmr-sync.ps1 `
-        -vmr ${{ parameters.vmrPath }}             `
-        -tmp $(Agent.TempDirectory)                `
-        -azdevPat '$(dn-bot-all-orgs-code-r)'      `
-        -ci                                        `
-        -debugOutput
+        ./eng/common/vmr-sync.sh                         \
+          --vmr ${{ parameters.vmrPath }}         \
+          --tmp $(Agent.TempDirectory)            \
+          --azdev-pat '$(dn-bot-all-orgs-code-r)' \
+          --ci                                    \
+          --debug
 
-      if ($LASTEXITCODE -ne 0) {
-        echo "##vso[task.logissue type=error]Failed to synchronize the VMR"
-        exit 1
-      }
-    displayName: Sync ${{ assetName }} into (Windows)
-    condition: eq(variables['Agent.OS'], 'Windows_NT')
-    workingDirectory: $(Agent.BuildDirectory)/repo
+        if [ "$?" -ne 0 ]; then
+          echo "##vso[task.logissue type=error]Failed to synchronize the VMR"
+          exit 1
+        fi
+      displayName: Sync ${{ assetName }} into (Unix)
+      workingDirectory: $(Agent.BuildDirectory)/repo
+
+  - ${{ else }}:
+    - powershell: |
+        $ErrorActionPreference = 'Stop'
+
+        Write-Host "Searching for details of asset ${{ assetName }}..."
+
+        $dependencies = .\.dotnet\dotnet darc get-dependencies --name '${{ assetName }}' --ci
+
+        $repository = $dependencies | Select-String -Pattern 'Repo:\s+([^\s]+)' | Select-Object -First 1
+        $repository -match 'Repo:\s+([^\s]+)' | Out-Null
+        $repository = $matches[1]
+
+        if ($repository -eq $null) {
+            Write-Error "Asset ${{ assetName }} not found in the dependency list"
+            exit 1
+        }
+
+        $commit = $dependencies | Select-String -Pattern 'Commit:\s+([^\s]+)' | Select-Object -First 1
+        $commit -match 'Commit:\s+([^\s]+)' | Out-Null
+        $commit = $matches[1]
+
+        Write-Host "Updating the VMR from $repository / $commit..."
+        cd ..
+        git clone $repository ${{ assetName }}
+        cd ${{ assetName }}
+        git checkout $commit
+        git branch "sync/$commit"
+
+        .\eng\common\vmr-sync.ps1 `
+          -vmr ${{ parameters.vmrPath }}             `
+          -tmp $(Agent.TempDirectory)                `
+          -azdevPat '$(dn-bot-all-orgs-code-r)'      `
+          -ci                                        `
+          -debugOutput
+
+        if ($LASTEXITCODE -ne 0) {
+          echo "##vso[task.logissue type=error]Failed to synchronize the VMR"
+          exit 1
+        }
+      displayName: Sync ${{ assetName }} into (Windows)
+      workingDirectory: $(Agent.BuildDirectory)/repo
