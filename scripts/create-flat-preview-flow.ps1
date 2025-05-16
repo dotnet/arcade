@@ -46,6 +46,12 @@ function AddBackwardsFlow($sourceVmr, $sourceChannel, $targetRepo, $mapping, $ta
     & darc add-subscription --source-repo "$sourceVmr" --channel "$sourceChannel" --target-repo "$targetRepo" --target-branch "$targetBranch" --source-enabled true --source-directory $mapping --excluded-assets $excludedAssets --update-frequency "$frequency" --quiet --no-trigger --standard-automerge
 }
 
+function AddBatchedMergePolicy($targetRepo, $targetBranch)
+{
+    Write-Host "Setting batched merge policy for $targetRepo @ $targetBranch"
+    & darc set-repository-policies --repo "$targetRepo" --branch "$targetBranch" --standard-automerge --quiet
+}
+
 Write-Host "Making default channels for runtime repos"
 MakeDefaultChannel https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int $RuntimeBranch $RuntimeChannel
 MakeDefaultChannel https://github.com/dotnet/aspnetcore $RuntimeBranch $RuntimeChannel
@@ -56,22 +62,12 @@ MakeDefaultChannel https://github.com/dotnet/runtime $RuntimeBranch $RuntimeChan
 MakeDefaultChannel https://github.com/dotnet/windowsdesktop $RuntimeBranch $RuntimeChannel
 MakeDefaultChannel https://github.com/dotnet/wpf $RuntimeBranch $RuntimeChannel
 MakeDefaultChannel https://github.com/dotnet/winforms $RuntimeBranch $RuntimeChannel
-MakeDefaultChannel https://github.com/dotnet/cecil main $RuntimeChannel
-MakeDefaultChannel https://github.com/dotnet/command-line-api main $RuntimeChannel
 
 Write-Host "Making default channels for SDK repos"
 MakeDefaultChannel https://github.com/dotnet/sdk $SdkBranch $SdkChannel
-MakeDefaultChannel https://github.com/dotnet/roslyn-analyzers "main" $SdkChannel
 MakeDefaultChannel https://github.com/dotnet/templating $SdkBranch $SdkChannel
-MakeDefaultChannel https://github.com/dotnet/scenario-tests "main" $SdkChannel
-MakeDefaultChannel https://github.com/dotnet/source-build-externals "main" $SdkChannel
-MakeDefaultChannel https://github.com/dotnet/source-build-reference-packages "main" $SdkChannel
-MakeDefaultChannel https://github.com/dotnet/sourcelink "main" $SdkChannel
-MakeDefaultChannel https://github.com/dotnet/symreader "main" $SdkChannel
-MakeDefaultChannel https://github.com/dotnet/xdt "main" $SdkChannel
 
 Write-Host "Making default channels for tooling repos"
-# prob wrong branches
 MakeDefaultChannel https://github.com/NuGet/NuGet.Client "dev" $SdkChannel
 MakeDefaultChannel https://github.com/dotnet/fhsarp "release/dev$VSBranch" $SdkChannel
 MakeDefaultChannel https://github.com/dotnet/msbuild "vs$VSBranch" $SdkChannel
@@ -79,15 +75,23 @@ MakeDefaultChannel https://github.com/dotnet/razor "release/$VSBranch" $SdkChann
 MakeDefaultChannel https://github.com/dotnet/roslyn "release/$VSBranch" $SdkChannel
 MakeDefaultChannel https://github.com/dotnet/vstest "rel/$VSBranch" $SdkChannel
 
-MakeDefaultChannel https://github.com/dotnet/diagnostics main $SdkChannel
-MakeDefaultChannel https://github.com/dotnet/deployment-tools main $SdkChannel
-
-# which branch should I use for the tooling?
+MakeDefaultChannel https://github.com/dotnet/diagnostics "main" $SdkChannel
+MakeDefaultChannel https://github.com/dotnet/deployment-tools "main" $SdkChannel
+MakeDefaultChannel https://github.com/dotnet/cecil "main" $RuntimeChannel
+MakeDefaultChannel https://github.com/dotnet/command-line-api "main" $RuntimeChannel
+MakeDefaultChannel https://github.com/dotnet/roslyn-analyzers "main" $SdkChannel
+MakeDefaultChannel https://github.com/dotnet/scenario-tests "main" $SdkChannel
+MakeDefaultChannel https://github.com/dotnet/source-build-externals "main" $SdkChannel
+MakeDefaultChannel https://github.com/dotnet/source-build-reference-packages "main" $SdkChannel
+MakeDefaultChannel https://github.com/dotnet/sourcelink "main" $SdkChannel
+MakeDefaultChannel https://github.com/dotnet/symreader "main" $SdkChannel
+MakeDefaultChannel https://github.com/dotnet/xdt "main" $SdkChannel
 
 Write-Host "Making default channel for the VMR"
 MakeDefaultChannel $vmr $SdkBranch $SdkChannel
 
-# Set branch policy for the VMR so everyone has the same??????
+Write-Host "Setting the default branch policy in the VMR for batched subscriptions"
+AddBatchedMergePolicy $vmr $SdkBranch
 
 Write-Host "Making forward flow subscriptions for runtime repos"
 AddForwardFlow https://github.com/dotnet/runtime $RuntimeChannel $vmr runtime $SdkBranch EveryBuild
@@ -113,7 +117,6 @@ AddForwardFlow https://github.com/dotnet/symreader $SdkChannel symreader $vmr $S
 AddForwardFlow https://github.com/dotnet/xdt $SdkChannel xdt $vmr $SdkBranch EveryBuild
 
 Write-Host "Making forward flow subscriptions for tooling repos"
-# These branches are probably not correct
 AddBatchedForwardFlow https://github.com/NuGet/NuGet.Client $VSChannel $vmr nuget-client $SdkBranch EveryBuild
 AddForwardFlow https://github.com/dotnet/fsharp $VSChannel $vmr fsharp $SdkBranch EveryBuild
 AddForwardFlow https://github.com/dotnet/msbuild $VSChannel $vmr msbuild $SdkBranch EveryBuild
@@ -128,7 +131,6 @@ AddBatchedMergePolicy $vmr $SdkBranch
 AddForwardFlow https://github.com/dotnet/deployment-tools $SdkChannel $vmr deployment-tools $SdkBranch EveryBuild
 AddForwardFlow https://github.com/dotnet/diagnostics $SdkChannel $vmr diagnostics $SdkBranch EveryBuild
 
-# NONE OF THESE ARE GOOD BECAUSE OF EXCLUDED ASSETS..
 Write-Host "Making backwards flow subscriptions for runtime repos"
 AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/runtime runtime $RuntimeBranch EveryBuild
 AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/aspnetcore aspnetcore $RuntimeBranch EveryBuild
@@ -142,16 +144,8 @@ AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/cecil cecil main Eve
 AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/command-line-api command-line-api main EveryBuild
 
 Write-Host "Making backwards flow subscriptions for sdk repos"
-# need to exclude assets here..
 AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/sdk sdk $SdkBranch EveryBuild
 AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/templating templating $SdkBranch EveryBuild
-AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/scenario-tests scenario-tests "main" EveryBuild
-AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/source-build-externals source-build-externals "main" EveryBuild
-AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/source-build-reference-packages source-build-reference-packages "main" EveryBuild
-AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/roslyn-analyzers roslyn-analyzers "main" EveryBuild
-AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/sourcelink sourcelink "main" EveryBuild
-AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/symreader symreader "main" EveryBuild
-AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/xdt xdt "main" EveryBuild
 
 Write-Host "Making backwards flow subscriptions for tooling repos"
 AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/fsharp fsharp "release/dev$VSBranch" EveryBuild
@@ -159,8 +153,14 @@ AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/msbuild msbuild "vs$
 AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/razor razor "release/$VSBranch" EveryBuild
 AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/roslyn roslyn "release/$VSBranch" EveryBuild
 AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/vstest vstest "rel/$VSBranch" EveryBuild
+AddBackwardsFlow $vmr $SdkChannel https://github.com/NuGet/NuGet.Client nuget-client "dev" EveryBuild
 
-#Don't we want to have backflow for these repos since they only have main? They will prob have to start branching too.
 AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/deployment-tools deployment-tools main EveryBuild
 AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/diagnostics diagnostics main EveryBuild
-AddBackwardsFlow $vmr $SdkChannel https://github.com/NuGet/NuGet.Client nuget-client "dev" EveryBuild
+AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/source-build-externals source-build-externals "main" EveryBuild
+AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/source-build-reference-packages source-build-reference-packages "main" EveryBuild
+AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/roslyn-analyzers roslyn-analyzers "main" EveryBuild
+AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/sourcelink sourcelink "main" EveryBuild
+AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/symreader symreader "main" EveryBuild
+AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/xdt xdt "main" EveryBuild
+AddBackwardsFlow $vmr $SdkChannel https://github.com/dotnet/scenario-tests scenario-tests "main" EveryBuild
