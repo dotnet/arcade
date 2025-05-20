@@ -85,8 +85,8 @@ namespace Microsoft.DotNet.SignTool
             using (var stream = new FileStream(filePath, FileMode.Open))
             using (var peReader = new PEReader(stream))
             {
-                var isSingleImageCrossgen = ((int)peReader.PEHeaders.CorHeader.Flags & CROSSGEN_FLAG) == CROSSGEN_FLAG;
-                isComposite = peReader.GetExportTable().TryGetValue("RTR_HEADER", out var rva);
+                var isSingleImageCrossgen = ReadyToRunReader.IsReadyToRunImage(peReader);
+                isComposite = peReader.TryGetReadyToRunHeader(out _);
                 return isComposite || isSingleImageCrossgen;
             }
         }
