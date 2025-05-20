@@ -79,7 +79,6 @@ namespace Microsoft.DotNet.SignTool
 
         public static bool IsCrossgened(string filePath, out bool isComposite)
         {
-            const int CROSSGEN_FLAG = 4;
             isComposite = false;
 
             using (var stream = new FileStream(filePath, FileMode.Open))
