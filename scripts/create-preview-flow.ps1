@@ -171,6 +171,14 @@ if ($AddInternalFlow) {
     MakeDefaultChannel https://dev.azure.com/dnceng/internal/_git/dotnet-templating $InternalSdkBranch $InternalSdkChannel
 }
 
+Write-Host "Make default channel for the VMR"
+MakeDefaultChannel https://github.com/dotnet/dotnet $SdkBranch $SdkBranch
+
+if ($AddInternalFlow) {
+    Write-Host "Make internal default channel for the VMR"
+    MakeDefaultChannel https://dev.azure.com/dnceng/internal/_git/dotnet-dotnet $InternalSdkBranch $InternalSdkChannel
+}
+
 Write-Host "Setting up batched merge policies"
 AddBatchedMergePolicy https://github.com/dotnet/aspnetcore $RuntimeBranch
 
