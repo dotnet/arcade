@@ -83,7 +83,7 @@ function AddBatchedPackageOnlyFlow($sourceRepo, $sourceChannel, $targetRepo, $ta
 # Add forward flow for sources.
 function AddForwardFlow($sourceRepo, $sourceChannel, $targetVmr, $mapping, $targetBranch, $frequency)
 {
-    Write-Host "Adding forward flow - $sourceRepo @ $sourceChannel -> $targetVmr @ $targetBranch ($frequency)"
+    Write-Host "Adding forward flow - $sourceRepo @ $sourceChannel -> $targetVmr ($mapping) @ $targetBranch ($frequency)"
     if (!$DryRun) {
         & darc add-subscription --source-repo "$sourceRepo" --channel "$sourceChannel" --target-repo "$targetVmr" --target-branch "$targetBranch" --source-enabled true --target-directory $mapping --update-frequency "$frequency" --quiet --no-trigger --standard-automerge
     }
@@ -185,6 +185,9 @@ AddArcadeFlow https://github.com/dotnet/icu "dotnet/$RuntimeBranch"
 Write-Host "Adding non-VMR runtime flow"
 AddPackageOnlyFlow https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int $RuntimeChannel https://github.com/dotnet/wpf $RuntimeBranch EveryBuild
 AddPackageOnlyFlow https://github.com/dotnet/icu $RuntimeChannel https://github.com/dotnet/runtime $RuntimeBranch EveryBuild
+
+Write-Host "Adding arcade VMR forward flow (non-automatic)"
+AddForwardFlow https://github.com/dotnet/arcade $RuntimeChannel $publicVMR arcade $SdkBranch None
 
 Write-Host "Adding VMR runtime repo forward flow"
 AddForwardFlow https://github.com/dotnet/aspnetcore $RuntimeChannel $publicVMR aspnetcore $SdkBranch EveryBuild
