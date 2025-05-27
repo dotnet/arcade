@@ -188,7 +188,7 @@ fi
 
 export DOTNET_ROOT="$dotnetDir"
 
-"$darcTool" vmr forwardflow \
+"$darc_tool" vmr forwardflow \
   --tmp "$tmp_dir"             \
   $azdev_pat                   \
   --$verbosity                 \
