@@ -108,15 +108,6 @@ jobs:
             flattenFolders: true
           condition: ${{ parameters.condition }}
           continueOnError: ${{ parameters.continueOnError }}
-
-    - ${{ if eq(parameters.isAssetlessBuild, 'false') }}: 
-      - task: DownloadPipelineArtifact@2
-        displayName: Download Asset Manifests
-        inputs:
-          artifactName: AssetManifests
-          targetPath: '$(Build.StagingDirectory)/AssetManifests'
-        condition: ${{ parameters.condition }}
-        continueOnError: ${{ parameters.continueOnError }}
     
     - task: NuGetAuthenticate@1
 
