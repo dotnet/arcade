@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
-  <Source Uri="https://github.com/dotnet/dotnet" Mapping="arcade" Sha="5d437e96e412b189af05abb84753996de9aa698f" BarId="268047" />
+  <Source Uri="https://github.com/dotnet/dotnet" Mapping="arcade" Sha="92f4458541726b45ef7c494dd6294c54dbc06a2d" BarId="269756" />
   <ProductDependencies>
   </ProductDependencies>
   <ToolsetDependencies>
@@ -161,6 +161,23 @@
     <Dependency Name="Microsoft.DncEng.SecretManager" Version="1.1.0-beta.25270.2">
       <Uri>https://github.com/dotnet/dnceng</Uri>
       <Sha>cee86fa4650ca44a8465c2b18073d5ecea418edf</Sha>
+    </Dependency>
+    <!-- Dependencies required for source build to lift to the previously-source-built version. -->
+    <Dependency Name="Microsoft.Build" Version="17.12.36">
+      <Uri>https://github.com/dotnet/msbuild</Uri>
+      <Sha>d1cce8d7cc03c23a4f1bad8e9240714fd9d199a3</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.Build.Framework" Version="17.12.36">
+      <Uri>https://github.com/dotnet/msbuild</Uri>
+      <Sha>d1cce8d7cc03c23a4f1bad8e9240714fd9d199a3</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.Build.Tasks.Core" Version="17.12.36">
+      <Uri>https://github.com/dotnet/msbuild</Uri>
+      <Sha>d1cce8d7cc03c23a4f1bad8e9240714fd9d199a3</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.Build.Utilities.Core" Version="17.12.36">
+      <Uri>https://github.com/dotnet/msbuild</Uri>
+      <Sha>d1cce8d7cc03c23a4f1bad8e9240714fd9d199a3</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
