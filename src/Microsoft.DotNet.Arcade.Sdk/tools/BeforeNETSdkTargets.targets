@@ -1,4 +1,11 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
   <Import Project="RuntimeIdentifierInference.BeforeNETSdkTargets.targets" />
+
+  <!-- XUnitV3, MSTest+MTP, and NUnit+MTP projects should be executables. -->
+  <!-- To make it easier for repos to migrate, we want to set OutputType for them automatically when we can detect this. -->
+  <!-- OutputType needs to be set before BeforeCommon.targets. It's too late to set it in Directory.Build.targets for example -->
+  <!-- See https://github.com/dotnet/sdk/blob/7a4d106916cf8ee38a3b0f44330062662a994d58/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.Sdk.BeforeCommon.targets#L24 -->
+  <!-- Just in case this caused an issue somewhere, it can be disabled by setting DisableArcadeTestOutputType to true -->
+  <OutputType Condition="'$(DisableArcadeTestOutputType)' != 'true' and '$(IsTestProject)' == 'true' and ('$(TestRunnerName)' == 'XUnitV3' or '$(UseMSTestRunner)' == 'true' or '$(UseNUnitRunner)' == 'true')">Exe</OutputType>
 </Project>
