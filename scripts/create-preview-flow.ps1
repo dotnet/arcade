@@ -256,15 +256,15 @@ if ($AddInternalFlow) {
 Write-Host "Adding VMR->repo backflow."
 # Only repos that branch for a release get backflow
 AddBackwardsFlow $publicVMR $SdkChannel https://github.com/dotnet/runtime runtime $RuntimeBranch EveryBuild
-AddBackwardsFlow $publicVMR $SdkChannel https://github.com/dotnet/aspnetcore aspnetcore $RuntimeBranch EveryBuild
+AddBackwardsFlow $publicVMR $SdkChannel https://github.com/dotnet/aspnetcore aspnetcore $RuntimeBranch EveryBuild -excludedAssets "Microsoft.CodeAnalysis.Common;Microsoft.CodeAnalysis.CSharp;Microsoft.CodeAnalysis.CSharp.Workspaces;Microsoft.CodeAnalysis.ExternalAccess.AspNetCore"
 AddBackwardsFlow $publicVMR $SdkChannel https://github.com/dotnet/efcore efcore $RuntimeBranch EveryBuild
 AddBackwardsFlow $publicVMR $SdkChannel https://github.com/dotnet/emsdk emsdk $RuntimeBranch EveryBuild
 AddBackwardsFlow $publicVMR $SdkChannel https://github.com/dotnet/windowsdesktop windowsdesktop $RuntimeBranch EveryBuild
 AddBackwardsFlow $publicVMR $SdkChannel https://github.com/dotnet/winforms winforms $RuntimeBranch EveryBuild
 AddBackwardsFlow $publicVMR $SdkChannel https://github.com/dotnet/wpf wpf $RuntimeBranch EveryBuild
-AddBackwardsFlow $publicVMR $SdkChannel https://github.com/dotnet/roslyn-analyzers templating $SdkBranch EveryBuild
+AddBackwardsFlow $publicVMR $SdkChannel https://github.com/dotnet/roslyn-analyzers templating $SdkBranch EveryBuild -excludedAssets "Microsoft.CodeAnalysis;Microsoft.Net.Compilers.Toolset"
 AddBackwardsFlow $publicVMR $SdkChannel https://github.com/dotnet/sdk sdk $SdkBranch EveryBuild
-AddBackwardsFlow $publicVMR $SdkChannel https://github.com/dotnet/templating templating $SdkBranch EveryBuild
+AddBackwardsFlow $publicVMR $SdkChannel https://github.com/dotnet/templating templating $SdkBranch EveryBuild -excludedAssets "Microsoft.Bcl.AsyncInterfaces;Microsoft.Extensions.DependencyInjection.Abstractions;Microsoft.Extensions.Logging;Microsoft.Extensions.Logging.Abstractions;Microsoft.Extensions.Logging.Console;System.Diagnostics.DiagnosticSource;System.Formats.Asn1;System.IO.Pipelines;System.Text.Encodings.Web;System.Text.Json"
 
 if ($AddInternalFlow) {
     Write-Host "Adding internal VMR sdk repo backflow"
