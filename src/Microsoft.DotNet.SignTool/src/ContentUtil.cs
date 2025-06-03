@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.SignTool
             using (var peReader = new PEReader(stream))
             {
                 var isSingleImageCrossgen = ((int)peReader.PEHeaders.CorHeader.Flags & CROSSGEN_FLAG) == CROSSGEN_FLAG;
-                isComposite = peReader.HasRtrHEaderExport();
+                isComposite = false; //peReader.HasRtrHEaderExport();
                 return isComposite || isSingleImageCrossgen;
             }
         }
