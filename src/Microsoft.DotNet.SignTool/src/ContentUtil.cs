@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.IO;
 using System.Security.Cryptography;
 using System.Runtime.InteropServices;
@@ -14,7 +15,6 @@ using System.Reflection;
 using System.Diagnostics;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using ILCompiler.Reflection.ReadyToRun;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -77,6 +77,17 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
+        public static int GetOffset(this PEReader reader, int rva)
+        {
+            int index = reader.PEHeaders.GetContainingSectionIndex(rva);
+            if (index == -1)
+            {
+                throw new BadImageFormatException("Failed to convert invalid RVA to offset: " + rva);
+            }
+            SectionHeader containingSection = reader.PEHeaders.SectionHeaders[index];
+            return rva - containingSection.VirtualAddress + containingSection.PointerToRawData;
+        }
+
         public static bool IsCrossgened(string filePath, out bool isComposite)
         {
             const int CROSSGEN_FLAG = 4;
@@ -86,7 +97,7 @@ namespace Microsoft.DotNet.SignTool
             using (var peReader = new PEReader(stream))
             {
                 var isSingleImageCrossgen = ((int)peReader.PEHeaders.CorHeader.Flags & CROSSGEN_FLAG) == CROSSGEN_FLAG;
-                isComposite = peReader.GetExportTable().TryGetValue("RTR_HEADER", out var rva);
+                isComposite = peReader.HasRtrHEaderExport();
                 return isComposite || isSingleImageCrossgen;
             }
         }
@@ -106,6 +117,50 @@ namespace Microsoft.DotNet.SignTool
             {
                 return string.Empty;
             }
+        }
+
+        public static bool HasRtrHEaderExport(this PEReader reader)
+        {
+            DirectoryEntry exportTable = reader.PEHeaders.PEHeader.ExportTableDirectory;
+            if (exportTable.Size == 0 || exportTable.RelativeVirtualAddress == 0)
+                return false;
+
+            PEMemoryBlock peImage = reader.GetEntireImage();
+            BlobReader exportTableHeader = peImage.GetReader(reader.GetOffset(exportTable.RelativeVirtualAddress), exportTable.Size);
+            // Skip reserved, time/date, major, minor, DLL name RVA.
+            exportTableHeader.ReadUInt32();
+            exportTableHeader.ReadUInt32();
+            exportTableHeader.ReadUInt16();
+            exportTableHeader.ReadUInt16();
+            exportTableHeader.ReadUInt32();
+            // Read ordinal base (ignored).
+            exportTableHeader.ReadInt32();
+            int addressEntryCount = exportTableHeader.ReadInt32();
+            int namePointerCount = exportTableHeader.ReadInt32();
+            // Skip export address table RVA.
+            exportTableHeader.ReadInt32();
+            int namePointerRVA = exportTableHeader.ReadInt32();
+            // Skip ordinal table RVA.
+            exportTableHeader.ReadInt32();
+
+            BlobReader namePointerReader = peImage.GetReader(reader.GetOffset(namePointerRVA), sizeof(int) * namePointerCount);
+            for (int i = 0; i < namePointerCount; i++)
+            {
+                int nameRVA = namePointerReader.ReadInt32();
+                if (nameRVA != 0)
+                {
+                    int nameOffset = reader.GetOffset(nameRVA);
+                    BlobReader nameReader = peImage.GetReader(nameOffset, peImage.Length - nameOffset);
+                    var sb = new StringBuilder();
+                    for (byte b = nameReader.ReadByte(); b != 0; b = nameReader.ReadByte())
+                    {
+                        sb.Append((char)b);
+                    }
+                    if (sb.ToString() == "RTR_HEADER")
+                        return true;
+                }
+            }
+            return false;
         }
     }
 }

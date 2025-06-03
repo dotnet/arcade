@@ -2940,6 +2940,27 @@ $@"
                 new string[0]);
         }
 
+        [Fact]
+        public void CompositeCrossgenBinaryWithMSCertShouldNotGet3rdPartyWarning()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new List<ItemToSign>()
+            {
+                new ItemToSign(GetResourcePath("Composite.r2r.dll"))
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
+            {
+                { new ExplicitCertificateKey("Composite.r2r.dll"), "Microsoft400" },
+            };
+
+            ValidateFileSignInfos(itemsToSign, new Dictionary<string, List<SignInfo>>(), fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'Composite.r2r.dll' Certificate='Microsoft400'"
+            });
+        }
+
         /// <summary>
         /// Verify that running the wixpack returns passing result and that the expected output file
         /// is created, or a negative result if the wix tool fails.
