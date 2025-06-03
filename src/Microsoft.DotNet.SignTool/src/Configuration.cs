@@ -103,6 +103,10 @@ namespace Microsoft.DotNet.SignTool
         private string _pkgToolPath;
         private string _snPath;
 
+        // Add this field to store the list of files to skip 3rd party check
+        private readonly HashSet<string> _itemsToSkip3rdPartyCheck;
+
+        // Update the constructor to accept the list of files to skip 3rd party check
         public Configuration(
             string tempDir,
             List<ItemToSign> itemsToSign,
@@ -110,6 +114,7 @@ namespace Microsoft.DotNet.SignTool
             Dictionary<ExplicitCertificateKey, string> fileSignInfo,
             Dictionary<string, List<SignInfo>> extensionSignInfo,
             Dictionary<string, List<AdditionalCertificateInformation>> additionalCertificateInformation,
+            HashSet<string> itemsToSkip3rdPartyCheck,
             string tarToolPath,
             string pkgToolPath,
             string snPath,
@@ -143,6 +148,7 @@ namespace Microsoft.DotNet.SignTool
             _tarToolPath = tarToolPath;
             _pkgToolPath = pkgToolPath;
             _snPath = snPath;
+            _itemsToSkip3rdPartyCheck = itemsToSkip3rdPartyCheck;
         }
 
         internal BatchSignInput GenerateListOfFiles()
@@ -471,7 +477,7 @@ namespace Microsoft.DotNet.SignTool
                 string macNotarizationAppName = null;
                 if (signInfo.Certificate != null && _additionalCertificateInformation.TryGetValue(signInfo.Certificate, out var additionalInfo))
                 {
-                    var additionalCertInfo = additionalInfo.FirstOrDefault(a => string.IsNullOrEmpty(a.CollisionPriorityId) || 
+                    var additionalCertInfo = additionalInfo.FirstOrDefault(a => string.IsNullOrEmpty(a.CollisionPriorityId) ||
                                                                        a.CollisionPriorityId == _hashToCollisionIdMap[signedFileContentKey]);
                     if (additionalCertInfo != null)
                     {
@@ -505,40 +511,9 @@ namespace Microsoft.DotNet.SignTool
                     signInfo = signInfo.WithNotarization(macNotarizationAppName, _hashToCollisionIdMap[signedFileContentKey]);
                 }
 
-                // Do not check composite images, since they will have empty copyright info.
-                if (signInfo.ShouldSign && peInfo != null && !peInfo.IsCompositeImage)
-                {
-                    bool isMicrosoftLibrary = IsMicrosoftLibrary(peInfo.Copyright);
-                    bool isMicrosoftCertificate = !IsThirdPartyCertificate(signInfo.Certificate);
-                    if (isMicrosoftLibrary != isMicrosoftCertificate)
-                    {
-                        string warning;
-                        SigningToolErrorCode code;
-                        if (isMicrosoftLibrary)
-                        {
-                            code = SigningToolErrorCode.SIGN001;
-                            warning = $"Signing Microsoft library '{file.FullPath}' with 3rd party certificate '{signInfo.Certificate}'. The library is considered Microsoft library due to its copyright: '{peInfo.Copyright}'.";
-                        }
-                        else
-                        {
-                            code = SigningToolErrorCode.SIGN004;
-                            warning = $"Signing 3rd party library '{file.FullPath}' with Microsoft certificate '{signInfo.Certificate}'. The library is considered 3rd party library due to its copyright: '{peInfo.Copyright}'.";
-                        }
+                Check3rdPartyMicrosoftSignatureMismatch(file, peInfo, signInfo);
 
-                        // https://github.com/dotnet/arcade/issues/10293
-                        // Turn the else into a warning (and hoist into the if above) after issue is complete.
-                        if (peInfo.IsManaged)
-                        {
-                            LogWarning(code, warning);
-                        }
-                        else
-                        {
-                            _log.LogMessage(MessageImportance.High, $"{code.ToString()}: {warning}");
-                        }
-                    }
-                }
-
-                return new FileSignInfo(file, signInfo,  (peInfo != null && peInfo.TargetFramework != "") ? peInfo.TargetFramework : null, wixContentFilePath: wixContentFilePath);
+                return new FileSignInfo(file, signInfo, (peInfo != null && peInfo.TargetFramework != "") ? peInfo.TargetFramework : null, wixContentFilePath: wixContentFilePath);
             }
 
             if (SignToolConstants.SignableExtensions.Contains(extension))
@@ -587,6 +562,56 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
+        /// <summary>
+        /// Checks for a mismatch between a 3rd party binary/cert, and a Microsoft binary/cert.
+        /// When a binary has a 3rd party copyright, it should get a 3rd party cert. If it's first party,
+        /// it should not get a 3rd party cert.
+        /// 
+        /// Logs a warning or message if there is a mismatch.
+        /// </summary>
+        /// <param name="file">File to verify</param>
+        /// <param name="peInfo">File info</param>
+        /// <param name="signInfo">Signing information.</param>
+        private void Check3rdPartyMicrosoftSignatureMismatch(PathWithHash file, PEInfo peInfo, SignInfo signInfo)
+        {
+            if (ShouldSkip3rdPartyCheck(file.FileName))
+            {
+                return;
+            }
+
+            if (signInfo.ShouldSign && peInfo != null)
+            {
+                bool isMicrosoftLibrary = IsMicrosoftLibrary(peInfo.Copyright);
+                bool isMicrosoftCertificate = !IsThirdPartyCertificate(signInfo.Certificate);
+                if (isMicrosoftLibrary != isMicrosoftCertificate)
+                {
+                    string warning;
+                    SigningToolErrorCode code;
+                    if (isMicrosoftLibrary)
+                    {
+                        code = SigningToolErrorCode.SIGN001;
+                        warning = $"Signing Microsoft library '{file.FullPath}' with 3rd party certificate '{signInfo.Certificate}'. The library is considered Microsoft library due to its copyright: '{peInfo.Copyright}'.";
+                    }
+                    else
+                    {
+                        code = SigningToolErrorCode.SIGN004;
+                        warning = $"Signing 3rd party library '{file.FullPath}' with Microsoft certificate '{signInfo.Certificate}'. The library is considered 3rd party library due to its copyright: '{peInfo.Copyright}'.";
+                    }
+
+                    // https://github.com/dotnet/arcade/issues/10293
+                    // Turn the else into a warning (and hoist into the if above) after issue is complete.
+                    if (peInfo.IsManaged)
+                    {
+                        LogWarning(code, warning);
+                    }
+                    else
+                    {
+                        _log.LogMessage(MessageImportance.High, $"{code.ToString()}: {warning}");
+                    }
+                }
+            }
+        }
+
         private void LogWarning(SigningToolErrorCode code, string message)
             => _log.LogWarning(subcategory: null, warningCode: code.ToString(), helpKeyword: null, file: null, lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0, message: message);
 
@@ -621,11 +646,11 @@ namespace Microsoft.DotNet.SignTool
                 return new PEInfo(isManaged, GetNativeLegalCopyright(fullPath));
             }
 
-            bool isCrossgened = ContentUtil.IsCrossgened(fullPath, out bool isCompositeImage);
+            bool isCrossgened = ContentUtil.IsCrossgened(fullPath);
             string publicKeyToken = ContentUtil.GetPublicKeyToken(fullPath);
 
             GetManagedTargetFrameworkAndCopyright(fullPath, out string targetFramework, out string copyright);
-            return new PEInfo(isManaged, isCrossgened, isCompositeImage, copyright, publicKeyToken, targetFramework);
+            return new PEInfo(isManaged, isCrossgened, copyright, publicKeyToken, targetFramework);
         }
 
         /// <summary>
@@ -820,6 +845,12 @@ namespace Microsoft.DotNet.SignTool
         {
             // Treat msi as an archive where the filename is the name of the msi, but its contents are from the corresponding wixpack
             return TryBuildZipData(msiFileSignInfo, out zipData, msiFileSignInfo.WixContentFilePath);
+        }
+
+        // Add a helper method to check if a file should skip 3rd party check
+        private bool ShouldSkip3rdPartyCheck(string fileName)
+        {
+            return _itemsToSkip3rdPartyCheck.Contains(Path.GetFileName(fileName));
         }
     }
 }
