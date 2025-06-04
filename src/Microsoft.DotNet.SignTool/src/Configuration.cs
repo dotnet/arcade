@@ -850,7 +850,7 @@ namespace Microsoft.DotNet.SignTool
         // Add a helper method to check if a file should skip 3rd party check
         private bool ShouldSkip3rdPartyCheck(string fileName)
         {
-            return _itemsToSkip3rdPartyCheck.Contains(Path.GetFileName(fileName));
+            return _itemsToSkip3rdPartyCheck != null && _itemsToSkip3rdPartyCheck.Contains(Path.GetFileName(fileName));
         }
     }
 }
