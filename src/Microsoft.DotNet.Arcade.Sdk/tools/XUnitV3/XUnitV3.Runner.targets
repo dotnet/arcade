@@ -24,7 +24,10 @@
       <_TestRunnerArgs Condition="'$(UseMicrosoftTestingPlatformRunner)' != 'true'">%(TestToRun.RunArguments) $(_TestRunnerAdditionalArguments) -xml "%(TestToRun.ResultsXmlPath)" -html "%(TestToRun.ResultsHtmlPath)" -trx "%(TestToRun.ResultsTrxPath)"</_TestRunnerArgs>
       <_TestRunnerArgs Condition="'$(UseMicrosoftTestingPlatformRunner)' == 'true'">%(TestToRun.RunArguments) $(_TestRunnerAdditionalArguments) --results-directory "$(_TestResultDirectory)" --report-xunit --report-xunit-filename "$(_TestResultXmlFileName)" --report-xunit-html --report-xunit-html-filename "$(_TestResultHtmlFileName)" --report-trx --report-trx-filename "$(_TestResultTrxFileName)"</_TestRunnerArgs>
 
+      <TestDotNetRoot Condition="'$(TestDotNetRoot)' == '' AND '%(TestToRun.Architecture)'=='x86' And Exists('$(DotNetRoot)x86\dotnet.exe')">$(DotNetRoot)x86</TestDotNetRoot>
       <TestDotNetRoot Condition="'$(TestDotNetRoot)' == ''">$(DotNetRoot)</TestDotNetRoot>
+      <_DotNetRootArchEnvVar Condition="'%(TestToRun.Architecture)'=='x86'">;DOTNET_ROOT_X86=$(TestDotNetRoot)</_DotNetRootArchEnvVar>
+      <_DotNetRootArchEnvVar Condition="'%(TestToRun.Architecture)'=='arm64'">;DOTNET_ROOT_X64=$(TestDotNetRoot)</_DotNetRootArchEnvVar>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(_TestRuntime)' == 'Core'">
@@ -64,7 +67,7 @@
           WorkingDirectory="$(_TargetDir)"
           IgnoreExitCode="true"
           Timeout="$(_TestTimeout)"
-          EnvironmentVariables="DOTNET_ROOT=$(TestDotNetRoot);DOTNET_ROOT_X86=$(TestDotNetRoot)x86"
+          EnvironmentVariables="DOTNET_ROOT=$(TestDotNetRoot)$(_DotNetRootArchEnvVar)"
           ContinueOnError="WarnAndContinue">
       <Output TaskParameter="ExitCode" PropertyName="_TestErrorCode" />
     </Exec>
