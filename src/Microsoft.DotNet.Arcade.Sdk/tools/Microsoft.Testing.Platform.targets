@@ -33,8 +33,8 @@
     </PropertyGroup>
 
     <!-- Validate that non-Core workloads use executable files, not DLL files -->
-    <Error Condition="'$(_TestRuntime)' != 'Core' and !$(_TestAssembly.EndsWith('.exe'))" 
-           Text="MTP runner for non-Core workloads requires an executable (.exe) file, but was given a DLL: '$(_TestAssembly)'. Please set OutputType to Exe in your project file." />
+    <Error Condition="'$(_TestRuntime)' != 'Core' and !$(_TestAssembly.EndsWith('.exe', StringComparison.OrdinalIgnoreCase))" 
+           Text="MTP runner for non-Core workloads requires an executable (.exe) file, but was given: '$(_TestAssembly)'. Please set &lt;OutputType&gt;Exe&lt;/OutputType&gt; in your project file." />
 
     <PropertyGroup>
       <_TestRunnerCommand>"$(_TestRunner)" $(_TestRunnerArgs)</_TestRunnerCommand>
