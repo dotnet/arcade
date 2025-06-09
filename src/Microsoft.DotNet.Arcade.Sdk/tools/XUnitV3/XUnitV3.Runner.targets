@@ -28,7 +28,8 @@
 
       <!-- HACK: Some repos (at least dotnet/winforms) build+test for x86, but the generated apphost ends up 64-bit -->
       <!-- This is likely a misconfiguration on the repo, but to maintain the same behavior as xunit 2, we force running the assembly under x86 dotnet -->
-      <_TestRunner Condition="'%(TestToRun.Architecture)'=='x86' And Exists('$(DotNetRoot)x86\dotnet.exe')">$(DotNetRoot)x86\dotnet.exe exec $(_TestAssembly)</_TestRunner>
+      <_TestRunner Condition="'%(TestToRun.Architecture)'=='x86' And Exists('$(DotNetRoot)x86\dotnet.exe')">$(DotNetRoot)x86\dotnet.exe</_TestRunner>
+      <_TestRunnerArgs Condition="'%(TestToRun.Architecture)'=='x86' And Exists('$(DotNetRoot)x86\dotnet.exe')">exec "$(_TestAssembly)" $(_TestRunnerArgs)</_TestRunnerArgs>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(_TestRuntime)' == 'Core'">
