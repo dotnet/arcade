@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+# This script is used to install the .NET SDK.
+# It will also invoke the SDK with any provided arguments.
+
 source="${BASH_SOURCE[0]}"
 # resolve $SOURCE until the file is no longer a symlink
 while [[ -h $source ]]; do

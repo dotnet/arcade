@@ -1,15 +1,7 @@
 @echo off
 
-powershell -ExecutionPolicy ByPass -NoProfile -Command "& { . '%~dp0tools.ps1'; InitializeDotNetCli $true $true }"
+:: This script is used to install the .NET SDK.
+:: It will also invoke the SDK with any provided arguments.
 
-if NOT [%ERRORLEVEL%] == [0] (
-  echo Failed to install or invoke dotnet... 1>&2
-  exit /b %ERRORLEVEL%
-)
-
-:: Invoke acquired SDK with args if they are provided
-if NOT "%~1" == "" (
-  set /p dotnetPath=<%~dp0..\..\artifacts\toolset\sdk.txt
-  set DOTNET_NOLOGO=1
-  call "%dotnetPath%\dotnet.exe" %*
-)
+powershell -ExecutionPolicy ByPass -NoProfile -command "& """%~dp0dotnet.ps1""" %*"
+exit /b %ErrorLevel%
