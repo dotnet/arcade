@@ -450,7 +450,7 @@ function MSBuild {
     local selectedPath="$toolset_dir/net/Microsoft.DotNet.ArcadeLogging.dll"
 
     if [[ -z "$selectedPath" ]]; then
-      Write-PipelineTelemetryError -category 'Build'  "Unable to find arcade sdk logger assembly."
+      Write-PipelineTelemetryError -category 'Build'  "Unable to find arcade sdk logger assembly: $selectedPath"
       ExitWithExitCode 1
     fi
 
