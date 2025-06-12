@@ -14,7 +14,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Diagnostics.Runtime" />
-    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" />
   </ItemGroup>
 
   <ItemGroup>
