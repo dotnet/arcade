@@ -8,7 +8,6 @@
     <IsTool>true</IsTool>
     <SignAssembly>false</SignAssembly>
     <IsPackable>true</IsPackable>
-    <!-- <NoWarn>$(NoWarn);NU5128</NoWarn> -->
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <Description>Build artifact signing validation tool</Description>
     <PackageTags>Arcade Signing Validation Tool</PackageTags>

@@ -7,6 +7,7 @@
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>dotnet-swaggergen</ToolCommandName>
     <SignAssembly>false</SignAssembly>
+    <RollForward>Major</RollForward>
   </PropertyGroup>
 
   <ItemGroup>

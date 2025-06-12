@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(NetMinimum);$(NetFrameworkMinimum)</TargetFrameworks>
-    <OutputType>Library</OutputType>
     <IsPackable>true</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsBuildTaskProject>true</IsBuildTaskProject>
