@@ -3,7 +3,7 @@
   <Import Project="$(MSBuildThisFileDirectory)..\Microsoft.SignCheck\ResxWorkaround.props" />
 
   <PropertyGroup>
-    <TargetFramework>$(NetFrameworkToolCurrent)</TargetFramework>
+    <TargetFramework>$(NetFrameworkMinimum)</TargetFramework>
     <OutputType>Exe</OutputType>
     <IsTool>true</IsTool>
     <SignAssembly>false</SignAssembly>
