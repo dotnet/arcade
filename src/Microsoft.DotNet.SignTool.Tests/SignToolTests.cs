@@ -453,8 +453,8 @@ namespace Microsoft.DotNet.SignTool.Tests
 
         private string ExtractArchiveFromDebPackage(string debianPackage, string archiveName, string destinationFolder)
         {
-            var (relativePath, entry) = ZipData.ReadDebContainerEntries(debianPackage, archiveName).Single();
-            string archive = Path.Combine(destinationFolder, relativePath);
+            var entry = ZipData.ReadDebContainerEntries(debianPackage, archiveName).Single();
+            string archive = Path.Combine(destinationFolder, entry.RelativePath);
             entry.WriteToFile(archive);
             return archive;
         }

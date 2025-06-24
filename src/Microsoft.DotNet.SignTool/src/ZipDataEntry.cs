@@ -10,11 +10,22 @@ namespace Microsoft.DotNet.SignTool
 {
     internal sealed class ZipDataEntry : IDisposable
     {
+        string _relativePath;
         Stream _stream;
         ImmutableArray<byte> _contentHash;
 
-        public ZipDataEntry(Stream contentStream, long contentSize)
+        public ZipDataEntry(string relativePath, Stream contentStream) : this(relativePath, contentStream, contentStream?.Length ?? 0)
         {
+        }
+
+        public ZipDataEntry(string relativePath, Stream contentStream, long contentSize)
+        {
+            _relativePath = relativePath;
+
+            // this might be just a pointer to a folder. We skip those.
+            if (contentStream == null)
+                return;
+
             if (contentStream.CanSeek)
             {
                 _stream = contentStream;
@@ -31,16 +42,25 @@ namespace Microsoft.DotNet.SignTool
             _stream.Position = 0;
         }
 
-        public ZipDataEntry(ZipArchiveEntry zipArchiveEntry)
+        public ZipDataEntry(ZipArchiveEntry entry)
         {
-            // the stream returned by zipArchiveEntry.Open() isn't seekable,
+            _relativePath = entry.FullName; // lgtm [cs/zipslip] Archive from trusted source
+
+            // this might be just a pointer to a folder. We skip those.
+            if (_relativePath.EndsWith("/") && entry.Name == "")
+                return;
+
+            // the stream returned by entry.Open() isn't seekable,
             // we can avoid creating a MemoryStream copy by just opening a separate instance for computing the content hash
-            using var contentHashStream = zipArchiveEntry.Open();
+            using var contentHashStream = entry.Open();
             _contentHash = ContentUtil.GetContentHash(contentHashStream);
 
             // this will already be at position 0
-            _stream = zipArchiveEntry.Open();
+            _stream = entry.Open();
         }
+
+        public string RelativePath => _relativePath;
+
         public ImmutableArray<byte> ContentHash => _contentHash;
 
         public void WriteToFile(string path)
