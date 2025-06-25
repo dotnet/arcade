@@ -4,35 +4,16 @@
   <UsingTask TaskName="WixToolset.HeatTasks.HeatDirectory" AssemblyFile="$(WixHeatBinDir)\WixToolset.HeatTasks.dll" />
 
   <!--
-    These targets use MSBuild Exec tasks to run WiX 3 toolset commands.
-
-    WiX 4 is expected to support running in .NET Core. Once using WiX 4, we can (more easily) remove
-    this file and switch to wixproj. See https://github.com/wixtoolset/issues/issues/5627
+    The following targets use MSBuild Exec tasks to invoke WiX 5 toolset commands directly.
+    Note: WiX 5 supports SDK-style wixproj projects, which may allow for tighter integration in the future.
   -->
 
   <!--
-    Acquire WiX tools, if not present.
+    Locate WiX tools.
   -->
   <Target Name="_AcquireWix">
-    <!-- <MSBuild
-      Projects="$(MSBuildThisFileDirectory)..\acquisition\acquire-wix\acquire-wix.proj"
-      Targets="AcquireWixCore"
-      Properties="BaseIntermediateOutputPath=$(BaseIntermediateOutputPath);
-                  RepoRoot=$(RepoRoot)">
-      <Output TaskParameter="TargetOutputs" PropertyName="WixToolsDir" />
-    </MSBuild>
-  
-    <PropertyGroup>
-      <_WixIntermediateOutputPath>$(BaseIntermediateOutputPath)wix</_WixIntermediateOutputPath>
-    </PropertyGroup>
-
-    <PropertyGroup>
-      <WixInstallPath>$(WixToolsDir)</WixInstallPath>
-      <WixTargetsPath>$(WixToolsDir)wix.targets</WixTargetsPath>
-      <WixObjDir>$(IntermediateOutputPath)/wix/</WixObjDir>
-      <WixObjDir Condition="'$(RuntimeIdentifier)' == ''">$(IntermediateOutputPath)/$(InstallerRuntimeIdentifier)/wix/</WixObjDir>
+    <!-- <PropertyGroup>
       <LightCommandObjDir>$(IntermediateOutputPath)/lightcommand/</LightCommandObjDir>
-      <MsiArch>$(InstallerTargetArchitecture)</MsiArch>
     </PropertyGroup> -->
 
     <PropertyGroup>
@@ -292,22 +273,7 @@
           DependsOnTargets="GetWixBuildConfiguration">
     <ItemGroup>
       <DirectoryToHarvest
-        WixSourceFile="$(WixObjDir)%(Name).wxs"
-        WixObjFile="$(WixObjDir)%(Name).wixobj" />
-
-      <DirectoryToHarvest
-        Command="heat.exe ^
-          dir &quot;%(Identity)&quot; ^
-          -nologo ^
-          -template fragment ^
-          -sreg ^
-          -ag ^
-          -var var.%(SubstituteVar) ^
-          -cg %(ComponentGroupName) ^
-          -srd ^
-          -dr %(DirectoryRef) ^
-          -out %(WixSourceFile)
-          $(AdditionalHeatArgs)" />
+        WixSourceFile="$(WixObjDir)%(Name).wxs" />
 
       <CandleVariables Include="InstallFiles" Value="true" />
     </ItemGroup>
@@ -325,11 +291,6 @@
       OutputFile="%(DirectoryToHarvest.WixSourceFile)"
       AdditionalOptions="$(AdditionalHeatArgs)" />
 
-    <!-- <Exec
-      Command="%(DirectoryToHarvest.Command)"
-      WorkingDirectory="$(WixHeatBinDir)"
-      StandardOutputImportance="normal" /> -->
-
     <!--
       Currently FileElementToStabilize assumes a single DirectoryToHarvest. If there were multiple,
       the task would expect exactly one match in each file, which isn't likely to be the case. But,
@@ -340,55 +301,6 @@
       SourceFile="%(DirectoryToHarvest.WixSourceFile)"
       OutputFile="%(DirectoryToHarvest.WixSourceFile)"
       FileElementToStabilize="@(HeatOutputFileElementToStabilize)" />
-  </Target>
-
-  <Target Name="deleteme_____RunCandleCompiler"
-          DependsOnTargets="
-            GetWixBuildConfiguration;
-            GetBundleUpgradeCode;
-            _GetUpgradeCode;
-            _GenerateMsiVersionString">
-    <PropertyGroup>
-      <WixDependencyKeyName Condition="'$(WixDependencyKeyName)' == ''">$(InstallerName.Replace('-', '_'))</WixDependencyKeyName>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <CandleVariables Include="SharedWixDir" Value="$(MSBuildThisFileDirectory.TrimEnd('\'))" />
-      <CandleVariables Include="DependencyKeyName" Value="$(WixDependencyKeyName)" />
-
-      <CandleVariables Include="%(DirectoryToHarvest.SubstituteVar)" Value="%(DirectoryToHarvest.Identity)" />
-
-      <CandleVariables Include="ExtraComponentGroupRefIds" Value="@(WixExtraComponentGroupRefId)" Condition="'@(WixExtraComponentGroupRefId)' != ''" />
-      <CandleVariables Include="RegKeyProductName" Value="$(RegKeyProductName)" Condition="'$(RegKeyProductName)' != ''" />
-
-      <CandleVariables Include="ProductMoniker" Value="$(ProductBrandName)" />
-      <CandleVariables Include="BuildVersion" Value="$(MsiVersionString)" />
-      <CandleVariables Include="NugetVersion" Value="$(Version)" />
-      <CandleVariables Include="TargetArchitectureDescription" Value="$(InstallerTargetArchitecture)$(CrossArchContentsBuildPart)" />
-      <CandleVariables Include="UpgradeCode" Value="$(UpgradeCode)" />
-      <CandleVariables Include="MajorUpgradeSchedule" Value="$(MajorUpgradeSchedule)" Condition="'$(MajorUpgradeSchedule)' != ''" />
-
-      <!-- If this is a cross-arch MSI, add target arch to the dependency key for uniqueness. -->
-      <CandleVariables Include="CrossArchContentsPlatformPart" Value="$(CrossArchContentsBuildPart.Replace('-', '_'))" />
-    </ItemGroup>
-
-    <PropertyGroup>
-      <_wixArgs></_wixArgs>
-      <_wixArgs>$(_wixArgs) -nologo</_wixArgs>
-      <_wixArgs>$(_wixArgs) -arch $(MsiArch)</_wixArgs>
-      <_wixArgs>$(_wixArgs) -out "$(WixObjDir)"</_wixArgs>
-
-      <_wixArgs>$(_wixArgs) @(WixExtensions -> '-ext %(Identity)', ' ')</_wixArgs>
-      <_wixArgs>$(_wixArgs) @(CandleVariables -> '-d%(Identity)="%(Value)"', ' ')</_wixArgs>
-      <_wixArgs>$(_wixArgs) @(WixSrcFile -> '"%(FullPath)"', ' ')</_wixArgs>
-      <_wixArgs>$(_wixArgs) @(DirectoryToHarvest -> '"%(WixSourceFile)"', ' ')</_wixArgs>
-      <_wixArgs>$(_wixArgs) $(AdditionalCandleArgs)</_wixArgs>
-    </PropertyGroup>
-
-    <Exec
-      Command="candle.exe $(_wixArgs)"
-      WorkingDirectory="$(WixExeDir)"
-      StandardOutputImportance="normal" />
   </Target>
 
   <Target Name="RunLightLinker"
@@ -433,9 +345,6 @@
       <_wixArgs>$(_wixArgs) @(CandleVariables -> '-d %(Identity)="%(Value)"', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(WixSrcFile -> '"%(FullPath)"', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(DirectoryToHarvest -> '"%(WixSourceFile)"', ' ')</_wixArgs>
-
-      <!-- <_wixArgs>$(_wixArgs) @(WixSrcFile -> '"$(WixObjDir)%(Filename).wixobj"', ' ')</_wixArgs>
-      <_wixArgs>$(_wixArgs) @(DirectoryToHarvest -> '"%(WixObjFile)"', ' ')</_wixArgs> -->
 
       <_wixArgs>$(_wixArgs) $(AdditionalCandleArgs)</_wixArgs>
       <_wixArgs>$(_wixArgs) $(AdditionalLightArgs)</_wixArgs>
