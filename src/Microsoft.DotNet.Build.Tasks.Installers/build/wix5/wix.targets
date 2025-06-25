@@ -1,6 +1,8 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
 
+  <UsingTask TaskName="WixToolset.HeatTasks.HeatDirectory" AssemblyFile="$(WixHeatBinDir)\WixToolset.HeatTasks.dll" />
+
   <!--
     These targets use MSBuild Exec tasks to run WiX 3 toolset commands.
 
@@ -34,6 +36,12 @@
     </PropertyGroup> -->
 
     <PropertyGroup>
+      <_WixIntermediateOutputPath>$(BaseIntermediateOutputPath)wix</_WixIntermediateOutputPath>
+    </PropertyGroup>
+
+    <PropertyGroup>
+      <WixObjDir>$(IntermediateOutputPath)/wix/</WixObjDir>
+      <WixObjDir Condition="'$(RuntimeIdentifier)' == ''">$(IntermediateOutputPath)/$(InstallerRuntimeIdentifier)/wix/</WixObjDir>
       <MsiArch>$(InstallerTargetArchitecture)</MsiArch>
     </PropertyGroup>
 
@@ -304,10 +312,23 @@
       <CandleVariables Include="InstallFiles" Value="true" />
     </ItemGroup>
 
-    <Exec
+    <HeatDirectory
+      Directory="%(DirectoryToHarvest.Identity)"
+      NoLogo="true"
+      Template="fragment"
+      SuppressRegistry="true"
+      AutogenerateGuids="true"
+      PreprocessorVariable="var.%(DirectoryToHarvest.SubstituteVar)"
+      ComponentGroupName="%(DirectoryToHarvest.ComponentGroupName)"
+      SuppressRootDirectory="true"
+      DirectoryRefId="%(DirectoryToHarvest.DirectoryRef)"
+      OutputFile="%(DirectoryToHarvest.WixSourceFile)"
+      AdditionalOptions="$(AdditionalHeatArgs)" />
+
+    <!-- <Exec
       Command="%(DirectoryToHarvest.Command)"
       WorkingDirectory="$(WixHeatBinDir)"
-      StandardOutputImportance="normal" />
+      StandardOutputImportance="normal" /> -->
 
     <!--
       Currently FileElementToStabilize assumes a single DirectoryToHarvest. If there were multiple,
@@ -435,7 +456,8 @@
       IgnoreStandardErrorWarningFormat="true"
       RetryDelayBase="2" />
 
-    <CreateLightCommandPackageDrop
+    <!-- TODO fix the following command: -->
+    <!--<CreateLightCommandPackageDrop
       OriginalLightCommand="$(_lightCommand)"
       LightCommandWorkingDir="$(LightCommandObjDir)"
       OutputFolder="$(ArtifactsNonShippingPackagesDir)"
@@ -445,7 +467,7 @@
       WixExtensions="@(WixExtensions)"
       WixSrcFiles="@(WixSrcFile -> '$(WixObjDir)%(Filename).wixobj');@(DirectoryToHarvest -> '%(WixObjFile)')">
       <Output TaskParameter="OutputFile" PropertyName="_LightCommandPackageNameOutput" />
-    </CreateLightCommandPackageDrop>
+    </CreateLightCommandPackageDrop>-->
   </Target>
 
   <!--

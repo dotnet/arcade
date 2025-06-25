@@ -1,7 +1,6 @@
-<?xml version="1.0"?>
-<Include xmlns="http://wixtoolset.org/schemas/v4/wxs">
-
-  <Package Compressed="yes" InstallScope="perMachine" InstallerVersion="$(var.InstallerVersion)" />
+﻿<Include 
+  xmlns="http://wixtoolset.org/schemas/v4/wxs"
+  xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
 
   <?ifndef MajorUpgradeSchedule?>
     <?define MajorUpgradeSchedule = afterInstallInitialize?>
@@ -9,11 +8,11 @@
 
   <MajorUpgrade DowngradeErrorMessage="$(var.DowngradeErrorMessage)" Schedule="$(var.MajorUpgradeSchedule)"/>
 
-  <MediaTemplate CompressionLevel="high" EmbedCab="yes"/>
+  <MediaTemplate CompressionLevel="high" EmbedCab="yes" />
 
-  <Feature
+  <Feature 
     Id="Provider"
-    Absent="disallow"
+    AllowAbsent="no"
     AllowAdvertise="no"
     Description="Used for Ref Counting"
     Display="hidden"
@@ -29,8 +28,8 @@
   <WixVariable Id="WixUILicenseRtf" Value="$(var.MicrosoftEula)" />
 
   <Property Id="WIXUI_INSTALLDIR" Value="DOTNETHOME"/>
-  <UIRef Id="WixUI_InstallDir" />
+  <ui:WixUI Id="WixUI_InstallDir" />
 
-  <CustomActionRef Id="WixBroadcastEnvironmentChange" />
+  <BroadcastEnvironmentChange xmlns="http://wixtoolset.org/schemas/v4/wxs/util" />
 
 </Include>
