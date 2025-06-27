@@ -671,8 +671,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     TempSymbolsAzureDevOpsOrg,
                     creds,
                     packageFileExcludeList: exclusions,
-                    convertPortablePdbs: false,
-                    treatPdbConversionIssuesAsInfo: false,
                     pdbConversionTreatAsWarning: null,
                     dotnetInternalPublishSpecialClrFiles: publishSpecialClrFiles,
                     verboseClient: true,
