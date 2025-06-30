@@ -158,9 +158,9 @@
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-runtime</Uri>
       <Sha>990ebf52fc408ca45929fd176d2740675a67fab8</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DncEng.SecretManager" Version="1.1.0-beta.25320.2">
+    <Dependency Name="Microsoft.DncEng.SecretManager" Version="1.1.0-beta.25325.1">
       <Uri>https://github.com/dotnet/dnceng</Uri>
-      <Sha>f8e423db429900ec56bbbc7e76d8d8711ab0c1f9</Sha>
+      <Sha>02d0e33d3b027db11770eda8a0ad573e2f3e461a</Sha>
     </Dependency>
     <!-- Dependencies required for source build to lift to the previously-source-built version. -->
     <Dependency Name="Microsoft.Build" Version="17.12.36">
