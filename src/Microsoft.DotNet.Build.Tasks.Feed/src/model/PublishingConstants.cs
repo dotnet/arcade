@@ -1539,7 +1539,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 targetFeeds: DotNetToolsFeeds,
                 symbolTargetType: SymbolPublishVisibility.Public,
                 flatten: false),
-            // VS 18.0
+            // 18.0
             new TargetChannelConfig(
                 id: 7987,
                 isInternal: false,
