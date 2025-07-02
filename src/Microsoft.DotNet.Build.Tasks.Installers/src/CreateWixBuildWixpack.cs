@@ -413,36 +413,92 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 {
                     var doc = XDocument.Load(copiedXmlPath);
 
-                    var contentElements = new (string, string, string)[]
+                    var contentElements = new (string, string, string[])[]
                     {
-                        ("File", "Id", "Source"),
-                        ("WixVariable", "Id", "Value"),
-                        ("Icon", "Id", "SourceFile")
+                        ("File", "Id", ["Source"]),
+                        ("MsiPackage", "Id", ["SourceFile"]),
+                        ("ExePackage", "Id", ["SourceFile"]),
+                        ("Payload", "Id", ["SourceFile"]),
+                        ("WixStandardBootstrapperApplication", "Id", ["LicenseFile", "LocalizationFile", "ThemeFile"]),
+                        ("WixVariable", "Id", ["Value"]),
+                        ("Icon", "Id", ["SourceFile"])
                     };
 
-                    foreach (var (elementName, idAttr, sourceAttr) in contentElements)
+                    foreach (var (elementName, idAttr, sourceAttrArray) in contentElements)
                     {
                         var elements = doc.Descendants().Where(e => e.Name.LocalName == elementName);
                         foreach (var element in elements)
                         {
-                            var id = element.Attribute(idAttr)?.Value;
-                            var source = element.Attribute(sourceAttr)?.Value;
-
-                            if (string.IsNullOrEmpty(source))
+                            foreach (var sourceAttr in sourceAttrArray)
                             {
-                                continue;
+                                var source = element.Attribute(sourceAttr)?.Value;
+
+                                if (string.IsNullOrEmpty(source))
+                                {
+                                    continue;
+                                }
+
+                                source = ResolvePath(source);
+
+                                // Handle source-file using preprocessor variables
+                                // replace them with "*"
+                                if (source.Contains("*"))
+                                {
+                                    // Enumerate all files
+                                    // Properly update SourceFile and Id attributes
+                                    // if source is relative, resolve it against the project directory
+                                    if (!Path.IsPathRooted(source))
+                                    {
+                                        source = Path.Combine(_wixprojDir, source);
+                                    }
+
+                                    // Split source string by "\\*\\" to handle multiple files
+                                    var parts = source.Split(new[] { "\\*\\", "\\*" }, StringSplitOptions.RemoveEmptyEntries);
+                                    // Enumerate directories  in parts[0] directory and copy each file in source string, replacing the "*" with the enumerated directory name
+
+                                    if (parts.Length != 2)
+                                    {
+                                        // We only support one specific scenario when path is in the format:
+                                        // <directoryPart>\\*\\<filename>
+                                        Console.WriteLine($"Invalid source format: {source}");
+                                        continue;
+                                    }
+
+                                    string directoryPart = parts[0];
+                                    // Enumerate directories in the directoryPart
+                                    var dirs = Directory.GetDirectories(directoryPart, "*", SearchOption.TopDirectoryOnly);
+                                    foreach (var dir in dirs)
+                                    {
+                                        var filePath = Path.Combine(dir, Path.GetFileName(source));
+                                        CopySourceFile(Path.GetFileName(dir), filePath);
+                                    }
+
+                                    var originalSource = element.Attribute(sourceAttr)?.Value;
+                                    if (!Path.IsPathRooted(originalSource))
+                                    {
+                                        originalSource = Path.Combine(_wixprojDir, originalSource);
+                                    }
+
+                                    // Update the original attribute to "$(token)\\<filename>"
+                                    var newTokenizedSourceValue = Path.Combine(Path.GetFileName(Path.GetDirectoryName(originalSource)), Path.GetFileName(originalSource));
+                                    element.SetAttributeValue(sourceAttr, newTokenizedSourceValue);
+                                }
+                                else
+                                {
+                                    var id = element.Attribute(idAttr)?.Value;
+                                    // Resolved source is a single file, copy it to the subfolder
+                                    if (string.IsNullOrEmpty(id))
+                                    {
+                                        id = Path.GetFileName(source);
+                                    }
+
+                                    CopySourceFile(id, source);
+
+                                    // Update the original attribute to "<id>\\<filename>"
+                                    var newSourceValue = $"{id}\\{Path.GetFileName(source)}";
+                                    element.SetAttributeValue(sourceAttr, newSourceValue);
+                                }
                             }
-
-                            if (string.IsNullOrEmpty(id))
-                            {
-                                id = source;
-                            }
-
-                            CopySourceFile(id, source);
-
-                            // Update the original attribute to "<id>\\<filename>"
-                            var newSourceValue = $"{id}\\{Path.GetFileName(source)}";
-                            element.SetAttributeValue(sourceAttr, newSourceValue);
                         }
                     }
 
@@ -455,48 +511,56 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             }
         }
 
-        private void CopySourceFile(string fileId, string source)
+        private string ResolvePath(string path)
         {
             // Replace $(<value>) with value from _defineConstantsDictionary
-            var resolvedSource = source;
-            int startIdx = resolvedSource.IndexOf("$(");
+            int startIdx = path.IndexOf("$(");
             while (startIdx != -1)
             {
-                int endIdx = resolvedSource.IndexOf(")", startIdx + 2);
+                int endIdx = path.IndexOf(')', startIdx + 2);
                 if (endIdx == -1) break;
-                var varName = resolvedSource.Substring(startIdx + 2, endIdx - (startIdx + 2));
+                var varName = path.Substring(startIdx + 2, endIdx - (startIdx + 2));
                 if (_defineConstantsDictionary.TryGetValue(varName, out var varValue))
                 {
-                    resolvedSource = resolvedSource.Substring(0, startIdx) + varValue + resolvedSource.Substring(endIdx + 1);
-                    startIdx = resolvedSource.IndexOf("$(");
+                    path = path.Substring(0, startIdx) + varValue + path.Substring(endIdx + 1);
                 }
                 else
                 {
-                    // If not found, skip this variable
-                    startIdx = resolvedSource.IndexOf("$(", endIdx + 1);
+                    // Old:
+                    // If not found, skip this value
+                    //startIdx = path.IndexOf("$(", endIdx + 1);
+
+                    // If not found, replace with "*"
+                    path = path.Substring(0, startIdx) + "*" + path.Substring(endIdx + 1);
                 }
+
+                startIdx = path.IndexOf("$(");
             }
 
+            return path;
+        }
+
+        private void CopySourceFile(string fileId, string source)
+        {
             // Create subfolder in WixpackWorkingDir with the name equal to File@Id
             var destDir = Path.Combine(WixpackWorkingDir, fileId);
             Directory.CreateDirectory(destDir);
 
-            // if resolvedSource is relative, resolve it against the project directory
-            if (!Path.IsPathRooted(resolvedSource))
+            // if source is relative, resolve it against the project directory
+            if (!Path.IsPathRooted(source))
             {
-                resolvedSource = Path.Combine(_wixprojDir, resolvedSource);
+                source = Path.Combine(_wixprojDir, source);
             }
 
             // Copy the file if it exists
-            if (File.Exists(resolvedSource))
+            if (File.Exists(source))
             {
-                var destPath = Path.Combine(destDir, Path.GetFileName(resolvedSource));
-                File.Copy(resolvedSource, destPath, overwrite: true);
+                var destPath = Path.Combine(destDir, Path.GetFileName(source));
+                File.Copy(source, destPath, overwrite: true);
             }
             else
             {
-                Console.WriteLine($"Resolved source file not found: {resolvedSource}");
-                // TODO: handle missing files as needed, e.g., log an error or throw an exception
+                throw new FileNotFoundException($"Source file not found: {source}");
             }
         }
     }
