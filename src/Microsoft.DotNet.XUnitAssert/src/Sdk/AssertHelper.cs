@@ -426,6 +426,7 @@ namespace Xunit.Internal
 			Type actualType;
 			TypeInfo actualTypeInfo;
 			actual = UnwrapLazy(actual, out actualType, out actualTypeInfo);
+#endif
 
 			// Check for null equivalence
 			if (expected == null)
