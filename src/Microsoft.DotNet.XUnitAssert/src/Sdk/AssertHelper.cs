@@ -479,6 +479,7 @@ namespace Xunit.Internal
 				if (expectedUri != null && actualUri != null)
 					return VerifyEquivalenceUri(expectedUri, actualUri, prefix);
 
+#if !XUNIT_AOT
 				// IGrouping<TKey,TValue> is special, since it implements IEnumerable<TValue>
 				var expectedGroupingTypes = ArgumentFormatter.GetGroupingTypes(expected);
 				if (expectedGroupingTypes != null)
