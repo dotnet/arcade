@@ -24,3 +24,12 @@ For repos that do not need to run the full set, you would do the following:
    - For Windows only verifications, add the following:
        verifications: [ "unified-build-windows-x64", "unified-build-windows-x86" ]
 
+## Manual run
+
+To run the pipeline from a PR, add the following PR comment: `/azp run <pipeline-name>`
+
+## Further customization
+
+To get pipeline to run automatically, update the `pr` trigger in the YML.
+
+To make this pipeline a required PR check, update the GitHub PR settings for your repo.
