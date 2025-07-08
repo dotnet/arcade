@@ -109,16 +109,29 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 File.Copy(solutionPath, destPath, overwrite: true);
             }
 
+            CopyExtensions();
             CopyIncludeSearchPathsContents();
-
             UpdatePaths();
-
-            // Generate new command line arguments for Wix build command
             GenerateWixBuildCommandLineFile();
-
             CreateWixpackPackage();
 
             return true;
+        }
+
+        private void CopyExtensions()
+        {
+            for (int i = 0; i < Extensions.Length; i++)
+            {
+                var extension = Extensions[i];
+                if (string.IsNullOrWhiteSpace(extension.ItemSpec))
+                    continue;
+
+                string filename = Path.GetFileName(extension.ItemSpec);
+                CopySourceFile(filename, extension.ItemSpec);
+
+                // Update the extension item spec to just the file name
+                Extensions[i] = new TaskItem(Path.Combine(filename, filename));
+            }
         }
 
         private void CreateWixpackPackage()
