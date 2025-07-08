@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.SignTool
         internal string TempDir => _args.TempDir;
         internal string MicroBuildCorePath => _args.MicroBuildCorePath;
 
+        internal string Wix3ToolsPath => _args.Wix3ToolsPath;
         internal string WixToolsPath => _args.WixToolsPath;
         internal string TarToolPath => _args.TarToolPath;
         internal string PkgToolPath => _args.PkgToolPath;

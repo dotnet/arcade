@@ -173,7 +173,7 @@ namespace Microsoft.DotNet.SignTool
                     string engineFileName = $"{Path.Combine(workingDirectory, $"{engineContainer}", file.FileName)}{SignToolConstants.MsiEngineExtension}";
                     _log.LogMessage(MessageImportance.Normal, $"Extracting engine from {file.FullPath}");
                     if (!RunWixTool("insignia.exe", $"-ib {file.FullPath} -o {engineFileName}",
-                        workingDirectory, _signTool.WixToolsPath, _log))
+                        workingDirectory, _signTool.Wix3ToolsPath, _log))
                     {
                         _log.LogError($"Failed to extract engine from {file.FullPath}");
                         return false;
@@ -203,7 +203,7 @@ namespace Microsoft.DotNet.SignTool
                     {
                         if (!RunWixTool("insignia.exe",
                             $"-ab {engine.Key.FileName} {engine.Value.FullPath} -o {engine.Value.FullPath}", workingDirectory,
-                            _signTool.WixToolsPath, _log))
+                            _signTool.Wix3ToolsPath, _log))
                         {
                             _log.LogError($"Failed to attach engine to {engine.Value.FullPath}");
                             return false;
@@ -282,7 +282,7 @@ namespace Microsoft.DotNet.SignTool
                 if (file.IsUnpackableContainer())
                 {
                     _log.LogMessage($"Repacking container: '{file.FileName}'");
-                    _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath, _signTool.TarToolPath, _signTool.PkgToolPath);
+                    _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.Wix3ToolsPath, _signTool.WixToolsPath, _signTool.TarToolPath, _signTool.PkgToolPath);
                 }
                 else
                 {

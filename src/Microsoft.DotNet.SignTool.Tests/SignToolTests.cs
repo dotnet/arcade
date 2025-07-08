@@ -268,9 +268,14 @@ namespace Microsoft.DotNet.SignTool.Tests
             _output = output;
         }
 
+        private string GetWix3ToolPath()
+        {
+            return Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "wix3");
+        }
+
         private string GetWixToolPath()
         {
-            return Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "wix");
+            return Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "wix", "net6.0", "any");
         }
 
         private static string s_snPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "sn", "sn.exe");
@@ -326,6 +331,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             Dictionary<string, List<SignInfo>> extensionsSignInfo,
             string[] expectedXmlElementsPerSigningRound,
             Dictionary<string, List<AdditionalCertificateInformation>> additionalCertificateInfo = null,
+            string wix3ToolsPath = null,
             string wixToolsPath = null)
         {
             var buildEngine = new FakeBuildEngine();
@@ -335,7 +341,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             // The path to DotNet will always be null in these tests, this will force
             // the signing logic to call our FakeBuildEngine.BuildProjectFile with a path
             // to the XML that store the content of the would be Microbuild sign request.
-            var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, dotnetPath: null, msbuildVerbosity: "quiet", _tmpDir, enclosingDir: "", "", wixToolsPath: wixToolsPath, tarToolPath: s_tarToolPath, pkgToolPath: s_pkgToolPath, dotnetTimeout: -1);
+            var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, dotnetPath: null, msbuildVerbosity: "quiet", _tmpDir, enclosingDir: "", "", wix3ToolsPath: wix3ToolsPath, wixToolsPath: wixToolsPath, tarToolPath: s_tarToolPath, pkgToolPath: s_pkgToolPath, dotnetTimeout: -1);
 
             var signTool = new FakeSignTool(signToolArgs, task.Log);
             // Passing null for the 3rd party check skip as this doesn't affect the generated project.
@@ -1054,6 +1060,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "PackageWi
   <Authenticode>NuGet</Authenticode>
 </FilesToSign>"
             },
+            wix3ToolsPath: GetWix3ToolPath(),
             wixToolsPath: GetWixToolPath());
         }
 
@@ -1985,6 +1992,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>"
             },
+            wix3ToolsPath: GetWix3ToolPath(),
             wixToolsPath: GetWixToolPath());
 
         }
@@ -2024,6 +2032,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>"
             },
+            wix3ToolsPath: GetWix3ToolPath(),
             wixToolsPath: GetWixToolPath());
         }
 
@@ -2048,6 +2057,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
                 DotNetPath = CreateTestResource("dotnet.fake"),
                 DoStrongNameCheck = false,
                 SNBinaryPath = null,
+                Wix3ToolsPath = GetWix3ToolPath(),
                 WixToolsPath = badPath
             };
 
@@ -2972,13 +2982,13 @@ $@"
         [InlineData(true)]
         [InlineData(false)]
         [Trait("Category", "SkipWhenLiveUnitTesting")]
-        public void RunWixToolRunsOrFailsProperly(bool deleteWixobjBeforeRunningTool)
+        public void RunWix3ToolRunsOrFailsProperly(bool deleteWixobjBeforeRunningTool)
         {
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
 
             const string expectedExe = "MsiBootstrapper.exe";
             const string wixPack = "MsiBootstrapper.exe.wixpack.zip";
-            var wixToolsPath = GetWixToolPath();
+            var wix3ToolsPath = GetWix3ToolPath();
             var wixpackPath = GetResourcePath(wixPack);
             var tempDir = Path.GetTempPath();
             string workingDir = Path.Combine(tempDir, "extract", Guid.NewGuid().ToString());
@@ -2997,7 +3007,7 @@ $@"
                     File.Delete(Path.Combine(workingDir, "Bundle.wixobj"));
                 }
 
-                BatchSignUtil.RunWixTool(createFileName, outputDir, workingDir, wixToolsPath, task.Log).Should().Be(!deleteWixobjBeforeRunningTool);
+                BatchSignUtil.RunWixTool(createFileName, outputDir, workingDir, wix3ToolsPath, task.Log).Should().Be(!deleteWixobjBeforeRunningTool);
                 File.Exists(outputFileName).Should().Be(!deleteWixobjBeforeRunningTool);
             }
             finally
@@ -3011,7 +3021,7 @@ $@"
         /// Run a wix tool, but with an empty wix path.
         /// </summary>
         [Fact]
-        public void RunWixToolThrowsErrorIfNoWixToolsProvided()
+        public void RunWix3ToolThrowsErrorIfNoWixToolsProvided()
         {
             var fakeBuildEngine = new FakeBuildEngine();
             var task = new SignToolTask { BuildEngine = fakeBuildEngine };
@@ -3026,13 +3036,13 @@ $@"
         /// provided
         /// </summary>
         [Fact]
-        public void RunWixToolThrowsErrorIfWixToolsProvidedButDirDoesNotExist()
+        public void RunWix3ToolThrowsErrorIfWixToolsProvidedButDirDoesNotExist()
         {
             const string totalWixToolDir = "totally/wix/tools";
             var fakeBuildEngine = new FakeBuildEngine();
             var task = new SignToolTask { BuildEngine = fakeBuildEngine };
 
-            BatchSignUtil.RunWixTool("create.cmd", "foodir", "bardir", "totally/wix/tools", task.Log).Should().BeFalse();
+            BatchSignUtil.RunWixTool("create.cmd", "foodir", "bardir", "totally/wix3/tools", task.Log).Should().BeFalse();
             task.Log.HasLoggedErrors.Should().BeTrue();
             fakeBuildEngine.LogErrorEvents.Should().Contain(e => e.Message.Contains($"WixToolsPath '{totalWixToolDir}' not found."));
         }
