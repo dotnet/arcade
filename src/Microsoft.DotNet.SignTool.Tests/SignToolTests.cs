@@ -1999,6 +1999,59 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
 
         [WindowsOnlyFact]
         [Trait("Category", "SkipWhenLiveUnitTesting")]
+        public void SignBundleDoubleNested()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new List<ItemToSign>()
+            {
+                new ItemToSign(GetResourcePath("MsiBootstrapper5.exe")),
+                new ItemToSign(GetResourcePath("MsiBootstrapper5.exe.wixpack.zip")),
+                new ItemToSign(GetResourcePath("MsiSetup5.msi.wixpack.zip"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo(certificate: "ArcadeCertTest", strongName: "ArcadeStrongTest") } }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'MsiApplication.exe' TargetFramework='.NETFramework,Version=v4.7.2' Certificate='Microsoft400'",
+                "File 'MsiSetup5.msi' Certificate='Microsoft400'",
+                "File 'MsiBootstrapper5.exe' Certificate='Microsoft400'"
+            }/*,
+            Reenable after https://github.com/dotnet/arcade/issues/10293,
+            expectedWarnings: new[]
+            {
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "MsiBootstrapper.exe")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: 'Copyright (c). All rights reserved.'."
+            }*/);
+
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+$@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "0", "ABCDEFG/MsiApplication.exe"))}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>",
+$@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "0", "ABCDEFG/MsiSetup5.msi"))}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>",
+ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "engines", "0", "MsiBootstrapper5.exe-engine.exe"))}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>",
+ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "MsiBootstrapper5.exe"))}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>"
+            },
+            wix3ToolsPath: GetWix3ToolPath(),
+            wixToolsPath: GetWixToolPath());
+
+        }
+
+        [WindowsOnlyFact]
+        [Trait("Category", "SkipWhenLiveUnitTesting")]
         public void MsiWithWixpack()
         {
             // List of files to be considered for signing
