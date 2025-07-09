@@ -120,14 +120,11 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
         {
             for (int i = 0; i < Extensions.Length; i++)
             {
-                var extension = Extensions[i];
-                if (string.IsNullOrWhiteSpace(extension.ItemSpec))
-                    continue;
+                var extensionPath = Extensions[i].ItemSpec;
+                string filename = Path.GetFileName(extensionPath);
+                CopySourceFile(filename, extensionPath);
 
-                string filename = Path.GetFileName(extension.ItemSpec);
-                CopySourceFile(filename, extension.ItemSpec);
-
-                // Update the extension item spec to just the file name
+                // Update the extension item spec to the new relative path
                 Extensions[i] = new TaskItem(Path.Combine(filename, filename));
             }
         }
@@ -139,23 +136,25 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             {
                 File.Delete(OutputFile);
             }
+
             if (!Directory.Exists(OutputFolder))
             {
                 Directory.CreateDirectory(OutputFolder);
             }
+
             ZipFile.CreateFromDirectory(WixpackWorkingDir, OutputFile);
         }
 
         private void CopyIncludeSearchPathsContents()
         {
             if (IncludeSearchPaths == null || IncludeSearchPaths.Length == 0)
+            {
                 return;
+            }
 
             for (int i = 0; i < IncludeSearchPaths.Length; i++)
             {
                 var includePath = IncludeSearchPaths[i];
-                if (string.IsNullOrWhiteSpace(includePath))
-                    continue;
 
                 // If not rooted, resolve relative to _wixprojDir
                 var fullSourceDir = Path.IsPathRooted(includePath)
@@ -179,7 +178,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             }
         }
 
-        private void CopyDirectoryRecursive(string sourceDir, string destDir)
+        private static void CopyDirectoryRecursive(string sourceDir, string destDir)
         {
             Directory.CreateDirectory(destDir);
 
@@ -208,18 +207,6 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             if (_defineConstantsDictionary.ContainsKey("ProjectPath"))
             {
                 _defineConstantsDictionary["ProjectPath"] = Path.GetFileName(_defineConstantsDictionary["ProjectPath"]);
-            }
-
-            // Update SolutionDir to just '.'
-            if (_defineConstantsDictionary.ContainsKey("SolutionDir"))
-            {
-                _defineConstantsDictionary["SolutionDir"] = ".";
-            }
-
-            // Update SolutionPath to just the solution file name
-            if (_defineConstantsDictionary.ContainsKey("SolutionPath"))
-            {
-                _defineConstantsDictionary["SolutionPath"] = Path.GetFileName(_defineConstantsDictionary["SolutionPath"]);
             }
 
             // Update OutDir to just '.''
@@ -257,8 +244,6 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             {
                 BindTrackingFile.ItemSpec = Path.Combine("%outputfolder%", Path.GetFileName(BindTrackingFile.ItemSpec));
             }
-
-
         }
 
         private void GenerateWixBuildCommandLineFile()
@@ -366,26 +351,36 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
         }
 
         /// <summary>
-        /// Converts the DefineConstants string array (format: key=value) to a Dictionary.
+        /// Gets a Dictionary from DefineConstants string array (format: key=value)
         /// </summary>
         private Dictionary<string, string> GetDefineConstantsDictionary()
         {
             var dict = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
             if (DefineConstants == null)
+            {
                 return dict;
+            }
 
             foreach (var entry in DefineConstants)
             {
                 if (string.IsNullOrWhiteSpace(entry))
+                {
                     continue;
+                }
+
                 var idx = entry.IndexOf('=');
-                if (idx < 0)
-                    continue;
-                var key = entry.Substring(0, idx).Trim();
-                var value = entry.Substring(idx + 1).Trim();
-                if (!string.IsNullOrEmpty(key))
-                    dict[key] = value;
+                if (idx > -1)
+                {
+                    var key = entry.Substring(0, idx).Trim();
+                    var value = entry.Substring(idx + 1).Trim();
+
+                    if (!string.IsNullOrEmpty(key))
+                    {
+                        dict[key] = value;
+                    }
+                }
             }
+
             return dict;
         }
 
@@ -397,7 +392,9 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
         private void CopySourceFilesAndContent()
         {
             if (SourceFiles == null || _defineConstantsDictionary == null || string.IsNullOrEmpty(WixpackWorkingDir))
+            {
                 throw new InvalidOperationException("Task not initialized. Run Execute() first.");
+            }
 
             foreach (var sourceFile in SourceFiles)
             {
@@ -450,9 +447,9 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
                                 source = ResolvePath(source);
 
-                                // Handle source-file using preprocessor variables
-                                // replace them with "*"
-                                if (source.Contains("*"))
+                                // Unknown tokens are replaced with "*"
+                                // Process all files that match this patterns
+                                if (source.Contains('*'))
                                 {
                                     // Enumerate all files
                                     // Properly update SourceFile and Id attributes
@@ -483,13 +480,13 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                                         CopySourceFile(Path.GetFileName(dir), filePath);
                                     }
 
+                                    // Update the original attribute to "$(token)\\<filename>"
                                     var originalSource = element.Attribute(sourceAttr)?.Value;
                                     if (!Path.IsPathRooted(originalSource))
                                     {
                                         originalSource = Path.Combine(_wixprojDir, originalSource);
                                     }
 
-                                    // Update the original attribute to "$(token)\\<filename>"
                                     var newTokenizedSourceValue = Path.Combine(Path.GetFileName(Path.GetDirectoryName(originalSource)), Path.GetFileName(originalSource));
                                     element.SetAttributeValue(sourceAttr, newTokenizedSourceValue);
                                 }
@@ -536,10 +533,6 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 }
                 else
                 {
-                    // Old:
-                    // If not found, skip this value
-                    //startIdx = path.IndexOf("$(", endIdx + 1);
-
                     // If not found, replace with "*"
                     path = path.Substring(0, startIdx) + "*" + path.Substring(endIdx + 1);
                 }
