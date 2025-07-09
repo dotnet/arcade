@@ -352,7 +352,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 }
             }
 
-            string commandLine = "C:\\wix5\\tools.fx\\wix.exe build " + string.Join(" ", commandLineArgs);
+            string commandLine = "wix.exe build " + string.Join(" ", commandLineArgs);
             Console.WriteLine("Generated command line: " + commandLine);
 
             StringBuilder createCmdFileContents = new StringBuilder();
