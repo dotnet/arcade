@@ -3035,13 +3035,13 @@ $@"
         [InlineData(true)]
         [InlineData(false)]
         [Trait("Category", "SkipWhenLiveUnitTesting")]
-        public void RunWix3ToolRunsOrFailsProperly(bool deleteWixobjBeforeRunningTool)
+        public void RunWixToolRunsOrFailsProperly(bool deleteWxsBeforeRunningTool)
         {
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
 
-            const string expectedExe = "MsiBootstrapper.exe";
-            const string wixPack = "MsiBootstrapper.exe.wixpack.zip";
-            var wix3ToolsPath = GetWix3ToolPath();
+            const string expectedExe = "MsiBootstrapper5.exe";
+            const string wixPack = "MsiBootstrapper5.exe.wixpack.zip";
+            var wixToolsPath = GetWixToolPath();
             var wixpackPath = GetResourcePath(wixPack);
             var tempDir = Path.GetTempPath();
             string workingDir = Path.Combine(tempDir, "extract", Guid.NewGuid().ToString());
@@ -3055,13 +3055,13 @@ $@"
                 // Unzip the wixpack zip, run the tool, and check the exit code
                 ZipFile.ExtractToDirectory(wixpackPath, workingDir);
 
-                if (deleteWixobjBeforeRunningTool)
+                if (deleteWxsBeforeRunningTool)
                 {
-                    File.Delete(Path.Combine(workingDir, "Bundle.wixobj"));
+                    File.Delete(Path.Combine(workingDir, "bundle.wxs"));
                 }
 
-                BatchSignUtil.RunWixTool(createFileName, outputDir, workingDir, wix3ToolsPath, task.Log).Should().Be(!deleteWixobjBeforeRunningTool);
-                File.Exists(outputFileName).Should().Be(!deleteWixobjBeforeRunningTool);
+                BatchSignUtil.RunWixTool(createFileName, outputDir, workingDir, wixToolsPath, task.Log).Should().Be(!deleteWxsBeforeRunningTool);
+                File.Exists(outputFileName).Should().Be(!deleteWxsBeforeRunningTool);
             }
             finally
             {
@@ -3074,7 +3074,7 @@ $@"
         /// Run a wix tool, but with an empty wix path.
         /// </summary>
         [Fact]
-        public void RunWix3ToolThrowsErrorIfNoWixToolsProvided()
+        public void RunWixToolThrowsErrorIfNoWixToolsProvided()
         {
             var fakeBuildEngine = new FakeBuildEngine();
             var task = new SignToolTask { BuildEngine = fakeBuildEngine };
@@ -3089,13 +3089,13 @@ $@"
         /// provided
         /// </summary>
         [Fact]
-        public void RunWix3ToolThrowsErrorIfWixToolsProvidedButDirDoesNotExist()
+        public void RunWixToolThrowsErrorIfWixToolsProvidedButDirDoesNotExist()
         {
             const string totalWixToolDir = "totally/wix/tools";
             var fakeBuildEngine = new FakeBuildEngine();
             var task = new SignToolTask { BuildEngine = fakeBuildEngine };
 
-            BatchSignUtil.RunWixTool("create.cmd", "foodir", "bardir", "totally/wix3/tools", task.Log).Should().BeFalse();
+            BatchSignUtil.RunWixTool("create.cmd", "foodir", "bardir", "totally/wix/tools", task.Log).Should().BeFalse();
             task.Log.HasLoggedErrors.Should().BeTrue();
             fakeBuildEngine.LogErrorEvents.Should().Contain(e => e.Message.Contains($"WixToolsPath '{totalWixToolDir}' not found."));
         }
