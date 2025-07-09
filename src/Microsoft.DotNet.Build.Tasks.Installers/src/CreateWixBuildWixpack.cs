@@ -1,8 +1,6 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +8,8 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Xml.Linq;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Installers
 {
@@ -65,57 +65,55 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
         public override bool Execute()
         {
-            Console.WriteLine("Executing CreateWixBuildWixpack Task...");
-            _defineConstantsDictionary = GetDefineConstantsDictionary();
-
-            if (string.IsNullOrWhiteSpace(WixpackWorkingDir))
+            try
             {
-                WixpackWorkingDir = Path.Combine(Path.GetTempPath(), "WixpackTemp", Guid.NewGuid().ToString().Split('-')[0]);
-            }
-            
-            _wixprojDir = string.Empty;
+                _defineConstantsDictionary = GetDefineConstantsDictionary();
 
-            if (!_defineConstantsDictionary.TryGetValue("ProjectDir", out _wixprojDir))
+                if (string.IsNullOrWhiteSpace(WixpackWorkingDir))
+                {
+                    WixpackWorkingDir = Path.Combine(Path.GetTempPath(), "WixpackTemp", Guid.NewGuid().ToString().Split('-')[0]);
+                }
+
+                _wixprojDir = string.Empty;
+
+                if (!_defineConstantsDictionary.TryGetValue("ProjectDir", out _wixprojDir))
+                {
+                    throw new InvalidOperationException("ProjectDir not defined in DefineConstants. Task cannot proceed.");
+                }
+
+                _installerFilename = Path.GetFileName(InstallerFile);
+
+                if (Directory.Exists(WixpackWorkingDir))
+                {
+                    Directory.Delete(WixpackWorkingDir, true);
+                }
+                Directory.CreateDirectory(WixpackWorkingDir);
+
+                CopySourceFilesAndContent();
+
+                // Copy wixproj - fail if ProjectPath is not defined
+                if (_defineConstantsDictionary.TryGetValue("ProjectPath", out var projectPath))
+                {
+                    string destPath = Path.Combine(WixpackWorkingDir, Path.GetFileName(projectPath));
+                    File.Copy(projectPath, destPath, overwrite: true);
+                }
+                else
+                {
+                    throw new InvalidOperationException("ProjectPath not defined in DefineConstants. Task cannot proceed.");
+                }
+
+                CopyExtensions();
+                CopyIncludeSearchPathsContents();
+                UpdatePaths();
+                GenerateWixBuildCommandLineFile();
+                CreateWixpackPackage();
+            }
+            catch (Exception e)
             {
-                throw new InvalidOperationException("ProjectDir not defined in DefineConstants. Task cannot proceed.");
+                Log.LogErrorFromException(e, true);
             }
 
-            _installerFilename = Path.GetFileName(InstallerFile);
-
-            if (Directory.Exists(WixpackWorkingDir))
-            {
-                Directory.Delete(WixpackWorkingDir, true);
-            }
-            Directory.CreateDirectory(WixpackWorkingDir);
-
-            CopySourceFilesAndContent();
-
-            // Copy wixproj - fail if ProjectPath is not defined
-            if (_defineConstantsDictionary.TryGetValue("ProjectPath", out var projectPath))
-            {
-                string destPath = Path.Combine(WixpackWorkingDir, Path.GetFileName(projectPath));
-                File.Copy(projectPath, destPath, overwrite: true);
-            }
-            else
-            {
-                Console.WriteLine("ProjectPath not defined in DefineConstants. Unexpected - failure!");
-                // Throw and exception here
-            }
-
-            // copy .sln file if it exists
-            if (_defineConstantsDictionary.TryGetValue("SolutionPath", out var solutionPath))
-            {
-                string destPath = Path.Combine(WixpackWorkingDir, Path.GetFileName(solutionPath));
-                File.Copy(solutionPath, destPath, overwrite: true);
-            }
-
-            CopyExtensions();
-            CopyIncludeSearchPathsContents();
-            UpdatePaths();
-            GenerateWixBuildCommandLineFile();
-            CreateWixpackPackage();
-
-            return true;
+            return !Log.HasLoggedErrors;
         }
 
         private void CopyExtensions()
@@ -166,7 +164,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
                 if (!Directory.Exists(fullSourceDir))
                 {
-                    Console.WriteLine($"IncludeSearchPath directory not found: {fullSourceDir}");
+                    Log.LogWarning($"IncludeSearchPath directory not found: {fullSourceDir}");
                     continue;
                 }
 
@@ -353,7 +351,6 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             }
 
             string commandLine = "wix.exe build " + string.Join(" ", commandLineArgs);
-            Console.WriteLine("Generated command line: " + commandLine);
 
             StringBuilder createCmdFileContents = new StringBuilder();
             createCmdFileContents.AppendLine("@echo off");
@@ -414,7 +411,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
                 if (!File.Exists(xmlPath))
                 {
-                    Console.WriteLine($"Source XML not found: {xmlPath}");
+                    Log.LogWarning($"Source XML not found: {xmlPath}");
                     continue;
                 }
 
@@ -473,7 +470,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                                     {
                                         // We only support one specific scenario when path is in the format:
                                         // <directoryPart>\\*\\<filename>
-                                        Console.WriteLine($"Invalid source format: {source}");
+                                        Log.LogWarning($"Invalid source format: {source}");
                                         continue;
                                     }
 
@@ -519,7 +516,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error processing {copiedXmlPath}: {ex.Message}");
+                    Log.LogError($"Error processing {copiedXmlPath}: {ex.Message}");
                 }
             }
         }
