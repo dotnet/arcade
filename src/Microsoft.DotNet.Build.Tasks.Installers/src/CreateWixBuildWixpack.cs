@@ -75,7 +75,6 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 }
 
                 _wixprojDir = string.Empty;
-
                 if (!_defineConstantsDictionary.TryGetValue("ProjectDir", out _wixprojDir))
                 {
                     throw new InvalidOperationException("ProjectDir not defined in DefineConstants. Task cannot proceed.");
@@ -89,9 +88,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 }
                 Directory.CreateDirectory(WixpackWorkingDir);
 
-                CopySourceFilesAndContent();
-
-                // Copy wixproj - fail if ProjectPath is not defined
+                // Copy wixproj file - fail if ProjectPath is not defined
                 if (_defineConstantsDictionary.TryGetValue("ProjectPath", out var projectPath))
                 {
                     string destPath = Path.Combine(WixpackWorkingDir, Path.GetFileName(projectPath));
@@ -102,6 +99,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                     throw new InvalidOperationException("ProjectPath not defined in DefineConstants. Task cannot proceed.");
                 }
 
+                CopySourceFilesAndContent();
                 CopyExtensions();
                 CopyIncludeSearchPathsContents();
                 UpdatePaths();
@@ -114,19 +112,6 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             }
 
             return !Log.HasLoggedErrors;
-        }
-
-        private void CopyExtensions()
-        {
-            for (int i = 0; i < Extensions.Length; i++)
-            {
-                var extensionPath = Extensions[i].ItemSpec;
-                string filename = Path.GetFileName(extensionPath);
-                CopySourceFile(filename, extensionPath);
-
-                // Update the extension item spec to the new relative path
-                Extensions[i] = new TaskItem(Path.Combine(filename, filename));
-            }
         }
 
         private void CreateWixpackPackage()
@@ -154,13 +139,8 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
             for (int i = 0; i < IncludeSearchPaths.Length; i++)
             {
-                var includePath = IncludeSearchPaths[i];
-
                 // If not rooted, resolve relative to _wixprojDir
-                var fullSourceDir = Path.IsPathRooted(includePath)
-                    ? includePath
-                    : Path.Combine(_wixprojDir, includePath);
-
+                var fullSourceDir = GetAbsoluteSourcePath(IncludeSearchPaths[i]);
                 if (!Directory.Exists(fullSourceDir))
                 {
                     Log.LogWarning($"IncludeSearchPath directory not found: {fullSourceDir}");
@@ -169,29 +149,9 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
                 // Use a random directory name for the destination
                 var randomDirName = Path.GetRandomFileName();
-                var destDir = Path.Combine(WixpackWorkingDir, randomDirName);
-
-                CopyDirectoryRecursive(fullSourceDir, destDir);
-
-                // Update IncludeSearchPaths element to the random directory name only
                 IncludeSearchPaths[i] = randomDirName;
-            }
-        }
 
-        private static void CopyDirectoryRecursive(string sourceDir, string destDir)
-        {
-            Directory.CreateDirectory(destDir);
-
-            foreach (var file in Directory.GetFiles(sourceDir))
-            {
-                var destFile = Path.Combine(destDir, Path.GetFileName(file));
-                File.Copy(file, destFile, overwrite: true);
-            }
-
-            foreach (var dir in Directory.GetDirectories(sourceDir))
-            {
-                var destSubDir = Path.Combine(destDir, Path.GetFileName(dir));
-                CopyDirectoryRecursive(dir, destSubDir);
+                CopyDirectoryRecursive(fullSourceDir, Path.Combine(WixpackWorkingDir, randomDirName));
             }
         }
 
@@ -337,7 +297,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
             string commandLine = "wix.exe build " + string.Join(" ", commandLineArgs);
 
-            StringBuilder createCmdFileContents = new StringBuilder();
+            StringBuilder createCmdFileContents = new();
             createCmdFileContents.AppendLine("@echo off");
             createCmdFileContents.AppendLine("set outputfolder=%1");
             createCmdFileContents.AppendLine("if \"%outputfolder%\" NEQ \"\" (");
@@ -371,8 +331,8 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 var idx = entry.IndexOf('=');
                 if (idx > -1)
                 {
-                    var key = entry.Substring(0, idx).Trim();
-                    var value = entry.Substring(idx + 1).Trim();
+                    var key = entry.Substring(0, idx);
+                    var value = entry.Substring(idx + 1);
 
                     if (!string.IsNullOrEmpty(key))
                     {
@@ -398,17 +358,10 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
             foreach (var sourceFile in SourceFiles)
             {
-                var xmlPath = sourceFile.ItemSpec;
-
-                // if resolvedSource is relative, resolve it against the project directory
-                if (!Path.IsPathRooted(xmlPath))
-                {
-                    xmlPath = Path.Combine(_wixprojDir, xmlPath);
-                }
-
+                var xmlPath = GetAbsoluteSourcePath(sourceFile.ItemSpec);
                 if (!File.Exists(xmlPath))
                 {
-                    Log.LogWarning($"Source XML not found: {xmlPath}");
+                    Log.LogError($"Source file not found: {sourceFile.ItemSpec}");
                     continue;
                 }
 
@@ -447,53 +400,43 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
                                 source = ResolvePath(source);
 
-                                // Unknown tokens are replaced with "*"
-                                // Process all files that match this patterns
-                                if (source.Contains('*'))
+                                // If there are any unprocessed tokens, process all matching file patterns
+                                // We only support one unprocessed token, specified as immediate file parent
+                                // [<path>\\]{pattern}\\<filename>
+                                if (source.Contains("$("))
                                 {
-                                    // Enumerate all files
-                                    // Properly update SourceFile and Id attributes
-                                    // if source is relative, resolve it against the project directory
-                                    if (!Path.IsPathRooted(source))
+                                    int startIdx = source.IndexOf("$(");
+                                    if (startIdx != source.LastIndexOf("$("))
                                     {
-                                        source = Path.Combine(_wixprojDir, source);
-                                    }
-
-                                    // Split source string by "\\*\\" to handle multiple files
-                                    var parts = source.Split(new[] { "\\*\\", "\\*" }, StringSplitOptions.RemoveEmptyEntries);
-                                    // Enumerate directories  in parts[0] directory and copy each file in source string, replacing the "*" with the enumerated directory name
-
-                                    if (parts.Length != 2)
-                                    {
-                                        // We only support one specific scenario when path is in the format:
-                                        // <directoryPart>\\*\\<filename>
-                                        Log.LogWarning($"Invalid source format: {source}");
+                                        Log.LogError($"Multiple unprocessed tokens found in source: {source}.");
                                         continue;
                                     }
 
-                                    string directoryPart = parts[0];
-                                    // Enumerate directories in the directoryPart
-                                    var dirs = Directory.GetDirectories(directoryPart, "*", SearchOption.TopDirectoryOnly);
+                                    string pattern = source.Substring(startIdx, source.IndexOf(')', startIdx + 2) - startIdx + 1);
+
+                                    source = GetAbsoluteSourcePath(source);
+
+                                    var parts = source.Split([$"\\{pattern}\\"], StringSplitOptions.None);
+                                    if (parts.Length > 2 || parts[1].Contains('\\'))
+                                    {
+                                        Log.LogError($"Unsupported source format: {source}");
+                                        continue;
+                                    }
+
+                                    // Enumerate directories in parts[0]
+                                    var dirs = Directory.GetDirectories(parts[0], "*", SearchOption.TopDirectoryOnly);
                                     foreach (var dir in dirs)
                                     {
                                         var filePath = Path.Combine(dir, Path.GetFileName(source));
                                         CopySourceFile(Path.GetFileName(dir), filePath);
                                     }
 
-                                    // Update the original attribute to "$(token)\\<filename>"
-                                    var originalSource = element.Attribute(sourceAttr)?.Value;
-                                    if (!Path.IsPathRooted(originalSource))
-                                    {
-                                        originalSource = Path.Combine(_wixprojDir, originalSource);
-                                    }
-
-                                    var newTokenizedSourceValue = Path.Combine(Path.GetFileName(Path.GetDirectoryName(originalSource)), Path.GetFileName(originalSource));
-                                    element.SetAttributeValue(sourceAttr, newTokenizedSourceValue);
+                                    element.SetAttributeValue(sourceAttr, $"{pattern}\\{parts[1]}");
                                 }
                                 else
                                 {
+                                    // Resolved source is a single file, copy it to a subfolder
                                     var id = element.Attribute(idAttr)?.Value;
-                                    // Resolved source is a single file, copy it to the subfolder
                                     if (string.IsNullOrEmpty(id))
                                     {
                                         id = Path.GetFileName(source);
@@ -525,7 +468,12 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             while (startIdx != -1)
             {
                 int endIdx = path.IndexOf(')', startIdx + 2);
-                if (endIdx == -1) break;
+                if (endIdx == -1)
+                {
+                    Log.LogError($"Unmatched $() in path: {path}");
+                    break;
+                }
+
                 var varName = path.Substring(startIdx + 2, endIdx - (startIdx + 2));
                 if (_defineConstantsDictionary.TryGetValue(varName, out var varValue))
                 {
@@ -533,8 +481,8 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 }
                 else
                 {
-                    // If not found, replace with "*"
-                    path = path.Substring(0, startIdx) + "*" + path.Substring(endIdx + 1);
+                    // We support tokenized paths
+                    break;
                 }
 
                 startIdx = path.IndexOf("$(");
@@ -545,17 +493,11 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
         private void CopySourceFile(string fileId, string source)
         {
-            // Create subfolder in WixpackWorkingDir with the name equal to File@Id
             var destDir = Path.Combine(WixpackWorkingDir, fileId);
             Directory.CreateDirectory(destDir);
 
-            // if source is relative, resolve it against the project directory
-            if (!Path.IsPathRooted(source))
-            {
-                source = Path.Combine(_wixprojDir, source);
-            }
+            source = GetAbsoluteSourcePath(source);
 
-            // Copy the file if it exists
             if (File.Exists(source))
             {
                 var destPath = Path.Combine(destDir, Path.GetFileName(source));
@@ -564,6 +506,45 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             else
             {
                 throw new FileNotFoundException($"Source file not found: {source}");
+            }
+        }
+
+        private void CopyExtensions()
+        {
+            for (int i = 0; i < Extensions.Length; i++)
+            {
+                var extensionPath = Extensions[i].ItemSpec;
+                string filename = Path.GetFileName(extensionPath);
+                CopySourceFile(filename, extensionPath);
+
+                // Update the extension item spec to the new relative path
+                Extensions[i] = new TaskItem(Path.Combine(filename, filename));
+            }
+        }
+
+        private string GetAbsoluteSourcePath(string source)
+        {
+            // If the source is relative, resolve it against the project directory
+            if (!Path.IsPathRooted(source))
+            {
+                return Path.Combine(_wixprojDir, source);
+            }
+
+            return source;
+        }
+
+        private static void CopyDirectoryRecursive(string sourceDir, string destDir)
+        {
+            Directory.CreateDirectory(destDir);
+
+            foreach (var file in Directory.GetFiles(sourceDir))
+            {
+                File.Copy(file, Path.Combine(destDir, Path.GetFileName(file)), overwrite: true);
+            }
+
+            foreach (var dir in Directory.GetDirectories(sourceDir))
+            {
+                CopyDirectoryRecursive(dir, Path.Combine(destDir, Path.GetFileName(dir)));
             }
         }
     }
