@@ -12,8 +12,9 @@ namespace Microsoft.DotNet.Build.Manifest
         UnsupportedV1 = 1,
         UnsupportedV2 = 2,
         V3 = 3,
+        V4 = 4,
         Latest = V3,
-        Dev = 4
+        Dev = V4
     }
 
     public class BuildIdentity

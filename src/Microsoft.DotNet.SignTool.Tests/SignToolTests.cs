@@ -28,7 +28,6 @@ namespace Microsoft.DotNet.SignTool.Tests
         // Default extension based signing information
         private static readonly Dictionary<string, List<SignInfo>> s_fileExtensionSignInfo = new Dictionary<string, List<SignInfo>>()
         {
-            {".js", new List<SignInfo>{ new SignInfo("JSCertificate") } },
             {".jar",  new List<SignInfo>{ new SignInfo("JARCertificate") } },
             {".ps1",  new List<SignInfo>{ new SignInfo("PSCertificate") } },
             {".psd1",  new List<SignInfo>{ new SignInfo("PSDCertificate") } },
@@ -53,7 +52,6 @@ namespace Microsoft.DotNet.SignTool.Tests
         private static readonly Dictionary<string, List<SignInfo>> s_fileExtensionSignInfoWithCollisionId = 
             new Dictionary<string, List<SignInfo>>()
         {
-            {".js", new List<SignInfo>{ new SignInfo("JSCertificate", collisionPriorityId: "123") } },
             {".jar", new List<SignInfo>{ new SignInfo("JARCertificate", collisionPriorityId: "123") } },
             { ".ps1", new List<SignInfo>{ new SignInfo("PSCertificate", collisionPriorityId: "123") } },
             { ".psd1", new List<SignInfo>{ new SignInfo("PSDCertificate", collisionPriorityId: "123") } },
@@ -81,10 +79,6 @@ namespace Microsoft.DotNet.SignTool.Tests
         // Default extension based signing information post build
         private static readonly ITaskItem[] s_fileExtensionSignInfoPostBuild = new ITaskItem[]
         {
-            new TaskItem(".js", new Dictionary<string, string> {
-                { "CertificateName", "JSCertificate" },
-                { SignToolConstants.CollisionPriorityId, "123" }
-            }),
             new TaskItem(".jar", new Dictionary<string, string> {
                 { "CertificateName", "JARCertificate" },
                 { SignToolConstants.CollisionPriorityId, "123" }
@@ -144,10 +138,6 @@ namespace Microsoft.DotNet.SignTool.Tests
             new TaskItem(".vsix", new Dictionary<string, string> {
                 { "CertificateName", "VsixSHA2" },
                 { SignToolConstants.CollisionPriorityId, "123" }
-            }),
-            new TaskItem(".js", new Dictionary<string, string> {
-                { "CertificateName", "JSCertificate" },
-                { SignToolConstants.CollisionPriorityId, "234" }
             }),
             new TaskItem(".jar", new Dictionary<string, string> {
                 { "CertificateName", "JARCertificate" },
@@ -269,6 +259,8 @@ namespace Microsoft.DotNet.SignTool.Tests
             }
         }
 
+        public static bool PlatformSupportsStrongNameAlgorithm { get; } = StrongNameSupportHelper.GetPlatformSupportsRSASHA1();
+
         public SignToolTests(ITestOutputHelper output)
         {
             _tmpDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -346,7 +338,8 @@ namespace Microsoft.DotNet.SignTool.Tests
             var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, dotnetPath: null, msbuildVerbosity: "quiet", _tmpDir, enclosingDir: "", "", wixToolsPath: wixToolsPath, tarToolPath: s_tarToolPath, pkgToolPath: s_pkgToolPath, dotnetTimeout: -1);
 
             var signTool = new FakeSignTool(signToolArgs, task.Log);
-            var configuration = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, additionalCertificateInfo, tarToolPath: s_tarToolPath, pkgToolPath: s_pkgToolPath, snPath: s_snPath, task.Log);
+            // Passing null for the 3rd party check skip as this doesn't affect the generated project.
+            var configuration = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, additionalCertificateInfo, null, tarToolPath: s_tarToolPath, pkgToolPath: s_pkgToolPath, snPath: s_snPath, task.Log);
             var signingInput = configuration.GenerateListOfFiles();
             var util = new BatchSignUtil(
                 task.BuildEngine,
@@ -387,12 +380,14 @@ namespace Microsoft.DotNet.SignTool.Tests
             string[] expected,
             string[] expectedCopyFiles = null,
             Dictionary<string, List<AdditionalCertificateInformation>> additionalCertificateInfo = null,
+            HashSet<string> skip3rdPartyCheckFiles = null,
             string[] expectedErrors = null,
             string[] expectedWarnings = null)
         {
             var engine = new FakeBuildEngine();
             var task = new SignToolTask { BuildEngine = engine };
-            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, additionalCertificateInfo, tarToolPath: s_tarToolPath, pkgToolPath: s_pkgToolPath, snPath: s_snPath, task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, additionalCertificateInfo,
+                skip3rdPartyCheckFiles, tarToolPath: s_tarToolPath, pkgToolPath: s_pkgToolPath, snPath: s_snPath, task.Log).GenerateListOfFiles();
 
             signingInput.FilesToSign.Select(f => f.ToString()).Should().BeEquivalentTo(expected);
             signingInput.FilesToCopy.Select(f => $"{f.Key} -> {f.Value}").Should().BeEquivalentTo(expectedCopyFiles ?? Array.Empty<string>());
@@ -458,9 +453,9 @@ namespace Microsoft.DotNet.SignTool.Tests
 
         private string ExtractArchiveFromDebPackage(string debianPackage, string archiveName, string destinationFolder)
         {
-            var (relativePath, content, contentSize) = ZipData.ReadDebContainerEntries(debianPackage, archiveName).Single();
-            string archive = Path.Combine(destinationFolder, relativePath);
-            File.WriteAllBytes(archive, ((MemoryStream)content).ToArray());
+            var entry = ZipData.ReadDebContainerEntries(debianPackage, archiveName).Single();
+            string archive = Path.Combine(destinationFolder, entry.RelativePath);
+            entry.WriteToFile(archive);
             return archive;
         }
 
@@ -528,7 +523,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
-            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, null, tarToolPath: s_tarToolPath, pkgToolPath: s_pkgToolPath, snPath: s_snPath, task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, null, null, tarToolPath: s_tarToolPath, pkgToolPath: s_pkgToolPath, snPath: s_snPath, task.Log).GenerateListOfFiles();
 
             signingInput.FilesToSign.Should().BeEmpty();
             signingInput.ZipDataMap.Should().BeEmpty();
@@ -713,7 +708,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             });
         }
 
-        [Fact]
+        [ConditionalFact(nameof(PlatformSupportsStrongNameAlgorithm))]
         public void SkipStrongNamingBinaryButDontSkipAuthenticode()
         {
             // List of files to be considered for signing
@@ -990,6 +985,25 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "CoreLibCr
             {
                 $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "EmptyPKT.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
             });
+        }
+
+        [Fact]
+        public void NoWarnThirdPartyLibraryMicrosoftCertificate()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new List<ItemToSign>()
+            {
+                new ItemToSign(GetResourcePath("EmptyPKT.dll"))
+            };
+
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>() { };
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>() { };
+            var noWarn3rdPartySet = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "EmptyPKT.dll" };
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'EmptyPKT.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='Microsoft400'",
+            }, skip3rdPartyCheckFiles: noWarn3rdPartySet);
         }
 
         [WindowsOnlyFact]
@@ -2381,7 +2395,6 @@ $@"
             var itemsToSign = new List<ItemToSign>()
             {
                 new ItemToSign(CreateTestResource("dynalib.dylib"), "123"),
-                new ItemToSign(CreateTestResource("javascript.js"), "123"),
                 new ItemToSign(CreateTestResource("javatest.jar"), "123"),
                 new ItemToSign(CreateTestResource("power.ps1"), "123"),
                 new ItemToSign(CreateTestResource("powerc.psc1"), "123"),
@@ -2398,7 +2411,6 @@ $@"
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
                 "File 'dynalib.dylib' Certificate='DylibCertificate'",
-                "File 'javascript.js' Certificate='JSCertificate'",
                 "File 'javatest.jar' Certificate='JARCertificate'",
                 "File 'power.ps1' Certificate='PSCertificate'",
                 "File 'powerc.psc1' Certificate='PSCCertificate'",
@@ -2413,12 +2425,12 @@ $@"
             var fileExtensionSignInfo = new List<ITaskItem>();
 
             // Validate that multiple entries will collide and fail
-            fileExtensionSignInfo.Add(new TaskItem(".js", new Dictionary<string, string>
+            fileExtensionSignInfo.Add(new TaskItem(".ps1", new Dictionary<string, string>
             {
-                { "CertificateName", "JSCertificate" },
+                { "CertificateName", "PS1Certificate" },
                 { "CollisionPriorityId", "123" }
             }));
-            fileExtensionSignInfo.Add(new TaskItem(".js", new Dictionary<string, string>{
+            fileExtensionSignInfo.Add(new TaskItem(".ps1", new Dictionary<string, string>{
                 { "CertificateName", "None" },
                 { "CollisionPriorityId", "123" }
             }));
@@ -2432,17 +2444,17 @@ $@"
             var fileExtensionSignInfo = new List<ITaskItem>();
 
             // Validate that multiple entries will collide and fail
-            fileExtensionSignInfo.Add(new TaskItem(".js", new Dictionary<string, string>
+            fileExtensionSignInfo.Add(new TaskItem(".ps1", new Dictionary<string, string>
             {
-                { "CertificateName", "JSCertificate" },
+                { "CertificateName", "PS1Certificate" },
                 { "CollisionPriorityId", "123" }
             }));
-            fileExtensionSignInfo.Add(new TaskItem(".js", new Dictionary<string, string>{
+            fileExtensionSignInfo.Add(new TaskItem(".ps1", new Dictionary<string, string>{
                 { "CertificateName", "None" }
             }));
-            fileExtensionSignInfo.Add(new TaskItem(".js", new Dictionary<string, string>
+            fileExtensionSignInfo.Add(new TaskItem(".ps1", new Dictionary<string, string>
             {
-                { "CertificateName", "JSCertificate" },
+                { "CertificateName", "PS1Certificate" },
                 { "CollisionPriorityId", "456" }
             }));
 
@@ -2747,7 +2759,6 @@ $@"
             // List of files to be considered for signing
             var itemsToSign = new List<ItemToSign>()
             {
-                new ItemToSign(CreateTestResource("test.js"), "123"),
                 new ItemToSign(CreateTestResource("test.jar"), "123"),
                 new ItemToSign(CreateTestResource("test.ps1"), "123"),
                 new ItemToSign(CreateTestResource("test.psd1"), "123"),
@@ -2776,7 +2787,6 @@ $@"
             // Overriding information
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
             {
-                { new ExplicitCertificateKey("test.js", collisionPriorityId: "123"), "JSCertificate" },
                 { new ExplicitCertificateKey("test.jar", collisionPriorityId: "123"), "JARCertificate" },
                 { new ExplicitCertificateKey("test.ps1", collisionPriorityId: "123"), "PS1Certificate" },
                 { new ExplicitCertificateKey("test.psd1", collisionPriorityId: "123"), "PSD1Certificate" },
@@ -2809,7 +2819,6 @@ $@"
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
-                "File 'test.js' Certificate='JSCertificate'",
                 "File 'test.jar' Certificate='JARCertificate'",
                 "File 'test.ps1' Certificate='PS1Certificate'",
                 "File 'test.psd1' Certificate='PSD1Certificate'",
@@ -2832,10 +2841,10 @@ $@"
             expectedWarnings: new[]
             {
                 $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "EmptyPKT.dll")}' with Microsoft certificate 'DLLCertificate'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "9", "lib/net461/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate3'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "10", "lib/netstandard2.0/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate4'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "16", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate5'. The library is considered 3rd party library due to its copyright: ''.",
-                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "23", "Simple.dll")}' with Microsoft certificate 'DLLCertificate2'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "8", "lib/net461/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate3'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "9", "lib/netstandard2.0/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate4'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "15", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}' with Microsoft certificate 'DLLCertificate5'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "22", "Simple.dll")}' with Microsoft certificate 'DLLCertificate2'. The library is considered 3rd party library due to its copyright: ''.",
                 $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "Simple.exe")}' with Microsoft certificate 'MacDeveloperHarden'. The library is considered 3rd party library due to its copyright: ''."
             });
         }
@@ -2870,6 +2879,7 @@ $@"
                 new Dictionary<ExplicitCertificateKey, string>(),
                 new Dictionary<string, List<SignInfo>>(),
                 new(),
+                null,
                 tarToolPath: s_tarToolPath,
                 pkgToolPath: s_pkgToolPath,
                 snPath: s_snPath,
@@ -2920,6 +2930,7 @@ $@"
                 new Dictionary<ExplicitCertificateKey, string>(),
                 extensionSignInfo,
                 new(),
+                null,
                 tarToolPath: s_tarToolPath,
                 pkgToolPath: s_pkgToolPath,
                 snPath: s_snPath,
@@ -3091,7 +3102,7 @@ $@"
         /// <summary>
         /// Verify that flipbit works properly by flipping twice.
         /// </summary>
-        [Fact]
+        [ConditionalFact(nameof(PlatformSupportsStrongNameAlgorithm))]
         public void NoFlipButWriteShouldVerify()
         {
             // We're going to open the file and flip a bit in the checksum
@@ -3121,7 +3132,7 @@ $@"
 
         // This binary has had a resource added after it was strong name. This invalidated the checksum too,
         // so we write the expected checksum.
-        [Fact]
+        [ConditionalFact(nameof(PlatformSupportsStrongNameAlgorithm))]
         public void InvalidatedSNSignatureDoesNotValidate()
         {
             using var inputStream = File.OpenRead(GetResourcePath("InvalidatedStrongName.dll"));
@@ -3137,7 +3148,7 @@ $@"
             StrongNameHelper.IsSigned(outputStream).Should().BeFalse();
         }
 
-        [Fact]
+        [ConditionalFact(nameof(PlatformSupportsStrongNameAlgorithm))]
         public void ValidStrongNameSignaturesValidate()
         {
             StrongNameHelper.IsSigned(GetResourcePath("SignedLibrary.dll")).Should().BeTrue();
@@ -3151,7 +3162,7 @@ $@"
             StrongNameHelper.IsSigned_Legacy(GetResourcePath("StrongNamedWithEcmaKey.dll"), s_snPath).Should().BeTrue();
         }
 
-        [Theory]
+        [ConditionalTheory(nameof(PlatformSupportsStrongNameAlgorithm))]
         [InlineData("OpenSigned.dll", "OpenSignedCorrespondingKey.snk", true)]
         [InlineData("DelaySignedWithOpen.dll", "OpenSignedCorrespondingKey.snk", false)]
         public void SigningSignsAsExpected(string file, string key, bool initiallySigned)

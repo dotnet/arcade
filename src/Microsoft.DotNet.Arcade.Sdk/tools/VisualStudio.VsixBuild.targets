@@ -43,14 +43,12 @@
     <IsProductComponent>true</IsProductComponent>
 
     <Ngen Condition="'$(Ngen)' == ''">true</Ngen>
-    <NgenArchitecture Condition="'$(NgenArchitecture)' == ''">All</NgenArchitecture>
     <NgenPriority Condition="'$(NgenPriority)' == ''">3</NgenPriority>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(VisualStudioInsertionComponent)' != ''">
     <ProjectReference Update="@(ProjectReference)">
       <Ngen Condition="'%(Ngen)' == ''">true</Ngen>
-      <NgenArchitecture Condition="'%(NgenArchitecture)' == '' and '%(Ngen)' != 'false'">All</NgenArchitecture>
       <NgenPriority Condition="'%(NgenPriority)' == '' and '%(Ngen)' != 'false'">3</NgenPriority>
     </ProjectReference>
   </ItemGroup>
@@ -276,26 +274,4 @@
   <PropertyGroup>
     <GetVsixSourceItemsDependsOn>$(GetVsixSourceItemsDependsOn);_GetVsixTemplateItems</GetVsixSourceItemsDependsOn>
   </PropertyGroup>
-
-  <!--
-    Make sure to include information about inputs and outputs to CreateVsixContainer for fast up-to-date check.
-  -->
-  <PropertyGroup Condition="'$(VSToolsPath)' != '' and ('$(IsVsixProject)' == 'true' or '$(GeneratePkgDefFile)' == 'true')">
-    <CollectUpToDateCheckInputDesignTimeDependsOn>$(CollectUpToDateCheckInputDesignTimeDependsOn);CollectVsixUpToDateCheckInput</CollectUpToDateCheckInputDesignTimeDependsOn>
-    <CollectUpToDateCheckBuiltDesignTimeDependsOn>$(CollectUpToDateCheckBuiltDesignTimeDependsOn);CollectVsixUpToDateCheckBuilt</CollectUpToDateCheckBuiltDesignTimeDependsOn>
-  </PropertyGroup>
-
-  <Target Name="CollectVsixUpToDateCheckInput" DependsOnTargets="GetVsixSourceItems;FindSourceVsixManifest">
-    <ItemGroup Condition="$(CreateVsixContainer)">
-      <UpToDateCheckInput Include="@(VSIXSourceItem)" Set="VSIXSet"/>
-      <UpToDateCheckInput Include="@(SourceVsixManifest)" Set="VSIXSet" />
-    </ItemGroup>
-  </Target>
-
-  <Target Name="CollectVsixUpToDateCheckBuilt">
-    <ItemGroup Condition="$(CreateVsixContainer)">
-      <UpToDateCheckOutput Include="$(TargetVsixContainer)" Set="VSIXSet"/>
-    </ItemGroup>
-  </Target>
-
 </Project>
