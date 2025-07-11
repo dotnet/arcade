@@ -265,7 +265,7 @@ function GetDotNetInstallScript([string] $dotnetRoot) {
     # Check if the script is older than 30 days
     $fileAge = (Get-Date) - (Get-Item $installScript).LastWriteTime
     if ($fileAge.Days -gt 30) {
-      Write-Host "Existing install script is $($fileAge.Days) days old, re-downloading..."
+      Write-Host "Existing install script is too old, re-downloading..."
       $shouldDownload = $true
     }
   }

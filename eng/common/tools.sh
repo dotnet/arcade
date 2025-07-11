@@ -310,10 +310,10 @@ function GetDotNetInstallScript {
     local download_time=$(cat "$timestamp_file" 2>/dev/null || echo "0")
     local current_time=$(date +%s)
     local age_seconds=$((current_time - download_time))
-    local age_days=$((age_seconds / 86400))
     
-    if [[ $age_days -gt 30 ]]; then
-      echo "Existing install script is $age_days days old, re-downloading..."
+    # 30 days = 30 * 24 * 60 * 60 = 2592000 seconds
+    if [[ $age_seconds -gt 2592000 ]]; then
+      echo "Existing install script is too old, re-downloading..."
       should_download=true
     fi
   else
