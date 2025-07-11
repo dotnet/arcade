@@ -350,7 +350,7 @@ function GetDotNetInstallScript {
       }
     fi
     
-    # Create timestamp file to track download time
+    # Create timestamp file to track download time in seconds from epoch
     date +%s > "$timestamp_file"
   fi
   # return value
