@@ -300,27 +300,26 @@ function GetDotNetInstallScript {
   local root=$1
   local install_script="$root/dotnet-install.sh"
   local install_script_url="https://builds.dotnet.microsoft.com/dotnet/scripts/$dotnetInstallScriptVersion/dotnet-install.sh"
+  local timestamp_file="$root/.dotnet-install.timestamp"
   local should_download=false
 
   if [[ ! -a "$install_script" ]]; then
     should_download=true
-  else
-    # Check if the script is older than 30 days
-    if [[ "$(uname)" == "Darwin" ]]; then
-      # macOS uses different stat format
-      local file_time=$(stat -f %m "$install_script" 2>/dev/null || echo "0")
-    else
-      # Linux stat format
-      local file_time=$(stat -c %Y "$install_script" 2>/dev/null || echo "0")
-    fi
+  elif [[ -f "$timestamp_file" ]]; then
+    # Check if the script is older than 30 days using timestamp file
+    local download_time=$(cat "$timestamp_file" 2>/dev/null || echo "0")
     local current_time=$(date +%s)
-    local age_seconds=$((current_time - file_time))
+    local age_seconds=$((current_time - download_time))
     local age_days=$((age_seconds / 86400))
     
     if [[ $age_days -gt 30 ]]; then
       echo "Existing install script is $age_days days old, re-downloading..."
       should_download=true
     fi
+  else
+    # No timestamp file exists, assume script is old and re-download
+    echo "No timestamp found for existing install script, re-downloading..."
+    should_download=true
   fi
 
   if [[ "$should_download" == true ]]; then
@@ -350,6 +349,9 @@ function GetDotNetInstallScript {
         ExitWithExitCode $exit_code
       }
     fi
+    
+    # Create timestamp file to track download time
+    date +%s > "$timestamp_file"
   fi
   # return value
   _GetDotNetInstallScript="$install_script"
