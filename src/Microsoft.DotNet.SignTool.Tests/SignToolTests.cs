@@ -276,7 +276,7 @@ namespace Microsoft.DotNet.SignTool.Tests
         private string GetWixToolPath()
         {
             return Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "wix", "net472", "x64");
-	}
+        }
 
         private static string s_snPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "sn", "sn.exe");
         private static string s_tarToolPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "tar", "Microsoft.Dotnet.Tar.dll");
