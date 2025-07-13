@@ -27,21 +27,21 @@
       <Uri>https://github.com/dotnet/templating</Uri>
       <Sha>43b5827697e501c442eb75ffff832cd4df2514fe</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.25353.1">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="10.0.0-beta.25358.3">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>aea743edf7c9345cfdbdf9593756973baadc6b37</Sha>
+      <Sha>4e526204e83e615efe8eb5743be7fbccfa4e492a</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="10.0.0-beta.25353.1">
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="10.0.0-beta.25358.3">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>aea743edf7c9345cfdbdf9593756973baadc6b37</Sha>
+      <Sha>4e526204e83e615efe8eb5743be7fbccfa4e492a</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.ProductConstructionService.Client" Version="1.1.0-beta.25351.1">
+    <Dependency Name="Microsoft.DotNet.ProductConstructionService.Client" Version="1.1.0-beta.25361.1">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>22c6a0562dd81ab9178c095de04832999981f3f7</Sha>
+      <Sha>2e55418d0b56aa4b6b888c0e6801b2f832f32002</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.DarcLib" Version="1.1.0-beta.25351.1">
+    <Dependency Name="Microsoft.DotNet.DarcLib" Version="1.1.0-beta.25361.1">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>22c6a0562dd81ab9178c095de04832999981f3f7</Sha>
+      <Sha>2e55418d0b56aa4b6b888c0e6801b2f832f32002</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="10.0.0-prerelease.25318.1">
       <Uri>https://github.com/dotnet/xharness</Uri>
