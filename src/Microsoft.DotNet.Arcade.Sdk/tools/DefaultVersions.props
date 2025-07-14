@@ -81,7 +81,7 @@
     <XUnitRunnerConsoleVersion Condition="'$(XUnitRunnerConsoleVersion)' == ''">$(XUnitVersion)</XUnitRunnerConsoleVersion>
     <XUnitRunnerVisualStudioVersion Condition="'$(XUnitRunnerVisualStudioVersion)' == ''">3.1.1</XUnitRunnerVisualStudioVersion>
 
-    <XUnitV3Version Condition="'$(XUnitV3Version)' == ''">2.0.3</XUnitV3Version>
+    <XUnitV3Version Condition="'$(XUnitV3Version)' == ''">3.0.0</XUnitV3Version>
     <MicrosoftTestingPlatformVersion Condition="'$(MicrosoftTestingPlatformVersion)' == ''">1.7.3</MicrosoftTestingPlatformVersion>
 
     <MSTestVersion Condition="'$(MSTestVersion)' == ''">3.9.3</MSTestVersion>
