@@ -46,7 +46,7 @@
   <ItemGroup Condition="'$(_ImportOrUseTooling)' == 'true'">
     <!-- Copy of 'sn.exe' in form of NuGet package. -->
     <PackageReference Include="sn" Version="$(SNVersion)" IsImplicitlyDefined="true" />
-    <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)"  IsImplicitlyDefined="true" />
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core.props" Version="$(MicrosoftVisualStudioEngMicroBuildCoreVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="MicroBuild.Core.Sentinel" Version="1.0.0" IsImplicitlyDefined="true" />
     <PackageReference Include="vswhere" Version="$(VSWhereVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.Signed.Wix" Version="$(MicrosoftSignedWixVersion)" IsImplicitlyDefined="true" />
