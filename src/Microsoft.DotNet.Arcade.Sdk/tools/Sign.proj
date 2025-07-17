@@ -88,7 +88,7 @@
         LogDir="$(ArtifactsLogDir)"
         DotNetPath="$(_DotNetCorePath)"
         SNBinaryPath="$(SNBinaryPath)"
-        MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"
+        MicroBuildCorePath="$(NuGetPackageRoot)microsoft.visualstudioeng.microbuild.core\$(MicrosoftVisualStudioEngMicroBuildCoreVersion)"
         Wix3ToolsPath="$(WixInstallPath)"
         WixToolsPath="$(NuGetPackageRoot)microsoft.wixtoolset.sdk\$(MicrosoftWixToolsetVersion)\tools\net472\x64"
         TarToolPath="$(NuGetPackageRoot)microsoft.dotnet.tar\$(MicrosoftDotNetTarVersion)\tools\$(NetToolCurrent)\any\Microsoft.Dotnet.Tar.dll"
