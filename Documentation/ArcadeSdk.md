@@ -1008,6 +1008,57 @@ Properties that define TargetFramework for use by projects so their targeting ea
 
 Set to `true` to indicate that the project is a test utility project. Such are projects that offer utilities to run tests. Example: `Microsoft.DotNet.XUnitExtensions.csproj` in Arcade. This makes are mark them as non-shipping and excluded from source build.
 
+### `OnTestsExecutedProject` (string)
+
+The path to an MSBuild projects in the consumer repository with `OnTestsExecuted` target, that will be executed whenever project's test have been executed. This can be useful for custom test reporting functionality.
+
+For example:
+
+`tests/Directory.Build.props` in the consumer project:
+```xml
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))" />
+
+  <PropertyGroup>
+    <OnTestsExecutedProperties>$(OnTestsExecutedProperties);TestReporter=true</OnTestsExecutedProperties>
+    <OnTestsExecutedProject>$(RepositoryEngineeringDir)TestReporter.proj</OnTestsExecutedProject>
+  </PropertyGroup>
+</Project>
+```
+
+`eng/TestReporter.proj` in the consumer project:
+```xml
+<Project>
+
+  <!--
+    Available properties:
+      - Project: The project name of the test project.
+      - LogFile: The full path to the test log file (stdout).
+      - TrxFile: The full path to the test trx file.
+      - ExitCode: The exit code of the test run.
+      - TestEnvironment: The test environment (e.g., 'net9.0|x64').
+      - TestAssembly: The full path to the test assembly that was executed.
+      - TargetFramework: The target framework of the test assembly (e.g., 'net9.0').
+      - any custom properties defined in `OnTestsExecutedProperties`.
+  -->
+  <Target Name="OnTestsExecuted" DependsOnTargets="TestsExecuted;TestsFailed">
+  </Target>
+
+  <Target Name="TestsExecuted" Condition=" '$(ExitCode)' == 0 ">
+    <Message Importance="high" Text="Running TestReporter for successful tests in $(TestEnvironment)..." />
+  </Target>
+
+  <Target Name="TestsFailed" Condition=" '$(ExitCode)' != 0 ">
+    <Message Importance="high" Text="Running TestReporter for failed tests in $(TestEnvironment)..." />
+  </Target>
+
+</Project>
+```
+
+### `OnTestsExecutedProperties` (list of strings)
+
+List of custom properties to be passed to `OnTestsExecutedProject` whenever project's test have been executed. 
+
 ### `SkipTests` (bool)
 
 Set to `true` in a test project to skip running tests.
