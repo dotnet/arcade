@@ -26,6 +26,7 @@
       <MsiArch>$(InstallerTargetArchitecture)</MsiArch>
     </PropertyGroup>
 
+    <!-- TODO not all of these are required all the time. e.g. only bundle requires WixBalExtension -->
     <Error
       Text="WiX tools not found. Please install package 'Microsoft.Wix'."
       Condition="!Exists('$(PkgMicrosoft_Wix)')" />
@@ -46,12 +47,17 @@
       Text="WiX tools not found. Please install package 'Microsoft.WixToolset.Util.wixext'."
       Condition="!Exists('$(PkgMicrosoft_WixToolset_Util_wixext)')" />
 
+    <Error
+      Text="WiX tools not found. Please install package 'Microsoft.WixToolset.Bal.wixext'."
+      Condition="!Exists('$(PkgMicrosoft_WixToolset_Bal_wixext)')" />
     <PropertyGroup>
       <WixExeDir>$(PkgMicrosoft_Wix)\tools\net6.0\any\</WixExeDir>
       <WixExtensionsDir>wixext5</WixExtensionsDir>
       <WixUIExtensionDir>$(PkgMicrosoft_WixToolset_UI_wixext)\$(WixExtensionsDir)\</WixUIExtensionDir>
       <WixDependencyExtensionDir>$(PkgMicrosoft_WixToolset_Dependency_wixext)\$(WixExtensionsDir)\</WixDependencyExtensionDir>
       <WixUtilExtensionDir>$(PkgMicrosoft_WixToolset_Util_wixext)\$(WixExtensionsDir)\</WixUtilExtensionDir>
+      <WixBalExtensionDir>$(PkgMicrosoft_WixToolset_Bal_wixext)\$(WixExtensionsDir)\</WixBalExtensionDir>
+      <!-- <WixTagExtensionDir>$(PkgMicrosoft_WixToolset_Tag_wixext)\$(WixExtensionsDir)\</WixTagExtensionDir> -->
     </PropertyGroup>
   </Target>
 
@@ -132,9 +138,9 @@
 
   <Target Name="UseBundleWixProject" DependsOnTargets="GenerateBundleThemeVariables">
     <ItemGroup>
-      <WixExtensions Include="WixBalExtension.dll" />
-      <WixExtensions Include="WixTagExtension.dll" />
+      <WixExtensions Include="$(WixBalExtensionDir)\WixToolset.BootstrapperApplications.wixext.dll" />
       <WixExtensions Include="$(WixDependencyExtensionDir)\WixToolset.Dependency.wixext.dll" />
+      <WixExtensions Include="$(WixUtilExtensionDir)\WixToolset.Util.wixext.dll" />
 
       <WixSrcFile Include="$(MSBuildThisFileDirectory)bundle/bundle.wxs" />
       <WixSrcFile Include="$(MSBuildThisFileDirectory)bundle/upgradePolicies.wxs" />
