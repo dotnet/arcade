@@ -1263,6 +1263,39 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 symbolTargetType: SymbolPublishVisibility.Internal,
                 flatten: false),
 
+            // Aspire 9.x
+            new TargetChannelConfig(
+                id: 8103,
+                isInternal: false,
+                publishingInfraVersion: PublishingInfraVersion.Latest,
+                akaMSChannelNames: ["9/aspire"],
+                akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
+                akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
+                targetFeeds: DotNet9Feeds,
+                symbolTargetType: SymbolPublishVisibility.Public),
+
+            // Aspire 9.x RCs
+            new TargetChannelConfig(
+                id: 8104,
+                isInternal: false,
+                publishingInfraVersion: PublishingInfraVersion.Latest,
+                akaMSChannelNames: ["9/aspire/rc"],
+                akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
+                akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
+                targetFeeds: DotNet9Feeds,
+                symbolTargetType: SymbolPublishVisibility.Public),
+
+            // Aspire 9.x GA
+            new TargetChannelConfig(
+                id: 8105,
+                isInternal: false,
+                publishingInfraVersion: PublishingInfraVersion.Latest,
+                akaMSChannelNames: ["9/aspire/ga"],
+                akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
+                akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
+                targetFeeds: DotNet9Feeds,
+                symbolTargetType: SymbolPublishVisibility.Public),
+
             // General Testing,
             new TargetChannelConfig(
                 id: 529,
@@ -1531,6 +1564,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             // VS 17.15
             new TargetChannelConfig(
                 id: 6989,
+                isInternal: false,
+                publishingInfraVersion: PublishingInfraVersion.Latest,
+                akaMSChannelNames: [],
+                akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
+                akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
+                targetFeeds: DotNetToolsFeeds,
+                symbolTargetType: SymbolPublishVisibility.Public,
+                flatten: false),
+            // 18.0
+            new TargetChannelConfig(
+                id: 7987,
                 isInternal: false,
                 publishingInfraVersion: PublishingInfraVersion.Latest,
                 akaMSChannelNames: [],
