@@ -3,6 +3,7 @@
           Outputs="%(TestToRun.ResultsStdOutPath)"
           Condition="'@(TestToRun)' != ''">
     <PropertyGroup>
+      <_TestAssembly>%(TestToRun.Identity)</_TestAssembly>
       <_TestEnvironment>%(TestToRun.EnvironmentDisplay)</_TestEnvironment>
       <_TestRunner>%(TestToRun.RunCommand)</_TestRunner>
       <_TestRuntime>%(TestToRun.TestRuntime)</_TestRuntime>
