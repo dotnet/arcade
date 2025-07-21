@@ -27,6 +27,6 @@
   </ItemGroup>  
 
   <Import Project="..\VSTest.targets" Condition=" '$(EnableMSTestRunner)' == 'false' " />
-  <Import Project="..\Microsoft.Testing.Platform.targets" Condition=" '$(EnableMSTestRunner)' == 'true' " />
+  <Import Project="..\Microsoft.Testing.Platform\Microsoft.Testing.Platform.targets" Condition=" '$(EnableMSTestRunner)' == 'true' " />
 
 </Project>
