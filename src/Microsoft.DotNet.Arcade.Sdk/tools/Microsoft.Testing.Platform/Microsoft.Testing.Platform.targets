@@ -16,7 +16,7 @@
     </PropertyGroup>
 
     <!-- Validate that non-Core workloads use executable files, not DLL files -->
-    <Error Condition="'$(_TestRunner)' != 'Core' and !$(_TestRunner.EndsWith('.exe', StringComparison.OrdinalIgnoreCase))" 
+    <Error Condition="'$(_TestRuntime)' != 'Core' and !$(_TestRunner.EndsWith('.exe', StringComparison.OrdinalIgnoreCase))" 
            Text="Microsoft.Testing.Platform runner requires an executable (.exe) file (for non-.NET workloads), but was given: '$(_TestRunner)'. Please set &lt;OutputType&gt;Exe&lt;/OutputType&gt; in your project file." />
 
     <PropertyGroup>
