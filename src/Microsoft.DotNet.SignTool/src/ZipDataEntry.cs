@@ -80,4 +80,5 @@ namespace Microsoft.DotNet.SignTool
                 _stream = null;
             }
         }
+    }
 }
