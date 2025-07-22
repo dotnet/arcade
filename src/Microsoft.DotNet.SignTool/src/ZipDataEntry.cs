@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.SignTool
     {
         string _relativePath;
         Stream _stream;
-        bool streamOwned = false;
+        bool _streamOwned = false;
         ImmutableArray<byte> _contentHash;
 
         public ZipDataEntry(string relativePath, Stream contentStream) : this(relativePath, contentStream, contentStream?.Length ?? 0)
@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.SignTool
                 // if we can't seek we need to copy the stream into a (seekable) MemoryStream so we can compute the content hash
                 _stream = new MemoryStream((int)contentSize);
                 contentStream.CopyTo(_stream);
-                streamOwned = true;
+                _streamOwned = true;
                 _stream.Position = 0;
             }
 
@@ -74,11 +74,11 @@ namespace Microsoft.DotNet.SignTool
 
         public void Dispose()
         {
-            if (streamOwned)
+            if (_streamOwned)
             {
                 _stream.Dispose();
-                _stream = null;
             }
+            _stream = null;
         }
     }
 }
