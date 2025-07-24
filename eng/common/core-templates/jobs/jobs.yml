@@ -83,7 +83,6 @@ jobs:
   - template: /eng/common/core-templates/jobs/source-build.yml
     parameters:
       is1ESPipeline: ${{ parameters.is1ESPipeline }}
-      allCompletedJobId: Source_Build_Complete
       ${{ each parameter in parameters.sourceBuildParameters }}:
         ${{ parameter.key }}: ${{ parameter.value }}
 
