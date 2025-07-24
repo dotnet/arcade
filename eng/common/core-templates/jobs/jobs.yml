@@ -107,8 +107,6 @@ jobs:
         - ${{ if eq(parameters.publishBuildAssetsDependsOn, '') }}:
           - ${{ each job in parameters.jobs }}:
             - ${{ job.job }}
-        - ${{ if eq(parameters.enableSourceBuild, true) }}:
-          - Source_Build_Complete
 
         runAsPublic: ${{ parameters.runAsPublic }}
         publishAssetsImmediately: ${{ or(parameters.publishAssetsImmediately, parameters.isAssetlessBuild) }}
