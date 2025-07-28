@@ -2955,6 +2955,47 @@ $@"
             });
         }
 
+        [Fact]
+        public void GetExecutableType_DetectsCorrectFormats()
+        {
+            // Test PE file format
+            var peFile = CreateTestResource("test.exe");
+            var peData = new byte[68];
+            peData[0] = 0x4D; peData[1] = 0x5A; // MZ header
+            peData[60] = 64; // PE offset at 64
+            peData[64] = 0x50; peData[65] = 0x45; // PE signature
+            File.WriteAllBytes(peFile, peData);
+            
+            Assert.Equal("PE", ContentUtil.GetExecutableType(peFile));
+
+            // Test ELF file format
+            var elfFile = CreateTestResource("test_elf");
+            var elfData = new byte[] { 0x7F, 0x45, 0x4C, 0x46, 0x01, 0x01, 0x01, 0x00 }; // ELF magic + padding
+            File.WriteAllBytes(elfFile, elfData);
+            
+            Assert.Equal("ELF", ContentUtil.GetExecutableType(elfFile));
+
+            // Test Mach-O file format (32-bit)
+            var machoFile = CreateTestResource("test_macho");
+            var machoData = new byte[8];
+            BitConverter.GetBytes(0xFEEDFACE).CopyTo(machoData, 0);
+            File.WriteAllBytes(machoFile, machoData);
+            
+            Assert.Equal("MachO", ContentUtil.GetExecutableType(machoFile));
+
+            // Test unknown format
+            var unknownFile = CreateTestResource("test_unknown");
+            File.WriteAllBytes(unknownFile, new byte[] { 0x12, 0x34, 0x56, 0x78 });
+            
+            Assert.Null(ContentUtil.GetExecutableType(unknownFile));
+
+            // Test empty file
+            var emptyFile = CreateTestResource("test_empty");
+            File.WriteAllBytes(emptyFile, new byte[0]);
+            
+            Assert.Null(ContentUtil.GetExecutableType(emptyFile));
+        }
+
         [Theory]
         [MemberData(nameof(GetSignableExtensions))]
         public void MissingCertificateName(string extension)
@@ -3319,6 +3360,54 @@ $@"
                 Action shouldFail = () => StrongNameHelper.Sign(inputStream, GetResourcePath("OpenSignedCorrespondingKey.snk"));
                 shouldFail.Should().Throw<InvalidOperationException>();
             }
+        }
+
+        [Fact]
+        public void ExecutableTypeValidation()
+        {
+            // Test valid ExecutableType values
+            var task = new SignToolTask
+            {
+                BuildEngine = new FakeBuildEngine(),
+                ItemsToSign = Array.Empty<ITaskItem>(),
+                StrongNameSignInfo = Array.Empty<ITaskItem>(),
+                FileSignInfo = new ITaskItem[]
+                {
+                    new TaskItem("dotnet.exe") { ItemSpec = "dotnet.exe" }.SetMetadata("ExecutableType", "PE").SetMetadata("CertificateName", "TestCert"),
+                    new TaskItem("dotnet") { ItemSpec = "dotnet" }.SetMetadata("ExecutableType", "ELF").SetMetadata("CertificateName", "TestCert"),
+                    new TaskItem("dotnet") { ItemSpec = "dotnet" }.SetMetadata("ExecutableType", "MachO").SetMetadata("CertificateName", "TestCert")
+                },
+                LogDir = "LogDir",
+                TempDir = "TempDir",
+                DryRun = true,
+                TestSign = true,
+                DotNetPath = CreateTestResource("dotnet.fake"),
+                AllowEmptySignList = true
+            };
+            
+            task.Execute().Should().BeTrue();
+            task.Log.HasLoggedErrors.Should().BeFalse();
+
+            // Test invalid ExecutableType value
+            task = new SignToolTask
+            {
+                BuildEngine = new FakeBuildEngine(),
+                ItemsToSign = Array.Empty<ITaskItem>(),
+                StrongNameSignInfo = Array.Empty<ITaskItem>(),
+                FileSignInfo = new ITaskItem[]
+                {
+                    new TaskItem("test.exe") { ItemSpec = "test.exe" }.SetMetadata("ExecutableType", "INVALID").SetMetadata("CertificateName", "TestCert")
+                },
+                LogDir = "LogDir",
+                TempDir = "TempDir", 
+                DryRun = true,
+                TestSign = true,
+                DotNetPath = CreateTestResource("dotnet.fake"),
+                AllowEmptySignList = true
+            };
+            
+            task.Execute().Should().BeFalse();
+            task.Log.HasLoggedErrors.Should().BeTrue();
         }
     }
 }

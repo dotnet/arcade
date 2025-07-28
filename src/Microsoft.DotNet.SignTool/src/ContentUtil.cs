@@ -141,7 +141,8 @@ namespace Microsoft.DotNet.SignTool
                         if (bytesRead >= 64)
                         {
                             uint peOffset = BitConverter.ToUInt32(buffer, 60);
-                            if (peOffset < stream.Length - 4)
+                            // Validate PE offset is reasonable and within bounds
+                            if (peOffset >= 64 && peOffset < stream.Length - 4 && peOffset < 0x10000)
                             {
                                 stream.Seek(peOffset, SeekOrigin.Begin);
                                 var peSignature = new byte[4];
