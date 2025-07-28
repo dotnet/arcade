@@ -308,6 +308,9 @@ namespace Microsoft.DotNet.SignTool
             PEInfo peInfo = null;
             SignedFileContentKey signedFileContentKey = new SignedFileContentKey(file.ContentHash, file.FileName);
 
+            // Detect executable type for matching FileSignInfo entries
+            string executableType = ContentUtil.GetExecutableType(file.FullPath);
+
             // First check for zero length files. These occasionally occur in python and
             // cannot be signed.
             if (file.ContentHash == ContentUtil.EmptyFileContentHash)
@@ -415,11 +418,28 @@ namespace Microsoft.DotNet.SignTool
 
                 // Check if we have more specific sign info:
                 matchedNameTokenFramework = _fileSignInfo.TryGetValue(
-                    new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, peInfo.TargetFramework, _hashToCollisionIdMap[signedFileContentKey]),
+                    new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, peInfo.TargetFramework, _hashToCollisionIdMap[signedFileContentKey], executableType),
                     out explicitCertificateName);
+                
+                // If no match with ExecutableType, try without it for backward compatibility
+                if (!matchedNameTokenFramework)
+                {
+                    matchedNameTokenFramework = _fileSignInfo.TryGetValue(
+                        new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, peInfo.TargetFramework, _hashToCollisionIdMap[signedFileContentKey]),
+                        out explicitCertificateName);
+                }
+                
                 matchedNameToken = !matchedNameTokenFramework && _fileSignInfo.TryGetValue(
-                    new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]),
+                    new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey], executableType: executableType),
                     out explicitCertificateName);
+                
+                // If no match with ExecutableType, try without it for backward compatibility
+                if (!matchedNameToken)
+                {
+                    matchedNameToken = !matchedNameTokenFramework && _fileSignInfo.TryGetValue(
+                        new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]),
+                        out explicitCertificateName);
+                }
 
                 fileSpec = matchedNameTokenFramework ? $" (PublicKeyToken = {peInfo.PublicKeyToken}, Framework = {peInfo.TargetFramework})" :
                         matchedNameToken ? $" (PublicKeyToken = {peInfo.PublicKeyToken})" : string.Empty;
@@ -452,8 +472,16 @@ namespace Microsoft.DotNet.SignTool
             // We didn't find any specific information for PE files using PKT + TargetFramework
             if (explicitCertificateName == null)
             {
+                // First try with ExecutableType
                 matchedName = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(file.FileName,
-                    collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]), out explicitCertificateName);
+                    collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey], executableType: executableType), out explicitCertificateName);
+                
+                // If no match with ExecutableType, try without it for backward compatibility
+                if (!matchedName)
+                {
+                    matchedName = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(file.FileName,
+                        collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]), out explicitCertificateName);
+                }
             }
 
             // If has overriding info, is it for ignoring the file?

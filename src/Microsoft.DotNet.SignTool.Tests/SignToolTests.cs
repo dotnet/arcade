@@ -2912,6 +2912,49 @@ $@"
             });
         }
 
+        [Fact]
+        public void ExecutableTypeFileSignInfos()
+        {
+            // Create test executables with different formats
+            var peFile = CreateTestResource("dotnet.exe");
+            var elfFile = CreateTestResource("dotnet");
+            var machoFile = CreateTestResource("dotnet");
+            
+            // Create PE format bytes in the PE file
+            File.WriteAllBytes(peFile, new byte[] { 0x4D, 0x5A }.Concat(new byte[58]).Concat(BitConverter.GetBytes(64u)).Concat(new byte[] { 0x50, 0x45, 0x00, 0x00 }).Concat(new byte[100]).ToArray());
+            
+            // Create ELF format bytes in the ELF file  
+            File.WriteAllBytes(elfFile, new byte[] { 0x7F, 0x45, 0x4C, 0x46 }.Concat(new byte[100]).ToArray());
+            
+            // Create Mach-O format bytes in the Mach-O file
+            File.WriteAllBytes(machoFile, BitConverter.GetBytes(0xFEEDFACEu).Concat(new byte[100]).ToArray());
+
+            // List of files to be considered for signing
+            var itemsToSign = new List<ItemToSign>()
+            {
+                new ItemToSign(peFile, "123"),
+                new ItemToSign(elfFile, "123"),
+                new ItemToSign(machoFile, "123")
+            };
+
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
+
+            // File-specific signing information with ExecutableType
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
+            {
+                { new ExplicitCertificateKey("dotnet.exe", executableType: "PE", collisionPriorityId: "123"), "WindowsCertificate" },
+                { new ExplicitCertificateKey("dotnet", executableType: "ELF", collisionPriorityId: "123"), "LinuxCertificate" },
+                { new ExplicitCertificateKey("dotnet", executableType: "MachO", collisionPriorityId: "123"), "MacDeveloperHarden" },
+            };
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'dotnet.exe' Certificate='WindowsCertificate'",
+                "File 'dotnet' Certificate='LinuxCertificate'",
+                "File 'dotnet' Certificate='MacDeveloperHarden'",
+            });
+        }
+
         [Theory]
         [MemberData(nameof(GetSignableExtensions))]
         public void MissingCertificateName(string extension)
