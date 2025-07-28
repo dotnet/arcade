@@ -418,28 +418,12 @@ namespace Microsoft.DotNet.SignTool
 
                 // Check if we have more specific sign info:
                 matchedNameTokenFramework = _fileSignInfo.TryGetValue(
-                    new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, peInfo.TargetFramework, _hashToCollisionIdMap[signedFileContentKey], executableType),
+                    new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, peInfo.TargetFramework, _hashToCollisionIdMap[signedFileContentKey]),
                     out explicitCertificateName);
-                
-                // If no match with ExecutableType, try without it for backward compatibility
-                if (!matchedNameTokenFramework)
-                {
-                    matchedNameTokenFramework = _fileSignInfo.TryGetValue(
-                        new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, peInfo.TargetFramework, _hashToCollisionIdMap[signedFileContentKey]),
-                        out explicitCertificateName);
-                }
                 
                 matchedNameToken = !matchedNameTokenFramework && _fileSignInfo.TryGetValue(
-                    new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey], executableType: executableType),
+                    new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]),
                     out explicitCertificateName);
-                
-                // If no match with ExecutableType, try without it for backward compatibility
-                if (!matchedNameToken)
-                {
-                    matchedNameToken = !matchedNameTokenFramework && _fileSignInfo.TryGetValue(
-                        new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]),
-                        out explicitCertificateName);
-                }
 
                 fileSpec = matchedNameTokenFramework ? $" (PublicKeyToken = {peInfo.PublicKeyToken}, Framework = {peInfo.TargetFramework})" :
                         matchedNameToken ? $" (PublicKeyToken = {peInfo.PublicKeyToken})" : string.Empty;
