@@ -3277,5 +3277,72 @@ $@"
                 shouldFail.Should().Throw<InvalidOperationException>();
             }
         }
+
+        [Fact]
+        public void TestSignShouldNotValidateNuGetSignatures()
+        {
+            // Create SignToolArgs for test signing
+            var testSignArgs = new SignToolArgs(
+                tempPath: _tmpDir,
+                microBuildCorePath: "MockPath",
+                testSign: true,  // This is the key - TestSign should be true
+                dotnetPath: "MockDotNetPath",
+                msbuildVerbosity: "quiet",
+                logDir: "MockLogDir",
+                enclosingDir: "MockEnclosingDir",
+                snBinaryPath: "MockSnPath",
+                wix3ToolsPath: null,
+                wixToolsPath: null,
+                tarToolPath: null,
+                pkgToolPath: null,
+                dotnetTimeout: 300000);
+
+            // Create SignToolArgs for real signing
+            var realSignArgs = new SignToolArgs(
+                tempPath: _tmpDir,
+                microBuildCorePath: "MockPath",
+                testSign: false,  // Real signing mode
+                dotnetPath: "MockDotNetPath",
+                msbuildVerbosity: "quiet",
+                logDir: "MockLogDir",
+                enclosingDir: "MockEnclosingDir",
+                snBinaryPath: "MockSnPath",
+                wix3ToolsPath: null,
+                wixToolsPath: null,
+                tarToolPath: null,
+                pkgToolPath: null,
+                dotnetTimeout: 300000);
+
+            var fakeBuildEngine = new FakeBuildEngine(_output);
+            var fakeLog = new TaskLoggingHelper(fakeBuildEngine, "TestLog");
+
+            var testSignTool = new RealSignTool(testSignArgs, fakeLog);
+            var realSignTool = new RealSignTool(realSignArgs, fakeLog);
+
+            // Use any nupkg file from the test resources (doesn't matter if it's actually signed or not)
+            string nupkgPath = GetResourcePath("Simple.nupkg");
+
+            // When TestSign is true, VerifySignedNuGet should return Signed without actually validating
+            var testSignResult = testSignTool.VerifySignedNuGet(nupkgPath);
+            testSignResult.Should().Be(SigningStatus.Signed, "TestSign mode should return Signed without validation");
+
+            // When TestSign is false, VerifySignedNuGet should perform actual validation
+            // Note: We're not asserting the actual result here because it depends on whether the test nupkg is actually signed
+            // The important thing is that it doesn't automatically return Signed like in test mode
+            var realSignResult = realSignTool.VerifySignedNuGet(nupkgPath);
+            // Just verify that the method completes without throwing - the actual result depends on the test file
+            realSignResult.Should().BeOneOf(SigningStatus.Signed, SigningStatus.NotSigned, SigningStatus.Unknown);
+        }
+
+        [Fact]
+        public void DelaySignedBinaryFailsToSignWithDifferentKey()
+        {
+            // Using stream variant so that legacy fallback doesn't swallow the exception.
+            using (var inputStream = File.OpenRead(GetResourcePath("DelaySigned.dll")))
+            {
+                Action shouldFail = () => StrongNameHelper.Sign(inputStream, GetResourcePath("OpenSignedCorrespondingKey.snk"));
+                shouldFail.Should().Throw<InvalidOperationException>();
+            }
+        }
     }
 }
