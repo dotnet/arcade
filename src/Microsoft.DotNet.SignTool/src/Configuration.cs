@@ -309,7 +309,7 @@ namespace Microsoft.DotNet.SignTool
             SignedFileContentKey signedFileContentKey = new SignedFileContentKey(file.ContentHash, file.FileName);
 
             // Detect executable type for matching FileSignInfo entries
-            string executableType = ContentUtil.GetExecutableType(file.FullPath);
+            ExecutableType executableType = ContentUtil.GetExecutableType(file.FullPath);
 
             // First check for zero length files. These occasionally occur in python and
             // cannot be signed.
@@ -457,14 +457,18 @@ namespace Microsoft.DotNet.SignTool
             if (explicitCertificateName == null)
             {
                 // First try with ExecutableType
-                matchedName = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(file.FileName,
+                var matchedNameAndExecutableType = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(file.FileName,
                     collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey], executableType: executableType), out explicitCertificateName);
                 
                 // If no match with ExecutableType, try without it for backward compatibility
-                if (!matchedName)
+                if (!matchedNameAndExecutableType)
                 {
                     matchedName = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(file.FileName,
                         collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]), out explicitCertificateName);
+                }
+                else
+                {
+                    matchedName = matchedNameAndExecutableType;
                 }
             }
 
