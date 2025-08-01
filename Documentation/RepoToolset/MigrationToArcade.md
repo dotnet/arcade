@@ -19,7 +19,6 @@ Below is a list of changes required to migrate to Arcade.
        searchPattern: `artifacts\$(BuildConfiguration)\packages\*Shipping\*.nupkg`
   3. Remove PublishOutputToSymStore property from projects if your projects used it before.
      - By default Windows PDBs for all shipping projects are published to symbol server.
-     - PublishWindowsPdb property can be used to suppress publishing Windows PDB for the project.
   4. Review usages of $(PackageOutputPath)
      Replace with `$(ArtifactsShippingPackagesDir)` or `$(ArtifactsNonShippingPackagesDir)`.
 
