@@ -543,6 +543,7 @@ namespace Microsoft.DotNet.SignTool
                     var publicKeyToken = item.GetMetadata("PublicKeyToken");
                     var certificateName = item.GetMetadata("CertificateName");
                     var collisionPriorityId = item.GetMetadata(SignToolConstants.CollisionPriorityId);
+                    var executableType = item.GetMetadata("ExecutableType");
 
                     if (fileName.IndexOfAny(new[] { '/', '\\' }) >= 0)
                     {
@@ -568,10 +569,16 @@ namespace Microsoft.DotNet.SignTool
                         continue;
                     }
 
-                    var key = new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework, collisionPriorityId);
+                    if (!string.IsNullOrEmpty(executableType) && !IsValidExecutableType(executableType))
+                    {
+                        Log.LogError($"ExecutableType metadata for {nameof(FileSignInfo)} is invalid: '{executableType}'. Valid values are 'PE', 'MachO', and 'ELF'.");
+                        continue;
+                    }
+
+                    var key = new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework, collisionPriorityId, executableType);
                     if (map.TryGetValue(key, out var existingCert))
                     {
-                        Log.LogError($"Duplicate entries in {nameof(FileSignInfo)} with the same key ('{fileName}', '{publicKeyToken}', '{targetFramework}'): '{existingCert}', '{certificateName}'.");
+                        Log.LogError($"Duplicate entries in {nameof(FileSignInfo)} with the same key ('{fileName}', '{publicKeyToken}', '{targetFramework}', '{executableType}'): '{existingCert}', '{certificateName}'.");
                         continue;
                     }
 
@@ -602,6 +609,11 @@ namespace Microsoft.DotNet.SignTool
             if (pkt.Length != 16) return false;
 
             return pkt.ToLower().All(c => (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z'));
+        }
+
+        private bool IsValidExecutableType(string executableType)
+        {
+            return executableType == "PE" || executableType == "MachO" || executableType == "ELF";
         }
     }
 }

@@ -103,5 +103,67 @@ namespace Microsoft.DotNet.SignTool
                 return string.Empty;
             }
         }
+
+        /// <summary>
+        /// Determines the executable type of a file by examining its binary format.
+        /// Returns PE, MachO, ELF, or None if the format is not recognized.
+        /// </summary>
+        /// <param name="filePath">Path to the file to examine</param>
+        /// <returns>The executable type or None if not recognized</returns>
+        public static ExecutableType GetExecutableType(string filePath)
+        {
+            try
+            {
+                using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                {
+                    if (stream.Length < 4)
+                        return ExecutableType.None;
+
+                    var buffer = new byte[64]; // Read enough for PE header check
+                    int bytesRead = stream.Read(buffer, 0, buffer.Length);
+                    if (bytesRead < 4)
+                        return ExecutableType.None;
+
+                    // Check for ELF magic: 7F 45 4C 46
+                    if (buffer[0] == 0x7F && buffer[1] == 0x45 && buffer[2] == 0x4C && buffer[3] == 0x46)
+                        return ExecutableType.ELF;
+
+                    // Check for Mach-O magic numbers
+                    uint magic = BitConverter.ToUInt32(buffer, 0);
+                    if (magic == 0xFEEDFACE || magic == 0xFEEDFACF || 
+                        magic == 0xCEFAEDFE || magic == 0xCFFAEDFE)
+                        return ExecutableType.MachO;
+
+                    // Check for PE format: starts with MZ header
+                    if (buffer[0] == 0x4D && buffer[1] == 0x5A) // "MZ"
+                    {
+                        // For PE files, we need to check the PE signature
+                        if (bytesRead >= 64)
+                        {
+                            uint peOffset = BitConverter.ToUInt32(buffer, 60);
+                            // Validate PE offset is reasonable and within bounds
+                            if (peOffset >= 64 && peOffset < stream.Length - 4 && peOffset < 0x10000)
+                            {
+                                stream.Seek(peOffset, SeekOrigin.Begin);
+                                var peSignature = new byte[4];
+                                if (stream.Read(peSignature, 0, 4) == 4)
+                                {
+                                    // Check for "PE\0\0"
+                                    if (peSignature[0] == 0x50 && peSignature[1] == 0x45 && 
+                                        peSignature[2] == 0x00 && peSignature[3] == 0x00)
+                                        return ExecutableType.PE;
+                                }
+                            }
+                        }
+                    }
+
+                    return ExecutableType.None;
+                }
+            }
+            catch
+            {
+                return ExecutableType.None;
+            }
+        }
     }
 }
