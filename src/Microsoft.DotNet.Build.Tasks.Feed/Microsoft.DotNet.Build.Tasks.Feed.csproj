@@ -54,9 +54,11 @@
     <Compile Include="..\Common\Internal\EnumExtensions.cs" />
   </ItemGroup>
 
-  <!-- Task is not supported on Framework -->
+  <!-- Most tasks are not supported on NETFramework. Add only those that we need -->
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
-    <Compile Remove="src\PublishBuildToMaestro.cs" />
+    <Compile Remove="@(Compile)" />
+    <Compile Include="src\PushToBuildStorage.cs" />
+    <Compile Include="src\common\NativeMethods.cs" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(DotNetBuildSourceOnly)' == 'true'">
