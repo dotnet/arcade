@@ -3,7 +3,7 @@ parameters:
   enableSbom: true
   runAsPublic: false
   PackageVersion: 9.0.0
-  BuildDropPath: '$(Build.SourcesDirectory)/artifacts'
+  BuildDropPath: '$(Build.Repository.LocalPath)/artifacts'
 
 jobs:
 - template: /eng/common/core-templates/job/job.yml

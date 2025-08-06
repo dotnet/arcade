@@ -12,7 +12,7 @@ parameters:
   # variable is not available in template expression. _SignType has a very large proliferation across .NET, so replacing it is tough.
   microbuildUseESRP: true
   # Location of the MicroBuild output folder
-  microBuildOutputFolder: '$(Build.SourcesDirectory)'
+  microBuildOutputFolder: '$(Build.Repository.LocalPath)'
 
   continueOnError: false
 

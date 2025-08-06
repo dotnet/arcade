@@ -117,7 +117,7 @@ jobs:
         azureSubscription: "Darc: Maestro Production"
         scriptType: ps
         scriptLocation: scriptPath
-        scriptPath: $(Build.SourcesDirectory)/eng/common/sdk-task.ps1
+        scriptPath: $(Build.Repository.LocalPath)/eng/common/sdk-task.ps1
         arguments: -task PublishBuildAssets -restore -msbuildEngine dotnet
           /p:ManifestsPath='$(Build.StagingDirectory)/AssetManifests'
           /p:IsAssetlessBuild=${{ parameters.isAssetlessBuild }}
@@ -137,7 +137,7 @@ jobs:
           Add-Content -Path $filePath -Value "$(DefaultChannels)"
           Add-Content -Path $filePath -Value $(IsStableBuild)
 
-          $symbolExclusionfile = "$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt"
+          $symbolExclusionfile = "$(Build.Repository.LocalPath)/eng/SymbolPublishingExclusionsFile.txt"
           if (Test-Path -Path $symbolExclusionfile)
           {
             Write-Host "SymbolExclusionFile exists"
@@ -177,7 +177,7 @@ jobs:
           azureSubscription: "Darc: Maestro Production"
           scriptType: ps
           scriptLocation: scriptPath
-          scriptPath: $(Build.SourcesDirectory)/eng/common/post-build/publish-using-darc.ps1
+          scriptPath: $(Build.Repository.LocalPath)/eng/common/post-build/publish-using-darc.ps1
           arguments: >
             -BuildId $(BARBuildId)
             -PublishingInfraVersion 3
