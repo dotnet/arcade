@@ -81,10 +81,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         public const string FeedStagingInternalForChecksums = "https://dotnetbuilds.blob.core.windows.net/internal-checksums";
 
         public const string FeedDevForInstallers = "https://dotnetbuilds.blob.core.windows.net/dev";
-        public const string FeedDevForChecksums = "https://dotnetbuilds.blob.core.windows.net/dev-checksums";
-
         public const string FeedDevInternalForInstallers = "https://dotnetbuilds.blob.core.windows.net/dev-internal";
-        public const string FeedDevInternalForChecksums = "https://dotnetbuilds.blob.core.windows.net/dev-internal-checksums";
 
         private const string FeedDev = "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json";
 
@@ -295,16 +292,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         {
             (Packages, FeedDev, AssetSelection.ShippingOnly),
             (Packages, FeedDev, AssetSelection.NonShippingOnly),
-            (InstallersAndSymbols, FeedStagingForInstallers),
-            (TargetFeedContentType.Checksum, FeedStagingForChecksums),
+            (InstallersAndSymbols, FeedDevForInstallers),
+            (TargetFeedContentType.Checksum, FeedDevForInstallers),
         };
 
         private static TargetFeedSpecification[] GeneralTestingInternalFeeds =
         {
             (Packages, FeedGeneralTestingInternal, AssetSelection.ShippingOnly),
             (Packages, FeedGeneralTestingInternal, AssetSelection.NonShippingOnly),
-            (InstallersAndSymbols, FeedStagingInternalForInstallers),
-            (TargetFeedContentType.Checksum, FeedStagingInternalForChecksums),
+            (InstallersAndSymbols, FeedDevInternalForInstallers),
+            (TargetFeedContentType.Checksum, FeedDevInternalForInstallers),
         };
         #endregion
 
