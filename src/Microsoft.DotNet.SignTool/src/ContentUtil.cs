@@ -14,6 +14,7 @@ using System.Reflection;
 using System.Diagnostics;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using System.Reflection.Metadata.Ecma335;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -119,7 +120,7 @@ namespace Microsoft.DotNet.SignTool
                     if (stream.Length < 4)
                         return ExecutableType.None;
 
-                    var buffer = new byte[64]; // Read enough for PE header check
+                    var buffer = new byte[4]; // Read enough for MachO and ELF magic numbers
                     int bytesRead = stream.Read(buffer, 0, buffer.Length);
                     if (bytesRead < 4)
                         return ExecutableType.None;
@@ -134,30 +135,12 @@ namespace Microsoft.DotNet.SignTool
                         magic == 0xCEFAEDFE || magic == 0xCFFAEDFE)
                         return ExecutableType.MachO;
 
-                    // Check for PE format: starts with MZ header
-                    if (buffer[0] == 0x4D && buffer[1] == 0x5A) // "MZ"
+                    stream.Seek(0, SeekOrigin.Begin);
+                    using (var peReader = new PEReader(stream))
                     {
-                        // For PE files, we need to check the PE signature
-                        if (bytesRead >= 64)
-                        {
-                            uint peOffset = BitConverter.ToUInt32(buffer, 60);
-                            // Validate PE offset is reasonable and within bounds
-                            if (peOffset >= 64 && peOffset < stream.Length - 4 && peOffset < 0x10000)
-                            {
-                                stream.Seek(peOffset, SeekOrigin.Begin);
-                                var peSignature = new byte[4];
-                                if (stream.Read(peSignature, 0, 4) == 4)
-                                {
-                                    // Check for "PE\0\0"
-                                    if (peSignature[0] == 0x50 && peSignature[1] == 0x45 && 
-                                        peSignature[2] == 0x00 && peSignature[3] == 0x00)
-                                        return ExecutableType.PE;
-                                }
-                            }
-                        }
+                        // This will throw if it's not a PE.
+                        return (peReader.PEHeaders.PEHeaderStartOffset != 0) ? ExecutableType.PE : ExecutableType.None;
                     }
-
-                    return ExecutableType.None;
                 }
             }
             catch

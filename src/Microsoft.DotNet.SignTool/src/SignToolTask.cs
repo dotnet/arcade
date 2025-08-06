@@ -543,7 +543,7 @@ namespace Microsoft.DotNet.SignTool
                     var publicKeyToken = item.GetMetadata("PublicKeyToken");
                     var certificateName = item.GetMetadata("CertificateName");
                     var collisionPriorityId = item.GetMetadata(SignToolConstants.CollisionPriorityId);
-                    var executableType = item.GetMetadata("ExecutableType");
+                    var executableTypeMetadata = item.GetMetadata("ExecutableType");
 
                     if (fileName.IndexOfAny(new[] { '/', '\\' }) >= 0)
                     {
@@ -569,16 +569,17 @@ namespace Microsoft.DotNet.SignTool
                         continue;
                     }
 
-                    if (!string.IsNullOrEmpty(executableType) && !IsValidExecutableType(executableType))
+                    ExecutableType executableType = ExecutableType.None;
+                    if (!string.IsNullOrEmpty(executableTypeMetadata) && !Enum.TryParse<ExecutableType>(executableTypeMetadata, true, out executableType))
                     {
-                        Log.LogError($"ExecutableType metadata for {nameof(FileSignInfo)} is invalid: '{executableType}'. Valid values are 'PE', 'MachO', and 'ELF'.");
+                        Log.LogError($"ExecutableType metadata for {nameof(FileSignInfo)} is invalid: '{executableTypeMetadata}'. Valid values are 'PE', 'MachO', and 'ELF'.");
                         continue;
                     }
 
                     var key = new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework, collisionPriorityId, executableType);
                     if (map.TryGetValue(key, out var existingCert))
                     {
-                        Log.LogError($"Duplicate entries in {nameof(FileSignInfo)} with the same key ('{fileName}', '{publicKeyToken}', '{targetFramework}', '{executableType}'): '{existingCert}', '{certificateName}'.");
+                        Log.LogError($"Duplicate entries in {nameof(FileSignInfo)} with the same key ('{fileName}', '{publicKeyToken}', '{targetFramework}', '{executableTypeMetadata}'): '{existingCert}', '{certificateName}'.");
                         continue;
                     }
 
@@ -613,7 +614,7 @@ namespace Microsoft.DotNet.SignTool
 
         private bool IsValidExecutableType(string executableType)
         {
-            return executableType == "PE" || executableType == "MachO" || executableType == "ELF";
+            return Enum.TryParse<ExecutableType>(executableType, out var type);
         }
     }
 }

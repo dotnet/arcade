@@ -2916,18 +2916,9 @@ $@"
         public void ExecutableTypeFileSignInfos()
         {
             // Create test executables with different formats
-            var peFile = CreateTestResource("dotnet.exe");
-            var elfFile = CreateTestResource("dotnet");
-            var machoFile = CreateTestResource("dotnet");
-            
-            // Create PE format bytes in the PE file
-            File.WriteAllBytes(peFile, new byte[] { 0x4D, 0x5A }.Concat(new byte[58]).Concat(BitConverter.GetBytes(64u)).Concat(new byte[] { 0x50, 0x45, 0x00, 0x00 }).Concat(new byte[100]).ToArray());
-            
-            // Create ELF format bytes in the ELF file  
-            File.WriteAllBytes(elfFile, new byte[] { 0x7F, 0x45, 0x4C, 0x46 }.Concat(new byte[100]).ToArray());
-            
-            // Create Mach-O format bytes in the Mach-O file
-            File.WriteAllBytes(machoFile, BitConverter.GetBytes(0xFEEDFACEu).Concat(new byte[100]).ToArray());
+            var peFile = GetResourcePath("windows-exe.exe");
+            var elfFile = GetResourcePath("linux-elf");
+            var machoFile = GetResourcePath("macos-macho");
 
             // List of files to be considered for signing
             var itemsToSign = new List<ItemToSign>()
@@ -2942,16 +2933,16 @@ $@"
             // File-specific signing information with ExecutableType
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
             {
-                { new ExplicitCertificateKey("dotnet.exe", executableType: "PE", collisionPriorityId: "123"), "WindowsCertificate" },
-                { new ExplicitCertificateKey("dotnet", executableType: "ELF", collisionPriorityId: "123"), "LinuxCertificate" },
-                { new ExplicitCertificateKey("dotnet", executableType: "MachO", collisionPriorityId: "123"), "MacDeveloperHarden" },
+                { new ExplicitCertificateKey("windows-exe.exe", executableType: ExecutableType.PE, collisionPriorityId: "123"), "WindowsCertificate" },
+                { new ExplicitCertificateKey("linux-elf", executableType: ExecutableType.ELF, collisionPriorityId: "123"), "LinuxCertificate" },
+                { new ExplicitCertificateKey("macos-macho", executableType: ExecutableType.MachO, collisionPriorityId: "123"), "MacDeveloperHarden" },
             };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
-                "File 'dotnet.exe' Certificate='WindowsCertificate'",
-                "File 'dotnet' Certificate='LinuxCertificate'",
-                "File 'dotnet' Certificate='MacDeveloperHarden'",
+                "File 'windows-exe.exe' Certificate='WindowsCertificate'",
+                "File 'linux-elf' Certificate='LinuxCertificate'",
+                "File 'macos-macho' Certificate='MacDeveloperHarden'",
             });
         }
 
@@ -2959,27 +2950,16 @@ $@"
         public void GetExecutableType_DetectsCorrectFormats()
         {
             // Test PE file format
-            var peFile = CreateTestResource("test.exe");
-            var peData = new byte[68];
-            peData[0] = 0x4D; peData[1] = 0x5A; // MZ header
-            peData[60] = 64; // PE offset at 64
-            peData[64] = 0x50; peData[65] = 0x45; // PE signature
-            File.WriteAllBytes(peFile, peData);
-            
+            var peFile = GetResourcePath("windows-exe.exe");
+
             Assert.Equal(ExecutableType.PE, ContentUtil.GetExecutableType(peFile));
 
-            // Test ELF file format
-            var elfFile = CreateTestResource("test_elf");
-            var elfData = new byte[] { 0x7F, 0x45, 0x4C, 0x46, 0x01, 0x01, 0x01, 0x00 }; // ELF magic + padding
-            File.WriteAllBytes(elfFile, elfData);
+            var elfFile = GetResourcePath("linux-elf");
             
             Assert.Equal(ExecutableType.ELF, ContentUtil.GetExecutableType(elfFile));
 
             // Test Mach-O file format (32-bit)
-            var machoFile = CreateTestResource("test_macho");
-            var machoData = new byte[8];
-            BitConverter.GetBytes(0xFEEDFACE).CopyTo(machoData, 0);
-            File.WriteAllBytes(machoFile, machoData);
+            var machoFile = GetResourcePath("macos-macho");
             
             Assert.Equal(ExecutableType.MachO, ContentUtil.GetExecutableType(machoFile));
 
@@ -2994,6 +2974,18 @@ $@"
             File.WriteAllBytes(emptyFile, new byte[0]);
             
             Assert.Equal(ExecutableType.None, ContentUtil.GetExecutableType(emptyFile));
+
+            // Test a PE file is just the DOS header
+            var smallPeFile = CreateTestResource("test_small_pe");
+            File.WriteAllBytes(smallPeFile, new byte[] { 0x4D, 0x5A }); // Just the DOS header
+
+            Assert.Equal(ExecutableType.None, ContentUtil.GetExecutableType(smallPeFile));
+
+            // Test a PE file that doesn't have a full PE header (no offset)
+            var incompletePeFile = CreateTestResource("test_incomplete_pe");
+            File.WriteAllBytes(incompletePeFile, new byte[] { 0x4D, 0x5A, 0x90, 0x00, 0x03, 0x00, 0x00, 0x00 }); // DOS header with no PE header
+
+            Assert.Equal(ExecutableType.None, ContentUtil.GetExecutableType(incompletePeFile));
         }
 
         [Theory]
@@ -3373,9 +3365,21 @@ $@"
                 StrongNameSignInfo = Array.Empty<ITaskItem>(),
                 FileSignInfo = new ITaskItem[]
                 {
-                    new TaskItem("dotnet.exe") { ItemSpec = "dotnet.exe" }.SetMetadata("ExecutableType", "PE").SetMetadata("CertificateName", "TestCert"),
-                    new TaskItem("dotnet") { ItemSpec = "dotnet" }.SetMetadata("ExecutableType", "ELF").SetMetadata("CertificateName", "TestCert"),
-                    new TaskItem("dotnet") { ItemSpec = "dotnet" }.SetMetadata("ExecutableType", "MachO").SetMetadata("CertificateName", "TestCert")
+                    new TaskItem("dotnet.exe", new Dictionary<string, string>()
+                    {
+                        { "ExecutableType", "PE"},
+                        { "CertificateName", "TestCert" }
+                    }),
+                    new TaskItem("dotnet", new Dictionary<string, string>()
+                    {
+                        { "ExecutableType", "ELF"},
+                        { "CertificateName", "TestCert" }
+                    }),
+                    new TaskItem("dotnet", new Dictionary<string, string>()
+                    {
+                        { "ExecutableType", "MachO"},
+                        { "CertificateName", "TestCert" }
+                    })
                 },
                 LogDir = "LogDir",
                 TempDir = "TempDir",
@@ -3396,7 +3400,11 @@ $@"
                 StrongNameSignInfo = Array.Empty<ITaskItem>(),
                 FileSignInfo = new ITaskItem[]
                 {
-                    new TaskItem("test.exe") { ItemSpec = "test.exe" }.SetMetadata("ExecutableType", "INVALID").SetMetadata("CertificateName", "TestCert")
+                    new TaskItem("test.exe", new Dictionary<string, string>()
+                    {
+                        { "ExecutableType", "INVALID" },
+                        { "CertificateName", "TestCert" }
+                    })
                 },
                 LogDir = "LogDir",
                 TempDir = "TempDir", 

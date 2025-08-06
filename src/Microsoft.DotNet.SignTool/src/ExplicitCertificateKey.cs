@@ -25,17 +25,6 @@ namespace Microsoft.DotNet.SignTool
             ExecutableType = executableType;
         }
 
-        public ExplicitCertificateKey(string fileName, string publicKeyToken = null, string targetFramework = null, string collisionPriorityId = null, string executableType = null)
-        {
-            Debug.Assert(fileName != null);
-
-            FileName = fileName;
-            PublicKeyToken = publicKeyToken ?? "";
-            TargetFramework = targetFramework ?? "";
-            CollisionPriorityId = collisionPriorityId ?? "";
-            ExecutableType = ParseExecutableType(executableType);
-        }
-
         private static ExecutableType ParseExecutableType(string executableType)
         {
             if (string.IsNullOrEmpty(executableType))
@@ -54,7 +43,7 @@ namespace Microsoft.DotNet.SignTool
             => obj is ExplicitCertificateKey key && Equals(key);
 
         public override int GetHashCode()
-            => Hash.Combine(FileName.GetHashCode(), PublicKeyToken.GetHashCode(), TargetFramework.GetHashCode(), ExecutableType.GetHashCode());
+            => Hash.Combine(Hash.Combine(FileName.GetHashCode(), PublicKeyToken.GetHashCode()), Hash.Combine(TargetFramework.GetHashCode(), ExecutableType.GetHashCode()));
 
         bool IEquatable<ExplicitCertificateKey>.Equals(ExplicitCertificateKey other)
             => FileName == other.FileName && 
