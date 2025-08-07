@@ -76,10 +76,22 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                     WixpackWorkingDir = Path.Combine(Path.GetTempPath(), "WixpackTemp", Guid.NewGuid().ToString().Split('-')[0]);
                 }
 
-                _wixprojDir = string.Empty;
-                if (!_defineConstantsDictionary.TryGetValue("ProjectDir", out _wixprojDir))
+                if (_defineConstantsDictionary.TryGetValue("ProjectDir", out _wixprojDir))
                 {
-                    throw new InvalidOperationException("ProjectDir not defined in DefineConstants. Task cannot proceed.");
+                    // Copy wixproj file - fail if ProjectPath is not defined
+                    if (_defineConstantsDictionary.TryGetValue("ProjectPath", out var projectPath))
+                    {
+                        string destPath = Path.Combine(WixpackWorkingDir, Path.GetFileName(projectPath));
+                        File.Copy(projectPath, destPath, overwrite: true);
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("ProjectPath not defined in DefineConstants. Task cannot proceed.");
+                    }
+                }
+                else
+                {
+                    _wixprojDir = string.Empty;
                 }
 
                 _installerFilename = Path.GetFileName(InstallerFile);

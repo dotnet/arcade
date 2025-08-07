@@ -12,9 +12,9 @@
     Locate WiX tools.
   -->
   <Target Name="_AcquireWix">
-    <!-- <PropertyGroup>
-      <LightCommandObjDir>$(IntermediateOutputPath)/lightcommand/</LightCommandObjDir>
-    </PropertyGroup> -->
+    <PropertyGroup>
+      <LightCommandSrcDir>$(IntermediateOutputPath)/lightcommand/</LightCommandSrcDir>
+    </PropertyGroup>
 
     <PropertyGroup>
       <_WixIntermediateOutputPath>$(BaseIntermediateOutputPath)wix</_WixIntermediateOutputPath>
@@ -57,7 +57,6 @@
       <WixDependencyExtensionDir>$(PkgMicrosoft_WixToolset_Dependency_wixext)\$(WixExtensionsDir)\</WixDependencyExtensionDir>
       <WixUtilExtensionDir>$(PkgMicrosoft_WixToolset_Util_wixext)\$(WixExtensionsDir)\</WixUtilExtensionDir>
       <WixBalExtensionDir>$(PkgMicrosoft_WixToolset_Bal_wixext)\$(WixExtensionsDir)\</WixBalExtensionDir>
-      <!-- <WixTagExtensionDir>$(PkgMicrosoft_WixToolset_Tag_wixext)\$(WixExtensionsDir)\</WixTagExtensionDir> -->
     </PropertyGroup>
   </Target>
 
@@ -369,20 +368,20 @@
       WorkingDirectory="$(WixExeDir)"
       StandardOutputImportance="normal"
       IgnoreStandardErrorWarningFormat="true"
-      RetryDelayBase="2" />
+      RetryDelayBase="1" />
 
-    <!-- TODO fix the following command: -->
-    <!--<CreateLightCommandPackageDrop
-      OriginalLightCommand="$(_lightCommand)"
-      LightCommandWorkingDir="$(LightCommandObjDir)"
-      OutputFolder="$(ArtifactsNonShippingPackagesDir)"
-      NoLogo="true"
+    <!-- TODO this fails on preprocessor directives -->
+    <!-- <CreateWixBuildWixpack
       Cultures="en-us"
+      DefineConstants="@(CandleVariables->'var.%(Identity)=%(Value)')"
+      Extensions="@(WixExtensions)"
       InstallerFile="$(_OutInstallerFile)"
-      WixExtensions="@(WixExtensions)"
-      WixSrcFiles="@(WixSrcFile -> '$(WixObjDir)%(Filename).wixobj');@(DirectoryToHarvest -> '%(WixObjFile)')">
+      IntermediateDirectory="$(IntermediateOutputPath)en-us"
+      OutputFolder="$(ArtifactsNonShippingPackagesDir)"
+      SourceFiles="@(WixSrcFile)"
+      WixpackWorkingDir="$(LightCommandSrcDir)">
       <Output TaskParameter="OutputFile" PropertyName="_LightCommandPackageNameOutput" />
-    </CreateLightCommandPackageDrop>-->
+    </CreateWixBuildWixpack> -->
   </Target>
 
   <!--
@@ -510,6 +509,7 @@
     <Message Text="$(MSBuildProjectName) -> $(NupkgOutputFile)" Importance="High" />
   </Target>
 
+  <!-- TODO insignia needs to be wix burn detach/attach command -->
   <Target Name="ExtractEngineBundle"
           DependsOnTargets="
             GetInstallerGenerationFlags;
