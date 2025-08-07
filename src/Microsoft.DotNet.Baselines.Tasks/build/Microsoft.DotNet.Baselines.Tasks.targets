@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <_MicrosoftDotNetBaselinesTasksDir>$(MSBuildThisFileDirectory)../tools/netframework/</_MicrosoftDotNetBaselinesTasksDir>
+    <_MicrosoftDotNetBaselinesTasksDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../tools/net/</_MicrosoftDotNetBaselinesTasksDir>
+  </PropertyGroup>
+
+  <UsingTask TaskName="CreateUpdatePR" AssemblyFile="$(_MicrosoftDotNetBaselinesTasksDir)Microsoft.DotNet.Baselines.Tasks.dll"/>
+
+</Project>
