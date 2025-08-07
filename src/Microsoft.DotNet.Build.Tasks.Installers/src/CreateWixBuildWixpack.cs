@@ -102,17 +102,6 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 }
                 Directory.CreateDirectory(WixpackWorkingDir);
 
-                // Copy wixproj file - fail if ProjectPath is not defined
-                if (_defineConstantsDictionary.TryGetValue("ProjectPath", out var projectPath))
-                {
-                    string destPath = Path.Combine(WixpackWorkingDir, Path.GetFileName(projectPath));
-                    File.Copy(projectPath, destPath, overwrite: true);
-                }
-                else
-                {
-                    throw new InvalidOperationException("ProjectPath not defined in DefineConstants. Task cannot proceed.");
-                }
-
                 CopyIncludeSearchPathsContents();
                 ProcessIncludeFiles();
                 CopySourceFilesAndContent();
@@ -445,6 +434,12 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                                 var source = element.Attribute(sourceAttr)?.Value;
 
                                 if (string.IsNullOrEmpty(source))
+                                {
+                                    continue;
+                                }
+
+                                // TODO handle <Payload Name='eula.rtf' Compressed='yes' SourceFile='!(wix.WixStdbaLicenseRtf)' />
+                                if (source.Contains("WixStdbaLicenseRtf"))
                                 {
                                     continue;
                                 }

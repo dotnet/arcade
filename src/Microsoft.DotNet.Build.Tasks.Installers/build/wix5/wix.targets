@@ -270,6 +270,7 @@
   <Target Name="GetBundledMsiFiles" DependsOnTargets="_GetBundledComponentInstallers">
     <ItemGroup>
       <CandleVariables Include="ChainedDotNetPackageFiles" Value="@(_BundledComponents)" />
+      <WixSrcFile Include="$(_BundledComponentsPackageGroupWxsPath)" />
     </ItemGroup>
   </Target>
 
@@ -371,7 +372,7 @@
       RetryDelayBase="1" />
 
     <!-- TODO this fails on preprocessor directives -->
-    <!-- <CreateWixBuildWixpack
+    <CreateWixBuildWixpack
       Cultures="en-us"
       DefineConstants="@(CandleVariables->'var.%(Identity)=%(Value)')"
       Extensions="@(WixExtensions)"
@@ -381,7 +382,7 @@
       SourceFiles="@(WixSrcFile)"
       WixpackWorkingDir="$(LightCommandSrcDir)">
       <Output TaskParameter="OutputFile" PropertyName="_LightCommandPackageNameOutput" />
-    </CreateWixBuildWixpack> -->
+    </CreateWixBuildWixpack>
   </Target>
 
   <!--

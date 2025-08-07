@@ -70,9 +70,7 @@
     <?endif?>
 
     <Chain DisableSystemRestore="yes" ParallelCache="yes">
-      <?foreach chainedFile in $(var.ChainedDotNetPackageFiles)?>
-        <MsiPackage SourceFile="$(var.chainedFile)" />
-      <?endforeach?>
+      <PackageGroupRef Id="PG_DotNet"/>
     </Chain>
   </Bundle>
 
