@@ -148,6 +148,9 @@ namespace Microsoft.DotNet.SignTool
             
             var zippedPaths = ZipMacFiles(filesToSign);
 
+            // Backup files that require detached signatures before signing
+            var detachedSignatureBackups = BackupDetachedSignatureFiles(filesToSign);
+
             // First the signing pass
             var signProjectPath = Path.Combine(dir, $"Round{round}-Sign.proj");
             File.WriteAllText(signProjectPath, GenerateBuildFileContent(filesToSign, zippedPaths, false));
@@ -158,6 +161,9 @@ namespace Microsoft.DotNet.SignTool
             {
                 return false;
             }
+
+            // Handle detached signatures - restore originals and move signatures to .sig files
+            RestoreDetachedSignatureFiles(detachedSignatureBackups);
 
             // Now unzip. Notarization does not expect zipped packages.
             UnzipMacFiles(zippedPaths);
@@ -234,6 +240,95 @@ namespace Microsoft.DotNet.SignTool
                 throw new NotImplementedException($"The zip file path '{zipFilePath}' already exists.");
             }
             return zipFilePath;
+        }
+
+        /// <summary>
+        /// Backs up files that require detached signatures before they are signed.
+        /// Returns a dictionary mapping original file paths to their backup paths.
+        /// </summary>
+        /// <param name="filesToSign">Files that will be part of the signing process</param>
+        /// <returns>Dictionary of original paths to backup paths</returns>
+        private Dictionary<string, string> BackupDetachedSignatureFiles(IEnumerable<FileSignInfo> filesToSign)
+        {
+            var backups = new Dictionary<string, string>();
+            var detachedSignatureFiles = filesToSign.Where(f => f.SignInfo.IsDetachedSignature).ToList();
+            
+            if (!detachedSignatureFiles.Any())
+            {
+                return backups;
+            }
+
+            _log.LogMessage($"Backing up {detachedSignatureFiles.Count} files requiring detached signatures.");
+
+            foreach (var fileSignInfo in detachedSignatureFiles)
+            {
+                string originalFile = fileSignInfo.FullPath;
+                string backupFile = originalFile + ".backup";
+
+                try
+                {
+                    File.Copy(originalFile, backupFile, overwrite: true);
+                    backups[originalFile] = backupFile;
+                    _log.LogMessage($"Backed up file for detached signature: {originalFile} -> {backupFile}");
+                }
+                catch (Exception ex)
+                {
+                    _log.LogError($"Failed to backup file for detached signature {originalFile}: {ex.Message}");
+                }
+            }
+
+            return backups;
+        }
+
+        /// <summary>
+        /// Restores original files and creates detached signature files after signing.
+        /// </summary>
+        /// <param name="detachedSignatureBackups">Dictionary of original paths to backup paths</param>
+        private void RestoreDetachedSignatureFiles(Dictionary<string, string> detachedSignatureBackups)
+        {
+            if (!detachedSignatureBackups.Any())
+            {
+                return;
+            }
+
+            _log.LogMessage($"Restoring {detachedSignatureBackups.Count} files and creating detached signatures.");
+
+            foreach (var kvp in detachedSignatureBackups)
+            {
+                string originalFile = kvp.Key;
+                string backupFile = kvp.Value;
+                string signatureFile = originalFile + ".sig";
+
+                try
+                {
+                    // The original file should now contain the signature after signing
+                    if (File.Exists(originalFile))
+                    {
+                        // Move the signed file (which contains the signature) to the .sig file
+                        File.Move(originalFile, signatureFile);
+                        _log.LogMessage($"Created detached signature file: {signatureFile}");
+                    }
+                    else
+                    {
+                        _log.LogWarning($"Expected signed file not found: {originalFile}");
+                    }
+
+                    // Restore the original file from backup
+                    if (File.Exists(backupFile))
+                    {
+                        File.Move(backupFile, originalFile);
+                        _log.LogMessage($"Restored original file: {originalFile}");
+                    }
+                    else
+                    {
+                        _log.LogError($"Backup file not found: {backupFile}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _log.LogError($"Failed to restore detached signature file {originalFile}: {ex.Message}");
+                }
+            }
         }
 
         private static void AppendLine(StringBuilder builder, int depth, string text)

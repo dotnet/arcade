@@ -529,6 +529,12 @@ namespace Microsoft.DotNet.SignTool
 
                 Check3rdPartyMicrosoftSignatureMismatch(file, peInfo, signInfo);
 
+                // Check if this file type should use detached signatures instead of in-place signing
+                if (ShouldUseDetachedSignature(file.FileName, parentContainer))
+                {
+                    signInfo = signInfo.WithDetachedSignature(signInfo.Certificate);
+                }
+
                 return new FileSignInfo(file, signInfo, (peInfo != null && peInfo.TargetFramework != "") ? peInfo.TargetFramework : null, wixContentFilePath: wixContentFilePath);
             }
 
@@ -862,6 +868,26 @@ namespace Microsoft.DotNet.SignTool
         private bool ShouldSkip3rdPartyCheck(string fileName)
         {
             return _itemsToSkip3rdPartyCheck != null && _itemsToSkip3rdPartyCheck.Contains(Path.GetFileName(fileName));
+        }
+
+        /// <summary>
+        /// Determines if a file should use detached signatures based on its extension and whether it's a top-level file.
+        /// Detached signatures are only generated for top-level .zip, .tar.gz, and .tgz files, not for files nested inside containers.
+        /// </summary>
+        /// <param name="fileName">The file name to check</param>
+        /// <param name="parentContainer">The parent container path, if any</param>
+        /// <returns>True if the file should use detached signatures</returns>
+        private bool ShouldUseDetachedSignature(string fileName, string parentContainer)
+        {
+            // Only generate detached signatures for top-level files (not nested inside containers)
+            if (!string.IsNullOrEmpty(parentContainer))
+            {
+                return false;
+            }
+
+            // Check if the file type supports only detached signatures
+            return FileSignInfo.IsZip(fileName) ||
+                   FileSignInfo.IsTarGZip(fileName);
         }
     }
 }
