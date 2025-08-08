@@ -3493,5 +3493,87 @@ $@"
             zipFileSignInfo.SignInfo.IsDetachedSignature.Should().BeTrue("test.zip should be configured for detached signatures");
             zipFileSignInfo.SignInfo.Certificate.Should().Be("Microsoft400", "test.zip should have the correct certificate");
         }
+
+        [Fact]
+        public void DetachedSignatureFileTypeDetection()
+        {
+            // Test that the correct file types are detected for detached signatures
+            var testCases = new[]
+            {
+                new { FileName = "test.zip", ShouldUseDetached = true },
+                new { FileName = "archive.tar.gz", ShouldUseDetached = true },
+                new { FileName = "package.tgz", ShouldUseDetached = true },
+                new { FileName = "binary.exe", ShouldUseDetached = false },
+                new { FileName = "library.dll", ShouldUseDetached = false },
+                new { FileName = "data.txt", ShouldUseDetached = false },
+                new { FileName = "config.xml", ShouldUseDetached = false },
+                new { FileName = "package.nupkg", ShouldUseDetached = false }
+            };
+
+            foreach (var testCase in testCases)
+            {
+                // Test the FileSignInfo static methods
+                bool isZip = FileSignInfo.IsZip(testCase.FileName);
+                bool isTarGz = FileSignInfo.IsTarGZip(testCase.FileName);
+                bool shouldUseDetached = isZip || isTarGz;
+
+                shouldUseDetached.Should().Be(testCase.ShouldUseDetached, 
+                    $"File {testCase.FileName} should{(testCase.ShouldUseDetached ? "" : " not")} use detached signatures. " +
+                    $"IsZip: {isZip}, IsTarGz: {isTarGz}");
+            }
+
+            // Test multi-part extensions
+            FileSignInfo.IsTarGZip("data.tar.gz").Should().BeTrue("Should detect .tar.gz files");
+            FileSignInfo.IsTarGZip("backup.tgz").Should().BeTrue("Should detect .tgz files");
+            FileSignInfo.IsTarGZip("file.gz").Should().BeFalse("Should not detect standalone .gz files as tar.gz");
+            FileSignInfo.IsTarGZip("archive.tar").Should().BeFalse("Should not detect .tar files without .gz");
+        }
+
+        [Fact]
+        public void DetachedSignaturesOnlyForTopLevelFiles()
+        {
+            // Test that detached signatures are only created for top-level files, not nested files
+            var itemsToSign = new List<ItemToSign>()
+            {
+                new ItemToSign(GetResourcePath("test.zip")),           // Top-level - should get detached signature
+                new ItemToSign(GetResourcePath("NestedZip.zip"))       // Contains nested zip files
+            };
+
+            var fileExtensionSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                {".zip", new List<SignInfo>{new SignInfo("Microsoft400").WithDetachedSignature("Microsoft400")} }
+            };
+
+            var configuration = new Configuration(
+                _tmpDir,
+                itemsToSign,
+                new Dictionary<string, List<SignInfo>>(),
+                new Dictionary<ExplicitCertificateKey, string>(),
+                fileExtensionSignInfo,
+                new Dictionary<string, List<AdditionalCertificateInformation>>(),
+                new HashSet<string>(),
+                tarToolPath: "",
+                pkgToolPath: "",
+                snPath: "",
+                log: new FakeMSBuildLog());
+
+            // Check top-level zip files
+            var topLevelZipFiles = configuration.BatchSignInput.FilesToSign.Where(f => 
+                (f.FileName == "test.zip" || f.FileName == "NestedZip.zip") && f.SignInfo.IsDetachedSignature).ToList();
+            
+            topLevelZipFiles.Should().HaveCount(2, "Both top-level zip files should be configured for detached signatures");
+
+            // Check that nested zip files are NOT configured for detached signatures
+            var nestedZipFiles = configuration.BatchSignInput.FilesToSign.Where(f => 
+                f.FileName == "InnerZipFile.zip" && f.SignInfo.IsDetachedSignature).ToList();
+            
+            nestedZipFiles.Should().BeEmpty("Nested zip files should NOT be configured for detached signatures");
+
+            // Verify that nested files still get signed, just not with detached signatures
+            var nestedZipFileRegular = configuration.BatchSignInput.FilesToSign.FirstOrDefault(f => f.FileName == "InnerZipFile.zip");
+            nestedZipFileRegular.Should().NotBeNull("Nested zip file should still be present for signing");
+            nestedZipFileRegular.SignInfo.IsDetachedSignature.Should().BeFalse("Nested zip file should not use detached signatures");
+            nestedZipFileRegular.SignInfo.ShouldSign.Should().BeTrue("Nested zip file should still be signed normally");
+        }
     }
 }

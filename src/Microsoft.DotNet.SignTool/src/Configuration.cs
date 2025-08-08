@@ -882,12 +882,19 @@ namespace Microsoft.DotNet.SignTool
             // Only generate detached signatures for top-level files (not nested inside containers)
             if (!string.IsNullOrEmpty(parentContainer))
             {
+                _log.LogMessage(MessageImportance.Low, $"Skipping detached signature for nested file: {fileName} (in {parentContainer})");
                 return false;
             }
 
             // Check if the file type supports only detached signatures
-            return FileSignInfo.IsZip(fileName) ||
-                   FileSignInfo.IsTarGZip(fileName);
+            bool shouldUseDetached = FileSignInfo.IsZip(fileName) || FileSignInfo.IsTarGZip(fileName);
+            
+            if (shouldUseDetached)
+            {
+                _log.LogMessage(MessageImportance.Low, $"File {fileName} will use detached signatures");
+            }
+            
+            return shouldUseDetached;
         }
     }
 }
