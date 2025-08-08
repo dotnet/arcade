@@ -3417,5 +3417,36 @@ $@"
             task.Execute().Should().BeFalse();
             task.Log.HasLoggedErrors.Should().BeTrue();
         }
+
+        public void TestSignShouldNotValidateNuGetSignatures()
+        {
+            // Create SignToolArgs for test signing
+            var testSignArgs = new SignToolArgs(
+                tempPath: _tmpDir,
+                microBuildCorePath: "MockPath",
+                testSign: true,  // This is the key - TestSign should be true
+                dotnetPath: "MockDotNetPath",
+                msbuildVerbosity: "quiet",
+                logDir: "MockLogDir",
+                enclosingDir: "MockEnclosingDir",
+                snBinaryPath: "MockSnPath",
+                wix3ToolsPath: null,
+                wixToolsPath: null,
+                tarToolPath: null,
+                pkgToolPath: null,
+                dotnetTimeout: 300000);
+
+            var fakeBuildEngine = new FakeBuildEngine(_output);
+            var fakeLog = new TaskLoggingHelper(fakeBuildEngine, "TestLog");
+
+            var testSignTool = new RealSignTool(testSignArgs, fakeLog);
+
+            // Use any nupkg file from the test resources (doesn't matter if it's actually signed or not)
+            string nupkgPath = GetResourcePath("Simple.nupkg");
+
+            // When TestSign is true, VerifySignedNuGet should return Signed without actually validating
+            var testSignResult = testSignTool.VerifySignedNuGet(nupkgPath);
+            testSignResult.Should().Be(SigningStatus.Signed, "TestSign mode should return Signed without validation");
+        }
     }
 }
