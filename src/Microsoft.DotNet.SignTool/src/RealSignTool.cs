@@ -192,5 +192,7 @@ namespace Microsoft.DotNet.SignTool
 
             return true;
         }
+
+
     }
 }

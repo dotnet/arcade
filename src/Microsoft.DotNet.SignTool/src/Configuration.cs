@@ -217,6 +217,8 @@ namespace Microsoft.DotNet.SignTool
             var wixPack = _wixPacks.SingleOrDefault(w => w.Moniker.Equals(file.FileName, StringComparison.OrdinalIgnoreCase));
             var fileSignInfo = ExtractSignInfo(file, parentContainer, collisionPriorityId, wixPack.FullPath);
 
+            // If the file is a top level file, and is a detached signature, then copy the detached signature alongside
+            // the 
             if (_filesByContentKey.TryGetValue(fileSignInfo.FileContentKey, out var existingSignInfo))
             {
                 // If we saw this file already we wouldn't call TrackFile unless this is a top-level file.
@@ -224,6 +226,14 @@ namespace Microsoft.DotNet.SignTool
 
                 // Copy the signed content to the destination path.
                 _filesToCopy.Add(new KeyValuePair<string, string>(existingSignInfo.FullPath, file.FullPath));
+
+                // If this is a top-level file that uses detached signatures, also copy the detached signature file
+                if (existingSignInfo.SignInfo.IsDetachedSignature)
+                {
+                    _filesToCopy.Add(new KeyValuePair<string, string>(existingSignInfo.DetachedSignatureFullPath, fileSignInfo.DetachedSignatureFullPath));
+                    _log.LogMessage(MessageImportance.Low, $"Will copy detached signature from '{existingSignInfo.DetachedSignatureFullPath}' to '{fileSignInfo.DetachedSignatureFullPath}'");
+                }
+                
                 return fileSignInfo;
             }
 
@@ -261,12 +271,15 @@ namespace Microsoft.DotNet.SignTool
             {
                 // Only sign containers if the file itself is unsigned, or 
                 // an item in the container is unsigned.
-                hasSignableParts = _zipDataMap[fileSignInfo.FileContentKey].NestedParts.Values.Any(b => b.FileSignInfo.SignInfo.ShouldSign || b.FileSignInfo.HasSignableParts);
-                if(hasSignableParts)
+                if (_zipDataMap.TryGetValue(fileSignInfo.FileContentKey, out var zipData))
                 {
-                    // If the file has contents that need to be signed, then re-evaluate the signing info
-                    fileSignInfo = fileSignInfo.WithSignableParts();
-                    _filesByContentKey[fileSignInfo.FileContentKey] = fileSignInfo;
+                    hasSignableParts = zipData.NestedParts.Values.Any(b => b.FileSignInfo.SignInfo.ShouldSign || b.FileSignInfo.HasSignableParts);
+                    if(hasSignableParts)
+                    {
+                        // If the file has contents that need to be signed, then re-evaluate the signing info
+                        fileSignInfo = fileSignInfo.WithSignableParts();
+                        _filesByContentKey[fileSignInfo.FileContentKey] = fileSignInfo;
+                    }
                 }
             }
             if (fileSignInfo.ShouldTrack)
@@ -418,11 +431,11 @@ namespace Microsoft.DotNet.SignTool
 
                 // Check if we have more specific sign info:
                 matchedNameTokenFramework = _fileSignInfo.TryGetValue(
-                    new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, peInfo.TargetFramework, _hashToCollisionIdMap[signedFileContentKey]),
+                    new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, peInfo.TargetFramework, _hashToCollisionIdMap[signedFileContentKey]), 
                     out explicitCertificateName);
                 
                 matchedNameToken = !matchedNameTokenFramework && _fileSignInfo.TryGetValue(
-                    new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]),
+                    new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]), 
                     out explicitCertificateName);
 
                 fileSpec = matchedNameTokenFramework ? $" (PublicKeyToken = {peInfo.PublicKeyToken}, Framework = {peInfo.TargetFramework})" :
@@ -509,6 +522,7 @@ namespace Microsoft.DotNet.SignTool
                     _log.LogWarning($"Skipping file '{file.FullPath}' because .js files are no longer signed by default. " +
                         "To disable this warning, please explicitly define the FileExtensionSignInfo for the .js extension " +
                         "or set the MSBuild property 'NoSignJS' to 'true'.");
+
                     return new FileSignInfo(file, SignInfo.Ignore, wixContentFilePath: wixContentFilePath);
                 }
 
@@ -528,6 +542,12 @@ namespace Microsoft.DotNet.SignTool
                 }
 
                 Check3rdPartyMicrosoftSignatureMismatch(file, peInfo, signInfo);
+
+                // Check if this file type should use detached signatures instead of in-place signing
+                if (ShouldUseDetachedSignature(file, signInfo))
+                {
+                    signInfo = signInfo.WithDetachedSignature(signInfo.Certificate);
+                }
 
                 return new FileSignInfo(file, signInfo, (peInfo != null && peInfo.TargetFramework != "") ? peInfo.TargetFramework : null, wixContentFilePath: wixContentFilePath);
             }
@@ -862,6 +882,28 @@ namespace Microsoft.DotNet.SignTool
         private bool ShouldSkip3rdPartyCheck(string fileName)
         {
             return _itemsToSkip3rdPartyCheck != null && _itemsToSkip3rdPartyCheck.Contains(Path.GetFileName(fileName));
+        }
+
+        /// <summary>
+        /// Determines if a file should use detached signatures based on certificate configuration.
+        /// </summary>
+        /// <param name="file">The file to check</param>
+        /// <returns>True if the file should use detached signatures</returns>
+        private bool ShouldUseDetachedSignature(PathWithHash file, SignInfo signInfo)
+        {
+            // Check if the certificate is configured for detached signatures
+            if (signInfo.Certificate != null && _additionalCertificateInformation.TryGetValue(signInfo.Certificate, out var additionalInfo))
+            {
+                var additionalCertInfo = additionalInfo.FirstOrDefault(a => string.IsNullOrEmpty(a.CollisionPriorityId) ||
+                                                                   a.CollisionPriorityId == signInfo.CollisionPriorityId);
+                if (additionalCertInfo != null && additionalCertInfo.IsDetachedSignature)
+                {
+                    _log.LogMessage(MessageImportance.Low, $"File {file.FileName} will use detached signatures based on certificate configuration");
+                    return true;
+                }
+            }
+            
+            return false;
         }
     }
 }

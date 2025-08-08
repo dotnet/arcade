@@ -6,6 +6,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Linq;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -74,5 +75,7 @@ namespace Microsoft.DotNet.SignTool
         public override SigningStatus VerifySignedVSIX(string filePath) => SigningStatus.Signed;
 
         public override SigningStatus VerifySignedPkgOrAppBundle(TaskLoggingHelper log, string filePath, string pkgToolPath) => SigningStatus.Signed;
+
+
     }
 }
