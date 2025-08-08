@@ -3418,6 +3418,7 @@ $@"
             task.Log.HasLoggedErrors.Should().BeTrue();
         }
 
+        [Fact]
         public void TestSignShouldNotValidateNuGetSignatures()
         {
             // Create SignToolArgs for test signing
