@@ -148,15 +148,28 @@ namespace Microsoft.DotNet.SignTool
             
             var zippedPaths = ZipMacFiles(filesToSign);
 
-            // First the signing pass
-            var signProjectPath = Path.Combine(dir, $"Round{round}-Sign.proj");
-            File.WriteAllText(signProjectPath, GenerateBuildFileContent(filesToSign, zippedPaths, false));
-            string signingLogName = $"SigningRound{round}";
-            status = RunMSBuild(buildEngine, signProjectPath, Path.Combine(_args.LogDir, $"{signingLogName}.binlog"), Path.Combine(_args.LogDir, $"{signingLogName}.log"), Path.Combine(_args.LogDir, $"{signingLogName}.error.log"));
+            // Separate files that need detached signatures from regular signing
+            var regularFiles = filesToSign.Where(f => !f.SignInfo.IsDetachedSignature).ToList();
+            var detachedSignatureFiles = filesToSign.Where(f => f.SignInfo.IsDetachedSignature).ToList();
 
-            if (!status)
+            // Sign regular files with MicroBuild
+            if (regularFiles.Any())
             {
-                return false;
+                var signProjectPath = Path.Combine(dir, $"Round{round}-Sign.proj");
+                File.WriteAllText(signProjectPath, GenerateBuildFileContent(regularFiles, zippedPaths, false));
+                string signingLogName = $"SigningRound{round}";
+                status = RunMSBuild(buildEngine, signProjectPath, Path.Combine(_args.LogDir, $"{signingLogName}.binlog"), Path.Combine(_args.LogDir, $"{signingLogName}.log"), Path.Combine(_args.LogDir, $"{signingLogName}.error.log"));
+
+                if (!status)
+                {
+                    return false;
+                }
+            }
+
+            // Handle detached signatures separately
+            if (detachedSignatureFiles.Any())
+            {
+                status = ProcessDetachedSignatureFiles(detachedSignatureFiles) && status;
             }
 
             // Now unzip. Notarization does not expect zipped packages.
@@ -235,6 +248,14 @@ namespace Microsoft.DotNet.SignTool
             }
             return zipFilePath;
         }
+
+        /// <summary>
+        /// Processes files that require detached signatures by creating .sig files alongside the originals.
+        /// This is an abstract method that must be implemented by concrete SignTool classes.
+        /// </summary>
+        /// <param name="detachedSignatureFiles">Files that need detached signatures</param>
+        /// <returns>True if all detached signatures were created successfully</returns>
+        protected abstract bool ProcessDetachedSignatureFiles(IEnumerable<FileSignInfo> detachedSignatureFiles);
 
         private static void AppendLine(StringBuilder builder, int depth, string text)
         {

@@ -40,8 +40,8 @@ namespace Microsoft.DotNet.SignTool.Tests
             {".exe",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             {".msi",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             {".vsix",  new List<SignInfo>{ new SignInfo("VsixSHA2") } },
-            {".zip",  new List<SignInfo>{ SignInfo.Ignore } },
-            {".tgz",  new List<SignInfo>{ SignInfo.Ignore } },
+            {".zip",  new List<SignInfo>{ new SignInfo("Microsoft400").WithDetachedSignature("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
+            {".tgz",  new List<SignInfo>{ new SignInfo("Microsoft400").WithDetachedSignature("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             {".pkg",  new List<SignInfo>{ new SignInfo("MacDeveloperHarden") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             {".app",  new List<SignInfo>{ new SignInfo("MacDeveloperHarden") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             {".py",  new List<SignInfo>{ new SignInfo("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
@@ -68,8 +68,8 @@ namespace Microsoft.DotNet.SignTool.Tests
             { ".exe", new List<SignInfo>{ new SignInfo("Microsoft400", collisionPriorityId:  "123") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             { ".msi", new List<SignInfo>{ new SignInfo("Microsoft400", collisionPriorityId:  "123") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             { ".vsix", new List<SignInfo>{ new SignInfo("VsixSHA2", collisionPriorityId: "123") } },
-            { ".zip", new List<SignInfo>{ SignInfo.Ignore } },
-            { ".tgz", new List<SignInfo>{ SignInfo.Ignore } },
+            { ".zip", new List<SignInfo>{ new SignInfo("Microsoft400", collisionPriorityId: "123").WithDetachedSignature("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
+            { ".tgz", new List<SignInfo>{ new SignInfo("Microsoft400", collisionPriorityId: "123").WithDetachedSignature("Microsoft400") } }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
             { ".pkg", new List<SignInfo>{ new SignInfo("Microsoft400", collisionPriorityId:  "123") } },
             { ".app",  new List<SignInfo>{ new SignInfo("Microsoft400", collisionPriorityId:  "123") } },
             { ".nupkg", new List<SignInfo>{ new SignInfo("NuGet", collisionPriorityId: "123") } },
@@ -116,11 +116,11 @@ namespace Microsoft.DotNet.SignTool.Tests
                 { SignToolConstants.CollisionPriorityId, "123" }
             }),
             new TaskItem(".zip", new Dictionary<string, string> {
-                { "CertificateName", "None" },
+                { "CertificateName", "Microsoft400" }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
                 { SignToolConstants.CollisionPriorityId, "123" }
             }),
             new TaskItem(".tgz", new Dictionary<string, string> {
-                { "CertificateName", "None" },
+                { "CertificateName", "Microsoft400" }, // lgtm [cs/common-default-passwords] Safe, these are certificate names
                 { SignToolConstants.CollisionPriorityId, "123" }
             }),
             new TaskItem(".pkg", new Dictionary<string, string> {
@@ -1250,7 +1250,7 @@ $@"
                 "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
-                "File 'test.zip'",
+                "File 'test.zip' Certificate='Microsoft400'",
             }/*,
             Reenable after https://github.com/dotnet/arcade/issues/10293,
             expectedWarnings: new[]
@@ -2559,8 +2559,8 @@ $@"
             {
                 "File 'Simple1.exe' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='Microsoft400'",
                 "File 'Simple2.exe' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='Microsoft400'",
-                "File 'SameFiles1.zip'",
-                "File 'SameFiles2.zip'",
+                "File 'SameFiles1.zip' Certificate='Microsoft400'",
+                "File 'SameFiles2.zip' Certificate='Microsoft400'",
             },
             expectedWarnings: new[]
             {
@@ -2771,7 +2771,7 @@ $@"
             {
                 "File 'NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
-                "File 'test.zip'",
+                "File 'test.zip' Certificate='Microsoft400'",
                 "File 'PackageWithZip.nupkg' Certificate='NuGet'",
             }/*,
             Reenable after https://github.com/dotnet/arcade/issues/10293,
@@ -2803,10 +2803,10 @@ $@"
             {
                 "File 'NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
-                "File 'InnerZipFile.zip'",
+                "File 'InnerZipFile.zip' Certificate='Microsoft400'",
                 "File 'Mid.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
                 "File 'MidNativeLibrary.dll' Certificate='Microsoft400'",
-                "File 'NestedZip.zip'",
+                "File 'NestedZip.zip' Certificate='Microsoft400'",
             }/*,
             Reenable after https://github.com/dotnet/arcade/issues/10293,
             expectedWarnings: new[]
@@ -3448,6 +3448,132 @@ $@"
             // When TestSign is true, VerifySignedNuGet should return Signed without actually validating
             var testSignResult = testSignTool.VerifySignedNuGet(nupkgPath);
             testSignResult.Should().Be(SigningStatus.Signed, "TestSign mode should return Signed without validation");
+        }
+
+        [Fact]
+        public void DetachedSignaturesForZipAndTgzFiles()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new List<ItemToSign>()
+            {
+                new ItemToSign(GetResourcePath("test.zip"))
+            };
+
+            // Default signing information - zip should get detached signature
+            var fileExtensionSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                {".zip", new List<SignInfo>{new SignInfo("Microsoft400").WithDetachedSignature("Microsoft400")} }
+            };
+
+            ValidateFileSignInfos(itemsToSign, new Dictionary<string, List<SignInfo>>(), new Dictionary<ExplicitCertificateKey, string>(), fileExtensionSignInfo, new[]
+            {
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
+                "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
+                "File 'test.zip' Certificate='Microsoft400'",
+            });
+
+            // Verify that the zip file is configured for detached signatures
+            var configuration = new Configuration(
+                _tmpDir,
+                itemsToSign,
+                new Dictionary<string, List<SignInfo>>(),
+                new Dictionary<ExplicitCertificateKey, string>(),
+                fileExtensionSignInfo,
+                new Dictionary<string, List<AdditionalCertificateInformation>>(),
+                new HashSet<string>(),
+                tarToolPath: "",
+                pkgToolPath: "",
+                snPath: "",
+                log: new FakeMSBuildLog());
+
+            var zipFileSignInfo = configuration.BatchSignInput.FilesToSign.FirstOrDefault(f => f.FileName == "test.zip");
+            zipFileSignInfo.Should().NotBeNull("test.zip should be in files to sign");
+            zipFileSignInfo.SignInfo.IsDetachedSignature.Should().BeTrue("test.zip should be configured for detached signatures");
+            zipFileSignInfo.SignInfo.Certificate.Should().Be("Microsoft400", "test.zip should have the correct certificate");
+        }
+
+        [Fact]
+        public void DetachedSignatureFileTypeDetection()
+        {
+            // Test that the correct file types are detected for detached signatures
+            var testCases = new[]
+            {
+                new { FileName = "test.zip", ShouldUseDetached = true },
+                new { FileName = "archive.tar.gz", ShouldUseDetached = true },
+                new { FileName = "package.tgz", ShouldUseDetached = true },
+                new { FileName = "binary.exe", ShouldUseDetached = false },
+                new { FileName = "library.dll", ShouldUseDetached = false },
+                new { FileName = "data.txt", ShouldUseDetached = false },
+                new { FileName = "config.xml", ShouldUseDetached = false },
+                new { FileName = "package.nupkg", ShouldUseDetached = false }
+            };
+
+            foreach (var testCase in testCases)
+            {
+                // Test the FileSignInfo static methods
+                bool isZip = FileSignInfo.IsZip(testCase.FileName);
+                bool isTarGz = FileSignInfo.IsTarGZip(testCase.FileName);
+                bool shouldUseDetached = isZip || isTarGz;
+
+                shouldUseDetached.Should().Be(testCase.ShouldUseDetached, 
+                    $"File {testCase.FileName} should{(testCase.ShouldUseDetached ? "" : " not")} use detached signatures. " +
+                    $"IsZip: {isZip}, IsTarGz: {isTarGz}");
+            }
+
+            // Test multi-part extensions
+            FileSignInfo.IsTarGZip("data.tar.gz").Should().BeTrue("Should detect .tar.gz files");
+            FileSignInfo.IsTarGZip("backup.tgz").Should().BeTrue("Should detect .tgz files");
+            FileSignInfo.IsTarGZip("file.gz").Should().BeFalse("Should not detect standalone .gz files as tar.gz");
+            FileSignInfo.IsTarGZip("archive.tar").Should().BeFalse("Should not detect .tar files without .gz");
+        }
+
+        [Fact]
+        public void DetachedSignaturesOnlyForTopLevelFiles()
+        {
+            // Test that detached signatures are only created for top-level files, not nested files
+            var itemsToSign = new List<ItemToSign>()
+            {
+                new ItemToSign(GetResourcePath("test.zip")),           // Top-level - should get detached signature
+                new ItemToSign(GetResourcePath("NestedZip.zip"))       // Contains nested zip files
+            };
+
+            var fileExtensionSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                {".zip", new List<SignInfo>{new SignInfo("Microsoft400").WithDetachedSignature("Microsoft400")} }
+            };
+
+            var configuration = new Configuration(
+                _tmpDir,
+                itemsToSign,
+                new Dictionary<string, List<SignInfo>>(),
+                new Dictionary<ExplicitCertificateKey, string>(),
+                fileExtensionSignInfo,
+                new Dictionary<string, List<AdditionalCertificateInformation>>(),
+                new HashSet<string>(),
+                tarToolPath: "",
+                pkgToolPath: "",
+                snPath: "",
+                log: new FakeMSBuildLog());
+
+            // Check top-level zip files
+            var topLevelZipFiles = configuration.BatchSignInput.FilesToSign.Where(f => 
+                (f.FileName == "test.zip" || f.FileName == "NestedZip.zip") && f.SignInfo.IsDetachedSignature).ToList();
+            
+            topLevelZipFiles.Should().HaveCount(2, "Both top-level zip files should be configured for detached signatures");
+
+            // Check that nested zip files are NOT configured for detached signatures
+            var nestedZipFiles = configuration.BatchSignInput.FilesToSign.Where(f => 
+                f.FileName == "InnerZipFile.zip" && f.SignInfo.IsDetachedSignature).ToList();
+            
+            nestedZipFiles.Should().BeEmpty("Nested zip files should NOT be configured for detached signatures");
+
+            // Verify that nested files still get signed, just not with detached signatures
+            var nestedZipFileRegular = configuration.BatchSignInput.FilesToSign.FirstOrDefault(f => f.FileName == "InnerZipFile.zip");
+            nestedZipFileRegular.Should().NotBeNull("Nested zip file should still be present for signing");
+            nestedZipFileRegular.SignInfo.IsDetachedSignature.Should().BeFalse("Nested zip file should not use detached signatures");
+            nestedZipFileRegular.SignInfo.ShouldSign.Should().BeTrue("Nested zip file should still be signed normally");
         }
     }
 }
