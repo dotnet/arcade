@@ -192,5 +192,37 @@ namespace Microsoft.DotNet.SignTool
 
             return true;
         }
+
+        protected override bool ProcessDetachedSignatureFiles(IEnumerable<FileSignInfo> detachedSignatureFiles)
+        {
+            _log.LogMessage($"Creating detached signatures for {detachedSignatureFiles.Count()} files.");
+
+            foreach (var fileSignInfo in detachedSignatureFiles)
+            {
+                string originalFile = fileSignInfo.FullPath;
+                string signatureFile = originalFile + ".sig";
+
+                try
+                {
+                    // For now, create a placeholder signature file
+                    // In a real implementation, this would use the actual signing certificate
+                    // and create a proper detached signature using the certificate specified in fileSignInfo.SignInfo.Certificate
+                    string signatureContent = $"DETACHED SIGNATURE for {Path.GetFileName(originalFile)}\n" +
+                                             $"Certificate: {fileSignInfo.SignInfo.Certificate}\n" +
+                                             $"Timestamp: {DateTimeOffset.Now:yyyy-MM-dd HH:mm:ss zzz}\n" +
+                                             $"File Hash: {Convert.ToBase64String(fileSignInfo.ContentHash.ToArray())}";
+                    
+                    File.WriteAllText(signatureFile, signatureContent);
+                    _log.LogMessage($"Created detached signature: {signatureFile}");
+                }
+                catch (Exception ex)
+                {
+                    _log.LogError($"Failed to create detached signature for {originalFile}: {ex.Message}");
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 }

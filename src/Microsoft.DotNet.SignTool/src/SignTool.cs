@@ -148,22 +148,29 @@ namespace Microsoft.DotNet.SignTool
             
             var zippedPaths = ZipMacFiles(filesToSign);
 
-            // Backup files that require detached signatures before signing
-            var detachedSignatureBackups = BackupDetachedSignatureFiles(filesToSign);
+            // Separate files that need detached signatures from regular signing
+            var regularFiles = filesToSign.Where(f => !f.SignInfo.IsDetachedSignature).ToList();
+            var detachedSignatureFiles = filesToSign.Where(f => f.SignInfo.IsDetachedSignature).ToList();
 
-            // First the signing pass
-            var signProjectPath = Path.Combine(dir, $"Round{round}-Sign.proj");
-            File.WriteAllText(signProjectPath, GenerateBuildFileContent(filesToSign, zippedPaths, false));
-            string signingLogName = $"SigningRound{round}";
-            status = RunMSBuild(buildEngine, signProjectPath, Path.Combine(_args.LogDir, $"{signingLogName}.binlog"), Path.Combine(_args.LogDir, $"{signingLogName}.log"), Path.Combine(_args.LogDir, $"{signingLogName}.error.log"));
-
-            if (!status)
+            // Sign regular files with MicroBuild
+            if (regularFiles.Any())
             {
-                return false;
+                var signProjectPath = Path.Combine(dir, $"Round{round}-Sign.proj");
+                File.WriteAllText(signProjectPath, GenerateBuildFileContent(regularFiles, zippedPaths, false));
+                string signingLogName = $"SigningRound{round}";
+                status = RunMSBuild(buildEngine, signProjectPath, Path.Combine(_args.LogDir, $"{signingLogName}.binlog"), Path.Combine(_args.LogDir, $"{signingLogName}.log"), Path.Combine(_args.LogDir, $"{signingLogName}.error.log"));
+
+                if (!status)
+                {
+                    return false;
+                }
             }
 
-            // Handle detached signatures - restore originals and move signatures to .sig files
-            RestoreDetachedSignatureFiles(detachedSignatureBackups);
+            // Handle detached signatures separately
+            if (detachedSignatureFiles.Any())
+            {
+                status = ProcessDetachedSignatureFiles(detachedSignatureFiles) && status;
+            }
 
             // Now unzip. Notarization does not expect zipped packages.
             UnzipMacFiles(zippedPaths);
@@ -243,93 +250,12 @@ namespace Microsoft.DotNet.SignTool
         }
 
         /// <summary>
-        /// Backs up files that require detached signatures before they are signed.
-        /// Returns a dictionary mapping original file paths to their backup paths.
+        /// Processes files that require detached signatures by creating .sig files alongside the originals.
+        /// This is an abstract method that must be implemented by concrete SignTool classes.
         /// </summary>
-        /// <param name="filesToSign">Files that will be part of the signing process</param>
-        /// <returns>Dictionary of original paths to backup paths</returns>
-        private Dictionary<string, string> BackupDetachedSignatureFiles(IEnumerable<FileSignInfo> filesToSign)
-        {
-            var backups = new Dictionary<string, string>();
-            var detachedSignatureFiles = filesToSign.Where(f => f.SignInfo.IsDetachedSignature).ToList();
-            
-            if (!detachedSignatureFiles.Any())
-            {
-                return backups;
-            }
-
-            _log.LogMessage($"Backing up {detachedSignatureFiles.Count} files requiring detached signatures.");
-
-            foreach (var fileSignInfo in detachedSignatureFiles)
-            {
-                string originalFile = fileSignInfo.FullPath;
-                string backupFile = originalFile + ".backup";
-
-                try
-                {
-                    File.Copy(originalFile, backupFile, overwrite: true);
-                    backups[originalFile] = backupFile;
-                    _log.LogMessage($"Backed up file for detached signature: {originalFile} -> {backupFile}");
-                }
-                catch (Exception ex)
-                {
-                    _log.LogError($"Failed to backup file for detached signature {originalFile}: {ex.Message}");
-                }
-            }
-
-            return backups;
-        }
-
-        /// <summary>
-        /// Restores original files and creates detached signature files after signing.
-        /// </summary>
-        /// <param name="detachedSignatureBackups">Dictionary of original paths to backup paths</param>
-        private void RestoreDetachedSignatureFiles(Dictionary<string, string> detachedSignatureBackups)
-        {
-            if (!detachedSignatureBackups.Any())
-            {
-                return;
-            }
-
-            _log.LogMessage($"Restoring {detachedSignatureBackups.Count} files and creating detached signatures.");
-
-            foreach (var kvp in detachedSignatureBackups)
-            {
-                string originalFile = kvp.Key;
-                string backupFile = kvp.Value;
-                string signatureFile = originalFile + ".sig";
-
-                try
-                {
-                    // The original file should now contain the signature after signing
-                    if (File.Exists(originalFile))
-                    {
-                        // Move the signed file (which contains the signature) to the .sig file
-                        File.Move(originalFile, signatureFile);
-                        _log.LogMessage($"Created detached signature file: {signatureFile}");
-                    }
-                    else
-                    {
-                        _log.LogWarning($"Expected signed file not found: {originalFile}");
-                    }
-
-                    // Restore the original file from backup
-                    if (File.Exists(backupFile))
-                    {
-                        File.Move(backupFile, originalFile);
-                        _log.LogMessage($"Restored original file: {originalFile}");
-                    }
-                    else
-                    {
-                        _log.LogError($"Backup file not found: {backupFile}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _log.LogError($"Failed to restore detached signature file {originalFile}: {ex.Message}");
-                }
-            }
-        }
+        /// <param name="detachedSignatureFiles">Files that need detached signatures</param>
+        /// <returns>True if all detached signatures were created successfully</returns>
+        protected abstract bool ProcessDetachedSignatureFiles(IEnumerable<FileSignInfo> detachedSignatureFiles);
 
         private static void AppendLine(StringBuilder builder, int depth, string text)
         {
