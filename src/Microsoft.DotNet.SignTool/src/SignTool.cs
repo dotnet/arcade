@@ -148,15 +148,24 @@ namespace Microsoft.DotNet.SignTool
             
             var zippedPaths = ZipMacFiles(filesToSign);
 
-            // Separate files that need detached signatures from regular signing
-            var regularFiles = filesToSign.Where(f => !f.SignInfo.IsDetachedSignature).ToList();
+            // Identify files that need detached signatures
             var detachedSignatureFiles = filesToSign.Where(f => f.SignInfo.IsDetachedSignature).ToList();
+            
+            // Backup original files that need detached signatures before signing
+            var originalFileBackups = new Dictionary<string, string>();
+            foreach (var fileInfo in detachedSignatureFiles)
+            {
+                string backupPath = fileInfo.FullPath + ".original";
+                File.Copy(fileInfo.FullPath, backupPath, overwrite: true);
+                originalFileBackups[fileInfo.FullPath] = backupPath;
+                _log.LogMessage($"Backed up original file for detached signature: {fileInfo.FullPath} -> {backupPath}");
+            }
 
-            // Sign regular files with MicroBuild
-            if (regularFiles.Any())
+            // Sign all files (including those needing detached signatures) with MicroBuild
+            if (filesToSign.Any())
             {
                 var signProjectPath = Path.Combine(dir, $"Round{round}-Sign.proj");
-                File.WriteAllText(signProjectPath, GenerateBuildFileContent(regularFiles, zippedPaths, false));
+                File.WriteAllText(signProjectPath, GenerateBuildFileContent(filesToSign, zippedPaths, false));
                 string signingLogName = $"SigningRound{round}";
                 status = RunMSBuild(buildEngine, signProjectPath, Path.Combine(_args.LogDir, $"{signingLogName}.binlog"), Path.Combine(_args.LogDir, $"{signingLogName}.log"), Path.Combine(_args.LogDir, $"{signingLogName}.error.log"));
 
@@ -164,12 +173,22 @@ namespace Microsoft.DotNet.SignTool
                 {
                     return false;
                 }
-            }
-
-            // Handle detached signatures separately
-            if (detachedSignatureFiles.Any())
-            {
-                status = ProcessDetachedSignatureFiles(detachedSignatureFiles) && status;
+                
+                // After signing, handle detached signatures
+                foreach (var fileInfo in detachedSignatureFiles)
+                {
+                    string signatureFile = fileInfo.FullPath + ".sig";
+                    
+                    // Copy the signed content to .sig file
+                    File.Copy(fileInfo.FullPath, signatureFile, overwrite: true);
+                    _log.LogMessage($"Created detached signature file: {signatureFile}");
+                    
+                    // Restore the original file
+                    string backupPath = originalFileBackups[fileInfo.FullPath];
+                    File.Copy(backupPath, fileInfo.FullPath, overwrite: true);
+                    File.Delete(backupPath);
+                    _log.LogMessage($"Restored original file: {fileInfo.FullPath}");
+                }
             }
 
             // Now unzip. Notarization does not expect zipped packages.
@@ -249,13 +268,7 @@ namespace Microsoft.DotNet.SignTool
             return zipFilePath;
         }
 
-        /// <summary>
-        /// Processes files that require detached signatures by creating .sig files alongside the originals.
-        /// This is an abstract method that must be implemented by concrete SignTool classes.
-        /// </summary>
-        /// <param name="detachedSignatureFiles">Files that need detached signatures</param>
-        /// <returns>True if all detached signatures were created successfully</returns>
-        protected abstract bool ProcessDetachedSignatureFiles(IEnumerable<FileSignInfo> detachedSignatureFiles);
+
 
         private static void AppendLine(StringBuilder builder, int depth, string text)
         {

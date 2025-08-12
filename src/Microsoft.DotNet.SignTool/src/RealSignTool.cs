@@ -193,28 +193,6 @@ namespace Microsoft.DotNet.SignTool
             return true;
         }
 
-        protected override bool ProcessDetachedSignatureFiles(IEnumerable<FileSignInfo> detachedSignatureFiles)
-        {
-            var fileList = detachedSignatureFiles.ToList();
-            if (!fileList.Any())
-            {
-                return true;
-            }
 
-            _log.LogMessage($"Processing detached signatures for {fileList.Count} files.");
-
-            // The actual detached signature creation will be handled by the signing service
-            // For now, just log the files that would be processed
-            foreach (var fileSignInfo in fileList)
-            {
-                string originalFile = fileSignInfo.FullPath;
-                string signatureFile = originalFile + ".sig";
-                
-                _log.LogMessage($"Detached signature will be created by signing service: {signatureFile}");
-            }
-
-            _log.LogMessage("Detached signature processing completed.");
-            return true;
-        }
     }
 }

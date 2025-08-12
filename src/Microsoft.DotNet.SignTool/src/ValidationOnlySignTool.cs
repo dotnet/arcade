@@ -76,16 +76,6 @@ namespace Microsoft.DotNet.SignTool
 
         public override SigningStatus VerifySignedPkgOrAppBundle(TaskLoggingHelper log, string filePath, string pkgToolPath) => SigningStatus.Signed;
 
-        protected override bool ProcessDetachedSignatureFiles(IEnumerable<FileSignInfo> detachedSignatureFiles)
-        {
-            _log.LogMessage($"ValidationOnly: Skipping detached signature creation for {detachedSignatureFiles.Count()} files.");
-            
-            foreach (var fileSignInfo in detachedSignatureFiles)
-            {
-                _log.LogMessage($"ValidationOnly: Would create detached signature for {fileSignInfo.FullPath} with certificate {fileSignInfo.SignInfo.Certificate}");
-            }
-            
-            return true;
-        }
+
     }
 }
