@@ -7,12 +7,7 @@ Arcade SDK is the core infrastructure tooling used across the .NET ecosystem for
 ## Critical Prerequisites
 
 ### .NET SDK Installation
-- **REQUIRED SDK**: .NET 10.0.100-preview.7.25372.107 (specified in global.json)
-- **NEVER** use system-installed dotnet. Always use the local SDK installation.
-- Install required SDK: `./eng/common/dotnet.sh --version`
-  - Downloads and installs to `.dotnet/` directory automatically
-  - Takes 2-3 minutes to download ~245MB SDK package
-- Verify installation: `./eng/common/dotnet.sh --version` should show `10.0.100-preview.7.25372.107`
+- **NEVER** install an SDK. It is installed by building the repository.
 
 ### Network Dependencies
 - **CRITICAL**: Requires access to Azure DevOps package feeds (dev.azure.com/dnceng)
@@ -21,19 +16,17 @@ Arcade SDK is the core infrastructure tooling used across the .NET ecosystem for
 
 ## Working Effectively
 
-### Bootstrap and Build Process
+### Build Process
 **NEVER CANCEL BUILDS OR TESTS** - they may take 90+ minutes. Always use appropriate timeouts.
 
 ```bash
-# Bootstrap environment (first time setup)
-./eng/common/dotnet.sh --version
 
 # Full restore, build, and test - TAKES 90+ MINUTES - NEVER CANCEL
 timeout 6000 ./build.sh --restore --build
 # Set timeout to 100+ minutes (6000 seconds) for build commands
 
 # Test execution - TAKES 30+ MINUTES - NEVER CANCEL  
-timeout 2400 ./test.sh
+timeout 2400 ./build.sh --restore --build --test
 # Set timeout to 40+ minutes (2400 seconds) for test commands
 
 # Restore only (faster for dependency checks)
@@ -86,16 +79,7 @@ After making changes, **ALWAYS** run complete validation scenarios:
 
 ```bash
 # Build validation - NEVER CANCEL - 90+ minute timeout
-timeout 6000 ./build.sh --restore --build --configuration Release
-
-# Unit test validation - NEVER CANCEL - 30+ minute timeout  
-timeout 2400 ./test.sh --configuration Release
-
-# SDK validation (builds test projects using the SDK)
-timeout 6000 ./eng/validate-sdk.yml # Run via CI or manually
-
-# Integration test scenarios
-timeout 3600 ./tests/UnitTests.proj # Helix-based integration tests
+timeout 6000 ./build.sh --restore --build --configuration Release --test
 ```
 
 ### Test Categories
@@ -103,12 +87,6 @@ timeout 3600 ./tests/UnitTests.proj # Helix-based integration tests
 - **Integration Tests**: Cross-component validation via Helix
 - **SDK Tests**: Validate Arcade SDK works in sample projects
 - **Packaging Tests**: Ensure generated packages are valid
-
-### Expected Test Failures
-Some tests have expected failures for validation purposes:
-- HelixReporterTests.failure1/failure2
-- TRXTests.Fail1/Fail2  
-- UnitTest2.ExpectedFailureTheoryTest
 
 ## Common Development Tasks
 
