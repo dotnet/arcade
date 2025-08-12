@@ -76,8 +76,8 @@
 
   <Fragment>
     <PayloadGroup Id="DotnetCoreBAPayloads">
-      <!-- TODO png/ico -->
-      <Payload Name="bg.png" Compressed="yes" SourceFile="$(var.DotNetBackgroundPngFile)" />
+      <Payload Name="dotnet.ico" Compressed="yes" SourceFile="$(var.DotNetIcoFile)" />
+      <Payload Name="DotNetLogo_124x.png" Compressed="yes" SourceFile="$(var.DotNetLogoPngFile)" />
 
       <?foreach LCID in $(var.LcidList)?>
         <Payload Id="thm_$(var.LCID)" Compressed="yes" Name="$(var.LCID)\thm.wxl" SourceFile="$(var.BundleThmDir)\theme\$(var.LCID)\bundle.wxl" />

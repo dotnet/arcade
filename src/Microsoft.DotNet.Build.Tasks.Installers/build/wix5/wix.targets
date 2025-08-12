@@ -210,7 +210,8 @@
            Condition="'$(BundleThemeDirectory)' == ''" />
       
     <PropertyGroup>
-      <WixInstallerBackgroundFile Condition="'$(WixInstallerBackgroundFile)' == ''">$(MSBuildThisFileDirectory)..\resources\dotnetbackground.png</WixInstallerBackgroundFile>
+      <WixInstallerIconFile Condition="'$(WixInstallerIconFile)' == ''">$(MSBuildThisFileDirectory)..\resources\dotnet.ico</WixInstallerIconFile>
+      <WixInstallerPngLogoFile Condition="'$(WixInstallerPngLogoFile)' == ''">$(MSBuildThisFileDirectory)..\resources\DotNetLogo_124x.png</WixInstallerPngLogoFile>
       <WixInstallerLogoFile Condition="'$(WixInstallerLogoFile)' == ''">$(MSBuildThisFileDirectory)..\resources\dotnetlogo.bmp</WixInstallerLogoFile>
       <WixBootstrapperFlavor Condition="'$(WixBootstrapperFlavor)' == ''">Foundation</WixBootstrapperFlavor>
     </PropertyGroup>
@@ -225,9 +226,10 @@
       <CandleVariables Include="LcidList" Value="@(LocDirName)" />
       <CandleVariables Include="BundleThmDir" Value="$(BundleThemeDirectory)" />
 
-      <CandleVariables Include="DotNetBackgroundPngFile" Value="$(WixInstallerBackgroundFile)" />
+      <CandleVariables Include="DotNetIcoFile" Value="$(WixInstallerIconFile)" />
       <CandleVariables Include="DotNetDummyEulaFile" Value="$(MSBuildThisFileDirectory)bundle\dummyEula.rtf" />
       <CandleVariables Include="DotNetLogoBmpFile" Value="$(WixInstallerLogoFile)" />
+      <CandleVariables Include="DotNetLogoPngFile" Value="$(WixInstallerPngLogoFile)" />
       <CandleVariables Include="BootstrapperApplicationFlavor" Value="$(WixBootstrapperFlavor)" />
       <CandleVariables Include="WixThemeFile" Value="$(_WixThemeFile)" Condition="'$(_WixThemeFile)' != ''" />
     </ItemGroup>
@@ -369,7 +371,7 @@
       WorkingDirectory="$(WixExeDir)"
       StandardOutputImportance="normal"
       IgnoreStandardErrorWarningFormat="true"
-      RetryDelayBase="1" />
+      RetryDelayBase="2" />
 
     <!-- TODO this fails on preprocessor directives -->
     <CreateWixBuildWixpack
