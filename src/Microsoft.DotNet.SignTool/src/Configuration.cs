@@ -530,7 +530,7 @@ namespace Microsoft.DotNet.SignTool
                 Check3rdPartyMicrosoftSignatureMismatch(file, peInfo, signInfo);
 
                 // Check if this file type should use detached signatures instead of in-place signing
-                if (ShouldUseDetachedSignature(file.FileName, parentContainer))
+                if (ShouldUseDetachedSignature(file, parentContainer))
                 {
                     signInfo = signInfo.WithDetachedSignature(signInfo.Certificate);
                 }
@@ -874,24 +874,24 @@ namespace Microsoft.DotNet.SignTool
         /// Determines if a file should use detached signatures based on its extension and whether it's a top-level file.
         /// Detached signatures are only generated for top-level .zip, .tar.gz, and .tgz files, not for files nested inside containers.
         /// </summary>
-        /// <param name="fileName">The file name to check</param>
-        /// <param name="parentContainer">The parent container path, if any</param>
+        /// <param name="file">The file to check</param>
+        /// <param name="parentContainer">The parent container, if any</param>
         /// <returns>True if the file should use detached signatures</returns>
-        private bool ShouldUseDetachedSignature(string fileName, string parentContainer)
+        private bool ShouldUseDetachedSignature(PathWithHash file, PathWithHash parentContainer)
         {
             // Only generate detached signatures for top-level files (not nested inside containers)
-            if (!string.IsNullOrEmpty(parentContainer))
+            if (parentContainer != null)
             {
-                _log.LogMessage(MessageImportance.Low, $"Skipping detached signature for nested file: {fileName} (in {parentContainer})");
+                _log.LogMessage(MessageImportance.Low, $"Skipping detached signature for nested file: {file.FileName} (in {parentContainer.FileName})");
                 return false;
             }
 
             // Check if the file type supports only detached signatures
-            bool shouldUseDetached = FileSignInfo.IsZip(fileName) || FileSignInfo.IsTarGZip(fileName);
+            bool shouldUseDetached = FileSignInfo.IsZip(file.FileName) || FileSignInfo.IsTarGZip(file.FileName);
             
             if (shouldUseDetached)
             {
-                _log.LogMessage(MessageImportance.Low, $"File {fileName} will use detached signatures");
+                _log.LogMessage(MessageImportance.Low, $"File {file.FileName} will use detached signatures");
             }
             
             return shouldUseDetached;
