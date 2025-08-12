@@ -30,6 +30,8 @@ parameters:
 
   signingValidationAdditionalParameters: ''
 
+  repositoryAlias: self
+
 jobs:
 - job: Asset_Registry_Publish
 
@@ -65,6 +67,9 @@ jobs:
       os: windows
   steps:
   - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+    - checkout: ${{ parameters.repositoryAlias }}
+      fetchDepth: 3
+      clean: true
     - task: DownloadBuildArtifacts@0
       displayName: Download artifact
       inputs:
