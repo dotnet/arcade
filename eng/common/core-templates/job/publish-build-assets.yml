@@ -32,6 +32,8 @@ parameters:
 
   is1ESPipeline: ''
 
+  repositoryAlias: self
+
 jobs:
 - job: Asset_Registry_Publish
 
@@ -72,7 +74,7 @@ jobs:
     - 'Illegal entry point, is1ESPipeline is not defined. Repository yaml should not directly reference templates in core-templates folder.': error
 
   - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-    - checkout: self
+    - checkout: ${{ parameters.repositoryAlias }}
       fetchDepth: 3
       clean: true
       
