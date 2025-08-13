@@ -45,11 +45,11 @@ if (-not $wxlFiles) {
             $content = Get-Content $_.FullName -Raw
 
             # Split files on schema to select different parser settings in the generated project.
-            if ($content -match "http://wixtoolset.org/schemas/v4/wxl")
+            if ($content -like "*http://wixtoolset.org/schemas/v4/wxl*")
             {
                 $wxlFilesV5 += Copy-Item $_.FullName -Destination $destinationFile -PassThru
             }
-            elseif ($content -match "http://schemas.microsoft.com/wix/2006/localization")
+            elseif ($content -like "*http://schemas.microsoft.com/wix/2006/localization*")
             {
                 $wxlFilesV3 += Copy-Item $_.FullName -Destination $destinationFile -PassThru
             }
