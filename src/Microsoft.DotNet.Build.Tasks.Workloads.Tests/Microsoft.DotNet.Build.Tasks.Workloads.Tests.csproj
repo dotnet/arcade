@@ -13,6 +13,12 @@
     <PackageReference Include="Microsoft.Deployment.DotNet.Releases" />
     <PackageReference Include="Microsoft.NET.Sdk.WorkloadManifestReader" />
     <PackageReference Include="Microsoft.Signed.Wix" />
+
+    <PackageReference Include="Microsoft.WixToolset.Dtf.Compression" />
+    <PackageReference Include="Microsoft.WixToolset.Dtf.Compression.Cab" />
+    <PackageReference Include="Microsoft.WixToolset.Dtf.Resources" />
+    <PackageReference Include="Microsoft.WixToolset.Dtf.WindowsInstaller" />
+    <PackageReference Include="Microsoft.WixToolset.Dtf.WindowsInstaller.Package" />
     <PackageReference Include="FluentAssertions" />
   </ItemGroup>
 
@@ -23,11 +29,13 @@
 
   <!-- Sample packages -->
   <ItemGroup>
+    <!-- Microsoft.wix is the WiX CLI -->
+    <PackageDownload Include="Microsoft.wix" Version="[$(MicrosoftWixToolsetSdkVersion)]" />
     <PackageDownload Include="Microsoft.Signed.Wix" Version="[$(MicrosoftSignedWixVersion)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.200" Version="[$(MicrosoftNETWorkloadMonoToolChainManifest_60200Version)];[$(MicrosoftNETWorkloadMonoToolChainManifest_60200Version_604)]" />
     <PackageDownload Include="Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.300" Version="[$(MicrosoftNETWorkloadMonoToolChainManifest_60300Version_6021)];[$(MicrosoftNETWorkloadMonoToolChainManifest_60300Version_6022)]" />
     <PackageDownload Include="Microsoft.iOS.Templates" Version="[$(MicrosoftiOSTemplatesVersion)];[$(MicrosoftiOSTemplatesVersion160527)]" />
-    <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net6.Manifest-8.0.100-preview.6" Version="[$(MicrosoftNETWorkloadEmscriptenManifest_80100Preview6Version)]"/>
+    <PackageDownload Include="Microsoft.NET.Workload.Emscripten.net6.Manifest-8.0.100-preview.6" Version="[$(MicrosoftNETWorkloadEmscriptenManifest_80100Preview6Version)]" />
     <!-- We can only test the task properly by building an actual workload end-to-end. EMSDK is the tiniest one available -->
     <PackageDownload Include="Microsoft.NET.Workload.Emscripten.Manifest-6.0.200" Version="[$(MicrosoftNETWorkloadEmscriptenManifest_60200Version)]" />
     <PackageDownload Include="Microsoft.NET.Runtime.Emscripten.2.0.23.Node.win-x64" Version="[$(MicrosoftNETRuntimeEmscripten2023Nodewin_x64)]" />
@@ -37,12 +45,13 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
-    <PackageReference Include="System.Text.Json"  />
+    <PackageReference Include="System.Text.Json" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="$(NuGetPackageRoot)microsoft.signed.wix\$(MicrosoftSignedWixVersion)\tools\**\*" Link="testassets\wix\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
+    <!--<Content Include="$(NuGetPackageRoot)microsoft.signed.wix\$(MicrosoftSignedWixVersion)\tools\**\*" Link="testassets\wix\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />-->
+    <Content Include="$(NuGetPackageRoot)microsoft.wix\$(MicrosoftWixToolsetSdkVersion)\tools\**\*" Link="testassets\wix\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
     <Content Include="$(NuGetPackageRoot)microsoft.net.workload.mono.toolchain.manifest-6.0.200\$(MicrosoftNETWorkloadMonoToolChainManifest_60200Version)\*.nupkg" Link="testassets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
     <Content Include="$(NuGetPackageRoot)microsoft.net.workload.mono.toolchain.manifest-6.0.200\$(MicrosoftNETWorkloadMonoToolChainManifest_60200Version_604)\*.nupkg" Link="testassets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
     <Content Include="$(NuGetPackageRoot)microsoft.net.workload.mono.toolchain.manifest-6.0.300\$(MicrosoftNETWorkloadMonoToolChainManifest_60300Version_6022)\*.nupkg" Link="testassets\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />
@@ -63,13 +72,4 @@
     <None Remove="testassets\emsdkWorkloadManifest2.json" />
     <None Remove="testassets\mauiWorkloadManifest.json" />
   </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Resources.dll" />
-    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Compression.dll" />
-    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Compression.Cab.dll" />
-    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.WindowsInstaller.dll" />
-    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.WindowsInstaller.Package.dll" />
-  </ItemGroup>
-
 </Project>
