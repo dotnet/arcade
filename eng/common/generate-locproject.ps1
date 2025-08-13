@@ -51,7 +51,7 @@ if (-not $wxlFiles) {
             }
             elseif ($content -match "http://schemas.microsoft.com/wix/2006/localization")
             {
-                $wxlFilesV3 += Copy-Item "$($_.FullName)" -Destination $destinationFile -PassThru
+                $wxlFilesV3 += Copy-Item $_.FullName -Destination $destinationFile -PassThru
             }
         }
     }
