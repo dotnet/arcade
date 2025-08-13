@@ -42,7 +42,7 @@ if (-not $wxlFiles) {
         $wxlFiles = @()
         $wxlEnFiles | ForEach-Object {
             $destinationFile = "$($_.Directory.Parent.FullName)\$($_.Name)"
-            $content = Get-Content $($_.FullName) -Raw
+            $content = Get-Content $_.FullName -Raw
 
             # Split files on schema to select different parser settings in the generated project.
             if ($content -match "http://wixtoolset.org/schemas/v4/wxl")
