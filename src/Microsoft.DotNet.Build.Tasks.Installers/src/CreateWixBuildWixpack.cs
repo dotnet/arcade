@@ -76,6 +76,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
         private Dictionary<string, string> _defineConstantsDictionary;
         private Dictionary<string, string> _defineVariablesDictionary;
+        private Dictionary<string, string> _systemVariablesDictionary;
         private string _wixprojDir;
         private string _installerFilename;
 
@@ -86,6 +87,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             try
             {
                 _defineConstantsDictionary = GetDefineConstantsDictionary();
+                _systemVariablesDictionary = GetSystemVariablesDictionary();
 
                 if (string.IsNullOrWhiteSpace(WixpackWorkingDir))
                 {
@@ -454,6 +456,19 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             return dict;
         }
 
+        private Dictionary<string, string> GetSystemVariablesDictionary()
+        {
+            var dict = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
+
+            // Add support for known used system variables
+            if (_defineConstantsDictionary.TryGetValue("InstallerPlatform", out var installerPlatform))
+            {
+                dict.Add("BUILDARCH", installerPlatform);
+            }
+
+            return dict;
+        }
+
         /// <summary>
         /// For each item in SourceFiles, reads the XML, finds all File elements, gets File@Id and File@Source values.
         /// If File@Source contains $(<value>), replaces it with the value from _defineConstantsDictionary.
@@ -654,21 +669,35 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 }
 
                 var varName = path.Substring(startIdx + 2, endIdx - (startIdx + 2));
-                if (varName.StartsWith("var."))
+                if (varName.StartsWith("sys."))
                 {
-                    varName = varName.Substring(4);
-                }
-
-                if (_defineConstantsDictionary.TryGetValue(varName, out var varValue) ||
-                    _defineVariablesDictionary.TryGetValue(varName, out varValue))
-                {
-
-                    path = path.Substring(0, startIdx) + varValue + path.Substring(endIdx + 1);
+                    if (_systemVariablesDictionary.TryGetValue(varName.Substring(4), out var varValue))
+                    {
+                        path = path.Substring(0, startIdx) + varValue + path.Substring(endIdx + 1);
+                    }
+                    else
+                    {
+                        // We support tokenized paths
+                        break;
+                    }
                 }
                 else
                 {
-                    // We support tokenized paths
-                    break;
+                    if (varName.StartsWith("var."))
+                    {
+                        varName = varName.Substring(4);
+                    }
+
+                    if (_defineConstantsDictionary.TryGetValue(varName, out var varValue) ||
+                        _defineVariablesDictionary.TryGetValue(varName, out varValue))
+                    {
+                        path = path.Substring(0, startIdx) + varValue + path.Substring(endIdx + 1);
+                    }
+                    else
+                    {
+                        // We support tokenized paths
+                        break;
+                    }
                 }
 
                 startIdx = path.IndexOf("$(");
