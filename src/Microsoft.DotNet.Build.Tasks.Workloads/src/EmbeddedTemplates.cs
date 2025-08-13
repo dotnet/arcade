@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 { "WorkloadSetProduct.wxs", $"{ns}.MsiTemplate.WorkloadSetProduct.wxs" },
                 { "Product.wxs", $"{ns}.MsiTemplate.Product.wxs" },
                 { "Registry.wxs", $"{ns}.MsiTemplate.Registry.wxs" },
-                { "Variables.wxi", $"{ns}.MsiTemplate.Variables.wxi" },
+                { "msi.wixproj", $"{ns}.MsiTemplate.msi.wixproj" },
 
                 { $"msi.swr", $"{ns}.SwixTemplate.msi.swr" },
                 { $"msi.swixproj", $"{ns}.SwixTemplate.msi.swixproj" },
