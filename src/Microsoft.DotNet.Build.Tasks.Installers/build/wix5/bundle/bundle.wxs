@@ -13,7 +13,7 @@
     Compressed="yes">
 
     <bal:Condition Message="#(loc.FailureNotSupportedCurrentOperatingSystem)"
-                   Condition="VersionNT &gt; v6.2" />
+                   Condition="((VersionNT &gt; v6.1) OR (VersionNT = v6.1 AND ServicePackLevel &gt;= 1))" />
 
     <?if $(var.Platform)=x64 or $(var.Platform)=arm64?>
       <bal:Condition Message="#(loc.FailureNotSupportedX86OperatingSystem)" Condition="VersionNT64" />
