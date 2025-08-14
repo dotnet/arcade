@@ -13,7 +13,7 @@
   -->
   <Target Name="_AcquireWix">
     <PropertyGroup>
-      <LightCommandSrcDir>$(IntermediateOutputPath)/lightcommand/</LightCommandSrcDir>
+      <WixpackWorkingDir>$(IntermediateOutputPath)/wixpackcontents/</WixpackWorkingDir>
     </PropertyGroup>
 
     <PropertyGroup>
@@ -356,17 +356,17 @@
       <_wixArgs>$(_wixArgs) $(AdditionalCandleArgs)</_wixArgs>
       <_wixArgs>$(_wixArgs) $(AdditionalLightArgs)</_wixArgs>
       
-      <_lightCommand>wix.exe build $(_wixArgs)</_lightCommand>
+      <_wixCommand>wix.exe build $(_wixArgs)</_wixCommand>
     </PropertyGroup>
 
     <!--
-      Run light.exe with retries. This hardens against interference by Windows Defender by giving
-      Defender time to catch up. Light creates a file then immediately moves it, which fails when
+      Run wix.exe with retries. This hardens against interference by Windows Defender by giving
+      Defender time to catch up. Wix creates a file then immediately moves it, which fails when
       Defender is holding it open. Uses a small base time because it resolves itself quickly and we
       don't want to delay the build very long if it's an actual build authoring error.
     -->
     <ExecWithRetries
-      Command="$(_lightCommand)"
+      Command="$(_wixCommand)"
       WorkingDirectory="$(WixExeDir)"
       StandardOutputImportance="normal"
       IgnoreStandardErrorWarningFormat="true"
@@ -381,8 +381,8 @@
       IntermediateDirectory="$(IntermediateOutputPath)en-us"
       OutputFolder="$(ArtifactsNonShippingPackagesDir)"
       SourceFiles="@(WixSrcFile)"
-      WixpackWorkingDir="$(LightCommandSrcDir)">
-      <Output TaskParameter="OutputFile" PropertyName="_LightCommandPackageNameOutput" />
+      WixpackWorkingDir="$(WixpackWorkingDir)">
+      <Output TaskParameter="OutputFile" PropertyName="_wixCommandPackageNameOutput" />
     </CreateWixBuildWixpack>
   </Target>
 
