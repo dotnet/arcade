@@ -544,7 +544,8 @@ function LocateVisualStudio([object]$vsRequirements = $null){
   if (Get-Member -InputObject $GlobalJson.tools -Name 'vswhere') {
     $vswhereVersion = $GlobalJson.tools.vswhere
   } else {
-    $vswhereVersion = '2.5.2'
+    # keep this in sync with the VSWhereVersion in DefaultVersions.props
+    $vswhereVersion = '3.1.7'
   }
 
   $vsWhereDir = Join-Path $ToolsDir "vswhere\$vswhereVersion"
