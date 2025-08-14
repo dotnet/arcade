@@ -26,7 +26,6 @@
       <MsiArch>$(InstallerTargetArchitecture)</MsiArch>
     </PropertyGroup>
 
-    <!-- TODO not all of these are required all the time. e.g. only bundle requires WixBalExtension -->
     <Error
       Text="WiX tools not found. Please install package 'Microsoft.Wix'."
       Condition="!Exists('$(PkgMicrosoft_Wix)')" />
@@ -50,6 +49,7 @@
     <Error
       Text="WiX tools not found. Please install package 'Microsoft.WixToolset.Bal.wixext'."
       Condition="!Exists('$(PkgMicrosoft_WixToolset_Bal_wixext)')" />
+
     <PropertyGroup>
       <WixExeDir>$(PkgMicrosoft_Wix)\tools\net6.0\any\</WixExeDir>
       <WixExtensionsDir>wixext5</WixExtensionsDir>
@@ -211,7 +211,7 @@
       
     <PropertyGroup>
       <WixInstallerIconFile Condition="'$(WixInstallerIconFile)' == ''">$(MSBuildThisFileDirectory)..\resources\dotnet.ico</WixInstallerIconFile>
-      <WixInstallerPngLogoFile Condition="'$(WixInstallerPngLogoFile)' == ''">$(MSBuildThisFileDirectory)..\resources\DotNetLogo_124x.png</WixInstallerPngLogoFile>
+      <WixInstallerPngLogoFile Condition="'$(WixInstallerPngLogoFile)' == ''">$(MSBuildThisFileDirectory)..\resources\DotNetLogo_256x.png</WixInstallerPngLogoFile>
       <WixInstallerLogoFile Condition="'$(WixInstallerLogoFile)' == ''">$(MSBuildThisFileDirectory)..\resources\dotnetlogo.bmp</WixInstallerLogoFile>
       <WixBootstrapperFlavor Condition="'$(WixBootstrapperFlavor)' == ''">Foundation</WixBootstrapperFlavor>
     </PropertyGroup>
@@ -260,7 +260,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <CandleVariables Include="MicrosoftEula" Value="$(MSBuildThisFileDirectory)eula.rtf" />
       <CandleVariables Include="InstallerVersion" Value="$(WixInstallerVersion)" />
     </ItemGroup>
   </Target>
@@ -512,15 +511,14 @@
     <Message Text="$(MSBuildProjectName) -> $(NupkgOutputFile)" Importance="High" />
   </Target>
 
-  <!-- TODO insignia needs to be wix burn detach/attach command -->
   <Target Name="ExtractEngineBundle"
           DependsOnTargets="
             GetInstallerGenerationFlags;
             GetWixBuildConfiguration">
     <Exec
       Condition="'$(GenerateExeBundle)' == 'true'"
-      Command="insignia.exe -ib $(_OutInstallerFile) -o $(ExeBundleInstallerEngineFile)"
-      WorkingDirectory="$(WixToolsDir)" />
+      Command="wix.exe burn detach $(_OutInstallerFile) -engine $(ExeBundleInstallerEngineFile)"
+      WorkingDirectory="$(WixExeDir)" />
   </Target>
 
   <Target Name="ReattachEngineToBundle"
@@ -529,8 +527,8 @@
             GetWixBuildConfiguration">
     <Exec
       Condition="'$(GenerateExeBundle)' == 'true'"
-      Command="insignia.exe -ab $(ExeBundleInstallerEngineFile) $(_OutInstallerFile) -o $(_OutInstallerFile)"
-      WorkingDirectory="$(WixToolsDir)" />
+      Command="wix.exe burn reattach $(_OutInstallerFile) -engine $(ExeBundleInstallerEngineFile) -o $(_OutInstallerFile)"
+      WorkingDirectory="$(WixExeDir)" />
   </Target>
 
   <Target Name="GetOutputWixInstallerFile"

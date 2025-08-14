@@ -438,12 +438,6 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                                     continue;
                                 }
 
-                                // TODO handle <Payload Name='eula.rtf' Compressed='yes' SourceFile='!(wix.WixStdbaLicenseRtf)' />
-                                if (source.Contains("WixStdbaLicenseRtf"))
-                                {
-                                    continue;
-                                }
-
                                 source = ResolvePath(source);
 
                                 // If there are any unprocessed tokens, process all matching file patterns

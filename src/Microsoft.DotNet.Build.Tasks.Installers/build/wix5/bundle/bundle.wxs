@@ -11,9 +11,6 @@
     UpgradeCode="$(var.UpgradeCode)"
     AboutUrl="https://dot.net/core"
     Compressed="yes">
-    
-    <bal:Condition Message="#(loc.FailureNotSupportedCurrentOperatingSystem)"
-                   Condition="((VersionNT &gt; v6.1) OR (VersionNT = v6.1 AND ServicePackLevel &gt;= 1))" />
 
     <?if $(var.Platform)=x64 or $(var.Platform)=arm64?>
       <bal:Condition Message="#(loc.FailureNotSupportedX86OperatingSystem)" Condition="VersionNT64" />
@@ -77,22 +74,13 @@
   <Fragment>
     <PayloadGroup Id="DotnetCoreBAPayloads">
       <Payload Name="dotnet.ico" Compressed="yes" SourceFile="$(var.DotNetIcoFile)" />
-      <Payload Name="DotNetLogo_124x.png" Compressed="yes" SourceFile="$(var.DotNetLogoPngFile)" />
+      <Payload Name="DotNetLogo_256x.png" Compressed="yes" SourceFile="$(var.DotNetLogoPngFile)" />
 
       <?foreach LCID in $(var.LcidList)?>
         <Payload Id="thm_$(var.LCID)" Compressed="yes" Name="$(var.LCID)\thm.wxl" SourceFile="$(var.BundleThmDir)\theme\$(var.LCID)\bundle.wxl" />
       <?endforeach?>
 
-      <?if $(var.BootstrapperApplicationFlavor) = "Foundation" ?>
-        <Payload Name='eula.rtf' Compressed='yes' SourceFile='!(wix.WixStdbaLicenseRtf)' />
-      <?endif?>
     </PayloadGroup>
-
-    <CustomTable Id='WixStdbaInformation'>
-      <Row>
-        <Data Column="LicenseFile" Value="eula.rtf" />
-      </Row>
-    </CustomTable>
   </Fragment>
 
 </Wix>
