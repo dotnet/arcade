@@ -12,6 +12,9 @@
     AboutUrl="https://dot.net/core"
     Compressed="yes">
 
+    <bal:Condition Message="#(loc.FailureNotSupportedCurrentOperatingSystem)"
+                   Condition="VersionNT &gt; v6.2" />
+
     <?if $(var.Platform)=x64 or $(var.Platform)=arm64?>
       <bal:Condition Message="#(loc.FailureNotSupportedX86OperatingSystem)" Condition="VersionNT64" />
     <?endif?>

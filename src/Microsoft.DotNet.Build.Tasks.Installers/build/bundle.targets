@@ -106,9 +106,7 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
     <Fragment>
         <PackageGroup Id="PG_DotNet">
-            @(_BundledComponents->'<MsiPackage SourceFile="%(Identity)">
-                <MsiProperty Name="DOTNETHOME" Value="[DOTNETHOME]" />
-            </MsiPackage>', '
+            @(_BundledComponents->'<MsiPackage SourceFile="%(Identity)" />', '
             ')
         </PackageGroup>
     </Fragment>
