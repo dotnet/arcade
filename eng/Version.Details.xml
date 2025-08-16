@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
-  <Source Uri="https://github.com/dotnet/dotnet" Mapping="arcade" Sha="5088919af0e4a144ce5b294542f472bf668c9cc8" BarId="279336" />
+  <Source Uri="https://github.com/dotnet/dotnet" Mapping="arcade" Sha="f8a57b66e6466922534e8046b37a6503d9d39dab" BarId="279432" />
   <ProductDependencies>
   </ProductDependencies>
   <ToolsetDependencies>
@@ -170,6 +170,14 @@
     <Dependency Name="Microsoft.Build.Utilities.Core" Version="17.12.36">
       <Uri>https://github.com/dotnet/msbuild</Uri>
       <Sha>d1cce8d7cc03c23a4f1bad8e9240714fd9d199a3</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.ApplicationInsights" Version="2.23.0">
+      <Uri>https://github.com/microsoft/ApplicationInsights-dotnet</Uri>
+      <Sha>2faa7e8b157a431daa2e71785d68abd5fa817b53</Sha>
+    </Dependency>
+    <Dependency Name="Newtonsoft.Json" Version="13.0.3">
+      <Uri>https://github.com/JamesNK/Newtonsoft.Json</Uri>
+      <Sha>0a2e291c0d9c0c7675d445703e51750363a549ef</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>

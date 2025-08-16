@@ -57,6 +57,10 @@ This file should be imported by eng/Versions.props
     <MicrosoftBuildFrameworkPackageVersion>17.12.36</MicrosoftBuildFrameworkPackageVersion>
     <MicrosoftBuildTasksCorePackageVersion>17.12.36</MicrosoftBuildTasksCorePackageVersion>
     <MicrosoftBuildUtilitiesCorePackageVersion>17.12.36</MicrosoftBuildUtilitiesCorePackageVersion>
+    <!-- microsoft/ApplicationInsights-dotnet dependencies -->
+    <MicrosoftApplicationInsightsPackageVersion>2.23.0</MicrosoftApplicationInsightsPackageVersion>
+    <!-- JamesNK/Newtonsoft.Json dependencies -->
+    <NewtonsoftJsonPackageVersion>13.0.3</NewtonsoftJsonPackageVersion>
   </PropertyGroup>
   <!--Property group for alternate package version names-->
   <PropertyGroup>
@@ -111,5 +115,9 @@ This file should be imported by eng/Versions.props
     <MicrosoftBuildFrameworkVersion>$(MicrosoftBuildFrameworkPackageVersion)</MicrosoftBuildFrameworkVersion>
     <MicrosoftBuildTasksCoreVersion>$(MicrosoftBuildTasksCorePackageVersion)</MicrosoftBuildTasksCoreVersion>
     <MicrosoftBuildUtilitiesCoreVersion>$(MicrosoftBuildUtilitiesCorePackageVersion)</MicrosoftBuildUtilitiesCoreVersion>
+    <!-- microsoft/ApplicationInsights-dotnet dependencies -->
+    <MicrosoftApplicationInsightsVersion>$(MicrosoftApplicationInsightsPackageVersion)</MicrosoftApplicationInsightsVersion>
+    <!-- JamesNK/Newtonsoft.Json dependencies -->
+    <NewtonsoftJsonVersion>$(NewtonsoftJsonPackageVersion)</NewtonsoftJsonVersion>
   </PropertyGroup>
 </Project>
