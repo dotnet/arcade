@@ -8,9 +8,9 @@ using FluentAssertions;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.Deployment.WindowsInstaller;
 using Microsoft.DotNet.Build.Tasks.Workloads.Msi;
 using Microsoft.NET.Sdk.WorkloadManifestReader;
+using WixToolset.Dtf.WindowsInstaller;
 using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         [WindowsOnlyFact]
         public void WorkloadManifestsIncludeInstallationRecords()
         {
-            ITaskItem msi603 = BuildManifestMsi(Path.Combine(TestAssetsPath, "microsoft.net.workload.mono.toolchain.manifest-6.0.200.6.0.3.nupkg"), 
+            ITaskItem msi603 = BuildManifestMsi(Path.Combine(TestAssetsPath, "microsoft.net.workload.mono.toolchain.manifest-6.0.200.6.0.3.nupkg"),
                 msiOutputPath: Path.Combine(MsiOutputPath, "mrec"));
             string msiPath603 = msi603.GetMetadata(Metadata.FullPath);
 
