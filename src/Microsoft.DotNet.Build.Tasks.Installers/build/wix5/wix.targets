@@ -308,6 +308,10 @@
       SourceFile="%(DirectoryToHarvest.WixSourceFile)"
       OutputFile="%(DirectoryToHarvest.WixSourceFile)"
       FileElementToStabilize="@(HeatOutputFileElementToStabilize)" />
+
+    <ItemGroup>
+      <WixSrcFile Include="@(DirectoryToHarvest->'%(WixSourceFile)')" />
+    </ItemGroup>
   </Target>
 
   <Target Name="RunLightLinker"
@@ -333,6 +337,7 @@
       <CandleVariables Include="ProductMoniker" Value="$(ProductBrandName)" />
       <CandleVariables Include="BuildVersion" Value="$(MsiVersionString)" />
       <CandleVariables Include="NugetVersion" Value="$(Version)" />
+      <CandleVariables Include="InstallerPlatform" Value="$(MsiArch)" />
       <CandleVariables Include="TargetArchitectureDescription" Value="$(InstallerTargetArchitecture)$(CrossArchContentsBuildPart)" />
       <CandleVariables Include="UpgradeCode" Value="$(UpgradeCode)" />
       <CandleVariables Include="MajorUpgradeSchedule" Value="$(MajorUpgradeSchedule)" Condition="'$(MajorUpgradeSchedule)' != ''" />
@@ -343,6 +348,7 @@
 
     <PropertyGroup>
       <_wixArgs></_wixArgs>
+      <_wixArgs>$(_wixArgs) -wx</_wixArgs>
       <_wixArgs>$(_wixArgs) -nologo</_wixArgs>
       <_wixArgs>$(_wixArgs) -culture en-us</_wixArgs>
       <_wixArgs>$(_wixArgs) -arch $(MsiArch)</_wixArgs>
@@ -351,7 +357,6 @@
       <_wixArgs>$(_wixArgs) @(WixExtensions -> '-ext %(Identity)', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(CandleVariables -> '-d %(Identity)="%(Value)"', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(WixSrcFile -> '"%(FullPath)"', ' ')</_wixArgs>
-      <_wixArgs>$(_wixArgs) @(DirectoryToHarvest -> '"%(WixSourceFile)"', ' ')</_wixArgs>
 
       <_wixArgs>$(_wixArgs) $(AdditionalCandleArgs)</_wixArgs>
       <_wixArgs>$(_wixArgs) $(AdditionalLightArgs)</_wixArgs>
@@ -375,9 +380,10 @@
     <!-- TODO this fails on preprocessor directives -->
     <CreateWixBuildWixpack
       Cultures="en-us"
-      DefineConstants="@(CandleVariables->'var.%(Identity)=%(Value)')"
+      DefineConstants="@(CandleVariables->'%(Identity)=%(Value)')"
       Extensions="@(WixExtensions)"
       InstallerFile="$(_OutInstallerFile)"
+      InstallerPlatform="$(MsiArch)"
       IntermediateDirectory="$(IntermediateOutputPath)en-us"
       OutputFolder="$(ArtifactsNonShippingPackagesDir)"
       SourceFiles="@(WixSrcFile)"

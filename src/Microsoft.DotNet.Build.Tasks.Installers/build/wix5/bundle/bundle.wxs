@@ -15,7 +15,10 @@
     <bal:Condition Message="#(loc.FailureNotSupportedCurrentOperatingSystem)"
                    Condition="((VersionNT &gt; v6.1) OR (VersionNT = v6.1 AND ServicePackLevel &gt;= 1))" />
 
-    <?if $(var.Platform)=x64 or $(var.Platform)=arm64?>
+    <?if $(var.Platform)=x64?>
+      <bal:Condition Message="#(loc.FailureNotSupportedX86OperatingSystem)" Condition="VersionNT64" />
+    <?endif?>
+    <?if $(var.Platform)=arm64?>
       <bal:Condition Message="#(loc.FailureNotSupportedX86OperatingSystem)" Condition="VersionNT64" />
     <?endif?>
 
@@ -79,8 +82,8 @@
       <Payload Name="dotnet.ico" Compressed="yes" SourceFile="$(var.DotNetIcoFile)" />
       <Payload Name="DotNetLogo_256x.png" Compressed="yes" SourceFile="$(var.DotNetLogoPngFile)" />
 
-      <?foreach LCID in $(var.LcidList)?>
-        <Payload Id="thm_$(var.LCID)" Compressed="yes" Name="$(var.LCID)\thm.wxl" SourceFile="$(var.BundleThmDir)\theme\$(var.LCID)\bundle.wxl" />
+      <?foreach langLCID in $(var.LcidList)?>
+        <Payload Id="thm_$(langLCID)" Compressed="yes" Name="$(langLCID)\thm.wxl" SourceFile="$(var.BundleThmDir)\theme\$(langLCID)\bundle.wxl" />
       <?endforeach?>
 
     </PayloadGroup>

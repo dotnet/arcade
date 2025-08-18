@@ -25,14 +25,12 @@
       </CreateFolder>
     </Component>
 
-    <DirectoryRef Id="TARGETDIR">
-      <Directory Id="CommonAppDataFolder">
-        <Directory Id="MicrosoftCommonAppData" Name="Microsoft">
-          <Directory Id="NetFrameworkCommonAppData" Name="NetFramework">
-            <Directory Id="BreadcrumbStore" Name="BreadcrumbStore" />
-          </Directory>
+    <StandardDirectory Id="CommonAppDataFolder">
+      <Directory Id="MicrosoftCommonAppData" Name="Microsoft">
+        <Directory Id="NetFrameworkCommonAppData" Name="NetFramework">
+          <Directory Id="BreadcrumbStore" Name="BreadcrumbStore" />
         </Directory>
       </Directory>
-    </DirectoryRef>
+    </StandardDirectory>
   </Fragment>
 </Wix>
