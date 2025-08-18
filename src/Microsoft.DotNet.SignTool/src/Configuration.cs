@@ -308,6 +308,9 @@ namespace Microsoft.DotNet.SignTool
             PEInfo peInfo = null;
             SignedFileContentKey signedFileContentKey = new SignedFileContentKey(file.ContentHash, file.FileName);
 
+            // Detect executable type for matching FileSignInfo entries
+            ExecutableType executableType = ContentUtil.GetExecutableType(file.FullPath);
+
             // First check for zero length files. These occasionally occur in python and
             // cannot be signed.
             if (file.ContentHash == ContentUtil.EmptyFileContentHash)
@@ -417,6 +420,7 @@ namespace Microsoft.DotNet.SignTool
                 matchedNameTokenFramework = _fileSignInfo.TryGetValue(
                     new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, peInfo.TargetFramework, _hashToCollisionIdMap[signedFileContentKey]),
                     out explicitCertificateName);
+                
                 matchedNameToken = !matchedNameTokenFramework && _fileSignInfo.TryGetValue(
                     new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]),
                     out explicitCertificateName);
@@ -452,8 +456,20 @@ namespace Microsoft.DotNet.SignTool
             // We didn't find any specific information for PE files using PKT + TargetFramework
             if (explicitCertificateName == null)
             {
-                matchedName = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(file.FileName,
-                    collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]), out explicitCertificateName);
+                // First try with ExecutableType
+                var matchedNameAndExecutableType = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(file.FileName,
+                    collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey], executableType: executableType), out explicitCertificateName);
+                
+                // If no match with ExecutableType, try without it for backward compatibility
+                if (!matchedNameAndExecutableType)
+                {
+                    matchedName = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(file.FileName,
+                        collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]), out explicitCertificateName);
+                }
+                else
+                {
+                    matchedName = matchedNameAndExecutableType;
+                }
             }
 
             // If has overriding info, is it for ignoring the file?
@@ -774,48 +790,49 @@ namespace Microsoft.DotNet.SignTool
             try
             {
                 var nestedParts = new Dictionary<string, ZipPart>();
-                
+
                 foreach (var entry in ZipData.ReadEntries(archivePath, _pathToContainerUnpackingDirectory, _tarToolPath, _pkgToolPath))
                 {
-                    if (entry.ContentHash == null)
+                    using (entry)
                     {
-                        // this might be just a pointer to a folder. We skip those.
-                        continue;
-                    }
+                        if (entry.ContentHash == null)
+                        {
+                            // this might be just a pointer to a folder. We skip those.
+                            continue;
+                        }
 
-                    var fileUniqueKey = new SignedFileContentKey(entry.ContentHash, Path.GetFileName(entry.RelativePath));
+                        var fileUniqueKey = new SignedFileContentKey(entry.ContentHash, Path.GetFileName(entry.RelativePath));
 
-                    if (!_whichPackagesTheFileIsIn.TryGetValue(fileUniqueKey, out var packages))
-                    {
-                        packages = new HashSet<string>();
-                    }
+                        if (!_whichPackagesTheFileIsIn.TryGetValue(fileUniqueKey, out var packages))
+                        {
+                            packages = new HashSet<string>();
+                        }
 
-                    packages.Add(Path.GetFileName(archivePath));
+                        packages.Add(Path.GetFileName(archivePath));
 
-                    _whichPackagesTheFileIsIn[fileUniqueKey] = packages;
+                        _whichPackagesTheFileIsIn[fileUniqueKey] = packages;
 
-                    // if we already encountered file that has the same content we can reuse its signed version when repackaging the container.
-                    var fileName = Path.GetFileName(entry.RelativePath);
-                    if (!_filesByContentKey.TryGetValue(fileUniqueKey, out var fileSignInfo))
-                    {
-                        string extractPathRoot = _useHashInExtractionPath ? fileUniqueKey.StringHash : _filesByContentKey.Count().ToString();
-                        string tempPath = Path.Combine(_pathToContainerUnpackingDirectory, extractPathRoot, entry.RelativePath);
-                        _log.LogMessage($"Extracting file '{fileName}' from '{archivePath}' to '{tempPath}'.");
+                        // if we already encountered file that has the same content we can reuse its signed version when repackaging the container.
+                        var fileName = Path.GetFileName(entry.RelativePath);
+                        if (!_filesByContentKey.TryGetValue(fileUniqueKey, out var fileSignInfo))
+                        {
+                            string extractPathRoot = _useHashInExtractionPath ? fileUniqueKey.StringHash : _filesByContentKey.Count().ToString();
+                            string tempPath = Path.Combine(_pathToContainerUnpackingDirectory, extractPathRoot, entry.RelativePath);
+                            _log.LogMessage($"Extracting file '{fileName}' from '{archivePath}' to '{tempPath}'.");
 
-                        Directory.CreateDirectory(Path.GetDirectoryName(tempPath));
+                            Directory.CreateDirectory(Path.GetDirectoryName(tempPath));
 
-                        entry.WriteToFile(tempPath);
+                            entry.WriteToFile(tempPath);
 
-                        _hashToCollisionIdMap.TryGetValue(fileUniqueKey, out string collisionPriorityId);
-                        PathWithHash nestedFile = new PathWithHash(tempPath, entry.ContentHash);
-                        fileSignInfo = TrackFile(nestedFile, zipFileSignInfo.File, collisionPriorityId);
-                    }
+                            _hashToCollisionIdMap.TryGetValue(fileUniqueKey, out string collisionPriorityId);
+                            PathWithHash nestedFile = new PathWithHash(tempPath, entry.ContentHash);
+                            fileSignInfo = TrackFile(nestedFile, zipFileSignInfo.File, collisionPriorityId);
+                        }
 
-                    entry.Dispose();
-
-                    if (fileSignInfo.ShouldTrack)
-                    {
-                        nestedParts.Add(entry.RelativePath, new ZipPart(entry.RelativePath, fileSignInfo));
+                        if (fileSignInfo.ShouldTrack)
+                        {
+                            nestedParts.Add(entry.RelativePath, new ZipPart(entry.RelativePath, fileSignInfo));
+                        }
                     }
                 }
 
