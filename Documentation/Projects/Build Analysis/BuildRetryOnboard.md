@@ -21,7 +21,7 @@ Ex. \eng\BuildConfiguration\build-configuration.json
     ``` 
     - task: PublishPipelineArtifact@1
       inputs:
-          targetPath: $(System.DefaultWorkingDirectory)\eng\BuildConfiguration
+          targetPath: $(Build.SourcesDirectory)\eng\BuildConfiguration
           artifactName: BuildConfiguration
    ``` 
 
