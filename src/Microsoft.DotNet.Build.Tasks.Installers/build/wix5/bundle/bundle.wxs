@@ -61,7 +61,7 @@
       </BootstrapperApplication>
     <?endif?>
 
-    <SoftwareTag Regid="microsoft.com" InstallPath="[$(var.Program_Files)]dotnet" />
+    <SoftwareTag Regid="microsoft.com" InstallPath="[ProgramFiles6432Folder]dotnet" />
 
     <!-- Variables used solely for localization. -->
     <Variable Name="BUNDLEMONIKER" Type="string" Value="$(var.ProductMoniker) ($(var.TargetArchitectureDescription))" bal:Overridable="no" />

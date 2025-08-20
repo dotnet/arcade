@@ -15,17 +15,12 @@
 
   <?define Platform   =   "$(sys.BUILDARCH)" ?>
 
-  <?if $(var.Platform)=x86?>
-    <?define Program_Files="ProgramFilesFolder"?>
-    <?define Win64AttributeValue=no?>
-  <?elseif $(var.Platform)=x64?>
-    <?define Program_Files="ProgramFiles64Folder"?>
-    <?define Win64AttributeValue=yes?>
-  <?elseif $(var.Platform)=arm64?>
-    <?define Program_Files="ProgramFiles64Folder"?>
-    <?define Win64AttributeValue=yes?>
-  <?else?>
-    <?error Invalid Platform ($(var.Platform))?>
+  <?if $(var.Platform)!=x86?>
+    <?if $(var.Platform)!=x64?>
+      <?if $(var.Platform)!=arm64?>
+        <?error Invalid Platform ($(var.Platform))?>
+      <?endif?>
+    <?endif?>
   <?endif?>
 
   <?ifndef DependencyKey?>
