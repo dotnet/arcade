@@ -854,6 +854,29 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 targetFeeds: DotNet10Feeds,
                 symbolTargetType: SymbolPublishVisibility.Public),
 
+            // .NET 10 Eng,
+            new TargetChannelConfig(
+                id: 8394,
+                isInternal: false,
+                publishingInfraVersion: PublishingInfraVersion.Latest,
+                akaMSChannelNames: ["eng/net10"],
+                akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
+                akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
+                targetFeeds: DotNetEngFeeds,
+                symbolTargetType: SymbolPublishVisibility.Public),
+
+            // .NET 10 Eng - Validation,
+            new TargetChannelConfig(
+                id: 8395,
+                isInternal: false,
+                publishingInfraVersion: PublishingInfraVersion.Latest,
+                akaMSChannelNames: ["eng/net10validation"],
+                akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
+                akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
+                targetFeeds: DotNetEngFeeds,
+                symbolTargetType: SymbolPublishVisibility.Public,
+                flatten: false),
+
             // .NET 10 Workload Release,
             new TargetChannelConfig(
                 id: 5174,
