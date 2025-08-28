@@ -3,6 +3,9 @@
 
 using System;
 using System.IO;
+using Microsoft.Build.Utilities;
+using Microsoft.DotNet.Build.Tasks.Workloads.Msi;
+using Microsoft.Arcade.Test.Common;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 {
@@ -17,5 +20,28 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public static readonly string WixToolsetPath = Path.Combine(TestAssetsPath, "wix");
 
         public static readonly string PackageRootDirectory = Path.Combine(BaseIntermediateOutputPath, "pkg");
+
+        public static readonly string TestOutputRoot = Path.Combine(AppContext.BaseDirectory, "TEST_OUTPUT");
+
+        /// <summary>
+        /// Returns a new, random directory for test projects.
+        /// </summary>
+        public string TestProjectDirectory => Path.Combine(TestOutputRoot, Path.GetFileNameWithoutExtension(Path.GetTempFileName()));
+
+        internal static WorkloadManifestPackage CreateWorkloadManifestPackage(string packageFile, string msiVersion)
+        {
+            string path = Path.Combine(TestAssetsPath, packageFile);
+            TaskItem packageItem = new(path);
+            return new(packageItem, PackageRootDirectory, new Version(msiVersion));
+        }
+
+        internal static WorkloadManifestMsi CreateWorkloadManifestMsi(string packageFile, string msiVersion, string platform = "x64", string msiOutputPath = null,
+            bool isSxS = true)
+        {
+            WorkloadManifestPackage pkg = CreateWorkloadManifestPackage(packageFile, msiVersion);
+            WorkloadManifestMsi msi = new(pkg, platform, new MockBuildEngine(), WixToolsetPath, BaseIntermediateOutputPath,
+                isSxS: true);
+            return msi;
+        }
     }
 }

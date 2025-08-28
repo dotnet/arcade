@@ -135,11 +135,20 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             // Template packs should pull in the raw nupkg. We can verify by query the File table. There should
             // only be a single file.
             FileRow fileRow = MsiUtils.GetAllFiles(msiPath).FirstOrDefault();
-            Assert.Contains("microsoft.ios.templates.15.2.302-preview.14.122.nupk", fileRow.FileName);
+            Assert.Contains("microsoft.ios.templates.15.2.302-preview.14.122.nupkg", fileRow.FileName);
 
             // Generated MSI should return the path where the .wixobj files are located so
             // WiX packs can be created for post-build signing.
             Assert.NotNull(item.GetMetadata(Metadata.WixObj));
+        }
+
+        [WindowsOnlyFact]
+        public void ItCreatesSetupProects()
+        {
+            var msi = CreateWorkloadManifestMsi(Path.Combine(TestAssetsPath, "microsoft.net.workload.mono.toolchain.manifest-6.0.200.6.0.3.nupkg"),
+                msiVersion: "1.2.3");
+
+            msi.CreateProject();
         }
     }
 }
