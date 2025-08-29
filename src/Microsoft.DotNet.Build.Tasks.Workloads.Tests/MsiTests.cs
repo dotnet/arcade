@@ -8,9 +8,9 @@ using FluentAssertions;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.Deployment.WindowsInstaller;
 using Microsoft.DotNet.Build.Tasks.Workloads.Msi;
 using Microsoft.NET.Sdk.WorkloadManifestReader;
+using WixToolset.Dtf.WindowsInstaller;
 using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         [WindowsOnlyFact]
         public void WorkloadManifestsIncludeInstallationRecords()
         {
-            ITaskItem msi603 = BuildManifestMsi(Path.Combine(TestAssetsPath, "microsoft.net.workload.mono.toolchain.manifest-6.0.200.6.0.3.nupkg"), 
+            ITaskItem msi603 = BuildManifestMsi(Path.Combine(TestAssetsPath, "microsoft.net.workload.mono.toolchain.manifest-6.0.200.6.0.3.nupkg"),
                 msiOutputPath: Path.Combine(MsiOutputPath, "mrec"));
             string msiPath603 = msi603.GetMetadata(Metadata.FullPath);
 
@@ -135,11 +135,20 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             // Template packs should pull in the raw nupkg. We can verify by query the File table. There should
             // only be a single file.
             FileRow fileRow = MsiUtils.GetAllFiles(msiPath).FirstOrDefault();
-            Assert.Contains("microsoft.ios.templates.15.2.302-preview.14.122.nupk", fileRow.FileName);
+            Assert.Contains("microsoft.ios.templates.15.2.302-preview.14.122.nupkg", fileRow.FileName);
 
             // Generated MSI should return the path where the .wixobj files are located so
             // WiX packs can be created for post-build signing.
             Assert.NotNull(item.GetMetadata(Metadata.WixObj));
+        }
+
+        [WindowsOnlyFact]
+        public void ItCreatesSetupProects()
+        {
+            var msi = CreateWorkloadManifestMsi(Path.Combine(TestAssetsPath, "microsoft.net.workload.mono.toolchain.manifest-6.0.200.6.0.3.nupkg"),
+                msiVersion: "1.2.3");
+
+            msi.CreateProject();
         }
     }
 }
