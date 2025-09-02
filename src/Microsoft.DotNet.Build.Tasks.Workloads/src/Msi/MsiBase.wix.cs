@@ -159,6 +159,60 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         }
 
         /// <summary>
+        /// Creates an empty WiX project using the specific toolset version and initialize common properties.
+        /// </summary>
+        /// <param name="toolsetVersion">The WiX toolset version to use for building the project.</param>
+        /// <returns>An empty project.</returns>
+        /// <remarks>
+        /// <para>
+        /// The following properties are set: <b>InstallerPlatform</b>
+        /// </para>
+        /// <para>
+        /// The following preprocessor variables are included: <b>InstallerVersion</b>
+        /// </para>
+        /// </remarks>
+        protected WixProject CreateEmptyProject(string toolsetVersion = ToolsetInfo.MicrosoftWixToolsetVersion)
+        {
+            if (Directory.Exists(WixSourceDirectory))
+            {
+                Directory.Delete(WixSourceDirectory, true);
+            }
+
+            Directory.CreateDirectory(WixSourceDirectory);
+
+            WixProject wixproj = new(toolsetVersion);
+
+            // Initialize common properties and preprocessor definitions.
+            wixproj.AddProperty("InstallerPlatform", Platform);
+            // Turn off ICE validation. CodeIntegrity and AppLocker block ICE checks that require elevation, even
+            // when running as administator. 
+            wixproj.AddProperty("SuppressValidation", "true");
+
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.Bitness, Platform == "x86" ? "always32" : "always64");
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.EulaRtf, GenerateEula());
+            // v5.0 was releases with W2K8 R2 and Windows 7. It's also required to support
+            // arm64. See https://learn.microsoft.com/en-us/windows/win32/msi/released-versions-of-windows-installer
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.InstallerVersion, "500");
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.Manufacturer, Manufacturer);
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.PackageId, Metadata.Id);
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.PackageVersion, $"{Metadata.PackageVersion}");
+            //wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.Platform, Platform);
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.ProductCode, $"{Guid.NewGuid():B}");
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.ProductLanguage, "1033");
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.ProductName, GetProductName(Platform));
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.ProductVersion, $"{Metadata.MsiVersion}");
+
+            // All MSIs must support reference counting.
+            wixproj.AddPackageReference(ToolsetPackages.MicrosoftWixToolsetDependencyExtension);
+            // Util extension is required to access the QueryNativeMachine custom action.
+            wixproj.AddPackageReference(ToolsetPackages.MicrosoftWixToolsetUtilExtension);
+            // All workload MSIs (manifests or packs) needs to override the default dialog set and select a minimal UI.
+            wixproj.AddPackageReference(ToolsetPackages.MicrosoftWixToolsetUIExtension);
+
+            return wixproj;
+        }
+
+        /// <summary>
         /// Creates a new compiler tool task and configures some common extensions and preprocessor
         /// variables.
         /// </summary>

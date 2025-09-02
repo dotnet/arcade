@@ -78,6 +78,23 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         }
 
         [WindowsOnlyFact]
+        public void ItCanGenerateAManifestWixProject()
+        {
+            string testCaseDirectory = TestCaseDirectory;
+            testCaseDirectory = @"D:\workloads\manifests\A";
+            // Directory where the package will be extracted.
+            string packageContentsDirectory = Path.Combine(testCaseDirectory, "pkg");
+            TaskItem packageItem = new(Path.Combine(TestAssetsPath, "microsoft.net.workload.mono.toolchain.manifest-6.0.200.6.0.3.nupkg"));
+            WorkloadManifestPackage pkg = new(packageItem, packageContentsDirectory, new Version("1.2.3"));
+            pkg.Extract();
+            WorkloadManifestMsi msi = new(pkg, "x64", new MockBuildEngine(), WixToolsetPath, testCaseDirectory);
+
+            string wixProjPath = msi.CreateProject(ToolsetInfo.MicrosoftWixToolsetVersion);
+
+            string wixProjContents = File.ReadAllText(wixProjPath);
+        }
+
+        [WindowsOnlyFact]
         public void ItCanBuildAManifestMsi()
         {
             string PackageRootDirectory = Path.Combine(BaseIntermediateOutputPath, "pkg");
@@ -140,15 +157,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             // Generated MSI should return the path where the .wixobj files are located so
             // WiX packs can be created for post-build signing.
             Assert.NotNull(item.GetMetadata(Metadata.WixObj));
-        }
-
-        [WindowsOnlyFact]
-        public void ItCreatesSetupProects()
-        {
-            var msi = CreateWorkloadManifestMsi(Path.Combine(TestAssetsPath, "microsoft.net.workload.mono.toolchain.manifest-6.0.200.6.0.3.nupkg"),
-                msiVersion: "1.2.3");
-
-            msi.CreateProject();
-        }
+        }        
     }
 }

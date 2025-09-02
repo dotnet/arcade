@@ -48,7 +48,7 @@
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
     <PackageReference Include="System.Text.Json" />
   </ItemGroup>
-
+  
   <ItemGroup>
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
     <!--<Content Include="$(NuGetPackageRoot)microsoft.signed.wix\$(MicrosoftSignedWixVersion)\tools\**\*" Link="testassets\wix\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" Visible="false" />-->
@@ -73,5 +73,5 @@
     <None Remove="testassets\emsdkWorkloadManifest.json" />
     <None Remove="testassets\emsdkWorkloadManifest2.json" />
     <None Remove="testassets\mauiWorkloadManifest.json" />
-  </ItemGroup>
+  </ItemGroup>  
 </Project>

@@ -125,8 +125,17 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
                     var item = doc.CreateElement(_itemHarvestDirectory);
                     item.SetAttribute(_attributeInclude, harvestInfo.Path);
                     item.SetAttribute(_attributeComponentGroupName, harvestInfo.ComponentGroupName);
-                    item.SetAttribute(_attributeDirectoryRefId, harvestInfo.DirectoryRefId);
-                    item.SetAttribute(_attributePreprocessorVariable, harvestInfo.PreprocessorVariable);
+
+                    if (!string.IsNullOrWhiteSpace(harvestInfo.DirectoryRefId))
+                    {
+                        item.SetAttribute(_attributeDirectoryRefId, harvestInfo.DirectoryRefId);
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(harvestInfo.PreprocessorVariable))
+                    {
+                        item.SetAttribute(_attributePreprocessorVariable, harvestInfo.PreprocessorVariable);
+                    }
+
                     item.SetAttribute(_attributeSuppressRegistry, harvestInfo.SuppressRegistry.ToString().ToLowerInvariant());
                     item.SetAttribute(_attributeSuppressRootDirectory, harvestInfo.SuppressRootDirectory.ToString().ToLowerInvariant());
 
@@ -144,6 +153,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
                 Indent = true,
                 OmitXmlDeclaration = true
             };
+
+            Directory.CreateDirectory(Path.GetDirectoryName(Path.GetFullPath(path)));
 
             using StreamWriter streamWriter = new(path);
             using XmlWriter writer = XmlWriter.Create(streamWriter, settings);
@@ -180,10 +191,16 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
             _properties[name] = value;
 
         /// <summary>
-        /// Adds a directory for harvesting.
+        /// Adds a directory for harvesting. 
         /// </summary>
-        public void AddHarvestDirectory(string path, string componentGroupName, string directoryRefId,
-            string preprocessorVariable, bool suppressRegistry = true, bool suppressRootDirectory = true) =>
+        /// <param name="path">The local path of the directory to harvest.</param>
+        /// <param name="directoryRefId">The ID of the directory to reference instead of TARGETDIR.</param>
+        /// <param name="preprocessorVariable">The preprocessor variable to use instead of SourceDir.</param>
+        /// <param name="componentGroupName">The name of the component group to create for generated authoring.</param>
+        /// <param name="suppressRegistry">Suppress generation of registry elements.</param>
+        /// <param name="suppressRootDirectory">Suppress generation of a Directory element for the parent directory of the file.</param>
+        public void AddHarvestDirectory(string path, string directoryRefId = null, string preprocessorVariable = null,
+            string componentGroupName = DefaultValues.DefaultComponentGroupName, bool suppressRegistry = true, bool suppressRootDirectory = true) =>
             _harvestDirectories[path] = new HarvestDirectoryInfo(path, componentGroupName, directoryRefId,
                 preprocessorVariable, suppressRegistry, suppressRootDirectory);
     }

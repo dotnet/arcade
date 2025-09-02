@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public void ItGeneratesAnSdkStyleProject()
         {
             var wixproj = new WixProject("5.0.2");
-            string projectDir = TestProjectDirectory;
+            string projectDir = TestCaseDirectory;
             string wixProjPath = Path.Combine(projectDir, "msi.wixproj");
             Directory.CreateDirectory(projectDir);
 
@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public void PackageReferencesCanBeAdded()
         {
             var wixproj = new WixProject("5.0.2");
-            string projectDir = TestProjectDirectory;
+            string projectDir = TestCaseDirectory;
             string wixProjPath = Path.Combine(projectDir, "msi.wixproj");
             Directory.CreateDirectory(projectDir);
 
@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public void PreprocessorDefinitionsCanBeAdded()
         {
             var wixproj = new WixProject("5.0.2");
-            string projectDir = TestProjectDirectory;
+            string projectDir = TestCaseDirectory;
             string wixProjPath = Path.Combine(projectDir, "msi.wixproj");
             Directory.CreateDirectory(projectDir);
 
@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public void PropertiesCanBeAdded()
         {
             var wixproj = new WixProject("5.0.2");
-            string projectDir = TestProjectDirectory;
+            string projectDir = TestCaseDirectory;
             string wixProjPath = Path.Combine(projectDir, "msi.wixproj");
             Directory.CreateDirectory(projectDir);
 
@@ -80,15 +80,24 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public void HarvestDirectoriesCanBeAdded()
         {
             var wixproj = new WixProject("5.0.2");
-            string projectDir = TestProjectDirectory;
+            string projectDir = TestCaseDirectory;
             string wixProjPath = Path.Combine(projectDir, "msi.wixproj");
             Directory.CreateDirectory(projectDir);
 
-            wixproj.AddHarvestDirectory(@"x\y\z", "CG_Test", "SOMEDIR", "MyVar");
+            wixproj.AddHarvestDirectory(@"x\y\z", "SOMEDIR", "MyVar", "CG_Test");
+            // This will select the default component group.
+            wixproj.AddHarvestDirectory(@"a\b\c", "SOMEDIR2", "MyVar2");
+            // Omit the preprocessor variable override.
+            wixproj.AddHarvestDirectory(@"aa\bb\cc", "SOMEDIR3");
+            // Omit the preprocessor variable override.
+            wixproj.AddHarvestDirectory(@"xx\yy\zz");
             wixproj.Save(wixProjPath);
 
             string projectContents = File.ReadAllText(wixProjPath);
             Assert.Contains(@"<HarvestDirectory Include=""x\y\z"" ComponentGroupName=""CG_Test"" DirectoryRefId=""SOMEDIR"" PreprocessorVariable=""MyVar"" SuppressRegistry=""true"" SuppressRootDirectory=""true"" />", projectContents,StringComparison.OrdinalIgnoreCase);
+            Assert.Contains(@"<HarvestDirectory Include=""a\b\c"" ComponentGroupName=""CG_PackageContents"" DirectoryRefId=""SOMEDIR2"" PreprocessorVariable=""MyVar2"" SuppressRegistry=""true"" SuppressRootDirectory=""true"" />", projectContents, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains(@"<HarvestDirectory Include=""aa\bb\cc"" ComponentGroupName=""CG_PackageContents"" DirectoryRefId=""SOMEDIR3"" SuppressRegistry=""true"" SuppressRootDirectory=""true"" />", projectContents, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains(@"<HarvestDirectory Include=""xx\yy\zz"" ComponentGroupName=""CG_PackageContents"" SuppressRegistry=""true"" SuppressRootDirectory=""true"" />", projectContents, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

@@ -24,9 +24,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public static readonly string TestOutputRoot = Path.Combine(AppContext.BaseDirectory, "TEST_OUTPUT");
 
         /// <summary>
-        /// Returns a new, random directory for test projects.
+        /// Returns a new, random directory for a test case.
         /// </summary>
-        public string TestProjectDirectory => Path.Combine(TestOutputRoot, Path.GetFileNameWithoutExtension(Path.GetTempFileName()));
+        public string TestCaseDirectory => Path.Combine(TestOutputRoot, Path.GetFileNameWithoutExtension(Path.GetTempFileName()));
 
         internal static WorkloadManifestPackage CreateWorkloadManifestPackage(string packageFile, string msiVersion)
         {
