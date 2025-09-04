@@ -543,7 +543,7 @@ namespace Microsoft.DotNet.SignTool
 
                 Check3rdPartyMicrosoftSignatureMismatch(file, peInfo, signInfo);
 
-                // Check if this file type should use detached signatures instead of in-place signing
+                // Check if this cert should use detached signatures instead of in-place signing
                 if (ShouldUseDetachedSignature(file, signInfo))
                 {
                     signInfo = signInfo.WithDetachedSignature(signInfo.Certificate);
