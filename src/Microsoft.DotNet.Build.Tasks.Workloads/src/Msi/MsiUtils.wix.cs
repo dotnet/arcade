@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// <summary>
         /// Query string to retrieve the dependency provider key from the WixDependencyProvider table.
         /// </summary>
-        private const string _getWixDependencyProviderQuery = "SELECT `ProviderKey` FROM `WixDependencyProvider`";
+        private const string _getWixDependencyProviderQuery = "SELECT `ProviderKey` FROM `Wix4DependencyProvider`";
 
         /// <summary>
         /// Query string to retrieve all the rows from the MSI Directory table.
@@ -139,7 +139,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             using InstallPackage ip = new(packagePath, DatabaseOpenMode.ReadOnly);
             using Database db = new(packagePath, DatabaseOpenMode.ReadOnly);
 
-            if (db.Tables.Contains("WixDependencyProvider"))
+            if (db.Tables.Contains("Wix4DependencyProvider"))
             {
                 using View depProviderView = db.OpenView(_getWixDependencyProviderQuery);
                 depProviderView.Execute();

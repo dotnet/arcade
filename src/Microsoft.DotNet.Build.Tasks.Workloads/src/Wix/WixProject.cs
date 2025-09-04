@@ -33,6 +33,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
         private const string _attributeSuppressRegistry = "SuppressRegistry";
         private const string _attributeSuppressRootDirectory = "SuppressRootDirectory";
         private const string _attributeVersion = "Version";
+        private const string _attributeVersionOverride = "VersionOverride";
         private const string _elementPropertyGroup = "PropertyGroup";
         private const string _elementProject = "Project";
         private const string _elementItemGroup = "ItemGroup";
@@ -54,6 +55,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
         private string _sdk;
 
         private string _toolsetVersion;
+
+        /// <summary>
+        /// Replace version attributes, 
+        /// </summary>
+        public bool OverridePackageVersions
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// Creates a new <see cref="WixProject"/> instance.
@@ -95,7 +105,20 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
                 {
                     var item = doc.CreateElement(_itemPackageReference);
                     item.SetAttribute(_attributeInclude, packageId);
-                    item.SetAttribute(_attributeVersion, _packageReferences[packageId]);
+
+                    // Allow null/empty versions in case CPM already defined the packages.
+                    if (!string.IsNullOrEmpty(_packageReferences[packageId]))
+                    {
+                        if (OverridePackageVersions)
+                        {
+                            item.SetAttribute(_attributeVersionOverride, _packageReferences[packageId]);
+                        }
+                        else
+                        {
+                            item.SetAttribute(_attributeVersion, _packageReferences[packageId]);
+                        }
+                    }
+                    
                     packageReferencesItemGroup.AppendChild(item);
                 }
 

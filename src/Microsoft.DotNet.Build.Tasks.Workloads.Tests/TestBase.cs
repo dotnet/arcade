@@ -11,10 +11,17 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 {
     public abstract class TestBase
     {
+        /// <summary>
+        /// This is a version of Arcade that contains updated tasks for creating WiX packs that support
+        /// signing MSIs built using WiX v5.
+        /// </summary>
+        public static readonly string MicrosoftDotNetBuildTasksInstallersPackageVersion = "10.0.0-beta.25420.109";
+
         public static readonly string BaseIntermediateOutputPath = Path.Combine(AppContext.BaseDirectory, "obj", Path.GetFileNameWithoutExtension(Path.GetTempFileName()));
         public static readonly string BaseOutputPath = Path.Combine(AppContext.BaseDirectory, "bin", Path.GetFileNameWithoutExtension(Path.GetTempFileName()));
 
         public static readonly string MsiOutputPath = Path.Combine(BaseOutputPath, "msi");
+
         public static readonly string TestAssetsPath = Path.Combine(AppContext.BaseDirectory, "testassets");
 
         public static readonly string WixToolsetPath = Path.Combine(TestAssetsPath, "wix");
@@ -26,7 +33,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         /// <summary>
         /// Returns a new, random directory for a test case.
         /// </summary>
-        public string TestCaseDirectory => Path.Combine(TestOutputRoot, Path.GetFileNameWithoutExtension(Path.GetTempFileName()));
+        public string TestCaseDirectory => Path.Combine(TestOutputRoot, Path.GetRandomFileName());
 
         internal static WorkloadManifestPackage CreateWorkloadManifestPackage(string packageFile, string msiVersion)
         {

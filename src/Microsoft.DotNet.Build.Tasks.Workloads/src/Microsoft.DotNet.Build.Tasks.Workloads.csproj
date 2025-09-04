@@ -57,6 +57,7 @@
     <EmbeddedResource Include="Misc\*.*" />
     <EmbeddedResource Include="MsiTemplate\*.wxs" />
     <EmbeddedResource Include="MsiTemplate\*.wxi" />
+    <EmbeddedResource Include="MsiTemplate\*.pp" />
     <EmbeddedResource Include="MsiTemplate\*.wixproj" />
     <EmbeddedResource Include="SwixTemplate\*.swr" />
     <EmbeddedResource Include="SwixTemplate\*.swixproj" />
@@ -66,24 +67,13 @@
   
   <ItemGroup>
     <Compile Include="..\..\Common\Internal\BuildTask.cs" />
+    <None Include="msitemplate\Directory.Build.targets.pp" />
     <None Include="msitemplate\msi.wixproj" />
     <Compile Update="Strings.Designer.cs" DesignTime="True" AutoGen="True" DependentUpon="Strings.resx" />
   </ItemGroup>
 
   <Target Name="GenerateToolsetInfo" BeforeTargets="CoreCompile">
-    <WriteLinesToFile File="$(IntermediateOutputPath)ToolsetInfo.cs"
-                      Overwrite="true"
-                      Lines="namespace Microsoft.DotNet.Build.Tasks.Workloads
-{
-    public class ToolsetInfo
-    {
-         /// &lt;summary&gt;
-         /// The default version of the WiX toolset defined by Arcade.
-         /// &lt;/summary&gt;
-         public const string MicrosoftWixToolsetVersion = &quot;$(MicrosoftWiXToolsetSdkVersion)&quot;%3B
-    }
-}
-" />
+    <WriteLinesToFile File="$(IntermediateOutputPath)ToolsetInfo.cs" Overwrite="true" Lines="namespace Microsoft.DotNet.Build.Tasks.Workloads&#xD;&#xA;{&#xD;&#xA;    public class ToolsetInfo&#xD;&#xA;    {&#xD;&#xA;         /// &lt;summary&gt;&#xD;&#xA;         /// The default version of the WiX toolset defined by Arcade.&#xD;&#xA;         /// &lt;/summary&gt;&#xD;&#xA;         public const string MicrosoftWixToolsetVersion = &quot;$(MicrosoftWiXToolsetSdkVersion)&quot;%3B&#xD;&#xA;    }&#xD;&#xA;}&#xD;&#xA;" />
     <ItemGroup>
       <Compile Include="$(IntermediateOutputPath)ToolsetInfo.cs" />
     </ItemGroup>

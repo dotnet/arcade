@@ -25,23 +25,29 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.StartsWith(@"<Project Sdk=""Microsoft.WixToolset.Sdk/5.0.2""", projectContents);            
         }
 
-        [WindowsOnlyFact]
-        public void PackageReferencesCanBeAdded()
+        [WindowsOnlyTheory]
+        [InlineData("Microsoft.WixToolset.Heat", null, false, @"<PackageReference Include=""Microsoft.WixToolset.Heat"" />")]
+        [InlineData("Microsoft.WixToolset.Heat", "5.0.3", false, @"<PackageReference Include=""Microsoft.WixToolset.Heat"" Version=""5.0.3"" />")]
+        [InlineData("Microsoft.WixToolset.Heat", "5.0.3", true, @"<PackageReference Include=""Microsoft.WixToolset.Heat"" VersionOverride=""5.0.3"" />")]
+        public void PackageReferencesCanBeAdded(string packageId, string packageVersion, bool overridePackageVersions,
+            string expectedPackageReference)
         {
-            var wixproj = new WixProject("5.0.2");
+            var wixproj = new WixProject("5.0.2") 
+            { 
+                OverridePackageVersions = overridePackageVersions 
+            };
+
             string projectDir = TestCaseDirectory;
             string wixProjPath = Path.Combine(projectDir, "msi.wixproj");
             Directory.CreateDirectory(projectDir);
 
-            wixproj.AddPackageReference("Microsoft.WixToolset.Heat");
-            wixproj.AddPackageReference("Microsoft.WixToolset.Util.wixext", "5.0.3");
+            wixproj.AddPackageReference(packageId, packageVersion);                
             wixproj.Save(wixProjPath);
 
             string projectContents = File.ReadAllText(wixProjPath);
 
             Assert.Contains("Microsoft.WixToolset.Sdk/5.0.2", projectContents);
-            Assert.Contains(@"PackageReference Include=""Microsoft.WixToolset.Heat"" Version=""5.0.2""", projectContents);
-            Assert.Contains(@"PackageReference Include=""Microsoft.WixToolset.Util.wixext"" Version=""5.0.3""", projectContents);
+            Assert.Contains(expectedPackageReference, projectContents);
         }
 
         [WindowsOnlyFact]

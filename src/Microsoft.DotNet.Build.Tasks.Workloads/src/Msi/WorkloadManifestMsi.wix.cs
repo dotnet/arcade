@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Workloads.Wix;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
@@ -35,27 +36,31 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         }
 
         public WorkloadManifestMsi(WorkloadManifestPackage package, string platform, IBuildEngine buildEngine, string wixToolsetPath,
-            string baseIntermediateOutputPath, bool isSxS = false) :
-            base(MsiMetadata.Create(package), buildEngine, wixToolsetPath, platform, baseIntermediateOutputPath)
+            string baseIntermediateOutputPath, bool isSxS = false, string toolsetVersion = ToolsetInfo.MicrosoftWixToolsetVersion,
+            bool overridePackageVersions = false) :
+            base(MsiMetadata.Create(package), buildEngine, wixToolsetPath, platform, baseIntermediateOutputPath, toolsetVersion,
+                overridePackageVersions)
         {
             Package = package;
             IsSxS = isSxS;
         }
 
-        public string CreateProject(string toolsetVersion = ToolsetInfo.MicrosoftWixToolsetVersion)
+        /// <summary>
+        /// Creates a new WiX project for building a workload manifest installer (MSI).
+        /// </summary>
+        protected override WixProject CreateProject()
         {
-            WixProject wixproj = CreateEmptyProject(toolsetVersion);           
+            WixProject wixproj = base.CreateProject();
 
             // Add source files
             EmbeddedTemplates.Extract("ManifestProduct.wxs", WixSourceDirectory);
             EmbeddedTemplates.Extract("DependencyProvider.wxs", WixSourceDirectory);
             EmbeddedTemplates.Extract("dotnethome_x64.wxs", WixSourceDirectory);
             EmbeddedTemplates.Extract("Directories.wxs", WixSourceDirectory);
-            EmbeddedTemplates.Extract("ManifestProduct.wxs", WixSourceDirectory);
             EmbeddedTemplates.Extract("Registry.wxs", WixSourceDirectory);
 
             // Add package references for WiX
-            wixproj.AddPackageReference(ToolsetPackages.MicrosoftWixToolsetHeat);
+            wixproj.AddPackageReference(ToolsetPackages.MicrosoftWixToolsetHeat, WixToolsetPackageVersion);
 
             // Configure harvesting of the manifest package contents.
             string wixProjectPath = Path.Combine(WixSourceDirectory, "manifest.wixproj");
@@ -69,7 +74,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
                 NuGetPackageFiles[file] = @"\data\extractedManifest\" + Path.GetFileName(file);
             }
 
-            //  Add WorkloadPackGroups.json to add to workload manifest MSI
+            // Add WorkloadPackGroups.json to add to workload manifest MSI
             string? jsonContentWxs = null;
             string? jsonDirectory = null;
 
@@ -124,16 +129,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
                 wixproj.AddPreprocessorDefinition("ManifestVersion", Package.GetManifest().Version);
             }
 
-            // Finally, generate the .wixproj file. Always overwrite an existing content.
-            if (File.Exists(wixProjectPath))
-            {
-                File.Delete(wixProjectPath);
-            }
-
-            wixproj.Save(wixProjectPath);
-
-            return wixProjectPath;
-        }
+            return wixproj;
+        }        
 
         /// <inheritdoc />
         /// <exception cref="Exception" />
