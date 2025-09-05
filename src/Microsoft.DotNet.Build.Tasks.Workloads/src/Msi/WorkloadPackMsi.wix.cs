@@ -19,10 +19,44 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         protected override string BaseOutputName => _package.ShortName;
 
         public WorkloadPackMsi(WorkloadPackPackage package, string platform, IBuildEngine buildEngine, string wixToolsetPath,
-            string baseIntermediatOutputPath) :
-            base(MsiMetadata.Create(package), buildEngine, wixToolsetPath, platform, baseIntermediatOutputPath)
+            string baseIntermediatOutputPath, string toolsetVersion = ToolsetInfo.MicrosoftWixToolsetVersion,
+            bool overridePackageVersions = false) :
+            base(MsiMetadata.Create(package), buildEngine, wixToolsetPath, platform, baseIntermediatOutputPath, toolsetVersion,
+                overridePackageVersions)
         {
             _package = package;
+        }
+
+        protected override WixProject CreateProject()
+        {
+            WixProject wixproj = base.CreateProject();
+            string wixProjectPath = Path.Combine(WixSourceDirectory, "pack.wixproj");
+
+            EmbeddedTemplates.Extract("Product.wxs", WixSourceDirectory);
+            EmbeddedTemplates.Extract("DependencyProvider.wxs", WixSourceDirectory);
+            EmbeddedTemplates.Extract("dotnethome_x64.wxs", WixSourceDirectory);
+            EmbeddedTemplates.Extract("Directories.wxs", WixSourceDirectory);
+            EmbeddedTemplates.Extract("Registry.wxs", WixSourceDirectory);
+            
+            wixproj.AddPackageReference(ToolsetPackages.MicrosoftWixToolsetHeat, WixToolsetPackageVersion);
+
+            string directoryReference = _package.Kind == WorkloadPackKind.Library || _package.Kind == WorkloadPackKind.Template ?
+                "InstallDir" : "VersionDir";
+
+            wixproj.AddHarvestDirectory(_package.DestinationDirectory, directoryReference,
+                PreprocessorDefinitionNames.SourceDir);
+
+            Guid upgradeCode = Utils.CreateUuid(UpgradeCodeNamespaceUuid, $"{_package.Identity};{Platform}");
+            string providerKeyName = $"{_package.Id},{_package.PackageVersion},{Platform}";
+
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.InstallDir, $"{GetInstallDir(_package.Kind)}");
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.UpgradeCode, $"{upgradeCode:B}");
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.DependencyProviderKeyName, $"{providerKeyName}");
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.PackKind, $"{_package.Kind}");
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.SourceDir, $"{_package.DestinationDirectory}");
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.InstallationRecordKey, $"InstalledPacks");
+
+            return wixproj;
         }
 
         public override ITaskItem Build(string outputPath, ITaskItem[]? iceSuppressions = null)

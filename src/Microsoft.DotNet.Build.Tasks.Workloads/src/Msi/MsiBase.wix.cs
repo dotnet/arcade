@@ -5,8 +5,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -75,6 +77,16 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         }
 
         /// <summary>
+        /// When <see langword="true"/>, package references in the generated .wixproj do not include
+        /// version information.
+        /// </summary>
+        public bool ManagePackageVersionsCentrally
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Gets the value to use for the manufacturer. 
         /// </summary>
         protected string Manufacturer =>
@@ -112,23 +124,51 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         }
 
         /// <summary>
-        /// Set of files to include in the NuGet package that will wrap the MSI. Keys represent the source files and the
-        /// value contains the relative path inside the generated NuGet package.
+        /// Generate VersionOverride attributes for package references.
+        /// </summary>
+        protected bool OverridePackageVersions
+        {
+            get;
+        }
+
+        /// <summary>
+        /// The WiX toolset version. This version applies to both the WiX SDK and any additional toolset
+        /// package references.
+        /// </summary>
+        protected string WixToolsetVersion
+        {
+            get;
+        }
+
+        /// <summary>
+        /// The package version to use when adding package references to the .wixproj. Returns <see langword="null""/> 
+        /// if <see cref="ManagePackageVersionsCentrally"/> is <see langword="true"/>.
+        /// </summary>
+        protected string? WixToolsetPackageVersion =>
+            ManagePackageVersionsCentrally ? null : WixToolsetVersion;
+
+        /// <summary>
+        /// Set of files to include in the NuGet package that will wrap the MSI. Keys represent source files and 
+        /// values contain relative paths inside the generated NuGet package.
         /// </summary>
         public Dictionary<string, string> NuGetPackageFiles { get; set; } = new();
 
         public MsiBase(MsiMetadata metadata, IBuildEngine buildEngine, string wixToolsetPath,
-            string platform, string baseIntermediateOutputPath)
+            string platform, string baseIntermediateOutputPath, string toolsetVersion = ToolsetInfo.MicrosoftWixToolsetVersion,
+            bool overridePackageVersions = false)
         {
             BuildEngine = buildEngine;
             WixToolsetPath = wixToolsetPath;
             Platform = platform;
             BaseIntermediateOutputPath = baseIntermediateOutputPath;
+            WixToolsetVersion = toolsetVersion;
 
             // Candle expects the output path to be terminated with a single '\'.
             CompilerOutputPath = Utils.EnsureTrailingSlash(Path.Combine(baseIntermediateOutputPath, "wixobj", metadata.Id, $"{metadata.PackageVersion}", platform));
-            WixSourceDirectory = Path.Combine(baseIntermediateOutputPath, "src", "wix", metadata.Id, $"{metadata.PackageVersion}", platform);
+//            WixSourceDirectory = Path.Combine(baseIntermediateOutputPath, "src", "wix", metadata.Id, $"{metadata.PackageVersion}", platform);
+            WixSourceDirectory = Path.Combine(baseIntermediateOutputPath, "src", "wix", Path.GetRandomFileName());
             Metadata = metadata;
+            OverridePackageVersions = overridePackageVersions;
         }
 
         /// <summary>
@@ -156,6 +196,73 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             File.WriteAllText(eulaRtf, s_eula.Replace(__LICENSE_URL__, Metadata.LicenseUrl));
 
             return eulaRtf;
+        }
+
+        /// <summary>
+        /// Creates a basic WiX project using the specific toolset version and sets common properties and
+        /// package references
+        /// </summary>
+        /// <param name="toolsetVersion">The WiX toolset version to use for building the project.</param>
+        /// <returns>An empty project.</returns>
+        /// <remarks>
+        /// <para>
+        /// The following properties are set: <b>InstallerPlatform, SuppressValidation, OutputType, TargetName,
+        /// DebugType</b>
+        /// </para>
+        /// <para>
+        /// The following preprocessor variables are included: <b>InstallerVersion</b>
+        /// </para>
+        /// </remarks>
+        protected virtual WixProject CreateProject()
+        {
+            if (Directory.Exists(WixSourceDirectory))
+            {
+                Directory.Delete(WixSourceDirectory, true);
+            }
+
+            Directory.CreateDirectory(WixSourceDirectory);
+
+            WixProject wixproj = new(WixToolsetVersion) { OverridePackageVersions = this.OverridePackageVersions };
+
+            // ***********************************************************
+            // Initialize common properties and preprocessor definitions.
+            // ***********************************************************
+            wixproj.AddProperty(WixProperties.InstallerPlatform, Platform);
+            // Pacakge is the default in v5, but defaults can change.
+            wixproj.AddProperty(WixProperties.OutputType, "Package");
+            // Turn off ICE validation. CodeIntegrity and AppLocker block ICE checks that require elevation, even
+            // when running as administator. 
+            wixproj.AddProperty(WixProperties.SuppressValidation, "true");
+            // The WiX SDK will determine the extension based on the output type, e.g. Package -> .msi, Patch -> .msp, etc.
+            wixproj.AddProperty(WixProperties.TargetName, Path.GetFileNameWithoutExtension(OutputName));
+            // WiX only supports "full". If the property is overridden (Directory.build.props),
+            // the compiler will report a warning, e.g. "warning WIX1098: The value 'embedded' is not a valid value for command line argument '-pdbType'. Using the value 'full' instead."
+            wixproj.AddProperty(WixProperties.DebugType, "full");
+            wixproj.AddProperty("IntermediateOutputPath", @"obj\\$(Configuration)");
+
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.Bitness, Platform == "x86" ? "always32" : "always64");
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.EulaRtf, GenerateEula());
+            // v5.0 was released with W2K8 R2 and Windows 7. It's also required to support
+            // arm64. See https://learn.microsoft.com/en-us/windows/win32/msi/released-versions-of-windows-installer
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.InstallerVersion, "500");
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.Manufacturer, Manufacturer);
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.PackageId, Metadata.Id);
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.PackageVersion, $"{Metadata.PackageVersion}");
+            //wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.Platform, Platform);
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.ProductCode, $"{Guid.NewGuid():B}");
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.ProductLanguage, "1033");
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.ProductName, GetProductName(Platform));
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.ProductVersion, $"{Metadata.MsiVersion}");
+
+            // All workload MSIs must support reference counting since they are shared between multiple
+            // SDKs and Visual Studio.
+            wixproj.AddPackageReference(ToolsetPackages.MicrosoftWixToolsetDependencyExtension, WixToolsetPackageVersion);
+            // Util extension is required to access the QueryNativeMachine custom action.
+            wixproj.AddPackageReference(ToolsetPackages.MicrosoftWixToolsetUtilExtension, WixToolsetPackageVersion);
+            // All workload MSIs (manifests or packs) need to override the default dialog set and select a minimal UI.
+            wixproj.AddPackageReference(ToolsetPackages.MicrosoftWixToolsetUIExtension, WixToolsetPackageVersion);
+
+            return wixproj;
         }
 
         /// <summary>
@@ -232,6 +339,50 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             // Return a task item that contains all the information about the generated MSI.            
             msiItem.SetMetadata(Workloads.Metadata.Platform, Platform);
             msiItem.SetMetadata(Workloads.Metadata.WixObj, compilerOutputPath);
+            msiItem.SetMetadata(Workloads.Metadata.Version, $"{Metadata.MsiVersion}");
+            msiItem.SetMetadata(Workloads.Metadata.SwixPackageId, Metadata.SwixPackageId);
+
+            return msiItem;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="outputPath"></param>
+        /// <returns></returns>
+        public virtual ITaskItem Build2(string outputPath)
+        {
+            string wixProjectPath = Path.Combine(WixSourceDirectory, "msi.wixproj");
+            WixProject wixproj = CreateProject();
+            wixproj.AddProperty("OutputPath", outputPath);
+
+            if (File.Exists(wixProjectPath))
+            {
+                File.Delete(wixProjectPath);
+            }
+
+            wixproj.Save(wixProjectPath);
+
+            // If DOTNET_HOST_PATH is set, we'll use that. If not, fall back
+            // to resolivng the local runtime Arcade is using.
+            string? dotnetHostPath = Environment.GetEnvironmentVariable("DOTNET_HOST_PATH");
+            if (string.IsNullOrWhiteSpace(dotnetHostPath))
+            {
+                dotnetHostPath = Path.Combine(RuntimeEnvironment.GetRuntimeDirectory(), @"..\..\..\dotnet.exe");
+            }
+
+            ProcessStartInfo startInfo = new()
+            {
+                FileName = dotnetHostPath,
+                Arguments = $"build {wixProjectPath}",
+            };
+
+            var buildProcess = Process.Start(startInfo);
+            buildProcess?.WaitForExit();
+
+            // Return a task item that contains all the information about the generated MSI.            
+            TaskItem msiItem = new TaskItem(Path.Combine(outputPath, OutputName));
+            msiItem.SetMetadata(Workloads.Metadata.Platform, Platform);
             msiItem.SetMetadata(Workloads.Metadata.Version, $"{Metadata.MsiVersion}");
             msiItem.SetMetadata(Workloads.Metadata.SwixPackageId, Metadata.SwixPackageId);
 

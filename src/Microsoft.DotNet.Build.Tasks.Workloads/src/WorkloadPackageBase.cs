@@ -200,7 +200,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             Title = nuspec.GetTitle();
 
             PackagePath = packagePath;
-            DestinationDirectory = Path.Combine(destinationBaseDirectory, $"{Identity}");
+
+            DestinationDirectory = Path.Combine(destinationBaseDirectory, Path.GetRandomFileName());
             ShortNames = shortNames;
 
             PackageFileName = Path.GetFileNameWithoutExtension(packagePath);
