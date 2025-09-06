@@ -554,14 +554,28 @@ namespace Microsoft.DotNet.SignTool
                 }
                 else if (fileName.IsZip())
                 {
-                    if (fileName.SignInfo.Certificate != null)
+                    // Zip files can't be signed without a detached signature. If a certificate is provided but the signature is not detached.
+                    if (!fileName.SignInfo.IsDetachedSignature && fileName.SignInfo.Certificate != null)
                     {
-                        log.LogError($"Zip {fileName} should not be signed with this certificate: {fileName.SignInfo.Certificate}");
+                        log.LogError($"'{fileName}' may only be signed with a detached signature. '{fileName.SignInfo.Certificate}' does not produce a detached signature");
                     }
 
                     if (fileName.SignInfo.StrongName != null)
                     {
                         log.LogError($"Zip {fileName} cannot be strong name signed.");
+                    }
+                }
+                else if (fileName.IsTarGZip())
+                {
+                    // Tar.gz files can't be signed without a detached signature. If a certificate is provided but the signature is not detached.
+                    if (!fileName.SignInfo.IsDetachedSignature && fileName.SignInfo.Certificate != null)
+                    {
+                        log.LogError($"'{fileName}' may only be signed with a detached signature. '{fileName.SignInfo.Certificate}' does not produce a detached signature");
+                    }
+                    
+                    if (fileName.SignInfo.StrongName != null)
+                    {
+                        log.LogError($"TarGZip {fileName} cannot be strong name signed.");
                     }
                 }
                 if (fileName.IsExecutableWixContainer())
