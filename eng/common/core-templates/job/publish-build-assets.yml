@@ -40,6 +40,8 @@ parameters:
 
   repositoryAlias: self
 
+  officialBuildId: ''
+
 jobs:
 - job: Asset_Registry_Publish
 
@@ -124,7 +126,7 @@ jobs:
           /p:ManifestsPath='$(Build.StagingDirectory)/AssetManifests'
           /p:IsAssetlessBuild=${{ parameters.isAssetlessBuild }}
           /p:MaestroApiEndpoint=https://maestro.dot.net
-          /p:OfficialBuildId=$(Build.BuildNumber)
+          /p:OfficialBuildId=${{ parameters.officialBuildId }}
       condition: ${{ parameters.condition }}
       continueOnError: ${{ parameters.continueOnError }}
     
