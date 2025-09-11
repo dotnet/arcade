@@ -117,7 +117,4 @@ jobs:
         artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
         signingValidationAdditionalParameters: ${{ parameters.signingValidationAdditionalParameters }}
         repositoryAlias: ${{ parameters.repositoryAlias }}
-        ${{ if ne(parameters.officialBuildId, '') }}:
-          officialBuildId: ${{ parameters.officialBuildId }}
-        ${{ else }}:
-          officialBuildId: $(Build.BuildNumber)
+        officialBuildId: ${{ parameters.officialBuildId }}
