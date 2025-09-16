@@ -106,7 +106,7 @@
 
     <!-- Explicitly use the "new" LinuxSign cert. TODO: Update the cert name to the actual name in MicroBuild once it's added. -->
     <NewKeyLinuxRPM Include="$(ArtifactsPackagesDir)**/*-newkey-*.rpm" />
-    <FileSignInfo Include="@(NewKeyLinuxRPM->'%(Filename)%(Extension)')" CertificateName="Linux500207Pgp" />
+    <FileSignInfo Include="@(NewKeyLinuxRPM->'%(Filename)%(Extension)')" CertificateName="LinuxSign500207PGP" />
   </ItemGroup>
 
   <!-- The name of the .NET specific certificate, which is a general replacement for Microsoft400
