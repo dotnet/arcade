@@ -26,13 +26,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
                 Directory.Delete(baseIntermediateOutputPath, recursive: true);
             }
 
-            ITaskItem[] workloadSetPackages = new[]
-            {
+            ITaskItem[] workloadSetPackages =
+            [
                 new TaskItem(Path.Combine(TestAssetsPath, "microsoft.net.workloads.9.0.100.9.0.100-baseline.1.23464.1.nupkg"))
                 .WithMetadata(Metadata.MsiVersion, "12.8.45")
-            };
+            ];
 
-            IBuildEngine buildEngine = new MockBuildEngine();
+            var buildEngine = new MockBuildEngine();
 
             CreateVisualStudioWorkloadSet createWorkloadSetTask = new CreateVisualStudioWorkloadSet()
             {
@@ -43,7 +43,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
                 WorkloadSetPackageFiles = workloadSetPackages
             };
 
-            Assert.True(createWorkloadSetTask.Execute());
+            Assert.True(createWorkloadSetTask.Execute(), buildEngine.BuildErrorEvents.Count > 0 ?
+                buildEngine.BuildErrorEvents[0].Message : "Task failed. No error events");
 
             // Spot check the x64 generated MSI.
             ITaskItem msi = createWorkloadSetTask.Msis.Where(i => i.GetMetadata(Metadata.Platform) == "x64").FirstOrDefault();

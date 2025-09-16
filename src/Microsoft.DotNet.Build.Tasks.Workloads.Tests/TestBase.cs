@@ -33,22 +33,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         /// <summary>
         /// Returns a new, random directory for a test case.
         /// </summary>
-        public string TestCaseDirectory => Path.Combine(TestOutputRoot, Path.GetRandomFileName());
-
-        internal static WorkloadManifestPackage CreateWorkloadManifestPackage(string packageFile, string msiVersion)
-        {
-            string path = Path.Combine(TestAssetsPath, packageFile);
-            TaskItem packageItem = new(path);
-            return new(packageItem, PackageRootDirectory, new Version(msiVersion));
-        }
-
-        internal static WorkloadManifestMsi CreateWorkloadManifestMsi(string packageFile, string msiVersion, string platform = "x64", string msiOutputPath = null,
-            bool isSxS = true)
-        {
-            WorkloadManifestPackage pkg = CreateWorkloadManifestPackage(packageFile, msiVersion);
-            WorkloadManifestMsi msi = new(pkg, platform, new MockBuildEngine(), WixToolsetPath, BaseIntermediateOutputPath,
-                isSxS: true);
-            return msi;
-        }
+        public string GetTestCaseDirectory() =>
+            Path.Combine(TestOutputRoot, Path.GetFileNameWithoutExtension(Path.GetRandomFileName()));
     }
 }

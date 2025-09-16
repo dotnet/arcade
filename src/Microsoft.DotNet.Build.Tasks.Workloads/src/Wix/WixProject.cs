@@ -9,7 +9,7 @@ using System.Xml;
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
 {
     /// <summary>
-    /// Record to track HarvestDirectory item metadata consumed by Heat when 
+    /// Record to track HarvestDirectory item metadata consumed by Heat when generating setup authoring.
     /// </summary>
     /// <param name="Path">The directory to harvest.</param>
     /// <param name="ComponentGroupName">The name of the component group to create for generated authoring.</param>
@@ -52,12 +52,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
 
         private Dictionary<string, HarvestDirectoryInfo> _harvestDirectories = new(StringComparer.OrdinalIgnoreCase);
 
-        private string _sdk;
+        private string _wixToolsetSdk;
 
         private string _toolsetVersion;
 
         /// <summary>
-        /// Replace version attributes, 
+        /// Generate VersionOverride attributes for package references.
         /// </summary>
         public bool OverridePackageVersions
         {
@@ -68,20 +68,25 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
         /// <summary>
         /// Creates a new <see cref="WixProject"/> instance.
         /// </summary>
-        /// <param name="toolsetVersion">The version of the WiX toolset the project will reference.</param>
-        /// <param name="sdk">The SDK to use.</param>
-        public WixProject(string toolsetVersion, string sdk = _defaultSdk)
+        /// <param name="toolsetVersion">The version of the WiX toolset the project will reference.
+        /// The version applies to both the toolset SDK and package references.</param>
+        /// <param name="wixToolsetSdk">The WiX toolset SDK to use.</param>
+        public WixProject(string toolsetVersion, string wixToolsetSdk = _defaultSdk)
         {
             _toolsetVersion = toolsetVersion;
-            _sdk = sdk;
+            _wixToolsetSdk = wixToolsetSdk;
         }
 
+        /// <summary>
+        /// Generates a .wixproj (XML) file using the specified path and current configuration.
+        /// </summary>
+        /// <param name="path">The path of the .wixproj to generate.</param>
         public void Save(string path)
         {
             XmlDocument doc = new XmlDocument();
             var project = doc.CreateElement(_elementProject);
 
-            project.SetAttribute(_attributeSdk, $"{_sdk}/{_toolsetVersion}");
+            project.SetAttribute(_attributeSdk, $"{_wixToolsetSdk}/{_toolsetVersion}");
 
             if (_properties.Count > 0)
             {
@@ -214,7 +219,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
             _properties[name] = value;
 
         /// <summary>
-        /// Adds a directory for harvesting. 
+        /// Adds a directory for harvesting. A package reference for Heat (the harvesting tool) will automatically
+        /// be added to the project.
         /// </summary>
         /// <param name="path">The local path of the directory to harvest.</param>
         /// <param name="directoryRefId">The ID of the directory to reference instead of TARGETDIR.</param>
@@ -223,8 +229,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
         /// <param name="suppressRegistry">Suppress generation of registry elements.</param>
         /// <param name="suppressRootDirectory">Suppress generation of a Directory element for the parent directory of the file.</param>
         public void AddHarvestDirectory(string path, string directoryRefId = null, string preprocessorVariable = null,
-            string componentGroupName = DefaultValues.DefaultComponentGroupName, bool suppressRegistry = true, bool suppressRootDirectory = true) =>
+            string componentGroupName = DefaultValues.DefaultComponentGroupName, bool suppressRegistry = true, bool suppressRootDirectory = true)
+        {
             _harvestDirectories[path] = new HarvestDirectoryInfo(path, componentGroupName, directoryRefId,
                 preprocessorVariable, suppressRegistry, suppressRootDirectory);
+            AddPackageReference(ToolsetPackages.MicrosoftWixToolsetHeat, _toolsetVersion);
+        }            
     }
 }

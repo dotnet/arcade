@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public void ItGeneratesAnSdkStyleProject()
         {
             var wixproj = new WixProject("5.0.2");
-            string projectDir = TestCaseDirectory;
+            string projectDir = GetTestCaseDirectory();
             string wixProjPath = Path.Combine(projectDir, "msi.wixproj");
             Directory.CreateDirectory(projectDir);
 
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
                 OverridePackageVersions = overridePackageVersions 
             };
 
-            string projectDir = TestCaseDirectory;
+            string projectDir = GetTestCaseDirectory();
             string wixProjPath = Path.Combine(projectDir, "msi.wixproj");
             Directory.CreateDirectory(projectDir);
 
@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public void PreprocessorDefinitionsCanBeAdded()
         {
             var wixproj = new WixProject("5.0.2");
-            string projectDir = TestCaseDirectory;
+            string projectDir = GetTestCaseDirectory();
             string wixProjPath = Path.Combine(projectDir, "msi.wixproj");
             Directory.CreateDirectory(projectDir);
 
@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public void PropertiesCanBeAdded()
         {
             var wixproj = new WixProject("5.0.2");
-            string projectDir = TestCaseDirectory;
+            string projectDir = GetTestCaseDirectory();
             string wixProjPath = Path.Combine(projectDir, "msi.wixproj");
             Directory.CreateDirectory(projectDir);
 
@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public void HarvestDirectoriesCanBeAdded()
         {
             var wixproj = new WixProject("5.0.2");
-            string projectDir = TestCaseDirectory;
+            string projectDir = GetTestCaseDirectory();
             string wixProjPath = Path.Combine(projectDir, "msi.wixproj");
             Directory.CreateDirectory(projectDir);
 

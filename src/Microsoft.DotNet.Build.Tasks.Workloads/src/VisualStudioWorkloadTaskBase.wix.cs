@@ -41,15 +41,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
-        /// A set of Internal Consistency Evaluators (ICEs) to suppress.
-        /// </summary>
-        public ITaskItem[] IceSuppressions
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
         /// A set of items containing all the MSIs that were generated. Additional metadata
         /// is provided for the projects that need to be built to produce NuGet packages for
         /// the MSI.
@@ -87,6 +78,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// </summary>
         [Required]
         public string WixToolsetPath
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// The version of the WiX toolset to use.
+        /// </summary>
+        public string WixToolsetVersion
         {
             get;
             set;

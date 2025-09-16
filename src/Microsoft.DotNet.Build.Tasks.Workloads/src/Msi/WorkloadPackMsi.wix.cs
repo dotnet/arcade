@@ -18,11 +18,19 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// <inheritdoc />
         protected override string BaseOutputName => _package.ShortName;
 
+        protected override string ProviderKeyName =>
+            $"{_package.Id},{_package.PackageVersion},{Platform}";
+
+        protected override Guid UpgradeCode =>
+            Utils.CreateUuid(UpgradeCodeNamespaceUuid, $"{_package.Identity};{Platform}");
+
+        protected override string? InstallationRecordKey => "InstalledPacks";
+
         public WorkloadPackMsi(WorkloadPackPackage package, string platform, IBuildEngine buildEngine, string wixToolsetPath,
-            string baseIntermediatOutputPath, string toolsetVersion = ToolsetInfo.MicrosoftWixToolsetVersion,
-            bool overridePackageVersions = false) :
-            base(MsiMetadata.Create(package), buildEngine, wixToolsetPath, platform, baseIntermediatOutputPath, toolsetVersion,
-                overridePackageVersions)
+            string baseIntermediatOutputPath, string wixToolsetVersion = ToolsetInfo.MicrosoftWixToolsetVersion,
+            bool overridePackageVersions = false, bool generateWixPack = false) :
+            base(MsiMetadata.Create(package), buildEngine, platform, baseIntermediatOutputPath, wixToolsetVersion,
+                overridePackageVersions, generateWixPack)
         {
             _package = package;
         }
@@ -38,82 +46,18 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             EmbeddedTemplates.Extract("Directories.wxs", WixSourceDirectory);
             EmbeddedTemplates.Extract("Registry.wxs", WixSourceDirectory);
             
-            wixproj.AddPackageReference(ToolsetPackages.MicrosoftWixToolsetHeat, WixToolsetPackageVersion);
-
             string directoryReference = _package.Kind == WorkloadPackKind.Library || _package.Kind == WorkloadPackKind.Template ?
                 "InstallDir" : "VersionDir";
 
             wixproj.AddHarvestDirectory(_package.DestinationDirectory, directoryReference,
-                PreprocessorDefinitionNames.SourceDir);
-
-            Guid upgradeCode = Utils.CreateUuid(UpgradeCodeNamespaceUuid, $"{_package.Identity};{Platform}");
-            string providerKeyName = $"{_package.Id},{_package.PackageVersion},{Platform}";
+                PreprocessorDefinitionNames.SourceDir);            
 
             wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.InstallDir, $"{GetInstallDir(_package.Kind)}");
-            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.UpgradeCode, $"{upgradeCode:B}");
-            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.DependencyProviderKeyName, $"{providerKeyName}");
             wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.PackKind, $"{_package.Kind}");
             wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.SourceDir, $"{_package.DestinationDirectory}");
-            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.InstallationRecordKey, $"InstalledPacks");
 
             return wixproj;
-        }
-
-        public override ITaskItem Build(string outputPath, ITaskItem[]? iceSuppressions = null)
-        {
-            // Harvest the package contents before adding it to the source files we need to compile.
-            string packageContentWxs = Path.Combine(WixSourceDirectory, "PackageContent.wxs");
-            string directoryReference = _package.Kind == WorkloadPackKind.Library || _package.Kind == WorkloadPackKind.Template ?
-                "InstallDir" : "VersionDir";
-
-            HarvesterToolTask heat = new(BuildEngine, WixToolsetPath)
-            {
-                DirectoryReference = directoryReference,
-                OutputFile = packageContentWxs,
-                Platform = this.Platform,
-                SourceDirectory = _package.DestinationDirectory
-            };
-
-            if (!heat.Execute())
-            {
-                throw new Exception(Strings.HeatFailedToHarvest);
-            }
-
-            CompilerToolTask candle = CreateDefaultCompiler();
-
-            candle.AddSourceFiles(packageContentWxs,
-                EmbeddedTemplates.Extract("DependencyProvider.wxs", WixSourceDirectory),
-                EmbeddedTemplates.Extract("Directories.wxs", WixSourceDirectory),
-                EmbeddedTemplates.Extract("dotnethome_x64.wxs", WixSourceDirectory),
-                EmbeddedTemplates.Extract("Product.wxs", WixSourceDirectory),
-                EmbeddedTemplates.Extract("Registry.wxs", WixSourceDirectory));
-
-            // Only extract the include file as it's not compilable, but imported by various source files.
-            EmbeddedTemplates.Extract("Variables.wxi", WixSourceDirectory);
-
-            // Workload packs are not upgradable so the upgrade code is generated using the package identity as that
-            // includes the package version.
-            Guid upgradeCode = Utils.CreateUuid(UpgradeCodeNamespaceUuid, $"{_package.Identity};{Platform}");
-            string providerKeyName = $"{_package.Id},{_package.PackageVersion},{Platform}";
-
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.InstallDir, $"{GetInstallDir(_package.Kind)}");
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.UpgradeCode, $"{upgradeCode:B}");
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.DependencyProviderKeyName, $"{providerKeyName}");
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.PackKind, $"{_package.Kind}");
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.SourceDir, $"{_package.DestinationDirectory}");
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.InstallationRecordKey, $"InstalledPacks");
-
-            if (!candle.Execute())
-            {
-                throw new Exception(Strings.FailedToCompileMsi);
-            }
-
-            ITaskItem msi = Link(candle.OutputPath, Path.Combine(outputPath, OutputName), iceSuppressions);
-
-            AddDefaultPackageFiles(msi);
-
-            return msi;
-        }
+        }        
 
         /// <summary>
         /// Get the installation directory based on the kind of workload pack.

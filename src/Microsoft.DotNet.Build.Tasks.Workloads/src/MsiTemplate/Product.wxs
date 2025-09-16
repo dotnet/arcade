@@ -1,8 +1,8 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
-  <Package ProductCode="$(ProductCode)" UpgradeCode="$(UpgradeCode)" Version="$(ProductVersion)" Manufacturer="$(Manufacturer)"
-             InstallerVersion="$(InstallerVersion)" Compressed="yes"
-             Scope="perMachine" Language="$(ProductLanguage)" Name="$(ProductName)">
+  <Package ProductCode="$(ProductCode)" UpgradeCode="$(UpgradeCode)" Version="$(ProductVersion)" 
+           Manufacturer="$(Manufacturer)" InstallerVersion="$(InstallerVersion)" Compressed="yes"
+           Scope="perMachine" Language="$(ProductLanguage)" Name="$(ProductName)">
 
     <MediaTemplate CompressionLevel="high" EmbedCab="yes" />
 
