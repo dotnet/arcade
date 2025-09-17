@@ -3,7 +3,7 @@
   <Target Name="GenerateWixpackPackage" AfterTargets="CoreCompile">
     <PropertyGroup>
       <WixpackWorkingDir>$(IntermediateOutputPath)wixpack</WixpackWorkingDir>
-      <WixpackOutputDir>$(ArtifactsNonShippingPackagesDir)</WixpackOutputDir>
+      <WixpackOutputDir>__WIXPACK_OUTPUT_DIR__</WixpackOutputDir>
     </PropertyGroup>
 
     <CreateWixBuildWixpack

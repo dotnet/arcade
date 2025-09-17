@@ -80,6 +80,29 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
+        /// Replaces all the tokens in a file using the provided replacement tokens. Each key-value-pair define the 
+        /// token to replace (key) and its replacement (value).
+        /// </summary>
+        /// <param name="fileName">The file to modify.</param>
+        /// <param name="encoding">The encoding to use when updating the file.</param>
+        /// <param name="tokenReplacements">An array of replacement tokens.</param>
+        internal static void StringReplace(string fileName, Encoding encoding, params (string Key, string Value)[] tokenReplacements)
+        {
+            FileAttributes oldAttributes = File.GetAttributes(fileName);
+            File.SetAttributes(fileName, oldAttributes & ~FileAttributes.ReadOnly);
+
+            string content = File.ReadAllText(fileName);
+
+            foreach (var token in tokenReplacements)
+            {
+                content = content.Replace(token.Key, token.Value);
+            }
+
+            File.WriteAllText(fileName, content, encoding);
+            File.SetAttributes(fileName, oldAttributes);
+        }
+
+        /// <summary>
         /// Checks whether a string parameter is neither <see langword="null"/> nor empty.
         /// </summary>
         /// <param name="name">The name of the parameter to check.</param>

@@ -7,9 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Workloads.Wix;
@@ -21,6 +21,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
     /// </summary>
     internal abstract class MsiBase
     {
+        /// <summary>
+        /// The Arcade package that contains the CreateWixBuildWixpack task to support signing.
+        /// </summary>
+        private const string _MicrosoftDotNetBuildTaskInstallers = "Microsoft.DotNet.Build.Tasks.Installers";
+
         /// <summary>
         /// Replacement token for license URLs in the generated EULA.
         /// </summary>
@@ -133,7 +138,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// When set to <see langword="true"/>, a wixpack archive will be generated when the MSI is compiled.
         /// The wixpack is used to sign an MSI and its contents when using Arcade.
         /// </summary>
-        protected bool GenerateWixPack
+        protected bool GenerateWixpack
         {
             get;
             set;
@@ -153,10 +158,19 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         public Dictionary<string, string> NuGetPackageFiles { get; set; } = new();
 
         /// <summary>
+        /// The output directory to use when generating a wixpack for signing.
+        /// </summary>
+        public string? WixpackOutputDirectory
+        {
+            get;
+            init;
+        }
+
+        /// <summary>
         /// The MSI UpgradeCode.
         /// </summary>
-        protected abstract Guid UpgradeCode 
-        { 
+        protected abstract Guid UpgradeCode
+        {
             get;
         }
 
@@ -187,9 +201,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// <param name="baseIntermediateOutputPath"></param>
         /// <param name="wixToolsetVersion">The version of the WiX toolset to use for building the installer.</param>
         /// <param name="overridePackageVersions"></param>
-        public MsiBase(MsiMetadata metadata, IBuildEngine buildEngine, 
+        public MsiBase(MsiMetadata metadata, IBuildEngine buildEngine,
             string platform, string baseIntermediateOutputPath, string wixToolsetVersion = ToolsetInfo.MicrosoftWixToolsetVersion,
-            bool overridePackageVersions = false, bool generateWixPack = false)
+            bool overridePackageVersions = false, bool generateWixpack = false,
+            string? wixpackOutputDirectory = null)
         {
             BuildEngine = buildEngine;
             Platform = platform;
@@ -198,8 +213,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             WixSourceDirectory = Path.Combine(baseIntermediateOutputPath, "src", "wix", Path.GetRandomFileName());
             Metadata = metadata;
             OverridePackageVersions = overridePackageVersions;
-            GenerateWixPack = generateWixPack;
-        }        
+            GenerateWixpack = generateWixpack;
+            WixpackOutputDirectory = wixpackOutputDirectory;
+        }
 
         /// <summary>
         /// Gets the platform specific ProductName MSI property.  
@@ -308,20 +324,24 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             WixProject wixproj = CreateProject();
             wixproj.AddProperty("OutputPath", outputPath);
 
+            if (GenerateWixpack)
+            {
+                // Wixpacks need to capture compile time information from the WiX SDK to rebuild the MSI
+                // after replacing any unsigned content when using Arcade to sign. 
+                Utils.StringReplace(EmbeddedTemplates.Extract("Directory.Build.targets", WixSourceDirectory),
+                    Encoding.UTF8, ("__WIXPACK_OUTPUT_DIR__", WixpackOutputDirectory));
+
+                // Add a package reference to pull in the CreateWixBuildWixpack task. The version 
+                // should automatically default to the "major.minor.path-*", e.g. 10.0.0-*
+                wixproj.AddPackageReference(_MicrosoftDotNetBuildTaskInstallers, ToolsetInfo.ArcadeVersion);
+            }
+
             if (File.Exists(wixProjectPath))
             {
                 File.Delete(wixProjectPath);
             }
 
             wixproj.Save(wixProjectPath);
-
-            if (GenerateWixPack)
-            {
-                // Wixpacks need to capture compile time information from the WiX SDK to rebuild the MSI
-                // after replacing any unsigned content when using Arcade to sign. 
-
-                // TODO: Extract and modify the Directory.Build.targets template and replace some tokens.
-            }
 
             // Use DOTNET_HOST_PATH if set, otherwise, fall back to resolivng the host relative to
             // the runtime being used.
@@ -345,11 +365,18 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             var buildProcess = Process.Start(startInfo);
             buildProcess?.WaitForExit();
 
-            // Return a task item that contains all the information about the generated MSI.            
+            // Return a task item that contains information about the generated MSI.
             TaskItem msiItem = new TaskItem(Path.Combine(outputPath, OutputName));
             msiItem.SetMetadata(Workloads.Metadata.Platform, Platform);
             msiItem.SetMetadata(Workloads.Metadata.Version, $"{Metadata.MsiVersion}");
             msiItem.SetMetadata(Workloads.Metadata.SwixPackageId, Metadata.SwixPackageId);
+
+            if (GenerateWixpack && !string.IsNullOrEmpty(WixpackOutputDirectory))
+            {
+                msiItem.SetMetadata(Workloads.Metadata.Wixpack, Path.Combine(
+                    WixpackOutputDirectory,
+                    Path.GetFileNameWithoutExtension(OutputName)) + ".msi.wixpack.zip");
+            }
 
             AddDefaultPackageFiles(msiItem);
 

@@ -64,12 +64,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// <param name="allowSideBySideInstalls">Determines whether manifest installers are side-by-side for an SDK feature band or support major upgrades.</param>
         /// <param name="wixToolsetVersion">The version of the WiX toolset to use for building the installer.</param>
         /// <param name="overridePackageVersions">Determines if VersionOverride attributes are generated for package references.</param>
-        /// <param name="generateWixPack">Determines if a wixpack archive should be generated. The wixpack is required to sign MSIs using Arcade.</param>
+        /// <param name="generateWixpack">Determines if a wixpack archive should be generated. The wixpack is required to sign MSIs using Arcade.</param>
+        /// <param name="wixpackOutputDirectory">The directory to use for generating a wixpack for signing.</param>
         public WorkloadManifestMsi(WorkloadManifestPackage package, string platform, IBuildEngine buildEngine,
             string baseIntermediateOutputPath, bool allowSideBySideInstalls = false, string wixToolsetVersion = ToolsetInfo.MicrosoftWixToolsetVersion,
-            bool overridePackageVersions = false, bool generateWixPack = false) :
+            bool overridePackageVersions = false, bool generateWixpack = false, string? wixpackOutputDirectory = null) :
             base(MsiMetadata.Create(package), buildEngine, platform, baseIntermediateOutputPath, wixToolsetVersion,
-                overridePackageVersions)
+                overridePackageVersions, generateWixpack, wixpackOutputDirectory)
         {
             Package = package;
             AllowSideBySideInstalls = allowSideBySideInstalls;

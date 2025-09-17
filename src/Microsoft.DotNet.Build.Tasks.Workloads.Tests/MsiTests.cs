@@ -28,13 +28,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         /// <param name="allowSideBySideInstalls">Whether MSIs should allow side-by-side installations instead of major upgrades.</param>
         /// <returns>A task item with metadata for the generated MSI.</returns>
         private static ITaskItem BuildManifestMsi(string outputDirectory, string packagePath, string msiVersion = "1.2.3", string platform = "x64",
-            bool allowSideBySideInstalls = true)
+            bool allowSideBySideInstalls = true, bool generateWixpack = false, string wixpackOutputDirectory = null)
         {
             TaskItem packageItem = new(packagePath);
             WorkloadManifestPackage pkg = new(packageItem, Path.Combine(outputDirectory, "pkg"), new Version(msiVersion));
             pkg.Extract();
             WorkloadManifestMsi msi = new(pkg, platform, new MockBuildEngine(), outputDirectory,
-                allowSideBySideInstalls, overridePackageVersions: true);
+                allowSideBySideInstalls, overridePackageVersions: true, generateWixpack: generateWixpack,
+                wixpackOutputDirectory: wixpackOutputDirectory);
 
             return msi.Build(Path.Combine(outputDirectory, "msi"));
         }
@@ -82,6 +83,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             using SummaryInfo si = new(msiPath, enableWrite: false);
             Assert.Equal("x64;1033", si.Template);
 
+            // Verify pack directories
+            MsiUtils.GetAllDirectories(msiPath).Select(d => d.Directory).Should().Contain("PackageDir", "because it's an SDK pack");
+            MsiUtils.GetAllDirectories(msiPath).Select(d => d.Directory).Should().Contain("InstallDir", "because it's a workload pack");
+
             // UpgradeCode is predictable/stable for pack MSIs since they are seeded using the package identity (ID & version).
             Assert.Equal("{A06E6854-C6B0-3C8D-8D0C-F0704755303B}", MsiUtils.GetProperty(msiPath, MsiProperty.UpgradeCode));
         }
@@ -116,52 +121,37 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
                 d.Directory == "ManifestVersionDir" &&
                 d.DirectoryParent == "ManifestIdDir" &&
                 d.DefaultDir.EndsWith("|6.0.4"));
-
-            // TODO: Need to ensure that we can generate the new wixpacks in build since
-            // wixobj no longer exists.
-            // Generated MSI should return the path where the .wixobj files are located so
-            //// WiX packs can be created for post-build signing.
-            //Assert.NotNull(msi603.GetMetadata(Metadata.WixObj));
-            //Assert.NotNull(msi604.GetMetadata(Metadata.WixObj));
-        }        
+        }
 
         [WindowsOnlyFact]
         public void ItCanBuildAManifestMsi()
         {
             string outputDirectory = GetTestCaseDirectory();
-            //string pkgDirectory = Path.Combine(outputDirectory, "pkg");
-            //string msiDirectory = Path.Combine(outputDirectory, "msi");
+            string wixpackOutputDirectory = Path.Combine(outputDirectory, "wixpack");
 
-
-            ITaskItem msi = BuildManifestMsi(outputDirectory, 
+            ITaskItem msi = BuildManifestMsi(outputDirectory,
                 Path.Combine(TestAssetsPath, "microsoft.net.workload.mono.toolchain.manifest-6.0.200.6.0.3.nupkg"),
-                allowSideBySideInstalls: false);
-
-
-            //TaskItem packageItem = new(Path.Combine(TestAssetsPath, "microsoft.net.workload.mono.toolchain.manifest-6.0.200.6.0.3.nupkg"));
-            //WorkloadManifestPackage pkg = new(packageItem, pkgDirectory, new Version("1.2.3"));
-            //pkg.Extract();
-            //WorkloadManifestMsi msi = new(pkg, "x64", new MockBuildEngine(), outputDirectory);
-
-            //ITaskItem item = msi.Build(msiDirectory);
+                allowSideBySideInstalls: false,
+                generateWixpack: true,
+                wixpackOutputDirectory: wixpackOutputDirectory);
 
             string msiPath = msi.GetMetadata(Metadata.FullPath);
 
             // Process the summary information stream's template to extract the MSIs target platform.
             using SummaryInfo si = new(msiPath, enableWrite: false);
 
-            // UpgradeCode is predictable/stable for manifest MSIs.
+            // UpgradeCode is predictable/stable for manifest MSIs that support major upgrades.
             Assert.Equal("{E4761192-882D-38E9-A3F4-14B6C4AD12BD}", MsiUtils.GetProperty(msiPath, MsiProperty.UpgradeCode));
             Assert.Equal("1.2.3", MsiUtils.GetProperty(msiPath, MsiProperty.ProductVersion));
             Assert.Equal("Microsoft.NET.Workload.Mono.ToolChain,6.0.200,x64", MsiUtils.GetProviderKeyName(msiPath));
             Assert.Equal("x64;1033", si.Template);
 
             // There should be no version directory present if the old upgrade model is used.
-            MsiUtils.GetAllDirectories(msiPath).Select(d => d.Directory).Should().NotContain("ManifestVersionDir");
+            MsiUtils.GetAllDirectories(msiPath).Select(d => d.Directory).Should().NotContain("ManifestVersionDir", 
+                "because the manifest MSI supports major upgrades");
 
-            // Generated MSI should return the path where the .wixobj files are located so
-            // WiX packs can be created for post-build signing.
-            //Assert.NotNull(item.GetMetadata(Metadata.WixObj));
+            // Verify that the wixpack archive was created.
+            Assert.True(File.Exists(msi.GetMetadata(Metadata.Wixpack)));
         }
 
         [WindowsOnlyFact]
@@ -194,6 +184,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             // only be a single file.
             FileRow fileRow = MsiUtils.GetAllFiles(msiPath).FirstOrDefault();
             Assert.Contains("microsoft.ios.templates.15.2.302-preview.14.122.nupkg", fileRow.FileName);
+
+            MsiUtils.GetAllDirectories(msiPath).Select(d => d.Directory).Should().NotContain("PackageDir", "because it's a template pack");
+            MsiUtils.GetAllDirectories(msiPath).Select(d => d.Directory).Should().Contain("InstallDir", "because it's a workload pack");
         }
     }
 }

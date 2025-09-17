@@ -28,9 +28,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
 
         public WorkloadPackMsi(WorkloadPackPackage package, string platform, IBuildEngine buildEngine, string wixToolsetPath,
             string baseIntermediatOutputPath, string wixToolsetVersion = ToolsetInfo.MicrosoftWixToolsetVersion,
-            bool overridePackageVersions = false, bool generateWixPack = false) :
+            bool overridePackageVersions = false, bool generateWixPack = false,
+            string? wixpackOutputDirectory = null) :
             base(MsiMetadata.Create(package), buildEngine, platform, baseIntermediatOutputPath, wixToolsetVersion,
-                overridePackageVersions, generateWixPack)
+                overridePackageVersions, generateWixPack, wixpackOutputDirectory)
         {
             _package = package;
         }
@@ -44,6 +45,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             EmbeddedTemplates.Extract("DependencyProvider.wxs", WixSourceDirectory);
             EmbeddedTemplates.Extract("dotnethome_x64.wxs", WixSourceDirectory);
             EmbeddedTemplates.Extract("Directories.wxs", WixSourceDirectory);
+            EmbeddedTemplates.Extract("WorkloadPackDirectories.wxs", WixSourceDirectory);
             EmbeddedTemplates.Extract("Registry.wxs", WixSourceDirectory);
             
             string directoryReference = _package.Kind == WorkloadPackKind.Library || _package.Kind == WorkloadPackKind.Template ?

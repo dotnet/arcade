@@ -12,28 +12,13 @@
     <?if $(InstallerPlatform)~=x64?>
     <CustomActionRef Id="Set_DOTNETHOME_NON_NATIVE_ARCHITECTURE" />
     <?endif?>
-  </Fragment>
-
-  <!-- InstallDir should only be defined for workload packs -->
-  <?ifdef InstallDir?>
-  <Fragment>
-    <DirectoryRef Id="DOTNETHOME">
-      <Directory Id="InstallDir" Name="$(var.InstallDir)">
-        <?if $(var.PackKind) != "library" and $(var.PackKind) != "template"?>
-        <Directory Id="PackageDir" Name="$(var.PackageId)">
-          <Directory Id="VersionDir" Name="$(var.PackageVersion)" />
-        </Directory>
-        <?endif?>
-      </Directory>
-    </DirectoryRef>
-  </Fragment>
-  <?endif?>
+  </Fragment>  
 
   <?ifdef SdkFeatureBandVersion?>
   <Fragment>
     <DirectoryRef Id="DOTNETHOME">
       <Directory Id="SdkManifestsDir" Name="sdk-manifests">
-        <Directory Id="SdkFeatureBandVersionDir" Name="$(var.SdkFeatureBandVersion)" />
+        <Directory Id="SdkFeatureBandVersionDir" Name="$(SdkFeatureBandVersion)" />
       </Directory>
     </DirectoryRef>
   </Fragment>
@@ -43,7 +28,7 @@
   <Fragment>
     <DirectoryRef Id="SdkFeatureBandVersionDir">
       <Directory Id="WorkloadSetsDir" Name="workloadsets">
-        <Directory Id="WorkloadSetVersionDir" Name="$(var.WorkloadSetVersion)" />
+        <Directory Id="WorkloadSetVersionDir" Name="$(WorkloadSetVersion)" />
       </Directory>
     </DirectoryRef>
   </Fragment>
@@ -52,11 +37,16 @@
   <?ifdef ManifestId?>
   <Fragment>
     <DirectoryRef Id="SdkFeatureBandVersionDir">
-      <Directory Id="ManifestIdDir" Name="$(var.ManifestId)">
-        <?ifdef ManifestVersion ?>
-        <Directory Id="ManifestVersionDir" Name="$(var.ManifestVersion)" />
-        <?endif?>
+      <Directory Id="ManifestIdDir" Name="$(ManifestId)">
       </Directory>
+    </DirectoryRef>
+  </Fragment>
+  <?endif?>
+
+  <?ifdef ManifestVersion?>
+  <Fragment>
+    <DirectoryRef Id="ManifestIdDir">
+      <Directory Id="ManifestVersionDir" Name="$(ManifestVersion)" />
     </DirectoryRef>
   </Fragment>
   <?endif?>

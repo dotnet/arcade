@@ -69,12 +69,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             {
                 { "DependencyProvider.wxs", $"{ns}.MsiTemplate.DependencyProvider.wxs" },
                 { "Directories.wxs", $"{ns}.MsiTemplate.Directories.wxs" },
+                { "WorkloadPackDirectories.wxs", $"{ns}.MsiTemplate.WorkloadPackDirectories.wxs" },
                 { "dotnethome_x64.wxs", $"{ns}.MsiTemplate.dotnethome_x64.wxs" },
                 { "ManifestProduct.wxs", $"{ns}.MsiTemplate.ManifestProduct.wxs" },
                 { "WorkloadSetProduct.wxs", $"{ns}.MsiTemplate.WorkloadSetProduct.wxs" },
                 { "Product.wxs", $"{ns}.MsiTemplate.Product.wxs" },
                 { "Registry.wxs", $"{ns}.MsiTemplate.Registry.wxs" },
-                { "msi.wixproj", $"{ns}.MsiTemplate.msi.wixproj" },
                 { "Directory.Build.targets", $"{ns}.MsiTemplate.Directory.Build.targets.pp" },
 
                 { $"msi.swr", $"{ns}.SwixTemplate.msi.swr" },

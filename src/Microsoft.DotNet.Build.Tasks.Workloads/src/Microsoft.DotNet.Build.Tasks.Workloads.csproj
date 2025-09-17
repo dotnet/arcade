@@ -67,13 +67,21 @@
   
   <ItemGroup>
     <Compile Include="..\..\Common\Internal\BuildTask.cs" />
-    <None Include="msitemplate\Directory.Build.targets.pp" />
-    <None Include="msitemplate\msi.wixproj" />
     <Compile Update="Strings.Designer.cs" DesignTime="True" AutoGen="True" DependentUpon="Strings.resx" />
   </ItemGroup>
 
   <Target Name="GenerateToolsetInfo" BeforeTargets="CoreCompile">
-    <WriteLinesToFile File="$(IntermediateOutputPath)ToolsetInfo.cs" Overwrite="true" Lines="namespace Microsoft.DotNet.Build.Tasks.Workloads&#xD;&#xA;{&#xD;&#xA;    public class ToolsetInfo&#xD;&#xA;    {&#xD;&#xA;         /// &lt;summary&gt;&#xD;&#xA;         /// The default version of the WiX toolset defined by Arcade.&#xD;&#xA;         /// &lt;/summary&gt;&#xD;&#xA;         public const string MicrosoftWixToolsetVersion = &quot;$(MicrosoftWiXToolsetSdkVersion)&quot;%3B&#xD;&#xA;    }&#xD;&#xA;}&#xD;&#xA;" />
+    <ItemGroup>
+      <ToolsetInfoLines Include="namespace Microsoft.DotNet.Build.Tasks.Workloads&#xD;&#xA;"/>
+      <ToolsetInfoLines Include="{&#xD;&#xA;"/>
+      <ToolsetInfoLines Include="    public class ToolsetInfo&#xD;&#xA;"/>
+      <ToolsetInfoLines Include="    {&#xD;&#xA;"/>
+      <ToolsetInfoLines Include="        public const string MicrosoftWixToolsetVersion = &quot;$(MicrosoftWiXToolsetSdkVersion)&quot;%3B&#xD;&#xA;"/>
+      <ToolsetInfoLines Include="        public const string ArcadeVersion = &quot;$(VersionPrefix)-*&quot;%3B&#xD;&#xA;"/>
+      <ToolsetInfoLines Include="    }&#xD;&#xA;"/>
+      <ToolsetInfoLines Include="}&#xD;&#xA;"/>
+    </ItemGroup>
+    <WriteLinesToFile File="$(IntermediateOutputPath)ToolsetInfo.cs" Overwrite="true" Lines="@(ToolsetInfoLines)" />
     <ItemGroup>
       <Compile Include="$(IntermediateOutputPath)ToolsetInfo.cs" />
     </ItemGroup>
