@@ -989,6 +989,33 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 symbolTargetType: PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
+            // .NET 11,
+            new TargetChannelConfig(
+                id: 8297,
+                isInternal: false,
+                publishingInfraVersion: PublishingInfraVersion.Latest,
+                akaMSChannelNames: ["11.0"],
+                targetFeeds: DotNet11Feeds,
+                symbolTargetType: SymbolPublishVisibility.Public),
+
+            // .NET 11 Workload Release,
+            new TargetChannelConfig(
+                id: 8299,
+                isInternal: false,
+                publishingInfraVersion: PublishingInfraVersion.Latest,
+                akaMSChannelNames: [ "11.0-workloads" ],
+                targetFeeds: DotNet11WorkloadFeeds,
+                symbolTargetType: SymbolPublishVisibility.Public),
+
+            // .NET 11.0.1xx SDK,
+            new TargetChannelConfig(
+                id: 8298,
+                isInternal: false,
+                publishingInfraVersion: PublishingInfraVersion.Latest,
+                akaMSChannelNames: [ "11.0.1xx", "11.0" ],
+                targetFeeds: DotNet10Feeds,
+                symbolTargetType: SymbolPublishVisibility.Public),
+
             // .NET Core Experimental,
             new TargetChannelConfig(
                 id: 562,
