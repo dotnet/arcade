@@ -1013,7 +1013,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 isInternal: false,
                 publishingInfraVersion: PublishingInfraVersion.Latest,
                 akaMSChannelNames: [ "11.0.1xx", "11.0" ],
-                targetFeeds: DotNet10Feeds,
+                targetFeeds: DotNet11Feeds,
                 symbolTargetType: SymbolPublishVisibility.Public),
 
             // .NET Core Experimental,
