@@ -93,6 +93,16 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
+        /// Generate VersionOverride attributes for package references. This avoids conflicts when
+        /// using CPM and a different version of WiX for non-workload related projects in the same repository.
+        /// </summary>
+        public bool OverridePackageVersions
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Core execution of the build task.
         /// </summary>
         /// <returns><see langword="true" /> if successful; otherwise <see langword="false"/>.</returns>

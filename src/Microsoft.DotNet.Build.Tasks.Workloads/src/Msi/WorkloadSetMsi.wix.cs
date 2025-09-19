@@ -46,10 +46,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             EmbeddedTemplates.Extract("WorkloadSetProduct.wxs", WixSourceDirectory);
 
             string packageDataDirectory = Path.Combine(_package.DestinationDirectory, "data");
-            wixproj.AddHarvestDirectory(packageDataDirectory, MsiDirectories.WorkloadSetVersionDirectory);
+            wixproj.AddHarvestDirectory(packageDataDirectory, MsiDirectories.WorkloadSetVersionDirectory,
+                PreprocessorDefinitionNames.SourceDir);
 
             wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.SourceDir, $"{packageDataDirectory}");
             wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.SdkFeatureBandVersion, $"{_package.SdkFeatureBand}");
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.UpgradeStrategy, "none");
             wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.WorkloadSetVersion, $"{_package.WorkloadSetVersion}");
 
             return wixproj;

@@ -15,11 +15,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
     public class CreateVisualStudioWorkloadSetTests : TestBase
     {
         [WindowsOnlyFact]
-        public static void ItCanCreateWorkloadSets()
+        public void ItCanCreateWorkloadSets()
         {
             // Create intermediate outputs under %temp% to avoid path issues and make sure it's clean so we don't pick up
             // conflicting sources from previous runs.
-            string baseIntermediateOutputPath = Path.Combine(Path.GetTempPath(), "WLS");
+            string testCaseDirectory = GetTestCaseDirectory();
+            string baseIntermediateOutputPath = testCaseDirectory;
 
             if (Directory.Exists(baseIntermediateOutputPath))
             {
@@ -36,9 +37,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 
             CreateVisualStudioWorkloadSet createWorkloadSetTask = new CreateVisualStudioWorkloadSet()
             {
-                BaseOutputPath = BaseOutputPath,
+                BaseOutputPath = Path.Combine(testCaseDirectory, "msi"),
                 BaseIntermediateOutputPath = baseIntermediateOutputPath,
                 BuildEngine = buildEngine,
+                OverridePackageVersions = true,
+               
                 WixToolsetPath = WixToolsetPath,
                 WorkloadSetPackageFiles = workloadSetPackages
             };
@@ -58,6 +61,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
                 r.Value == "12.8.45");
 
             // Workload sets are SxS. Verify that we don't have an Upgrade table.
+            // This requires suppressing the default behavior by setting Package@UpgradeStrategy to "none".
             Assert.False(MsiUtils.HasTable(msi.ItemSpec, "Upgrade"));
 
             // Verify the workloadset version directory and only look at the long name version.

@@ -32,6 +32,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
         public static readonly string SdkFeatureBandVersion = nameof(SdkFeatureBandVersion);
         public static readonly string SourceDir = nameof(SourceDir);
         public static readonly string UpgradeCode = nameof(UpgradeCode);
+        public static readonly string UpgradeStrategy = nameof(UpgradeStrategy);
         public static readonly string WorkloadSetVersion = nameof(WorkloadSetVersion);
     }
 }

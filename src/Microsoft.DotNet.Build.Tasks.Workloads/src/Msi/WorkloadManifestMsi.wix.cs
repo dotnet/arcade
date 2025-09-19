@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         protected override string? InstallationRecordKey => "InstalledManifests";
 
         /// <summary>
-        /// 
+        /// Creates a new <see cref="WorkloadManifestMsi"/> instance.
         /// </summary>
         /// <param name="package">The NuGet package containing the workload manifest.</param>
         /// <param name="platform">The target platform of the installer.</param>
@@ -131,7 +131,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
                 NuGetPackageFiles[jsonFullPath] = @"\data\extractedManifest\" + Path.GetFileName(jsonFullPath);
             }
 
-            // Add preprocessor definitions            
+            // Add preprocessor definitions
             wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.SourceDir, $"{packageDataDirectory}");
             wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.SdkFeatureBandVersion, $"{Package.SdkFeatureBand}");
 
