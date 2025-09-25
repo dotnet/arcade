@@ -334,7 +334,7 @@
   -->
   <Target Name="_BuildAzureLinuxRpm"
           AfterTargets="GenerateRpm"
-          Condition="'$(PackageTargetOS)' != ''">
+          Condition="'$(PackageTargetOS)' == ''">
     <!-- AzureLinux -->
     <PropertyGroup>
       <_AzureLinuxVersionSuffix>azl</_AzureLinuxVersionSuffix>
