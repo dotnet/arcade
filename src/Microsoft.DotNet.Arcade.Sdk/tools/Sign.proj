@@ -81,7 +81,7 @@
     </PropertyGroup>
 
     <ItemGroup Condition="'$(UseDotNetToolPathForMicroBuild)' == 'false'">
-      <_ItemInPath Include="$([System.Text.RegularExpressions.Regex]::Split('$(PATH)', ':'))" />
+      <_ItemInPath Include="$([System.Text.RegularExpressions.Regex]::Split('$(PATH)', '$([System.Convert]::ToString($([System.IO.Path]::PathSeparator)))'))" />
 
       <_DotNetPathMicroBuildCandidate
         Include="@(_ItemInPath->'%(Identity)/dotnet')"
@@ -93,7 +93,8 @@
       <_DotNetPathMicroBuild>%(_DotNetPathMicroBuildCandidate.Identity)</_DotNetPathMicroBuild>
     </PropertyGroup>
 
-    <Warning
+    <Message
+      Importance="High"
       Condition="'$(UseDotNetToolPathForMicroBuild)' == 'false' and '$(_DotNetPathMicroBuild)' == '$(DotNetTool)'"
       Text="Did not find a dotnet executable in a MicroBuild directory on PATH. Using $(DotNetTool) instead, which may cause signing errors." />
   </Target>
