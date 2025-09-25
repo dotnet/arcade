@@ -158,7 +158,7 @@
   -->
   <Target Name="_BuildMarinerRpm"
           AfterTargets="GenerateRpm"
-          Condition="'$(PackageTargetOS)' != ''">
+          Condition="'$(PackageTargetOS)' == ''">
     <!-- CBL-Mariner -->
     <PropertyGroup>
       <!-- CBL-Mariner 1.0 -->
