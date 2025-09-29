@@ -1428,7 +1428,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             
             // 18.0
             new TargetChannelConfig(
-                id: 7987
+                id: 7987,
                 isInternal: false,
                 publishingInfraVersion: PublishingInfraVersion.Latest,
                 akaMSChannelNames: new List<string>(),
