@@ -36,7 +36,7 @@ function Write-PipelineTelemetryError {
   fi
   message="(NETCORE_ENGINEERING_TELEMETRY=$telemetry_category) $message"
   function_args+=("$message")
-  Write-PipelineTaskError ${function_args[@]}
+  Write-PipelineTaskError "${function_args[@]}"
 }
 
 function Write-PipelineTaskError {

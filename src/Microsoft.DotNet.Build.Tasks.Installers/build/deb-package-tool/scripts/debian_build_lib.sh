@@ -51,7 +51,7 @@ add_system_dir_placement(){
         in_package_dir="${in_package_dir}/"
     fi
 
-    for rel_filepath in ${dir_files[@]}
+    for rel_filepath in "${dir_files[@]}"
     do
         local parent_path=$(dirname $rel_filepath)
 
@@ -122,7 +122,7 @@ _copy_files_to_package(){
     shift; shift;
     rel_filepath_list=( $@ )
 
-    for rel_filepath in ${rel_filepath_list[@]}
+    for rel_filepath in "${rel_filepath_list[@]}"
     do
         local parent_dir=$(dirname $rel_filepath)
         local filename=$(basename $rel_filepath)

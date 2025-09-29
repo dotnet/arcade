@@ -8,7 +8,7 @@ fi
 Log()
 {
     if [ $VERBOSE -ge 1 ]; then
-        echo ${@:2}
+        echo "${@:2}"
     fi
 }
 
@@ -127,7 +127,7 @@ fetch_tizen_pkgs()
 
     PACKAGE_CHECKSUM_XPATH_TPL='string(//*[local-name()="metadata"]/*[local-name()="package"][*[local-name()="name"][text()="_PKG_"]][*[local-name()="arch"][text()="_ARCH_"]]/*[local-name()="checksum"]/text())'
 
-    for pkg in ${@:2}
+    for pkg in "${@:2}"
     do
         Inform "Fetching... $pkg"
         XPATH=${PACKAGE_XPATH_TPL/_PKG_/$pkg}
