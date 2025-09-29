@@ -1425,17 +1425,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 symbolTargetType: PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
-
+            
             // 18.0
             new TargetChannelConfig(
-                id: 7987,
+                id: 7987
                 isInternal: false,
                 publishingInfraVersion: PublishingInfraVersion.Latest,
-                akaMSChannelNames: [],
-                akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
-                akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
+                akaMSChannelNames: new List<string>(),
                 targetFeeds: DotNetToolsFeeds,
-                symbolTargetType: SymbolPublishVisibility.Public,
+                symbolTargetType: PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude,
                 flatten: false),
             
             // 18.1
@@ -1443,11 +1442,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 id: 8703,
                 isInternal: false,
                 publishingInfraVersion: PublishingInfraVersion.Latest,
-                akaMSChannelNames: [],
-                akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
-                akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
+                akaMSChannelNames: new List<string>(),
                 targetFeeds: DotNetToolsFeeds,
-                symbolTargetType: SymbolPublishVisibility.Public,
+                symbolTargetType: PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude,
                 flatten: false),
             
             // 18.2
@@ -1455,11 +1453,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 id: 8704,
                 isInternal: false,
                 publishingInfraVersion: PublishingInfraVersion.Latest,
-                akaMSChannelNames: [],
-                akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
-                akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
+                akaMSChannelNames: new List<string>(),
                 targetFeeds: DotNetToolsFeeds,
-                symbolTargetType: SymbolPublishVisibility.Public,
+                symbolTargetType: PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude,
                 flatten: false),
             
             // 18.3
@@ -1467,11 +1464,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 id: 8705,
                 isInternal: false,
                 publishingInfraVersion: PublishingInfraVersion.Latest,
-                akaMSChannelNames: [],
-                akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
-                akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
+                akaMSChannelNames: new List<string>(),
                 targetFeeds: DotNetToolsFeeds,
-                symbolTargetType: SymbolPublishVisibility.Public,
+                symbolTargetType: PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude,
                 flatten: false),
             
             // 18.4
@@ -1479,23 +1475,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 id: 8706,
                 isInternal: false,
                 publishingInfraVersion: PublishingInfraVersion.Latest,
-                akaMSChannelNames: [],
-                akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
-                akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
+                akaMSChannelNames: new List<string>(),
                 targetFeeds: DotNetToolsFeeds,
-                symbolTargetType: SymbolPublishVisibility.Public,
+                symbolTargetType: PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude,
                 flatten: false),
-            
+
             // 18.5
             new TargetChannelConfig(
                 id: 8707,
                 isInternal: false,
                 publishingInfraVersion: PublishingInfraVersion.Latest,
-                akaMSChannelNames: [],
-                akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
-                akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
+                akaMSChannelNames: new List<string>(),
                 targetFeeds: DotNetToolsFeeds,
-                symbolTargetType: SymbolPublishVisibility.Public,
+                symbolTargetType: PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude,
                 flatten: false),
             
             // 18.6
@@ -1503,11 +1497,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 id: 8708,
                 isInternal: false,
                 publishingInfraVersion: PublishingInfraVersion.Latest,
-                akaMSChannelNames: [],
-                akaMSCreateLinkPatterns: DefaultAkaMSCreateLinkPatterns,
-                akaMSDoNotCreateLinkPatterns: DefaultAkaMSDoNotCreateLinkPatterns,
+                akaMSChannelNames: new List<string>(),
                 targetFeeds: DotNetToolsFeeds,
-                symbolTargetType: SymbolPublishVisibility.Public,
+                symbolTargetType: PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude,
                 flatten: false),
             };
         #endregion
