@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -27,21 +30,19 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             var originalConfig = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <configuration>
   <packageSources>
-    <add key=""nuget.org"" value=""https://api.nuget.org/v3/index.json"" />
+    <add key=""dotnet-public"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json"" />
     <add key=""dotnet6"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json"" />
   </packageSources>
 </configuration>";
             var configPath = Path.Combine(_testOutputDirectory, "nuget.config");
-            await File.WriteAllTextAsync(configPath, originalConfig);
-            var testCredential = "test-token-12345";
-            var scriptType = ScriptRunner.GetPlatformAppropriateScriptType();
-
+            await Task.Run(() => File.WriteAllText(configPath, originalConfig));
+            var testCredential = "Placeholder";
             // Act
-            var result = await _scriptRunner.RunScript(scriptType, configPath, testCredential);
+            var result = await _scriptRunner.RunScript(configPath, testCredential);
 
             // Assert
-            result.exitCode.Should().Be(0, $"{scriptType} script should succeed, but got error: {result.error}");
-            var modifiedConfig = await File.ReadAllTextAsync(configPath);
+            result.exitCode.Should().Be(0, "script should succeed, but got error: {result.error}");
+            var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
             
             // Should add internal feeds
             modifiedConfig.ShouldContainPackageSource("dotnet6-internal");
@@ -67,20 +68,19 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             var originalConfig = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <configuration>
   <packageSources>
-    <add key=""nuget.org"" value=""https://api.nuget.org/v3/index.json"" />
+    <add key=""dotnet-public"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json"" />
     <add key=""dotnet6"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json"" />
   </packageSources>
 </configuration>";
             var configPath = Path.Combine(_testOutputDirectory, "nuget.config");
-            await File.WriteAllTextAsync(configPath, originalConfig);
-            var scriptType = ScriptRunner.GetPlatformAppropriateScriptType();
+            await Task.Run(() => File.WriteAllText(configPath, originalConfig));
 
             // Act - No credential provided
-            var result = await _scriptRunner.RunScript(scriptType, configPath);
+            var result = await _scriptRunner.RunScript(configPath);
 
             // Assert
-            result.exitCode.Should().Be(0, $"{scriptType} script should succeed, but got error: {result.error}");
-            var modifiedConfig = await File.ReadAllTextAsync(configPath);
+            result.exitCode.Should().Be(0, "script should succeed, but got error: {result.error}");
+            var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
             
             // Should add internal feeds
             modifiedConfig.ShouldContainPackageSource("dotnet6-internal");
@@ -103,28 +103,26 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             var originalConfig = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <configuration>
   <packageSources>
-    <add key=""nuget.org"" value=""https://api.nuget.org/v3/index.json"" />
+    <add key=""dotnet-public"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json"" />
     <add key=""dotnet6"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json"" />
     <add key=""existing-private"" value=""https://example.com/nuget"" />
   </packageSources>
   <packageSourceCredentials>
     <existing-private>
       <add key=""Username"" value=""existing-user"" />
-      <add key=""ClearTextPassword"" value=""existing-password"" />
+      <add key=""ClearTextPassword"" value=""Placeholder"" />
     </existing-private>
   </packageSourceCredentials>
 </configuration>";
             var configPath = Path.Combine(_testOutputDirectory, "nuget.config");
-            await File.WriteAllTextAsync(configPath, originalConfig);
-            var testCredential = "new-token-12345";
-            var scriptType = ScriptRunner.GetPlatformAppropriateScriptType();
-
+            await Task.Run(() => File.WriteAllText(configPath, originalConfig));
+            var testCredential = "Placeholder";
             // Act
-            var result = await _scriptRunner.RunScript(scriptType, configPath, testCredential);
+            var result = await _scriptRunner.RunScript(configPath, testCredential);
 
             // Assert
-            result.exitCode.Should().Be(0, $"{scriptType} script should succeed, but got error: {result.error}");
-            var modifiedConfig = await File.ReadAllTextAsync(configPath);
+            result.exitCode.Should().Be(0, "script should succeed, but got error: {result.error}");
+            var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
             
             // Should preserve existing credentials
             modifiedConfig.ShouldContainCredentials("existing-private", "existing-user", "should preserve existing credentials");
@@ -141,7 +139,7 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             var originalConfig = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <configuration>
   <packageSources>
-    <add key=""nuget.org"" value=""https://api.nuget.org/v3/index.json"" />
+    <add key=""dotnet-public"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json"" />
     <add key=""dotnet6"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json"" />
   </packageSources>
   <disabledPackageSources>
@@ -149,16 +147,14 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
   </disabledPackageSources>
 </configuration>";
             var configPath = Path.Combine(_testOutputDirectory, "nuget.config");
-            await File.WriteAllTextAsync(configPath, originalConfig);
-            var testCredential = "test-token-12345";
-            var scriptType = ScriptRunner.GetPlatformAppropriateScriptType();
-
+            await Task.Run(() => File.WriteAllText(configPath, originalConfig));
+            var testCredential = "Placeholder";
             // Act
-            var result = await _scriptRunner.RunScript(scriptType, configPath, testCredential);
+            var result = await _scriptRunner.RunScript(configPath, testCredential);
 
             // Assert
-            result.exitCode.Should().Be(0, $"{scriptType} script should succeed, but got error: {result.error}");
-            var modifiedConfig = await File.ReadAllTextAsync(configPath);
+            result.exitCode.Should().Be(0, "script should succeed, but got error: {result.error}");
+            var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
             
             // Should enable the darc-int feed
             modifiedConfig.ShouldNotBeDisabled("darc-int-dotnet-roslyn-12345", "darc-int feed should be enabled");
@@ -178,26 +174,25 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             var originalConfig = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <configuration>
   <packageSources>
-    <add key=""nuget.org"" value=""https://api.nuget.org/v3/index.json"" />
+    <add key=""dotnet-public"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json"" />
     <add key=""dotnet6"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json"" />
   </packageSources>
   <packageSourceCredentials>
     <dotnet6-internal>
       <add key=""Username"" value=""dn-bot"" />
-      <add key=""ClearTextPassword"" value=""existing-token"" />
+      <add key=""ClearTextPassword"" value=""Placeholder"" />
     </dotnet6-internal>
   </packageSourceCredentials>
 </configuration>";
             var configPath = Path.Combine(_testOutputDirectory, "nuget.config");
-            await File.WriteAllTextAsync(configPath, originalConfig);
-            var scriptType = ScriptRunner.GetPlatformAppropriateScriptType();
+            await Task.Run(() => File.WriteAllText(configPath, originalConfig));
 
             // Act - No credential provided
-            var result = await _scriptRunner.RunScript(scriptType, configPath);
+            var result = await _scriptRunner.RunScript(configPath);
 
             // Assert
-            result.exitCode.Should().Be(0, $"{scriptType} script should succeed, but got error: {result.error}");
-            var modifiedConfig = await File.ReadAllTextAsync(configPath);
+            result.exitCode.Should().Be(0, "script should succeed, but got error: {result.error}");
+            var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
             
             // Should preserve existing credentials
             modifiedConfig.ShouldContainCredentials("dotnet6-internal", "dn-bot", "should preserve existing credentials");
@@ -207,3 +202,5 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
         }
     }
 }
+
+

@@ -119,7 +119,7 @@ function EnableInternalPackageSource($DisabledPackageSources, $Creds, $PackageSo
         # Due to https://github.com/NuGet/Home/issues/10291, we must actually remove the disabled entries
         $DisabledPackageSources.RemoveChild($DisabledPackageSource)
 
-        AddCredential -Creds $creds -Source $DisabledPackageSource.Key -Username $Username -pwd $pwd
+        AddCredential -Creds $creds -Source $DisabledPackageSource.Key -Username $userName -pwd $Password
         return $true
     }
     return $false
@@ -135,11 +135,11 @@ $doc = New-Object System.Xml.XmlDocument
 $filename = (Get-Item $ConfigFile).FullName
 $doc.Load($filename)
 
-# Get reference to <PackageSources> or create one if none exist already
+# Get reference to <PackageSources> - fail if none exist
 $sources = $doc.DocumentElement.SelectSingleNode("packageSources")
 if ($sources -eq $null) {
-    $sources = $doc.CreateElement("packageSources")
-    $doc.DocumentElement.AppendChild($sources) | Out-Null
+    Write-PipelineTelemetryError -Category 'Build' -Message "Eng/common/SetupNugetSources.ps1 returned a non-zero exit code. NuGet config file must contain a packageSources section: $ConfigFile"
+    ExitWithExitCode 1
 }
 
 $creds = $null
@@ -154,14 +154,14 @@ if ($Password) {
     }
 }
 
+$userName = "dn-bot"
+
 # Check for disabledPackageSources; we'll enable any darc-int ones we find there
 $disabledSources = $doc.DocumentElement.SelectSingleNode("disabledPackageSources")
 if ($disabledSources -ne $null) {
     Write-Host "Checking for any darc-int disabled package sources in the disabledPackageSources node"
     EnableMaestroInternalPackageSources -DisabledPackageSources $disabledSources -Creds $creds
 }
-
-$userName = "dn-bot"
 $dotnetVersions = @('5','6','7','8','9','10')
 
 foreach ($dotnetVersion in $dotnetVersions) {
