@@ -129,8 +129,8 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
                 "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal-transport/nuget/v3/index.json",
                 "should add transport feed");
             
-            // Should have 3 package sources (original 2 + transport, not duplicating the enabled one)
-            modifiedConfig.GetPackageSourceCount().Should().Be(3, "should not duplicate enabled feeds");
+            // Should have 4 package sources (original 3, with dotnet6-internal enabled + transport added)
+            modifiedConfig.GetPackageSourceCount().Should().Be(4, "should enable existing feed and add transport feed");
         }
 
         [Fact]

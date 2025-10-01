@@ -25,7 +25,9 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
         public async Task EmptyConfiguration_FailsWithoutPackageSourcesSection()
         {
             // Arrange
-            var originalConfig = TestNuGetConfigFactory.CreateEmptyConfig();
+            var originalConfig = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<configuration>
+</configuration>";
             var configPath = Path.Combine(_testOutputDirectory, "nuget.config");
             await Task.Run(() => File.WriteAllText(configPath, originalConfig));
 
@@ -45,7 +47,12 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
         public async Task ConfigWithoutPackageSourcesSection_FailsWithoutPackageSourcesSection()
         {
             // Arrange
-            var originalConfig = TestNuGetConfigFactory.CreateConfigWithoutPackageSources();
+            var originalConfig = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<configuration>
+  <disabledPackageSources>
+    <add key=""darc-int-dotnet-runtime-67890"" value=""true"" />
+  </disabledPackageSources>
+</configuration>";
             var configPath = Path.Combine(_testOutputDirectory, "nuget.config");
             await Task.Run(() => File.WriteAllText(configPath, originalConfig));
 

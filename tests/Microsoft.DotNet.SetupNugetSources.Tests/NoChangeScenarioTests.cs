@@ -27,7 +27,12 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
         public async Task BasicConfig_NoChanges()
         {
             // Arrange
-            var originalConfig = TestNuGetConfigFactory.CreateBasicConfig();
+            var originalConfig = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<configuration>
+  <packageSources>
+    <add key=""dotnet-public"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json"" />
+  </packageSources>
+</configuration>";
             var configPath = Path.Combine(_testOutputDirectory, "nuget.config");
             await Task.Run(() => File.WriteAllText(configPath, originalConfig));
 
