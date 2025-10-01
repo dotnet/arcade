@@ -59,7 +59,18 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
         public async Task ConfigWithMultipleDotNetVersions_AddsAllInternalFeeds()
         {
             // Arrange
-            var originalConfig = TestNuGetConfigFactory.CreateConfigWithMultipleDotNetVersions();
+            var originalConfig = @"<?xml version=""1.0"" encoding=""utf-8""?>
+<configuration>
+  <packageSources>
+    <add key=""dotnet-public"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json"" />
+    <add key=""dotnet5"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json"" />
+    <add key=""dotnet6"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json"" />
+    <add key=""dotnet7"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json"" />
+    <add key=""dotnet8"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet8/nuget/v3/index.json"" />
+    <add key=""dotnet9"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet9/nuget/v3/index.json"" />
+    <add key=""dotnet10"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet10/nuget/v3/index.json"" />
+  </packageSources>
+</configuration>";
             var configPath = Path.Combine(_testOutputDirectory, "nuget.config");
             await Task.Run(() => File.WriteAllText(configPath, originalConfig));
             // Act
