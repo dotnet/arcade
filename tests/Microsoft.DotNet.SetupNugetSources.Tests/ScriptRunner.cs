@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -24,7 +27,7 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
 
         public async Task<(int exitCode, string output, string error)> RunPowerShellScript(string configFilePath, string password = null)
         {
-            var scriptPath = Path.Combine(_testDirectory, "SetupNugetSources.ps1");
+            var scriptPath = Path.Combine(GetRepoRoot(), "eng", "common", "SetupNugetSources.ps1");
             var arguments = $"-ExecutionPolicy Bypass -File \"{scriptPath}\" -ConfigFile \"{configFilePath}\"";
             
             if (!string.IsNullOrEmpty(password))
@@ -37,7 +40,7 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
 
         public async Task<(int exitCode, string output, string error)> RunShellScript(string configFilePath, string credToken = null)
         {
-            var scriptPath = Path.Combine(_testDirectory, "SetupNugetSources.sh");
+            var scriptPath = Path.Combine(GetRepoRoot(), "eng", "common", "SetupNugetSources.sh");
             
             // Make script executable if on Unix
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -93,13 +96,14 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             process.BeginOutputReadLine();
             process.BeginErrorReadLine();
 
-            await process.WaitForExitAsync();
+            await Task.Run(() => process.WaitForExit());
 
             return (process.ExitCode, outputBuilder.ToString(), errorBuilder.ToString());
         }
 
-        public async Task<(int exitCode, string output, string error)> RunScript(ScriptType scriptType, string configFilePath, string credential = null)
+        public async Task<(int exitCode, string output, string error)> RunScript(string configFilePath, string credential = null)
         {
+            var scriptType = GetPlatformAppropriateScriptType();
             switch (scriptType)
             {
                 case ScriptType.PowerShell:
@@ -116,10 +120,15 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ScriptType.PowerShell : ScriptType.Shell;
         }
 
-        public static ScriptType[] GetAllSupportedScriptTypes()
+        private static string GetRepoRoot()
         {
-            // Each platform runs its appropriate script type
-            return new[] { GetPlatformAppropriateScriptType() };
+            var current = Directory.GetCurrentDirectory();
+            while (current != null && !File.Exists(Path.Combine(current, "global.json")))
+            {
+                current = Directory.GetParent(current)?.FullName;
+            }
+            return current ?? throw new InvalidOperationException("Could not find repository root with global.json");
         }
     }
 }
+

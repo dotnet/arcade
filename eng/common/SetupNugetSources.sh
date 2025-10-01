@@ -134,11 +134,8 @@ EnableMaestroInternalPackageSources() {
 # Ensure there is a <packageSources>...</packageSources> section.
 grep -i "<packageSources>" $ConfigFile
 if [ "$?" != "0" ]; then
-    echo "Adding <packageSources>...</packageSources> section."
-    ConfigNodeHeader="<configuration>"
-    PackageSourcesTemplate="${TB}<packageSources>${NL}${TB}</packageSources>"
-
-    sed -i.bak "s|$ConfigNodeHeader|$ConfigNodeHeader${NL}$PackageSourcesTemplate|" $ConfigFile
+    Write-PipelineTelemetryError -Category 'Build' "Error: Eng/common/SetupNugetSources.sh returned a non-zero exit code. NuGet config file must contain a packageSources section: $ConfigFile"
+    ExitWithExitCode 1
 fi
 
 PackageSources=()

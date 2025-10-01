@@ -1,3 +1,6 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -18,44 +21,6 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             _scriptRunner = new ScriptRunner(_testOutputDirectory);
         }
 
-        [Fact]
-        public async Task ConfigWithDotNet6_AddsInternalFeeds()
-        {
-            // Arrange
-            var originalConfig = @"<?xml version=""1.0"" encoding=""utf-8""?>
-<configuration>
-  <packageSources>
-    <add key=""nuget.org"" value=""https://api.nuget.org/v3/index.json"" />
-    <add key=""dotnet6"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json"" />
-  </packageSources>
-</configuration>";
-            var configPath = Path.Combine(_testOutputDirectory, "nuget.config");
-            await File.WriteAllTextAsync(configPath, originalConfig);
-            var scriptType = ScriptRunner.GetPlatformAppropriateScriptType();
-
-            // Act
-            var result = await _scriptRunner.RunScript(scriptType, configPath);
-
-            // Assert
-            result.exitCode.Should().Be(0, $"Script should succeed, but got error: {result.error}");
-            var modifiedConfig = await File.ReadAllTextAsync(configPath);
-            
-            modifiedConfig.ShouldContainPackageSource("dotnet6-internal", 
-                "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal/nuget/v3/index.json",
-                "should add dotnet6-internal feed");
-            modifiedConfig.ShouldContainPackageSource("dotnet6-internal-transport", 
-                "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal-transport/nuget/v3/index.json",
-                "should add dotnet6-internal-transport feed");
-            
-            // Original sources should still be present
-            modifiedConfig.ShouldContainPackageSource("nuget.org", 
-                "https://api.nuget.org/v3/index.json",
-                "should preserve original nuget.org feed");
-            modifiedConfig.ShouldContainPackageSource("dotnet6", 
-                "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
-                "should preserve original dotnet6 feed");
-        }
-
         [Theory]
         [InlineData("dotnet5")]
         [InlineData("dotnet6")]
@@ -69,20 +34,18 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             var originalConfig = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <configuration>
   <packageSources>
-    <add key=""nuget.org"" value=""https://api.nuget.org/v3/index.json"" />
+    <add key=""dotnet-public"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json"" />
     <add key=""{dotnetVersion}"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/{dotnetVersion}/nuget/v3/index.json"" />
   </packageSources>
 </configuration>";
             var configPath = Path.Combine(_testOutputDirectory, "nuget.config");
-            await File.WriteAllTextAsync(configPath, originalConfig);
-            var scriptType = ScriptRunner.GetPlatformAppropriateScriptType();
-
+            await Task.Run(() => File.WriteAllText(configPath, originalConfig));
             // Act
-            var result = await _scriptRunner.RunScript(scriptType, configPath);
+            var result = await _scriptRunner.RunScript(configPath);
 
             // Assert
-            result.exitCode.Should().Be(0, $"Script should succeed, but got error: {result.error}");
-            var modifiedConfig = await File.ReadAllTextAsync(configPath);
+            result.exitCode.Should().Be(0, "Script should succeed, but got error: {result.error}");
+            var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
             
             modifiedConfig.ShouldContainPackageSource($"{dotnetVersion}-internal", 
                 $"https://pkgs.dev.azure.com/dnceng/internal/_packaging/{dotnetVersion}-internal/nuget/v3/index.json",
@@ -98,15 +61,13 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             // Arrange
             var originalConfig = TestNuGetConfigFactory.CreateConfigWithMultipleDotNetVersions();
             var configPath = Path.Combine(_testOutputDirectory, "nuget.config");
-            await File.WriteAllTextAsync(configPath, originalConfig);
-            var scriptType = ScriptRunner.GetPlatformAppropriateScriptType();
-
+            await Task.Run(() => File.WriteAllText(configPath, originalConfig));
             // Act
-            var result = await _scriptRunner.RunScript(scriptType, configPath);
+            var result = await _scriptRunner.RunScript(configPath);
 
             // Assert
-            result.exitCode.Should().Be(0, $"Script should succeed, but got error: {result.error}");
-            var modifiedConfig = await File.ReadAllTextAsync(configPath);
+            result.exitCode.Should().Be(0, "Script should succeed, but got error: {result.error}");
+            var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
             
             // Should add internal feeds for all versions
             var versions = new[] { "dotnet5", "dotnet6", "dotnet7", "dotnet8", "dotnet9", "dotnet10" };
@@ -131,21 +92,19 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             var originalConfig = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <configuration>
   <packageSources>
-    <add key=""nuget.org"" value=""https://api.nuget.org/v3/index.json"" />
+    <add key=""dotnet-public"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public/nuget/v3/index.json"" />
     <add key=""dotnet6"" value=""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json"" />
     <add key=""dotnet6-internal"" value=""https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal/nuget/v3/index.json"" />
   </packageSources>
 </configuration>";
             var configPath = Path.Combine(_testOutputDirectory, "nuget.config");
-            await File.WriteAllTextAsync(configPath, originalConfig);
-            var scriptType = ScriptRunner.GetPlatformAppropriateScriptType();
-
+            await Task.Run(() => File.WriteAllText(configPath, originalConfig));
             // Act
-            var result = await _scriptRunner.RunScript(scriptType, configPath);
+            var result = await _scriptRunner.RunScript(configPath);
 
             // Assert
-            result.exitCode.Should().Be(0, $"Script should succeed, but got error: {result.error}");
-            var modifiedConfig = await File.ReadAllTextAsync(configPath);
+            result.exitCode.Should().Be(0, "Script should succeed, but got error: {result.error}");
+            var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
             
             // Should still contain the dotnet6-internal feed (only once)
             modifiedConfig.ShouldContainPackageSource("dotnet6-internal", 
@@ -162,3 +121,5 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
         }
     }
 }
+
+
