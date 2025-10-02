@@ -603,7 +603,28 @@ namespace Microsoft.DotNet.SignTool
             // No need to check if the file should not have been signed.
             if (file.SignInfo.ShouldSign)
             {
-                if (file.IsPEFile())
+                // For files with detached signatures, verify the .sig file exists
+                if (file.SignInfo.IsDetachedSignature)
+                {
+                    string sigFilePath = file.DetachedSignatureFullPath;
+                    if (!File.Exists(sigFilePath))
+                    {
+                        _log.LogError($"Detached signature file {sigFilePath} does not exist for {file.FullPath}");
+                    }
+                    else
+                    {
+                        var fileInfo = new FileInfo(sigFilePath);
+                        if (fileInfo.Length == 0)
+                        {
+                            _log.LogError($"Detached signature file {sigFilePath} is empty.");
+                        }
+                        else
+                        {
+                            _log.LogMessage(MessageImportance.Low, $"Detached signature file {sigFilePath} exists and is non-empty.");
+                        }
+                    }
+                }
+                else if (file.IsPEFile())
                 {
                     using (var stream = File.OpenRead(file.FullPath))
                     {
