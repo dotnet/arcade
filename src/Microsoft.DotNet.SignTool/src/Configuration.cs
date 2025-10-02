@@ -217,8 +217,6 @@ namespace Microsoft.DotNet.SignTool
             var wixPack = _wixPacks.SingleOrDefault(w => w.Moniker.Equals(file.FileName, StringComparison.OrdinalIgnoreCase));
             var fileSignInfo = ExtractSignInfo(file, parentContainer, collisionPriorityId, wixPack.FullPath);
 
-            // If the file is a top level file, and is a detached signature, then copy the detached signature alongside
-            // the 
             if (_filesByContentKey.TryGetValue(fileSignInfo.FileContentKey, out var existingSignInfo))
             {
                 // If we saw this file already we wouldn't call TrackFile unless this is a top-level file.
@@ -431,11 +429,11 @@ namespace Microsoft.DotNet.SignTool
 
                 // Check if we have more specific sign info:
                 matchedNameTokenFramework = _fileSignInfo.TryGetValue(
-                    new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, peInfo.TargetFramework, _hashToCollisionIdMap[signedFileContentKey]), 
+                    new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, peInfo.TargetFramework, _hashToCollisionIdMap[signedFileContentKey]),
                     out explicitCertificateName);
                 
                 matchedNameToken = !matchedNameTokenFramework && _fileSignInfo.TryGetValue(
-                    new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]), 
+                    new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]),
                     out explicitCertificateName);
 
                 fileSpec = matchedNameTokenFramework ? $" (PublicKeyToken = {peInfo.PublicKeyToken}, Framework = {peInfo.TargetFramework})" :
