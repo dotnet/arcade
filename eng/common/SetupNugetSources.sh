@@ -101,7 +101,7 @@ fi
 
 DotNetVersions=('5' '6' '7' '8' '9' '10')
 
-for DotNetVersion in ${DotNetVersions[@]} ; do
+for DotNetVersion in "${DotNetVersions[@]}" ; do
     FeedPrefix="dotnet${DotNetVersion}";
     grep -i "<add key=\"$FeedPrefix\"" $ConfigFile
     if [ "$?" == "0" ]; then
@@ -135,7 +135,7 @@ PackageSources+=$(grep -oh '"darc-int-[^"]*"' $ConfigFile | tr -d '"')
 IFS=$PrevIFS
 
 if [ "$CredToken" ]; then
-    for FeedName in ${PackageSources[@]} ; do
+    for FeedName in "${PackageSources[@]}" ; do
         # Check if there is no existing credential for this FeedName
         grep -i "<$FeedName>" $ConfigFile 
         if [ "$?" != "0" ]; then
@@ -155,7 +155,7 @@ if [ "$?" == "0" ]; then
     DisabledDarcIntSources=()
     echo "Re-enabling any disabled \"darc-int\" package sources in $ConfigFile"
     DisabledDarcIntSources+=$(grep -oh '"darc-int-[^"]*" value="true"' $ConfigFile  | tr -d '"')
-    for DisabledSourceName in ${DisabledDarcIntSources[@]} ; do
+    for DisabledSourceName in "${DisabledDarcIntSources[@]}" ; do
         if [[ $DisabledSourceName == darc-int* ]]
             then
                 OldDisableValue="<add key=\"$DisabledSourceName\" value=\"true\" />"
