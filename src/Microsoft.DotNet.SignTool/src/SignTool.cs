@@ -13,6 +13,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NuGet.Packaging;
 using Microsoft.DotNet.StrongName;
+using System.ComponentModel;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -148,15 +149,58 @@ namespace Microsoft.DotNet.SignTool
             
             var zippedPaths = ZipMacFiles(filesToSign);
 
-            // First the signing pass
-            var signProjectPath = Path.Combine(dir, $"Round{round}-Sign.proj");
-            File.WriteAllText(signProjectPath, GenerateBuildFileContent(filesToSign, zippedPaths, false));
-            string signingLogName = $"SigningRound{round}";
-            status = RunMSBuild(buildEngine, signProjectPath, Path.Combine(_args.LogDir, $"{signingLogName}.binlog"), Path.Combine(_args.LogDir, $"{signingLogName}.log"), Path.Combine(_args.LogDir, $"{signingLogName}.error.log"));
+            // Identify files that need detached signatures
+            var detachedSignatureFiles = filesToSign.Where(f => f.SignInfo.IsDetachedSignature).ToList();
+            var originalFileBackups = new Dictionary<string, string>();
 
-            if (!status)
+            try
             {
-                return false;
+
+                foreach (var fileInfo in detachedSignatureFiles)
+                {
+                    string backupPath = fileInfo.FullPath + ".original";
+                    File.Copy(fileInfo.FullPath, backupPath);
+                    originalFileBackups[fileInfo.FullPath] = backupPath;
+                    _log.LogMessage($"Backed up original file for detached signature: {fileInfo.FullPath} -> {backupPath}");
+                }
+
+                // Sign all files (including those needing detached signatures) with MicroBuild
+                if (filesToSign.Any())
+                {
+                    var signProjectPath = Path.Combine(dir, $"Round{round}-Sign.proj");
+                    File.WriteAllText(signProjectPath, GenerateBuildFileContent(filesToSign, zippedPaths, false));
+                    string signingLogName = $"SigningRound{round}";
+                    status = RunMSBuild(buildEngine, signProjectPath, Path.Combine(_args.LogDir, $"{signingLogName}.binlog"), Path.Combine(_args.LogDir, $"{signingLogName}.log"), Path.Combine(_args.LogDir, $"{signingLogName}.error.log"));
+
+                    if (!status)
+                    {
+                        return false;
+                    }
+
+                    // After signing, handle detached signatures
+                    foreach (var fileInfo in detachedSignatureFiles)
+                    {
+                        // Copy the signed content to .sig file
+                        File.Copy(fileInfo.FullPath, fileInfo.DetachedSignatureFullPath);
+                        _log.LogMessage($"Created detached signature file: {fileInfo.DetachedSignatureFullPath}");
+
+                        // Restore the original file
+                        string backupPath = originalFileBackups[fileInfo.FullPath];
+                        File.Copy(backupPath, fileInfo.FullPath, overwrite: true);
+                        _log.LogMessage($"Restored original file: {fileInfo.FullPath}");
+                    }
+                }
+            }
+            finally
+            {
+                // Delete any original detached signature files
+                foreach (var backupPath in originalFileBackups.Values)
+                {
+                    if (File.Exists(backupPath))
+                    {
+                        File.Delete(backupPath);
+                    }
+                }
             }
 
             // Now unzip. Notarization does not expect zipped packages.
