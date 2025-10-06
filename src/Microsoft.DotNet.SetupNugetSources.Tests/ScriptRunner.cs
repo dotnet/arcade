@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
 
         public async Task<(int exitCode, string output, string error)> RunPowerShellScript(string configFilePath, string password = null)
         {
-            var scriptPath = Path.Combine(GetRepoRoot(), "eng", "common", "SetupNugetSources.ps1");
+            var scriptPath = Path.Combine(GetScriptLocation(), "SetupNugetSources.ps1");
             var arguments = $"-ExecutionPolicy Bypass -File \"{scriptPath}\" -ConfigFile \"{configFilePath}\"";
             
             if (!string.IsNullOrEmpty(password))
@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
 
         public async Task<(int exitCode, string output, string error)> RunShellScript(string configFilePath, string credToken = null)
         {
-            var scriptPath = Path.Combine(GetRepoRoot(), "eng", "common", "SetupNugetSources.sh");
+            var scriptPath = Path.Combine(GetScriptLocation(), "eng", "common", "SetupNugetSources.sh");
             
             // Make script executable if on Unix
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -120,14 +120,19 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ScriptType.PowerShell : ScriptType.Shell;
         }
 
-        private static string GetRepoRoot()
+        private static string GetScriptLocation()
         {
-            var current = Directory.GetCurrentDirectory();
-            while (current != null && !File.Exists(Path.Combine(current, "global.json")))
+            // Scripts are copied to the build output directory, not in the repo root
+            // Use the directory where the ScriptRunner assembly is located
+            var assemblyLocation = typeof(ScriptRunner).Assembly.Location;
+            if (!string.IsNullOrEmpty(assemblyLocation))
             {
-                current = Directory.GetParent(current)?.FullName;
+                return Path.GetDirectoryName(assemblyLocation);
             }
-            return current ?? throw new InvalidOperationException("Could not find repository root with global.json");
+            else
+            {
+                throw new InvalidOperationException("Could not determine script directory");
+            }
         }
     }
 }
