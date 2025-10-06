@@ -15,8 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="..\..\eng\common\SetupNugetSources.ps1" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\eng\common\SetupNugetSources.sh" CopyToOutputDirectory="PreserveNewest" />
+  <None Include="..\..\eng\common\SetupNugetSources.ps1" CopyToOutputDirectory="PreserveNewest" />
+  <None Include="..\..\eng\common\SetupNugetSources.sh" CopyToOutputDirectory="PreserveNewest" />
+  <None Include="..\..\eng\common\tools.sh" CopyToOutputDirectory="PreserveNewest" />
+  <None Include="..\..\eng\common\pipeline-logging-functions.sh" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\eng\common\tools.ps1" CopyToOutputDirectory="PreserveNewest" />
     <None Include="..\..\eng\common\tools.sh" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
