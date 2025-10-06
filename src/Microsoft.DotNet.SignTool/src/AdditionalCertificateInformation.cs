@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// If true, this certificate should generate detached signatures instead of in-place signing.
         /// </summary>
-        public bool IsDetachedSignature { get; set; }
+        public bool GeneratesDetachedSignature { get; set; }
         public string CollisionPriorityId { get; set; }
     }
 }

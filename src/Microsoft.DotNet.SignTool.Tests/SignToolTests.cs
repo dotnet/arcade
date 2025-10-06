@@ -1304,7 +1304,7 @@ $@"
             {
                 {  "ArchiveCert",
                     new List<AdditionalCertificateInformation>() {
-                        new AdditionalCertificateInformation() { IsDetachedSignature = true }
+                        new AdditionalCertificateInformation() { GeneratesDetachedSignature = true }
                     }
                 }
             };

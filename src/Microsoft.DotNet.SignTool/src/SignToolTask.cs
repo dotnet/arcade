@@ -361,7 +361,7 @@ namespace Microsoft.DotNet.SignTool
                         DualSigningAllowed = dualSignAllowedValue,
                         MacSigningOperation = macSigningOperation,
                         MacNotarizationAppName = macNotarizationAppName,
-                        IsDetachedSignature = detachedSignatureCertificateValue,
+                        GeneratesDetachedSignature = detachedSignatureCertificateValue,
                         CollisionPriorityId = collisionPriorityId
                     };
 

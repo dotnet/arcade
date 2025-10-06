@@ -555,7 +555,7 @@ namespace Microsoft.DotNet.SignTool
                 else if (fileName.IsZip())
                 {
                     // Zip files can't be signed without a detached signature. If a certificate is provided but the signature is not detached.
-                    if (!fileName.SignInfo.IsDetachedSignature && fileName.SignInfo.Certificate != null)
+                    if (!fileName.SignInfo.GeneratesDetachedSignature && fileName.SignInfo.Certificate != null)
                     {
                         log.LogError($"'{fileName}' may only be signed with a detached signature. '{fileName.SignInfo.Certificate}' does not produce a detached signature");
                     }
@@ -568,7 +568,7 @@ namespace Microsoft.DotNet.SignTool
                 else if (fileName.IsTarGZip())
                 {
                     // Tar.gz files can't be signed without a detached signature. If a certificate is provided but the signature is not detached.
-                    if (!fileName.SignInfo.IsDetachedSignature && fileName.SignInfo.Certificate != null)
+                    if (!fileName.SignInfo.GeneratesDetachedSignature && fileName.SignInfo.Certificate != null)
                     {
                         log.LogError($"'{fileName}' may only be signed with a detached signature. '{fileName.SignInfo.Certificate}' does not produce a detached signature");
                     }
@@ -604,7 +604,7 @@ namespace Microsoft.DotNet.SignTool
             if (file.SignInfo.ShouldSign)
             {
                 // For files with detached signatures, verify the .sig file exists
-                if (file.SignInfo.IsDetachedSignature)
+                if (file.SignInfo.GeneratesDetachedSignature)
                 {
                     string sigFilePath = file.DetachedSignatureFullPath;
                     if (!File.Exists(sigFilePath))
