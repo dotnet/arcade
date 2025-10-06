@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
 
             // Assert
             result.exitCode.Should().Be(1, "Script should fail when packageSources section is missing");
-            result.output.Should().Contain("packageSources section", "should report missing packageSources section error");
+            result.error.Should().Contain("packageSources section", "should report missing packageSources section error");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
             
             // Config should remain unchanged when script fails
@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
 
             // Assert
             result.exitCode.Should().Be(1, "Script should fail when packageSources section is missing");
-            result.output.Should().Contain("packageSources section", "should report missing packageSources section error");
+            result.error.Should().Contain("packageSources section", "should report missing packageSources section error");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
             
             // Config should remain unchanged when script fails
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
 
             // Assert
             result.exitCode.Should().Be(1, "should return error code for nonexistent file");
-            result.output.Should().Contain("Couldn't find the NuGet config file", "should report missing file error");
+            result.error.Should().Contain("Couldn't find the NuGet config file", "should report missing file error");
         }
 
         [Fact]
@@ -125,7 +125,7 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
 
             // Assert
             result.exitCode.Should().Be(1, "Script should fail when packageSources section is missing");
-            result.output.Should().Contain("packageSources section", "should report missing packageSources section error");
+            result.error.Should().Contain("packageSources section", "should report missing packageSources section error");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
             
             // Config should remain unchanged when script fails

@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
 
         public async Task<(int exitCode, string output, string error)> RunShellScript(string configFilePath, string credToken = null)
         {
-            var scriptPath = Path.Combine(GetScriptLocation(), "eng", "common", "SetupNugetSources.sh");
+            var scriptPath = Path.Combine(GetScriptLocation(), "SetupNugetSources.sh");
             
             // Make script executable if on Unix
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
