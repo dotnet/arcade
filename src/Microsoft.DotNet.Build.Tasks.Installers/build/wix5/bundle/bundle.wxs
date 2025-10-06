@@ -61,7 +61,10 @@
       </BootstrapperApplication>
     <?endif?>
 
-    <?if $(var.Platform)=x64 or $(var.Platform)=arm64?>
+    <?if $(var.Platform)=x64?>
+      <SoftwareTag Regid="microsoft.com" InstallPath="[ProgramFiles64Folder]dotnet" />
+    <?endif?>
+    <?if $(var.Platform)=arm64?>
       <SoftwareTag Regid="microsoft.com" InstallPath="[ProgramFiles64Folder]dotnet" />
     <?endif?>
     <?if $(var.Platform)=x86?>
