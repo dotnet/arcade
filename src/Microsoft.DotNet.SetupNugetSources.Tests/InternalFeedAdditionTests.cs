@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -9,16 +10,28 @@ using Xunit;
 
 namespace Microsoft.DotNet.SetupNugetSources.Tests
 {
-    public class InternalFeedAdditionTests
+    public class InternalFeedAdditionTests : IClassFixture<SetupNugetSourcesFixture>, IDisposable
     {
         private readonly ScriptRunner _scriptRunner;
         private readonly string _testOutputDirectory;
 
-        public InternalFeedAdditionTests()
+        public InternalFeedAdditionTests(SetupNugetSourcesFixture fixture)
         {
-            _testOutputDirectory = Path.Combine(Path.GetTempPath(), "SetupNugetSourcesTests", System.Guid.NewGuid().ToString());
+            _testOutputDirectory = Path.Combine(Path.GetTempPath(), "SetupNugetSourcesTests", Guid.NewGuid().ToString());
             Directory.CreateDirectory(_testOutputDirectory);
-            _scriptRunner = new ScriptRunner(_testOutputDirectory);
+            _scriptRunner = fixture.ScriptRunner;
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                if (Directory.Exists(_testOutputDirectory))
+                {
+                    Directory.Delete(_testOutputDirectory, true);
+                }
+            }
+            catch { }
         }
 
         [Theory]
@@ -46,11 +59,11 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             // Assert
             result.exitCode.Should().Be(0, "Script should succeed, but got error: {result.error}");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
-            
-            modifiedConfig.ShouldContainPackageSource($"{dotnetVersion}-internal", 
+
+            modifiedConfig.ShouldContainPackageSource($"{dotnetVersion}-internal",
                 $"https://pkgs.dev.azure.com/dnceng/internal/_packaging/{dotnetVersion}-internal/nuget/v3/index.json",
                 $"should add {dotnetVersion}-internal feed");
-            modifiedConfig.ShouldContainPackageSource($"{dotnetVersion}-internal-transport", 
+            modifiedConfig.ShouldContainPackageSource($"{dotnetVersion}-internal-transport",
                 $"https://pkgs.dev.azure.com/dnceng/internal/_packaging/{dotnetVersion}-internal-transport/nuget/v3/index.json",
                 $"should add {dotnetVersion}-internal-transport feed");
         }
@@ -79,19 +92,19 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             // Assert
             result.exitCode.Should().Be(0, "Script should succeed, but got error: {result.error}");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
-            
+
             // Should add internal feeds for all versions
             var versions = new[] { "dotnet5", "dotnet6", "dotnet7", "dotnet8", "dotnet9", "dotnet10" };
             foreach (var version in versions)
             {
-                modifiedConfig.ShouldContainPackageSource($"{version}-internal", 
+                modifiedConfig.ShouldContainPackageSource($"{version}-internal",
                     $"https://pkgs.dev.azure.com/dnceng/internal/_packaging/{version}-internal/nuget/v3/index.json",
                     $"should add {version}-internal feed");
-                modifiedConfig.ShouldContainPackageSource($"{version}-internal-transport", 
+                modifiedConfig.ShouldContainPackageSource($"{version}-internal-transport",
                     $"https://pkgs.dev.azure.com/dnceng/internal/_packaging/{version}-internal-transport/nuget/v3/index.json",
                     $"should add {version}-internal-transport feed");
             }
-            
+
             // Original count (7 sources) + 12 internal sources = 19 total
             modifiedConfig.GetPackageSourceCount().Should().Be(19, "should have all original sources plus internal feeds");
         }
@@ -116,17 +129,17 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             // Assert
             result.exitCode.Should().Be(0, "Script should succeed, but got error: {result.error}");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
-            
+
             // Should still contain the dotnet6-internal feed (only once)
-            modifiedConfig.ShouldContainPackageSource("dotnet6-internal", 
+            modifiedConfig.ShouldContainPackageSource("dotnet6-internal",
                 "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal/nuget/v3/index.json",
                 "existing internal feed should be preserved");
-            
+
             // Should add the missing transport feed
-            modifiedConfig.ShouldContainPackageSource("dotnet6-internal-transport", 
+            modifiedConfig.ShouldContainPackageSource("dotnet6-internal-transport",
                 "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal-transport/nuget/v3/index.json",
                 "should add missing transport feed");
-            
+
             // Should have 4 total sources (3 original + 1 added transport)
             modifiedConfig.GetPackageSourceCount().Should().Be(4, "should not duplicate existing sources");
         }

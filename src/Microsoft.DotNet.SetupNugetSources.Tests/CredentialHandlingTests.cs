@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -9,19 +10,29 @@ using Xunit;
 
 namespace Microsoft.DotNet.SetupNugetSources.Tests
 {
-    public class CredentialHandlingTests
+    public class CredentialHandlingTests : IClassFixture<SetupNugetSourcesFixture>, IDisposable
     {
         private readonly ScriptRunner _scriptRunner;
         private readonly string _testOutputDirectory;
 
-        public CredentialHandlingTests()
+        public CredentialHandlingTests(SetupNugetSourcesFixture fixture)
         {
-            _testOutputDirectory = Path.Combine(Path.GetTempPath(), "SetupNugetSourcesTests", System.Guid.NewGuid().ToString());
+            _testOutputDirectory = Path.Combine(Path.GetTempPath(), "SetupNugetSourcesTests", Guid.NewGuid().ToString());
             Directory.CreateDirectory(_testOutputDirectory);
-            _scriptRunner = new ScriptRunner(_testOutputDirectory);
+            _scriptRunner = fixture.ScriptRunner;
         }
 
-
+        public void Dispose()
+        {
+            try
+            {
+                if (Directory.Exists(_testOutputDirectory))
+                {
+                    Directory.Delete(_testOutputDirectory, true);
+                }
+            }
+            catch { }
+        }
 
         [Fact]
         public async Task ConfigWithCredentialProvided_AddsCredentialsForInternalFeeds()
@@ -43,20 +54,20 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             // Assert
             result.exitCode.Should().Be(0, "script should succeed, but got error: {result.error}");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
-            
+
             // Should add internal feeds
             modifiedConfig.ShouldContainPackageSource("dotnet6-internal");
             modifiedConfig.ShouldContainPackageSource("dotnet6-internal-transport");
-            
+
             // Should add credentials for internal feeds
             modifiedConfig.ShouldContainCredentials("dotnet6-internal", "dn-bot", "should add credentials for internal feed");
             modifiedConfig.ShouldContainCredentials("dotnet6-internal-transport", "dn-bot", "should add credentials for transport feed");
-            
+
             // Should use v2 endpoints when credentials are provided
-            modifiedConfig.ShouldContainPackageSource("dotnet6-internal", 
+            modifiedConfig.ShouldContainPackageSource("dotnet6-internal",
                 "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal/nuget/v2",
                 "should use v2 endpoint when credentials provided");
-            modifiedConfig.ShouldContainPackageSource("dotnet6-internal-transport", 
+            modifiedConfig.ShouldContainPackageSource("dotnet6-internal-transport",
                 "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal-transport/nuget/v2",
                 "should use v2 endpoint when credentials provided");
         }
@@ -81,17 +92,17 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             // Assert
             result.exitCode.Should().Be(0, "script should succeed, but got error: {result.error}");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
-            
+
             // Should add internal feeds
             modifiedConfig.ShouldContainPackageSource("dotnet6-internal");
             modifiedConfig.ShouldContainPackageSource("dotnet6-internal-transport");
-            
+
             // Should NOT add credentials
             modifiedConfig.ShouldNotContainCredentials("dotnet6-internal", "should not add credentials without credential");
             modifiedConfig.ShouldNotContainCredentials("dotnet6-internal-transport", "should not add credentials without credential");
-            
+
             // Should use v3 endpoints when no credentials are provided
-            modifiedConfig.ShouldContainPackageSource("dotnet6-internal", 
+            modifiedConfig.ShouldContainPackageSource("dotnet6-internal",
                 "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal/nuget/v3/index.json",
                 "should use v3 endpoint when no credentials provided");
         }
@@ -123,10 +134,10 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             // Assert
             result.exitCode.Should().Be(0, "script should succeed, but got error: {result.error}");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
-            
+
             // Should preserve existing credentials
             modifiedConfig.ShouldContainCredentials("existing-private", "existing-user", "should preserve existing credentials");
-            
+
             // Should add new credentials for internal feeds
             modifiedConfig.ShouldContainCredentials("dotnet6-internal", "dn-bot", "should add credentials for new internal feed");
             modifiedConfig.ShouldContainCredentials("dotnet6-internal-transport", "dn-bot", "should add credentials for new transport feed");
@@ -155,13 +166,13 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             // Assert
             result.exitCode.Should().Be(0, "script should succeed, but got error: {result.error}");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
-            
+
             // Should enable the darc-int feed
             modifiedConfig.ShouldNotBeDisabled("darc-int-dotnet-roslyn-12345", "darc-int feed should be enabled");
-            
+
             // Should add credentials for enabled darc-int feed
             modifiedConfig.ShouldContainCredentials("darc-int-dotnet-roslyn-12345", "dn-bot", "should add credentials for enabled darc-int feed");
-            
+
             // Should add credentials for new internal feeds
             modifiedConfig.ShouldContainCredentials("dotnet6-internal", "dn-bot", "should add credentials for internal feed");
             modifiedConfig.ShouldContainCredentials("dotnet6-internal-transport", "dn-bot", "should add credentials for transport feed");
@@ -193,14 +204,12 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             // Assert
             result.exitCode.Should().Be(0, "script should succeed, but got error: {result.error}");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
-            
+
             // Should preserve existing credentials
             modifiedConfig.ShouldContainCredentials("dotnet6-internal", "dn-bot", "should preserve existing credentials");
-            
+
             // Should not add credentials for new feeds without credential
             modifiedConfig.ShouldNotContainCredentials("dotnet6-internal-transport", "should not add credentials without credential");
         }
     }
 }
-
-

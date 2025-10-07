@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -8,16 +9,28 @@ using Xunit;
 
 namespace Microsoft.DotNet.SetupNugetSources.Tests
 {
-    public class FeedEnablingTests
+    public class FeedEnablingTests : IClassFixture<SetupNugetSourcesFixture>, IDisposable
     {
         private readonly ScriptRunner _scriptRunner;
         private readonly string _testOutputDirectory;
 
-        public FeedEnablingTests()
+        public FeedEnablingTests(SetupNugetSourcesFixture fixture)
         {
-            _testOutputDirectory = Path.Combine(Path.GetTempPath(), "SetupNugetSourcesTests", System.Guid.NewGuid().ToString());
+            _testOutputDirectory = Path.Combine(Path.GetTempPath(), "SetupNugetSourcesTests", Guid.NewGuid().ToString());
             Directory.CreateDirectory(_testOutputDirectory);
-            _scriptRunner = new ScriptRunner(_testOutputDirectory);
+            _scriptRunner = fixture.ScriptRunner;
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                if (Directory.Exists(_testOutputDirectory))
+                {
+                    Directory.Delete(_testOutputDirectory, true);
+                }
+            }
+            catch { }
         }
 
         [Fact]
@@ -45,16 +58,16 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             // Assert
             result.exitCode.Should().Be(0, "Script should succeed, but got error: {result.error}");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
-            
+
             // Darc-int feeds should no longer be disabled
             modifiedConfig.ShouldNotBeDisabled("darc-int-dotnet-roslyn-12345", "darc-int feed should be enabled");
             modifiedConfig.ShouldNotBeDisabled("darc-int-dotnet-runtime-67890", "darc-int feed should be enabled");
-            
+
             // Should also add internal feeds for dotnet6
-            modifiedConfig.ShouldContainPackageSource("dotnet6-internal", 
+            modifiedConfig.ShouldContainPackageSource("dotnet6-internal",
                 "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal/nuget/v3/index.json",
                 "should add dotnet6-internal feed");
-            modifiedConfig.ShouldContainPackageSource("dotnet6-internal-transport", 
+            modifiedConfig.ShouldContainPackageSource("dotnet6-internal-transport",
                 "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal-transport/nuget/v3/index.json",
                 "should add dotnet6-internal-transport feed");
         }
@@ -86,11 +99,11 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             // Assert
             result.exitCode.Should().Be(0, "Script should succeed, but got error: {result.error}");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
-            
+
             // Darc-int feeds should be enabled
             modifiedConfig.ShouldNotBeDisabled("darc-int-dotnet-roslyn-12345", "darc-int feed should be enabled");
             modifiedConfig.ShouldNotBeDisabled("darc-int-dotnet-runtime-67890", "darc-int feed should be enabled");
-            
+
             // Non-darc-int feeds should remain disabled
             modifiedConfig.ShouldBeDisabled("some-other-feed", "non-darc-int feed should remain disabled");
             modifiedConfig.ShouldBeDisabled("another-disabled-feed", "non-darc-int feed should remain disabled");
@@ -120,15 +133,15 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             // Assert
             result.exitCode.Should().Be(0, "Script should succeed, but got error: {result.error}");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
-            
+
             // The dotnet6-internal feed should be enabled (removed from disabled sources)
             modifiedConfig.ShouldNotBeDisabled("dotnet6-internal", "internal feed should be enabled");
-            
+
             // Should still add the transport feed
-            modifiedConfig.ShouldContainPackageSource("dotnet6-internal-transport", 
+            modifiedConfig.ShouldContainPackageSource("dotnet6-internal-transport",
                 "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal-transport/nuget/v3/index.json",
                 "should add transport feed");
-            
+
             // Should have 4 package sources (original 3, with dotnet6-internal enabled + transport added)
             modifiedConfig.GetPackageSourceCount().Should().Be(4, "should enable existing feed and add transport feed");
         }
@@ -153,16 +166,14 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             // Assert
             result.exitCode.Should().Be(0, "Script should succeed, but got error: {result.error}");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
-            
+
             // Should add internal feeds even without disabled sources section
-            modifiedConfig.ShouldContainPackageSource("dotnet6-internal", 
+            modifiedConfig.ShouldContainPackageSource("dotnet6-internal",
                 "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal/nuget/v3/index.json",
                 "should add dotnet6-internal feed");
-            modifiedConfig.ShouldContainPackageSource("dotnet6-internal-transport", 
+            modifiedConfig.ShouldContainPackageSource("dotnet6-internal-transport",
                 "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal-transport/nuget/v3/index.json",
                 "should add dotnet6-internal-transport feed");
         }
     }
 }
-
-
