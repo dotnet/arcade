@@ -14,15 +14,19 @@
     <ProjectReference Include="..\..\src\Microsoft.DotNet.XUnitExtensions\src\Microsoft.DotNet.XUnitExtensions.csproj" />
   </ItemGroup>
 
+  <!-- Unified pattern-based inclusion using LinkBase and RecursiveDir metadata -->
   <ItemGroup>
-    <!-- Preserve relative repo structure under RepoScaffold in output -->
-    <None Include="..\..\global.json" TargetPath="RepoScaffold\global.json" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\eng\common\SetupNugetSources.ps1" TargetPath="RepoScaffold\eng\common\SetupNugetSources.ps1" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\eng\common\SetupNugetSources.sh" TargetPath="RepoScaffold\eng\common\SetupNugetSources.sh" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\eng\common\tools.ps1" TargetPath="RepoScaffold\eng\common\tools.ps1" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\eng\common\tools.sh" TargetPath="RepoScaffold\eng\common\tools.sh" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\eng\common\pipeline-logging-functions.ps1" TargetPath="RepoScaffold\eng\common\pipeline-logging-functions.ps1" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\eng\common\pipeline-logging-functions.sh" TargetPath="RepoScaffold\eng\common\pipeline-logging-functions.sh" CopyToOutputDirectory="PreserveNewest" />
+    <RepoScaffoldSource Include="..\..\global.json" />
+    <RepoScaffoldSource Include="..\..\eng\common\SetupNugetSources.*" />
+    <RepoScaffoldSource Include="..\..\eng\common\pipeline-logging-functions.*" />
+    <RepoScaffoldSource Include="..\..\eng\common\tools.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="@(RepoScaffoldSource)"
+          LinkBase="RepoScaffold"
+          TargetPath="RepoScaffold\\%(RecursiveDir)%(Filename)%(Extension)"
+          CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
