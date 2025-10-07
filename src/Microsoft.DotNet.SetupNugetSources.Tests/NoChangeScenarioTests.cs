@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -9,16 +10,28 @@ using Xunit;
 
 namespace Microsoft.DotNet.SetupNugetSources.Tests
 {
-    public class NoChangeScenarioTests
+    public class NoChangeScenarioTests : IClassFixture<SetupNugetSourcesFixture>, IDisposable
     {
         private readonly ScriptRunner _scriptRunner;
         private readonly string _testOutputDirectory;
 
-        public NoChangeScenarioTests()
+        public NoChangeScenarioTests(SetupNugetSourcesFixture fixture)
         {
-            _testOutputDirectory = Path.Combine(Path.GetTempPath(), "SetupNugetSourcesTests", System.Guid.NewGuid().ToString());
+            _testOutputDirectory = Path.Combine(Path.GetTempPath(), "SetupNugetSourcesTests", Guid.NewGuid().ToString());
             Directory.CreateDirectory(_testOutputDirectory);
-            _scriptRunner = new ScriptRunner(_testOutputDirectory);
+            _scriptRunner = fixture.ScriptRunner;
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                if (Directory.Exists(_testOutputDirectory))
+                {
+                    Directory.Delete(_testOutputDirectory, true);
+                }
+            }
+            catch { }
         }
 
 

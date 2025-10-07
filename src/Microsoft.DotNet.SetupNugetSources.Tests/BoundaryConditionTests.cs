@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using FluentAssertions;
@@ -9,16 +10,28 @@ using Xunit;
 
 namespace Microsoft.DotNet.SetupNugetSources.Tests
 {
-    public class BoundaryConditionTests
+    public class BoundaryConditionTests : IClassFixture<SetupNugetSourcesFixture>, IDisposable
     {
         private readonly ScriptRunner _scriptRunner;
         private readonly string _testOutputDirectory;
 
-        public BoundaryConditionTests()
+        public BoundaryConditionTests(SetupNugetSourcesFixture fixture)
         {
-            _testOutputDirectory = Path.Combine(Path.GetTempPath(), "SetupNugetSourcesTests", System.Guid.NewGuid().ToString());
+            _testOutputDirectory = Path.Combine(Path.GetTempPath(), "SetupNugetSourcesTests", Guid.NewGuid().ToString());
             Directory.CreateDirectory(_testOutputDirectory);
-            _scriptRunner = new ScriptRunner(_testOutputDirectory);
+            _scriptRunner = fixture.ScriptRunner;
+        }
+
+        public void Dispose()
+        {
+            try
+            {
+                if (Directory.Exists(_testOutputDirectory))
+                {
+                    Directory.Delete(_testOutputDirectory, true);
+                }
+            }
+            catch { }
         }
 
         [Fact]
@@ -36,9 +49,12 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
 
             // Assert
             result.exitCode.Should().Be(1, "Script should fail when packageSources section is missing");
-            result.error.Should().Contain("packageSources section", "should report missing packageSources section error");
+
+            // Check both output and error for the message (scripts may write to stdout instead of stderr)
+            var errorMessage = string.IsNullOrEmpty(result.error) ? result.output : result.error;
+            errorMessage.Should().Contain("packageSources section", "should report missing packageSources section error");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
-            
+
             // Config should remain unchanged when script fails
             modifiedConfig.Should().BeEquivalentTo(originalConfig, "config should not be modified when script fails");
         }
@@ -61,9 +77,11 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
 
             // Assert
             result.exitCode.Should().Be(1, "Script should fail when packageSources section is missing");
-            result.error.Should().Contain("packageSources section", "should report missing packageSources section error");
+            // Check both output and error for the message (scripts may write to stdout instead of stderr)
+            var errorMessage = string.IsNullOrEmpty(result.error) ? result.output : result.error;
+            errorMessage.Should().Contain("packageSources section", "should report missing packageSources section error");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
-            
+
             // Config should remain unchanged when script fails
             modifiedConfig.Should().BeEquivalentTo(originalConfig, "config should not be modified when script fails");
         }
@@ -88,7 +106,7 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             // Assert
             result.exitCode.Should().Be(0, "Script should succeed, but got error: {result.error}");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
-            
+
             // Should still add internal feeds
             modifiedConfig.ShouldContainPackageSource("dotnet6-internal");
             modifiedConfig.ShouldContainPackageSource("dotnet6-internal-transport");
@@ -104,7 +122,9 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
 
             // Assert
             result.exitCode.Should().Be(1, "should return error code for nonexistent file");
-            result.error.Should().Contain("Couldn't find the NuGet config file", "should report missing file error");
+            // Check both output and error for the message (scripts may write to stdout instead of stderr)
+            var errorMessage = string.IsNullOrEmpty(result.error) ? result.output : result.error;
+            errorMessage.Should().Contain("Couldn't find the NuGet config file", "should report missing file error");
         }
 
         [Fact]
@@ -125,9 +145,11 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
 
             // Assert
             result.exitCode.Should().Be(1, "Script should fail when packageSources section is missing");
-            result.error.Should().Contain("packageSources section", "should report missing packageSources section error");
+            // Check both output and error for the message (scripts may write to stdout instead of stderr)
+            var errorMessage = string.IsNullOrEmpty(result.error) ? result.output : result.error;
+            errorMessage.Should().Contain("packageSources section", "should report missing packageSources section error");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
-            
+
             // Config should remain unchanged when script fails
             modifiedConfig.Should().BeEquivalentTo(originalConfig, "config should not be modified when script fails");
         }
@@ -153,7 +175,7 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             // Assert
             result.exitCode.Should().Be(0, "Script should succeed, but got error: {result.error}");
             var modifiedConfig = await Task.Run(() => File.ReadAllText(configPath));
-            
+
             // Should enable darc-int feeds but not add any dotnet internal feeds since no dotnet feeds exist
             modifiedConfig.ShouldNotBeDisabled("darc-int-dotnet-roslyn-12345", "should enable darc-int feed");
             modifiedConfig.GetPackageSourceCount().Should().Be(0, "should not add dotnet internal feeds without dotnet public feeds");

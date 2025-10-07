@@ -15,13 +15,14 @@
   </ItemGroup>
 
   <ItemGroup>
-  <None Include="..\..\eng\common\SetupNugetSources.ps1" CopyToOutputDirectory="PreserveNewest" />
-  <None Include="..\..\eng\common\SetupNugetSources.sh" CopyToOutputDirectory="PreserveNewest" />
-  <None Include="..\..\eng\common\tools.sh" CopyToOutputDirectory="PreserveNewest" />
-  <None Include="..\..\eng\common\pipeline-logging-functions.sh" CopyToOutputDirectory="PreserveNewest" />
-  <None Include="..\..\eng\common\pipeline-logging-functions.ps1" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\eng\common\tools.ps1" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="..\..\eng\common\tools.sh" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Preserve relative repo structure under RepoScaffold in output -->
+    <None Include="..\..\global.json" TargetPath="RepoScaffold\global.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\eng\common\SetupNugetSources.ps1" TargetPath="RepoScaffold\eng\common\SetupNugetSources.ps1" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\eng\common\SetupNugetSources.sh" TargetPath="RepoScaffold\eng\common\SetupNugetSources.sh" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\eng\common\tools.ps1" TargetPath="RepoScaffold\eng\common\tools.ps1" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\eng\common\tools.sh" TargetPath="RepoScaffold\eng\common\tools.sh" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\eng\common\pipeline-logging-functions.ps1" TargetPath="RepoScaffold\eng\common\pipeline-logging-functions.ps1" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\..\eng\common\pipeline-logging-functions.sh" TargetPath="RepoScaffold\eng\common\pipeline-logging-functions.sh" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

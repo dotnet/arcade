@@ -18,16 +18,16 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
 
     public class ScriptRunner
     {
-        private readonly string _testDirectory;
+        private readonly string _repoRoot;
 
-        public ScriptRunner(string testDirectory)
+        public ScriptRunner(string repoRoot)
         {
-            _testDirectory = testDirectory;
+            _repoRoot = repoRoot ?? throw new ArgumentNullException(nameof(repoRoot));
         }
 
         public async Task<(int exitCode, string output, string error)> RunPowerShellScript(string configFilePath, string password = null)
         {
-            var scriptPath = Path.Combine(GetScriptLocation(), "SetupNugetSources.ps1");
+            var scriptPath = Path.Combine(_repoRoot, "eng", "common", "SetupNugetSources.ps1");
             var arguments = $"-ExecutionPolicy Bypass -File \"{scriptPath}\" -ConfigFile \"{configFilePath}\"";
             
             if (!string.IsNullOrEmpty(password))
@@ -35,17 +35,17 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
                 arguments += $" -Password \"{password}\"";
             }
 
-            return await RunProcess("powershell.exe", arguments);
+            return await RunProcess("powershell.exe", arguments, _repoRoot);
         }
 
         public async Task<(int exitCode, string output, string error)> RunShellScript(string configFilePath, string credToken = null)
         {
-            var scriptPath = Path.Combine(GetScriptLocation(), "SetupNugetSources.sh");
+            var scriptPath = Path.Combine(_repoRoot, "eng", "common", "SetupNugetSources.sh");
             
             // Make script executable if on Unix
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                await RunProcess("chmod", $"+x \"{scriptPath}\"");
+                await RunProcess("chmod", $"+x \"{scriptPath}\"", _repoRoot);
             }
 
             var arguments = $"\"{scriptPath}\" \"{configFilePath}\"";
@@ -55,10 +55,10 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
             }
 
             var shell = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "bash.exe" : "/bin/bash";
-            return await RunProcess(shell, arguments);
+            return await RunProcess(shell, arguments, _repoRoot);
         }
 
-        private async Task<(int exitCode, string output, string error)> RunProcess(string fileName, string arguments)
+        private async Task<(int exitCode, string output, string error)> RunProcess(string fileName, string arguments, string workingDirectory = null)
         {
             var process = new Process
             {
@@ -69,7 +69,8 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    WorkingDirectory = workingDirectory ?? Directory.GetCurrentDirectory()
                 }
             };
 
@@ -118,21 +119,6 @@ namespace Microsoft.DotNet.SetupNugetSources.Tests
         public static ScriptType GetPlatformAppropriateScriptType()
         {
             return RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ScriptType.PowerShell : ScriptType.Shell;
-        }
-
-        private static string GetScriptLocation()
-        {
-            // Scripts are copied to the build output directory, not in the repo root
-            // Use the directory where the ScriptRunner assembly is located
-            var assemblyLocation = typeof(ScriptRunner).Assembly.Location;
-            if (!string.IsNullOrEmpty(assemblyLocation))
-            {
-                return Path.GetDirectoryName(assemblyLocation);
-            }
-            else
-            {
-                throw new InvalidOperationException("Could not determine script directory");
-            }
         }
     }
 }
