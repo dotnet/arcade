@@ -1064,6 +1064,114 @@ To override the default Shared Framework version that is selected based on the t
 
 Timeout to apply to an individual invocation of the test runner (e.g. `xunit.console.exe`) for a single configuration. Integer number of milliseconds.
 
+### Code Coverage Properties
+
+Arcade SDK supports code coverage collection when using the VSTest runner. To enable code coverage, set `UseVSTestRunner` to `true` and `CollectCoverage` to `true`.
+
+#### `CollectCoverage` (bool)
+
+Set to `true` to enable code coverage collection when running tests. Default is `false`.
+
+```text
+msbuild Project.UnitTests.csproj /t:Test /p:UseVSTestRunner=true /p:CollectCoverage=true
+```
+
+Or set it in your project file:
+
+```xml
+<PropertyGroup>
+  <UseVSTestRunner>true</UseVSTestRunner>
+  <CollectCoverage>true</CollectCoverage>
+</PropertyGroup>
+```
+
+#### `CodeCoverageFormat` (string)
+
+Specifies the output format for code coverage reports. Supported values: `cobertura`, `opencover`, `lcov`, `json`, or a combination like `cobertura,opencover`. Default is `cobertura`.
+
+The Cobertura format is supported by Azure DevOps and can be published using the `PublishCodeCoverageResults` task.
+
+#### `CodeCoverageOutputDirectory` (string)
+
+Directory where code coverage reports will be generated. Default is `$(ArtifactsTestResultsDir)coverage`.
+
+#### `CoverageDeterministic` (bool)
+
+Enable or disable generation of deterministic coverage reports. Default is `true`.
+
+#### `CoverageInclude` (string)
+
+Semicolon-separated list of assembly patterns to include in code coverage. Uses glob patterns. Default is empty (includes all assemblies).
+
+Example:
+```xml
+<CoverageInclude>[MyProject]*;[MyLibrary]*</CoverageInclude>
+```
+
+#### `CoverageExclude` (string)
+
+Semicolon-separated list of assembly patterns to exclude from code coverage. Uses glob patterns. Default is empty.
+
+Example:
+```xml
+<CoverageExclude>[*.Tests]*;[xunit.*]*</CoverageExclude>
+```
+
+#### `CoverageIncludeByFile` (string)
+
+Semicolon-separated list of file path patterns to include in code coverage. Uses glob patterns. Default is empty.
+
+#### `CoverageExcludeByFile` (string)
+
+Semicolon-separated list of file path patterns to exclude from code coverage. Uses glob patterns. Default is empty.
+
+Example:
+```xml
+<CoverageExcludeByFile>**/*Designer.cs;**/Generated/*.cs</CoverageExcludeByFile>
+```
+
+#### `CoverageExcludeByAttribute` (string)
+
+Semicolon-separated list of attributes to exclude from code coverage. Default is empty.
+
+Example:
+```xml
+<CoverageExcludeByAttribute>Obsolete;GeneratedCode;CompilerGenerated</CoverageExcludeByAttribute>
+```
+
+#### Example: Complete Code Coverage Configuration
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <UseVSTestRunner>true</UseVSTestRunner>
+    <CollectCoverage>true</CollectCoverage>
+    <CodeCoverageFormat>cobertura</CodeCoverageFormat>
+    <CoverageExclude>[*.Tests]*;[xunit.*]*</CoverageExclude>
+    <CoverageExcludeByFile>**/*Designer.cs</CoverageExcludeByFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MyProject\MyProject.csproj" />
+  </ItemGroup>
+</Project>
+```
+
+Then run tests with:
+```text
+./build.sh --test
+```
+
+Code coverage reports will be generated in `artifacts/TestResults/coverage/` directory in Cobertura format, which can be published to Azure DevOps using the `PublishCodeCoverageResults` task in your pipeline:
+
+```yaml
+- task: PublishCodeCoverageResults@2
+  inputs:
+    summaryFileLocation: '$(Build.SourcesDirectory)/artifacts/TestResults/coverage/**/coverage.cobertura.xml'
+    codecoverageTool: 'cobertura'
+```
+
 ### `GenerateResxSource` (bool)
 
 When set to `true`, Arcade will generate a class source for all embedded .resx files.
