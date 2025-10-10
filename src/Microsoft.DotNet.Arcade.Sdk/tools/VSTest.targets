@@ -104,39 +104,38 @@
       
       <!-- Build ExcludeByAttribute filter -->
       <_CoverageExcludeByAttributeFilter Condition="'$(CoverageExcludeByAttribute)' != ''">$([System.String]::new('$(CoverageExcludeByAttribute)').Replace(';',','))</_CoverageExcludeByAttributeFilter>
-      
-      <!-- Prepare runsettings content -->
-      <_RunSettingsContent>
-<![CDATA[<?xml version="1.0" encoding="utf-8"?>
-<RunSettings>
-  <DataCollectionRunSettings>
-    <DataCollectors>
-      <DataCollector friendlyName="XPlat code coverage">
-        <Configuration>
-          <Format>$(_CodeCoverageFormat)</Format>
-          <OutputPath>$(_CodeCoverageOutputPath)</OutputPath>
-          <DeterministicReport>$(_CoverageDeterministic)</DeterministicReport>
-          <Include>$(_CoverageIncludeFilter)</Include>
-          <Exclude>$(_CoverageExcludeFilter)</Exclude>
-          <IncludeDirectory></IncludeDirectory>
-          <ExcludeByFile>$(_CoverageExcludeByFileFilter)</ExcludeByFile>
-          <IncludeTestAssembly>false</IncludeTestAssembly>
-          <ExcludeByAttribute>$(_CoverageExcludeByAttributeFilter)</ExcludeByAttribute>
-          <SkipAutoProps>true</SkipAutoProps>
-          <DoesNotReturnAttribute>DoesNotReturnAttribute</DoesNotReturnAttribute>
-          <SingleHit>false</SingleHit>
-          <UseSourceLink>true</UseSourceLink>
-        </Configuration>
-      </DataCollector>
-    </DataCollectors>
-  </DataCollectionRunSettings>
-</RunSettings>]]>
-      </_RunSettingsContent>
     </PropertyGroup>
+    
+    <!-- Generate the runsettings file content dynamically -->
+    <ItemGroup>
+      <_RunSettingsLines Include="&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;" />
+      <_RunSettingsLines Include="&lt;RunSettings&gt;" />
+      <_RunSettingsLines Include="  &lt;DataCollectionRunSettings&gt;" />
+      <_RunSettingsLines Include="    &lt;DataCollectors&gt;" />
+      <_RunSettingsLines Include="      &lt;DataCollector friendlyName=&quot;XPlat code coverage&quot;&gt;" />
+      <_RunSettingsLines Include="        &lt;Configuration&gt;" />
+      <_RunSettingsLines Include="          &lt;Format&gt;$(_CodeCoverageFormat)&lt;/Format&gt;" />
+      <_RunSettingsLines Include="          &lt;OutputPath&gt;$(_CodeCoverageOutputPath)&lt;/OutputPath&gt;" />
+      <_RunSettingsLines Include="          &lt;DeterministicReport&gt;$(_CoverageDeterministic)&lt;/DeterministicReport&gt;" />
+      <_RunSettingsLines Include="          &lt;Include&gt;$(_CoverageIncludeFilter)&lt;/Include&gt;" Condition="'$(_CoverageIncludeFilter)' != ''" />
+      <_RunSettingsLines Include="          &lt;Exclude&gt;$(_CoverageExcludeFilter)&lt;/Exclude&gt;" Condition="'$(_CoverageExcludeFilter)' != ''" />
+      <_RunSettingsLines Include="          &lt;ExcludeByFile&gt;$(_CoverageExcludeByFileFilter)&lt;/ExcludeByFile&gt;" Condition="'$(_CoverageExcludeByFileFilter)' != ''" />
+      <_RunSettingsLines Include="          &lt;IncludeTestAssembly&gt;false&lt;/IncludeTestAssembly&gt;" />
+      <_RunSettingsLines Include="          &lt;ExcludeByAttribute&gt;$(_CoverageExcludeByAttributeFilter)&lt;/ExcludeByAttribute&gt;" Condition="'$(_CoverageExcludeByAttributeFilter)' != ''" />
+      <_RunSettingsLines Include="          &lt;SkipAutoProps&gt;true&lt;/SkipAutoProps&gt;" />
+      <_RunSettingsLines Include="          &lt;DoesNotReturnAttribute&gt;DoesNotReturnAttribute&lt;/DoesNotReturnAttribute&gt;" />
+      <_RunSettingsLines Include="          &lt;SingleHit&gt;false&lt;/SingleHit&gt;" />
+      <_RunSettingsLines Include="          &lt;UseSourceLink&gt;true&lt;/UseSourceLink&gt;" />
+      <_RunSettingsLines Include="        &lt;/Configuration&gt;" />
+      <_RunSettingsLines Include="      &lt;/DataCollector&gt;" />
+      <_RunSettingsLines Include="    &lt;/DataCollectors&gt;" />
+      <_RunSettingsLines Include="  &lt;/DataCollectionRunSettings&gt;" />
+      <_RunSettingsLines Include="&lt;/RunSettings&gt;" />
+    </ItemGroup>
     
     <MakeDir Directories="$(ArtifactsObjDir)" />
     <WriteLinesToFile File="$(_GeneratedRunSettingsFile)" 
-                      Lines="$(_RunSettingsContent)" 
+                      Lines="@(_RunSettingsLines)" 
                       Overwrite="true" 
                       WriteOnlyWhenDifferent="true" />
     
