@@ -1,0 +1,15 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <!-- InstallDir and PackKind should only be defined for workload packs. -->
+  <Fragment>
+    <DirectoryRef Id="DOTNETHOME">
+      <Directory Id="InstallDir" Name="$(InstallDir)">
+        <?if $(PackKind) != "Library" and $(PackKind) != "Template"?>
+          <Directory Id="PackageDir" Name="$(PackageId)">
+            <Directory Id="VersionDir" Name="$(PackageVersion)" />
+          </Directory>
+        <?endif?>
+      </Directory>
+    </DirectoryRef>
+  </Fragment>
+</Wix>
