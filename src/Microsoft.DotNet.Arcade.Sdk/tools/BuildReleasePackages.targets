@@ -14,7 +14,7 @@
     <Error Text="PreReleaseVersionLabel must be non-empty when using NuGet Repack tool." Condition="'$(PreReleaseVersionLabel)' == ''" />
     
     <ItemGroup>
-      <_BuiltPackages Include="$(ArtifactsShippingPackagesDir)*.nupkg" />
+      <_BuiltPackages Include="$(ArtifactsShippingPackagesDir)*.$(Version).nupkg" />
     </ItemGroup>
 
     <!-- Force references among packages to use exact versions (see https://github.com/NuGet/Home/issues/7213) -->
