@@ -158,7 +158,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 "--package-name \"$package_name\" " +
                 " -v " +
                 $"{ devOutArg }  { instrumentationArg } { exitCodeArg } { extraArguments } " +
-                "-e DOTNET_CI true " +
+                "--arg env:DOTNET_CI=true " +
                 $"{ passthroughArgs }";
         }
 
