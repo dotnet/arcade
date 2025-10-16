@@ -567,9 +567,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         break;
                     }
 
-                    // due to latency in receiving the response and calculating the value, we may get a negative timespan
-                    // Clip to a minimum wait of 100ms
-                    timeSpan = Math.Max(timeSpan.Value, TimeSpan.FromMilliseconds(100));
+                    // Due to latency in receiving the response and calculating the value, we may have a negative timespan
+                    TimeSpan minWait = TimeSpan.FromMilliseconds(100);
+                    if (timeSpan < minWait)
+                    {
+                        timeSpan = minWait;
+                    }
 
                     Log.LogMessage(MessageImportance.High,
                         $"API rate limit exceeded, retrying in {timeSpan.Value.TotalSeconds} seconds. Retry attempt: {retry}");
