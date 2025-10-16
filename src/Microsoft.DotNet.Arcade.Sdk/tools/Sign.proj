@@ -69,7 +69,7 @@
   <Target Name="FindDotNetPathForMicroBuild" Condition="'$(_MicroBuildRequired)' == 'true'">
     <!--
       On non-Windows platforms, MicroBuild needs the .NET 8 SDK for signing.
-      Non-windows signed (real or test) builds will install this SDK into a */MicroBuild/* directory
+      Non-windows signed (real or test) builds will install this SDK into a */.dotnet-microbuild/* directory
       and add it to the PATH.
     -->
     <PropertyGroup>
@@ -85,7 +85,7 @@
 
       <_DotNetPathMicroBuildCandidate
         Include="@(_ItemInPath->'%(Identity)/dotnet')"
-        Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', 'MicroBuild')) and Exists('%(Identity)/dotnet')" />
+        Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('%(Identity)', '.dotnet-microbuild')) and Exists('%(Identity)/dotnet')" />
     </ItemGroup>
 
     <PropertyGroup Condition="'@(_DotNetPathMicroBuildCandidate)' != ''">
