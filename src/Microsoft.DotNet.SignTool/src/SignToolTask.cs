@@ -367,6 +367,8 @@ namespace Microsoft.DotNet.SignTool
                     var macSigningOperation = certificateSignInfo.GetMetadata("MacCertificate");
                     var macNotarizationAppName = certificateSignInfo.GetMetadata("MacNotarizationAppName");
                     var collisionPriorityId = certificateSignInfo.GetMetadata(SignToolConstants.CollisionPriorityId);
+                    var detachedSignatureCertificate = certificateSignInfo.GetMetadata("DetachedSignature");
+                    bool detachedSignatureCertificateValue = false;
 
                     if (string.IsNullOrEmpty(macSigningOperation) != string.IsNullOrEmpty(macNotarizationAppName))
                     {
@@ -379,11 +381,18 @@ namespace Microsoft.DotNet.SignTool
                         continue;
                     }
 
+                    if (!string.IsNullOrEmpty(detachedSignatureCertificate) && !bool.TryParse(detachedSignatureCertificate, out detachedSignatureCertificateValue))
+                    {
+                        Log.LogError($"DetachedSignature must be 'true' or 'false");
+                        continue;
+                    }
+
                     var additionalCertInfo = new AdditionalCertificateInformation
                     {
                         DualSigningAllowed = dualSignAllowedValue,
                         MacSigningOperation = macSigningOperation,
                         MacNotarizationAppName = macNotarizationAppName,
+                        GeneratesDetachedSignature = detachedSignatureCertificateValue,
                         CollisionPriorityId = collisionPriorityId
                     };
 
