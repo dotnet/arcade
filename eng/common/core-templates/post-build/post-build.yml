@@ -206,10 +206,10 @@ stages:
         displayName: Validate
         inputs:
           filePath: eng\common\sdk-task.ps1
-            arguments: -task SigningValidation -restore -msbuildEngine vs
-              /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts'
-              /p:SignCheckExclusionsFile='$(System.DefaultWorkingDirectory)/eng/SignCheckExclusionsFile.txt'
-              ${{ parameters.signingValidationAdditionalParameters }}
+          arguments: -task SigningValidation -restore -msbuildEngine vs
+            /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts'
+            /p:SignCheckExclusionsFile='$(System.DefaultWorkingDirectory)/eng/SignCheckExclusionsFile.txt'
+            ${{ parameters.signingValidationAdditionalParameters }}
 
       - template: /eng/common/core-templates/steps/publish-logs.yml
         parameters:
@@ -310,8 +310,6 @@ stages:
       - template: /eng/common/templates/steps/enable-internal-sources.yml
         parameters:
           legacyCredential: $(dn-bot-dnceng-artifact-feeds-rw)
-          runtimeSourceFeed: $(runtimeSourceFeed)
-          runtimeSourceFeedKey: $(runtimeSourceFeedKey)
 
       - template: /eng/common/templates/steps/enable-internal-runtimes.yml
 

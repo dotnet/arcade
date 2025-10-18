@@ -126,9 +126,6 @@ jobs:
         legacyCredential: $(dn-bot-dnceng-artifact-feeds-rw)
 
     - template: /eng/common/templates/steps/enable-internal-runtimes.yml
-      parameters:
-        runtimeSourceFeed: $(runtimeSourceFeed)
-        runtimeSourceFeedKey: $(runtimeSourceFeedKey)
 
     - task: AzureCLI@2
       displayName: Publish Build Assets
