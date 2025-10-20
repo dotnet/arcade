@@ -259,11 +259,11 @@ stages:
         displayName: Validate
         inputs:
           filePath: $(System.DefaultWorkingDirectory)/eng/common/post-build/sourcelink-validation.ps1
-            arguments: -InputPath $(Build.ArtifactStagingDirectory)/BlobArtifacts/ 
-              -ExtractPath $(Agent.BuildDirectory)/Extract/ 
-              -GHRepoName $(Build.Repository.Name) 
-              -GHCommit $(Build.SourceVersion)
-              -SourcelinkCliVersion $(SourceLinkCLIVersion)
+          arguments: -InputPath $(Build.ArtifactStagingDirectory)/BlobArtifacts/ 
+            -ExtractPath $(Agent.BuildDirectory)/Extract/ 
+            -GHRepoName $(Build.Repository.Name) 
+            -GHCommit $(Build.SourceVersion)
+            -SourcelinkCliVersion $(SourceLinkCLIVersion)
         continueOnError: true
 
 - ${{ if ne(parameters.publishAssetsImmediately, 'true') }}:
@@ -329,5 +329,5 @@ stages:
               -ArtifactsPublishingAdditionalParameters '${{ parameters.artifactsPublishingAdditionalParameters }}'
               -SymbolPublishingAdditionalParameters '${{ parameters.symbolPublishingAdditionalParameters }}'
               -SkipAssetsPublishing '${{ parameters.isAssetlessBuild }}'
-	      -runtimeSourceFeed https://ci.dot.net/internal 
-	      -runtimeSourceFeedKey $(dotnetbuilds-internal-container-read-token-base64)
+              -runtimeSourceFeed https://ci.dot.net/internal 
+              -runtimeSourceFeedKey $(dotnetbuilds-internal-container-read-token-base64)
