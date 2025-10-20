@@ -3,6 +3,7 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.DotNet.Build.Tasks;
 using System;
 using System.IO;
 
@@ -11,7 +12,7 @@ namespace Microsoft.DotNet.CMake.Sdk
     /// <summary>
     /// Creates a CMake File API query file to request codemodel information.
     /// </summary>
-    public class CreateCMakeFileApiQuery : Task
+    public class CreateCMakeFileApiQuery : BuildTask
     {
         /// <summary>
         /// The CMake build output directory where the query should be created.
@@ -32,13 +33,13 @@ namespace Microsoft.DotNet.CMake.Sdk
                 // Create an empty file to request codemodel-v2 information
                 File.WriteAllText(queryFile, string.Empty);
                 
-                Log.LogMessage(MessageImportance.Low, $"Created CMake File API query at: {queryFile}");
+                Log.LogMessage(LogImportance.Low, "Created CMake File API query at: {0}", queryFile);
                 
                 return true;
             }
             catch (Exception ex)
             {
-                Log.LogErrorFromException(ex);
+                Log.LogErrorFromException(ex, showStackTrace: false);
                 return false;
             }
         }
