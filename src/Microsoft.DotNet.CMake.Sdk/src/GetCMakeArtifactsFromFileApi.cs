@@ -48,109 +48,85 @@ namespace Microsoft.DotNet.CMake.Sdk
                 
                 if (!Directory.Exists(replyDir))
                 {
-                    Log.LogMessage(MessageImportance.Low, $"CMake File API reply directory does not exist: {replyDir}");
-                    Artifacts = Array.Empty<ITaskItem>();
-                    return true;
+                    Log.LogError($"CMake File API reply directory does not exist: {replyDir}");
+                    return false;
                 }
 
                 // Find the latest index file
                 var indexFiles = Directory.GetFiles(replyDir, "index-*.json");
                 if (indexFiles.Length == 0)
                 {
-                    Log.LogMessage(MessageImportance.Low, "No CMake File API index files found.");
-                    Artifacts = Array.Empty<ITaskItem>();
-                    return true;
+                    Log.LogError("No CMake File API index files found.");
+                    return false;
                 }
 
                 string indexFile = indexFiles.OrderByDescending(f => f).First();
                 Log.LogMessage(MessageImportance.Low, $"Reading CMake File API index: {indexFile}");
 
                 string indexJson = File.ReadAllText(indexFile);
-                using var indexDoc = JsonDocument.Parse(indexJson);
-                var root = indexDoc.RootElement;
-
-                // Find codemodel in reply
-                if (!root.TryGetProperty("reply", out var reply))
+                var options = new JsonSerializerOptions
                 {
-                    Log.LogMessage(MessageImportance.Low, "No 'reply' property in index file.");
-                    Artifacts = Array.Empty<ITaskItem>();
-                    return true;
+                    PropertyNameCaseInsensitive = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                };
+
+                var index = JsonSerializer.Deserialize<CMakeFileApiIndex>(indexJson, options);
+
+                if (index?.Reply?.ClientReply?.CodemodelV2?.JsonFile == null)
+                {
+                    Log.LogError("No 'codemodel-v2' found in File API index reply.");
+                    return false;
                 }
 
-                string codeModelFile = null;
-                if (reply.TryGetProperty("codemodel-v2", out var codeModelRef))
+                string codeModelFile = Path.Combine(replyDir, index.Reply.ClientReply.CodemodelV2.JsonFile);
+                if (!File.Exists(codeModelFile))
                 {
-                    if (codeModelRef.TryGetProperty("jsonFile", out var jsonFile))
-                    {
-                        codeModelFile = Path.Combine(replyDir, jsonFile.GetString());
-                    }
-                }
-
-                if (string.IsNullOrEmpty(codeModelFile) || !File.Exists(codeModelFile))
-                {
-                    Log.LogMessage(MessageImportance.Low, "Codemodel file not found in File API response.");
-                    Artifacts = Array.Empty<ITaskItem>();
-                    return true;
+                    Log.LogError($"Codemodel file not found: {codeModelFile}");
+                    return false;
                 }
 
                 Log.LogMessage(MessageImportance.Low, $"Reading codemodel: {codeModelFile}");
                 
-                var artifacts = new List<ITaskItem>();
-                
                 string codeModelJson = File.ReadAllText(codeModelFile);
-                using var codeModelDoc = JsonDocument.Parse(codeModelJson);
-                var codeModel = codeModelDoc.RootElement;
+                var codeModel = JsonSerializer.Deserialize<CMakeCodeModel>(codeModelJson, options);
+
+                if (codeModel == null)
+                {
+                    Log.LogError("Failed to deserialize codemodel.");
+                    return false;
+                }
 
                 // Get the source root from the codemodel
-                string sourceRoot = "";
-                if (codeModel.TryGetProperty("paths", out var paths) && 
-                    paths.TryGetProperty("source", out var sourceElement))
-                {
-                    sourceRoot = sourceElement.GetString().Replace('\\', '/').TrimEnd('/');
-                }
+                string sourceRoot = codeModel.Paths?.Source?.Replace('\\', '/').TrimEnd('/') ?? "";
 
                 // Normalize source directory for comparison
                 string normalizedSourceDir = Path.GetFullPath(SourceDirectory).Replace('\\', '/').TrimEnd('/');
 
                 // Find the configuration
-                if (codeModel.TryGetProperty("configurations", out var configurations))
+                var artifacts = new List<ITaskItem>();
+                bool configurationFound = false;
+                bool directoryFound = false;
+
+                if (codeModel.Configurations != null)
                 {
-                    foreach (var config in configurations.EnumerateArray())
+                    foreach (var config in codeModel.Configurations)
                     {
-                        if (!config.TryGetProperty("name", out var configName) || 
-                            !string.Equals(configName.GetString(), Configuration, StringComparison.OrdinalIgnoreCase))
+                        if (!string.Equals(config.Name, Configuration, StringComparison.OrdinalIgnoreCase))
                         {
                             continue;
                         }
 
+                        configurationFound = true;
                         Log.LogMessage(MessageImportance.Low, $"Found configuration: {Configuration}");
 
-                        // Get targets array
-                        if (!config.TryGetProperty("targets", out var targets))
+                        if (config.Directories == null || config.Targets == null)
                         {
                             continue;
                         }
 
-                        var targetsList = new List<JsonElement>();
-                        foreach (var target in targets.EnumerateArray())
+                        foreach (var directory in config.Directories)
                         {
-                            targetsList.Add(target);
-                        }
-
-                        // Get directories
-                        if (!config.TryGetProperty("directories", out var directories))
-                        {
-                            continue;
-                        }
-
-                        foreach (var directory in directories.EnumerateArray())
-                        {
-                            if (!directory.TryGetProperty("source", out var sourceDir))
-                            {
-                                continue;
-                            }
-
-                            string dirSource = sourceDir.GetString().Replace('\\', '/').TrimEnd('/');
+                            string dirSource = directory.Source?.Replace('\\', '/').TrimEnd('/') ?? "";
                             
                             // Make the directory source path absolute
                             if (!Path.IsPathRooted(dirSource))
@@ -165,29 +141,29 @@ namespace Microsoft.DotNet.CMake.Sdk
                                 continue;
                             }
 
+                            directoryFound = true;
                             Log.LogMessage(MessageImportance.Low, $"Found matching directory: {dirSource}");
 
                             // Get targets in this directory
-                            if (!directory.TryGetProperty("targetIndexes", out var targetIndexes))
+                            if (directory.TargetIndexes == null)
                             {
                                 continue;
                             }
 
-                            foreach (var indexElement in targetIndexes.EnumerateArray())
+                            foreach (int targetIndex in directory.TargetIndexes)
                             {
-                                int targetIndex = indexElement.GetInt32();
-                                if (targetIndex < 0 || targetIndex >= targetsList.Count)
+                                if (targetIndex < 0 || targetIndex >= config.Targets.Count)
                                 {
                                     continue;
                                 }
 
-                                var target = targetsList[targetIndex];
-                                if (!target.TryGetProperty("jsonFile", out var targetJsonFile))
+                                var target = config.Targets[targetIndex];
+                                if (string.IsNullOrEmpty(target.JsonFile))
                                 {
                                     continue;
                                 }
 
-                                string targetFile = Path.Combine(replyDir, targetJsonFile.GetString());
+                                string targetFile = Path.Combine(replyDir, target.JsonFile);
                                 if (!File.Exists(targetFile))
                                 {
                                     continue;
@@ -197,17 +173,16 @@ namespace Microsoft.DotNet.CMake.Sdk
 
                                 // Read target details
                                 string targetJson = File.ReadAllText(targetFile);
-                                using var targetDoc = JsonDocument.Parse(targetJson);
-                                var targetRoot = targetDoc.RootElement;
+                                var targetDetails = JsonSerializer.Deserialize<CMakeTargetDetails>(targetJson, options);
 
                                 // Get artifacts
-                                if (targetRoot.TryGetProperty("artifacts", out var artifactsArray))
+                                if (targetDetails?.Artifacts != null)
                                 {
-                                    foreach (var artifact in artifactsArray.EnumerateArray())
+                                    foreach (var artifact in targetDetails.Artifacts)
                                     {
-                                        if (artifact.TryGetProperty("path", out var artifactPath))
+                                        if (!string.IsNullOrEmpty(artifact.Path))
                                         {
-                                            string fullPath = Path.Combine(CMakeOutputDir, artifactPath.GetString());
+                                            string fullPath = Path.Combine(CMakeOutputDir, artifact.Path);
                                             fullPath = Path.GetFullPath(fullPath);
                                             
                                             var item = new TaskItem(fullPath);
@@ -222,6 +197,23 @@ namespace Microsoft.DotNet.CMake.Sdk
                         
                         break; // Found the configuration, no need to continue
                     }
+                }
+
+                if (!configurationFound)
+                {
+                    Log.LogError($"Configuration '{Configuration}' not found in CMake File API response.");
+                    return false;
+                }
+
+                if (!directoryFound)
+                {
+                    Log.LogError($"Source directory '{SourceDirectory}' not found in CMake File API response.");
+                    return false;
+                }
+
+                if (artifacts.Count == 0)
+                {
+                    Log.LogWarning($"No artifacts found for source directory '{SourceDirectory}' in configuration '{Configuration}'.");
                 }
 
                 Artifacts = artifacts.ToArray();

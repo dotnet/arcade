@@ -163,48 +163,16 @@
       <_SourceDirectory>$([System.IO.Path]::GetDirectoryName($(ReferencedCMakeLists)))</_SourceDirectory>
     </PropertyGroup>
 
-    <!-- Try to get artifacts from File API -->
+    <!-- Get artifacts from File API -->
     <GetCMakeArtifactsFromFileApi 
       CMakeOutputDir="$(_CMakeOutputDir)"
       SourceDirectory="$(_SourceDirectory)"
       Configuration="$(_Configuration)">
-      <Output TaskParameter="Artifacts" ItemName="_FileApiArtifacts" />
+      <Output TaskParameter="Artifacts" ItemName="NativeProjectBinaries" />
     </GetCMakeArtifactsFromFileApi>
 
-    <!-- If File API returned artifacts, use them. Otherwise fall back to old logic -->
-    <PropertyGroup>
-      <_UseFileApi Condition="'@(_FileApiArtifacts)' != ''">true</_UseFileApi>
-    </PropertyGroup>
-
-    <ItemGroup Condition="'$(_UseFileApi)' == 'true'">
-      <NativeProjectBinaries Include="@(_FileApiArtifacts)" />
-    </ItemGroup>
-
-    <Message Text="Using CMake File API to locate artifacts" Condition="'$(_UseFileApi)' == 'true'" />
-    <Message Text="File API not available, falling back to legacy path detection" Condition="'$(_UseFileApi)' != 'true'" />
-
-    <!-- Fall back to old logic if File API didn't work -->
-    <MSBuild Projects="$(ReferencedCMakeProject)"
-             Targets="GetOutputPathForProjectReference"
-             Properties="ReferencedCMakeLists=$(ReferencedCMakeLists)"
-             Condition="'$(_UseFileApi)' != 'true'">
-      <Output TaskParameter="TargetOutputs" ItemName="_LegacyOutputFolder" />
-    </MSBuild>
-
-    <PropertyGroup Condition="'$(_UseFileApi)' != 'true'">
-      <_LegacyOutputPath>%(_LegacyOutputFolder.Identity)</_LegacyOutputPath>
-      <_IsMultiConfigurationGenerator>%(_LegacyOutputFolder.IsMultiConfigurationGenerator)</_IsMultiConfigurationGenerator>
-    </PropertyGroup>
-
-    <MSBuild Projects="$(MSBuildProjectFile)" 
-             Targets="CopyNativeProjectBinaries"
-             Properties="NativeProjectOutputFolder=$(_LegacyOutputPath);
-                         ReferencedCMakeProject=$(ReferencedCMakeProject);
-                         IsMultiConfigurationGenerator=$(_IsMultiConfigurationGenerator)"
-             Condition="'$(_UseFileApi)' != 'true'" />
-
-    <!-- Copy the binaries from File API if we have them -->
-    <ItemGroup Condition="'$(_UseFileApi)' == 'true'">
+    <!-- Copy the binaries -->
+    <ItemGroup>
       <_ArtifactsToCopy Include="@(NativeProjectBinaries)" Condition="Exists('%(Identity)')" />
     </ItemGroup>
 
@@ -215,12 +183,11 @@
       OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
       Retries="$(CopyRetryCount)"
       RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)"
-      UseHardlinksIfPossible="$(CreateHardLinksForCopyFilesToOutputDirectoryIfPossible)"
-      Condition="'$(_UseFileApi)' == 'true'">
+      UseHardlinksIfPossible="$(CreateHardLinksForCopyFilesToOutputDirectoryIfPossible)">
       <Output TaskParameter="DestinationFiles" ItemName="FileWrites" />
     </Copy>
 
-    <ItemGroup Condition="'$(_UseFileApi)' == 'true'">
+    <ItemGroup>
       <FileWrites Include="@(_ArtifactsToCopy -> '$(OutDir)%(Filename)%(Extension)')" />
     </ItemGroup>
   </Target>

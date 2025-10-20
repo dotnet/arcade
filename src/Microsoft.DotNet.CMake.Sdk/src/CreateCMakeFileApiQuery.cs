@@ -23,7 +23,8 @@ namespace Microsoft.DotNet.CMake.Sdk
         {
             try
             {
-                string queryDir = Path.Combine(CMakeOutputDir, ".cmake", "api", "v1", "query");
+                // Create a client stateless query file with client name "Microsoft.DotNet.CMake.Sdk"
+                string queryDir = Path.Combine(CMakeOutputDir, ".cmake", "api", "v1", "query", "client-Microsoft.DotNet.CMake.Sdk");
                 Directory.CreateDirectory(queryDir);
 
                 string queryFile = Path.Combine(queryDir, "codemodel-v2");
