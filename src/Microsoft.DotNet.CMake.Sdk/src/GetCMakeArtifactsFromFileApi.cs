@@ -101,6 +101,14 @@ namespace Microsoft.DotNet.CMake.Sdk
                 using var codeModelDoc = JsonDocument.Parse(codeModelJson);
                 var codeModel = codeModelDoc.RootElement;
 
+                // Get the source root from the codemodel
+                string sourceRoot = "";
+                if (codeModel.TryGetProperty("paths", out var paths) && 
+                    paths.TryGetProperty("source", out var sourceElement))
+                {
+                    sourceRoot = sourceElement.GetString().Replace('\\', '/').TrimEnd('/');
+                }
+
                 // Normalize source directory for comparison
                 string normalizedSourceDir = Path.GetFullPath(SourceDirectory).Replace('\\', '/').TrimEnd('/');
 
@@ -143,6 +151,13 @@ namespace Microsoft.DotNet.CMake.Sdk
                             }
 
                             string dirSource = sourceDir.GetString().Replace('\\', '/').TrimEnd('/');
+                            
+                            // Make the directory source path absolute
+                            if (!Path.IsPathRooted(dirSource))
+                            {
+                                dirSource = Path.Combine(sourceRoot, dirSource);
+                                dirSource = Path.GetFullPath(dirSource).Replace('\\', '/').TrimEnd('/');
+                            }
                             
                             // Check if this directory matches the requested source directory
                             if (!string.Equals(dirSource, normalizedSourceDir, StringComparison.OrdinalIgnoreCase))

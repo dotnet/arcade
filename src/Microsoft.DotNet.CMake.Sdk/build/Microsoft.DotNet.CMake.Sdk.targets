@@ -11,6 +11,10 @@
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
+  <PropertyGroup>
+    <VSWhereVersion Condition="'$(VSWhereVersion)' == ''">3.1.7</VSWhereVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="vswhere" Version="$(VSWhereVersion)" IsImplicitlyDefined="true" GeneratePathProperty="true" />
   </ItemGroup>
@@ -100,20 +104,10 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="GetCMakeOutputDir" Returns="@(_CMakeOutputDirItem)">
-    <ItemGroup>
-      <_CMakeOutputDirItem Include="$(CMakeOutputDir)">
-        <CMakeOutputDir>$(CMakeOutputDir)</CMakeOutputDir>
-      </_CMakeOutputDirItem>
-    </ItemGroup>
+  <Target Name="GetCMakeOutputDirProperty" Returns="$(CMakeOutputDir)">
   </Target>
 
-  <Target Name="GetConfiguration" Returns="@(_ConfigurationItem)">
-    <ItemGroup>
-      <_ConfigurationItem Include="$(Configuration)">
-        <Configuration>$(Configuration)</Configuration>
-      </_ConfigurationItem>
-    </ItemGroup>
+  <Target Name="GetConfigurationProperty" Returns="$(Configuration)">
   </Target>
 
   <Target Name="_ResolveVSCompilerToolchainForNonVSGenerators"

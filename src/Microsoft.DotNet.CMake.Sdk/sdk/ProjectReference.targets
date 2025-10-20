@@ -147,15 +147,19 @@
   </Target>
 
   <Target Name="CopyNativeProjectBinariesFromFileApi">
-    <!-- Get CMakeOutputDir and Configuration from the CMake project -->
+    <!-- Get CMakeOutputDir from the CMake project -->
     <MSBuild Projects="$(ReferencedCMakeProject)"
-             Targets="GetCMakeOutputDir;GetConfiguration">
-      <Output TaskParameter="TargetOutputs" ItemName="_CMakeProjectOutputs" />
+             Targets="GetCMakeOutputDirProperty">
+      <Output TaskParameter="TargetOutputs" PropertyName="_CMakeOutputDir" />
+    </MSBuild>
+
+    <!-- Get Configuration from the CMake project  -->
+    <MSBuild Projects="$(ReferencedCMakeProject)"
+             Targets="GetConfigurationProperty">
+      <Output TaskParameter="TargetOutputs" PropertyName="_Configuration" />
     </MSBuild>
 
     <PropertyGroup>
-      <_CMakeOutputDir>%(_CMakeProjectOutputs.CMakeOutputDir)</_CMakeOutputDir>
-      <_Configuration>%(_CMakeProjectOutputs.Configuration)</_Configuration>
       <_SourceDirectory>$([System.IO.Path]::GetDirectoryName($(ReferencedCMakeLists)))</_SourceDirectory>
     </PropertyGroup>
 
