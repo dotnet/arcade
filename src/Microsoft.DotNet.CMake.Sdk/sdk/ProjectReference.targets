@@ -1,6 +1,13 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
 
+  <PropertyGroup>
+    <MicrosoftDotNetCMakeSdkTaskAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\tools\net\Microsoft.DotNet.CMake.Sdk.dll</MicrosoftDotNetCMakeSdkTaskAssembly>
+    <MicrosoftDotNetCMakeSdkTaskAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\tools\netframework\Microsoft.DotNet.CMake.Sdk.dll</MicrosoftDotNetCMakeSdkTaskAssembly>
+  </PropertyGroup>
+
+  <UsingTask TaskName="Microsoft.DotNet.CMake.Sdk.GetCMakeArtifactsFromFileApi" AssemblyFile="$(MicrosoftDotNetCMakeSdkTaskAssembly)" />
+
   <ItemDefinitionGroup>
     <NativeProjectReference>
       <CMakeProject></CMakeProject>
@@ -116,12 +123,6 @@
   <Target Name="ConsolidateNativeProjectReference"
           BeforeTargets="Build" >
 
-    <MSBuild Projects="%(NativeProjectReferenceNormalized.CMakeProject)"
-      Targets="GetOutputPathForProjectReference"
-      Properties="ReferencedCMakeLists=%(NativeProjectReferenceNormalized.Identity);%(NativeProjectReferenceNormalized.AdditionalProperties)">
-      <Output TaskParameter="TargetOutputs" ItemName="NativeProjectOutputFoldersToCopy" />
-    </MSBuild>
-
     <ItemGroup>
       <_NativeProjectReferenceToBuild Include="%(NativeProjectReferenceNormalized.CMakeProject)"
                                       Condition="'%(NativeProjectReferenceNormalized.BuildNative)' == 'true'"
@@ -135,15 +136,89 @@
     <MSBuild Projects="@(_UniqueNativeProjectReferenceToBuild)" />
 
     <Message Text= "Full native project references are :%(NativeProjectReferenceNormalized.Identity)" />
-    <Message Text= "Native binaries will be copied from :%(NativeProjectOutputFoldersToCopy.Identity)" />
+
+    <MSBuild Projects="$(MSBuildProjectFile)" 
+             Targets="CopyNativeProjectBinariesFromFileApi"
+             Properties="ReferencedCMakeLists=%(NativeProjectReferenceNormalized.Identity);
+                         ReferencedCMakeProject=%(NativeProjectReferenceNormalized.CMakeProject);
+                         %(NativeProjectReferenceNormalized.AdditionalProperties)"
+             Condition="'@(NativeProjectReference)' != ''" />
+
+  </Target>
+
+  <Target Name="CopyNativeProjectBinariesFromFileApi">
+    <!-- Get CMakeOutputDir and Configuration from the CMake project -->
+    <MSBuild Projects="$(ReferencedCMakeProject)"
+             Targets="GetCMakeOutputDir;GetConfiguration">
+      <Output TaskParameter="TargetOutputs" ItemName="_CMakeProjectOutputs" />
+    </MSBuild>
+
+    <PropertyGroup>
+      <_CMakeOutputDir>%(_CMakeProjectOutputs.CMakeOutputDir)</_CMakeOutputDir>
+      <_Configuration>%(_CMakeProjectOutputs.Configuration)</_Configuration>
+      <_SourceDirectory>$([System.IO.Path]::GetDirectoryName($(ReferencedCMakeLists)))</_SourceDirectory>
+    </PropertyGroup>
+
+    <!-- Try to get artifacts from File API -->
+    <GetCMakeArtifactsFromFileApi 
+      CMakeOutputDir="$(_CMakeOutputDir)"
+      SourceDirectory="$(_SourceDirectory)"
+      Configuration="$(_Configuration)">
+      <Output TaskParameter="Artifacts" ItemName="_FileApiArtifacts" />
+    </GetCMakeArtifactsFromFileApi>
+
+    <!-- If File API returned artifacts, use them. Otherwise fall back to old logic -->
+    <PropertyGroup>
+      <_UseFileApi Condition="'@(_FileApiArtifacts)' != ''">true</_UseFileApi>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(_UseFileApi)' == 'true'">
+      <NativeProjectBinaries Include="@(_FileApiArtifacts)" />
+    </ItemGroup>
+
+    <Message Text="Using CMake File API to locate artifacts" Condition="'$(_UseFileApi)' == 'true'" />
+    <Message Text="File API not available, falling back to legacy path detection" Condition="'$(_UseFileApi)' != 'true'" />
+
+    <!-- Fall back to old logic if File API didn't work -->
+    <MSBuild Projects="$(ReferencedCMakeProject)"
+             Targets="GetOutputPathForProjectReference"
+             Properties="ReferencedCMakeLists=$(ReferencedCMakeLists)"
+             Condition="'$(_UseFileApi)' != 'true'">
+      <Output TaskParameter="TargetOutputs" ItemName="_LegacyOutputFolder" />
+    </MSBuild>
+
+    <PropertyGroup Condition="'$(_UseFileApi)' != 'true'">
+      <_LegacyOutputPath>%(_LegacyOutputFolder.Identity)</_LegacyOutputPath>
+      <_IsMultiConfigurationGenerator>%(_LegacyOutputFolder.IsMultiConfigurationGenerator)</_IsMultiConfigurationGenerator>
+    </PropertyGroup>
 
     <MSBuild Projects="$(MSBuildProjectFile)" 
              Targets="CopyNativeProjectBinaries"
-             Properties="NativeProjectOutputFolder=%(NativeProjectOutputFoldersToCopy.Identity);
-                         ReferencedCMakeProject=%(NativeProjectOutputFoldersToCopy.MSBuildSourceProjectFile);
-                         IsMultiConfigurationGenerator=%(NativeProjectOutputFoldersToCopy.IsMultiConfigurationGenerator)"
-             Condition="'@(NativeProjectReference)' != ''" />
+             Properties="NativeProjectOutputFolder=$(_LegacyOutputPath);
+                         ReferencedCMakeProject=$(ReferencedCMakeProject);
+                         IsMultiConfigurationGenerator=$(_IsMultiConfigurationGenerator)"
+             Condition="'$(_UseFileApi)' != 'true'" />
 
+    <!-- Copy the binaries from File API if we have them -->
+    <ItemGroup Condition="'$(_UseFileApi)' == 'true'">
+      <_ArtifactsToCopy Include="@(NativeProjectBinaries)" Condition="Exists('%(Identity)')" />
+    </ItemGroup>
+
+    <Copy
+      SourceFiles="@(_ArtifactsToCopy)"
+      DestinationFiles="@(_ArtifactsToCopy -> '$(OutDir)%(Filename)%(Extension)')"
+      SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
+      OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
+      Retries="$(CopyRetryCount)"
+      RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)"
+      UseHardlinksIfPossible="$(CreateHardLinksForCopyFilesToOutputDirectoryIfPossible)"
+      Condition="'$(_UseFileApi)' == 'true'">
+      <Output TaskParameter="DestinationFiles" ItemName="FileWrites" />
+    </Copy>
+
+    <ItemGroup Condition="'$(_UseFileApi)' == 'true'">
+      <FileWrites Include="@(_ArtifactsToCopy -> '$(OutDir)%(Filename)%(Extension)')" />
+    </ItemGroup>
   </Target>
 
   <Target Name="CopyAllNativeProjectReferenceBinaries" DependsOnTargets="ResolveCMakeNativeProjectReference;ConsolidateNativeProjectReference" />
