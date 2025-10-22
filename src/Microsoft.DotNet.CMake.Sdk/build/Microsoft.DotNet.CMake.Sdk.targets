@@ -11,10 +11,6 @@
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
-  <PropertyGroup>
-    <VSWhereVersion Condition="'$(VSWhereVersion)' == ''">3.1.7</VSWhereVersion>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="vswhere" Version="$(VSWhereVersion)" IsImplicitlyDefined="true" GeneratePathProperty="true" />
   </ItemGroup>
