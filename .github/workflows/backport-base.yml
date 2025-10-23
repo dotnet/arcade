@@ -101,6 +101,9 @@ jobs:
           const comment_user = context.payload.comment.user.login;
           const workflow_run_url = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
 
+          const wrap_in_code_block = (language, content) => `\`\`\`${language}\n${content}\n\`\`\``;
+          const wrap_in_details_block = (summary, content) => `<details>\n<summary>${summary}</summary>\n\n${content}\n</details>`;
+
           // Post a comment on the PR and return the comment URL
           async function postComment(body) {
             const { data: comment } = await github.rest.issues.createComment({
