@@ -119,7 +119,7 @@ jobs:
             Please backport manually!`;
 
             const comment_url = await postComment(body);
-            core.setFailed(`Error: backporting failed due to merge conflicts. Posted comment: ${comment_url}`);
+            core.setFailed(`Backporting failed due to merge conflicts. Posted comment: ${comment_url}`);
           }
 
           async function failConflictResolution(git_am_output, resolution_std_err) {
@@ -142,7 +142,7 @@ jobs:
             </details>`;
 
             const comment_url = await postComment(body);
-            core.setFailed(`Error: backporting failed and automated conflict resolution did not fully resolve merge conflicts. Posted comment: ${comment_url}`);
+            core.setFailed(`Backporting failed and automated conflict resolution did not fully resolve merge conflicts. Posted comment: ${comment_url}`);
           }
 
           async function failUnknown(error) {
