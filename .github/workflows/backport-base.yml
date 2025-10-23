@@ -115,48 +115,6 @@ jobs:
             return comment.html_url;
           }
 
-          async function failMergeConflict(git_am_output) {
-            const body = `@${comment_user} backporting to \`${target_branch}\` failed, the patch most likely resulted in conflicts:
-            \`\`\`shell
-            ${git_am_output}
-            \`\`\`
-            Please backport manually!`;
-
-            const comment_url = await postComment(body);
-            core.setFailed(`Backporting failed due to merge conflicts. Posted comment: ${comment_url}`);
-          }
-
-          async function failConflictResolution(git_am_output, resolution_std_err) {
-            const body = `@${comment_user} backporting to \`${target_branch}\` failed, the patch most likely resulted in conflicts:
-
-            <details>
-            <summary>git am output</summary>
-
-            \`\`\`shell
-            ${git_am_output}
-            \`\`\`
-            </details>
-
-            <details>
-            <summary>Conflict resolution stderr:</summary>
-
-            \`\`\`shell
-            ${resolution_std_err}
-            \`\`\`
-            </details>
-
-            Please backport manually!`;
-
-            const comment_url = await postComment(body);
-            core.setFailed(`Backporting failed and automated conflict resolution did not fully resolve merge conflicts. Posted comment: ${comment_url}`);
-          }
-
-          async function failUnknown(error) {
-            const body = `@${comment_user} an error occurred while backporting to \`${target_branch}\`. See the [workflow output](${workflow_run_url}) for details.`;
-            await postComment(body);
-            core.setFailed(error);
-          }
-
           try {
             // verify the comment user is a repo collaborator
             try {
@@ -223,86 +181,49 @@ jobs:
 
               // If no resolution command supplied, fail immediately
               if (resolution_command.trim().length === 0) {
-                await failMergeConflict(git_am_output);
+                const details = `${wrap_in_code_block('console', git_am_output)}
+                  [Link to workflow output](${workflow_run_url})`;
+                const git_am_failed_body = `@${comment_user} backporting to \`${target_branch}\` failed, the patch most likely resulted in conflicts. Please backport manually!
+                  ${wrap_in_details_block('git am output', details)}`;
+                postComment(git_am_failed_body);
+                core.setFailed("git am failed, most likely due to a merge conflict.");
                 return;
               }
 
               console.log(`git am failed; attempting in-session conflict resolution via provided command: ${resolution_command}`);
 
               // Run user-provided resolution command
-              let resolution_stderr = '';
-              try {
-                await exec.exec(`bash -c "${resolution_command}"`, [], {
-                  listeners: {
-                    stderr: function stderr(data) { resolution_stderr += data; }
-                  }
-                });
-                console.log('Automated conflict resolution command completed successfully.');
-              } catch (e) {
-                console.log('Automated conflict resolution command exited with error:', e);
-                resolution_stderr += e.toString();
-                await failConflictResolution(git_am_output, resolution_stderr);
+              // Ignore return code to capture stdout/stderr
+              const resolution_result = await exec.getExecOutput(`bash -c "${resolution_command}"`, [], { ignoreReturnCode: true });
+              if (resolution_result.exitCode !== 0) {
+                const details = `${wrap_in_code_block('console', resolution_result.stdout + resolution_result.stderr)}
+                  [Link to workflow output](${workflow_run_url})`;
+                const resolution_failed_body = `@${comment_user} backporting to \`${target_branch}\` failed during automated conflict resolution. Please backport manually!
+                  ${wrap_in_details_block('Error details', details)}`;
+                postComment(resolution_failed_body);
+                core.setFailed(`Automated conflict resolution command exited with code ${resolution_result.exitCode}`);
                 return;
               }
 
               // Stage changes (excluding patch file)
-              let git_add_stderr = '';
-              try {
-                await exec.exec('git add -A', [], {
-                  listeners: {
-                    stderr: function stderr(data) { git_add_stderr += data; }
-                  }
-                });
-                await exec.exec(`git reset HEAD ${patch_file}`);
-              } catch (e) {
-                console.log('git add failed:', e);
-                git_add_stderr += e.toString();
-                await failConflictResolution(git_am_output, git_add_stderr);
-                return;
-              }
+              await exec.exec(`git add -A`);
+              await exec.exec(`git reset HEAD ${patch_file}`);
 
               // Check for remaining conflicts
-              let remainingConflicts = '';
-              let diff_stderr = '';
-              try {
-                await exec.exec(
-                  'bash -c "git diff --name-only --diff-filter=U"',
-                  [],
-                  {
-                    listeners: {
-                      stdout: d => remainingConflicts += d.toString(),
-                      stderr: d => diff_stderr += d.toString()
-                    }
-                  }
-                );
-              } catch (e) {
-                console.log('Listing remaining conflicts failed:', e);
-                diff_stderr += e.toString();
-                await failConflictResolution(git_am_output, diff_stderr);
+              const diff_command = 'git diff --name-only --diff-filter=U';
+              const diff_result = await exec.getExecOutput(diff_command);
+              if (diff_result.stdout.trim().length !== 0) {
+                const details = `${wrap_in_code_block('console', diff_result.stdout)}
+                  [Link to workflow output](${workflow_run_url})`;
+                const conflicts_body = `@${comment_user} backporting to \`${target_branch}\` failed. Automated conflict resolution did not resolve all conflicts. Please backport manually!
+                  ${wrap_in_details_block(`${diff_command} output`, details)}`;
+                postComment(conflicts_body);
+                core.setFailed(`Automated conflict resolution did not resolve all conflicts.`);
                 return;
               }
 
-              if (remainingConflicts.trim().length !== 0) {
-                console.log('Conflicts remain after resolution attempt:\n' + remainingConflicts);
-                await failConflictResolution(git_am_output, `Conflicts remain in the following files:\n${remainingConflicts}`);
-                return;
-              }
-
-              // Continue git am session
-              let git_am_continue_stderr = '';
-              try {
-                await exec.exec('git am --continue', [], {
-                  listeners: {
-                    stderr: function stderr(data) { git_am_continue_stderr += data; }
-                  }
-                });
-                console.log('git am --continue succeeded after automated resolution.');
-              } catch (e) {
-                console.log('git am --continue failed:', e);
-                git_am_continue_stderr += e.toString();
-                await failConflictResolution(git_am_output, git_am_continue_stderr);
-                return;
-              }
+              console.log('Automated conflict resolution resolved all merge conflicts. Continuing.');
+              await exec.exec('git am --continue');
             }
 
             // push the temp branch to the repository
@@ -348,7 +269,10 @@ jobs:
 
             console.log("Successfully opened the GitHub PR.");
           } catch (error) {
-            await failUnknown(error);
+            const body = `@${comment_user} an error occurred while backporting to \`${target_branch}\`. See the [workflow output](${workflow_run_url}) for details.`;
+            const comment_url = await postComment(body);
+            console.log(`Posted comment: ${comment_url}`);
+            core.setFailed(error);
           }
 
     - name: Re-lock PR comments
