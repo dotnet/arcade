@@ -14,7 +14,7 @@ using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 {
-    [Collection("SWIX Package")]
+    [Collection("SWIX Package Generation")]
     public class SwixPackageTests : TestBase
     {
         [WindowsOnlyFact]
