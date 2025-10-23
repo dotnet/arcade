@@ -25,7 +25,11 @@ on:
         type: string
         default: ''
       conflict_resolution_command:
-        description: 'Optional shell command to attempt automatic conflict resolution after a failed git am. If it eliminates merge conflicts, the backport proceeds.'
+        description: >-
+          Optional shell command to attempt automatic conflict resolution after a failed git am.
+          If the command eliminates merge conflicts, the backport proceeds automatically.
+          Do not run git commands from this parameter as they might have unintended side effects.
+          DO NOT PASS UNTRUSTED INPUT TO THIS PARAMETER.
         required: false
         type: string
 
