@@ -103,7 +103,7 @@ jobs:
 
           // Post a comment on the PR and return the comment URL
           async function postComment(body) {
-            const comment = await github.rest.issues.createComment({
+            const { data: comment } = await github.rest.issues.createComment({
               owner: repo_owner,
               repo: repo_name,
               issue_number: pr_number,
