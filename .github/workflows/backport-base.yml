@@ -194,7 +194,7 @@ jobs:
               // Ignore return code to capture stdout/stderr
               const resolution_result = await exec.getExecOutput(`bash -c "${resolution_command}"`, [], { ignoreReturnCode: true });
               if (resolution_result.exitCode !== 0) {
-                const details = `${wrap_in_code_block('console', resolution_result.stdout + resolution_result.stderr)}\n[Link to workflow output](${workflow_run_url})`;
+                const details = `\`${resolution_command}\` stderr:\n${wrap_in_code_block('console', resolution_result.stderr)}\n[Link to workflow output](${workflow_run_url})`;
                 const resolution_failed_body = `@${comment_user} backporting to \`${target_branch}\` failed during automated conflict resolution. Please backport manually!\n${wrap_in_details_block('Error details', details)}`;
                 postComment(resolution_failed_body);
                 core.setFailed(`Automated conflict resolution command exited with code ${resolution_result.exitCode}`);
