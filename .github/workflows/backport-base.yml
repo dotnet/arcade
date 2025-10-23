@@ -73,7 +73,8 @@ jobs:
       with:
         script: |
           const target_branch = '${{ steps.target-branch-extractor.outputs.result }}';
-          const backport_start_body = `Started backporting to \`${target_branch}\` ([link to workflow run](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}))`;
+          const workflow_run_url = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+          const backport_start_body = `Started backporting to \`${target_branch}\` ([link to workflow run](${workflow_run_url}))`;
           await github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
@@ -98,7 +99,7 @@ jobs:
           const repo_name = context.payload.repository.name;
           const pr_number = context.payload.issue.number;
           const comment_user = context.payload.comment.user.login;
-          const this_run_url = `${process.env.GITHUB_SERVER_URL}/${process.env.GITHUB_REPOSITORY}/actions/runs/${process.env.GITHUB_RUN_ID}`;
+          const workflow_run_url = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
 
           // Post a comment on the PR and return the comment URL
           async function postComment(body) {
@@ -148,7 +149,7 @@ jobs:
           }
 
           async function failUnknown(error) {
-            const body = `@${comment_user} an error occurred while backporting to \`${target_branch}\`. See the [workflow output](${this_run_url}) for details.`;
+            const body = `@${comment_user} an error occurred while backporting to \`${target_branch}\`. See the [workflow output](${workflow_run_url}) for details.`;
             await postComment(body);
             core.setFailed(error);
           }
