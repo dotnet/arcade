@@ -139,7 +139,9 @@ jobs:
             \`\`\`shell
             ${resolution_std_err}
             \`\`\`
-            </details>`;
+            </details>
+
+            Please backport manually!`;
 
             const comment_url = await postComment(body);
             core.setFailed(`Backporting failed and automated conflict resolution did not fully resolve merge conflicts. Posted comment: ${comment_url}`);
