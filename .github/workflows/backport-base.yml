@@ -138,13 +138,14 @@ jobs:
             } catch { }
 
             // download and apply patch
-            await exec.exec(`curl -sSL "${context.payload.issue.pull_request.patch_url}" --output changes.patch`);
+            const patch_file = 'changes.patch';
+            await exec.exec(`curl -sSL "${context.payload.issue.pull_request.patch_url}" --output ${patch_file}`);
 
             const additional_switches = process.env.ADDITIONAL_GIT_AM_SWITCHES?.trim() || '';
             const base_switches = '--3way --empty=keep --ignore-whitespace --keep-non-patch';
             const git_am_command = additional_switches
-              ? `git am ${base_switches} ${additional_switches} changes.patch`
-              : `git am ${base_switches} changes.patch`;
+              ? `git am ${base_switches} ${additional_switches} ${patch_file}`
+              : `git am ${base_switches} ${patch_file}`;
             let git_am_output = `$ ${git_am_command}\n\n`;
             let git_am_failed = false;
             try {
@@ -178,6 +179,8 @@ jobs:
                 // stage all changes (user command doesn't run git add)
                 try {
                   await exec.exec('git add -A');
+                  // exclude the patch file itself
+                  await exec.exec(`git reset HEAD ${patch_file}`);
                 } catch (e) {
                   console.log('git add failed:', e);
                 }
