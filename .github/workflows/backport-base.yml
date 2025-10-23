@@ -124,13 +124,22 @@ jobs:
 
           async function failConflictResolution(git_am_output, resolution_std_err) {
             const body = `@${comment_user} backporting to "${target_branch}" failed, the patch most likely resulted in conflicts:
+
+            <details>
+            <summary>git am output</summary>
+
             \`\`\`shell
             ${git_am_output}
             \`\`\`
-            Attempted automatic conflict resolution failed with the following error output:
+            </details>
+
+            <details>
+            <summary>Conflict resolution stderr:</summary>
+
             \`\`\`shell
             ${resolution_std_err}
-            \`\`\``;
+            \`\`\`
+            </details>`;
 
             const comment_url = await postComment(body);
             core.setFailed(`Error: backporting failed and automated conflict resolution did not fully resolve merge conflicts. Posted comment: ${comment_url}`);
