@@ -173,4 +173,16 @@ foreach ($dotnetVersion in $dotnetVersions) {
     }
 }
 
+# Check for dotnet-eng and add dotnet-eng-internal if present
+$dotnetEngSource = $sources.SelectSingleNode("add[@key='dotnet-eng']")
+if ($dotnetEngSource -ne $null) {
+    AddOrEnablePackageSource -Sources $sources -DisabledPackageSources $disabledSources -SourceName "dotnet-eng-internal" -SourceEndPoint "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-eng-internal/nuget/$feedSuffix" -Creds $creds -Username $userName -pwd $Password
+}
+
+# Check for dotnet-tools and add dotnet-tools-internal if present
+$dotnetToolsSource = $sources.SelectSingleNode("add[@key='dotnet-tools']")
+if ($dotnetToolsSource -ne $null) {
+    AddOrEnablePackageSource -Sources $sources -DisabledPackageSources $disabledSources -SourceName "dotnet-tools-internal" -SourceEndPoint "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal/nuget/$feedSuffix" -Creds $creds -Username $userName -pwd $Password
+}
+
 $doc.Save($filename)

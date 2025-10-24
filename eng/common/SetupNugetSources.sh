@@ -173,6 +173,18 @@ for DotNetVersion in ${DotNetVersions[@]} ; do
     fi
 done
 
+# Check for dotnet-eng and add dotnet-eng-internal if present
+grep -i "<add key=\"dotnet-eng\"" $ConfigFile > /dev/null
+if [ "$?" == "0" ]; then
+    AddOrEnablePackageSource "dotnet-eng-internal" "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-eng-internal/nuget/$FeedSuffix"
+fi
+
+# Check for dotnet-tools and add dotnet-tools-internal if present
+grep -i "<add key=\"dotnet-tools\"" $ConfigFile > /dev/null
+if [ "$?" == "0" ]; then
+    AddOrEnablePackageSource "dotnet-tools-internal" "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal/nuget/$FeedSuffix"
+fi
+
 # I want things split line by line
 PrevIFS=$IFS
 IFS=$'\n'
