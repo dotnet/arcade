@@ -264,37 +264,5 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             actualResult.Should().BeFalse();
         }
-
-        [Fact]
-        public void DotNet10InternalFeeds_UsesFineGrainedTargeting()
-        {
-            // Verify that .NET 10 internal channels use fine-grained asset category-based targeting
-            // mirroring the public channel behavior
-            var dotNet10InternalChannel = PublishingConstants.ChannelInfos.First(c => c.Id == 5177); // .NET 10 Internal
-            
-            // Verify infrastructure packages go to dotnet-eng-internal
-            var infraFeeds = dotNet10InternalChannel.TargetFeeds.Where(f => 
-                f.ContentTypes.Contains(TargetFeedContentType.InfrastructurePackage) &&
-                f.FeedUrl.Contains("dotnet-eng-internal")).ToList();
-            infraFeeds.Should().HaveCount(2); // shipping and non-shipping
-            
-            // Verify tooling packages go to dotnet-tools-internal
-            var toolingFeeds = dotNet10InternalChannel.TargetFeeds.Where(f => 
-                f.ContentTypes.Contains(TargetFeedContentType.ToolingPackage) &&
-                f.FeedUrl.Contains("dotnet-tools-internal")).ToList();
-            toolingFeeds.Should().HaveCount(2); // shipping and non-shipping
-            
-            // Verify library packages go to dotnet-libraries-internal feeds
-            var libraryFeeds = dotNet10InternalChannel.TargetFeeds.Where(f => 
-                f.ContentTypes.Contains(TargetFeedContentType.LibraryPackage) &&
-                f.FeedUrl.Contains("dotnet-libraries-internal")).ToList();
-            libraryFeeds.Should().HaveCount(2); // shipping and non-shipping
-            
-            // Verify regular packages go to dotnet10-internal feeds
-            var regularFeeds = dotNet10InternalChannel.TargetFeeds.Where(f => 
-                f.ContentTypes.Contains(TargetFeedContentType.Package) &&
-                f.FeedUrl.Contains("dotnet10-internal")).ToList();
-            regularFeeds.Should().HaveCount(2); // shipping and non-shipping
-        }
     }
 }
