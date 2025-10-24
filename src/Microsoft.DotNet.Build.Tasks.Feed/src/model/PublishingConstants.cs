@@ -94,9 +94,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public const string FeedDotNetEng = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json";
 
+        private const string FeedDotNetEngInternal = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-eng-internal/nuget/v3/index.json";
+
         private const string FeedDotNetTools = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json";
 
         private const string FeedDotNetToolsInternal = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal/nuget/v3/index.json";
+
+        private const string FeedDotNetToolsInternalTransport = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal-transport/nuget/v3/index.json";
 
         private const string FeedDotNet6Shipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json";
         private const string FeedDotNet6Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6-transport/nuget/v3/index.json";
@@ -225,8 +229,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         private static TargetFeedSpecification[] DotNet10InternalFeeds =
         {
-            (Packages, FeedDotNet10InternalShipping, AssetSelection.ShippingOnly),
-            (Packages, FeedDotNet10InternalTransport, AssetSelection.NonShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNet10InternalShipping, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNet10InternalTransport, AssetSelection.NonShippingOnly),
+            (TargetFeedContentType.InfrastructurePackage, FeedDotNetEngInternal, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.InfrastructurePackage, FeedDotNetEngInternal, AssetSelection.NonShippingOnly),
+            (TargetFeedContentType.CorePackage, FeedDotNet10InternalShipping, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.CorePackage, FeedDotNet10InternalTransport, AssetSelection.NonShippingOnly),
+            (TargetFeedContentType.LibraryPackage, FeedDotNetLibrariesInternalShipping, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.LibraryPackage, FeedDotNetLibrariesInternalTransport, AssetSelection.NonShippingOnly),
+            (TargetFeedContentType.ToolingPackage, FeedDotNetToolsInternalTransport, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.ToolingPackage, FeedDotNetToolsInternalTransport, AssetSelection.NonShippingOnly),
             (InstallersAndSymbols, FeedStagingInternalForInstallers),
             (TargetFeedContentType.Checksum, FeedStagingInternalForChecksums),
         };
