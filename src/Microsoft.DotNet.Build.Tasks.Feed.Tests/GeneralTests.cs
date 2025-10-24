@@ -278,10 +278,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 f.FeedUrl.Contains("dotnet-eng-internal")).ToList();
             infraFeeds.Should().HaveCount(2); // shipping and non-shipping
             
-            // Verify tooling packages go to dotnet-tools-internal-transport
+            // Verify tooling packages go to dotnet-tools-internal
             var toolingFeeds = dotNet10InternalChannel.TargetFeeds.Where(f => 
                 f.ContentTypes.Contains(TargetFeedContentType.ToolingPackage) &&
-                f.FeedUrl.Contains("dotnet-tools-internal-transport")).ToList();
+                f.FeedUrl.Contains("dotnet-tools-internal")).ToList();
             toolingFeeds.Should().HaveCount(2); // shipping and non-shipping
             
             // Verify library packages go to dotnet-libraries-internal feeds

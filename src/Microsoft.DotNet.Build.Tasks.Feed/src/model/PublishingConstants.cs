@@ -100,8 +100,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         private const string FeedDotNetToolsInternal = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal/nuget/v3/index.json";
 
-        private const string FeedDotNetToolsInternalTransport = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal-transport/nuget/v3/index.json";
-
         private const string FeedDotNet6Shipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json";
         private const string FeedDotNet6Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6-transport/nuget/v3/index.json";
 
@@ -237,8 +235,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             (TargetFeedContentType.CorePackage, FeedDotNet10InternalTransport, AssetSelection.NonShippingOnly),
             (TargetFeedContentType.LibraryPackage, FeedDotNetLibrariesInternalShipping, AssetSelection.ShippingOnly),
             (TargetFeedContentType.LibraryPackage, FeedDotNetLibrariesInternalTransport, AssetSelection.NonShippingOnly),
-            (TargetFeedContentType.ToolingPackage, FeedDotNetToolsInternalTransport, AssetSelection.ShippingOnly),
-            (TargetFeedContentType.ToolingPackage, FeedDotNetToolsInternalTransport, AssetSelection.NonShippingOnly),
+            (TargetFeedContentType.ToolingPackage, FeedDotNetToolsInternal, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.ToolingPackage, FeedDotNetToolsInternal, AssetSelection.NonShippingOnly),
             (InstallersAndSymbols, FeedStagingInternalForInstallers),
             (TargetFeedContentType.Checksum, FeedStagingInternalForChecksums),
         };
