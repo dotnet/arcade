@@ -59,7 +59,9 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                     using (var client = new HttpClient(new HttpClientHandler
                     {
                         AllowAutoRedirect = false,
-                        CheckCertificateRevocationList = true,
+                        // Certificate revocation checks are disabled to improve build reliability
+                        // in environments where CRL endpoints may not be accessible
+                        CheckCertificateRevocationList = false,
                     })
                     {
                         DefaultRequestHeaders =
