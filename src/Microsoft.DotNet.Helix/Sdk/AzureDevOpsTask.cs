@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                     using (var client = new HttpClient(new HttpClientHandler
                     {
                         AllowAutoRedirect = false,
-                        // Certificate revocation checks are disabled due to widespread failre on Ma
+                        // Certificate revocation checks are disabled due to widespread failure on macOS
                         // https://github.com/dotnet/dnceng/issues/6410
                         CheckCertificateRevocationList = false,
                     })
