@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -59,9 +60,9 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                     using (var client = new HttpClient(new HttpClientHandler
                     {
                         AllowAutoRedirect = false,
-                        // Certificate revocation checks are disabled due to widespread failure on macOS
+                        // Certificate revocation checks are disabled on macOS due to widespread failure
                         // https://github.com/dotnet/dnceng/issues/6410
-                        CheckCertificateRevocationList = false,
+                        CheckCertificateRevocationList = !RuntimeInformation.IsOSPlatform(OSPlatform.OSX),
                     })
                     {
                         DefaultRequestHeaders =
