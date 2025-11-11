@@ -126,7 +126,7 @@ stages:
 
       - job: MacOS
         pool:
-          vmImage: macOS-13
+          vmImage: macOS-latest
         strategy:
           matrix:
             Build_Debug:
@@ -228,7 +228,7 @@ stages:
       - job: MacOs
         timeoutInMinutes: 90
         pool:
-          vmimage:  macOS-13
+          vmimage:  macOS-latest
         strategy:
           matrix:
             Build_Debug:
