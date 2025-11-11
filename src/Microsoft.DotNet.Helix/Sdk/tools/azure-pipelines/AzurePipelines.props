@@ -4,6 +4,7 @@
   <PropertyGroup>
     <AzurePipelinesAvailable Condition="'$(SYSTEM_ACCESSTOKEN)' != ''">true</AzurePipelinesAvailable>
     <AzurePipelinesAvailable Condition="'$(AzurePipelinesAvailable)' != 'true'">false</AzurePipelinesAvailable>
+    <AzurePipelinesTimeout Condition="'$(AzurePipelinesTimeout)' == ''">180</AzurePipelinesTimeout>
   </PropertyGroup>
 
   <!-- We default the azure pipelines reporter to ON if we are running inside Azure Pipelines -->
@@ -13,7 +14,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="!$(AzurePipelinesAvailable)">
-    <EnableAzurePipelinesReporter Condition="'$(EnableAzurePipelinesReporter)' != 'true'">false</EnableAzurePipelinesReporter>
+    <EnableAzurePipelinesReporter Condition="'$(EnableAzurePipelineAzurePipelinesTimeoutsReporter)' != 'true'">false</EnableAzurePipelinesReporter>
     <FailOnTestFailure Condition="'$(FailOnTestFailure)' != 'false'">true</FailOnTestFailure>
   </PropertyGroup>
 

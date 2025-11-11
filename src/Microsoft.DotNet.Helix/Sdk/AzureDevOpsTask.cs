@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -21,6 +23,11 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
 {
     public abstract class AzureDevOpsTask : BaseTask
     {
+        /// <summary>
+        /// Timeout in seconds for HTTP requests. Default is 0 seconds (no timeout).
+        /// </summary>
+        public int TimeoutInSeconds { get; set; } = 0;
+        
         private bool InAzurePipeline => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_BUILDNUMBER"));
 
         protected string GetEnvironmentVariable(string name)
@@ -44,6 +51,57 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
 
         protected abstract Task ExecuteCoreAsync(HttpClient client);
 
+        private ActivityListener CreateHttpActivityListener()
+        {
+            var listener = new ActivityListener
+            {
+                ShouldListenTo = source => source.Name == "System.Net.Http",
+                Sample = (ref ActivityCreationOptions<ActivityContext> options) => ActivitySamplingResult.AllDataAndRecorded,
+                ActivityStarted = activity =>
+                {
+                    Log.LogMessage(MessageImportance.Low, 
+                        $"[System.Net.Http] {activity.OperationName} started - {activity.DisplayName}");
+                    
+                    // Log tags which contain request details
+                    foreach (var tag in activity.Tags)
+                    {
+                        Log.LogMessage(MessageImportance.Low, $"  {tag.Key}: {tag.Value}");
+                    }
+                },
+                ActivityStopped = activity =>
+                {
+                    var status = activity.Status == ActivityStatusCode.Error ? "ERROR" : "OK";
+                    Log.LogMessage(MessageImportance.Low, 
+                        $"[System.Net.Http] {activity.OperationName} stopped - Duration: {activity.Duration.TotalMilliseconds:F2}ms, Status: {status}");
+                    
+                    if (activity.Status == ActivityStatusCode.Error && !string.IsNullOrEmpty(activity.StatusDescription))
+                    {
+                        Log.LogMessage(MessageImportance.Normal, 
+                            $"[System.Net.Http] Error: {activity.StatusDescription}");
+                    }
+                    
+                    // Log response tags (status code, etc.)
+                    foreach (var tag in activity.Tags)
+                    {
+                        Log.LogMessage(MessageImportance.Low, $"  {tag.Key}: {tag.Value}");
+                    }
+                    
+                    // Log events (connection established, request/response headers sent/received, etc.)
+                    foreach (var evt in activity.Events)
+                    {
+                        var tagsStr = string.Join(", ", evt.Tags);
+                        Log.LogMessage(MessageImportance.Low, 
+                            $"  Event: {evt.Name} at {evt.Timestamp:O}" + 
+                            (string.IsNullOrEmpty(tagsStr) ? "" : $" ({tagsStr})"));
+                    }
+                }
+            };
+            
+            ActivitySource.AddActivityListener(listener);
+            Log.LogMessage(MessageImportance.Low, "System.Net.Http ActivityListener registered");
+            return listener;
+        }
+
         public override bool Execute()
             => ExecuteAsync().GetAwaiter().GetResult();
 
@@ -57,6 +115,9 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                 }
                 else
                 {
+                    // Set up HTTP activity listener for diagnostics - only active during this task execution
+                    using var httpActivityListener = CreateHttpActivityListener();
+                    
                     // Configure the cert revocation check in a fail-open state to avoid intermittent failures
                     // on Mac if the endpoint is not available. This is only available on .NET Core, but has only been
                     // observed on Mac anyway.
@@ -96,6 +157,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                     })
 #endif
                     {
+                        Timeout = TimeoutInSeconds > 0 ? TimeSpan.FromSeconds(TimeoutInSeconds) : System.Threading.Timeout.InfiniteTimeSpan,
                         DefaultRequestHeaders =
                         {
                             Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes("unused:" + AccessToken))),
