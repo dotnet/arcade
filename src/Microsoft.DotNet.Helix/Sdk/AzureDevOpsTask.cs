@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         /// <summary>
         /// Timeout in seconds for HTTP requests. Default is 0 seconds (no timeout).
         /// </summary>
-        public int TimeoutInSeconds { get; set; } = 0;
+        public int Timeout { get; set; } = 0;
         
         private bool InAzurePipeline => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_BUILDNUMBER"));
 
@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                     })
 #endif
                     {
-                        Timeout = TimeoutInSeconds > 0 ? TimeSpan.FromSeconds(TimeoutInSeconds) : System.Threading.Timeout.InfiniteTimeSpan,
+                        Timeout = Timeout > 0 ? TimeSpan.FromSeconds(Timeout) : System.Threading.Timeout.InfiniteTimeSpan,
                         DefaultRequestHeaders =
                         {
                             Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes("unused:" + AccessToken))),
