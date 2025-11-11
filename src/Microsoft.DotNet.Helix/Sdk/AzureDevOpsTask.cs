@@ -24,9 +24,9 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
     public abstract class AzureDevOpsTask : BaseTask
     {
         /// <summary>
-        /// Timeout in seconds for HTTP requests. Default is 0 seconds (no timeout).
+        /// Timeout in seconds for HTTP requests. Default is 180 seconds.
         /// </summary>
-        public int Timeout { get; set; } = 0;
+        public int Timeout { get; set; } = 180;
         
         private bool InAzurePipeline => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_BUILDNUMBER"));
 
