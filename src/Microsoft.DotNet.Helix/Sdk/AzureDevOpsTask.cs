@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         /// <summary>
         /// Timeout in seconds for HTTP requests. Default is 0 seconds (no timeout).
         /// </summary>
-        public int TimeoutInSeconds { get; set; } = 0;
+        public int Timeout { get; set; } = 0;
         
         private bool InAzurePipeline => !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_BUILDNUMBER"));
 
