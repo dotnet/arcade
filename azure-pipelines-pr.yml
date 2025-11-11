@@ -124,6 +124,23 @@ stages:
             /p:Test=false
           displayName: Unix Build / Publish
 
+      - job: MacOS
+        pool:
+          vmImage: macOS-13
+        strategy:
+          matrix:
+            Build_Debug:
+              _BuildConfig: Debug
+        preSteps:
+        - checkout: self
+          clean: true
+        steps:
+        - script: eng/common/cibuild.sh
+            --configuration $(_BuildConfig)
+            --prepareMachine
+            /p:Test=false
+          displayName: MacOS Build / Publish
+
 - stage: Test
   dependsOn: build
   jobs:
