@@ -247,6 +247,7 @@ stages:
             --test
             --warnAsError false
             --projects $(System.DefaultWorkingDirectory)/tests/UnitTests.proj
+            /v:detailed
             /bl:$(System.DefaultWorkingDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
             /p:RestoreUsingNuGetTargets=false
           displayName: Run Helix Tests
