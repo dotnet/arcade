@@ -49,9 +49,9 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
 
         protected string BuildId => GetEnvironmentVariable("BUILD_BUILDID");
 
-        protected abstract Task ExecuteCoreAsync(HttpClient client);
+        protected abstract Task ExecuteCoreAsync(HttpClient client, CancellationToken cancellationToken);
 
-        private ActivityListener CreateHttpActivityListener()
+        private ActivityListener CreateHttpActivityListener(MessageImportance logImportance)
         {
             var listener = new ActivityListener
             {
@@ -59,38 +59,38 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                 Sample = (ref ActivityCreationOptions<ActivityContext> options) => ActivitySamplingResult.AllDataAndRecorded,
                 ActivityStarted = activity =>
                 {
-                    Log.LogMessage(MessageImportance.Low, 
+                    Log.LogMessage(logImportance, 
                         $"[System.Net.Http] {activity.OperationName} started - {activity.DisplayName}");
                     
                     // Log tags which contain request details
                     foreach (var tag in activity.Tags)
                     {
-                        Log.LogMessage(MessageImportance.Low, $"  {tag.Key}: {tag.Value}");
+                        Log.LogMessage(logImportance, $"  {tag.Key}: {tag.Value}");
                     }
                 },
                 ActivityStopped = activity =>
                 {
                     var status = activity.Status == ActivityStatusCode.Error ? "ERROR" : "OK";
-                    Log.LogMessage(MessageImportance.Low, 
+                    Log.LogMessage(logImportance, 
                         $"[System.Net.Http] {activity.OperationName} stopped - Duration: {activity.Duration.TotalMilliseconds:F2}ms, Status: {status}");
                     
                     if (activity.Status == ActivityStatusCode.Error && !string.IsNullOrEmpty(activity.StatusDescription))
                     {
-                        Log.LogMessage(MessageImportance.Normal, 
+                        Log.LogMessage(MessageImportance.High, 
                             $"[System.Net.Http] Error: {activity.StatusDescription}");
                     }
                     
                     // Log response tags (status code, etc.)
                     foreach (var tag in activity.Tags)
                     {
-                        Log.LogMessage(MessageImportance.Low, $"  {tag.Key}: {tag.Value}");
+                        Log.LogMessage(logImportance, $"  {tag.Key}: {tag.Value}");
                     }
                     
                     // Log events (connection established, request/response headers sent/received, etc.)
                     foreach (var evt in activity.Events)
                     {
                         var tagsStr = string.Join(", ", evt.Tags);
-                        Log.LogMessage(MessageImportance.Low, 
+                        Log.LogMessage(logImportance, 
                             $"  Event: {evt.Name} at {evt.Timestamp:O}" + 
                             (string.IsNullOrEmpty(tagsStr) ? "" : $" ({tagsStr})"));
                     }
@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             };
             
             ActivitySource.AddActivityListener(listener);
-            Log.LogMessage(MessageImportance.Low, "System.Net.Http ActivityListener registered");
+            Log.LogMessage(logImportance, "System.Net.Http ActivityListener registered");
             return listener;
         }
 
@@ -107,6 +107,12 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
 
         private async Task<bool> ExecuteAsync()
         {
+            using var timeoutCts = new CancellationTokenSource();
+            if (Timeout > 0)
+            {
+                timeoutCts.CancelAfter(TimeSpan.FromSeconds(Timeout));
+            }
+
             try
             {
                 if (!InAzurePipeline)
@@ -116,7 +122,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                 else
                 {
                     // Set up HTTP activity listener for diagnostics - only active during this task execution
-                    using var httpActivityListener = CreateHttpActivityListener();
+                    using var httpActivityListener = CreateHttpActivityListener(MessageImportance.Normal);
                     
                     // Configure the cert revocation check in a fail-open state to avoid intermittent failures
                     // on Mac if the endpoint is not available. This is only available on .NET Core, but has only been
@@ -168,7 +174,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                         },
                     })
                     {
-                        await ExecuteCoreAsync(client);
+                        await ExecuteCoreAsync(client, timeoutCts.Token).ConfigureAwait(false);
                     }
                 }
             }
@@ -180,7 +186,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             return !Log.HasLoggedErrors;
         }
 
-        protected async Task RetryAsync(Func<Task> function)
+        protected async Task RetryAsync(Func<Task> function, CancellationToken cancellationToken)
         {
             try
             {
@@ -188,11 +194,11 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                 await RetryAsync(
                         async () =>
                         {
-                            await function();
+                            await function().ConfigureAwait(false);
                             return false; // the retry function requires a return, give it one
                         },
-                        ex => Log.LogMessage(MessageImportance.Low, $"Azure Dev Ops Operation failed: {ex}\nRetrying..."),
-                        CancellationToken.None);
+                        ex => Log.LogMessage(MessageImportance.Normal, $"Azure Dev Ops Operation failed: {ex}\nRetrying..."),
+                        cancellationToken).ConfigureAwait(false);
             }
             catch (HttpRequestException ex)
             {
@@ -200,15 +206,15 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             }
         }
 
-        protected async Task<T> RetryAsync<T>(Func<Task<T>> function)
+        protected async Task<T> RetryAsync<T>(Func<Task<T>> function, CancellationToken cancellationToken)
         {
             // Grab the retry logic from the helix api client
             try
             {
                 return await RetryAsync(
-                        async () => await function(),
+                        async () => await function().ConfigureAwait(false),
                         ex => Log.LogMessage(MessageImportance.Normal, $"Azure Dev Ops Operation failed: {ex}\nRetrying..."),
-                        CancellationToken.None);
+                        cancellationToken).ConfigureAwait(false);
             }
             catch (HttpRequestException ex)
             {
@@ -228,7 +234,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             }
 
             var statusCodeValue = (int)res.StatusCode;
-            var message = $"Request to {req.RequestUri} returned failed status {statusCodeValue} {res.ReasonPhrase}\n\n{(res.Content != null ? await res.Content.ReadAsStringAsync() : "")}";
+            var message = $"Request to {req.RequestUri} returned failed status {statusCodeValue} {res.ReasonPhrase}\n\n{(res.Content != null ? await res.Content.ReadAsStringAsync().ConfigureAwait(false) : "")}";
 
             if (statusCodeValue >= 400 && statusCodeValue < 500)
             {
@@ -246,11 +252,11 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         {
             if (!res.IsSuccessStatusCode)
             {
-                await HandleFailedRequest(req, res);
+                await HandleFailedRequest(req, res).ConfigureAwait(false);
                 return null;
             }
 
-            var responseContent = await res.Content.ReadAsStringAsync();
+            var responseContent = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
 
             try
             {

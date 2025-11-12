@@ -3,6 +3,7 @@
 
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Newtonsoft.Json;
@@ -18,7 +19,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         [Required]
         public string TestRunName { get; set; }
 
-        protected override async Task ExecuteCoreAsync(HttpClient client)
+        protected override async Task ExecuteCoreAsync(HttpClient client, CancellationToken cancellationToken)
         {
             await RetryAsync(
                 async () =>
@@ -36,12 +37,12 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                                 "application/json"),
                         })
                     {
-                        using (var res = await client.SendAsync(req))
+                        using (var res = await client.SendAsync(req, cancellationToken).ConfigureAwait(false))
                         {
                             res.EnsureSuccessStatusCode();
                         }
                     }
-                });
+                }, cancellationToken);
         }
     }
 }

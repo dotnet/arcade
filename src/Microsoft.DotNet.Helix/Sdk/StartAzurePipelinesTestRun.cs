@@ -3,6 +3,7 @@
 
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Newtonsoft.Json;
@@ -25,7 +26,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         [Output]
         public int TestRunId { get; set; }
         
-        protected override Task ExecuteCoreAsync(HttpClient client)
+        protected override Task ExecuteCoreAsync(HttpClient client, CancellationToken cancellationToken)
         {
             return RetryAsync(
                 async () =>
@@ -50,16 +51,16 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                         };
                     using (req)
                     {
-                        using (var res = await client.SendAsync(req))
+                        using (var res = await client.SendAsync(req, cancellationToken).ConfigureAwait(false))
                         {
-                            var result = await ParseResponseAsync(req, res);
+                            var result = await ParseResponseAsync(req, res).ConfigureAwait(false);
                             if (result != null)
                             {
                                 TestRunId = result["id"].ToObject<int>();
                             }
                         }
                     }
-                });
+                }, cancellationToken);
         }
 
         private JObject BuildPipelineReference()

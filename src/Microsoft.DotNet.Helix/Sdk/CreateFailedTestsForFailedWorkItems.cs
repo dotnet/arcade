@@ -4,6 +4,7 @@
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.AzureDevOps;
@@ -17,7 +18,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Required]
         public ITaskItem[] WorkItems { get; set; }
 
-        protected override async Task ExecuteCoreAsync(HttpClient client)
+        protected override async Task ExecuteCoreAsync(HttpClient client, CancellationToken cancellationToken)
         {
             foreach (ITaskItem workItem in WorkItems)
             {
@@ -26,11 +27,11 @@ namespace Microsoft.DotNet.Helix.Sdk
                 var testRunId = workItem.GetMetadata("TestRunId");
                 var failed = workItem.GetMetadata("Failed") == "true";
 
-                await CreateFakeTestResultAsync(client, testRunId, jobName, workItemName, failed);
+                await CreateFakeTestResultAsync(client, testRunId, jobName, workItemName, failed, cancellationToken).ConfigureAwait(false);
             }
         }
 
-        private async Task<int> CreateFakeTestResultAsync(HttpClient client, string testRunId, string jobName, string workItemFriendlyName, bool failed)
+        private async Task<int> CreateFakeTestResultAsync(HttpClient client, string testRunId, string jobName, string workItemFriendlyName, bool failed, CancellationToken cancellationToken)
         {
             var testResultData = await RetryAsync(
                 async () =>
@@ -65,12 +66,12 @@ namespace Microsoft.DotNet.Helix.Sdk
                         };
                     using (req)
                     {
-                        using (HttpResponseMessage res = await client.SendAsync(req))
+                        using (HttpResponseMessage res = await client.SendAsync(req, cancellationToken).ConfigureAwait(false))
                         {
-                            return await ParseResponseAsync(req, res);
+                            return await ParseResponseAsync(req, res).ConfigureAwait(false);
                         }
                     }
-                });
+                }, cancellationToken).ConfigureAwait(false);
 
             if (testResultData != null)
             {

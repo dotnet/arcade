@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Sdk;
@@ -24,25 +25,25 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         [Required]
         public ITaskItem[] WorkItems { get; set; }
 
-        protected override async Task ExecuteCoreAsync(HttpClient client)
+        protected override async Task ExecuteCoreAsync(HttpClient client, CancellationToken cancellationToken)
         {
             if (ExpectedTestFailures?.Length > 0)
             {
-                await ValidateExpectedTestFailuresAsync(client);
+                await ValidateExpectedTestFailuresAsync(client, cancellationToken).ConfigureAwait(false);
                 return;
             }
 
             if (!string.IsNullOrEmpty(EnableFlakyTestSupport))
             {
-                await CheckTestResultsWithFlakySupport(client);
+                await CheckTestResultsWithFlakySupport(client, cancellationToken).ConfigureAwait(false);
                 return;
             }
 
 
-            await CheckTestResultsAsync(client);
+            await CheckTestResultsAsync(client, cancellationToken).ConfigureAwait(false);
         }
 
-        private async Task CheckTestResultsAsync(HttpClient client)
+        private async Task CheckTestResultsAsync(HttpClient client, CancellationToken cancellationToken)
         {
             foreach (int testRunId in TestRunIds)
             {
@@ -58,16 +59,16 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                         using var req = new HttpRequestMessage(
                             HttpMethod.Get,
                             $"{CollectionUri}{TeamProject}/_apis/test/runs/{testRunId}?api-version=6.0");
-                        using HttpResponseMessage res = await client.SendAsync(req);
-                        return await ParseResponseAsync(req, res);
-                    });
+                        using HttpResponseMessage res = await client.SendAsync(req, cancellationToken).ConfigureAwait(false);
+                        return await ParseResponseAsync(req, res).ConfigureAwait(false);
+                    }, cancellationToken).ConfigureAwait(false);
                     // This retry does not use the RetryAsync() function as that one only retries for network/timeout issues
                     triesToWait--;
                     runComplete = CheckAzurePipelinesTestRunIsComplete(data);
                     if (!runComplete && triesToWait > 0)
                     {
                         Log.LogWarning($"Test run {testRunId} is not in completed state.  Will check back in 10 seconds.");
-                        await Task.Delay(10000);
+                        await Task.Delay(10000, cancellationToken).ConfigureAwait(false);
                     }
                 }
                 while (!runComplete && triesToWait > 0);
@@ -78,7 +79,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                         .FirstOrDefault(stat => stat["outcome"]?.ToString() == "Failed");
                     if (failed != null)
                     {
-                        await LogErrorsForFailedRun(client, testRunId);
+                        await LogErrorsForFailedRun(client, testRunId, cancellationToken).ConfigureAwait(false);
                     }
                     else
                     {
@@ -104,7 +105,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             return (stateCompleted == true && postProcessStateCompleted == true);
         }
 
-        private async Task LogErrorsForFailedRun(HttpClient client, int testRunId)
+        private async Task LogErrorsForFailedRun(HttpClient client, int testRunId, CancellationToken cancellationToken)
         {
             JObject data = await RetryAsync(
                 async () =>
@@ -112,9 +113,9 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                     using var req = new HttpRequestMessage(
                         HttpMethod.Get,
                         $"{CollectionUri}{TeamProject}/_apis/test/runs/{testRunId}/results?outcomes=Failed&$top=100&api-version=6.0");
-                    using HttpResponseMessage res = await client.SendAsync(req);
-                    return await ParseResponseAsync(req, res);
-                });
+                    using HttpResponseMessage res = await client.SendAsync(req, cancellationToken).ConfigureAwait(false);
+                    return await ParseResponseAsync(req, res).ConfigureAwait(false);
+                }, cancellationToken).ConfigureAwait(false);
             int count = data.Value<int>("count");
             IEnumerable<JObject> entries = data.Value<JArray>("value").Cast<JObject>();
             if (count == 0)
@@ -156,7 +157,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             }
         }
 
-        private async Task CheckTestResultsWithFlakySupport(HttpClient client)
+        private async Task CheckTestResultsWithFlakySupport(HttpClient client, CancellationToken cancellationToken)
         {
             JObject data = await RetryAsync(
                 async () =>
@@ -166,12 +167,12 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                         $"{CollectionUri}{TeamProject}/_apis/test/resultsummarybybuild?buildId={BuildId}&api-version=5.1-preview.2")
                     )
                     {
-                        using (HttpResponseMessage res = await client.SendAsync(req))
+                        using (HttpResponseMessage res = await client.SendAsync(req, cancellationToken).ConfigureAwait(false))
                         {
-                            return await ParseResponseAsync(req, res);
+                            return await ParseResponseAsync(req, res).ConfigureAwait(false);
                         }
                     }
-                });
+                }, cancellationToken).ConfigureAwait(false);
 
             if (data != null && data["aggregatedResultsAnalysis"] is JObject aggregatedResultsAnalysis &&
                 aggregatedResultsAnalysis["resultsByOutcome"] is JObject resultsByOutcome)
@@ -198,7 +199,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             }
         }
 
-        private async Task ValidateExpectedTestFailuresAsync(HttpClient client)
+        private async Task ValidateExpectedTestFailuresAsync(HttpClient client, CancellationToken cancellationToken)
         {
             foreach (var runId in TestRunIds)
             {
@@ -210,12 +211,12 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                             $"{CollectionUri}{TeamProject}/_apis/test/runs/{runId}/results?api-version=5.0&outcomes=Failed")
                         )
                         {
-                            using (HttpResponseMessage res = await client.SendAsync(req))
+                            using (HttpResponseMessage res = await client.SendAsync(req, cancellationToken).ConfigureAwait(false))
                             {
-                                return await ParseResponseAsync(req, res);
+                                return await ParseResponseAsync(req, res).ConfigureAwait(false);
                             }
                         }
-                    });
+                    }, cancellationToken).ConfigureAwait(false);
 
                 if (data != null)
                 {
