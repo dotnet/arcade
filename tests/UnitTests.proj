@@ -59,11 +59,11 @@
     <AzurePipelinesExpectedTestFailure Include="XunitReportingTests.ExerciseXunitCharacterFilteringFailurePath"/>
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
     <HelixTargetQueue Condition="$([MSBuild]::IsOSPlatform('Linux'))" Include="(AlmaLinux.9.Amd64)Ubuntu.2204.Amd64@mcr.microsoft.com/dotnet-buildtools/prereqs:almalinux-9-helix-amd64"/>
     <HelixTargetQueue Condition="$([MSBuild]::IsOSPlatform('Linux'))" Include="(Debian.13.Amd64)ubuntu.2204.amd64@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-13-helix-amd64"/>
     <HelixTargetQueue Condition="$([MSBuild]::IsOSPlatform('Windows'))" Include="Windows.10.Amd64"/>
-    <HelixTargetQueue Condition="$([MSBuild]::IsOSPlatform('macOS'))" Include="OSX.13.Amd64.Open"/>
+    <HelixTargetQueue Condition="$([MSBuild]::IsOSPlatform('macOS'))" Include="OSX.13.Amd64"/>
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
@@ -71,6 +71,13 @@
     <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
     <Creator Condition=" '$(Creator)' == ''">anon</Creator>
   </PropertyGroup>
+  
+  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
+    <HelixTargetQueue Condition="$([MSBuild]::IsOSPlatform('Linux'))" Include="(AlmaLinux.9.Amd64)Ubuntu.2204.Amd64.Open@mcr.microsoft.com/dotnet-buildtools/prereqs:almalinux-9-helix-amd64"/>
+    <HelixTargetQueue Condition="$([MSBuild]::IsOSPlatform('Linux'))" Include="(Debian.13.Amd64)ubuntu.2204.amd64.Open@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-13-helix-amd64"/>
+    <HelixTargetQueue Condition="$([MSBuild]::IsOSPlatform('Windows'))" Include="Windows.10.Amd64.Open"/>
+    <HelixTargetQueue Condition="$([MSBuild]::IsOSPlatform('macOS'))" Include="OSX.13.Amd64.Open"/>
+  </ItemGroup>
 
   <PropertyGroup Condition="!$(HelixTargetQueue.StartsWith('Windows'))">
     <HelixPreCommands>$(HelixPreCommands);find $HELIX_CORRELATION_PAYLOAD -type f</HelixPreCommands>
