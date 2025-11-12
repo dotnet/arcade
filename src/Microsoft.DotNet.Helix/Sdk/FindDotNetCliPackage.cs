@@ -59,7 +59,11 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         public override void ConfigureServices(IServiceCollection collection)
         {
-            _httpMessageHandler = new HttpClientHandler {  CheckCertificateRevocationList = true };
+            bool isOSX = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
+            _httpMessageHandler = new HttpClientHandler
+            {
+                CheckCertificateRevocationList = !isOSX  // Disable on macOS
+            };
             collection.TryAddSingleton(_httpMessageHandler);
             collection.TryAddSingleton(Log);
         }
