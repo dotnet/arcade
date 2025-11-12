@@ -60,10 +60,9 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
-    <HelixTargetQueue Condition="$([MSBuild]::IsOSPlatform('Linux'))" Include="(AlmaLinux.9.Amd64)Ubuntu.2204.Amd64@mcr.microsoft.com/dotnet-buildtools/prereqs:almalinux-9-helix-amd64"/>
-    <HelixTargetQueue Condition="$([MSBuild]::IsOSPlatform('Linux'))" Include="(Debian.13.Amd64)ubuntu.2204.amd64@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-13-helix-amd64"/>
-    <HelixTargetQueue Condition="$([MSBuild]::IsOSPlatform('Windows'))" Include="Windows.10.Amd64"/>
-    <HelixTargetQueue Condition="$([MSBuild]::IsOSPlatform('macOS'))" Include="OSX.13.Amd64"/>
+    <HelixTargetQueue Include="(AlmaLinux.9.Amd64)Ubuntu.2204.Amd64@mcr.microsoft.com/dotnet-buildtools/prereqs:almalinux-9-helix-amd64"/>
+    <HelixTargetQueue Include="Windows.10.Amd64"/>
+    <HelixTargetQueue Include="(Debian.13.Amd64)ubuntu.2204.amd64@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-13-helix-amd64"/>
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
@@ -71,12 +70,11 @@
     <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
     <Creator Condition=" '$(Creator)' == ''">anon</Creator>
   </PropertyGroup>
-  
+
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Condition="$([MSBuild]::IsOSPlatform('Linux'))" Include="(AlmaLinux.9.Amd64)Ubuntu.2204.Amd64.Open@mcr.microsoft.com/dotnet-buildtools/prereqs:almalinux-9-helix-amd64"/>
-    <HelixTargetQueue Condition="$([MSBuild]::IsOSPlatform('Linux'))" Include="(Debian.13.Amd64)ubuntu.2204.amd64.Open@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-13-helix-amd64"/>
-    <HelixTargetQueue Condition="$([MSBuild]::IsOSPlatform('Windows'))" Include="Windows.10.Amd64.Open"/>
-    <HelixTargetQueue Condition="$([MSBuild]::IsOSPlatform('macOS'))" Include="OSX.13.Amd64.Open"/>
+    <HelixTargetQueue Include="(AlmaLinux.9.Amd64.Open)Ubuntu.2204.Amd64.Open@mcr.microsoft.com/dotnet-buildtools/prereqs:almalinux-9-helix-amd64"/>
+    <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
+    <HelixTargetQueue Include="(Debian.13.Amd64.Open)ubuntu.2204.amd64.open@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-13-helix-amd64"/>
   </ItemGroup>
 
   <PropertyGroup Condition="!$(HelixTargetQueue.StartsWith('Windows'))">
