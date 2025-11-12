@@ -245,7 +245,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
                 catch (Exception toLog)
                 {
-                    Log.LogMessage(MessageImportance.Low, $"Hit exception in GetAsync(); will retry up to 10 times ({SanitizeString(toLog.Message)})");
+                    Log.LogMessage(MessageImportance.Low, $"Hit exception in GetAsync(); will retry up to 10 times ({SanitizeString(toLog.ToString())})");
                     return false;
                 }
             });
