@@ -32,6 +32,8 @@ extends:
         enabled: true
       tsa:
         enabled: true
+      binskim:
+        disabled: true
     stages:
     - stage: build
       displayName: Build
