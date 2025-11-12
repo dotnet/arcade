@@ -106,7 +106,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                         },
                     })
                     {
-                        await ExecuteCoreAsync(client);
+                        await ExecuteCoreAsync(client).ConfigureAwait(false);
                     }
                 }
             }
@@ -126,11 +126,11 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                 await RetryAsync(
                         async () =>
                         {
-                            await function();
+                            await function().ConfigureAwait(false);
                             return false; // the retry function requires a return, give it one
                         },
                         ex => Log.LogMessage(MessageImportance.Low, $"Azure Dev Ops Operation failed: {ex}\nRetrying..."),
-                        CancellationToken.None);
+                        CancellationToken.None).ConfigureAwait(false);
             }
             catch (HttpRequestException ex)
             {
@@ -144,9 +144,9 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             try
             {
                 return await RetryAsync(
-                        async () => await function(),
+                        async () => await function().ConfigureAwait(false),
                         ex => Log.LogMessage(MessageImportance.Normal, $"Azure Dev Ops Operation failed: {ex}\nRetrying..."),
-                        CancellationToken.None);
+                        CancellationToken.None).ConfigureAwait(false);
             }
             catch (HttpRequestException ex)
             {
@@ -166,7 +166,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             }
 
             var statusCodeValue = (int)res.StatusCode;
-            var message = $"Request to {req.RequestUri} returned failed status {statusCodeValue} {res.ReasonPhrase}\n\n{(res.Content != null ? await res.Content.ReadAsStringAsync() : "")}";
+            var message = $"Request to {req.RequestUri} returned failed status {statusCodeValue} {res.ReasonPhrase}\n\n{(res.Content != null ? await res.Content.ReadAsStringAsync().ConfigureAwait(false) : "")}";
 
             if (statusCodeValue >= 400 && statusCodeValue < 500)
             {
@@ -184,11 +184,11 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         {
             if (!res.IsSuccessStatusCode)
             {
-                await HandleFailedRequest(req, res);
+                await HandleFailedRequest(req, res).ConfigureAwait(false);
                 return null;
             }
 
-            var responseContent = await res.Content.ReadAsStringAsync();
+            var responseContent = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
 
             try
             {

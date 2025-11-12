@@ -55,10 +55,10 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 foreach (ITaskItem metadata in MetadataToWrite)
                 {
-                    await writer.WriteLineAsync(metadata.GetMetadata("Identity"));
+                    await writer.WriteLineAsync(metadata.GetMetadata("Identity")).ConfigureAwait(false);
                 }
             }
-            await Task.WhenAll(WorkItems.Select(wi => DownloadFilesForWorkItem(wi, directory.FullName, _cancellationSource.Token)));
+            await Task.WhenAll(WorkItems.Select(wi => DownloadFilesForWorkItem(wi, directory.FullName, _cancellationSource.Token))).ConfigureAwait(false);
         }
 
         private async Task DownloadFilesForWorkItem(ITaskItem workItem, string directoryPath, CancellationToken ct)
@@ -71,8 +71,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                 string[] filesToDownload = files.Split(';');
 
                 // Use the Helix API to get the last possible iteration of the work item's execution 
-                var allAvailableFiles = await HelixApi.WorkItem.ListFilesAsync(workItemName, JobId, true, ct);
-                var resultsUri = await HelixApi.Job.ResultsAsync(JobId, ct);
+                var allAvailableFiles = await HelixApi.WorkItem.ListFilesAsync(workItemName, JobId, true, ct).ConfigureAwait(false);
+                var resultsUri = await HelixApi.Job.ResultsAsync(JobId, ct).ConfigureAwait(false);
 
                 DirectoryInfo destinationDir = Directory.CreateDirectory(Path.Combine(directoryPath, workItemName));
                 foreach (string file in filesToDownload)
@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                             var strippedFileUri = new Uri(fileAvailableForDownload.Link.Substring(0, fileAvailableForDownload.Link.LastIndexOf('?')));
                             blob = new BlobClient(strippedFileUri, new AzureSasCredential(resultsUri.ResultsUriRSAS), blobClientOptions);
                         }
-                        await blob.DownloadToAsync(destinationFile);
+                        await blob.DownloadToAsync(destinationFile).ConfigureAwait(false);
                     }
                     catch (RequestFailedException rfe)
                     {

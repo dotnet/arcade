@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     // WorkItem payloads of APKs can be reused if sent to multiple queues at once,
                     // so we'll always include both scripts (very small)
                     PosixAndroidScript, NonPosixAndroidScript
-                });
+                }).ConfigureAwait(false);
 
             return CreateTaskItem(workItemName, workItemZip, command, workItemTimeout);
         }

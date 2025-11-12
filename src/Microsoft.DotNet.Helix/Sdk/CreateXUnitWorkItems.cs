@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// <returns></returns>
         private async Task ExecuteAsync()
         {
-            XUnitWorkItems = (await Task.WhenAll(XUnitProjects.Select(PrepareWorkItem))).Where(wi => wi != null).ToArray();
+            XUnitWorkItems = (await Task.WhenAll(XUnitProjects.Select(PrepareWorkItem)).ConfigureAwait(false)).Where(wi => wi != null).ToArray();
             return;
         }
 

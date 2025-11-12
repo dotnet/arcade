@@ -187,7 +187,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 isPosix: true,
                 appFolderPath,
                 customCommands,
-                new[] { EntryPointScript, RunnerScript });
+                new[] { EntryPointScript, RunnerScript }).ConfigureAwait(false);
 
             provisioningProfileProvider.AddProfileToPayload(payloadArchivePath, target);
 

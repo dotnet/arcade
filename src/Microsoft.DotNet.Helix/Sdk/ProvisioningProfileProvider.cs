@@ -197,7 +197,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 {
                     try
                     {
-                        response = await _httpClient.GetAsync(uri);
+                        response = await _httpClient.GetAsync(uri).ConfigureAwait(false);
                         return response.IsSuccessStatusCode;
                     }
                     catch (Exception e)
@@ -205,7 +205,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                         _log.LogMessage("Failed to download provisioning profile: {error}", e);
                         return false;
                     }
-                });
+                }).ConfigureAwait(false);
 
                 if (response is null)
                 {
@@ -215,7 +215,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 using (response)
                 using (var fileStream = _fileSystem.GetFileStream(targetFile, FileMode.Create, FileAccess.Write))
                 {
-                    await response.Content.CopyToAsync(fileStream);
+                    await response.Content.CopyToAsync(fileStream).ConfigureAwait(false);
                 }
             }, _tmpDir);
 

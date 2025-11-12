@@ -36,12 +36,12 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                                 "application/json"),
                         })
                     {
-                        using (var res = await client.SendAsync(req))
+                        using (var res = await client.SendAsync(req).ConfigureAwait(false))
                         {
                             res.EnsureSuccessStatusCode();
                         }
                     }
-                });
+                }).ConfigureAwait(false);
         }
     }
 }

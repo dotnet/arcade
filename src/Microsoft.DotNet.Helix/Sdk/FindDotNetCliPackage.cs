@@ -91,7 +91,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             string finalDownloadUrl = null;
             foreach (var feed in feeds)
             {
-                string downloadUrl = await GetDownloadUrlAsync(feed);
+                string downloadUrl = await GetDownloadUrlAsync(feed).ConfigureAwait(false);
 
                 if (downloadUrl == null)
                 {
@@ -103,7 +103,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 try
                 {
-                    using HttpResponseMessage res = await HeadRequestWithRetry(downloadUrl);
+                    using HttpResponseMessage res = await HeadRequestWithRetry(downloadUrl).ConfigureAwait(false);
 
                     if (res.StatusCode == HttpStatusCode.NotFound)
                     {
@@ -140,10 +140,10 @@ namespace Microsoft.DotNet.Helix.Sdk
             var oldVersion = Version; // ResolveVersionAsync will adjust the Version property, but we need it set back for other feeds to see the same initial Version
             try
             {
-                var version = await ResolveVersionAsync(feed);
+                var version = await ResolveVersionAsync(feed).ConfigureAwait(false);
                 string extension = Runtime.StartsWith("win") ? "zip" : "tar.gz";
 
-                string effectiveVersion = await GetEffectiveVersion(feed, version);
+                string effectiveVersion = await GetEffectiveVersion(feed, version).ConfigureAwait(false);
                 feed.TryGetMetadata("SasToken", out string sasToken);
                 if (!string.IsNullOrEmpty(sasToken) && !sasToken.StartsWith("?"))
                 {
@@ -184,9 +184,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                     feed.TryGetMetadata("sasToken", out string sasToken);
                     var productVersionText = PackageType switch
                     {
-                        "sdk" => await GetMatchingProductVersionTxtContents($"{feed.ItemSpec}/Sdk/{version}", "sdk-productVersion.txt", sasToken),
-                        "aspnetcore-runtime" => await GetMatchingProductVersionTxtContents($"{feed.ItemSpec}/aspnetcore/Runtime/{version}", "aspnetcore-productVersion.txt", sasToken),
-                        _ => await GetMatchingProductVersionTxtContents($"{feed.ItemSpec}/Runtime/{version}", "runtime-productVersion.txt", sasToken)
+                        "sdk" => await GetMatchingProductVersionTxtContents($"{feed.ItemSpec}/Sdk/{version}", "sdk-productVersion.txt", sasToken).ConfigureAwait(false),
+                        "aspnetcore-runtime" => await GetMatchingProductVersionTxtContents($"{feed.ItemSpec}/aspnetcore/Runtime/{version}", "aspnetcore-productVersion.txt", sasToken).ConfigureAwait(false),
+                        _ => await GetMatchingProductVersionTxtContents($"{feed.ItemSpec}/Runtime/{version}", "runtime-productVersion.txt", sasToken).ConfigureAwait(false)
                     };
 
                     if (!productVersionText.Equals(version))
@@ -204,15 +204,15 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             Log.LogMessage(MessageImportance.Low, $"Checking for productVersion.txt files under {baseUri}");
 
-            using HttpResponseMessage specificResponse = await GetAsyncWithRetry($"{baseUri}/{customVersionTextFileName}", sasToken);
+            using HttpResponseMessage specificResponse = await GetAsyncWithRetry($"{baseUri}/{customVersionTextFileName}", sasToken).ConfigureAwait(false);
 
             if (specificResponse.StatusCode == HttpStatusCode.NotFound)
             {
-                using HttpResponseMessage genericResponse = await GetAsyncWithRetry($"{baseUri}/productVersion.txt", sasToken);
+                using HttpResponseMessage genericResponse = await GetAsyncWithRetry($"{baseUri}/productVersion.txt", sasToken).ConfigureAwait(false);
                 if (genericResponse.StatusCode != HttpStatusCode.NotFound)
                 {
                     genericResponse.EnsureSuccessStatusCode();
-                    return (await genericResponse.Content.ReadAsStringAsync()).Trim();
+                    return (await genericResponse.Content.ReadAsStringAsync().ConfigureAwait(false)).Trim();
                 }
                 else
                 {
@@ -222,7 +222,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             else
             {
                 specificResponse.EnsureSuccessStatusCode();
-                return (await specificResponse.Content.ReadAsStringAsync()).Trim();
+                return (await specificResponse.Content.ReadAsStringAsync().ConfigureAwait(false)).Trim();
             }
             return Version;
         }
@@ -239,7 +239,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 try
                 {
-                    response = await _client.GetAsync($"{uri}{sasToken}");
+                    response = await _client.GetAsync($"{uri}{sasToken}").ConfigureAwait(false);
 
                     return true;
                 }
@@ -248,7 +248,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     Log.LogMessage(MessageImportance.Low, $"Hit exception in GetAsync(); will retry up to 10 times ({SanitizeString(toLog.Message)})");
                     return false;
                 }
-            });
+            }).ConfigureAwait(false);
             if (response == null)  // All retries failed
             {
                 throw new Exception($"Failed to GET from {SanitizeString(uri)}, even after retrying");
@@ -264,7 +264,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 try
                 {
                     using var req = new HttpRequestMessage(HttpMethod.Head, uri);
-                    response = await _client.SendAsync(req);
+                    response = await _client.SendAsync(req).ConfigureAwait(false);
                     return true;
                 }
                 catch (Exception toLog)
@@ -272,7 +272,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     Log.LogMessage(MessageImportance.Low, $"Hit exception in SendAsync(); will retry up to 10 times ({SanitizeString(toLog.Message)})");
                     return false;
                 }
-            });
+            }).ConfigureAwait(false);
             if (response == null) // All retries failed
             {
                 throw new Exception($"Failed to make HEAD request to {SanitizeString(uri)}, even after retrying");
@@ -334,9 +334,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                 Log.LogMessage(MessageImportance.Low, $"Resolving latest version from url {latestVersionUrl}");
 
                 feed.TryGetMetadata("sasToken", out string sasToken);
-                using HttpResponseMessage versionResponse = await GetAsyncWithRetry(latestVersionUrl, sasToken);
+                using HttpResponseMessage versionResponse = await GetAsyncWithRetry(latestVersionUrl, sasToken).ConfigureAwait(false);
                 versionResponse.EnsureSuccessStatusCode();
-                string latestVersionContent = await versionResponse.Content.ReadAsStringAsync();
+                string latestVersionContent = await versionResponse.Content.ReadAsStringAsync().ConfigureAwait(false);
                 string[] versionData = latestVersionContent.Split(Array.Empty<char>(), StringSplitOptions.RemoveEmptyEntries);
                 version = versionData[1];
                 Log.LogMessage(MessageImportance.Low, $"Got latest dotnet cli version {version}");

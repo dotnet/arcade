@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
 
                 workItems.Add(CreateTaskItem($"{jobName}/{wi}", metadata));
-                await Task.Delay(DelayBetweenHelixApiCallsInMs, cancellationToken);
+                await Task.Delay(DelayBetweenHelixApiCallsInMs, cancellationToken).ConfigureAwait(false);
             }
 
             return workItems;

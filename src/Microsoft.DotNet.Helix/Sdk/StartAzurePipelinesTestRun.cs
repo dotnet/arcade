@@ -50,9 +50,9 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                         };
                     using (req)
                     {
-                        using (var res = await client.SendAsync(req))
+                        using (var res = await client.SendAsync(req).ConfigureAwait(false))
                         {
-                            var result = await ParseResponseAsync(req, res);
+                            var result = await ParseResponseAsync(req, res).ConfigureAwait(false);
                             if (result != null)
                             {
                                 TestRunId = result["id"].ToObject<int>();

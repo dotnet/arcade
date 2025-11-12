@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 var testRunId = workItem.GetMetadata("TestRunId");
                 var failed = workItem.GetMetadata("Failed") == "true";
 
-                await CreateFakeTestResultAsync(client, testRunId, jobName, workItemName, failed);
+                await CreateFakeTestResultAsync(client, testRunId, jobName, workItemName, failed).ConfigureAwait(false);
             }
         }
 
@@ -65,12 +65,12 @@ namespace Microsoft.DotNet.Helix.Sdk
                         };
                     using (req)
                     {
-                        using (HttpResponseMessage res = await client.SendAsync(req))
+                        using (HttpResponseMessage res = await client.SendAsync(req).ConfigureAwait(false))
                         {
-                            return await ParseResponseAsync(req, res);
+                            return await ParseResponseAsync(req, res).ConfigureAwait(false);
                         }
                     }
-                });
+                }).ConfigureAwait(false);
 
             if (testResultData != null)
             {

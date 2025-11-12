@@ -163,18 +163,18 @@ namespace Microsoft.DotNet.Helix.Sdk
                 await zipArchiveManager.AddResourceFileToArchive<XHarnessTaskBase>(
                     outputZipPath,
                     ScriptNamespace + payloadScript,
-                    payloadScript);
+                    payloadScript).ConfigureAwait(false);
             }
 
             await zipArchiveManager.AddResourceFileToArchive<XHarnessTaskBase>(
                 outputZipPath,
                 ScriptNamespace + DiagnosticsScript,
-                DiagnosticsScript);
+                DiagnosticsScript).ConfigureAwait(false);
 
             await zipArchiveManager.AddContentToArchive(
                 outputZipPath,
                 CustomCommandsScript + (isPosix ? ".sh" : ".ps1"),
-                injectedCommands);
+                injectedCommands).ConfigureAwait(false);
 
             return outputZipPath;
         }

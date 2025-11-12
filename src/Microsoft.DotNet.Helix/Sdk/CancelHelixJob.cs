@@ -41,14 +41,14 @@ namespace Microsoft.DotNet.Helix.Sdk
                     // and ensure that anyone sufficiently motivated can still cancel Helix jobs after MSBuild is rapidly killed.
                     if (job.TryGetMetadata("HelixJobCancellationToken", out string helixCancellationToken))
                     {
-                        await api.Job.CancelAsync(correlationId, helixCancellationToken, cancellationToken);
+                        await api.Job.CancelAsync(correlationId, helixCancellationToken, cancellationToken).ConfigureAwait(false);
                         Log.LogMessage(MessageImportance.High, $"Successfully cancelled Helix Job {correlationId} via cancellation token.");
                     }
                     // Cancellation via token is preferred as these values are single-use (only work for one job) secrets and don't matter to leak.
                     else if (!string.IsNullOrEmpty(AccessToken))
                     {
                         Log.LogMessage(MessageImportance.High, "'HelixJobCancellationToken' metadata not supplied, will attempt to cancel using Access token. (Token must match user id that started the work)");
-                        await api.Job.CancelAsync(correlationId, null, cancellationToken);
+                        await api.Job.CancelAsync(correlationId, null, cancellationToken).ConfigureAwait(false);
                         Log.LogMessage(MessageImportance.High, $"Successfully cancelled Helix Job {correlationId} via access token.");
                     }
                     else

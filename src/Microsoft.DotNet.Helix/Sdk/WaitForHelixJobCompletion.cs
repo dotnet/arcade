@@ -25,12 +25,12 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             cancellationToken.ThrowIfCancellationRequested();
             // Wait 1 second to allow helix to register the job creation
-            await Task.Delay(1000, cancellationToken);
+            await Task.Delay(1000, cancellationToken).ConfigureAwait(false);
 
             List<(string jobName, string queueName, string jobCancellationToken)> jobNames = Jobs.Select(j => (j.GetMetadata("Identity"), j.GetMetadata("HelixTargetQueue"), j.GetMetadata("HelixJobCancellationToken"))).ToList();
 
             cancellationToken.ThrowIfCancellationRequested();
-            await Task.WhenAll(jobNames.Select(n => WaitForHelixJobAsync(n.jobName, n.queueName, n.jobCancellationToken, cancellationToken)));
+            await Task.WhenAll(jobNames.Select(n => WaitForHelixJobAsync(n.jobName, n.queueName, n.jobCancellationToken, cancellationToken))).ConfigureAwait(false);
         }
 
         private async Task WaitForHelixJobAsync(string jobName, string queueName, string helixJobCancellationToken, CancellationToken cancellationToken)
@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     Log.LogWarning($"Build task was cancelled while waiting on job '{jobName}'.  Attempting to cancel this job in Helix...");
                     try
                     {
-                        await HelixApi.Job.CancelAsync(jobName, helixJobCancellationToken);
+                        await HelixApi.Job.CancelAsync(jobName, helixJobCancellationToken).ConfigureAwait(false);
                         Log.LogWarning($"Successfully cancelled job '{jobName}'");
                     }
                     catch (RestApiException checkIfAlreadyCancelled) when (checkIfAlreadyCancelled.Response.Status == 304)
