@@ -21,7 +21,7 @@ function Test-FilesUseTelemetryOutput {
 
     local file_list=`grep --files-without-match --recursive --include=*.sh "Write-PipelineTelemetryError" $scriptroot`
     for file in $file_list; do
-        for remove_file in ${require_telemetry_exclude_files[@]}; do
+        for remove_file in "${require_telemetry_exclude_files[@]}"; do
             if [[ $file =~ .*"$remove_file" ]]; then
             file_list=( "${file_list[@]/$file}" )
             fi
