@@ -19,7 +19,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Preserve each test repo in its own subdirectory to avoid file collisions -->
+    <Content Include="testassets\MinimalRepo\**\*" LinkBase="testassets\MinimalRepo\" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="testassets\RepoWithConditionalProjectsToBuild\**\*" LinkBase="testassets\RepoWithConditionalProjectsToBuild\" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="testassets\Resources\**\*" LinkBase="testassets\Resources\" CopyToOutputDirectory="PreserveNewest" />
+    
+    <!-- Boilerplate files shared across tests -->
     <Content Include="$(RepositoryEngineeringDir)common\**\*" LinkBase="testassets\boilerplate\eng\common\" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(RepoRoot)build.sh" LinkBase="testassets\boilerplate\" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(RepoRoot)Build.cmd" LinkBase="testassets\boilerplate\" CopyToOutputDirectory="PreserveNewest" />
