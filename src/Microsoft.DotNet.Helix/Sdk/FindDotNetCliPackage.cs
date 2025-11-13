@@ -61,10 +61,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         public override void ConfigureServices(IServiceCollection collection)
         {
 #if NET
-            var socketsHandler = new SocketsHttpHandler
-            {
-                AllowAutoRedirect = true,
-            };
+            var socketsHandler = new SocketsHttpHandler();
             socketsHandler.SslOptions.CertificateChainPolicy = new X509ChainPolicy
             {
                 // Yes, check revocation.
