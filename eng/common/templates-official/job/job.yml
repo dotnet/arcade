@@ -41,7 +41,7 @@ jobs:
             continueOnError: true
             condition: always()
             retryCountOnTaskFailure: 10 # for any logs being locked
-            sbomEnabled: false  # we don't need SBOM for logs
+            isProduction: false
 
       - ${{ if eq(parameters.enablePublishBuildArtifacts, true) }}:
         - output: buildArtifacts
@@ -51,7 +51,7 @@ jobs:
           ArtifactName: ${{ coalesce(parameters.enablePublishBuildArtifacts.artifactName, '$(Agent.Os)_$(Agent.JobName)_Attempt$(System.JobAttempt)' ) }}
           continueOnError: true
           condition: always()
-          sbomEnabled: false  # we don't need SBOM for logs
+          isProduction: false
 
       - ${{ if eq(parameters.enableBuildRetry, 'true') }}:
         - output: pipelineArtifact
@@ -59,7 +59,7 @@ jobs:
           artifactName: 'BuildConfiguration'
           displayName: 'Publish build retry configuration'
           continueOnError: true
-          sbomEnabled: false  # we don't need SBOM for BuildConfiguration
+          isProduction: false
 
       - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), eq(parameters.enableSbom, 'true')) }}:
         - output: pipelineArtifact
