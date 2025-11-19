@@ -42,7 +42,7 @@ jobs:
           ArtifactName: ${{ coalesce(parameters.enablePublishBuildArtifacts.artifactName, '$(Agent.Os)_$(Agent.JobName)_Attempt$(System.JobAttempt)' ) }}
           continueOnError: true
           condition: always()
-          isProduction: false
+          #isProduction: false
 
       - ${{ if eq(parameters.enableBuildRetry, 'true') }}:
         - output: pipelineArtifact
