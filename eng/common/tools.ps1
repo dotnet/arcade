@@ -320,6 +320,7 @@ function InstallDotNet([string] $dotnetRoot,
   $installParameters = @{
     Version = $version
     InstallDir = $dotnetRoot
+    DownloadTimeout = 1200
   }
 
   if ($architecture) { $installParameters.Architecture = $architecture }
