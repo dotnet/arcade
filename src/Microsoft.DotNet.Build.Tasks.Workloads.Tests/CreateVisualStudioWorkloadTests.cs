@@ -9,7 +9,7 @@ using System.Linq;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.Deployment.WindowsInstaller;
+using WixToolset.Dtf.WindowsInstaller;
 using Microsoft.DotNet.Build.Tasks.Workloads.Msi;
 using Xunit;
 
