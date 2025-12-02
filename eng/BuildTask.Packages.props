@@ -17,6 +17,7 @@
     <PackageVersion Update="Microsoft.Extensions.DependencyModel" Version="8.0.2" />
     <PackageVersion Update="Microsoft.Extensions.Http" Version="8.0.0" />
     <PackageVersion Update="Microsoft.Extensions.Logging.Console" Version="8.0.0" />
+    <PackageVersion Update="Microsoft.Extensions.Logging.Abstractions" Version="8.0.3" />
   </ItemGroup>
 
 </Project>
