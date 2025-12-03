@@ -119,6 +119,13 @@ function ResetFilesToTargetBranch($patterns, $targetBranch) {
 
     Write-Host "Resetting files to $targetBranch for patterns: $($patterns -join ', ')"
 
+    # Verify the target branch exists
+    $branchExists = & git rev-parse --verify "origin/$targetBranch" 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning "Target branch 'origin/$targetBranch' does not exist. Skipping file reset."
+        return
+    }
+
     foreach ($pattern in $patterns) {
         $pattern = $pattern.Trim()
         if (-not $pattern) {
@@ -131,7 +138,12 @@ function ResetFilesToTargetBranch($patterns, $targetBranch) {
         # The -- is needed to separate the revision from the pathspec
         try {
             # First check if there are any files matching the pattern in the target branch
-            $matchingFiles = & git ls-tree -r --name-only "origin/$targetBranch" -- $pattern 2>$null
+            $matchingFiles = & git ls-tree -r --name-only "origin/$targetBranch" -- $pattern 2>&1
+            if ($LASTEXITCODE -ne 0) {
+                Write-Warning "Failed to list files for pattern '$pattern': $matchingFiles"
+                continue
+            }
+            
             if ($matchingFiles) {
                 Write-Host "Found files matching pattern '$pattern': $($matchingFiles -join ', ')"
                 Invoke-Block { & git checkout "origin/$targetBranch" -- $pattern }
@@ -139,7 +151,8 @@ function ResetFilesToTargetBranch($patterns, $targetBranch) {
                 # Check if there are any changes to commit
                 $status = & git status --porcelain
                 if ($status) {
-                    Invoke-Block { & git add $pattern }
+                    # Add all changes (the checkout already modified the specific files)
+                    Invoke-Block { & git add -A }
                     Invoke-Block { & git commit -m "Reset '$pattern' to $targetBranch" }
                     Write-Host -f Green "Successfully reset '$pattern' to $targetBranch"
                 } else {
