@@ -224,6 +224,14 @@ namespace Microsoft.DotNet.SignTool
 
                 // Copy the signed content to the destination path.
                 _filesToCopy.Add(new KeyValuePair<string, string>(existingSignInfo.FullPath, file.FullPath));
+
+                // If this is a top-level file that uses detached signatures, also copy the detached signature file
+                if (existingSignInfo.SignInfo.GeneratesDetachedSignature)
+                {
+                    _filesToCopy.Add(new KeyValuePair<string, string>(existingSignInfo.DetachedSignatureFullPath, fileSignInfo.DetachedSignatureFullPath));
+                    _log.LogMessage(MessageImportance.Low, $"Will copy detached signature from '{existingSignInfo.DetachedSignatureFullPath}' to '{fileSignInfo.DetachedSignatureFullPath}'");
+                }
+                
                 return fileSignInfo;
             }
 
@@ -262,7 +270,7 @@ namespace Microsoft.DotNet.SignTool
                 // Only sign containers if the file itself is unsigned, or 
                 // an item in the container is unsigned.
                 hasSignableParts = _zipDataMap[fileSignInfo.FileContentKey].NestedParts.Values.Any(b => b.FileSignInfo.SignInfo.ShouldSign || b.FileSignInfo.HasSignableParts);
-                if(hasSignableParts)
+                if (hasSignableParts)
                 {
                     // If the file has contents that need to be signed, then re-evaluate the signing info
                     fileSignInfo = fileSignInfo.WithSignableParts();
@@ -528,6 +536,12 @@ namespace Microsoft.DotNet.SignTool
                 }
 
                 Check3rdPartyMicrosoftSignatureMismatch(file, peInfo, signInfo);
+
+                // Check if this cert should use detached signatures instead of in-place signing
+                if (ShouldUseDetachedSignature(file, signInfo))
+                {
+                    signInfo = signInfo.WithDetachedSignature(signInfo.Certificate);
+                }
 
                 return new FileSignInfo(file, signInfo, (peInfo != null && peInfo.TargetFramework != "") ? peInfo.TargetFramework : null, wixContentFilePath: wixContentFilePath);
             }
@@ -814,19 +828,25 @@ namespace Microsoft.DotNet.SignTool
 
                         // if we already encountered file that has the same content we can reuse its signed version when repackaging the container.
                         var fileName = Path.GetFileName(entry.RelativePath);
+                        string entryPerms = entry.UnixFileMode.HasValue ? Convert.ToString((uint)entry.UnixFileMode.Value, 8) : "default perms";
                         if (!_filesByContentKey.TryGetValue(fileUniqueKey, out var fileSignInfo))
                         {
                             string extractPathRoot = _useHashInExtractionPath ? fileUniqueKey.StringHash : _filesByContentKey.Count().ToString();
                             string tempPath = Path.Combine(_pathToContainerUnpackingDirectory, extractPathRoot, entry.RelativePath);
-                            _log.LogMessage($"Extracting file '{fileName}' from '{archivePath}' to '{tempPath}'.");
+                            _log.LogMessage($"Extracting file '{fileName}' from '{archivePath}' to '{tempPath}'. (Caching with perms: {entryPerms})");
 
                             Directory.CreateDirectory(Path.GetDirectoryName(tempPath));
 
                             entry.WriteToFile(tempPath);
+                            ZipData.SetUnixFileMode(_log, entry.UnixFileMode, tempPath);
 
                             _hashToCollisionIdMap.TryGetValue(fileUniqueKey, out string collisionPriorityId);
                             PathWithHash nestedFile = new PathWithHash(tempPath, entry.ContentHash);
                             fileSignInfo = TrackFile(nestedFile, zipFileSignInfo.File, collisionPriorityId);
+                        }
+                        else
+                        {
+                            _log.LogMessage($"Reusing previously extracted file '{fileName}' for '{archivePath}'. (Archival perms: {entryPerms})");
                         }
 
                         if (fileSignInfo.ShouldTrack)
@@ -862,6 +882,28 @@ namespace Microsoft.DotNet.SignTool
         private bool ShouldSkip3rdPartyCheck(string fileName)
         {
             return _itemsToSkip3rdPartyCheck != null && _itemsToSkip3rdPartyCheck.Contains(Path.GetFileName(fileName));
+        }
+
+        /// <summary>
+        /// Determines if a file should use detached signatures based on certificate configuration.
+        /// </summary>
+        /// <param name="file">The file to check</param>
+        /// <returns>True if the file should use detached signatures</returns>
+        private bool ShouldUseDetachedSignature(PathWithHash file, SignInfo signInfo)
+        {
+            // Check if the certificate is configured for detached signatures
+            if (signInfo.Certificate != null && _additionalCertificateInformation.TryGetValue(signInfo.Certificate, out var additionalInfo))
+            {
+                var additionalCertInfo = additionalInfo.FirstOrDefault(a => string.IsNullOrEmpty(a.CollisionPriorityId) ||
+                                                                   a.CollisionPriorityId == signInfo.CollisionPriorityId);
+                if (additionalCertInfo != null && additionalCertInfo.GeneratesDetachedSignature)
+                {
+                    _log.LogMessage(MessageImportance.Low, $"File {file.FileName} will use detached signatures based on certificate configuration");
+                    return true;
+                }
+            }
+            
+            return false;
         }
     }
 }
