@@ -256,7 +256,12 @@ namespace Microsoft.DotNet.SignTool
             var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, DotNetPath, MSBuildVerbosity, LogDir, enclosingDir, SNBinaryPath, Wix3ToolsPath, WixToolsPath, TarToolPath, PkgToolPath, DotNetTimeout);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs, Log) : (SignTool)new RealSignTool(signToolArgs, Log);
 
-            var itemsToSign = ItemsToSign.Select(i => new ItemToSign(i.ItemSpec, i.GetMetadata(SignToolConstants.CollisionPriorityId))).OrderBy(i => i.CollisionPriorityId).ToList();
+            var itemsToSign = ItemsToSign.Select(i => 
+            {
+                var doNotUnpackStr = i.GetMetadata(SignToolConstants.DoNotUnpack);
+                bool doNotUnpack = !string.IsNullOrEmpty(doNotUnpackStr) && bool.TryParse(doNotUnpackStr, out bool parsed) && parsed;
+                return new ItemToSign(i.ItemSpec, i.GetMetadata(SignToolConstants.CollisionPriorityId), doNotUnpack);
+            }).OrderBy(i => i.CollisionPriorityId).ToList();
 
             Telemetry telemetry = new Telemetry();
             try

@@ -3559,5 +3559,63 @@ $@"
             var testSignResult = testSignTool.VerifySignedNuGet(nupkgPath);
             testSignResult.Should().Be(SigningStatus.Signed, "TestSign mode should return Signed without validation");
         }
+
+        [Fact]
+        public void ContainerSigningWithDoNotUnpack()
+        {
+            // List of files to be considered for signing - with DoNotUnpack flag
+            var itemsToSign = new List<ItemToSign>()
+            {
+                new ItemToSign(GetResourcePath("ContainerOne.1.0.0.nupkg"), collisionPriorityId: "123", doNotUnpack: true)
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "581d91ccdfc4ea9c", new List<SignInfo> {new SignInfo(certificate: "3PartySHA2", strongName: "ArcadeStrongTest", collisionPriorityId: "123") } }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            // When DoNotUnpack is true, only the top-level container should be signed,
+            // and nested files should not be extracted or signed
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
+            {
+                "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'",
+            });
+        }
+
+        [Fact]
+        public void ContainerSigningWithoutDoNotUnpack()
+        {
+            // List of files to be considered for signing - without DoNotUnpack flag (normal behavior)
+            var itemsToSign = new List<ItemToSign>()
+            {
+                new ItemToSign(GetResourcePath("ContainerOne.1.0.0.nupkg"), collisionPriorityId: "123", doNotUnpack: false)
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "581d91ccdfc4ea9c", new List<SignInfo> {new SignInfo(certificate: "3PartySHA2", strongName: "ArcadeStrongTest", collisionPriorityId: "123") } }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            // When DoNotUnpack is false (normal behavior), the container should be unpacked
+            // and nested files should be signed
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
+            {
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'",
+            });
+        }
     }
 }
