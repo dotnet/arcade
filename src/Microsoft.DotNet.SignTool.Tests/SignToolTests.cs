@@ -3617,5 +3617,41 @@ $@"
                 "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'",
             });
         }
+
+        [Fact]
+        public void ContainerSigningWithDoNotUnpackAndDetachedSignature()
+        {
+            // List of files to be considered for signing - with DoNotUnpack flag and detached signature
+            var itemsToSign = new List<ItemToSign>()
+            {
+                new ItemToSign(GetResourcePath("test.zip"), collisionPriorityId: "123", doNotUnpack: true)
+            };
+
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
+
+            // Configure the certificate to use detached signatures
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
+            {
+                { new ExplicitCertificateKey("test.zip", collisionPriorityId: "123"), "ArchiveCert" }
+            };
+
+            var additionalCertificateInfo = new Dictionary<string, List<AdditionalCertificateInformation>>()
+            {
+                {  "ArchiveCert",
+                    new List<AdditionalCertificateInformation>() {
+                        new AdditionalCertificateInformation() { GeneratesDetachedSignature = true, CollisionPriorityId = "123" }
+                    }
+                }
+            };
+
+            // When DoNotUnpack is true with a certificate that generates detached signatures,
+            // only the top-level container should be signed with a detached signature (.sig file),
+            // and nested files should not be extracted or signed
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
+            {
+                "File 'test.zip' Certificate='ArchiveCert'",
+            },
+            additionalCertificateInfo: additionalCertificateInfo);
+        }
     }
 }
