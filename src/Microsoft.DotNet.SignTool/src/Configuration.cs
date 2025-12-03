@@ -240,7 +240,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 if (doNotUnpack)
                 {
-                    _log.LogMessage(MessageImportance.Normal, $"Skipping container unpacking for '{file.FullPath}' due to DoNotUnpack flag");
+                    _log.LogMessage(MessageImportance.Normal, "Skipping container unpacking for '{0}' due to DoNotUnpack flag", file.FullPath);
                 }
                 else
                 {
@@ -269,7 +269,7 @@ namespace Microsoft.DotNet.SignTool
                     }
                 }
             }
-            
+
             _log.LogMessage(MessageImportance.Low, $"Caching file {fileSignInfo.FileContentKey.FileName} {fileSignInfo.FileContentKey.StringHash}");
             _filesByContentKey.Add(fileSignInfo.FileContentKey, fileSignInfo);
 
