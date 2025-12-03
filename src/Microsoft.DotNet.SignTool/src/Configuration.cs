@@ -169,7 +169,7 @@ namespace Microsoft.DotNet.SignTool
                 _whichPackagesTheFileIsIn[fileUniqueKey] = packages;
 
                 PathWithHash pathWithHash = new PathWithHash(itemToSign.FullPath, contentHash);
-                TrackFile(pathWithHash, null, itemToSign.CollisionPriorityId);
+                TrackFile(pathWithHash, null, itemToSign.CollisionPriorityId, itemToSign.DoNotUnpack);
             }
             gatherInfoTime.Stop();
             if (_telemetry != null)
@@ -207,7 +207,7 @@ namespace Microsoft.DotNet.SignTool
             return new BatchSignInput(_filesToSign.ToImmutableArray(), _zipDataMap.ToImmutableDictionary(), _filesToCopy.ToImmutableArray());
         }
 
-        private FileSignInfo TrackFile(PathWithHash file, PathWithHash parentContainer, string collisionPriorityId)
+        private FileSignInfo TrackFile(PathWithHash file, PathWithHash parentContainer, string collisionPriorityId, bool doNotUnpack = false)
         {
             bool isNested = parentContainer != null;
             _log.LogMessage($"Tracking file '{file.FullPath}' isNested={isNested}");
@@ -215,7 +215,7 @@ namespace Microsoft.DotNet.SignTool
             // If there's a wixpack in ItemsToSign which corresponds to this file, pass along the path of 
             // the wixpack so we can associate the wixpack with the item
             var wixPack = _wixPacks.SingleOrDefault(w => w.Moniker.Equals(file.FileName, StringComparison.OrdinalIgnoreCase));
-            var fileSignInfo = ExtractSignInfo(file, parentContainer, collisionPriorityId, wixPack.FullPath);
+            var fileSignInfo = ExtractSignInfo(file, parentContainer, collisionPriorityId, wixPack.FullPath, doNotUnpack);
 
             if (_filesByContentKey.TryGetValue(fileSignInfo.FileContentKey, out var existingSignInfo))
             {
@@ -235,7 +235,8 @@ namespace Microsoft.DotNet.SignTool
                 return fileSignInfo;
             }
 
-            if (fileSignInfo.IsUnpackableContainer())
+            // Skip unpacking if DoNotUnpack is set
+            if (fileSignInfo.IsUnpackableContainer() && !doNotUnpack)
             {
                 if (fileSignInfo.IsUnpackableWixContainer())
                 {
@@ -261,11 +262,16 @@ namespace Microsoft.DotNet.SignTool
                     }
                 }
             }
+            else if (doNotUnpack && fileSignInfo.IsUnpackableContainer())
+            {
+                _log.LogMessage(MessageImportance.Normal, $"Skipping container unpacking for '{file.FullPath}' due to DoNotUnpack flag");
+            }
+            
             _log.LogMessage(MessageImportance.Low, $"Caching file {fileSignInfo.FileContentKey.FileName} {fileSignInfo.FileContentKey.StringHash}");
             _filesByContentKey.Add(fileSignInfo.FileContentKey, fileSignInfo);
 
             bool hasSignableParts = false;
-            if (fileSignInfo.IsUnpackableContainer())
+            if (fileSignInfo.IsUnpackableContainer() && !doNotUnpack)
             {
                 // Only sign containers if the file itself is unsigned, or 
                 // an item in the container is unsigned.
@@ -303,7 +309,8 @@ namespace Microsoft.DotNet.SignTool
             PathWithHash file,
             PathWithHash parentContainer,
             string collisionPriorityId,
-            string wixContentFilePath)
+            string wixContentFilePath,
+            bool doNotUnpack = false)
         {
             var extension = Path.GetExtension(file.FileName);
             string explicitCertificateName = null;
@@ -324,7 +331,7 @@ namespace Microsoft.DotNet.SignTool
             if (file.ContentHash == ContentUtil.EmptyFileContentHash)
             {
                 _log.LogMessage(MessageImportance.Low, $"Ignoring zero length file: {file.FullPath}");
-                return new FileSignInfo(file, SignInfo.Ignore, wixContentFilePath: wixContentFilePath);
+                return new FileSignInfo(file, SignInfo.Ignore, wixContentFilePath: wixContentFilePath, doNotUnpack: doNotUnpack);
             }
 
             // handle multi-part extensions like ".symbols.nupkg" specified in FileExtensionSignInfo
@@ -484,7 +491,7 @@ namespace Microsoft.DotNet.SignTool
             if (SignToolConstants.IgnoreFileCertificateSentinel.Equals(explicitCertificateName, StringComparison.OrdinalIgnoreCase))
             {
                 _log.LogMessage(MessageImportance.Low, $"File configured to not be signed: {file.FullPath}{fileSpec}");
-                return new FileSignInfo(file, SignInfo.Ignore);
+                return new FileSignInfo(file, SignInfo.Ignore, doNotUnpack: doNotUnpack);
             }
 
             // Do we have an explicit certificate after all?
@@ -517,14 +524,14 @@ namespace Microsoft.DotNet.SignTool
                     _log.LogWarning($"Skipping file '{file.FullPath}' because .js files are no longer signed by default. " +
                         "To disable this warning, please explicitly define the FileExtensionSignInfo for the .js extension " +
                         "or set the MSBuild property 'NoSignJS' to 'true'.");
-                    return new FileSignInfo(file, SignInfo.Ignore, wixContentFilePath: wixContentFilePath);
+                    return new FileSignInfo(file, SignInfo.Ignore, wixContentFilePath: wixContentFilePath, doNotUnpack: doNotUnpack);
                 }
 
                 // If the file is already signed and we are not allowed to dual sign, and we are not doing a mac notarization operation,
                 // then we should not sign the file.
                 if (isAlreadyAuthenticodeSigned && !dualCertsAllowed && string.IsNullOrEmpty(macNotarizationAppName))
                 {
-                    return new FileSignInfo(file, signInfo.WithIsAlreadySigned(isAlreadyAuthenticodeSigned), wixContentFilePath: wixContentFilePath);
+                    return new FileSignInfo(file, signInfo.WithIsAlreadySigned(isAlreadyAuthenticodeSigned), wixContentFilePath: wixContentFilePath, doNotUnpack: doNotUnpack);
                 }
 
                 // If the certificate indicates that the file has a split sign/notarize operation,
@@ -543,7 +550,7 @@ namespace Microsoft.DotNet.SignTool
                     signInfo = signInfo.WithDetachedSignature(signInfo.Certificate);
                 }
 
-                return new FileSignInfo(file, signInfo, (peInfo != null && peInfo.TargetFramework != "") ? peInfo.TargetFramework : null, wixContentFilePath: wixContentFilePath);
+                return new FileSignInfo(file, signInfo, (peInfo != null && peInfo.TargetFramework != "") ? peInfo.TargetFramework : null, wixContentFilePath: wixContentFilePath, doNotUnpack: doNotUnpack);
             }
 
             if (SignToolConstants.SignableExtensions.Contains(extension))
@@ -556,7 +563,7 @@ namespace Microsoft.DotNet.SignTool
                 _log.LogMessage(MessageImportance.Low, $"Ignoring non-signable file: {file.FullPath}");
             }
 
-            return new FileSignInfo(file, SignInfo.Ignore, wixContentFilePath: wixContentFilePath);
+            return new FileSignInfo(file, SignInfo.Ignore, wixContentFilePath: wixContentFilePath, doNotUnpack: doNotUnpack);
 
             bool IsSigned(PathWithHash file, SigningStatus signingStatus)
             {
