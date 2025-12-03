@@ -236,35 +236,38 @@ namespace Microsoft.DotNet.SignTool
             }
 
             // Skip unpacking if DoNotUnpack is set
-            if (fileSignInfo.IsUnpackableContainer() && !doNotUnpack)
+            if (fileSignInfo.IsUnpackableContainer())
             {
-                if (fileSignInfo.IsUnpackableWixContainer())
+                if (doNotUnpack)
                 {
-                    _log.LogMessage($"Trying to gather data for wix container {fileSignInfo.FullPath}");
-                    if (TryBuildWixData(fileSignInfo, out var msiData))
-                    {
-                        _zipDataMap[fileSignInfo.FileContentKey] = msiData;
-                    }
-                    else
-                    {
-                        _log.LogError($"Failed to build wix data for {fileSignInfo.FullPath}");
-                    }
+                    _log.LogMessage(MessageImportance.Normal, $"Skipping container unpacking for '{file.FullPath}' due to DoNotUnpack flag");
                 }
                 else
                 {
-                    if (TryBuildZipData(fileSignInfo, out var zipData))
+                    if (fileSignInfo.IsUnpackableWixContainer())
                     {
-                        _zipDataMap[fileSignInfo.FileContentKey] = zipData;
+                        _log.LogMessage($"Trying to gather data for wix container {fileSignInfo.FullPath}");
+                        if (TryBuildWixData(fileSignInfo, out var msiData))
+                        {
+                            _zipDataMap[fileSignInfo.FileContentKey] = msiData;
+                        }
+                        else
+                        {
+                            _log.LogError($"Failed to build wix data for {fileSignInfo.FullPath}");
+                        }
                     }
                     else
                     {
-                        _log.LogError($"Failed to build zip data for {fileSignInfo.FullPath}");
+                        if (TryBuildZipData(fileSignInfo, out var zipData))
+                        {
+                            _zipDataMap[fileSignInfo.FileContentKey] = zipData;
+                        }
+                        else
+                        {
+                            _log.LogError($"Failed to build zip data for {fileSignInfo.FullPath}");
+                        }
                     }
                 }
-            }
-            else if (doNotUnpack && fileSignInfo.IsUnpackableContainer())
-            {
-                _log.LogMessage(MessageImportance.Normal, $"Skipping container unpacking for '{file.FullPath}' due to DoNotUnpack flag");
             }
             
             _log.LogMessage(MessageImportance.Low, $"Caching file {fileSignInfo.FileContentKey.FileName} {fileSignInfo.FileContentKey.StringHash}");

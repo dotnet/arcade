@@ -259,7 +259,7 @@ namespace Microsoft.DotNet.SignTool
             var itemsToSign = ItemsToSign.Select(i => 
             {
                 var doNotUnpackStr = i.GetMetadata(SignToolConstants.DoNotUnpack);
-                bool doNotUnpack = !string.IsNullOrEmpty(doNotUnpackStr) && bool.TryParse(doNotUnpackStr, out bool parsed) && parsed;
+                bool doNotUnpack = string.Equals(doNotUnpackStr, "true", StringComparison.OrdinalIgnoreCase);
                 return new ItemToSign(i.ItemSpec, i.GetMetadata(SignToolConstants.CollisionPriorityId), doNotUnpack);
             }).OrderBy(i => i.CollisionPriorityId).ToList();
 
