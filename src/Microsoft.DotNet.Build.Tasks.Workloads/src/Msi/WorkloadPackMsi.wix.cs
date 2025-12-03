@@ -47,22 +47,22 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             EmbeddedTemplates.Extract("Directories.wxs", WixSourceDirectory);
             EmbeddedTemplates.Extract("WorkloadPackDirectories.wxs", WixSourceDirectory);
             EmbeddedTemplates.Extract("Registry.wxs", WixSourceDirectory);
-            
+
             string directoryReference = _package.Kind == WorkloadPackKind.Library || _package.Kind == WorkloadPackKind.Template ?
                 "InstallDir" : "VersionDir";
 
             wixproj.AddHarvestDirectory(_package.DestinationDirectory, directoryReference,
-                PreprocessorDefinitionNames.SourceDir);            
+                PreprocessorDefinitionNames.SourceDir);
 
             wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.InstallDir, $"{GetInstallDir(_package.Kind)}");
             wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.PackKind, $"{_package.Kind}");
             wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.SourceDir, $"{_package.DestinationDirectory}");
 
             return wixproj;
-        }        
+        }
 
         /// <summary>
-        /// Get the installation directory based on the kind of workload pack.
+        /// Gets the name of the installation directory based on the kind of workload pack.
         /// </summary>
         /// <param name="kind">The workload pack kind.</param>
         /// <returns>The name of the root installation directory.</returns>
@@ -73,6 +73,21 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
                 WorkloadPackKind.Library => "library-packs",
                 WorkloadPackKind.Template => "template-packs",
                 WorkloadPackKind.Tool => "tool-packs",
+                _ => throw new ArgumentException(string.Format(Strings.UnknownWorkloadKind, kind)),
+            };
+
+        /// <summary>
+        /// Gets the directory reference (ID) associated with the workload pack kind.
+        /// </summary>
+        /// <param name="kind">The workload pack kind.</param>
+        /// <returns>The directory reference (ID) of the installation directory.</returns>
+        internal static string GetDirectoryReference(WorkloadPackKind kind) =>
+            kind switch
+            {
+                WorkloadPackKind.Framework or WorkloadPackKind.Sdk => "PacksDir",
+                WorkloadPackKind.Library => "LibraryPacksDir",
+                WorkloadPackKind.Template => "TemplatePacksDir",
+                WorkloadPackKind.Tool => "ToolPacksDir",
                 _ => throw new ArgumentException(string.Format(Strings.UnknownWorkloadKind, kind)),
             };
     }

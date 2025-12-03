@@ -10,14 +10,87 @@ using Microsoft.Arcade.Test.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using WixToolset.Dtf.WindowsInstaller;
+using Microsoft.NET.Sdk.WorkloadManifestReader;
 using Microsoft.DotNet.Build.Tasks.Workloads.Msi;
 using Xunit;
+using FluentAssertions.Equivalency;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 {
     [Collection("Workload Creation")]
     public class CreateVisualStudioWorkloadTests : TestBase
     {
+        [SkipOnCI(reason: "This test creates workload pack groups for WASM. The test requires almost 1GB of packages and takes a few minutes to run.")]
+        [WindowsOnlyFact]
+        public static void ItCreatesPackGroups()
+        {
+            // Create intermediate outputs under %temp% to avoid path issues and make sure it's clean so we don't pick up
+            // conflicting sources from previous runs.
+            string baseIntermediateOutputPath = Path.Combine(Path.GetTempPath(), "WLPG");
+
+            if (Directory.Exists(baseIntermediateOutputPath))
+            {
+                Directory.Delete(baseIntermediateOutputPath, recursive: true);
+            }
+
+            ITaskItem[] manifestsPackages = 
+            {
+                new TaskItem(Path.Combine(TestBase.TestAssetsPath, "microsoft.net.workload.mono.toolchain.current.manifest-10.0.100.10.0.100.nupkg"))
+                .WithMetadata(Metadata.MsiVersion, "10.0.456")
+            };
+
+            IBuildEngine buildEngine = new MockBuildEngine();
+            CreateVisualStudioWorkload createWorkloadTask = new CreateVisualStudioWorkload()
+            {
+                AllowMissingPacks = true,
+                BaseOutputPath = TestBase.BaseOutputPath,
+                BaseIntermediateOutputPath = baseIntermediateOutputPath,
+                BuildEngine = buildEngine,
+                CreateWorkloadPackGroups = true,
+                ComponentResources = Array.Empty<ITaskItem>(),
+                ManifestMsiVersion = null,
+                PackageSource = TestBase.TestAssetsPath,
+                ShortNames = Array.Empty<ITaskItem>(),
+                WixToolsetPath = TestBase.WixToolsetPath,
+                WorkloadManifestPackageFiles = manifestsPackages,
+                IsOutOfSupportInVisualStudio = false
+            };
+
+            bool result = createWorkloadTask.Execute();
+            Assert.True(result);
+
+            //WorkloadManifestPackage p = new(manifestsPackages[0], Path.Combine(Path.GetTempPath(), "WLPG"), Version.Parse("1.2.3"));
+            //WorkloadManifest manifest = p.GetManifest();
+
+            //List<WorkloadPack> packs = new();
+
+            //foreach (WorkloadDefinition workload in manifest.Workloads.Values)
+            //{
+            //    if ((workload is WorkloadDefinition wd) && (wd.Platforms == null || wd.Platforms.Any(platform => platform.StartsWith("win"))) && (wd.Packs != null))
+            //    {
+            //        foreach (WorkloadPackId packId in wd.Packs)
+            //        {
+            //            packs.Add(manifest.Packs[packId]);
+            //        }
+            //    }
+            //}
+
+
+
+            //List<string> l = new List<string>();
+
+            //foreach (var p2 in packs)
+            //{
+            //    foreach (var x in WorkloadPackPackage.GetSourcePackages("", p2))
+            //    {
+            //        l.Add(x.sourcePackage);
+            //    }
+            //}
+
+            //int y = packs.Count;
+        }
+
+        
         [WindowsOnlyFact]
         public static void ItCanCreateWorkloads()
         {

@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             get;
         }
 
-        public WorkloadPackPackage(WorkloadPack pack, string packagePath, string[] platforms, string destinationBaseDirectory, 
+        public WorkloadPackPackage(WorkloadPack pack, string packagePath, string[] platforms, string destinationBaseDirectory,
             ITaskItem[]? shortNames = null, TaskLoggingHelper? log = null) : base(packagePath, destinationBaseDirectory, shortNames, log)
         {
             _pack = pack;
@@ -98,6 +98,46 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 // For non-RID specific packs we'll produce MSIs for each supported platform.
                 yield return (Path.Combine(packageSource, $"{pack.Id}.{pack.Version}.nupkg"), CreateVisualStudioWorkload.SupportedPlatforms);
             }
+        }
+
+        /// <summary>
+        /// Gets the package associated with a specific workload pack for the specified platform.
+        /// </summary>
+        /// <param name="packageSource">The path where workload packages reside.</param>
+        /// <param name="pack"></param>
+        /// <returns></returns>
+        internal static string? GetSourcePackage(string packageSource, WorkloadPack pack, string platform)
+        {
+            if (pack.IsAlias && pack.AliasTo != null)
+            {
+                foreach (string rid in pack.AliasTo.Keys)
+                {
+                    string sourcePackage = Path.Combine(packageSource, $"{pack.AliasTo[rid]}.{pack.Version}.nupkg");
+
+                    switch (rid)
+                    {
+                        case "win7":
+                        case "win10":
+                        case "win":
+                        case "any":
+                            return sourcePackage;
+                        default:
+                            if (rid == $"win-{platform}")
+                            {
+                                return sourcePackage;
+                            }
+                            // Unsupported RID.
+                            continue;
+                    }
+                }
+            }
+            else
+            {
+                // For non-RID specific packs we'll produce MSIs for each supported platform.
+                return Path.Combine(packageSource, $"{pack.Id}.{pack.Version}.nupkg");
+            }
+
+            return null;
         }
 
         /// <summary>

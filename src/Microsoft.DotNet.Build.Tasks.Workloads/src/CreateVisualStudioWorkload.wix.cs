@@ -84,6 +84,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             set;
         }
 
+        /// <summary>
+        /// Aggregates multiple packs into a single installer.
+        /// </summary>
         public bool CreateWorkloadPackGroups
         {
             get;

@@ -22,6 +22,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
     internal abstract class MsiBase
     {
         /// <summary>
+        /// Used to track the number of directories created.
+        /// </summary>
+        private int _dirCount = 0;
+
+        /// <summary>
         /// The Arcade package that contains the CreateWixBuildWixpack task to support signing.
         /// </summary>
         private const string _MicrosoftDotNetBuildTaskInstallers = "Microsoft.DotNet.Build.Tasks.Installers";
@@ -323,17 +328,20 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             string wixProjectPath = Path.Combine(WixSourceDirectory, "msi.wixproj");
             WixProject wixproj = CreateProject();
             wixproj.AddProperty("OutputPath", outputPath);
+            string directoryBuildTargets = EmbeddedTemplates.Extract("Directory.Build.targets", WixSourceDirectory);
 
             if (GenerateWixpack)
             {
                 // Wixpacks need to capture compile time information from the WiX SDK to rebuild the MSI
                 // after replacing any unsigned content when using Arcade to sign. 
-                Utils.StringReplace(EmbeddedTemplates.Extract("Directory.Build.targets", WixSourceDirectory),
+                Utils.StringReplace(directoryBuildTargets,
                     Encoding.UTF8, ("__WIXPACK_OUTPUT_DIR__", WixpackOutputDirectory));
 
                 // Add a package reference to pull in the CreateWixBuildWixpack task. The version 
                 // should automatically default to the "major.minor.path-*", e.g. 10.0.0-*
                 wixproj.AddPackageReference(_MicrosoftDotNetBuildTaskInstallers, ToolsetInfo.ArcadeVersion);
+
+                wixproj.AddProperty(WixProperties.GenerateWixpack, "true");
             }
 
             if (File.Exists(wixProjectPath))
@@ -392,6 +400,41 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             NuGetPackageFiles[Path.GetFullPath(msiJsonPath)] = "\\data\\msi.json";
 
             NuGetPackageFiles["LICENSE.TXT"] = @"\";
+        }
+
+        /// <summary>
+        /// Creates a source file containing a directory fragment.
+        /// </summary>
+        /// <param name="name">The name of the directory.</param>
+        /// <param name="id">The ID of the directory.</param>
+        /// <param name="reference">The ID of the directory reference (parent directory).</param>
+
+        protected void AddDirectory(string name, string id, string reference)
+        {
+            try
+            {
+                AddDirectory(name, id, reference, WixSourceDirectory, $"dir{_dirCount}.wxs");
+            }
+            finally
+            {
+                _dirCount++;
+            }
+        }
+
+        /// <summary>
+        /// Creates a source file containing a directory fragment.
+        /// </summary>
+        /// <param name="name">The name of the directory.</param>
+        /// <param name="id">The ID of the directory.</param>
+        /// <param name="reference">The ID of the directory reference (parent directory).</param>
+        /// <param name="sourceDirectory">The source directory to use for the generated fragment.</param>
+        /// <param name="fragmentName">The file name of the generated fragment.</param>
+        internal static void AddDirectory(string name, string id, string reference, string sourceDirectory, string fragmentName)
+        {
+            string dirWxs = EmbeddedTemplates.Extract("DirectoryReference.wxs", sourceDirectory, fragmentName);
+
+            Utils.StringReplace(dirWxs, Encoding.UTF8,
+                (MsiTokens.__DIR_REF_ID__, reference), (MsiTokens.__DIR_ID__, id), (MsiTokens.__DIR_NAME__, name));
         }
     }
 }

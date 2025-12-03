@@ -1,0 +1,27 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+  <Fragment>
+    <DirectoryRef Id="DOTNETHOME">
+      <Directory Id="PacksDir" Name="packs" />
+    </DirectoryRef>
+  </Fragment>
+
+  <Fragment>
+    <DirectoryRef Id="DOTNETHOME">
+      <Directory Id="LibraryPacksDir" Name="library-packs" />
+    </DirectoryRef>
+  </Fragment>
+
+  <Fragment>
+    <DirectoryRef Id="DOTNETHOME">
+      <Directory Id="TemplatePacksDir" Name="template-packs" />
+    </DirectoryRef>
+  </Fragment>
+
+  <Fragment>
+    <DirectoryRef Id="DOTNETHOME">
+      <Directory Id="ToolPacksDir" Name="tool-packs" />
+    </DirectoryRef>
+  </Fragment>
+</Wix>

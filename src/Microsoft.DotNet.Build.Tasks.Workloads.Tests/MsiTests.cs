@@ -9,9 +9,11 @@ using Microsoft.Arcade.Test.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Workloads.Msi;
+using static Microsoft.DotNet.Build.Tasks.Workloads.Msi.WorkloadManifestMsi;
 using Microsoft.NET.Sdk.WorkloadManifestReader;
 using WixToolset.Dtf.WindowsInstaller;
 using Xunit;
+using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 {
@@ -147,7 +149,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.Equal("x64;1033", si.Template);
 
             // There should be no version directory present if the old upgrade model is used.
-            MsiUtils.GetAllDirectories(msiPath).Select(d => d.Directory).Should().NotContain("ManifestVersionDir", 
+            MsiUtils.GetAllDirectories(msiPath).Select(d => d.Directory).Should().NotContain("ManifestVersionDir",
                 "because the manifest MSI supports major upgrades");
 
             // Verify that the wixpack archive was created.
@@ -187,6 +189,67 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 
             MsiUtils.GetAllDirectories(msiPath).Select(d => d.Directory).Should().NotContain("PackageDir", "because it's a template pack");
             MsiUtils.GetAllDirectories(msiPath).Select(d => d.Directory).Should().Contain("InstallDir", "because it's a workload pack");
+        }
+
+        [WindowsOnlyFact]
+        public void ItCanBuildAWorkPackGroupMsi()
+        {
+            string outputDirectory = GetTestCaseDirectory();
+            string packageContentsDirectory = Path.Combine(outputDirectory, "pkg");
+            string msiOutputDirectory = Path.Combine(outputDirectory, "msi");
+            string packageSource = Path.Combine(TestAssetsPath, "wasm");
+
+            TaskItem packageItem = new(Path.Combine(TestAssetsPath, "microsoft.net.workload.mono.toolchain.current.manifest-10.0.100.10.0.100.nupkg"));
+            WorkloadManifestPackage manifestPackage = new(packageItem, packageContentsDirectory, new Version("1.2.3"));
+            // Parse the manifest to extract information related to workload packs so we can extract a specific pack.
+            WorkloadManifest manifest = manifestPackage.GetManifest();
+            WorkloadId workloadId = new("wasm-tools");
+            WorkloadDefinition workload = (WorkloadDefinition)manifest.Workloads[workloadId];
+
+            string packGroupId = null;
+            WorkloadPackGroupJson packGroupJson = null;
+
+            packGroupId = WorkloadPackGroupPackage.GetPackGroupID(workload.Id);
+            packGroupJson = new WorkloadPackGroupJson()
+            {
+                GroupPackageId = packGroupId,
+                GroupPackageVersion = manifestPackage.PackageVersion.ToString()
+            };
+
+            List<WorkloadPackPackage> workloadPackPackages = [];
+
+            foreach (WorkloadPackId packId in workload.Packs)
+            {
+                WorkloadPack pack = manifest.Packs[packId];
+
+                packGroupJson.Packs.Add(new WorkloadPackJson()
+                {
+                    PackId = pack.Id,
+                    PackVersion = pack.Version
+                });
+
+                string sourcePackage = WorkloadPackPackage.GetSourcePackage(packageSource, pack, "x64");
+
+                if (!string.IsNullOrWhiteSpace(sourcePackage))
+                {
+                    workloadPackPackages.Add(WorkloadPackPackage.Create(pack, sourcePackage, ["x64"],
+                        packageContentsDirectory, null, null));
+                }
+            }
+
+            var groupPackage = new WorkloadPackGroupPackage(workload.Id);
+            groupPackage.Packs.AddRange(workloadPackPackages);
+            groupPackage.ManifestsPerPlatform["x64"] = new([manifestPackage]);
+
+            var buildEngine = new MockBuildEngine();
+                
+            foreach (var p in workloadPackPackages)
+            {
+                p.Extract();
+            }
+
+            WorkloadPackGroupMsi msi = new(groupPackage, "x64", buildEngine, outputDirectory, overridePackageVersions: true);
+            msi.Build(msiOutputDirectory);
         }
     }
 }

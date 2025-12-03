@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 
             // Workload sets are SxS. Verify that we don't have an Upgrade table.
             // This requires suppressing the default behavior by setting Package@UpgradeStrategy to "none".
-            Assert.False(MsiUtils.HasTable(msi.ItemSpec, "Upgrade"));
+            MsiUtils.HasTable(msi.ItemSpec, "Upgrade").Should().BeFalse("because workload sets are side-by-side");
 
             // Verify the workloadset version directory and only look at the long name version.
             DirectoryRow versionDir = MsiUtils.GetAllDirectories(msi.ItemSpec).FirstOrDefault(d => string.Equals(d.Directory, "WorkloadSetVersionDir"));

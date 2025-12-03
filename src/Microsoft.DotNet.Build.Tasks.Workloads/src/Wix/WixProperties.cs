@@ -33,5 +33,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
         /// The debug information to emit.
         /// </summary>
         public static readonly string DebugType = nameof(DebugType);
+
+        /// <summary>
+        /// Boolean property indicating whether to generate WiX pack used for signing.
+        /// </summary>
+        public static readonly string GenerateWixpack = nameof(GenerateWixpack);
     }
 }
