@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
@@ -38,11 +38,11 @@
   <ItemGroup Condition="'$(IncludeWiX)' == 'true'">
     <PackageReference Include="Microsoft.Signed.Wix" />
 
-    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Resources.dll" />
-    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Compression.dll" />
-    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Compression.Cab.dll" />
-    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.WindowsInstaller.dll" />
-    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.WindowsInstaller.Package.dll" />
+    <PackageReference Include="Microsoft.WixToolset.Dtf.Compression" />
+    <PackageReference Include="Microsoft.WixToolset.Dtf.Compression.Cab" />
+    <PackageReference Include="Microsoft.WixToolset.Dtf.Resources" />
+    <PackageReference Include="Microsoft.WixToolset.Dtf.WindowsInstaller" />
+    <PackageReference Include="Microsoft.WixToolset.Dtf.WindowsInstaller.Package" />    
   </ItemGroup>
 
   <ItemGroup>
@@ -57,20 +57,33 @@
     <EmbeddedResource Include="Misc\*.*" />
     <EmbeddedResource Include="MsiTemplate\*.wxs" />
     <EmbeddedResource Include="MsiTemplate\*.wxi" />
+    <EmbeddedResource Include="MsiTemplate\*.pp" />
+    <EmbeddedResource Include="MsiTemplate\*.wixproj" />
     <EmbeddedResource Include="SwixTemplate\*.swr" />
     <EmbeddedResource Include="SwixTemplate\*.swixproj" />
-    <EmbeddedResource Include="..\..\Common\wix\dotnethome_x64.wxs" Link="MsiTemplate\dotnethome_x64.wxs" />
-    <EmbeddedResource Update="Strings.resx"
-                      Generator="ResXFileCodeGenerator"
-                      LastGenOutput="Strings.Designer.cs" />
+    <EmbeddedResource Include="..\..\Common\wix5\dotnethome_x64.wxs" Link="MsiTemplate\dotnethome_x64.wxs" />
+    <EmbeddedResource Update="Strings.resx" Generator="ResXFileCodeGenerator" LastGenOutput="Strings.Designer.cs" />
   </ItemGroup>
   
   <ItemGroup>
     <Compile Include="..\..\Common\Internal\BuildTask.cs" />
-    <Compile Update="Strings.Designer.cs"
-             DesignTime="True"
-             AutoGen="True"
-             DependentUpon="Strings.resx" />
+    <Compile Update="Strings.Designer.cs" DesignTime="True" AutoGen="True" DependentUpon="Strings.resx" />
   </ItemGroup>
 
+  <Target Name="GenerateToolsetInfo" BeforeTargets="CoreCompile">
+    <ItemGroup>
+      <ToolsetInfoLines Include="namespace Microsoft.DotNet.Build.Tasks.Workloads&#xD;&#xA;"/>
+      <ToolsetInfoLines Include="{&#xD;&#xA;"/>
+      <ToolsetInfoLines Include="    public class ToolsetInfo&#xD;&#xA;"/>
+      <ToolsetInfoLines Include="    {&#xD;&#xA;"/>
+      <ToolsetInfoLines Include="        public const string MicrosoftWixToolsetVersion = &quot;$(MicrosoftWiXToolsetSdkVersion)&quot;%3B&#xD;&#xA;"/>
+      <ToolsetInfoLines Include="        public const string ArcadeVersion = &quot;$(VersionPrefix)-&#x2A;&quot;%3B&#xD;&#xA;"/>
+      <ToolsetInfoLines Include="    }&#xD;&#xA;"/>
+      <ToolsetInfoLines Include="}&#xD;&#xA;"/>
+    </ItemGroup>
+    <WriteLinesToFile File="$(IntermediateOutputPath)ToolsetInfo.cs" Overwrite="true" Lines="@(ToolsetInfoLines)" />
+    <ItemGroup>
+      <Compile Include="$(IntermediateOutputPath)ToolsetInfo.cs" />
+    </ItemGroup>
+  </Target>
 </Project>

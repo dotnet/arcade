@@ -15,35 +15,39 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
     public class CreateVisualStudioWorkloadSetTests : TestBase
     {
         [WindowsOnlyFact]
-        public static void ItCanCreateWorkloadSets()
+        public void ItCanCreateWorkloadSets()
         {
             // Create intermediate outputs under %temp% to avoid path issues and make sure it's clean so we don't pick up
             // conflicting sources from previous runs.
-            string baseIntermediateOutputPath = Path.Combine(Path.GetTempPath(), "WLS");
+            string testCaseDirectory = GetTestCaseDirectory();
+            string baseIntermediateOutputPath = testCaseDirectory;
 
             if (Directory.Exists(baseIntermediateOutputPath))
             {
                 Directory.Delete(baseIntermediateOutputPath, recursive: true);
             }
 
-            ITaskItem[] workloadSetPackages = new[]
-            {
+            ITaskItem[] workloadSetPackages =
+            [
                 new TaskItem(Path.Combine(TestAssetsPath, "microsoft.net.workloads.9.0.100.9.0.100-baseline.1.23464.1.nupkg"))
                 .WithMetadata(Metadata.MsiVersion, "12.8.45")
-            };
+            ];
 
-            IBuildEngine buildEngine = new MockBuildEngine();
+            var buildEngine = new MockBuildEngine();
 
             CreateVisualStudioWorkloadSet createWorkloadSetTask = new CreateVisualStudioWorkloadSet()
             {
-                BaseOutputPath = BaseOutputPath,
+                BaseOutputPath = Path.Combine(testCaseDirectory, "msi"),
                 BaseIntermediateOutputPath = baseIntermediateOutputPath,
                 BuildEngine = buildEngine,
+                OverridePackageVersions = true,
+               
                 WixToolsetPath = WixToolsetPath,
                 WorkloadSetPackageFiles = workloadSetPackages
             };
 
-            Assert.True(createWorkloadSetTask.Execute());
+            Assert.True(createWorkloadSetTask.Execute(), buildEngine.BuildErrorEvents.Count > 0 ?
+                buildEngine.BuildErrorEvents[0].Message : "Task failed. No error events");
 
             // Spot check the x64 generated MSI.
             ITaskItem msi = createWorkloadSetTask.Msis.Where(i => i.GetMetadata(Metadata.Platform) == "x64").FirstOrDefault();
@@ -57,7 +61,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
                 r.Value == "12.8.45");
 
             // Workload sets are SxS. Verify that we don't have an Upgrade table.
-            Assert.False(MsiUtils.HasTable(msi.ItemSpec, "Upgrade"));
+            // This requires suppressing the default behavior by setting Package@UpgradeStrategy to "none".
+            MsiUtils.HasTable(msi.ItemSpec, "Upgrade").Should().BeFalse("because workload sets are side-by-side");
 
             // Verify the workloadset version directory and only look at the long name version.
             DirectoryRow versionDir = MsiUtils.GetAllDirectories(msi.ItemSpec).FirstOrDefault(d => string.Equals(d.Directory, "WorkloadSetVersionDir"));

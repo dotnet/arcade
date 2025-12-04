@@ -9,6 +9,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
     internal static class DefaultValues
     {
         /// <summary>
+        /// Default component group identifier used when harvesting a directory.
+        /// </summary>
+        public const string DefaultComponentGroupName = "CG_PackageContents";
+
+        /// <summary>
         /// Prefix used in Visual Studio for SWIX based package group.
         /// </summary>
         public const string PackageGroupPrefix = "PackageGroup";
