@@ -492,11 +492,13 @@ namespace Microsoft.DotNet.SignTool
 
             // Extract explicit certificate name and DoNotUnpack flag from FileSignInfoEntry
             string explicitCertificateName = explicitFileSignInfoEntry?.CertificateName;
-            bool doNotUnpackFromFileSignInfo = explicitFileSignInfoEntry?.DoNotUnpack ?? false;
-
-            // Combine DoNotUnpack from FileSignInfo with DoNotUnpack from FileExtensionSignInfo
-            // FileSignInfo takes precedence if it's explicitly set
-            bool doNotUnpack = doNotUnpackFromFileSignInfo || signInfo.DoNotUnpack;
+            
+            // Determine DoNotUnpack value:
+            // - If FileSignInfo is present, use its DoNotUnpack value (takes precedence)
+            // - Otherwise, use the DoNotUnpack from FileExtensionSignInfo (via signInfo)
+            bool doNotUnpack = explicitFileSignInfoEntry != null 
+                ? explicitFileSignInfoEntry.DoNotUnpack 
+                : signInfo.DoNotUnpack;
 
             // If has overriding info, is it for ignoring the file?
             if (SignToolConstants.IgnoreFileCertificateSentinel.Equals(explicitCertificateName, StringComparison.OrdinalIgnoreCase))
@@ -509,11 +511,8 @@ namespace Microsoft.DotNet.SignTool
             if (explicitCertificateName != null)
             {
                 signInfo = signInfo.WithCertificateName(explicitCertificateName, _hashToCollisionIdMap[signedFileContentKey]);
-                // Apply DoNotUnpack from FileSignInfo if present
-                if (doNotUnpackFromFileSignInfo)
-                {
-                    signInfo = signInfo.WithDoNotUnpack(true);
-                }
+                // Apply DoNotUnpack from FileSignInfo (takes precedence over extension-based DoNotUnpack)
+                signInfo = signInfo.WithDoNotUnpack(explicitFileSignInfoEntry.DoNotUnpack);
                 hasSignInfo = true;
             }
 
