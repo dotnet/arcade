@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FluentAssertions;
@@ -9,11 +10,10 @@ using Microsoft.Arcade.Test.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Workloads.Msi;
-using static Microsoft.DotNet.Build.Tasks.Workloads.Msi.WorkloadManifestMsi;
 using Microsoft.NET.Sdk.WorkloadManifestReader;
 using WixToolset.Dtf.WindowsInstaller;
 using Xunit;
-using System.Collections.Generic;
+using static Microsoft.DotNet.Build.Tasks.Workloads.Msi.WorkloadManifestMsi;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 {
@@ -164,7 +164,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             string pkgDirectory = Path.Combine(outputDirectory, "pkg");
             string msiDirectory = Path.Combine(outputDirectory, "msi");
             WorkloadPack templatePack = new(new WorkloadPackId("Microsoft.iOS.Templates"), "15.2.302-preview.14.122", WorkloadPackKind.Template, null);
-            TemplatePackPackage pkg = new(templatePack, packagePath, new[] { "x64" }, pkgDirectory);
+            TemplatePackPackage pkg = new(templatePack, packagePath, ["x64"], pkgDirectory);
             pkg.Extract();
             var buildEngine = new MockBuildEngine();
             WorkloadPackMsi msi = new(pkg, "x64", buildEngine, WixToolsetPath, outputDirectory, overridePackageVersions: true);
@@ -242,14 +242,43 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             groupPackage.ManifestsPerPlatform["x64"] = new([manifestPackage]);
 
             var buildEngine = new MockBuildEngine();
-                
+
             foreach (var p in workloadPackPackages)
             {
                 p.Extract();
             }
 
             WorkloadPackGroupMsi msi = new(groupPackage, "x64", buildEngine, outputDirectory, overridePackageVersions: true);
-            msi.Build(msiOutputDirectory);
+            ITaskItem msiItem = msi.Build(msiOutputDirectory);
+            string msiPath = msiItem.GetMetadata(Metadata.FullPath);
+
+            // Build individual pack MSIs to compare against the pack group.
+            var sdkPackPackage = workloadPackPackages.FirstOrDefault(p => p.Id == "Microsoft.NET.Runtime.WebAssembly.Sdk");
+            WorkloadPackMsi sdkPackMsi = new(sdkPackPackage, "x64", buildEngine, WixToolsetPath, outputDirectory, overridePackageVersions: true);
+            ITaskItem sdkPackMsiItem = sdkPackMsi.Build(msiOutputDirectory);
+            string sdkPackMsiPath = sdkPackMsiItem.GetMetadata(Metadata.FullPath);
+
+            // Verify workdload record keys for the pack group.
+            MsiUtils.GetAllRegistryKeys(msiPath).Should().Contain(r =>
+              r.Key == @"SOFTWARE\Microsoft\dotnet\InstalledPackGroups\x64\wasm.tools.WorkloadPacks\10.0.100\Microsoft.NET.Runtime.WebAssembly.Sdk\10.0.0");
+            MsiUtils.GetAllRegistryKeys(msiPath).Should().Contain(r =>
+              r.Key == @"SOFTWARE\Microsoft\dotnet\InstalledPackGroups\x64\wasm.tools.WorkloadPacks\10.0.100\Microsoft.NET.Sdk.WebAssembly.Pack\10.0.0");
+            MsiUtils.GetAllRegistryKeys(msiPath).Should().Contain(r =>
+              r.Key == @"SOFTWARE\Microsoft\dotnet\InstalledPackGroups\x64\wasm.tools.WorkloadPacks\10.0.100\Microsoft.NETCore.App.Runtime.Mono.browser-wasm\10.0.0");
+            MsiUtils.GetAllRegistryKeys(msiPath).Should().Contain(r =>
+              r.Key == @"SOFTWARE\Microsoft\dotnet\InstalledPackGroups\x64\wasm.tools.WorkloadPacks\10.0.100\Microsoft.NETCore.App.Runtime.AOT.win-x64.Cross.browser-wasm\10.0.0");
+
+            // Verify pack directories
+            MsiUtils.GetAllDirectories(msiPath).Select(d => d.Directory).Should().Contain("PacksDir", "because the pack group contains SDK packs");
+            MsiUtils.GetAllDirectories(msiPath).Select(d => d.Directory).Should().Contain("LibraryPacksDir", "because the pack group contains a library pack");
+
+            // Individual pack MSIs and pack group should have stable IDs for their components.
+            // Pick a unique file from the File table, then locate the matching component in the pack
+            // MSI and verify that the pack group MSI contains a component with the same ID.
+            FileRow f1 = MsiUtils.GetAllFiles(sdkPackMsiPath).First(f => f.FileName.EndsWith("Sdk.props"));
+            ComponentRow c1 = MsiUtils.GetAllComponents(sdkPackMsiPath).First(c => c.Component == f1.Component_);
+            MsiUtils.GetAllComponents(msiPath).Should().Contain(c => c.ComponentId == c1.ComponentId,
+                "Packs and PackGroups should share components");
         }
     }
 }

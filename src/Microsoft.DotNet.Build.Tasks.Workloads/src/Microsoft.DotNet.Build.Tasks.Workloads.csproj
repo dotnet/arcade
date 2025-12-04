@@ -77,7 +77,7 @@
       <ToolsetInfoLines Include="    public class ToolsetInfo&#xD;&#xA;"/>
       <ToolsetInfoLines Include="    {&#xD;&#xA;"/>
       <ToolsetInfoLines Include="        public const string MicrosoftWixToolsetVersion = &quot;$(MicrosoftWiXToolsetSdkVersion)&quot;%3B&#xD;&#xA;"/>
-      <ToolsetInfoLines Include="        public const string ArcadeVersion = &quot;$(VersionPrefix)-*&quot;%3B&#xD;&#xA;"/>
+      <ToolsetInfoLines Include="        public const string ArcadeVersion = &quot;$(VersionPrefix)-&#x2A;&quot;%3B&#xD;&#xA;"/>
       <ToolsetInfoLines Include="    }&#xD;&#xA;"/>
       <ToolsetInfoLines Include="}&#xD;&#xA;"/>
     </ItemGroup>
