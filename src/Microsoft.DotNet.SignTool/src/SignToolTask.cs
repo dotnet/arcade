@@ -256,12 +256,7 @@ namespace Microsoft.DotNet.SignTool
             var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, DotNetPath, MSBuildVerbosity, LogDir, enclosingDir, SNBinaryPath, Wix3ToolsPath, WixToolsPath, TarToolPath, PkgToolPath, DotNetTimeout);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs, Log) : (SignTool)new RealSignTool(signToolArgs, Log);
 
-            var itemsToSign = ItemsToSign.Select(i => 
-            {
-                var doNotUnpackStr = i.GetMetadata(SignToolConstants.DoNotUnpack);
-                bool.TryParse(doNotUnpackStr, out bool doNotUnpack);
-                return new ItemToSign(i.ItemSpec, i.GetMetadata(SignToolConstants.CollisionPriorityId), doNotUnpack);
-            }).OrderBy(i => i.CollisionPriorityId).ToList();
+            var itemsToSign = ItemsToSign.Select(i => new ItemToSign(i.ItemSpec, i.GetMetadata(SignToolConstants.CollisionPriorityId))).OrderBy(i => i.CollisionPriorityId).ToList();
 
             Telemetry telemetry = new Telemetry();
             try
@@ -452,6 +447,8 @@ namespace Microsoft.DotNet.SignTool
                     var extension = item.ItemSpec;
                     var certificate = item.GetMetadata("CertificateName");
                     var collisionPriorityId = item.GetMetadata(SignToolConstants.CollisionPriorityId);
+                    var doNotUnpackStr = item.GetMetadata(SignToolConstants.DoNotUnpack);
+                    bool.TryParse(doNotUnpackStr, out bool doNotUnpack);
 
                     // Some supported extensions have multiple dots. Special case these so that we don't throw an error below.
                     if (!extension.Equals(Path.GetExtension(extension)) && !specialExtensions.Contains(extension))
@@ -467,8 +464,8 @@ namespace Microsoft.DotNet.SignTool
                     }
 
                     SignInfo signInfo = certificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.InvariantCultureIgnoreCase) ?
-                        SignInfo.Ignore.WithCollisionPriorityId(collisionPriorityId) :
-                        new SignInfo(certificate, collisionPriorityId: collisionPriorityId);
+                        SignInfo.Ignore.WithCollisionPriorityId(collisionPriorityId).WithDoNotUnpack(doNotUnpack) :
+                        new SignInfo(certificate, collisionPriorityId: collisionPriorityId, doNotUnpack: doNotUnpack);
 
                     if (map.ContainsKey(extension))
                     {
@@ -544,9 +541,9 @@ namespace Microsoft.DotNet.SignTool
             return map;
         }
 
-        private Dictionary<ExplicitCertificateKey, string> ParseFileSignInfo()
+        private Dictionary<ExplicitCertificateKey, FileSignInfoEntry> ParseFileSignInfo()
         {
-            var map = new Dictionary<ExplicitCertificateKey, string>();
+            var map = new Dictionary<ExplicitCertificateKey, FileSignInfoEntry>();
 
             if (FileSignInfo != null)
             {
@@ -558,6 +555,8 @@ namespace Microsoft.DotNet.SignTool
                     var certificateName = item.GetMetadata("CertificateName");
                     var collisionPriorityId = item.GetMetadata(SignToolConstants.CollisionPriorityId);
                     var executableTypeMetadata = item.GetMetadata("ExecutableType");
+                    var doNotUnpackStr = item.GetMetadata(SignToolConstants.DoNotUnpack);
+                    bool.TryParse(doNotUnpackStr, out bool doNotUnpack);
 
                     if (fileName.IndexOfAny(new[] { '/', '\\' }) >= 0)
                     {
@@ -591,13 +590,13 @@ namespace Microsoft.DotNet.SignTool
                     }
 
                     var key = new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework, collisionPriorityId, executableType);
-                    if (map.TryGetValue(key, out var existingCert))
+                    if (map.TryGetValue(key, out var existingEntry))
                     {
-                        Log.LogError($"Duplicate entries in {nameof(FileSignInfo)} with the same key ('{fileName}', '{publicKeyToken}', '{targetFramework}', '{executableTypeMetadata}'): '{existingCert}', '{certificateName}'.");
+                        Log.LogError($"Duplicate entries in {nameof(FileSignInfo)} with the same key ('{fileName}', '{publicKeyToken}', '{targetFramework}', '{executableTypeMetadata}'): '{existingEntry.CertificateName}', '{certificateName}'.");
                         continue;
                     }
 
-                    map.Add(key, certificateName);
+                    map.Add(key, new FileSignInfoEntry(certificateName, doNotUnpack));
                 }
             }
 

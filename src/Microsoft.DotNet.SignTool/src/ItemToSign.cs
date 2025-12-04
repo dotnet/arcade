@@ -9,15 +9,13 @@ namespace Microsoft.DotNet.SignTool
 {
     internal class ItemToSign
     {
-        public ItemToSign(string fullPath, string collisionPriorityId = "", bool doNotUnpack = false)
+        public ItemToSign(string fullPath, string collisionPriorityId = "")
         {
             FullPath = fullPath;
             CollisionPriorityId = collisionPriorityId;
-            DoNotUnpack = doNotUnpack;
         }
 
         public string FullPath { get; }
         public string CollisionPriorityId { get; }
-        public bool DoNotUnpack { get; }
     }
 }

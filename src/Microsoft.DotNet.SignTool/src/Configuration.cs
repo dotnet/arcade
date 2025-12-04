@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.SignTool
         /// It also contains a SignToolConstants.IgnoreFileCertificateSentinel flag in the certificate name in case the file does not need to be signed
         /// for that 
         /// </summary>
-        private readonly Dictionary<ExplicitCertificateKey, string> _fileSignInfo;
+        private readonly Dictionary<ExplicitCertificateKey, FileSignInfoEntry> _fileSignInfo;
 
         /// <summary>
         /// Used to look for signing information when we have the PublicKeyToken of a file.
@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.SignTool
             string tempDir,
             List<ItemToSign> itemsToSign,
             Dictionary<string, List<SignInfo>> strongNameInfo,
-            Dictionary<ExplicitCertificateKey, string> fileSignInfo,
+            Dictionary<ExplicitCertificateKey, FileSignInfoEntry> fileSignInfo,
             Dictionary<string, List<SignInfo>> extensionSignInfo,
             Dictionary<string, List<AdditionalCertificateInformation>> additionalCertificateInformation,
             HashSet<string> itemsToSkip3rdPartyCheck,
@@ -169,7 +169,7 @@ namespace Microsoft.DotNet.SignTool
                 _whichPackagesTheFileIsIn[fileUniqueKey] = packages;
 
                 PathWithHash pathWithHash = new PathWithHash(itemToSign.FullPath, contentHash);
-                TrackFile(pathWithHash, null, itemToSign.CollisionPriorityId, itemToSign.DoNotUnpack);
+                TrackFile(pathWithHash, null, itemToSign.CollisionPriorityId);
             }
             gatherInfoTime.Stop();
             if (_telemetry != null)
@@ -207,7 +207,7 @@ namespace Microsoft.DotNet.SignTool
             return new BatchSignInput(_filesToSign.ToImmutableArray(), _zipDataMap.ToImmutableDictionary(), _filesToCopy.ToImmutableArray());
         }
 
-        private FileSignInfo TrackFile(PathWithHash file, PathWithHash parentContainer, string collisionPriorityId, bool doNotUnpack = false)
+        private FileSignInfo TrackFile(PathWithHash file, PathWithHash parentContainer, string collisionPriorityId)
         {
             bool isNested = parentContainer != null;
             _log.LogMessage($"Tracking file '{file.FullPath}' isNested={isNested}");
@@ -215,7 +215,7 @@ namespace Microsoft.DotNet.SignTool
             // If there's a wixpack in ItemsToSign which corresponds to this file, pass along the path of 
             // the wixpack so we can associate the wixpack with the item
             var wixPack = _wixPacks.SingleOrDefault(w => w.Moniker.Equals(file.FileName, StringComparison.OrdinalIgnoreCase));
-            var fileSignInfo = ExtractSignInfo(file, parentContainer, collisionPriorityId, wixPack.FullPath, doNotUnpack);
+            var fileSignInfo = ExtractSignInfo(file, parentContainer, collisionPriorityId, wixPack.FullPath);
 
             if (_filesByContentKey.TryGetValue(fileSignInfo.FileContentKey, out var existingSignInfo))
             {
@@ -235,7 +235,8 @@ namespace Microsoft.DotNet.SignTool
                 return fileSignInfo;
             }
 
-            // Skip unpacking if DoNotUnpack is set
+            // Skip unpacking if DoNotUnpack is set on the SignInfo (from FileSignInfo or FileExtensionSignInfo)
+            bool doNotUnpack = fileSignInfo.SignInfo.DoNotUnpack;
             if (fileSignInfo.IsUnpackableContainer())
             {
                 if (doNotUnpack)
@@ -312,11 +313,10 @@ namespace Microsoft.DotNet.SignTool
             PathWithHash file,
             PathWithHash parentContainer,
             string collisionPriorityId,
-            string wixContentFilePath,
-            bool doNotUnpack = false)
+            string wixContentFilePath)
         {
             var extension = Path.GetExtension(file.FileName);
-            string explicitCertificateName = null;
+            FileSignInfoEntry explicitFileSignInfoEntry = null;
             var fileSpec = string.Empty;
             var isAlreadyAuthenticodeSigned = false;
             var isAlreadyStrongNamed = false;
@@ -334,7 +334,7 @@ namespace Microsoft.DotNet.SignTool
             if (file.ContentHash == ContentUtil.EmptyFileContentHash)
             {
                 _log.LogMessage(MessageImportance.Low, $"Ignoring zero length file: {file.FullPath}");
-                return new FileSignInfo(file, SignInfo.Ignore, wixContentFilePath: wixContentFilePath, doNotUnpack: doNotUnpack);
+                return new FileSignInfo(file, SignInfo.Ignore, wixContentFilePath: wixContentFilePath);
             }
 
             // handle multi-part extensions like ".symbols.nupkg" specified in FileExtensionSignInfo
@@ -437,11 +437,11 @@ namespace Microsoft.DotNet.SignTool
                 // Check if we have more specific sign info:
                 matchedNameTokenFramework = _fileSignInfo.TryGetValue(
                     new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, peInfo.TargetFramework, _hashToCollisionIdMap[signedFileContentKey]),
-                    out explicitCertificateName);
+                    out explicitFileSignInfoEntry);
                 
                 matchedNameToken = !matchedNameTokenFramework && _fileSignInfo.TryGetValue(
                     new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]),
-                    out explicitCertificateName);
+                    out explicitFileSignInfoEntry);
 
                 fileSpec = matchedNameTokenFramework ? $" (PublicKeyToken = {peInfo.PublicKeyToken}, Framework = {peInfo.TargetFramework})" :
                         matchedNameToken ? $" (PublicKeyToken = {peInfo.PublicKeyToken})" : string.Empty;
@@ -472,17 +472,17 @@ namespace Microsoft.DotNet.SignTool
             }
 
             // We didn't find any specific information for PE files using PKT + TargetFramework
-            if (explicitCertificateName == null)
+            if (explicitFileSignInfoEntry == null)
             {
                 // First try with ExecutableType
                 var matchedNameAndExecutableType = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(file.FileName,
-                    collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey], executableType: executableType), out explicitCertificateName);
+                    collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey], executableType: executableType), out explicitFileSignInfoEntry);
                 
                 // If no match with ExecutableType, try without it for backward compatibility
                 if (!matchedNameAndExecutableType)
                 {
                     matchedName = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(file.FileName,
-                        collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]), out explicitCertificateName);
+                        collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]), out explicitFileSignInfoEntry);
                 }
                 else
                 {
@@ -490,17 +490,30 @@ namespace Microsoft.DotNet.SignTool
                 }
             }
 
+            // Extract explicit certificate name and DoNotUnpack flag from FileSignInfoEntry
+            string explicitCertificateName = explicitFileSignInfoEntry?.CertificateName;
+            bool doNotUnpackFromFileSignInfo = explicitFileSignInfoEntry?.DoNotUnpack ?? false;
+
+            // Combine DoNotUnpack from FileSignInfo with DoNotUnpack from FileExtensionSignInfo
+            // FileSignInfo takes precedence if it's explicitly set
+            bool doNotUnpack = doNotUnpackFromFileSignInfo || signInfo.DoNotUnpack;
+
             // If has overriding info, is it for ignoring the file?
             if (SignToolConstants.IgnoreFileCertificateSentinel.Equals(explicitCertificateName, StringComparison.OrdinalIgnoreCase))
             {
                 _log.LogMessage(MessageImportance.Low, $"File configured to not be signed: {file.FullPath}{fileSpec}");
-                return new FileSignInfo(file, SignInfo.Ignore, doNotUnpack: doNotUnpack);
+                return new FileSignInfo(file, SignInfo.Ignore.WithDoNotUnpack(doNotUnpack));
             }
 
             // Do we have an explicit certificate after all?
             if (explicitCertificateName != null)
             {
                 signInfo = signInfo.WithCertificateName(explicitCertificateName, _hashToCollisionIdMap[signedFileContentKey]);
+                // Apply DoNotUnpack from FileSignInfo if present
+                if (doNotUnpackFromFileSignInfo)
+                {
+                    signInfo = signInfo.WithDoNotUnpack(true);
+                }
                 hasSignInfo = true;
             }
 
@@ -527,14 +540,14 @@ namespace Microsoft.DotNet.SignTool
                     _log.LogWarning($"Skipping file '{file.FullPath}' because .js files are no longer signed by default. " +
                         "To disable this warning, please explicitly define the FileExtensionSignInfo for the .js extension " +
                         "or set the MSBuild property 'NoSignJS' to 'true'.");
-                    return new FileSignInfo(file, SignInfo.Ignore, wixContentFilePath: wixContentFilePath, doNotUnpack: doNotUnpack);
+                    return new FileSignInfo(file, SignInfo.Ignore.WithDoNotUnpack(doNotUnpack), wixContentFilePath: wixContentFilePath);
                 }
 
                 // If the file is already signed and we are not allowed to dual sign, and we are not doing a mac notarization operation,
                 // then we should not sign the file.
                 if (isAlreadyAuthenticodeSigned && !dualCertsAllowed && string.IsNullOrEmpty(macNotarizationAppName))
                 {
-                    return new FileSignInfo(file, signInfo.WithIsAlreadySigned(isAlreadyAuthenticodeSigned), wixContentFilePath: wixContentFilePath, doNotUnpack: doNotUnpack);
+                    return new FileSignInfo(file, signInfo.WithIsAlreadySigned(isAlreadyAuthenticodeSigned), wixContentFilePath: wixContentFilePath);
                 }
 
                 // If the certificate indicates that the file has a split sign/notarize operation,
@@ -553,7 +566,7 @@ namespace Microsoft.DotNet.SignTool
                     signInfo = signInfo.WithDetachedSignature(signInfo.Certificate);
                 }
 
-                return new FileSignInfo(file, signInfo, (peInfo != null && peInfo.TargetFramework != "") ? peInfo.TargetFramework : null, wixContentFilePath: wixContentFilePath, doNotUnpack: doNotUnpack);
+                return new FileSignInfo(file, signInfo, (peInfo != null && peInfo.TargetFramework != "") ? peInfo.TargetFramework : null, wixContentFilePath: wixContentFilePath);
             }
 
             if (SignToolConstants.SignableExtensions.Contains(extension))
@@ -566,7 +579,7 @@ namespace Microsoft.DotNet.SignTool
                 _log.LogMessage(MessageImportance.Low, $"Ignoring non-signable file: {file.FullPath}");
             }
 
-            return new FileSignInfo(file, SignInfo.Ignore, wixContentFilePath: wixContentFilePath, doNotUnpack: doNotUnpack);
+            return new FileSignInfo(file, SignInfo.Ignore.WithDoNotUnpack(doNotUnpack), wixContentFilePath: wixContentFilePath);
 
             bool IsSigned(PathWithHash file, SigningStatus signingStatus)
             {
