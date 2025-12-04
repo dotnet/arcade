@@ -127,13 +127,11 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool HasSignableParts { get; }
 
-        internal bool DoNotUnpack { get; }
-
-        internal bool ShouldRepack => HasSignableParts && !DoNotUnpack;
+        internal bool ShouldRepack => HasSignableParts && !SignInfo.DoNotUnpack;
 
         internal bool ShouldTrack => SignInfo.ShouldSign || ShouldRepack;
 
-        internal FileSignInfo(PathWithHash pathWithHash, SignInfo signInfo, string targetFramework = null, string wixContentFilePath = null, bool hasSignableParts = false, bool doNotUnpack = false)
+        internal FileSignInfo(PathWithHash pathWithHash, SignInfo signInfo, string targetFramework = null, string wixContentFilePath = null, bool hasSignableParts = false)
         {
             Debug.Assert(pathWithHash.FullPath != null);
             Debug.Assert(!pathWithHash.ContentHash.IsDefault && pathWithHash.ContentHash.Length == 256 / 8);
@@ -145,7 +143,6 @@ namespace Microsoft.DotNet.SignTool
             TargetFramework = targetFramework;
             WixContentFilePath = wixContentFilePath;
             HasSignableParts = hasSignableParts;
-            DoNotUnpack = doNotUnpack;
         }
 
         public override string ToString()
@@ -156,7 +153,7 @@ namespace Microsoft.DotNet.SignTool
                (SignInfo.ShouldNotarize ? $" NotarizationAppName='{SignInfo.NotarizationAppName}'" : "");
 
         internal FileSignInfo WithSignableParts()
-            => new FileSignInfo(File, SignInfo.WithIsAlreadySigned(false), TargetFramework, WixContentFilePath, true, DoNotUnpack);
+            => new FileSignInfo(File, SignInfo.WithIsAlreadySigned(false), TargetFramework, WixContentFilePath, true);
 
     }
 }
