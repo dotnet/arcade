@@ -127,7 +127,7 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool HasSignableParts { get; }
 
-        internal bool ShouldRepack => HasSignableParts;
+        internal bool ShouldRepack => HasSignableParts && !SignInfo.DoNotUnpack;
 
         internal bool ShouldTrack => SignInfo.ShouldSign || ShouldRepack;
 

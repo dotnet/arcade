@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.SignTool
         /// It also contains a SignToolConstants.IgnoreFileCertificateSentinel flag in the certificate name in case the file does not need to be signed
         /// for that 
         /// </summary>
-        private readonly Dictionary<ExplicitCertificateKey, string> _fileSignInfo;
+        private readonly Dictionary<ExplicitCertificateKey, FileSignInfoEntry> _fileSignInfo;
 
         /// <summary>
         /// Used to look for signing information when we have the PublicKeyToken of a file.
@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.SignTool
             string tempDir,
             List<ItemToSign> itemsToSign,
             Dictionary<string, List<SignInfo>> strongNameInfo,
-            Dictionary<ExplicitCertificateKey, string> fileSignInfo,
+            Dictionary<ExplicitCertificateKey, FileSignInfoEntry> fileSignInfo,
             Dictionary<string, List<SignInfo>> extensionSignInfo,
             Dictionary<string, List<AdditionalCertificateInformation>> additionalCertificateInformation,
             HashSet<string> itemsToSkip3rdPartyCheck,
@@ -235,37 +235,47 @@ namespace Microsoft.DotNet.SignTool
                 return fileSignInfo;
             }
 
+            // Skip unpacking if DoNotUnpack is set on the SignInfo (from FileSignInfo or FileExtensionSignInfo)
+            bool doNotUnpack = fileSignInfo.SignInfo.DoNotUnpack;
             if (fileSignInfo.IsUnpackableContainer())
             {
-                if (fileSignInfo.IsUnpackableWixContainer())
+                if (doNotUnpack)
                 {
-                    _log.LogMessage($"Trying to gather data for wix container {fileSignInfo.FullPath}");
-                    if (TryBuildWixData(fileSignInfo, out var msiData))
-                    {
-                        _zipDataMap[fileSignInfo.FileContentKey] = msiData;
-                    }
-                    else
-                    {
-                        _log.LogError($"Failed to build wix data for {fileSignInfo.FullPath}");
-                    }
+                    _log.LogMessage(MessageImportance.Normal, "Skipping container unpacking for '{0}' due to DoNotUnpack flag", file.FullPath);
                 }
                 else
                 {
-                    if (TryBuildZipData(fileSignInfo, out var zipData))
+                    if (fileSignInfo.IsUnpackableWixContainer())
                     {
-                        _zipDataMap[fileSignInfo.FileContentKey] = zipData;
+                        _log.LogMessage($"Trying to gather data for wix container {fileSignInfo.FullPath}");
+                        if (TryBuildWixData(fileSignInfo, out var msiData))
+                        {
+                            _zipDataMap[fileSignInfo.FileContentKey] = msiData;
+                        }
+                        else
+                        {
+                            _log.LogError($"Failed to build wix data for {fileSignInfo.FullPath}");
+                        }
                     }
                     else
                     {
-                        _log.LogError($"Failed to build zip data for {fileSignInfo.FullPath}");
+                        if (TryBuildZipData(fileSignInfo, out var zipData))
+                        {
+                            _zipDataMap[fileSignInfo.FileContentKey] = zipData;
+                        }
+                        else
+                        {
+                            _log.LogError($"Failed to build zip data for {fileSignInfo.FullPath}");
+                        }
                     }
                 }
             }
+
             _log.LogMessage(MessageImportance.Low, $"Caching file {fileSignInfo.FileContentKey.FileName} {fileSignInfo.FileContentKey.StringHash}");
             _filesByContentKey.Add(fileSignInfo.FileContentKey, fileSignInfo);
 
             bool hasSignableParts = false;
-            if (fileSignInfo.IsUnpackableContainer())
+            if (fileSignInfo.IsUnpackableContainer() && !doNotUnpack)
             {
                 // Only sign containers if the file itself is unsigned, or 
                 // an item in the container is unsigned.
@@ -306,7 +316,7 @@ namespace Microsoft.DotNet.SignTool
             string wixContentFilePath)
         {
             var extension = Path.GetExtension(file.FileName);
-            string explicitCertificateName = null;
+            FileSignInfoEntry explicitFileSignInfoEntry = null;
             var fileSpec = string.Empty;
             var isAlreadyAuthenticodeSigned = false;
             var isAlreadyStrongNamed = false;
@@ -427,11 +437,11 @@ namespace Microsoft.DotNet.SignTool
                 // Check if we have more specific sign info:
                 matchedNameTokenFramework = _fileSignInfo.TryGetValue(
                     new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, peInfo.TargetFramework, _hashToCollisionIdMap[signedFileContentKey]),
-                    out explicitCertificateName);
+                    out explicitFileSignInfoEntry);
                 
                 matchedNameToken = !matchedNameTokenFramework && _fileSignInfo.TryGetValue(
                     new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]),
-                    out explicitCertificateName);
+                    out explicitFileSignInfoEntry);
 
                 fileSpec = matchedNameTokenFramework ? $" (PublicKeyToken = {peInfo.PublicKeyToken}, Framework = {peInfo.TargetFramework})" :
                         matchedNameToken ? $" (PublicKeyToken = {peInfo.PublicKeyToken})" : string.Empty;
@@ -462,17 +472,17 @@ namespace Microsoft.DotNet.SignTool
             }
 
             // We didn't find any specific information for PE files using PKT + TargetFramework
-            if (explicitCertificateName == null)
+            if (explicitFileSignInfoEntry == null)
             {
                 // First try with ExecutableType
                 var matchedNameAndExecutableType = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(file.FileName,
-                    collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey], executableType: executableType), out explicitCertificateName);
+                    collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey], executableType: executableType), out explicitFileSignInfoEntry);
                 
                 // If no match with ExecutableType, try without it for backward compatibility
                 if (!matchedNameAndExecutableType)
                 {
                     matchedName = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(file.FileName,
-                        collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]), out explicitCertificateName);
+                        collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]), out explicitFileSignInfoEntry);
                 }
                 else
                 {
@@ -480,17 +490,29 @@ namespace Microsoft.DotNet.SignTool
                 }
             }
 
+            // Extract explicit certificate name and DoNotUnpack flag from FileSignInfoEntry
+            string explicitCertificateName = explicitFileSignInfoEntry?.CertificateName;
+            
+            // Determine DoNotUnpack value:
+            // - If FileSignInfo is present, use its DoNotUnpack value (takes precedence)
+            // - Otherwise, use the DoNotUnpack from FileExtensionSignInfo (via signInfo)
+            bool doNotUnpack = explicitFileSignInfoEntry != null 
+                ? explicitFileSignInfoEntry.DoNotUnpack 
+                : signInfo.DoNotUnpack;
+
             // If has overriding info, is it for ignoring the file?
             if (SignToolConstants.IgnoreFileCertificateSentinel.Equals(explicitCertificateName, StringComparison.OrdinalIgnoreCase))
             {
                 _log.LogMessage(MessageImportance.Low, $"File configured to not be signed: {file.FullPath}{fileSpec}");
-                return new FileSignInfo(file, SignInfo.Ignore);
+                return new FileSignInfo(file, SignInfo.Ignore.WithDoNotUnpack(doNotUnpack));
             }
 
             // Do we have an explicit certificate after all?
             if (explicitCertificateName != null)
             {
                 signInfo = signInfo.WithCertificateName(explicitCertificateName, _hashToCollisionIdMap[signedFileContentKey]);
+                // Apply DoNotUnpack from FileSignInfo (takes precedence over extension-based DoNotUnpack)
+                signInfo = signInfo.WithDoNotUnpack(explicitFileSignInfoEntry.DoNotUnpack);
                 hasSignInfo = true;
             }
 
@@ -517,7 +539,7 @@ namespace Microsoft.DotNet.SignTool
                     _log.LogWarning($"Skipping file '{file.FullPath}' because .js files are no longer signed by default. " +
                         "To disable this warning, please explicitly define the FileExtensionSignInfo for the .js extension " +
                         "or set the MSBuild property 'NoSignJS' to 'true'.");
-                    return new FileSignInfo(file, SignInfo.Ignore, wixContentFilePath: wixContentFilePath);
+                    return new FileSignInfo(file, SignInfo.Ignore.WithDoNotUnpack(doNotUnpack), wixContentFilePath: wixContentFilePath);
                 }
 
                 // If the file is already signed and we are not allowed to dual sign, and we are not doing a mac notarization operation,
@@ -556,7 +578,7 @@ namespace Microsoft.DotNet.SignTool
                 _log.LogMessage(MessageImportance.Low, $"Ignoring non-signable file: {file.FullPath}");
             }
 
-            return new FileSignInfo(file, SignInfo.Ignore, wixContentFilePath: wixContentFilePath);
+            return new FileSignInfo(file, SignInfo.Ignore.WithDoNotUnpack(doNotUnpack), wixContentFilePath: wixContentFilePath);
 
             bool IsSigned(PathWithHash file, SigningStatus signingStatus)
             {
