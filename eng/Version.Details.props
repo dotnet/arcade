@@ -46,7 +46,7 @@ This file should be imported by eng/Versions.props
     <SystemTextEncodingsWebPackageVersion>9.0.0</SystemTextEncodingsWebPackageVersion>
     <SystemTextJsonPackageVersion>9.0.0</SystemTextJsonPackageVersion>
     <!-- JamesNK/Newtonsoft.Json dependencies -->
-    <NewtonsoftJsonPackageVersion>13.0.3</NewtonsoftJsonPackageVersion>
+    <NewtonsoftJsonPackageVersion>13.0.4</NewtonsoftJsonPackageVersion>
     <!-- dotnet/deployment-tools dependencies -->
     <MicrosoftDeploymentDotNetReleasesPackageVersion>2.0.0-preview.1.24305.1</MicrosoftDeploymentDotNetReleasesPackageVersion>
     <!-- dotnet/sdk dependencies -->

@@ -112,9 +112,9 @@
     <!-- Needed for when this dependency gets updated in 
          https://github.com/dotnet/source-build-externals, otherwise
          a prebuilt will be introduced until the VMR is rebootstrapped. -->
-    <Dependency Name="Newtonsoft.Json" Version="13.0.3">
+    <Dependency Name="Newtonsoft.Json" Version="13.0.4">
       <Uri>https://github.com/JamesNK/Newtonsoft.Json</Uri>
-      <Sha>0a2e291c0d9c0c7675d445703e51750363a549ef</Sha>
+      <Sha>4e13299d4b0ec96bd4df9954ef646bd2d1b5bf2a</Sha>
     </Dependency>
     <Dependency Name="System.Text.Encodings.Web" Version="9.0.0">
       <Uri>https://github.com/dotnet/runtime</Uri>
