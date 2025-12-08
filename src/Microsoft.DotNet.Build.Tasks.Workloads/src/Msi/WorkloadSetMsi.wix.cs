@@ -27,6 +27,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         protected override Guid UpgradeCode => 
             Utils.CreateUuid(UpgradeCodeNamespaceUuid, $"{_package.Identity};{Platform}");
 
+        protected override string? MsiPackageType => DefaultValues.WorkloadSetMsi;
+
         public WorkloadSetMsi(WorkloadSetPackage package, string platform, IBuildEngine buildEngine,
             string baseIntermediatOutputPath, string wixToolsetVersion = ToolsetInfo.MicrosoftWixToolsetVersion,
             bool overridePackageVersions = false, bool generateWixPack = false) :

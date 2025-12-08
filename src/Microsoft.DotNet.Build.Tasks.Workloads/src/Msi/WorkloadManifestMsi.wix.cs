@@ -26,6 +26,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// <inheritdoc />
         protected override string BaseOutputName => Path.GetFileNameWithoutExtension(Package.PackagePath);
 
+        protected override string? MsiPackageType => DefaultValues.ManifestMsi;
+
         /// <summary>
         /// <see langword="true">True</see> if the manifest installer supports side-by-side installs, otherwise it's 
         /// assumed the installer supports major upgrades.

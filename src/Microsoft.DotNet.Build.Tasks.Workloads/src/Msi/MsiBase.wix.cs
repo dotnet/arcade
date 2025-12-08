@@ -198,6 +198,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         }
 
         /// <summary>
+        /// The package type represented by the MSI.
+        /// </summary>
+        protected abstract string? MsiPackageType
+        {
+            get;
+        }
+
+        /// <summary>
         /// Creates a new instance of the <see cref="MsiBase"/> class.
         /// </summary>
         /// <param name="metadata">Metadata passed to the <see cref="CreateVisualStudioWorkload"/> task that are used to build the MSI.</param>
@@ -378,6 +386,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             msiItem.SetMetadata(Workloads.Metadata.Platform, Platform);
             msiItem.SetMetadata(Workloads.Metadata.Version, $"{Metadata.MsiVersion}");
             msiItem.SetMetadata(Workloads.Metadata.SwixPackageId, Metadata.SwixPackageId);
+            msiItem.SetMetadata(Workloads.Metadata.PackageType, MsiPackageType);
 
             if (GenerateWixpack && !string.IsNullOrEmpty(WixpackOutputDirectory))
             {

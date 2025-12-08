@@ -197,9 +197,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             string outputDirectory = GetTestCaseDirectory();
             string packageContentsDirectory = Path.Combine(outputDirectory, "pkg");
             string msiOutputDirectory = Path.Combine(outputDirectory, "msi");
+            string pkgOutputDirectory = Path.Combine(outputDirectory, "nuget");
             string packageSource = Path.Combine(TestAssetsPath, "wasm");
 
-            TaskItem packageItem = new(Path.Combine(TestAssetsPath, "microsoft.net.workload.mono.toolchain.current.manifest-10.0.100.10.0.100.nupkg"));
+            TaskItem packageItem = new(Path.Combine(packageSource, "microsoft.net.workload.mono.toolchain.current.manifest-10.0.100.10.0.100.nupkg"));
             WorkloadManifestPackage manifestPackage = new(packageItem, packageContentsDirectory, new Version("1.2.3"));
             // Parse the manifest to extract information related to workload packs so we can extract a specific pack.
             WorkloadManifest manifest = manifestPackage.GetManifest();
@@ -249,8 +250,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             }
 
             WorkloadPackGroupMsi msi = new(groupPackage, "x64", buildEngine, outputDirectory, overridePackageVersions: true);
-            ITaskItem msiItem = msi.Build(msiOutputDirectory);
-            string msiPath = msiItem.GetMetadata(Metadata.FullPath);
+            ITaskItem msiWorkloadPackGroupOutputItem = msi.Build(msiOutputDirectory);
+            string msiPath = msiWorkloadPackGroupOutputItem.GetMetadata(Metadata.FullPath);
+
+            MsiPayloadPackageProject csproj = new(msi.Metadata, msiWorkloadPackGroupOutputItem, outputDirectory, pkgOutputDirectory, msi.NuGetPackageFiles);
+            msiWorkloadPackGroupOutputItem.SetMetadata(Metadata.PackageProject, csproj.Create());
 
             // Build individual pack MSIs to compare against the pack group.
             var sdkPackPackage = workloadPackPackages.FirstOrDefault(p => p.Id == "Microsoft.NET.Runtime.WebAssembly.Sdk");

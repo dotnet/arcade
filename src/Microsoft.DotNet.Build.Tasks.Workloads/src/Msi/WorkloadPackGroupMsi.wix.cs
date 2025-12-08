@@ -32,6 +32,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         protected override Guid UpgradeCode =>
             Utils.CreateUuid(UpgradeCodeNamespaceUuid, $"{Metadata.Id};{Platform}");
 
+        protected override string? MsiPackageType => DefaultValues.WorkloadPackGroupMsi;
+
         /// <summary>
         /// Gets a new directory ID.
         /// </summary>
@@ -83,8 +85,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
 
             foreach (var pack in _package.Packs)
             {
-                // wixproj.AddHarvestDirectory(pack.DestinationDirectory,,, $"CG_PackageContents_{packNumber}");
-
                 // Calculate the installation directory for the pack and generate a unique reference
                 string packInstallDir = WorkloadPackMsi.GetInstallDir(pack.Kind);
                 string packInstallDirReference = WorkloadPackMsi.GetDirectoryReference(pack.Kind);

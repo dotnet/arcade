@@ -26,6 +26,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
 
         protected override string? InstallationRecordKey => "InstalledPacks";
 
+        protected override string? MsiPackageType => DefaultValues.WorkloadPackMsi;
+
         public WorkloadPackMsi(WorkloadPackPackage package, string platform, IBuildEngine buildEngine, string wixToolsetPath,
             string baseIntermediatOutputPath, string wixToolsetVersion = ToolsetInfo.MicrosoftWixToolsetVersion,
             bool overridePackageVersions = false, bool generateWixPack = false,
