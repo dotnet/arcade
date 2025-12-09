@@ -67,21 +67,18 @@
   
   <ItemGroup>
     <Compile Include="..\..\Common\Internal\BuildTask.cs" />
+    <None Include="ToolsetInfo.cs.pp" />
     <Compile Update="Strings.Designer.cs" DesignTime="True" AutoGen="True" DependentUpon="Strings.resx" />
   </ItemGroup>
 
   <Target Name="GenerateToolsetInfo" BeforeTargets="CoreCompile">
-    <ItemGroup>
-      <ToolsetInfoLines Include="namespace Microsoft.DotNet.Build.Tasks.Workloads&#xD;&#xA;"/>
-      <ToolsetInfoLines Include="{&#xD;&#xA;"/>
-      <ToolsetInfoLines Include="    public class ToolsetInfo&#xD;&#xA;"/>
-      <ToolsetInfoLines Include="    {&#xD;&#xA;"/>
-      <ToolsetInfoLines Include="        public const string MicrosoftWixToolsetVersion = &quot;$(MicrosoftWiXToolsetSdkVersion)&quot;%3B&#xD;&#xA;"/>
-      <ToolsetInfoLines Include="        public const string ArcadeVersion = &quot;$(VersionPrefix)-&#x2A;&quot;%3B&#xD;&#xA;"/>
-      <ToolsetInfoLines Include="    }&#xD;&#xA;"/>
-      <ToolsetInfoLines Include="}&#xD;&#xA;"/>
-    </ItemGroup>
-    <WriteLinesToFile File="$(IntermediateOutputPath)ToolsetInfo.cs" Overwrite="true" Lines="@(ToolsetInfoLines)" />
+    <PropertyGroup>
+      <ToolsetInfoText>$([System.IO.File]::ReadAllText(ToolsetInfo.cs.pp))</ToolsetInfoText>
+      <ToolsetInfoText>$(ToolsetInfoText.Replace('{MicrosoftWixToolsetSdkVersion}', $(MicrosoftWixToolsetSdkVersion)))</ToolsetInfoText>
+      <ToolsetInfoText>$(ToolsetInfoText.Replace('{ArcadeVersion}', $(VersionPrefix)-*))</ToolsetInfoText>
+    </PropertyGroup>
+      
+    <WriteLinesToFile File="$(IntermediateOutputPath)ToolsetInfo.cs" Overwrite="true" Lines="$(ToolsetInfoText)" />
     <ItemGroup>
       <Compile Include="$(IntermediateOutputPath)ToolsetInfo.cs" />
     </ItemGroup>
