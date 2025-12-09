@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         public static readonly string[] SupportedPlatforms = { "x86", "x64", "arm64" };
 
         /// <summary>
-        /// The root intermediate output directory. This directory serves as a the base for generating
+        /// The root intermediate output directory. This directory serves as the base for generating
         /// installer sources and other projects used to create workload artifacts for Visual Studio.
         /// </summary>
         [Required]
@@ -39,6 +39,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             get;
             set;
         }
+
+        /// <summary>
+        /// Determines whether a wix pack archive should be generated to sign the MSI using Arcade.
+        /// </summary>
+        public bool GenerateWixPack
+        {
+            get;
+            set;
+        } = false;
 
         /// <summary>
         /// A set of items containing all the MSIs that were generated. Additional metadata

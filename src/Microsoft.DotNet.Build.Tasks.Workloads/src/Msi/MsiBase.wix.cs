@@ -150,7 +150,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         }
 
         /// <summary>
-        /// The package version to use when adding package references to the .wixproj. Returns <see langword="null""/> 
+        /// The package version to use when adding package references to the generated .wixproj. Returns <see langword="null""/> 
         /// if <see cref="ManagePackageVersionsCentrally"/> is <see langword="true"/>.
         /// </summary>
         protected string? WixToolsetPackageVersion =>
@@ -210,14 +210,17 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// </summary>
         /// <param name="metadata">Metadata passed to the <see cref="CreateVisualStudioWorkload"/> task that are used to build the MSI.</param>
         /// <param name="buildEngine"></param>
-        /// <param name="platform"></param>
-        /// <param name="baseIntermediateOutputPath"></param>
+        /// <param name="platform">The target platform of the MSI.</param>
+        /// <param name="baseIntermediateOutputPath">The base directory to use when generating the wix project source files.</param>
         /// <param name="wixToolsetVersion">The version of the WiX toolset to use for building the installer.</param>
-        /// <param name="overridePackageVersions"></param>
+        /// <param name="overridePackageVersions">Determines whether PackageOverride attributes should be generated 
+        /// when adding package references to avoid CPM conflicts.</param>
+        /// <param name="managePackageVersionsCentrally">When set to <see langword="true"/>, package references won't include
+        /// package version information, unless version overrides are enabled.</param>
         public MsiBase(MsiMetadata metadata, IBuildEngine buildEngine,
             string platform, string baseIntermediateOutputPath, string wixToolsetVersion = ToolsetInfo.MicrosoftWixToolsetVersion,
             bool overridePackageVersions = false, bool generateWixpack = false,
-            string? wixpackOutputDirectory = null)
+            string? wixpackOutputDirectory = null, bool managePackageVersionsCentrally = false)
         {
             BuildEngine = buildEngine;
             Platform = platform;
@@ -228,6 +231,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             OverridePackageVersions = overridePackageVersions;
             GenerateWixpack = generateWixpack;
             WixpackOutputDirectory = wixpackOutputDirectory;
+            ManagePackageVersionsCentrally = managePackageVersionsCentrally;
         }
 
         /// <summary>

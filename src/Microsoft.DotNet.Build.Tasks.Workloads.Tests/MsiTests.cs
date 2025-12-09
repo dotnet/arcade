@@ -32,6 +32,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         private static ITaskItem BuildManifestMsi(string outputDirectory, string packagePath, string msiVersion = "1.2.3", string platform = "x64",
             bool allowSideBySideInstalls = true, bool generateWixpack = false, string wixpackOutputDirectory = null)
         {
+            Directory.CreateDirectory(outputDirectory);
+            File.Copy(Path.Combine(TestAssetsPath, "NuGet.config"), Path.Combine(outputDirectory, "NuGet.config"), overwrite: true);
             TaskItem packageItem = new(packagePath);
             WorkloadManifestPackage pkg = new(packageItem, Path.Combine(outputDirectory, "pkg"), new Version(msiVersion));
             pkg.Extract();

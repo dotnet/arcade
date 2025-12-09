@@ -114,14 +114,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Wix
                     // Allow null/empty versions in case CPM already defined the packages.
                     if (!string.IsNullOrEmpty(_packageReferences[packageId]))
                     {
-                        if (OverridePackageVersions)
-                        {
-                            item.SetAttribute(_attributeVersionOverride, _packageReferences[packageId]);
-                        }
-                        else
-                        {
-                            item.SetAttribute(_attributeVersion, _packageReferences[packageId]);
-                        }
+                        item.SetAttribute(OverridePackageVersions ? _attributeVersionOverride : _attributeVersion, 
+                            _packageReferences[packageId]);
                     }
                     
                     packageReferencesItemGroup.AppendChild(item);

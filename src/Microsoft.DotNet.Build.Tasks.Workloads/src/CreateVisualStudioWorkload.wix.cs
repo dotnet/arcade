@@ -166,12 +166,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 Dictionary<string, WorkloadManifestMsi> manifestMsisByPlatform = new();
                 foreach (string platform in SupportedPlatforms)
                 {
-                    var manifestMsi = new WorkloadManifestMsi(manifestPackage, platform, BuildEngine, BaseIntermediateOutputPath, EnableSideBySideManifests);
+                    var manifestMsi = new WorkloadManifestMsi(manifestPackage, platform, BuildEngine, BaseIntermediateOutputPath, 
+                        EnableSideBySideManifests, generateWixpack: GenerateWixPack);
                     manifestMsisToBuild.Add(manifestMsi);
                     manifestMsisByPlatform[platform] = manifestMsi;
                 }
 
-                // If we're supporting SxS manifests, generate a package group to wrap the manifest VS packages
+                // If we're supporting SxS manifests, a package group to wrap the manifest VS packages
                 // so we don't deal with unstable package IDs during VS insertions.
                 if (EnableSideBySideManifests)
                 {
@@ -351,7 +352,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     // Enumerate over the platforms and build each MSI once.
                     _ = Parallel.ForEach(data.FeatureBands.Keys, platform =>
                     {
-                        WorkloadPackMsi msi = new(data.Package, platform, BuildEngine, WixToolsetPath, BaseIntermediateOutputPath);
+                        WorkloadPackMsi msi = new(data.Package, platform, BuildEngine, WixToolsetPath, BaseIntermediateOutputPath,
+                            generateWixPack: GenerateWixPack);
                         ITaskItem msiOutputItem = msi.Build(MsiOutputPath);
 
                         // Generate a .csproj to package the MSI and its manifest for CLI installs.
@@ -396,7 +398,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 {
                     foreach (var platform in packGroup.ManifestsPerPlatform.Keys)
                     {
-                        WorkloadPackGroupMsi msi = new(packGroup, platform, BuildEngine, BaseIntermediateOutputPath);
+                        WorkloadPackGroupMsi msi = new(packGroup, platform, BuildEngine, BaseIntermediateOutputPath,
+                            generateWixPack: GenerateWixPack);
                         ITaskItem msiOutputItem = msi.Build(MsiOutputPath);
 
                         // Generate a .csproj to package the MSI and its manifest for CLI installs.

@@ -40,8 +40,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
                 BaseOutputPath = Path.Combine(testCaseDirectory, "msi"),
                 BaseIntermediateOutputPath = baseIntermediateOutputPath,
                 BuildEngine = buildEngine,
-                OverridePackageVersions = true,
-               
+                OverridePackageVersions = true,               
                 WixToolsetPath = WixToolsetPath,
                 WorkloadSetPackageFiles = workloadSetPackages
             };
@@ -50,7 +49,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
                 buildEngine.BuildErrorEvents[0].Message : "Task failed. No error events");
 
             // Spot check the x64 generated MSI.
-            ITaskItem msi = createWorkloadSetTask.Msis.Where(i => i.GetMetadata(Metadata.Platform) == "x64").FirstOrDefault();
+            ITaskItem msi = createWorkloadSetTask.Msis.FirstOrDefault(i => i.GetMetadata(Metadata.Platform) == "x64");
             Assert.NotNull(msi);
 
             // Verify the workload set records the CLI will use.
@@ -81,9 +80,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.Contains("vs.package.type=msi", msiSwr);
 
             // Verify package group SWIX project
-            ITaskItem workloadSetPackageGroupSwixItem = createWorkloadSetTask.SwixProjects.Where(
-                s => s.GetMetadata(Metadata.PackageType).Equals(DefaultValues.PackageTypeWorkloadSetPackageGroup)).
-                FirstOrDefault();
+            ITaskItem workloadSetPackageGroupSwixItem = createWorkloadSetTask.SwixProjects.FirstOrDefault(
+                s => s.GetMetadata(Metadata.PackageType).Equals(DefaultValues.PackageTypeWorkloadSetPackageGroup));
             string packageGroupSwr = File.ReadAllText(Path.Combine(Path.GetDirectoryName(workloadSetPackageGroupSwixItem.ItemSpec), "packageGroup.swr"));
             Assert.Contains("package name=PackageGroup.NET.Workloads-9.0.100", packageGroupSwr);
             Assert.Contains("vs.dependency id=Microsoft.NET.Workloads.9.0.100.9.0.100-baseline.1.23464.1", packageGroupSwr);
