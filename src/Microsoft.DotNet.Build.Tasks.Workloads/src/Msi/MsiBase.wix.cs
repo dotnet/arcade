@@ -388,6 +388,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             msiItem.SetMetadata(Workloads.Metadata.SwixPackageId, Metadata.SwixPackageId);
             msiItem.SetMetadata(Workloads.Metadata.PackageType, MsiPackageType);
 
+            var fi = new FileInfo(msiItem.ItemSpec);
+            if (fi.Length > DefaultValues.MaxMsiSize)
+            {
+                throw new IOException($"The generated MSI, {msiItem.ItemSpec}, exceeded the maximum size ({DefaultValues.MaxMsiSize} bytes allowed for workloads.)");
+            }
+
             if (GenerateWixpack && !string.IsNullOrEmpty(WixpackOutputDirectory))
             {
                 msiItem.SetMetadata(Workloads.Metadata.Wixpack, Path.Combine(
