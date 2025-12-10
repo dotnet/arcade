@@ -161,13 +161,13 @@ function ResetFilesToTargetBranch($patterns, $targetBranch) {
 
     # Check if there are any changes to commit after processing all patterns
     $status = & git status --porcelain
-    if ($status) {
+    if ($status -and $processedPatterns.Count -gt 0) {
         # Add all changes (the checkout already modified the specific files)
         Invoke-Block { & git add -A }
         
         # Create a commit message listing all patterns that were reset
-        $patternsList = $processedPatterns -join "', '"
-        $commitMessage = "Reset files to $targetBranch`n`nReset patterns: '$patternsList'"
+        $patternsList = $processedPatterns -join ', '
+        $commitMessage = "Reset files to $targetBranch`n`nReset patterns: $patternsList"
         
         Invoke-Block { & git commit -m $commitMessage }
         Write-Host -f Green "Successfully reset files to $targetBranch for patterns: $patternsList"
