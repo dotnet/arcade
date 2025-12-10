@@ -166,8 +166,8 @@ function ResetFilesToTargetBranch($patterns, $targetBranch) {
         Invoke-Block { & git add -A }
         
         # Create a commit message listing all patterns that were reset
-        $patternsList = $processedPatterns -join ', '
-        $commitMessage = "Reset files to $targetBranch`n`nReset patterns: $patternsList"
+        $patternsList = $processedPatterns -join "`n- "
+        $commitMessage = "Reset files to $targetBranch`n`nReset patterns:`n- $patternsList"
         
         Invoke-Block { & git commit -m $commitMessage }
         Write-Host -f Green "Successfully reset files to $targetBranch for patterns: $patternsList"
