@@ -100,14 +100,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 feedBaseUrl += "/";
             }
-            var authority = new Uri(feedBaseUrl).Authority;
-            if (PublishingConstants.AccountsWithCdns.TryGetValue(authority, out var replacementAuthority))
-            {
-                // The storage accounts are in a single datacenter in the US and thus download 
-                // times can be painful elsewhere. The CDN helps with this therefore we point the target 
-                // of the aka.ms links to the CDN.
-                feedBaseUrl = feedBaseUrl.Replace(authority, replacementAuthority);
-            }
 
             return feedBaseUrl;
         }
