@@ -4,8 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Deployment.WindowsInstaller;
-using Microsoft.Deployment.WindowsInstaller.Package;
+using WixToolset.Dtf.WindowsInstaller;
+using WixToolset.Dtf.WindowsInstaller.Package;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
 {
@@ -14,6 +14,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
     /// </summary>
     public class MsiUtils
     {
+        /// <summary>
+        /// Query string to retrieve all the rows from the MSI Component table.
+        /// </summary>
+        private const string _getComponentsQuery = "SELECT `Component`, `ComponentId`, `Directory_`, `Attributes`, `Condition`, `KeyPath` FROM `Component`";
+
         /// <summary>
         /// Query string to retrieve all the rows from the MSI File table.
         /// </summary>
@@ -27,7 +32,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// <summary>
         /// Query string to retrieve the dependency provider key from the WixDependencyProvider table.
         /// </summary>
-        private const string _getWixDependencyProviderQuery = "SELECT `ProviderKey` FROM `WixDependencyProvider`";
+        private const string _getWixDependencyProviderQuery = "SELECT `ProviderKey` FROM `Wix4DependencyProvider`";
 
         /// <summary>
         /// Query string to retrieve all the rows from the MSI Directory table.
@@ -38,6 +43,26 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// Query string to retrieve all rows from the MSI Registry table.
         /// </summary>
         private const string _getRegistryQuery = "SELECT `Root`, `Key`, `Name`, `Value` FROM `Registry`";
+
+
+        /// <summary>
+        /// Gets an enumeration of all the components inside an MSI.
+        /// </summary>
+        /// <param name="packagePath">The path of the MSI package to query.</param>
+        /// <returns>And enumeration of all the components.</returns>
+        public static IEnumerable<ComponentRow> GetAllComponents(string packagePath)
+        {
+            using InstallPackage ip = new(packagePath, DatabaseOpenMode.ReadOnly);
+            using Database db = new(packagePath, DatabaseOpenMode.ReadOnly);
+            using View componentView = db.OpenView(_getComponentsQuery);
+            List<ComponentRow> components = new();
+            componentView.Execute();
+            foreach (Record componentRecord in componentView)
+            {
+                components.Add(ComponentRow.Create(componentRecord));
+            }
+            return components;
+        }
 
         /// <summary>
         /// Gets an enumeration of all the files inside an MSI.
@@ -139,7 +164,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             using InstallPackage ip = new(packagePath, DatabaseOpenMode.ReadOnly);
             using Database db = new(packagePath, DatabaseOpenMode.ReadOnly);
 
-            if (db.Tables.Contains("WixDependencyProvider"))
+            if (db.Tables.Contains("Wix4DependencyProvider"))
             {
                 using View depProviderView = db.OpenView(_getWixDependencyProviderQuery);
                 depProviderView.Execute();
