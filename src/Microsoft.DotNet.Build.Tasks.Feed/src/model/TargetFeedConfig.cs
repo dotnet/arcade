@@ -25,16 +25,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             get
             {
                 var uriBuilder = new UriBuilder(TargetURL) { Query = "", Fragment = "" };
-                string url = uriBuilder.Uri.AbsoluteUri;
                 
                 // Apply CDN substitution for known storage accounts
-                var authority = uriBuilder.Uri.Authority;
-                if (PublishingConstants.AccountsWithCdns.TryGetValue(authority, out var replacementAuthority))
+                if (PublishingConstants.AccountsWithCdns.TryGetValue(uriBuilder.Host, out var replacementHost))
                 {
-                    url = url.Replace(authority, replacementAuthority);
+                    uriBuilder.Host = replacementHost;
                 }
                 
-                return url;
+                return uriBuilder.Uri.AbsoluteUri;
             }
         }
 
