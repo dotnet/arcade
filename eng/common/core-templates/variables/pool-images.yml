@@ -1,13 +1,16 @@
 parameters:
   is1ESPipeline: false
   isScoutingJob: false
+  useDefaultPool: false
 
 variables:
   - ${{ if eq(parameters.is1ESPipeline, 'true') }}:
     - template: /eng/common/templates-official/variables/pool-images.yml
       parameters:
         isScoutingJob: ${{ parameters.isScoutingJob }}
+        useDefaultPool: ${{ parameters.useDefaultPool }}
   - ${{ else }}:
     - template: /eng/common/templates/variables/pool-images.yml
       parameters:
         isScoutingJob: ${{ parameters.isScoutingJob }}
+        useDefaultPool: ${{ parameters.useDefaultPool }}

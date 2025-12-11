@@ -15,6 +15,7 @@
 #   - template: /eng/common/templates/variables/pool-images.yml@self
 #     parameters:
 #       isScoutingJob: false  # Optional: set to true to use scouting Windows images
+#       useDefaultPool: false  # Optional: set to true to use pool-providers default pool
 #
 #   Then use the variables in your pool definitions:
 #
@@ -32,16 +33,25 @@ parameters:
 - name: isScoutingJob
   type: boolean
   default: false
+- name: useDefaultPool
+  type: boolean
+  default: false
 
 variables:
 - ${{ if eq(variables['System.TeamProject'], 'internal') }}:
   - template: /eng/common/templates-official/variables/pool-images.yml@self
     parameters:
       isScoutingJob: ${{ parameters.isScoutingJob }}
+      useDefaultPool: ${{ parameters.useDefaultPool }}
 - ${{ else }}:
+  # Import pool-providers to get the default pool based on branch
+  - template: /eng/common/templates/variables/pool-providers.yml@self
+
   # Public build pool images
-  - name: defaultPoolName
-    value: NetCore-Public-XL
+  # Override defaultPoolName with XL pool unless useDefaultPool is true
+  - ${{ if ne(parameters.useDefaultPool, true) }}:
+    - name: defaultPoolName
+      value: NetCore-Public-XL
   - name: shortStackPoolName
     value: NetCore-Public
   - name: poolImage_Linux
