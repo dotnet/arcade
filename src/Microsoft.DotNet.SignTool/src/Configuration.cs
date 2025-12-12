@@ -34,9 +34,9 @@ namespace Microsoft.DotNet.SignTool
         private readonly string _pathToContainerUnpackingDirectory;
 
         /// <summary>
-        /// This enable the overriding of the default certificate for a given file+token+target_framework.
-        /// It also contains a SignToolConstants.IgnoreFileCertificateSentinel flag in the certificate name in case the file does not need to be signed
-        /// for that 
+        /// This enables the overriding of the default certificate for a given file+token+target_framework.
+        /// It also contains a SignToolConstants.IgnoreFileCertificateSentinel flag in the certificate name in case the file does not need to be signed.
+        /// Additionally, this can specify DoNotUnpack behavior for files without requiring a certificate to be specified.
         /// </summary>
         private readonly Dictionary<ExplicitCertificateKey, FileSignInfoEntry> _fileSignInfo;
 
@@ -54,9 +54,9 @@ namespace Microsoft.DotNet.SignTool
         private List<WixPackInfo> _wixPacks;
 
         /// <summary>
-        /// Mapping of ".ext" to certificate. Files that have an extension on this map
-        /// will be signed using the specified certificate. Input list might contain
-        /// duplicate entries
+        /// Mapping of ".ext" to signing information including certificate and DoNotUnpack flag. 
+        /// Files that have an extension on this map will be signed using the specified certificate 
+        /// and/or have DoNotUnpack behavior applied. Input list might contain duplicate entries.
         /// </summary>
         private readonly Dictionary<string, List<SignInfo>> _fileExtensionSignInfo;
 
@@ -511,9 +511,13 @@ namespace Microsoft.DotNet.SignTool
             if (explicitCertificateName != null)
             {
                 signInfo = signInfo.WithCertificateName(explicitCertificateName, _hashToCollisionIdMap[signedFileContentKey]);
-                // Apply DoNotUnpack from FileSignInfo (takes precedence over extension-based DoNotUnpack)
-                signInfo = signInfo.WithDoNotUnpack(explicitFileSignInfoEntry.DoNotUnpack);
                 hasSignInfo = true;
+            }
+            
+            // Apply DoNotUnpack from FileSignInfo if present (takes precedence over extension-based DoNotUnpack)
+            if (explicitFileSignInfoEntry != null)
+            {
+                signInfo = signInfo.WithDoNotUnpack(explicitFileSignInfoEntry.DoNotUnpack);
             }
 
             if (hasSignInfo)

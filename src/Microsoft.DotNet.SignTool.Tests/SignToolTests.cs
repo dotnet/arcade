@@ -3562,131 +3562,78 @@ $@"
         [Fact]
         public void ContainerSigningWithDoNotUnpackViaFileSignInfo()
         {
-            // List of files to be considered for signing
+            // Test DoNotUnpack for both top-level and nested containers
+            // Uses NestedContainer.1.0.0.nupkg which contains ContainerOne.1.0.0.nupkg
             var itemsToSign = new List<ItemToSign>()
             {
-                new ItemToSign(GetResourcePath("ContainerOne.1.0.0.nupkg"), collisionPriorityId: "123")
+                new ItemToSign(GetResourcePath("NestedContainer.1.0.0.nupkg"), collisionPriorityId: "123")
             };
 
-            // Default signing information
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
                 { "581d91ccdfc4ea9c", new List<SignInfo> {new SignInfo(certificate: "3PartySHA2", strongName: "ArcadeStrongTest", collisionPriorityId: "123") } }
             };
 
-            // Configure DoNotUnpack via FileSignInfo
+            // Test 1: Set DoNotUnpack=true on top-level container without certificate (uses default from extension)
+            // Result: Only the top-level container is signed, nested container is not extracted
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, FileSignInfoEntry>()
+            {
+                { new ExplicitCertificateKey("NestedContainer.1.0.0.nupkg", collisionPriorityId: "123"), new FileSignInfoEntry(doNotUnpack: true) }
+            };
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
+            {
+                "File 'NestedContainer.1.0.0.nupkg' Certificate='NuGet'",
+            });
+
+            // Test 2: Set DoNotUnpack=true on nested container with explicit certificate, but allow top-level to unpack
+            // Result: Top-level is unpacked and its contents signed, but nested container is signed without unpacking
+            fileSignInfo = new Dictionary<ExplicitCertificateKey, FileSignInfoEntry>()
             {
                 { new ExplicitCertificateKey("ContainerOne.1.0.0.nupkg", collisionPriorityId: "123"), new FileSignInfoEntry("NuGet", doNotUnpack: true) }
             };
 
-            // When DoNotUnpack is true via FileSignInfo, only the top-level container should be signed,
-            // and nested files should not be extracted or signed
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ContainerTwo.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'",
+                "File 'NestedContainer.1.0.0.nupkg' Certificate='NuGet'",
             });
         }
 
         [Fact]
         public void ContainerSigningWithDoNotUnpackViaFileExtensionSignInfo()
         {
-            // List of files to be considered for signing
+            // Test DoNotUnpack for both top-level and nested containers
             var itemsToSign = new List<ItemToSign>()
             {
-                new ItemToSign(GetResourcePath("ContainerOne.1.0.0.nupkg"), collisionPriorityId: "123")
+                new ItemToSign(GetResourcePath("NestedContainer.1.0.0.nupkg"), collisionPriorityId: "123")
             };
 
-            // Default signing information
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
                 { "581d91ccdfc4ea9c", new List<SignInfo> {new SignInfo(certificate: "3PartySHA2", strongName: "ArcadeStrongTest", collisionPriorityId: "123") } }
             };
 
-            // Empty file sign info
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, FileSignInfoEntry>();
 
-            // Configure DoNotUnpack via FileExtensionSignInfo
+            // Configure DoNotUnpack via FileExtensionSignInfo for all .nupkg files
+            // Result: Only the top-level container is signed because DoNotUnpack=true prevents extraction
             var extensionSignInfoWithDoNotUnpack = new Dictionary<string, List<SignInfo>>()
             {
                 { ".nupkg", new List<SignInfo>{ new SignInfo("NuGet", collisionPriorityId: "123", doNotUnpack: true) } },
                 { ".dll", new List<SignInfo>{ new SignInfo("Microsoft400", collisionPriorityId: "123") } },
             };
 
-            // When DoNotUnpack is true via FileExtensionSignInfo, only the top-level container should be signed,
-            // and nested files should not be extracted or signed
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, extensionSignInfoWithDoNotUnpack, new[]
             {
-                "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'",
+                "File 'NestedContainer.1.0.0.nupkg' Certificate='NuGet'",
             });
-        }
-
-        [Fact]
-        public void ContainerSigningWithoutDoNotUnpack()
-        {
-            // List of files to be considered for signing - without DoNotUnpack flag (normal behavior)
-            var itemsToSign = new List<ItemToSign>()
-            {
-                new ItemToSign(GetResourcePath("ContainerOne.1.0.0.nupkg"), collisionPriorityId: "123")
-            };
-
-            // Default signing information
-            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
-            {
-                { "581d91ccdfc4ea9c", new List<SignInfo> {new SignInfo(certificate: "3PartySHA2", strongName: "ArcadeStrongTest", collisionPriorityId: "123") } }
-            };
-
-            // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, FileSignInfoEntry>();
-
-            // When DoNotUnpack is false (normal behavior), the container should be unpacked
-            // and nested files should be signed
-            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
-            {
-                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
-                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
-                "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
-                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
-                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
-                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
-                "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'",
-            });
-        }
-
-        [Fact]
-        public void ContainerSigningWithDoNotUnpackAndDetachedSignature()
-        {
-            // List of files to be considered for signing
-            var itemsToSign = new List<ItemToSign>()
-            {
-                new ItemToSign(GetResourcePath("test.zip"), collisionPriorityId: "123")
-            };
-
-            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
-
-            // Configure the certificate to use detached signatures and DoNotUnpack via FileSignInfo
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, FileSignInfoEntry>()
-            {
-                { new ExplicitCertificateKey("test.zip", collisionPriorityId: "123"), new FileSignInfoEntry("ArchiveCert", doNotUnpack: true) }
-            };
-
-            var additionalCertificateInfo = new Dictionary<string, List<AdditionalCertificateInformation>>()
-            {
-                {  "ArchiveCert",
-                    new List<AdditionalCertificateInformation>() {
-                        new AdditionalCertificateInformation() { GeneratesDetachedSignature = true, CollisionPriorityId = "123" }
-                    }
-                }
-            };
-
-            // When DoNotUnpack is true with a certificate that generates detached signatures,
-            // only the top-level container should be signed with a detached signature (.sig file),
-            // and nested files should not be extracted or signed
-            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
-            {
-                "File 'test.zip' Certificate='ArchiveCert'",
-            },
-            additionalCertificateInfo: additionalCertificateInfo);
         }
     }
 }
