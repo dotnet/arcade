@@ -457,9 +457,10 @@ namespace Microsoft.DotNet.SignTool
                         continue;
                     }
 
-                    if (string.IsNullOrWhiteSpace(certificate))
+                    // Certificate is only required when DoNotUnpack is not set
+                    if (!doNotUnpack && string.IsNullOrWhiteSpace(certificate))
                     {
-                        Log.LogError($"CertificateName metadata of {nameof(FileExtensionSignInfo)} is invalid: '{certificate}'");
+                        Log.LogError($"CertificateName metadata of {nameof(FileExtensionSignInfo)} is required when DoNotUnpack is not set: '{extension}'");
                         continue;
                     }
 
@@ -541,9 +542,9 @@ namespace Microsoft.DotNet.SignTool
             return map;
         }
 
-        private Dictionary<ExplicitCertificateKey, FileSignInfoEntry> ParseFileSignInfo()
+        private Dictionary<ExplicitSignInfoKey, FileSignInfoEntry> ParseFileSignInfo()
         {
-            var map = new Dictionary<ExplicitCertificateKey, FileSignInfoEntry>();
+            var map = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             if (FileSignInfo != null)
             {
@@ -570,9 +571,10 @@ namespace Microsoft.DotNet.SignTool
                         continue;
                     }
 
-                    if (string.IsNullOrWhiteSpace(certificateName))
+                    // Certificate is only required when DoNotUnpack is not set
+                    if (!doNotUnpack && string.IsNullOrWhiteSpace(certificateName))
                     {
-                        Log.LogError($"CertificateName metadata of {nameof(FileSignInfo)} is invalid: '{certificateName}'");
+                        Log.LogError($"CertificateName metadata of {nameof(FileSignInfo)} is required when DoNotUnpack is not set: '{fileName}'");
                         continue;
                     }
 
@@ -589,7 +591,7 @@ namespace Microsoft.DotNet.SignTool
                         continue;
                     }
 
-                    var key = new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework, collisionPriorityId, executableType);
+                    var key = new ExplicitSignInfoKey(fileName, publicKeyToken, targetFramework, collisionPriorityId, executableType);
                     if (map.TryGetValue(key, out var existingEntry))
                     {
                         Log.LogError($"Duplicate entries in {nameof(FileSignInfo)} with the same key ('{fileName}', '{publicKeyToken}', '{targetFramework}', '{executableTypeMetadata}'): '{existingEntry.CertificateName}', '{certificateName}'.");

@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.SignTool
         /// It also contains a SignToolConstants.IgnoreFileCertificateSentinel flag in the certificate name in case the file does not need to be signed.
         /// Additionally, this can specify DoNotUnpack behavior for files without requiring a certificate to be specified.
         /// </summary>
-        private readonly Dictionary<ExplicitCertificateKey, FileSignInfoEntry> _fileSignInfo;
+        private readonly Dictionary<ExplicitSignInfoKey, FileSignInfoEntry> _fileSignInfo;
 
         /// <summary>
         /// Used to look for signing information when we have the PublicKeyToken of a file.
@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.SignTool
             string tempDir,
             List<ItemToSign> itemsToSign,
             Dictionary<string, List<SignInfo>> strongNameInfo,
-            Dictionary<ExplicitCertificateKey, FileSignInfoEntry> fileSignInfo,
+            Dictionary<ExplicitSignInfoKey, FileSignInfoEntry> fileSignInfo,
             Dictionary<string, List<SignInfo>> extensionSignInfo,
             Dictionary<string, List<AdditionalCertificateInformation>> additionalCertificateInformation,
             HashSet<string> itemsToSkip3rdPartyCheck,
@@ -436,11 +436,11 @@ namespace Microsoft.DotNet.SignTool
 
                 // Check if we have more specific sign info:
                 matchedNameTokenFramework = _fileSignInfo.TryGetValue(
-                    new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, peInfo.TargetFramework, _hashToCollisionIdMap[signedFileContentKey]),
+                    new ExplicitSignInfoKey(file.FileName, peInfo.PublicKeyToken, peInfo.TargetFramework, _hashToCollisionIdMap[signedFileContentKey]),
                     out explicitFileSignInfoEntry);
                 
                 matchedNameToken = !matchedNameTokenFramework && _fileSignInfo.TryGetValue(
-                    new ExplicitCertificateKey(file.FileName, peInfo.PublicKeyToken, collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]),
+                    new ExplicitSignInfoKey(file.FileName, peInfo.PublicKeyToken, collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]),
                     out explicitFileSignInfoEntry);
 
                 fileSpec = matchedNameTokenFramework ? $" (PublicKeyToken = {peInfo.PublicKeyToken}, Framework = {peInfo.TargetFramework})" :
@@ -475,13 +475,13 @@ namespace Microsoft.DotNet.SignTool
             if (explicitFileSignInfoEntry == null)
             {
                 // First try with ExecutableType
-                var matchedNameAndExecutableType = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(file.FileName,
+                var matchedNameAndExecutableType = _fileSignInfo.TryGetValue(new ExplicitSignInfoKey(file.FileName,
                     collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey], executableType: executableType), out explicitFileSignInfoEntry);
                 
                 // If no match with ExecutableType, try without it for backward compatibility
                 if (!matchedNameAndExecutableType)
                 {
-                    matchedName = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(file.FileName,
+                    matchedName = _fileSignInfo.TryGetValue(new ExplicitSignInfoKey(file.FileName,
                         collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]), out explicitFileSignInfoEntry);
                 }
                 else
