@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(NetToolCurrent);$(NetFrameworkToolCurrent)</TargetFrameworks>
+    <TargetFramework>$(NetToolCurrent)</TargetFramework>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
 
@@ -17,6 +17,4 @@
     <PackageReference Include="Microsoft.Build.Tasks.Core" />
   </ItemGroup>
 
-  <!-- This project is a build task dependency and needs to follow desktop version requirements. -->
-  <Import Project="$(RepositoryEngineeringDir)BuildTask.Packages.props" />
 </Project>

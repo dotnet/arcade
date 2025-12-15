@@ -282,7 +282,7 @@ namespace Microsoft.DotNet.SignTool
                 if (file.IsUnpackableContainer())
                 {
                     _log.LogMessage($"Repacking container: '{file.FileName}'");
-                    _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.Wix3ToolsPath, _signTool.WixToolsPath, _signTool.TarToolPath, _signTool.PkgToolPath);
+                    _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.Wix3ToolsPath, _signTool.WixToolsPath, _signTool.PkgToolPath);
                 }
                 else
                 {
