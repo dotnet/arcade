@@ -8,8 +8,8 @@
     <!-- Build Tasks should have this set per https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Versioning.md#recommended-settings -->
     <AutoGenerateAssemblyVersion>true</AutoGenerateAssemblyVersion>
     <BuildTaskTargetFolder Condition="'$(BuildTaskTargetFolder)' == ''">tools</BuildTaskTargetFolder>
-    <PackTasks Condition="'$(PackTasks)' == ''">true</PackTasks>
-    <TargetsForTfmSpecificContentInPackage Condition="'$(PackTasks)' == 'true'">$(TargetsForTfmSpecificContentInPackage);_AddBuildOutputToPackageCore</TargetsForTfmSpecificContentInPackage>
+    <BuildTaskTargetTfmSpecificFolder Condition="'$(BuildTaskTargetTfmSpecificFolder)' == ''">net</BuildTaskTargetTfmSpecificFolder>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddBuildOutputToPackage</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
 
   <!--
@@ -39,7 +39,7 @@
   </ItemGroup>
 
   <!-- Don't include assemblies that are provided by the SDK, next to MSBuild. -->
-  <ItemGroup Condition="'$(SkipSDKInboxPublishExcludes)' != 'true'">
+  <ItemGroup>
     <PackageReference Update="Newtonsoft.Json" Publish="false" />
     <PackageReference Update="NuGet.Commands" Publish="false" />
     <PackageReference Update="NuGet.Common" Publish="false" />
@@ -64,11 +64,13 @@
     </PackageReference>
   </ItemGroup>
 
-  <!-- Publish .NET Core assets and include them in the package under $(BuildTaskTargetFolder) directory. -->
-  <Target Name="_AddBuildOutputToPackageCore" DependsOnTargets="Publish" Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'">
-    <PropertyGroup>
-      <BuildTaskTargetTfmSpecificFolder Condition="'$(BuildTaskTargetTfmSpecificFolder)' == ''">net</BuildTaskTargetTfmSpecificFolder>
-    </PropertyGroup>
+  <!-- Invoke publish after build as packaging depends on published outputs. -->
+  <Target Name="PublishBuilder"
+          AfterTargets="Build"
+          DependsOnTargets="Publish" />
+
+  <!-- Publish assets and include them in the package under $(BuildTaskTargetFolder) directory. -->
+  <Target Name="_AddBuildOutputToPackage">
     <ItemGroup>
       <TfmSpecificPackageFile Include="$(PublishDir)**"
                               PackagePath="$(BuildTaskTargetFolder)/$(BuildTaskTargetTfmSpecificFolder)/%(RecursiveDir)%(FileName)%(Extension)"/>
