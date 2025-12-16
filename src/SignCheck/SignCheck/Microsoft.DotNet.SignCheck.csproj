@@ -12,6 +12,7 @@
     <RootNamespace>SignCheck</RootNamespace>
     <PackAsTool>true</PackAsTool>
     <ToolCommandName>signcheck</ToolCommandName>
+    <ExcludeFromSourceOnlyBuild>true</ExcludeFromSourceOnlyBuild>
   </PropertyGroup>
 
   <ItemGroup>
