@@ -67,7 +67,8 @@
   <!-- Invoke publish after build as packaging depends on published outputs. -->
   <Target Name="PublishBuilder"
           AfterTargets="Build"
-          DependsOnTargets="Publish" />
+          DependsOnTargets="Publish"
+          Condition="'$(_SuppressAllTargets)' != 'true'" />
 
   <!-- Publish assets and include them in the package under $(BuildTaskTargetFolder) directory. -->
   <Target Name="_AddBuildOutputToPackage">
