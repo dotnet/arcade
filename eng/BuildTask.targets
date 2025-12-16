@@ -10,6 +10,8 @@
     <BuildTaskTargetFolder Condition="'$(BuildTaskTargetFolder)' == ''">tools</BuildTaskTargetFolder>
     <BuildTaskTargetTfmSpecificFolder Condition="'$(BuildTaskTargetTfmSpecificFolder)' == ''">net</BuildTaskTargetTfmSpecificFolder>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddBuildOutputToPackage</TargetsForTfmSpecificContentInPackage>
+    <!-- Invoke publish before pack as packaging depends on published outputs. -->
+    <BeforePack Condition="'$(_SuppressAllTargets)' != 'true'">$(BeforePack);Publish</BeforePack>
   </PropertyGroup>
 
   <!--
@@ -63,12 +65,6 @@
       <ExcludeAssets Condition="'%(PackageReference.Publish)' == 'false'">runtime</ExcludeAssets>
     </PackageReference>
   </ItemGroup>
-
-  <!-- Invoke publish after build as packaging depends on published outputs. -->
-  <Target Name="PublishBuilder"
-          AfterTargets="Build"
-          DependsOnTargets="Publish"
-          Condition="'$(_SuppressAllTargets)' != 'true'" />
 
   <!-- Publish assets and include them in the package under $(BuildTaskTargetFolder) directory. -->
   <Target Name="_AddBuildOutputToPackage">
