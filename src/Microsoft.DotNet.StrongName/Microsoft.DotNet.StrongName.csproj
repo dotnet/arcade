@@ -1,18 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(BundledNETCoreAppTargetFramework);$(NetFrameworkToolCurrent)</TargetFrameworks>
+    <TargetFramework>$(BundledNETCoreAppTargetFramework)</TargetFramework>
     <IsPackable>true</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <IsBuildTaskProject>true</IsBuildTaskProject>
     <Description>Strong name signing and verification</Description>
     <PackageTags>Arcade Build Library Strong Name</PackageTags>
   </PropertyGroup>
-
-  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
-    <PackageReference Include="System.Reflection.Metadata" />
-    <Reference Include="WindowsBase" />
-  </ItemGroup>
 
   <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.DotNet.SignTool.Tests" />
