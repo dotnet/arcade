@@ -86,16 +86,20 @@ namespace Microsoft.SignCheck.Verification
             Log = log;
             Options = options;
 
-            AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".psd1"));
-            AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".psm1"));
-            AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".ps1"));
-            AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".ps1xml"));
-            AddFileVerifier(new CabVerifier(log, exclusions, options, ".cab"));
-            AddFileVerifier(new JarVerifier(log, exclusions, options));
-            AddFileVerifier(new MsiVerifier(log, exclusions, options));
-            AddFileVerifier(new MspVerifier(log, exclusions, options));
-            AddFileVerifier(new MsuVerifier(log, exclusions, options));
-            AddFileVerifier(new VsixVerifier(log, exclusions, options));
+            if (OperatingSystem.IsWindows())
+            {
+                AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".psd1"));
+                AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".psm1"));
+                AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".ps1"));
+                AddFileVerifier(new AuthentiCodeVerifier(log, exclusions, options, ".ps1xml"));
+                AddFileVerifier(new CabVerifier(log, exclusions, options, ".cab"));
+                AddFileVerifier(new JarVerifier(log, exclusions, options));
+                AddFileVerifier(new MsiVerifier(log, exclusions, options));
+                AddFileVerifier(new MspVerifier(log, exclusions, options));
+                AddFileVerifier(new MsuVerifier(log, exclusions, options));
+                AddFileVerifier(new VsixVerifier(log, exclusions, options));
+            }
+
             AddFileVerifier(new DebVerifier(log, exclusions, options));
             AddFileVerifier(new MachOVerifier(log, exclusions, options, ".dylib"));
             AddFileVerifier(new MachOVerifier(log, exclusions, options, ".macho"));

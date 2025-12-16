@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.Services.Client" Version="$(MicrosoftDataServicesClientVersion)" />
+    <PackageReference Include="Microsoft.Data.Services.Client" />
     <PackageReference Include="Microsoft.Data.OData" />
   </ItemGroup>
 

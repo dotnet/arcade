@@ -6,6 +6,7 @@ using Microsoft.Build.Utilities;
 using System;
 using System.IO;
 using System.Reflection;
+using System.Runtime.Loader;
 
 namespace Microsoft.DotNet.Build.Tasks
 {

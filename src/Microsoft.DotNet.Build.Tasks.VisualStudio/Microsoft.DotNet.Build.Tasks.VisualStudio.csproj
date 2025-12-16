@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Tasks.Core" />
     <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="System.IO.Packaging" />
   </ItemGroup>
 
   <ItemGroup>
