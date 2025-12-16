@@ -6,6 +6,7 @@
     <IsBuildTaskProject>true</IsBuildTaskProject>
     <Description>This package provides support for generating client library code from a swagger document.</Description>
     <DevelopmentDependency>true</DevelopmentDependency>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
