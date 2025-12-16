@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio.UnitTests
             }
         }
 
-        [Fact]
+        [WindowsOnlyFact]
         public void Execute()
         {
             var temp = Path.GetTempPath();

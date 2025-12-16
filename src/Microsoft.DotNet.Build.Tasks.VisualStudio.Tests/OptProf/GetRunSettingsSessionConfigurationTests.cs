@@ -409,7 +409,7 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio.UnitTests
             Assert.Throws<InvalidDataException>(() => GetRunSettingsSessionConfiguration.GetTestsDropName(jsonString));
         }
 
-        [Fact]
+        [WindowsOnlyFact]
         public void Execute()
         {
             var temp = Path.GetTempPath();
@@ -446,7 +446,7 @@ $@"<TestStores>
             Directory.Delete(dir, recursive: true);
         }
 
-        [Theory]
+        [WindowsOnlyTheory]
         [InlineData(products_only, products_only_expectedContainerString, products_only_expectedTestCaseFilterString)]
         [InlineData(assemblies_only, assemblies_only_expectedContainerString, assemblies_only_expectedTestCaseFilterString)]
         [InlineData(products_and_assemblies, products_and_assemblies_expectedContainerString, products_and_assemblies_expectedTestCaseFilterString)]
