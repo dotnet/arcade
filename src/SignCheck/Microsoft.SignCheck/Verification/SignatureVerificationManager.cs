@@ -97,7 +97,6 @@ namespace Microsoft.SignCheck.Verification
                 AddFileVerifier(new MsiVerifier(log, exclusions, options));
                 AddFileVerifier(new MspVerifier(log, exclusions, options));
                 AddFileVerifier(new MsuVerifier(log, exclusions, options));
-                AddFileVerifier(new VsixVerifier(log, exclusions, options));
             }
 
             AddFileVerifier(new DebVerifier(log, exclusions, options));
