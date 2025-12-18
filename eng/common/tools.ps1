@@ -312,7 +312,7 @@ function InstallDotNet([string] $dotnetRoot,
       if (Test-Path $runtimePath) {
         Write-Host "  Runtime toolset '$runtime/$architecture v$version' already installed."
         $installSuccess = $true
-        Exit
+        return
       }
     } else {
       $dotnetVersionLabel = "runtime toolset '$runtime/$architecture channel $channel'"
