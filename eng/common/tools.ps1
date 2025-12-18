@@ -291,6 +291,7 @@ function InstallDotNet([string] $dotnetRoot,
   [bool] $skipNonVersionedFiles = $false,
   [string] $runtimeSourceFeed = '',
   [string] $runtimeSourceFeedKey = '',
+  [string] $channel = '',
   [switch] $noPath) {
 
   $dotnetVersionLabel = "'sdk v$version'"
@@ -301,21 +302,36 @@ function InstallDotNet([string] $dotnetRoot,
     if ($runtime -eq "dotnet") { $runtimePath = $runtimePath + "\Microsoft.NETCore.App" }
     if ($runtime -eq "aspnetcore") { $runtimePath = $runtimePath + "\Microsoft.AspNetCore.App" }
     if ($runtime -eq "windowsdesktop") { $runtimePath = $runtimePath + "\Microsoft.WindowsDesktop.App" }
-    $runtimePath = $runtimePath + "\" + $version
-  
-    $dotnetVersionLabel = "runtime toolset '$runtime/$architecture v$version'"
+    
+    # When using channel, we can't check for an existing installation by version
+    # since we don't know which version will be installed
+    if (-not $channel) {
+      $runtimePath = $runtimePath + "\" + $version
+      $dotnetVersionLabel = "runtime toolset '$runtime/$architecture v$version'"
 
-    if (Test-Path $runtimePath) {
-      Write-Host "  Runtime toolset '$runtime/$architecture v$version' already installed."
-      $installSuccess = $true
-      Exit
+      if (Test-Path $runtimePath) {
+        Write-Host "  Runtime toolset '$runtime/$architecture v$version' already installed."
+        $installSuccess = $true
+        Exit
+      }
+    } else {
+      $dotnetVersionLabel = "runtime toolset '$runtime/$architecture channel $channel'"
     }
   }
 
   $installScript = GetDotNetInstallScript $dotnetRoot
-  $installParameters = @{
-    Version = $version
-    InstallDir = $dotnetRoot
+  
+  # Use -Channel if specified, otherwise use -Version
+  if ($channel) {
+    $installParameters = @{
+      Channel = $channel
+      InstallDir = $dotnetRoot
+    }
+  } else {
+    $installParameters = @{
+      Version = $version
+      InstallDir = $dotnetRoot
+    }
   }
 
   if ($architecture) { $installParameters.Architecture = $architecture }
