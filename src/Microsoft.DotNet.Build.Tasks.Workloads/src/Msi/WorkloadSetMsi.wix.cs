@@ -19,63 +19,44 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
 
         protected override string BaseOutputName => Path.GetFileNameWithoutExtension(_package.PackagePath);
 
-        public WorkloadSetMsi(WorkloadSetPackage package, string platform, IBuildEngine buildEngine, string wixToolsetPath,
-            string baseIntermediatOutputPath) :
-            base(MsiMetadata.Create(package), buildEngine, wixToolsetPath, platform, baseIntermediatOutputPath)
+        protected override string ProviderKeyName => 
+            $"Microsoft.NET.Workload.Set,{_package.SdkFeatureBand},{_package.PackageVersion},{Platform}";
+
+        protected override string? InstallationRecordKey => "InstalledWorkloadSets";
+
+        protected override Guid UpgradeCode => 
+            Utils.CreateUuid(UpgradeCodeNamespaceUuid, $"{_package.Identity};{Platform}");
+
+        protected override string? MsiPackageType => DefaultValues.WorkloadSetMsi;
+
+        public WorkloadSetMsi(WorkloadSetPackage package, string platform, IBuildEngine buildEngine,
+            string baseIntermediatOutputPath, string wixToolsetVersion = ToolsetInfo.MicrosoftWixToolsetVersion,
+            bool overridePackageVersions = false, bool generateWixPack = false) :
+            base(MsiMetadata.Create(package), buildEngine, platform, baseIntermediatOutputPath,
+                wixToolsetVersion, overridePackageVersions, generateWixPack)
         {
             _package = package;
         }
 
-        public override ITaskItem Build(string outputPath, ITaskItem[]? iceSuppressions)
+        protected override WixProject CreateProject()
         {
-            // Harvest the package contents before adding it to the source files we need to compile.
-            string packageContentWxs = Path.Combine(WixSourceDirectory, "PackageContent.wxs");
+            WixProject wixproj = base.CreateProject();
+
+            EmbeddedTemplates.Extract("DependencyProvider.wxs", WixSourceDirectory);
+            EmbeddedTemplates.Extract("Directories.wxs", WixSourceDirectory);
+            EmbeddedTemplates.Extract("dotnethome_x64.wxs", WixSourceDirectory);
+            EmbeddedTemplates.Extract("WorkloadSetProduct.wxs", WixSourceDirectory);
+
             string packageDataDirectory = Path.Combine(_package.DestinationDirectory, "data");
+            wixproj.AddHarvestDirectory(packageDataDirectory, MsiDirectories.WorkloadSetVersionDirectory,
+                PreprocessorDefinitionNames.SourceDir);
 
-            HarvesterToolTask heat = new(BuildEngine, WixToolsetPath)
-            {
-                DirectoryReference = MsiDirectories.WorkloadSetVersionDirectory,
-                OutputFile = packageContentWxs,
-                Platform = this.Platform,
-                SourceDirectory = packageDataDirectory
-            };
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.SourceDir, $"{packageDataDirectory}");
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.SdkFeatureBandVersion, $"{_package.SdkFeatureBand}");
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.UpgradeStrategy, "none");
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.WorkloadSetVersion, $"{_package.WorkloadSetVersion}");
 
-            if (!heat.Execute())
-            {
-                throw new Exception(Strings.HeatFailedToHarvest);
-            }
-
-            CompilerToolTask candle = CreateDefaultCompiler();
-            candle.AddSourceFiles(packageContentWxs,
-                EmbeddedTemplates.Extract("DependencyProvider.wxs", WixSourceDirectory),
-                EmbeddedTemplates.Extract("Directories.wxs", WixSourceDirectory),
-                EmbeddedTemplates.Extract("dotnethome_x64.wxs", WixSourceDirectory),
-                EmbeddedTemplates.Extract("WorkloadSetProduct.wxs", WixSourceDirectory));
-
-            // Extract the include file as it's not compilable, but imported by various source files.
-            EmbeddedTemplates.Extract("Variables.wxi", WixSourceDirectory);
-            
-            Guid upgradeCode = Utils.CreateUuid(UpgradeCodeNamespaceUuid, $"{_package.Identity};{Platform}");
-            string providerKeyName = $"Microsoft.NET.Workload.Set,{_package.SdkFeatureBand},{_package.PackageVersion},{Platform}";
-
-            // Set up additional preprocessor definitions.
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.UpgradeCode, $"{upgradeCode:B}");
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.DependencyProviderKeyName, $"{providerKeyName}");
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.SourceDir, $"{packageDataDirectory}");
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.SdkFeatureBandVersion, $"{_package.SdkFeatureBand}");
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.WorkloadSetVersion, $"{_package.WorkloadSetVersion}");
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.InstallationRecordKey, $"InstalledWorkloadSets");
-
-            if (!candle.Execute())
-            {
-                throw new Exception(Strings.FailedToCompileMsi);
-            }
-
-            ITaskItem msi = Link(candle.OutputPath, Path.Combine(outputPath, OutputName), iceSuppressions);
-
-            AddDefaultPackageFiles(msi);
-
-            return msi;
+            return wixproj;
         }
     }
 }
