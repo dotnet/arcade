@@ -136,4 +136,4 @@ node_modules/
 .idea/
 
 # vscode python env files
-.env.nuget/nuget.exe
+.env
