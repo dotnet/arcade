@@ -13,6 +13,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
@@ -226,14 +227,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 return false;
             }
 
-            var parts = versionString.Split('.');
-            if (parts.Length != 2)
-            {
-                return false;
-            }
-
-            // Both parts must be valid integers
-            return int.TryParse(parts[0], out _) && int.TryParse(parts[1], out _);
+            // Match exactly two numeric parts separated by a dot
+            return Regex.IsMatch(versionString, @"^\d+\.\d+$");
         }
 
         /*
