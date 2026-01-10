@@ -279,12 +279,20 @@ namespace Microsoft.DotNet.SignTool
             {
                 // Only sign containers if the file itself is unsigned, or 
                 // an item in the container is unsigned.
-                hasSignableParts = _zipDataMap[fileSignInfo.FileContentKey].NestedParts.Values.Any(b => b.FileSignInfo.SignInfo.ShouldSign || b.FileSignInfo.HasSignableParts);
-                if (hasSignableParts)
+                // Use TryGetValue to avoid KeyNotFoundException when DoNotUnpack skips adding to _zipDataMap
+                if (_zipDataMap.TryGetValue(fileSignInfo.FileContentKey, out var zipData))
                 {
-                    // If the file has contents that need to be signed, then re-evaluate the signing info
-                    fileSignInfo = fileSignInfo.WithSignableParts();
-                    _filesByContentKey[fileSignInfo.FileContentKey] = fileSignInfo;
+                    hasSignableParts = zipData.NestedParts.Values.Any(b => b.FileSignInfo.SignInfo.ShouldSign || b.FileSignInfo.HasSignableParts);
+                    if (hasSignableParts)
+                    {
+                        // If the file has contents that need to be signed, then re-evaluate the signing info
+                        fileSignInfo = fileSignInfo.WithSignableParts();
+                        _filesByContentKey[fileSignInfo.FileContentKey] = fileSignInfo;
+                    }
+                }
+                else
+                {
+                    _log.LogError($"Container '{fileSignInfo.FullPath}' was not unpacked. Cannot determine signable parts. This may indicate an internal error in the signing logic.");
                 }
             }
             if (fileSignInfo.ShouldTrack)
@@ -353,7 +361,12 @@ namespace Microsoft.DotNet.SignTool
                     // Hash doesn't exist so we use the CollisionPriorityId from the parent container
                     SignedFileContentKey parentSignedFileContentKey =
                         new SignedFileContentKey(parentContainer.ContentHash, parentContainer.FileName);
-                    collisionPriorityId = _hashToCollisionIdMap[parentSignedFileContentKey];
+                    // Use TryGetValue to avoid KeyNotFoundException when parent has DoNotUnpack flag
+                    if (!_hashToCollisionIdMap.TryGetValue(parentSignedFileContentKey, out collisionPriorityId))
+                    {
+                        _log.LogError($"Unable to find collision priority ID for parent container '{parentContainer.FileName}' (hash: {parentContainer.ContentHash}) when processing nested file '{file.FileName}'. This may occur if the parent container was not properly tracked or had issues during processing.");
+                        collisionPriorityId = string.Empty; // Use empty string as fallback
+                    }
                 }
             }
 
