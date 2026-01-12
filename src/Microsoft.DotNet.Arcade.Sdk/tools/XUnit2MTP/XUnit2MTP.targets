@@ -1,0 +1,34 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<Project>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.core" Version="$(XUnitVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true" />
+    <PackageReference Include="xunit.analyzers" Version="$(XUnitAnalyzersVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true" />
+    <PackageReference Include="xunit.assert" Version="$(XUnitVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true" Condition="'$(UseDotNetXUnitAssert)' != 'true' or '$(TargetFrameworkIdentifier)' != '.NETCoreApp'" />
+    <PackageReference Include="Microsoft.DotNet.XUnitAssert" Version="$(MicrosoftDotNetXUnitAssertVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true" Condition="'$(UseDotNetXUnitAssert)' == 'true' and '$(TargetFrameworkIdentifier)' == '.NETCoreApp'" />
+    <PackageReference Include="YTest.MTP.XUnit2" Version="$(YTestMTPXUnit2Version)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true"/>
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <XUnitDesktopSettingsFile Condition="'$(XUnitDesktopSettingsFile)' == ''">$(MSBuildThisFileDirectory)xunit.runner.json</XUnitDesktopSettingsFile>
+  </PropertyGroup>
+
+  <!--
+    Include settings file (xunit.runner.json) if specified.
+  -->
+  <ItemGroup>
+    <None Include="$(XUnitDesktopSettingsFile)"
+          CopyToOutputDirectory="PreserveNewest"
+          Visible="false"
+          Condition="'$(XUnitDesktopSettingsFile)' != '' and '$(TargetFrameworkIdentifier)' == '.NETFramework'" />
+
+    <None Include="$(XUnitCoreSettingsFile)"
+          CopyToOutputDirectory="PreserveNewest"
+          Visible="false"
+          Condition="'$(XUnitCoreSettingsFile)' != '' and '$(TargetFrameworkIdentifier)' == '.NETCoreApp'" />
+  </ItemGroup>
+
+  <Import Project="XUnit2MTP.Runner.targets" />
+
+</Project>
