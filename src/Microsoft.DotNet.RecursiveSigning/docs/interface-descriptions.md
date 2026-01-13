@@ -12,6 +12,11 @@ Each interface exposes a narrowly scoped contract so that new implementations ca
 - Streams container entries for discovery without forcing the orchestrator to extract to disk.
 - Writes updated containers by combining existing metadata with newly signed files.
 
+### Entry stream ownership and lifetime
+- For discovery (`ReadEntriesAsync`): the orchestrator (caller) owns each returned `ContainerEntry` and must dispose it when finished. Disposing the entry disposes its `ContentStream`.
+- Returned entry streams are only guaranteed to be valid until the corresponding `ContainerEntry` is disposed.
+- For repacking (`WriteContainerAsync`): the orchestrator (caller) retains ownership of the passed `ContainerEntry` objects and their streams; handlers must not dispose entry streams.
+
 ## IContainerHandlerRegistry
 - Stores the ordered list of available container handlers.
 - Locates the first handler able to work with a specific artifact path.

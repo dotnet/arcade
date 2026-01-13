@@ -420,7 +420,10 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
 
             await foreach (var entry in handler.ReadEntriesAsync(containerNode.Location.FilePathOnDisk!, cancellationToken))
             {
-                await TrackNestedFile(entry.ContentStream, entry.RelativePath, containerNode, configuration, cancellationToken);
+                using (entry)
+                {
+                    await TrackNestedFile(entry.ContentStream, entry.RelativePath, containerNode, configuration, cancellationToken);
+                }
             }
         }
 

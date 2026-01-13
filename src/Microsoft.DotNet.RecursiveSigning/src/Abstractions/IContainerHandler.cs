@@ -27,7 +27,11 @@ namespace Microsoft.DotNet.RecursiveSigning.Abstractions
         /// </summary>
         /// <param name="containerPath">Path to container file.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
-        /// <returns>Async enumerable of container entries.</returns>
+        /// <returns>
+        /// Async enumerable of container entries.
+        /// The caller owns each returned <see cref="ContainerEntry"/> (and its <see cref="ContainerEntry.ContentStream"/>)
+        /// and must dispose it when finished reading the entry.
+        /// </returns>
         IAsyncEnumerable<ContainerEntry> ReadEntriesAsync(
             string containerPath,
             CancellationToken cancellationToken = default);
@@ -39,6 +43,10 @@ namespace Microsoft.DotNet.RecursiveSigning.Abstractions
         /// <param name="entries">Entries to write (some may be updated).</param>
         /// <param name="metadata">Container metadata to preserve.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
+        /// <remarks>
+        /// The caller retains ownership of <paramref name="entries"/> and their streams.
+        /// Implementations must not dispose entry streams.
+        /// </remarks>
         Task WriteContainerAsync(
             string containerPath,
             IEnumerable<ContainerEntry> entries,

@@ -20,6 +20,11 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
 
         /// <summary>
         /// Stream to read/write the entry content.
+        /// The caller that receives a <see cref="ContainerEntry"/> instance owns this stream and is responsible
+        /// for disposing it (typically by disposing the <see cref="ContainerEntry"/>).
+        ///
+        /// For entries produced by <c>IContainerHandler.ReadEntriesAsync</c>, the stream is only guaranteed to be
+        /// valid until the entry is disposed.
         /// </summary>
         public Stream ContentStream { get; }
 
@@ -51,7 +56,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
 
         public void Dispose()
         {
-            ContentStream?.Dispose();
+            ContentStream.Dispose();
         }
 
         public override string ToString() => RelativePath;
