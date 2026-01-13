@@ -20,7 +20,6 @@ Arcade SDK is the core infrastructure tooling used across the .NET ecosystem for
 **NEVER CANCEL BUILDS OR TESTS** - they may take 90+ minutes. Always use appropriate timeouts.
 
 ```bash
-
 # Full restore, build, and test - TAKES 90+ MINUTES - NEVER CANCEL
 timeout 6000 ./build.sh --restore --build
 # Set timeout to 100+ minutes (6000 seconds) for build commands
@@ -166,3 +165,9 @@ timeout 6000 ./build.sh --restore --build --configuration Release --test
 - **Discussions**: Use dotnet/arcade discussions for questions
 - **Documentation**: See `/Documentation/` folder for detailed guides
 - **Contact**: @dotnet/dnceng team for infrastructure issues
+
+## Project-Specific Notes
+- Microsoft.DotNet.RecursiveSigning architecture and design references now live in `src/Microsoft.DotNet.RecursiveSigning/docs/`. Consult the markdown files in that directory for component guidance before editing related code.
+
+### Iterative Signing Workflow
+- Sign all nodes ready for signing, update the graph, then repack containers whose signable children are signed; proceed round-by-round.
