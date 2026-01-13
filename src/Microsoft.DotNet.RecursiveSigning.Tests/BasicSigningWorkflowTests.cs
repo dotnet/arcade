@@ -506,12 +506,12 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             // Equivalent to the old signing-round calculation:
             // children are signable immediately, container is gated until children are done.
             graph.GetNodesReadyForSigning().Should().Contain(new[] { file1Node, file2Node });
-            graph.GetContainersReadyForRepack().Should().BeEmpty();
+            graph.GetContainersReadyForRepack().Should().NotContain(containerNode);
 
-            graph.MarkAsSigned(file1Node);
-            graph.GetContainersReadyForRepack().Should().BeEmpty();
+            graph.MarkAsComplete(file1Node);
+            graph.GetContainersReadyForRepack().Should().NotContain(containerNode);
 
-            graph.MarkAsSigned(file2Node);
+            graph.MarkAsComplete(file2Node);
             graph.GetContainersReadyForRepack().Should().ContainSingle().Which.Should().Be(containerNode);
         }
 

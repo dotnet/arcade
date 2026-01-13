@@ -29,10 +29,15 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
         }
         private static FileNode CreateNode(string fileName, ICertificateIdentifier? certificateIdentifier)
         {
+            return CreateNode(fileName, certificateIdentifier, isAlreadySigned: false);
+        }
+
+        private static FileNode CreateNode(string fileName, ICertificateIdentifier? certificateIdentifier, bool isAlreadySigned)
+        {
             byte[] bytes = Guid.NewGuid().ToByteArray();
             var contentKey = new FileContentKey(new ContentHash(ImmutableArray.Create(bytes)), fileName);
             var location = new FileLocation("/test/" + fileName, RelativePathInContainer: null);
-            var metadata = Mock.Of<IFileMetadata>();
+            var metadata = Mock.Of<IFileMetadata>(m => m.IsAlreadySigned == isAlreadySigned);
             return new FileNode(contentKey, location, metadata, certificateIdentifier);
         }
 
@@ -44,14 +49,12 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
         [Fact]
         public void AddNode_Skips_WhenAlreadySigned()
         {
-            // The graph computes initial state; we no longer allow pre-setting Signed.
-            // A signable leaf should become ReadyToSign.
-            var node = CreateNode("a.dll", Signable());
+            var node = CreateNode("a.dll", Signable(), isAlreadySigned: true);
 
             var g = BuildGraph((node, null));
 
-            node.State.Should().Be(FileNodeState.ReadyToSign);
-            g.GetNodesReadyForSigning().Should().ContainSingle().Which.Should().BeSameAs(node);
+            node.State.Should().Be(FileNodeState.Skipped);
+            g.GetNodesReadyForSigning().Should().BeEmpty();
         }
 
         [Fact]
@@ -79,7 +82,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
 
             var g = BuildGraph((container, null), (child, container), (containerRef, null));
 
-            g.MarkAsSigned(child);
+            g.MarkAsComplete(child);
 
             g.GetContainersReadyForRepack().Should().ContainSingle().Which.Should().BeSameAs(container);
         }
@@ -94,6 +97,107 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             _ = BuildGraph((node, null));
 
             node.State.Should().Be(FileNodeState.ReadyToSign);
+        }
+
+        [Fact]
+        public void AlreadySignedContainer_WithNoDescendantWork_IsSkipped()
+        {
+            var container = CreateNode("c.zip", Signable(), isAlreadySigned: true);
+            var c1 = CreateNode("readme.txt", certificateIdentifier: null);
+            var c2 = CreateNode("license.txt", certificateIdentifier: null);
+
+            var g = BuildGraph((container, null), (c1, container), (c2, container));
+
+            container.State.Should().Be(FileNodeState.Skipped);
+            g.GetNodesReadyForSigning().Should().BeEmpty();
+            g.GetContainersReadyForRepack().Should().BeEmpty();
+            g.IsComplete().Should().BeTrue();
+        }
+
+        [Fact]
+        public void AlreadySignedContainer_WithSignableChild_IsNotSkipped()
+        {
+            var container = CreateNode("c.zip", Signable(), isAlreadySigned: true);
+            var child = CreateNode("a.dll", Signable());
+
+            var g = BuildGraph((container, null), (child, container));
+
+            container.State.Should().Be(FileNodeState.PendingRepack);
+            g.GetNodesReadyForSigning().Should().ContainSingle().Which.Should().BeSameAs(child);
+        }
+
+        [Fact]
+        public void AlreadySignedContainer_WithReferenceToSignableChild_IsNotSkipped()
+        {
+            var container = CreateNode("c.zip", Signable(), isAlreadySigned: true);
+
+            var canonical = CreateNode("a.dll", Signable());
+            var referenceLocation = new FileLocation("/test/other/a.dll", RelativePathInContainer: "a.dll");
+            var reference = new ReferenceNode(canonical.ContentKey, referenceLocation, canonical);
+
+            var g = BuildGraph((container, null), (canonical, null), (reference, container));
+
+            // Container still needs work because it contains a signable child (via reference).
+            container.State.Should().Be(FileNodeState.PendingRepack);
+            g.GetNodesReadyForSigning().Should().ContainSingle().Which.Should().BeSameAs(canonical);
+
+            // Drive the graph to completion for this topology.
+            g.MarkAsComplete(canonical);
+            container.State.Should().Be(FileNodeState.ReadyToRepack);
+            g.GetContainersReadyForRepack().Should().ContainSingle().Which.Should().BeSameAs(container);
+
+            g.MarkContainerAsRepacked(container);
+            container.State.Should().Be(FileNodeState.ReadyToSign);
+            g.GetNodesReadyForSigning().Should().ContainSingle().Which.Should().BeSameAs(container);
+
+            g.MarkAsComplete(container);
+            container.State.Should().Be(FileNodeState.Complete);
+            g.IsComplete().Should().BeTrue();
+        }
+
+        [Fact]
+        public void ContainerReadyToRepack_WhenReferenceChildSigned()
+        {
+            var container = CreateNode("c.zip", Signable());
+
+            var canonical = CreateNode("a.dll", Signable());
+            var referenceLocation = new FileLocation("/test/other/a.dll", RelativePathInContainer: "a.dll");
+            var reference = new ReferenceNode(canonical.ContentKey, referenceLocation, canonical);
+
+            var g = BuildGraph((container, null), (canonical, null), (reference, container));
+
+            container.State.Should().Be(FileNodeState.PendingRepack);
+
+            g.MarkAsComplete(canonical);
+            container.State.Should().Be(FileNodeState.ReadyToRepack);
+
+            // Ensure repack/sign transitions are valid and the graph completes.
+            g.MarkContainerAsRepacked(container);
+            container.State.Should().Be(FileNodeState.ReadyToSign);
+            g.MarkAsComplete(container);
+            container.State.Should().Be(FileNodeState.Complete);
+            g.IsComplete().Should().BeTrue();
+        }
+
+        [Fact]
+        public void AlreadySignedContainer_WithOnlyReferenceToAlreadySignedSignableChild_IsSkipped()
+        {
+            var container = CreateNode("c.zip", Signable(), isAlreadySigned: true);
+
+            var canonical = CreateNode("a.dll", Signable(), isAlreadySigned: true);
+            var referenceLocation = new FileLocation("/test/other/a.dll", RelativePathInContainer: "a.dll");
+            var reference = new ReferenceNode(canonical.ContentKey, referenceLocation, canonical);
+
+            var g = BuildGraph((container, null), (canonical, null), (reference, container));
+
+            // Canonical is already signed -> skipped; reference mirrors skipped; container can be skipped.
+            canonical.State.Should().Be(FileNodeState.Skipped);
+            container.State.Should().Be(FileNodeState.Skipped);
+            g.GetNodesReadyForSigning().Should().BeEmpty();
+
+            // With all work skipped, the graph should be complete with no further transitions.
+            g.GetContainersReadyForRepack().Should().BeEmpty();
+            g.IsComplete().Should().BeTrue();
         }
 
         [Fact]
@@ -141,11 +245,11 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
 
             container.State.Should().Be(FileNodeState.PendingRepack);
 
-            g.MarkAsSigned(c1);
+            g.MarkAsComplete(c1);
             container.State.Should().Be(FileNodeState.PendingRepack);
             g.GetContainersReadyForRepack().Should().BeEmpty();
 
-            g.MarkAsSigned(c2);
+            g.MarkAsComplete(c2);
             container.State.Should().Be(FileNodeState.ReadyToRepack);
             g.GetContainersReadyForRepack().Should().ContainSingle().Which.Should().BeSameAs(container);
         }
@@ -161,7 +265,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             var g = BuildGraph((container, null), (signableChild, container), (nonSignableChild, container));
 
             // Only the signable child should be required for repack readiness.
-            g.MarkAsSigned(signableChild);
+            g.MarkAsComplete(signableChild);
             container.State.Should().Be(FileNodeState.ReadyToRepack);
         }
 
@@ -202,7 +306,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             container.State.Should().Be(FileNodeState.PendingRepack);
             g.GetNodesReadyForSigning().Should().ContainSingle().Which.Should().BeSameAs(child);
 
-            g.MarkAsSigned(child);
+            g.MarkAsComplete(child);
 
             container.State.Should().Be(FileNodeState.ReadyToRepack);
             g.GetContainersReadyForRepack().Should().ContainSingle().Which.Should().BeSameAs(container);
@@ -217,11 +321,11 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
 
             var g = BuildGraph((container, null), (child, container));
 
-            g.MarkAsSigned(child);
+            g.MarkAsComplete(child);
             container.State.Should().Be(FileNodeState.ReadyToRepack);
 
             g.MarkContainerAsRepacked(container);
-            container.State.Should().Be(FileNodeState.Skipped);
+            container.State.Should().Be(FileNodeState.Complete);
         }
 
         [Fact]
@@ -252,11 +356,11 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
 
             skipped.State.Should().Be(FileNodeState.Skipped);
 
-            g.MarkAsSigned(signable1);
+            g.MarkAsComplete(signable1);
             container.State.Should().Be(FileNodeState.PendingRepack);
             g.GetContainersReadyForRepack().Should().BeEmpty();
 
-            g.MarkAsSigned(signable2);
+            g.MarkAsComplete(signable2);
             container.State.Should().Be(FileNodeState.ReadyToRepack);
             g.GetContainersReadyForRepack().Should().ContainSingle().Which.Should().BeSameAs(container);
         }
@@ -270,7 +374,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
 
             var g = BuildGraph((container, null), (c1, container), (c2, container));
 
-            container.State.Should().Be(FileNodeState.PendingRepack);
+            container.State.Should().Be(FileNodeState.Skipped);
             c1.State.Should().Be(FileNodeState.Skipped);
             c2.State.Should().Be(FileNodeState.Skipped);
 
@@ -308,7 +412,6 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
                 (innerSignable2, inner),
                 (innerSkipped, inner));
 
-            // Initial states
             outer.State.Should().Be(FileNodeState.PendingRepack);
             inner.State.Should().Be(FileNodeState.PendingRepack);
             outerSkipped.State.Should().Be(FileNodeState.Skipped);
@@ -320,24 +423,24 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             ready.Should().BeEquivalentTo(new[] { outerSignable1, innerSignable1, innerSignable2 });
 
             // Sign inner children one-by-one
-            g.MarkAsSigned(innerSignable1);
+            g.MarkAsComplete(innerSignable1);
             inner.State.Should().Be(FileNodeState.PendingRepack);
             g.GetContainersReadyForRepack().Should().BeEmpty();
 
-            g.MarkAsSigned(innerSignable2);
+            g.MarkAsComplete(innerSignable2);
             inner.State.Should().Be(FileNodeState.ReadyToRepack);
             g.GetContainersReadyForRepack().Should().ContainSingle().Which.Should().BeSameAs(inner);
 
             // Repack inner (non-signable => completes)
             g.MarkContainerAsRepacked(inner);
-            inner.State.Should().Be(FileNodeState.Skipped);
+            inner.State.Should().Be(FileNodeState.Complete);
 
-            // Outer is still gated until all of its signable children are done.
+            // Outer is gated by its signable direct children.
             outer.State.Should().Be(FileNodeState.PendingRepack);
-            g.GetContainersReadyForRepack().Should().BeEmpty();
+            g.GetContainersReadyForRepack().Should().NotContain(outer);
 
             // Sign outer signable leaf => outer becomes ready to repack (because inner is done and other children are skipped)
-            g.MarkAsSigned(outerSignable1);
+            g.MarkAsComplete(outerSignable1);
             outer.State.Should().Be(FileNodeState.ReadyToRepack);
 
             // Repack outer (signable => becomes ReadyToSign)
@@ -345,11 +448,40 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             outer.State.Should().Be(FileNodeState.ReadyToSign);
 
             // Sign outer container itself
-            g.MarkAsSigned(outer);
-            outer.State.Should().Be(FileNodeState.Signed);
+            g.MarkAsComplete(outer);
+            outer.State.Should().Be(FileNodeState.Complete);
 
             // Graph should be complete now
             g.IsComplete().Should().BeTrue();
         }
+
+        [Fact]
+        public void Container_WithMultipleReferencesToSameCanonicalChild_DoesNotDoubleCount()
+        {
+            var container = CreateNode("c.zip", Signable("C"));
+            var canonical = CreateNode("a.dll", Signable("A"));
+
+            var referenceLocation1 = new FileLocation("/test/other1/a.dll", RelativePathInContainer: "a.dll");
+            var referenceLocation2 = new FileLocation("/test/other2/a.dll", RelativePathInContainer: "a.dll");
+            var reference1 = new ReferenceNode(canonical.ContentKey, referenceLocation1, canonical);
+            var reference2 = new ReferenceNode(canonical.ContentKey, referenceLocation2, canonical);
+
+            var g = BuildGraph((container, null), (canonical, null), (reference1, container), (reference2, container));
+
+            container.State.Should().Be(FileNodeState.PendingRepack);
+            g.GetNodesReadyForSigning().Should().ContainSingle().Which.Should().BeSameAs(canonical);
+
+            // Signing the canonical node should unblock the container even though it references the same content twice.
+            g.MarkAsComplete(canonical);
+            container.State.Should().Be(FileNodeState.ReadyToRepack);
+            g.GetContainersReadyForRepack().Should().ContainSingle().Which.Should().BeSameAs(container);
+
+            g.MarkContainerAsRepacked(container);
+            container.State.Should().Be(FileNodeState.ReadyToSign);
+            g.MarkAsComplete(container);
+            container.State.Should().Be(FileNodeState.Complete);
+            g.IsComplete().Should().BeTrue();
+        }
+
     }
 }

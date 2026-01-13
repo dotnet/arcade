@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
 
         internal virtual void MarkReadyToSign() => throw new NotSupportedException();
 
-        internal virtual void MarkSigned() => throw new NotSupportedException();
+        internal virtual void MarkAsComplete() => throw new NotSupportedException();
 
         internal virtual void MarkReadyToRepack() => throw new NotSupportedException();
 
@@ -73,8 +73,21 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
     public sealed class FileNode : FileNodeBase
     {
         private readonly List<FileNodeBase> _children = new();
+        private readonly List<ReferenceNode> _referenceNodes = new();
 
         public override IReadOnlyList<FileNodeBase> Children => _children;
+
+        internal IReadOnlyList<ReferenceNode> ReferenceNodes => _referenceNodes;
+
+        internal void AddReferenceNode(ReferenceNode referenceNode)
+        {
+            if (referenceNode == null)
+            {
+                throw new ArgumentNullException(nameof(referenceNode));
+            }
+
+            _referenceNodes.Add(referenceNode);
+        }
 
         /// <summary>
         /// Intrinsic file metadata.
@@ -89,7 +102,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
         /// <summary>
         /// Whether this node requires signing.
         /// </summary>
-        public bool NeedsSigning => State is not (FileNodeState.Signed or FileNodeState.Skipped or FileNodeState.PendingRepack or FileNodeState.ReadyToRepack);
+        public bool NeedsSigning => State is not (FileNodeState.Complete or FileNodeState.Skipped or FileNodeState.PendingRepack or FileNodeState.ReadyToRepack);
 
         /// <summary>
         /// Current state of this node in the signing process.
@@ -141,7 +154,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
 
         internal override void MarkReadyToSign() => TransitionTo(FileNodeState.ReadyToSign);
 
-        internal override void MarkSigned() => TransitionTo(FileNodeState.Signed);
+        internal override void MarkAsComplete() => TransitionTo(FileNodeState.Complete);
 
         internal override void MarkReadyToRepack() => TransitionTo(FileNodeState.ReadyToRepack);
 
@@ -171,7 +184,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
                 return true;
             }
 
-            if (from is FileNodeState.Signed or FileNodeState.Skipped)
+            if (from is FileNodeState.Complete or FileNodeState.Skipped)
             {
                 return false;
             }
@@ -179,14 +192,10 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
             return (from, to) switch
             {
                 (FileNodeState.PendingSigning, FileNodeState.ReadyToSign) => true,
-                (FileNodeState.PendingSigning, FileNodeState.ReadyToRepack) => true,
-                (FileNodeState.PendingSigning, FileNodeState.Skipped) => true,
-                (FileNodeState.PendingRepack, FileNodeState.Skipped) => true,
                 (FileNodeState.PendingRepack, FileNodeState.ReadyToRepack) => true,
-                (FileNodeState.ReadyToSign, FileNodeState.Signed) => true,
-                (FileNodeState.ReadyToSign, FileNodeState.Skipped) => true,
-                (FileNodeState.ReadyToRepack, FileNodeState.Skipped) => true,
                 (FileNodeState.ReadyToRepack, FileNodeState.ReadyToSign) => true,
+                (FileNodeState.ReadyToRepack, FileNodeState.Complete) => true,
+                (FileNodeState.ReadyToSign, FileNodeState.Complete) => true,
                 _ => false,
             };
         }
@@ -220,6 +229,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
             : base(contentKey, location)
         {
             CanonicalNode = canonicalNode ?? throw new ArgumentNullException(nameof(canonicalNode));
+            CanonicalNode.AddReferenceNode(this);
         }
 
         internal override void AttachToGraph(FileNodeGraph graph)
@@ -247,12 +257,12 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
         None,
 
         /// <summary>
-        /// Not yet ready for signing.
+        /// Not yet ready for signing. Pending child operations and/or repack
         /// </summary>
         PendingSigning,
 
         /// <summary>
-        /// Not signable itself, but tracked until all signable children are done and the container can be repacked.
+        /// Waiting for repack. Pending child operations.
         /// </summary>
         PendingRepack,
 
@@ -262,17 +272,17 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
         ReadyToSign,
 
         /// <summary>
-        /// Signed, but the containing container (if any) may still need repack evaluation.
+        /// Complete (signed)
         /// </summary>
-        Signed,
+        Complete,
 
         /// <summary>
-        /// A container is eligible to be repacked because all signable children have been signed.
+        /// A container is eligible to be repacked because all signable children are complete or skipped
         /// </summary>
         ReadyToRepack,
 
         /// <summary>
-        /// Skipped (already signed or should ignore).
+        /// Skipped (no processing required).
         /// </summary>
         Skipped
     }

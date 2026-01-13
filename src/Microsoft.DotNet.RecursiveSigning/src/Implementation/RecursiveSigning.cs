@@ -568,7 +568,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             // Mark first occurrences as signed and register signed versions
             foreach (var (node, outputPath) in filesToSign)
             {
-                _signingGraph.MarkAsSigned(node);
+                _signingGraph.MarkAsComplete(node);
                 _fileDeduplicator.RegisterSignedFile(node.ContentKey, outputPath);
                 signedFiles.Add(new SignedFileInfo(node.Location.FilePathOnDisk, node.CertificateIdentifier?.Name ?? string.Empty, false));
             }
@@ -652,7 +652,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             // Still report them as signed if their canonical/original node was signed.
             foreach (var referenceNode in allNodes.OfType<ReferenceNode>())
             {
-                if (referenceNode.CanonicalNode.State == FileNodeState.Signed)
+                if (referenceNode.CanonicalNode.State == FileNodeState.Complete)
                 {
                     signedFiles.Add(new SignedFileInfo(
                         referenceNode.Location.FilePathOnDisk,
@@ -662,7 +662,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             }
 
 
-            var unsignedNodes = allNodes.OfType<FileNode>().Where(n => n.State != FileNodeState.Signed && n.State != FileNodeState.Skipped).ToList();
+            var unsignedNodes = allNodes.OfType<FileNode>().Where(n => n.State != FileNodeState.Complete && n.State != FileNodeState.Skipped).ToList();
 
             if (unsignedNodes.Count > 0)
             {

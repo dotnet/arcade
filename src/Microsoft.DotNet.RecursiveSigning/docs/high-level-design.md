@@ -31,11 +31,15 @@ Microsoft.DotNet.RecursiveSigning orchestrates recursive signing of artifacts so
      (indicating a location where a signed copy needs to be placed), but no further extraction or analysis is done.
 4. **Certificate Resolution and Validation**
    - The signature calculator evaluates configuration rules in priority order (explicit overrides, strong-name, extension).
-   - Each file node is annotated with signing directives, skip markers, or validation errors; failures halt the run before any signing occurs.
+   - Certificate resolution is performed for every discovered file so downstream components (dedup, signing, telemetry) have a consistent certificate identifier.
+   - Separately, signature calculation records whether the file is already signed and therefore *potentially* skippable.
+   - Skipping of already-signed containers is not decided here; it is decided during graph finalization using child/descendant needs.
+   - Failures halt the run before any signing occurs.
 5. **Graph finalization (bottom-up)**
    - Once discovery is complete, the graph is finalized by processing nodes in a children-first order.
    - Each node's initial execution state is computed directly (for example, leaf signable nodes start as `ReadyToSign`).
    - Containers compute signable-child progress during this same pass, which determines whether they start as `PendingRepack` or `ReadyToRepack`.
+   - Containers that are already signed may be initialized to `Skipped` *only when no descendant will be modified*; this prevents skipping a container that must be repacked because a nested file was signed.
 6. **Iterative Signing + Repack rounds**
    - The orchestrator repeatedly:
      - Signs all nodes returned by `GetNodesReadyForSigning()`.

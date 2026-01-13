@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             using (var stream = _fileSystem.GetFileStream(filePath, FileMode.Open, FileAccess.Read))
             {
                 await ContentHash.FromStreamAsync(stream, cancellationToken);
-                return new FileMetadata(executableType: ExecutableType.None);
+                return new FileMetadata(executableType: ExecutableType.None, isAlreadySigned: false);
             }
         }
 
@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             }
 
             await ContentHash.FromStreamAsync(contentStream, cancellationToken);
-            return new FileMetadata(executableType: ExecutableType.None);
+            return new FileMetadata(executableType: ExecutableType.None, isAlreadySigned: false);
         }
 
         public bool IsContainer(string filePath)

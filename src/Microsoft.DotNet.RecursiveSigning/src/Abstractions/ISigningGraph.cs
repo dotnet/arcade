@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Abstractions
         /// Mark a node as signed and update dependent nodes.
         /// </summary>
         /// <param name="node">Node that was signed.</param>
-        void MarkAsSigned(FileNode node);
+        void MarkAsComplete(FileNode node);
 
         /// <summary>
         /// Mark a container as repacked, transitioning it so it can be signed.

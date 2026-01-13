@@ -6,9 +6,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using Microsoft.DotNet.RecursiveSigning.Abstractions;
 using Microsoft.DotNet.RecursiveSigning.Models;
+using NuGet.Packaging.Signing;
 
 namespace Microsoft.DotNet.RecursiveSigning.Implementation
 {
@@ -19,18 +21,13 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
     /// - No node state is considered finalized.
     /// Execution phase:
     /// - <see cref="FinalizeDiscovery"/> freezes discovery and computes initial node states.
-    /// - Nodes transition via graph operations (e.g. <see cref="MarkAsSigned"/>).
+    /// - Nodes transition via graph operations (e.g. <see cref="MarkAsComplete"/>).
     /// </summary>
     public sealed class SigningGraph : FileNodeGraph, ISigningGraph
     {
-        private sealed class ContainerProgress
-        {
-            public int SignableChildCount;
-            public int SignedOrSkippedSignableChildCount;
-        }
-
         private readonly ConcurrentBag<FileNodeBase> _allNodes = new();
-        private readonly Dictionary<FileNode, ContainerProgress> _containerProgress = new();
+        // Number of children requiring processing remaining for each node.
+        private readonly Dictionary<FileNode, uint> _containerProgress = new();
         private readonly object _lock = new();
 
         private bool _discoveryFinalized;
@@ -38,7 +35,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
         public override bool IsDiscoveryFinalized => _discoveryFinalized;
 
         private static bool IsDone(FileNodeState state) =>
-            state == FileNodeState.Signed || state == FileNodeState.Skipped;
+            state == FileNodeState.Complete || state == FileNodeState.Skipped;
 
         private bool IsDone(FileNode node)
         {
@@ -47,37 +44,26 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                 return true;
             }
 
-            if (node.State == FileNodeState.PendingRepack && node.CertificateIdentifier == null &&
-                _containerProgress.TryGetValue(node, out var progress) && progress.SignableChildCount == 0)
-            {
-                return true;
-            }
-
             return false;
         }
 
-        private static FileNodeState ComputeInitialState(FileNodeBase node, int signableChildCount, int doneSignableChildCount)
+        private static FileNodeState ComputeInitialState(FileNode node, uint childrenRequiringProcessing)
         {
-            if (node.Children.Count > 0)
+            if (node.Children.Count > 0 && childrenRequiringProcessing > 0)
             {
-                if (signableChildCount > 0)
-                {
-                    // Container with signable children must wait for children, then repack.
-                    return doneSignableChildCount >= signableChildCount ? FileNodeState.ReadyToRepack : FileNodeState.PendingRepack;
-                }
-
-                // No signable children => no repack is required.
-                if (node.CertificateIdentifier != null)
-                {
-                    return FileNodeState.ReadyToSign;
-                }
-
-                // Non-signable container with no signable children stays tracked as PendingRepack.
                 return FileNodeState.PendingRepack;
             }
 
-            // Leaf nodes.
-            return node.CertificateIdentifier != null ? FileNodeState.ReadyToSign : FileNodeState.Skipped;
+            // Otherwise, all children are complete or there are no children,
+            if (node.CertificateIdentifier != null)
+            {
+                // Signable container with all children complete, but already signed.
+                return node.Metadata.IsAlreadySigned ? FileNodeState.Skipped : FileNodeState.ReadyToSign;
+            }
+            else
+            {
+                return FileNodeState.Skipped;
+            }
         }
 
         public void AddNode(FileNodeBase node, FileNode? parent = null)
@@ -132,26 +118,28 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                         continue;
                     }
 
-                    int signableChildCount = 0;
-                    int doneSignableChildCount = 0;
-
-                    // Initialize tracking of all children.
-                    if (node is FileNode container && container.Children.Count > 0)
+                    if (node is not FileNode concreteNode)
                     {
-                        signableChildCount = container.Children.OfType<FileNode>().Count(c => c.CertificateIdentifier != null);
-                        doneSignableChildCount = container.Children.OfType<FileNode>().Count(c => c.CertificateIdentifier != null && IsDone(c.State));
-
-                        if (!_containerProgress.TryGetValue(container, out var progress))
-                        {
-                            progress = new ContainerProgress();
-                            _containerProgress[container] = progress;
-                        }
-
-                        progress.SignableChildCount = signableChildCount;
-                        progress.SignedOrSkippedSignableChildCount = doneSignableChildCount;
+                        throw new NotImplementedException("Unexpected node type in signing graph.");
                     }
 
-                    node.InitializeState(ComputeInitialState(node, signableChildCount, doneSignableChildCount));
+                    uint childrenRequiringProcessing = 0;
+                    // Initialize tracking of all children.
+                    if (concreteNode.Children.Count > 0)
+                    {
+                        // Track all children (including reference nodes) for gating purposes. Initially
+                        // look for all children that are not skipped.
+                        childrenRequiringProcessing = (uint)concreteNode.Children.Count(c => !IsDone(c.State));
+
+                        if (_containerProgress.TryGetValue(concreteNode, out var progress))
+                        {
+                            throw new InvalidOperationException("Container progress already initialized for node.");
+                        }
+
+                        _containerProgress[concreteNode] = childrenRequiringProcessing;
+                    }
+
+                    concreteNode.InitializeState(ComputeInitialState(concreteNode, childrenRequiringProcessing));
                 }
 
                 _discoveryFinalized = true;
@@ -208,17 +196,15 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                     throw new InvalidOperationException("Discovery must be finalized before marking containers as repacked.");
                 }
 
-                if (container.State == FileNodeState.ReadyToRepack)
+                // If the container's cert identifier is null, it means it does not require signing.
+
+                if (container.CertificateIdentifier != null)
                 {
-                    // After repack, signable containers must be signed; non-signable containers are complete.
-                    if (container.CertificateIdentifier != null)
-                    {
-                        container.MarkReadyToSign();
-                    }
-                    else
-                    {
-                        container.MarkSkipped();
-                    }
+                    container.MarkReadyToSign();
+                }
+                else
+                {
+                    MarkAsComplete(container);
                 }
             }
         }
@@ -249,7 +235,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             }
         }
 
-        public void MarkAsSigned(FileNode node)
+        public void MarkAsComplete(FileNode node)
         {
             if (node == null)
             {
@@ -263,24 +249,40 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                     throw new InvalidOperationException("Discovery must be finalized before marking nodes as signed.");
                 }
 
-                node.MarkSigned();
+                node.MarkAsComplete();
 
-                // Reference nodes are informational only and mirror canonical state (via property delegation).
-                var parent = node.Parent;
-                if (parent is FileNode parentFile && node.CertificateIdentifier != null)
+                // Update all parent containers that contain this canonical node, either directly or via references.
+                // This relies on the canonical node tracking its reference occurrences.
+                var parentsToUpdate = new HashSet<FileNode>();
+
+                if (node.Parent is FileNode directParent)
                 {
-                    if (_containerProgress.TryGetValue(parentFile, out var progress))
-                    {
-                        progress.SignedOrSkippedSignableChildCount++;
+                    UpdateContainerTracking(directParent);
+                }
 
-                        if (progress.SignableChildCount > 0 &&
-                            progress.SignedOrSkippedSignableChildCount >= progress.SignableChildCount &&
-                            (parentFile.State == FileNodeState.PendingSigning || parentFile.State == FileNodeState.PendingRepack))
-                        {
-                            parentFile.MarkReadyToRepack();
-                        }
+                // Add all referenced node's parents if they exist.
+                foreach (var reference in node.ReferenceNodes)
+                {
+                    if (reference.Parent is FileNode referenceParent)
+                    {
+                        UpdateContainerTracking(referenceParent);
                     }
                 }
+            }
+        }
+
+        private void UpdateContainerTracking(FileNode container)
+        {
+            if (!_containerProgress.TryGetValue(container, out var remainingChildrenToProcess))
+            {
+                throw new InvalidOperationException("Container progress not found for updating.");
+            }
+
+            _containerProgress[container] = remainingChildrenToProcess - 1;
+
+            if (_containerProgress[container] == 0)
+            {
+                container.MarkReadyToRepack();
             }
         }
 

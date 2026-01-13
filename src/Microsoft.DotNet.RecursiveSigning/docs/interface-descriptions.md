@@ -19,12 +19,13 @@ Each interface exposes a narrowly scoped contract so that new implementations ca
 
 ## IFileAnalyzer
 - Inspects files to gather metadata needed for signing decisions (hashes, strong-name info, executable type, etc.).
-- Detects whether a file is already signed and whether it contains nested content.
+- Detects whether a file is already signed and whether it contains nested content (this is an intrinsic property of the file as observed on disk).
 - Produces immutable metadata objects consumed by downstream components.
 
 ## ISignatureCalculator
 - Applies certificate rules (extension, strong-name, explicit overrides) to determine how a file must be signed.
-- Flags files that should be skipped or already satisfy requirements.
+- Always resolves the certificate identifier for every file (even if the file is already signed).
+- Does not determine whether a file is already signed (that comes from `IFileAnalyzer`/metadata); it only determines what certificate would be used if signing is required.
 - Validates that resolved certificates fit the file characteristics before signing.
 
 ## ISigningProvider

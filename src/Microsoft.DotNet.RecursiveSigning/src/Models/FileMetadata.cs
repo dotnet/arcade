@@ -18,19 +18,23 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
 
         public string? PublicKeyToken { get; }
 
+        public bool IsAlreadySigned { get; }
+
         public FileMetadata(
             ExecutableType executableType = ExecutableType.None,
             string? targetFramework = null,
-            string? publicKeyToken = null)
+            string? publicKeyToken = null,
+            bool isAlreadySigned = false)
         {
             ExecutableType = executableType;
             TargetFramework = targetFramework;
             PublicKeyToken = publicKeyToken;
+            IsAlreadySigned = isAlreadySigned;
         }
 
         public override string ToString()
         {
-            return $"{ExecutableType}, TFM: {TargetFramework ?? "<none>"}, PKT: {PublicKeyToken ?? "<none>"}";
+            return $"{ExecutableType}, TFM: {TargetFramework ?? "<none>"}, PKT: {PublicKeyToken ?? "<none>"}, AlreadySigned: {IsAlreadySigned}";
         }
     }
 }

@@ -14,7 +14,9 @@ This document specifies the behavior, state-machine, and state-transitions of th
 - `FileNode`
   - Represents a file occurrence in the signing graph.
   - Can have a `Parent` (container) and `Children` (contents).
-  - Has intrinsic `SigningInfo` produced by signature calculation.
+  - Has intrinsic signing classification produced by signature calculation:
+    - the resolved certificate identifier (always computed), and
+    - whether the file is already signed and therefore potentially skippable.
 - `SigningGraph`
   - Owns the set of nodes and all state transitions.
   - Computes when nodes are eligible to be signed and when containers are eligible to be repacked.
@@ -61,13 +63,19 @@ Additionally, a **non-signable container** with **no signable children** is trea
 
 A node is considered **signable** when it has a non-null certificate identifier (i.e., `node.CertificateIdentifier != null`).
 
-A node is considered **skippable** (not participating in signing rounds) when any of the following are true:
+The graph distinguishes between:
 
-- `node.SigningInfo.IsAlreadySigned` is `true`, or
-- `node.SigningInfo.ShouldIgnore` is `true`, or
-- `node.SigningInfo.NeedsSigning` is `false`
+- **Certificate resolution** (always performed)
+- **Signing participation** (may be skipped)
 
-> Note: This model applies to computing the *initial* state during discovery finalization.
+A node is considered **potentially skippable** when signature calculation indicates it is already signed.
+
+Skipping is finalized during `FinalizeDiscovery()` using both the node's intrinsic information and the state/needs of its children:
+
+- A **leaf** that is already signed may initialize to `Skipped`.
+- A **container** that is already signed may initialize to `Skipped` **only if no descendant requires signing or repack**.
+
+> This prevents the "already signed container" optimization from incorrectly skipping containers that must be modified because a nested file was signed/updated.
 
 ## Graph invariants
 
@@ -126,16 +134,18 @@ Completes graph discovery and computes initial execution states.
 Initial state rules:
 
 - Leaf nodes
-  - If signable: `ReadyToSign`
-  - Otherwise: `Skipped`
+  - If not signable: `Skipped`
+  - Else if already signed: `Skipped`
+  - Else: `ReadyToSign`
 
 - Container nodes
-  - If it has one or more signable children:
+  - If any child (direct or transitive) will be signed or repacked in this run: container participates in the workflow
     - If all signable children are done: `ReadyToRepack`
     - Otherwise: `PendingRepack`
-  - If it has no signable children:
-    - If the container itself is signable: `ReadyToSign` (no repack is needed)
-    - Otherwise: `PendingRepack` (tracked but treated as complete)
+  - Else (no descendant work is needed):
+    - If already signed: `Skipped`
+    - Else if the container itself is signable: `ReadyToSign`
+    - Else: `PendingRepack` (tracked but treated as complete)
 
 ### `GetNodesReadyForSigning()`
 

@@ -15,5 +15,11 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
         string? TargetFramework { get; }
 
         string? PublicKeyToken { get; }
+
+        /// <summary>
+        /// Indicates whether the file is already signed as observed on disk.
+        /// This is independent of whether the signing policy requires signing for this file.
+        /// </summary>
+        bool IsAlreadySigned { get; }
     }
 }
