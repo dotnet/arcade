@@ -137,3 +137,6 @@ node_modules/
 
 # vscode python env files
 .env
+
+# Nuget.exe downloaded during SDK installation
+/.nuget/nuget.exe
