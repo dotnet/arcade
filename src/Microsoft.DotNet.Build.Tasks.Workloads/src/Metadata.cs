@@ -58,5 +58,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// the compiler.
         /// </summary>
         public static readonly string WixObj = nameof(WixObj);
+
+        /// <summary>
+        /// Metadata containing the full path to the generated wixpack archive.
+        /// </summary>
+        public static readonly string Wixpack = nameof(Wixpack);
     }
 }
