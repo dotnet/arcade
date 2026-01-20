@@ -149,19 +149,19 @@
       <Sha>cd39caadfdc198bfc3cb138675d6a031f2fef74b</Sha>
     </Dependency>
     <!-- Dependencies required for source build to lift to the previously-source-built version. -->
-    <Dependency Name="Microsoft.Build" Version="18.0.7">
+    <Dependency Name="Microsoft.Build" Version="18.0.2">
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-dotnet</Uri>
       <Sha>44525024595742ebe09023abe709df51de65009b</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Build.Framework" Version="18.0.7">
+    <Dependency Name="Microsoft.Build.Framework" Version="18.0.2">
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-dotnet</Uri>
       <Sha>44525024595742ebe09023abe709df51de65009b</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Build.Tasks.Core" Version="18.0.7">
+    <Dependency Name="Microsoft.Build.Tasks.Core" Version="18.0.2">
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-dotnet</Uri>
       <Sha>44525024595742ebe09023abe709df51de65009b</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Build.Utilities.Core" Version="18.0.7">
+    <Dependency Name="Microsoft.Build.Utilities.Core" Version="18.0.2">
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-dotnet</Uri>
       <Sha>44525024595742ebe09023abe709df51de65009b</Sha>
     </Dependency>
