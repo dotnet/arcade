@@ -142,18 +142,20 @@ function ResetFilesToTargetBranch($patterns, $targetBranch) {
 
         Write-Host "Processing pattern: $pattern"
         
-        # First, remove all files matching the pattern from the merge
-        $filesToRemove = & git ls-files $pattern 2>&1
-        if ($LASTEXITCODE -eq 0 -and $filesToRemove) {
-            Write-Host -f Yellow "Removing files matching '$pattern' from merge"
-            & git rm -rf $pattern 2>&1 | Write-Host
-            $processedPatterns += $pattern
+        # Use git checkout to reset files matching the pattern to the target branch
+        # The -- is needed to separate the revision from the pathspec
+        # Just attempt to checkout the pattern directly - git will handle whether files exist
+        try {
+            & git checkout "origin/$targetBranch" -- $pattern 2>&1 | Write-Host
+            if ($LASTEXITCODE -eq 0) {
+                Write-Host -f Green "Checked out pattern '$pattern' from $targetBranch"
+                $processedPatterns += $pattern
+            } else {
+                Write-Host -f Yellow "Pattern '$pattern' did not match any files in $targetBranch"
+            }
         }
-        
-        # Then, checkout any files that exist in target branch (re-adds them)
-        & git checkout "origin/$targetBranch" -- $pattern 2>&1 | Write-Host
-        if ($LASTEXITCODE -eq 0) {
-            Write-Host -f Green "Checked out pattern '$pattern' from $targetBranch"
+        catch {
+            Write-Warning "Failed to checkout pattern '$pattern' from $targetBranch. Error: $_"
         }
     }
 
