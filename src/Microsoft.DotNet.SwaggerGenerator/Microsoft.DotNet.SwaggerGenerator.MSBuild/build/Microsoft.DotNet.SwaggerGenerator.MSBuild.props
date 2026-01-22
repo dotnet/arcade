@@ -4,6 +4,7 @@
   <PropertyGroup>
     <MicrosoftDotNetSwaggerGeneratorMSBuildDirectory Condition="'$(MicrosoftDotNetSwaggerGeneratorMSBuildDirectory)' == ''">$(MSBuildThisFileDirectory)../tools/net/</MicrosoftDotNetSwaggerGeneratorMSBuildDirectory>
     <MicrosoftDotNetSwaggerGeneratorMSBuildTasksAssembly>$(MicrosoftDotNetSwaggerGeneratorMSBuildDirectory)Microsoft.DotNet.SwaggerGenerator.MSBuild.dll</MicrosoftDotNetSwaggerGeneratorMSBuildTasksAssembly>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildTaskFactory Condition="'$(MicrosoftDotNetSwaggerGeneratorMSBuildTaskFactory)' == ''">AssemblyTaskFactory</MicrosoftDotNetSwaggerGeneratorMSBuildTaskFactory>
 
     <SwaggerOutputDirectory>$([MSBuild]::NormalizeDirectory('$(MSBuildProjectDirectory)', 'generated-code'))</SwaggerOutputDirectory>
   </PropertyGroup>

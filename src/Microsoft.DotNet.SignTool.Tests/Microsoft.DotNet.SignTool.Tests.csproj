@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(NetToolCurrent)</TargetFramework>
+    <TargetFramework>$(BundledNETCoreAppTargetFramework)</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,7 +18,7 @@
 
     <ProjectReference Include="..\Microsoft.DotNet.MacOsPkg\Cli\Microsoft.DotNet.MacOsPkg.Cli.csproj"
                       ReferenceOutputAssembly="false"
-                      SetTargetFramework="TargetFramework=$(NetToolCurrent)"
+                      SetTargetFramework="TargetFramework=$(BundledNETCoreAppTargetFramework)"
                       SkipGetTargetFrameworkProperties="true"
                       Private="false"
                       OutputItemType="_PkgToolPath" />
