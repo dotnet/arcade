@@ -4,6 +4,8 @@
     <TargetFramework>$(BundledNETCoreAppTargetFramework)</TargetFramework>
     <PackageType>MSBuildSdk</PackageType>
     <IsBuildTaskProject>true</IsBuildTaskProject>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
