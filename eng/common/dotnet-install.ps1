@@ -3,6 +3,7 @@ Param(
   [string] $verbosity = 'minimal',
   [string] $architecture = '',
   [string] $version = 'Latest',
+  [string] $channel = '',
   [string] $runtime = 'dotnet',
   [string] $RuntimeSourceFeed = '',
   [string] $RuntimeSourceFeedKey = ''
@@ -17,7 +18,7 @@ try {
     if ($architecture -and $architecture.Trim() -eq 'x86') {
         $installdir = Join-Path $installdir 'x86'
     }
-    InstallDotNet $installdir $version $architecture $runtime $true -RuntimeSourceFeed $RuntimeSourceFeed -RuntimeSourceFeedKey $RuntimeSourceFeedKey
+    InstallDotNet $installdir $version $architecture $runtime $true -RuntimeSourceFeed $RuntimeSourceFeed -RuntimeSourceFeedKey $RuntimeSourceFeedKey -Channel $channel
 }
 catch {
   Write-Host $_.ScriptStackTrace

@@ -14,6 +14,7 @@ scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 . "$scriptroot/tools.sh"
 
 version='Latest'
+channel=''
 architecture=''
 runtime='dotnet'
 runtimeSourceFeed=''
@@ -24,6 +25,10 @@ while [[ $# -gt 0 ]]; do
     -version|-v)
       shift
       version="$1"
+      ;;
+    -channel|-c)
+      shift
+      channel="$1"
       ;;
     -architecture|-a)
       shift
@@ -85,7 +90,7 @@ if [[ $architecture != "" ]] && [[ $architecture != $buildarch ]]; then
   dotnetRoot="$dotnetRoot/$architecture"
 fi
 
-InstallDotNet "$dotnetRoot" $version "$architecture" $runtime true $runtimeSourceFeed $runtimeSourceFeedKey || {
+InstallDotNet "$dotnetRoot" $version "$architecture" $runtime true $runtimeSourceFeed $runtimeSourceFeedKey "$channel" || {
   local exit_code=$?
   Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "dotnet-install.sh failed (exit code '$exit_code')." >&2
   ExitWithExitCode $exit_code
