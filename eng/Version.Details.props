@@ -17,8 +17,8 @@ This file should be imported by eng/Versions.props
     <MicrosoftDotNetArcadeSdkPackageVersion>11.0.0-beta.26073.1</MicrosoftDotNetArcadeSdkPackageVersion>
     <MicrosoftDotNetHelixSdkPackageVersion>11.0.0-beta.26073.1</MicrosoftDotNetHelixSdkPackageVersion>
     <!-- dotnet/arcade-services dependencies -->
-    <MicrosoftDotNetDarcLibPackageVersion>1.1.0-beta.25564.1</MicrosoftDotNetDarcLibPackageVersion>
-    <MicrosoftDotNetProductConstructionServiceClientPackageVersion>1.1.0-beta.25564.1</MicrosoftDotNetProductConstructionServiceClientPackageVersion>
+    <MicrosoftDotNetDarcLibPackageVersion>1.1.0-beta.26073.2</MicrosoftDotNetDarcLibPackageVersion>
+    <MicrosoftDotNetProductConstructionServiceClientPackageVersion>1.1.0-beta.26073.2</MicrosoftDotNetProductConstructionServiceClientPackageVersion>
     <!-- dotnet/xharness dependencies -->
     <MicrosoftDotNetXHarnessCLIPackageVersion>11.0.0-prerelease.26062.2</MicrosoftDotNetXHarnessCLIPackageVersion>
     <!-- dotnet/symreader-converter dependencies -->
