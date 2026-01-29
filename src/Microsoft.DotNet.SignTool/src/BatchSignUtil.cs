@@ -281,15 +281,18 @@ namespace Microsoft.DotNet.SignTool
             {
                 if (file.IsUnpackableContainer())
                 {
-                    _log.LogMessage($"Repacking container: '{file.FileName}'");
-                    _batchData.ZipDataMap[file.FileContentKey].Repack(
-                        _log,
-                        _signTool.TempDir,
-                        _signTool.Wix3ToolsPath,
-                        _signTool.WixToolsPath,
-                        _signTool.DotNetPathTooling,
-                        _signTool.TarToolPath,
-                        _signTool.PkgToolPath);
+                    if (_batchData.ZipDataMap.TryGetValue(file.FileContentKey, out var zipData))
+                    {
+                        _log.LogMessage($"Repacking container: '{file.FileName}'");
+                        zipData.Repack(_log, _signTool.TempDir, _signTool.Wix3ToolsPath, _signTool.WixToolsPath, _signTool.TarToolPath, _signTool.PkgToolPath);
+                    }
+                    else
+                    {
+                        if (!file.SignInfo.DoNotUnpack)
+                        {
+                            _log.LogError($"No zip data found for file '{file.FullPath}' to repack.");
+                        }
+                    }
                 }
                 else
                 {
@@ -301,9 +304,8 @@ namespace Microsoft.DotNet.SignTool
             // signed, don't need signing, and are repacked.
             bool isReady(FileSignInfo file)
             {
-                if (file.IsUnpackableContainer())
+                if (_batchData.ZipDataMap.TryGetValue(file.FileContentKey, out var zipData))
                 {
-                    var zipData = _batchData.ZipDataMap[file.FileContentKey];
                     return zipData.NestedParts.Values.All(x => (!x.FileSignInfo.SignInfo.ShouldSign ||
                         trackedSet.Contains(x.FileSignInfo.FileContentKey)) && !toRepackSet.Contains(x.FileSignInfo.FullPath)
                         );
@@ -656,7 +658,7 @@ namespace Microsoft.DotNet.SignTool
                 }
                 else if (file.IsPkg() || file.IsAppBundle())
                 {
-                    var status = _signTool.VerifySignedPkgOrAppBundle(_log, file.FullPath, _signTool.DotNetPathTooling, _signTool.PkgToolPath);
+                    var status = _signTool.VerifySignedPkgOrAppBundle(_log, file.FullPath, _signTool.PkgToolPath);
                     LogSigningStatus(file, status, "Pkg or app");
                 }
                 else if (file.IsNupkg())
@@ -671,10 +673,8 @@ namespace Microsoft.DotNet.SignTool
                 }
             }
 
-            if (file.IsUnpackableContainer())
+            if (_batchData.ZipDataMap.TryGetValue(file.FileContentKey, out var zipData))
             {
-                var zipData = _batchData.ZipDataMap[file.FileContentKey];
-
                 foreach (var nestedPart in zipData.NestedParts.Values)
                 {
                     VerifyAfterSign(log, nestedPart.FileSignInfo);
