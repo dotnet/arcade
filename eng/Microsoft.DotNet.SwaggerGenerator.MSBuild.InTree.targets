@@ -2,9 +2,7 @@
 
   <PropertyGroup>
     <MicrosoftDotNetSwaggerGeneratorMSBuildProjectDirectory>$([MSBuild]::NormalizeDirectory('$(RepoRoot)', 'src', 'Microsoft.DotNet.SwaggerGenerator', 'Microsoft.DotNet.SwaggerGenerator.MSBuild'))</MicrosoftDotNetSwaggerGeneratorMSBuildProjectDirectory>
-    <MicrosoftDotNetSwaggerGeneratorMSBuildBaseOutputDirectory>$(ArtifactsBinDir)Microsoft.DotNet.SwaggerGenerator.MSBuild\$(Configuration)\</MicrosoftDotNetSwaggerGeneratorMSBuildBaseOutputDirectory>
-    <!-- Keep TFMs in sync with Microsoft.DotNet.SwaggerGenerator.MSBuild.csproj -->
-    <MicrosoftDotNetSwaggerGeneratorMSBuildDirectory>$(MicrosoftDotNetSwaggerGeneratorMSBuildBaseOutputDirectory)$(BundledNETCoreAppTargetFramework)\</MicrosoftDotNetSwaggerGeneratorMSBuildDirectory>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildDirectory>$(ArtifactsBinDir)Microsoft.DotNet.SwaggerGenerator.MSBuild\$(Configuration)\</MicrosoftDotNetSwaggerGeneratorMSBuildDirectory>
     <!-- Make sure that the P2Ps are built before swagger generator targets are invoked. -->
     <GenerateSwaggerCodeDependsOn>ResolveProjectReferences</GenerateSwaggerCodeDependsOn>
   </PropertyGroup>
@@ -21,10 +19,7 @@
     <ProjectReference Include="$(MicrosoftDotNetSwaggerGeneratorMSBuildProjectDirectory)Microsoft.DotNet.SwaggerGenerator.MSBuild.csproj"
                       ReferenceOutputAssembly="false"
                       PrivateAssets="all"
-                      Private="false">
-      <!-- Keep TFM in sync with Microsoft.DotNet.SwaggerGenerator.MSBuild.csproj -->
-      <SetTargetFramework>TargetFramework=$(BundledNETCoreAppTargetFramework)</SetTargetFramework>
-    </ProjectReference>
+                      Private="false" />
   </ItemGroup>
 
 </Project>
