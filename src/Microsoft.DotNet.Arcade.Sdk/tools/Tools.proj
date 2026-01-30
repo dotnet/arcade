@@ -12,6 +12,9 @@
     <TargetFrameworkMoniker Condition="'$(TargetFrameworkMoniker)' == ''">.NETFramework,Version=v4.7.2</TargetFrameworkMoniker>   
     <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
 
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+
     <!-- Internal tool restore settings -->
     <!-- VisualStudio.InsertionManifests.targets: Keep condition in sync with import in AfterSigning.proj. -->
     <RestoreInternalTooling Condition="'$(UsingToolVSSDK)' == 'true' and '$(GenerateSbom)' == 'true' and '$(MSBuildRuntimeType)' != 'Core'">true</RestoreInternalTooling>
@@ -45,10 +48,10 @@
 
   <ItemGroup Condition="'$(_ImportOrUseTooling)' == 'true'">
     <!-- Copy of 'sn.exe' in form of NuGet package. -->
-    <PackageDownload Include="sn" Version="$(SNVersion)" />
+    <PackageDownload Include="sn" Version="[$(SNVersion)]" />
     <PackageDownload Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="[$(MicrosoftVisualStudioEngMicroBuildCoreVersion)]" />
     <PackageDownload Include="MicroBuild.Core.Sentinel" Version="[1.0.0]" />
-    <PackageDownload Include="vswhere" Version="$(VSWhereVersion)" />
+    <PackageDownload Include="vswhere" Version="[$(VSWhereVersion)]" />
     <PackageDownload Include="Microsoft.Signed.Wix" Version="[$(MicrosoftSignedWixVersion)]" />
     <PackageDownload Include="Microsoft.WixToolset.Sdk" Version="[$(MicrosoftWixToolsetSdkVersion)]" />
     <PackageDownload Include="Microsoft.DotNet.SignTool" Version="[$(MicrosoftDotNetSignToolVersion)]" />
