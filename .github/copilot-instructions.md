@@ -34,8 +34,6 @@ timeout 1800 ./build.sh --restore
 
 # Clean build artifacts
 ./build.sh --clean
-```
-
 ### Platform-Specific Commands
 - **Linux/macOS**: `./build.sh`, `./test.sh`, `./restore.sh`
 - **Windows**: `Build.cmd`, `Test.cmd`, `Restore.cmd`
@@ -61,7 +59,6 @@ timeout 1800 ./build.sh --restore
 - **Microsoft.DotNet.PackageTesting**: Automated package validation testing
 
 ## Build Artifacts Structure
-```
 artifacts/
 ├── bin/                    # Compiled binaries by project/configuration
 ├── packages/               # Generated NuGet packages (Shipping/NonShipping)
@@ -69,7 +66,6 @@ artifacts/
 ├── log/                    # Build logs and binary logs (.binlog)
 ├── tmp/                    # Temporary build artifacts
 └── toolset/               # Downloaded build tools and dependencies
-```
 
 ## Validation and Testing
 
@@ -86,6 +82,9 @@ timeout 6000 ./build.sh --restore --build --configuration Release --test
 - **Integration Tests**: Cross-component validation via Helix
 - **SDK Tests**: Validate Arcade SDK works in sample projects
 - **Packaging Tests**: Ensure generated packages are valid
+
+### Writing Tests
+- When writing tests in this repo, **do not implement new mock file system wrappers**; use the existing `Microsoft.Arcade.Test.Common.MockFileSystem`. Update the shared `IFileSystem`/`MockFileSystem` to support binary-safe operations needed for in-place updates, rather than adding separate binary storage dictionaries or per-test filesystem adapters.
 
 ## Common Development Tasks
 

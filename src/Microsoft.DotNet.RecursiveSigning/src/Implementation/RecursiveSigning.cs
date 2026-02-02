@@ -32,6 +32,18 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
         private readonly ISigningProvider _signingProvider;
         private readonly ILogger<RecursiveSigning> _logger;
 
+        private readonly Dictionary<FileContentKey, FileNode> _canonicalNodesByContentKey = new();
+        private readonly Dictionary<FileContentKey, List<ReferencePlaceholderNode>> _referencePlaceholdersByContentKey = new();
+
+
+        private readonly record struct DiscoveryWorkItem(
+            string FilePath,
+            string? RelativePathInContainer,
+            FileNode? ParentNode,
+            bool ExpandContainer,
+            FileNode? ContainerNode,
+            bool IsCanonicalWorkItem);
+
         public RecursiveSigning(
             IFileSystem fileSystem,
             IFileAnalyzer fileAnalyzer,
@@ -123,18 +135,55 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             List<SigningError> errors,
             CancellationToken cancellationToken)
         {
-            foreach (var filePath in request.InputFiles.Select(f => f.ToString()))
+            var pending = new Stack<DiscoveryWorkItem>();
+
+            // Push in reverse so the first input is processed first when popping.
+            foreach (var filePath in request.InputFiles.Select(f => f.ToString()).Reverse())
+            {
+                pending.Push(new DiscoveryWorkItem(
+                    NormalizeFilePathForFileSystem(filePath),
+                    RelativePathInContainer: null,
+                    ParentNode: null,
+                    ExpandContainer: false,
+                    ContainerNode: null,
+                    IsCanonicalWorkItem: true));
+            }
+
+            while (pending.Count > 0)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
+                var item = pending.Pop();
+
                 try
                 {
-                    await TrackFile(NormalizeFilePathForFileSystem(filePath), null, request.Configuration, cancellationToken);
+                    if (item.ExpandContainer)
+                    {
+                        if (item.ContainerNode != null)
+                        {
+                            var handler = _containerHandlerRegistry.FindHandler(item.ContainerNode.Location.FilePathOnDisk!);
+                            if (handler != null)
+                            {
+                                await DiscoverContainerContentsAsync(item.ContainerNode, handler, request.Configuration, pending, cancellationToken);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        await TrackFile(
+                            item.FilePath,
+                            item.RelativePathInContainer,
+                            item.ParentNode,
+                            request.Configuration,
+                            pending,
+                            cancellationToken,
+                            item.IsCanonicalWorkItem);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error discovering file: {FilePath}", filePath);
-                    errors.Add(new SigningError($"Error discovering file: {ex.Message}", filePath, ex));
+                    _logger.LogError(ex, "Error discovering file: {FilePath}", item.FilePath);
+                    errors.Add(new SigningError($"Error discovering file: {ex.Message}", item.FilePath, ex));
                 }
             }
         }
@@ -157,9 +206,12 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
         /// <returns>The node representing the tracked file.</returns>
         private async Task<FileNodeBase> TrackFile(
             string filePath,
+            string? relativePathInContainer,
             FileNode? parentNode,
             SigningConfiguration configuration,
-            CancellationToken cancellationToken)
+            Stack<DiscoveryWorkItem> pending,
+            CancellationToken cancellationToken,
+            bool isCanonicalWorkItem)
         {
             // If the file does not exist, then throw
             if (!_fileSystem.FileExists(filePath))
@@ -172,7 +224,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             using var stream = _fileSystem.GetFileStream(filePath, FileMode.Open, FileAccess.Read);
             ContentHash contentHash = await ContentHash.FromStreamAsync(stream, cancellationToken);
             var contentKey = new FileContentKey(contentHash, fileName);
-            var location = new FileLocation(filePath, RelativePathInContainer: null);
+            var location = new FileLocation(filePath, relativePathInContainer);
 
             // Check for duplicates and skip discovery 
             if (_fileDeduplicator.TryGetRegisteredFile(contentKey, out string? originalPath))
@@ -183,15 +235,65 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                     filePath,
                     originalPath);
 
-                return CreateReferenceNode(contentKey, location, parentNode, "file", filePath);
+                if (_canonicalNodesByContentKey.TryGetValue(contentKey, out var canonicalNode))
+                {
+                    return CreateReferenceNode(contentKey, location, parentNode, "file", filePath);
+                }
+
+                // Canonical work for this content key has not been processed yet.
+                // Ensure it is scheduled so any placeholders can be resolved before FinalizeDiscovery.
+                if (originalPath != null && isCanonicalWorkItem)
+                {
+                    pending.Push(new DiscoveryWorkItem(
+                        NormalizeFilePathForFileSystem(originalPath),
+                        RelativePathInContainer: null,
+                        ParentNode: null,
+                        ExpandContainer: false,
+                        ContainerNode: null,
+                        IsCanonicalWorkItem: true));
+                }
+
+                var placeholder = new ReferencePlaceholderNode(contentKey, location);
+                _signingGraph.AddNode(placeholder, parentNode);
+                if (!_referencePlaceholdersByContentKey.TryGetValue(contentKey, out var placeholders))
+                {
+                    placeholders = new List<ReferencePlaceholderNode>();
+                    _referencePlaceholdersByContentKey[contentKey] = placeholders;
+                }
+                placeholders.Add(placeholder);
+                return placeholder;
             }
 
             _fileDeduplicator.RegisterFile(contentKey, filePath);
 
+            // Fully discover the canonical node when its work item is dequeued.
             var metadata = await _fileAnalyzer.AnalyzeAsync(filePath, cancellationToken);
+            var node = await DiscoverFileAsync(contentKey, location, metadata, parentNode, configuration, pending, cancellationToken);
+            _canonicalNodesByContentKey[contentKey] = node;
 
-            // First occurrence: delegate to DiscoverFileAsync for full analysis
-            return await DiscoverFileAsync(contentKey, location, metadata, parentNode, configuration, cancellationToken);
+            // Replace any previously created reference placeholders for this content key.
+            if (_referencePlaceholdersByContentKey.TryGetValue(contentKey, out var placeholdersForKey))
+            {
+                foreach (var placeholder in placeholdersForKey)
+                {
+                    var reference = new ReferenceNode(contentKey, placeholder.Location, node);
+                    // Add to graph node set, then (if needed) swap into the parent's children list.
+                    _signingGraph.AddNode(reference, parent: null);
+
+                    if (_signingGraph is SigningGraph sg)
+                    {
+                        if (placeholder.Parent is FileNode p)
+                        {
+                            sg.ReplaceChildNode(p, placeholder, reference);
+                        }
+
+                        sg.RemoveNode(placeholder);
+                    }
+                }
+                _referencePlaceholdersByContentKey.Remove(contentKey);
+            }
+
+            return node;
         }
 
         /// <summary>
@@ -204,11 +306,12 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
         /// <param name="configuration">Signing configuration.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>The node representing the tracked file.</returns>
-        private async Task<FileNodeBase> TrackNestedFile(
+        private async Task TrackContainerEntryAsync(
             Stream contentStream,
             string relativePath,
             FileNode parentNode,
             SigningConfiguration configuration,
+            Stack<DiscoveryWorkItem> pending,
             CancellationToken cancellationToken)
         {
             if (contentStream == null)
@@ -237,6 +340,11 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             // If the content has been seen before, reuse the first extracted path.
             if (_fileDeduplicator.TryGetRegisteredFile(contentKey, out string? originalPath))
             {
+                if (originalPath == null)
+                {
+                    throw new InvalidOperationException("Deduplicator returned a null original path for a registered content key.");
+                }
+
                 _logger.LogDebug(
                     "Duplicate file detected in container: {FileName} at {RelativePath} (original: {OriginalPath}), skipping extraction",
                     contentKey.FileName,
@@ -244,7 +352,27 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                     originalPath);
 
                 var referenceLocation = new FileLocation(originalPath, relativePath);
-                return CreateReferenceNodeForContainer(contentKey, referenceLocation, parentNode);
+                if (!_canonicalNodesByContentKey.TryGetValue(contentKey, out var canonicalNode))
+                {
+                    // Create a minimal canonical node so the reference exists in the graph immediately.
+                    // The canonical work item will later fully analyze and/or expand the file.
+                    var dummyMetadata = new FileMetadata(isAlreadySigned: false);
+                    canonicalNode = new FileNode(contentKey, new FileLocation(originalPath, RelativePathInContainer: null), dummyMetadata, certificateIdentifier: null);
+                    _signingGraph.AddNode(canonicalNode, parent: null);
+                    _canonicalNodesByContentKey[contentKey] = canonicalNode;
+
+                    pending.Push(new DiscoveryWorkItem(
+                        NormalizeFilePathForFileSystem(originalPath),
+                        RelativePathInContainer: null,
+                        ParentNode: null,
+                        ExpandContainer: false,
+                        ContainerNode: null,
+                        IsCanonicalWorkItem: true));
+                }
+
+                var referenceNode = new ReferenceNode(contentKey, referenceLocation, canonicalNode);
+                _signingGraph.AddNode(referenceNode, parentNode);
+                return;
             }
 
             var metadata = await _fileAnalyzer.AnalyzeAsync(contentStream, fileName, cancellationToken);
@@ -256,9 +384,19 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                 configuration.TempDirectory,
                 cancellationToken);
 
+            // Register the extracted path before pushing further discovery so that later duplicate entries
+            // can resolve the canonical node via FindExistingNodeByContentKey.
             _fileDeduplicator.RegisterFile(contentKey, filePath);
 
-            return await DiscoverFileAsync(contentKey, new FileLocation(filePath, relativePath), metadata, parentNode, configuration, cancellationToken);
+            // Queue canonical processing (fully deferred discovery).
+            var location = new FileLocation(filePath, relativePath);
+            pending.Push(new DiscoveryWorkItem(
+                filePath,
+                RelativePathInContainer: relativePath,
+                ParentNode: parentNode,
+                ExpandContainer: false,
+                ContainerNode: null,
+                IsCanonicalWorkItem: true));
         }
 
         /// <summary>
@@ -266,7 +404,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
         /// </summary>
         private FileNodeBase CreateReferenceNode(FileContentKey contentKey, FileLocation fileLocation, FileNode? parentNode, string context, string location)
         {
-            var existingNode = FindExistingNodeByContentKey(contentKey);
+            FileNode? existingNode = FindExistingNodeByContentKey(contentKey);
             if (existingNode == null)
             {
                 throw new InvalidOperationException(
@@ -285,9 +423,9 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
         /// <summary>
         /// Creates a reference node for a duplicate file found in a container.
         /// </summary>
-        private FileNodeBase CreateReferenceNodeForContainer(FileContentKey contentKey, FileLocation fileLocation, FileNode parentNode)
+        private FileNodeBase CreateReferenceNodeForContainer(FileContentKey contentKey, FileLocation fileLocation, FileNode? parentNode)
         {
-            var existingNode = FindExistingNodeByContentKey(contentKey);
+            FileNode? existingNode = FindExistingNodeByContentKey(contentKey);
             if (existingNode == null)
             {
                 throw new InvalidOperationException(
@@ -345,6 +483,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             return allNodes.OfType<FileNode>().FirstOrDefault(n => n.ContentKey.Equals(contentKey));
         }
 
+
         /// <summary>
         /// Discovers signing information for a file and, if it is a container, recursively discovers its contents.
         /// </summary>
@@ -361,6 +500,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             IFileMetadata metadata,
             FileNode? parentNode,
             SigningConfiguration configuration,
+            Stack<DiscoveryWorkItem> pending,
             CancellationToken cancellationToken)
         {
             // First occurrence: full analysis and potential container extraction
@@ -394,10 +534,17 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             _logger.LogDebug("Discovered file: {FileName}, NeedsSigning: {NeedsSigning}, IsContainer: {IsContainer}",
                 contentKey.FileName, node.NeedsSigning, isContainer);
 
-            // If this is a container (has a registered handler), recursively discover its contents
+            // If this is a container (has a registered handler), defer expansion so we don't keep the container
+            // open while processing the full nested subtree.
             if (isContainer)
             {
-                await DiscoverContainerContentsAsync(node, handler!, configuration, cancellationToken);
+                pending.Push(new DiscoveryWorkItem(
+                    location.FilePathOnDisk!,
+                    RelativePathInContainer: location.RelativePathInContainer,
+                    ParentNode: null,
+                    ExpandContainer: true,
+                    ContainerNode: node,
+                    IsCanonicalWorkItem: false));
             }
 
             return node;
@@ -414,6 +561,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             FileNode containerNode,
             IContainerHandler handler,
             SigningConfiguration configuration,
+            Stack<DiscoveryWorkItem> pending,
             CancellationToken cancellationToken)
         {
             _logger.LogDebug("Discovering contents of container: {FileName}", containerNode.ContentKey.FileName);
@@ -422,7 +570,19 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             {
                 using (entry)
                 {
-                    await TrackNestedFile(entry.ContentStream, entry.RelativePath, containerNode, configuration, cancellationToken);
+                    if (entry.ContentStream == null)
+                    {
+                        throw new InvalidOperationException(
+                            $"Container handler returned a null content stream for entry '{entry.RelativePath}'.");
+                    }
+
+                    await TrackContainerEntryAsync(
+                        entry.ContentStream,
+                        entry.RelativePath,
+                        containerNode,
+                        configuration,
+                        pending,
+                        cancellationToken);
                 }
             }
         }
@@ -546,9 +706,8 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             foreach (var node in nodes)
             {
                 // Graph-level implicit dedup guarantees these are unique original nodes.
-                var signedDir = _fileSystem.PathCombine(request.Configuration.TempDirectory, "signed", Guid.NewGuid().ToString());
-                _fileSystem.CreateDirectory(signedDir);
-                string outputPath = _fileSystem.PathCombine(signedDir, node.ContentKey.FileName);
+                string outputPath = node.Location.FilePathOnDisk!
+                    ?? throw new InvalidOperationException($"Node '{node.ContentKey.FileName}' has no on-disk path for in-place signing.");
                 filesToSign.Add((node, outputPath));
             }
 
@@ -580,10 +739,10 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
         }
 
         /// <summary>
-        /// Repacks a container by writing out a new container file from its (signed) child entries.
+        /// Repacks a container in place by updating its signed child entries.
         /// </summary>
         /// <param name="containerNode">Container node to repack.</param>
-        /// <param name="tempDirectory">Temporary directory used for repacked output.</param>
+        /// <param name="tempDirectory">Temporary directory currently unused for in-place repacking.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>Path to the repacked container on disk.</returns>
         private async Task<string> RepackContainerAsync(FileNode containerNode, string tempDirectory, CancellationToken cancellationToken)
@@ -597,44 +756,42 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             _logger.LogDebug("Repacking container: {FileName}", containerNode.ContentKey.FileName);
 
             // Build list of entries with signed versions
-            var entries = new List<ContainerEntry>();
+            var updatedEntries = new List<ContainerEntry>();
 
-            foreach (var child in containerNode.Children.OfType<FileNode>())
+            try
             {
-                // Get signed version
-                if (!_fileDeduplicator.TryGetSignedVersion(child.ContentKey, out string? signedPath))
+                foreach (var child in containerNode.Children.OfType<FileNode>())
                 {
-                    signedPath = child.Location.FilePathOnDisk!; // Use original if not signed
+                    // Get signed version
+                    if (!_fileDeduplicator.TryGetSignedVersion(child.ContentKey, out string? signedPath))
+                    {
+                        signedPath = child.Location.FilePathOnDisk!; // Use original if not signed
+                    }
+
+                    var entry = new ContainerEntry(child.Location.RelativePathInContainer!, contentStream: null)
+                    {
+                        UpdatedContentPath = signedPath
+                    };
+                    updatedEntries.Add(entry);
                 }
 
-                var stream = _fileSystem.GetFileStream(signedPath!, FileMode.Open, FileAccess.Read);
-                var entry = new ContainerEntry(child.Location.RelativePathInContainer!, stream)
-                {
-                    IsUpdated = true,
-                    UpdatedContentPath = signedPath
-                };
-                entries.Add(entry);
+                // Repack container in place
+                await handler.WriteContainerAsync(
+                    containerNode.Location.FilePathOnDisk!,
+                    updatedEntries,
+                    new ContainerMetadata(),
+                    cancellationToken);
             }
-
-            // Create output path for repacked container
-            var repackedDir = _fileSystem.PathCombine(tempDirectory, "repacked", Guid.NewGuid().ToString());
-            _fileSystem.CreateDirectory(repackedDir);
-            string repackedPath = _fileSystem.PathCombine(repackedDir, containerNode.ContentKey.FileName);
-
-            // Repack container to new location
-            await handler.WriteContainerAsync(
-                repackedPath,
-                entries,
-                new ContainerMetadata(),
-                cancellationToken);
-
-            // Cleanup entry streams
-            foreach (var entry in entries)
+            finally
             {
-                entry.Dispose();
+                // Cleanup entry streams
+                foreach (var entry in updatedEntries)
+                {
+                    entry.Dispose();
+                }
             }
 
-            return repackedPath;
+            return containerNode.Location.FilePathOnDisk!;
         }
 
         /// <summary>

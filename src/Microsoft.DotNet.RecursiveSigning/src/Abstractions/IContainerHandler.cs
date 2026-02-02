@@ -40,16 +40,16 @@ namespace Microsoft.DotNet.RecursiveSigning.Abstractions
         /// Write updated container with signed contents.
         /// </summary>
         /// <param name="containerPath">Path to container file.</param>
-        /// <param name="entries">Entries to write (some may be updated).</param>
+        /// <param name="entriesToUpdate">Entries to update. Not all entries in the container may be updated.</param>
         /// <param name="metadata">Container metadata to preserve.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <remarks>
-        /// The caller retains ownership of <paramref name="entries"/> and their streams.
+        /// The caller retains ownership of <paramref name="entriesToUpdate"/> and their streams.
         /// Implementations must not dispose entry streams.
         /// </remarks>
         Task WriteContainerAsync(
             string containerPath,
-            IEnumerable<ContainerEntry> entries,
+            IEnumerable<ContainerEntry> entriesToUpdate,
             ContainerMetadata metadata,
             CancellationToken cancellationToken = default);
     }

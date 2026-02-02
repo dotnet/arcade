@@ -55,21 +55,6 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
                     await Task.Delay(_delay, cancellationToken);
                 }
 
-                // Simulate signing by copying file to output
-                // In a real implementation, this would actually sign the file
-                string? directory = Path.GetDirectoryName(outputPath);
-                if (!string.IsNullOrEmpty(directory) && !_fileSystem.DirectoryExists(directory))
-                {
-                    _fileSystem.CreateDirectory(directory);
-                }
-
-                // Copy file using file system
-                using (var sourceStream = _fileSystem.GetFileStream(node.Location.FilePathOnDisk!, FileMode.Open, FileAccess.Read))
-                using (var destStream = _fileSystem.GetFileStream(outputPath, FileMode.Create, FileAccess.Write))
-                {
-                    await sourceStream.CopyToAsync(destStream, cancellationToken);
-                }
-
                 // Optionally append a marker to show it was "signed"
                 string signedMarker = $"\n[SIGNED with {node.CertificateIdentifier?.Name}]";
                 using (var appendStream = _fileSystem.GetFileStream(outputPath, FileMode.Append, FileAccess.Write))

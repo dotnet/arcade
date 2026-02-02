@@ -594,7 +594,6 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
                 {
                     ContentHash = System.Security.Cryptography.SHA256.HashData(bytes),
                     Length = bytes.Length,
-                    IsUpdated = false
                 };
             }
 
@@ -619,7 +618,6 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
                 {
                     ContentHash = System.Security.Cryptography.SHA256.HashData(bytes),
                     Length = bytes.Length,
-                    IsUpdated = false
                 };
             }
 
@@ -807,7 +805,6 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
                 {
                     ContentHash = System.Security.Cryptography.SHA256.HashData(bytes),
                     Length = bytes.Length,
-                    IsUpdated = false
                 };
             }
 

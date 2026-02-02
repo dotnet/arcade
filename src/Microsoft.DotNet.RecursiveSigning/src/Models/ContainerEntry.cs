@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
         /// For entries produced by <c>IContainerHandler.ReadEntriesAsync</c>, the stream is only guaranteed to be
         /// valid until the entry is disposed.
         /// </summary>
-        public Stream ContentStream { get; }
+        public Stream? ContentStream { get; }
 
         /// <summary>
         /// Content hash (SHA-256).
@@ -39,24 +39,19 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
         public long? Length { get; set; }
 
         /// <summary>
-        /// Whether this entry has been updated with signed content.
-        /// </summary>
-        public bool IsUpdated { get; set; }
-
-        /// <summary>
         /// Path to the updated (signed) version of this file.
         /// </summary>
         public string? UpdatedContentPath { get; set; }
 
-        public ContainerEntry(string relativePath, Stream contentStream)
+        public ContainerEntry(string relativePath, Stream? contentStream)
         {
             RelativePath = relativePath ?? throw new ArgumentNullException(nameof(relativePath));
-            ContentStream = contentStream ?? throw new ArgumentNullException(nameof(contentStream));
+            ContentStream = contentStream;
         }
 
         public void Dispose()
         {
-            ContentStream.Dispose();
+            ContentStream?.Dispose();
         }
 
         public override string ToString() => RelativePath;

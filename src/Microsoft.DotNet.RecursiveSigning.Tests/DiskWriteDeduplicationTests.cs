@@ -257,6 +257,35 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
         }
 
         [Fact]
+        public async Task DuplicateEntryEncounteredBeforeCanonicalDequeued_DoesNotThrow()
+        {
+            // This specifically exercises the fully-deferred discovery behavior: while enumerating container entries,
+            // the first occurrence is queued for later processing. A second occurrence may be encountered before the
+            // queued item is dequeued. Placeholder canonical nodes must prevent discovery-time failures.
+
+            string containerFile = _fileSystem.PathCombine(_testRoot, "package.testcontainer");
+            string sharedContent = "duplicate entry content";
+
+            var containerHandler = _services.GetRequiredService<StubContainerHandler>();
+            containerHandler.SetContainerContents(containerFile, new List<(string, string)>
+            {
+                ("lib/net8.0/file.dll", sharedContent),
+                ("lib/net10.0/file.dll", sharedContent)
+            });
+            _fileSystem.WriteToFile(containerFile, "container marker");
+
+            var request = CreateSigningRequest(containerFile);
+            var recursiveSigning = _services.GetRequiredService<IRecursiveSigning>();
+
+            // This test is focused on discovery-time behavior: it should not fail with the
+            // "Duplicate detected but no existing node found" error when duplicates are encountered
+            // before the canonical queued item is processed.
+            var result = await recursiveSigning.SignAsync(request, CancellationToken.None);
+            result.Errors.Select(e => e.Message)
+                .Should().NotContain(m => m.Contains("Duplicate detected but no existing node found", StringComparison.OrdinalIgnoreCase));
+        }
+
+        [Fact]
         public async Task TwoDifferentNamedEntriesInSameContainer_SameContent_AreExtractedTwice()
         {
             // Arrange: Create a container with two entries having identical content but different names

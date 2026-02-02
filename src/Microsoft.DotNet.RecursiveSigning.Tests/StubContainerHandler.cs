@@ -76,7 +76,6 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
                 {
                     ContentHash = System.Security.Cryptography.SHA256.HashData(bytes),
                     Length = bytes.Length,
-                    IsUpdated = false
                 };
             }
 
@@ -95,24 +94,21 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             foreach (var entry in entries)
             {
                 string content;
-                if (entry.IsUpdated && entry.UpdatedContentPath != null)
+                if (!string.IsNullOrEmpty(entry.UpdatedContentPath))
                 {
-                    // Read from updated file
-                    if (File.Exists(entry.UpdatedContentPath))
-                    {
-                        content = File.ReadAllText(entry.UpdatedContentPath);
-                    }
-                    else
-                    {
-                        using var reader = new StreamReader(entry.ContentStream);
-                        content = reader.ReadToEnd();
-                    }
+                    // In the real workflow this is a temp path extracted from the container handler.
+                    // Read via file APIs for simplicity in tests.
+                    content = File.ReadAllText(entry.UpdatedContentPath);
+                }
+                else if (entry.ContentStream is not null)
+                {
+                    // Some tests may still provide content via stream for convenience.
+                    using var reader = new StreamReader(entry.ContentStream);
+                    content = reader.ReadToEnd();
                 }
                 else
                 {
-                    // Read from stream
-                    using var reader = new StreamReader(entry.ContentStream);
-                    content = reader.ReadToEnd();
+                    throw new InvalidOperationException($"Entry '{entry.RelativePath}' has no content available (both {nameof(entry.ContentStream)} and {nameof(entry.UpdatedContentPath)} are null).");
                 }
 
                 updatedEntries.Add((entry.RelativePath, content));

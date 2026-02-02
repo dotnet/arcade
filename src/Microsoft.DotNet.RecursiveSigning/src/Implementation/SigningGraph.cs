@@ -4,7 +4,6 @@
 #nullable enable
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -25,7 +24,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
     /// </summary>
     public sealed class SigningGraph : FileNodeGraph, ISigningGraph
     {
-        private readonly ConcurrentBag<FileNodeBase> _allNodes = new();
+        private readonly List<FileNodeBase> _allNodes = new();
         // Number of children requiring processing remaining for each node.
         private readonly Dictionary<FileNode, uint> _containerProgress = new();
         private readonly object _lock = new();
@@ -81,7 +80,6 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                 }
 
                 node.AttachToGraph(this);
-
                 _allNodes.Add(node);
 
                 if (parent != null)
@@ -92,6 +90,62 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                         ((List<FileNodeBase>)parentFile.Children).Add(node);
                     }
                 }
+            }
+
+        }
+
+        internal void RemoveNode(FileNodeBase node)
+        {
+            if (node == null)
+            {
+                throw new ArgumentNullException(nameof(node));
+            }
+
+            lock (_lock)
+            {
+                if (_discoveryFinalized)
+                {
+                    throw new InvalidOperationException("Cannot remove nodes after discovery has been finalized.");
+                }
+
+                _allNodes.Remove(node);
+            }
+        }
+
+        internal void ReplaceChildNode(FileNode parent, FileNodeBase oldChild, FileNodeBase newChild)
+        {
+            if (parent == null)
+            {
+                throw new ArgumentNullException(nameof(parent));
+            }
+
+            if (oldChild == null)
+            {
+                throw new ArgumentNullException(nameof(oldChild));
+            }
+
+            if (newChild == null)
+            {
+                throw new ArgumentNullException(nameof(newChild));
+            }
+
+            lock (_lock)
+            {
+                if (_discoveryFinalized)
+                {
+                    throw new InvalidOperationException("Cannot replace nodes after discovery has been finalized.");
+                }
+
+                var children = (List<FileNodeBase>)parent.Children;
+                int index = children.IndexOf(oldChild);
+                if (index < 0)
+                {
+                    throw new InvalidOperationException("Old child node not found in parent.");
+                }
+
+                newChild.Parent = parent;
+                children[index] = newChild;
+                oldChild.Parent = null;
             }
         }
 
@@ -107,6 +161,11 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                 // Compute initial state in bottom-up order such that when a node is processed,
                 // all of its children have already been processed (including reference nodes).
                 // This enables correct container state/progress computation without additional passes.
+                if (_allNodes.Any(n => n is ReferencePlaceholderNode))
+                {
+                    throw new InvalidOperationException("Cannot finalize discovery while reference placeholder nodes are still present.");
+                }
+
                 var orderedNodes = TopologicallyOrderByChildrenFirst(_allNodes);
 
                 // Single bottom-up pass: by the time a node is processed, all its children have already been processed.
@@ -127,9 +186,32 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                     // Initialize tracking of all children.
                     if (concreteNode.Children.Count > 0)
                     {
-                        // Track all children (including reference nodes) for gating purposes. Initially
-                        // look for all children that are not skipped.
-                        childrenRequiringProcessing = (uint)concreteNode.Children.Count(c => !IsDone(c.State));
+                        // Track unique work for gating:
+                        // - Direct children: count if not done.
+                        // - Reference children: count based on their canonical node, but do not double-count
+                        //   multiple references to the same canonical node.
+                        var canonicalGatingSet = new HashSet<FileNode>();
+                        foreach (var child in concreteNode.Children)
+                        {
+                            if (child is ReferenceNode referenceChild)
+                            {
+                                canonicalGatingSet.Add(referenceChild.CanonicalNode);
+                                continue;
+                            }
+
+                            if (child is FileNode fileChild && !IsDone(fileChild))
+                            {
+                                childrenRequiringProcessing++;
+                            }
+                        }
+
+                        foreach (var canonical in canonicalGatingSet)
+                        {
+                            if (!IsDone(canonical))
+                            {
+                                childrenRequiringProcessing++;
+                            }
+                        }
 
                         if (_containerProgress.TryGetValue(concreteNode, out var progress))
                         {
@@ -211,28 +293,22 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
 
         public IReadOnlyList<FileNode> GetNodesReadyForSigning()
         {
-            lock (_lock)
+            if (!_discoveryFinalized)
             {
-                if (!_discoveryFinalized)
-                {
-                    throw new InvalidOperationException("Discovery must be finalized before querying ready-to-sign nodes.");
-                }
-
-                return _allNodes.OfType<FileNode>().Where(n => n.State == FileNodeState.ReadyToSign).ToList();
+                throw new InvalidOperationException("Discovery must be finalized before querying ready-to-sign nodes.");
             }
+
+            return _allNodes.OfType<FileNode>().Where(n => n.State == FileNodeState.ReadyToSign).ToList();
         }
 
         public IReadOnlyList<FileNode> GetContainersReadyForRepack()
         {
-            lock (_lock)
+            if (!_discoveryFinalized)
             {
-                if (!_discoveryFinalized)
-                {
-                    throw new InvalidOperationException("Discovery must be finalized before querying ready-to-repack containers.");
-                }
-
-                return _allNodes.OfType<FileNode>().Where(n => n.State == FileNodeState.ReadyToRepack).ToList();
+                throw new InvalidOperationException("Discovery must be finalized before querying ready-to-repack containers.");
             }
+
+            return _allNodes.OfType<FileNode>().Where(n => n.State == FileNodeState.ReadyToRepack).ToList();
         }
 
         public void MarkAsComplete(FileNode node)
@@ -253,20 +329,24 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
 
                 // Update all parent containers that contain this canonical node, either directly or via references.
                 // This relies on the canonical node tracking its reference occurrences.
-                var parentsToUpdate = new HashSet<FileNode>();
-
                 if (node.Parent is FileNode directParent)
                 {
                     UpdateContainerTracking(directParent);
                 }
 
                 // Add all referenced node's parents if they exist.
+                var referenceParentsToUpdate = new HashSet<FileNode>();
                 foreach (var reference in node.ReferenceNodes)
                 {
                     if (reference.Parent is FileNode referenceParent)
                     {
-                        UpdateContainerTracking(referenceParent);
+                        referenceParentsToUpdate.Add(referenceParent);
                     }
+                }
+
+                foreach (var referenceParent in referenceParentsToUpdate)
+                {
+                    UpdateContainerTracking(referenceParent);
                 }
             }
         }
@@ -288,6 +368,11 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
 
         public IReadOnlyList<FileNodeBase> GetAllNodes()
         {
+            if (_discoveryFinalized)
+            {
+                return _allNodes;
+            }
+
             lock (_lock)
             {
                 return _allNodes.ToList();
@@ -296,35 +381,32 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
 
         public bool IsComplete()
         {
-            lock (_lock)
+            if (!_discoveryFinalized)
             {
-                if (!_discoveryFinalized)
-                {
-                    throw new InvalidOperationException("Discovery must be finalized before checking completion.");
-                }
-
-                foreach (var node in _allNodes)
-                {
-                    if (node is ReferenceNode reference)
-                    {
-                        if (!IsDone(reference.CanonicalNode))
-                        {
-                            return false;
-                        }
-                        continue;
-                    }
-
-                    if (node is FileNode fileNode)
-                    {
-                        if (!IsDone(fileNode))
-                        {
-                            return false;
-                        }
-                    }
-                }
-
-                return true;
+                throw new InvalidOperationException("Discovery must be finalized before checking completion.");
             }
+
+            foreach (var node in _allNodes)
+            {
+                if (node is ReferenceNode reference)
+                {
+                    if (!IsDone(reference.CanonicalNode))
+                    {
+                        return false;
+                    }
+                    continue;
+                }
+
+                if (node is FileNode fileNode)
+                {
+                    if (!IsDone(fileNode))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
     }
 }

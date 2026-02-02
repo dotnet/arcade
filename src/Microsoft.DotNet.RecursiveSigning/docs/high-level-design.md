@@ -64,6 +64,9 @@ Microsoft.DotNet.RecursiveSigning orchestrates recursive signing of artifacts so
 - **Async by Default**: All I/O heavy work uses asynchronous patterns to keep throughput high during large signing jobs.
 - **Deterministic Ordering**: The signing graph ensures predictable signing rounds and reproducible outputs.
 - **Observability**: Logging, telemetry, and validation are present throughout each phase to simplify triage.
+- **Avoid Disk Hydration**: Where possible, files are never hydrated to disk; processing should prefer streams and in-memory buffers.
+- **Minimize Temporary Files**: Temporary files should be avoided where possible, and are never written unless absolutely necessary for compatibility with external tools or formats.
+- **In-Place Updates**: Signing and repack operations should be performed in place whenever supported by the file format and signing tooling.
 
 ## Extension Approach
 - **New Signing Services**: Implement the signing provider and certificate identifier abstractions without touching orchestrator logic.
