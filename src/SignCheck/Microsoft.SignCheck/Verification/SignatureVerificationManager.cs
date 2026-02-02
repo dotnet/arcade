@@ -105,10 +105,11 @@ namespace Microsoft.SignCheck.Verification
             AddFileVerifier(new MachOVerifier(log, exclusions, options, ".a"));
             AddFileVerifier(new PkgVerifier(log, exclusions, options, ".pkg"));
             AddFileVerifier(new PkgVerifier(log, exclusions, options, ".app"));
+            AddFileVerifier(new RpmVerifier(log, exclusions, options));
+            AddFileVerifier(new SigVerifier(log, exclusions, options));
             AddFileVerifier(new TarVerifier(log, exclusions, options, ".tar"));
             AddFileVerifier(new TarVerifier(log, exclusions, options, ".tgz"));
             AddFileVerifier(new TarVerifier(log, exclusions, options, ".gz"));
-            AddFileVerifier(new RpmVerifier(log, exclusions, options));
 #endif
             AddFileVerifier(new ExeVerifier(log, exclusions, options, ".exe"));
             AddFileVerifier(new JavaScriptVerifier(log, exclusions, options));
