@@ -20,6 +20,7 @@ namespace Microsoft.SignCheck.Verification
 
         public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
         {
+#if NET
             // The signature file path is the current file (e.g., foo.tar.gz.sig)
             string signatureFilePath = path;
             
@@ -29,8 +30,11 @@ namespace Microsoft.SignCheck.Verification
             // Check if the signed file exists
             if (!File.Exists(signedFilePath))
             {
-                Log.WriteMessage(LogVerbosity.Detailed, $"Signed file not found: {signedFilePath}");
-                return SignatureVerificationResult.UnsignedFileResult(path, parent, virtualPath);
+                Log.WriteMessage(LogVerbosity.Detailed, $"Signed file not found for signature: {signedFilePath}");
+                SignatureVerificationResult errorResult = new SignatureVerificationResult(path, parent, virtualPath);
+                errorResult.IsSigned = false;
+                errorResult.AddDetail(DetailKeys.Error, $"Corresponding file not found: {Path.GetFileName(signedFilePath)}");
+                return errorResult;
             }
 
             SignatureVerificationResult svr = new SignatureVerificationResult(path, parent, virtualPath);
@@ -49,14 +53,11 @@ namespace Microsoft.SignCheck.Verification
 
                 bool isSigned = PgpVerificationHelper.VerifyPgpSignature(tempSigFile, tempSignedFile, svr, tempDir);
                 
+                svr.IsSigned = isSigned;
+                svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, isSigned);
                 if (isSigned)
                 {
-                    svr.IsSigned = true;
                     svr.AddDetail(DetailKeys.File, $"Detached signature verified for: {Path.GetFileName(signedFilePath)}");
-                }
-                else
-                {
-                    svr.IsSigned = false;
                 }
             }
             finally
@@ -65,6 +66,10 @@ namespace Microsoft.SignCheck.Verification
             }
 
             return svr;
+#else
+            // PGP verification is not supported on .NET Framework
+            return SignatureVerificationResult.UnsupportedFileTypeResult(path, parent, virtualPath);
+#endif
         }
     }
 }

@@ -15,6 +15,7 @@ namespace Microsoft.SignCheck.Verification
     /// </summary>
     internal static class PgpVerificationHelper
     {
+#if NET
         /// <summary>
         /// Verifies a PGP signature using GPG.
         /// </summary>
@@ -81,5 +82,6 @@ namespace Microsoft.SignCheck.Verification
                 EffectiveDate = keyInfoMatch.GroupValueOrDefault("createdOn").DateTimeOrDefault(DateTime.MaxValue)
             };
         }
+#endif
     }
 }
