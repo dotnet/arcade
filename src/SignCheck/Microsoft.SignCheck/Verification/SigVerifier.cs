@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
 using System.IO;
 using Microsoft.SignCheck.Logging;
 
@@ -40,7 +41,18 @@ namespace Microsoft.SignCheck.Verification
             SignatureVerificationResult svr = new SignatureVerificationResult(path, parent, virtualPath);
 
             string tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-            Directory.CreateDirectory(tempDir);
+            
+            try
+            {
+                Directory.CreateDirectory(tempDir);
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+            {
+                Log.WriteMessage(LogVerbosity.Detailed, $"Failed to create temporary directory: {ex.Message}");
+                svr.IsSigned = false;
+                svr.AddDetail(DetailKeys.Error, $"Failed to create temporary directory for verification: {ex.Message}");
+                return svr;
+            }
 
             try
             {
@@ -62,7 +74,18 @@ namespace Microsoft.SignCheck.Verification
             }
             finally
             {
-                Directory.Delete(tempDir, true);
+                try
+                {
+                    if (Directory.Exists(tempDir))
+                    {
+                        Directory.Delete(tempDir, true);
+                    }
+                }
+                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException)
+                {
+                    // Log cleanup failure but don't fail the verification
+                    Log.WriteMessage(LogVerbosity.Diagnostic, $"Failed to clean up temporary directory {tempDir}: {ex.Message}");
+                }
             }
 
             return svr;

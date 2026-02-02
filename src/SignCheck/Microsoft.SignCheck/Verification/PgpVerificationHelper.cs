@@ -39,7 +39,11 @@ namespace Microsoft.SignCheck.Verification
             // https://microsoft.sharepoint.com/teams/prss/esrp/info/SitePages/Linux%20GPG%20Signing.aspx
             Utils.DownloadAndConfigurePublicKeys(tempDir);
 
-            (int exitCode, string output, string error) = Utils.RunBashCommand($"gpg --verify --status-fd 1 {signatureDocument} {signableContent}");
+            // Escape file paths to prevent shell injection
+            string escapedSigFile = EscapeShellArgument(signatureDocument);
+            string escapedContentFile = EscapeShellArgument(signableContent);
+            
+            (int exitCode, string output, string error) = Utils.RunBashCommand($"gpg --verify --status-fd 1 {escapedSigFile} {escapedContentFile}");
             string verificationOutput = output + error;
 
             if (!verificationOutput.Contains("Good signature"))
@@ -70,8 +74,11 @@ namespace Microsoft.SignCheck.Verification
             Match signatureKeyInfoMatch = signatureKeyInfoRegex.Match(verificationOutput);
 
             string keyId = signatureKeyInfoMatch.GroupValueOrDefault("keyId");
-            (_, string keyInfo, _) = Utils.RunBashCommand($"gpg --list-keys --with-colons {keyId} | grep '^pub:'");
-            Regex keyInfoRegex = new Regex(@$"pub.+{keyId}:(?<createdOn>\d+):");
+            
+            // Escape keyId to prevent shell injection
+            string escapedKeyId = EscapeShellArgument(keyId);
+            (_, string keyInfo, _) = Utils.RunBashCommand($"gpg --list-keys --with-colons {escapedKeyId} | grep '^pub:'");
+            Regex keyInfoRegex = new Regex(@$"pub.+{Regex.Escape(keyId)}:(?<createdOn>\d+):");
             Match keyInfoMatch = keyInfoRegex.Match(keyInfo);
 
             return new Timestamp()
@@ -81,6 +88,22 @@ namespace Microsoft.SignCheck.Verification
                 SignatureAlgorithm = signatureKeyInfoMatch.GroupValueOrDefault("algorithm"),
                 EffectiveDate = keyInfoMatch.GroupValueOrDefault("createdOn").DateTimeOrDefault(DateTime.MaxValue)
             };
+        }
+
+        /// <summary>
+        /// Escapes a string for use as a shell argument by wrapping it in single quotes
+        /// and escaping any single quotes in the string.
+        /// </summary>
+        private static string EscapeShellArgument(string argument)
+        {
+            if (string.IsNullOrEmpty(argument))
+            {
+                return "''";
+            }
+
+            // In bash, the safest way to escape is to use single quotes
+            // and replace any single quotes with '\''
+            return $"'{argument.Replace("'", "'\\''")}'";
         }
 #endif
     }
