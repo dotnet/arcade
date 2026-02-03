@@ -8,6 +8,7 @@ namespace Microsoft.SignCheck.Verification
 {
     /// <summary>
     /// Base class for Linux package verifiers (RPM, DEB) that use PGP signatures.
+    /// Extends ArchiveVerifier to provide archive extraction while using PGP verification.
     /// </summary>
     public abstract class LinuxPackageVerifier : ArchiveVerifier
     {
@@ -34,7 +35,8 @@ namespace Microsoft.SignCheck.Verification
             {
                 (string signatureDocument, string signableContent) = GetSignatureDocumentAndSignableContent(path, tempDir);
 
-                return PgpVerificationHelper.VerifyPgpSignature(signatureDocument, signableContent, svr, tempDir);
+                // Use the static PGP verification method from PgpVerifier
+                return PgpVerifier.VerifyPgpSignature(signatureDocument, signableContent, svr, tempDir);
             }
             finally
             {

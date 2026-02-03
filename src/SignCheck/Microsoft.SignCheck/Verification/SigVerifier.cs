@@ -12,19 +12,40 @@ namespace Microsoft.SignCheck.Verification
     /// A detached signature file must have the same name as the signed file with a .sig extension.
     /// For example, foo.tar.gz would have a signature file foo.tar.gz.sig.
     /// </summary>
-    public class SigVerifier : FileVerifier
+    public class SigVerifier : PgpVerifier
     {
         public SigVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options) 
             : base(log, exclusions, options, ".sig")
         {
         }
 
-        public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
+        protected override (string signatureDocument, string signableContent) GetSignatureDocumentAndSignableContent(string path, string tempDir)
         {
-#if NET
             // The signature file path is the current file (e.g., foo.tar.gz.sig)
             string signatureFilePath = path;
             
+            // The signed file should be the signature file without the .sig extension
+            string signedFilePath = path.Substring(0, path.Length - FileExtension.Length);
+
+            // Check if the signed file exists
+            if (!File.Exists(signedFilePath))
+            {
+                return (null, null);
+            }
+
+            // Copy files to temp directory to avoid issues with spaces in paths
+            string tempSigFile = Path.Combine(tempDir, "signature.sig");
+            string tempSignedFile = Path.Combine(tempDir, "content");
+            
+            File.Copy(signatureFilePath, tempSigFile);
+            File.Copy(signedFilePath, tempSignedFile);
+
+            return (tempSigFile, tempSignedFile);
+        }
+
+        public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
+        {
+#if NET
             // The signed file should be the signature file without the .sig extension
             string signedFilePath = path.Substring(0, path.Length - FileExtension.Length);
 
@@ -56,14 +77,9 @@ namespace Microsoft.SignCheck.Verification
 
             try
             {
-                // Copy files to temp directory to avoid issues with spaces in paths
-                string tempSigFile = Path.Combine(tempDir, "signature.sig");
-                string tempSignedFile = Path.Combine(tempDir, "content");
-                
-                File.Copy(signatureFilePath, tempSigFile);
-                File.Copy(signedFilePath, tempSignedFile);
+                (string signatureDocument, string signableContent) = GetSignatureDocumentAndSignableContent(path, tempDir);
 
-                bool isSigned = PgpVerificationHelper.VerifyPgpSignature(tempSigFile, tempSignedFile, svr, tempDir);
+                bool isSigned = VerifyPgpSignature(signatureDocument, signableContent, svr, tempDir);
                 
                 svr.IsSigned = isSigned;
                 svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, isSigned);

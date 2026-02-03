@@ -10,12 +10,51 @@ using Microsoft.SignCheck.Logging;
 namespace Microsoft.SignCheck.Verification
 {
     /// <summary>
-    /// Helper class for verifying PGP signatures.
-    /// Provides common PGP verification logic that can be used by different verifiers.
+    /// Base class for verifying PGP signatures.
+    /// Provides PGP verification logic for files and packages.
     /// </summary>
-    internal static class PgpVerificationHelper
+    public abstract class PgpVerifier : FileVerifier
     {
+        protected PgpVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options, string fileExtension) 
+            : base(log, exclusions, options, fileExtension)
+        {
+        }
+
+        /// <summary>
+        /// Returns the paths to the signature document and the signable content.
+        /// Used to verify the signature using gpg.
+        /// </summary>
+        /// <param name="path">The path to the file to verify.</param>
+        /// <param name="tempDir">A temporary directory for intermediate files.</param>
+        /// <returns>A tuple containing the signature document path and the signable content path.</returns>
+        protected abstract (string signatureDocument, string signableContent) GetSignatureDocumentAndSignableContent(string path, string tempDir);
+
 #if NET
+        /// <summary>
+        /// Verifies if the file has a valid PGP signature.
+        /// </summary>
+        protected virtual bool IsSigned(string path, SignatureVerificationResult svr)
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                throw new PlatformNotSupportedException("PGP signature verification is not supported on Windows.");
+            }
+
+            string tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+            Directory.CreateDirectory(tempDir);
+
+            try
+            {
+                (string signatureDocument, string signableContent) = GetSignatureDocumentAndSignableContent(path, tempDir);
+
+                return VerifyPgpSignature(signatureDocument, signableContent, svr, tempDir);
+            }
+            finally
+            {
+                Directory.Delete(tempDir, true);
+            }
+        }
+
         /// <summary>
         /// Verifies a PGP signature using GPG.
         /// </summary>
@@ -26,11 +65,6 @@ namespace Microsoft.SignCheck.Verification
         /// <returns>True if the signature is valid, false otherwise.</returns>
         public static bool VerifyPgpSignature(string signatureDocument, string signableContent, SignatureVerificationResult svr, string tempDir)
         {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                throw new PlatformNotSupportedException("PGP signature verification is not supported on Windows.");
-            }
-
             if (string.IsNullOrEmpty(signatureDocument) || string.IsNullOrEmpty(signableContent))
             {
                 return false;
