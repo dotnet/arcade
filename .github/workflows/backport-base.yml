@@ -165,7 +165,7 @@ jobs:
 
             // download and apply patch
             const patch_file = 'changes.patch';
-            await exec.exec(`curl -sSL "${context.payload.issue.pull_request.patch_url}" --output ${patch_file}`);
+            await exec.exec(`bash -c 'gh pr diff --patch ${pr_number} > ${patch_file}'`);
 
             const additional_switches = process.env.ADDITIONAL_GIT_AM_SWITCHES?.trim() || '';
             const base_switches = '--3way --empty=keep --ignore-whitespace --keep-non-patch';
