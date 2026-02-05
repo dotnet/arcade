@@ -3673,7 +3673,7 @@ $@"
                 fileSignInfo,
                 s_fileExtensionSignInfo,
                 additionalCertificateInfo,
-                filesToSkip3rdPartyCheck: null,
+                itemsToSkip3rdPartyCheck: null,
                 tarToolPath: null,
                 pkgToolPath: null,
                 snPath: null,
@@ -3721,20 +3721,21 @@ $@"
     /// <summary>
     /// Fake build engine that can simulate notarization failures
     /// </summary>
-    internal class FakeBuildEngineWithFailures : FakeBuildEngine
+    internal class FakeBuildEngineWithFailures : IBuildEngine
     {
         private readonly int _failNotarizationCount;
         private int _notarizationAttemptsSoFar = 0;
+        private readonly FakeBuildEngine _innerEngine;
 
         public int NotarizationAttempts => _notarizationAttemptsSoFar;
 
         public FakeBuildEngineWithFailures(ITestOutputHelper output, int failNotarizationCount)
-            : base(output)
         {
             _failNotarizationCount = failNotarizationCount;
+            _innerEngine = new FakeBuildEngine(output);
         }
 
-        public override bool BuildProjectFile(string projectFileName, string[] targetNames, System.Collections.IDictionary globalProperties, System.Collections.IDictionary targetOutputs)
+        public bool BuildProjectFile(string projectFileName, string[] targetNames, System.Collections.IDictionary globalProperties, System.Collections.IDictionary targetOutputs)
         {
             // Check if this is a notarization project
             if (projectFileName.Contains("Notarize"))
@@ -3748,8 +3749,18 @@ $@"
                 }
             }
 
-            // Otherwise use the base implementation
-            return base.BuildProjectFile(projectFileName, targetNames, globalProperties, targetOutputs);
+            // Otherwise use the inner engine implementation
+            return _innerEngine.BuildProjectFile(projectFileName, targetNames, globalProperties, targetOutputs);
         }
+
+        public int ColumnNumberOfTaskNode => _innerEngine.ColumnNumberOfTaskNode;
+        public bool ContinueOnError { get => _innerEngine.ContinueOnError; set => _innerEngine.ContinueOnError = value; }
+        public int LineNumberOfTaskNode => _innerEngine.LineNumberOfTaskNode;
+        public string ProjectFileOfTaskNode => _innerEngine.ProjectFileOfTaskNode;
+
+        public void LogCustomEvent(CustomBuildEventArgs e) => _innerEngine.LogCustomEvent(e);
+        public void LogErrorEvent(BuildErrorEventArgs e) => _innerEngine.LogErrorEvent(e);
+        public void LogMessageEvent(BuildMessageEventArgs e) => _innerEngine.LogMessageEvent(e);
+        public void LogWarningEvent(BuildWarningEventArgs e) => _innerEngine.LogWarningEvent(e);
     }
 }
