@@ -191,21 +191,20 @@ namespace Microsoft.DotNet.SignTool
             {
                 var notarizeProjectPath = Path.Combine(dir, $"Round{round}-Notarize.proj");
                 File.WriteAllText(notarizeProjectPath, GenerateBuildFileContent(filesToNotarize, null, true));
-                string notarizeLogName = $"NotarizationRound{round}";
                 
                 // Notarization can be flaky, so retry up to 5 times with no wait between retries
                 const int maxRetries = 5;
                 int attempt = 0;
                 bool notarizationSucceeded = false;
                 
+                _log.LogMessage(MessageImportance.High, $"Starting notarization with up to {maxRetries} attempts");
+                
                 while (attempt < maxRetries && !notarizationSucceeded)
                 {
                     attempt++;
-                    if (attempt > 1)
-                    {
-                        _log.LogMessage(MessageImportance.High, $"Notarization attempt {attempt} of {maxRetries}");
-                    }
+                    _log.LogMessage(MessageImportance.High, $"Notarization attempt {attempt} of {maxRetries}");
                     
+                    string notarizeLogName = $"NotarizationRound{round}-Attempt{attempt}";
                     notarizationSucceeded = RunMSBuild(buildEngine, notarizeProjectPath, 
                         Path.Combine(_args.LogDir, $"{notarizeLogName}.binlog"), 
                         Path.Combine(_args.LogDir, $"{notarizeLogName}.log"), 
@@ -215,6 +214,11 @@ namespace Microsoft.DotNet.SignTool
                     {
                         _log.LogMessage(MessageImportance.High, $"Notarization failed on attempt {attempt}. Retrying...");
                     }
+                }
+                
+                if (!notarizationSucceeded)
+                {
+                    _log.LogError($"Notarization failed after {maxRetries} attempts");
                 }
                 
                 status = notarizationSucceeded;
