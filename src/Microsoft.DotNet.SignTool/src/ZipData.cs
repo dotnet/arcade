@@ -62,6 +62,13 @@ namespace Microsoft.DotNet.SignTool
 #if NET472
                 return ReadTarGZipEntries(archivePath, tempDir, tarToolPath, ignoreContent);
 #else
+                // TODO: Remove workaround for https://github.com/dotnet/arcade/issues/16484
+                // Hardlinks are used on Windows but System.Formats.Tar doesn't fully support them yet.
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                {
+                    return ReadTarGZipEntriesWithExternalTar(archivePath, tempDir, ignoreContent);
+                }
+
                 return ReadTarGZipEntries(archivePath)
                     .Select(static entry => new ZipDataEntry(entry.Name, entry.DataStream, entry.Length)
                     {
@@ -485,6 +492,14 @@ namespace Microsoft.DotNet.SignTool
 #else
         private void RepackTarGZip(TaskLoggingHelper log, string tempDir, string tarToolPath)
         {
+            // TODO: Remove workaround for https://github.com/dotnet/arcade/issues/16484
+            // Hardlinks are used on Windows but System.Formats.Tar doesn't fully support them yet.
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                RepackTarGZipWithExternalTar(log, tempDir);
+                return;
+            }
+
             using MemoryStream streamToCompress = new();
             using (TarWriter writer = new(streamToCompress, leaveOpen: true))
             {
@@ -518,6 +533,103 @@ namespace Microsoft.DotNet.SignTool
                 using GZipStream compressor = new(outputStream, CompressionMode.Compress);
                 streamToCompress.CopyTo(compressor);
             }
+        }
+
+        /// <summary>
+        /// Read tar.gz entries using external tar.exe to properly handle hardlinks.
+        /// Windows tarballs use hardlinks for deduplication, which System.Formats.Tar doesn't yet support.
+        /// When tar.exe extracts hardlinks, they become regular files with the same content.
+        /// </summary>
+        private static IEnumerable<ZipDataEntry> ReadTarGZipEntriesWithExternalTar(string archivePath, string tempDir, bool ignoreContent)
+        {
+            string extractDir = Path.Combine(tempDir, Guid.NewGuid().ToString());
+            Directory.CreateDirectory(extractDir);
+
+            try
+            {
+                // Extract the tarball - tar.exe will resolve hardlinks to regular files
+                if (!RunTarCommand($"-xzf \"{archivePath}\" -C \"{extractDir}\""))
+                {
+                    throw new Exception($"Failed to extract tar archive: {archivePath}");
+                }
+
+                foreach (var path in Directory.EnumerateFiles(extractDir, "*", SearchOption.AllDirectories))
+                {
+                    string relativePath = path.Substring(extractDir.Length + 1).Replace(Path.DirectorySeparatorChar, '/');
+                    using var stream = ignoreContent ? null : (Stream)File.Open(path, FileMode.Open);
+                    yield return new ZipDataEntry(relativePath, stream);
+                }
+            }
+            finally
+            {
+                if (Directory.Exists(extractDir))
+                {
+                    Directory.Delete(extractDir, recursive: true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Repack tar.gz using external tar.exe to preserve hardlinks.
+        /// Windows tarballs use hardlinks for deduplication, which System.Formats.Tar doesn't yet support.
+        /// </summary>
+        private void RepackTarGZipWithExternalTar(TaskLoggingHelper log, string tempDir)
+        {
+            string extractDir = Path.Combine(tempDir, Guid.NewGuid().ToString());
+            Directory.CreateDirectory(extractDir);
+
+            try
+            {
+                // Extract the tarball - tar.exe will recreate hardlinks
+                if (!RunTarCommand($"-xzf \"{FileSignInfo.FullPath}\" -C \"{extractDir}\""))
+                {
+                    log.LogError($"Failed to extract tar archive: {FileSignInfo.FullPath}");
+                    return;
+                }
+
+                // Replace signed files in the extracted directory
+                foreach (var path in Directory.EnumerateFiles(extractDir, "*", SearchOption.AllDirectories))
+                {
+                    string relativePath = path.Substring(extractDir.Length + 1).Replace(Path.DirectorySeparatorChar, '/');
+                    ZipPart? signedPart = FindNestedPart(relativePath);
+
+                    if (signedPart.HasValue)
+                    {
+                        log.LogMessage(MessageImportance.Low, $"Copying signed file from {signedPart.Value.FileSignInfo.FullPath} to {FileSignInfo.FullPath} -> {relativePath}");
+                        File.Copy(signedPart.Value.FileSignInfo.FullPath, path, overwrite: true);
+                    }
+                }
+
+                // Repack the tarball - tar.exe will detect and preserve hardlinks
+                if (!RunTarCommand($"-czf \"{FileSignInfo.FullPath}\" -C \"{extractDir}\" ."))
+                {
+                    log.LogError($"Failed to create tar archive: {FileSignInfo.FullPath}");
+                    return;
+                }
+            }
+            finally
+            {
+                if (Directory.Exists(extractDir))
+                {
+                    Directory.Delete(extractDir, recursive: true);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Run tar command. Used for Windows hardlink support workaround.
+        /// </summary>
+        private static bool RunTarCommand(string arguments)
+        {
+            var process = Process.Start(new ProcessStartInfo()
+            {
+                FileName = "tar",
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardError = true
+            });
+            process.WaitForExit();
+            return process.ExitCode == 0;
         }
 
         private static IEnumerable<TarEntry> ReadTarGZipEntries(string path)
