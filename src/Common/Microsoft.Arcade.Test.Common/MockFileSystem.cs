@@ -4,20 +4,23 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text.Unicode;
 using Microsoft.Arcade.Common;
 
 #nullable enable
 namespace Microsoft.Arcade.Test.Common
 {
+        
     public class MockFileSystem : IFileSystem
     {
-        private const string BinaryPrefix = "base64:";
-
         #region File system state
 
-        public HashSet<string> Directories { get; }    
+        public HashSet<string> Directories { get; }
         
-        public Dictionary<string, string> Files { get; }
+        public Dictionary<string, byte[]> Files { get; }
+
+
 
         public List<string> RemovedFiles { get; } = new();
 
@@ -31,7 +34,7 @@ namespace Microsoft.Arcade.Test.Common
             string directorySeparator = "/")
         {
             Directories = new(directories ?? new string[0]);
-            Files = files ?? new();
+            Files = files?.ToDictionary(f => f.Key, f => System.Text.Encoding.UTF8.GetBytes(f.Value)) ?? new();
             DirectorySeparator = directorySeparator;
         }
 
@@ -61,15 +64,11 @@ namespace Microsoft.Arcade.Test.Common
 
         public string PathCombine(string path1, string path2, string path3) => path1 + DirectorySeparator + path2 + DirectorySeparator + path3;
 
-        public void WriteToFile(string path, string content)
-        {
-            Files[path] = content;
-        }
+        public void WriteToFile(string path, string content) => Files[path] = System.Text.Encoding.UTF8.GetBytes(content);
 
-        public void CopyFile(string sourceFileName, string destFileName, bool overwrite = false)
-        {
-            Files[destFileName] = Files[sourceFileName];
-        }
+        public string ReadToString(string path) => System.Text.Encoding.UTF8.GetString(Files[path]);
+
+        public void CopyFile(string sourceFileName, string destFileName, bool overwrite = false) => Files[destFileName] = Files[sourceFileName];
 
         public Stream GetFileStream(string path, FileMode mode, FileAccess access)
         {
@@ -107,27 +106,12 @@ namespace Microsoft.Arcade.Test.Common
             {
                 throw new FileNotFoundException($"File not found: {path}");
             }
-
-            string content = Files[path];
-            if (string.IsNullOrEmpty(content))
-            {
-                return Array.Empty<byte>();
-            }
-
-            // Binary-safe: bytes are stored as base64 in the existing string dictionary.
-            // Text-based tests typically use WriteToFile / Files directly.
-            if (content.StartsWith(BinaryPrefix, StringComparison.Ordinal))
-            {
-                return Convert.FromBase64String(content.Substring(BinaryPrefix.Length));
-            }
-
-            // Treat existing content as plain text.
-            return System.Text.Encoding.UTF8.GetBytes(content);
+            return Files[path];
         }
 
         public void WriteAllBytes(string path, byte[] bytes)
         {
-            Files[path] = bytes.Length == 0 ? string.Empty : BinaryPrefix + Convert.ToBase64String(bytes);
+            Files[path] = bytes;
         }
 
         public long GetFileLength(string path)
@@ -136,19 +120,7 @@ namespace Microsoft.Arcade.Test.Common
             {
                 throw new FileNotFoundException($"File not found: {path}");
             }
-
-            string content = Files[path];
-            if (string.IsNullOrEmpty(content))
-            {
-                return 0;
-            }
-
-            if (content.StartsWith(BinaryPrefix, StringComparison.Ordinal))
-            {
-                return Convert.FromBase64String(content.Substring(BinaryPrefix.Length)).LongLength;
-            }
-
-            return System.Text.Encoding.UTF8.GetByteCount(content);
+            return Files[path].LongLength;
         }
 
         #endregion
@@ -174,7 +146,7 @@ namespace Microsoft.Arcade.Test.Common
                 {
                     if (fileSystem.FileExists(path))
                     {
-                        byte[] existingContent = fileSystem.ReadAllBytes(path);
+                        byte[] existingContent = fileSystem.Files[path];
                         Write(existingContent, 0, existingContent.Length);
                         
                         if (mode == FileMode.Open)

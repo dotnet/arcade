@@ -212,32 +212,6 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
     }
 
     /// <summary>
-    /// Placeholder for a reference occurrence when the canonical <see cref="FileNode"/> has not been discovered yet.
-    /// This node is expected to be replaced during discovery dequeue once the canonical node exists.
-    /// </summary>
-    public sealed class ReferencePlaceholderNode : FileNodeBase
-    {
-        public override IReadOnlyList<FileNodeBase> Children => throw new NotSupportedException();
-
-        public override ICertificateIdentifier? CertificateIdentifier => throw new NotSupportedException();
-
-        public override FileNodeState State => throw new NotSupportedException();
-
-        public ReferencePlaceholderNode(FileContentKey contentKey, FileLocation location)
-            : base(contentKey, location)
-        {
-        }
-
-        internal override void AttachToGraph(FileNodeGraph graph)
-        {
-            if (graph == null)
-            {
-                throw new ArgumentNullException(nameof(graph));
-            }
-        }
-    }
-
-    /// <summary>
     /// Node that references another <see cref="FileNode"/>'s content (deduplication).
     /// Reference nodes should not be processed as independent signing/repack units.
     /// </summary>
@@ -247,11 +221,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
 
         public override IReadOnlyList<FileNodeBase> Children => CanonicalNode.Children;
 
-        public override ICertificateIdentifier? CertificateIdentifier
-        {
-            get => CanonicalNode.CertificateIdentifier;
-            protected init => throw new NotSupportedException();
-        }
+        public override ICertificateIdentifier? CertificateIdentifier => CanonicalNode.CertificateIdentifier;
 
         public override FileNodeState State => CanonicalNode.State;
 

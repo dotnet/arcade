@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 .Setup(x => x.ArchiveDirectory(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()))
                 .Callback<string, string, bool>((folder, zipPath, _) =>
                 {
-                    _fileSystem.Files.Add(zipPath, "zip of " + folder);
+                    _fileSystem.WriteToFile(zipPath, "zip of " + folder);
                 });
 
             _task = new CreateXHarnessAppleWorkItems()
@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 CreateAppBundle("apps/System.Bar.app", "ios-simulator-64_13.5"),
             };
 
-            _fileSystem.Files.Add("apps/xharness-payload-system.foo.zip", "archive");
+            _fileSystem.WriteToFile("apps/xharness-payload-system.foo.zip", "archive");
 
             // Act
             using var provider = collection.BuildServiceProvider();
@@ -218,7 +218,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 CreateAppBundle("/apps/System.Foo.zip", "ios-device_13.5", "00:15:42", "00:08:55", "00:02:33")
             };
             _task.TmpDir = "/tmp";
-            _fileSystem.Files.Add("/apps/System.Foo.zip", "zipped payload");
+            _fileSystem.WriteToFile("/apps/System.Foo.zip", "zipped payload");
             _fileSystem.Directories.Remove("/apps/System.Foo.zip");
 
             // Act

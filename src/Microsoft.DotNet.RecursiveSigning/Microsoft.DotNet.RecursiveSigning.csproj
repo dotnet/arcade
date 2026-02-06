@@ -1,7 +1,7 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(NetToolCurrent)</TargetFrameworks>
+    <TargetFrameworks>$(BundledNetCoreAppTargetFramework)</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <Description>Recursive signing tool</Description>
     <PackageTags>Arcade Build Tool Signing</PackageTags>

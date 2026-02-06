@@ -34,7 +34,7 @@ This handler is intended to support the recursive signing workflow by:
 `WriteContainerAsync` rewrites the container at `containerPath`.
 - If any entry is updated (`IsUpdated == true`), the container is fully rewritten.
 - For each entry:
-  - If `IsUpdated == true` and `UpdatedContentPath` is set, data is read from the file at `UpdatedContentPath`.
+  - If `UpdatedContentPath` is set, data is read from the file at `UpdatedContentPath`.
   - Otherwise, data is read from `ContentStream`.
 - Entries are written into a new ZIP archive, and then the original file is replaced atomically (best effort) by moving the temp file into place.
 

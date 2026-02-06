@@ -196,7 +196,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             task.Log.HasLoggedErrors.Should().BeFalse();
 
             // Validate that the manifest shows up in the manifest target location
-            var manifestContent = mockFileSystem.Files[TARGET_MANIFEST_PATH];
+            var manifestContent = mockFileSystem.ReadToString(TARGET_MANIFEST_PATH);
             var model = LoadModel(manifestContent);
 
             // Validate a few invariants: IsStable should be false.
@@ -260,7 +260,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             task.Log.HasLoggedErrors.Should().BeFalse();
 
             // Validate that the manifest shows up in the manifest target location
-            var manifestContent = mockFileSystem.Files[TARGET_MANIFEST_PATH];
+            var manifestContent = mockFileSystem.ReadToString(TARGET_MANIFEST_PATH);
             var model = LoadModel(manifestContent);
 
             // Validate a few invariants: IsStable should be false.
@@ -283,8 +283,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         public void V4_FuturePathsShouldOnlyUseForwardSlash()
         {
             var mockFileSystem = new MockFileSystem(directorySeparator: @"\");
-            mockFileSystem.Files[PDB_A] = nameof(PDB_A);
-            mockFileSystem.Files[PDB_B] = nameof(PDB_B);
+            mockFileSystem.WriteToFile(PDB_A, nameof(PDB_A));
+            mockFileSystem.WriteToFile(PDB_B, nameof(PDB_B));
 
             var taskItems = new TaskItem[]
             {
@@ -317,7 +317,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             task.Log.HasLoggedErrors.Should().BeFalse();
 
             // Validate that the manifest shows up in the manifest target location
-            var manifestContent = mockFileSystem.Files[TARGET_MANIFEST_PATH];
+            var manifestContent = mockFileSystem.ReadToString(TARGET_MANIFEST_PATH);
             var model = LoadModel(manifestContent);
 
             // Validate a few invariants: IsStable should be false.
@@ -338,8 +338,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         public void V4_FuturePathsNotRelativeToAssetDirectoryShouldThrowError()
         {
             var mockFileSystem = new MockFileSystem();
-            mockFileSystem.Files[PDB_A] = nameof(PDB_A);
-            mockFileSystem.Files[PDB_B] = nameof(PDB_B);
+            mockFileSystem.WriteToFile(PDB_A, nameof(PDB_A));
+            mockFileSystem.WriteToFile(PDB_B, nameof(PDB_B));
 
             var taskItems = new TaskItem[]
             {
@@ -410,7 +410,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             // Load the manifest using the manifest APIs, and ensure that IsStable and 
             // IsReleaseOnlyPackageVersion are set to false
-            var manifestContent = mockFileSystem.Files[TARGET_MANIFEST_PATH];
+            var manifestContent = mockFileSystem.ReadToString(TARGET_MANIFEST_PATH);
 
             var reader = new StringReader(manifestContent);
             BuildModel model = BuildModel.Parse(XElement.Load(reader));
@@ -452,10 +452,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var mockFileSystem = new MockFileSystem();
 
             // Set up files in the "source" locations
-            mockFileSystem.Files[PACKAGE_A] = "PackageA content";
-            mockFileSystem.Files[PACKAGE_B] = "PackageB content";
-            mockFileSystem.Files[BLOB_A] = "BlobA content";
-            mockFileSystem.Files[PDB_A] = "PdbA content"; // Include a PDB for publishing
+            mockFileSystem.WriteToFile(PACKAGE_A, "PackageA content");
+            mockFileSystem.WriteToFile(PACKAGE_B, "PackageB content");
+            mockFileSystem.WriteToFile(BLOB_A, "BlobA content");
+            mockFileSystem.WriteToFile(PDB_A, "PdbA content"); // Include a PDB for publishing
 
             // Output directories for local storage
             string shippingPackagesDir = mockFileSystem.PathCombine("C:", "artifacts", "shipping-packages");
@@ -545,10 +545,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             mockFileSystem.Files.Should().ContainKey(expectedManifestPath);
 
             // Verify content was copied correctly
-            mockFileSystem.Files[expectedNonShippingPackagePath].Should().Be("PackageA content");
-            mockFileSystem.Files[expectedShippingPackagePath].Should().Be("PackageB content");
-            mockFileSystem.Files[expectedBlobPath].Should().Be("BlobA content");
-            mockFileSystem.Files[expectedPdbPath].Should().Be("PdbA content");
+            mockFileSystem.ReadAllBytes(expectedNonShippingPackagePath).Should().BeEquivalentTo(System.Text.Encoding.UTF8.GetBytes("PackageA content"));
+            mockFileSystem.ReadAllBytes(expectedShippingPackagePath).Should().BeEquivalentTo(System.Text.Encoding.UTF8.GetBytes("PackageB content"));
+            mockFileSystem.ReadAllBytes(expectedBlobPath).Should().BeEquivalentTo(System.Text.Encoding.UTF8.GetBytes("BlobA content"));
+            mockFileSystem.ReadAllBytes(expectedPdbPath).Should().BeEquivalentTo(System.Text.Encoding.UTF8.GetBytes("PdbA content"));
 
             // Verify that no VSO upload commands were logged
             MockBuildEngine mockBuildEngine = (MockBuildEngine)task.BuildEngine;
@@ -569,10 +569,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var mockFileSystem = new MockFileSystem();
 
             // Set up files in the "source" locations
-            mockFileSystem.Files[PACKAGE_A] = "PackageA content";
-            mockFileSystem.Files[PACKAGE_B] = "PackageB content";
-            mockFileSystem.Files[BLOB_A] = "BlobA content";
-            mockFileSystem.Files[PDB_A] = "PdbA content"; // Include a PDB for publishing
+            mockFileSystem.WriteToFile(PACKAGE_A, "PackageA content");
+            mockFileSystem.WriteToFile(PACKAGE_B, "PackageB content");
+            mockFileSystem.WriteToFile(BLOB_A, "BlobA content");
+            mockFileSystem.WriteToFile(PDB_A, "PdbA content"); // Include a PDB for publishing
 
             // Output directories for local storage
             string shippingPackagesDir = mockFileSystem.PathCombine("C:", "artifacts", "shipping-packages");
@@ -663,10 +663,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             mockFileSystem.Files.Should().ContainKey(expectedManifestPath);
 
             // Verify content was copied correctly
-            mockFileSystem.Files[expectedNonShippingPackagePath].Should().Be("PackageA content");
-            mockFileSystem.Files[expectedShippingPackagePath].Should().Be("PackageB content");
-            mockFileSystem.Files[expectedBlobPath].Should().Be("BlobA content");
-            mockFileSystem.Files[expectedPdbPath].Should().Be("PdbA content");
+            mockFileSystem.ReadAllBytes(expectedNonShippingPackagePath).Should().BeEquivalentTo(System.Text.Encoding.UTF8.GetBytes("PackageA content"));
+            mockFileSystem.ReadAllBytes(expectedShippingPackagePath).Should().BeEquivalentTo(System.Text.Encoding.UTF8.GetBytes("PackageB content"));
+            mockFileSystem.ReadAllBytes(expectedBlobPath).Should().BeEquivalentTo(System.Text.Encoding.UTF8.GetBytes("BlobA content"));
+            mockFileSystem.ReadAllBytes(expectedPdbPath).Should().BeEquivalentTo(System.Text.Encoding.UTF8.GetBytes("PdbA content"));
         }
 
         /// <summary>
@@ -726,7 +726,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             task.Log.HasLoggedErrors.Should().BeFalse();
 
             // Validate that the manifest shows up in the manifest target location
-            var manifestContent = mockFileSystem.Files[TARGET_MANIFEST_PATH];
+            var manifestContent = mockFileSystem.ReadToString(TARGET_MANIFEST_PATH);
             var model = LoadModel(manifestContent);
 
             // Validate a few invariants: IsStable should be false.
@@ -742,7 +742,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var mockFileSystem = new MockFileSystem();
             foreach (var item in taskItems)
             {
-                mockFileSystem.Files[item.ItemSpec] = $"Content of {mockFileSystem.GetFileName(item.ItemSpec)}";
+                mockFileSystem.WriteToFile(item.ItemSpec, $"Content of {mockFileSystem.GetFileName(item.ItemSpec)}");
             }
             return mockFileSystem;
         }
@@ -799,8 +799,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             const string pdbBRelativePath = "path/to/other/pdb/in/artifacts/file.pdb";
 
             var mockFileSystem = new MockFileSystem();
-            mockFileSystem.Files[PDB_A] = nameof(PDB_A);
-            mockFileSystem.Files[PDB_B] = nameof(PDB_B);
+            mockFileSystem.WriteToFile(PDB_A, nameof(PDB_A));
+            mockFileSystem.WriteToFile(PDB_B, nameof(PDB_B));
 
             var taskItems = new TaskItem[]
             {
@@ -834,8 +834,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             // Check that the PDBs were copied to the correct location.
             var expectedPdbALocation = mockFileSystem.PathCombine(task.PdbArtifactsLocalStorageDir, pdbARelativePath);
             var expectedPdbBLocation = mockFileSystem.PathCombine(task.PdbArtifactsLocalStorageDir, pdbBRelativePath);
-            mockFileSystem.Files.Should().Contain(expectedPdbALocation, nameof(PDB_A));
-            mockFileSystem.Files.Should().Contain(expectedPdbBLocation, nameof(PDB_B));
+            mockFileSystem.ReadToString(expectedPdbALocation).Should().Be(nameof(PDB_A));
+            mockFileSystem.ReadToString(expectedPdbBLocation).Should().Be(nameof(PDB_B));
 
             MockBuildEngine mockBuildEngine = (MockBuildEngine)task.BuildEngine;
             mockBuildEngine.BuildMessageEvents.Select(e => e.Message).Should().Contain([
