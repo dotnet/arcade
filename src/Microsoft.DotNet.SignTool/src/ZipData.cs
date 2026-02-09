@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.SignTool
             return null;
         }
 
-        public static IEnumerable<ZipDataEntry> ReadEntries(string archivePath, string tempDir, string tarToolPath, string pkgToolPath, bool ignoreContent = false)
+        public static IEnumerable<ZipDataEntry> ReadEntries(string archivePath, string tempDir, string tarToolPath, string pkgToolPath, TaskLoggingHelper log, bool ignoreContent = false)
         {
             if (FileSignInfo.IsTarGZip(archivePath))
             {
@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.SignTool
                 // Hardlinks are used on Windows but System.Formats.Tar doesn't fully support them yet.
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
-                    return ReadTarGZipEntriesWithExternalTar(archivePath, tempDir, ignoreContent);
+                    return ReadTarGZipEntriesWithExternalTar(archivePath, tempDir, log, ignoreContent);
                 }
 
                 return ReadTarGZipEntries(archivePath)
@@ -540,7 +540,7 @@ namespace Microsoft.DotNet.SignTool
         /// Windows tarballs use hardlinks for deduplication, which System.Formats.Tar doesn't yet support.
         /// When tar.exe extracts hardlinks, they become regular files with the same content.
         /// </summary>
-        private static IEnumerable<ZipDataEntry> ReadTarGZipEntriesWithExternalTar(string archivePath, string tempDir, bool ignoreContent)
+        private static IEnumerable<ZipDataEntry> ReadTarGZipEntriesWithExternalTar(string archivePath, string tempDir, TaskLoggingHelper log, bool ignoreContent)
         {
             string extractDir = Path.Combine(tempDir, Guid.NewGuid().ToString());
             Directory.CreateDirectory(extractDir);
@@ -548,7 +548,7 @@ namespace Microsoft.DotNet.SignTool
             try
             {
                 // Extract the tarball - tar.exe will resolve hardlinks to regular files
-                if (!RunTarCommand($"-xzf \"{archivePath}\" -C \"{extractDir}\""))
+                if (!RunExternalProcess(log, "tar", $"-xzf \"{archivePath}\" -C \"{extractDir}\"", out _))
                 {
                     throw new Exception($"Failed to extract tar archive: {archivePath}");
                 }
@@ -581,7 +581,7 @@ namespace Microsoft.DotNet.SignTool
             try
             {
                 // Extract the tarball - tar.exe will recreate hardlinks
-                if (!RunTarCommand($"-xzf \"{FileSignInfo.FullPath}\" -C \"{extractDir}\""))
+                if (!RunExternalProcess(log, "tar", $"-xzf \"{FileSignInfo.FullPath}\" -C \"{extractDir}\"", out _))
                 {
                     log.LogError($"Failed to extract tar archive: {FileSignInfo.FullPath}");
                     return;
@@ -601,7 +601,7 @@ namespace Microsoft.DotNet.SignTool
                 }
 
                 // Repack the tarball - tar.exe will detect and preserve hardlinks
-                if (!RunTarCommand($"-czf \"{FileSignInfo.FullPath}\" -C \"{extractDir}\" ."))
+                if (!RunExternalProcess(log, "tar", $"-czf \"{FileSignInfo.FullPath}\" -C \"{extractDir}\" .", out _))
                 {
                     log.LogError($"Failed to create tar archive: {FileSignInfo.FullPath}");
                     return;
@@ -614,22 +614,6 @@ namespace Microsoft.DotNet.SignTool
                     Directory.Delete(extractDir, recursive: true);
                 }
             }
-        }
-
-        /// <summary>
-        /// Run tar command. Used for Windows hardlink support workaround.
-        /// </summary>
-        private static bool RunTarCommand(string arguments)
-        {
-            var process = Process.Start(new ProcessStartInfo()
-            {
-                FileName = "tar",
-                Arguments = arguments,
-                UseShellExecute = false,
-                RedirectStandardError = true
-            });
-            process.WaitForExit();
-            return process.ExitCode == 0;
         }
 
         private static IEnumerable<TarEntry> ReadTarGZipEntries(string path)
