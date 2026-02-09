@@ -20,7 +20,6 @@ Arcade SDK is the core infrastructure tooling used across the .NET ecosystem for
 **NEVER CANCEL BUILDS OR TESTS** - they may take 90+ minutes. Always use appropriate timeouts.
 
 ```bash
-
 # Full restore, build, and test - TAKES 90+ MINUTES - NEVER CANCEL
 timeout 6000 ./build.sh --restore --build
 # Set timeout to 100+ minutes (6000 seconds) for build commands
@@ -35,8 +34,6 @@ timeout 1800 ./build.sh --restore
 
 # Clean build artifacts
 ./build.sh --clean
-```
-
 ### Platform-Specific Commands
 - **Linux/macOS**: `./build.sh`, `./test.sh`, `./restore.sh`
 - **Windows**: `Build.cmd`, `Test.cmd`, `Restore.cmd`
@@ -62,7 +59,6 @@ timeout 1800 ./build.sh --restore
 - **Microsoft.DotNet.PackageTesting**: Automated package validation testing
 
 ## Build Artifacts Structure
-```
 artifacts/
 ├── bin/                    # Compiled binaries by project/configuration
 ├── packages/               # Generated NuGet packages (Shipping/NonShipping)
@@ -70,7 +66,6 @@ artifacts/
 ├── log/                    # Build logs and binary logs (.binlog)
 ├── tmp/                    # Temporary build artifacts
 └── toolset/               # Downloaded build tools and dependencies
-```
 
 ## Validation and Testing
 
@@ -87,6 +82,9 @@ timeout 6000 ./build.sh --restore --build --configuration Release --test
 - **Integration Tests**: Cross-component validation via Helix
 - **SDK Tests**: Validate Arcade SDK works in sample projects
 - **Packaging Tests**: Ensure generated packages are valid
+
+### Writing Tests
+- When writing tests in this repo, **do not implement new mock file system wrappers**; use the existing `Microsoft.Arcade.Test.Common.MockFileSystem`. Update the shared `IFileSystem`/`MockFileSystem` to support binary-safe operations needed for in-place updates, rather than adding separate binary storage dictionaries or per-test filesystem adapters.
 
 ## Common Development Tasks
 
@@ -166,3 +164,9 @@ timeout 6000 ./build.sh --restore --build --configuration Release --test
 - **Discussions**: Use dotnet/arcade discussions for questions
 - **Documentation**: See `/Documentation/` folder for detailed guides
 - **Contact**: @dotnet/dnceng team for infrastructure issues
+
+## Project-Specific Notes
+- Microsoft.DotNet.RecursiveSigning architecture and design references now live in `src/Microsoft.DotNet.RecursiveSigning/docs/`. Consult the markdown files in that directory for component guidance before editing related code.
+
+### Iterative Signing Workflow
+- Sign all nodes ready for signing, update the graph, then repack containers whose signable children are signed; proceed round-by-round.

@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 .Setup(x => x.ArchiveFile(It.IsAny<string>(), It.IsAny<string>()))
                 .Callback<string, string>((folder, zipPath) =>
                 {
-                    _fileSystem.Files.Add(zipPath, "zip of " + folder);
+                    _fileSystem.WriteToFile(zipPath, "zip of " + folder);
                 });
 
             _task = new CreateXHarnessAndroidWorkItems()
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 CreateApk("apks/System.Bar.apk", "System.Bar"),
             };
 
-            _fileSystem.Files.Add("apks/xharness-payload-system.foo.zip", "archive");
+            _fileSystem.WriteToFile("apks/xharness-payload-system.foo.zip", "archive");
 
             // Act
             using var provider = collection.BuildServiceProvider();
