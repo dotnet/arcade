@@ -105,6 +105,7 @@ Options:
 | .psd1          | Windows                    | .NET Framework       |
 | .psm1          | Windows                    | .NET Framework       |
 | .rpm           | Linux                      | .NET Core            |
+| .sig           | Linux                      | .NET Core            |
 | .so            | macOS                      | .NET Core            |
 | .tar           | macOS, Linux               | .NET Core            |
 | .tgz           | macOS, Linux               | .NET Core            |
