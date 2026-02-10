@@ -73,7 +73,7 @@ jobs:
     ${{ else }}:
       value: ''
   pool:
-    image: Azure-Linux-3-Amd64
+    image: build.azurelinux.3.amd64
     name: NetCore1ESPool-Internal
     os: linux
   

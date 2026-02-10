@@ -208,7 +208,7 @@ extends:
   parameters:
     pool:
       name: NetCore1ESPool-Internal
-      image: Azure-Linux-3-Amd64
+      image: build.azurelinux.3.amd64
       os: linux
     stages:
     - stage: Renovate

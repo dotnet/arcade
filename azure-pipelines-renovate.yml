@@ -37,8 +37,8 @@ extends:
   parameters:
     pool:
       name: NetCore1ESPool-Internal
-      image: 1es-windows-2022
-      os: windows
+      image: build.azurelinux.3.amd64
+      os: linux
     stages:
     - stage: Renovate
       displayName: Run Renovate
