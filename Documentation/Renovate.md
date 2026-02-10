@@ -221,6 +221,8 @@ extends:
           gitHubRepo: ${{ variables.gitHubRepo }}
 ```
 
+> **Note:** After creating the YAML file, you'll need to create the pipeline in Azure DevOps. Create the pipeline in **dnceng/internal** (not public) since the Renovate job requires access to internal resources and the `dotnet-renovate-bot` GitHub token stored in the `dotnet-renovate-bot-pat` variable group.
+
 ### Test with Dry Run
 
 Before enabling automatic PR creation, test your configuration using [dry run mode](https://docs.renovatebot.com/self-hosted-configuration/#dryrun).
