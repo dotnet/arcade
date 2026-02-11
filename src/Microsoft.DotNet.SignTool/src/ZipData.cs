@@ -334,6 +334,9 @@ namespace Microsoft.DotNet.SignTool
 
         private static IEnumerable<ZipDataEntry> ReadPkgOrAppBundleEntries(string archivePath, string tempDir, string pkgToolPath, bool ignoreContent)
         {
+#if NET472
+            throw new NotImplementedException("PKG signing is not supported on .NET Framework");
+#else
             string extractDir = Path.Combine(tempDir, Guid.NewGuid().ToString());
             try
             {
@@ -344,6 +347,11 @@ namespace Microsoft.DotNet.SignTool
 
                 foreach (var path in Directory.EnumerateFiles(extractDir, "*.*", SearchOption.AllDirectories))
                 {
+                    // Skip symbolic links - they reference files that are processed at their real paths.
+                    if (new FileInfo(path).LinkTarget != null)
+                    {
+                        continue;
+                    }
                     var relativePath = path.Substring(extractDir.Length + 1).Replace(Path.DirectorySeparatorChar, '/');
                     using var stream = ignoreContent ? null : (Stream)File.Open(path, FileMode.Open);
                     yield return new ZipDataEntry(relativePath, stream)
@@ -359,6 +367,7 @@ namespace Microsoft.DotNet.SignTool
                     Directory.Delete(extractDir, recursive: true);
                 }
             }
+#endif
         }
 
         private void RepackPkgOrAppBundles(TaskLoggingHelper log, string tempDir, string pkgToolPath)
@@ -382,6 +391,13 @@ namespace Microsoft.DotNet.SignTool
 
                 foreach (var path in Directory.EnumerateFiles(extractDir, "*.*", SearchOption.AllDirectories))
                 {
+                    // Skip symbolic links - they are preserved from extraction and point to
+                    // the real files which are updated in place.
+                    if (new FileInfo(path).LinkTarget != null)
+                    {
+                        continue;
+                    }
+
                     var relativePath = path.Substring(extractDir.Length + 1).Replace(Path.DirectorySeparatorChar, '/');
 
                     var signedPart = FindNestedPart(relativePath);
