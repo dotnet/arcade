@@ -10,6 +10,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Data;
+using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using NuGet.Packaging;
@@ -793,7 +794,7 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
-        private static IEnumerable<ZipDataEntry> ReadRpmContainerEntries(string archivePath)
+        private static IEnumerable<ZipDataEntry> ReadRpmContainerEntries(string archivePath, bool skipSymlinks = true)
         {
             using var stream = File.Open(archivePath, FileMode.Open);
             using RpmPackage rpmPackage = RpmPackage.Read(stream);
@@ -801,9 +802,26 @@ namespace Microsoft.DotNet.SignTool
 
             while (archive.GetNextEntry() is CpioEntry entry)
             {
-                yield return new ZipDataEntry(entry.Name, entry.DataStream)
+                uint fileKind = entry.Mode & CpioEntry.FileKindMask;
+                if (fileKind == CpioEntry.Directory ||
+                    (skipSymlinks && fileKind == CpioEntry.SymbolicLink))
+                {
+                    continue;
+                }
+
+                bool isSymlink = fileKind == CpioEntry.SymbolicLink;
+                string linkTarget = null;
+                if (isSymlink)
+                {
+                    using StreamReader reader = new(entry.DataStream, Encoding.UTF8, detectEncodingFromByteOrderMarks: true, bufferSize: -1, leaveOpen: true);
+                    linkTarget = reader.ReadToEnd().TrimEnd();
+                }
+
+                yield return new ZipDataEntry(entry.Name, isSymlink ? null : entry.DataStream)
                 {
                     UnixFileMode = entry.Mode & CpioEntry.FilePermissionMask,
+                    IsSymbolicLink = isSymlink,
+                    SymbolicLinkTarget = linkTarget,
                 };
             }
         }
@@ -892,12 +910,16 @@ namespace Microsoft.DotNet.SignTool
 
         internal static void ExtractRpmPayloadContents(TaskLoggingHelper log, string rpmPackage, string layout)
         {
-            foreach (var entry in ReadRpmContainerEntries(rpmPackage))
+            foreach (var entry in ReadRpmContainerEntries(rpmPackage, skipSymlinks: false))
             {
                 string outputPath = Path.Combine(layout, entry.RelativePath);
                 Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 
-                if (entry != null)
+                if (entry.IsSymbolicLink)
+                {
+                    File.CreateSymbolicLink(outputPath, entry.SymbolicLinkTarget);
+                }
+                else
                 {
                     entry.WriteToFile(outputPath);
                     SetUnixFileMode(log, entry.UnixFileMode, outputPath);
