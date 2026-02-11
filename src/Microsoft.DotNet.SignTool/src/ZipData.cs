@@ -64,6 +64,8 @@ namespace Microsoft.DotNet.SignTool
                 return ReadTarGZipEntries(archivePath, tempDir, tarToolPath, ignoreContent);
 #else
                 return ReadTarGZipEntries(archivePath)
+                    .Where(static entry => entry.EntryType != TarEntryType.SymbolicLink &&
+                                           entry.EntryType != TarEntryType.Directory)
                     .Select(static entry => new ZipDataEntry(entry.Name, entry.DataStream, entry.Length)
                     {
                         UnixFileMode = (uint)entry.Mode,
