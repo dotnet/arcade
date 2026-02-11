@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Workloads.Wix;
@@ -92,12 +93,21 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             EmbeddedTemplates.Extract("Directories.wxs", WixSourceDirectory);
             EmbeddedTemplates.Extract("Registry.wxs", WixSourceDirectory);
 
-            // Configure harvesting of the manifest package contents.
-            string wixProjectPath = Path.Combine(WixSourceDirectory, "manifest.wixproj");
+            // Configure file harvesting.
             string packageDataDirectory = Path.Combine(Package.DestinationDirectory, "data");
-            wixproj.AddHarvestDirectory(packageDataDirectory,
-                AllowSideBySideInstalls ? MsiDirectories.ManifestVersionDirectory : MsiDirectories.ManifestIdDirectory,
-                PreprocessorDefinitionNames.SourceDir);
+            string filesWxs = EmbeddedTemplates.Extract("Files.wxs", WixSourceDirectory);
+
+            Utils.StringReplace(filesWxs, Encoding.UTF8,
+                (MsiTokens.__DIR_ID__, AllowSideBySideInstalls ? MsiDirectories.ManifestVersionDirectory : MsiDirectories.ManifestIdDirectory),
+                (MsiTokens.__COMPONENT_GROUP_ID__, "CG_PackageContents"),
+                (MsiTokens.__INCLUDE__, packageDataDirectory + Path.DirectorySeparatorChar + "**"));
+
+            //// Configure harvesting of the manifest package contents.
+            //string wixProjectPath = Path.Combine(WixSourceDirectory, "manifest.wixproj");
+            
+            //wixproj.AddHarvestDirectory(packageDataDirectory,
+            //    AllowSideBySideInstalls ? MsiDirectories.ManifestVersionDirectory : MsiDirectories.ManifestIdDirectory,
+            //    PreprocessorDefinitionNames.SourceDir);
 
             foreach (var file in Directory.GetFiles(packageDataDirectory).Select(f => Path.GetFullPath(f)))
             {

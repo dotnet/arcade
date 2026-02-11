@@ -1,0 +1,12 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  
+  <!-- Template for harvesting files -->
+  <Fragment>
+    <ComponentGroup Id="__COMPONENT_GROUP_ID__">
+      <!-- WiX 5 introduced a new Files element that can automatically harvest
+           files from a directory/sub-directory. -->
+      <Files Directory="__DIR_ID__" Include="__INCLUDE__" />
+    </ComponentGroup>
+  </Fragment>
+</Wix>

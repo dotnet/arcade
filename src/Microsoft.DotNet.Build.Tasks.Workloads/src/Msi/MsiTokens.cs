@@ -11,5 +11,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         public static readonly string __DIR_REF_ID__ = nameof(__DIR_REF_ID__);
         public static readonly string __DIR_ID__ = nameof(__DIR_ID__);
         public static readonly string __DIR_NAME__ = nameof(__DIR_NAME__);
+
+        /// <summary>
+        /// Replacement token for Files@Include.
+        /// </summary>
+        public static readonly string __INCLUDE__ = nameof(__INCLUDE__);
+
+        /// <summary>
+        /// Replacement token for ComponentGroup@Id.
+        /// </summary>
+        public static readonly string __COMPONENT_GROUP_ID__ = nameof(__COMPONENT_GROUP_ID__);
     }
 }

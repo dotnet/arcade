@@ -28,28 +28,28 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
                 Directory.Delete(baseIntermediateOutputPath, recursive: true);
             }
 
-            ITaskItem[] manifestsPackages = new[]
-            {
-                new TaskItem(Path.Combine(TestBase.TestAssetsPath, "microsoft.net.workload.emscripten.manifest-6.0.200.6.0.4.nupkg"))
+            ITaskItem[] manifestsPackages =
+            [
+                new TaskItem(Path.Combine(TestAssetsPath, "microsoft.net.workload.emscripten.manifest-6.0.200.6.0.4.nupkg"))
                 .WithMetadata(Metadata.MsiVersion, "6.33.28")
-            };
+            ];
 
-            ITaskItem[] componentResources = new[]
-            {
+            ITaskItem[] componentResources =
+            [
                 new TaskItem("microsoft-net-sdk-emscripten")
                 .WithMetadata(Metadata.Title, ".NET WebAssembly Build Tools (Emscripten)")
                 .WithMetadata(Metadata.Description, "Build tools for WebAssembly ahead-of-time (AoT) compilation and native linking.")
                 .WithMetadata(Metadata.Version, "5.6.7.8")
-            };
+            ];
 
-            ITaskItem[] shortNames = new[]
-            {
+            ITaskItem[] shortNames =
+            [
                 new TaskItem("Microsoft.NET.Workload.Emscripten").WithMetadata("Replacement", "Emscripten"),
                 new TaskItem("microsoft.netcore.app.runtime").WithMetadata("Replacement", "Microsoft"),
                 new TaskItem("Microsoft.NETCore.App.Runtime").WithMetadata("Replacement", "Microsoft"),
                 new TaskItem("microsoft.net.runtime").WithMetadata("Replacement", "Microsoft"),
                 new TaskItem("Microsoft.NET.Runtime").WithMetadata("Replacement", "Microsoft")
-            };
+            ];
 
             IBuildEngine buildEngine = new MockBuildEngine();
 
@@ -164,43 +164,43 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
                 Directory.Delete(baseIntermediateOutputPath, recursive: true);
             }
 
-            ITaskItem[] manifestsPackages = new[]
-            {
+            ITaskItem[] manifestsPackages =
+            [
                 new TaskItem(Path.Combine(TestBase.TestAssetsPath, "microsoft.net.workload.emscripten.manifest-6.0.200.6.0.4.nupkg"))
                 .WithMetadata(Metadata.MsiVersion, "6.33.28")
                 .WithMetadata(Metadata.SupportsMachineArch, "true")
-            };
+            ];
 
-            ITaskItem[] componentResources = new[]
-            {
+            ITaskItem[] componentResources =
+            [
                 new TaskItem("microsoft-net-sdk-emscripten")
                 .WithMetadata(Metadata.Title, ".NET WebAssembly Build Tools (Emscripten)")
                 .WithMetadata(Metadata.Description, "Build tools for WebAssembly ahead-of-time (AoT) compilation and native linking.")
                 .WithMetadata(Metadata.Version, "5.6.7.8")
-            };
+            ];
 
-            ITaskItem[] shortNames = new[]
-            {
+            ITaskItem[] shortNames =
+            [
                 new TaskItem("Microsoft.NET.Workload.Emscripten").WithMetadata("Replacement", "Emscripten"),
                 new TaskItem("microsoft.netcore.app.runtime").WithMetadata("Replacement", "Microsoft"),
                 new TaskItem("Microsoft.NETCore.App.Runtime").WithMetadata("Replacement", "Microsoft"),
                 new TaskItem("microsoft.net.runtime").WithMetadata("Replacement", "Microsoft"),
                 new TaskItem("Microsoft.NET.Runtime").WithMetadata("Replacement", "Microsoft")
-            };
+            ];
 
             IBuildEngine buildEngine = new MockBuildEngine();
 
             CreateVisualStudioWorkload createWorkloadTask = new CreateVisualStudioWorkload()
             {
                 AllowMissingPacks = true,
-                BaseOutputPath = TestBase.BaseOutputPath,
+                BaseOutputPath = BaseOutputPath,
                 BaseIntermediateOutputPath = baseIntermediateOutputPath,
                 BuildEngine = buildEngine,
                 ComponentResources = componentResources,
                 ManifestMsiVersion = null,
-                PackageSource = TestBase.TestAssetsPath,
+                PackageSource = TestAssetsPath,
                 ShortNames = shortNames,
-                WixToolsetPath = TestBase.WixToolsetPath,
+                WixToolsetPath = WixToolsetPath,
                 WorkloadManifestPackageFiles = manifestsPackages,
             };
 
