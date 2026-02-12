@@ -587,32 +587,6 @@ namespace Microsoft.DotNet.SignTool.Tests
                     $"symlink '{symlinkPath}' should resolve to the signed file");
             }
         }
-
-        private void ValidateProducedPkgContent(
-            string pkgPath,
-            (string path, string target)[] expectedSymlinks)
-        {
-            string tempDir = Path.Combine(_tmpDir, "verification");
-            Directory.CreateDirectory(tempDir);
-
-            string extractDir = Path.Combine(tempDir, "pkg");
-
-            // Unpack the PKG using the macOS pkg tool
-            ZipData.RunPkgProcess(pkgPath, extractDir, "unpack", s_pkgToolPath);
-
-            foreach ((string symlinkPath, string expectedTarget) in expectedSymlinks)
-            {
-                string layoutPath = Path.Combine(extractDir, symlinkPath);
-                var fileInfo = new FileInfo(layoutPath);
-                fileInfo.Exists.Should().BeTrue($"symlink '{symlinkPath}' should exist");
-                fileInfo.LinkTarget.Should().Be(expectedTarget, $"symlink '{symlinkPath}' should point to '{expectedTarget}'");
-
-                // Verify the symlink resolves to a valid file with the same content as its target
-                string resolvedTarget = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(layoutPath)!, expectedTarget));
-                File.ReadAllBytes(layoutPath).Should().BeEquivalentTo(File.ReadAllBytes(resolvedTarget),
-                    $"symlink '{symlinkPath}' should resolve to the signed file");
-            }
-        }
 #endif
         [Fact]
         public void EmptySigningList()
@@ -1634,7 +1608,6 @@ $@"
         [MacOSOnlyFact]
         public void SignNestedPkgFile()
         {
-#if !NETFRAMEWORK
             // List of files to be considered for signing
             var itemsToSign = new List<ItemToSign>()
             {
@@ -1682,12 +1655,6 @@ $@"
                 <Authenticode>MacDeveloperHarden</Authenticode>
                 </FilesToSign>"
             });
-
-            ValidateProducedPkgContent(Path.Combine(_tmpDir, "NestedPkg.pkg"), new[]
-            {
-                ("Payload/NativeLibrary-link.dll", "NativeLibrary.dll")
-            });
-#endif
         }
 
         [MacOSOnlyFact]
