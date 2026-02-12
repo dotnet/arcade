@@ -53,6 +53,14 @@ parameters:
   type: boolean
   default: false
 
+# Pool configuration for the job.
+- name: pool
+  type: object
+  default:
+    name: NetCore1ESPool-Internal
+    image: build.azurelinux.3.amd64
+    os: linux
+
 jobs:
 - job: Renovate
   displayName: Run Renovate
@@ -72,10 +80,7 @@ jobs:
       value: 'always'
     ${{ else }}:
       value: ''
-  pool:
-    image: build.azurelinux.3.amd64
-    name: NetCore1ESPool-Internal
-    os: linux
+  pool: ${{ parameters.pool }}
   
   templateContext:
     outputParentDirectory: $(Build.ArtifactStagingDirectory)
