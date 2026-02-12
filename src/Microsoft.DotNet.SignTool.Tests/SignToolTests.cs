@@ -2263,7 +2263,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
 
             task.Execute().Should().BeFalse();
             task.Log.HasLoggedErrors.Should().BeTrue();
-            fakeBuildEngine.LogErrorEvents.ForEach(a => a.Message.Should().EndWithEquivalent(" does not exist." ));
+            fakeBuildEngine.LogErrorEvents.ForEach(a => a.Message.Should().EndWith(" does not exist." ));
         }
 
         [Fact]
