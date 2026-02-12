@@ -51,7 +51,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 foreach (string platform in SupportedPlatforms)
                 {
                     var workloadSetMsi = new WorkloadSetMsi(workloadSetPackage, platform, BuildEngine,
-                        WixToolsetPath, BaseIntermediateOutputPath);
+                        BaseIntermediateOutputPath, overridePackageVersions: OverridePackageVersions,
+                        generateWixPack: GenerateWixPack);
                     workloadSetMsisToBuild.Add(workloadSetMsi);
                 }
 
@@ -67,7 +68,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                 _ = Parallel.ForEach(workloadSetMsisToBuild, msi =>
                 {
-                    ITaskItem msiOutputItem = msi.Build(MsiOutputPath, IceSuppressions);
+                    ITaskItem msiOutputItem = msi.Build(MsiOutputPath);
 
                     // Generate a .csproj to package the MSI and its manifest for CLI installs.
                     MsiPayloadPackageProject csproj = new(msi.Metadata, msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, msi.NuGetPackageFiles);
@@ -80,7 +81,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                     // Generate a .swixproj for packaging the MSI in Visual Studio. We'll default to using machineArch always. Workload sets
                     // are being introduced in .NET 8 and the corresponding versions of VS all support the machineArch property.
-                    MsiSwixProject swixProject = new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, workloadSetPackage.SdkFeatureBand, chip: null, machineArch: msiOutputItem.GetMetadata(Metadata.Platform));
+                    MsiSwixProject swixProject = new(msiOutputItem, BaseIntermediateOutputPath, BaseOutputPath, workloadSetPackage.SdkFeatureBand, 
+                        chip: null, machineArch: msiOutputItem.GetMetadata(Metadata.Platform));
 
                     string swixProj = swixProject.Create();
 

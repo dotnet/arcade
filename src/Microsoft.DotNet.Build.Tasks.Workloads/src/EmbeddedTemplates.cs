@@ -69,12 +69,16 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             {
                 { "DependencyProvider.wxs", $"{ns}.MsiTemplate.DependencyProvider.wxs" },
                 { "Directories.wxs", $"{ns}.MsiTemplate.Directories.wxs" },
+                { "WorkloadPackDirectories.wxs", $"{ns}.MsiTemplate.WorkloadPackDirectories.wxs" },
                 { "dotnethome_x64.wxs", $"{ns}.MsiTemplate.dotnethome_x64.wxs" },
+                { "Files.wxs",$"{ns}.MsiTemplate.Files.wxs" },
                 { "ManifestProduct.wxs", $"{ns}.MsiTemplate.ManifestProduct.wxs" },
                 { "WorkloadSetProduct.wxs", $"{ns}.MsiTemplate.WorkloadSetProduct.wxs" },
+                { "PackDirectories.wxs", $"{ns}.MsiTemplate.PackDirectories.wxs" },
+                { "DirectoryReference.wxs", $"{ns}.MsiTemplate.DirectoryReference.wxs" },
                 { "Product.wxs", $"{ns}.MsiTemplate.Product.wxs" },
                 { "Registry.wxs", $"{ns}.MsiTemplate.Registry.wxs" },
-                { "Variables.wxi", $"{ns}.MsiTemplate.Variables.wxi" },
+                { "Directory.Build.targets", $"{ns}.MsiTemplate.Directory.Build.targets.pp" },
 
                 { $"msi.swr", $"{ns}.SwixTemplate.msi.swr" },
                 { $"msi.swixproj", $"{ns}.SwixTemplate.msi.swixproj" },
@@ -83,7 +87,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 { $"component.swixproj", $"{ns}.SwixTemplate.component.swixproj" },
                 { $"manifest.vsmanproj", $"{ns}.SwixTempalte.manifest.vsmanproj" },
                 { $"packageGroup.swr", $"{ns}.SwixTemplate.packageGroup.swr" },
-                { $"packageGroup.swixproj", $"{ns}.SwixTemplate.packageGroup.swixproj" },
+                { $"packageGroup.swixproj", $"{ns}.SwixTemplate.packageGroup.swixproj" },                
 
                 { "Icon.png", $"{ns}.Misc.Icon.png" },
                 { "LICENSE.TXT", $"{ns}.Misc.LICENSE.TXT" },

@@ -200,7 +200,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             Title = nuspec.GetTitle();
 
             PackagePath = packagePath;
-            DestinationDirectory = Path.Combine(destinationBaseDirectory, $"{Identity}");
+
+            // Previously this extracted to a directory containing the package identity, but for testing
+            // inside Arcade under v5, Heat reports errors for workload packs like Emscripten that
+            // have deep structure.
+            // heat.exe : error HEAT0001: System.Runtime.InteropServices.COMException (0x00000003): Failed to get short
+            // path buffer size for file: D:\git\forks\arcade\artifacts\bin\Microsoft.DotNet.Build.Tasks.Workloads.Tests\Debug\net10.0\TEST_OUTPUT\qbdhgr2p.dpg\pkg\Microsoft.NET.Runtime.Emscripten.2.0.23.Sdk.win-x64.6.0.4\tools\emscripten\cache\sysroot\include\c++\v1\__support\win32\limits_msvc_win32.h
+            DestinationDirectory = Path.Combine(destinationBaseDirectory, Path.GetRandomFileName());
             ShortNames = shortNames;
 
             PackageFileName = Path.GetFileNameWithoutExtension(packagePath);

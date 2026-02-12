@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         public static readonly string[] SupportedPlatforms = { "x86", "x64", "arm64" };
 
         /// <summary>
-        /// The root intermediate output directory. This directory serves as a the base for generating
+        /// The root intermediate output directory. This directory serves as the base for generating
         /// installer sources and other projects used to create workload artifacts for Visual Studio.
         /// </summary>
         [Required]
@@ -41,13 +41,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
-        /// A set of Internal Consistency Evaluators (ICEs) to suppress.
+        /// Determines whether a wix pack archive should be generated to sign the MSI using Arcade.
         /// </summary>
-        public ITaskItem[] IceSuppressions
+        public bool GenerateWixPack
         {
             get;
             set;
-        }
+        } = false;
 
         /// <summary>
         /// A set of items containing all the MSIs that were generated. Additional metadata
@@ -87,6 +87,25 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// </summary>
         [Required]
         public string WixToolsetPath
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// The version of the WiX toolset to use.
+        /// </summary>
+        public string WixToolsetVersion
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Generate VersionOverride attributes for package references. This avoids conflicts when
+        /// using CPM and a different version of WiX for non-workload related projects in the same repository.
+        /// </summary>
+        public bool OverridePackageVersions
         {
             get;
             set;

@@ -8,7 +8,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Workloads.Wix;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
@@ -25,52 +27,99 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// <inheritdoc />
         protected override string BaseOutputName => Path.GetFileNameWithoutExtension(Package.PackagePath);
 
+        protected override string? MsiPackageType => DefaultValues.ManifestMsi;
+
         /// <summary>
-        /// <see langword="true">True</see> if the manifest installer supports side-by-side installs, otherwise the installer
-        /// supports major upgrades.
+        /// <see langword="true">True</see> if the manifest installer supports side-by-side installs, otherwise it's 
+        /// assumed the installer supports major upgrades.
         /// </summary>
-        protected bool IsSxS
+        /// <remarks>
+        /// Major upgrades require both the ProductVersion and ProductCode to change. Refer to the 
+        /// <a href="https://learn.microsoft.com/en-us/windows/win32/msi/major-upgrades">Windows Installer</a> for
+        /// more details
+        /// </remarks>
+        protected bool AllowSideBySideInstalls
         {
             get;
         }
 
-        public WorkloadManifestMsi(WorkloadManifestPackage package, string platform, IBuildEngine buildEngine, string wixToolsetPath,
-            string baseIntermediateOutputPath, bool isSxS = false) :
-            base(MsiMetadata.Create(package), buildEngine, wixToolsetPath, platform, baseIntermediateOutputPath)
+        // To support upgrades, the UpgradeCode must be stable within an SDK feature band.
+        // For example, 6.0.101 and 6.0.108 will generate the same GUID for the same platform and manifest ID. 
+        // The workload author must ensure that the ProductVersion is higher than previously shipped versions.
+        // For SxS installs the UpgradeCode can be a random GUID.
+        protected override Guid UpgradeCode =>
+            AllowSideBySideInstalls ? Guid.NewGuid() :
+                    Utils.CreateUuid(UpgradeCodeNamespaceUuid, $"{Package.ManifestId};{Package.SdkFeatureBand};{Platform}");
+
+        protected override string ProviderKeyName =>
+            AllowSideBySideInstalls ? $"{Package.ManifestId},{Package.SdkFeatureBand},{Package.PackageVersion},{Platform}" :
+                $"{Package.ManifestId},{Package.SdkFeatureBand},{Platform}";
+
+        protected override string? InstallationRecordKey => "InstalledManifests";
+
+        /// <summary>
+        /// Creates a new <see cref="WorkloadManifestMsi"/> instance.
+        /// </summary>
+        /// <param name="package">The NuGet package containing the workload manifest.</param>
+        /// <param name="platform">The target platform of the installer.</param>
+        /// <param name="buildEngine"></param>
+        /// <param name="baseIntermediateOutputPath"></param>
+        /// <param name="allowSideBySideInstalls">Determines whether manifest installers are side-by-side for an SDK feature band or support major upgrades.</param>
+        /// <param name="wixToolsetVersion">The version of the WiX toolset to use for building the installer.</param>
+        /// <param name="overridePackageVersions">Determines if VersionOverride attributes are generated for package references.</param>
+        /// <param name="generateWixpack">Determines if a wixpack archive should be generated. The wixpack is required to sign MSIs using Arcade.</param>
+        /// <param name="wixpackOutputDirectory">The directory to use for generating a wixpack for signing.</param>
+        public WorkloadManifestMsi(WorkloadManifestPackage package, string platform, IBuildEngine buildEngine,
+            string baseIntermediateOutputPath, bool allowSideBySideInstalls = false, string wixToolsetVersion = ToolsetInfo.MicrosoftWixToolsetVersion,
+            bool overridePackageVersions = false, bool generateWixpack = false, string? wixpackOutputDirectory = null) :
+            base(MsiMetadata.Create(package), buildEngine, platform, baseIntermediateOutputPath, wixToolsetVersion,
+                overridePackageVersions, generateWixpack, wixpackOutputDirectory)
         {
             Package = package;
-            IsSxS = isSxS;
+            AllowSideBySideInstalls = allowSideBySideInstalls;
         }
 
-        /// <inheritdoc />
-        /// <exception cref="Exception" />
-        public override ITaskItem Build(string outputPath, ITaskItem[]? iceSuppressions = null)
+        /// <summary>
+        /// Creates a new WiX project for building a workload manifest installer (MSI).
+        /// </summary>
+        protected override WixProject CreateProject()
         {
-            // Harvest the package contents before adding it to the source files we need to compile.
-            string packageContentWxs = Path.Combine(WixSourceDirectory, "PackageContent.wxs");
+            WixProject wixproj = base.CreateProject();
+
+            // Add source files
+            EmbeddedTemplates.Extract("ManifestProduct.wxs", WixSourceDirectory);
+            EmbeddedTemplates.Extract("DependencyProvider.wxs", WixSourceDirectory);
+            EmbeddedTemplates.Extract("dotnethome_x64.wxs", WixSourceDirectory);
+            EmbeddedTemplates.Extract("Directories.wxs", WixSourceDirectory);
+            EmbeddedTemplates.Extract("Registry.wxs", WixSourceDirectory);
+
+            // Configure file harvesting.
             string packageDataDirectory = Path.Combine(Package.DestinationDirectory, "data");
+            string filesWxs = EmbeddedTemplates.Extract("Files.wxs", WixSourceDirectory);
 
-            HarvesterToolTask heat = new(BuildEngine, WixToolsetPath)
-            {
-                DirectoryReference = IsSxS ? MsiDirectories.ManifestVersionDirectory : MsiDirectories.ManifestIdDirectory,
-                OutputFile = packageContentWxs,
-                Platform = this.Platform,
-                SourceDirectory = packageDataDirectory
-            };
+            Utils.StringReplace(filesWxs, Encoding.UTF8,
+                (MsiTokens.__DIR_ID__, AllowSideBySideInstalls ? MsiDirectories.ManifestVersionDirectory : MsiDirectories.ManifestIdDirectory),
+                (MsiTokens.__COMPONENT_GROUP_ID__, "CG_PackageContents"),
+                (MsiTokens.__INCLUDE__, packageDataDirectory + Path.DirectorySeparatorChar + "**"));
 
-            if (!heat.Execute())
-            {
-                throw new Exception(Strings.HeatFailedToHarvest);
-            }
+            //// Configure harvesting of the manifest package contents.
+            //string wixProjectPath = Path.Combine(WixSourceDirectory, "manifest.wixproj");
+            
+            //wixproj.AddHarvestDirectory(packageDataDirectory,
+            //    AllowSideBySideInstalls ? MsiDirectories.ManifestVersionDirectory : MsiDirectories.ManifestIdDirectory,
+            //    PreprocessorDefinitionNames.SourceDir);
 
             foreach (var file in Directory.GetFiles(packageDataDirectory).Select(f => Path.GetFullPath(f)))
             {
                 NuGetPackageFiles[file] = @"\data\extractedManifest\" + Path.GetFileName(file);
             }
 
-            //  Add WorkloadPackGroups.json to add to workload manifest MSI
+            // Add WorkloadPackGroups.json to add to workload manifest MSI
             string? jsonContentWxs = null;
             string? jsonDirectory = null;
+
+            // Default the variable to false. If we harvested workload pack group data, we'll override it
+            wixproj.AddPreprocessorDefinition("IncludePackGroupJson", "false");
 
             if (WorkloadPackGroups.Any())
             {
@@ -83,82 +132,31 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
                 string jsonFullPath = Path.GetFullPath(Path.Combine(jsonDirectory, "WorkloadPackGroups.json"));
                 File.WriteAllText(jsonFullPath, jsonAsString);
 
-                HarvesterToolTask jsonHeat = new(BuildEngine, WixToolsetPath)
-                {
-                    DirectoryReference = IsSxS ? MsiDirectories.ManifestVersionDirectory : MsiDirectories.ManifestIdDirectory,
-                    OutputFile = jsonContentWxs,
-                    Platform = this.Platform,
-                    SourceDirectory = jsonDirectory,
-                    SourceVariableName = "JsonSourceDir",
-                    ComponentGroupName = "CG_PackGroupJson"
-                };
+                wixproj.AddHarvestDirectory(jsonDirectory,
+                    AllowSideBySideInstalls ? MsiDirectories.ManifestVersionDirectory : MsiDirectories.ManifestIdDirectory,
+                    "JsonSourceDir",
+                    "CG_PackGroupJson");
 
-                if (!jsonHeat.Execute())
-                {
-                    throw new Exception(Strings.HeatFailedToHarvest);
-                }
+                wixproj.AddPreprocessorDefinition("IncludePackGroupJson", "true");
+                wixproj.AddPreprocessorDefinition("JsonSourceDir", jsonDirectory);
 
                 NuGetPackageFiles[jsonFullPath] = @"\data\extractedManifest\" + Path.GetFileName(jsonFullPath);
             }
 
-            CompilerToolTask candle = CreateDefaultCompiler();
-            candle.AddSourceFiles(packageContentWxs,
-                EmbeddedTemplates.Extract("DependencyProvider.wxs", WixSourceDirectory),
-                EmbeddedTemplates.Extract("dotnethome_x64.wxs", WixSourceDirectory),
-                EmbeddedTemplates.Extract("ManifestProduct.wxs", WixSourceDirectory),
-                EmbeddedTemplates.Extract("Registry.wxs", WixSourceDirectory));
-
-            if (IsSxS)
-            {
-                candle.AddPreprocessorDefinition("ManifestVersion", Package.GetManifest().Version);
-            }
-
-            if (jsonContentWxs != null)
-            {
-                candle.AddSourceFiles(jsonContentWxs);
-                candle.AddPreprocessorDefinition("IncludePackGroupJson", "true");
-                candle.AddPreprocessorDefinition("JsonSourceDir", jsonDirectory);
-            }
-            else
-            {
-                candle.AddPreprocessorDefinition("IncludePackGroupJson", "false");
-            }
-
-            // Only extract the include file as it's not compilable, but imported by various source files.
-            EmbeddedTemplates.Extract("Variables.wxi", WixSourceDirectory);
-
-            // To support upgrades, the UpgradeCode must be stable within an SDK feature band.
-            // For example, 6.0.101 and 6.0.108 will generate the same GUID for the same platform and manifest ID. 
-            // The workload author will need to guarantee that the version for the MSI is higher than previous shipped versions
-            // to ensure upgrades correctly trigger. For SxS installs we use the package identity that would include that includes
-            // the package version.
-            Guid upgradeCode = IsSxS ? Utils.CreateUuid(UpgradeCodeNamespaceUuid, $"{Package.Identity};{Platform}") :
-                Utils.CreateUuid(UpgradeCodeNamespaceUuid, $"{Package.ManifestId};{Package.SdkFeatureBand};{Platform}");
-            string providerKeyName = IsSxS ?
-                $"{Package.ManifestId},{Package.SdkFeatureBand},{Package.PackageVersion},{Platform}" :
-                $"{Package.ManifestId},{Package.SdkFeatureBand},{Platform}";
-
-            // Set up additional preprocessor definitions.
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.UpgradeCode, $"{upgradeCode:B}");
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.DependencyProviderKeyName, $"{providerKeyName}");
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.SourceDir, $"{packageDataDirectory}");
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.SdkFeatureBandVersion, $"{Package.SdkFeatureBand}");
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.InstallationRecordKey, $"InstalledManifests");
+            // Add preprocessor definitions
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.SourceDir, $"{packageDataDirectory}");
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.SdkFeatureBandVersion, $"{Package.SdkFeatureBand}");
 
             // The temporary installer in the SDK (6.0) used lower invariants of the manifest ID.
             // We have to do the same to ensure the keypath generation produces stable GUIDs.
-            candle.AddPreprocessorDefinition(PreprocessorDefinitionNames.ManifestId, $"{Package.ManifestId.ToLowerInvariant()}");
+            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.ManifestId, $"{Package.ManifestId.ToLowerInvariant()}");
 
-            if (!candle.Execute())
+            if (AllowSideBySideInstalls)
             {
-                throw new Exception(Strings.FailedToCompileMsi);
+                wixproj.AddPreprocessorDefinition("ManifestVersion", Package.GetManifest().Version);
             }
 
-            ITaskItem msi = Link(candle.OutputPath, Path.Combine(outputPath, OutputName), iceSuppressions);
-
-            AddDefaultPackageFiles(msi);
-
-            return msi;
+            return wixproj;
         }
 
         public class WorkloadPackGroupJson

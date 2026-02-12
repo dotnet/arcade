@@ -1,38 +1,24 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <?include Variables.wxi?>
-  <Fragment>
-    <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="$(var.ProgramFilesFolder)">
-        <Directory Id="DOTNETHOME" Name="dotnet" />
-      </Directory>
-    </Directory>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
-    <?if $(var.Platform)~=x64?>
+  <!-- All the directories are broken into separate fragments. References to specific directories should be sufficient to
+       pull them into an installer. -->
+  <Fragment>
+    <StandardDirectory Id="ProgramFiles6432Folder">
+      <Directory Id="DOTNETHOME" Name="dotnet" />
+    </StandardDirectory>
+
+    <!-- This custom action is necessary to override the DOTNETHOME value when installing x64 on arm64. -->
+    <?if $(InstallerPlatform)~=x64?>
     <CustomActionRef Id="Set_DOTNETHOME_NON_NATIVE_ARCHITECTURE" />
     <?endif?>
-  </Fragment>
-
-  <?ifdef InstallDir?>
-  <Fragment>
-    <DirectoryRef Id="DOTNETHOME">
-      <Directory Id="InstallDir" Name="$(var.InstallDir)">
-        <?if $(var.PackKind) != "library" and $(var.PackKind) != "template"?>
-        <Directory Id="PackageDir" Name="$(var.PackageId)">
-          <Directory Id="VersionDir" Name="$(var.PackageVersion)" />
-        </Directory>
-        <?endif?>
-      </Directory>
-    </DirectoryRef>
-  </Fragment>
-  <?endif?>
+  </Fragment>  
 
   <?ifdef SdkFeatureBandVersion?>
   <Fragment>
     <DirectoryRef Id="DOTNETHOME">
       <Directory Id="SdkManifestsDir" Name="sdk-manifests">
-        <Directory Id="SdkFeatureBandVersionDir" Name="$(var.SdkFeatureBandVersion)" />
+        <Directory Id="SdkFeatureBandVersionDir" Name="$(SdkFeatureBandVersion)" />
       </Directory>
     </DirectoryRef>
   </Fragment>
@@ -42,7 +28,7 @@
   <Fragment>
     <DirectoryRef Id="SdkFeatureBandVersionDir">
       <Directory Id="WorkloadSetsDir" Name="workloadsets">
-        <Directory Id="WorkloadSetVersionDir" Name="$(var.WorkloadSetVersion)" />
+        <Directory Id="WorkloadSetVersionDir" Name="$(WorkloadSetVersion)" />
       </Directory>
     </DirectoryRef>
   </Fragment>
@@ -51,11 +37,16 @@
   <?ifdef ManifestId?>
   <Fragment>
     <DirectoryRef Id="SdkFeatureBandVersionDir">
-      <Directory Id="ManifestIdDir" Name="$(var.ManifestId)">
-        <?ifdef ManifestVersion ?>
-        <Directory Id="ManifestVersionDir" Name="$(var.ManifestVersion)" />
-        <?endif?>
+      <Directory Id="ManifestIdDir" Name="$(ManifestId)">
       </Directory>
+    </DirectoryRef>
+  </Fragment>
+  <?endif?>
+
+  <?ifdef ManifestVersion?>
+  <Fragment>
+    <DirectoryRef Id="ManifestIdDir">
+      <Directory Id="ManifestVersionDir" Name="$(ManifestVersion)" />
     </DirectoryRef>
   </Fragment>
   <?endif?>
