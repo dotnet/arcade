@@ -812,6 +812,19 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
+        /// <summary>
+        /// Read entries from an RPM container.
+        /// </summary>
+        /// <param name="archivePath">Path to the RPM package.</param>
+        /// <param name="skipSymlinks">
+        /// When true (the default), symbolic links are excluded from the returned entries.
+        /// This is used during the read/signing phase where only regular files need to be inspected and signed.
+        /// When false, symbolic links are included (with their target paths captured) so that
+        /// <see cref="ExtractRpmPayloadContents"/> can recreate them on disk. This is necessary because
+        /// repacking rebuilds the cpio payload from the extracted disk layout rather than copying
+        /// streams from the original archive, so symlinks must be physically present or they
+        /// would be dropped from the repacked RPM.
+        /// </param>
         private static IEnumerable<ZipDataEntry> ReadRpmContainerEntries(string archivePath, bool skipSymlinks = true)
         {
             using var stream = File.Open(archivePath, FileMode.Open);
