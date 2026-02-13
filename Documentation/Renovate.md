@@ -165,7 +165,7 @@ For more configuration options, see the [Renovate configuration documentation](h
 
 ### Create the Pipeline YAML
 
-Create a new pipeline YAML file in your repository (e.g., `eng/pipelines/renovate.yml`) that references the [Arcade Renovate job template](../eng/common/core-templates/job/renovate.yml).
+Create a new pipeline YAML file in your repository (e.g., `eng/pipelines/renovate.yml`) that references the [Arcade Renovate job template](../eng/common/core-templates/job/renovate.yml). Set the `gitHubRepo` variable according to your repo name.
 
 ```yaml
 # Renovate Dependency Update Pipeline
@@ -191,34 +191,17 @@ parameters:
   type: boolean
   default: false
 
-resources:
-  repositories:
-  - repository: 1ESPipelineTemplates
-    type: git
-    name: 1ESPipelineTemplates/1ESPipelineTemplates
-    ref: refs/tags/release
-
 variables:
 - name: gitHubRepo
   # TODO: Replace with your GitHub repo
   value: 'dotnet/your-repo-name'
 
 extends:
-  template: v1/1ES.Official.PipelineTemplate.yml@1ESPipelineTemplates
+  template: /eng/common/core-templates/stages/renovate.yml@self
   parameters:
-    pool:
-      name: NetCore1ESPool-Internal
-      image: build.azurelinux.3.amd64
-      os: linux
-    stages:
-    - stage: Renovate
-      displayName: Run Renovate
-      jobs:
-      - template: /eng/common/core-templates/job/renovate.yml@self
-        parameters:
-          dryRun: ${{ parameters.dryRun }}
-          forceRecreatePR: ${{ parameters.forceRecreatePR }}
-          gitHubRepo: ${{ variables.gitHubRepo }}
+    dryRun: ${{ parameters.dryRun }}
+    forceRecreatePR: ${{ parameters.forceRecreatePR }}
+    gitHubRepo: ${{ variables.gitHubRepo }}
 ```
 
 > **Note:** After creating the YAML file, you'll need to create the pipeline in Azure DevOps. Create the pipeline in **dnceng/internal** (not public) since the Renovate job requires access to internal resources and the `dotnet-renovate-bot` GitHub token stored in the `dotnet-renovate-bot-pat` variable group.
@@ -351,7 +334,8 @@ If you need different update schedules for different dependencies:
 2. Create separate pipeline YAML files, each referencing a different config via `renovateConfigPath`
 
     ```yaml
-    - template: /eng/common/core-templates/job/renovate.yml@self
+    extends:
+      template: /eng/common/core-templates/stages/renovate.yml@self
       parameters:
         dryRun: ${{ parameters.dryRun }}
         forceRecreatePR: ${{ parameters.forceRecreatePR }}
