@@ -1,0 +1,20 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "enabledManagers": [
+    "custom.regex"
+  ],
+  "customManagers": [
+    // Update the renovateVersion variable in the Renovate job template when a new Renovate Docker version is released.
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/eng/common/core-templates/job/renovate\\.yml$/"
+      ],
+      "matchStrings": [
+        "renovateVersion\\n\\s+value:\\s*['\"]?(?<currentValue>\\d+)['\"]?"
+      ],
+      "depNameTemplate": "ghcr.io/renovatebot/renovate",
+      "datasourceTemplate": "docker"
+    }
+  ]
+}
