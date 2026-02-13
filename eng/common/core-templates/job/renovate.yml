@@ -95,41 +95,30 @@ jobs:
   steps:
   - checkout: self
     fetchDepth: 1
-  
-  # Allow write permissions for all users. This allows the Renovate log files to be written
-  # to this directory by the Renovate container.
-  - script: chmod a+w $(Build.ArtifactStagingDirectory)
-    displayName: Set permissions for log directory
+
+  - task: UseNode@1
+    displayName: Install Node.js
+    inputs:
+      version: '22.x'
+
+  - script: echo "registry=https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-npm/npm/registry/" > $(Build.SourcesDirectory)/.npmrc
+    displayName: Configure npm registry
+
+  - task: npmAuthenticate@0
+    displayName: Authenticate npm
+    inputs:
+      workingFile: $(Build.SourcesDirectory)/.npmrc
 
   - script: >
-      docker run
-      --rm
-      --env LOG_LEVEL=info
-      --env LOG_FILE_LEVEL=debug
-      --env LOG_FILE=/log/renovate-config-validator.json
-      --volume $(Build.SourcesDirectory)/${{parameters.renovateConfigPath}}:/config/renovate.json
-      --volume $(Build.ArtifactStagingDirectory):/log
-      ghcr.io/renovatebot/renovate:$(renovateVersion)
-      renovate-config-validator /config/renovate.json
+      npx --yes --package renovate@$(renovateVersion) --
+      renovate-config-validator
+      $(Build.SourcesDirectory)/${{parameters.renovateConfigPath}}
     displayName: Validate Renovate config
   
   - script: >
-      docker run
-      --env-file $(Build.SourcesDirectory)/eng/common/renovate.env
-      --env RENOVATE_FORK_TOKEN
-      --env RENOVATE_TOKEN
-      --env RENOVATE_REPOSITORIES
-      --env RENOVATE_BASE_BRANCHES
-      --env RENOVATE_DRY_RUN
-      --env RENOVATE_RECREATE_WHEN
-      --env LOG_LEVEL=info
-      --env LOG_FILE_LEVEL=debug
-      --env LOG_FILE="/log/renovate-log.json"
-      --env RENOVATE_CONFIG_FILE=/config/renovate.json
-      --volume $(Build.SourcesDirectory)/${{parameters.renovateConfigPath}}:/config/renovate.json
-      --volume $(Build.ArtifactStagingDirectory):/log
-      --rm
-      ghcr.io/renovatebot/renovate:$(renovateVersion)
+      . $(Build.SourcesDirectory)/eng/common/renovate.env &&
+      npx --yes --package renovate@$(renovateVersion) --
+      renovate
     displayName: Run Renovate
     env:
       RENOVATE_FORK_TOKEN: $(BotAccount-dotnet-renovate-bot-PAT)
@@ -138,6 +127,10 @@ jobs:
       RENOVATE_BASE_BRANCHES: ${{ convertToJson(parameters.baseBranches) }}
       RENOVATE_DRY_RUN: $(dryRunArg)
       RENOVATE_RECREATE_WHEN: $(recreateWhenArg)
+      LOG_LEVEL: info
+      LOG_FILE_LEVEL: debug
+      LOG_FILE: $(Build.ArtifactStagingDirectory)/renovate-log.json
+      RENOVATE_CONFIG_FILE: $(Build.SourcesDirectory)/${{parameters.renovateConfigPath}}
   
   - script: |
       echo "PRs created by Renovate:"
