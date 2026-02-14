@@ -7,9 +7,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
+using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Workloads.Wix;
@@ -25,6 +27,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// Used to track the number of directories created.
         /// </summary>
         private int _dirCount = 0;
+
+        /// <summary>
+        /// Used to track Files elements added for harvesting.
+        /// </summary>
+        private int _filesCount = 0;
 
         /// <summary>
         /// The Arcade package that contains the CreateWixBuildWixpack task to support signing.
@@ -51,6 +58,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// The UUID namespace to use for generating an upgrade code.
         /// </summary>
         internal static readonly Guid UpgradeCodeNamespaceUuid = Guid.Parse("C743F81B-B3B5-4E77-9F6D-474EFF3A722C");
+
+        public abstract string ProductTemplate
+        {
+            get;
+        }
 
         /// <summary>
         /// Metadata for the MSI such as package ID, version, author information, etc.
@@ -258,7 +270,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// Creates a basic WiX project using the specific toolset version and sets common properties and
         /// package references.
         /// </summary>
-        /// <param name="toolsetVersion">The WiX toolset version to use for building the project.</param>
         /// <returns>An empty project.</returns>
         /// <remarks>
         /// <para>
@@ -294,7 +305,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             // WiX only supports "full". If the property is overridden (Directory.build.props),
             // the compiler will report a warning, e.g. "warning WIX1098: The value 'embedded' is not a valid value for command line argument '-pdbType'. Using the value 'full' instead."
             wixproj.AddProperty(WixProperties.DebugType, "full");
-            wixproj.AddProperty("IntermediateOutputPath", @"obj\\$(Configuration)");
+            wixproj.AddProperty("IntermediateOutputPath", @"obj\$(Configuration)");
 
             wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.Bitness, Platform == "x86" ? "always32" : "always64");
             wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.EulaRtf, GenerateEula());
@@ -327,7 +338,39 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             // All workload MSIs (manifests or packs) need to override the default dialog set and select a minimal UI.
             wixproj.AddPackageReference(ToolsetPackages.MicrosoftWixToolsetUIExtension, WixToolsetPackageVersion);
 
+            // Extract common template source files used for all workload MSIs.
+            //EmbeddedTemplates.Extract("DependencyProvider.wxs", WixSourceDirectory);
+            EmbeddedTemplates.Extract("dotnethome_x64.wxs", WixSourceDirectory);
+            EmbeddedTemplates.Extract("Directories.wxs", WixSourceDirectory);
+            //EmbeddedTemplates.Extract("Registry.wxs", WixSourceDirectory);
+            EmbeddedTemplates.Extract(ProductTemplate, WixSourceDirectory, "Product.wxs");
+
             return wixproj;
+        }
+
+        /// <summary>
+        /// Adds a set of files to be harvested for inclusion in the MSI package. The harvested files
+        /// will be placed in a component group and added to the specified feature.
+        /// </summary>
+        /// <param name="dirId">The directory ID containing the directory path for the root of the harvested files.</param>
+        /// <param name="include">The directory to include for harvesting.</param>
+        /// <param name="wildcard">Globbing pattern to use for harvesting. The default is "**", indicating that directories should be recursed.</param>
+        /// <param name="featureId">The ID of the feature to add the generated component group holding the harvested files.</param>
+        protected void AddFiles(string dirId, string include, string wildcard = "**", string featureId = DefaultValues.PackageContentsFeatureId)
+        {
+            // Generate sequential templates, e.g., Files00.wxs, Files01.wxs, etc.
+            string idSuffix = $"{_filesCount:D2}";
+            string componentGroupId = $"CG_{idSuffix}";
+            string filesWxs = EmbeddedTemplates.Extract("Files.wxs", WixSourceDirectory, $"Files{idSuffix}.wxs");
+
+            Utils.StringReplace(filesWxs, Encoding.UTF8,
+                (MsiTokens.__COMPONENT_GROUP_ID__, componentGroupId),
+                (MsiTokens.__DIR_ID__, dirId),
+                (MsiTokens.__INCLUDE__, include + Path.DirectorySeparatorChar + wildcard));
+
+            AddComponentGroupReferenceToFeature(featureId, componentGroupId);
+
+            _filesCount++;
         }
 
         /// <summary>
@@ -350,7 +393,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
                     Encoding.UTF8, ("__WIXPACK_OUTPUT_DIR__", WixpackOutputDirectory));
 
                 // Add a package reference to pull in the CreateWixBuildWixpack task. The version 
-                // should automatically default to the "major.minor.path-*", e.g. 10.0.0-*
+                // should automatically default to the "major.minor.patch-*", e.g. 10.0.0-*
                 wixproj.AddPackageReference(_MicrosoftDotNetBuildTaskInstallers, ToolsetInfo.ArcadeVersion);
 
                 wixproj.AddProperty(WixProperties.GenerateWixpack, "true");
@@ -437,6 +480,30 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             finally
             {
                 _dirCount++;
+            }
+        }
+
+        /// <summary>
+        /// Adds a reference to a component group within a specified feature in the Product.wxs file.
+        /// </summary>
+        /// <remarks>If the specified feature is not found in the Product.wxs file, no changes are made.
+        /// This method updates the Product.wxs file in the directory specified by WixSourceDirectory.</remarks>
+        /// <param name="featureId">The identifier of the feature to which the component group reference will be added. Must match the value of
+        /// the 'Id' attribute of an existing <Feature> element.</param>
+        /// <param name="componentGroupId">The identifier of the component group to reference. This value is set as the 'Id' attribute of the new
+        /// <ComponentGroupRef> element.</param>
+        protected void AddComponentGroupReferenceToFeature(string featureId, string componentGroupId)
+        {
+            var productDoc = XDocument.Load(Path.Combine(WixSourceDirectory, "Product.wxs"));
+            var ns = productDoc.Root!.Name.Namespace;
+
+            var featureElement = productDoc.Root.Descendants(ns + "Feature")
+                .FirstOrDefault(f => f.Attribute("Id")?.Value == featureId);
+
+            if (featureElement != null)
+            {
+                featureElement.Add(new XElement(ns + "ComponentGroupRef", new XAttribute("Id", componentGroupId)));
+                productDoc.Save(Path.Combine(WixSourceDirectory, "Product.wxs"));
             }
         }
 

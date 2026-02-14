@@ -36,7 +36,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// <summary>
         /// The default value to assign to the Manufacturer property of an MSI.
         /// </summary>
-        public static readonly string Manufacturer = "Microsoft Corporation";
+        public const string Manufacturer = "Microsoft Corporation";
+
+        /// <summary>
+        /// Default Feature ID to reference when harvesting files.
+        /// </summary>
+        public const string PackageContentsFeatureId = "F_PackageContents";
 
         public static readonly string x86 = "x64";
         public static readonly string x64 = "x64";

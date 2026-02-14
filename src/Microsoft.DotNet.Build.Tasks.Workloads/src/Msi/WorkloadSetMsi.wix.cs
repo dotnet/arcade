@@ -17,6 +17,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
     {
         private WorkloadSetPackage _package;
 
+        public override string ProductTemplate => "WorkloadSetProduct.wxs";
+
         protected override string BaseOutputName => Path.GetFileNameWithoutExtension(_package.PackagePath);
 
         protected override string ProviderKeyName => 

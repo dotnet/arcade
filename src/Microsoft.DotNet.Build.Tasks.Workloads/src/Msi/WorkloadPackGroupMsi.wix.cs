@@ -24,6 +24,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// <inheritdoc />
         protected override string BaseOutputName => Metadata.Id;
 
+        public override string ProductTemplate => "Product.wxs";
+
         protected override string ProviderKeyName =>
             $"{_package.Id},{Metadata.PackageVersion},{Platform}";
 

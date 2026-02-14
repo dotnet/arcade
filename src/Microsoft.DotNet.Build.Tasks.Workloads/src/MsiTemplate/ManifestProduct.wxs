@@ -1,7 +1,8 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:dep="http://wixtoolset.org/schemas/v4/wxs/dependency">
   <Package UpgradeCode="$(UpgradeCode)" Version="$(ProductVersion)" Manufacturer="$(Manufacturer)"
-           InstallerVersion="$(InstallerVersion)" Compressed="yes"
+           InstallerVersion="$(InstallerVersion)" Compressed="yes" ProductCode="$(ProductCode)"
            Scope="perMachine" Language="$(ProductLanguage)" Name="$(ProductName)">
 
     <MediaTemplate CompressionLevel="high" EmbedCab="yes" />
@@ -22,18 +23,31 @@
             Message="A newer version of [ProductName] is alread installed." />
 
     <!-- Record the original package used to generate the MSI -->
-    <Property Id="PackageId" Value="$(var.PackageId)" />
-    <Property Id="PackageVersion" Value="$(var.PackageVersion)" />
+    <Property Id="PackageId" Value="$(PackageId)" />
+    <Property Id="PackageVersion" Value="$(PackageVersion)" />
 
-    <Feature Id="F_PackageContents">
-      <ComponentGroupRef Id="CG_PackageContents"/>
-      <?if $(var.IncludePackGroupJson) = "true" ?>
-      <ComponentGroupRef Id="CG_PackGroupJson"/>
-      <?endif?>
+    <Feature Id="F_PackageContents" AllowAbsent="no" AllowAdvertise="no" Description="Contents of the package."
+             Display="hidden" InstallDefault="local" Title="Package Contents" TypicalDefault="install"/>
+
+    <Feature Id="F_InstallationRecord" AllowAbsent="no" AllowAdvertise="no" Description="Installation record for .NET CLI management."
+             Display="hidden" InstallDefault="local" Title="Installation Record" TypicalDefault="install">
+      <Component Id="C_InstallationRecord" Bitness="$(Bitness)" Directory="TARGETDIR">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\dotnet\$(InstallationRecordKey)\$(InstallerPlatform)\$(PackageId)\$(PackageVersion)">
+          <RegistryValue Name="DependencyProviderKey" Type="string" Value="$(DependencyProviderKeyName)" KeyPath="yes"/>
+          <RegistryValue Name="ProductCode" Type="string" Value="$(ProductCode)"/>
+          <RegistryValue Name="UpgradeCode" Type="string" Value="$(UpgradeCode)"/>
+          <RegistryValue Name="ProductVersion" Type="string" Value="$(ProductVersion)" />
+          <RegistryValue Name="ProductLanguage" Type="integer" Value="$(ProductLanguage)" />
+        </RegistryKey>
+      </Component>
     </Feature>
 
-    <FeatureRef Id="F_DependencyProvider" />
-    <FeatureRef Id="F_RegistryKeys" />
+    <Feature Id="F_DependencyProvider" AllowAbsent="no" AllowAdvertise="no" Description="Support for package reference counting."
+             Display="hidden" InstallDefault="local" Title="Dependency Provider" TypicalDefault="install">
+      <Component Id="C_DependencyProvider" Bitness="always32" Directory="TARGETDIR" Guid="*">
+        <Provides Key="$(DependencyProviderKeyName)" dep:Check="yes" />
+      </Component>
+    </Feature>
 
     <WixVariable Id="WixUILicenseRtf" Value="$(var.EulaRtf)" />
     <ui:WixUI Id="WixUI_Minimal"/>

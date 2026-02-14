@@ -20,6 +20,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
     /// </summary>
     internal class WorkloadManifestMsi : MsiBase
     {
+        public override string ProductTemplate => "ManifestProduct.wxs";
+
         public WorkloadManifestPackage Package { get; }
 
         public List<WorkloadPackGroupJson> WorkloadPackGroups { get; } = new();
@@ -86,28 +88,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         {
             WixProject wixproj = base.CreateProject();
 
-            // Add source files
-            EmbeddedTemplates.Extract("ManifestProduct.wxs", WixSourceDirectory);
-            EmbeddedTemplates.Extract("DependencyProvider.wxs", WixSourceDirectory);
-            EmbeddedTemplates.Extract("dotnethome_x64.wxs", WixSourceDirectory);
-            EmbeddedTemplates.Extract("Directories.wxs", WixSourceDirectory);
-            EmbeddedTemplates.Extract("Registry.wxs", WixSourceDirectory);
-
             // Configure file harvesting.
             string packageDataDirectory = Path.Combine(Package.DestinationDirectory, "data");
-            string filesWxs = EmbeddedTemplates.Extract("Files.wxs", WixSourceDirectory);
-
-            Utils.StringReplace(filesWxs, Encoding.UTF8,
-                (MsiTokens.__DIR_ID__, AllowSideBySideInstalls ? MsiDirectories.ManifestVersionDirectory : MsiDirectories.ManifestIdDirectory),
-                (MsiTokens.__COMPONENT_GROUP_ID__, "CG_PackageContents"),
-                (MsiTokens.__INCLUDE__, packageDataDirectory + Path.DirectorySeparatorChar + "**"));
-
-            //// Configure harvesting of the manifest package contents.
-            //string wixProjectPath = Path.Combine(WixSourceDirectory, "manifest.wixproj");
-            
-            //wixproj.AddHarvestDirectory(packageDataDirectory,
-            //    AllowSideBySideInstalls ? MsiDirectories.ManifestVersionDirectory : MsiDirectories.ManifestIdDirectory,
-            //    PreprocessorDefinitionNames.SourceDir);
+            AddFiles(AllowSideBySideInstalls ? MsiDirectories.ManifestVersionDirectory : MsiDirectories.ManifestIdDirectory,
+                packageDataDirectory);
 
             foreach (var file in Directory.GetFiles(packageDataDirectory).Select(f => Path.GetFullPath(f)))
             {
@@ -115,7 +99,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             }
 
             // Add WorkloadPackGroups.json to add to workload manifest MSI
-            string? jsonContentWxs = null;
             string? jsonDirectory = null;
 
             // Default the variable to false. If we harvested workload pack group data, we'll override it
@@ -123,8 +106,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
 
             if (WorkloadPackGroups.Any())
             {
-                jsonContentWxs = Path.Combine(WixSourceDirectory, "JsonContent.wxs");
-
                 string jsonAsString = JsonSerializer.Serialize(WorkloadPackGroups, typeof(IList<WorkloadPackGroupJson>), new JsonSerializerOptions() { WriteIndented = true });
                 jsonDirectory = Path.Combine(WixSourceDirectory, "json");
                 Directory.CreateDirectory(jsonDirectory);
@@ -132,10 +113,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
                 string jsonFullPath = Path.GetFullPath(Path.Combine(jsonDirectory, "WorkloadPackGroups.json"));
                 File.WriteAllText(jsonFullPath, jsonAsString);
 
-                wixproj.AddHarvestDirectory(jsonDirectory,
-                    AllowSideBySideInstalls ? MsiDirectories.ManifestVersionDirectory : MsiDirectories.ManifestIdDirectory,
-                    "JsonSourceDir",
-                    "CG_PackGroupJson");
+                AddFiles(AllowSideBySideInstalls ? MsiDirectories.ManifestVersionDirectory : MsiDirectories.ManifestIdDirectory,
+                    jsonDirectory);
 
                 wixproj.AddPreprocessorDefinition("IncludePackGroupJson", "true");
                 wixproj.AddPreprocessorDefinition("JsonSourceDir", jsonDirectory);

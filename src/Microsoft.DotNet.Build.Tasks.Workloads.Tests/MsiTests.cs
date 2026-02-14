@@ -154,9 +154,49 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             MsiUtils.GetAllDirectories(msiPath).Select(d => d.Directory).Should().NotContain("ManifestVersionDir",
                 "because the manifest MSI supports major upgrades");
 
+            // Verify the installation record and dependency provider registry entries
+            var registryKeys = MsiUtils.GetAllRegistryKeys(msiPath);
+            string expectedProductCode = MsiUtils.GetProperty(msiPath, MsiProperty.ProductCode);
+            string installationRecordKeyName = @"SOFTWARE\Microsoft\dotnet\InstalledManifests\x64\Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.200\6.0.3";
+            string dependencyProviderKeyName = @"Software\Classes\Installer\Dependencies\Microsoft.NET.Workload.Mono.ToolChain,6.0.200,x64";
+            registryKeys.Should().Contain(r => r.Key == installationRecordKeyName &&
+                r.Name == "DependencyProviderKey" &&
+                r.Value == "Microsoft.NET.Workload.Mono.ToolChain,6.0.200,x64");
+            // The ProductCode is generated each time the MSI is built, but the value in the installation
+            // record should match the MSI's ProductCode property.
+            registryKeys.Should().Contain(r => r.Key == installationRecordKeyName &&
+                r.Root == 2 &&
+                r.Name == "ProductCode" &&
+                string.Equals(r.Value, expectedProductCode, StringComparison.OrdinalIgnoreCase));
+            registryKeys.Should().Contain(r => r.Key == installationRecordKeyName &&
+                r.Root == 2 &&
+                r.Name == "UpgradeCode" &&
+                r.Value == "{e4761192-882d-38e9-a3f4-14b6c4ad12bd}");
+            registryKeys.Should().Contain(r => r.Key == installationRecordKeyName &&
+                r.Root == 2 &&
+                r.Name == "ProductVersion" &&
+                r.Value == "1.2.3");
+            registryKeys.Should().Contain(r => r.Key == installationRecordKeyName &&
+                r.Root == 2 &&
+                r.Name == "ProductLanguage" &&
+                r.Value == "#1033");
+            registryKeys.Should().Contain(r => r.Key == dependencyProviderKeyName &&
+                r.Root == -1 &&
+                r.Name == "Version" &&
+                r.Value == "[ProductVersion]");
+            registryKeys.Should().Contain(r => r.Key == dependencyProviderKeyName &&
+                r.Root == -1 &&
+                r.Name == "DisplayName" &&
+                r.Value == "[ProductName]");
+
+            // The files should contain the workload manifest and targets.
+            var files = MsiUtils.GetAllFiles(msiPath);
+            files.Should().Contain(f => f.FileName.EndsWith("WorkloadManifest.json"));
+            files.Should().Contain(f => f.FileName.EndsWith("WorkloadManifest.targets"));
+
             // Verify that the wixpack archive was created.
             Assert.True(File.Exists(msi.GetMetadata(Metadata.Wixpack)));
-        }
+        }        
 
         [WindowsOnlyFact]
         public void ItCanBuildATemplatePackMsi()
@@ -189,8 +229,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             FileRow fileRow = MsiUtils.GetAllFiles(msiPath).FirstOrDefault();
             Assert.Contains("microsoft.ios.templates.15.2.302-preview.14.122.nupkg", fileRow.FileName);
 
-            MsiUtils.GetAllDirectories(msiPath).Select(d => d.Directory).Should().NotContain("PackageDir", "because it's a template pack");
-            MsiUtils.GetAllDirectories(msiPath).Select(d => d.Directory).Should().Contain("InstallDir", "because it's a workload pack");
+            var directories = MsiUtils.GetAllDirectories(msiPath).Select(d => d.Directory);
+            directories.Should().NotContain("PackageDir", "because it's a template pack");
+            directories.Should().Contain("InstallDir", "because it's a workload pack");
         }
 
         [WindowsOnlyFact]

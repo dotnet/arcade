@@ -21,5 +21,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// Replacement token for ComponentGroup@Id.
         /// </summary>
         public static readonly string __COMPONENT_GROUP_ID__ = nameof(__COMPONENT_GROUP_ID__);
+
+        /// <summary>
+        /// Replacement token for FeatureRef@Id.
+        /// </summary>
+        public static readonly string __FEATURE_REF_ID__ = nameof(__FEATURE_REF_ID__);
     }
 }
