@@ -349,8 +349,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         }
 
         /// <summary>
-        /// Adds a set of files to be harvested for inclusion in the MSI package. The harvested files
-        /// will be placed in a component group and added to the specified feature.
+        /// Adds a Files element to harvest files and place them in the specified component group and feature.
         /// </summary>
         /// <param name="dirId">The directory ID containing the directory path for the root of the harvested files.</param>
         /// <param name="include">The directory to include for harvesting.</param>
@@ -371,6 +370,29 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             AddComponentGroupReferenceToFeature(featureId, componentGroupId);
 
             _filesCount++;
+        }
+
+        /// <summary>
+        /// Creates a new Directory element using the specified ID and name under the specified parent directory.
+        /// </summary>
+        /// <param name="id">The identifier of the directory.</param>
+        /// <param name="name">The name of the directory.</param>
+        /// <param name="parentId">The identifier of the parent directory.</param>
+        /// <param name="sourceFile">The source file used for adding the directory and searching for parent references.</param>
+        protected void AddDirectory(string id, string name, string parentId = "DOTNETHOME", string sourceFile = "Directories.wxs")
+        {
+            var srcPath = Path.Combine(WixSourceDirectory, sourceFile);
+            var productDoc = XDocument.Load(srcPath);
+            var ns = productDoc.Root!.Name.Namespace;
+
+            var parentDirectoryElement = productDoc.Root.Descendants(ns + "Directory")
+                .FirstOrDefault(f => f.Attribute("Id")?.Value == parentId);
+
+            if (parentDirectoryElement != null)
+            {
+                parentDirectoryElement.Add(new XElement(ns + "Directory", new XAttribute("Id", id), new XAttribute("Name", name)));
+                productDoc.Save(srcPath);
+            }
         }
 
         /// <summary>
@@ -471,7 +493,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         /// <param name="id">The ID of the directory.</param>
         /// <param name="reference">The ID of the directory reference (parent directory).</param>
 
-        protected void AddDirectory(string name, string id, string reference)
+        protected void AddDirectory2(string name, string id, string reference)
         {
             try
             {

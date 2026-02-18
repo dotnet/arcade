@@ -12,7 +12,7 @@
     <?if $(InstallerPlatform)~=x64?>
     <CustomActionRef Id="Set_DOTNETHOME_NON_NATIVE_ARCHITECTURE" />
     <?endif?>
-  </Fragment>  
+  </Fragment>
 
   <?ifdef SdkFeatureBandVersion?>
   <Fragment>

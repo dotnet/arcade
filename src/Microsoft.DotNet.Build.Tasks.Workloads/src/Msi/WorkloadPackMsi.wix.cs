@@ -43,24 +43,20 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         protected override WixProject CreateProject()
         {
             WixProject wixproj = base.CreateProject();
-            string wixProjectPath = Path.Combine(WixSourceDirectory, "pack.wixproj");
 
-            EmbeddedTemplates.Extract("Product.wxs", WixSourceDirectory);
-            EmbeddedTemplates.Extract("DependencyProvider.wxs", WixSourceDirectory);
-            EmbeddedTemplates.Extract("dotnethome_x64.wxs", WixSourceDirectory);
-            EmbeddedTemplates.Extract("Directories.wxs", WixSourceDirectory);
-            EmbeddedTemplates.Extract("WorkloadPackDirectories.wxs", WixSourceDirectory);
-            EmbeddedTemplates.Extract("Registry.wxs", WixSourceDirectory);
+            // Add the default installation directory based on the workload pack kind.
+            AddDirectory("InstallDir", GetInstallDir(_package.Kind));
+            string directoryReference = "InstallDir";
 
-            string directoryReference = _package.Kind == WorkloadPackKind.Library || _package.Kind == WorkloadPackKind.Template ?
-                "InstallDir" : "VersionDir";
+            if (_package.Kind != WorkloadPackKind.Library && _package.Kind != WorkloadPackKind.Template)
+            {
+                AddDirectory("PackageDir", Metadata.Id, "InstallDir");
+                AddDirectory("VersionDir", Metadata.PackageVersion.ToString(), "PackageDir");
+                // Override the directory refernece for harvesting.
+                directoryReference = "VersionDir";
+            }
 
-            wixproj.AddHarvestDirectory(_package.DestinationDirectory, directoryReference,
-                PreprocessorDefinitionNames.SourceDir);
-
-            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.InstallDir, $"{GetInstallDir(_package.Kind)}");
-            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.PackKind, $"{_package.Kind}");
-            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.SourceDir, $"{_package.DestinationDirectory}");
+            AddFiles(directoryReference, _package.DestinationDirectory);
 
             return wixproj;
         }
