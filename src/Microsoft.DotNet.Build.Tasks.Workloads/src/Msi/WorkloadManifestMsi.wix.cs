@@ -7,8 +7,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Text;
+using System.Text.Json;
+using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Workloads.Wix;
@@ -122,17 +123,17 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
                 NuGetPackageFiles[jsonFullPath] = @"\data\extractedManifest\" + Path.GetFileName(jsonFullPath);
             }
 
-            // Add preprocessor definitions
-            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.SourceDir, $"{packageDataDirectory}");
-            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.SdkFeatureBandVersion, $"{Package.SdkFeatureBand}");
+            // Add manifest directories.
+            AddDirectory("SdkManifestDir", "sdk-manifests");
+            AddDirectory("SdkFeatureBandVersionDir", $"{Package.SdkFeatureBand}", "SdkManifestDir");
 
             // The temporary installer in the SDK (6.0) used lower invariants of the manifest ID.
             // We have to do the same to ensure the keypath generation produces stable GUIDs.
-            wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.ManifestId, $"{Package.ManifestId.ToLowerInvariant()}");
+            AddDirectory("ManifestIdDir", $"{Package.ManifestId.ToLowerInvariant()}", "SdkFeatureBandVersionDir");
 
             if (AllowSideBySideInstalls)
             {
-                wixproj.AddPreprocessorDefinition("ManifestVersion", Package.GetManifest().Version);
+                AddDirectory("ManifestVersionDir", Package.GetManifest().Version, "ManifestIdDir");
             }
 
             return wixproj;

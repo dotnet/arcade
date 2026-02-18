@@ -14,39 +14,12 @@
     <?endif?>
   </Fragment>
 
-  <?ifdef SdkFeatureBandVersion?>
-  <Fragment>
-    <DirectoryRef Id="DOTNETHOME">
-      <Directory Id="SdkManifestsDir" Name="sdk-manifests">
-        <Directory Id="SdkFeatureBandVersionDir" Name="$(SdkFeatureBandVersion)" />
-      </Directory>
-    </DirectoryRef>
-  </Fragment>
-  <?endif?>
-
   <?ifdef WorkloadSetVersion?>
   <Fragment>
     <DirectoryRef Id="SdkFeatureBandVersionDir">
       <Directory Id="WorkloadSetsDir" Name="workloadsets">
         <Directory Id="WorkloadSetVersionDir" Name="$(WorkloadSetVersion)" />
       </Directory>
-    </DirectoryRef>
-  </Fragment>
-  <?endif?>
-
-  <?ifdef ManifestId?>
-  <Fragment>
-    <DirectoryRef Id="SdkFeatureBandVersionDir">
-      <Directory Id="ManifestIdDir" Name="$(ManifestId)">
-      </Directory>
-    </DirectoryRef>
-  </Fragment>
-  <?endif?>
-
-  <?ifdef ManifestVersion?>
-  <Fragment>
-    <DirectoryRef Id="ManifestIdDir">
-      <Directory Id="ManifestVersionDir" Name="$(ManifestVersion)" />
     </DirectoryRef>
   </Fragment>
   <?endif?>
