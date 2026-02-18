@@ -27,3 +27,5 @@ extends:
     gitHubRepo: 'dotnet/arcade'
     dryRun: ${{ parameters.dryRun }}
     forceRecreatePR: ${{ parameters.forceRecreatePR }}
+    baseBranches:
+    - dev/mthalman/renovate

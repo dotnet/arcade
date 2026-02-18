@@ -43,6 +43,11 @@ parameters:
     image: build.azurelinux.3.amd64
     os: linux
 
+# Renovate version used in the container image tag.
+- name: renovateVersion
+  default: 42
+  type: number
+
 # Pool configuration for SDL analysis.
 - name: sdlPool
   type: object
@@ -64,6 +69,9 @@ extends:
     pool: ${{ parameters.pool }}
     sdl:
       sourceAnalysisPool: ${{ parameters.sdlPool }}
+    containers:
+      RenovateContainer:
+        image: mcr.microsoft.com/dotnet-buildtools/prereqs:azurelinux-3.0-renovate-${{ parameters.renovateVersion }}-amd64
     stages:
     - stage: Renovate
       displayName: Run Renovate
