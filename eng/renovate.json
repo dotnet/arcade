@@ -4,17 +4,18 @@
     "custom.regex"
   ],
   "customManagers": [
-    // Update the renovateVersion variable in the Renovate job template when a new Renovate Docker version is released.
+    // Update the renovateVersion parameter in the Renovate stages template when a new Renovate Docker version is released.
     {
       "customType": "regex",
       "managerFilePatterns": [
-        "/eng/common/core-templates/job/renovate\\.yml$/"
+        "/eng/common/core-templates/stages/renovate\\.yml$/"
       ],
       "matchStrings": [
-        "renovateVersion\\n\\s+value:\\s*['\"]?(?<currentValue>\\d+)['\"]?"
+        "renovateVersion\\n\\s+default:\\s*(?<currentValue>\\d+)"
       ],
-      "depNameTemplate": "ghcr.io/renovatebot/renovate",
-      "datasourceTemplate": "docker"
+      "depNameTemplate": "mcr.microsoft.com/dotnet-buildtools/prereqs",
+      "datasourceTemplate": "docker",
+      "extractVersionTemplate": "^azurelinux-3\\.0-renovate-(?<version>\\d+)-amd64$"
     }
   ]
 }

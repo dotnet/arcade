@@ -64,6 +64,7 @@ parameters:
 jobs:
 - job: Renovate
   displayName: Run Renovate
+  container: RenovateContainer
   variables:
   - group: dotnet-renovate-bot
   # The Renovate version is automatically updated by https://github.com/dotnet/arcade/blob/main/azure-pipelines-renovate.yml.
@@ -96,28 +97,15 @@ jobs:
   - checkout: self
     fetchDepth: 1
 
-  - task: UseNode@1
-    displayName: Install Node.js
-    inputs:
-      version: '22.x'
-
-  - script: echo "registry=https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-public-npm/npm/registry/" > $(Build.SourcesDirectory)/.npmrc
-    displayName: Configure npm registry
-
-  - task: npmAuthenticate@0
-    displayName: Authenticate npm
-    inputs:
-      workingFile: $(Build.SourcesDirectory)/.npmrc
-
-  - script: >
-      npx --yes --package renovate@$(renovateVersion) --
-      renovate-config-validator
-      $(Build.SourcesDirectory)/${{parameters.renovateConfigPath}}
+  - script: renovate-config-validator $(Build.SourcesDirectory)/${{parameters.renovateConfigPath}}
     displayName: Validate Renovate config
+    env:
+      LOG_LEVEL: info
+      LOG_FILE_LEVEL: debug
+      LOG_FILE: $(Build.ArtifactStagingDirectory)/renovate-config-validator.json
   
-  - script: >
-      . $(Build.SourcesDirectory)/eng/common/renovate.env &&
-      npx --yes --package renovate@$(renovateVersion) --
+  - script: |
+      . $(Build.SourcesDirectory)/eng/common/renovate.env
       renovate
     displayName: Run Renovate
     env:
@@ -129,7 +117,7 @@ jobs:
       RENOVATE_RECREATE_WHEN: $(recreateWhenArg)
       LOG_LEVEL: info
       LOG_FILE_LEVEL: debug
-      LOG_FILE: $(Build.ArtifactStagingDirectory)/renovate-log.json
+      LOG_FILE: $(Build.ArtifactStagingDirectory)/renovate.json
       RENOVATE_CONFIG_FILE: $(Build.SourcesDirectory)/${{parameters.renovateConfigPath}}
   
   - script: |
