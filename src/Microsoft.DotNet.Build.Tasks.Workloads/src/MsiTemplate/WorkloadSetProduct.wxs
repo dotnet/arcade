@@ -1,5 +1,6 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
-<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui">
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:ui="http://wixtoolset.org/schemas/v4/wxs/ui"
+     xmlns:dep="http://wixtoolset.org/schemas/v4/wxs/dependency">
   <Package ProductCode="$(ProductCode)" Name="$(ProductName)" Language="$(ProductLanguage)" Version="$(ProductVersion)"
            Manufacturer="$(Manufacturer)" UpgradeCode="$(UpgradeCode)"
            InstallerVersion="$(InstallerVersion)" Compressed="yes" Scope="perMachine" UpgradeStrategy="$(UpgradeStrategy)">
@@ -10,9 +11,11 @@
     <Property Id="PackageId" Value="$(PackageId)" />
     <Property Id="PackageVersion" Value="$(PackageVersion)" />
 
-    <Feature Id="F_PackageContents">
-      <ComponentGroupRef Id="CG_PackageContents"/>
+    <Feature Id="F_PackageContents" AllowAbsent="no" AllowAdvertise="no" Description="Contents of the package."
+             Display="hidden" InstallDefault="local" Title="Package Contents" TypicalDefault="install"/>
 
+    <Feature Id="F_InstallationRecord" AllowAbsent="no" AllowAdvertise="no" Description="Installation record for .NET CLI management."
+             Display="hidden" InstallDefault="local" Title="Installation Record" TypicalDefault="install">
       <!-- Workload set installation record, similar to workload pack records. -->
       <Component Id="C_InstalledWorkloadSet" Bitness="$(Bitness)" Directory="TARGETDIR">
         <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\dotnet\$(InstallationRecordKey)\$(InstallerPlatform)\$(SdkFeatureBandVersion)\$(PackageVersion)">
@@ -25,7 +28,12 @@
       </Component>
     </Feature>
 
-    <FeatureRef Id="F_DependencyProvider" />
+    <Feature Id="F_DependencyProvider" AllowAbsent="no" AllowAdvertise="no" Description="Support for package reference counting."
+             Display="hidden" InstallDefault="local" Title="Dependency Provider" TypicalDefault="install">
+      <Component Id="C_DependencyProvider" Bitness="always32" Directory="TARGETDIR" Guid="*">
+        <Provides Key="$(DependencyProviderKeyName)" dep:Check="yes" />
+      </Component>
+    </Feature>
 
     <WixVariable Id="WixUILicenseRtf" Value="$(var.EulaRtf)" />
     <ui:WixUI Id="WixUI_Minimal"/>

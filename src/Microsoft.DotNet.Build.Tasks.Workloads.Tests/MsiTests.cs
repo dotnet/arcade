@@ -11,7 +11,6 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Workloads.Msi;
 using Microsoft.NET.Sdk.WorkloadManifestReader;
-using Microsoft.Win32;
 using WixToolset.Dtf.WindowsInstaller;
 using Xunit;
 using static Microsoft.DotNet.Build.Tasks.Workloads.Msi.WorkloadManifestMsi;
@@ -21,47 +20,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
     [Collection("MSI tests")]
     public class MsiTests : TestBase
     {
-        private static void ValidateInstallationRecord(IEnumerable<RegistryRow> registryKeys, 
-            string installationRecordKeyName, string expectedProviderKey, string expectedProductCode, string expectedUpgradeCode,
-            string expectedProductVersion,
-            string expectedProductLanguage = "#1033")
-        {
-            registryKeys.Should().Contain(r => r.Key == installationRecordKeyName &&
-                r.Root == 2 &&
-                r.Name == "DependencyProviderKey" &&
-                r.Value == expectedProviderKey);
-            registryKeys.Should().Contain(r => r.Key == installationRecordKeyName &&
-                r.Root == 2 &&
-                r.Name == "ProductCode" &&
-                string.Equals(r.Value, expectedProductCode, StringComparison.OrdinalIgnoreCase));
-            registryKeys.Should().Contain(r => r.Key == installationRecordKeyName &&
-                r.Root == 2 &&
-                r.Name == "UpgradeCode" &&
-                string.Equals(r.Value, expectedUpgradeCode, StringComparison.OrdinalIgnoreCase));
-            registryKeys.Should().Contain(r => r.Key == installationRecordKeyName &&
-                r.Root == 2 &&
-                r.Name == "ProductVersion" &&
-                r.Value == expectedProductVersion);
-            registryKeys.Should().Contain(r => r.Key == installationRecordKeyName &&
-                r.Root == 2 &&
-                r.Name == "ProductLanguage" &&
-                r.Value == expectedProductLanguage);
-        }
-
-        private static void ValidateDependencyProviderKey(IEnumerable<RegistryRow> registryKeys, string dependencyProviderKeyName)
-        {
-            // Dependency provider entries references the ProductVersion and ProductName properties. These
-            // properties are set by the installer service at install time.
-            registryKeys.Should().Contain(r => r.Key == dependencyProviderKeyName &&
-                    r.Root == -1 &&
-                    r.Name == "Version" &&
-                    r.Value == "[ProductVersion]");
-            registryKeys.Should().Contain(r => r.Key == dependencyProviderKeyName &&
-                r.Root == -1 &&
-                r.Name == "DisplayName" &&
-                r.Value == "[ProductName]");
-        }
-
         /// <summary>
         /// Helper method for generating workload manifest MSIs.
         /// </summary>
@@ -97,9 +55,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             WorkloadManifestPackage manifestPackage = new(packageItem, packageContentsDirectory, new Version("1.2.3"));
             // Parse the manifest to extract information related to workload packs so we can extract a specific pack.
             WorkloadManifest manifest = manifestPackage.GetManifest();
-            //WorkloadPackId packId = new("Microsoft.NET.Runtime.Emscripten.Sdk");
             WorkloadPackId packId = new("Microsoft.NET.Runtime.Emscripten.Python");
-            // Microsoft.NET.Runtime.Emscripten.Python
             WorkloadPack pack = manifest.Packs[packId];
 
             var sourcePackages = WorkloadPackPackage.GetSourcePackages(TestAssetsPath, pack);
@@ -118,8 +74,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.Equal("x64;1033", si.Template);
 
             // Verify pack directories
-            MsiUtils.GetAllDirectories(msiPath).Select(d => d.Directory).Should().Contain("PackageDir", "because it's an SDK pack");
-            MsiUtils.GetAllDirectories(msiPath).Select(d => d.Directory).Should().Contain("InstallDir", "because it's a workload pack");
+            var directories = MsiUtils.GetAllDirectories(msiPath);
+            directories.Select(d => d.Directory).Should().Contain("PackageDir", "because it's an SDK pack");
+            directories.Select(d => d.Directory).Should().Contain("InstallDir", "because it's a workload pack");
 
             // UpgradeCode is predictable/stable for pack MSIs since they are seeded using the package identity (ID & version).
             string upgradeCode = MsiUtils.GetProperty(msiPath, MsiProperty.UpgradeCode);
@@ -128,13 +85,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             // Verify the installation record and dependency provider registry entries
             var registryKeys = MsiUtils.GetAllRegistryKeys(msiPath);
             string expectedProductCode = MsiUtils.GetProperty(msiPath, MsiProperty.ProductCode);
-            string installationRecordKeyName = @"SOFTWARE\Microsoft\dotnet\InstalledPacks\x64\Microsoft.NET.Runtime.Emscripten.2.0.23.Python.win-x64\6.0.4";
-            string dependencyProviderKeyName = @"Software\Classes\Installer\Dependencies\Microsoft.NET.Runtime.Emscripten.2.0.23.Python.win-x64,6.0.4,x64";
+            string installationRecordKey = @"SOFTWARE\Microsoft\dotnet\InstalledPacks\x64\Microsoft.NET.Runtime.Emscripten.2.0.23.Python.win-x64\6.0.4";
+            string dependencyProviderKey = @"Software\Classes\Installer\Dependencies\Microsoft.NET.Runtime.Emscripten.2.0.23.Python.win-x64,6.0.4,x64";
 
-            ValidateInstallationRecord(registryKeys, installationRecordKeyName,
+            ValidateInstallationRecord(registryKeys, installationRecordKey,
                 "Microsoft.NET.Runtime.Emscripten.2.0.23.Python.win-x64,6.0.4,x64",
                 expectedProductCode, upgradeCode, "6.0.4.0");
-            ValidateDependencyProviderKey(registryKeys, dependencyProviderKeyName);
+            ValidateDependencyProviderKey(registryKeys, dependencyProviderKey);
         }
 
         [WindowsOnlyFact]
@@ -200,13 +157,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             // Verify the installation record and dependency provider registry entries
             var registryKeys = MsiUtils.GetAllRegistryKeys(msiPath);
             string expectedProductCode = MsiUtils.GetProperty(msiPath, MsiProperty.ProductCode);
-            string installationRecordKeyName = @"SOFTWARE\Microsoft\dotnet\InstalledManifests\x64\Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.200\6.0.3";
-            string dependencyProviderKeyName = @"Software\Classes\Installer\Dependencies\Microsoft.NET.Workload.Mono.ToolChain,6.0.200,x64";
+            string installationRecordKey = @"SOFTWARE\Microsoft\dotnet\InstalledManifests\x64\Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.200\6.0.3";
+            string dependencyProviderKey = @"Software\Classes\Installer\Dependencies\Microsoft.NET.Workload.Mono.ToolChain,6.0.200,x64";
 
-            ValidateInstallationRecord(registryKeys, installationRecordKeyName,
+            ValidateInstallationRecord(registryKeys, installationRecordKey,
                 "Microsoft.NET.Workload.Mono.ToolChain,6.0.200,x64",
                 expectedProductCode, upgradeCode, "1.2.3");
-            ValidateDependencyProviderKey(registryKeys, dependencyProviderKeyName);
+            ValidateDependencyProviderKey(registryKeys, dependencyProviderKey);
 
             // The File table should contain the workload manifest and targets. There may be additional
             // localized content for the manifests. Their presence is neither required nor critical to
@@ -217,7 +174,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 
             // Verify that the wixpack archive was created.
             Assert.True(File.Exists(msi.GetMetadata(Metadata.Wixpack)));
-        }        
+        }
 
         [WindowsOnlyFact]
         public void ItCanBuildATemplatePackMsi()
@@ -258,12 +215,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             // Verify the installation record and dependency provider registry entries
             var registryKeys = MsiUtils.GetAllRegistryKeys(msiPath);
             string expectedProductCode = MsiUtils.GetProperty(msiPath, MsiProperty.ProductCode);
-            string installationRecordKeyName = @"SOFTWARE\Microsoft\dotnet\InstalledPacks\x64\Microsoft.iOS.Templates\15.2.302-preview.14.122";
-            string dependencyProviderKeyName = @"Software\Classes\Installer\Dependencies\Microsoft.iOS.Templates,15.2.302-preview.14.122,x64";
+            string installationRecordKey = @"SOFTWARE\Microsoft\dotnet\InstalledPacks\x64\Microsoft.iOS.Templates\15.2.302-preview.14.122";
+            string dependencyProviderKey = @"Software\Classes\Installer\Dependencies\Microsoft.iOS.Templates,15.2.302-preview.14.122,x64";
 
-            ValidateInstallationRecord(registryKeys, installationRecordKeyName,
+            ValidateInstallationRecord(registryKeys, installationRecordKey,
                 "Microsoft.iOS.Templates,15.2.302-preview.14.122,x64", expectedProductCode, upgradeCode, "15.2.302.0");
-            ValidateDependencyProviderKey(registryKeys, dependencyProviderKeyName);
+            ValidateDependencyProviderKey(registryKeys, dependencyProviderKey);
         }
 
         [WindowsOnlyFact]

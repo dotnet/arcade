@@ -6,8 +6,10 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Packaging;
 using System.Linq;
 using System.Text.Json;
+using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Workloads.Wix;
 
@@ -21,12 +23,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
 
         protected override string BaseOutputName => Path.GetFileNameWithoutExtension(_package.PackagePath);
 
-        protected override string ProviderKeyName => 
+        protected override string ProviderKeyName =>
             $"Microsoft.NET.Workload.Set,{_package.SdkFeatureBand},{_package.PackageVersion},{Platform}";
 
         protected override string? InstallationRecordKey => "InstalledWorkloadSets";
 
-        protected override Guid UpgradeCode => 
+        protected override Guid UpgradeCode =>
             Utils.CreateUuid(UpgradeCodeNamespaceUuid, $"{_package.Identity};{Platform}");
 
         protected override string? MsiPackageType => DefaultValues.WorkloadSetMsi;
@@ -44,14 +46,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
         {
             WixProject wixproj = base.CreateProject();
 
-            EmbeddedTemplates.Extract("DependencyProvider.wxs", WixSourceDirectory);
-            EmbeddedTemplates.Extract("Directories.wxs", WixSourceDirectory);
-            EmbeddedTemplates.Extract("dotnethome_x64.wxs", WixSourceDirectory);
-            EmbeddedTemplates.Extract("WorkloadSetProduct.wxs", WixSourceDirectory);
-
             string packageDataDirectory = Path.Combine(_package.DestinationDirectory, "data");
-            wixproj.AddHarvestDirectory(packageDataDirectory, MsiDirectories.WorkloadSetVersionDirectory,
-                PreprocessorDefinitionNames.SourceDir);
+
+            AddFiles(MsiDirectories.WorkloadSetVersionDirectory, packageDataDirectory);
+
+            AddDirectory("SdkManifestDir", "sdk-manifests");
+            AddDirectory("SdkFeatureBandVersionDir", $"{_package.SdkFeatureBand}", "SdkManifestDir");
+            AddDirectory("WorkloadSetsDir", $"workloadsets", "SdkFeatureBandVersionDir");
+            AddDirectory("WorkloadSetVersionDir", $"{_package.WorkloadSetVersion}", "WorkloadSetsDir");
 
             wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.SourceDir, $"{packageDataDirectory}");
             wixproj.AddPreprocessorDefinition(PreprocessorDefinitionNames.SdkFeatureBandVersion, $"{_package.SdkFeatureBand}");

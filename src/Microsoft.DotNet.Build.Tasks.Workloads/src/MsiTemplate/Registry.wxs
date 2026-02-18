@@ -4,7 +4,7 @@
     <Feature Id="F_RegistryKeys" AllowAbsent="no" AllowAdvertise="no" Description="Registry keys."
              Display="hidden" InstallDefault="local" Level="1" Title="Workload Pack Registration" TypicalDefault="install">
       <Component Id="C_InstalledPack" Bitness="$(Bitness)" Directory="TARGETDIR">
-        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\dotnet\$(InstallationRecordKey)\$(InstallerPlatform)\$(PackageId)\$(PackageVersion)">
+        <RegistryKey Id="R_InstallRecord" Root="HKLM" Key="SOFTWARE\Microsoft\dotnet\$(InstallationRecordKey)\$(InstallerPlatform)\$(PackageId)\$(PackageVersion)">
           <RegistryValue Name="DependencyProviderKey" Type="string" Value="$(DependencyProviderKeyName)" KeyPath="yes"/>
           <RegistryValue Name="ProductCode" Type="string" Value="$(ProductCode)"/>
           <RegistryValue Name="UpgradeCode" Type="string" Value="$(UpgradeCode)"/>

@@ -2,10 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using Microsoft.Arcade.Test.Common;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Workloads.Msi;
-using Microsoft.Arcade.Test.Common;
+using FluentAssertions;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 {
@@ -35,5 +37,46 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         /// </summary>
         public string GetTestCaseDirectory() =>
             Path.Combine(TestOutputRoot, Path.GetFileNameWithoutExtension(Path.GetRandomFileName()));
+
+        protected static void ValidateInstallationRecord(IEnumerable<RegistryRow> registryKeys,
+            string installationRecordKey, string expectedProviderKey, string expectedProductCode, string expectedUpgradeCode,
+            string expectedProductVersion,
+            string expectedProductLanguage = "#1033")
+        {
+            registryKeys.Should().Contain(r => r.Key == installationRecordKey &&
+                r.Root == 2 &&
+                r.Name == "DependencyProviderKey" &&
+                r.Value == expectedProviderKey);
+            registryKeys.Should().Contain(r => r.Key == installationRecordKey &&
+                r.Root == 2 &&
+                r.Name == "ProductCode" &&
+                string.Equals(r.Value, expectedProductCode, StringComparison.OrdinalIgnoreCase));
+            registryKeys.Should().Contain(r => r.Key == installationRecordKey &&
+                r.Root == 2 &&
+                r.Name == "UpgradeCode" &&
+                string.Equals(r.Value, expectedUpgradeCode, StringComparison.OrdinalIgnoreCase));
+            registryKeys.Should().Contain(r => r.Key == installationRecordKey &&
+                r.Root == 2 &&
+                r.Name == "ProductVersion" &&
+                r.Value == expectedProductVersion);
+            registryKeys.Should().Contain(r => r.Key == installationRecordKey &&
+                r.Root == 2 &&
+                r.Name == "ProductLanguage" &&
+                r.Value == expectedProductLanguage);
+        }
+
+        protected static void ValidateDependencyProviderKey(IEnumerable<RegistryRow> registryKeys, string dependencyProviderKey)
+        {
+            // Dependency provider entries references the ProductVersion and ProductName properties. These
+            // properties are set by the installer service at install time.
+            registryKeys.Should().Contain(r => r.Key == dependencyProviderKey &&
+                    r.Root == -1 &&
+                    r.Name == "Version" &&
+                    r.Value == "[ProductVersion]");
+            registryKeys.Should().Contain(r => r.Key == dependencyProviderKey &&
+                r.Root == -1 &&
+                r.Name == "DisplayName" &&
+                r.Value == "[ProductName]");
+        }
     }
 }

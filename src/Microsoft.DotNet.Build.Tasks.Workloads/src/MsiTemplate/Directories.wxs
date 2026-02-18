@@ -13,14 +13,4 @@
     <CustomActionRef Id="Set_DOTNETHOME_NON_NATIVE_ARCHITECTURE" />
     <?endif?>
   </Fragment>
-
-  <?ifdef WorkloadSetVersion?>
-  <Fragment>
-    <DirectoryRef Id="SdkFeatureBandVersionDir">
-      <Directory Id="WorkloadSetsDir" Name="workloadsets">
-        <Directory Id="WorkloadSetVersionDir" Name="$(WorkloadSetVersion)" />
-      </Directory>
-    </DirectoryRef>
-  </Fragment>
-  <?endif?>
 </Wix>
