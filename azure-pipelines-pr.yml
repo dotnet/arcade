@@ -153,6 +153,7 @@ stages:
         download: true
       workspace:
         clean: all
+      enablePublishTestResults: true
       jobs:
       - job: Windows_NT
         timeoutInMinutes: 90
@@ -268,6 +269,7 @@ stages:
         download: true
       workspace:
         clean: all
+      enablePublishTestResults: true
       jobs:
       - job: Apple_Simulators
         timeoutInMinutes: 90
