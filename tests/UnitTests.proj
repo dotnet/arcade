@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.Build.NoTargets" DefaultTargets="Test">
+<Project DefaultTargets="Test">
 
   <!-- <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.props"/> -->
   <!-- Using locally built version of the helix sdk, normal projects replace the below Import and PropertyGroup with the SDK import above-->
