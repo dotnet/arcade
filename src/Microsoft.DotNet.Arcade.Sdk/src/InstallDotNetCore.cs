@@ -13,6 +13,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
@@ -106,8 +107,16 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                     }
 
                                     SemanticVersion version = null;
+                                    string channel = null;
+                                    
+                                    // Check if the version is in major.minor format (e.g., "8.0", "10.0")
+                                    // This format should use the -channel parameter instead of -version
+                                    if (IsTwoPartVersion(item.Key))
+                                    {
+                                        channel = item.Key;
+                                    }
                                     // Try to parse version
-                                    if (!SemanticVersion.TryParse(item.Key, out version))
+                                    else if (!SemanticVersion.TryParse(item.Key, out version))
                                     {
                                         var propertyName = item.Key.Trim(s_keyTrimChars);
 
@@ -123,9 +132,12 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                         }
                                     }
 
-                                    if (version != null)
+                                    if (version != null || channel != null)
                                     {
-                                        string arguments = $"-runtime \"{runtimeItem.Key}\" -version \"{version.ToNormalizedString()}\"";
+                                        string arguments = channel != null 
+                                            ? $"-runtime \"{runtimeItem.Key}\" -channel \"{channel}\"" 
+                                            : $"-runtime \"{runtimeItem.Key}\" -version \"{version.ToNormalizedString()}\"";
+                                        
                                         if (!string.IsNullOrEmpty(architecture))
                                         {
                                             arguments += $" -architecture {architecture}";
@@ -202,6 +214,21 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
             // let dotnet-install.sh/ps1 infer a default arch
             return null;
+        }
+
+        /*
+         * Checks if a version string is in major.minor format (e.g., "8.0", "10.0").
+         * Returns true if the version has exactly two numeric parts separated by a dot.
+         */
+        private bool IsTwoPartVersion(string versionString)
+        {
+            if (string.IsNullOrWhiteSpace(versionString))
+            {
+                return false;
+            }
+
+            // Match exactly two numeric parts separated by a dot
+            return Regex.IsMatch(versionString, @"^\d+\.\d+$");
         }
 
         /*

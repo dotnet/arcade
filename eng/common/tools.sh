@@ -183,6 +183,7 @@ function InstallDotNet {
   local root=$1
   local version=$2
   local runtime=$4
+  local channel="${8:-}"
 
   local dotnetVersionLabel="'$runtime v$version'"
   if [[ -n "${4:-}" ]] && [ "$4" != 'sdk' ]; then
@@ -201,21 +202,32 @@ function InstallDotNet {
       *)
         ;;
     esac
-    runtimePath="$runtimePath/$version"
+    
+    # When using channel, we can't check for an existing installation by version
+    # since we don't know which version will be installed
+    if [[ -z "$channel" ]]; then
+      runtimePath="$runtimePath/$version"
+      dotnetVersionLabel="runtime toolset '$runtime/$architecture v$version'"
 
-    dotnetVersionLabel="runtime toolset '$runtime/$architecture v$version'"
-
-    if [ -d "$runtimePath" ]; then
-      echo "  Runtime toolset '$runtime/$architecture v$version' already installed."
-      local installSuccess=1
-      return
+      if [ -d "$runtimePath" ]; then
+        echo "  Runtime toolset '$runtime/$architecture v$version' already installed."
+        local installSuccess=1
+        return
+      fi
+    else
+      dotnetVersionLabel="runtime toolset '$runtime/$architecture channel $channel'"
     fi
   fi
 
   GetDotNetInstallScript "$root"
   local install_script=$_GetDotNetInstallScript
 
-  local installParameters=(--version $version --install-dir "$root")
+  # Use --channel if specified, otherwise use --version
+  if [[ -n "$channel" ]]; then
+    local installParameters=(--channel $channel --install-dir "$root")
+  else
+    local installParameters=(--version $version --install-dir "$root")
+  fi
 
   if [[ -n "${3:-}" ]] && [ "$3" != 'unset' ]; then
     installParameters+=(--architecture $3)
