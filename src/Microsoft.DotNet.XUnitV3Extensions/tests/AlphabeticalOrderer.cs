@@ -9,8 +9,8 @@ using Xunit.v3;
 namespace Microsoft.DotNet.XUnitExtensions.Tests
 {
     /// <summary>
-    /// Orders test cases alphabetically so that static-state validation tests
-    /// (prefixed "Validate") run after the tests that set the state.
+    /// Orders test cases alphabetically so that we can test 'failing' test cases through
+    /// side-effects.
     /// </summary>
     public class AlphabeticalOrderer : ITestCaseOrderer
     {
