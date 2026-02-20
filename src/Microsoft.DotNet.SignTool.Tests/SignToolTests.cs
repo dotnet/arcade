@@ -3309,6 +3309,12 @@ $@"
         [MemberData(nameof(GetSignableExtensions))]
         public void MissingCertificateNameButExtensionIsIgnored(string extension)
         {
+            //  test.deb contains symbolic links which aren't supported on windows.
+            if (extension == ".deb" && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return;
+            }
+
             var needContent = new Dictionary<string, (string, string[])>(StringComparer.OrdinalIgnoreCase)
             {
                 { ".dll", ("EmptyPKT.dll", []) },
