@@ -1956,7 +1956,7 @@ $@"
         }
 
 #if !NETFRAMEWORK
-        [Fact]
+        [UnixOnlyFact]
         public void CheckDebSigning()
         {
             // List of files to be considered for signing
