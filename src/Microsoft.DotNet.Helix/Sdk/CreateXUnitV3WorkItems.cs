@@ -46,6 +46,13 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string XUnitWorkItemTimeout { get; set; }
 
         /// <summary>
+        /// Whether to use Microsoft Testing Platform (MTP) command-line arguments.
+        /// When true, uses --report-xunit/--auto-reporters off style arguments.
+        /// When false, uses legacy -xml/-noAutoReporters style arguments.
+        /// </summary>
+        public bool UseMicrosoftTestingPlatformRunner { get; set; }
+
+        /// <summary>
         /// An array of ITaskItems of type HelixWorkItem
         /// </summary>
         [Output]
@@ -102,10 +109,14 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             // XUnit v3 tests are self-hosting - run the assembly directly with dotnet exec
+            string resultArgs = UseMicrosoftTestingPlatformRunner
+                ? "--results-directory . --report-xunit --report-xunit-filename testResults.xml --auto-reporters off"
+                : "-xml testResults.xml -noAutoReporters";
+
             string command = $"{PathToDotnet} exec --roll-forward Major " +
                 $"--runtimeconfig {assemblyBaseName}.runtimeconfig.json " +
                 $"--depsfile {assemblyBaseName}.deps.json " +
-                $"{assemblyName} -xml testResults.xml -noAutoReporters" +
+                $"{assemblyName} {resultArgs}" +
                 (string.IsNullOrEmpty(arguments) ? "" : " " + arguments);
 
             Log.LogMessage($"Creating XUnit v3 work item with properties Identity: {assemblyName}, PayloadDirectory: {publishDirectory}, Command: {command}");
