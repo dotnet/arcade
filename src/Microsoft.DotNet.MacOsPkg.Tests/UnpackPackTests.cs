@@ -216,7 +216,7 @@ namespace Microsoft.DotNet.MacOsPkg.Tests
             var process = Process.Start(new ProcessStartInfo()
             {
                 FileName = "dotnet",
-                Arguments = $@"exec ""{pkgToolPath}"" ""{inputPath}"" ""{outputPath}"" {action}",
+                Arguments = $@"exec ""{pkgToolPath}"" {action} ""{inputPath}"" ""{outputPath}""",
                 UseShellExecute = false,
                 RedirectStandardError = true,
             });

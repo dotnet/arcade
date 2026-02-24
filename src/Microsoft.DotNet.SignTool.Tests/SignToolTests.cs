@@ -1588,6 +1588,7 @@ $@"
                 <Authenticode>Microsoft400</Authenticode>
                 </FilesToSign>
                 ",
+                // Signing rounds use .pkg.zip because MicroBuild expects zipped packages
                 $@"
                 <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "1", "NestedPkg.pkg.zip"))}"">
                 <Authenticode>MacDeveloperHarden</Authenticode>
@@ -1597,8 +1598,10 @@ $@"
                 <Authenticode>MacDeveloperHarden</Authenticode>
                 </FilesToSign>
                 ",
+                // Notarization round uses the unzipped .pkg path — files are unzipped
+                // before notarization (see SignTool.cs: "Notarization does not expect zipped packages")
                 $@"
-                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.pkg.zip"))}"">
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.pkg"))}"">
                 <Authenticode>8020</Authenticode>
                 <MacAppName>com.microsoft.dotnet</MacAppName>
                 </FilesToSign>",
