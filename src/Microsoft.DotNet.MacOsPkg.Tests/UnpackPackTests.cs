@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.MacOsPkg.Tests
             Path.GetDirectoryName(typeof(UnpackPackTests).Assembly.Location)!,
             "tools",
             "macospkg",
-            "Microsoft.Dotnet.MacOsPkg.dll");
+            "Microsoft.DotNet.MacOsPkg.Cli.dll");
 
         const UnixFileMode nonExecutableFileMode = UnixFileMode.OtherRead | 
                                                    UnixFileMode.GroupRead |

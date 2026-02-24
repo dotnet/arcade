@@ -280,7 +280,7 @@ namespace Microsoft.DotNet.SignTool.Tests
 
         private static string s_snPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "sn", "sn.exe");
         private static string s_tarToolPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "tar", "Microsoft.Dotnet.Tar.dll");
-        private static string s_pkgToolPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "pkg", "Microsoft.Dotnet.MacOsPkg.dll");
+        private static string s_pkgToolPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "pkg", "Microsoft.DotNet.MacOsPkg.Cli.dll");
 
         private string GetResourcePath(string name, string relativePath = null)
         {
@@ -1549,7 +1549,7 @@ $@"
             {
                 {  "MacDeveloperHardenWithNotarization",
                     new List<AdditionalCertificateInformation>() {
-                        new AdditionalCertificateInformation() { MacNotarizationAppName = "dotnet", MacSigningOperation = "MacDeveloperHarden" }
+                        new AdditionalCertificateInformation() { MacNotarizationAppName = "com.microsoft.dotnet", MacSigningOperation = "MacDeveloperHarden" }
                     } 
                 }
             };
@@ -2066,9 +2066,9 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.rpm"
                 "File 'IncorrectlySignedDeb.deb' Certificate='LinuxSign'"
             };
 
-            // If on windows, both packages will be submitted for signing
-            // because the CL verification tool (gpg) is not available on Windows.
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // If running on a platform other than Linux, both packages will be submitted for signing
+            // because the CL verification tool (gpg) is not available.
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 expectedFilesToBeSigned.Add("File 'SignedDeb.deb' Certificate='LinuxSign'");
             }
@@ -2097,9 +2097,9 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.rpm"
                 "File 'IncorrectlySignedRpm.rpm' Certificate='LinuxSign'"
             };
 
-            // If on windows, both packages will be submitted for signing
-            // because the CL verification tool (gpg) is not available on Windows.
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // If running on a platform other than Linux, both packages will be submitted for signing
+            // because the CL verification tool (gpg) is not available.
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 expectedFilesToBeSigned.Add("File 'SignedRpm.rpm' Certificate='LinuxSign'");
             }
