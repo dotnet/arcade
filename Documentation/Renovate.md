@@ -210,7 +210,7 @@ extends:
 
 Before enabling automatic PR creation, test your configuration using [dry run mode](https://docs.renovatebot.com/self-hosted-configuration/#dryrun).
 Any existing dependencies that Renovate detects that should be updated will appear in the `Run Renovate`
-step's log as `INFO: DRY-RUN: Would create PR...`.
+step's log as `Would create PR...` or `Would commit files to branch...`.
 Examine the log to determine whether it meets your expectation.
 See [Troubleshooting](#troubleshooting) for more information on investigating the Renovate log.
 
@@ -354,14 +354,14 @@ This section helps diagnose issues when Renovate isn't behaving as expected.
 The Renovate pipeline publishes detailed debug logs as pipeline artifacts after each run. To access them:
 
 Find the two log files in the pipeline artifacts:
-- **`renovate-log.json`** - The main Renovate execution log with debug-level details
+- **`renovate.json`** - The main Renovate execution log with debug-level details
 - **`renovate-config-validator.json`** - Log from the Renovate configuration file validation step
 
 The log files are in JSON Lines format (one JSON object per line), which can be viewed in any text editor or processed with tools like `jq`.
 
 ### Understanding the Log File
 
-The `renovate-log.json` file contains detailed information about what Renovate did during execution. Each line is a JSON object with a `msg` field describing the action and additional context fields.
+The `renovate.json` file contains detailed information about what Renovate did during execution. Each line is a JSON object with a `msg` field describing the action and additional context fields.
 
 #### Finding Which Files Are Being Scanned
 
@@ -371,7 +371,7 @@ Using `jq` to filter file matching information:
 
 ```bash
 # Find all files being matched by managers
-cat renovate-log.json | jq -s 'map(select(.packageFile)) | .[] | {packageFile,msg}'
+cat renovate.json | jq -s 'map(select(.packageFile)) | .[] | {packageFile,msg}'
 ```
 
 #### Finding Dependencies That Need Updating
@@ -380,13 +380,13 @@ To identify which dependencies Renovate found that need updates, search for:
 
 ```bash
 # Find all dependency updates detected
-cat renovate-log.json | jq -s 'map(select(.msg == "packageFiles with updates")) | .[0].config'
+cat renovate.json | jq -s 'map(select(.msg == "packageFiles with updates")) | .[0].config'
 
 # Find PRs that would be created (dry run mode)
-cat renovate-log.json | jq -s 'map(select(.msg | contains("DRY-RUN"))) | .[].msg'
+cat renovate.json | jq -s 'map(select(.msg | contains("DRY-RUN"))) | .[].msg'
 
 # Find PRs that were actually created
-cat renovate-log.json | jq -s 'map(select(.msg == "PR created")) | .[] | {pr, prTitle}'
+cat renovate.json | jq -s 'map(select(.msg == "PR created")) | .[] | {pr, prTitle}'
 ```
 
 ### Common Issues
