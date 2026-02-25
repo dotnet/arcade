@@ -27,6 +27,7 @@
 
       <_TestRunnerCommand>&quot;$(DotNetTool)&quot; test $(_TestAssembly) --logger:"console%3Bverbosity=normal" --logger:"trx%3BLogFileName=$(_TestResultTrxFileName)" --logger:"html%3BLogFileName=$(_TestResultHtmlFileName)" "--ResultsDirectory:$(_TestResultDirectory)" "--Framework:%(TestToRun.TargetFrameworkIdentifier),Version=%(TestToRun.TargetFrameworkVersion)"</_TestRunnerCommand>
       <_TestRunnerCommand Condition="'%(TestToRun.TestRunSettingsFile)' != ''">$(_TestRunnerCommand) "--settings:%(TestToRun.TestRunSettingsFile)"</_TestRunnerCommand>
+      <_TestRunnerCommand Condition="'%(TestToRun.CollectCoverage)' == 'true'">$(_TestRunnerCommand) --collect:"XPlat Code Coverage"</_TestRunnerCommand>
       <_TestRunnerCommand Condition="'$(_TestRunnerAdditionalArguments)' != ''">$(_TestRunnerCommand) $(_TestRunnerAdditionalArguments)</_TestRunnerCommand>
 
       <!-- 
@@ -81,10 +82,81 @@
     </ItemGroup>
   </Target>
 
+  <!-- Generate .runsettings file with code coverage configuration when code coverage is enabled -->
+  <Target Name="_GenerateCodeCoverageRunSettings"
+          BeforeTargets="_AddVSTestSpecificSettingsToInnerBuild"
+          Condition="'$(CollectCoverage)' == 'true' and '$(TestRunSettingsFile)' == ''">
+    
+    <PropertyGroup>
+      <_GeneratedRunSettingsFile>$(ArtifactsObjDir)$(MSBuildProjectName).runsettings</_GeneratedRunSettingsFile>
+      
+      <!-- Build Include filter -->
+      <_CoverageIncludeFilter Condition="'$(CoverageInclude)' != ''">$([System.String]::new('$(CoverageInclude)').Replace(';',','))</_CoverageIncludeFilter>
+      
+      <!-- Build Exclude filter -->
+      <_CoverageExcludeFilter Condition="'$(CoverageExclude)' != ''">$([System.String]::new('$(CoverageExclude)').Replace(';',','))</_CoverageExcludeFilter>
+      
+      <!-- Build IncludeByFile filter -->
+      <_CoverageIncludeByFileFilter Condition="'$(CoverageIncludeByFile)' != ''">$([System.String]::new('$(CoverageIncludeByFile)').Replace(';',','))</_CoverageIncludeByFileFilter>
+      
+      <!-- Build ExcludeByFile filter -->
+      <_CoverageExcludeByFileFilter Condition="'$(CoverageExcludeByFile)' != ''">$([System.String]::new('$(CoverageExcludeByFile)').Replace(';',','))</_CoverageExcludeByFileFilter>
+      
+      <!-- Build ExcludeByAttribute filter -->
+      <_CoverageExcludeByAttributeFilter Condition="'$(CoverageExcludeByAttribute)' != ''">$([System.String]::new('$(CoverageExcludeByAttribute)').Replace(';',','))</_CoverageExcludeByAttributeFilter>
+    </PropertyGroup>
+    
+    <!-- Generate the runsettings file content dynamically -->
+    <ItemGroup>
+      <_RunSettingsLines Include="&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;" />
+      <_RunSettingsLines Include="&lt;RunSettings&gt;" />
+      <_RunSettingsLines Include="  &lt;DataCollectionRunSettings&gt;" />
+      <_RunSettingsLines Include="    &lt;DataCollectors&gt;" />
+      <_RunSettingsLines Include="      &lt;DataCollector friendlyName=&quot;XPlat code coverage&quot;&gt;" />
+      <_RunSettingsLines Include="        &lt;Configuration&gt;" />
+      <_RunSettingsLines Include="          &lt;Format&gt;$(_CodeCoverageFormat)&lt;/Format&gt;" />
+      <_RunSettingsLines Include="          &lt;OutputPath&gt;$(_CodeCoverageOutputPath)&lt;/OutputPath&gt;" />
+      <_RunSettingsLines Include="          &lt;DeterministicReport&gt;$(_CoverageDeterministic)&lt;/DeterministicReport&gt;" />
+      <_RunSettingsLines Include="          &lt;Include&gt;$(_CoverageIncludeFilter)&lt;/Include&gt;" Condition="'$(_CoverageIncludeFilter)' != ''" />
+      <_RunSettingsLines Include="          &lt;Exclude&gt;$(_CoverageExcludeFilter)&lt;/Exclude&gt;" Condition="'$(_CoverageExcludeFilter)' != ''" />
+      <_RunSettingsLines Include="          &lt;ExcludeByFile&gt;$(_CoverageExcludeByFileFilter)&lt;/ExcludeByFile&gt;" Condition="'$(_CoverageExcludeByFileFilter)' != ''" />
+      <_RunSettingsLines Include="          &lt;IncludeTestAssembly&gt;false&lt;/IncludeTestAssembly&gt;" />
+      <_RunSettingsLines Include="          &lt;ExcludeByAttribute&gt;$(_CoverageExcludeByAttributeFilter)&lt;/ExcludeByAttribute&gt;" Condition="'$(_CoverageExcludeByAttributeFilter)' != ''" />
+      <_RunSettingsLines Include="          &lt;SkipAutoProps&gt;true&lt;/SkipAutoProps&gt;" />
+      <_RunSettingsLines Include="          &lt;DoesNotReturnAttribute&gt;DoesNotReturnAttribute&lt;/DoesNotReturnAttribute&gt;" />
+      <_RunSettingsLines Include="          &lt;SingleHit&gt;false&lt;/SingleHit&gt;" />
+      <_RunSettingsLines Include="          &lt;UseSourceLink&gt;true&lt;/UseSourceLink&gt;" />
+      <_RunSettingsLines Include="        &lt;/Configuration&gt;" />
+      <_RunSettingsLines Include="      &lt;/DataCollector&gt;" />
+      <_RunSettingsLines Include="    &lt;/DataCollectors&gt;" />
+      <_RunSettingsLines Include="  &lt;/DataCollectionRunSettings&gt;" />
+      <_RunSettingsLines Include="&lt;/RunSettings&gt;" />
+    </ItemGroup>
+    
+    <MakeDir Directories="$(ArtifactsObjDir)" />
+    <WriteLinesToFile File="$(_GeneratedRunSettingsFile)" 
+                      Lines="@(_RunSettingsLines)" 
+                      Overwrite="true" 
+                      WriteOnlyWhenDifferent="true" />
+    
+    <PropertyGroup>
+      <TestRunSettingsFile>$(_GeneratedRunSettingsFile)</TestRunSettingsFile>
+    </PropertyGroup>
+    
+    <ItemGroup>
+      <FileWrites Include="$(_GeneratedRunSettingsFile)" />
+    </ItemGroup>
+  </Target>
+
   <!-- Set VSTest specific settings in a target so that the TestToRun item can read from it and customers can set it at any time during evaluation. -->
   <Target Name="_AddVSTestSpecificSettingsToInnerBuild" BeforeTargets="_InnerGetTestsToRun">
     <PropertyGroup>
       <TestRunSettingsFile Condition="'$(TestRunSettingsFile)' == ''">$(VSTestRunSettingsFile)</TestRunSettingsFile>
+      
+      <!-- Set code coverage output format and path for coverlet -->
+      <_CodeCoverageFormat Condition="'$(CollectCoverage)' == 'true'">$(CodeCoverageFormat)</_CodeCoverageFormat>
+      <_CodeCoverageOutputPath Condition="'$(CollectCoverage)' == 'true'">$(CodeCoverageOutputDirectory)</_CodeCoverageOutputPath>
+      <_CoverageDeterministic Condition="'$(CollectCoverage)' == 'true'">$(CoverageDeterministic)</_CoverageDeterministic>
     </PropertyGroup>
   </Target>
 
