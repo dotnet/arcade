@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <!-- Treat this as a tooling library as it references msbuild. -->
-    <TargetFrameworks>$(NetToolCurrent);netstandard2.0;$(NetFrameworkToolCurrent)</TargetFrameworks>
+    <TargetFrameworks>$(BundledNETCoreAppTargetFramework);netstandard2.0;$(NetFrameworkToolCurrent)</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <DefaultExcludesInProjectFolder Condition="$([MSBuild]::GetTargetFrameworkIdentifier('$(TargetFramework)')) != '.NETFramework'">**/*.Desktop.*</DefaultExcludesInProjectFolder>
   </PropertyGroup>
@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Utilities.Core" PrivateAssets="all" ExcludeAssets="runtime" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" />
+    <PackageReference Include="NuGet.Packaging" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
@@ -21,5 +22,5 @@
 
   <!-- This project is a build task dependency and needs to follow desktop version requirements. -->
   <Import Project="$(RepositoryEngineeringDir)BuildTask.Packages.props" />
-
+  
 </Project>

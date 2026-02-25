@@ -5,7 +5,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -23,13 +22,12 @@ using System.Threading.Tasks;
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
-#if !NET472_OR_GREATER
 using Azure.Identity;
-using Microsoft.DotNet.Maestro.Client;
-using Microsoft.DotNet.Maestro.Client.Models;
+using Microsoft.DotNet.ProductConstructionService.Client;
+using Microsoft.DotNet.ProductConstructionService.Client.Models;
 using Microsoft.DotNet.Internal.SymbolHelper;
-#endif
-using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using Microsoft.DotNet.ArcadeAzureIntegration;
+using Microsoft.DotNet.Build.Manifest;
 using Newtonsoft.Json;
 using NuGet.Versioning;
 using static Microsoft.DotNet.Build.Tasks.Feed.GeneralUtils;
@@ -39,7 +37,6 @@ using MsBuildUtils = Microsoft.Build.Utilities;
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
 
-#if !NET472_OR_GREATER
     /// <summary>
     /// The intended use of this task is to push artifacts described in
     /// a build manifest to a static package feed.
@@ -47,6 +44,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities.Task
     {
         public AssetPublisherFactory AssetPublisherFactory { get; }
+
+        /// <summary>
+        /// Production channel validator for validating builds before publishing to production channels.
+        /// </summary>
+        public ITargetChannelValidator TargetChannelValidator { get; set; }
 
         /// <summary>
         /// Full path to the folder containing blob assets.
@@ -92,12 +94,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public bool AllowInteractiveAuthentication { get; set; }
 
         /// <summary>
-        /// Directory where "nuget.exe" is installed. This will be used to publish packages.
-        /// </summary>
-        [Required]
-        public string NugetPath { get; set; }
-
-        /// <summary>
         /// We are setting StreamingPublishingMaxClients=16 and NonStreamingPublishingMaxClients=12 through publish-asset.yml as we were hitting OOM issue 
         /// https://github.com/dotnet/core-eng/issues/13098 for more details.
         /// </summary>
@@ -114,6 +110,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// currently reduced below optimal to prevent OOM.
         /// </summary>
         public int MaxClients { get { return UseStreamingPublishing ? StreamingPublishingMaxClients : NonStreamingPublishingMaxClients; } }
+
+        /// <summary>
+        /// Whether to enforce production channel validation rules.
+        /// If true, validation failures prevent builds from being published (Fail).
+        /// If false, validation failures are reported as warnings but builds are allowed to be published (AuditOnlyFailure).
+        /// Default: false (audit mode)
+        /// </summary>
+        public bool EnforceProduction { get; set; } = false;
 
         /// <summary>
         /// Whether this build is internal or not. If true, extra checks are done to avoid accidental
@@ -159,7 +163,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureApiVersionForFileDownload { get; set; } = "4.1-preview.4";
 
-        public string AzureProject { get; set; }
+        public string AzureDevOpsProject { get; set; }
 
         public string BuildId { get; set; }
 
@@ -186,17 +190,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public readonly Dictionary<TargetFeedContentType, HashSet<TargetFeedConfig>> FeedConfigs =
             new Dictionary<TargetFeedContentType, HashSet<TargetFeedConfig>>();
 
-        private readonly Dictionary<TargetFeedContentType, HashSet<PackageArtifactModel>> PackagesByCategory =
+        public readonly Dictionary<TargetFeedContentType, HashSet<PackageArtifactModel>> PackagesByCategory =
             new Dictionary<TargetFeedContentType, HashSet<PackageArtifactModel>>();
 
-        private readonly Dictionary<TargetFeedContentType, HashSet<BlobArtifactModel>> BlobsByCategory =
+        public readonly Dictionary<TargetFeedContentType, HashSet<BlobArtifactModel>> BlobsByCategory =
             new Dictionary<TargetFeedContentType, HashSet<BlobArtifactModel>>();
 
         private readonly ConcurrentDictionary<(int AssetId, string AssetLocation, LocationType LocationType), ValueTuple> NewAssetLocations =
             new ConcurrentDictionary<(int AssetId, string AssetLocation, LocationType LocationType), ValueTuple>();
 
+        private ConcurrentDictionary<string, IArtifactUrlHelper> _artifactUrlHelpers = new ConcurrentDictionary<string, IArtifactUrlHelper>();
+
         // Matches versions such as 1.0.0.1234
-        private static readonly string FourPartVersionPattern = @"\d+\.\d+\.\d+\.\d+";
+        private static readonly string FourPartVersionPattern = @"\d+\.\d+\.\d+\.\d+"; 
 
         private static Regex FourPartVersionRegex = new Regex(FourPartVersionPattern);
 
@@ -226,20 +232,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             DelayBase = 2.5 // 2.5 ^ 5 = ~1.5 minutes max wait between retries
         };
 
-        public enum ArtifactName
-        {
-            [Description("PackageArtifacts")]
-            PackageArtifacts,
-
-            [Description("BlobArtifacts")]
-            BlobArtifacts
-        }
+        public const string BlobArtifactsArtifactName = "BlobArtifacts";
+        public const string PackageArtifactsArtifactName = "PackageArtifacts";
 
         private int TimeoutInSeconds = 300;
 
-        protected PublishArtifactsInManifestBase(AssetPublisherFactory assetPublisherFactory = null)
+        protected PublishArtifactsInManifestBase(AssetPublisherFactory assetPublisherFactory = null,
+                                                 ITargetChannelValidator targetChannelValidator = null)
         {
             AssetPublisherFactory = assetPublisherFactory ?? new AssetPublisherFactory(Log);
+            TargetChannelValidator = targetChannelValidator;
         }
 
         public override bool Execute()
@@ -248,6 +250,47 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         public abstract Task<bool> ExecuteAsync();
+
+        /// <summary>
+        /// Validates whether the build can be published to a production channel.
+        /// This method uses the injected ITargetChannelValidator to perform the validation.
+        /// </summary>
+        /// <param name="build">The build information from BAR</param>
+        /// <param name="targetChannel">The target channel the build will be published to</param>
+        /// <returns>True if the build is allowed to be published to the target channel, false otherwise</returns>
+        protected async Task<bool> ValidateTargetChannelAsync(ProductConstructionService.Client.Models.Build build, TargetChannelConfig targetChannel)
+        {
+            if (targetChannel.IsProduction)
+            {
+                Log.LogMessage(MessageImportance.Normal, $"Validating production channel {targetChannel.Id}");
+                var validationResult = await TargetChannelValidator.ValidateAsync(build, targetChannel);
+                
+                switch (validationResult)
+                {
+                    case TargetChannelValidationResult.Success:
+                        Log.LogMessage(MessageImportance.Normal, $"Build validation succeeded for production channel {targetChannel.Id}");
+                        return true;
+                    
+                    case TargetChannelValidationResult.AuditOnlyFailure:
+                        Log.LogWarning($"Build validation audit failure for production channel {targetChannel.Id}. This is currently treated as a warning.");
+                        return true; // For now, treat audit-only failures as success but log warning
+                    
+                    case TargetChannelValidationResult.Fail:
+                        Log.LogError($"Build validation failed for production channel {targetChannel.Id}");
+                        return false;
+                    
+                    default:
+                        Log.LogError($"Unknown validation result '{validationResult}' for production channel {targetChannel.Id}");
+                        return false;
+                }
+            }
+            else
+            {
+                Log.LogMessage(MessageImportance.Normal, $"Skipping validation for non-production channel {targetChannel.Id}");
+            }
+
+            return true;
+        }
 
         /// <summary>
         ///     Lookup an asset in the build asset dictionary by name and version
@@ -293,7 +336,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         /// <param name="buildInformation">Build information</param>
         /// <returns>Map of asset name -> list of assets with that name.</returns>
-        protected ReadOnlyDictionary<string, Asset> CreateBuildAssetDictionary(Maestro.Client.Models.Build buildInformation)
+        protected ReadOnlyDictionary<string, Asset> CreateBuildAssetDictionary(ProductConstructionService.Client.Models.Build buildInformation)
         {
             Dictionary<string, Asset> buildAssets = new Dictionary<string, Asset>();
 
@@ -323,8 +366,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <returns>True if that asset didn't have the informed location recorded already.</returns>
         private bool TryAddAssetLocation(string assetId, string assetVersion, ReadOnlyDictionary<string, Asset> buildAssets, TargetFeedConfig feedConfig, LocationType assetLocationType)
         {
-            Asset assetRecord = string.IsNullOrEmpty(assetVersion) ?
-                LookupAsset(assetId, buildAssets) :
+            Asset assetRecord = string.IsNullOrEmpty(assetVersion) ? 
+                LookupAsset(assetId, buildAssets) : 
                 LookupAsset(assetId, assetVersion, buildAssets);
 
             if (assetRecord == null)
@@ -341,14 +384,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///   Persist in BAR all pending associations of Asset -> AssetLocation stored in `NewAssetLocations`.
         /// </summary>
         /// <param name="client">Maestro++ API client</param>
-        protected async Task PersistPendingAssetLocationAsync(IMaestroApi client)
+        protected async Task PersistPendingAssetLocationAsync(IProductConstructionServiceApi client)
         {
             Log.LogMessage(MessageImportance.High, "\nPersisting new locations of assets in the Build Asset Registry.");
 
             var updates = NewAssetLocations.Keys.Select(nal => new AssetAndLocation(nal.AssetId, (LocationType)nal.LocationType)
             {
                 Location = nal.AssetLocation
-            }).ToImmutableList();
+            }).ToList();
 
             await client.Assets.BulkAddLocationsAsync(updates);
 
@@ -379,11 +422,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public void CheckForStableAssetsInNonIsolatedFeeds()
         {
-            if (BuildModel.Identity.IsReleaseOnlyPackageVersion || SkipSafetyChecks)
-            {
-                return;
-            }
-
             foreach (var packagesPerCategory in PackagesByCategory)
             {
                 var category = packagesPerCategory.Key;
@@ -394,13 +432,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     foreach (var feedConfig in feedConfigsForCategory)
                     {
                         // Look at the version numbers. If any of the packages here are stable and about to be published to a
-                        // non-isolated feed, then issue an error. Isolated feeds may recieve all packages.
+                        // non-isolated feed, then issue an error. Isolated feeds may receive all packages.
                         if (feedConfig.Isolated)
                         {
                             continue;
                         }
 
-                        HashSet<PackageArtifactModel> filteredPackages = FilterPackages(packages, feedConfig);
+                        HashSet<PackageArtifactModel> filteredPackages = SplitPackageByAssetSelection(packages, feedConfig);
 
                         foreach (var package in filteredPackages)
                         {
@@ -416,8 +454,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             // We want to avoid pushing non-final bits with final version numbers to feeds that are in general
                             // use by the public. This is for technical (can't overwrite the original packages) reasons as well as 
                             // to avoid confusion. Because .NET core generally brands its "final" bits without prerelease version
-                            // suffixes (e.g. 3.0.0-preview1), test to see whether a prerelease suffix exists.
-                            else if (!version.IsPrerelease)
+                            // suffixes (e.g. 3.0.0-preview1), test to see whether a prerelease suffix exists or contains "final".
+                            else if ((!version.IsPrerelease || version.ReleaseLabels.Any(label => label.Contains("final", StringComparison.OrdinalIgnoreCase)))
+                                     && package.CouldBeStable != false)
                             {
                                 Log.LogError($"Package '{package.Id}' has stable version '{package.Version}' but is targeted at a non-isolated feed '{feedConfig.TargetURL}'");
                             }
@@ -439,41 +478,54 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private async Task<bool> PublishSymbolsUsingStreamingAsync(
             string requestName,
             SymbolUploadHelper helper,
-            string[] symbolAssetNames,
+            HashSet<BlobArtifactModel> symbolAssets,
             SemaphoreSlim clientThrottle)
         {
-            if (symbolAssetNames.Length == 0)
+            if (symbolAssets.Count == 0)
             {
                 return true;
             }
 
-            using HttpClient client = CreateAzdoClient(AzureDevOpsOrg, setAutomaticDecompression: true, AzureProject);
-            client.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
-            string containerId = await GetContainerIdAsync(client, ArtifactName.BlobArtifacts);
+            using HttpClient downloadClient = CreateAzdoClient();
 
-            IEnumerable<Task<bool>> publishingTasks = symbolAssetNames.Select(assetName => PublishSymbolPackageWithDownload(assetName));
-            IEnumerable<bool> results = await Task.WhenAll(publishingTasks);
+            IEnumerable<bool> results = await Task.WhenAll(symbolAssets.Select(symbolAsset => Task.Run(async () => 
+                await PublishSymbolPackageWithDownload(symbolAsset))));
             return results.All(x => x);
 
-            async Task<bool> PublishSymbolPackageWithDownload(string symbolAssetName)
+            async Task<bool> PublishSymbolPackageWithDownload(BlobArtifactModel symbolAsset)
             {
                 string temporarySymbolsDirectory = CreateTemporaryDirectory();
-                string symbolPackageName = Path.GetFileName(symbolAssetName);
+                string symbolPackageName = Path.GetFileName(symbolAsset.Id);
                 string localSymbolPath = Path.Combine(temporarySymbolsDirectory, symbolPackageName);
+                string artifactName = BlobArtifactsArtifactName;
+                string artifactSubPath = symbolPackageName;
+
+                // Under V4 publishing, the pipeline artifact name and subpath are specified per-artifact.
+                if (BuildModel.Identity.PublishingVersion >= PublishingInfraVersion.V4)
+                {
+                    if (string.IsNullOrEmpty(symbolAsset.PipelineArtifactPath) || string.IsNullOrEmpty(symbolAsset.PipelineArtifactName))
+                    {
+                        Log.LogError($"Symbol package {symbolAsset} is missing required PipelineArtifactPath and PipelineArtifactName attributes for V4+ publishing");
+                        return false;
+                    }
+
+                    artifactName = symbolAsset.PipelineArtifactName;
+                    artifactSubPath = symbolAsset.PipelineArtifactPath;
+                }
+
                 try
                 {
                     await clientThrottle.WaitAsync();
-                    Log.LogMessage(MessageImportance.High, $"Downloading symbol: {symbolPackageName} to {localSymbolPath}");
+                    Log.LogMessage(MessageImportance.Low, $"Downloading symbol: '{artifactSubPath}' from artifact '{artifactName}' to {localSymbolPath}");
                     Stopwatch gatherDownloadTime = Stopwatch.StartNew();
                     await DownloadFileAsync(
-                        client,
-                        ArtifactName.BlobArtifacts,
-                        containerId,
-                        symbolPackageName,
+                        downloadClient,
+                        artifactName,
+                        artifactSubPath,
                         localSymbolPath);
                     gatherDownloadTime.Stop();
-                    Log.LogMessage(MessageImportance.Normal, $"Time taken to download file to '{localSymbolPath}' is {gatherDownloadTime.ElapsedMilliseconds / 1000.0} (seconds)");
-                    Log.LogMessage(MessageImportance.High, $"Successfully downloaded symbol : {symbolPackageName} to {localSymbolPath}");
+                    Log.LogMessage(MessageImportance.Low, $"Time taken to download file to '{localSymbolPath}' is {gatherDownloadTime.ElapsedMilliseconds / 1000.0} (seconds)");
+                    Log.LogMessage(MessageImportance.Low, $"Successfully downloaded symbol : {symbolPackageName} to {localSymbolPath}");
 
                     int response = await helper.AddPackageToRequest(requestName, localSymbolPath);
                     if (response != 0)
@@ -501,9 +553,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private async Task<bool> PublishSymbolsFromBlobArtifactsAsync(
             string requestName,
             SymbolUploadHelper helper,
-            string[] symbolPackages)
+            HashSet<BlobArtifactModel> symbolPackages)
         {
-            int result = await helper.AddPackagesToRequest(requestName, symbolPackages.Select(x => Path.Combine(BlobAssetsBasePath, x)));
+            int result = await helper.AddPackagesToRequest(requestName, symbolPackages.Select(x => Path.Combine(BlobAssetsBasePath, x.Id)));
             if (result != 0)
             {
                 Log.LogError("Unable to upload packages to symbol server. Symbol client returned {0}.", result);
@@ -515,17 +567,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Decides how to publish the symbol, dll and pdb files
         /// </summary>
         /// <param name="buildInfo">Build information used to get symbol server publishing name.</param>
-        /// <param name="buildAssets">Name to asset map for this particular publishing build.</param>
         /// <param name="pdbArtifactsBasePath">Path to loose dll and pdb files folder.</param>
-        /// <param name="msdlToken">Token to authenticate MSDL.</param>
-        /// <param name="symWebToken">Token to authenticate SymWeb.</param>
+        /// <param name="assetNameToBARAssetMapping">Asset id to BAR asset mapping</param>
         /// <param name="symbolPublishingExclusionsFile">Path to file containing list of relative file paths for files in packages that can't be published.</param>
         /// <param name="clientThrottle">Semaphore to throttle concurrent AzDO asset download and symbol uploads.</param>
         /// <param name="publishSpecialClrFiles">If true, the special coreclr module indexed files like  DBI, DAC and SOS are published</param>
         /// <param name="dryRun">If true, it will log all the operations of extraction and the symbol command that would get used, but never call into the symbol indexing logic.</param>
         public async Task HandleSymbolPublishingAsync(
-            Maestro.Client.Models.Build buildInfo,
-            ReadOnlyDictionary<string, Asset> buildAssets,
+            ProductConstructionService.Client.Models.Build buildInfo,
+            ReadOnlyDictionary<string, Asset> assetNameToBARAssetMapping,
             string pdbArtifactsBasePath,
             string symbolPublishingExclusionsFile,
             bool publishSpecialClrFiles,
@@ -535,10 +585,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             ArgumentNullException.ThrowIfNull(buildInfo);
 
-            (string[] symbolPackageNames, string looseSymbolFilesDirectory) = GetSymbolAssetsToPublish(buildAssets, pdbArtifactsBasePath);
-            int looseFileCount = Directory.EnumerateFiles(looseSymbolFilesDirectory, "*", SearchOption.AllDirectories).Count();
+            Log.LogMessage(MessageImportance.High, "Begin publishing of symbols.");
 
-            if (symbolPackageNames.Length == 0 && looseFileCount == 0)
+            var symbolPackagesToPublish = BlobsByCategory.TryGetValue(TargetFeedContentType.Symbols, out HashSet<BlobArtifactModel> symbolAssets) ?
+                symbolAssets : new HashSet<BlobArtifactModel>();
+
+            string looseSymbolFilesDirectory = await PrepLoosePdbsForPublish(pdbArtifactsBasePath, clientThrottle);
+            var looseFiles = Directory.EnumerateFiles(looseSymbolFilesDirectory, "*", SearchOption.AllDirectories);
+
+            if (symbolPackagesToPublish.Count == 0 && looseFiles.Count() == 0)
             {
                 Log.LogMessage(MessageImportance.High, "No assets to publish to symbol server were found.");
                 return;
@@ -552,8 +607,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 Log.LogMessage(MessageImportance.High, "No target symbol servers match this promotion request.");
                 return;
             }
-
-            SymbolUploadHelper helper = await CreatePublishSymbolHelper(symbolPublishingExclusionsFile, publishSpecialClrFiles, dryRun);
 
             // There's a slight chance of optimization here. If a symbol is already published, it doesn't need to be published again.
             // We can check if the symbol is already published and skip the download/unwrap/conversion and just update the lifetime and send to
@@ -570,21 +623,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     $"\tTemp symbol org: {TempSymbolsAzureDevOpsOrg}" + Environment.NewLine +
                     $"\tFinal symbol visibility: {publishVisibility}" + Environment.NewLine +
                     $"\tRequest Name: {requestName}" + Environment.NewLine +
-                    $"\tSymbol package count: {symbolPackageNames.Length}" + Environment.NewLine +
-                    $"\tLoose symbol file count: {looseFileCount}");
+                    $"\tSymbol packages ({symbolPackagesToPublish.Count}):{Environment.NewLine}\t\t{string.Join($"{Environment.NewLine}\t\t", symbolPackagesToPublish.Select(s => s.Id))}" + Environment.NewLine +
+                    $"\tLoose symbol files ({looseFiles.Count()}): {Environment.NewLine}\t\t{string.Join($"{Environment.NewLine}\t\t", looseFiles)}");
 
-            // The OIDC token that the AzureCLI task generates is short lived (10 mins). The operations below can take longer than that.
-            // So we send at least one request to symbolrequest to ensure the CLI caches a valid token. We will need to revisit this if we
-            // run this for over the token's validity period (1hr). At that point, we might need to inject OIDC refreshes to the task call site.
-            DefaultAzureCredential creds = new(new DefaultAzureCredentialOptions
-            {
-                ExcludeVisualStudioCodeCredential = true,
-                ExcludeVisualStudioCredential = true,
-                ExcludeAzureDeveloperCliCredential = true,
-                ExcludeInteractiveBrowserCredential = true,
-                ManagedIdentityClientId = ManagedIdentityClientId,
-                CredentialProcessTimeout = TimeSpan.FromSeconds(60.0)
-            });
+            SymbolUploadHelper helper = await CreatePublishSymbolHelper(symbolPublishingExclusionsFile, publishSpecialClrFiles, dryRun);
+
+            var creds = new DefaultIdentityTokenCredential(
+                new DefaultIdentityTokenCredentialOptions
+                {
+                    ManagedIdentityClientId = ManagedIdentityClientId
+                }
+            );
             TaskTracer tracer = new(Log, verbose: true);
 
             _ = await SymbolPromotionHelper.CheckRequestRegistration(tracer, creds, env, SymbolRequestProject, requestName);
@@ -593,7 +642,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             // 1. Create a request in the symbol servers that we are targeting.
             // 2. Upload the loose files to the symbol servers. In both streaming mode and blob mode, they are assumed to already be 
             //    locally available on disk. In streaming mode, they are downloaded in yml. There's usually very few of them.
-            // 3. Upload the packages to the symbol servers. In streaming mode, they are downloaded dynamically and uploaded with aa degree of 
+            // 3. Upload the packages to the symbol servers. In streaming mode, they are downloaded dynamically and uploaded with a degree of 
             //    parallelism controlled by the throttle. In blob mode, they are published serially.
             // 4. If all uploads succeed, finalize the request in the symbol servers. This is the point of no return. The request is now immutable and will be
             //    the only two options onward is to modify the lifetime or to delete. If any of the uploads fail, we delete the request. A retry can be requested.
@@ -617,13 +666,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 if (UseStreamingPublishing)
                 {
                     symbolPublishingSucceeded = await PublishSymbolsUsingStreamingAsync(requestName, helper,
-                                                                                        symbolPackageNames,
+                                                                                        symbolPackagesToPublish,
                                                                                         clientThrottle);
                 }
                 else
                 {
                     symbolPublishingSucceeded = await PublishSymbolsFromBlobArtifactsAsync(requestName, helper,
-                                                                                           symbolPackageNames);
+                                                                                           symbolPackagesToPublish);
                 }
 
                 if (symbolPublishingSucceeded)
@@ -684,7 +733,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     isDryRun: dryRun);
 
                 // In dry run mode, we never hit the symbol server. Don't download symbol.exe in such scenario.
-                return dryRun ? Task.FromResult(SymbolUploadHelperFactory.GetSymbolHelperFromLocalTool(tracer, options, ".")) 
+                return dryRun ? Task.FromResult(SymbolUploadHelperFactory.GetSymbolHelperFromLocalTool(tracer, options, "."))
                     : SymbolUploadHelperFactory.GetSymbolHelperWithDownloadAsync(tracer, options);
 
                 FrozenSet<string> LoadExclusions(string symbolPublishingExclusionsFile)
@@ -705,7 +754,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     // These files tend to be short - load it all at once.
                     string[] files = File.ReadAllLines(symbolPublishingExclusionsFile);
 
-                    FrozenSet<string> excludeFiles = files.Where(x => x is not null or "").ToFrozenSet();
+                    FrozenSet<string> excludeFiles = files.Where(x => !string.IsNullOrEmpty(x)).ToFrozenSet();
 
                     if (excludeFiles.Count > 0)
                     {
@@ -724,13 +773,52 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        internal (string[], string) GetSymbolAssetsToPublish(ReadOnlyDictionary<string, Asset> buildAssets, string pdbArtifactsBasePath)
+        /// <summary>
+        /// Prep loose PDBs for publishing by downloading (V4 streaming only), and copying to a temporary directory.
+        /// </summary>
+        /// <param name="pdbArtifactsBasePath">Input base path where loose PDBs are stored.</param>
+        /// <returns>Temporary directory where loose PDBs were staged.</returns>
+        internal async Task<string> PrepLoosePdbsForPublish(string pdbArtifactsBasePath, SemaphoreSlim clientThrottle)
         {
-            string[] symbolPackagesAssetNames = buildAssets?.Keys.Where(x => IsSymbolPackage(x)).Distinct().ToArray() ?? [];
             string pdbStagePath = CreateTemporaryDirectory();
+
+            if (UseStreamingPublishing && BuildModel.Identity.PublishingVersion >= PublishingInfraVersion.V4)
+            {
+                using (HttpClient client = CreateAzdoClient())
+                {
+                    // Prep all files by downloading from the location in the manifest.
+                    await Task.WhenAll(BuildModel.Artifacts.Pdbs.Select(pdb => Task.Run(async () =>
+                    {
+                        if (string.IsNullOrEmpty(pdb.PipelineArtifactPath) || string.IsNullOrEmpty(pdb.PipelineArtifactName))
+                        {
+                            Log.LogError($"PDB artifact {pdb} is missing required PipelineArtifactPath and PipelineArtifactName attributes for V4+ publishing");
+                            return;
+                        }
+
+                        string artifactName = pdb.PipelineArtifactName;
+                        string subPath = pdb.PipelineArtifactPath;
+                        FileInfo pdbStagingPath = new(Path.Combine(pdbStagePath, subPath));
+                        pdbStagingPath.Directory.Create();
+
+                        try
+                        {
+                            await clientThrottle.WaitAsync();
+                            await DownloadFileAsync(client, artifactName, subPath, pdbStagingPath.FullName);
+                        }
+                        finally
+                        {
+                            clientThrottle.Release();
+                        }
+                    })));
+                }
+            }
+            
+            // Ensure that PDB artifacts can be specified by directory for non-streaming cases
+            // like the staging pipeline.
 
             if (Directory.Exists(pdbArtifactsBasePath))
             {
+                // Pre-V4 logic - copy from provided folder
                 foreach (string looseFile in Directory.EnumerateFiles(pdbArtifactsBasePath, "*", SearchOption.AllDirectories))
                 {
                     string extension = Path.GetExtension(looseFile);
@@ -744,7 +832,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
             }
 
-            return (symbolPackagesAssetNames, pdbStagePath);
+            return pdbStagePath;
         }
 
 
@@ -790,7 +878,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     foreach (var feedConfig in feedConfigsForCategory)
                     {
-                        HashSet<PackageArtifactModel> filteredPackages = FilterPackages(packages, feedConfig);
+                        HashSet<PackageArtifactModel> filteredPackages = SplitPackageByAssetSelection(packages, feedConfig);
 
                         foreach (var package in filteredPackages)
                         {
@@ -804,12 +892,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         switch (feedConfig.Type)
                         {
                             case FeedType.AzDoNugetFeed:
-                                publishTasks.Add(
-                                    PublishPackagesToAzDoNugetFeedAsync(
+                                publishTasks.Add(Task.Run(async () =>
+                                    await PublishPackagesToAzDoNugetFeedAsync(
                                         filteredPackages,
                                         buildAssets,
                                         feedConfig,
-                                        clientThrottle));
+                                        clientThrottle)));
                                 break;
                             default:
                                 Log.LogError(
@@ -829,7 +917,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Log.LogMessage(MessageImportance.High, "\nCompleted publishing of packages: ");
         }
 
-        private HashSet<PackageArtifactModel> FilterPackages(HashSet<PackageArtifactModel> packages, TargetFeedConfig feedConfig)
+        protected virtual HashSet<PackageArtifactModel> SplitPackageByAssetSelection(HashSet<PackageArtifactModel> packages, TargetFeedConfig feedConfig)
         {
             return feedConfig.AssetSelection switch
             {
@@ -843,60 +931,98 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             };
         }
 
-        /// <summary>
-        /// Creates Azdo client
-        /// </summary>
-        /// <param name="accountName">Name of the org</param>
-        /// <param name="setAutomaticDecompression">If client is used for downloading the artifact then AutomaticDecompression has to be set, else it is not required</param>
-        /// <param name="projectName">Azure devOps project name</param>
-        /// <param name="versionOverride">Default version is 6.0</param>
-        /// <returns>HttpClient</returns>
-        public HttpClient CreateAzdoClient(
-            string accountName,
-            bool setAutomaticDecompression,
-            string projectName = null,
-            string versionOverride = null)
+        private HttpClient CreateAzdoClient(string tokenOverride = null)
         {
             HttpClientHandler handler = new HttpClientHandler { CheckCertificateRevocationList = true };
-            if (setAutomaticDecompression)
-            {
-                handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-            }
+            // Must set automatic decompression when dealing with build artifacts. Not required for pipeline artifacts.
+            handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
 
-            string address = $"https://dev.azure.com/{accountName}/";
-
-            if (!string.IsNullOrEmpty(projectName))
-            {
-                address += $"{projectName}/";
-            }
-
-            var client = new HttpClient(handler)
-            {
-                BaseAddress = new Uri(address)
-            };
+            var client = new HttpClient(handler);
             client.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                 "Basic",
                 Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "",
-                    AzdoApiToken))));
-            client.DefaultRequestHeaders.Add(
-                "Accept",
-                $"application/xml;api-version={versionOverride ?? AzureDevOpsFeedsApiVersion}");
+                    tokenOverride ?? AzdoApiToken))));
             return client;
         }
 
+        private SemaphoreSlim _createArtifactSemaphore = new SemaphoreSlim(1,1);
+
         /// <summary>
-        /// Gets the container Id, that is going to be used in another API call to download the assets
-        /// ContainerId is the same for PackageArtifacts and BlobArtifacts
+        /// Download artifact file using Azure API
         /// </summary>
+        /// <param name="apiClient">Azdo client</param>
         /// <param name="artifactName">If it is PackageArtifacts or BlobArtifacts</param>
-        /// <returns>ContainerId</returns>
-        public async Task<string> GetContainerIdAsync(HttpClient client, ArtifactName artifactName)
+        /// <param name="containerId">ContainerId where the packageArtifact and BlobArtifacts are stored</param>
+        /// <param name="fileName">Name the file we are trying to download</param>
+        /// <param name="path">Path where the file is being downloaded</param>
+        public async Task DownloadFileAsync(
+            HttpClient client,
+            string artifactName,
+            string fileName,
+            string path)
         {
-            string uri =
-                 $"{AzureDevOpsBaseUrl}/{AzureDevOpsOrg}/{AzureProject}/_apis/build/builds/{BuildId}/artifacts?api-version={AzureDevOpsFeedsApiVersion}";
+            // Look up or create a helper for the specified artifact type.
+            if (!_artifactUrlHelpers.TryGetValue(artifactName, out IArtifactUrlHelper helper))
+            {
+                // Since the helper creation makes an http call, let's only do this once
+                // per artifact name by locking
+
+                await _createArtifactSemaphore.WaitAsync();
+                try
+                {
+                    if (!_artifactUrlHelpers.TryGetValue(artifactName, out helper))
+                    {
+                        helper = await CreateArtifactUrlHelper(client, artifactName);
+                        _artifactUrlHelpers[artifactName] = helper;
+                    }
+                }
+                finally
+                {
+                    _createArtifactSemaphore.Release();
+                }
+            }
+
+            string uri = helper.ConstructDownloadUrl(fileName);
+
+
+            Log.LogMessage(MessageImportance.Low, $"Downloading file from '{uri}' to '{path}'");
+
             Exception mostRecentlyCaughtException = null;
-            string containerId = "";
+            bool success = await RetryHandler.RunAsync(async attempt =>
+            {
+                try
+                {
+                    using CancellationTokenSource timeoutTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(TimeoutInMinutes));
+                    using HttpResponseMessage response = await client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, timeoutTokenSource.Token);
+                    response.EnsureSuccessStatusCode();
+                    using var fs = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                    using var stream = await response.Content.ReadAsStreamAsync(timeoutTokenSource.Token);
+                    await stream.CopyToAsync(fs, timeoutTokenSource.Token);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    mostRecentlyCaughtException = ex;
+                    return false;
+                }
+            }).ConfigureAwait(false);
+
+            if (!success)
+            {
+                throw new Exception(
+                    $"Failed to download '{path}' after {RetryHandler.MaxAttempts} attempts. See inner exception for details.",
+                    mostRecentlyCaughtException);
+            }
+        }
+
+        private async Task<IArtifactUrlHelper> CreateArtifactUrlHelper(HttpClient client, string artifactName)
+        {
+            // Get information about the artifacts from the artifacts API
+            string uri =
+                 $"{AzureDevOpsBaseUrl}/{AzureDevOpsOrg}/{AzureDevOpsProject}/_apis/build/builds/{BuildId}/artifacts?api-version={AzureDevOpsFeedsApiVersion}";
+            Exception mostRecentlyCaughtException = null;
+            IArtifactUrlHelper helper = null;
             bool success = await RetryHandler.RunAsync(async attempt =>
             {
                 try
@@ -910,17 +1036,35 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     string responseBody = await response.Content.ReadAsStringAsync();
                     BuildArtifacts buildArtifacts = JsonConvert.DeserializeObject<BuildArtifacts>(responseBody);
 
-                    foreach (var artifact in buildArtifacts.value)
+                    var artifactInfo = buildArtifacts.value.SingleOrDefault(a => a.name == artifactName);
+                    if (artifactInfo == null)
                     {
-                        ArtifactName name;
-                        if (Enum.TryParse<ArtifactName>(artifact.name, out name) && name == artifactName)
-                        {
-                            string[] segment = artifact.resource.data.Split('/');
-                            containerId = segment[1];
-                            return true;
-                        }
+                        Log.LogError($"Artifact '{artifactName}' not found in build {BuildId}");
+                        return false;
                     }
-                    return false;
+
+                    switch (artifactInfo.resource.type.ToLowerInvariant())
+                    {
+                        case "container":
+                            string[] segment = artifactInfo.resource.data.Split('/');
+                            if (segment.Length < 2)
+                            {
+                                Log.LogError($"Artifact '{artifactName}' does not have a valid container id");
+                                return false;
+                            }
+                            helper = new BuildArtifactUrlHelper(
+                                segment[1],
+                                artifactName,
+                                AzureDevOpsBaseUrl,
+                                AzureDevOpsOrg,
+                                AzureApiVersionForFileDownload);
+                            return true;
+                        case "pipelineartifact":
+                            helper = new PipelineArtifactDownloadHelper(artifactInfo.resource.downloadUrl);
+                            return true;
+                        default:
+                            throw new Exception($"Artifact '{artifactName}' is not a build or pipeline artifact but a '{artifactInfo.resource.type}'");
+                    }
                 }
                 catch (Exception toStore) when (toStore is HttpRequestException || toStore is TaskCanceledException)
                 {
@@ -929,73 +1073,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
             }).ConfigureAwait(false);
 
-            if (string.IsNullOrEmpty(containerId))
-            {
-                Log.LogError("Container Id does not exists");
-            }
-
             if (!success)
             {
                 throw new Exception(
-                    $"Failed to get container id after {RetryHandler.MaxAttempts} attempts.  See inner exception for details, {mostRecentlyCaughtException}");
+                    $"Failed to construct download URL helper after {RetryHandler.MaxAttempts} attempts.  See inner exception for details, {mostRecentlyCaughtException}");
             }
 
-            return containerId;
-        }
-
-        /// <summary>
-        /// Download artifact file using Azure API
-        /// </summary>
-        /// <param name="client">Azdo client</param>
-        /// <param name="artifactName">If it is PackageArtifacts or BlobArtifacts</param>
-        /// <param name="containerId">ContainerId where the packageArtifact and BlobArtifacts are stored</param>
-        /// <param name="fileName">Name the file we are trying to download</param>
-        /// <param name="path">Path where the file is being downloaded</param>
-        public async Task DownloadFileAsync(
-            HttpClient client,
-            ArtifactName artifactName,
-            string containerId,
-            string fileName,
-            string path)
-        {
-            string uri =
-                $"{AzureDevOpsBaseUrl}/{AzureDevOpsOrg}/_apis/resources/Containers/{containerId}?itemPath=/{artifactName}/{fileName}&isShallow=true&api-version={AzureApiVersionForFileDownload}";
-            Exception mostRecentlyCaughtException = null;
-            bool success = await RetryHandler.RunAsync(async attempt =>
-            {
-                try
-                {
-                    Log.LogMessage(MessageImportance.Low, $"Download file uri = {uri}");
-
-                    CancellationTokenSource timeoutTokenSource =
-                        new CancellationTokenSource(TimeSpan.FromMinutes(TimeoutInMinutes));
-
-                    using HttpResponseMessage response = await client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, timeoutTokenSource.Token);
-
-                    response.EnsureSuccessStatusCode();
-
-                    using var fs = new FileStream(
-                        path,
-                        FileMode.Create,
-                        FileAccess.ReadWrite,
-                        FileShare.ReadWrite);
-                    using var stream = await response.Content.ReadAsStreamAsync(timeoutTokenSource.Token);
-
-                    await stream.CopyToAsync(fs, timeoutTokenSource.Token);
-                    return true;
-                }
-                catch (Exception toStore)
-                {
-                    mostRecentlyCaughtException = toStore;
-                    return false;
-                }
-            }).ConfigureAwait(false);
-
-            if (!success)
-            {
-                throw new Exception(
-                    $"Failed to download local file '{path}' after {RetryHandler.MaxAttempts} attempts.  See inner exception for details.", mostRecentlyCaughtException);
-            }
+            return helper;
         }
 
         protected async Task HandleBlobPublishingAsync(ReadOnlyDictionary<string, Asset> buildAssets, SemaphoreSlim clientThrottle = null)
@@ -1025,15 +1109,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 $"Blob {blob.Id} ({shippingString}) should go to {feedConfig.SafeTargetURL} ({isolatedString}{internalString})");
                         }
 
-                        var assetsToPublish = new HashSet<string>(filteredBlobs.Select(b => b.Id));
                         var publisher = AssetPublisherFactory.CreateAssetPublisher(feedConfig, this);
-                        publishTasks.Add(
-                            PublishAssetsAsync(
+                        publishTasks.Add(Task.Run(async () =>
+                            await PublishAssetsAsync(
                                 publisher,
-                                assetsToPublish,
+                                filteredBlobs,
                                 buildAssets,
                                 feedConfig,
-                                clientThrottle));
+                                clientThrottle)));
                     }
                 }
                 else
@@ -1177,12 +1260,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             SemaphoreSlim clientThrottle)
         {
             bool failed = false;
-            using HttpClient httpClient = CreateAzdoClient(AzureDevOpsOrg, false, AzureProject);
-            string containerId = await GetContainerIdAsync(httpClient, ArtifactName.PackageArtifacts);
+            using HttpClient downloadFileClient = CreateAzdoClient();
+            using HttpClient feedPublishingClient = CreateAzdoClient(feedConfig.Token);
 
-            using HttpClient client = CreateAzdoClient(AzureDevOpsOrg, true);
-
-            await Task.WhenAll(packagesToPublish.Select(async package =>
+            await Task.WhenAll(packagesToPublish.Select(package => Task.Run(async () =>
             {
                 try
                 {
@@ -1192,15 +1273,31 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Path.GetFullPath(Path.Combine(ArtifactsBasePath, Guid.NewGuid().ToString()));
                     EnsureTemporaryDirectoryExists(temporaryPackageDirectory);
                     string localPackagePath = Path.Combine(temporaryPackageDirectory, packageFilename);
+
+                    // Determine whether the package lives
+                    string artifactName = PackageArtifactsArtifactName;
+                    string artifactSubPath = packageFilename;
+
+                    if (BuildModel.Identity.PublishingVersion >= PublishingInfraVersion.V4)
+                    {
+                        if (string.IsNullOrEmpty(package.PipelineArtifactPath) || string.IsNullOrEmpty(package.PipelineArtifactName))
+                        {
+                            Log.LogError($"Package {package.Id} is missing required PipelineArtifactPath or PipelineArtifactName for V4+ publishing");
+                            return;
+                        }
+
+                        artifactName = package.PipelineArtifactName;
+                        artifactSubPath = package.PipelineArtifactPath;
+                    }
+
                     Log.LogMessage(MessageImportance.Low,
-                        $"Downloading package : {packageFilename} to {localPackagePath}");
+                        $"Downloading package : '{artifactSubPath}' from artifact '{artifactName}' to {localPackagePath}");
 
                     Stopwatch gatherPackageDownloadTime = Stopwatch.StartNew();
                     await DownloadFileAsync(
-                        client,
-                        ArtifactName.PackageArtifacts,
-                        containerId,
-                        packageFilename,
+                        downloadFileClient,
+                        artifactName,
+                        artifactSubPath,
                         localPackagePath);
 
                     if (!File.Exists(localPackagePath))
@@ -1229,19 +1326,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         feedConfig,
                         LocationType.NugetFeed);
 
-                    using HttpClient httpClient = new HttpClient(new HttpClientHandler
-                    {
-                        CheckCertificateRevocationList = true
-                    });
-
-                    httpClient.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
-                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
-                        "Basic",
-                        Convert.ToBase64String(
-                            Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", feedConfig.Token))));
-
                     Stopwatch gatherPackagePublishingTime = Stopwatch.StartNew();
-                    await PushPackageToNugetFeed(httpClient, feedConfig, localPackagePath, package.Id, package.Version);
+                    await PushPackageToNugetFeed(feedPublishingClient, feedConfig, localPackagePath, package.Id, package.Version);
                     gatherPackagePublishingTime.Stop();
                     Log.LogMessage(MessageImportance.Low, $"Publishing package {localPackagePath} took {gatherPackagePublishingTime.ElapsedMilliseconds / 1000.0} (seconds)");
 
@@ -1251,7 +1337,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     clientThrottle.Release();
                 }
-            }));
+            })));
         }
 
         private async Task PublishPackagesToAzDoNugetFeedAsync(
@@ -1279,7 +1365,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             HashSet<T> packagesToPublish,
             TargetFeedConfig feedConfig,
             int maxClients,
-            Func<TargetFeedConfig, HttpClient, T, string, string, string, Task> packagePublishAction)
+            Func<TargetFeedConfig, HttpClient, T, string, String, String, Task> packagePublishAction)
         {
             if (!packagesToPublish.Any())
             {
@@ -1308,7 +1394,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     "Basic",
                     Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", feedConfig.Token))));
 
-                await Task.WhenAll(packagesToPublish.Select(async packageToPublish =>
+                await Task.WhenAll(packagesToPublish.Select(packageToPublish => Task.Run(async () =>
                 {
                     try
                     {
@@ -1326,7 +1412,47 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         clientThrottle.Release();
                     }
-                }));
+                })));
+            }
+        }
+
+        public enum NuGetFeedUploadPackageResult
+        {
+            Success,
+            AlreadyExists,
+            Failed,
+        }
+
+        public static async Task<NuGetFeedUploadPackageResult> NuGetFeedUploadPackageAsync(HttpClient httpClient, string feedName, string feedUri, Stream packageContentReadStream)
+        {
+            const string cAzureDevOps = "AzureDevOps";
+
+            try
+            {
+                Uri uri = new Uri(feedUri);
+
+                var request = new HttpRequestMessage(HttpMethod.Put, uri);
+                var packageContent = new StreamContent(packageContentReadStream);
+                packageContent.Headers.ContentType = MediaTypeHeaderValue.Parse("application/octet-stream");
+                using var content = new MultipartFormDataContent();
+                content.Add(packageContent, "package", "package.nupkg");
+                request.Content = content;
+                request.Headers.TransferEncodingChunked = true;
+                request.Headers.Add("X-NuGet-ApiKey", cAzureDevOps);
+
+                var response = await httpClient.SendAsync(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+                {
+                    return NuGetFeedUploadPackageResult.AlreadyExists;
+                }
+
+                response.EnsureSuccessStatusCode();
+                return NuGetFeedUploadPackageResult.Success;
+            }
+            catch
+            {
+                // Log the exception if we have access to the logging context
+                return NuGetFeedUploadPackageResult.Failed;
             }
         }
 
@@ -1346,12 +1472,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///         - Azure DevOps is having some issue meaning we didn't succeed to publish at first.
         ///         
         ///     The second case is by far the most common. So, we first attempt to push the 
-        ///     package normally using nuget.exe. If this fails, this could mean any number of 
-        ///     things (like failed auth). But in normal circumstances, this might mean the 
-        ///     package already exists. This either means that we are attempting to push the 
-        ///     same package, or attemtping to push a different package with the same id and 
-        ///     version. The second case is an error, as Azure DevOps feeds are immutable, 
-        ///     the former is simply a case where we should continue onward.
+        ///     package normally using the API, and if we get Conflict, then we start comparing file contents.
         ///     
         ///     To handle the third case we rely on the call to compare file contents 
         ///     `CompareLocalPackageToFeedPackage` to return PackageFeedStatus.DoesNotExist,
@@ -1370,57 +1491,69 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string feedVisibility,
             string feedName,
             Func<string, string, HttpClient, MsBuildUtils.TaskLoggingHelper, Task<PackageFeedStatus>> CompareLocalPackageToFeedPackageCallBack = null,
-            Func<string, string, Task<ProcessExecutionResult>> RunProcessAndGetOutputsCallBack = null
-            )
+            Func<HttpClient, string, string, Stream, Task<NuGetFeedUploadPackageResult>> AttemptPushPackageCallback = null)
         {
             // Using these callbacks we can mock up functionality when testing.
             CompareLocalPackageToFeedPackageCallBack ??= CompareLocalPackageToFeedPackage;
-            RunProcessAndGetOutputsCallBack ??= GeneralUtils.RunProcessAndGetOutputsAsync;
-            ProcessExecutionResult nugetResult = null;
+            AttemptPushPackageCallback ??= NuGetFeedUploadPackageAsync;
+
             var packageStatus = PackageFeedStatus.Unknown;
 
             try
             {
-                Log.LogMessage(MessageImportance.Normal, $"Pushing local package {localPackageLocation} to target feed {feedConfig.TargetURL}");
+                Log.LogMessage(MessageImportance.Normal, $"Pushing package {id}@{version} to target feed {feedConfig.TargetURL}");
                 int attemptIndex = 0;
 
                 do
                 {
                     attemptIndex++;
-                    // The feed key when pushing to AzDo feeds is "AzureDevOps" (works with the credential helper).
-                    nugetResult = await RunProcessAndGetOutputsCallBack(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetURL}\" -NonInteractive -ApiKey AzureDevOps -Verbosity quiet");
+                    string feedUri = $"https://pkgs.dev.azure.com/{feedAccount}/{feedVisibility}_packaging/{feedName}/nuget/v2";
 
-                    if (nugetResult.ExitCode == 0)
+                    NuGetFeedUploadPackageResult result;
+
+                    using (Stream packageStream = File.OpenRead(localPackageLocation))
+                    {
+                        result = await AttemptPushPackageCallback(client, feedName, feedUri, packageStream);
+                    }
+
+                    if (result == NuGetFeedUploadPackageResult.Success)
                     {
                         // We have just pushed this package so we know it exists and is identical to our local copy
                         packageStatus = PackageFeedStatus.ExistsAndIdenticalToLocal;
                         break;
                     }
-
-                    Log.LogMessage(MessageImportance.Low, $"Attempt # {attemptIndex} failed to push {localPackageLocation}, attempting to determine whether the package already existed on the feed with the same content. Nuget exit code = {nugetResult.ExitCode}");
-
-                    string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedVisibility}_apis/packaging/feeds/{feedName}/nuget/packages/{id}/versions/{version}/content";
-                    packageStatus = await CompareLocalPackageToFeedPackageCallBack(localPackageLocation, packageContentUrl, client, Log);
-
-                    switch (packageStatus)
+                    else if (result == NuGetFeedUploadPackageResult.AlreadyExists)
                     {
-                        case PackageFeedStatus.ExistsAndIdenticalToLocal:
-                            {
-                                Log.LogMessage(MessageImportance.Normal, $"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' but has the same content; skipping push");
-                                break;
-                            }
-                        case PackageFeedStatus.ExistsAndDifferent:
-                            {
-                                Log.LogError($"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' with different content.");
-                                break;
-                            }
-                        default:
-                            {
-                                // For either case (unknown exception or 404, we will retry the push and check again.  Linearly increase back-off time on each retry.
-                                Log.LogMessage(MessageImportance.Low, $"Hit error checking package status after failed push: '{packageStatus}'. Will retry after {RetryDelayMilliseconds * attemptIndex} ms.");
-                                await Task.Delay(RetryDelayMilliseconds * attemptIndex).ConfigureAwait(false);
-                                break;
-                            }
+
+                        Log.LogMessage(MessageImportance.Low, $"Attempt # {attemptIndex} failed to push {localPackageLocation}, attempting to determine whether the package already existed on the feed with the same content.");
+
+                        string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedVisibility}_apis/packaging/feeds/{feedName}/nuget/packages/{id}/versions/{version}/content";
+                        packageStatus = await CompareLocalPackageToFeedPackageCallBack(localPackageLocation, packageContentUrl, client, Log);
+
+                        switch (packageStatus)
+                        {
+                            case PackageFeedStatus.ExistsAndIdenticalToLocal:
+                                {
+                                    Log.LogMessage(MessageImportance.Normal, $"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' but has the same content; skipping push");
+                                    break;
+                                }
+                            case PackageFeedStatus.ExistsAndDifferent:
+                                {
+                                    Log.LogError($"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' with different content.");
+                                    break;
+                                }
+                            default:
+                                {
+                                    // For either case (unknown exception or 404, we will retry the push and check again.  Linearly increase back-off time on each retry.
+                                    Log.LogMessage(MessageImportance.Low, $"Hit error checking package status after failed push: '{packageStatus}'. Will retry after {RetryDelayMilliseconds * attemptIndex} ms.");
+                                    await Task.Delay(RetryDelayMilliseconds * attemptIndex).ConfigureAwait(false);
+                                    break;
+                                }
+                        }
+                    }
+                    else
+                    {
+                        packageStatus = PackageFeedStatus.Unknown;
                     }
                 }
                 while (packageStatus != PackageFeedStatus.ExistsAndIdenticalToLocal && // Success
@@ -1438,12 +1571,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
             catch (Exception e)
             {
-                Log.LogError($"Unexpected exception pushing package '{id}@{version}': {e.Message}");
-            }
-
-            if (packageStatus != PackageFeedStatus.ExistsAndIdenticalToLocal && nugetResult?.ExitCode != 0)
-            {
-                Log.LogError($"Output from nuget.exe: {Environment.NewLine}StdOut:{Environment.NewLine}{nugetResult.StandardOut}{Environment.NewLine}StdErr:{Environment.NewLine}{nugetResult.StandardError}");
+                Log.LogErrorFromException(e, true);
             }
         }
 
@@ -1459,21 +1587,29 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return temporaryDirectory;
         }
 
-        private async Task PublishAssetsAsync(IAssetPublisher assetPublisher, HashSet<string> assetsToPublish,
-            ReadOnlyDictionary<string, Asset> buildAssets,
+        /// <summary>
+        /// Publish non-package blob assets to output locations
+        /// </summary>
+        /// <param name="assetPublisher">Asset publisher to use. Moves the outputs to the target location</param>
+        /// <param name="blobAssets">Blob artifacts to publish from the manifest.</param>
+        /// <param name="assetToBARMapping">Mapping of the id of a given asset to the BAR id asset.</param>
+        /// <param name="feedConfig">Feed configuration defining where the assets should go.</param>
+        /// <param name="clientThrottle">Throttle.</param>
+        private async Task PublishAssetsAsync(IAssetPublisher assetPublisher, HashSet<BlobArtifactModel> blobAssets,
+            ReadOnlyDictionary<string, Asset> assetToBARMapping,
             TargetFeedConfig feedConfig,
             SemaphoreSlim clientThrottle)
         {
             if (UseStreamingPublishing)
             {
-                await PublishAssetsUsingStreamingPublishingAsync(assetPublisher, assetsToPublish, buildAssets, feedConfig, clientThrottle);
+                await PublishAssetsUsingStreamingPublishingAsync(assetPublisher, blobAssets, assetToBARMapping, feedConfig, clientThrottle);
             }
             else
             {
-                await PublishAssetsWithoutStreamingPublishingAsync(assetPublisher, assetsToPublish, buildAssets, feedConfig);
+                await PublishAssetsWithoutStreamingPublishingAsync(assetPublisher, blobAssets, assetToBARMapping, feedConfig);
             }
 
-            if (feedConfig.Type == FeedType.AzureStorageContainer && 
+            if (feedConfig.Type == FeedType.AzureStorageContainer &&
                 feedConfig.LatestLinkShortUrlPrefixes.Any())
             {
 
@@ -1501,47 +1637,58 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 // The latest links should be updated only after the publishing is complete, to avoid
                 // dead links in the interim.
                 await LinkManager.CreateOrUpdateLatestLinksAsync(
-                    assetsToPublish,
-                    feedConfig,
-                    feedConfig.Type == FeedType.AzureStorageContainer
-                        ? 0
-                        : PublishingConstants.ExpectedFeedUrlSuffix.Length);
+                    blobAssets.Select(b => b.Id).ToHashSet(),
+                    feedConfig);
             }
         }
 
         private async Task PublishAssetsUsingStreamingPublishingAsync(
             IAssetPublisher assetPublisher,
-            HashSet<string> assetsToPublish,
+            HashSet<BlobArtifactModel> assetsToPublish,
             ReadOnlyDictionary<string, Asset> buildAssets,
             TargetFeedConfig feedConfig,
             SemaphoreSlim clientThrottle)
         {
             bool failed = false;
-            using HttpClient httpClient = CreateAzdoClient(AzureDevOpsOrg, false, AzureProject);
-            string containerId = await GetContainerIdAsync(httpClient, ArtifactName.BlobArtifacts);
 
             var pushOptions = new PushOptions
             {
                 AllowOverwrite = feedConfig.AllowOverwrite,
                 PassIfExistingItemIdentical = true,
             };
-            using HttpClient client = CreateAzdoClient(AzureDevOpsOrg, true, AzureProject);
+            using HttpClient downloadClient = CreateAzdoClient();
 
-            await Task.WhenAll(assetsToPublish.Select(async asset =>
+            await Task.WhenAll(assetsToPublish.Select(asset => Task.Run(async () =>
             {
                 using (await SemaphoreLock.LockAsync(clientThrottle))
                 {
                     string temporaryBlobDirectory = CreateTemporaryDirectory();
-                    var fileName = Path.GetFileName(asset);
+                    var targetBlobPath = asset.Id;
+                    var fileName = Path.GetFileName(targetBlobPath);
                     var localBlobPath = Path.Combine(temporaryBlobDirectory, fileName);
-                    Log.LogMessage(MessageImportance.Low, $"Downloading blob : {fileName} to {localBlobPath}");
+                    var blobArtifactName = BlobArtifactsArtifactName;
+                    var blobArtifactSubPath = fileName;
+
+                    if (BuildModel.Identity.PublishingVersion >= PublishingInfraVersion.V4)
+                    {
+                        if (string.IsNullOrEmpty(asset.PipelineArtifactPath) || string.IsNullOrEmpty(asset.PipelineArtifactName))
+                        {
+                            Log.LogError($"Blob {asset} is missing required PipelineArtifactPath or PipelineArtifactName for V4+ publishing");
+                            failed = true;
+                            return;
+                        }
+
+                        blobArtifactName = asset.PipelineArtifactName;
+                        blobArtifactSubPath = asset.PipelineArtifactPath;
+                    }
+
+                    Log.LogMessage(MessageImportance.Low, $"Downloading blob : {blobArtifactSubPath} from artifact '{blobArtifactName}' to {localBlobPath}");
 
                     Stopwatch gatherBlobDownloadTime = Stopwatch.StartNew();
                     await DownloadFileAsync(
-                        client,
-                        ArtifactName.BlobArtifacts,
-                        containerId,
-                        fileName,
+                        downloadClient,
+                        blobArtifactName,
+                        blobArtifactSubPath,
                         localBlobPath);
                     gatherBlobDownloadTime.Stop();
                     Log.LogMessage(MessageImportance.Low, $"Time taken to download file to '{localBlobPath}' is {gatherBlobDownloadTime.ElapsedMilliseconds / 1000.0} (seconds)");
@@ -1557,14 +1704,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             $"Successfully downloaded blob : {fileName} to {localBlobPath}");
 
                         TryAddAssetLocation(
-                            asset,
+                            targetBlobPath,
                             assetVersion: null,
                             buildAssets,
                             feedConfig,
                             assetPublisher.LocationType);
 
                         Stopwatch gatherBlobPublishingTime = Stopwatch.StartNew();
-                        await assetPublisher.PublishAssetAsync(localBlobPath, asset, pushOptions, null);
+                        await assetPublisher.PublishAssetAsync(localBlobPath, targetBlobPath, pushOptions, null);
                         gatherBlobPublishingTime.Stop();
                         Log.LogMessage(MessageImportance.Low, $"Publishing {localBlobPath} completed in {gatherBlobPublishingTime.ElapsedMilliseconds / 1000.0} (seconds)");
                     }
@@ -1576,20 +1723,28 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     DeleteTemporaryDirectory(temporaryBlobDirectory);
                 }
-            }));
+            })));
         }
 
+        /// <summary>
+        /// Simpler, non-streaming version of publishing that pushes from a local output directory to a target feed.
+        /// </summary>
+        /// <param name="assetPublisher">Asset publisher to use to move assets to the output location</param>
+        /// <param name="assetsToPublish">Set of assets to publish</param>
+        /// <param name="assetNameToBARAssetMapping">Mapping of asset name to BAR id asset information</param>
+        /// <param name="feedConfig">Feed configuration specifying what assets go where</param>
+        /// <remarks>At this point, this code assumes a flat file layout under the blob artifacts path.</remarks>
         private async Task PublishAssetsWithoutStreamingPublishingAsync(
             IAssetPublisher assetPublisher,
-            HashSet<string> assetsToPublish,
-            ReadOnlyDictionary<string, Asset> buildAssets,
+            HashSet<BlobArtifactModel> assetsToPublish,
+            ReadOnlyDictionary<string, Asset> assetNameToBARAssetMapping,
             TargetFeedConfig feedConfig)
         {
             bool failed = false;
             var assets = assetsToPublish
                 .Select(asset =>
                 {
-                    var fileName = Path.GetFileName(asset);
+                    var fileName = Path.GetFileName(asset.Id);
                     var localBlobPath = Path.Combine(BlobAssetsBasePath, fileName);
 
                     if (!File.Exists(localBlobPath))
@@ -1598,7 +1753,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Log.LogError($"Could not locate '{asset} at '{localBlobPath}'");
                     }
 
-                    return (localBlobPath, id: asset);
+                    return (localBlobPath, id: asset.Id);
                 })
                 .ToArray();
 
@@ -1616,16 +1771,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             foreach (var asset in assetsToPublish)
             {
                 TryAddAssetLocation(
-                    asset,
+                    asset.Id,
                     assetVersion: null,
-                    buildAssets,
+                    assetNameToBARAssetMapping,
                     feedConfig,
                     LocationType.Container);
             }
 
             using var clientThrottle = new SemaphoreSlim(MaxClients, MaxClients);
             await Task.WhenAll(assets.Select(asset =>
-                assetPublisher.PublishAssetAsync(asset.localBlobPath, asset.id, pushOptions, clientThrottle)));
+                Task.Run(async () => await assetPublisher.PublishAssetAsync(asset.localBlobPath, asset.id, pushOptions, clientThrottle))));
         }
 
         private async Task PushPackageToNugetFeed(
@@ -1660,7 +1815,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         /// <summary>
-        /// Create Temporary directory if it does not exists.
+        /// Creates a temporary directory if it does not exists.
         /// </summary>
         /// <param name="temporaryLocation"></param>
         public void EnsureTemporaryDirectoryExists(string temporaryLocation)
@@ -1782,32 +1937,3 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
     }
 }
-#else
-    public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities.Task
-    {
-        public override bool Execute() => throw new NotSupportedException("PublishArtifactsInManifestBase depends on Maestro.Client, which has discontinued support for desktop frameworks.");
-
-        public abstract Task<bool> ExecuteAsync();
-
-        public Task PushNugetPackagesAsync<T>(
-            HashSet<T> packagesToPublish,
-            TargetFeedConfig feedConfig,
-            int maxClients,
-            Func<TargetFeedConfig, HttpClient, T, string, string, string, Task> packagePublishAction)  
-            => throw new NotSupportedException("PublishArtifactsInManifestBase depends on Maestro.Client, which has discontinued support for desktop frameworks.");
-
-        public Task PushNugetPackageAsync(
-            TargetFeedConfig feedConfig,
-            HttpClient client,
-            string localPackageLocation,
-            string id,
-            string version,
-            string feedAccount,
-            string feedVisibility,
-            string feedName,
-            Func<string, string, HttpClient, MsBuildUtils.TaskLoggingHelper, Task<PackageFeedStatus>> CompareLocalPackageToFeedPackageCallBack = null,
-            Func<string, string, Task<ProcessExecutionResult>> RunProcessAndGetOutputsCallBack = null
-            ) => throw new NotSupportedException("PublishArtifactsInManifestBase depends on Maestro.Client, which has discontinued support for desktop frameworks.");
-    }
-}
-#endif

@@ -25,9 +25,8 @@ This is a MSBuild custom task that provides batch signing and simple verificatio
 | FileSignInfo           | Array    | Used to override the default certificate information for specific files and target frameworks combinations. If not specified default information is used or error occurs. See details below. |
 | FileExtensionSignInfo  | Array    | This is a mapping between extension (in the format ".ext") to default sign information for those kind of files. Overriding of the default sign info is done using the other parameters. |
 | CertificatesSignInfo   | Array    | List of certificate names that can be flagged using the `DualSigningAllowed` attribute as dual certificates. |
-| **MicroBuildCorePath** | Dir Path | Path to MicroBuild.Core package directory.                   |
-| MSBuildPath            | Exe path | Path to the MSBuild.exe binary used to run the signing process on MicroBuild for Windows. |
-| DotNetPath             | Exe path | Path to the dotnet executable used to run the signing process on MicroBuild for Linux and Mac. |
+| **MicroBuildCorePath** | Dir Path | Path to Microsoft.VisualStudioEng.MicroBuild.Core.props package directory.                   |
+| DotNetPath             | Exe path | Path to the dotnet executable used to run the signing process on MicroBuild. |
 | SNBinaryPath           | Exe path | Path to the sn.exe binary used to strong-name sign / validate signature of managed files. |
 | **TempDir**            | Dir path | Used to store temporary files during the process of calling MicroBuild signing. |
 | LogDir                 | Dir path | MSBuild binary log information from the signing rounds will be stored in this directory. |
@@ -36,7 +35,7 @@ This is a MSBuild custom task that provides batch signing and simple verificatio
 
 ​	Items in bold are required: `ItemsToSign`, `MicroBuildCorePath` and `TempDir`.
 
-​	`MSBuildPath`, `SNBinaryPath` and `LogDir` are only required if `DryRun == false`.
+​	`DotNetPath`, `SNBinaryPath` and `LogDir` are only required if `DryRun == false`.
 
 
 # Arguments Metadata
@@ -101,11 +100,11 @@ The [default configuration](../../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.pro
 
 #### 2. Use a different certificate for an specific Public Key Token
 
-If you repo have signable files that have a different Public Key Token than the one preconfigured in the SDK (i.e., `31bf3856ad364e35`) you might add an entry to `StrongNameSignInfo` to specify the certificate name that should be used for those files. To do that, place an entry like the one show below in your `eng\Signing.props` file.
+If your repo has signable files that have a different Public Key Token than the one preconfigured in the SDK (i.e., `31bf3856ad364e35`) you might add an entry to `StrongNameSignInfo` to specify the certificate name that should be used for those files. To do that, place an entry like the one show below in your `eng\Signing.props` file.
 
 ```xml
 <ItemGroup>
-	<StrongNameSignInfo Include="StrongName1" PublicKeyToken="4321abcda1b2c3d4" CertificateName="DifferentCertName" />
+	<StrongNameSignInfo Include="(MSBuildThisFileDirectory)..\StrongName1.snk" PublicKeyToken="4321abcda1b2c3d4" CertificateName="DifferentCertName" />
 </ItemGroup>
 ```
 
@@ -222,7 +221,7 @@ Click [here](../../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) to see how t
     TempDir="$(ArtifactsTmpDir)"
     LogDir="$(ArtifactsLogDir)"
     MSBuildPath="$(DesktopMSBuildPath)"
-    MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"/>
+    MicroBuildCorePath="$(NuGetPackageRoot)microsoft.visualstudioeng.microbuild.core\$(MicrosoftVisualStudioEngMicroBuildCoreVersion)"/>
 ...
 ```
 

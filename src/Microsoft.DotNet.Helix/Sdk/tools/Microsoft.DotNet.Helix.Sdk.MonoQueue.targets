@@ -59,15 +59,11 @@
                   HelixProperties="@(HelixProperties)">
       <Output TaskParameter="JobCorrelationId" PropertyName="HelixJobId"/>
       <Output TaskParameter="JobCancellationToken" PropertyName="HelixJobCancellationToken"/>
-      <Output TaskParameter="ResultsContainerUri" PropertyName="HelixResultsContainer"/>
-      <Output TaskParameter="ResultsContainerReadSAS" PropertyName="HelixResultsContainerReadSAS"/>
     </SendHelixJob>
     <ItemGroup>
       <SentJob Include="$(HelixJobId)">
         <WorkItemCount>@(HelixWorkItem->Count())</WorkItemCount>
         <HelixTargetQueue>$(HelixTargetQueue)</HelixTargetQueue>
-        <ResultsContainerUri>$(HelixResultsContainer)</ResultsContainerUri>
-        <ResultsContainerReadSAS>$(HelixResultsContainerReadSAS)</ResultsContainerReadSAS>
         <HelixJobCancellationToken>$(HelixJobCancellationToken)</HelixJobCancellationToken>
       </SentJob>
     </ItemGroup>
@@ -75,9 +71,13 @@
     <PropertyGroup>
       <_AccessTokenSuffix />
       <_AccessTokenSuffix Condition=" '$(HelixAccessToken)' != '' ">&amp;access_token={Get this from helix.dot.net}</_AccessTokenSuffix>
+      <_HelixBaseUri Condition="'$(HelixBaseUri)' == ''">https://helix.dot.net</_HelixBaseUri>
+      <_HelixBaseUri Condition="'$(HelixBaseUri)' != ''">$(HelixBaseUri.TrimEnd('/'))</_HelixBaseUri>
+      <_HelixJobName />
+      <_HelixJobName Condition="'$(HelixJobName)' != ''"> '$(HelixJobName)'</_HelixJobName>
     </PropertyGroup>
-    <Message Condition=" '$(HelixBaseUri)' == '' " Text="Sent Helix Job; see work items at https://helix.dot.net/api/jobs/$(HelixJobId)/workitems?api-version=2019-06-17$(_AccessTokenSuffix)" Importance="High" />
-    <Message Condition=" '$(HelixBaseUri)' != '' " Text="Sent Helix Job; see work items at $(HelixBaseUri)/api/jobs/$(HelixJobId)/workitems?api-version=2019-06-17$(_AccessTokenSuffix)" Importance="High" />
+    <Message Text="$(_HelixJobSentMessage)" Importance="High" />
+    <Message Text="Sent Helix Job$(_HelixJobName); see work items at $(_HelixBaseUri)/api/jobs/$(HelixJobId)/workitems?api-version=2019-06-17$(_AccessTokenSuffix)" Importance="High" />
   </Target>
 
   <Target Name="Test"

@@ -25,14 +25,14 @@ stages:
         azureSubscription: "Darc: Maestro Production"
         scriptType: ps
         scriptLocation: scriptPath
-        scriptPath: $(Build.SourcesDirectory)/eng/publishing/v3/validate-and-locate-build.ps1
+        scriptPath: $(System.DefaultWorkingDirectory)/eng/publishing/v3/validate-and-locate-build.ps1
         arguments: >
           -BuildId ${{ parameters.BARBuildId }}
           -PromoteToChannelIds ${{ parameters.PromoteToChannelIds }}
           -DarcVersion $(DarcVersion)
 
-    - task: DownloadBuildArtifacts@0
-      displayName: Download Build Assets
+    - task: DownloadPipelineArtifact@2
+      displayName: Download V3 Merged Manifest
       continueOnError: true
       enabled: true
       inputs:
@@ -42,12 +42,56 @@ stages:
         pipeline: $(AzDOPipelineId)
         buildId: $(AzDOBuildId)
         downloadType: 'specific'
+        artifact: BlobArtifacts
         itemPattern: |
-          AssetManifests/**
-          BlobArtifacts/MergedManifest.xml
-          PdbArtifacts/**
+          **/MergedManifest.xml
+        downloadPath: '$(Build.ArtifactStagingDirectory)/BlobArtifacts'
+
+    - task: DownloadPipelineArtifact@2
+      displayName: Download V3 PDB Artifacts
+      continueOnError: true
+      enabled: true
+      inputs:
+        buildType: specific
+        buildVersionToDownload: specific
+        project: $(AzDOProject)
+        pipeline: $(AzDOPipelineId)
+        buildId: $(AzDOBuildId)
+        downloadType: 'specific'
+        artifact: PdbArtifacts
+        downloadPath: '$(Build.ArtifactStagingDirectory)/PdbArtifacts'
+
+    - task: DownloadPipelineArtifact@2
+      displayName: Download V4 Merged Manifest
+      continueOnError: true
+      enabled: true
+      inputs:
+        buildType: specific
+        buildVersionToDownload: specific
+        project: $(AzDOProject)
+        pipeline: $(AzDOPipelineId)
+        buildId: $(AzDOBuildId)
+        downloadType: 'specific'
+        artifact: AssetManifests
+        itemPattern: |
+          **/MergedManifest.xml
+        downloadPath: '$(Build.ArtifactStagingDirectory)/BlobArtifacts'
+
+    - task: DownloadPipelineArtifact@2
+      displayName: Download Release Configs
+      continueOnError: true
+      enabled: true
+      inputs:
+        buildType: specific
+        buildVersionToDownload: specific
+        project: $(AzDOProject)
+        pipeline: $(AzDOPipelineId)
+        buildId: $(AzDOBuildId)
+        downloadType: 'specific'
+        artifact: ReleaseConfigs
+        itemPattern: |
           ReleaseConfigs/SymbolPublishingExclusionsFile.txt
-        downloadPath: '$(Build.ArtifactStagingDirectory)'
+        downloadPath: '$(Build.ArtifactStagingDirectory)/ReleaseConfigs'
 
     - task: NuGetToolInstaller@1
       displayName: 'Install NuGet.exe'
@@ -58,7 +102,7 @@ stages:
     - task: PowerShell@2
       displayName: Enable cross-org publishing
       inputs:
-        filePath: $(Build.SourcesDirectory)/eng/common/enable-cross-org-publishing.ps1
+        filePath: $(System.DefaultWorkingDirectory)/eng/common/enable-cross-org-publishing.ps1
         arguments: -token $(dn-bot-all-orgs-artifact-feeds-rw)
 
     - task: AzureCLI@2
@@ -86,14 +130,15 @@ stages:
 
     - task: AzureCLI@2
       displayName: Publish packages, blobs and symbols
+      env:
+        SYSTEM_ACCESSTOKEN: $(System.AccessToken)
       inputs:
         azureSubscription: maestro-build-promotion
-        addSpnToEnvironment: true
         scriptType: ps
         scriptLocation: scriptPath
-        scriptPath: $(Build.SourcesDirectory)/eng/common/sdk-task.ps1
+        scriptPath: $(System.DefaultWorkingDirectory)/eng/common/sdk-task.ps1
         arguments: >
-          -task PublishArtifactsInManifest -restore -msbuildEngine dotnet
+          -task PublishArtifactsInManifest -restore -msbuildEngine dotnet -noWarnAsError
           /p:PublishingInfraVersion=3
           /p:BARBuildId=${{ parameters.BARBuildId }}
           /p:TargetChannels='${{ parameters.PromoteToChannelIds }}'
@@ -108,7 +153,6 @@ stages:
           /p:AzureDevOpsFeedsKey='$(dn-bot-all-orgs-artifact-feeds-rw)'
           /p:AkaMSClientId=$(akams-app-id)
           /p:AkaMSClientCertificate=$(Agent.TempDirectory)/akamsclientcert.pfx
-          /p:ManagedIdentityClientId=$env:servicePrincipalId
           ${{ parameters.artifactsPublishingAdditionalParameters }} 
           /p:PDBArtifactsBasePath='$(Build.ArtifactStagingDirectory)/PDBArtifacts/'
           /p:SymbolPublishingExclusionsFile='$(Build.ArtifactStagingDirectory)/ReleaseConfigs/SymbolPublishingExclusionsFile.txt'

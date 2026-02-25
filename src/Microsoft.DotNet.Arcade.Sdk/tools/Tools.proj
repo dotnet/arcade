@@ -37,31 +37,31 @@
     <PackageReference Include="Microsoft.DotNet.NuGetRepack.Tasks" Version="$(MicrosoftDotnetNuGetRepackTasksVersion)" Condition="'$(UsingToolNuGetRepack)' == 'true'" IsImplicitlyDefined="true" />
   </ItemGroup>
 
-  <!-- These package references should only be included when:
-       - Not in source-only mode OR
-       - When in source-only mode in the outer repo build but not launched from the orchestrator.
-  -->
-
   <PropertyGroup>
-    <_ImportOrUseTooling>false</_ImportOrUseTooling>
-    <_ImportOrUseTooling Condition="'$(DotNetBuildSourceOnly)' != 'true' or ('$(DotNetBuildPhase)' == 'Repo' and '$(DotNetBuildOrchestrator)' != 'true')">true</_ImportOrUseTooling>
+    <!-- Don't restore the below nuget packages, repo tools and additional global.json runtimes when building source-only. -->
+    <_ImportOrUseTooling Condition="'$(_ImportOrUseTooling)' == '' and '$(DotNetBuildSourceOnly)' != 'true'">true</_ImportOrUseTooling>
+    <RestoreBuildTaskFeed>$(Publish)</RestoreBuildTaskFeed>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(_ImportOrUseTooling)' == 'true'">
     <!-- Copy of 'sn.exe' in form of NuGet package. -->
     <PackageReference Include="sn" Version="$(SNVersion)" IsImplicitlyDefined="true" />
-    <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)"  IsImplicitlyDefined="true" />
+    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(MicrosoftVisualStudioEngMicroBuildCoreVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="MicroBuild.Core.Sentinel" Version="1.0.0" IsImplicitlyDefined="true" />
     <PackageReference Include="vswhere" Version="$(VSWhereVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.Signed.Wix" Version="$(MicrosoftSignedWixVersion)" IsImplicitlyDefined="true" />
+    <PackageReference Include="Microsoft.WixToolset.Sdk" Version="$(MicrosoftWixToolsetSdkVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.DotNet.SignTool" Version="$(MicrosoftDotNetSignToolVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.DotNet.Tar" Version="$(MicrosoftDotNetTarVersion)" IsImplicitlyDefined="true" />
+    <PackageReference Include="Microsoft.DotNet.MacOsPkg.Cli" Version="$(MicrosoftDotNetMacOsPkgVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.SymbolUploader.Build.Task" Version="$(MicrosoftSymbolUploaderBuildTaskVersion)" Condition="'$(PublishToSymbolServer)' == 'true'" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.VisualStudio" Version="$(MicrosoftDotNetBuildTasksVisualStudioVersion)" Condition="'$(UsingToolVSSDK)' == 'true'" IsImplicitlyDefined="true" />
   </ItemGroup>
 
-  <!-- Unlike the items above, we should restore M.D.B.T.F in source build scenarios since it's used in the inner build. -->
-  <ItemGroup>
+  <!-- Unlike the items above, we should restore M.D.B.T.F in source build scenarios.
+      Only reference this if publishing is enabled as that is the only scenario where the targets file which this package
+      provides is being imported (from Publish.proj). -->
+  <ItemGroup Condition="'$(RestoreBuildTaskFeed)' == 'true'">
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" IsImplicitlyDefined="true" />
   </ItemGroup>
 
@@ -77,7 +77,7 @@
     <!-- Respect a restore config file passed in via /p:RestoreConfigFile, common in VMR builds -->
     <PropertyGroup>
       <RestoreConfigFileOption></RestoreConfigFileOption>
-      <RestoreConfigFileOption Condition="'$(RestoreConfigFile)' != ''">--configfile $(RestoreConfigFile)</RestoreConfigFileOption>
+      <RestoreConfigFileOption Condition="'$(RestoreConfigFile)' != ''">--configfile "$(RestoreConfigFile)"</RestoreConfigFileOption>
     </PropertyGroup>
 
     <Exec Command='"$(DotNetTool)" tool restore $(RestoreConfigFileOption)' WorkingDirectory="$(RepoRoot)" />
@@ -86,15 +86,22 @@
   <!-- Set as DependsOnTargets when internal tools (e.g. IBC data, optprof) is required -->
   <Target Name="RestoreInternalTooling"
           AfterTargets="$(RestoreInternalToolingAfterTargets)">
-    <MSBuild Projects="$(RepoRoot)eng/common/internal/Tools.csproj"
+    <PropertyGroup>
+      <InternalToolsRestoreProject>$(RepoRoot)eng/common/internal/Tools.csproj</InternalToolsRestoreProject>
+      <InternalToolsRestoreConfig>$(RepoRoot)eng/common/internal/NuGet.config</InternalToolsRestoreConfig>
+    </PropertyGroup>
+    <MSBuild Projects="$(InternalToolsRestoreProject)"
         Targets="Restore"
-        Properties="@(_RestoreToolsProps);_NETCORE_ENGINEERING_TELEMETRY=Restore"
+        Properties="@(_RestoreToolsProps);RestoreConfigFile=$(InternalToolsRestoreConfig);_NETCORE_ENGINEERING_TELEMETRY=Restore"
         Condition="'$(Restore)' == 'true'"/>
   </Target>
 
-  <Import Project="SourceBuild/SourceBuildArcadeTools.targets" Condition="'$(ArcadeBuildFromSource)' == 'true' or
-                                                                          '$(DotNetBuildRepo)' == 'true' or
-                                                                          '$(SetUpSourceBuildIntermediateNupkgCache)' == 'true'" />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.SourceBuild.Tasks"
+                      Version="$(MicrosoftDotNetSourceBuildTasksVersion)"
+                      IsImplicitlyDefined="true"
+                      Condition="'$(TrackPrebuiltUsage)' == 'true'" />
+  </ItemGroup>
 
   <!-- Repository extensibility point -->
   <Import Project="$(RepositoryEngineeringDir)Tools.props" Condition="Exists('$(RepositoryEngineeringDir)Tools.props')" />

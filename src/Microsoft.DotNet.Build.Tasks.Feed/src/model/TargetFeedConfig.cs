@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Azure;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Model
@@ -15,9 +16,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
     public class TargetFeedConfig
     {
         /// <summary>
-        ///   Returns the TargetURL stripped of SAS token so it can be used for logging purposes.
+        ///   Returns the TargetURL stripped of SAS token and with CDN substitution applied
+        ///   for known blob storage accounts. This is used for both logging purposes and
+        ///   for storing asset locations in BAR that point to publicly accessible CDN URLs.
         /// </summary>
-        public string SafeTargetURL => new UriBuilder(TargetURL) {Query = "", Fragment = ""}.Uri.AbsoluteUri;
+        public string SafeTargetURL
+        {
+            get
+            {
+                var uriBuilder = new UriBuilder(TargetURL) { Query = "", Fragment = "" };
+                
+                // Apply CDN substitution for known storage accounts
+                if (PublishingConstants.AccountsWithCdns.TryGetValue(uriBuilder.Host, out var replacementHost))
+                {
+                    uriBuilder.Host = replacementHost;
+                }
+                
+                return uriBuilder.Uri.AbsoluteUri;
+            }
+        }
 
         public TargetFeedContentType ContentType { get; }
 
@@ -54,25 +71,27 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         /// E.g. 
         ///      [LatestLinkShortUrlPrefixes]/aspnetcore/Runtime/dotnet-hosting-win.exe -> aspnetcore/Runtime/3.1.0-preview2.19511.6/dotnet-hosting-3.1.0-preview2.19511.6-win.exe
         /// </summary>
-        public List<string> LatestLinkShortUrlPrefixes { get; }
+        public ImmutableList<string> LatestLinkShortUrlPrefixes { get; }
 
         public SymbolPublishVisibility SymbolPublishVisibility { get; }
 
-        public ImmutableList<string> FilenamesToExclude { get; }
+        public ImmutableList<Regex> AkaMSCreateLinkPatterns { get; }
+        public ImmutableList<Regex> AkaMSDoNotCreateLinkPatterns { get; }
 
         public bool Flatten { get; }
 
         public TargetFeedConfig(TargetFeedContentType contentType, 
             string targetURL, 
             FeedType type, 
-            string token, 
-            List<string> latestLinkShortUrlPrefixes = null, 
+            string token,
+            ImmutableList<string> latestLinkShortUrlPrefixes = null,
+            ImmutableList<Regex> akaMSCreateLinkPatterns = null,
+            ImmutableList<Regex> akaMSDoNotCreateLinkPatterns = null,
             AssetSelection assetSelection = AssetSelection.All, 
             bool isolated = false, 
             bool @internal = false, 
             bool allowOverwrite = false, 
             SymbolPublishVisibility symbolPublishVisibility = SymbolPublishVisibility.None, 
-            IEnumerable<string> filenamesToExclude = null,
             bool flatten = true)
         {
             ContentType = contentType;
@@ -83,16 +102,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             Isolated = isolated;
             Internal = @internal;
             AllowOverwrite = allowOverwrite;
-            LatestLinkShortUrlPrefixes = latestLinkShortUrlPrefixes ?? new List<string>();
+            LatestLinkShortUrlPrefixes = latestLinkShortUrlPrefixes ?? ImmutableList<string>.Empty;
+            AkaMSCreateLinkPatterns = akaMSCreateLinkPatterns ?? ImmutableList<Regex>.Empty;
+            AkaMSDoNotCreateLinkPatterns = akaMSDoNotCreateLinkPatterns ?? ImmutableList<Regex>.Empty;
             SymbolPublishVisibility = symbolPublishVisibility;
-            FilenamesToExclude = filenamesToExclude?.ToImmutableList() ?? ImmutableList<string>.Empty;
             Flatten = flatten;
         }
 
         public override bool Equals(object obj)
         {
-            if (
-                obj is TargetFeedConfig other &&
+            return obj is TargetFeedConfig other &&
                 (ContentType == other.ContentType) &&
                 ((TargetURL is null && other.TargetURL is null) || TargetURL.Equals(other.TargetURL, StringComparison.OrdinalIgnoreCase)) &&
                 (Type == other.Type) &&
@@ -102,23 +121,28 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 (Isolated == other.Isolated) &&
                 (Internal == other.Internal) &&
                 (AllowOverwrite == other.AllowOverwrite) &&
-                (Flatten == other.Flatten))
-            {
-                if (FilenamesToExclude is null)
-                    return other.FilenamesToExclude is null;
-                
-                if (other.FilenamesToExclude is null)
-                    return false;
-                
-                return FilenamesToExclude.SequenceEqual(other.FilenamesToExclude);
-            }
-
-            return false;
+                (Flatten == other.Flatten) &&
+                // Basically all of the time the akams patterns will use the default and be ref-equal
+                (AkaMSCreateLinkPatterns == other.AkaMSCreateLinkPatterns || 
+                    (AkaMSCreateLinkPatterns.Select(p => p.ToString()).SequenceEqual(other.AkaMSCreateLinkPatterns.Select(p => p.ToString())))) &&
+                (AkaMSDoNotCreateLinkPatterns == other.AkaMSDoNotCreateLinkPatterns ||
+                    (AkaMSDoNotCreateLinkPatterns.Select(p => p.ToString()).SequenceEqual(other.AkaMSDoNotCreateLinkPatterns.Select(p => p.ToString()))));
         }
 
         public override int GetHashCode()
         {
-            return (ContentType, Type, AssetSelection, Isolated, Internal, AllowOverwrite, string.Join(" ", LatestLinkShortUrlPrefixes), TargetURL, Token, Flatten, string.Join(" ", FilenamesToExclude)).GetHashCode();
+            return (ContentType,
+                    Type,
+                    AssetSelection,
+                    Isolated,
+                    Internal,
+                    AllowOverwrite,
+                    string.Join(" ", LatestLinkShortUrlPrefixes),
+                    string.Join(" ", AkaMSCreateLinkPatterns.Select(s => s.ToString())),
+                    string.Join(" ", AkaMSDoNotCreateLinkPatterns.Select(s => s.ToString())),
+                    TargetURL,
+                    Token,
+                    Flatten).GetHashCode();
         }
 
         public override string ToString()
@@ -131,8 +155,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n Internal? '{Internal}' " +
                 $"\n AllowOverwrite? '{AllowOverwrite}' " +
                 $"\n ShortUrlPrefix: \n\t{string.Join("\n\t", LatestLinkShortUrlPrefixes)}" +
+                $"\n AkaMSCreateLinkPatterns: \n\t{string.Join("\n\t", AkaMSCreateLinkPatterns.Select(s => s.ToString()))}" +
+                $"\n AkaMSDoNotCreateLinkPatterns: \n\t{string.Join("\n\t", AkaMSDoNotCreateLinkPatterns.Select(s => s.ToString()))}" +
                 $"\n TargetURL: '{SafeTargetURL}'" +
-                $"\n FilenamesToExclude: \n\t{string.Join("\n\t", FilenamesToExclude)}" +
                 $"\n Flatten: '{Flatten}'";
         }
     }
@@ -153,7 +178,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         Maven           = 512,
         VSIX            = 1024,
         Badge           = 2048,
-        Other           = 4096
+        Other           = 4096,
+        InfrastructurePackage = 8192,
+        CorePackage     = 16384,
+        LibraryPackage  = 32768,
+        ToolingPackage  = 65536
     }
 
     public enum SymbolPublishVisibility
@@ -180,6 +209,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
     {
         All,
         ShippingOnly,
-        NonShippingOnly
+        NonShippingOnly,
+        CouldBeStable, // V4 only. Assets that could be stable (whether shipping or non-shipping)
     }
 }

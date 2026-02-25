@@ -19,16 +19,15 @@ stages:
         demands: ImageOverride -equals 1es-windows-2022
 
       steps:
-      - task: UseDotNet@2
-        displayName: Install global.json SDK
-        inputs:
-          useGlobalJson: true
+      - script: restore.cmd -ci
+        displayName: Run restore.cmd
 
       - task: UseDotNet@2
-        displayName: Install .NET 6 runtime
+        displayName: Install .NET 8 runtime
         inputs:
           packageType: runtime
-          version: 6.x
+          version: 8.x
+          installationPath: $(System.DefaultWorkingDirectory)/.dotnet
 
       - script: dotnet tool restore
         displayName: Restore dotnet tools
@@ -40,4 +39,4 @@ stages:
           scriptType: pscore
           scriptLocation: inlineScript
           inlineScript: |
-            Get-ChildItem .vault-config/*.yaml |% { dotnet secret-manager synchronize $_}
+            Get-ChildItem .vault-config/*.yaml |% { dotnet secret-manager synchronize --skip-untracked $_}

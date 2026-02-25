@@ -6,15 +6,11 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
-using Azure.Core;
-using Microsoft.Arcade.Common;
 using Microsoft.Arcade.Test.Common;
-using Microsoft.DotNet.Arcade.Test.Common;
+using Microsoft.DotNet.Build.Manifest.Tests;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
-using Microsoft.DotNet.Maestro.Client.Models;
+using Microsoft.DotNet.ProductConstructionService.Client.Models;
 using Xunit;
 using static Microsoft.DotNet.Internal.SymbolHelper.SymbolPromotionHelper;
 
@@ -48,16 +44,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var feedConfigsForSymbols = new HashSet<TargetFeedConfig>
             {
                 new TargetFeedConfig(
-                TargetFeedContentType.Symbols,
-                "TargetUrl",
-                FeedType.AzDoNugetFeed,
-                default,
-                new List<string>(),
-                AssetSelection.All,
-                isolated: true,
-                @internal: false,
-                allowOverwrite: true,
-                symbolTargetVisibility)
+                    TargetFeedContentType.Symbols,
+                    "TargetUrl",
+                    FeedType.AzDoNugetFeed,
+                    default,
+                    default,
+                    default,
+                    default,
+                    AssetSelection.All,
+                    isolated: true,
+                    @internal: false,
+                    allowOverwrite: true,
+                    symbolTargetVisibility)
             };
             SymbolPublishVisibility visibility = publishTask.GetSymbolPublishingVisibility(feedConfigsForSymbols);
             Assert.Equal(symbolTargetVisibility, visibility);
@@ -90,6 +88,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     FeedType.AzDoNugetFeed,
                     default,
                     [],
+                    [],
+                    [],
                     AssetSelection.All,
                     isolated: true,
                     @internal: false,
@@ -107,10 +107,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             var path = TestInputs.GetFullPath("Symbol");
             var buildAsset = ReadOnlyDictionary<string, Asset>.Empty;
+            // Clear the symbol packages added by the s
+            task.BlobsByCategory.Clear();
 
             await task.HandleSymbolPublishingAsync(
                 buildInfo: buildInfo,
-                buildAssets: buildAsset,
+                assetNameToBARAssetMapping: buildAsset,
                 pdbArtifactsBasePath: path,
                 symbolPublishingExclusionsFile: "",
                 publishSpecialClrFiles: false,
@@ -163,8 +165,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             // have interesting observable state.
             Assert.Contains(buildEngine.BuildMessageEvents, x => x.Message.StartsWith("Publishing Symbols to Symbol server"));
             var message = buildEngine.BuildMessageEvents.Single(x => x.Message.StartsWith("Publishing Symbols to Symbol server"));
-            Assert.Contains("Symbol package count: 1", message.Message);
-            Assert.Contains("Loose symbol file count: 1", message.Message);
+            Assert.Contains("Symbol packages (1):", message.Message);
+            Assert.Contains("Loose symbol files (1)", message.Message);
 
             Assert.Contains(buildEngine.BuildMessageEvents, x => x.Message.Contains("Creating symbol request"));
             Assert.Equal(2, buildEngine.BuildMessageEvents.Where(x => x.Message.Contains("Adding directory")).Count());
@@ -184,12 +186,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             Assert.Contains("to last 3650 days", registerLog.Message);
         }
 
-        private static (MockBuildEngine, PublishArtifactsInManifestV3, ReadOnlyDictionary<string, Asset>, string, string, Maestro.Client.Models.Build) GetCanonicalSymbolTestAssets(SymbolPublishVisibility targetServer = SymbolPublishVisibility.Public)
+        private static (MockBuildEngine, PublishArtifactsInManifestV3, ReadOnlyDictionary<string, Asset>, string, string, ProductConstructionService.Client.Models.Build) GetCanonicalSymbolTestAssets(SymbolPublishVisibility targetServer = SymbolPublishVisibility.Public)
         {
+            const string symbolPackageName= "test-package-a.1.0.0.symbols.nupkg";
+
             var symbolPackages = new Dictionary<string, Asset>()
             {
-                { "test-package-a.1.0.0.symbols.nupkg",  new(id: 0, buildId: 0, nonShipping: true, name: "test-package-a.1.0.0.symbols.nupkg", version: "1.0.0", locations: [])}
+                { symbolPackageName,  new(id: 0, buildId: 0, nonShipping: true, name: symbolPackageName, version: "1.0.0", locations: [])}
             }.AsReadOnly();
+            
             var exclusionFile = TestInputs.GetFullPath("Symbols/SymbolPublishingExclusionsFile.txt");
             var symbolFilesDir = TestInputs.GetFullPath("Symbols");
 
@@ -202,6 +207,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 FeedType.AzDoNugetFeed,
                 default,
                 latestLinkShortUrlPrefixes: [],
+                akaMSCreateLinkPatterns: [],
+                akaMSDoNotCreateLinkPatterns: [],
                 AssetSelection.All,
                 isolated: true,
                 @internal: false,
@@ -219,232 +226,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 SymbolRequestProject = "dotnettest"
             };
             task.FeedConfigs.Add(TargetFeedContentType.Symbols, feedConfigsForSymbols);
+            task.BlobsByCategory.Add(TargetFeedContentType.Symbols, new HashSet<Manifest.BlobArtifactModel>()
+            {
+                new Manifest.BlobArtifactModel()
+                {
+                    Id = symbolPackageName,
+                }
+            });
 
-            Maestro.Client.Models.Build buildInfo = new(id: 4242, DateTimeOffset.Now, staleness: 0, released: false, stable: true, commit: "abcd", [], [], [], []);
+            ProductConstructionService.Client.Models.Build buildInfo = new(id: 4242, DateTimeOffset.Now, staleness: 0, released: false, stable: true, commit: "abcd", [], [], [], []);
 
             return (buildEngine, task, symbolPackages, symbolFilesDir, exclusionFile, buildInfo);
-        }
-
-        [Fact]
-        public void DownloadFileAsyncSucceedsForValidUrl()
-        {
-            var buildEngine = new MockBuildEngine();
-            var publishTask = new PublishArtifactsInManifestV3
-            {
-                BuildEngine = buildEngine,
-            };
-
-            var testFile = Path.Combine("Symbols", "test.txt");
-            var responseContent = TestInputs.ReadAllBytes(testFile);
-            var response = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new ByteArrayContent(responseContent)
-            };
-
-            using HttpClient client = FakeHttpClient.WithResponses(response);
-            var path = TestInputs.GetFullPath(Guid.NewGuid().ToString());
-
-            var test = publishTask.DownloadFileAsync(
-                client,
-                PublishArtifactsInManifestBase.ArtifactName.BlobArtifacts,
-                "1234",
-                "test.txt",
-                path);
-
-            Assert.True(File.Exists(path));
-            publishTask.DeleteTemporaryFiles(path);
-            publishTask.DeleteTemporaryDirectory(path);
-        }
-
-        [Theory]
-        [InlineData(HttpStatusCode.BadRequest)]
-        [InlineData(HttpStatusCode.NotFound)]
-        [InlineData(HttpStatusCode.GatewayTimeout)]
-        public async Task DownloadFileAsyncFailsForInValidUrlTest(HttpStatusCode httpStatus)
-        {
-            var buildEngine = new MockBuildEngine();
-            var publishTask = new PublishArtifactsInManifestV3
-            {
-                BuildEngine = buildEngine,
-            };
-            var testFile = Path.Combine("Symbols", "test.txt");
-            var responseContent = TestInputs.ReadAllBytes(testFile);
-            publishTask.RetryHandler = new ExponentialRetry() { MaxAttempts = 3, DelayBase = 1 };
-
-            var responses = new[]
-            {
-                new HttpResponseMessage(httpStatus)
-                {
-                    Content = new ByteArrayContent(responseContent)
-                },
-                new HttpResponseMessage(httpStatus)
-                {
-                    Content = new ByteArrayContent(responseContent)
-                },
-                new HttpResponseMessage(httpStatus)
-                {
-                    Content = new ByteArrayContent(responseContent)
-                }
-            };
-            using HttpClient client = FakeHttpClient.WithResponses(responses);
-            var path = TestInputs.GetFullPath(Guid.NewGuid().ToString());
-
-            var actualError = await Assert.ThrowsAsync<Exception>(() =>
-                publishTask.DownloadFileAsync(
-                    client,
-                    PublishArtifactsInManifestBase.ArtifactName.BlobArtifacts,
-                    "1234",
-                    "test.txt",
-                    path));
-            Assert.Contains($"Failed to download local file '{path}' after {publishTask.RetryHandler.MaxAttempts} attempts.  See inner exception for details.", actualError.Message);
-        }
-
-        [Theory]
-        [InlineData(HttpStatusCode.BadRequest)]
-        [InlineData(HttpStatusCode.NotFound)]
-        [InlineData(HttpStatusCode.GatewayTimeout)]
-        public async Task DownloadFailureWhenStatusCodeIsInvalid(HttpStatusCode httpStatus)
-        {
-            var buildEngine = new MockBuildEngine();
-            var publishTask = new PublishArtifactsInManifestV3
-            {
-                BuildEngine = buildEngine,
-            };
-            var testFile = Path.Combine("Symbols", "test.txt");
-            var responseContent = TestInputs.ReadAllBytes(testFile);
-            publishTask.RetryHandler = new ExponentialRetry() { MaxAttempts = 3, DelayBase = 1 };
-
-            var responses = new[]
-            {
-                new HttpResponseMessage(httpStatus)
-                {
-                    Content = new ByteArrayContent(responseContent)
-                },
-                new HttpResponseMessage(httpStatus)
-                {
-                    Content = new ByteArrayContent(responseContent)
-                },
-                new HttpResponseMessage(httpStatus)
-                {
-                    Content = new ByteArrayContent(responseContent)
-                }
-            };
-            using HttpClient client = FakeHttpClient.WithResponses(responses);
-            var path = TestInputs.GetFullPath(Guid.NewGuid().ToString());
-
-            var actualError = await Assert.ThrowsAsync<Exception>(() =>
-                publishTask.DownloadFileAsync(
-                    client,
-                    PublishArtifactsInManifestBase.ArtifactName.BlobArtifacts,
-                    "1234",
-                    "test.txt",
-                    path));
-            Assert.Contains($"Failed to download local file '{path}' after {publishTask.RetryHandler.MaxAttempts} attempts.  See inner exception for details.", actualError.Message);
-        }
-
-        [Theory]
-        [InlineData(HttpStatusCode.BadRequest)]
-        [InlineData(HttpStatusCode.NotFound)]
-        [InlineData(HttpStatusCode.GatewayTimeout)]
-        public async Task DownloadFileSuccessfulAfterRetryTest(HttpStatusCode httpStatus)
-        {
-            var buildEngine = new MockBuildEngine();
-            var publishTask = new PublishArtifactsInManifestV3
-            {
-                BuildEngine = buildEngine,
-            };
-            var testFile = Path.Combine("Symbols", "test.txt");
-            var responseContent = TestInputs.ReadAllBytes(testFile);
-            publishTask.RetryHandler = new ExponentialRetry() { MaxAttempts = 2, DelayBase = 1 };
-
-            var responses = new[]
-            {
-                new HttpResponseMessage(httpStatus)
-                {
-                    Content = new ByteArrayContent(responseContent)
-                },
-                new HttpResponseMessage(HttpStatusCode.OK)
-                {
-                    Content = new ByteArrayContent(responseContent)
-                }
-            };
-            using HttpClient client = FakeHttpClient.WithResponses(responses);
-            var path = TestInputs.GetFullPath(Guid.NewGuid().ToString());
-
-            await publishTask.DownloadFileAsync(
-                client,
-                PublishArtifactsInManifestBase.ArtifactName.BlobArtifacts,
-                "1234",
-                "test.txt",
-                path);
-            Assert.True(File.Exists(path));
-            publishTask.DeleteTemporaryFiles(path);
-            publishTask.DeleteTemporaryDirectory(path);
-        }
-
-        [Theory]
-        [InlineData(PublishArtifactsInManifestBase.ArtifactName.BlobArtifacts, "1")]
-        [InlineData(PublishArtifactsInManifestBase.ArtifactName.PackageArtifacts, "1234")]
-        public async Task GetContainerIdToDownloadArtifactAsync(PublishArtifactsInManifestBase.ArtifactName artifactName, string containerId)
-        {
-            var buildEngine = new MockBuildEngine();
-            var publishTask = new PublishArtifactsInManifestV3
-            {
-                BuildEngine = buildEngine,
-            };
-            publishTask.BuildId = "1243456";
-            var testPackageName = Path.Combine("Symbols", "test.txt");
-            var responseContent = TestInputs.ReadAllBytes(testPackageName);
-            var responses = new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new ByteArrayContent(responseContent)
-            };
-
-            using HttpClient client = FakeHttpClient.WithResponses(responses);
-            var test = await publishTask.GetContainerIdAsync(
-                client,
-                artifactName);
-            Assert.Equal(containerId, test);
-        }
-
-        [Theory]
-        [InlineData(HttpStatusCode.BadRequest)]
-        [InlineData(HttpStatusCode.NotFound)]
-        public async Task ErrorAfterMaxRetriesToGetContainerId(HttpStatusCode httpStatus)
-        {
-            var buildEngine = new MockBuildEngine();
-            var publishTask = new PublishArtifactsInManifestV3
-            {
-                BuildEngine = buildEngine,
-            };
-            publishTask.BuildId = "1243456";
-            publishTask.RetryHandler = new ExponentialRetry() {MaxAttempts = 3, DelayBase = 1};
-
-            var testPackageName = Path.Combine("Symbols", "test.txt");
-            var responseContent = TestInputs.ReadAllBytes(testPackageName);
-            var responses = new[]
-            {
-                new HttpResponseMessage(httpStatus)
-                {
-                    Content = new ByteArrayContent(responseContent)
-                },
-                new HttpResponseMessage(httpStatus)
-                {
-                    Content = new ByteArrayContent(responseContent)
-                },
-                new HttpResponseMessage(httpStatus)
-                {
-                    Content = new ByteArrayContent(responseContent)
-                }
-            };
-
-            using HttpClient client = FakeHttpClient.WithResponses(responses);
-
-            var actualError = await Assert.ThrowsAsync<Exception>(() =>
-                publishTask.GetContainerIdAsync(
-                    client,
-                    PublishArtifactsInManifestBase.ArtifactName.BlobArtifacts));
-            Assert.Contains($"Failed to get container id after {publishTask.RetryHandler.MaxAttempts} attempts.  See inner exception for details,", actualError.Message);
         }
     }
 }

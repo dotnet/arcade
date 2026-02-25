@@ -1,11 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>$(NetToolCurrent)</TargetFramework>
+    <TargetFramework>$(BundledNETCoreAppTargetFramework)</TargetFramework>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentAssertions" />
+    <PackageReference Include="AwesomeAssertions" />
+    <PackageReference Include="Microsoft.DotNet.ProductConstructionService.Client" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="Moq" />
@@ -17,17 +19,11 @@
     <ProjectReference Include="..\Microsoft.DotNet.Build.Tasks.Feed\Microsoft.DotNet.Build.Tasks.Feed.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Internal.DependencyInjection.Testing\Microsoft.DotNet.Internal.DependencyInjection.Testing.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.XUnitExtensions\src\Microsoft.DotNet.XUnitExtensions.csproj" />
-    <ProjectReference Include="..\VersionTools\Microsoft.DotNet.VersionTools\Microsoft.DotNet.VersionTools.csproj" />
-  </ItemGroup>
-
-  <!-- Upgrade transitive NETStandard.Library dependency to avoid .NET Standard 1.x dependencies from symbol uploading. -->
-  <ItemGroup>
-    <PackageReference Include="NETStandard.Library" IsImplicitlyDefined="false" PrivateAssets="all" ExcludeAssets="runtime" VersionOverride="2.0.3" />
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="TestInputs\**"
-             CopyToOutputDirectory="Always" />
+    <Content Include="..\Microsoft.DotNet.Build.Manifest.Tests\TestInputs\**" LinkBase="TestInputs" CopyToOutputDirectory="Always" />
+    <Compile Include="..\Microsoft.DotNet.Build.Manifest.Tests\TestInputs\TestInputs.cs" />
   </ItemGroup>
 
 </Project>
