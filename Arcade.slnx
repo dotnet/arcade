@@ -29,6 +29,7 @@
     <Project Path="src/Microsoft.DotNet.NuGetRepack/tests/Microsoft.DotNet.NuGetRepack.Tests.csproj" />
     <Project Path="src/Microsoft.DotNet.PackageTesting.Tests/Microsoft.DotNet.PackageTesting.Tests.csproj" />
     <Project Path="src/Microsoft.DotNet.RemoteExecutor/tests/Microsoft.DotNet.RemoteExecutor.Tests.csproj" />
+    <Project Path="src/Microsoft.DotNet.RecursiveSigning.Tests/Microsoft.DotNet.RecursiveSigning.Tests.csproj" />
     <Project Path="src/Microsoft.DotNet.SetupNugetSources.Tests/Microsoft.DotNet.SetupNugetSources.Tests.csproj" />
     <Project Path="src/Microsoft.DotNet.SignTool.Tests/Microsoft.DotNet.SignTool.Tests.csproj" />
     <Project Path="src/Microsoft.DotNet.SourceBuild/tests/Microsoft.DotNet.SourceBuild.Tasks.Tests.csproj" />
@@ -71,6 +72,7 @@
   <Project Path="src/Microsoft.DotNet.RemoteExecutor/src/Microsoft.DotNet.RemoteExecutor.csproj" />
   <Project Path="src/Microsoft.DotNet.SharedFramework.Sdk/Microsoft.DotNet.SharedFramework.Sdk.csproj" />
   <Project Path="src/Microsoft.DotNet.SignTool/Microsoft.DotNet.SignTool.csproj" />
+  <Project Path="src/Microsoft.DotNet.RecursiveSigning/Microsoft.DotNet.RecursiveSigning.csproj" />
   <Project Path="src/Microsoft.DotNet.SourceBuild/tasks/Microsoft.DotNet.SourceBuild.Tasks.csproj" />
   <Project Path="src/Microsoft.DotNet.StrongName/Microsoft.DotNet.StrongName.csproj" />
   <Project Path="src/Microsoft.DotNet.Tar/Microsoft.DotNet.Tar.csproj" />

@@ -39,5 +39,11 @@ namespace Microsoft.Arcade.Common
         FileAttributes GetAttributes(string path);
 
         string GetRelativePath(string basePath, string targetPath);
+
+        byte[] ReadAllBytes(string path);
+
+        void WriteAllBytes(string path, byte[] bytes);
+
+        long GetFileLength(string path);
     }
 }
