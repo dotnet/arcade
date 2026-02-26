@@ -9,7 +9,7 @@ using System.Linq;
 using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -268,6 +268,20 @@ namespace Microsoft.DotNet.SignTool.Tests
             _output = output;
         }
 
+        private string GetWix3ToolPath()
+        {
+            return Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "wix3");
+        }
+
+        private string GetWixToolPath()
+        {
+            return Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "wix", "net472", "x64");
+        }
+
+        private static string s_snPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "sn", "sn.exe");
+        private static string s_tarToolPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "tar", "Microsoft.Dotnet.Tar.dll");
+        private static string s_pkgToolPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "pkg", "Microsoft.DotNet.MacOsPkg.Cli.dll");
+
         private string GetResourcePath(string name, string relativePath = null)
         {
             var srcPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "Resources", name);
@@ -313,7 +327,7 @@ namespace Microsoft.DotNet.SignTool.Tests
         private void ValidateGeneratedProject(
             List<ItemToSign> itemsToSign,
             Dictionary<string, List<SignInfo>> strongNameSignInfo,
-            Dictionary<ExplicitCertificateKey, string> fileSignInfo,
+            Dictionary<ExplicitSignInfoKey, FileSignInfoEntry> fileSignInfo,
             Dictionary<string, List<SignInfo>> extensionsSignInfo,
             string[] expectedXmlElementsPerSigningRound,
             Dictionary<string, List<AdditionalCertificateInformation>> additionalCertificateInfo = null,
@@ -327,37 +341,11 @@ namespace Microsoft.DotNet.SignTool.Tests
             // The path to DotNet will always be null in these tests, this will force
             // the signing logic to call our FakeBuildEngine.BuildProjectFile with a path
             // to the XML that store the content of the would be Microbuild sign request.
-            var signToolArgs = new SignToolArgs(
-                _tmpDir,
-                microBuildCorePath: "MicroBuildCorePath",
-                testSign: true,
-                dotNetPathMicroBuild: null,
-                dotNetPathTooling: Config.DotNetPathTooling,
-                msbuildVerbosity: "quiet",
-                _tmpDir,
-                enclosingDir: "",
-                "",
-                wix3ToolsPath: wix3ToolsPath,
-                wixToolsPath: wixToolsPath,
-                tarToolPath: Config.TarToolPath,
-                pkgToolPath: Config.PkgToolPath,
-                dotnetTimeout: -1);
+            var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, dotnetPath: null, msbuildVerbosity: "quiet", _tmpDir, enclosingDir: "", "", wix3ToolsPath: wix3ToolsPath, wixToolsPath: wixToolsPath, tarToolPath: s_tarToolPath, pkgToolPath: s_pkgToolPath, dotnetTimeout: -1);
 
             var signTool = new FakeSignTool(signToolArgs, task.Log);
             // Passing null for the 3rd party check skip as this doesn't affect the generated project.
-            var configuration = new Configuration(
-                signToolArgs.TempDir,
-                itemsToSign,
-                strongNameSignInfo,
-                fileSignInfo,
-                extensionsSignInfo,
-                additionalCertificateInfo,
-                null,
-                dotNetPathTooling: Config.DotNetPathTooling,
-                tarToolPath: Config.TarToolPath,
-                pkgToolPath: Config.PkgToolPath,
-                snPath: Config.SNPath,
-                task.Log);
+            var configuration = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, additionalCertificateInfo, null, tarToolPath: s_tarToolPath, pkgToolPath: s_pkgToolPath, snPath: s_snPath, task.Log);
             var signingInput = configuration.GenerateListOfFiles();
             var util = new BatchSignUtil(
                 task.BuildEngine,
@@ -393,7 +381,7 @@ namespace Microsoft.DotNet.SignTool.Tests
         private void ValidateFileSignInfos(
             List<ItemToSign> itemsToSign,
             Dictionary<string, List<SignInfo>> strongNameSignInfo,
-            Dictionary<ExplicitCertificateKey, string> fileSignInfo,
+            Dictionary<ExplicitSignInfoKey, FileSignInfoEntry> fileSignInfo,
             Dictionary<string, List<SignInfo>> extensionsSignInfo,
             string[] expected,
             string[] expectedCopyFiles = null,
@@ -404,19 +392,8 @@ namespace Microsoft.DotNet.SignTool.Tests
         {
             var engine = new FakeBuildEngine();
             var task = new SignToolTask { BuildEngine = engine };
-            var signingInput = new Configuration(
-                _tmpDir,
-                itemsToSign,
-                strongNameSignInfo,
-                fileSignInfo,
-                extensionsSignInfo,
-                additionalCertificateInfo,
-                skip3rdPartyCheckFiles,
-                dotNetPathTooling: Config.DotNetPathTooling,
-                tarToolPath: Config.TarToolPath,
-                pkgToolPath: Config.PkgToolPath,
-                snPath: Config.SNPath,
-                task.Log).GenerateListOfFiles();
+            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, additionalCertificateInfo,
+                skip3rdPartyCheckFiles, tarToolPath: s_tarToolPath, pkgToolPath: s_pkgToolPath, snPath: s_snPath, task.Log).GenerateListOfFiles();
 
             signingInput.FilesToSign.Select(f => f.ToString()).Should().BeEquivalentTo(expected);
             signingInput.FilesToCopy.Select(f => $"{f.Key} -> {f.Value}").Should().BeEquivalentTo(expectedCopyFiles ?? Array.Empty<string>());
@@ -429,7 +406,8 @@ namespace Microsoft.DotNet.SignTool.Tests
             string debianPackage,
             (string, string)[] expectedFilesOriginalHashes,
             string[] signableFiles,
-            string expectedControlFileContent)
+            string expectedControlFileContent,
+            (string path, string target)[] expectedSymlinks = null)
         {
             string tempDir = Path.Combine(_tmpDir, "verification");
             Directory.CreateDirectory(tempDir);
@@ -443,8 +421,11 @@ namespace Microsoft.DotNet.SignTool.Tests
             Directory.CreateDirectory(controlLayout);
             Directory.CreateDirectory(dataLayout);
 
-            ZipData.ExtractTarballContents(dataArchive, dataLayout, skipSymlinks: false);
-            ZipData.ExtractTarballContents(controlArchive, controlLayout);
+            var fakeBuildEngine = new FakeBuildEngine(_output);
+            var fakeLog = new TaskLoggingHelper(fakeBuildEngine, "TestLog");
+
+            ZipData.ExtractTarballContents(fakeLog, dataArchive, dataLayout, skipSymlinks: false);
+            ZipData.ExtractTarballContents(fakeLog, controlArchive, controlLayout);
 
             string md5sumsContents = File.ReadAllText(Path.Combine(controlLayout, "md5sums"));
 
@@ -475,6 +456,23 @@ namespace Microsoft.DotNet.SignTool.Tests
                 }
             }
 
+            // Checks: Symbolic links are preserved and point to the correct targets
+            if (expectedSymlinks != null)
+            {
+                foreach ((string symlinkPath, string expectedTarget) in expectedSymlinks)
+                {
+                    string layoutPath = Path.Combine(dataLayout, symlinkPath);
+                    var fileInfo = new FileInfo(layoutPath);
+                    fileInfo.Exists.Should().BeTrue($"symlink '{symlinkPath}' should exist");
+                    fileInfo.LinkTarget.Should().Be(expectedTarget, $"symlink '{symlinkPath}' should point to '{expectedTarget}'");
+
+                    // Verify the symlink resolves to a valid file with the same content as its target
+                    string resolvedTarget = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(layoutPath)!, expectedTarget));
+                    File.ReadAllBytes(layoutPath).Should().BeEquivalentTo(File.ReadAllBytes(resolvedTarget),
+                        $"symlink '{symlinkPath}' should resolve to the signed file");
+                }
+            }
+
             // Check: control file contents matches the expected contents
             string controlFileContents = File.ReadAllText(Path.Combine(controlLayout, "control"));
             controlFileContents.Should().Be(expectedControlFileContent);
@@ -492,7 +490,8 @@ namespace Microsoft.DotNet.SignTool.Tests
             string rpmPackage,
             (string, string)[] expectedFilesOriginalHashes,
             string[] signableFiles,
-            string originalUncompressedPayloadChecksum)
+            string originalUncompressedPayloadChecksum,
+            (string path, string target)[] expectedSymlinks = null)
         {
             string tempDir = Path.Combine(_tmpDir, "verification");
             Directory.CreateDirectory(tempDir);
@@ -500,7 +499,9 @@ namespace Microsoft.DotNet.SignTool.Tests
             string layout = Path.Combine(tempDir, "layout");
             Directory.CreateDirectory(layout);
 
-            ZipData.ExtractRpmPayloadContents(rpmPackage, layout);
+            var fakeBuildEngine = new FakeBuildEngine(_output);
+            var fakeLog = new TaskLoggingHelper(fakeBuildEngine, "TestLog");
+            ZipData.ExtractRpmPayloadContents(fakeLog, rpmPackage, layout);
 
             // Checks:
             // Expected files are present
@@ -524,6 +525,23 @@ namespace Microsoft.DotNet.SignTool.Tests
                 }
             }
 
+            // Checks: Symbolic links are preserved and point to the correct targets
+            if (expectedSymlinks != null)
+            {
+                foreach ((string symlinkPath, string expectedTarget) in expectedSymlinks)
+                {
+                    string layoutPath = Path.Combine(layout, symlinkPath);
+                    var fileInfo = new FileInfo(layoutPath);
+                    fileInfo.Exists.Should().BeTrue($"symlink '{symlinkPath}' should exist");
+                    fileInfo.LinkTarget.Should().Be(expectedTarget, $"symlink '{symlinkPath}' should point to '{expectedTarget}'");
+
+                    // Verify the symlink resolves to a valid file with the same content as its target
+                    string resolvedTarget = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(layoutPath)!, expectedTarget));
+                    File.ReadAllBytes(layoutPath).Should().BeEquivalentTo(File.ReadAllBytes(resolvedTarget),
+                        $"symlink '{symlinkPath}' should resolve to the signed file");
+                }
+            }
+
             // Checks:
             // Header payload digest matches the hash of the payload
             // Header payload digest is different than the hash of the original payload
@@ -541,6 +559,34 @@ namespace Microsoft.DotNet.SignTool.Tests
                 checksum.Should().Be(uncompressedPayloadDigest);
             }
         }
+
+        private void ValidateProducedTarGZipContent(
+            string tarGZipPath,
+            (string path, string target)[] expectedSymlinks)
+        {
+            string tempDir = Path.Combine(_tmpDir, "verification");
+            Directory.CreateDirectory(tempDir);
+
+            string layout = Path.Combine(tempDir, "tgz");
+            Directory.CreateDirectory(layout);
+
+            var fakeBuildEngine = new FakeBuildEngine(_output);
+            var fakeLog = new TaskLoggingHelper(fakeBuildEngine, "TestLog");
+            ZipData.ExtractTarballContents(fakeLog, tarGZipPath, layout, skipSymlinks: false);
+
+            foreach ((string symlinkPath, string expectedTarget) in expectedSymlinks)
+            {
+                string layoutPath = Path.Combine(layout, symlinkPath);
+                var fileInfo = new FileInfo(layoutPath);
+                fileInfo.Exists.Should().BeTrue($"symlink '{symlinkPath}' should exist");
+                fileInfo.LinkTarget.Should().Be(expectedTarget, $"symlink '{symlinkPath}' should point to '{expectedTarget}'");
+
+                // Verify the symlink resolves to a valid file with the same content as its target
+                string resolvedTarget = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(layoutPath)!, expectedTarget));
+                File.ReadAllBytes(layoutPath).Should().BeEquivalentTo(File.ReadAllBytes(resolvedTarget),
+                    $"symlink '{symlinkPath}' should resolve to the signed file");
+            }
+        }
 #endif
         [Fact]
         public void EmptySigningList()
@@ -549,23 +595,10 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
 
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
-            var signingInput = new Configuration(
-                _tmpDir,
-                itemsToSign,
-                strongNameSignInfo,
-                fileSignInfo,
-                s_fileExtensionSignInfo,
-                null,
-                null,
-                dotNetPathTooling: Config.DotNetPathTooling,
-                tarToolPath: Config.TarToolPath,
-                pkgToolPath: Config.PkgToolPath,
-                snPath: Config.SNPath,
-                task.Log
-            ).GenerateListOfFiles();
+            var signingInput = new Configuration(_tmpDir, itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, null, null, tarToolPath: s_tarToolPath, pkgToolPath: s_pkgToolPath, snPath: s_snPath, task.Log).GenerateListOfFiles();
 
             signingInput.FilesToSign.Should().BeEmpty();
             signingInput.ZipDataMap.Should().BeEmpty();
@@ -584,10 +617,9 @@ namespace Microsoft.DotNet.SignTool.Tests
                 TempDir = "TempDir",
                 DryRun = false,
                 TestSign = true,
-                DotNetPathMicroBuild = CreateTestResource("dotnet.mb.fake"),
-                DotNetPathTooling = CreateTestResource("dotnet.tool.fake"),
+                DotNetPath = CreateTestResource("dotnet.fake"),
                 SNBinaryPath = CreateTestResource("fake.sn.exe"),
-                PkgToolPath = Config.PkgToolPath,
+                PkgToolPath = s_pkgToolPath,
             };
 
             task.Execute().Should().BeTrue();
@@ -605,11 +637,10 @@ namespace Microsoft.DotNet.SignTool.Tests
                 TempDir = "TempDir",
                 DryRun = false,
                 TestSign = true,
-                DotNetPathMicroBuild = CreateTestResource("dotnet.mb.fake"),
-                DotNetPathTooling = CreateTestResource("dotnet.tool.fake"),
+                DotNetPath = CreateTestResource("dotnet.fake"),
                 DoStrongNameCheck = false,
                 SNBinaryPath = null,
-                PkgToolPath = Config.PkgToolPath,
+                PkgToolPath = s_pkgToolPath,
             };
 
             task.Execute().Should().BeTrue();
@@ -631,7 +662,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
@@ -666,10 +697,10 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>
             {
-                { new ExplicitCertificateKey("NativeLibrary.dll"), "None" },
-                { new ExplicitCertificateKey("ProjectOne.dll", publicKeyToken: "581d91ccdfc4ea9c", targetFramework: ".NETCoreApp,Version=v2.1"), "None" }
+                { new ExplicitSignInfoKey("NativeLibrary.dll"), new FileSignInfoEntry("None") },
+                { new ExplicitSignInfoKey("ProjectOne.dll", publicKeyToken: "581d91ccdfc4ea9c", targetFramework: ".NETCoreApp,Version=v2.1"), new FileSignInfoEntry("None") }
             };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
@@ -699,7 +730,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, Array.Empty<string>());
         }
@@ -720,7 +751,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[] 
             {
@@ -744,7 +775,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -768,7 +799,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -796,7 +827,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, List<SignInfo>>(), new[]
             {
@@ -829,9 +860,9 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>()
             {
-                { new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c"), "OverriddenCertificate" }
+                { new ExplicitSignInfoKey("ProjectOne.dll", "581d91ccdfc4ea9c"), new FileSignInfoEntry("OverriddenCertificate") }
             };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
@@ -871,10 +902,10 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>()
             {
-                { new ExplicitCertificateKey("NativeLibrary.dll", collisionPriorityId: "123"), "OverriddenCertificate1" },
-                { new ExplicitCertificateKey("ProjectOne.dll", collisionPriorityId: "123"), "3PartySHA2" }
+                { new ExplicitSignInfoKey("NativeLibrary.dll", collisionPriorityId: "123"), new FileSignInfoEntry("OverriddenCertificate1") },
+                { new ExplicitSignInfoKey("ProjectOne.dll", collisionPriorityId: "123"), new FileSignInfoEntry("3PartySHA2") }
             };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
@@ -911,9 +942,9 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>()
             {
-                { new ExplicitCertificateKey("EmptyPKT.dll"), "3PartySHA2" }
+                { new ExplicitSignInfoKey("EmptyPKT.dll"), new FileSignInfoEntry("3PartySHA2") }
             };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
@@ -940,9 +971,9 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>()
             {
-                { new ExplicitCertificateKey("EmptyPKT.dll", collisionPriorityId: "123"), "3PartySHA2" }
+                { new ExplicitSignInfoKey("EmptyPKT.dll", collisionPriorityId: "123"), new FileSignInfoEntry("3PartySHA2") }
             };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, List<SignInfo>>(), new[]
@@ -976,7 +1007,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "CoreLibCr
                 { "", new List<SignInfo>{ new SignInfo("3PartySHA2", collisionPriorityId: "123") } }
             };
 
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>() { };
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>() { };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -998,9 +1029,9 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "CoreLibCr
                 {  "", new List<SignInfo>{ new SignInfo("DefaultCertificate", collisionPriorityId: "123") } }
             };
 
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>()
             {
-                { new ExplicitCertificateKey("CustomTargetFrameworkAttribute.dll", targetFramework: ".NETFramework,Version=v2.0", collisionPriorityId: "123"), "3PartySHA2" }
+                { new ExplicitSignInfoKey("CustomTargetFrameworkAttribute.dll", targetFramework: ".NETFramework,Version=v2.0", collisionPriorityId: "123"), new FileSignInfoEntry("3PartySHA2") }
             };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
@@ -1019,7 +1050,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "CoreLibCr
             };
 
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>() { };
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>() { };
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>() { };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -1041,7 +1072,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "CoreLibCr
             };
 
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>() { };
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>() { };
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>() { };
             var noWarn3rdPartySet = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "EmptyPKT.dll" };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
@@ -1068,7 +1099,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "CoreLibCr
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
@@ -1098,8 +1129,8 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "PackageWi
   <Authenticode>NuGet</Authenticode>
 </FilesToSign>"
             },
-            wix3ToolsPath: Config.Wix3ToolPath,
-            wixToolsPath: Config.WixToolPath);
+            wix3ToolsPath: GetWix3ToolPath(),
+            wixToolsPath: GetWixToolPath());
         }
 
 
@@ -1119,7 +1150,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "PackageWi
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
@@ -1198,9 +1229,9 @@ $@"
 
             // Overriding information. Since ContainerOne.dll collides with ContainerTwo.dll already in the hash mapping
             // table with collition id 123, we end up using ArcadeStrongTest instead of OverriddenCertificate1
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>()
             {
-                { new ExplicitCertificateKey("ContainerOne.dll", collisionPriorityId: "456"), "OverriddenCertificate1" }
+                { new ExplicitSignInfoKey("ContainerOne.dll", collisionPriorityId: "456"), new FileSignInfoEntry("OverriddenCertificate1") }
             };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
@@ -1280,7 +1311,7 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -1331,11 +1362,11 @@ $@"
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
 
             // Overriding information
-            var explicitCertKeys = new Dictionary<ExplicitCertificateKey, string>()
+            var explicitCertKeys = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>()
             {
-                { new ExplicitCertificateKey("test.zip"), "ArchiveCert" },
-                { new ExplicitCertificateKey("test.tgz"), "ArchiveCert" },
-                { new ExplicitCertificateKey("InnerZipFile.zip"), "ArchiveCert" }
+                { new ExplicitSignInfoKey("test.zip"), new FileSignInfoEntry("ArchiveCert") },
+                { new ExplicitSignInfoKey("test.tgz"), new FileSignInfoEntry("ArchiveCert") },
+                { new ExplicitSignInfoKey("InnerZipFile.zip"), new FileSignInfoEntry("ArchiveCert") }
             };
 
             var additionalCertificateInfo = new Dictionary<string, List<AdditionalCertificateInformation>>()
@@ -1423,7 +1454,7 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -1457,7 +1488,7 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -1518,15 +1549,15 @@ $@"
             {
                 {  "MacDeveloperHardenWithNotarization",
                     new List<AdditionalCertificateInformation>() {
-                        new AdditionalCertificateInformation() { MacNotarizationAppName = "dotnet", MacSigningOperation = "MacDeveloperHarden" }
+                        new AdditionalCertificateInformation() { MacNotarizationAppName = "com.microsoft.dotnet", MacSigningOperation = "MacDeveloperHarden" }
                     } 
                 }
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>()
             {
-                { new ExplicitCertificateKey("test.pkg"), "MacDeveloperHardenWithNotarization" }
+                { new ExplicitSignInfoKey("test.pkg"), new FileSignInfoEntry("MacDeveloperHardenWithNotarization") }
             };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
@@ -1557,6 +1588,7 @@ $@"
                 <Authenticode>Microsoft400</Authenticode>
                 </FilesToSign>
                 ",
+                // Signing rounds use .pkg.zip because MicroBuild expects zipped packages
                 $@"
                 <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "1", "NestedPkg.pkg.zip"))}"">
                 <Authenticode>MacDeveloperHarden</Authenticode>
@@ -1566,8 +1598,10 @@ $@"
                 <Authenticode>MacDeveloperHarden</Authenticode>
                 </FilesToSign>
                 ",
+                // Notarization round uses the unzipped .pkg path — files are unzipped
+                // before notarization (see SignTool.cs: "Notarization does not expect zipped packages")
                 $@"
-                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.pkg.zip"))}"">
+                <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.pkg"))}"">
                 <Authenticode>8020</Authenticode>
                 <MacAppName>com.microsoft.dotnet</MacAppName>
                 </FilesToSign>",
@@ -1590,7 +1624,7 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -1642,7 +1676,7 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             // When .apps are unpacked from .pkgs, they get zipped so they can be signed
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
@@ -1688,7 +1722,7 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -1724,6 +1758,101 @@ $@"
             });
         }
 
+#if !NETFRAMEWORK
+        /// <summary>
+        /// Validates that tar.gz archives containing symbolic links are handled correctly.
+        /// On Windows, ReadTarGZipEntriesWithExternalTar throws when symlinks are detected,
+        /// so this test is skipped on Windows.
+        /// </summary>
+        [UnixOnlyFactAttribute]
+        public void SignTarGZipFileWithSymlinks()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new List<ItemToSign>()
+            {
+                new ItemToSign(GetResourcePath("testSymlinks.tgz"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo(certificate: "ArcadeCertTest", strongName: "ArcadeStrongTest") } }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
+
+            // The symlink (test/this_is_a_big_folder_name_look/NativeLibrary.dll -> ../NativeLibrary.dll)
+            // is filtered out by System.Formats.Tar on non-Windows, so only regular files are signed.
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
+                "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
+                "File 'testSymlinks.tgz'",
+            });
+
+            ValidateProducedTarGZipContent(Path.Combine(_tmpDir, "testSymlinks.tgz"), new[]
+            {
+                ("test/this_is_a_big_folder_name_look/NativeLibrary.dll", "../NativeLibrary.dll")
+            });
+        }
+
+        // TODO: Remove WindowsOnlyFact once https://github.com/dotnet/arcade/issues/16484 is resolved.
+        [WindowsOnlyFact]
+        public void SignTarGZipFileWithHardlinks()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new List<ItemToSign>()
+            {
+                new ItemToSign(GetResourcePath("testHardlinks.tgz"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo(certificate: "ArcadeCertTest", strongName: "ArcadeStrongTest") } }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
+
+            // All three files (original + 2 hardlinks) should be detected for signing
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'hardlink1.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'hardlink2.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'original.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='ArcadeCertTest' StrongName='ArcadeStrongTest'",
+                "File 'testHardlinks.tgz'",
+            },
+            expectedWarnings: new[]
+            {
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "hardlink1.dll")}' with Microsoft certificate 'ArcadeCertTest'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "1", "hardlink2.dll")}' with Microsoft certificate 'ArcadeCertTest'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN004: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "2", "original.dll")}' with Microsoft certificate 'ArcadeCertTest'. The library is considered 3rd party library due to its copyright: ''.",
+            });
+
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+$@"
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "0", "hardlink1.dll"))}"">
+  <Authenticode>ArcadeCertTest</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "1", "hardlink2.dll"))}"">
+  <Authenticode>ArcadeCertTest</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "2", "original.dll"))}"">
+  <Authenticode>ArcadeCertTest</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>
+"
+            });
+        }
+#endif
+
         [Fact]
         public void SymbolsNupkg()
         {
@@ -1740,7 +1869,7 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -1792,7 +1921,7 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
             var tempFileExtensionSignInfo = s_fileExtensionSignInfo.Where(s => s.Key != ".symbols.nupkg").ToDictionary(e => e.Key, e => e.Value);
             
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, tempFileExtensionSignInfo, new[]
@@ -1830,7 +1959,7 @@ $@"
         }
 
 #if !NETFRAMEWORK
-        [Fact]
+        [UnixOnlyFact]
         public void CheckDebSigning()
         {
             // List of files to be considered for signing
@@ -1843,7 +1972,7 @@ $@"
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -1869,9 +1998,13 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.deb"
             };
             string[] signableFiles = ["usr/local/bin/mscorlib.dll"];
             string expectedControlFileContent = "Package: test\nVersion: 1.0\nSection: base\nPriority: optional\nArchitecture: all\n";
-            expectedControlFileContent +="Maintainer: Arcade <test@example.com>\nInstalled-Size: 49697\nDescription: A simple test package\n This is a simple generated .deb package for testing purposes.\n";
+            expectedControlFileContent +="Maintainer: Arcade <test@example.com>\nInstalled-Size: 48\nDescription: A simple test package\n This is a simple generated .deb package for testing purposes.\n";
+            var expectedSymlinks = new (string, string)[]
+            {
+                ("usr/local/bin/mscorlib-link.dll", "./mscorlib.dll")
+            };
 
-            ValidateProducedDebContent(Path.Combine(_tmpDir, "test.deb"), expectedFilesOriginalHashes, signableFiles, expectedControlFileContent);
+            ValidateProducedDebContent(Path.Combine(_tmpDir, "test.deb"), expectedFilesOriginalHashes, signableFiles, expectedControlFileContent, expectedSymlinks);
         }
 
         [WindowsOnlyFact]
@@ -1887,7 +2020,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.deb"
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -1915,7 +2048,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.rpm"
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -1940,8 +2073,12 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.rpm"
             };
             string[] signableFiles = ["usr/local/bin/mscorlib.dll"];
             string originalUncompressedPayloadChecksum = "216c2a99006d2e14d28a40c0f14a63f6462f533e89789a6f294186e0a0aad3fd";
+            var expectedSymlinks = new (string, string)[]
+            {
+                ("usr/local/bin/mscorlib-link.dll", "mscorlib.dll")
+            };
 
-            ValidateProducedRpmContent(Path.Combine(_tmpDir, "test.rpm"), expectedFilesOriginalHashes, signableFiles, originalUncompressedPayloadChecksum);
+            ValidateProducedRpmContent(Path.Combine(_tmpDir, "test.rpm"), expectedFilesOriginalHashes, signableFiles, originalUncompressedPayloadChecksum, expectedSymlinks);
         }
 
         [Fact]
@@ -1958,16 +2095,16 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.rpm"
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             var expectedFilesToBeSigned = new List<string>
             {
                 "File 'IncorrectlySignedDeb.deb' Certificate='LinuxSign'"
             };
 
-            // If on windows, both packages will be submitted for signing
-            // because the CL verification tool (gpg) is not available on Windows.
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // If running on a platform other than Linux, both packages will be submitted for signing
+            // because the CL verification tool (gpg) is not available.
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 expectedFilesToBeSigned.Add("File 'SignedDeb.deb' Certificate='LinuxSign'");
             }
@@ -1989,16 +2126,16 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.rpm"
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             var expectedFilesToBeSigned = new List<string>
             {
                 "File 'IncorrectlySignedRpm.rpm' Certificate='LinuxSign'"
             };
 
-            // If on windows, both packages will be submitted for signing
-            // because the CL verification tool (gpg) is not available on Windows.
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            // If running on a platform other than Linux, both packages will be submitted for signing
+            // because the CL verification tool (gpg) is not available.
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 expectedFilesToBeSigned.Add("File 'SignedRpm.rpm' Certificate='LinuxSign'");
             }
@@ -2021,7 +2158,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.rpm"
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -2045,7 +2182,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.rpm"
 
             ValidateFileSignInfos(itemsToSign,
                                   new Dictionary<string, List<SignInfo>>(),
-                                  new Dictionary<ExplicitCertificateKey, string>(),
+                                  new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>(),
                                   s_fileExtensionSignInfo,
                                   new[] { "File 'IncorrectlySignedPackage.1.0.0.nupkg' Certificate='NuGet'" });
         }
@@ -2064,7 +2201,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.rpm"
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -2092,7 +2229,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.rpm"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -2117,8 +2254,8 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>"
             },
-            wix3ToolsPath: Config.Wix3ToolPath,
-            wixToolsPath: Config.WixToolPath);
+            wix3ToolsPath: GetWix3ToolPath(),
+            wixToolsPath: GetWixToolPath());
 
         }
 
@@ -2141,7 +2278,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -2170,8 +2307,8 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>"
             },
-            wix3ToolsPath: Config.Wix3ToolPath,
-            wixToolsPath: Config.WixToolPath);
+            wix3ToolsPath: GetWix3ToolPath(),
+            wixToolsPath: GetWixToolPath());
 
         }
 
@@ -2193,7 +2330,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
@@ -2210,8 +2347,8 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>"
             },
-            wix3ToolsPath: Config.Wix3ToolPath,
-            wixToolsPath: Config.WixToolPath);
+            wix3ToolsPath: GetWix3ToolPath(),
+            wixToolsPath: GetWixToolPath());
         }
 
         /// <summary>
@@ -2220,7 +2357,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
         [WindowsOnlyFact]
         public void BadWixToolsetPath()
         {
-            var badPath = Path.Combine(Config.WixToolPath, "badpath");
+            var badPath = Path.Combine(GetWixToolPath(), "badpath");
 
             var fakeBuildEngine = new FakeBuildEngine(_output);
             var task = new SignToolTask
@@ -2232,17 +2369,16 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
                 LogDir = "LogDir",
                 TempDir = "TempDir",
                 DryRun = true,
-                DotNetPathMicroBuild = CreateTestResource("dotnet.mb.fake"),
-                DotNetPathTooling = CreateTestResource("dotnet.tool.fake"),
+                DotNetPath = CreateTestResource("dotnet.fake"),
                 DoStrongNameCheck = false,
                 SNBinaryPath = null,
-                Wix3ToolsPath = Config.Wix3ToolPath,
+                Wix3ToolsPath = GetWix3ToolPath(),
                 WixToolsPath = badPath
             };
 
             task.Execute().Should().BeFalse();
             task.Log.HasLoggedErrors.Should().BeTrue();
-            fakeBuildEngine.LogErrorEvents.ForEach(a => a.Message.Should().EndWithEquivalent(" does not exist." ));
+            fakeBuildEngine.LogErrorEvents.ForEach(a => a.Message.Should().EndWith(" does not exist." ));
         }
 
         [Fact]
@@ -2261,7 +2397,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -2296,7 +2432,7 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
@@ -2357,7 +2493,7 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
@@ -2418,7 +2554,7 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -2476,7 +2612,7 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
@@ -2536,7 +2672,7 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -2570,9 +2706,9 @@ $@"
             // Default signing information
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>()
             {
-                { new ExplicitCertificateKey("ZeroLengthPythonFile.py"), "3PartySHA2" }
+                { new ExplicitSignInfoKey("ZeroLengthPythonFile.py"), new FileSignInfoEntry("3PartySHA2") }
             };
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, Array.Empty<string>());
         }
@@ -2595,7 +2731,7 @@ $@"
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
@@ -2681,7 +2817,7 @@ $@"
                 new ItemToSign(GetResourcePath("SameFiles2.zip"), "123"),
             };
 
-            ValidateFileSignInfos(itemsToSign, new Dictionary<string, List<SignInfo>>(), new Dictionary<ExplicitCertificateKey, string>(), s_fileExtensionSignInfoWithCollisionId, new[]
+            ValidateFileSignInfos(itemsToSign, new Dictionary<string, List<SignInfo>>(), new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>(), s_fileExtensionSignInfoWithCollisionId, new[]
             {
                 "File 'Simple1.exe' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='Microsoft400'",
                 "File 'Simple2.exe' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='Microsoft400'",
@@ -2788,13 +2924,12 @@ $@"
                 LogDir = "LogDir",
                 TempDir = "TempDir",
                 DryRun = true,
-                DotNetPathMicroBuild = CreateTestResource("dotnet.mb.fake"),
-                DotNetPathTooling = CreateTestResource("dotnet.tool.fake"),
+                DotNetPath = CreateTestResource("dotnet.fake"),
                 MicroBuildCorePath = "MicroBuildCorePath",
                 DoStrongNameCheck = false,
                 SNBinaryPath = null,
-                TarToolPath = Config.TarToolPath,
-                PkgToolPath = Config.PkgToolPath,
+                TarToolPath = s_tarToolPath,
+                PkgToolPath = s_pkgToolPath,
             };
 
             task.Execute().Should().BeTrue();
@@ -2828,8 +2963,7 @@ $@"
                 LogDir = "LogDir",
                 TempDir = "TempDir",
                 DryRun = true,
-                DotNetPathMicroBuild = CreateTestResource("dotnet.mb.fake"),
-                DotNetPathTooling = CreateTestResource("dotnet.tool.fake"),
+                DotNetPath = CreateTestResource("dotnet.fake"),
                 DoStrongNameCheck = false,
                 SNBinaryPath = null,
             };
@@ -2857,7 +2991,7 @@ $@"
                 { "31bf3856ad364e35", new List<SignInfo>{ new SignInfo(certificate: dualCertName, strongName: null) } }
             };
 
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -2890,7 +3024,7 @@ $@"
                 { "31bf3856ad364e35", new List<SignInfo>{ new SignInfo(certificate: dualCertName, strongName: null) } }
             };
 
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new string[] { }, additionalCertificateInfo: additionalCertInfo);
         }
@@ -2911,7 +3045,7 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
@@ -2943,7 +3077,7 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
@@ -2994,26 +3128,26 @@ $@"
             };
 
             // Overriding information
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>()
             {
-                { new ExplicitCertificateKey("test.jar", collisionPriorityId: "123"), "JARCertificate" },
-                { new ExplicitCertificateKey("test.ps1", collisionPriorityId: "123"), "PS1Certificate" },
-                { new ExplicitCertificateKey("test.psd1", collisionPriorityId: "123"), "PSD1Certificate" },
-                { new ExplicitCertificateKey("test.psm1", collisionPriorityId: "123"), "PSM1Certificate" },
-                { new ExplicitCertificateKey("test.psc1", collisionPriorityId: "123"), "PSC1Certificate" },
-                { new ExplicitCertificateKey("test.dylib", collisionPriorityId: "123"), "DYLIBCertificate" },
-                { new ExplicitCertificateKey("EmptyPKT.dll", collisionPriorityId: "123"), "DLLCertificate" },
-                { new ExplicitCertificateKey("test.vsix", collisionPriorityId: "123"), "VSIXCertificate" },
-                { new ExplicitCertificateKey("PackageWithRelationships.vsix", collisionPriorityId: "123"), "VSIXCertificate2" },
-                { new ExplicitCertificateKey("Simple.dll", collisionPriorityId: "123"), "DLLCertificate2" },
-                { new ExplicitCertificateKey("Simple.nupkg", collisionPriorityId: "123"), "NUPKGCertificate" },
-                { new ExplicitCertificateKey("Simple.symbols.nupkg", collisionPriorityId: "123"), "NUPKGCertificate2" },
-                { new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETFramework,Version=v4.6.1", "123"), "DLLCertificate3" },
-                { new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETStandard,Version=v2.0", "123"), "DLLCertificate4" },
-                { new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETCoreApp,Version=v2.0", "123"), "DLLCertificate5" },
-                { new ExplicitCertificateKey("filewithoutextension", collisionPriorityId: "123"), "MacDeveloperHarden" },
-                { new ExplicitCertificateKey("SPCNoPKT.dll", collisionPriorityId: "123"), "None" },
-                { new ExplicitCertificateKey("Simple.exe", collisionPriorityId: "1234"), "MacDeveloperHardenWithNotarization" },
+                { new ExplicitSignInfoKey("test.jar", collisionPriorityId: "123"), new FileSignInfoEntry("JARCertificate") },
+                { new ExplicitSignInfoKey("test.ps1", collisionPriorityId: "123"), new FileSignInfoEntry("PS1Certificate") },
+                { new ExplicitSignInfoKey("test.psd1", collisionPriorityId: "123"), new FileSignInfoEntry("PSD1Certificate") },
+                { new ExplicitSignInfoKey("test.psm1", collisionPriorityId: "123"), new FileSignInfoEntry("PSM1Certificate") },
+                { new ExplicitSignInfoKey("test.psc1", collisionPriorityId: "123"), new FileSignInfoEntry("PSC1Certificate") },
+                { new ExplicitSignInfoKey("test.dylib", collisionPriorityId: "123"), new FileSignInfoEntry("DYLIBCertificate") },
+                { new ExplicitSignInfoKey("EmptyPKT.dll", collisionPriorityId: "123"), new FileSignInfoEntry("DLLCertificate") },
+                { new ExplicitSignInfoKey("test.vsix", collisionPriorityId: "123"), new FileSignInfoEntry("VSIXCertificate") },
+                { new ExplicitSignInfoKey("PackageWithRelationships.vsix", collisionPriorityId: "123"), new FileSignInfoEntry("VSIXCertificate2") },
+                { new ExplicitSignInfoKey("Simple.dll", collisionPriorityId: "123"), new FileSignInfoEntry("DLLCertificate2") },
+                { new ExplicitSignInfoKey("Simple.nupkg", collisionPriorityId: "123"), new FileSignInfoEntry("NUPKGCertificate") },
+                { new ExplicitSignInfoKey("Simple.symbols.nupkg", collisionPriorityId: "123"), new FileSignInfoEntry("NUPKGCertificate2") },
+                { new ExplicitSignInfoKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETFramework,Version=v4.6.1", "123"), new FileSignInfoEntry("DLLCertificate3") },
+                { new ExplicitSignInfoKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETStandard,Version=v2.0", "123"), new FileSignInfoEntry("DLLCertificate4") },
+                { new ExplicitSignInfoKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETCoreApp,Version=v2.0", "123"), new FileSignInfoEntry("DLLCertificate5") },
+                { new ExplicitSignInfoKey("filewithoutextension", collisionPriorityId: "123"), new FileSignInfoEntry("MacDeveloperHarden") },
+                { new ExplicitSignInfoKey("SPCNoPKT.dll", collisionPriorityId: "123"), new FileSignInfoEntry("None") },
+                { new ExplicitSignInfoKey("Simple.exe", collisionPriorityId: "1234"), new FileSignInfoEntry("MacDeveloperHardenWithNotarization") },
             };
 
             // Set up the cert to allow for signing and notarization.
@@ -3077,11 +3211,11 @@ $@"
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
 
             // File-specific signing information with ExecutableType
-            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>()
             {
-                { new ExplicitCertificateKey("windows-exe.exe", executableType: ExecutableType.PE, collisionPriorityId: "123"), "WindowsCertificate" },
-                { new ExplicitCertificateKey("linux-elf", executableType: ExecutableType.ELF, collisionPriorityId: "123"), "LinuxCertificate" },
-                { new ExplicitCertificateKey("macos-macho", executableType: ExecutableType.MachO, collisionPriorityId: "123"), "MacDeveloperHarden" },
+                { new ExplicitSignInfoKey("windows-exe.exe", executableType: ExecutableType.PE, collisionPriorityId: "123"), new FileSignInfoEntry("WindowsCertificate") },
+                { new ExplicitSignInfoKey("linux-elf", executableType: ExecutableType.ELF, collisionPriorityId: "123"), new FileSignInfoEntry("LinuxCertificate") },
+                { new ExplicitSignInfoKey("macos-macho", executableType: ExecutableType.MachO, collisionPriorityId: "123"), new FileSignInfoEntry("MacDeveloperHarden") },
             };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
@@ -3161,14 +3295,13 @@ $@"
             new Configuration(_tmpDir,
                 itemsToSign,
                 new Dictionary<string, List<SignInfo>>(),
-                new Dictionary<ExplicitCertificateKey, string>(),
+                new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>(),
                 new Dictionary<string, List<SignInfo>>(),
                 new(),
                 null,
-                dotNetPathTooling: Config.DotNetPathTooling,
-                tarToolPath: Config.TarToolPath,
-                pkgToolPath: Config.PkgToolPath,
-                snPath: Config.SNPath,
+                tarToolPath: s_tarToolPath,
+                pkgToolPath: s_pkgToolPath,
+                snPath: s_snPath,
                 task.Log)
                 .GenerateListOfFiles();
 
@@ -3179,6 +3312,12 @@ $@"
         [MemberData(nameof(GetSignableExtensions))]
         public void MissingCertificateNameButExtensionIsIgnored(string extension)
         {
+            //  test.deb contains symbolic links which aren't supported on windows.
+            if (extension == ".deb" && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return;
+            }
+
             var needContent = new Dictionary<string, (string, string[])>(StringComparer.OrdinalIgnoreCase)
             {
                 { ".dll", ("EmptyPKT.dll", []) },
@@ -3213,14 +3352,13 @@ $@"
             new Configuration(_tmpDir,
                 itemsToSign,
                 new Dictionary<string, List<SignInfo>>(),
-                new Dictionary<ExplicitCertificateKey, string>(),
+                new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>(),
                 extensionSignInfo,
                 new(),
                 null,
-                dotNetPathTooling: Config.DotNetPathTooling,
-                tarToolPath: Config.TarToolPath,
-                pkgToolPath: Config.PkgToolPath,
-                snPath: Config.SNPath,
+                tarToolPath: s_tarToolPath,
+                pkgToolPath: s_pkgToolPath,
+                snPath: s_snPath,
                 task.Log)
                 .GenerateListOfFiles();
 
@@ -3238,15 +3376,14 @@ $@"
             ValidateFileSignInfos(
                 itemsToSign, 
                 new Dictionary<string, List<SignInfo>>(), 
-                new Dictionary<ExplicitCertificateKey, 
-                string>(), 
+                new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>(), 
                 s_fileExtensionSignInfoWithCollisionId, 
                 new string[0]);
 
             ValidateGeneratedProject(
                 itemsToSign, 
                 new Dictionary<string, List<SignInfo>>(), 
-                new Dictionary<ExplicitCertificateKey, string>(), 
+                new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>(), 
                 s_fileExtensionSignInfoWithCollisionId, 
                 new string[0]);
         }
@@ -3265,7 +3402,7 @@ $@"
 
             const string expectedExe = "MsiBootstrapper5.exe";
             const string wixPack = "MsiBootstrapper5.exe.wixpack.zip";
-            var wixToolsPath = Config.WixToolPath;
+            var wixToolsPath = GetWixToolPath();
             var wixpackPath = GetResourcePath(wixPack);
             var tempDir = Path.GetTempPath();
             string workingDir = Path.Combine(tempDir, "extract", Guid.NewGuid().ToString());
@@ -3445,8 +3582,8 @@ $@"
         [WindowsOnlyFact]
         public void ValidStrongNameSignaturesValidateWithFallback()
         {
-            StrongNameHelper.IsSigned_Legacy(GetResourcePath("SignedLibrary.dll"), Config.SNPath).Should().BeTrue();
-            StrongNameHelper.IsSigned_Legacy(GetResourcePath("StrongNamedWithEcmaKey.dll"), Config.SNPath).Should().BeTrue();
+            StrongNameHelper.IsSigned_Legacy(GetResourcePath("SignedLibrary.dll"), s_snPath).Should().BeTrue();
+            StrongNameHelper.IsSigned_Legacy(GetResourcePath("StrongNamedWithEcmaKey.dll"), s_snPath).Should().BeTrue();
         }
 
         [ConditionalTheory(nameof(PlatformSupportsStrongNameAlgorithm))]
@@ -3461,7 +3598,7 @@ $@"
             StrongNameHelper.IsSigned(resourcePath).Should().BeTrue();
 
             // Legacy sn verification works on on Windows only
-            StrongNameHelper.IsSigned_Legacy(resourcePath, Config.SNPath).Should().Be(
+            StrongNameHelper.IsSigned_Legacy(resourcePath, s_snPath).Should().Be(
                 RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
         }
 
@@ -3473,10 +3610,10 @@ $@"
         {
             // Make sure this is unique
             string resourcePath = GetResourcePath(file, Guid.NewGuid().ToString());
-            StrongNameHelper.IsSigned_Legacy(resourcePath, Config.SNPath).Should().Be(initiallySigned);
+            StrongNameHelper.IsSigned_Legacy(resourcePath, s_snPath).Should().Be(initiallySigned);
             // Unset the strong name bit first
             StrongNameHelper.ClearStrongNameSignedBit(resourcePath);
-            StrongNameHelper.Sign_Legacy(resourcePath, GetResourcePath(key), Config.SNPath).Should().BeTrue();
+            StrongNameHelper.Sign_Legacy(resourcePath, GetResourcePath(key), s_snPath).Should().BeTrue();
             StrongNameHelper.IsSigned(resourcePath).Should().BeTrue();
         }
 
@@ -3533,8 +3670,7 @@ $@"
                 TempDir = "TempDir",
                 DryRun = true,
                 TestSign = true,
-                DotNetPathMicroBuild = CreateTestResource("dotnet.mb.fake"),
-                DotNetPathTooling = CreateTestResource("dotnet.tool.fake"),
+                DotNetPath = CreateTestResource("dotnet.fake"),
                 AllowEmptySignList = true
             };
             
@@ -3559,8 +3695,7 @@ $@"
                 TempDir = "TempDir", 
                 DryRun = true,
                 TestSign = true,
-                DotNetPathMicroBuild = CreateTestResource("dotnet.mb.fake"),
-                DotNetPathTooling = CreateTestResource("dotnet.tool.fake"),
+                DotNetPath = CreateTestResource("dotnet.fake"),
                 AllowEmptySignList = true
             };
             
@@ -3576,8 +3711,7 @@ $@"
                 tempPath: _tmpDir,
                 microBuildCorePath: "MockPath",
                 testSign: true,  // This is the key - TestSign should be true
-                dotNetPathMicroBuild: "MockDotNetPathMicroBuild",
-                dotNetPathTooling: "MockdotNetPathTooling",
+                dotnetPath: "MockDotNetPath",
                 msbuildVerbosity: "quiet",
                 logDir: "MockLogDir",
                 enclosingDir: "MockEnclosingDir",
@@ -3600,5 +3734,209 @@ $@"
             var testSignResult = testSignTool.VerifySignedNuGet(nupkgPath);
             testSignResult.Should().Be(SigningStatus.Signed, "TestSign mode should return Signed without validation");
         }
+
+        [Fact]
+        public void ContainerSigningWithDoNotUnpackViaFileSignInfo()
+        {
+            // Test DoNotUnpack for both top-level and nested containers
+            // Uses NestedContainer.1.0.0.nupkg which contains ContainerOne.1.0.0.nupkg
+            var itemsToSign = new List<ItemToSign>()
+            {
+                new ItemToSign(GetResourcePath("NestedContainer.1.0.0.nupkg"), collisionPriorityId: "123")
+            };
+
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "581d91ccdfc4ea9c", new List<SignInfo> {new SignInfo(certificate: "3PartySHA2", strongName: "ArcadeStrongTest", collisionPriorityId: "123") } }
+            };
+
+            // Test 1: Set DoNotUnpack=true on top-level container without certificate (uses default from extension)
+            // Result: Only the top-level container is signed, nested container is not extracted
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>()
+            {
+                { new ExplicitSignInfoKey("NestedContainer.1.0.0.nupkg", collisionPriorityId: "123"), new FileSignInfoEntry(doNotUnpack: true) }
+            };
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
+            {
+                "File 'NestedContainer.1.0.0.nupkg' Certificate='NuGet'",
+            });
+
+            // Test 2: Set DoNotUnpack=true on nested container with explicit certificate, but allow top-level to unpack
+            // Result: Top-level is unpacked and its contents signed, but nested container is signed without unpacking
+            fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>()
+            {
+                { new ExplicitSignInfoKey("ContainerOne.1.0.0.nupkg", collisionPriorityId: "123"), new FileSignInfoEntry("NuGet", doNotUnpack: true) }
+            };
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
+            {
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ContainerTwo.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'",
+                "File 'NestedContainer.1.0.0.nupkg' Certificate='NuGet'",
+            });
+        }
+
+        [Fact]
+        public void ContainerSigningWithDoNotUnpackViaFileExtensionSignInfo()
+        {
+            // Test DoNotUnpack for both top-level and nested containers
+            var itemsToSign = new List<ItemToSign>()
+            {
+                new ItemToSign(GetResourcePath("NestedContainer.1.0.0.nupkg"), collisionPriorityId: "123")
+            };
+
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "581d91ccdfc4ea9c", new List<SignInfo> {new SignInfo(certificate: "3PartySHA2", strongName: "ArcadeStrongTest", collisionPriorityId: "123") } }
+            };
+
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>();
+
+            // Configure DoNotUnpack via FileExtensionSignInfo for all .nupkg files
+            // Result: Only the top-level container is signed because DoNotUnpack=true prevents extraction
+            var extensionSignInfoWithDoNotUnpack = new Dictionary<string, List<SignInfo>>()
+            {
+                { ".nupkg", new List<SignInfo>{ new SignInfo("NuGet", collisionPriorityId: "123", doNotUnpack: true) } },
+                { ".dll", new List<SignInfo>{ new SignInfo("Microsoft400", collisionPriorityId: "123") } },
+            };
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, extensionSignInfoWithDoNotUnpack, new[]
+            {
+                "File 'NestedContainer.1.0.0.nupkg' Certificate='NuGet'",
+            });
+        }
+
+        [Fact]
+        public void NotarizationRetriesOnFailure()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new List<ItemToSign>()
+            {
+                new ItemToSign(GetResourcePath("test.pkg"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo(certificate: "ArcadeCertTest", strongName: "ArcadeStrongTest") } }
+            };
+
+            // Set up the cert to allow for signing and notarization.
+            var additionalCertificateInfo = new Dictionary<string, List<AdditionalCertificateInformation>>()
+            {
+                {  "MacDeveloperHardenWithNotarization",
+                    new List<AdditionalCertificateInformation>() {
+                        new AdditionalCertificateInformation() { MacNotarizationAppName = "dotnet", MacSigningOperation = "MacDeveloperHarden" }
+                    }
+                }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitSignInfoKey, FileSignInfoEntry>()
+            {
+                { new ExplicitSignInfoKey("test.pkg"), new FileSignInfoEntry("MacDeveloperHardenWithNotarization") }
+            };
+
+            var configuration = new Configuration(_tmpDir,
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfo,
+                additionalCertificateInfo,
+                itemsToSkip3rdPartyCheck: null,
+                tarToolPath: null,
+                pkgToolPath: null,
+                snPath: null,
+                new TaskLoggingHelper(new FakeBuildEngine(_output), "SignToolTests"),
+                telemetry: null);
+
+            var parsedSigningInput = configuration.GenerateListOfFiles();
+
+            // Create a fake build engine to track build calls
+            var fakeBuildEngine = new FakeBuildEngineWithFailures(_output, failNotarizationCount: 3);
+            var fakeLog = new TaskLoggingHelper(fakeBuildEngine, "SignToolTests");
+
+            var args = new SignToolArgs(
+                tempPath: _tmpDir,
+                microBuildCorePath: CreateTestResource("MicroBuild.Core"),
+                testSign: true,
+                dotnetPath: null,
+                msbuildVerbosity: "quiet",
+                logDir: _tmpDir,
+                enclosingDir: "",
+                snBinaryPath: null,
+                wix3ToolsPath: null,
+                wixToolsPath: null,
+                tarToolPath: null,
+                pkgToolPath: null,
+                dotnetTimeout: -1);
+
+            var signTool = new FakeSignTool(args, fakeLog);
+
+            var util = new BatchSignUtil(
+                fakeBuildEngine,
+                fakeLog,
+                signTool,
+                parsedSigningInput,
+                Array.Empty<string>(),
+                null);
+
+            util.Go(false);
+
+            // Verify that notarization was retried
+            fakeBuildEngine.NotarizationAttempts.Should().Be(4, "Notarization should succeed on the 4th attempt after 3 failures");
+        }
+    }
+
+    /// <summary>
+    /// Fake build engine that can simulate notarization failures
+    /// </summary>
+    internal class FakeBuildEngineWithFailures : IBuildEngine
+    {
+        private readonly int _failNotarizationCount;
+        private int _notarizationAttemptsSoFar = 0;
+        private readonly FakeBuildEngine _innerEngine;
+
+        public int NotarizationAttempts => _notarizationAttemptsSoFar;
+
+        public FakeBuildEngineWithFailures(ITestOutputHelper output, int failNotarizationCount)
+        {
+            _failNotarizationCount = failNotarizationCount;
+            _innerEngine = new FakeBuildEngine(output);
+        }
+
+        public bool BuildProjectFile(string projectFileName, string[] targetNames, System.Collections.IDictionary globalProperties, System.Collections.IDictionary targetOutputs)
+        {
+            // Check if this is a notarization project
+            if (projectFileName.Contains("Notarize"))
+            {
+                _notarizationAttemptsSoFar++;
+                
+                // Fail the first N attempts
+                if (_notarizationAttemptsSoFar <= _failNotarizationCount)
+                {
+                    return false;
+                }
+            }
+
+            // Otherwise use the inner engine implementation
+            return _innerEngine.BuildProjectFile(projectFileName, targetNames, globalProperties, targetOutputs);
+        }
+
+        public int ColumnNumberOfTaskNode => _innerEngine.ColumnNumberOfTaskNode;
+        public bool ContinueOnError { get => _innerEngine.ContinueOnError; set => _innerEngine.ContinueOnError = value; }
+        public int LineNumberOfTaskNode => _innerEngine.LineNumberOfTaskNode;
+        public string ProjectFileOfTaskNode => _innerEngine.ProjectFileOfTaskNode;
+
+        public void LogCustomEvent(CustomBuildEventArgs e) => _innerEngine.LogCustomEvent(e);
+        public void LogErrorEvent(BuildErrorEventArgs e) => _innerEngine.LogErrorEvent(e);
+        public void LogMessageEvent(BuildMessageEventArgs e) => _innerEngine.LogMessageEvent(e);
+        public void LogWarningEvent(BuildWarningEventArgs e) => _innerEngine.LogWarningEvent(e);
     }
 }

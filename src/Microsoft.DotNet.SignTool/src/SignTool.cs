@@ -26,7 +26,6 @@ namespace Microsoft.DotNet.SignTool
 
         internal string Wix3ToolsPath => _args.Wix3ToolsPath;
         internal string WixToolsPath => _args.WixToolsPath;
-        internal string DotNetPathTooling => _args.DotNetPathTooling;
         internal string TarToolPath => _args.TarToolPath;
         internal string PkgToolPath => _args.PkgToolPath;
 
@@ -46,11 +45,7 @@ namespace Microsoft.DotNet.SignTool
         public abstract SigningStatus VerifySignedPowerShellFile(string filePath);
         public abstract SigningStatus VerifySignedNuGet(string filePath);
         public abstract SigningStatus VerifySignedVSIX(string filePath);
-        public abstract SigningStatus VerifySignedPkgOrAppBundle(
-            TaskLoggingHelper log,
-            string filePath,
-            string dotNetPathTooling,
-            string pkgToolPath);
+        public abstract SigningStatus VerifySignedPkgOrAppBundle(TaskLoggingHelper log, string filePath, string pkgToolPath);
 
         public abstract SigningStatus VerifyStrongNameSign(string fileFullPath);
 
@@ -196,8 +191,37 @@ namespace Microsoft.DotNet.SignTool
             {
                 var notarizeProjectPath = Path.Combine(dir, $"Round{round}-Notarize.proj");
                 File.WriteAllText(notarizeProjectPath, GenerateBuildFileContent(filesToNotarize, null, true));
-                string notarizeLogName = $"NotarizationRound{round}";
-                status = RunMSBuild(buildEngine, notarizeProjectPath, Path.Combine(_args.LogDir, $"{notarizeLogName}.binlog"), Path.Combine(_args.LogDir, $"{notarizeLogName}.log"), Path.Combine(_args.LogDir, $"{notarizeLogName}.error.log"));
+                
+                // Notarization can be flaky, so retry up to 5 times with no wait between retries
+                const int maxRetries = 5;
+                int attempt = 0;
+                bool notarizationSucceeded = false;
+                
+                _log.LogMessage(MessageImportance.High, $"Starting notarization with up to {maxRetries} attempts");
+                
+                while (attempt < maxRetries && !notarizationSucceeded)
+                {
+                    attempt++;
+                    _log.LogMessage(MessageImportance.High, $"Notarization attempt {attempt} of {maxRetries}");
+                    
+                    string notarizeLogName = $"NotarizationRound{round}-Attempt{attempt}";
+                    notarizationSucceeded = RunMSBuild(buildEngine, notarizeProjectPath, 
+                        Path.Combine(_args.LogDir, $"{notarizeLogName}.binlog"), 
+                        Path.Combine(_args.LogDir, $"{notarizeLogName}.log"), 
+                        Path.Combine(_args.LogDir, $"{notarizeLogName}.error.log"));
+                    
+                    if (!notarizationSucceeded && attempt < maxRetries)
+                    {
+                        _log.LogMessage(MessageImportance.High, $"Notarization failed on attempt {attempt}. Retrying...");
+                    }
+                }
+                
+                if (!notarizationSucceeded)
+                {
+                    _log.LogError($"Notarization failed after {maxRetries} attempts");
+                }
+                
+                status = notarizationSucceeded;
             }
 
             return status;
@@ -213,7 +237,7 @@ namespace Microsoft.DotNet.SignTool
             foreach (var fileInfo in detachedSignatureFiles)
             {
                 // Copy the signed content to .sig file
-                File.Copy(fileInfo.FullPath, fileInfo.DetachedSignatureFullPath);
+                File.Copy(fileInfo.FullPath, fileInfo.DetachedSignatureFullPath, overwrite: true);
                 _log.LogMessage($"Created detached signature file: {fileInfo.DetachedSignatureFullPath}");
 
                 // Restore the original file
