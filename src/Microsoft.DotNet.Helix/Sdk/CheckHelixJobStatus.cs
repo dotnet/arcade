@@ -40,8 +40,32 @@ namespace Microsoft.DotNet.Helix.Sdk
                         var jobName = workItem.GetMetadata("JobName");
                         var workItemName = workItem.GetMetadata("WorkItemName");
                         var consoleUri = workItem.GetMetadata("ConsoleOutputUri");
+                        var exitCode = workItem.GetMetadata("ExitCode");
+                        var consoleErrorText = workItem.GetMetadata("ConsoleErrorText");
 
-                        Log.LogError(FailureCategory.Test, $"Work item {workItemName} in job {jobName} has failed.\nFailure log: {consoleUri}{accessTokenSuffix}");
+                        var sb = new System.Text.StringBuilder();
+                        sb.Append($"Work item {workItemName} in job {jobName} has failed.");
+
+                        if (!string.IsNullOrEmpty(exitCode))
+                        {
+                            sb.Append($" (exit code {exitCode})");
+                        }
+
+                        sb.AppendLine();
+                        sb.AppendLine($"Failure log: {consoleUri}{accessTokenSuffix}");
+
+                        if (!string.IsNullOrEmpty(consoleErrorText))
+                        {
+                            sb.AppendLine();
+                            sb.AppendLine("Error details:");
+                            // Truncate to avoid excessively long MSBuild error messages
+                            string truncated = consoleErrorText.Length > 2000
+                                ? consoleErrorText.Substring(0, 2000) + "..."
+                                : consoleErrorText;
+                            sb.Append(truncated);
+                        }
+
+                        Log.LogError(FailureCategory.Test, sb.ToString());
                     }
                 }
             }
