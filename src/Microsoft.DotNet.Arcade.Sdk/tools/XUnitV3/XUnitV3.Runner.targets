@@ -80,6 +80,16 @@
     </PropertyGroup>
 
     <!--
+      Allow running an arbitrary target after the tests have been executed. This is useful for running custom test reporting tools.
+    -->
+    <MSBuild Projects="$(OnTestsExecutedProject)"
+             Properties="$(OnTestsExecutedProperties);Project=$(MSBuildProjectName);LogFile=%(TestToRun.ResultsStdOutPath);TrxFile=%(TestToRun.ResultsTrxPath);ExitCode=$(_TestErrorCode);TestEnvironment=$(_TestEnvironment);TestAssembly=$(_TestAssembly);TargetFramework=%(TestToRun.TargetFramework)"
+             Targets="OnTestsExecuted"
+             SkipNonexistentProjects="true"
+             Condition=" Exists('$(OnTestsExecutedProject)') "
+             />
+
+    <!--
       Ideally we would set ContinueOnError="ErrorAndContinue" so that when a test fails in multi-targeted test project
       we'll still run tests for all target frameworks. ErrorAndContinue doesn't work well on Linux though: https://github.com/Microsoft/msbuild/issues/3961.
     -->
