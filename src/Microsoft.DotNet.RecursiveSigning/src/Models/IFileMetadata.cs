@@ -10,6 +10,11 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
     /// </summary>
     public interface IFileMetadata
     {
+        /// <summary>
+        /// File name. No path.
+        /// </summary>
+        string FileName { get; }
+
         ExecutableType ExecutableType { get; }
 
         string? TargetFramework { get; }

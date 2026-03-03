@@ -13,12 +13,13 @@ Microsoft.DotNet.RecursiveSigning orchestrates recursive signing of artifacts so
 1. **Discovery**: Identify top-level artifacts, detect nested containers, and gather metadata required for signing decisions.
 2. **Graph Finalization**: Freeze discovery and compute initial node states bottom-up (including which files are immediately ready to sign or repack).
 3. **Signing Rounds**: Sign all nodes currently marked `ReadyToSign`, update the graph, and unlock containers for repack.
-4. **Repacking**: Repack containers marked `ReadyToRepack`, then mark them ready for signing.
-5. **Finalization**: Emit signed outputs, collect telemetry, and return a summary of successes and failures.
+4. **Repacking**: Repack containers marked `ReadyToRepack` in place, then mark them ready for signing.
+5. **Finalization**: Collect telemetry and return a summary of successes and failures.
 
 ## Algorithm Walkthrough
 1. **Input Preparation**
    - Normalize the list of top-level artifacts and allocate temporary working locations defined by configuration.
+   - Optionally set an output directory; if set, root inputs are copied there before discovery starts.
    - Initialize telemetry, logging, and cancellation hooks that remain active throughout the run.
 2. **Container Expansion**
    - For each artifact, choose an appropriate container handler (if any) and stream entries without rewriting the entire archive.
@@ -30,9 +31,9 @@ Microsoft.DotNet.RecursiveSigning orchestrates recursive signing of artifacts so
    - Files encountered multiple times are only analyzed a single time and only extracted to disk a single time. If a duplicate file is discovered, the graph should be updated
      (indicating a location where a signed copy needs to be placed), but no further extraction or analysis is done.
 4. **Certificate Resolution and Validation**
-   - The signature calculator evaluates configuration rules in priority order (explicit overrides, strong-name, extension).
+   - The certificate calculator evaluates configuration rules in priority order (file name, extension).
    - Certificate resolution is performed for every discovered file so downstream components (dedup, signing, telemetry) have a consistent certificate identifier.
-   - Separately, signature calculation records whether the file is already signed and therefore *potentially* skippable.
+   - Separately, file metadata records whether the file is already signed and therefore *potentially* skippable.
    - Skipping of already-signed containers is not decided here; it is decided during graph finalization using child/descendant needs.
    - Failures halt the run before any signing occurs.
 5. **Graph finalization (bottom-up)**
@@ -42,9 +43,11 @@ Microsoft.DotNet.RecursiveSigning orchestrates recursive signing of artifacts so
    - Containers that are already signed may be initialized to `Skipped` *only when no descendant will be modified*; this prevents skipping a container that must be repacked because a nested file was signed.
 6. **Iterative Signing + Repack rounds**
    - The orchestrator repeatedly:
-     - Signs all nodes returned by `GetNodesReadyForSigning()`.
-     - Repacks all containers returned by `GetContainersReadyForRepack()`.
-     - Marks repacked containers ready to sign.
+      - Signs all nodes returned by `GetNodesReadyForSigning()`.
+      - Repacks all containers returned by `GetContainersReadyForRepack()`.
+      - Marks repacked containers ready to sign.
+   - Working files (including extracted nested files and repacked containers) are always updated in place.
+   - Only root input artifacts may be copied to an optional output directory, and this copy happens before processing.
    - Successful signing marks nodes as `Signed` and updates parent container progress so containers can become eligible for repack.
 7. **Completion and Reporting**
    - When no unsigned nodes remain, results are collated: signed file inventory, reused copies, validation issues, and telemetry trends.

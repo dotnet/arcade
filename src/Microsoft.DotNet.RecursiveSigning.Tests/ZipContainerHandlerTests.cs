@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             }));
 
             var entries = new List<ContainerEntry>();
-            await foreach (ContainerEntry entry in handler.ReadEntriesAsync(containerPath))
+            await foreach (ContainerEntry entry in handler.ReadEntriesAsync(containerPath, "/tmp"))
             {
                 entries.Add(entry);
             }
@@ -93,7 +93,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
                 new ContainerEntry("a.txt", contentStream: null) { UpdatedContentPath = updatedPath },
             };
 
-            await handler.WriteContainerAsync(containerPath, entries, new ContainerMetadata());
+            await handler.WriteContainerAsync(containerPath, entries, new ContainerMetadata(), "/tmp");
 
             byte[] updatedZip = mockFileSystem.ReadAllBytes(containerPath);
             ReadZipEntryText(updatedZip, "a.txt").Should().Be("new");

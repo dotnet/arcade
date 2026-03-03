@@ -26,6 +26,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Abstractions
         /// Read entries from a container.
         /// </summary>
         /// <param name="containerPath">Path to container file.</param>
+        /// <param name="tempDirectory">Temporary directory available for handler operations.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>
         /// Async enumerable of container entries.
@@ -34,6 +35,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Abstractions
         /// </returns>
         IAsyncEnumerable<ContainerEntry> ReadEntriesAsync(
             string containerPath,
+            string tempDirectory,
             CancellationToken cancellationToken = default);
 
         /// <summary>
@@ -42,6 +44,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Abstractions
         /// <param name="containerPath">Path to container file.</param>
         /// <param name="entriesToUpdate">Entries to update. Not all entries in the container may be updated.</param>
         /// <param name="metadata">Container metadata to preserve.</param>
+        /// <param name="tempDirectory">Temporary directory available for handler operations.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <remarks>
         /// The caller retains ownership of <paramref name="entriesToUpdate"/> and their streams.
@@ -51,6 +54,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Abstractions
             string containerPath,
             IEnumerable<ContainerEntry> entriesToUpdate,
             ContainerMetadata metadata,
+            string tempDirectory,
             CancellationToken cancellationToken = default);
     }
 }

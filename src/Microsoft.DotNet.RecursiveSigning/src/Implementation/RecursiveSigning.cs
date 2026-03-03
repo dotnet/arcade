@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
     {
         private readonly IFileSystem _fileSystem;
         private readonly IFileAnalyzer _fileAnalyzer;
-        private readonly ISignatureCalculator _signatureCalculator;
+        private readonly ICertificateCalculator _signatureCalculator;
         private readonly ISigningGraph _signingGraph;
         private readonly IFileDeduplicator _fileDeduplicator;
         private readonly IContainerHandlerRegistry _containerHandlerRegistry;
@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
         public RecursiveSigning(
             IFileSystem fileSystem,
             IFileAnalyzer fileAnalyzer,
-            ISignatureCalculator signatureCalculator,
+            ICertificateCalculator signatureCalculator,
             ISigningGraph signingGraph,
             IFileDeduplicator fileDeduplicator,
             IContainerHandlerRegistry containerHandlerRegistry,
@@ -63,14 +63,16 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             var sw = Stopwatch.StartNew();
             var errors = new List<SigningError>();
             var signedFiles = new List<SignedFileInfo>();
+            var effectiveInputFiles = ResolveRootInputs(request.InputFiles, request.Configuration.OutputDirectory);
+            var effectiveRequest = new SigningRequest(effectiveInputFiles, request.Configuration, request.Options);
 
             try
             {
-                _logger.LogInformation("Starting recursive signing for {FileCount} input files", request.InputFiles.Count);
+                _logger.LogInformation("Starting recursive signing for {FileCount} input files", effectiveRequest.InputFiles.Count);
 
                 // Phase 1: Discovery - Build the signing graph
                 _logger.LogInformation("Phase 1: Discovery and Analysis");
-                await DiscoveryPhaseAsync(request, errors, cancellationToken);
+                await DiscoveryPhaseAsync(effectiveRequest, errors, cancellationToken);
 
                 _signingGraph.FinalizeDiscovery();
 
@@ -85,7 +87,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
 
                 // Phase 2: Iterative Signing
                 _logger.LogInformation("Phase 2: Iterative Signing");
-                await IterativeSigningPhaseAsync(request, signedFiles, errors, cancellationToken);
+                await IterativeSigningPhaseAsync(effectiveRequest, signedFiles, errors, cancellationToken);
 
                 if (errors.Count > 0)
                 {
@@ -129,7 +131,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
 
                 try
                 {
-                    await TrackFile(NormalizeFilePathForFileSystem(filePath), null, request.Configuration, cancellationToken);
+                    await TrackFile(filePath, null, request.Configuration, cancellationToken);
                 }
                 catch (Exception ex)
                 {
@@ -139,13 +141,6 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             }
         }
 
-
-        private string NormalizeFilePathForFileSystem(string filePath)
-        {
-            // Tests may use a mock IFileSystem keyed by '/' paths while FileInfo.FullName is OS-specific.
-            // Normalize to forward slashes to work with the mock file system.
-            return filePath.Replace('\\', '/');
-        }
 
         /// <summary>
         /// Tracks a top-level file from disk, performing deduplication, analysis, and optional container discovery.
@@ -418,7 +413,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
         {
             _logger.LogDebug("Discovering contents of container: {FileName}", containerNode.ContentKey.FileName);
 
-            await foreach (var entry in handler.ReadEntriesAsync(containerNode.Location.FilePathOnDisk!, cancellationToken))
+            await foreach (var entry in handler.ReadEntriesAsync(containerNode.Location.FilePathOnDisk!, configuration.TempDirectory, cancellationToken))
             {
                 using (entry)
                 {
@@ -495,7 +490,6 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
         /// Repacks containers whose children have been signed, updating their identity and metadata.
         /// </summary>
         /// <param name="containers">Containers ready for repack.</param>
-        /// <param name="tempDirectory">Temporary directory used for repacked output.</param>
         /// <param name="errors">Accumulated error list.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         private async Task RepackContainersAsync(
@@ -545,11 +539,8 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
 
             foreach (var node in nodes)
             {
-                // Graph-level implicit dedup guarantees these are unique original nodes.
-                var signedDir = _fileSystem.PathCombine(request.Configuration.TempDirectory, "signed", Guid.NewGuid().ToString());
-                _fileSystem.CreateDirectory(signedDir);
-                string outputPath = _fileSystem.PathCombine(signedDir, node.ContentKey.FileName);
-                filesToSign.Add((node, outputPath));
+                // Sign in place. Optional root output copies are handled after signing.
+                filesToSign.Add((node, node.Location.FilePathOnDisk!));
             }
 
             if (filesToSign.Count == 0)
@@ -573,7 +564,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             {
                 _signingGraph.MarkAsComplete(node);
                 _fileDeduplicator.RegisterSignedFile(node.ContentKey, outputPath);
-                signedFiles.Add(new SignedFileInfo(node.Location.FilePathOnDisk, node.CertificateIdentifier?.Name ?? string.Empty, false));
+                signedFiles.Add(new SignedFileInfo(node.Location.FilePathOnDisk!, node.CertificateIdentifier?.Name ?? string.Empty, false));
             }
 
             return true;
@@ -583,7 +574,6 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
         /// Repacks a container by writing out a new container file from its (signed) child entries.
         /// </summary>
         /// <param name="containerNode">Container node to repack.</param>
-        /// <param name="tempDirectory">Temporary directory used for repacked output.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>Path to the repacked container on disk.</returns>
         private async Task<string> RepackContainerAsync(FileNode containerNode, string tempDirectory, CancellationToken cancellationToken)
@@ -615,16 +605,14 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                 entries.Add(entry);
             }
 
-            // Create output path for repacked container
-            var repackedDir = _fileSystem.PathCombine(tempDirectory, "repacked", Guid.NewGuid().ToString());
-            _fileSystem.CreateDirectory(repackedDir);
-            string repackedPath = _fileSystem.PathCombine(repackedDir, containerNode.ContentKey.FileName);
+            string repackedPath = containerNode.Location.FilePathOnDisk!;
 
-            // Repack container to new location
+            // Repack container in place.
             await handler.WriteContainerAsync(
                 repackedPath,
                 entries,
                 new ContainerMetadata(),
+                tempDirectory,
                 cancellationToken);
 
             // Cleanup entry streams
@@ -657,7 +645,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                 if (referenceNode.CanonicalNode.State == FileNodeState.Complete)
                 {
                     signedFiles.Add(new SignedFileInfo(
-                        referenceNode.Location.FilePathOnDisk,
+                        referenceNode.Location.FilePathOnDisk!,
                         referenceNode.CanonicalNode.CertificateIdentifier?.Name ?? string.Empty,
                         wasAlreadySigned: true));
                 }
@@ -679,6 +667,56 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                 signedFiles.Count,
                 allNodes.OfType<FileNode>().Count(n => n.State == FileNodeState.Skipped),
                 errors.Count);
+        }
+
+        /// <summary>
+        /// Resolves the root input set for processing.
+        /// When an output directory is configured, root inputs are copied there first and the copied paths are returned.
+        /// </summary>
+        private IReadOnlyList<FileInfo> ResolveRootInputs(IReadOnlyList<FileInfo> inputFiles, string? outputDirectory)
+        {
+            if (outputDirectory is null)
+            {
+                return inputFiles;
+            }
+
+            var sourcePaths = inputFiles.Select(f => f.ToString()).ToArray();
+            string commonRoot = RootInputOutputPathHelper.GetCommonRootForFiles(sourcePaths);
+
+            var relocatedInputs = new List<FileInfo>(sourcePaths.Length);
+            foreach (string sourcePath in sourcePaths)
+            {
+                string destinationPath = BuildOutputPath(sourcePath, outputDirectory, commonRoot);
+                CopyToOutputPath(sourcePath, destinationPath);
+                relocatedInputs.Add(new FileInfo(destinationPath));
+            }
+
+            return relocatedInputs;
+        }
+
+        /// <summary>
+        /// Builds the destination path for a root input under the configured output directory
+        /// using the shared common root of all root inputs.
+        /// </summary>
+        private static string BuildOutputPath(string sourcePath, string outputDirectory, string commonRoot)
+        {
+            return RootInputOutputPathHelper.BuildOutputPath(sourcePath, outputDirectory, commonRoot);
+        }
+
+        private void CopyToOutputPath(string sourcePath, string destinationPath)
+        {
+            if (string.Equals(sourcePath, destinationPath, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            string? destinationDirectory = _fileSystem.GetDirectoryName(destinationPath);
+            if (!string.IsNullOrEmpty(destinationDirectory))
+            {
+                _fileSystem.CreateDirectory(destinationDirectory);
+            }
+
+            _fileSystem.CopyFile(sourcePath, destinationPath, overwrite: true);
         }
 
         /// <summary>
@@ -712,3 +750,4 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
         }
     }
 }
+

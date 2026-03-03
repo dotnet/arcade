@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Configuration
         /// Add RecursiveSigning core services.
         /// Consumers must also register:
         /// - IFileAnalyzer
-        /// - ISignatureCalculator  
+        /// - ICertificateCalculator  
         /// - ISigningProvider
         /// - IContainerHandler implementations (optional)
         /// </summary>
@@ -70,3 +70,4 @@ namespace Microsoft.DotNet.RecursiveSigning.Configuration
         }
     }
 }
+

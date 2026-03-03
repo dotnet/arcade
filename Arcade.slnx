@@ -72,6 +72,7 @@
   <Project Path="src/Microsoft.DotNet.SharedFramework.Sdk/Microsoft.DotNet.SharedFramework.Sdk.csproj" />
   <Project Path="src/Microsoft.DotNet.SignTool/Microsoft.DotNet.SignTool.csproj" />
   <Project Path="src/Microsoft.DotNet.RecursiveSigning/Microsoft.DotNet.RecursiveSigning.csproj" />
+  <Project Path="src/Microsoft.DotNet.RecursiveSigning.Cli/Microsoft.DotNet.RecursiveSigning.Cli.csproj" />
   <Project Path="src/Microsoft.DotNet.SourceBuild/tasks/Microsoft.DotNet.SourceBuild.Tasks.csproj" />
   <Project Path="src/Microsoft.DotNet.StrongName/Microsoft.DotNet.StrongName.csproj" />
   <Project Path="src/Microsoft.DotNet.Tar/Microsoft.DotNet.Tar.csproj" />

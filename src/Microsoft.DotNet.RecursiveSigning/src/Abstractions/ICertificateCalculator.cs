@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Abstractions
     /// Calculates signing information for files.
     /// Phase 1: Stub implementation (always returns test certificate).
     /// </summary>
-    public interface ISignatureCalculator
+    public interface ICertificateCalculator
     {
         /// <summary>
         /// Calculate signing information for a file.
@@ -22,3 +22,4 @@ namespace Microsoft.DotNet.RecursiveSigning.Abstractions
         ICertificateIdentifier? CalculateCertificateIdentifier(IFileMetadata metadata, SigningConfiguration configuration);
     }
 }
+

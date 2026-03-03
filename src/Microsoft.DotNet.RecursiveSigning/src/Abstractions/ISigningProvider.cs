@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Abstractions
         /// <summary>
         /// Sign a batch of files.
         /// </summary>
-        /// <param name="files">Files to sign with their signing information.</param>
+        /// <param name="files">Files to sign with their signing information. The output path may be the same as the input path for in-place signing.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>True if all files signed successfully.</returns>
         Task<bool> SignFilesAsync(

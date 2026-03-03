@@ -53,6 +53,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
 
         public async IAsyncEnumerable<ContainerEntry> ReadEntriesAsync(
             string containerPath,
+            string tempDirectory,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(containerPath))
@@ -95,6 +96,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             string containerPath,
             IEnumerable<ContainerEntry> entries,
             ContainerMetadata metadata,
+            string tempDirectory,
             CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(containerPath))

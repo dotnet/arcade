@@ -4,11 +4,13 @@ This document groups the supporting data models and services that multiple parts
 
 ## Configuration and Requests
 - **SigningRequest**: Captures the input files, configuration object, and options for a signing run.
-- **ISigningConfiguration**: Provides certificate rules, temporary storage locations, and service-specific properties required by the chosen signing provider.
+- **SigningConfiguration**: Provides temporary storage locations required during recursive signing.
 - **SigningOptions**: Hosts execution toggles such as parallelism, strict validation levels, and logging verbosity.
 
 ## Certificate Rules
-- **CertificateRules**: Stores extension-based mappings, strong-name mappings, explicit overrides, and exemption lists. These rules are interpreted by the signature calculator to maintain consistent behavior across services.
+- **DefaultCertificateRules**: Stores file-name and extension mappings plus raw certificate definition JSON keyed by friendly name.
+- **DefaultCertificateRulesReader**: Reads JSON configuration and materializes `DefaultCertificateRules`.
+- **ICertificateCalculator**: Resolves `ICertificateIdentifier` values from file metadata and rules.
 - **ICertificateIdentifier Implementations**: Represent certificates in a service-agnostic way so that the orchestrator can batch files without understanding provider specifics.
 
 ## File and Container Metadata
@@ -18,7 +20,6 @@ This document groups the supporting data models and services that multiple parts
 - **ContainerMetadata**: Captures format-specific attributes (timestamps, permissions, compression hints) that must be preserved when writing the container back out.
 
 ## Signing State
-- **SigningInfo**: Outcome of signature calculation for a file, including the selected certificate, skip flags, or already-signed indicators.
 - **SigningRound / FileNode**: Graph nodes and batches that help the orchestrator enforce signing order and parallelism.
 - **SigningResult / SigningError**: Aggregate outcome returned to callers, including success flag, per-file summaries, telemetry, and any validation failures.
 

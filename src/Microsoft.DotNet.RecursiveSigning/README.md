@@ -6,8 +6,9 @@ Microsoft.DotNet.RecursiveSigning provides a modern, extensible pipeline for rec
 - [High-Level Design and Principles](docs/high-level-design.md)
 - [Basic Interface Descriptions](docs/interface-descriptions.md)
 - [Shared Misc Components](docs/shared-components.md)
-- [Default Signature Calculator](docs/default-signature-calculator.md)
+- [Default Certificate Calculator](docs/default-certificarte-calculator.md)
 - [Default File Deduplicator](docs/default-file-deduplicator.md)
+- [CLI Tool Design](docs/cli-tool.md)
 
 These documents describe the architecture, responsibilities, and extensibility points without prescribing implementation details. Consult them when modifying or extending the recursive signing system.
 

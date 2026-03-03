@@ -111,7 +111,7 @@ Adds a new node to the graph and wires it to a parent container (if provided).
    - `node.Parent = parent`
    - `parent.Children.Add(node)`
 3. The graph does not derive execution ordering (including container signable-child counts) during discovery.
-   `SigningInfo` is treated as not yet finalized until `FinalizeDiscovery()`.
+   Certificate assignment is treated as not yet finalized until `FinalizeDiscovery()`.
 4. No execution state transitions are considered final until `FinalizeDiscovery()` is called.
 
 > Rationale: This is the key mechanism that prevents the graph from assuming discovery-time decisions are final.
@@ -212,9 +212,9 @@ The following transitions are permitted by `SigningGraph`:
 ## Notes and known gaps
 
 - The state machine above describes existing behavior.
-- If the pipeline needs to change a node’s `SigningInfo` after discovery (e.g., re-run the signature calculator with new context), the graph should expose an explicit API like `UpdateSigningInfo(node, newInfo)` that:
+- If the pipeline needs to change a node’s certificate assignment after discovery (e.g., re-run the certificate calculator with new context), the graph should expose an explicit API like `UpdateCertificateIdentifier(node, newIdentifier)` that:
   - updates counters for the parent container,
   - re-evaluates node initial/derived state,
   - re-evaluates impacted ancestor containers.
 
-Until such an API exists, callers should treat `SigningInfo` as immutable and add nodes in discovery order with correct `SigningInfo`.
+Until such an API exists, callers should treat certificate assignment as immutable and add nodes in discovery order with the correct `CertificateIdentifier`.

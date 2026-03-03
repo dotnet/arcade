@@ -12,6 +12,8 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
     /// </summary>
     public sealed class FileMetadata : IFileMetadata
     {
+        public string FileName { get; }
+
         public ExecutableType ExecutableType { get; }
 
         public string? TargetFramework { get; }
@@ -21,11 +23,13 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
         public bool IsAlreadySigned { get; }
 
         public FileMetadata(
+            string fileName,
             ExecutableType executableType = ExecutableType.None,
             string? targetFramework = null,
             string? publicKeyToken = null,
             bool isAlreadySigned = false)
         {
+            FileName = fileName ?? throw new ArgumentNullException(nameof(fileName));
             ExecutableType = executableType;
             TargetFramework = targetFramework;
             PublicKeyToken = publicKeyToken;

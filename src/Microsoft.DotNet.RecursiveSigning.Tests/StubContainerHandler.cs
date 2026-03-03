@@ -33,6 +33,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
 
         public async IAsyncEnumerable<ContainerEntry> ReadEntriesAsync(
             string containerPath,
+            string tempDirectory,
             [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             if (!_containerContents.TryGetValue(containerPath, out var entries))
@@ -86,6 +87,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             string containerPath,
             IEnumerable<ContainerEntry> entries,
             ContainerMetadata metadata,
+            string tempDirectory,
             CancellationToken cancellationToken = default)
         {
             // Update container contents with new entries

@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
     /// Stub signature calculator for Phase 1 testing.
     /// Always returns the same test certificate - no real certificate resolution.
     /// </summary>
-    public sealed class StubSignatureCalculator : ISignatureCalculator
+    public sealed class StubSignatureCalculator : ICertificateCalculator
     {
         private const string TestCertificate = "TestCert";
 
@@ -34,3 +34,4 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
         }
     }
 }
+

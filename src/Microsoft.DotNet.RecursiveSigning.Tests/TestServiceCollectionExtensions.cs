@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             }
 
             services.AddSingleton<IFileAnalyzer, StubFileAnalyzer>();
-            services.AddSingleton<ISignatureCalculator, StubSignatureCalculator>();
+            services.AddSingleton<ICertificateCalculator, StubSignatureCalculator>();
 
             return services;
         }
@@ -61,3 +61,4 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
         }
     }
 }
+

@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             
             // Add signature calculator
             var stubSignatureCalculator = new StubSignatureCalculator();
-            services.AddSingleton<ISignatureCalculator>(stubSignatureCalculator);
+            services.AddSingleton<ICertificateCalculator>(stubSignatureCalculator);
             
             // Add fake signing provider
             var fakeSigningProvider = new FakeSigningProvider(_fileSystem);
@@ -170,8 +170,12 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             // Should have: topLevelFile, containerFile, and a reference node for shared.dll in container
             allNodes.Should().HaveCount(3, "should have top-level file, container, and reference node");
 
-            var topLevelNode = allNodes.First(n => n.Location.FilePathOnDisk == topLevelFile);
-            var containerNode = allNodes.First(n => n.Location.FilePathOnDisk == containerFile);
+            var topLevelNode = allNodes.First(n =>
+                n.Parent == null &&
+                n.ContentKey.FileName == Path.GetFileName(topLevelFile));
+            var containerNode = allNodes.First(n =>
+                n.Parent == null &&
+                n.ContentKey.FileName == Path.GetFileName(containerFile));
 
             // The container should have one child node for the entry.
             containerNode.Children.Should().HaveCount(1);
@@ -399,8 +403,12 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             // Should have: 2 containers + 2 child nodes (one extracted + one reference)
             allNodes.Should().HaveCount(4, "should have 2 containers and 2 child nodes");
 
-            var container1Node = allNodes.First(n => n.Location.FilePathOnDisk == container1);
-            var container2Node = allNodes.First(n => n.Location.FilePathOnDisk == container2);
+            var container1Node = allNodes.First(n =>
+                n.Parent == null &&
+                n.ContentKey.FileName == Path.GetFileName(container1));
+            var container2Node = allNodes.First(n =>
+                n.Parent == null &&
+                n.ContentKey.FileName == Path.GetFileName(container2));
 
             var child1 = allNodes.First(n => n.Parent == container1Node);
             var child2 = allNodes.First(n => n.Parent == container2Node);
@@ -634,3 +642,4 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
         }
     }
 }
+

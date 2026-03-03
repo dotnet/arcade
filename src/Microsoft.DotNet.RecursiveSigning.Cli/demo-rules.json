@@ -1,0 +1,39 @@
+{
+  "certificates": [
+    {
+      "friendlyName": "DemoCertA",
+      "operations": [
+        {
+          "keyCode": "CP-230072",
+          "operationSetCode": "Authenticode_SignTool6.3.9304_NPH_FDSHA256",
+          "parameters": [
+            {
+              "parameterName": "OpusName",
+              "parameterValue": "Microsoft"
+            },
+            {
+              "parameterName": "OpusInfo",
+              "parameterValue": "http://www.microsoft.com"
+            }
+          ],
+          "toolName": "signtool.exe",
+          "toolVersion": "6.2.9304.0"
+        }
+      ]
+    },
+    {
+      "friendlyName": "DemoCertB",
+      "operations": []
+    }
+  ],
+  "rules": {
+    "fileNameMappings": {
+      "special.dll": "DemoCertA"
+    },
+    "fileExtensionMappings": {
+      ".dll": "DemoCertB",
+      ".exe": "DemoCertA",
+      ".nupkg": "DemoCertA"
+    }
+  }
+}

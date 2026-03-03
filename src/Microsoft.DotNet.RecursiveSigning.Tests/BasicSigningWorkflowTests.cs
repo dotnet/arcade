@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
         private readonly MockFileSystem _mockFileSystem;
         private readonly ServiceProvider _serviceProvider;
         private readonly Mock<IFileAnalyzer> _mockFileAnalyzer;
-        private readonly Mock<ISignatureCalculator> _mockSignatureCalculator;
+        private readonly Mock<ICertificateCalculator> _mockSignatureCalculator;
         private readonly Mock<ISigningProvider> _mockSigningProvider;
         private readonly Mock<IContainerHandler> _mockContainerHandler;
         private readonly List<string> _signedFiles;
@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
 
             // Setup mocks
             _mockFileAnalyzer = new Mock<IFileAnalyzer>();
-            _mockSignatureCalculator = new Mock<ISignatureCalculator>();
+            _mockSignatureCalculator = new Mock<ICertificateCalculator>();
             _mockSigningProvider = new Mock<ISigningProvider>();
             _mockContainerHandler = new Mock<IContainerHandler>();
 
@@ -195,7 +195,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             var orchestrator = _serviceProvider.GetRequiredService<IRecursiveSigning>();
 
             var request = new SigningRequest(
-                new[] { new FileInfo(Path.Combine(_workingDir, "simple.txt")) },
+                new[] { new FileInfo(testFile) },
                 new SigningConfiguration(_workingDir),
                 new SigningOptions());
 
@@ -233,7 +233,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             var orchestrator = _serviceProvider.GetRequiredService<IRecursiveSigning>();
 
             var request = new SigningRequest(
-                new[] { new FileInfo(Path.Combine(_workingDir, "package.testcontainer")) },
+                new[] { new FileInfo(containerFile) },
                 new SigningConfiguration(_workingDir),
                 new SigningOptions());
 
@@ -258,6 +258,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             // Verify container was read
             _mockContainerHandler.Verify(h => h.ReadEntriesAsync(
                 containerFile,
+                _workingDir,
                 It.IsAny<System.Threading.CancellationToken>()), Times.Once);
 
             // Verify signing was called (nested files + container)
@@ -270,6 +271,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
                 It.IsAny<string>(),
                 It.IsAny<IEnumerable<ContainerEntry>>(),
                 It.IsAny<ContainerMetadata>(),
+                _workingDir,
                 It.IsAny<System.Threading.CancellationToken>()), Times.Once);
         }
 
@@ -296,8 +298,9 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
 
             _mockContainerHandler.Setup(h => h.ReadEntriesAsync(
                     It.IsAny<string>(),
+                    It.IsAny<string>(),
                     It.IsAny<System.Threading.CancellationToken>()))
-                .Returns((string containerPath, System.Threading.CancellationToken ct) =>
+                .Returns((string containerPath, string tempDirectory, System.Threading.CancellationToken ct) =>
                 {
                     unpackedPaths.Add(containerPath);
 
@@ -319,8 +322,9 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
                     It.IsAny<string>(),
                     It.IsAny<IEnumerable<ContainerEntry>>(),
                     It.IsAny<ContainerMetadata>(),
+                    It.IsAny<string>(),
                     It.IsAny<System.Threading.CancellationToken>()))
-                .Returns((string outputPath, IEnumerable<ContainerEntry> entries, ContainerMetadata metadata, System.Threading.CancellationToken ct) =>
+                .Returns((string outputPath, IEnumerable<ContainerEntry> entries, ContainerMetadata metadata, string tempDirectory, System.Threading.CancellationToken ct) =>
                 {
                     var outputDir = _mockFileSystem.GetDirectoryName(outputPath);
                     if (!string.IsNullOrEmpty(outputDir))
@@ -385,6 +389,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
 
             _mockContainerHandler.Verify(h => h.ReadEntriesAsync(
                 It.IsAny<string>(),
+                It.IsAny<string>(),
                 It.IsAny<System.Threading.CancellationToken>()), Times.AtLeast(4));
         }
 
@@ -432,7 +437,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             var orchestrator = _serviceProvider.GetRequiredService<IRecursiveSigning>();
 
             var request = new SigningRequest(
-                new[] { new FileInfo(Path.Combine(dir1, "duplicate.txt")), new FileInfo(Path.Combine(dir2, "duplicate.txt")) },
+                new[] { new FileInfo(file1), new FileInfo(file2) },
                 new SigningConfiguration(_workingDir),
                 new SigningOptions());
 
@@ -473,7 +478,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             // Arrange
             var graph = _serviceProvider.GetRequiredService<ISigningGraph>();
             var fileAnalyzer = _serviceProvider.GetRequiredService<IFileAnalyzer>();
-            var sigCalc = _serviceProvider.GetRequiredService<ISignatureCalculator>();
+            var sigCalc = _serviceProvider.GetRequiredService<ICertificateCalculator>();
 
             // Create a simple graph: container with 2 files
             var file1Path = CreateTestFile("file1.txt", "content1");
@@ -693,6 +698,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             // Verify containers were processed
             _mockContainerHandler.Verify(h => h.ReadEntriesAsync(
                 It.IsAny<string>(),
+                It.IsAny<string>(),
                 It.IsAny<System.Threading.CancellationToken>()), Times.AtLeast(2));
             
             // Verify signing occurred
@@ -707,7 +713,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             _mockFileAnalyzer.Setup(a => a.AnalyzeAsync(It.IsAny<string>(), It.IsAny<System.Threading.CancellationToken>()))
                 .ReturnsAsync((string path, System.Threading.CancellationToken ct) =>
                 {
-                    return (IFileMetadata)new FileMetadata(executableType: ExecutableType.None);
+                    return (IFileMetadata)new FileMetadata("mock.bin", executableType: ExecutableType.None);
                 });
 
             // Container contents are analyzed from streams during extraction.
@@ -717,7 +723,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
                     It.IsAny<System.Threading.CancellationToken>()))
                 .ReturnsAsync((Stream stream, string fileName, System.Threading.CancellationToken ct) =>
                 {
-                    return (IFileMetadata)new FileMetadata(executableType: ExecutableType.None);
+                    return (IFileMetadata)new FileMetadata(fileName, executableType: ExecutableType.None);
                 });
 
             // Setup SignatureCalculator mock
@@ -745,7 +751,11 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
                         // If the input path isn't present in the mock FS, write a minimal payload.
                         if (_mockFileSystem.FileExists(node.Location.FilePathOnDisk!))
                         {
-                            _mockFileSystem.CopyFile(node.Location.FilePathOnDisk!, outputPath, overwrite: true);
+                            if (!string.Equals(node.Location.FilePathOnDisk, outputPath, StringComparison.OrdinalIgnoreCase))
+                            {
+                                _mockFileSystem.CopyFile(node.Location.FilePathOnDisk!, outputPath, overwrite: true);
+                            }
+
                             var currentContent = _mockFileSystem.Files[outputPath];
                             _mockFileSystem.WriteToFile(outputPath, currentContent + $"\n[SIGNED with {node.CertificateIdentifier?.Name}]");
                         }
@@ -764,6 +774,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
 
             _mockContainerHandler.Setup(h => h.ReadEntriesAsync(
                 It.IsAny<string>(),
+                It.IsAny<string>(),
                 It.IsAny<System.Threading.CancellationToken>()))
                 .Returns(ReadContainerEntriesAsync());
 
@@ -771,8 +782,9 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
                 It.IsAny<string>(),
                 It.IsAny<IEnumerable<ContainerEntry>>(),
                 It.IsAny<ContainerMetadata>(),
+                It.IsAny<string>(),
                 It.IsAny<System.Threading.CancellationToken>()))
-                .Returns((string outputPath, IEnumerable<ContainerEntry> entries, ContainerMetadata metadata, System.Threading.CancellationToken ct) =>
+                .Returns((string outputPath, IEnumerable<ContainerEntry> entries, ContainerMetadata metadata, string tempDirectory, System.Threading.CancellationToken ct) =>
                 {
                     var outputDir = _mockFileSystem.GetDirectoryName(outputPath);
                     if (!string.IsNullOrEmpty(outputDir))
@@ -829,3 +841,4 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
         }
     }
 }
+

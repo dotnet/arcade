@@ -11,6 +11,7 @@ Each interface exposes a narrowly scoped contract so that new implementations ca
 - Advertises whether it can process a given file extension or format.
 - Streams container entries for discovery without forcing the orchestrator to extract to disk.
 - Writes updated containers by combining existing metadata with newly signed files.
+- Receives the signing temp directory for both unpack/read and repack/write operations; handlers may use it when needed.
 
 ### Entry stream ownership and lifetime
 - For discovery (`ReadEntriesAsync`): the orchestrator (caller) owns each returned `ContainerEntry` and must dispose it when finished. Disposing the entry disposes its `ContentStream`.
@@ -27,7 +28,7 @@ Each interface exposes a narrowly scoped contract so that new implementations ca
 - Detects whether a file is already signed and whether it contains nested content (this is an intrinsic property of the file as observed on disk).
 - Produces immutable metadata objects consumed by downstream components.
 
-## ISignatureCalculator
+## ICertificateCalculator
 - Applies certificate rules (extension, strong-name, explicit overrides) to determine how a file must be signed.
 - Always resolves the certificate identifier for every file (even if the file is already signed).
 - Does not determine whether a file is already signed (that comes from `IFileAnalyzer`/metadata); it only determines what certificate would be used if signing is required.
@@ -37,6 +38,7 @@ Each interface exposes a narrowly scoped contract so that new implementations ca
 - Performs the actual signing, verification, or strong-name application using a backing service or toolchain.
 - Batches files by certificate or operation to optimize service calls.
 - Reports per-file status so the orchestrator can update progress and telemetry.
+- Supports in-place signing (`outputPath == inputPath`) for working files.
 
 ## IFileDeduplicator
 - Tracks unique files by combining their hash and filename.
@@ -47,3 +49,4 @@ Each interface exposes a narrowly scoped contract so that new implementations ca
 - Models container relationships and determines when a file is ready to sign.
 - Provides the next set of signable files while ensuring dependencies are respected.
 - Marks progress after signing so that repacking and subsequent rounds can proceed.
+
