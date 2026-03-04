@@ -1,5 +1,9 @@
 <Project>
 
+  <PropertyGroup>
+    <FullAssemblySigningSupported Condition="'$(FullAssemblySigningSupported)' == '' and '$(OS)' != 'Windows_NT'">false</FullAssemblySigningSupported>
+  </PropertyGroup>
+
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
 
   <PropertyGroup>
