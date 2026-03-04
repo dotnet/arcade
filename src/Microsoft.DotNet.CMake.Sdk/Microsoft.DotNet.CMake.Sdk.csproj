@@ -18,13 +18,4 @@
     <Compile Include="..\Common\Internal\BuildTask.cs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="build\**\*.props;build\**\*.targets"
-          Pack="true"
-          PackagePath="build\%(RecursiveDir)%(Filename)%(Extension)" />
-    <None Include="sdk\**\*.props;sdk\**\*.targets"
-          Pack="true"
-          PackagePath="sdk\%(RecursiveDir)%(Filename)%(Extension)" />
-  </ItemGroup>
-
 </Project>
