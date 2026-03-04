@@ -81,19 +81,4 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
             return normalized;
         }
     }
-
-    public sealed class ESRPCertificateIdentifier : ICertificateIdentifier
-    {
-        public string Name => FriendlyName;
-        public string FriendlyName { get; }
-        public JsonElement CertificateDefinition { get; }
-
-        public ESRPCertificateIdentifier(string friendlyName, JsonElement certificateDefinition)
-        {
-            FriendlyName = friendlyName ?? throw new ArgumentNullException(nameof(friendlyName));
-            CertificateDefinition = certificateDefinition.Clone();
-        }
-    }
 }
-
-

@@ -13,7 +13,7 @@ using Microsoft.DotNet.RecursiveSigning.Models;
 namespace Microsoft.DotNet.RecursiveSigning.Implementation
 {
     /// <summary>
-    /// Default lightweight file analyzer used by the CLI/demo workflow.
+    /// Default lightweight file analyzer.
     /// </summary>
     public sealed class DefaultFileAnalyzer : IFileAnalyzer
     {

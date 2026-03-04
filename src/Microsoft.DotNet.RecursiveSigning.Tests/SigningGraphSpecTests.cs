@@ -201,6 +201,22 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
         }
 
         [Fact]
+        public void Container_WithReferenceToNonSignableCanonicalChild_IsReadyToSign()
+        {
+            var canonical = CreateNode("shared.txt", certificateIdentifier: null);
+            var container = CreateNode("c.zip", Signable());
+            var reference = new ReferenceNode(canonical.ContentKey, new FileLocation("/test/ref/shared.txt", "shared.txt"), canonical);
+
+            // Intentionally add in an order that can expose finalize-order bugs.
+            var g = BuildGraph((canonical, null), (container, null), (reference, container));
+
+            canonical.State.Should().Be(FileNodeState.Skipped);
+            container.State.Should().Be(FileNodeState.ReadyToSign);
+            g.GetContainersReadyForRepack().Should().BeEmpty();
+            g.GetNodesReadyForSigning().Should().ContainSingle().Which.Should().BeSameAs(container);
+        }
+
+        [Fact]
         public void AddNode_Skips_WhenNotSignable()
         {
             // No certificate identifier => not signable

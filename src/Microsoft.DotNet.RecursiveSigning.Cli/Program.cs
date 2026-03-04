@@ -28,16 +28,57 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
                 return 1;
             }
 
-            var reader = new DefaultCertificateRulesReader();
-            var rules = reader.ReadFromFile(options.ConfigPath);
+            if (!File.Exists(options.ConfigPath))
+            {
+                Console.Error.WriteLine($"Error: Config file not found: {options.ConfigPath}");
+                return 1;
+            }
+
+            DefaultCertificateRules rules;
+            try
+            {
+                var reader = new DefaultCertificateRulesReader();
+                rules = reader.ReadFromFile(options.ConfigPath);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine($"Error: Failed to read config file '{options.ConfigPath}': {ex.Message}");
+                return 1;
+            }
 
             var services = new ServiceCollection();
             services.AddLogging(builder => builder.AddConsole().SetMinimumLevel(options.Verbose ? LogLevel.Debug : LogLevel.Information));
             services.AddRecursiveSigning();
             services.AddContainerHandler<ZipContainerHandler>();
             services.AddSingleton<IFileAnalyzer, DefaultFileAnalyzer>();
-            services.AddSingleton<ISigningProvider, DryRunSigningProvider>();
             services.AddSingleton<ICertificateCalculator>(_ => new DefaultCertificateCalculator(rules));
+
+            if (options.UseESRP)
+            {
+                var serviceConnectionId = Environment.GetEnvironmentVariable("MBSIGN_CONNECTEDSERVICE") ?? "";
+                var usePME = !string.IsNullOrEmpty(serviceConnectionId);
+
+                var esrpConfig = new ESRPCliSigningConfiguration
+                {
+                    ESRPCliPath = options.ESRPCliPath ?? GetBundledEsrpCliPath(),
+                    TempDirectory = options.TempDirectory,
+                    RootDirectory = options.RootDirectory ?? Directory.GetCurrentDirectory(),
+                    DryRun = options.DryRun,
+                    AuthMode = usePME ? ESRPAuthMode.FederatedToken : ESRPAuthMode.Certificate,
+                    ClientId = usePME ? "c4428c30-2253-4654-ab5e-cdb9ff6d850c" : "dec434ad-6bd4-4a20-b400-4bf6db7fc3fb",
+                    TenantId = usePME ? "975f013f-7f24-47e8-a7d3-abc4752bf346" : "72f988bf-86f1-41af-91ab-2d7cd011db47",
+                    ServiceConnectionId = serviceConnectionId,
+                    EncryptedAuthCertPath = Environment.GetEnvironmentVariable("ESRP_AUTH_CERT_PATH") ?? "",
+                    EncryptionKeyPath = Environment.GetEnvironmentVariable("ESRP_ENCRYPTION_KEY_PATH") ?? "",
+                };
+                services.AddSingleton(esrpConfig);
+                services.AddSingleton<IProcessRunner, DefaultProcessRunner>();
+                services.AddSingleton<ISigningProvider, ESRPCliSigningProvider>();
+            }
+            else
+            {
+                services.AddSingleton<ISigningProvider, DryRunSigningProvider>();
+            }
 
             using var provider = services.BuildServiceProvider();
             var recursiveSigning = provider.GetRequiredService<IRecursiveSigning>();
@@ -68,12 +109,58 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
                 Console.Error.WriteLine($"ERROR: {error.FilePath} :: {error.Message}");
             }
 
+            PrintSummaryTable(result);
+
             return result.Success ? 0 : 1;
+        }
+
+        private static void PrintSummaryTable(SigningResult result)
+        {
+            var t = result.Telemetry;
+            var w = 58;
+            var line = new string('-', w);
+            Console.WriteLine();
+            Console.WriteLine("+" + line + "+");
+            Console.WriteLine("|" + "Signing Summary".PadLeft(37).PadRight(w) + "|");
+            Console.WriteLine("+" + line + "+");
+            Console.WriteLine($"| {"Total files discovered",-30}{t.TotalFiles,8} {"",-18}|");
+            Console.WriteLine($"| {"Files signed",-30}{t.FilesSigned,8} {"",-18}|");
+            Console.WriteLine($"| {"Files skipped",-30}{t.FilesSkipped,8} {"",-18}|");
+            Console.WriteLine($"| {"Duplicate files",-30}{t.DuplicateFiles,8} {"",-18}|");
+            Console.WriteLine($"| {"Signing rounds",-30}{t.SigningRounds,8} {"",-18}|");
+            Console.WriteLine("+" + line + "+");
+            Console.WriteLine($"| {"Discovery (unpack+analyze)",-30}{FormatDuration(t.DiscoveryDuration),12} {"",-14}|");
+            Console.WriteLine($"| {"Signing (all rounds)",-30}{FormatDuration(t.SigningDuration),12} {"",-14}|");
+            Console.WriteLine($"| {"Finalization",-30}{FormatDuration(t.FinalizationDuration),12} {"",-14}|");
+            Console.WriteLine($"| {"Total",-30}{FormatDuration(t.Duration),12} {"",-14}|");
+
+            if (t.Rounds.Count > 0)
+            {
+                Console.WriteLine("+" + line + "+");
+                Console.WriteLine($"| {"Round",7} {"Files",7} {"Containers",12} {"Sign Time",11} {"Repack Time",13} |");
+                Console.WriteLine("+" + line + "+");
+                foreach (var r in t.Rounds)
+                {
+                    Console.WriteLine($"| {r.RoundNumber,7} {r.FilesSigned,7} {r.ContainersRepacked,12} {FormatDuration(r.SigningDuration),11} {FormatDuration(r.RepackDuration),13} |");
+                }
+            }
+
+            Console.WriteLine("+" + line + "+");
+        }
+
+        private static string FormatDuration(TimeSpan ts)
+        {
+            if (ts.TotalMinutes >= 1)
+            {
+                return $"{ts.Minutes}m {ts.Seconds:D2}.{ts.Milliseconds / 100}s";
+            }
+            return $"{ts.TotalSeconds:F1}s";
         }
 
         private static bool TryParseArguments(string[] args, out CliOptions options)
         {
-            options = new CliOptions("", "", null, Array.Empty<string>(), Verbose: false);
+            options = new CliOptions("", "", null, Array.Empty<string>(), Verbose: false,
+                UseESRP: false, DryRun: false, ESRPCliPath: null, RootDirectory: null);
 
             if (args.Length < 3)
             {
@@ -85,6 +172,10 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
             string? outputDirectory = null;
             var inputPatterns = new List<string>();
             var verbose = false;
+            var useESRP = false;
+            var dryRun = false;
+            string? esrpCliPath = null;
+            string? rootDirectory = null;
 
             for (var i = 0; i < args.Length; i++)
             {
@@ -125,6 +216,32 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
 
                     outputDirectory = args[++i];
                 }
+                else if (arg.Equals("--esrp", StringComparison.OrdinalIgnoreCase))
+                {
+                    useESRP = true;
+                }
+                else if (arg.Equals("--dry-run", StringComparison.OrdinalIgnoreCase))
+                {
+                    dryRun = true;
+                }
+                else if (arg.Equals("--esrp-cli-path", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (i + 1 >= args.Length)
+                    {
+                        return false;
+                    }
+
+                    esrpCliPath = args[++i];
+                }
+                else if (arg.Equals("--root", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (i + 1 >= args.Length)
+                    {
+                        return false;
+                    }
+
+                    rootDirectory = args[++i];
+                }
                 else if (arg.Equals("--verbose", StringComparison.OrdinalIgnoreCase))
                 {
                     verbose = true;
@@ -140,14 +257,25 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
                 return false;
             }
 
-            options = new CliOptions(configPath, tempDirectory, outputDirectory, inputPatterns, verbose);
+            options = new CliOptions(configPath, tempDirectory, outputDirectory, inputPatterns, verbose,
+                useESRP, dryRun, esrpCliPath, rootDirectory);
             return true;
         }
 
         private static void PrintUsage()
         {
             Console.WriteLine("Usage:");
-            Console.WriteLine("  recursive-signing-cli --config <rules.json> --input <file-or-glob> [--input <file-or-glob> ...] [--temp <tempDirectory>] [--output <outputDirectory>] [--verbose]");
+            Console.WriteLine("  recursive-signing-cli --config <rules.json> --input <file-or-glob> [options]");
+            Console.WriteLine();
+            Console.WriteLine("Options:");
+            Console.WriteLine("  --input <file-or-glob>    Top-level files to process (repeatable)");
+            Console.WriteLine("  --temp <directory>        Temporary working directory");
+            Console.WriteLine("  --output <directory>      Output directory for final root artifacts");
+            Console.WriteLine("  --verbose                 Enable debug logging");
+            Console.WriteLine("  --esrp                    Use ESRP CLI signing provider instead of dry-run");
+            Console.WriteLine("  --dry-run                 Print ESRP submission JSON without invoking CLI (requires --esrp)");
+            Console.WriteLine("  --esrp-cli-path <path>    Path to esrpcli.dll (default: bundled copy; requires --esrp)");
+            Console.WriteLine("  --root <directory>        Root directory for relative file paths (requires --esrp)");
         }
 
         private static IReadOnlyList<string> ExpandInputPaths(IReadOnlyList<string> inputPatterns)
@@ -238,8 +366,25 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
             return escaped;
         }
 
-        private sealed record CliOptions(string ConfigPath, string TempDirectory, string? OutputDirectory, IReadOnlyList<string> InputPatterns, bool Verbose);
+        /// <summary>
+        /// Returns the path to the bundled esrpcli.dll that ships alongside this CLI tool.
+        /// </summary>
+        private static string GetBundledEsrpCliPath()
+        {
+            var appDir = AppContext.BaseDirectory;
+            return Path.Combine(appDir, "ESRPCLI", "esrpcli.dll");
+        }
+
+        private sealed record CliOptions(
+            string ConfigPath,
+            string TempDirectory,
+            string? OutputDirectory,
+            IReadOnlyList<string> InputPatterns,
+            bool Verbose,
+            bool UseESRP,
+            bool DryRun,
+            string? ESRPCliPath,
+            string? RootDirectory);
     }
 }
-
 

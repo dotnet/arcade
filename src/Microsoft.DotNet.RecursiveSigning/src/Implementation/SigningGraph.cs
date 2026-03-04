@@ -164,6 +164,11 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                     throw new InvalidOperationException("Signing graph contains a cycle in parent/child relationships.");
                 }
 
+                if (node is ReferenceNode referenceNode)
+                {
+                    Visit(referenceNode.CanonicalNode);
+                }
+
                 foreach (var child in node.Children)
                 {
                     Visit(child);

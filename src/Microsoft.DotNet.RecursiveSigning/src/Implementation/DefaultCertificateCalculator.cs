@@ -10,7 +10,7 @@ using Microsoft.DotNet.RecursiveSigning.Models;
 namespace Microsoft.DotNet.RecursiveSigning.Implementation
 {
     /// <summary>
-    /// Demo signature calculator that resolves certificates by filename first, then extension.
+    /// Certificate calculator that resolves certificates by filename first, then extension.
     /// </summary>
     public sealed class DefaultCertificateCalculator : ICertificateCalculator
     {

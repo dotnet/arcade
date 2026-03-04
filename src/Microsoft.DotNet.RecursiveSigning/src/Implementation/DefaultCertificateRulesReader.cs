@@ -12,7 +12,7 @@ using Microsoft.DotNet.RecursiveSigning.Models;
 namespace Microsoft.DotNet.RecursiveSigning.Implementation
 {
     /// <summary>
-    /// Reads demo certificate rules from JSON.
+    /// Reads certificate rules from JSON.
     /// </summary>
     public sealed class DefaultCertificateRulesReader
     {
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             var document = JsonSerializer.Deserialize<DefaultCertificateRulesDocument>(json, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
-            }) ?? throw new InvalidOperationException("Failed to deserialize demo certificate rules JSON.");
+            }) ?? throw new InvalidOperationException("Failed to deserialize certificate rules JSON.");
 
             var certificates = new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase);
             foreach (var cert in document.Certificates ?? Array.Empty<JsonElement>())
@@ -65,10 +65,10 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
         private sealed class DefaultCertificateRulesDocument
         {
             public JsonElement[]? Certificates { get; set; }
-            public DemoRuleMappingsDocument? Rules { get; set; }
+            public RuleMappingsDocument? Rules { get; set; }
         }
 
-        private sealed class DemoRuleMappingsDocument
+        private sealed class RuleMappingsDocument
         {
             public Dictionary<string, string>? FileNameMappings { get; set; }
             public Dictionary<string, string>? FileExtensionMappings { get; set; }

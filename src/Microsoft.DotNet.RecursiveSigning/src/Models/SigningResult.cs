@@ -67,9 +67,30 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
     public sealed class SigningTelemetry
     {
         public int TotalFiles { get; set; }
-        public int FilesS​igned { get; set; }
+        public int FilesSigned { get; set; }
         public int FilesSkipped { get; set; }
+        public int DuplicateFiles { get; set; }
         public int SigningRounds { get; set; }
         public TimeSpan Duration { get; set; }
+        public TimeSpan DiscoveryDuration { get; set; }
+        public TimeSpan SigningDuration { get; set; }
+        public TimeSpan FinalizationDuration { get; set; }
+
+        /// <summary>
+        /// Per-round timing: each entry is (signingTime, repackTime, filesInRound).
+        /// </summary>
+        public IReadOnlyList<SigningRoundTelemetry> Rounds { get; set; } = Array.Empty<SigningRoundTelemetry>();
+    }
+
+    /// <summary>
+    /// Telemetry for a single signing round.
+    /// </summary>
+    public sealed class SigningRoundTelemetry
+    {
+        public int RoundNumber { get; set; }
+        public int FilesSigned { get; set; }
+        public int ContainersRepacked { get; set; }
+        public TimeSpan SigningDuration { get; set; }
+        public TimeSpan RepackDuration { get; set; }
     }
 }
