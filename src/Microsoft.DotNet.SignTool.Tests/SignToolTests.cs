@@ -246,9 +246,7 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             ".py",
             ".pyd",
-#if !NETFRAMEWORK
             ".deb",
-#endif
         };
 
         public static IEnumerable<object[]> GetSignableExtensions()
@@ -400,7 +398,6 @@ namespace Microsoft.DotNet.SignTool.Tests
             engine.LogWarningEvents.Select(w => $"{w.Code}: {w.Message}").Should().BeEquivalentTo(expectedWarnings ?? Array.Empty<string>());
         }
 
-#if !NETFRAMEWORK
         private void ValidateProducedDebContent(
             string debianPackage,
             (string, string)[] expectedFilesOriginalHashes,
@@ -586,7 +583,7 @@ namespace Microsoft.DotNet.SignTool.Tests
                     $"symlink '{symlinkPath}' should resolve to the signed file");
             }
         }
-#endif
+
         [Fact]
         public void EmptySigningList()
         {
@@ -1757,7 +1754,6 @@ $@"
             });
         }
 
-#if !NETFRAMEWORK
         /// <summary>
         /// Validates that tar.gz archives containing symbolic links are handled correctly.
         /// On Windows, ReadTarGZipEntriesWithExternalTar throws when symlinks are detected,
@@ -1850,7 +1846,6 @@ $@"
 "
             });
         }
-#endif
 
         [Fact]
         public void SymbolsNupkg()
@@ -1957,7 +1952,6 @@ $@"
             });
         }
 
-#if !NETFRAMEWORK
         [UnixOnlyFact]
         public void CheckDebSigning()
         {
@@ -2141,7 +2135,6 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.rpm"
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, expectedFilesToBeSigned.ToArray());
         }
-#endif
 
         [Fact]
         public void CheckPowershellSigning()
@@ -2169,7 +2162,6 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.rpm"
          * NuGet behaves differently on core vs framework 
          * - https://github.com/NuGet/NuGet.Client/blob/e88a5a03a1b26099f8be225d3ee3a897b2edb1d0/build/common.targets#L18-L25
          */
-#if NETFRAMEWORK
         [Fact]
         public void VerifyNupkgIntegrity()
         {
@@ -2209,7 +2201,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.rpm"
                 "File 'FakeSignedContents.nupkg' Certificate='NuGet'"
             });
         }
-#endif
+
         [WindowsOnlyFact]
         [Trait("Category", "SkipWhenLiveUnitTesting")]
         public void SignMsiEngine()
