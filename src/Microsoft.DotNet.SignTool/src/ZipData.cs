@@ -304,9 +304,6 @@ namespace Microsoft.DotNet.SignTool
 
         private static IEnumerable<ZipDataEntry> ReadPkgOrAppBundleEntries(string archivePath, string tempDir, string pkgToolPath, bool ignoreContent)
         {
-#if NET472
-            throw new NotImplementedException("PKG signing is not supported on .NET Framework");
-#else
             string extractDir = Path.Combine(tempDir, Guid.NewGuid().ToString());
             try
             {
@@ -337,7 +334,6 @@ namespace Microsoft.DotNet.SignTool
                     Directory.Delete(extractDir, recursive: true);
                 }
             }
-#endif
         }
 
         private void RepackPkgOrAppBundles(TaskLoggingHelper log, string tempDir, string pkgToolPath)
