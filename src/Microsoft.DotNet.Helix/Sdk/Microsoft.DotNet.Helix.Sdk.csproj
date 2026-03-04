@@ -5,7 +5,8 @@
     <PackageType>MSBuildSdk</PackageType>
     <IsBuildTaskProject>true</IsBuildTaskProject>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <!-- Avoid binclashes during the test run on CI. -->
+    <CopyLocalLockFileAssemblies Condition="'$(TestRunId)' == ''">true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
