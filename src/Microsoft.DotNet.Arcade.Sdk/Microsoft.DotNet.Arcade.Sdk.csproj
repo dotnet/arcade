@@ -71,6 +71,7 @@
     <MicrosoftSymbolUploaderBuildTaskVersion>$(MicrosoftSymbolUploaderBuildTaskVersion)</MicrosoftSymbolUploaderBuildTaskVersion>
     <MicrosoftTemplateEngineAuthoringTasksVersion>$(MicrosoftTemplateEngineAuthoringTasksVersion)</MicrosoftTemplateEngineAuthoringTasksVersion>
     <MicrosoftDotNetXUnitAssertVersion>$(PackageVersion)</MicrosoftDotNetXUnitAssertVersion>
+    <MicrosoftDotNetXUnitV3AssertVersion>$(PackageVersion)</MicrosoftDotNetXUnitV3AssertVersion>
   </PropertyGroup>
 
 </Project>]]>
