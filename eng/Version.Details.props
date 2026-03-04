@@ -9,7 +9,6 @@ This file should be imported by eng/Versions.props
     <MicrosoftCodeAnalysisCSharpPackageVersion>4.8.0</MicrosoftCodeAnalysisCSharpPackageVersion>
     <MicrosoftNetCompilersToolsetPackageVersion>4.8.0</MicrosoftNetCompilersToolsetPackageVersion>
     <!-- _git/dotnet-symuploader dependencies -->
-    <MicrosoftSymbolUploaderPackageVersion>2.0.0-preview.1.23470.14</MicrosoftSymbolUploaderPackageVersion>
     <MicrosoftSymbolUploaderBuildTaskPackageVersion>2.0.0-preview.1.23470.14</MicrosoftSymbolUploaderBuildTaskPackageVersion>
     <!-- dotnet/templating dependencies -->
     <MicrosoftTemplateEngineAuthoringTasksPackageVersion>10.0.100-preview.4.25220.1</MicrosoftTemplateEngineAuthoringTasksPackageVersion>
@@ -57,7 +56,6 @@ This file should be imported by eng/Versions.props
     <MicrosoftCodeAnalysisCSharpVersion>$(MicrosoftCodeAnalysisCSharpPackageVersion)</MicrosoftCodeAnalysisCSharpVersion>
     <MicrosoftNetCompilersToolsetVersion>$(MicrosoftNetCompilersToolsetPackageVersion)</MicrosoftNetCompilersToolsetVersion>
     <!-- _git/dotnet-symuploader dependencies -->
-    <MicrosoftSymbolUploaderVersion>$(MicrosoftSymbolUploaderPackageVersion)</MicrosoftSymbolUploaderVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion>$(MicrosoftSymbolUploaderBuildTaskPackageVersion)</MicrosoftSymbolUploaderBuildTaskVersion>
     <!-- dotnet/templating dependencies -->
     <MicrosoftTemplateEngineAuthoringTasksVersion>$(MicrosoftTemplateEngineAuthoringTasksPackageVersion)</MicrosoftTemplateEngineAuthoringTasksVersion>
