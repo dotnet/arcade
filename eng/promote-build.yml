@@ -78,7 +78,7 @@ extends:
         enabled: true
 
     stages:
-    - template: /eng/publishing/v3/publish.yml@self
+    - template: /eng/publishing/v3/publish.yml
       parameters:
         PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
         BARBuildId: ${{ parameters.BARBuildId }}

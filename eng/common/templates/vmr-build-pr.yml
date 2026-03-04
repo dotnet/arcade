@@ -20,7 +20,7 @@ trigger: none
 pr: none
 
 variables:
-- template: /eng/common/templates/variables/pool-providers.yml@self
+- template: /eng/common/templates/variables/pool-providers.yml
 
 - name: skipComponentGovernanceDetection  # we run CG on internal builds only
   value: true

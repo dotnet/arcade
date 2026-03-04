@@ -22,7 +22,7 @@ parameters:
   default: false
 
 extends:
-  template: /eng/common/core-templates/stages/renovate.yml@self
+  template: /eng/common/core-templates/stages/renovate.yml
   parameters:
     gitHubRepo: 'dotnet/arcade'
     dryRun: ${{ parameters.dryRun }}
