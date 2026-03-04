@@ -3837,7 +3837,6 @@ $@"
                 s_fileExtensionSignInfo,
                 additionalCertificateInfo,
                 itemsToSkip3rdPartyCheck: null,
-                tarToolPath: null,
                 pkgToolPath: null,
                 snPath: null,
                 new TaskLoggingHelper(new FakeBuildEngine(_output), "SignToolTests"),
@@ -3860,7 +3859,6 @@ $@"
                 snBinaryPath: null,
                 wix3ToolsPath: null,
                 wixToolsPath: null,
-                tarToolPath: null,
                 pkgToolPath: null,
                 dotnetTimeout: -1);
 
