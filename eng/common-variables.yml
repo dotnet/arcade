@@ -34,5 +34,3 @@ variables:
         /p:TeamName=$(_TeamName)
         /p:DotNetPublishUsingPipelines=true
         /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-    - name: PostBuildSign
-      value: true
