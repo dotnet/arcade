@@ -6,7 +6,7 @@
 using System;
 using System.Reflection;
 using System.Collections.Immutable;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.DotNet.RecursiveSigning.Implementation;
 using Microsoft.DotNet.RecursiveSigning.Models;
 using Moq;

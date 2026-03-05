@@ -4,7 +4,7 @@
 #nullable enable
 
 using System;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.DotNet.RecursiveSigning.Implementation;
 using Xunit;
 

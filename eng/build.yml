@@ -26,7 +26,6 @@ stages:
       enableMicrobuild: true
       microbuildUseESRP: ${{ parameters.microbuildUseESRP }}
       enableSourceIndex: true
-      enableSourceBuild: true
       workspace:
         clean: all
       jobs:
@@ -41,12 +40,25 @@ stages:
           fetchDepth: 0
           clean: true
         steps:
+        - task: NuGetAuthenticate@1
         - script: eng\common\cibuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
             $(_InternalBuildArgs)
             /p:Test=false
           displayName: Windows Build / Publish
+
+        - template: /eng/pipelines/templates/steps/recursive-sign.yml@self
+          parameters:
+            serviceConnectionName: 'DotNetBuildESRP'
+            configPath: 'src/Microsoft.DotNet.RecursiveSigning.Cli/signing-config.json'
+            inputs: '$(Build.SourcesDirectory)/artifacts/packages/$(_BuildConfig)/**/Microsoft.DotNet.RecursiveSigning.*.nupkg'
+            esrpId: '28ec6507-2167-4eaa-a294-34408cf5dd0e'
+            esrpClientId: '0ecbcdb7-8451-4cbe-940a-4ed97b08b955'
+            esrpTenantId: '975f013f-7f24-47e8-a7d3-abc4752bf346'
+            keyVaultName: 'DotNetEngKeyVault'
+            certName: 'DotNet-ESRP-AuthSignCert'
+            dryRun: false
 
 - stage: ValidateSdk
   displayName: Validate Arcade SDK

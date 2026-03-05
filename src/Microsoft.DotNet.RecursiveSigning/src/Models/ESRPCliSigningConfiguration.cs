@@ -21,16 +21,20 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
         public string GatewayUrl { get; set; } = "https://api.esrp.microsoft.com/api/v2";
 
         /// <summary>
-        /// ESRP client ID for signing requests.
-        /// PME default: c4428c30-2253-4654-ab5e-cdb9ff6d850c
-        /// CORP default: dec434ad-6bd4-4a20-b400-4bf6db7fc3fb
+        /// ESRP client identifier passed via <c>-esrpClientId</c>.
+        /// This identifies the ESRP client account to the ESRP service.
+        /// Distinct from <see cref="ClientId"/> which is the AAD app registration for auth.
+        /// </summary>
+        public string EsrpClientId { get; set; } = string.Empty;
+
+        /// <summary>
+        /// AAD app registration client ID passed via <c>-a</c>.
+        /// Used for OAuth authentication to the ESRP service.
         /// </summary>
         public string ClientId { get; set; } = string.Empty;
 
         /// <summary>
         /// AAD tenant ID.
-        /// PME default: 975f013f-7f24-47e8-a7d3-abc4752bf346
-        /// CORP default: 72f988bf-86f1-41af-91ab-2d7cd011db47
         /// </summary>
         public string TenantId { get; set; } = string.Empty;
 
@@ -43,6 +47,11 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
         /// Organization info URL.
         /// </summary>
         public string OrganizationInfoUrl { get; set; } = "https://www.microsoft.com";
+
+        /// <summary>
+        /// AAD app resource URI for auth token scoping.
+        /// </summary>
+        public string ResourceUri { get; set; } = "https://msazurecloud.onmicrosoft.com/api.esrp.microsoft.com";
 
         /// <summary>
         /// Key vault name for the ESRP request-signing (PKITA) certificate.
@@ -105,6 +114,12 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
         /// When true, the provider logs the submission JSON and CLI arguments without invoking the ESRP CLI.
         /// </summary>
         public bool DryRun { get; set; }
+
+        /// <summary>
+        /// When true, logs submission JSON, CLI arguments, and full stdout/stderr at Information level
+        /// for diagnostic purposes.
+        /// </summary>
+        public bool VerboseLogging { get; set; }
     }
 
     /// <summary>

@@ -55,8 +55,24 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
 
             if (options.UseESRP)
             {
-                var serviceConnectionId = Environment.GetEnvironmentVariable("MBSIGN_CONNECTEDSERVICE") ?? "";
-                var usePME = !string.IsNullOrEmpty(serviceConnectionId);
+                var usePME = options.UseFederatedToken;
+
+                // Validate required ESRP config when not in dry-run
+                if (!options.DryRun)
+                {
+                    var missing = new List<string>();
+                    if (string.IsNullOrEmpty(options.EsrpId)) missing.Add("--esrp-id");
+                    if (string.IsNullOrEmpty(options.ESRPClientId)) missing.Add("--esrp-client-id");
+                    if (string.IsNullOrEmpty(options.ESRPTenantId)) missing.Add("--esrp-tenant-id");
+                    if (string.IsNullOrEmpty(options.ESRPKeyVaultName)) missing.Add("--esrp-keyvault-name");
+                    if (string.IsNullOrEmpty(options.ESRPCertName)) missing.Add("--esrp-cert-name");
+                    if (usePME && string.IsNullOrEmpty(options.ServiceConnectionId)) missing.Add("--service-connection-id");
+                    if (missing.Count > 0)
+                    {
+                        Console.Error.WriteLine($"Error: The following required ESRP options are missing: {string.Join(", ", missing)}");
+                        return 1;
+                    }
+                }
 
                 var esrpConfig = new ESRPCliSigningConfiguration
                 {
@@ -64,10 +80,14 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
                     TempDirectory = options.TempDirectory,
                     RootDirectory = options.RootDirectory ?? Directory.GetCurrentDirectory(),
                     DryRun = options.DryRun,
+                    VerboseLogging = options.Verbose,
                     AuthMode = usePME ? ESRPAuthMode.FederatedToken : ESRPAuthMode.Certificate,
-                    ClientId = usePME ? "c4428c30-2253-4654-ab5e-cdb9ff6d850c" : "dec434ad-6bd4-4a20-b400-4bf6db7fc3fb",
-                    TenantId = usePME ? "975f013f-7f24-47e8-a7d3-abc4752bf346" : "72f988bf-86f1-41af-91ab-2d7cd011db47",
-                    ServiceConnectionId = serviceConnectionId,
+                    EsrpClientId = options.EsrpId ?? "",
+                    ClientId = options.ESRPClientId ?? "",
+                    TenantId = options.ESRPTenantId ?? "",
+                    KeyVaultName = options.ESRPKeyVaultName ?? "",
+                    CertificateName = options.ESRPCertName ?? "",
+                    ServiceConnectionId = options.ServiceConnectionId ?? "",
                     EncryptedAuthCertPath = Environment.GetEnvironmentVariable("ESRP_AUTH_CERT_PATH") ?? "",
                     EncryptionKeyPath = Environment.GetEnvironmentVariable("ESRP_ENCRYPTION_KEY_PATH") ?? "",
                 };
@@ -160,7 +180,9 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
         private static bool TryParseArguments(string[] args, out CliOptions options)
         {
             options = new CliOptions("", "", null, Array.Empty<string>(), Verbose: false,
-                UseESRP: false, DryRun: false, ESRPCliPath: null, RootDirectory: null);
+                UseESRP: false, DryRun: false, UseFederatedToken: false, ESRPCliPath: null, RootDirectory: null,
+                EsrpId: null, ESRPClientId: null, ESRPTenantId: null, ESRPKeyVaultName: null, ESRPCertName: null,
+                ServiceConnectionId: null);
 
             if (args.Length < 3)
             {
@@ -174,8 +196,15 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
             var verbose = false;
             var useESRP = false;
             var dryRun = false;
+            var useFederatedToken = false;
             string? esrpCliPath = null;
             string? rootDirectory = null;
+            string? esrpId = null;
+            string? esrpClientId = null;
+            string? esrpTenantId = null;
+            string? esrpKeyVaultName = null;
+            string? esrpCertName = null;
+            string? serviceConnectionId = null;
 
             for (var i = 0; i < args.Length; i++)
             {
@@ -242,6 +271,64 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
 
                     rootDirectory = args[++i];
                 }
+                else if (arg.Equals("--esrp-id", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (i + 1 >= args.Length)
+                    {
+                        return false;
+                    }
+
+                    esrpId = args[++i];
+                }
+                else if (arg.Equals("--esrp-client-id", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (i + 1 >= args.Length)
+                    {
+                        return false;
+                    }
+
+                    esrpClientId = args[++i];
+                }
+                else if (arg.Equals("--esrp-tenant-id", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (i + 1 >= args.Length)
+                    {
+                        return false;
+                    }
+
+                    esrpTenantId = args[++i];
+                }
+                else if (arg.Equals("--esrp-keyvault-name", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (i + 1 >= args.Length)
+                    {
+                        return false;
+                    }
+
+                    esrpKeyVaultName = args[++i];
+                }
+                else if (arg.Equals("--esrp-cert-name", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (i + 1 >= args.Length)
+                    {
+                        return false;
+                    }
+
+                    esrpCertName = args[++i];
+                }
+                else if (arg.Equals("--federated-token", StringComparison.OrdinalIgnoreCase))
+                {
+                    useFederatedToken = true;
+                }
+                else if (arg.Equals("--service-connection-id", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (i + 1 >= args.Length)
+                    {
+                        return false;
+                    }
+
+                    serviceConnectionId = args[++i];
+                }
                 else if (arg.Equals("--verbose", StringComparison.OrdinalIgnoreCase))
                 {
                     verbose = true;
@@ -258,7 +345,8 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
             }
 
             options = new CliOptions(configPath, tempDirectory, outputDirectory, inputPatterns, verbose,
-                useESRP, dryRun, esrpCliPath, rootDirectory);
+                useESRP, dryRun, useFederatedToken, esrpCliPath, rootDirectory,
+                esrpId, esrpClientId, esrpTenantId, esrpKeyVaultName, esrpCertName, serviceConnectionId);
             return true;
         }
 
@@ -276,6 +364,13 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
             Console.WriteLine("  --dry-run                 Print ESRP submission JSON without invoking CLI (requires --esrp)");
             Console.WriteLine("  --esrp-cli-path <path>    Path to esrpcli.dll (default: bundled copy; requires --esrp)");
             Console.WriteLine("  --root <directory>        Root directory for relative file paths (requires --esrp)");
+            Console.WriteLine("  --esrp-id <id>            ESRP client account identifier (-esrpClientId flag)");
+            Console.WriteLine("  --esrp-client-id <id>     AAD app registration client ID for auth (-a flag)");
+            Console.WriteLine("  --esrp-tenant-id <id>     AAD tenant ID (-d flag)");
+            Console.WriteLine("  --esrp-keyvault-name <n>  Key vault name for ESRP auth cert");
+            Console.WriteLine("  --esrp-cert-name <name>   Certificate name in key vault");
+            Console.WriteLine("  --federated-token         Use federated token (PME) auth mode (default: certificate/CORP)");
+            Console.WriteLine("  --service-connection-id <guid>  ADO service connection GUID for federated token auth");
         }
 
         private static IReadOnlyList<string> ExpandInputPaths(IReadOnlyList<string> inputPatterns)
@@ -383,8 +478,15 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
             bool Verbose,
             bool UseESRP,
             bool DryRun,
+            bool UseFederatedToken,
             string? ESRPCliPath,
-            string? RootDirectory);
+            string? RootDirectory,
+            string? EsrpId,
+            string? ESRPClientId,
+            string? ESRPTenantId,
+            string? ESRPKeyVaultName,
+            string? ESRPCertName,
+            string? ServiceConnectionId);
     }
 }
 

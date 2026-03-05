@@ -5,7 +5,7 @@
 
 using System;
 using System.Collections.Immutable;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.DotNet.RecursiveSigning.Implementation;
 using Microsoft.DotNet.RecursiveSigning.Models;

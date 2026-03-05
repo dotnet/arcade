@@ -1,0 +1,81 @@
+parameters:
+  # Azure DevOps service connection name for ESRP signing
+  serviceConnectionName: 'DotNetBuildESRP'
+  # Service connection GUID for federated token auth
+  serviceConnectionGuid: '4171f9a7-af33-4d84-8daf-2d0185625062'
+  # Signing config file path
+  configPath: ''
+  # Input files / glob patterns (semicolon-separated)
+  inputs: ''
+  # Output directory (optional, defaults to in-place signing)
+  outputDirectory: ''
+  # ESRP client account identifier (EsrpClientId from EsrpCodeSigning task, passed as -esrpClientId)
+  esrpId: '28ec6507-2167-4eaa-a294-34408cf5dd0e'
+  # App registration client ID for ESRP auth (AppRegistrationClientId, passed as -a)
+  esrpClientId: '0ecbcdb7-8451-4cbe-940a-4ed97b08b955'
+  # App registration tenant ID (AppRegistrationTenantId, passed as -d)
+  esrpTenantId: '975f013f-7f24-47e8-a7d3-abc4752bf346'
+  # Key vault name for the ESRP auth signing certificate (AuthAKVName)
+  keyVaultName: 'DotNetEngKeyVault'
+  # Certificate name in the key vault (AuthSignCertName)
+  certName: 'DotNet-ESRP-AuthSignCert'
+  # Dry-run mode (true/false)
+  dryRun: false
+  # Working directory where the recursive signing CLI project lives
+  cliProjectDir: 'src/Microsoft.DotNet.RecursiveSigning.Cli'
+
+steps:
+# Use AzureCLI@2 to map the service connection so the access token is available
+- task: AzureCLI@2
+  displayName: 'Sign with Recursive Signing CLI'
+  inputs:
+    azureSubscription: ${{ parameters.serviceConnectionName }}
+    scriptType: 'ps'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      # The AzureCLI task maps the service connection, making SYSTEM_ACCESSTOKEN available.
+      # Set the ESRP token env var for the signing tool
+      $env:ESRP_TOKEN = $env:SYSTEM_ACCESSTOKEN
+
+      # Build the input args from the semicolon-separated list
+      $inputArgs = @()
+      $inputs = "${{ parameters.inputs }}".Split(';', [System.StringSplitOptions]::RemoveEmptyEntries)
+      foreach ($input in $inputs) {
+        $inputArgs += "--input"
+        $inputArgs += $input.Trim()
+      }
+
+      $dryRunFlag = @()
+      if ("${{ parameters.dryRun }}" -eq "true") {
+        $dryRunFlag += "--dry-run"
+      }
+
+      $outputArgs = @()
+      if ("${{ parameters.outputDirectory }}" -ne "") {
+        $outputArgs += "--output"
+        $outputArgs += "${{ parameters.outputDirectory }}"
+      }
+
+      # Run the recursive signing CLI
+      & dotnet run --project "${{ parameters.cliProjectDir }}" -- `
+        --config "${{ parameters.configPath }}" `
+        --esrp `
+        --federated-token `
+        --service-connection-id "${{ parameters.serviceConnectionGuid }}" `
+        --esrp-id "${{ parameters.esrpId }}" `
+        --esrp-client-id "${{ parameters.esrpClientId }}" `
+        --esrp-tenant-id "${{ parameters.esrpTenantId }}" `
+        --esrp-keyvault-name "${{ parameters.keyVaultName }}" `
+        --esrp-cert-name "${{ parameters.certName }}" `
+        @dryRunFlag `
+        --verbose `
+        @inputArgs `
+        @outputArgs
+      
+      if ($LASTEXITCODE -ne 0) {
+        Write-Error "Recursive signing CLI failed with exit code $LASTEXITCODE"
+        exit $LASTEXITCODE
+      }
+  env:
+    SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+    MBSIGN_CONNECTEDSERVICE: ${{ parameters.serviceConnectionGuid }}

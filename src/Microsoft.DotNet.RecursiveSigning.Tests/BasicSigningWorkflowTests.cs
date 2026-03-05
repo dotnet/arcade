@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.Arcade.Common;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.Extensions.DependencyInjection;

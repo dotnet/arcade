@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.DotNet.RecursiveSigning.Abstractions;
 using Microsoft.DotNet.RecursiveSigning.Implementation;
 using Microsoft.DotNet.RecursiveSigning.Models;
@@ -63,10 +63,8 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
         }
 
         [Fact]
-        public void BuildSubmissionJson_SingleCert_ProducesSingleBatch()
+        public void GroupFilesByCertificate_SingleCert_ProducesSingleGroup()
         {
-            var config = CreateConfig();
-            var provider = new ESRPCliSigningProvider(config, new FakeProcessRunner(), NullLogger<ESRPCliSigningProvider>.Instance);
             var cert = CreateCert("CertA");
             var files = new List<(FileNode, string)>
             {
@@ -74,27 +72,15 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
                 (CreateFileNode("bin/b.dll", cert), RootDir + "/bin/b.dll"),
             };
 
-            var json = provider.BuildSubmissionJson(files);
-            var doc = JsonDocument.Parse(json);
+            var groups = ESRPCliSigningProvider.GroupFilesByCertificate(files);
 
-            doc.RootElement.GetProperty("Version").GetString().Should().Be("1.0.0");
-            var batches = doc.RootElement.GetProperty("SignBatches");
-            batches.GetArrayLength().Should().Be(1);
-
-            var batch = batches[0];
-            batch.GetProperty("SourceLocationType").GetString().Should().Be("UNC");
-            batch.GetProperty("SignRequestFiles").GetArrayLength().Should().Be(2);
-
-            var ops = batch.GetProperty("SigningInfo").GetProperty("Operations");
-            ops.GetArrayLength().Should().Be(1);
-            ops[0].GetProperty("KeyCode").GetString().Should().Be("CP-230012");
+            groups.Should().HaveCount(1);
+            groups["CertA"].files.Should().HaveCount(2);
         }
 
         [Fact]
-        public void BuildSubmissionJson_MultipleCerts_ProducesMultipleBatches()
+        public void GroupFilesByCertificate_MultipleCerts_ProducesMultipleGroups()
         {
-            var config = CreateConfig();
-            var provider = new ESRPCliSigningProvider(config, new FakeProcessRunner(), NullLogger<ESRPCliSigningProvider>.Instance);
             var certA = CreateCert("CertA", "CP-111");
             var certB = CreateCert("CertB", "CP-222");
             var files = new List<(FileNode, string)>
@@ -104,40 +90,44 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
                 (CreateFileNode("bin/c.dll", certA), RootDir + "/bin/c.dll"),
             };
 
-            var json = provider.BuildSubmissionJson(files);
-            var doc = JsonDocument.Parse(json);
+            var groups = ESRPCliSigningProvider.GroupFilesByCertificate(files);
 
-            var batches = doc.RootElement.GetProperty("SignBatches");
-            batches.GetArrayLength().Should().Be(2);
-
-            // CertA batch should have 2 files
-            var batchA = batches[0];
-            batchA.GetProperty("SignRequestFiles").GetArrayLength().Should().Be(2);
-            batchA.GetProperty("SigningInfo").GetProperty("Operations")[0]
-                .GetProperty("KeyCode").GetString().Should().Be("CP-111");
-
-            // CertB batch should have 1 file
-            var batchB = batches[1];
-            batchB.GetProperty("SignRequestFiles").GetArrayLength().Should().Be(1);
-            batchB.GetProperty("SigningInfo").GetProperty("Operations")[0]
-                .GetProperty("KeyCode").GetString().Should().Be("CP-222");
+            groups.Should().HaveCount(2);
+            groups["CertA"].files.Should().HaveCount(2);
+            groups["CertB"].files.Should().HaveCount(1);
         }
 
         [Fact]
-        public void BuildPatternFile_ProducesCommaSeparatedRelativePaths()
+        public void BuildOperationsJson_ProducesCorrectJsonArray()
         {
             var config = CreateConfig();
             var provider = new ESRPCliSigningProvider(config, new FakeProcessRunner(), NullLogger<ESRPCliSigningProvider>.Instance);
+            var cert = CreateCert("CertA", "CP-230012");
+
+            var json = provider.BuildOperationsJson(cert);
+            var doc = JsonDocument.Parse(json);
+
+            doc.RootElement.GetArrayLength().Should().Be(1);
+            var op = doc.RootElement[0];
+            op.GetProperty("KeyCode").GetString().Should().Be("CP-230012");
+            op.GetProperty("OperationCode").GetString().Should().Be("SigntoolSign");
+            op.GetProperty("ToolName").GetString().Should().Be("sign");
+        }
+
+        [Fact]
+        public void BuildPatternFileContent_ProducesCommaSeparatedRelativePaths()
+        {
             var cert = CreateCert("CertA");
             var files = new List<(FileNode, string)>
             {
                 (CreateFileNode("bin/a.dll", cert), RootDir + "/bin/a.dll"),
-                (CreateFileNode("lib/b.dll", cert), RootDir + "/lib/b.dll"),
+                (CreateFileNode("bin/b.dll", cert), RootDir + "/bin/b.dll"),
             };
+            var rootDir = RootDir.Replace('\\', '/') + "/bin";
 
-            var pattern = provider.BuildPatternFile(files);
+            var pattern = ESRPCliSigningProvider.BuildPatternFileContent(files, rootDir);
 
-            pattern.Should().Be("bin/a.dll,lib/b.dll");
+            pattern.Should().Be("a.dll,b.dll");
         }
 
         [Fact]
@@ -146,11 +136,12 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             var config = CreateConfig();
             var provider = new ESRPCliSigningProvider(config, new FakeProcessRunner(), NullLogger<ESRPCliSigningProvider>.Instance);
 
-            var args = provider.BuildArguments("/work");
+            var args = provider.BuildArguments("/work", RootDir);
 
             args.Should().Contain("-x regularSigning");
             args.Should().Contain("-y \"inlineSignParams\"");
-            args.Should().Contain("-c 400");
+            args.Should().Contain("-j");
+            args.Should().Contain("-p");
             args.Should().Contain("-t 30");
             args.Should().Contain("-v \"Tls12\"");
             args.Should().Contain("-s \"https://api.esrp.microsoft.com/api/v2\"");
@@ -194,64 +185,57 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
         }
 
         [Fact]
-        public void BuildSubmissionJson_FilesInDifferentTrees_ComputesCommonRoot()
+        public void ExtractOperations_ReturnsOperationsArray()
         {
-            var config = CreateConfig();
-            var provider = new ESRPCliSigningProvider(config, new FakeProcessRunner(), NullLogger<ESRPCliSigningProvider>.Instance);
-            var cert = CreateCert("CertA");
+            var cert = CreateCert("CertA", "CP-230012");
+            var ops = ESRPCliSigningProvider.ExtractOperations(cert.CertificateDefinition);
 
-            var path1 = (RootDir + "/bin/a.dll").Replace('\\', '/');
-            var path2 = (RootDir + "/lib/b.dll").Replace('\\', '/');
-            var contentKey1 = new FileContentKey(
-                new ContentHash(ImmutableArray.Create<byte>(1, 2, 3, 4)), "a.dll");
-            var contentKey2 = new FileContentKey(
-                new ContentHash(ImmutableArray.Create<byte>(5, 6, 7, 8)), "b.dll");
-            var node1 = new FileNode(contentKey1, new FileLocation(path1, null), new FileMetadata("a.dll"), cert);
-            var node2 = new FileNode(contentKey2, new FileLocation(path2, null), new FileMetadata("b.dll"), cert);
-
-            var files = new List<(FileNode, string)> { (node1, path1), (node2, path2) };
-
-            var json = provider.BuildSubmissionJson(files);
-            var doc = JsonDocument.Parse(json);
-            var batch = doc.RootElement.GetProperty("SignBatches")[0];
-
-            // Common root should be the RootDir itself
-            var sourceRoot = batch.GetProperty("SourceRootDirectory").GetString();
-            sourceRoot.Should().Be(RootDir.Replace('\\', '/'));
+            ops.GetArrayLength().Should().Be(1);
+            ops[0].GetProperty("KeyCode").GetString().Should().Be("CP-230012");
         }
 
         [Fact]
-        public void BuildSubmissionJson_FileRequestHasCorrelationId()
+        public async Task SignFilesAsync_MultipleCerts_InvokesProcessPerGroup()
         {
             var config = CreateConfig();
-            var provider = new ESRPCliSigningProvider(config, new FakeProcessRunner(), NullLogger<ESRPCliSigningProvider>.Instance);
-            var cert = CreateCert("CertA");
+            var processRunner = new FakeProcessRunner();
+            var provider = new ESRPCliSigningProvider(config, processRunner, NullLogger<ESRPCliSigningProvider>.Instance);
+            var certA = CreateCert("CertA", "CP-111");
+            var certB = CreateCert("CertB", "CP-222");
             var files = new List<(FileNode, string)>
             {
-                (CreateFileNode("bin/a.dll", cert), RootDir + "/bin/a.dll"),
+                (CreateFileNode("bin/a.dll", certA), RootDir + "/bin/a.dll"),
+                (CreateFileNode("bin/b.exe", certB), RootDir + "/bin/b.exe"),
             };
 
-            var json = provider.BuildSubmissionJson(files);
-            var doc = JsonDocument.Parse(json);
-            var fileEntry = doc.RootElement.GetProperty("SignBatches")[0]
-                .GetProperty("SignRequestFiles")[0];
+            var result = await provider.SignFilesAsync(files);
 
-            fileEntry.TryGetProperty("CustomerCorrelationId", out var corrId).Should().BeTrue();
-            Guid.TryParse(corrId.GetString(), out _).Should().BeTrue();
+            result.Should().BeTrue();
+            // One invocation per cert group, submitted in parallel
+            processRunner.Invocations.Should().HaveCount(2);
         }
 
         /// <summary>
         /// Fake process runner that records invocations without running any real process.
+        /// Thread-safe for parallel invocation testing.
         /// </summary>
         private sealed class FakeProcessRunner : IProcessRunner
         {
-            public List<(string FileName, string Arguments)> Invocations { get; } = new();
+            private readonly List<(string FileName, string Arguments)> _invocations = new();
+
+            public IReadOnlyList<(string FileName, string Arguments)> Invocations
+            {
+                get { lock (_invocations) { return _invocations.ToList(); } }
+            }
 
             public ProcessResult NextResult { get; set; } = new ProcessResult(0, "Success\n", "");
 
             public Task<ProcessResult> RunAsync(string fileName, string arguments, CancellationToken cancellationToken)
             {
-                Invocations.Add((fileName, arguments));
+                lock (_invocations)
+                {
+                    _invocations.Add((fileName, arguments));
+                }
                 return Task.FromResult(NextResult);
             }
         }
