@@ -11,12 +11,12 @@ stages:
   displayName: Build
   jobs:
   - ${{ if eq(parameters.oneLocEnabled, true) }}:
-    - template: /eng/common/templates-official/job/onelocbuild.yml@self
+    - template: /eng/common/templates-official/job/onelocbuild.yml
       parameters:
         MirrorRepo: arcade
         LclSource: lclFilesFromPackage
         LclPackageId: 'LCL-JUNO-PROD-ARCADE'
-  - template: /eng/common/templates-official/jobs/jobs.yml@self
+  - template: /eng/common/templates-official/jobs/jobs.yml
     parameters:
       artifacts:
         publish:
@@ -52,7 +52,7 @@ stages:
   displayName: Validate Arcade SDK
   dependsOn: build
   jobs:
-  - template: /eng/validate-sdk.yml@self
+  - template: /eng/validate-sdk.yml
     parameters:
       microbuildUseESRP: ${{ parameters.microbuildUseESRP }}
       buildArgs: -configuration $(_BuildConfig)
@@ -60,7 +60,7 @@ stages:
         $(_InternalBuildArgs)
         /p:Test=false
 
-- template: /eng/common/templates-official/post-build/post-build.yml@self
+- template: /eng/common/templates-official/post-build/post-build.yml
   parameters:
     publishingInfraVersion: 3
     # signing validation will not run, even if the below value is 'true', if the 'PostBuildSign' variable is set to 'true'
