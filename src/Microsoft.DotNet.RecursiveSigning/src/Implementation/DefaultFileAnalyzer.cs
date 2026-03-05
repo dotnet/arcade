@@ -4,7 +4,9 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.RecursiveSigning.Abstractions;
@@ -13,10 +15,30 @@ using Microsoft.DotNet.RecursiveSigning.Models;
 namespace Microsoft.DotNet.RecursiveSigning.Implementation
 {
     /// <summary>
-    /// Default lightweight file analyzer.
+    /// File analyzer that dispatches to registered <see cref="IFileTypeAnalyzer"/>
+    /// instances based on file name. Falls back to basic filename-only metadata
+    /// when no analyzer matches.
     /// </summary>
     public sealed class DefaultFileAnalyzer : IFileAnalyzer
     {
+        private readonly IReadOnlyList<IFileTypeAnalyzer> _typeAnalyzers;
+
+        /// <summary>
+        /// Creates a file analyzer with no type-specific analyzers (stub mode).
+        /// </summary>
+        public DefaultFileAnalyzer()
+            : this(Array.Empty<IFileTypeAnalyzer>())
+        {
+        }
+
+        /// <summary>
+        /// Creates a file analyzer with the given type-specific analyzers.
+        /// </summary>
+        public DefaultFileAnalyzer(IEnumerable<IFileTypeAnalyzer> typeAnalyzers)
+        {
+            _typeAnalyzers = typeAnalyzers?.ToList() ?? throw new ArgumentNullException(nameof(typeAnalyzers));
+        }
+
         public Task<IFileMetadata> AnalyzeAsync(string filePath, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(filePath))
@@ -24,10 +46,17 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                 throw new ArgumentException("File path cannot be null or whitespace.", nameof(filePath));
             }
 
-            return Task.FromResult<IFileMetadata>(new FileMetadata(Path.GetFileName(filePath)));
+            var fileName = Path.GetFileName(filePath);
+            var analyzer = FindAnalyzer(fileName);
+            if (analyzer == null)
+            {
+                return Task.FromResult<IFileMetadata>(new FileMetadata(fileName));
+            }
+
+            return AnalyzeWithFileTypeAsync(analyzer, filePath, fileName, cancellationToken);
         }
 
-        public Task<IFileMetadata> AnalyzeAsync(Stream contentStream, string fileName, CancellationToken cancellationToken = default)
+        public async Task<IFileMetadata> AnalyzeAsync(Stream contentStream, string fileName, CancellationToken cancellationToken = default)
         {
             if (contentStream == null)
             {
@@ -39,7 +68,38 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                 throw new ArgumentException("File name cannot be null or whitespace.", nameof(fileName));
             }
 
-            return Task.FromResult<IFileMetadata>(new FileMetadata(fileName));
+            var analyzer = FindAnalyzer(fileName);
+            if (analyzer == null)
+            {
+                return new FileMetadata(fileName);
+            }
+
+            var info = await analyzer.AnalyzeAsync(contentStream, fileName, cancellationToken);
+            return ToMetadata(fileName, info);
         }
+
+        private IFileTypeAnalyzer? FindAnalyzer(string fileName)
+        {
+            foreach (var analyzer in _typeAnalyzers)
+            {
+                if (analyzer.CanAnalyze(fileName))
+                {
+                    return analyzer;
+                }
+            }
+            return null;
+        }
+
+        private static async Task<IFileMetadata> AnalyzeWithFileTypeAsync(
+            IFileTypeAnalyzer analyzer, string filePath, string fileName,
+            CancellationToken cancellationToken)
+        {
+            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            var info = await analyzer.AnalyzeAsync(stream, fileName, cancellationToken);
+            return ToMetadata(fileName, info);
+        }
+
+        private static FileMetadata ToMetadata(string fileName, FileTypeInfo info) =>
+            new(fileName, info.ExecutableType, info.TargetFramework, info.PublicKeyToken, info.IsAlreadySigned);
     }
 }
