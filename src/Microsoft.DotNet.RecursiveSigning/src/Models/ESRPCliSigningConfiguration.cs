@@ -111,6 +111,13 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
         public string RootDirectory { get; set; } = string.Empty;
 
         /// <summary>
+        /// Directory where ESRP CLI invocation logs are written.
+        /// Each invocation writes stdout/stderr to a separate file.
+        /// When empty, logs are only written through the ILogger pipeline.
+        /// </summary>
+        public string LogDirectory { get; set; } = string.Empty;
+
+        /// <summary>
         /// When true, the provider logs the submission JSON and CLI arguments without invoking the ESRP CLI.
         /// </summary>
         public bool DryRun { get; set; }

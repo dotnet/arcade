@@ -67,8 +67,8 @@ steps:
         --esrp-tenant-id "${{ parameters.esrpTenantId }}" `
         --esrp-keyvault-name "${{ parameters.keyVaultName }}" `
         --esrp-cert-name "${{ parameters.certName }}" `
+        --log-dir "$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/recursive-signing" `
         @dryRunFlag `
-        --verbose `
         @inputArgs `
         @outputArgs
       

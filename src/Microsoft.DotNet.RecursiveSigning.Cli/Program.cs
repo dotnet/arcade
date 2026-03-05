@@ -78,6 +78,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
                 {
                     ESRPCliPath = options.ESRPCliPath ?? GetBundledEsrpCliPath(),
                     TempDirectory = options.TempDirectory,
+                    LogDirectory = options.LogDir ?? Path.Combine(options.TempDirectory, "esrp-logs"),
                     RootDirectory = options.RootDirectory ?? Directory.GetCurrentDirectory(),
                     DryRun = options.DryRun,
                     VerboseLogging = options.Verbose,
@@ -182,7 +183,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
             options = new CliOptions("", "", null, Array.Empty<string>(), Verbose: false,
                 UseESRP: false, DryRun: false, UseFederatedToken: false, ESRPCliPath: null, RootDirectory: null,
                 EsrpId: null, ESRPClientId: null, ESRPTenantId: null, ESRPKeyVaultName: null, ESRPCertName: null,
-                ServiceConnectionId: null);
+                ServiceConnectionId: null, LogDir: null);
 
             if (args.Length < 3)
             {
@@ -205,6 +206,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
             string? esrpKeyVaultName = null;
             string? esrpCertName = null;
             string? serviceConnectionId = null;
+            string? logDir = null;
 
             for (var i = 0; i < args.Length; i++)
             {
@@ -333,6 +335,15 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
                 {
                     verbose = true;
                 }
+                else if (arg.Equals("--log-dir", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (i + 1 >= args.Length)
+                    {
+                        return false;
+                    }
+
+                    logDir = args[++i];
+                }
                 else
                 {
                     inputPatterns.Add(arg);
@@ -346,7 +357,8 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
 
             options = new CliOptions(configPath, tempDirectory, outputDirectory, inputPatterns, verbose,
                 useESRP, dryRun, useFederatedToken, esrpCliPath, rootDirectory,
-                esrpId, esrpClientId, esrpTenantId, esrpKeyVaultName, esrpCertName, serviceConnectionId);
+                esrpId, esrpClientId, esrpTenantId, esrpKeyVaultName, esrpCertName, serviceConnectionId,
+                logDir);
             return true;
         }
 
@@ -360,6 +372,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
             Console.WriteLine("  --temp <directory>        Temporary working directory");
             Console.WriteLine("  --output <directory>      Output directory for final root artifacts");
             Console.WriteLine("  --verbose                 Enable debug logging");
+            Console.WriteLine("  --log-dir <directory>     Directory for ESRP CLI invocation logs (default: <temp>/esrp-logs)");
             Console.WriteLine("  --esrp                    Use ESRP CLI signing provider instead of dry-run");
             Console.WriteLine("  --dry-run                 Print ESRP submission JSON without invoking CLI (requires --esrp)");
             Console.WriteLine("  --esrp-cli-path <path>    Path to esrpcli.dll (default: bundled copy; requires --esrp)");
@@ -486,7 +499,8 @@ namespace Microsoft.DotNet.RecursiveSigning.Cli
             string? ESRPTenantId,
             string? ESRPKeyVaultName,
             string? ESRPCertName,
-            string? ServiceConnectionId);
+            string? ServiceConnectionId,
+            string? LogDir);
     }
 }
 

@@ -128,6 +128,9 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                     LogVerbose("ESRP CLI stderr:\n{Stderr}", result.StandardError);
                 }
 
+                // Always write logs to files for post-mortem diagnostics
+                WriteInvocationLog(certName, result, arguments);
+
                 var parsed = ESRPCliResultParser.Parse(
                     result.ExitCode, result.StandardOutput, result.StandardError);
 
@@ -140,6 +143,14 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                 {
                     _logger.LogError("ESRP CLI signing failed for '{Cert}': {Error}",
                         certName, parsed.ErrorMessage);
+
+                    // Surface individual failure details at error level so they appear
+                    // in the build log even in non-verbose mode
+                    foreach (var detail in parsed.FailureDetails)
+                    {
+                        _logger.LogError("  {FailureDetail}", detail);
+                    }
+
                     return false;
                 }
 
@@ -446,6 +457,49 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             else
             {
                 _logger.LogDebug(message, args);
+            }
+        }
+
+        /// <summary>
+        /// Writes stdout, stderr, and redacted arguments for one ESRP CLI invocation
+        /// to a log file. Files are always written (even in non-verbose mode) so that
+        /// build operators can inspect signing details after the fact.
+        /// </summary>
+        private void WriteInvocationLog(string certName, ProcessResult result, string arguments)
+        {
+            var logDir = _configuration.LogDirectory;
+            if (string.IsNullOrWhiteSpace(logDir))
+            {
+                return;
+            }
+
+            try
+            {
+                Directory.CreateDirectory(logDir);
+                var safeCertName = string.Join("_", certName.Split(Path.GetInvalidFileNameChars()));
+                var timestamp = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss");
+                var logFile = Path.Combine(logDir, $"esrp-{safeCertName}-{timestamp}.log");
+
+                var sb = new StringBuilder();
+                sb.AppendLine($"=== ESRP CLI Invocation: {certName} ===");
+                sb.AppendLine($"Timestamp (UTC): {DateTime.UtcNow:O}");
+                sb.AppendLine($"Exit code: {result.ExitCode}");
+                sb.AppendLine($"Arguments (redacted): dotnet {RedactAuthArguments(arguments)}");
+                sb.AppendLine();
+                sb.AppendLine("=== stdout ===");
+                sb.AppendLine(result.StandardOutput);
+                if (!string.IsNullOrWhiteSpace(result.StandardError))
+                {
+                    sb.AppendLine("=== stderr ===");
+                    sb.AppendLine(result.StandardError);
+                }
+
+                File.WriteAllText(logFile, sb.ToString());
+                _logger.LogInformation("ESRP CLI log written to: {LogFile}", logFile);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Failed to write ESRP invocation log for '{Cert}': {Error}", certName, ex.Message);
             }
         }
 
