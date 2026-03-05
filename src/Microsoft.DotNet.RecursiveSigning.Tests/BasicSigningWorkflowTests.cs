@@ -28,10 +28,12 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
     internal class SimpleCertificateIdentifier : ICertificateIdentifier
     {
         public string Name { get; }
+        public bool SignRegardless { get; }
 
-        public SimpleCertificateIdentifier(string name)
+        public SimpleCertificateIdentifier(string name, bool signRegardless = false)
         {
             Name = name;
+            SignRegardless = signRegardless;
         }
     }
 

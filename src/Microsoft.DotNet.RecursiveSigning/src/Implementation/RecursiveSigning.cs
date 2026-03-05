@@ -88,6 +88,21 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                 var allNodes = _signingGraph.GetAllNodes();
                 _logger.LogInformation("Discovered {NodeCount} files total", allNodes.Count);
 
+                // Log skip/sign-regardless decisions for diagnosability
+                foreach (var node in allNodes.OfType<FileNode>())
+                {
+                    if (node.State == FileNodeState.Skipped && node.CertificateIdentifier != null && node.Metadata.IsAlreadySigned)
+                    {
+                        _logger.LogInformation("Skipping '{FileName}': already signed (certificate '{CertName}')",
+                            node.ContentKey.FileName, node.CertificateIdentifier.Name);
+                    }
+                    else if (node.Metadata.IsAlreadySigned && node.CertificateIdentifier?.SignRegardless == true)
+                    {
+                        _logger.LogInformation("Signing '{FileName}' despite existing signature (certificate '{CertName}' has signRegardless=true)",
+                            node.ContentKey.FileName, node.CertificateIdentifier.Name);
+                    }
+                }
+
                 // Phase 2: Iterative Signing
                 _logger.LogInformation("Phase 2: Iterative Signing");
                 var signingSw = Stopwatch.StartNew();

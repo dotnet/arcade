@@ -43,7 +43,12 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
 
         private static ICertificateIdentifier Signable(string certificateName = "A")
         {
-            return Mock.Of<ICertificateIdentifier>(c => c.Name == certificateName);
+            return Mock.Of<ICertificateIdentifier>(c => c.Name == certificateName && c.SignRegardless == false);
+        }
+
+        private static ICertificateIdentifier SignableRegardless(string certificateName = "A")
+        {
+            return Mock.Of<ICertificateIdentifier>(c => c.Name == certificateName && c.SignRegardless == true);
         }
 
         [Fact]
@@ -496,6 +501,72 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             container.State.Should().Be(FileNodeState.ReadyToSign);
             g.MarkAsComplete(container);
             container.State.Should().Be(FileNodeState.Complete);
+            g.IsComplete().Should().BeTrue();
+        }
+
+        // ── SignRegardless / already-signed skipping tests ──────────────────
+
+        [Fact]
+        public void AlreadySigned_WithSignRegardless_IsReadyToSign()
+        {
+            var node = CreateNode("a.dll", SignableRegardless(), isAlreadySigned: true);
+
+            var g = BuildGraph((node, null));
+
+            node.State.Should().Be(FileNodeState.ReadyToSign);
+            g.GetNodesReadyForSigning().Should().ContainSingle().Which.Should().BeSameAs(node);
+        }
+
+        [Fact]
+        public void AlreadySigned_WithoutSignRegardless_IsSkipped()
+        {
+            // Verify the existing behavior is preserved
+            var node = CreateNode("a.dll", Signable(), isAlreadySigned: true);
+
+            var g = BuildGraph((node, null));
+
+            node.State.Should().Be(FileNodeState.Skipped);
+            g.GetNodesReadyForSigning().Should().BeEmpty();
+        }
+
+        [Fact]
+        public void NotSigned_WithSignRegardless_IsReadyToSign()
+        {
+            // signRegardless should not prevent signing unsigned files
+            var node = CreateNode("a.dll", SignableRegardless(), isAlreadySigned: false);
+
+            var g = BuildGraph((node, null));
+
+            node.State.Should().Be(FileNodeState.ReadyToSign);
+            g.GetNodesReadyForSigning().Should().ContainSingle();
+        }
+
+        [Fact]
+        public void Container_WithSignableChildren_AlreadySigned_StillPendsRepack()
+        {
+            // Even if a container is already signed, if children need signing,
+            // the container must go through PendingRepack → Repack → ReadyToSign
+            var container = CreateNode("pkg.nupkg", Signable(), isAlreadySigned: true);
+            var child = CreateNode("lib.dll", Signable(), isAlreadySigned: false);
+
+            var g = BuildGraph((container, null), (child, container));
+
+            // Container must wait for children, not skip
+            container.State.Should().Be(FileNodeState.PendingRepack);
+            child.State.Should().Be(FileNodeState.ReadyToSign);
+        }
+
+        [Fact]
+        public void Container_AllChildrenAlreadySigned_ContainerAlreadySigned_AllSkipped()
+        {
+            // Container and all children are already signed → everything skipped
+            var container = CreateNode("pkg.nupkg", Signable(), isAlreadySigned: true);
+            var child = CreateNode("lib.dll", Signable(), isAlreadySigned: true);
+
+            var g = BuildGraph((container, null), (child, container));
+
+            child.State.Should().Be(FileNodeState.Skipped);
+            container.State.Should().Be(FileNodeState.Skipped);
             g.IsComplete().Should().BeTrue();
         }
 

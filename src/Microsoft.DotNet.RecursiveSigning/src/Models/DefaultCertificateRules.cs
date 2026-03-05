@@ -15,11 +15,13 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
     public sealed class DefaultCertificateRules
     {
         public IReadOnlyDictionary<string, JsonElement> CertificatesByFriendlyName { get; }
+        public IReadOnlyDictionary<string, bool> SignRegardlessByFriendlyName { get; }
         public IReadOnlyDictionary<string, string> FileNameMappings { get; }
         public IReadOnlyDictionary<string, string> FileExtensionMappings { get; }
 
         public DefaultCertificateRules(
             IReadOnlyDictionary<string, JsonElement>? certificatesByFriendlyName,
+            IReadOnlyDictionary<string, bool>? signRegardlessByFriendlyName,
             IReadOnlyDictionary<string, string>? fileNameMappings,
             IReadOnlyDictionary<string, string>? fileExtensionMappings)
         {
@@ -37,7 +39,17 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
                 }
             }
 
+            var normalizedSignRegardless = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
+            if (signRegardlessByFriendlyName != null)
+            {
+                foreach (var (friendlyName, value) in signRegardlessByFriendlyName)
+                {
+                    normalizedSignRegardless[friendlyName.Trim()] = value;
+                }
+            }
+
             CertificatesByFriendlyName = normalizedCertificates;
+            SignRegardlessByFriendlyName = normalizedSignRegardless;
             FileNameMappings = NormalizeMappings(fileNameMappings, normalizeExtensionKeys: false);
             FileExtensionMappings = NormalizeMappings(fileExtensionMappings, normalizeExtensionKeys: true);
         }
@@ -45,6 +57,11 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
         public bool TryGetCertificateDefinition(string friendlyName, out JsonElement certificateDefinition)
         {
             return CertificatesByFriendlyName.TryGetValue(friendlyName, out certificateDefinition);
+        }
+
+        public bool GetSignRegardless(string friendlyName)
+        {
+            return SignRegardlessByFriendlyName.TryGetValue(friendlyName, out var value) && value;
         }
 
         private static IReadOnlyDictionary<string, string> NormalizeMappings(

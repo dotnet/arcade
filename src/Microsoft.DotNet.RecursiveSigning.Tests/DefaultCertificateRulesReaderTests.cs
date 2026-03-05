@@ -163,6 +163,58 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             rules.FileExtensionMappings[".dll"].Should().Be("DemoCertB");
             rules.CertificatesByFriendlyName["DemoCertA"].GetProperty("operations").GetArrayLength().Should().Be(1);
         }
+
+        [Fact]
+        public void ReadFromJson_ParsesSignRegardless()
+        {
+            var json = """
+{
+  "certificates": [
+    {
+      "friendlyName": "NormalCert",
+      "operations": []
+    },
+    {
+      "friendlyName": "DualCert",
+      "signRegardless": true,
+      "operations": []
+    }
+  ],
+  "rules": {
+    "fileExtensionMappings": {
+      ".dll": "NormalCert",
+      ".exe": "DualCert"
+    }
+  }
+}
+""";
+
+            var reader = new DefaultCertificateRulesReader();
+            var rules = reader.ReadFromJson(json);
+
+            rules.GetSignRegardless("NormalCert").Should().BeFalse();
+            rules.GetSignRegardless("DualCert").Should().BeTrue();
+        }
+
+        [Fact]
+        public void ReadFromJson_SignRegardlessMissing_DefaultsFalse()
+        {
+            var json = """
+{
+  "certificates": [
+    {
+      "friendlyName": "BasicCert",
+      "operations": []
+    }
+  ]
+}
+""";
+
+            var reader = new DefaultCertificateRulesReader();
+            var rules = reader.ReadFromJson(json);
+
+            rules.GetSignRegardless("BasicCert").Should().BeFalse();
+        }
     }
 }
 

@@ -212,6 +212,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
                 {
                     ["TestCert"] = JsonDocument.Parse("""{"friendlyName":"TestCert"}""").RootElement.Clone()
                 },
+                signRegardlessByFriendlyName: null,
                 fileNameMappings: new Dictionary<string, string>(),
                 fileExtensionMappings: new Dictionary<string, string>
                 {
