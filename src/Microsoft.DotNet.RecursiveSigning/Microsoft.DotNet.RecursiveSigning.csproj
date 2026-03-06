@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(NetMinimum);$(BundledNetCoreAppTargetFramework)</TargetFrameworks>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <IsPackable>true</IsPackable>
+    <Description>Recursive signing tool</Description>
+    <PackageTags>Arcade Build Tool Signing</PackageTags>
+    <DevelopmentDependency>false</DevelopmentDependency>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
+    <!-- Copy assemblies into lib folder so they can be used as a development dependency -->
+    <BuildTaskTargetFolder>lib</BuildTaskTargetFolder>
+  </PropertyGroup>
+
+  <!-- PrivateAssets=all so the package has no external NuGet dependencies -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Microsoft.Arcade.Common\Microsoft.Arcade.Common.csproj" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.DotNet.RecursiveSigning.Tests" />
+  </ItemGroup>
+
+</Project>

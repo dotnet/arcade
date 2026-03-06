@@ -4,18 +4,23 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text.Unicode;
 using Microsoft.Arcade.Common;
 
 #nullable enable
 namespace Microsoft.Arcade.Test.Common
 {
+        
     public class MockFileSystem : IFileSystem
     {
         #region File system state
 
-        public HashSet<string> Directories { get; }    
+        public HashSet<string> Directories { get; }
         
-        public Dictionary<string, string> Files { get; }
+        public Dictionary<string, byte[]> Files { get; }
+
+
 
         public List<string> RemovedFiles { get; } = new();
 
@@ -29,7 +34,7 @@ namespace Microsoft.Arcade.Test.Common
             string directorySeparator = "/")
         {
             Directories = new(directories ?? new string[0]);
-            Files = files ?? new();
+            Files = files?.ToDictionary(f => f.Key, f => System.Text.Encoding.UTF8.GetBytes(f.Value)) ?? new();
             DirectorySeparator = directorySeparator;
         }
 
@@ -59,12 +64,17 @@ namespace Microsoft.Arcade.Test.Common
 
         public string PathCombine(string path1, string path2, string path3) => path1 + DirectorySeparator + path2 + DirectorySeparator + path3;
 
-        public void WriteToFile(string path, string content) => Files[path] = content;
+        public void WriteToFile(string path, string content) => Files[path] = System.Text.Encoding.UTF8.GetBytes(content);
+
+        public string ReadToString(string path) => System.Text.Encoding.UTF8.GetString(Files[path]);
 
         public void CopyFile(string sourceFileName, string destFileName, bool overwrite = false) => Files[destFileName] = Files[sourceFileName];
 
         public Stream GetFileStream(string path, FileMode mode, FileAccess access)
-            => FileExists(path) ? new MemoryStream() : new MockFileStream(this, path);
+        {
+            // Always use MockFileStream which handles both read and write correctly
+            return new MockFileStream(this, path, mode, access);
+        }
 
         public FileAttributes GetAttributes(string path)
         {
@@ -90,34 +100,86 @@ namespace Microsoft.Arcade.Test.Common
             return targetPath.Replace(basePath, "").TrimStart('/', '\\');
         }
 
+        public byte[] ReadAllBytes(string path)
+        {
+            if (!Files.ContainsKey(path))
+            {
+                throw new FileNotFoundException($"File not found: {path}");
+            }
+            return Files[path];
+        }
+
+        public void WriteAllBytes(string path, byte[] bytes)
+        {
+            Files[path] = bytes;
+        }
+
+        public long GetFileLength(string path)
+        {
+            if (!Files.ContainsKey(path))
+            {
+                throw new FileNotFoundException($"File not found: {path}");
+            }
+            return Files[path].LongLength;
+        }
+
         #endregion
 
         /// <summary>
-        /// Allows to write to a stream that will end up in the MockFileSystem.
+        /// Allows to read and write to a stream that will end up in the MockFileSystem.
         /// </summary>
         private class MockFileStream : MemoryStream
         {
             private readonly MockFileSystem _fileSystem;
             private readonly string _path;
+            private readonly FileAccess _access;
             private bool _disposed = false;
 
-            public MockFileStream(MockFileSystem fileSystem, string path)
-                : base(fileSystem.FileExists(path) ? System.Text.Encoding.UTF8.GetBytes(fileSystem.Files[path]) : new byte[2048])
+            public MockFileStream(MockFileSystem fileSystem, string path, FileMode mode, FileAccess access)
             {
                 _fileSystem = fileSystem;
                 _path = path;
+                _access = access;
+
+                // Initialize the stream based on mode and existing file content
+                if (mode == FileMode.Open || mode == FileMode.Append)
+                {
+                    if (fileSystem.FileExists(path))
+                    {
+                        byte[] existingContent = fileSystem.Files[path];
+                        Write(existingContent, 0, existingContent.Length);
+                        
+                        if (mode == FileMode.Open)
+                        {
+                            Seek(0, SeekOrigin.Begin); // Reset to beginning for read
+                        }
+                        // For Append mode, position is already at the end
+                    }
+                    else if (mode == FileMode.Open)
+                    {
+                        throw new FileNotFoundException($"File not found: {path}");
+                    }
+                }
+                else if (mode == FileMode.Create || mode == FileMode.CreateNew || mode == FileMode.Truncate)
+                {
+                    // Start with an empty stream
+                    if (mode == FileMode.CreateNew && fileSystem.FileExists(path))
+                    {
+                        throw new IOException($"File already exists: {path}");
+                    }
+                }
             }
 
             protected override void Dispose(bool disposing)
             {
-                // flush file to our system
-                if (!_disposed)
+                // Flush to file system if we have write access
+                if (!_disposed && (_access == FileAccess.Write || _access == FileAccess.ReadWrite))
                 {
                     _disposed = true;
-                    using var sr = new StreamReader(this);
-                    Seek(0, SeekOrigin.Begin);
-                    _fileSystem.WriteToFile(_path, sr.ReadToEnd().Replace("\0", ""));
+                    _fileSystem.WriteAllBytes(_path, ToArray());
                 }
+                
+                base.Dispose(disposing);
             }
         }
     }

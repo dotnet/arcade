@@ -1,0 +1,44 @@
+{
+  "$schema": "../signing-config-schema.json",
+  "$comment": "Demonstrates multiple certificates with file-name and extension mapping. File-name rules take priority over extension rules.",
+  "certificates": [
+    {
+      "friendlyName": "DemoCertA",
+      "$comment": "Primary certificate with full Authenticode parameters.",
+      "operations": [
+        {
+          "keyCode": "CP-230072",
+          "operationSetCode": "Authenticode_SignTool6.3.9304_NPH_FDSHA256",
+          "parameters": [
+            {
+              "parameterName": "OpusName",
+              "parameterValue": "Microsoft"
+            },
+            {
+              "parameterName": "OpusInfo",
+              "parameterValue": "http://www.microsoft.com"
+            }
+          ],
+          "toolName": "signtool.exe",
+          "toolVersion": "6.2.9304.0"
+        }
+      ]
+    },
+    {
+      "friendlyName": "DemoCertB",
+      "$comment": "Secondary certificate with no operations — useful for testing or placeholder configs.",
+      "operations": []
+    }
+  ],
+  "rules": {
+    "fileNameMappings": {
+      "$comment": "Exact file name matches are checked first. 'special.dll' uses DemoCertA even though .dll maps to DemoCertB by extension.",
+      "special.dll": "DemoCertA"
+    },
+    "fileExtensionMappings": {
+      ".dll": "DemoCertB",
+      ".exe": "DemoCertA",
+      ".nupkg": "DemoCertA"
+    }
+  }
+}

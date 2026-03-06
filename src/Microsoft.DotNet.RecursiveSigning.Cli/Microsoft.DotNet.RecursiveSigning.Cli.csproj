@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>$(NetMinimum)</TargetFramework>
+    <RollForward>LatestMajor</RollForward>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>dotnet-recursive-sign</ToolCommandName>
+    <UseAppHost>false</UseAppHost>
+    <Description>Recursive code signing CLI tool using ESRP</Description>
+    <PackageTags>Arcade Build Tool Signing ESRP</PackageTags>
+    <DevelopmentDependency>false</DevelopmentDependency>
+  </PropertyGroup>
+
+  <!-- PrivateAssets=all so the tool package has no external NuGet dependencies -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Ess.EsrpCli" GeneratePathProperty="true" ExcludeAssets="all" />
+    <PackageReference Include="System.CommandLine" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.RecursiveSigning\Microsoft.DotNet.RecursiveSigning.csproj" PrivateAssets="all" />
+  </ItemGroup>
+
+  <!-- Copy ESRP CLI tool binaries to output under ESRPCLI/ subdirectory.
+       None items with CopyToPublishDirectory are included in the dotnet tool package
+       under tools/<tfm>/any/ without being treated as NuGet content files. -->
+  <ItemGroup>
+    <None Include="$(PkgMicrosoft_Ess_EsrpCli)\tools\net8.0\**\*"
+          CopyToOutputDirectory="PreserveNewest"
+          CopyToPublishDirectory="PreserveNewest"
+          Link="ESRPCLI\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

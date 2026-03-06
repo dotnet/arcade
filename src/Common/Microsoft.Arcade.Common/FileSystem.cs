@@ -53,5 +53,19 @@ namespace Microsoft.Arcade.Common
         /// <param name="targetPath">Target path that is relative to base path.</param>
         /// <exception cref="NotImplementedException"></exception>
         public virtual string GetRelativePath(string basePath, string targetPath) => throw new NotImplementedException("Not supported in default FileSystem implementation");
+
+        public byte[] ReadAllBytes(string path) => File.ReadAllBytes(path);
+
+        public void WriteAllBytes(string path, byte[] bytes)
+        {
+            string? dirPath = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(dirPath))
+            {
+                Directory.CreateDirectory(dirPath);
+            }
+            File.WriteAllBytes(path, bytes);
+        }
+
+        public long GetFileLength(string path) => new FileInfo(path).Length;
     }
 }
