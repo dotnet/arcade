@@ -16,7 +16,7 @@ stages:
     - group: AzureDevOps-Artifact-Feeds-Pats
     - group: Publish-Build-Assets
 
-    - template: /eng/common/templates-official/post-build/common-variables.yml
+    - template: /eng/common/templates-official/post-build/common-variables.yml@self
 
     steps:
     - task: AzureCLI@2
@@ -170,7 +170,7 @@ stages:
           /p:StreamingPublishingMaxClients=16
           /p:NonStreamingPublishingMaxClients=12
 
-    - template: /eng/common/templates-official/steps/publish-logs.yml
+    - template: /eng/common/templates-official/steps/publish-logs.yml@self
       parameters:
         StageLabel: '${{ parameters.stageName }}'
         JobLabel: 'AssetsPublishing'
