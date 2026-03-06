@@ -40,7 +40,8 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                     throw new InvalidOperationException($"Rule matched '{metadata.FileName}' to certificate '{friendlyName}', but that certificate is not defined.");
                 }
 
-                return new ESRPCertificateIdentifier(friendlyName, certificateDefinition);
+                var alwaysSign = _rules.GetAlwaysSign(friendlyName);
+                return new ESRPCertificateIdentifier(friendlyName, certificateDefinition, alwaysSign);
             }
 
             return null;

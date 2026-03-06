@@ -40,6 +40,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             }) ?? throw new InvalidOperationException("Failed to deserialize certificate rules JSON.");
 
             var certificates = new Dictionary<string, JsonElement>(StringComparer.OrdinalIgnoreCase);
+            var alwaysSign = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
             foreach (var cert in document.Certificates ?? Array.Empty<JsonElement>())
             {
                 if (!cert.TryGetProperty("friendlyName", out var friendlyNameElement))
@@ -54,10 +55,17 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                 }
 
                 certificates[friendlyName] = cert.Clone();
+
+                if (cert.TryGetProperty("alwaysSign", out var alwaysSignElement) &&
+                    alwaysSignElement.ValueKind == JsonValueKind.True)
+                {
+                    alwaysSign[friendlyName] = true;
+                }
             }
 
             return new DefaultCertificateRules(
                 certificates,
+                alwaysSign,
                 document.Rules?.FileNameMappings,
                 document.Rules?.FileExtensionMappings);
         }

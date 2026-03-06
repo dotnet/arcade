@@ -14,5 +14,12 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
         /// Gets the certificate name or identifier.
         /// </summary>
         string Name { get; }
+
+        /// <summary>
+        /// When <c>true</c>, the certificate should be applied to matching files even if
+        /// the file is already signed. Used for dual-signing scenarios (e.g. adding a
+        /// Microsoft signature on top of a third-party signature).
+        /// </summary>
+        bool AlwaysSign { get; }
     }
 }

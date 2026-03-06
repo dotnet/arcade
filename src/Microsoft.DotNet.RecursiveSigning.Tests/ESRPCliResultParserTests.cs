@@ -4,7 +4,7 @@
 #nullable enable
 
 using System;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.DotNet.RecursiveSigning.Implementation;
 using Xunit;
 
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             var result = ESRPCliResultParser.Parse(0, "Some output\nfailDoNotRetry: permanent error\n", "");
 
             result.Success.Should().BeFalse();
-            result.ErrorMessage.Should().Contain("failDoNotRetry");
+            result.ErrorMessage.Should().Contain("signing failure");
         }
 
         [Fact]
@@ -95,6 +95,51 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
 
             result.Success.Should().BeFalse();
             result.ErrorMessage.Should().Contain("detailed error info");
+        }
+
+        [Fact]
+        public void Parse_FailedFilesList_ExtractsFailureDetails()
+        {
+            var stdout = """
+                Calling esrp gateway get status for this operation Id: 9d35507d-7a74-4803-be0c-2a7ad82d88b2
+                1 files failed.
+                      List of failed files:
+                      Failed OperationId: 9d35507d-7a74-4803-be0c-2a7ad82d88b2, Status: FailDoNotRetry,  Component: , FilePath:D:\a\_work\1\s\artifacts\packages\Release\NonShipping\Foo.nupkg, Error: {"code":"NeoSigningServiceFailedError","details":{"error":"unauthorized"}}
+                """;
+
+            var result = ESRPCliResultParser.Parse(0, stdout, "");
+
+            result.Success.Should().BeFalse();
+            result.FailureDetails.Should().HaveCount(1);
+            result.FailureDetails[0].Should().Contain("9d35507d-7a74-4803-be0c-2a7ad82d88b2");
+            result.FailureDetails[0].Should().Contain("FailDoNotRetry");
+            result.FailureDetails[0].Should().Contain("Foo.nupkg");
+        }
+
+        [Fact]
+        public void Parse_MultipleFailedFiles_ExtractsAllDetails()
+        {
+            var stdout = """
+                2 files failed.
+                      List of failed files:
+                      Failed OperationId: 11111111-1111-1111-1111-111111111111, Status: FailDoNotRetry,  Component: , FilePath:a.dll, Error: {"code":"err1"}
+                      Failed OperationId: 22222222-2222-2222-2222-222222222222, Status: FailDoNotRetry,  Component: , FilePath:b.dll, Error: {"code":"err2"}
+                """;
+
+            var result = ESRPCliResultParser.Parse(0, stdout, "");
+
+            result.Success.Should().BeFalse();
+            result.FailureDetails.Should().HaveCount(2);
+            result.FailureDetails[0].Should().Contain("a.dll");
+            result.FailureDetails[1].Should().Contain("b.dll");
+        }
+
+        [Fact]
+        public void Parse_SuccessOutput_HasNoFailureDetails()
+        {
+            var result = ESRPCliResultParser.Parse(0, "Success: All files signed.\n", "");
+
+            result.FailureDetails.Should().BeEmpty();
         }
     }
 }

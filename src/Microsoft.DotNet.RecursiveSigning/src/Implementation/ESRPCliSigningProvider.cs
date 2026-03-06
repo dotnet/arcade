@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -19,10 +20,9 @@ using Microsoft.DotNet.RecursiveSigning.Models;
 namespace Microsoft.DotNet.RecursiveSigning.Implementation
 {
     /// <summary>
-    /// Signing provider that invokes the ESRP CLI tool.
-    /// Builds a single submission JSON containing one <c>SignBatch</c> per distinct certificate
-    /// and makes a single CLI invocation per <see cref="SignFilesAsync"/> call.
-    /// Supports a dry-run mode that logs the submission without invoking the CLI.
+    /// Signing provider that invokes the ESRP CLI tool using regularSigning mode.
+    /// Groups files by certificate and submits all certificate groups in parallel,
+    /// each as a separate CLI invocation.
     /// </summary>
     public sealed class ESRPCliSigningProvider : ISigningProvider
     {
@@ -30,11 +30,13 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
         private readonly IProcessRunner _processRunner;
         private readonly ILogger<ESRPCliSigningProvider> _logger;
 
-        private static readonly JsonSerializerOptions s_jsonOptions = new()
+        private static readonly JsonSerializerOptions s_prettyJsonOptions = new()
         {
             WriteIndented = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         };
+
+        private static readonly JsonSerializerOptions s_compactJsonOptions = new();
 
         public ESRPCliSigningProvider(
             ESRPCliSigningConfiguration configuration,
@@ -55,56 +57,77 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                 return true;
             }
 
-            // Build the submission JSON
-            var submissionJson = BuildSubmissionJson(files);
+            var groups = GroupFilesByCertificate(files);
 
             if (_configuration.DryRun)
             {
-                var templateArgs = BuildArgumentsTemplate("<workDir>");
-                _logger.LogInformation("=== ESRP CLI Dry Run ===");
-                _logger.LogInformation("Submission JSON:\n{Json}", submissionJson);
-                _logger.LogInformation("CLI arguments (template):\n  dotnet {Args}", templateArgs);
-                _logger.LogInformation("Files to sign: {Count}", files.Count);
-                foreach (var (node, outputPath) in files)
-                {
-                    _logger.LogInformation("  {File} => {Cert}",
-                        node.Location.FilePathOnDisk,
-                        node.CertificateIdentifier?.Name ?? "(none)");
-                }
-                _logger.LogInformation("=== End Dry Run ===");
+                LogDryRun(groups);
                 return true;
             }
 
-            // Create a unique working directory
+            _logger.LogInformation("Signing {Count} file(s) across {Groups} certificate group(s)",
+                files.Count, groups.Count);
+
+            // Submit all cert groups in parallel
+            var tasks = groups.Select(g =>
+                SignCertGroupAsync(g.Key, g.Value.cert, g.Value.files, cancellationToken));
+            var results = await Task.WhenAll(tasks);
+
+            if (results.All(r => r))
+            {
+                _logger.LogInformation("ESRP CLI signing succeeded for all {Count} file(s)", files.Count);
+                return true;
+            }
+
+            return false;
+        }
+
+        // ────────────────────────────────────────────────────────────────────────
+        //  Per-cert-group signing
+        // ────────────────────────────────────────────────────────────────────────
+
+        private async Task<bool> SignCertGroupAsync(
+            string certName,
+            ESRPCertificateIdentifier cert,
+            List<(FileNode node, string outputPath)> groupFiles,
+            CancellationToken cancellationToken)
+        {
             var workDir = Path.Combine(_configuration.TempDirectory, Guid.NewGuid().ToString());
             Directory.CreateDirectory(workDir);
 
             try
             {
-                // Write submission JSON
-                var submissionPath = Path.Combine(workDir, "submission.json");
-                File.WriteAllText(submissionPath, submissionJson);
+                var rootDir = ComputeCommonRoot(
+                    groupFiles.Select(f => NormalizePath(f.node.Location.FilePathOnDisk!)));
 
-                // Write pattern file (comma-separated relative paths for all files)
-                var patternPath = Path.Combine(workDir, "pattern.txt");
-                var pattern = BuildPatternFile(files);
-                File.WriteAllText(patternPath, pattern);
+                // Write the operations JSON and pattern file for this cert group
+                var operationsJson = BuildOperationsJson(cert);
+                File.WriteAllText(Path.Combine(workDir, "inlineOperations.json"), operationsJson);
 
-                // Build real arguments with actual work directory
-                var realArguments = BuildArguments(workDir);
+                var patternContent = BuildPatternFileContent(groupFiles, rootDir);
+                File.WriteAllText(Path.Combine(workDir, "pattern.txt"), patternContent);
 
-                _logger.LogDebug("ESRP CLI arguments: dotnet {Args}", RedactAuthArguments(realArguments));
-                _logger.LogInformation("Signing {Count} file(s) via ESRP CLI", files.Count);
+                var arguments = BuildArguments(workDir, rootDir);
 
-                var result = await _processRunner.RunAsync("dotnet", realArguments, cancellationToken);
+                _logger.LogInformation("Signing {Count} file(s) with certificate '{Cert}'",
+                    groupFiles.Count, certName);
+                LogVerbose("ESRP CLI operations JSON:\n{Json}", operationsJson);
+                LogVerbose("ESRP CLI pattern file:\n{Pattern}", patternContent);
+                LogVerbose("ESRP CLI arguments: dotnet {Args}", RedactAuthArguments(arguments));
 
-                _logger.LogDebug("ESRP CLI stdout:\n{Stdout}", result.StandardOutput);
+                var result = await _processRunner.RunAsync("dotnet", arguments, cancellationToken);
+
+                LogVerbose("ESRP CLI stdout:\n{Stdout}", result.StandardOutput);
                 if (!string.IsNullOrWhiteSpace(result.StandardError))
                 {
-                    _logger.LogDebug("ESRP CLI stderr:\n{Stderr}", result.StandardError);
+                    LogVerbose("ESRP CLI stderr:\n{Stderr}", result.StandardError);
                 }
 
-                var parsed = ESRPCliResultParser.Parse(result.ExitCode, result.StandardOutput, result.StandardError);
+                // Always write logs to files for post-mortem diagnostics
+                WriteInvocationLog(certName, result, arguments);
+
+                var parsed = ESRPCliResultParser.Parse(
+                    result.ExitCode, result.StandardOutput, result.StandardError);
 
                 if (parsed.OperationId.HasValue)
                 {
@@ -113,40 +136,45 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
 
                 if (!parsed.Success)
                 {
-                    _logger.LogError("ESRP CLI signing failed: {Error}", parsed.ErrorMessage);
+                    _logger.LogError("ESRP CLI signing failed for '{Cert}': {Error}",
+                        certName, parsed.ErrorMessage);
+
+                    // Surface individual failure details at error level so they appear
+                    // in the build log even in non-verbose mode
+                    foreach (var detail in parsed.FailureDetails)
+                    {
+                        _logger.LogError("  {FailureDetail}", detail);
+                    }
+
                     return false;
                 }
 
-                _logger.LogInformation("ESRP CLI signing succeeded for {Count} file(s)", files.Count);
                 return true;
             }
             finally
             {
-                try
-                {
-                    Directory.Delete(workDir, true);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning("Failed to delete working directory {WorkDir}: {Error}", workDir, ex.Message);
-                }
+                TryDeleteDirectory(workDir);
             }
         }
 
+        // ────────────────────────────────────────────────────────────────────────
+        //  File grouping & operations
+        // ────────────────────────────────────────────────────────────────────────
+
         /// <summary>
-        /// Builds the ESRP submission JSON with one SignBatch per distinct certificate.
-        /// This is an internal method exposed for testing.
+        /// Groups files by their certificate identifier's friendly name.
         /// </summary>
-        internal string BuildSubmissionJson(IReadOnlyList<(FileNode node, string outputPath)> files)
+        internal static Dictionary<string, (ESRPCertificateIdentifier cert, List<(FileNode node, string outputPath)> files)>
+            GroupFilesByCertificate(IReadOnlyList<(FileNode node, string outputPath)> files)
         {
-            // Group files by certificate friendly name
-            var groups = new Dictionary<string, (ESRPCertificateIdentifier cert, List<(FileNode node, string outputPath)> files)>(StringComparer.OrdinalIgnoreCase);
+            var groups = new Dictionary<string, (ESRPCertificateIdentifier cert, List<(FileNode node, string outputPath)> files)>(
+                StringComparer.OrdinalIgnoreCase);
 
             foreach (var entry in files)
             {
                 var certId = entry.node.CertificateIdentifier as ESRPCertificateIdentifier
                     ?? throw new InvalidOperationException(
-                        $"File '{entry.node.Location.FilePathOnDisk}' has a CertificateIdentifier that is not an ESRPCertificateIdentifier.");
+                        $"File '{entry.node.Location.FilePathOnDisk}' does not have an ESRPCertificateIdentifier.");
 
                 if (!groups.TryGetValue(certId.FriendlyName, out var group))
                 {
@@ -157,311 +185,342 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                 group.files.Add(entry);
             }
 
-            // Build SignBatches - each batch uses the common root of its files
-            var signBatches = new List<object>();
-            foreach (var (_, (cert, groupFiles)) in groups)
-            {
-                var batchRootDir = ComputeCommonRoot(groupFiles.Select(f => NormalizePath(f.node.Location.FilePathOnDisk!)));
-
-                var signRequestFiles = new List<object>();
-                foreach (var (node, outputPath) in groupFiles)
-                {
-                    var relativePath = GetRelativePath(node.Location.FilePathOnDisk!, batchRootDir);
-                    signRequestFiles.Add(new
-                    {
-                        CustomerCorrelationId = Guid.NewGuid().ToString(),
-                        SourceLocation = relativePath,
-                        DestinationLocation = relativePath,
-                    });
-                }
-
-                signBatches.Add(new SignBatchEntry
-                {
-                    SourceLocationType = "UNC",
-                    SourceRootDirectory = batchRootDir,
-                    DestinationLocationType = "UNC",
-                    DestinationRootDirectory = batchRootDir,
-                    SignRequestFiles = signRequestFiles.ToArray(),
-                    SigningInfo = new SigningInfoEntry
-                    {
-                        Operations = ExtractOperations(cert.CertificateDefinition),
-                    },
-                });
-            }
-
-            var submission = new SubmissionEntry
-            {
-                Version = "1.0.0",
-                SignBatches = signBatches.ToArray(),
-            };
-
-            return JsonSerializer.Serialize(submission, s_jsonOptions);
-        }
-
-        internal string BuildPatternFile(IReadOnlyList<(FileNode node, string outputPath)> files)
-        {
-            var allPaths = files.Select(f => NormalizePath(f.node.Location.FilePathOnDisk!));
-            var commonRoot = ComputeCommonRoot(allPaths);
-            var sb = new StringBuilder();
-            for (int i = 0; i < files.Count; i++)
-            {
-                if (i > 0)
-                {
-                    sb.Append(',');
-                }
-                sb.Append(GetRelativePath(files[i].node.Location.FilePathOnDisk!, commonRoot));
-            }
-            return sb.ToString();
+            return groups;
         }
 
         /// <summary>
-        /// Builds a display-only template of CLI arguments for dry-run output.
-        /// Does not write any files or perform encryption.
+        /// Builds the inline operations JSON for a certificate, written to
+        /// inlineOperations.json and passed via the <c>-j</c> flag.
         /// </summary>
-        private string BuildArgumentsTemplate(string workDir)
+        internal string BuildOperationsJson(ESRPCertificateIdentifier cert)
         {
-            var keyVaultJson = JsonSerializer.Serialize(new { akv = _configuration.KeyVaultName, cert = _configuration.CertificateName });
-
-            var sb = new StringBuilder();
-            sb.Append($"--roll-forward Major {_configuration.ESRPCliPath} vsts.sign");
-            sb.Append(" -x regularSigning");
-            sb.Append(" -y \"inlineSignParams\"");
-            sb.Append($" -c {_configuration.BatchSize}");
-            sb.Append($" -j \"{Path.Combine(workDir, "submission.json")}\"");
-            sb.Append(" -u false");
-            sb.Append($" -f \"{_configuration.RootDirectory}\"");
-            sb.Append($" -p \"{Path.Combine(workDir, "pattern.txt")}\"");
-            sb.Append($" -m {_configuration.BatchSize}");
-            sb.Append($" -t {_configuration.TimeoutInMinutes}");
-            sb.Append(" -v \"Tls12\"");
-            sb.Append($" -s \"{_configuration.GatewayUrl}\"");
-            sb.Append($" -o \"{_configuration.Organization}\"");
-            sb.Append($" -i \"{_configuration.OrganizationInfoUrl}\"");
-            sb.Append(" -r true");
-            sb.Append($" -a {_configuration.ClientId}");
-            sb.Append($" -d {_configuration.TenantId}");
-            sb.Append($" -z {JsonSerializer.Serialize(keyVaultJson)}");
-
-            if (_configuration.AuthMode == ESRPAuthMode.FederatedToken)
-            {
-                sb.Append(" -useMSIAuthentication true");
-                sb.Append(" -federatedTokenData [REDACTED]");
-            }
-            else
-            {
-                sb.Append(" -useMSIAuthentication false");
-                sb.Append(" -encryptedCertificateData [REDACTED]");
-            }
-
-            return sb.ToString();
-        }
-
-        internal string BuildArguments(string workDir)
-        {
-            var keyVaultJson = JsonSerializer.Serialize(new { akv = _configuration.KeyVaultName, cert = _configuration.CertificateName });
-
-            var sb = new StringBuilder();
-            sb.Append($"--roll-forward Major {_configuration.ESRPCliPath} vsts.sign");
-            sb.Append(" -x regularSigning");
-            sb.Append(" -y \"inlineSignParams\"");
-            sb.Append($" -c {_configuration.BatchSize}");
-            sb.Append($" -j \"{Path.Combine(workDir, "submission.json")}\"");
-            sb.Append(" -u false");
-            sb.Append($" -f \"{_configuration.RootDirectory}\"");
-            sb.Append($" -p \"{Path.Combine(workDir, "pattern.txt")}\"");
-            sb.Append($" -m {_configuration.BatchSize}");
-            sb.Append($" -t {_configuration.TimeoutInMinutes}");
-            sb.Append(" -v \"Tls12\"");
-            sb.Append($" -s \"{_configuration.GatewayUrl}\"");
-            sb.Append($" -o \"{_configuration.Organization}\"");
-            sb.Append($" -i \"{_configuration.OrganizationInfoUrl}\"");
-            sb.Append(" -r true");
-            sb.Append($" -a {_configuration.ClientId}");
-            sb.Append($" -d {_configuration.TenantId}");
-            sb.Append($" -z {JsonSerializer.Serialize(keyVaultJson)}");
-
-            // Authentication
-            if (_configuration.AuthMode == ESRPAuthMode.FederatedToken)
-            {
-                sb.Append(" -useMSIAuthentication true");
-                var federatedTokenData = BuildFederatedTokenData();
-                sb.Append($" -federatedTokenData {JsonSerializer.Serialize(federatedTokenData)}");
-            }
-            else
-            {
-                sb.Append(" -useMSIAuthentication false");
-                var encryptedCertData = JsonSerializer.Serialize(new
-                {
-                    authCert = _configuration.EncryptedAuthCertPath,
-                    encryptionKey = _configuration.EncryptionKeyPath
-                });
-                sb.Append($" -encryptedCertificateData {JsonSerializer.Serialize(encryptedCertData)}");
-            }
-
-            return sb.ToString();
+            var operations = ExtractOperations(cert.CertificateDefinition);
+            return JsonSerializer.Serialize(operations, s_prettyJsonOptions);
         }
 
         /// <summary>
-        /// Builds the federated token data JSON for PME auth.
-        /// The systemAccessToken field is the name of an environment variable
-        /// containing the ADO system access token. The ESRP CLI reads the token
-        /// from this env var at runtime.
+        /// Builds a comma-separated pattern file of relative paths.
         /// </summary>
-        private string BuildFederatedTokenData()
+        internal static string BuildPatternFileContent(
+            IReadOnlyList<(FileNode node, string outputPath)> files,
+            string rootDir)
         {
-            var tokenEnvVar = _configuration.SystemAccessTokenEnvVar;
-
-            if (string.IsNullOrEmpty(tokenEnvVar))
-            {
-                throw new InvalidOperationException(
-                    "SystemAccessTokenEnvVar must be set for FederatedToken auth mode. " +
-                    "Set it to the name of the environment variable containing the ADO system access token (e.g. 'SYSTEM_ACCESSTOKEN').");
-            }
-
-            var json = new
-            {
-                jobId = Environment.GetEnvironmentVariable("SYSTEM_JOBID") ?? "",
-                planId = Environment.GetEnvironmentVariable("SYSTEM_PLANID") ?? "",
-                projectId = Environment.GetEnvironmentVariable("SYSTEM_TEAMPROJECTID") ?? "",
-                hub = Environment.GetEnvironmentVariable("SYSTEM_HOSTTYPE") ?? "",
-                uri = Environment.GetEnvironmentVariable("SYSTEM_COLLECTIONURI")
-                    ?? Environment.GetEnvironmentVariable("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI") ?? "",
-                serviceConnectionId = _configuration.ServiceConnectionId,
-                systemAccessToken = tokenEnvVar,
-            };
-
-            return JsonSerializer.Serialize(json);
-        }
-
-        internal static string ComputeCommonRoot(IEnumerable<string> normalizedPaths)
-        {
-            string? common = null;
-            foreach (var path in normalizedPaths)
-            {
-                var dir = path.Substring(0, path.LastIndexOf('/'));
-                if (common == null)
-                {
-                    common = dir;
-                }
-                else
-                {
-                    while (!dir.StartsWith(common + "/", StringComparison.OrdinalIgnoreCase) &&
-                           !dir.Equals(common, StringComparison.OrdinalIgnoreCase))
-                    {
-                        var lastSlash = common.LastIndexOf('/');
-                        common = lastSlash >= 0 ? common.Substring(0, lastSlash) : common;
-                        if (common.Length <= 1)
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return common ?? string.Empty;
+            return string.Join(',',
+                files.Select(f => GetRelativePath(f.node.Location.FilePathOnDisk!, rootDir)));
         }
 
         /// <summary>
-        /// Extracts the "operations" array from a CertificateDefinition JsonElement.
-        /// The CertificateDefinition is the full cert entry: {"friendlyName":"...", "operations":[...]}.
-        /// We need just the operations array for the ESRP submission.
+        /// Extracts the operations array from a CertificateDefinition.
+        /// Accepts either a bare JSON array or an object with an <c>operations</c> property.
         /// </summary>
-        private static JsonElement ExtractOperations(JsonElement certificateDefinition)
+        internal static JsonElement ExtractOperations(JsonElement certificateDefinition)
         {
             if (certificateDefinition.ValueKind == JsonValueKind.Array)
             {
-                // Already an array of operations
                 return certificateDefinition;
             }
 
             if (certificateDefinition.ValueKind == JsonValueKind.Object &&
-                certificateDefinition.TryGetProperty("operations", out var operations))
+                certificateDefinition.TryGetProperty("operations", out var ops))
             {
-                return operations.Clone();
+                return ops;
             }
 
             throw new InvalidOperationException(
                 "CertificateDefinition must be either an operations array or an object with an 'operations' property.");
         }
 
+        // ────────────────────────────────────────────────────────────────────────
+        //  CLI argument construction
+        // ────────────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Builds CLI arguments for the ESRP CLI regularSigning mode.
+        /// </summary>
+        internal string BuildArguments(string workDir, string rootDir)
+        {
+            var sb = new StringBuilder();
+
+            // Core signing flags
+            sb.Append($"--roll-forward Major {_configuration.ESRPCliPath} vsts.sign");
+            sb.Append(" -x regularSigning");
+            sb.Append(" -y \"inlineSignParams\"");
+            sb.Append(" -c 400");
+            sb.Append($" -j \"{Path.Combine(workDir, "inlineOperations.json")}\"");
+            sb.Append(" -u false");
+            sb.Append($" -f \"{rootDir}\"");
+            sb.Append($" -p \"{Path.Combine(workDir, "pattern.txt")}\"");
+            sb.Append($" -m {_configuration.BatchSize}");
+            sb.Append($" -t {_configuration.TimeoutInMinutes}");
+            sb.Append(" -v \"Tls12\"");
+
+            // Service endpoint
+            sb.Append($" -s \"{_configuration.GatewayUrl}\"");
+            sb.Append($" -o \"{_configuration.Organization}\"");
+            sb.Append($" -i \"{_configuration.OrganizationInfoUrl}\"");
+            sb.Append(" -r true");
+            sb.Append(" -skipAdoReportAttachment false");
+            sb.Append(" -pendingAnalysisWaitTimeoutMinutes 5");
+            sb.Append($" -resourceUri {_configuration.ResourceUri}");
+
+            // Identity
+            sb.Append($" -esrpClientId {_configuration.EsrpClientId}");
+            sb.Append($" -a {_configuration.ClientId}");
+            sb.Append($" -d {_configuration.TenantId}");
+            sb.Append($" -z {SerializeJsonArg(new { akv = _configuration.KeyVaultName, cert = _configuration.CertificateName })}");
+
+            // Authentication
+            AppendAuthArguments(sb);
+
+            return sb.ToString();
+        }
+
+        private void AppendAuthArguments(StringBuilder sb)
+        {
+            if (_configuration.AuthMode == ESRPAuthMode.FederatedToken)
+            {
+                sb.Append(" -useMSIAuthentication true");
+                var tokenData = BuildFederatedTokenData();
+                sb.Append($" -federatedTokenData {SerializeJsonArg(tokenData)}");
+            }
+            else
+            {
+                sb.Append(" -useMSIAuthentication false");
+                sb.Append($" -encryptedCertificateData {SerializeJsonArg(new { authCert = _configuration.EncryptedAuthCertPath, encryptionKey = _configuration.EncryptionKeyPath })}");
+            }
+        }
+
+        // ────────────────────────────────────────────────────────────────────────
+        //  Authentication
+        // ────────────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Builds the federated token data for ESRP federated auth. Encrypts the system access
+        /// token with AES and writes the key/IV and ciphertext to temp files,
+        /// matching the Sign repo's ESRPCliDll approach.
+        /// </summary>
+        private object BuildFederatedTokenData()
+        {
+            var accessToken = Environment.GetEnvironmentVariable(_configuration.SystemAccessTokenEnvVar);
+            if (string.IsNullOrEmpty(accessToken))
+            {
+                throw new InvalidOperationException(
+                    $"Environment variable '{_configuration.SystemAccessTokenEnvVar}' is not set. " +
+                    "Required for FederatedToken auth mode.");
+            }
+
+            var (encryptionKeyPath, encryptedTokenPath) = EncryptAccessToken(accessToken.Trim());
+
+            return new
+            {
+                jobId = GetEnv("SYSTEM_JOBID"),
+                planId = GetEnv("SYSTEM_PLANID"),
+                projectId = GetEnv("SYSTEM_TEAMPROJECTID"),
+                hub = GetEnv("SYSTEM_HOSTTYPE"),
+                uri = Environment.GetEnvironmentVariable("SYSTEM_COLLECTIONURI")
+                    ?? GetEnv("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI"),
+                managedIdentityId = _configuration.ClientId,
+                managedIdentityTenantId = _configuration.TenantId,
+                serviceConnectionId = _configuration.ServiceConnectionId,
+                tempDirectory = Environment.GetEnvironmentVariable("AGENT_TEMPDIRECTORY")
+                    ?? _configuration.TempDirectory,
+                encryptionKey = encryptionKeyPath,
+                systemAccessToken = encryptedTokenPath,
+            };
+
+            static string GetEnv(string name) =>
+                Environment.GetEnvironmentVariable(name) ?? "";
+        }
+
+        /// <summary>
+        /// AES-CBC encrypts the access token and writes the key/IV and ciphertext to disk.
+        /// Returns the paths to the key file and encrypted token file.
+        /// </summary>
+        private (string keyPath, string tokenPath) EncryptAccessToken(string accessToken)
+        {
+            var tempDir = _configuration.TempDirectory;
+            Directory.CreateDirectory(tempDir);
+            var keyPath = Path.Combine(tempDir, "esrp-encryption-key.json");
+            var tokenPath = Path.Combine(tempDir, "esrp-encrypted-token.txt");
+
+            using var aes = Aes.Create();
+            aes.Mode = CipherMode.CBC;
+            aes.Padding = PaddingMode.PKCS7;
+            aes.GenerateKey();
+            aes.GenerateIV();
+
+            File.WriteAllText(keyPath, JsonSerializer.Serialize(
+                new
+                {
+                    key = ToHex(aes.Key),
+                    iv = ToHex(aes.IV),
+                },
+                s_compactJsonOptions));
+
+            using var encryptor = aes.CreateEncryptor(aes.Key, aes.IV);
+            var plaintext = Encoding.UTF8.GetBytes(accessToken);
+            var ciphertext = encryptor.TransformFinalBlock(plaintext, 0, plaintext.Length);
+            File.WriteAllText(tokenPath, ToHex(ciphertext));
+
+            return (keyPath, tokenPath);
+
+            static string ToHex(byte[] bytes) =>
+                BitConverter.ToString(bytes).Replace("-", "").ToLowerInvariant();
+        }
+
+        // ────────────────────────────────────────────────────────────────────────
+        //  Path utilities
+        // ────────────────────────────────────────────────────────────────────────
+
+        internal static string ComputeCommonRoot(IEnumerable<string> normalizedPaths)
+        {
+            string? common = null;
+            foreach (var path in normalizedPaths)
+            {
+                var dir = path[..path.LastIndexOf('/')];
+                if (common == null)
+                {
+                    common = dir;
+                    continue;
+                }
+
+                while (!dir.StartsWith(common + "/", StringComparison.OrdinalIgnoreCase) &&
+                       !dir.Equals(common, StringComparison.OrdinalIgnoreCase))
+                {
+                    var lastSlash = common.LastIndexOf('/');
+                    common = lastSlash >= 0 ? common[..lastSlash] : common;
+                    if (common.Length <= 1) break;
+                }
+            }
+
+            return common ?? string.Empty;
+        }
+
         private static string GetRelativePath(string filePath, string rootDir)
         {
-            var normalizedFile = NormalizePath(filePath);
-            if (!normalizedFile.StartsWith(rootDir, StringComparison.OrdinalIgnoreCase))
+            var normalized = NormalizePath(filePath);
+            if (!normalized.StartsWith(rootDir, StringComparison.OrdinalIgnoreCase))
             {
                 throw new InvalidOperationException(
                     $"File path '{filePath}' is not under root directory '{rootDir}'.");
             }
 
-            var relative = normalizedFile.Substring(rootDir.Length);
-            if (relative.StartsWith("/") || relative.StartsWith("\\"))
-            {
-                relative = relative.Substring(1);
-            }
-
-            return relative;
+            return normalized[(rootDir.Length + 1)..]; // skip the trailing '/'
         }
 
-        private static string NormalizePath(string path)
+        internal static string NormalizePath(string path) =>
+            Path.GetFullPath(path).Replace('\\', '/').TrimEnd('/');
+
+        // ────────────────────────────────────────────────────────────────────────
+        //  JSON / logging helpers
+        // ────────────────────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Serializes an object to a JSON string wrapped in outer quotes with escaped
+        /// inner quotes, suitable for passing as a CLI argument on Windows.
+        /// Matches Newtonsoft's <c>JsonConvert.ToString(JsonConvert.SerializeObject(obj))</c>.
+        /// </summary>
+        private static string SerializeJsonArg(object value)
         {
-            return Path.GetFullPath(path).Replace('\\', '/').TrimEnd('/');
+            var json = JsonSerializer.Serialize(value, s_compactJsonOptions);
+            return "\"" + json.Replace("\"", "\\\"") + "\"";
         }
 
         private static string RedactAuthArguments(string arguments)
         {
-            // Redact auth-sensitive portions
             var redacted = arguments;
             foreach (var flag in new[] { "-federatedTokenData", "-encryptedCertificateData" })
             {
                 var idx = redacted.IndexOf(flag, StringComparison.OrdinalIgnoreCase);
-                if (idx >= 0)
-                {
-                    var endIdx = redacted.IndexOf(" -", idx + flag.Length);
-                    if (endIdx < 0)
-                    {
-                        endIdx = redacted.Length;
-                    }
-                    redacted = redacted.Substring(0, idx + flag.Length) + " [REDACTED]" + redacted.Substring(endIdx);
-                }
+                if (idx < 0) continue;
+                var endIdx = redacted.IndexOf(" -", idx + flag.Length);
+                if (endIdx < 0) endIdx = redacted.Length;
+                redacted = redacted[..(idx + flag.Length)] + " [REDACTED]" + redacted[endIdx..];
             }
             return redacted;
         }
 
-        // Internal DTOs for JSON serialization of the submission
-        internal sealed class SubmissionEntry
+        /// <summary>
+        /// Logs at Information level when verbose logging is enabled, Debug otherwise.
+        /// </summary>
+        private void LogVerbose(string message, params object[] args)
         {
-            [JsonPropertyName("Version")]
-            public string Version { get; set; } = "1.0.0";
-
-            [JsonPropertyName("SignBatches")]
-            public object[] SignBatches { get; set; } = Array.Empty<object>();
+            if (_configuration.VerboseLogging)
+            {
+                _logger.LogInformation(message, args);
+            }
+            else
+            {
+                _logger.LogDebug(message, args);
+            }
         }
 
-        internal sealed class SignBatchEntry
+        /// <summary>
+        /// Writes stdout, stderr, and redacted arguments for one ESRP CLI invocation
+        /// to a log file. Files are always written (even in non-verbose mode) so that
+        /// build operators can inspect signing details after the fact.
+        /// </summary>
+        private void WriteInvocationLog(string certName, ProcessResult result, string arguments)
         {
-            [JsonPropertyName("SourceLocationType")]
-            public string SourceLocationType { get; set; } = "UNC";
+            var logDir = _configuration.LogDirectory;
+            if (string.IsNullOrWhiteSpace(logDir))
+            {
+                return;
+            }
 
-            [JsonPropertyName("SourceRootDirectory")]
-            public string SourceRootDirectory { get; set; } = string.Empty;
+            try
+            {
+                Directory.CreateDirectory(logDir);
+                var safeCertName = string.Join("_", certName.Split(Path.GetInvalidFileNameChars()));
+                var timestamp = DateTime.UtcNow.ToString("yyyyMMdd-HHmmss");
+                var logFile = Path.Combine(logDir, $"esrp-{safeCertName}-{timestamp}.log");
 
-            [JsonPropertyName("DestinationLocationType")]
-            public string DestinationLocationType { get; set; } = "UNC";
+                var sb = new StringBuilder();
+                sb.AppendLine($"=== ESRP CLI Invocation: {certName} ===");
+                sb.AppendLine($"Timestamp (UTC): {DateTime.UtcNow:O}");
+                sb.AppendLine($"Exit code: {result.ExitCode}");
+                sb.AppendLine($"Arguments (redacted): dotnet {RedactAuthArguments(arguments)}");
+                sb.AppendLine();
+                sb.AppendLine("=== stdout ===");
+                sb.AppendLine(result.StandardOutput);
+                if (!string.IsNullOrWhiteSpace(result.StandardError))
+                {
+                    sb.AppendLine("=== stderr ===");
+                    sb.AppendLine(result.StandardError);
+                }
 
-            [JsonPropertyName("DestinationRootDirectory")]
-            public string DestinationRootDirectory { get; set; } = string.Empty;
-
-            [JsonPropertyName("SignRequestFiles")]
-            public object[] SignRequestFiles { get; set; } = Array.Empty<object>();
-
-            [JsonPropertyName("SigningInfo")]
-            public SigningInfoEntry SigningInfo { get; set; } = new();
+                File.WriteAllText(logFile, sb.ToString());
+                _logger.LogInformation("ESRP CLI log written to: {LogFile}", logFile);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Failed to write ESRP invocation log for '{Cert}': {Error}", certName, ex.Message);
+            }
         }
 
-        internal sealed class SigningInfoEntry
+        private void LogDryRun(
+            Dictionary<string, (ESRPCertificateIdentifier cert, List<(FileNode node, string outputPath)> files)> groups)
         {
-            [JsonPropertyName("Operations")]
-            public JsonElement Operations { get; set; }
+            _logger.LogInformation("=== ESRP CLI Dry Run ({Count} certificate group(s)) ===", groups.Count);
+            foreach (var (certName, (cert, groupFiles)) in groups)
+            {
+                _logger.LogInformation("  Certificate '{Cert}': {Count} file(s)", certName, groupFiles.Count);
+                _logger.LogInformation("  Operations:\n{Ops}", BuildOperationsJson(cert));
+                foreach (var (node, _) in groupFiles)
+                {
+                    _logger.LogInformation("    {File}", node.Location.FilePathOnDisk);
+                }
+            }
+            _logger.LogInformation("=== End Dry Run ===");
+        }
+
+        private void TryDeleteDirectory(string path)
+        {
+            try { Directory.Delete(path, true); }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Failed to delete working directory {Path}: {Error}", path, ex.Message);
+            }
         }
     }
 }

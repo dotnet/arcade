@@ -54,11 +54,17 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                 return FileNodeState.PendingRepack;
             }
 
-            // Otherwise, all children are complete or there are no children,
+            // Otherwise, all children are complete or there are no children.
             if (node.CertificateIdentifier != null)
             {
-                // Signable container with all children complete, but already signed.
-                return node.Metadata.IsAlreadySigned ? FileNodeState.Skipped : FileNodeState.ReadyToSign;
+                // Skip already-signed files unless the certificate has alwaysSign=true
+                // (dual-signing scenario: add our signature on top of an existing one).
+                if (node.Metadata.IsAlreadySigned && !node.CertificateIdentifier.AlwaysSign)
+                {
+                    return FileNodeState.Skipped;
+                }
+
+                return FileNodeState.ReadyToSign;
             }
             else
             {

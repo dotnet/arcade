@@ -18,11 +18,13 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
         public string Name => FriendlyName;
         public string FriendlyName { get; }
         public JsonElement CertificateDefinition { get; }
+        public bool AlwaysSign { get; }
 
-        public ESRPCertificateIdentifier(string friendlyName, JsonElement certificateDefinition)
+        public ESRPCertificateIdentifier(string friendlyName, JsonElement certificateDefinition, bool alwaysSign = false)
         {
             FriendlyName = friendlyName ?? throw new ArgumentNullException(nameof(friendlyName));
             CertificateDefinition = certificateDefinition.Clone();
+            AlwaysSign = alwaysSign;
         }
     }
 }

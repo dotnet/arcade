@@ -4,6 +4,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 
 namespace Microsoft.DotNet.RecursiveSigning.Implementation
 {
@@ -16,11 +17,20 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
         public Guid? OperationId { get; }
         public string? ErrorMessage { get; }
 
-        public ESRPCliResult(bool success, Guid? operationId, string? errorMessage)
+        /// <summary>
+        /// Individual failure details extracted from the ESRP CLI output.
+        /// Each entry describes one failed file/operation, including the OperationId,
+        /// status, file path, and raw error JSON.
+        /// </summary>
+        public IReadOnlyList<string> FailureDetails { get; }
+
+        public ESRPCliResult(bool success, Guid? operationId, string? errorMessage,
+            IReadOnlyList<string>? failureDetails = null)
         {
             Success = success;
             OperationId = operationId;
             ErrorMessage = errorMessage;
+            FailureDetails = failureDetails ?? Array.Empty<string>();
         }
     }
 
@@ -30,15 +40,19 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
     internal static class ESRPCliResultParser
     {
         private const string OperationIdPrefix = "Calling esrp gateway get status for this operation Id: ";
+        private const string FailedFilesHeader = "List of failed files:";
 
         public static ESRPCliResult Parse(int exitCode, string stdout, string stderr)
         {
             Guid? operationId = null;
             bool foundSuccess = false;
             bool foundFailure = false;
+            var failureDetails = new List<string>();
 
             if (!string.IsNullOrEmpty(stdout))
             {
+                bool inFailedFilesSection = false;
+
                 foreach (var line in stdout.Split('\n'))
                 {
                     var trimmed = line.Trim();
@@ -53,6 +67,28 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                     }
 
                     if (trimmed.IndexOf("failDoNotRetry", StringComparison.OrdinalIgnoreCase) >= 0)
+                    {
+                        foundFailure = true;
+                    }
+
+                    // Detect the "List of failed files:" section header
+                    if (trimmed.Equals(FailedFilesHeader, StringComparison.OrdinalIgnoreCase))
+                    {
+                        inFailedFilesSection = true;
+                        continue;
+                    }
+
+                    // Collect "Failed OperationId: ..." lines as failure details
+                    if (inFailedFilesSection &&
+                        trimmed.StartsWith("Failed OperationId:", StringComparison.OrdinalIgnoreCase))
+                    {
+                        failureDetails.Add(trimmed);
+                        foundFailure = true;
+                    }
+
+                    // Also detect "N files failed." lines
+                    if (trimmed.EndsWith("files failed.", StringComparison.OrdinalIgnoreCase) ||
+                        trimmed.EndsWith("file failed.", StringComparison.OrdinalIgnoreCase))
                     {
                         foundFailure = true;
                     }
@@ -80,12 +116,12 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                 {
                     message += $" stderr: {stderr.Trim()}";
                 }
-                return new ESRPCliResult(false, operationId, message);
+                return new ESRPCliResult(false, operationId, message, failureDetails);
             }
 
             if (foundFailure)
             {
-                return new ESRPCliResult(false, operationId, "ESRP CLI reported failDoNotRetry.");
+                return new ESRPCliResult(false, operationId, "ESRP CLI reported signing failure(s).", failureDetails);
             }
 
             if (foundSuccess)

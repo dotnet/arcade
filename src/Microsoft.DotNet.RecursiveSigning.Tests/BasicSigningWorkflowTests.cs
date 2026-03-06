@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.Arcade.Common;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.Extensions.DependencyInjection;
@@ -28,10 +28,12 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
     internal class SimpleCertificateIdentifier : ICertificateIdentifier
     {
         public string Name { get; }
+        public bool AlwaysSign { get; }
 
-        public SimpleCertificateIdentifier(string name)
+        public SimpleCertificateIdentifier(string name, bool alwaysSign = false)
         {
             Name = name;
+            AlwaysSign = alwaysSign;
         }
     }
 

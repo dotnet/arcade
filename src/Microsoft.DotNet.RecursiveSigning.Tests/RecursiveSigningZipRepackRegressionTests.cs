@@ -10,7 +10,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.DotNet.RecursiveSigning.Abstractions;
 using Microsoft.DotNet.RecursiveSigning.Configuration;
 using Microsoft.DotNet.RecursiveSigning.Implementation;
@@ -212,6 +212,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
                 {
                     ["TestCert"] = JsonDocument.Parse("""{"friendlyName":"TestCert"}""").RootElement.Clone()
                 },
+                alwaysSignByFriendlyName: null,
                 fileNameMappings: new Dictionary<string, string>(),
                 fileExtensionMappings: new Dictionary<string, string>
                 {

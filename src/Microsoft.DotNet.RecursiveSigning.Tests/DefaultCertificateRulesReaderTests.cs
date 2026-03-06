@@ -4,7 +4,7 @@
 #nullable enable
 
 using System;
-using FluentAssertions;
+using AwesomeAssertions;
 using Microsoft.DotNet.RecursiveSigning.Implementation;
 using Xunit;
 
@@ -162,6 +162,58 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             rules.FileNameMappings["special.dll"].Should().Be("DemoCertA");
             rules.FileExtensionMappings[".dll"].Should().Be("DemoCertB");
             rules.CertificatesByFriendlyName["DemoCertA"].GetProperty("operations").GetArrayLength().Should().Be(1);
+        }
+
+        [Fact]
+        public void ReadFromJson_ParsesAlwaysSign()
+        {
+            var json = """
+{
+  "certificates": [
+    {
+      "friendlyName": "NormalCert",
+      "operations": []
+    },
+    {
+      "friendlyName": "DualCert",
+      "alwaysSign": true,
+      "operations": []
+    }
+  ],
+  "rules": {
+    "fileExtensionMappings": {
+      ".dll": "NormalCert",
+      ".exe": "DualCert"
+    }
+  }
+}
+""";
+
+            var reader = new DefaultCertificateRulesReader();
+            var rules = reader.ReadFromJson(json);
+
+            rules.GetAlwaysSign("NormalCert").Should().BeFalse();
+            rules.GetAlwaysSign("DualCert").Should().BeTrue();
+        }
+
+        [Fact]
+        public void ReadFromJson_AlwaysSignMissing_DefaultsFalse()
+        {
+            var json = """
+{
+  "certificates": [
+    {
+      "friendlyName": "BasicCert",
+      "operations": []
+    }
+  ]
+}
+""";
+
+            var reader = new DefaultCertificateRulesReader();
+            var rules = reader.ReadFromJson(json);
+
+            rules.GetAlwaysSign("BasicCert").Should().BeFalse();
         }
     }
 }
