@@ -1,4 +1,5 @@
 {
+  "$schema": "../Microsoft.DotNet.RecursiveSigning/docs/signing-config-schema.json",
   "certificates": [
     {
       "friendlyName": "DemoCertA",

@@ -12,12 +12,17 @@ This document defines the default certificate calculator architecture with expli
 - `ESRPCertificateIdentifier`: concrete `ICertificateIdentifier` carrying friendly name + raw certificate JSON definition.
 
 ## JSON format
+
+The signing config file format is formally defined by the JSON schema at
+[`signing-config-schema.json`](signing-config-schema.json).
+
 Top-level object:
 - `certificates`: array of certificate definitions.
 - `rules`: file-name and extension rule maps.
 
 Certificate shape:
-- `friendlyName`: string
+- `friendlyName`: string — unique name referenced by the rules section (case-insensitive).
+- `alwaysSign`: boolean (optional, default `false`) — when `true`, files are signed even if already signed (dual-signing).
 - `operations`: array of ESRP-like operations:
   - `keyCode`
   - `operationSetCode`
@@ -27,7 +32,7 @@ Certificate shape:
 
 Rule shape:
 - `fileNameMappings`: map of exact file name to certificate friendly name.
-- `fileExtensionMappings`: map of extension to certificate friendly name.
+- `fileExtensionMappings`: map of extension (with leading dot) to certificate friendly name.
 
 ## Resolution order
 1. Exact file-name mapping.
