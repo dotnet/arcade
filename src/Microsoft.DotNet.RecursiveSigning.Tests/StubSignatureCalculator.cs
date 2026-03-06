@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
         private sealed class TestCertificateIdentifier : ICertificateIdentifier
         {
             public string Name { get; }
-            public bool SignRegardless => false;
+            public bool AlwaysSign => false;
 
             public TestCertificateIdentifier(string name)
             {

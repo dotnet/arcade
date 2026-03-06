@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
                     ["DemoCertA"] = JsonDocument.Parse("""{"friendlyName":"DemoCertA"}""").RootElement.Clone(),
                     ["DemoCertB"] = JsonDocument.Parse("""{"friendlyName":"DemoCertB"}""").RootElement.Clone(),
                 },
-                signRegardlessByFriendlyName: null,
+                alwaysSignByFriendlyName: null,
                 fileNameMappings: new Dictionary<string, string>
                 {
                     ["special.dll"] = "DemoCertA"
@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
                 {
                     ["DemoCertC"] = JsonDocument.Parse("""{"friendlyName":"DemoCertC"}""").RootElement.Clone()
                 },
-                signRegardlessByFriendlyName: null,
+                alwaysSignByFriendlyName: null,
                 fileNameMappings: new Dictionary<string, string>(),
                 fileExtensionMappings: new Dictionary<string, string>
                 {
@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
                 {
                     ["DemoCertB"] = JsonDocument.Parse("""{"friendlyName":"DemoCertB"}""").RootElement.Clone()
                 },
-                signRegardlessByFriendlyName: null,
+                alwaysSignByFriendlyName: null,
                 fileNameMappings: new Dictionary<string, string>(),
                 fileExtensionMappings: new Dictionary<string, string>
                 {
@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
         {
             var rules = new DefaultCertificateRules(
                 certificatesByFriendlyName: new Dictionary<string, JsonElement>(),
-                signRegardlessByFriendlyName: null,
+                alwaysSignByFriendlyName: null,
                 fileNameMappings: new Dictionary<string, string>
                 {
                     ["special.dll"] = "MissingCert"
@@ -107,14 +107,14 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
         }
 
         [Fact]
-        public void CalculateCertificateIdentifier_SignRegardless_PropagatedToIdentifier()
+        public void CalculateCertificateIdentifier_AlwaysSign_PropagatedToIdentifier()
         {
             var rules = new DefaultCertificateRules(
                 certificatesByFriendlyName: new Dictionary<string, JsonElement>
                 {
                     ["DualCert"] = JsonDocument.Parse("""{"friendlyName":"DualCert"}""").RootElement.Clone()
                 },
-                signRegardlessByFriendlyName: new Dictionary<string, bool>
+                alwaysSignByFriendlyName: new Dictionary<string, bool>
                 {
                     ["DualCert"] = true,
                 },
@@ -129,18 +129,18 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             var cert = calculator.CalculateCertificateIdentifier(new FileMetadata("lib.dll"), configuration);
 
             cert.Should().NotBeNull();
-            cert!.SignRegardless.Should().BeTrue();
+            cert!.AlwaysSign.Should().BeTrue();
         }
 
         [Fact]
-        public void CalculateCertificateIdentifier_NoSignRegardless_DefaultsFalse()
+        public void CalculateCertificateIdentifier_NoAlwaysSign_DefaultsFalse()
         {
             var rules = new DefaultCertificateRules(
                 certificatesByFriendlyName: new Dictionary<string, JsonElement>
                 {
                     ["NormalCert"] = JsonDocument.Parse("""{"friendlyName":"NormalCert"}""").RootElement.Clone()
                 },
-                signRegardlessByFriendlyName: null,
+                alwaysSignByFriendlyName: null,
                 fileNameMappings: new Dictionary<string, string>(),
                 fileExtensionMappings: new Dictionary<string, string>
                 {
@@ -152,7 +152,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             var cert = calculator.CalculateCertificateIdentifier(new FileMetadata("lib.dll"), configuration);
 
             cert.Should().NotBeNull();
-            cert!.SignRegardless.Should().BeFalse();
+            cert!.AlwaysSign.Should().BeFalse();
         }
     }
 }

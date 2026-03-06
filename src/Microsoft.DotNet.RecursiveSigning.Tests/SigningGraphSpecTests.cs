@@ -43,12 +43,12 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
 
         private static ICertificateIdentifier Signable(string certificateName = "A")
         {
-            return Mock.Of<ICertificateIdentifier>(c => c.Name == certificateName && c.SignRegardless == false);
+            return Mock.Of<ICertificateIdentifier>(c => c.Name == certificateName && c.AlwaysSign == false);
         }
 
         private static ICertificateIdentifier SignableRegardless(string certificateName = "A")
         {
-            return Mock.Of<ICertificateIdentifier>(c => c.Name == certificateName && c.SignRegardless == true);
+            return Mock.Of<ICertificateIdentifier>(c => c.Name == certificateName && c.AlwaysSign == true);
         }
 
         [Fact]
@@ -504,10 +504,10 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             g.IsComplete().Should().BeTrue();
         }
 
-        // ── SignRegardless / already-signed skipping tests ──────────────────
+        // ── AlwaysSign / already-signed skipping tests ──────────────────
 
         [Fact]
-        public void AlreadySigned_WithSignRegardless_IsReadyToSign()
+        public void AlreadySigned_WithAlwaysSign_IsReadyToSign()
         {
             var node = CreateNode("a.dll", SignableRegardless(), isAlreadySigned: true);
 
@@ -518,7 +518,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
         }
 
         [Fact]
-        public void AlreadySigned_WithoutSignRegardless_IsSkipped()
+        public void AlreadySigned_WithoutAlwaysSign_IsSkipped()
         {
             // Verify the existing behavior is preserved
             var node = CreateNode("a.dll", Signable(), isAlreadySigned: true);
@@ -530,9 +530,9 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
         }
 
         [Fact]
-        public void NotSigned_WithSignRegardless_IsReadyToSign()
+        public void NotSigned_WithAlwaysSign_IsReadyToSign()
         {
-            // signRegardless should not prevent signing unsigned files
+            // alwaysSign should not prevent signing unsigned files
             var node = CreateNode("a.dll", SignableRegardless(), isAlreadySigned: false);
 
             var g = BuildGraph((node, null));

@@ -69,22 +69,22 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
         public ESRPAuthMode AuthMode { get; set; }
 
         /// <summary>
-        /// For CORP mode: path to the AES-encrypted auth certificate file.
+        /// For certificate mode: path to the AES-encrypted auth certificate file.
         /// </summary>
         public string EncryptedAuthCertPath { get; set; } = string.Empty;
 
         /// <summary>
-        /// For CORP mode: path to the AES encryption key file (JSON with "key" and "iv").
+        /// For certificate mode: path to the AES encryption key file (JSON with "key" and "iv").
         /// </summary>
         public string EncryptionKeyPath { get; set; } = string.Empty;
 
         /// <summary>
-        /// For PME mode: Azure DevOps service connection ID (typically from MBSIGN_CONNECTEDSERVICE env var).
+        /// For federated token mode: Azure DevOps service connection ID (typically from MBSIGN_CONNECTEDSERVICE env var).
         /// </summary>
         public string ServiceConnectionId { get; set; } = string.Empty;
 
         /// <summary>
-        /// For PME mode: name of the environment variable containing the ADO system access token.
+        /// For federated token mode: name of the environment variable containing the ADO system access token.
         /// The ESRP CLI reads the token from this env var at runtime.
         /// Typically "SYSTEM_ACCESSTOKEN" or a custom variable like "ESRP_TOKEN".
         /// </summary>
@@ -135,12 +135,13 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
     public enum ESRPAuthMode
     {
         /// <summary>
-        /// PME: uses ADO service connection with AES-encrypted system access token.
+        /// Federated token: uses ADO service connection with AES-encrypted system access token
+        /// to authenticate to the ESRP service.
         /// </summary>
         FederatedToken,
 
         /// <summary>
-        /// CORP: uses pre-provisioned encrypted certificate files.
+        /// Certificate: uses pre-provisioned encrypted certificate files for ESRP authentication.
         /// </summary>
         Certificate,
     }

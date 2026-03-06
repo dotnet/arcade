@@ -57,9 +57,9 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             // Otherwise, all children are complete or there are no children.
             if (node.CertificateIdentifier != null)
             {
-                // Skip already-signed files unless the certificate has signRegardless=true
+                // Skip already-signed files unless the certificate has alwaysSign=true
                 // (dual-signing scenario: add our signature on top of an existing one).
-                if (node.Metadata.IsAlreadySigned && !node.CertificateIdentifier.SignRegardless)
+                if (node.Metadata.IsAlreadySigned && !node.CertificateIdentifier.AlwaysSign)
                 {
                     return FileNodeState.Skipped;
                 }

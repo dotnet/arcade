@@ -300,7 +300,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
         // ────────────────────────────────────────────────────────────────────────
 
         /// <summary>
-        /// Builds the federated token data for PME auth. Encrypts the system access
+        /// Builds the federated token data for ESRP federated auth. Encrypts the system access
         /// token with AES and writes the key/IV and ciphertext to temp files,
         /// matching the Sign repo's ESRPCliDll approach.
         /// </summary>

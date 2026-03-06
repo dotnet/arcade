@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$comment": "Schema for the recursive signing tool's config file. Each config defines certificates (with ESRP signing operations) and rules that map files to those certificates.",
+  "type": "object",
+  "required": ["certificates", "rules"],
+  "additionalProperties": false,
+  "properties": {
+    "certificates": {
+      "type": "array",
+      "$comment": "List of certificate definitions. Each entry defines a friendly name, its ESRP signing operations, and optional flags.",
+      "items": {
+        "type": "object",
+        "required": ["friendlyName", "operations"],
+        "properties": {
+          "friendlyName": {
+            "type": "string",
+            "$comment": "Unique name used to reference this certificate in the rules section. Case-insensitive matching."
+          },
+          "alwaysSign": {
+            "type": "boolean",
+            "default": false,
+            "$comment": "When true, files matching this certificate are signed even if they already carry a signature. Used for dual-signing scenarios (e.g. adding a Microsoft signature on top of a third-party signature)."
+          },
+          "operations": {
+            "type": "array",
+            "$comment": "ESRP signing operations submitted for files matching this certificate. Each operation is passed directly to the ESRP CLI submission JSON.",
+            "items": {
+              "type": "object",
+              "required": ["keyCode", "operationSetCode", "toolName", "toolVersion"],
+              "properties": {
+                "keyCode": {
+                  "type": "string",
+                  "$comment": "ESRP key code identifying the signing certificate (e.g. 'CP-230012')."
+                },
+                "operationSetCode": {
+                  "type": "string",
+                  "$comment": "ESRP operation set code (e.g. 'SigntoolSign', 'SigntoolVerify')."
+                },
+                "parameters": {
+                  "$comment": "Operation parameters. May be an object with key/value pairs or an array of {parameterName, parameterValue} objects, depending on the ESRP operation.",
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "additionalProperties": { "type": "string" }
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": ["parameterName", "parameterValue"],
+                        "properties": {
+                          "parameterName": { "type": "string" },
+                          "parameterValue": { "type": "string" }
+                        }
+                      }
+                    }
+                  ]
+                },
+                "toolName": {
+                  "type": "string",
+                  "$comment": "Name of the signing tool (e.g. 'sign', 'signtool.exe')."
+                },
+                "toolVersion": {
+                  "type": "string",
+                  "$comment": "Version of the signing tool."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "rules": {
+      "type": "object",
+      "$comment": "Rules that map files to certificate friendly names. Files are matched by exact filename first, then by extension.",
+      "additionalProperties": false,
+      "properties": {
+        "fileNameMappings": {
+          "type": "object",
+          "$comment": "Maps exact file names (case-insensitive) to certificate friendly names. Checked before extension mappings.",
+          "additionalProperties": { "type": "string" }
+        },
+        "fileExtensionMappings": {
+          "type": "object",
+          "$comment": "Maps file extensions (e.g. '.dll', '.exe') to certificate friendly names. Extensions should include the leading dot. Case-insensitive.",
+          "additionalProperties": { "type": "string" }
+        }
+      }
+    }
+  }
+}

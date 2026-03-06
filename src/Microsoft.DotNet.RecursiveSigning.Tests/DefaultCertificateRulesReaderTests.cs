@@ -165,7 +165,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
         }
 
         [Fact]
-        public void ReadFromJson_ParsesSignRegardless()
+        public void ReadFromJson_ParsesAlwaysSign()
         {
             var json = """
 {
@@ -176,7 +176,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
     },
     {
       "friendlyName": "DualCert",
-      "signRegardless": true,
+      "alwaysSign": true,
       "operations": []
     }
   ],
@@ -192,12 +192,12 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             var reader = new DefaultCertificateRulesReader();
             var rules = reader.ReadFromJson(json);
 
-            rules.GetSignRegardless("NormalCert").Should().BeFalse();
-            rules.GetSignRegardless("DualCert").Should().BeTrue();
+            rules.GetAlwaysSign("NormalCert").Should().BeFalse();
+            rules.GetAlwaysSign("DualCert").Should().BeTrue();
         }
 
         [Fact]
-        public void ReadFromJson_SignRegardlessMissing_DefaultsFalse()
+        public void ReadFromJson_AlwaysSignMissing_DefaultsFalse()
         {
             var json = """
 {
@@ -213,7 +213,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Tests
             var reader = new DefaultCertificateRulesReader();
             var rules = reader.ReadFromJson(json);
 
-            rules.GetSignRegardless("BasicCert").Should().BeFalse();
+            rules.GetAlwaysSign("BasicCert").Should().BeFalse();
         }
     }
 }

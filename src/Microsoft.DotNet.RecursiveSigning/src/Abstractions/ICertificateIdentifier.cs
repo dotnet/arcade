@@ -20,6 +20,6 @@ namespace Microsoft.DotNet.RecursiveSigning.Models
         /// the file is already signed. Used for dual-signing scenarios (e.g. adding a
         /// Microsoft signature on top of a third-party signature).
         /// </summary>
-        bool SignRegardless { get; }
+        bool AlwaysSign { get; }
     }
 }

@@ -79,7 +79,7 @@ The ESRP CLI accepts a JSON file (`-j`) with the following structure. Each `Sign
 | `-d` | ESRP tenant ID | `"72f988bf-..."` |
 | `-z` | Key vault JSON (vault name + cert name) | `{"akv":"...","cert":"..."}` |
 | `-useMSIAuthentication` | Whether to use managed identity | `true`/`false` |
-| `-federatedTokenData` | Federated token blob (PME auth) | JSON string |
+| `-federatedTokenData` | Federated token blob (federated auth) | JSON string |
 | `-encryptedCertificateData` | Encrypted cert paths (cert auth) | JSON string |
 
 ### Result parsing

@@ -96,9 +96,9 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                         _logger.LogInformation("Skipping '{FileName}': already signed (certificate '{CertName}')",
                             node.ContentKey.FileName, node.CertificateIdentifier.Name);
                     }
-                    else if (node.Metadata.IsAlreadySigned && node.CertificateIdentifier?.SignRegardless == true)
+                    else if (node.Metadata.IsAlreadySigned && node.CertificateIdentifier?.AlwaysSign == true)
                     {
-                        _logger.LogInformation("Signing '{FileName}' despite existing signature (certificate '{CertName}' has signRegardless=true)",
+                        _logger.LogInformation("Signing '{FileName}' despite existing signature (certificate '{CertName}' has alwaysSign=true)",
                             node.ContentKey.FileName, node.CertificateIdentifier.Name);
                     }
                 }

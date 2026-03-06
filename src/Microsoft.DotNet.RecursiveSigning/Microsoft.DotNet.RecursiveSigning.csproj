@@ -2,8 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(NetMinimum);$(BundledNetCoreAppTargetFramework)</TargetFrameworks>
-    <!-- Deduplicate when NetMinimum == BundledNetCoreAppTargetFramework (source-build) -->
-    <TargetFrameworks Condition="'$(NetMinimum)' == '$(BundledNetCoreAppTargetFramework)'">$(BundledNetCoreAppTargetFramework)</TargetFrameworks>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
     <IsPackable>true</IsPackable>
     <Description>Recursive signing tool</Description>
     <PackageTags>Arcade Build Tool Signing</PackageTags>
