@@ -9,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -35,13 +34,9 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
         {
             WriteIndented = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         };
 
-        private static readonly JsonSerializerOptions s_compactJsonOptions = new()
-        {
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-        };
+        private static readonly JsonSerializerOptions s_compactJsonOptions = new();
 
         public ESRPCliSigningProvider(
             ESRPCliSigningConfiguration configuration,

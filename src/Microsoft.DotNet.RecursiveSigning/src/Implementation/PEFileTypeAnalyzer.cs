@@ -5,6 +5,7 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Reflection.PortableExecutable;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,38 +26,30 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
         public bool CanAnalyze(string fileName)
         {
             var ext = Path.GetExtension(fileName);
-            foreach (var pe in s_peExtensions)
-            {
-                if (ext.Equals(pe, StringComparison.OrdinalIgnoreCase))
-                {
-                    return true;
-                }
-            }
-            return false;
+            return s_peExtensions.Any(pe => ext.Equals(pe, StringComparison.OrdinalIgnoreCase));
         }
 
-        public Task<FileTypeInfo> AnalyzeAsync(
+        public async Task<FileTypeInfo> AnalyzeAsync(
             Stream stream, string fileName, CancellationToken cancellationToken = default)
-        {
-            var info = Analyze(stream);
-            return Task.FromResult(info);
-        }
-
-        /// <summary>
-        /// Synchronously analyzes a PE stream. Separated for testability and
-        /// because <see cref="PEReader"/> is not async.
-        /// </summary>
-        internal static FileTypeInfo Analyze(Stream stream)
         {
             if (!stream.CanSeek)
             {
-                // PEReader needs a seekable stream; wrap in MemoryStream if needed.
+                // PEReader needs a seekable stream; copy asynchronously.
                 using var ms = new MemoryStream();
-                stream.CopyTo(ms);
+                await stream.CopyToAsync(ms, cancellationToken);
                 ms.Position = 0;
                 return AnalyzeCore(ms);
             }
 
+            return Analyze(stream);
+        }
+
+        /// <summary>
+        /// Synchronously analyzes a seekable PE stream. Separated for testability and
+        /// because <see cref="PEReader"/> is not async.
+        /// </summary>
+        internal static FileTypeInfo Analyze(Stream stream)
+        {
             var originalPosition = stream.Position;
             try
             {
@@ -65,9 +58,7 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             }
             finally
             {
-                // Restore position so callers can continue reading.
-                try { stream.Position = originalPosition; }
-                catch { /* non-seekable after all; ignore */ }
+                stream.Position = originalPosition;
             }
         }
 

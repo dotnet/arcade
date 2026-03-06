@@ -39,21 +39,15 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
             _typeAnalyzers = typeAnalyzers?.ToList() ?? throw new ArgumentNullException(nameof(typeAnalyzers));
         }
 
-        public Task<IFileMetadata> AnalyzeAsync(string filePath, CancellationToken cancellationToken = default)
+        public async Task<IFileMetadata> AnalyzeAsync(string filePath, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 throw new ArgumentException("File path cannot be null or whitespace.", nameof(filePath));
             }
 
-            var fileName = Path.GetFileName(filePath);
-            var analyzer = FindAnalyzer(fileName);
-            if (analyzer == null)
-            {
-                return Task.FromResult<IFileMetadata>(new FileMetadata(fileName));
-            }
-
-            return AnalyzeWithFileTypeAsync(analyzer, filePath, fileName, cancellationToken);
+            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+            return await AnalyzeAsync(stream, Path.GetFileName(filePath), cancellationToken);
         }
 
         public async Task<IFileMetadata> AnalyzeAsync(Stream contentStream, string fileName, CancellationToken cancellationToken = default)
@@ -88,15 +82,6 @@ namespace Microsoft.DotNet.RecursiveSigning.Implementation
                 }
             }
             return null;
-        }
-
-        private static async Task<IFileMetadata> AnalyzeWithFileTypeAsync(
-            IFileTypeAnalyzer analyzer, string filePath, string fileName,
-            CancellationToken cancellationToken)
-        {
-            using var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
-            var info = await analyzer.AnalyzeAsync(stream, fileName, cancellationToken);
-            return ToMetadata(fileName, info);
         }
 
         private static FileMetadata ToMetadata(string fileName, FileTypeInfo info) =>
