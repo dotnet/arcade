@@ -8,6 +8,7 @@ Microsoft.DotNet.RecursiveSigning provides a modern, extensible pipeline for rec
 - [Shared Misc Components](docs/shared-components.md)
 - [Default Certificate Calculator](docs/default-certificarte-calculator.md)
 - [Signing Config JSON Schema](docs/signing-config-schema.json)
+- [Sample Configs](docs/samples/) — example signing configurations
 - [Default File Deduplicator](docs/default-file-deduplicator.md)
 - [CLI Tool Design](docs/cli-tool.md)
 

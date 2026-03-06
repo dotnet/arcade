@@ -1,0 +1,56 @@
+{
+  "$schema": "../signing-config-schema.json",
+  "certificates": [
+    {
+      "friendlyName": "Microsoft400",
+      "operations": [
+        {
+          "KeyCode": "CP-230012",
+          "OperationCode": "SigntoolSign",
+          "Parameters": {
+            "OpusName": "Microsoft",
+            "OpusInfo": "http://www.microsoft.com",
+            "FileDigest": "/fd \"SHA256\"",
+            "PageHash": "/NPH",
+            "TimeStamp": "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
+          },
+          "ToolName": "sign",
+          "ToolVersion": "1.0"
+        },
+        {
+          "KeyCode": "CP-230012",
+          "OperationCode": "SigntoolVerify",
+          "Parameters": {},
+          "ToolName": "sign",
+          "ToolVersion": "1.0"
+        }
+      ]
+    },
+    {
+      "friendlyName": "NuGet",
+      "operations": [
+        {
+          "KeyCode": "CP-401405",
+          "OperationCode": "NuGetSign",
+          "Parameters": {},
+          "ToolName": "sign",
+          "ToolVersion": "1.0"
+        },
+        {
+          "KeyCode": "CP-401405",
+          "OperationCode": "NuGetVerify",
+          "Parameters": {},
+          "ToolName": "sign",
+          "ToolVersion": "1.0"
+        }
+      ]
+    }
+  ],
+  "rules": {
+    "fileExtensionMappings": {
+      ".dll": "Microsoft400",
+      ".exe": "Microsoft400",
+      ".nupkg": "NuGet"
+    }
+  }
+}
