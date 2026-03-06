@@ -31,7 +31,7 @@ extends:
     stages:
     - stage: build
       jobs:
-      - template: /eng/common/templates-official/jobs/jobs.yml@self
+      - template: /eng/common/templates-official/jobs/jobs.yml
         parameters:
           # 1ES makes use of outputs to reduce security task injection overhead
           templateContext:
