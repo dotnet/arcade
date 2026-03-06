@@ -1,8 +1,37 @@
 {
   "$schema": "../signing-config-schema.json",
+  "$comment": "Signs binaries with Authenticode (Microsoft400), NuGet packages with NuGet signing, and third-party binaries with dual-signing (alwaysSign).",
   "certificates": [
     {
       "friendlyName": "Microsoft400",
+      "$comment": "Standard Authenticode signing for Microsoft-owned binaries.",
+      "operations": [
+        {
+          "KeyCode": "CP-230012",
+          "OperationCode": "SigntoolSign",
+          "Parameters": {
+            "OpusName": "Microsoft",
+            "OpusInfo": "http://www.microsoft.com",
+            "FileDigest": "/fd \"SHA256\"",
+            "PageHash": "/NPH",
+            "TimeStamp": "/tr \"http://rfc3161.gtm.corp.microsoft.com/TSS/HttpTspServer\" /td sha256"
+          },
+          "ToolName": "sign",
+          "ToolVersion": "1.0"
+        },
+        {
+          "KeyCode": "CP-230012",
+          "OperationCode": "SigntoolVerify",
+          "Parameters": {},
+          "ToolName": "sign",
+          "ToolVersion": "1.0"
+        }
+      ]
+    },
+    {
+      "friendlyName": "Microsoft400DualSign",
+      "$comment": "Same Authenticode certificate but with alwaysSign=true. Used for third-party binaries that arrive pre-signed and need a Microsoft signature added on top.",
+      "alwaysSign": true,
       "operations": [
         {
           "KeyCode": "CP-230012",
@@ -28,6 +57,7 @@
     },
     {
       "friendlyName": "NuGet",
+      "$comment": "NuGet package signing. Applied to .nupkg files after their inner binaries are signed.",
       "operations": [
         {
           "KeyCode": "CP-401405",
@@ -47,6 +77,11 @@
     }
   ],
   "rules": {
+    "$comment": "Files are matched by exact name first, then by extension.",
+    "fileNameMappings": {
+      "$comment": "Third-party binaries that ship pre-signed — use the dual-sign certificate to add our signature.",
+      "Newtonsoft.Json.dll": "Microsoft400DualSign"
+    },
     "fileExtensionMappings": {
       ".dll": "Microsoft400",
       ".exe": "Microsoft400",
