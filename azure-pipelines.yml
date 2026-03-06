@@ -21,10 +21,10 @@ trigger:
 pr: none
 
 variables:
-- template: /eng/common-variables.yml
+- template: /eng/common-variables.yml@self
   parameters:
     signType: real
-- template: /eng/common/templates-official/variables/pool-providers.yml
+- template: /eng/common/templates-official/variables/pool-providers.yml@self
 
 resources:
   containers:
@@ -54,7 +54,7 @@ extends:
         analyzeTargetGlob: +:f|**/artifacts/**/*.dll;+:f|**/artifacts/**/*.exe;-:f|**/*.Tests/**/*;-:f|**/wix/**/*;-:f|**/wix3/**/*;-:f|**/winterop.dll;
 
     stages:
-    - template: /eng/build.yml
+    - template: /eng/build.yml@self
       parameters:
         ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
           oneLocEnabled: true

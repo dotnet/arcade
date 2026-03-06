@@ -1,10 +1,10 @@
 trigger: none
 
 variables:
-- template: /eng/common-variables.yml
+- template: /eng/common-variables.yml@self
   parameters:
     signType: test
-- template: /eng/common/templates-official/variables/pool-providers.yml
+- template: /eng/common/templates-official/variables/pool-providers.yml@self
 
 resources:
   containers:
@@ -24,4 +24,4 @@ extends:
       os: windows
 
     stages:
-    - template: /eng/build.yml
+    - template: /eng/build.yml@self
