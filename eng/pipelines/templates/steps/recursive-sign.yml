@@ -62,8 +62,8 @@ steps:
         --esrp `
         --federated-token `
         --service-connection-id "${{ parameters.serviceConnectionGuid }}" `
-        --esrp-id "${{ parameters.esrpId }}" `
-        --esrp-client-id "${{ parameters.esrpClientId }}" `
+        --esrp-client-id "${{ parameters.esrpId }}" `
+        --esrp-app-registration "${{ parameters.esrpClientId }}" `
         --esrp-tenant-id "${{ parameters.esrpTenantId }}" `
         --esrp-keyvault-name "${{ parameters.keyVaultName }}" `
         --esrp-cert-name "${{ parameters.certName }}" `

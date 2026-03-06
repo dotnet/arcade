@@ -12,14 +12,14 @@
     <BuildTaskTargetFolder>lib</BuildTaskTargetFolder>
   </PropertyGroup>
 
-  <!-- Phase 1 Dependencies: Core infrastructure only -->
+  <!-- PrivateAssets=all so the package has no external NuGet dependencies -->
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Common\Microsoft.Arcade.Common\Microsoft.Arcade.Common.csproj" />
+    <ProjectReference Include="..\Common\Microsoft.Arcade.Common\Microsoft.Arcade.Common.csproj" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

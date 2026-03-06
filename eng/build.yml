@@ -72,6 +72,43 @@ stages:
         $(_InternalBuildArgs)
         /p:Test=false
 
+- stage: PushRecursiveSigningPackages
+  displayName: Push RecursiveSigning Packages
+  dependsOn: build
+  jobs:
+  - job: PushToTestFeed
+    displayName: Push to dotnet-sign-test-feed
+    pool:
+      name: $(DncEngInternalBuildPool)
+      image: windows.vs2022.amd64
+      os: windows
+    steps:
+    - task: DownloadPipelineArtifact@2
+      displayName: Download Package Artifacts
+      inputs:
+        artifactName: PackageArtifacts
+        targetPath: $(Pipeline.Workspace)/PackageArtifacts
+    - task: NuGetAuthenticate@1
+      displayName: Authenticate to Azure Artifacts
+    - powershell: |
+        $packages = Get-ChildItem -Path "$(Pipeline.Workspace)/PackageArtifacts" -Filter "Microsoft.DotNet.RecursiveSigning*.nupkg" -Recurse
+        if ($packages.Count -eq 0) {
+          Write-Error "No RecursiveSigning packages found"
+          exit 1
+        }
+        foreach ($pkg in $packages) {
+          Write-Host "Pushing $($pkg.FullName)"
+          dotnet nuget push $pkg.FullName `
+            --source "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-sign-test-feed/nuget/v3/index.json" `
+            --api-key az `
+            --skip-duplicate
+          if ($LASTEXITCODE -ne 0) {
+            Write-Error "Failed to push $($pkg.Name)"
+            exit $LASTEXITCODE
+          }
+        }
+      displayName: Push RecursiveSigning packages
+
 - template: /eng/common/templates-official/post-build/post-build.yml@self
   parameters:
     publishingInfraVersion: 3
