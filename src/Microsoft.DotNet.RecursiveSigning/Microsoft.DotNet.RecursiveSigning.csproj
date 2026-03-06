@@ -1,7 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(BundledNetCoreAppTargetFramework)</TargetFrameworks>
+    <TargetFrameworks>$(NetMinimum);$(BundledNetCoreAppTargetFramework)</TargetFrameworks>
+    <!-- Deduplicate when NetMinimum == BundledNetCoreAppTargetFramework (source-build) -->
+    <TargetFrameworks Condition="'$(NetMinimum)' == '$(BundledNetCoreAppTargetFramework)'">$(BundledNetCoreAppTargetFramework)</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <Description>Recursive signing tool</Description>
     <PackageTags>Arcade Build Tool Signing</PackageTags>

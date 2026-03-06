@@ -24,7 +24,7 @@
           "ToolVersion": "1.0"
         }
       ]
-    },
+    }
   ],
   "rules": {
     "fileExtensionMappings": {
