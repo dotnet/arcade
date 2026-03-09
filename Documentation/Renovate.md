@@ -197,7 +197,7 @@ variables:
   value: 'dotnet/your-repo-name'
 
 extends:
-  template: /eng/common/core-templates/stages/renovate.yml
+  template: /eng/common/core-templates/stages/renovate.yml@self
   parameters:
     dryRun: ${{ parameters.dryRun }}
     forceRecreatePR: ${{ parameters.forceRecreatePR }}
@@ -335,7 +335,7 @@ If you need different update schedules for different dependencies:
 
     ```yaml
     extends:
-      template: /eng/common/core-templates/stages/renovate.yml
+      template: /eng/common/core-templates/stages/renovate.yml@self
       parameters:
         dryRun: ${{ parameters.dryRun }}
         forceRecreatePR: ${{ parameters.forceRecreatePR }}
