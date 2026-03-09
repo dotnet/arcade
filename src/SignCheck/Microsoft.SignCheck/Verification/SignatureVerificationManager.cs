@@ -116,7 +116,7 @@ namespace Microsoft.SignCheck.Verification
             AddFileVerifier(new NupkgVerifier(log, exclusions, options));
             AddFileVerifier(new PortableExecutableVerifier(log, exclusions, options, ".dll"));
             AddFileVerifier(new XmlVerifier(log, exclusions, options));
-            AddFileVerifier(new ZipVerifier(log, exclusions, options));
+            AddFileVerifier(new ZipVerifier(log, exclusions, options, supportsDetachedSignature: true));
         }
 
         /// <summary>
