@@ -26,8 +26,51 @@ namespace Microsoft.DotNet.Helix.Sdk
                 var testRunId = workItem.GetMetadata("TestRunId");
                 var failed = workItem.GetMetadata("Failed") == "true";
 
+                // If the work item failed, check whether there are already real test results
+                // reported for it. If so, those results already capture the failure details —
+                // marking WorkItemExecution as failed too is redundant and prevents Build Analysis
+                // from recognizing all failures as known issues.
+                if (failed)
+                {
+                    bool hasRealResults = await WorkItemHasTestResultsAsync(client, testRunId, jobName, workItemName);
+                    if (hasRealResults)
+                    {
+                        Log.LogMessage(MessageImportance.Normal,
+                            $"Work item {workItemName} already has test results reported; marking WorkItemExecution as passed.");
+                        failed = false;
+                    }
+                }
+
                 await CreateFakeTestResultAsync(client, testRunId, jobName, workItemName, failed);
             }
+        }
+
+        /// <summary>
+        /// Checks whether the test run already contains real test results for this work item.
+        /// Real results are posted by the reporter running on the Helix agent before the work item completes.
+        /// </summary>
+        private async Task<bool> WorkItemHasTestResultsAsync(HttpClient client, string testRunId, string jobName, string workItemName)
+        {
+            var data = await RetryAsync(
+                async () =>
+                {
+                    using (var req = new HttpRequestMessage(
+                        HttpMethod.Get,
+                        $"{CollectionUri}{TeamProject}/_apis/test/runs/{testRunId}/results?$top=1&$filter=automatedTestStorage eq '{workItemName}'&api-version=6.0"))
+                    {
+                        using (HttpResponseMessage res = await client.SendAsync(req))
+                        {
+                            return await ParseResponseAsync(req, res);
+                        }
+                    }
+                });
+
+            if (data != null && data["count"] != null)
+            {
+                return data.Value<int>("count") > 0;
+            }
+
+            return false;
         }
 
         private async Task<int> CreateFakeTestResultAsync(HttpClient client, string testRunId, string jobName, string workItemFriendlyName, bool failed)
