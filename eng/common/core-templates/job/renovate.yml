@@ -95,12 +95,15 @@ jobs:
   # Changing the variable name here would require updating the name in https://github.com/dotnet/arcade/blob/main/eng/renovate.json as well.
   - name: renovateVersion
     value: '42'
+    readonly: true
   - name: dryRunArg
+    readonly: true
     ${{ if eq(parameters.dryRun, true) }}:
       value: 'full'
     ${{ else }}:
       value: ''
   - name: recreateWhenArg
+    readonly: true
     ${{ if eq(parameters.forceRecreatePR, true) }}:
       value: 'always'
     ${{ else }}:
@@ -108,11 +111,13 @@ jobs:
   # In multi-checkout (without custom paths), Azure DevOps places each repo under
   # $(Build.SourcesDirectory)/<repoName>. selfRepoName must be provided in that case.
   - name: selfRepoPath
+    readonly: true
     ${{ if eq(parameters.arcadeRepoResource, 'self') }}:
       value: '$(Build.SourcesDirectory)'
     ${{ else }}:
       value: '$(Build.SourcesDirectory)/${{ parameters.selfRepoName }}'
   - name: arcadeRepoPath
+    readonly: true
     ${{ if eq(parameters.arcadeRepoResource, 'self') }}:
       value: '$(Build.SourcesDirectory)'
     ${{ else }}:
