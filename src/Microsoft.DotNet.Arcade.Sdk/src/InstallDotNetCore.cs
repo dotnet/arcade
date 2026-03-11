@@ -249,23 +249,25 @@ namespace Microsoft.DotNet.Arcade.Sdk
         {
             // For performance this check is duplicated from InstallDotnet in tools.sh and tools.ps1
             // if you are making changes here, consider if you need to make changes there as well.
-            if (!string.IsNullOrEmpty(runtime) && runtime != "sdk")
+            if (string.IsNullOrEmpty(runtime) && runtime == "sdk")
             {
-                string runtimePath = runtime switch
-                {
-                    "dotnet" => Path.Combine(dotnetRoot, "shared", "Microsoft.NETCore.App", version),
-                    "aspnetcore" => Path.Combine(dotnetRoot, "shared", "Microsoft.AspNetCore.App", version),
-                    "windowsdesktop" => Path.Combine(dotnetRoot, "shared", "Microsoft.WindowsDesktop.App", version),
-                    _ => Path.Combine(dotnetRoot, "shared", version)
-                };
+                throw new ArgumentException($"{nameof(InstallDotNetCore)} cannot be used for .NET SDK installation.");
+            }
 
-                string dotnetVersionLabel = $"runtime toolset '{runtime}/{architecture} v{version}'";
+            string runtimePath = runtime switch
+            {
+                "dotnet" => Path.Combine(dotnetRoot, "shared", "Microsoft.NETCore.App", version),
+                "aspnetcore" => Path.Combine(dotnetRoot, "shared", "Microsoft.AspNetCore.App", version),
+                "windowsdesktop" => Path.Combine(dotnetRoot, "shared", "Microsoft.WindowsDesktop.App", version),
+                _ => Path.Combine(dotnetRoot, "shared", version)
+            };
 
-                if (Directory.Exists(runtimePath))
-                {
-                    Console.WriteLine($"  Runtime toolset '{runtime}/{architecture} v{version}' already installed.");
-                    return true;
-                }
+            string dotnetVersionLabel = $"runtime toolset '{runtime}/{architecture} v{version}'";
+
+            if (Directory.Exists(runtimePath))
+            {
+                Console.WriteLine($"  Runtime toolset '{runtime}/{architecture} v{version}' already installed.");
+                return true;
             }
 
             return false;
