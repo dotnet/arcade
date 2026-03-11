@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     public class InstallDotNetCore : Microsoft.Build.Utilities.Task
     {
 #endif
-        private static readonly char[] s_keyTrimChars = [ '$', '(', ')' ];
+        private static readonly char[] s_keyTrimChars = ['$', '(', ')'];
 
         public string VersionsPropsPath { get; set; }
 
@@ -34,10 +34,12 @@ namespace Microsoft.DotNet.Arcade.Sdk
         [Required]
         public string GlobalJsonPath { get; set; }
         [Required]
+        public string DotnetPath { get; set; }
+        [Required]
         public string Platform { get; set; }
 
         public string RuntimeSourceFeed { get; set; }
-        
+
         public string RuntimeSourceFeedKey { get; set; }
 
         public override bool Execute()
@@ -125,7 +127,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                                     if (version != null)
                                     {
-                                        string arguments = $"-runtime \"{runtimeItem.Key}\" -version \"{version.ToNormalizedString()}\"";
+                                        string normalizedVersion = version.ToNormalizedString();
+                                        string runtime = runtimeItem.Key;
+                                        string arguments = $"-runtime \"{runtime}\" -version \"{normalizedVersion}\"";
                                         if (!string.IsNullOrEmpty(architecture))
                                         {
                                             arguments += $" -architecture {architecture}";
@@ -140,6 +144,14 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                         if (!string.IsNullOrWhiteSpace(RuntimeSourceFeed) && !string.IsNullOrWhiteSpace(RuntimeSourceFeedKey))
                                         {
                                             arguments += $" -runtimeSourceFeedKey {RuntimeSourceFeedKey}";
+                                        }
+
+                                        // Quickly check if the runtime is already installed, skipping double process hop,
+                                        // load of powershell, and load of tools.sh, or similar overhead for shell script.
+                                        // Saving about 1 second per runtime.
+                                        if (CheckRuntimeDotnetInstalled(DotnetPath, normalizedVersion, architecture, runtime))
+                                        {
+                                            continue;
                                         }
 
                                         Log.LogMessage(MessageImportance.Low, $"Executing: {DotNetInstallScript} {arguments}");
@@ -227,6 +239,34 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 items.Add(new KeyValuePair<string, string>(version.GetString(), architecture));
             }
             return items.ToArray();
+        }
+
+        private static bool CheckRuntimeDotnetInstalled(
+            string dotnetRoot,
+            string version,
+            string architecture,
+            string runtime)
+        {
+            if (!string.IsNullOrEmpty(runtime) && runtime != "sdk")
+            {
+                string runtimePath = runtime switch
+                {
+                    "dotnet" => Path.Combine(dotnetRoot, "shared", "Microsoft.NETCore.App", version),
+                    "aspnetcore" => Path.Combine(dotnetRoot, "shared", "Microsoft.AspNetCore.App", version),
+                    "windowsdesktop" => Path.Combine(dotnetRoot, "shared", "Microsoft.WindowsDesktop.App", version),
+                    _ => Path.Combine(dotnetRoot, "shared", version)
+                };
+
+                string dotnetVersionLabel = $"runtime toolset '{runtime}/{architecture} v{version}'";
+
+                if (Directory.Exists(runtimePath))
+                {
+                    Console.WriteLine($"  Runtime toolset '{runtime}/{architecture} v{version}' already installed.");
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
