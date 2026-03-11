@@ -133,6 +133,7 @@ stages:
         publish:
           logs:
             name: Logs_Test_$(Agent.OS)_$(_BuildConfig)_$(_Testing)
+        download: true
       workspace:
         clean: all
       jobs:
@@ -218,6 +219,7 @@ stages:
         publish:
           logs:
             name: Logs_Test_$(Agent.OS)_$(_BuildConfig)_$(_Testing)
+        download: true
       workspace:
         clean: all
       jobs:

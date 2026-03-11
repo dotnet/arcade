@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>$(BundledNETCoreAppTargetFramework)</TargetFramework>
+    <!-- Don't build P2Ps to avoid lock file issues in Helix.Sdk when building this project via the Helix SDK. -->
+    <BuildProjectReferences Condition="'$(HelixTargetQueue)' != ''">false</BuildProjectReferences>
   </PropertyGroup>
 
   <ItemGroup>
