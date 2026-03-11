@@ -247,6 +247,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
             string architecture,
             string runtime)
         {
+            // For performance this check is duplicated from InstallDotnet in tools.sh and tools.ps1
+            // if you are making changes here, consider if you need to make changes there as well.
             if (!string.IsNullOrEmpty(runtime) && runtime != "sdk")
             {
                 string runtimePath = runtime switch
