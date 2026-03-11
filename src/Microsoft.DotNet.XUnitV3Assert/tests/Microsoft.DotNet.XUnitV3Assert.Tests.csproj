@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <PackageReference Include="xunit.v3.core" PrivateAssets="all" Publish="true" />
-    <PackageReference Include="xunit.analyzers" PrivateAssets="all" Publish="true" />
     <ProjectReference Include="..\src\Microsoft.DotNet.XUnitV3Assert.csproj" />
   </ItemGroup>
 
