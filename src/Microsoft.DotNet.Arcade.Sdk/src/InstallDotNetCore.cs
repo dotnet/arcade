@@ -146,12 +146,18 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                             arguments += $" -runtimeSourceFeedKey {RuntimeSourceFeedKey}";
                                         }
 
-                                        // Quickly check if the runtime is already installed, skipping double process hop,
-                                        // load of powershell, and load of tools.sh, or similar overhead for shell script.
-                                        // Saving about 1 second per runtime.
-                                        if (CheckRuntimeDotnetInstalled(DotnetPath, normalizedVersion, architecture, runtime))
+                                        // Null architecture means that the script should infer it, we don't want to re-implement too much logic here,
+                                        // so we skip the quick check.
+                                        if (architecture != null)
                                         {
-                                            continue;
+                                            // Quickly check if the runtime is already installed, skipping double process hop,
+                                            // load of powershell, and load of tools.sh, or similar overhead for shell script.
+                                            // Saving about 1 second per runtime.
+                                            if (CheckRuntimeDotnetInstalled(DotnetPath, normalizedVersion, architecture, runtime))
+
+                                            {
+                                                continue;
+                                            }
                                         }
 
                                         Log.LogMessage(MessageImportance.Low, $"Executing: {DotNetInstallScript} {arguments}");
@@ -254,6 +260,13 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 throw new ArgumentException($"{nameof(InstallDotNetCore)} cannot be used for .NET SDK installation.");
             }
 
+            if (!string.Equals(architecture, RuntimeInformation.OSArchitecture.ToString(), StringComparison.OrdinalIgnoreCase))
+            {
+                // This istallation is not native to this OS, it will be installed into a subfolder with the architecture name.
+                // See eng/common/dotnet-install.sh and eng/common/dotnet-install.ps1
+                dotnetRoot = Path.Combine(dotnetRoot, architecture.ToLowerInvariant());
+            }
+
             string runtimePath = runtime switch
             {
                 "dotnet" => Path.Combine(dotnetRoot, "shared", "Microsoft.NETCore.App", version),
@@ -262,11 +275,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 _ => Path.Combine(dotnetRoot, "shared", version)
             };
 
-            string dotnetVersionLabel = $"runtime toolset '{runtime}/{architecture} v{version}'";
-
             if (Directory.Exists(runtimePath))
             {
-                Console.WriteLine($"  Runtime toolset '{runtime}/{architecture} v{version}' already installed.");
+                Console.WriteLine($"  Runtime toolset '{runtime}/{architecture} v{version}' already installed in directory '{runtimePath}'.");
                 return true;
             }
 
