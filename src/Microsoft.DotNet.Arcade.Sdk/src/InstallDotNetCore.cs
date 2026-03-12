@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
         [Required]
         public string GlobalJsonPath { get; set; }
         [Required]
-        public string DotnetPath { get; set; }
+        public string DotNetPath { get; set; }
         [Required]
         public string Platform { get; set; }
 
@@ -153,7 +153,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                             // Quickly check if the runtime is already installed, skipping double process hop,
                                             // load of powershell, and load of tools.sh, or similar overhead for shell script.
                                             // Saving about 1 second per runtime.
-                                            if (CheckRuntimeDotnetInstalled(DotnetPath, normalizedVersion, architecture, runtime))
+                                            if (CheckRuntimeDotnetInstalled(DotNetPath, normalizedVersion, architecture, runtime))
 
                                             {
                                                 continue;
