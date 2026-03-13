@@ -14,10 +14,16 @@
 
     <!-- Arcade tests try to pull in old packages. -->
     <DisableArcadeTestFramework>true</DisableArcadeTestFramework>
+    <!-- Set explicitly since DisableArcadeTestFramework prevents XUnitV3.targets from setting it -->
+    <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="xunit.v3.core" PrivateAssets="all" Publish="true" />
+    <!-- MTP packages added explicitly because DisableArcadeTestFramework prevents XUnitV3.targets from adding them -->
+    <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" Version="$(MicrosoftTestingPlatformVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true" />
+    <PackageReference Include="Microsoft.Testing.Platform.MSBuild" Version="$(MicrosoftTestingPlatformVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true" />
+    <PackageReference Include="Microsoft.Testing.Platform" Version="$(MicrosoftTestingPlatformVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true" />
     <ProjectReference Include="..\src\Microsoft.DotNet.XUnitAssert.csproj" />
   </ItemGroup>
 
