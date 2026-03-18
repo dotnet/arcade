@@ -40,7 +40,17 @@
           Condition="'$(DotNetBuildFromSource)' != 'true' and Exists('$(_RepoToolManifest)')"
           BeforeTargets="Restore">
 
-    <Exec Command='"$(DotNetTool)" tool restore' WorkingDirectory="$(RepoRoot)" />
+    <!-- Retry once for transient network failures (e.g. Connection reset by peer on macOS agents) -->
+    <Exec Command='"$(DotNetTool)" tool restore'
+          WorkingDirectory="$(RepoRoot)"
+          IgnoreExitCode="true">
+      <Output TaskParameter="ExitCode" PropertyName="_ToolRestoreExitCode" />
+    </Exec>
+    <Warning Text="'dotnet tool restore' failed with exit code $(_ToolRestoreExitCode). Retrying..."
+             Condition="'$(_ToolRestoreExitCode)' != '0'" />
+    <Exec Command='"$(DotNetTool)" tool restore'
+          WorkingDirectory="$(RepoRoot)"
+          Condition="'$(_ToolRestoreExitCode)' != '0'" />
   </Target>
 
   <!-- Repository extensibility point -->
