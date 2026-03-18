@@ -1,6 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
+using System.IO;
 using Microsoft.SignCheck.Interop.PortableExecutable;
 using Microsoft.SignCheck.Logging;
 
@@ -34,7 +36,19 @@ namespace Microsoft.SignCheck.Verification
         {
             // Defer to the base implementation to check the AuthentiCode signature.
             SignatureVerificationResult svr = base.VerifySignature(path, parent, virtualPath);
-            PEHeader = new PortableExecutableHeader(svr.FullPath);
+
+            try
+            {
+                PEHeader = new PortableExecutableHeader(svr.FullPath);
+            }
+            catch (Exception e) when (e is EndOfStreamException or IOException or InvalidOperationException)
+            {
+                // The file is not a valid PE (truncated, corrupt, or not actually a PE).
+                // Treat it as unsigned — do not let the exception propagate.
+                svr.IsSigned = false;
+                svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
+                return svr;
+            }
 
             if (VerifyStrongNameSignature)
             {
