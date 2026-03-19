@@ -12,17 +12,17 @@ namespace Microsoft.SignCheck.Verification
 {
     public abstract class PgpVerifier : ArchiveVerifier
     {
-        private bool _supportsDetachedSignature;
+        private bool _signatureIsDetached;
 
-        protected PgpVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options, string fileExtension, bool supportsDetachedSignature = false)
+        protected PgpVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options, string fileExtension, bool signatureIsDetached = false)
         : base(log, exclusions, options, fileExtension)
         {
-            _supportsDetachedSignature = supportsDetachedSignature;
+            _signatureIsDetached = signatureIsDetached;
         }
 
         public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
         {
-            if (_supportsDetachedSignature && File.Exists(path + ".sig"))
+            if (_signatureIsDetached && File.Exists(path + ".sig"))
             {
                 return VerifySupportedFileType(path, parent, virtualPath);
             }
@@ -38,7 +38,7 @@ namespace Microsoft.SignCheck.Verification
         /// <returns></returns>
         protected virtual (string signatureDocument, string signableContent) GetSignatureDocumentAndSignableContent(string path, string tempDir)
         {
-            if (_supportsDetachedSignature)
+            if (_signatureIsDetached)
             {
                 string signature = $"{path}.sig";
                 string signatureDocument = Path.Combine(tempDir, Path.GetFileName(signature));

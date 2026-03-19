@@ -10,7 +10,7 @@ namespace Microsoft.SignCheck.Verification
 {
     public class ZipVerifier : PgpVerifier
     {
-        public ZipVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options, string fileExtension = ".zip", bool supportsDetachedSignature = false) : base(log, exclusions, options, fileExtension, supportsDetachedSignature) { }
+        public ZipVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options, string fileExtension = ".zip", bool signatureIsDetached = false) : base(log, exclusions, options, fileExtension, signatureIsDetached) { }
 
         protected override IEnumerable<ArchiveEntry> ReadArchiveEntries(string archivePath)
         {
