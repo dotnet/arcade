@@ -12,7 +12,7 @@ namespace Microsoft.SignCheck.Verification
 {
     public class TarVerifier : PgpVerifier
     {
-        public TarVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options, string fileExtension) : base(log, exclusions, options, fileExtension, supportsDetachedSignature: true)
+        public TarVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options, string fileExtension) : base(log, exclusions, options, fileExtension, signatureIsDetached: true)
         {
             if (fileExtension != ".tar" && fileExtension != ".gz" && fileExtension != ".tgz")
             {
