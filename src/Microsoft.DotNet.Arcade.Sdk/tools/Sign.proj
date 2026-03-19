@@ -31,7 +31,7 @@
   <Import Project="Sign.props" />
 
   <!-- Import the wix props to get the install path -->
-  <Import Project="$(NuGetPackageRoot)microsoft.signed.wix\$(MicrosoftSignedWixVersion)\build\Microsoft.Signed.Wix.props" />
+  <Import Project="$(NuGetPackageRoot)microsoft.signed.wix\$(MicrosoftSignedWixVersion)\build\Microsoft.Signed.Wix.props" Condition="'$(UsingToolWix3)' == 'true'" />
 
   <!-- Update sign infos that were using Microsoft400 to use the .NET-specific cert if UseDotNetCertificate is present.
        This will update any use, even if explicitly specified.
@@ -60,6 +60,10 @@
 
       <!-- SN is only available on Windows -->
       <SNBinaryPath Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(NuGetPackageRoot)sn\$(SNVersion)\sn.exe</SNBinaryPath>
+
+      <!-- Only set WiX tool paths when the corresponding tool is opted-in -->
+      <_Wix3ToolsPath Condition="'$(UsingToolWix3)' == 'true'">$(WixInstallPath)</_Wix3ToolsPath>
+      <_WixToolsPath Condition="'$(UsingToolWix5)' == 'true'">$(NuGetPackageRoot)microsoft.wixtoolset.sdk\$(MicrosoftWixToolsetSdkVersion)\tools\net472\x64</_WixToolsPath>
     </PropertyGroup>
 
     <ItemGroup>
@@ -90,8 +94,8 @@
         DotNetPath="$(_DotNetCorePath)"
         SNBinaryPath="$(SNBinaryPath)"
         MicroBuildCorePath="$(NuGetPackageRoot)microsoft.visualstudioeng.microbuild.core\$(MicrosoftVisualStudioEngMicroBuildCoreVersion)"
-        Wix3ToolsPath="$(WixInstallPath)"
-        WixToolsPath="$(NuGetPackageRoot)microsoft.wixtoolset.sdk\$(MicrosoftWixToolsetSdkVersion)\tools\net472\x64"
+        Wix3ToolsPath="$(_Wix3ToolsPath)"
+        WixToolsPath="$(_WixToolsPath)"
         PkgToolPath="@(MacOSPkgCliItem)"
         RepackParallelism="$(SignToolRepackParallelism)"
         MaximumParallelFileSize="$(SignToolRepackMaximumParallelFileSize)"
