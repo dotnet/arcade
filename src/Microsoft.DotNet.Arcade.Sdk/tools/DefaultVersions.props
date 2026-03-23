@@ -70,7 +70,7 @@
     <!--
       Note: The property name intentionally does NOT follow the convention of 'MicrosoftVSSDKBuildToolsVersion'
       because the Microsoft.VSSDK.BuildTools package itself redefines that property to a different value,
-      which causes NuGet restores to go in a loop. See https://github.com/dotnet/arcade/issues/15594.
+      which causes NuGet restores to go in a loop. See https://github.com/dotnet/arcade/issues/16228.
     -->
     <MicrosoftVSSDKBuildToolsDefaultVersion Condition="'$(MicrosoftVSSDKBuildToolsDefaultVersion)' == ''">17.14.2120</MicrosoftVSSDKBuildToolsDefaultVersion>
     <MicrosoftDotnetNuGetRepackTasksVersion Condition="'$(MicrosoftDotnetNuGetRepackTasksVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotnetNuGetRepackTasksVersion>
