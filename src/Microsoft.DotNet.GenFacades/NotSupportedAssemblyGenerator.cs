@@ -14,7 +14,7 @@ using System.Linq;
 namespace Microsoft.DotNet.GenFacades
 {
     /// <summary>
-    /// The class generates an NotSupportedAssembly from the reference sources.
+    /// The class generates a NotSupportedAssembly from the reference or implementation sources.
     /// </summary>
     public class NotSupportedAssemblyGenerator : RoslynBuildTask
     {
@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.GenFacades
         {
             if (SourceFiles == null || SourceFiles.Length == 0)
             {
-                Log.LogError("There are no ref source files.");
+                Log.LogError("There are no source files.");
                 return false;
             }
 
@@ -112,7 +112,8 @@ namespace Microsoft.DotNet.GenFacades
 
         public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
-            if (node.Body == null)
+            // Abstract/extern methods and interface members have neither body nor expression body.
+            if (node.Body == null && node.ExpressionBody == null)
                 return node;
 
             if (_exclusionApis != null && _exclusionApis.Contains(GetMethodDefinition(node)))
@@ -127,13 +128,33 @@ namespace Microsoft.DotNet.GenFacades
             {
                 block = (BlockSyntax)SyntaxFactory.ParseStatement(GetDefaultMessage());
             }
-            return node.WithBody(block);
+            return node.WithBody(block).WithExpressionBody(null).WithSemicolonToken(default);
         }
 
         public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node)
         {
             if (_exclusionApis != null && _exclusionApis.Contains(GetPropertyDefinition(node)))
                 return null;
+
+            // Handle expression-bodied properties (e.g., `public int X => _x;`).
+            // Convert them to a getter-only property that throws.
+            if (node.ExpressionBody != null)
+            {
+                var getterBlock = (BlockSyntax)SyntaxFactory.ParseStatement(GetDefaultMessage());
+                var getterAccessor = SyntaxFactory.AccessorDeclaration(SyntaxKind.GetAccessorDeclaration)
+                    .WithBody(getterBlock);
+                var accessorList = SyntaxFactory.AccessorList(SyntaxFactory.SingletonList(getterAccessor));
+                return node.WithExpressionBody(null)
+                           .WithSemicolonToken(default)
+                           .WithInitializer(null)
+                           .WithAccessorList(accessorList);
+            }
+
+            // Strip property initializers (e.g., `public int X { get; } = 5;`).
+            if (node.Initializer != null)
+            {
+                node = node.WithInitializer(null).WithSemicolonToken(default);
+            }
 
             return base.VisitPropertyDeclaration(node);
         }
@@ -157,42 +178,57 @@ namespace Microsoft.DotNet.GenFacades
         public override SyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
         {
             BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(GetDefaultMessage());
-            return node.WithBody(block);
+            return node.WithBody(block).WithExpressionBody(null).WithSemicolonToken(default);
         }
 
         public override SyntaxNode VisitDestructorDeclaration(DestructorDeclarationSyntax node)
         {
             BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(emptyBody);
-            return node.WithBody(block);
+            return node.WithBody(block).WithExpressionBody(null).WithSemicolonToken(default);
         }
 
         public override SyntaxNode VisitAccessorDeclaration(AccessorDeclarationSyntax node)
         {
-            if (node.Body == null)
+            // Auto-accessors and interface accessors have neither body nor expression body.
+            if (node.Body == null && node.ExpressionBody == null)
                 return node;
 
-            string message = "{ throw new System.PlatformNotSupportedException(" + $"{ _message }); "+ " } ";       
-            BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(message);
+            BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(GetDefaultMessage());
 
-            return node.WithBody(block);
+            return node.WithBody(block).WithExpressionBody(null).WithSemicolonToken(default);
         }
 
         public override SyntaxNode VisitOperatorDeclaration(OperatorDeclarationSyntax node)
         {
-            if (node.Body == null)
+            if (node.Body == null && node.ExpressionBody == null)
                 return node;
 
             BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(GetDefaultMessage());
-            return node.WithBody(block);
+            return node.WithBody(block).WithExpressionBody(null).WithSemicolonToken(default);
         }
 
         public override SyntaxNode VisitConversionOperatorDeclaration(ConversionOperatorDeclarationSyntax node)
         {
-            if (node.Body == null)
+            if (node.Body == null && node.ExpressionBody == null)
                 return node;
 
             BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(GetDefaultMessage());
-            return node.WithBody(block);
+            return node.WithBody(block).WithExpressionBody(null).WithSemicolonToken(default);
+        }
+
+        public override SyntaxNode VisitVariableDeclarator(VariableDeclaratorSyntax node)
+        {
+            // Strip non-const field initializers so that implementation sources with runtime
+            // initializers (e.g., `private static readonly X s_x = new X();`) compile correctly.
+            if (node.Initializer != null &&
+                node.Parent is VariableDeclarationSyntax &&
+                node.Parent.Parent is FieldDeclarationSyntax fieldDecl &&
+                !fieldDecl.Modifiers.Any(SyntaxKind.ConstKeyword))
+            {
+                return node.WithInitializer(null);
+            }
+
+            return base.VisitVariableDeclarator(node);
         }
 
         private string GetFullyQualifiedName(TypeDeclarationSyntax node)
