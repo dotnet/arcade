@@ -68,6 +68,16 @@ jobs:
           targetPath: $(Build.ArtifactStagingDirectory)/sbom
           artifactName: $(ARTIFACT_NAME)
 
+      # V4 publishing: automatically publish staged artifacts as a pipeline artifact.
+      # The artifact name matches the SDK's FutureArtifactName ($(System.PhaseName)_Artifacts),
+      # which is encoded in the asset manifest for downstream publishing to discover.
+      - ${{ if eq(parameters.publishingVersion, 4) }}:
+        - output: pipelineArtifact
+          displayName: 'Publish V4 pipeline artifacts'
+          targetPath: '$(Build.ArtifactStagingDirectory)/artifacts'
+          artifactName: '$(System.PhaseName)_Artifacts'
+          continueOnError: true
+
       # add any outputs provided via root yaml
       - ${{ if ne(parameters.templateContext.outputs, '') }}:
         - ${{ each output in parameters.templateContext.outputs }}:

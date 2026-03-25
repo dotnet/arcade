@@ -27,6 +27,7 @@ stages:
       microbuildUseESRP: ${{ parameters.microbuildUseESRP }}
       enableSourceIndex: true
       enableSourceBuild: true
+      publishingVersion: 4
       workspace:
         clean: all
       jobs:
@@ -62,7 +63,7 @@ stages:
 
 - template: /eng/common/templates-official/post-build/post-build.yml@self
   parameters:
-    publishingInfraVersion: 3
+    publishingInfraVersion: 4
     # signing validation will not run, even if the below value is 'true', if the 'PostBuildSign' variable is set to 'true'
     enableSigningValidation: false
     # Sourcelink validation isn't passing for Arcade due to some regressions. This should be
