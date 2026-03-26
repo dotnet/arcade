@@ -28,6 +28,10 @@ parameters:
 - name: retryCountOnTaskFailure
   type: string
   default: 10
+
+- name: sbomEnabled
+  type: string
+  default: ''
   
 steps:
 - ${{ if ne(parameters.is1ESPipeline, true) }}:
@@ -44,3 +48,5 @@ steps:
       ArtifactName: ${{ parameters.artifactName }}
     ${{ if parameters.retryCountOnTaskFailure }}:
       retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
+    ${{ if ne(parameters.sbomEnabled, '') }}:
+      sbomEnabled: ${{ parameters.sbomEnabled }}
