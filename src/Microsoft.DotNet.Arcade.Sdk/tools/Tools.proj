@@ -52,8 +52,8 @@
     <PackageDownload Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="[$(MicrosoftVisualStudioEngMicroBuildCoreVersion)]" />
     <PackageDownload Include="MicroBuild.Core.Sentinel" Version="[1.0.0]" />
     <PackageDownload Include="vswhere" Version="[$(VSWhereVersion)]" />
-    <PackageDownload Include="Microsoft.Signed.Wix" Version="[$(MicrosoftSignedWixVersion)]" />
-    <PackageDownload Include="Microsoft.WixToolset.Sdk" Version="[$(MicrosoftWixToolsetSdkVersion)]" />
+    <PackageDownload Include="Microsoft.Signed.Wix" Version="[$(MicrosoftSignedWixVersion)]" Condition="'$(UsingToolWix3)' == 'true'" />
+    <PackageDownload Include="Microsoft.WixToolset.Sdk" Version="[$(MicrosoftWixToolsetSdkVersion)]" Condition="'$(UsingToolWix5)' == 'true'" />
     <PackageDownload Include="Microsoft.DotNet.SignTool" Version="[$(MicrosoftDotNetSignToolVersion)]" />
     <PackageDownload Include="Microsoft.DotNet.MacOsPkg.Cli" Version="[$(MicrosoftDotNetMacOsPkgVersion)]" />
     <PackageDownload Include="Microsoft.SymbolUploader.Build.Task" Version="[$(MicrosoftSymbolUploaderBuildTaskVersion)]" Condition="'$(PublishToSymbolServer)' == 'true'" />

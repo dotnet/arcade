@@ -33,6 +33,10 @@
     <UsingToolVisualStudioIbcTraining Condition="'$(UsingToolVisualStudioIbcTraining)' == ''">false</UsingToolVisualStudioIbcTraining>
     <UsingToolNuGetRepack Condition="'$(UsingToolNuGetRepack)' == ''">false</UsingToolNuGetRepack>
     <UsingToolSymbolUploader Condition="'$(UsingToolSymbolUploader)' == ''">false</UsingToolSymbolUploader>
+    <!-- Set UsingToolWix3 to true if this repo produces WiX 3 MSI installers (wixpacks). -->
+    <UsingToolWix3 Condition="'$(UsingToolWix3)' == ''">false</UsingToolWix3>
+    <!-- Set UsingToolWix5 to true if this repo produces WiX 5 MSI installers (wixpacks). -->
+    <UsingToolWix5 Condition="'$(UsingToolWix5)' == ''">false</UsingToolWix5>
 
     <!-- Deprecated features -->
     <!--
