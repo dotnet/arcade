@@ -203,14 +203,6 @@ jobs:
           SourceFolder: 'artifacts/packages'
           Contents: '**'
           TargetFolder: '$(Build.ArtifactStagingDirectory)/artifacts/packages'
-    - ${{ if and(ne(parameters.artifacts.publish.manifests, 'false'), ne(parameters.artifacts.publish.manifests, '')) }}:
-      - task: CopyFiles@2
-        displayName: Gather manifests for publish to artifacts
-        inputs:
-          SourceFolder: 'artifacts/log'
-          Contents: '**/AssetManifest/**'
-          TargetFolder: '$(Build.ArtifactStagingDirectory)/artifacts/manifests'
-        continueOnError: true
     - ${{ if and(ne(parameters.artifacts.publish.logs, 'false'), ne(parameters.artifacts.publish.logs, '')) }}:
       - task: CopyFiles@2
         displayName: Gather logs for publish to artifacts
