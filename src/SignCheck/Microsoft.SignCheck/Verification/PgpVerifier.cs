@@ -10,12 +10,24 @@ using Microsoft.SignCheck.Logging;
 
 namespace Microsoft.SignCheck.Verification
 {
-    public abstract class LinuxPackageVerifier : ArchiveVerifier
+    public abstract class PgpVerifier : ArchiveVerifier
     {
-        protected LinuxPackageVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options, string fileExtension) : base(log, exclusions, options, fileExtension) { }
+        private bool _signatureIsDetached;
+
+        protected PgpVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options, string fileExtension, bool signatureIsDetached = false)
+        : base(log, exclusions, options, fileExtension)
+        {
+            _signatureIsDetached = signatureIsDetached;
+        }
 
         public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
-            => VerifySupportedFileType(path, parent, virtualPath);
+        {
+            if (_signatureIsDetached && File.Exists(path + ".sig"))
+            {
+                return VerifySupportedFileType(path, parent, virtualPath);
+            }
+            return VerifyUnsupportedFileType(path, parent, virtualPath);
+        }
 
         /// <summary>
         /// Returns the paths to the signature document and the signable content.
@@ -24,13 +36,25 @@ namespace Microsoft.SignCheck.Verification
         /// <param name="path"></param>
         /// <param name="tempDir"></param>
         /// <returns></returns>
-        protected abstract (string signatureDocument, string signableContent) GetSignatureDocumentAndSignableContent(string path, string tempDir);
+        protected virtual (string signatureDocument, string signableContent) GetSignatureDocumentAndSignableContent(string path, string tempDir)
+        {
+            if (_signatureIsDetached)
+            {
+                string signature = $"{path}.sig";
+                string signatureDocument = Path.Combine(tempDir, Path.GetFileName(signature));
+                File.Copy(signature, signatureDocument, overwrite: true);
+
+                return (signatureDocument, path);
+            }
+
+            throw new InvalidOperationException("GetSignatureDocumentAndSignableContent must be overridden for supported archive types that do not use detached signatures.");
+        }
 
         protected override bool IsSigned(string path, SignatureVerificationResult svr)
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                throw new PlatformNotSupportedException("Linux package verification is not supported on Windows.");
+                throw new PlatformNotSupportedException("Pgp verification is not supported on Windows.");
             }
 
             string tempDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
