@@ -60,3 +60,4 @@ steps:
       artifactName: PostBuildLogs
       continueOnError: true
       condition: always()
+      sbomEnabled: false
