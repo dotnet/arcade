@@ -36,16 +36,25 @@ jobs:
     artifactPublishSteps:
     - ${{ if ne(parameters.artifacts.publish, '') }}:
       - ${{ if and(ne(parameters.artifacts.publish.artifacts, 'false'), ne(parameters.artifacts.publish.artifacts, '')) }}:
-        - template: /eng/common/core-templates/steps/publish-build-artifacts.yml
+        - template: /eng/common/core-templates/steps/publish-pipeline-artifacts.yml
           parameters:
             is1ESPipeline: false
             args:
               displayName: Publish pipeline artifacts
-              pathToPublish: '$(Build.ArtifactStagingDirectory)/artifacts'
-              publishLocation: Container
+              targetPath: '$(Build.ArtifactStagingDirectory)/artifacts'
               artifactName: ${{ coalesce(parameters.artifacts.publish.artifacts.name , 'Artifacts_$(Agent.Os)_$(_BuildConfig)') }}
               continueOnError: true
-              condition: always()
+              condition: succeeded()
+              retryCountOnTaskFailure: 10 # for any logs being locked
+        - template: /eng/common/core-templates/steps/publish-pipeline-artifacts.yml
+          parameters:
+            is1ESPipeline: false
+            args:
+              displayName: Publish pipeline artifacts
+              targetPath: '$(Build.ArtifactStagingDirectory)/artifacts'
+              artifactName: ${{ coalesce(parameters.artifacts.publish.artifacts.name , 'Artifacts_$(Agent.Os)_$(_BuildConfig)') }}_Attempt$(System.JobAttempt)
+              continueOnError: true
+              condition: not(succeeded())
               retryCountOnTaskFailure: 10 # for any logs being locked
       - ${{ if and(ne(parameters.artifacts.publish.logs, 'false'), ne(parameters.artifacts.publish.logs, '')) }}:
         - template: /eng/common/core-templates/steps/publish-pipeline-artifacts.yml
