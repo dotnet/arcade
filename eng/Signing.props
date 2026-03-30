@@ -18,6 +18,7 @@
     <FileSignInfo Include="Newtonsoft.Json.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="NRedisStack.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Octokit.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="Pipelines.Sockets.Unofficial.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="SevenZip.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="SharpYaml.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Swashbuckle.AspNetCore.Swagger.dll" CertificateName="3PartySHA2" />
