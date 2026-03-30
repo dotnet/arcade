@@ -21,6 +21,7 @@
     <FileSignInfo Include="Pipelines.Sockets.Unofficial.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="SevenZip.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="SharpYaml.dll" CertificateName="3PartySHA2" />
+    <FileSignInfo Include="StackExchange.Redis.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="Swashbuckle.AspNetCore.Swagger.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="winterop.dll" CertificateName="3PartySHA2" />
     <FileSignInfo Include="wix.dll" CertificateName="3PartySHA2" />
