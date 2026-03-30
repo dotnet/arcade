@@ -26,11 +26,18 @@ jobs:
       outputs:
       - ${{ if ne(parameters.artifacts.publish, '') }}:
         - ${{ if and(ne(parameters.artifacts.publish.artifacts, 'false'), ne(parameters.artifacts.publish.artifacts, '')) }}:
-          - output: buildArtifacts
+          - output: pipelineArtifact
             displayName: Publish pipeline artifacts
-            PathtoPublish: '$(Build.ArtifactStagingDirectory)/artifacts'
-            ArtifactName: ${{ coalesce(parameters.artifacts.publish.artifacts.name , 'Artifacts_$(Agent.Os)_$(_BuildConfig)') }}
-            condition: always()
+            targetPath: '$(Build.ArtifactStagingDirectory)/artifacts'
+            artifactName: ${{ coalesce(parameters.artifacts.publish.artifacts.name , 'Artifacts_$(Agent.Os)_$(_BuildConfig)') }}
+            condition: succeeded()
+            retryCountOnTaskFailure: 10 # for any logs being locked
+            continueOnError: true
+          - output: pipelineArtifact
+            displayName: Publish pipeline artifacts
+            targetPath: '$(Build.ArtifactStagingDirectory)/artifacts'
+            artifactName: ${{ coalesce(parameters.artifacts.publish.artifacts.name , 'Artifacts_$(Agent.Os)_$(_BuildConfig)') }}_Attempt$(System.JobAttempt)
+            condition: not(succeeded())
             retryCountOnTaskFailure: 10 # for any logs being locked
             continueOnError: true
         - ${{ if and(ne(parameters.artifacts.publish.logs, 'false'), ne(parameters.artifacts.publish.logs, '')) }}:
