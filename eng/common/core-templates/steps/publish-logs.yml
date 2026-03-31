@@ -56,7 +56,7 @@ steps:
     args:
       displayName: Publish Logs
       targetPath: '$(Build.ArtifactStagingDirectory)/PostBuildLogs'
-      artifactName: PostBuildLogs_Attempt$(System.JobAttempt)
+      artifactName: PostBuildLogs_${{ parameters.StageLabel }}_${{ parameters.JobLabel }}_Attempt$(System.JobAttempt)
       continueOnError: true
       condition: always()
       retryCountOnTaskFailure: 10 # for any files being locked
