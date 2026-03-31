@@ -217,4 +217,5 @@ jobs:
       - template: /eng/common/core-templates/steps/publish-logs.yml
         parameters:
           is1ESPipeline: ${{ parameters.is1ESPipeline }}
+          StageLabel: 'BuildAssetRegistry'
           JobLabel: 'Publish_Artifacts_Logs'
