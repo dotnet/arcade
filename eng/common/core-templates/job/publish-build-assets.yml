@@ -172,8 +172,7 @@ jobs:
             targetPath: '$(Build.ArtifactStagingDirectory)/MergedManifest.xml'
             artifactName: AssetManifests
             displayName: 'Publish Merged Manifest'
-            retryCountOnTaskFailure: 10 # for any logs being locked
-            sbomEnabled: false # we don't need SBOM for logs
+            retryCountOnTaskFailure: 10 # for any files being locked
 
     - template: /eng/common/core-templates/steps/publish-pipeline-artifacts.yml
       parameters:
@@ -182,6 +181,7 @@ jobs:
           displayName: Publish ReleaseConfigs Artifact
           targetPath: '$(Build.StagingDirectory)/ReleaseConfigs'
           artifactName: ReleaseConfigs
+          retryCountOnTaskFailure: 10 # for any files being locked
 
     - ${{ if or(eq(parameters.publishAssetsImmediately, 'true'), eq(parameters.isAssetlessBuild, 'true')) }}:
       - template: /eng/common/core-templates/post-build/setup-maestro-vars.yml
