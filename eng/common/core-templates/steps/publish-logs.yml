@@ -59,4 +59,6 @@ steps:
       artifactName: PostBuildLogs_Attempt$(System.JobAttempt)
       continueOnError: true
       condition: always()
-      sbomEnabled: false  # we don't need SBOM for logs
+      retryCountOnTaskFailure: 10 # for any files being locked
+      isProduction: false # logs are non-production artifacts
+
