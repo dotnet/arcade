@@ -37,12 +37,10 @@
     <PackageReference Update="Microsoft.Build.Tasks.Core" Publish="false" />
     <PackageReference Update="Microsoft.Build.Utilities.Core" Publish="false" />
     <PackageReference Update="Microsoft.NET.StringTools" Publish="false" />
-    <PackageReference Update="System.Resources.Extensions" Publish="false" />
   </ItemGroup>
 
   <!-- Don't include assemblies that are provided by the SDK, next to MSBuild. -->
   <ItemGroup>
-    <PackageReference Update="Newtonsoft.Json" Publish="false" />
     <PackageReference Update="NuGet.Commands" Publish="false" />
     <PackageReference Update="NuGet.Common" Publish="false" />
     <PackageReference Update="NuGet.Configuration" Publish="false" />
@@ -50,9 +48,6 @@
     <PackageReference Update="NuGet.Packaging" Publish="false" />
     <PackageReference Update="NuGet.ProjectModel" Publish="false" />
     <PackageReference Update="NuGet.Versioning" Publish="false" />
-    <PackageReference Update="System.CodeDom" Publish="false" />
-    <PackageReference Update="System.Security.Cryptography.ProtectedData" Publish="false" />
-    <PackageReference Update="System.Text.Encoding.CodePages" Publish="false" />
   </ItemGroup>
 
   <ItemGroup>
