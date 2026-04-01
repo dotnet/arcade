@@ -99,14 +99,10 @@ namespace Microsoft.SignCheck.Verification
                     return signedCms;
                 }
             }
-            catch (Exception) when (IsExpectedException())
+            catch (Exception)
             {
                 return null;
             }
-
-            // Local function to keep the catch filter readable.
-            // We catch any exception because the file may be corrupt or not actually a CAB.
-            static bool IsExpectedException() => true;
         }
     }
 }
