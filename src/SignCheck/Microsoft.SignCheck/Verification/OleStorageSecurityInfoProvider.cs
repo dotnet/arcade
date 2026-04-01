@@ -4,6 +4,7 @@
 using System;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
 using System.Security.Cryptography.Pkcs;
 using Microsoft.SignCheck.Interop;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -16,6 +17,7 @@ namespace Microsoft.SignCheck.Verification
     /// Reads digital signature information from OLE Compound Document files (MSI, MSP).
     /// These files store their Authenticode signature in a stream named "\x05DigitalSignature".
     /// </summary>
+    [SupportedOSPlatform("windows")]
     public class OleStorageSecurityInfoProvider : ISecurityInfoProvider
     {
         private const string DigitalSignatureStreamName = "\x05DigitalSignature";

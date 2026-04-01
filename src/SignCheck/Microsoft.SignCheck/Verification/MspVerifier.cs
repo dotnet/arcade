@@ -2,11 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.IO;
+using System.Runtime.Versioning;
 using Microsoft.SignCheck.Interop;
 using Microsoft.SignCheck.Logging;
 
 namespace Microsoft.SignCheck.Verification
 {
+    [SupportedOSPlatform("windows")]
     public class MspVerifier : AuthentiCodeVerifier
     {
 

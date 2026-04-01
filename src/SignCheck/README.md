@@ -90,13 +90,13 @@ Options:
 | .dylib         | macOS                      |
 | .exe           | Windows, macOS, Linux      |
 | .gz            | macOS, Linux               |
-| .jar           | Windows                    |
+| .jar           | Windows, macOS, Linux      |
 | .js            | Windows, macOS, Linux      |
 | .lzma          | Windows, macOS, Linux      |
 | .macho         | macOS                      |
 | .msi           | Windows                    |
 | .msp           | Windows                    |
-| .msu           | Windows                    |
+| .msu           | Windows, macOS, Linux *    |
 | .nupkg         | Windows, macOS, Linux      |
 | .pkg           | macOS                      |
 | .ps1           | Windows, macOS, Linux      |
@@ -110,13 +110,15 @@ Options:
 | .xml           | Windows, macOS, Linux      |
 | .zip           | Windows, macOS, Linux      |
 
+\* Signature verification is cross-platform. Recursive content extraction is Windows-only.
+
 #### Detected via File Headers
 
 | File Type                  | Platforms                  |
 |----------------------------|----------------------------|
 | Cab Files                  | Windows, macOS, Linux      |
 | EXE Files                  | Windows                    |
-| Jar Files                  | Windows                    |
+| Jar Files                  | Windows, macOS, Linux      |
 | Mach-O Files               | macOS                      |
 | NuGet Packages             | Windows, macOS, Linux      |
 | PE Files                   | Windows                    |
