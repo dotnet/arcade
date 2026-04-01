@@ -379,7 +379,7 @@ function InstallDotNet([string] $dotnetRoot,
 # Returns full path to msbuild.exe.
 # Throws on failure.
 #
-function InitializeVisualStudioMSBuild([bool]$install, [object]$vsRequirements = $null) {
+function InitializeVisualStudioMSBuild([object]$vsRequirements = $null) {
   if (-not (IsWindowsPlatform)) {
     throw "Cannot initialize Visual Studio on non-Windows"
   }
@@ -389,7 +389,7 @@ function InitializeVisualStudioMSBuild([bool]$install, [object]$vsRequirements =
   }
 
   # Minimum VS version to require.
-  $vsMinVersionReqdStr = '17.7'
+  $vsMinVersionReqdStr = '18.0'
 
   if (!$vsRequirements) {
     if (Get-Member -InputObject $GlobalJson.tools -Name 'vs') {
@@ -564,7 +564,7 @@ function InitializeBuildTool() {
     $buildTool = @{ Path = $dotnetPath; Command = 'msbuild'; Tool = 'dotnet'; Framework = 'net' }
   } elseif ($msbuildEngine -eq "vs") {
     try {
-      $msbuildPath = InitializeVisualStudioMSBuild -install:$restore
+      $msbuildPath = InitializeVisualStudioMSBuild
     } catch {
       Write-PipelineTelemetryError -Category 'InitializeToolset' -Message $_
       ExitWithExitCode 1

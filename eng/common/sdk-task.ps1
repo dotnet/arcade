@@ -70,7 +70,7 @@ try {
       $GlobalJson.tools | Add-Member -Name "vs" -Value (ConvertFrom-Json "{ `"version`": `"16.5`" }") -MemberType NoteProperty
     }
 
-    $global:_MSBuildExe = InitializeVisualStudioMSBuild -install $true
+    $global:_MSBuildExe = InitializeVisualStudioMSBuild
   }
 
   $taskProject = GetSdkTaskProject $task
