@@ -92,7 +92,7 @@ namespace Microsoft.SignCheck.Verification
                 AddFileVerifier(new MspVerifier(log, exclusions, options));
             }
 
-            AddFileVerifier(new CabVerifier(log, exclusions, options, ".cab"));
+            AddFileVerifier(new CabVerifier(log, exclusions, options));
             AddFileVerifier(new JarVerifier(log, exclusions, options));
             AddFileVerifier(new MsuVerifier(log, exclusions, options));
 
