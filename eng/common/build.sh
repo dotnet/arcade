@@ -223,7 +223,9 @@ function InitializeCustomToolset {
   local script="$eng_root/restore-toolset.sh"
 
   if [[ -a "$script" ]]; then
+    local saved_cwd="$PWD"
     . "$script"
+    cd "$saved_cwd"
   fi
 }
 

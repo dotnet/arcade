@@ -94,7 +94,9 @@ function InitializeCustomToolset {
   $script = Join-Path $EngRoot 'restore-toolset.ps1'
 
   if (Test-Path $script) {
+    $savedCwd = Get-Location
     . $script
+    Set-Location $savedCwd
   }
 }
 
