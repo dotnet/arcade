@@ -48,6 +48,15 @@ jobs:
   dependsOn: ${{ parameters.dependsOn }}
   timeoutInMinutes: 150
 
+  # Disable binskim for 1ES PT builds — this job produces config-only artifacts (no binaries),
+  # and TSAUpload prints a warning when binskim runs but produces no output.
+  ${{ if eq(parameters.is1ESPipeline, 'true') }}:
+    templateContext:
+      sdl:
+        binskim:
+          enabled: false
+          justificationForDisabling: "Job produces config-only artifacts (no binaries)."
+
   ${{ if eq(parameters.publishAssetsImmediately, 'true') }}:
     displayName: Publish Assets
   ${{ else }}:
