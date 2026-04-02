@@ -184,38 +184,36 @@ namespace Microsoft.DotNet.SignTool
                 var notarizeProjectPath = Path.Combine(dir, $"Round{round}-Notarize.proj");
                 File.WriteAllText(notarizeProjectPath, GenerateBuildFileContent(filesToNotarize, null, true));
 
-                // Notarization can be flaky, so allow up to 5 attempts
-                const int maxAttempts = 5;
-                string notarizeLogName = $"NotarizationRound{round}";
-
-                _log.LogMessage(MessageImportance.High, $"Starting notarization with up to {maxAttempts} attempts");
-
+                // Notarization can be flaky, so retry up to 5 times with no wait between retries
+                const int maxRetries = 5;
+                int attempt = 0;
                 bool notarizationSucceeded = false;
-                for (int attempt = 1; attempt <= maxAttempts; attempt++)
+                
+                _log.LogMessage(MessageImportance.High, $"Starting notarization with up to {maxRetries} attempts");
+                
+                while (attempt < maxRetries && !notarizationSucceeded)
                 {
-                    bool isLastAttempt = attempt == maxAttempts;
-
-                    _log.LogMessage(MessageImportance.High, $"Notarization attempt {attempt} of {maxAttempts}");
-
-                    string attemptSuffix = $"-Attempt{attempt}";
-                    bool result = RunMSBuild(buildEngine, notarizeProjectPath,
-                        Path.Combine(_args.LogDir, $"{notarizeLogName}{attemptSuffix}.binlog"),
-                        Path.Combine(_args.LogDir, $"{notarizeLogName}{attemptSuffix}.log"),
-                        Path.Combine(_args.LogDir, $"{notarizeLogName}{attemptSuffix}.error.log"),
-                        suppressErrors: !isLastAttempt);
-
-                    if (result)
+                    attempt++;
+                    _log.LogMessage(MessageImportance.High, $"Notarization attempt {attempt} of {maxRetries}");
+                    
+                    string notarizeLogName = $"NotarizationRound{round}-Attempt{attempt}";
+                    notarizationSucceeded = RunMSBuild(buildEngine, notarizeProjectPath, 
+                        Path.Combine(_args.LogDir, $"{notarizeLogName}.binlog"), 
+                        Path.Combine(_args.LogDir, $"{notarizeLogName}.log"), 
+                        Path.Combine(_args.LogDir, $"{notarizeLogName}.error.log"),
+                        suppressErrors: attempt < maxRetries);
+                    
+                    if (!notarizationSucceeded && attempt < maxRetries)
                     {
-                        notarizationSucceeded = true;
-                        break;
-                    }
-
-                    if (!isLastAttempt)
-                    {
-                        _log.LogMessage(MessageImportance.High, $"Notarization attempt {attempt} failed. Retrying...");
+                        _log.LogMessage(MessageImportance.High, $"Notarization failed on attempt {attempt}. Retrying...");
                     }
                 }
-
+                
+                if (!notarizationSucceeded)
+                {
+                    _log.LogError($"Notarization failed after {maxRetries} attempts");
+                }
+                
                 status = notarizationSucceeded;
             }
 
