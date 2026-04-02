@@ -55,11 +55,6 @@ namespace Microsoft.DotNet.SignTool
 
             Directory.CreateDirectory(_logDir);
 
-            return RunMSBuildProcess(projectFilePath, binLogPath, logPath, errorLogPath, suppressErrors);
-        }
-
-        private bool RunMSBuildProcess(string projectFilePath, string binLogPath, string logPath, string errorLogPath, bool suppressErrors)
-        {
             using (var process = new Process())
             {
                 process.StartInfo = new ProcessStartInfo()
