@@ -15,12 +15,14 @@ namespace Microsoft.SignCheck.Verification
 {
     /// <summary>
     /// Reads digital signature information from OLE Compound Document files (MSI, MSP).
-    /// These files store their Authenticode signature in a stream named "\x05DigitalSignature".
+    /// These files store their Authenticode signature in a stream named "\u0005DigitalSignature".
     /// </summary>
     [SupportedOSPlatform("windows")]
     public class OleStorageSecurityInfoProvider : ISecurityInfoProvider
     {
-        private const string DigitalSignatureStreamName = "\x05DigitalSignature";
+        // Use \u0005 (not \x05) because \x greedily consumes hex digits,
+        // turning \x05D into U+005D (']') instead of U+0005 followed by 'D'.
+        private const string DigitalSignatureStreamName = "\u0005DigitalSignature";
 
         public SignedCms ReadSecurityInfo(string path)
         {
