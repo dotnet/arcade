@@ -26,5 +26,7 @@ steps:
       properties: ${{ parameters.args.properties }}
     ${{ if parameters.args.sbomEnabled }}:
       sbomEnabled: ${{ parameters.args.sbomEnabled }}
+    ${{ if parameters.args.sbomBuildDropPath }}:
+      sbomBuildDropPath: ${{ parameters.args.sbomBuildDropPath }}
     ${{ if parameters.args.isProduction }}:
       isProduction: ${{ parameters.args.isProduction }}

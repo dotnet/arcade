@@ -173,6 +173,7 @@ jobs:
             artifactName: AssetManifests
             displayName: 'Publish Merged Manifest'
             retryCountOnTaskFailure: 10 # for any files being locked
+            sbomBuildDropPath: $(Build.ArtifactStagingDirectory)
 
     - template: /eng/common/core-templates/steps/publish-pipeline-artifacts.yml
       parameters:
