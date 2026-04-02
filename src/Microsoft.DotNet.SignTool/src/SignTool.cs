@@ -28,6 +28,14 @@ namespace Microsoft.DotNet.SignTool
         internal string WixToolsPath => _args.WixToolsPath;
         internal string PkgToolPath => _args.PkgToolPath;
 
+        /// <summary>
+        /// When true, <see cref="RunMSBuild"/> implementations should log failures
+        /// as high-importance messages rather than errors. Used during notarization
+        /// retries so that a transient failure doesn't leave a permanent error in
+        /// the MSBuild error list when a subsequent retry succeeds.
+        /// </summary>
+        internal bool SuppressRunMSBuildErrors { get; set; }
+
         internal SignTool(SignToolArgs args, TaskLoggingHelper log)
         {
             _args = args;
@@ -197,10 +205,22 @@ namespace Microsoft.DotNet.SignTool
                     _log.LogMessage(MessageImportance.High, $"Notarization attempt {attempt} of {maxRetries}");
                     
                     string notarizeLogName = $"NotarizationRound{round}-Attempt{attempt}";
-                    notarizationSucceeded = RunMSBuild(buildEngine, notarizeProjectPath, 
-                        Path.Combine(_args.LogDir, $"{notarizeLogName}.binlog"), 
-                        Path.Combine(_args.LogDir, $"{notarizeLogName}.log"), 
-                        Path.Combine(_args.LogDir, $"{notarizeLogName}.error.log"));
+
+                    // Suppress errors during retryable attempts so that a transient
+                    // failure doesn't leave a permanent error in the MSBuild error list
+                    // when a subsequent retry succeeds.
+                    SuppressRunMSBuildErrors = (attempt < maxRetries);
+                    try
+                    {
+                        notarizationSucceeded = RunMSBuild(buildEngine, notarizeProjectPath, 
+                            Path.Combine(_args.LogDir, $"{notarizeLogName}.binlog"), 
+                            Path.Combine(_args.LogDir, $"{notarizeLogName}.log"), 
+                            Path.Combine(_args.LogDir, $"{notarizeLogName}.error.log"));
+                    }
+                    finally
+                    {
+                        SuppressRunMSBuildErrors = false;
+                    }
                     
                     if (!notarizationSucceeded && attempt < maxRetries)
                     {

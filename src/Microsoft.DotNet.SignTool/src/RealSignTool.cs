@@ -88,8 +88,20 @@ namespace Microsoft.DotNet.SignTool
 
                 if (process.ExitCode != 0)
                 {
-                    _log.LogError($"Failed to execute MSBuild on the project file '{projectFilePath}'" +
-                    $" with exit code '{process.ExitCode}'.");
+                    string failureMessage = $"Failed to execute MSBuild on the project file '{projectFilePath}'" +
+                        $" with exit code '{process.ExitCode}'.";
+
+                    // When SuppressRunMSBuildErrors is set (during notarization retries),
+                    // log as a message instead of an error so the build isn't permanently
+                    // marked as failed when a subsequent retry succeeds.
+                    if (SuppressRunMSBuildErrors)
+                    {
+                        _log.LogMessage(MessageImportance.High, failureMessage);
+                    }
+                    else
+                    {
+                        _log.LogError(failureMessage);
+                    }
                     success = false;
                 }
 
