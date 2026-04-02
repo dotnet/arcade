@@ -24,8 +24,10 @@ namespace Microsoft.SignCheck.Verification
 
         public SignedCms ReadSecurityInfo(string path)
         {
-            IStorage storage = null;
-            int hr = Ole32.StgOpenStorage(path, null, STGM.STGM_READ | STGM.STGM_SHARE_EXCLUSIVE, IntPtr.Zero, 0, out storage);
+            Guid iidStorage = typeof(IStorage).GUID;
+            int hr = Ole32.StgOpenStorageEx(path, STGM.STGM_READ | STGM.STGM_SHARE_EXCLUSIVE,
+                Ole32.STGFMT_STORAGE, 0, IntPtr.Zero, IntPtr.Zero, ref iidStorage, out object storageObj);
+            IStorage storage = storageObj as IStorage;
 
             if (hr != StructuredStorage.S_OK || storage == null)
             {
