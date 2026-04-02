@@ -27,6 +27,7 @@ stages:
       enablePublishBuildAssets: true
       enableSourceIndex: true
       enableSourceBuild: true
+      enablePublishing: true
       publishingVersion: 4
       workspace:
         clean: all
