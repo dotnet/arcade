@@ -42,11 +42,17 @@ parameters:
 
   officialBuildId: ''
 
+  # Optional: additional job properties for the publish-assets job, such as 1ES templateContext.
+  templateContext: {}
+
 jobs:
 - job: Asset_Registry_Publish
 
   dependsOn: ${{ parameters.dependsOn }}
   timeoutInMinutes: 150
+
+  ${{ if ne(parameters.templateContext, '') }}:
+    templateContext: ${{ parameters.templateContext }}
 
   ${{ if eq(parameters.publishAssetsImmediately, 'true') }}:
     displayName: Publish Assets

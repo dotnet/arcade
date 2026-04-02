@@ -25,6 +25,11 @@ stages:
       enableMicrobuild: true
       microbuildUseESRP: ${{ parameters.microbuildUseESRP }}
       enablePublishBuildAssets: true
+      publishBuildAssetsTemplateContext:
+        sdl:
+          binskim:
+            enabled: false
+            justificationForDisabling: "Job produces config-only artifacts (no binaries)."
       enableSourceIndex: true
       enableSourceBuild: true
       publishingVersion: 4

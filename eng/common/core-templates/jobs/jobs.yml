@@ -24,6 +24,10 @@ parameters:
   # Optional: Override automatically derived dependsOn value for "publish build assets" job
   publishBuildAssetsDependsOn: ''
 
+  # Optional: additional job properties for the auto-generated "publish build assets" job,
+  # such as 1ES templateContext settings.
+  publishBuildAssetsTemplateContext: {}
+
   # Optional: Publish the assets as soon as the publish to BAR stage is complete, rather doing so in a separate stage.
   publishAssetsImmediately: false
 
@@ -123,3 +127,4 @@ jobs:
         signingValidationAdditionalParameters: ${{ parameters.signingValidationAdditionalParameters }}
         repositoryAlias: ${{ parameters.repositoryAlias }}
         officialBuildId: ${{ parameters.officialBuildId }}
+        templateContext: ${{ parameters.publishBuildAssetsTemplateContext }}

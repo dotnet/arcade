@@ -17,6 +17,7 @@ parameters:
   enablePublishBuildArtifacts: boolean # Enables publishing build logs as an Azure DevOps artifact.
   jobs: [ jobSchema ] # see "Job schema" below
   publishBuildAssetsDependsOn: [ string ] # Override automatically derived dependsOn value for "publish build assets" job
+  publishBuildAssetsTemplateContext: object # Additional job properties for the auto-generated "publish build assets" job, such as 1ES templateContext
   runAsPublic: boolean # Specify if job should run as a public build even in the internal project
 ```
 
