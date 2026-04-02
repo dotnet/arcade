@@ -71,7 +71,7 @@ namespace Microsoft.SignCheck.Interop
                             rootStorageEnum.Next(1, enumStg, out numFetched);
                         }
 
-                        if (enumStg != null)
+                        if (rootStorageEnum != null)
                         {
                             Marshal.ReleaseComObject(rootStorageEnum);
                         }
