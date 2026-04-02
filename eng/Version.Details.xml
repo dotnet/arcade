@@ -108,6 +108,10 @@
       <Sha>c7b5e07cfed85e88c162dc1c916efaff03742e6e</Sha>
     </Dependency>
     <!-- Transitive dependency needed for source build. -->
+    <Dependency Name="System.Composition" Version="10.0.3">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>dc5fd7a8dce8309e4add8fd4bd5d8718f221b15a</Sha>
+    </Dependency>
     <Dependency Name="System.Security.Cryptography.Pkcs" Version="10.0.3">
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>dc5fd7a8dce8309e4add8fd4bd5d8718f221b15a</Sha>
