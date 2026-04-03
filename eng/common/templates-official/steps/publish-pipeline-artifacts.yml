@@ -28,5 +28,5 @@ steps:
       sbomEnabled: ${{ parameters.args.sbomEnabled }}
     ${{ if parameters.args.sbomBuildDropPath }}:
       sbomBuildDropPath: ${{ parameters.args.sbomBuildDropPath }}
-    ${{ if parameters.args.isProduction }}:
+    ${{ if ne(parameters.args.isProduction, '') }}:
       isProduction: ${{ parameters.args.isProduction }}
