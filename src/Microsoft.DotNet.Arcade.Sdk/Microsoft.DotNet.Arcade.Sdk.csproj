@@ -40,6 +40,9 @@
     <None Include="$(_GeneratedVersionFilePath)"
           Pack="true"
           PackagePath="tools\DefaultVersions.Generated.props" />
+    <None Include="SdkTasks/**/*.*"
+          Pack="true"
+          PackagePath="SdkTasks/%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

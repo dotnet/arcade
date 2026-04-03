@@ -438,10 +438,13 @@ function InitializeToolset {
     ExitWithExitCode 3
   fi
 
-  # Copy the tools folder to the toolset directory
-  # TODO: In the future, only copy the SdkTasks folder and remove the fallback path.
   mkdir -p "$toolset_tools_dir"
   cp -r "$package_dir/tools/." "$toolset_tools_dir"
+
+  # Copy SdkTasks if present at the package root (new layout)
+  if [[ -d "$package_dir/SdkTasks" ]]; then
+    cp -r "$package_dir/SdkTasks" "$toolset_tools_dir/"
+  fi
 
   if [[ -a "$toolset_tools_dir/SdkTasks/Build.proj" ]]; then
     toolset_build_proj="$toolset_tools_dir/SdkTasks/Build.proj"

@@ -680,10 +680,14 @@ function InitializeToolset() {
     ExitWithExitCode 3
   }
 
-  # Copy the tools folder to the toolset directory
-  # TODO: In the future, only copy the SdkTasks folder and remove the fallback path.
   New-Item -ItemType Directory -Path $toolsetToolsDir -Force | Out-Null
   Copy-Item -Path "$packageToolsDir\*" -Destination $toolsetToolsDir -Recurse -Force
+
+  # Copy SdkTasks if present at the package root (new layout)
+  $packageSdkTasksDir = Join-Path $packageDir 'SdkTasks'
+  if (Test-Path $packageSdkTasksDir) {
+    Copy-Item -Path $packageSdkTasksDir -Destination $toolsetToolsDir -Recurse -Force
+  }
 
   if (Test-Path $newPath) {
     $toolsetBuildProj = $newPath
