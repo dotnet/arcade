@@ -48,6 +48,6 @@
 
   <Target Name="CreateManifestResourceNames" />
 
-  <Import Project="EmptyDisableRestore.targets" Condition="'$(_EmptyDisableRestore)' != 'false'" />
+  <Import Project="EmptyDisableRestore.targets" Condition="'$(_NoSuppressRestoreTarget)' != 'false'" />
 
 </Project>
