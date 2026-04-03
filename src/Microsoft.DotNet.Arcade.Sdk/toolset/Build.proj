@@ -148,7 +148,6 @@
 
     <ItemGroup Condition="'$(Restore)' == 'true'">
       <_RestoreToolsProps Include="@(_CommonProps)"/>
-      <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
       <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
       <_RestoreToolsProps Include="_NuGetRestoreTargets=$(_NuGetRestoreTargets)"/>
 
