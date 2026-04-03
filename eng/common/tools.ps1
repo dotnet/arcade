@@ -476,7 +476,6 @@ function LocateVisualStudio([object]$vsRequirements = $null){
   if (Get-Member -InputObject $GlobalJson.tools -Name 'vswhere') {
     $vswhereVersion = $GlobalJson.tools.vswhere
   } else {
-    # keep this in sync with the VSWhereVersion in DefaultVersions.props
     $vswhereVersion = '3.1.7'
   }
 
@@ -648,13 +647,22 @@ function InitializeToolset() {
   $nugetCache = GetNuGetPackageCachePath
 
   $toolsetVersion = Read-ArcadeSdkVersion
-  $toolsetLocationFile = Join-Path $ToolsetDir "$toolsetVersion.txt"
+  $toolsetToolsDir = Join-Path $ToolsetDir $toolsetVersion
 
-  if (Test-Path $toolsetLocationFile) {
-    $path = Get-Content $toolsetLocationFile -TotalCount 1
-    if (Test-Path $path) {
-      return $global:_InitializeToolset = $path
-    }
+  # Check if the toolset has already been extracted
+  $toolsetBuildProj = $null
+  $newPath = Join-Path $toolsetToolsDir 'SdkTasks\Build.proj'
+  $oldPath = Join-Path $toolsetToolsDir 'Build.proj'
+
+  if (Test-Path $newPath) {
+    $toolsetBuildProj = $newPath
+  } elseif (Test-Path $oldPath) {
+    # TODO: Remove this fallback once Build.proj has been moved to SdkTasks in all supported versions.
+    $toolsetBuildProj = $oldPath
+  }
+
+  if ($toolsetBuildProj -ne $null) {
+    return $global:_InitializeToolset = $toolsetBuildProj
   }
 
   if (-not $restore) {
@@ -662,21 +670,31 @@ function InitializeToolset() {
     ExitWithExitCode 1
   }
 
-  $buildTool = InitializeBuildTool
+  DotNet package download "Microsoft.DotNet.Arcade.Sdk@$toolsetVersion" --prerelease --output "$nugetCache"
 
-  $proj = Join-Path $ToolsetDir 'restore.proj'
-  $bl = if ($binaryLog) { '/bl:' + (Join-Path $LogDir 'ToolsetRestore.binlog') } else { '' }
+  $packageDir = Join-Path $nugetCache (Join-Path 'microsoft.dotnet.arcade.sdk' $toolsetVersion)
+  $packageToolsDir = Join-Path $packageDir 'tools'
 
-  '<Project Sdk="Microsoft.DotNet.Arcade.Sdk"/>' | Set-Content $proj
-
-  MSBuild-Core $proj $bl /t:__WriteToolsetLocation /clp:ErrorsOnly`;NoSummary /p:__ToolsetLocationOutputFile=$toolsetLocationFile
-
-  $path = Get-Content $toolsetLocationFile -Encoding UTF8 -TotalCount 1
-  if (!(Test-Path $path)) {
-    throw "Invalid toolset path: $path"
+  if (!(Test-Path $packageToolsDir)) {
+    Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "Arcade SDK tools not found at: $packageToolsDir"
+    ExitWithExitCode 3
   }
 
-  return $global:_InitializeToolset = $path
+  # Copy the tools folder to the toolset directory
+  # TODO: In the future, only copy the SdkTasks folder and remove the fallback path.
+  New-Item -ItemType Directory -Path $toolsetToolsDir -Force | Out-Null
+  Copy-Item -Path "$packageToolsDir\*" -Destination $toolsetToolsDir -Recurse -Force
+
+  if (Test-Path $newPath) {
+    $toolsetBuildProj = $newPath
+  } elseif (Test-Path $oldPath) {
+    # TODO: Remove this fallback once Build.proj has been moved to SdkTasks in all supported versions.
+    $toolsetBuildProj = $oldPath
+  } else {
+    throw "Unable to find Build.proj in toolset at: $toolsetToolsDir"
+  }
+
+  return $global:_InitializeToolset = $toolsetBuildProj
 }
 
 function ExitWithExitCode([int] $exitCode) {
@@ -735,6 +753,40 @@ function MSBuild() {
   }
 
   MSBuild-Core @args
+}
+
+#
+# Executes a dotnet command with arguments passed to the function.
+# Terminates the script if the command fails.
+#
+function DotNet() {
+  $dotnetRoot = InitializeDotNetCli -install:$restore
+  $dotnetPath = Join-Path $dotnetRoot (GetExecutableFileName 'dotnet')
+
+  $cmdArgs = ""
+  foreach ($arg in $args) {
+    if ($null -ne $arg -and $arg.Trim() -ne "") {
+      if ($arg.EndsWith('\')) {
+        $arg = $arg + "\"
+      }
+      $cmdArgs += " `"$arg`""
+    }
+  }
+
+  $env:ARCADE_BUILD_TOOL_COMMAND = "`"$dotnetPath`" $cmdArgs"
+
+  $exitCode = Exec-Process $dotnetPath $cmdArgs
+
+  if ($exitCode -ne 0) {
+    Write-Host "dotnet command failed with exit code $exitCode. Check errors above." -ForegroundColor Red
+
+    if ($ci -and $env:SYSTEM_TEAMPROJECT -ne $null -and !$fromVMR) {
+      Write-PipelineSetResult -Result "Failed" -Message "dotnet command execution failed."
+      ExitWithExitCode 0
+    } else {
+      ExitWithExitCode $exitCode
+    }
+  }
 }
 
 #
