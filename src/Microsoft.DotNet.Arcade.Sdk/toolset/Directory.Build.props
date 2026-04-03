@@ -15,7 +15,7 @@
 
     <_SuppressAllTargets>true</_SuppressAllTargets>
     <_SuppressSdkImports>false</_SuppressSdkImports>
-    <_EmptyDisableRestore>true</_EmptyDisableRestore>
+    <_EmptyDisableRestore>false</_EmptyDisableRestore>
   </PropertyGroup>
 
 </Project>
