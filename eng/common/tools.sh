@@ -411,10 +411,7 @@ function InitializeToolset {
 
   # Check if the toolset has already been extracted
   local toolset_build_proj=""
-  if [[ -a "$toolset_tools_dir/toolset/Build.proj" ]]; then
-    toolset_build_proj="$toolset_tools_dir/toolset/Build.proj"
-  elif [[ -a "$toolset_tools_dir/Build.proj" ]]; then
-    # TODO: Remove this fallback once Build.proj has been moved to toolset in all supported versions.
+  if [[ -a "$toolset_tools_dir/Build.proj" ]]; then
     toolset_build_proj="$toolset_tools_dir/Build.proj"
   fi
 
@@ -433,8 +430,9 @@ function InitializeToolset {
 
   local package_dir="$_GetNuGetPackageCachePath/microsoft.dotnet.arcade.sdk/$toolset_version"
 
-  if [[ ! -d "$package_dir/tools" ]]; then
-    Write-PipelineTelemetryError -category 'InitializeToolset' "Arcade SDK tools not found at: $package_dir/tools"
+  # TODO: Remove the tools/ check once all supported versions have the toolset folder.
+  if [[ ! -d "$package_dir/toolset" && ! -d "$package_dir/tools" ]]; then
+    Write-PipelineTelemetryError -category 'InitializeToolset' "Arcade SDK package does not contain a toolset or tools folder: $package_dir"
     ExitWithExitCode 3
   fi
 
@@ -442,16 +440,13 @@ function InitializeToolset {
 
   # Copy toolset if present at the package root (new layout), otherwise fall back to tools
   if [[ -d "$package_dir/toolset" ]]; then
-    cp -r "$package_dir/toolset" "$toolset_tools_dir/"
+    cp -r "$package_dir/toolset/." "$toolset_tools_dir"
   else
     # TODO: Remove this fallback once all supported versions have the toolset folder.
     cp -r "$package_dir/tools/." "$toolset_tools_dir"
   fi
 
-  if [[ -a "$toolset_tools_dir/toolset/Build.proj" ]]; then
-    toolset_build_proj="$toolset_tools_dir/toolset/Build.proj"
-  elif [[ -a "$toolset_tools_dir/Build.proj" ]]; then
-    # TODO: Remove this fallback once Build.proj has been moved to toolset in all supported versions.
+  if [[ -a "$toolset_tools_dir/Build.proj" ]]; then
     toolset_build_proj="$toolset_tools_dir/Build.proj"
   else
     Write-PipelineTelemetryError -category 'Build' "Unable to find Build.proj in toolset at: $toolset_tools_dir"
@@ -594,7 +589,7 @@ function GetDarc {
 # Returns a full path to an Arcade SDK task project file.
 function GetSdkTaskProject {
   taskName=$1
-  echo "$(dirname $_InitializeToolset)/toolset/$taskName.proj"
+  echo "$(dirname $_InitializeToolset)/$taskName.proj"
 }
 
 ResolvePath "${BASH_SOURCE[0]}"

@@ -610,7 +610,7 @@ function GetNuGetPackageCachePath() {
 
 # Returns a full path to an Arcade SDK task project file.
 function GetSdkTaskProject([string]$taskName) {
-  return Join-Path (Split-Path (InitializeToolset) -Parent) "toolset\$taskName.proj"
+  return Join-Path (Split-Path (InitializeToolset) -Parent) "$taskName.proj"
 }
 
 function InitializeNativeTools() {
@@ -651,14 +651,10 @@ function InitializeToolset() {
 
   # Check if the toolset has already been extracted
   $toolsetBuildProj = $null
-  $newPath = Join-Path $toolsetToolsDir 'toolset\Build.proj'
-  $oldPath = Join-Path $toolsetToolsDir 'Build.proj'
+  $buildProjPath = Join-Path $toolsetToolsDir 'Build.proj'
 
-  if (Test-Path $newPath) {
-    $toolsetBuildProj = $newPath
-  } elseif (Test-Path $oldPath) {
-    # TODO: Remove this fallback once Build.proj has been moved to toolset in all supported versions.
-    $toolsetBuildProj = $oldPath
+  if (Test-Path $buildProjPath) {
+    $toolsetBuildProj = $buildProjPath
   }
 
   if ($toolsetBuildProj -ne $null) {
@@ -673,29 +669,27 @@ function InitializeToolset() {
   DotNet package download "Microsoft.DotNet.Arcade.Sdk@$toolsetVersion" --prerelease --output "$nugetCache"
 
   $packageDir = Join-Path $nugetCache (Join-Path 'microsoft.dotnet.arcade.sdk' $toolsetVersion)
+  $packageToolsetDir = Join-Path $packageDir 'toolset'
   $packageToolsDir = Join-Path $packageDir 'tools'
 
-  if (!(Test-Path $packageToolsDir)) {
-    Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "Arcade SDK tools not found at: $packageToolsDir"
+  # TODO: Remove the tools/ check once all supported versions have the toolset folder.
+  if (!(Test-Path $packageToolsetDir) -and !(Test-Path $packageToolsDir)) {
+    Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "Arcade SDK package does not contain a toolset or tools folder: $packageDir"
     ExitWithExitCode 3
   }
 
   New-Item -ItemType Directory -Path $toolsetToolsDir -Force | Out-Null
 
   # Copy toolset if present at the package root (new layout), otherwise fall back to tools
-  $packageToolsetDir = Join-Path $packageDir 'toolset'
   if (Test-Path $packageToolsetDir) {
-    Copy-Item -Path $packageToolsetDir -Destination $toolsetToolsDir -Recurse -Force
+    Copy-Item -Path "$packageToolsetDir\*" -Destination $toolsetToolsDir -Recurse -Force
   } else {
     # TODO: Remove this fallback once all supported versions have the toolset folder.
     Copy-Item -Path "$packageToolsDir\*" -Destination $toolsetToolsDir -Recurse -Force
   }
 
-  if (Test-Path $newPath) {
-    $toolsetBuildProj = $newPath
-  } elseif (Test-Path $oldPath) {
-    # TODO: Remove this fallback once Build.proj has been moved to toolset in all supported versions.
-    $toolsetBuildProj = $oldPath
+  if (Test-Path $buildProjPath) {
+    $toolsetBuildProj = $buildProjPath
   } else {
     throw "Unable to find Build.proj in toolset at: $toolsetToolsDir"
   }
