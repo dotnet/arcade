@@ -14,7 +14,7 @@ Param(
   [Parameter(ValueFromRemainingArguments=$true)][String[]]$properties
 )
 
-$ci = $false
+$ci = $true
 $binaryLog = if ($excludeCIBinaryLog) { $false } else { $true }
 $warnAsError = if ($noWarnAsError) { $false } else { $true }
 
