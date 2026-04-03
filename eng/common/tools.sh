@@ -439,11 +439,13 @@ function InitializeToolset {
   fi
 
   mkdir -p "$toolset_tools_dir"
-  cp -r "$package_dir/tools/." "$toolset_tools_dir"
 
-  # Copy toolset if present at the package root (new layout)
+  # Copy toolset if present at the package root (new layout), otherwise fall back to tools
   if [[ -d "$package_dir/toolset" ]]; then
     cp -r "$package_dir/toolset" "$toolset_tools_dir/"
+  else
+    # TODO: Remove this fallback once all supported versions have the toolset folder.
+    cp -r "$package_dir/tools/." "$toolset_tools_dir"
   fi
 
   if [[ -a "$toolset_tools_dir/toolset/Build.proj" ]]; then

@@ -681,12 +681,14 @@ function InitializeToolset() {
   }
 
   New-Item -ItemType Directory -Path $toolsetToolsDir -Force | Out-Null
-  Copy-Item -Path "$packageToolsDir\*" -Destination $toolsetToolsDir -Recurse -Force
 
-  # Copy toolset if present at the package root (new layout)
-  $packageSdkTasksDir = Join-Path $packageDir 'toolset'
-  if (Test-Path $packageSdkTasksDir) {
-    Copy-Item -Path $packageSdkTasksDir -Destination $toolsetToolsDir -Recurse -Force
+  # Copy toolset if present at the package root (new layout), otherwise fall back to tools
+  $packageToolsetDir = Join-Path $packageDir 'toolset'
+  if (Test-Path $packageToolsetDir) {
+    Copy-Item -Path $packageToolsetDir -Destination $toolsetToolsDir -Recurse -Force
+  } else {
+    # TODO: Remove this fallback once all supported versions have the toolset folder.
+    Copy-Item -Path "$packageToolsDir\*" -Destination $toolsetToolsDir -Recurse -Force
   }
 
   if (Test-Path $newPath) {
