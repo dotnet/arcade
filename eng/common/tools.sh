@@ -588,8 +588,22 @@ function GetDarc {
 
 # Returns a full path to an Arcade SDK task project file.
 function GetSdkTaskProject {
-  taskName=$1
-  echo "$(dirname $_InitializeToolset)/$taskName.proj"
+  local taskName=$1
+  local toolsetDir
+  toolsetDir="$(dirname "$_InitializeToolset")"
+  local proj="$toolsetDir/$taskName.proj"
+  if [[ -a "$proj" ]]; then
+    echo "$proj"
+    return
+  fi
+  # TODO: Remove this fallback once all supported versions use the new layout.
+  local legacyProj="$toolsetDir/SdkTasks/$taskName.proj"
+  if [[ -a "$legacyProj" ]]; then
+    echo "$legacyProj"
+    return
+  fi
+  Write-PipelineTelemetryError -category 'Build' "Unable to find $taskName.proj in toolset at: $toolsetDir"
+  ExitWithExitCode 3
 }
 
 ResolvePath "${BASH_SOURCE[0]}"

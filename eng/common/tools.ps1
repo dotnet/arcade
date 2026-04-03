@@ -610,7 +610,17 @@ function GetNuGetPackageCachePath() {
 
 # Returns a full path to an Arcade SDK task project file.
 function GetSdkTaskProject([string]$taskName) {
-  return Join-Path (Split-Path (InitializeToolset) -Parent) "$taskName.proj"
+  $toolsetDir = Split-Path (InitializeToolset) -Parent
+  $proj = Join-Path $toolsetDir "$taskName.proj"
+  if (Test-Path $proj) {
+    return $proj
+  }
+  # TODO: Remove this fallback once all supported versions use the new layout.
+  $legacyProj = Join-Path $toolsetDir "SdkTasks\$taskName.proj"
+  if (Test-Path $legacyProj) {
+    return $legacyProj
+  }
+  throw "Unable to find $taskName.proj in toolset at: $toolsetDir"
 }
 
 function InitializeNativeTools() {
