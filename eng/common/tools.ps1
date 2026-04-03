@@ -610,7 +610,7 @@ function GetNuGetPackageCachePath() {
 
 # Returns a full path to an Arcade SDK task project file.
 function GetSdkTaskProject([string]$taskName) {
-  return Join-Path (Split-Path (InitializeToolset) -Parent) "sdk-tasks\$taskName.proj"
+  return Join-Path (Split-Path (InitializeToolset) -Parent) "toolset\$taskName.proj"
 }
 
 function InitializeNativeTools() {
@@ -651,13 +651,13 @@ function InitializeToolset() {
 
   # Check if the toolset has already been extracted
   $toolsetBuildProj = $null
-  $newPath = Join-Path $toolsetToolsDir 'sdk-tasks\Build.proj'
+  $newPath = Join-Path $toolsetToolsDir 'toolset\Build.proj'
   $oldPath = Join-Path $toolsetToolsDir 'Build.proj'
 
   if (Test-Path $newPath) {
     $toolsetBuildProj = $newPath
   } elseif (Test-Path $oldPath) {
-    # TODO: Remove this fallback once Build.proj has been moved to sdk-tasks in all supported versions.
+    # TODO: Remove this fallback once Build.proj has been moved to toolset in all supported versions.
     $toolsetBuildProj = $oldPath
   }
 
@@ -683,8 +683,8 @@ function InitializeToolset() {
   New-Item -ItemType Directory -Path $toolsetToolsDir -Force | Out-Null
   Copy-Item -Path "$packageToolsDir\*" -Destination $toolsetToolsDir -Recurse -Force
 
-  # Copy sdk-tasks if present at the package root (new layout)
-  $packageSdkTasksDir = Join-Path $packageDir 'sdk-tasks'
+  # Copy toolset if present at the package root (new layout)
+  $packageSdkTasksDir = Join-Path $packageDir 'toolset'
   if (Test-Path $packageSdkTasksDir) {
     Copy-Item -Path $packageSdkTasksDir -Destination $toolsetToolsDir -Recurse -Force
   }
@@ -692,7 +692,7 @@ function InitializeToolset() {
   if (Test-Path $newPath) {
     $toolsetBuildProj = $newPath
   } elseif (Test-Path $oldPath) {
-    # TODO: Remove this fallback once Build.proj has been moved to sdk-tasks in all supported versions.
+    # TODO: Remove this fallback once Build.proj has been moved to toolset in all supported versions.
     $toolsetBuildProj = $oldPath
   } else {
     throw "Unable to find Build.proj in toolset at: $toolsetToolsDir"
