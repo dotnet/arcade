@@ -12,7 +12,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ArcadeSdkToolsDir>$(MSBuildThisFileDirectory)</ArcadeSdkToolsDir>
     <ArcadeSdkBuildTasksAssembly>$(MSBuildThisFileDirectory)net\Microsoft.DotNet.Arcade.Sdk.dll</ArcadeSdkBuildTasksAssembly>
   </PropertyGroup>
 
