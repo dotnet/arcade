@@ -27,8 +27,6 @@
         - IsShipping                      Set to false to mark the artifact as non-shipping. Defaults to true.
   -->
 
-  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GenerateChecksums" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" Runtime="NET" />
-
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" />
   </ItemGroup>
