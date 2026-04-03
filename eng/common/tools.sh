@@ -411,10 +411,10 @@ function InitializeToolset {
 
   # Check if the toolset has already been extracted
   local toolset_build_proj=""
-  if [[ -a "$toolset_tools_dir/SdkTasks/Build.proj" ]]; then
-    toolset_build_proj="$toolset_tools_dir/SdkTasks/Build.proj"
+  if [[ -a "$toolset_tools_dir/sdk-tasks/Build.proj" ]]; then
+    toolset_build_proj="$toolset_tools_dir/sdk-tasks/Build.proj"
   elif [[ -a "$toolset_tools_dir/Build.proj" ]]; then
-    # TODO: Remove this fallback once Build.proj has been moved to SdkTasks in all supported versions.
+    # TODO: Remove this fallback once Build.proj has been moved to sdk-tasks in all supported versions.
     toolset_build_proj="$toolset_tools_dir/Build.proj"
   fi
 
@@ -441,15 +441,15 @@ function InitializeToolset {
   mkdir -p "$toolset_tools_dir"
   cp -r "$package_dir/tools/." "$toolset_tools_dir"
 
-  # Copy SdkTasks if present at the package root (new layout)
-  if [[ -d "$package_dir/SdkTasks" ]]; then
-    cp -r "$package_dir/SdkTasks" "$toolset_tools_dir/"
+  # Copy sdk-tasks if present at the package root (new layout)
+  if [[ -d "$package_dir/sdk-tasks" ]]; then
+    cp -r "$package_dir/sdk-tasks" "$toolset_tools_dir/"
   fi
 
-  if [[ -a "$toolset_tools_dir/SdkTasks/Build.proj" ]]; then
-    toolset_build_proj="$toolset_tools_dir/SdkTasks/Build.proj"
+  if [[ -a "$toolset_tools_dir/sdk-tasks/Build.proj" ]]; then
+    toolset_build_proj="$toolset_tools_dir/sdk-tasks/Build.proj"
   elif [[ -a "$toolset_tools_dir/Build.proj" ]]; then
-    # TODO: Remove this fallback once Build.proj has been moved to SdkTasks in all supported versions.
+    # TODO: Remove this fallback once Build.proj has been moved to sdk-tasks in all supported versions.
     toolset_build_proj="$toolset_tools_dir/Build.proj"
   else
     Write-PipelineTelemetryError -category 'Build' "Unable to find Build.proj in toolset at: $toolset_tools_dir"
@@ -592,7 +592,7 @@ function GetDarc {
 # Returns a full path to an Arcade SDK task project file.
 function GetSdkTaskProject {
   taskName=$1
-  echo "$(dirname $_InitializeToolset)/SdkTasks/$taskName.proj"
+  echo "$(dirname $_InitializeToolset)/sdk-tasks/$taskName.proj"
 }
 
 ResolvePath "${BASH_SOURCE[0]}"
