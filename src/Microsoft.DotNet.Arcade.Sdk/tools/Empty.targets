@@ -46,6 +46,8 @@
   <Target Name="CorePack"/>
   <Target Name="AfterPack"/>
 
+  <Target Name="CreateManifestResourceNames" />
+
   <Import Project="EmptyDisableRestore.targets" Condition="'$(_EmptyDisableRestore)' != 'false'" />
 
 </Project>
