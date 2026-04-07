@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using Azure.Core;
 using Azure.Identity;
 using Microsoft.DotNet.ProductConstructionService.Client;
 using Microsoft.DotNet.ProductConstructionService.Client.Models;
@@ -718,7 +719,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Task<SymbolUploadHelper> CreatePublishSymbolHelper(string symbolPublishingExclusionsFile, bool publishSpecialClrFiles, bool dryRun)
             {
                 FrozenSet<string> exclusions = LoadExclusions(symbolPublishingExclusionsFile);
-                PATCredential creds = new(TempSymbolsAzureDevOpsOrgToken);
+
+                TokenCredential creds = string.IsNullOrEmpty(TempSymbolsAzureDevOpsOrgToken)
+                    ? new DefaultIdentityTokenCredential(
+                        new DefaultIdentityTokenCredentialOptions
+                        {
+                            ManagedIdentityClientId = ManagedIdentityClientId
+                        })
+                    : new PATCredential(TempSymbolsAzureDevOpsOrgToken);
+
                 TaskTracer tracer = new(Log, verbose: true);
 
                 SymbolPublisherOptions options = new(
