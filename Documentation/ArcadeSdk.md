@@ -725,14 +725,17 @@ The Build Pipeline needs to link the following variable group:
 
 ### Publishing VS insertion artifacts to a drop
 
-This step is required for repositories that build VS insertion components.
+This step is required for repositories that build VS insertion components. For new or migrated pipelines, prefer the Artifact Services task with `usePat: false` so the upload can run with the pipeline identity instead of a long-lived PAT.
 
 ```yml
-- task: ms-vseng.MicroBuildTasks.4305a8de-ba66-4d8b-b2d1-0dc4ecbbf5e8.MicroBuildUploadVstsDropFolder@1
-  displayName: Upload VSTS Drop
+- task: ms-vscs-artifact.build-tasks.artifactDropTask-1.artifactDropTask@0
+  displayName: Upload Azure DevOps Drop
   inputs:
-    DropName: $(VisualStudioDropName)
-    DropFolder: 'artifacts\VSSetup\$(BuildConfiguration)\Insertion'
+    dropServiceURI: 'https://devdiv.artifacts.visualstudio.com'
+    buildNumber: $(VisualStudioDropName)
+    sourcePath: '$(System.DefaultWorkingDirectory)\artifacts\VSSetup\$(BuildConfiguration)\Insertion'
+    toLowerCase: false
+    usePat: false
   condition: succeeded()
 ```
 
@@ -801,10 +804,10 @@ The IBC data acquisition is performed by an internal tool `drop.exe` provided by
 DevOps feed. The repository build definition thus must invoke Azure DevOps task that restores internal tools in order for
 IBC data embedding to work. See [Restoring internal tools](#restoring-internal-tools).
 
-To retrieve the data the tool needs to authenticate to the VS drop storage. The access token necessary for the authentication
-is passed via `VisualStudioDropAccessToken` property. If the account the official build of the repository is running on has
-an access to the VS drop storage, the build definition can pass `/p:VisualStudioDropAccessToken=$(System.AccessToken)` to
-the `/eng/common/CIBuild.cmd` script.
+To retrieve the data the tool needs to authenticate to the VS drop storage. Arcade uses the `VisualStudioDropAccessToken`
+property when provided. If the build wants a default token source without explicitly wiring the property on every invocation,
+it can set `VisualStudioDropAccessTokenFallback` (for example from a secure pipeline variable or other short-lived token source),
+and Arcade will use that value only when `VisualStudioDropAccessToken` is not explicitly supplied.
 
 The IBC data drop produced by a training run is identified by the name of the repository, the branch and the build number
 the trained binaries came from, and a training run id. An example of IBC data identifier is
@@ -849,8 +852,10 @@ The following build definition steps are required for successful generation of a
     # ... 
     /p:RepositoryName=$(Build.Repository.Name)
     /p:VisualStudioIbcSourceBranchName=$(VisualStudio.IbcSourceBranchName)
-    /p:VisualStudioDropAccessToken=$(System.AccessToken)
-    /p:VisualStudioDropName=$(VisualStudio.DropName)      # required by VS insertion component manifest generator
+    /p:VisualStudioDropName=$(VisualStudio.DropName)           # required by VS insertion component manifest generator
+    # /p:VisualStudioDropAccessToken=$(VisualStudioDropToken)   # optional explicit token override
+    env:
+      VisualStudioDropAccessTokenFallback: $(VisualStudioDropToken)  # optional fallback supplied by the pipeline
 
   # ...
 
