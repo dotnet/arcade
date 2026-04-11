@@ -220,12 +220,31 @@ try {
     Write-Host $committersList
 
     $mergeBranchName = "merge/$MergeFromBranch-to-$MergeToBranch"
-    Invoke-Block { & git checkout -B $mergeBranchName  }
 
-    # Reset specified files to target branch if ResetToTargetPaths is configured
+    # When ResetToTargetPaths is configured, we need to create a proper merge commit
+    # so that the target branch content is included. Without this, the merge branch
+    # would just be the source branch with some files overwritten, missing all
+    # target-only changes (APIs, fixes, platform versions, etc.).
     if ($ResetToTargetPaths) {
+        # Configure git user for the merge commit
+        Invoke-Block { & git config user.name "github-actions[bot]" }
+        Invoke-Block { & git config user.email "41898282+github-actions[bot]@users.noreply.github.com" }
+
+        # Start from the target branch and merge source into it
+        Invoke-Block { & git checkout -B $mergeBranchName "origin/$MergeToBranch" }
+
+        # Merge source branch. Use -X theirs to auto-resolve conflicts in favor of
+        # the source branch, since ResetToTargetPaths will overwrite target-wins files
+        # in the next step anyway.
+        Invoke-Block { & git merge --no-ff "origin/$MergeFromBranch" -X theirs -m "Merge branch '$MergeFromBranch' into $MergeToBranch" }
+
         $patterns = $ResetToTargetPaths -split ";"
         ResetFilesToTargetBranch $patterns $MergeToBranch
+    }
+    else {
+        # Without ResetToTargetPaths, the original behavior is fine: create a branch
+        # from the source and let GitHub's merge button do the actual merge.
+        Invoke-Block { & git checkout -B $mergeBranchName }
     }
 
     $remoteName = 'origin'
