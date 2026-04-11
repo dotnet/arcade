@@ -15,7 +15,7 @@
 
   <Import Project="Performance.targets" Condition="'$(DisableArcadeTestFramework)' != 'true'" />
   <Import Project="Localization.targets" />
-  <Import Project="VisualStudio.targets" Condition="'$(UsingToolVSSDK)' == 'true' and ('$(IsVsixProject)' == 'true' or '$(IsSwixProject)' == 'true' or '$(GeneratePkgDefFile)' == 'true') and '$(MSBuildRuntimeType)' != 'Core'"/>
+  <Import Project="VisualStudio.targets" Condition="'$(UsingToolVSSDK)' == 'true' and ('$(IsVsixProject)' == 'true' or '$(IsSwixProject)' == 'true' or '$(GeneratePkgDefFile)' == 'true')"/>
   <Import Project="OptimizationData.targets" Condition="'$(UsingToolIbcOptimization)' == 'true'"/>
   <Import Project="SymStore.targets" Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OS)' == 'Windows_NT'"/>
 
