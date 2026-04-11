@@ -411,7 +411,7 @@ namespace Microsoft.DotNet.SignTool
 
         internal static bool RunWixTool(string toolName, string arguments, string workingDirectory, string wixToolsPath, TaskLoggingHelper log)
         {
-            if (wixToolsPath == null)
+            if (string.IsNullOrEmpty(wixToolsPath))
             {
                 log.LogError("WixToolsPath must be defined to run WiX tooling. Wixpacks are used to produce signed msi's during post-build signing. If this repository is using in-build signing, remove '*.wixpack.zip' from ItemsToSign.");
                 return false;
