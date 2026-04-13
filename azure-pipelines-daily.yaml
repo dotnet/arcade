@@ -25,6 +25,7 @@ stages:
         inputs:
           packageType: sdk
           useGlobalJson: true
+          includePreviewVersions: true
           installationPath: $(System.DefaultWorkingDirectory)/.dotnet
 
       - task: UseDotNet@2
