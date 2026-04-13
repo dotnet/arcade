@@ -19,8 +19,13 @@ stages:
         demands: ImageOverride -equals windows.vs2026.amd64
 
       steps:
-      - script: restore.cmd -ci
-        displayName: Run restore.cmd
+      # Secret synchronization only needs the repo SDK plus local tools.
+      - task: UseDotNet@2
+        displayName: Install repo .NET SDK
+        inputs:
+          packageType: sdk
+          useGlobalJson: true
+          installationPath: $(System.DefaultWorkingDirectory)/.dotnet
 
       - task: UseDotNet@2
         displayName: Install .NET 8 runtime
