@@ -453,6 +453,23 @@ namespace Microsoft.DotNet.RemoteExecutor
                 psi.Environment.Remove("CoreClr_Enable_Profiling");
             }
 
+            if (options.DisableCrashDumpCollection)
+            {
+                psi.Environment.Remove("DOTNET_DbgEnableMiniDump");
+                psi.Environment.Remove("DOTNET_DbgMiniDumpType");
+                psi.Environment.Remove("DOTNET_DbgMiniDumpName");
+            }
+            else if (options.CrashDumpCollectionType.HasValue)
+            {
+                string uploadPath = Environment.GetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT");
+                psi.Environment["DOTNET_DbgEnableMiniDump"] = "1";
+                psi.Environment["DOTNET_DbgMiniDumpType"] = ((int)options.CrashDumpCollectionType.Value).ToString();
+                if (!string.IsNullOrWhiteSpace(uploadPath))
+                {
+                    psi.Environment["DOTNET_DbgMiniDumpName"] = IOPath.Combine(uploadPath, "%e.%p.%t.dmp");
+                }
+            }
+
             // If we need the host (if it exists), use it, otherwise target the console app directly.
             string metadataArgs = PasteArguments.Paste(new string[] { a.FullName, t.FullName, method.Name, options.ExceptionFile }, pasteFirstArgumentUsingArgV0Rules: false);
             string passedArgs = pasteArguments ? PasteArguments.Paste(args, pasteFirstArgumentUsingArgV0Rules: false) : string.Join(" ", args);
