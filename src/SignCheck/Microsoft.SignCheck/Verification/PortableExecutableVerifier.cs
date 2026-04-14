@@ -37,7 +37,18 @@ namespace Microsoft.SignCheck.Verification
         {
             // Defer to the base implementation to check the AuthentiCode signature.
             SignatureVerificationResult svr = base.VerifySignature(path, parent, virtualPath);
-            PEHeader = new PortableExecutableHeader(svr.FullPath);
+
+            try
+            {
+                PEHeader = new PortableExecutableHeader(svr.FullPath);
+            }
+            catch (Exception e) when (e is InvalidDataException or EndOfStreamException or IOException)
+            {
+                svr.AddDetail(DetailKeys.Error, SignCheckResources.DetailVerificationError, e.Message);
+                svr.IsSigned = false;
+                svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
+                return svr;
+            }
 
             if (VerifyStrongNameSignature)
             {
