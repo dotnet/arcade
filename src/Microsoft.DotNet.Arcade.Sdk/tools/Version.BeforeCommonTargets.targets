@@ -55,14 +55,14 @@
     <_BuildNumberR>$(_BuildNumber.Substring(9))</_BuildNumberR>
 
     <!-- SHORT_DATE := yy * 1000 + mm * 50 + dd -->
-    <VersionSuffixDateStamp>$([MSBuild]::Add($([MSBuild]::Add($([MSBuild]::Multiply($(_BuildNumberYY), 1000)), $([MSBuild]::Multiply($(_BuildNumberMM), 50)))), $(_BuildNumberDD)))</VersionSuffixDateStamp>
+    <VersionSuffixDateStamp>$([System.Decimal]::Add($([System.Decimal]::Add($([System.Decimal]::Multiply($(_BuildNumberYY), 1000)), $([System.Decimal]::Multiply($(_BuildNumberMM), 50))), $(_BuildNumberDD)))</VersionSuffixDateStamp>
 
     <!-- REVISION := r -->
     <VersionSuffixBuildOfTheDay>$(_BuildNumberR)</VersionSuffixBuildOfTheDay>
     <VersionSuffixBuildOfTheDayPadded>$(VersionSuffixBuildOfTheDay.PadLeft(2, $([System.Convert]::ToChar(`0`))))</VersionSuffixBuildOfTheDayPadded>
 
     <!-- PATCH_NUMBER := (SHORT_DATE - VersionBaseShortDate) * 100 + r -->
-    <_PatchNumber>$([MSBuild]::Add($([MSBuild]::Multiply($([MSBuild]::Subtract($(VersionSuffixDateStamp), $([MSBuild]::ValueOrDefault($(VersionBaseShortDate), 19000)))), 100)), $(_BuildNumberR)))</_PatchNumber>
+    <_PatchNumber>$([System.Decimal]::Add($([System.Decimal]::Multiply($([System.Decimal]::Subtract($(VersionSuffixDateStamp), $([MSBuild]::ValueOrDefault($(VersionBaseShortDate), 19000)))), 100)), $(_BuildNumberR)))</_PatchNumber>
   </PropertyGroup>
 
   <!--
