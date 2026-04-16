@@ -22,7 +22,7 @@ namespace Microsoft.SignCheck.Verification
 
         public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
         {
-            if (_signatureIsDetached && File.Exists(path + ".sig"))
+            if (!_signatureIsDetached || (_signatureIsDetached && File.Exists(path + ".sig")))
             {
                 return VerifySupportedFileType(path, parent, virtualPath);
             }
