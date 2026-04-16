@@ -128,6 +128,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Msi
             // Candle expects the output path to be terminated with a single '\'.
             CompilerOutputPath = Utils.EnsureTrailingSlash(Path.Combine(baseIntermediateOutputPath, "wixobj", metadata.Id, $"{metadata.PackageVersion}", platform));
             WixSourceDirectory = Path.Combine(baseIntermediateOutputPath, "src", "wix", metadata.Id, $"{metadata.PackageVersion}", platform);
+            Directory.CreateDirectory(CompilerOutputPath);
+            Directory.CreateDirectory(WixSourceDirectory);
             Metadata = metadata;
         }
 

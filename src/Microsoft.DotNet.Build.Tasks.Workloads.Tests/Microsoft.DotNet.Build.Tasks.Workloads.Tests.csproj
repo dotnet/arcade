@@ -33,15 +33,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!--
-    Defer staging package-cache test assets until build execution so one-shot
-    restore+build CI runs don't glob the nupkgs too early, but Helix test runs
-    still get the files copied into the testassets directory.
+    Defer discovering package-cache test assets until build execution so one-shot
+    restore+build CI runs don't glob the nupkgs too early, while both build and
+    publish outputs still include the files for Helix test runs.
   -->
-  <Target Name="StageDownloadedTestAssets" BeforeTargets="CopyFilesToOutputDirectory">
+  <Target Name="StageDownloadedTestAssets" AfterTargets="Build;Publish">
     <ItemGroup>
       <_DownloadedWixTools Include="$(NuGetPackageRoot)microsoft.signed.wix\$(MicrosoftSignedWixVersion)\tools\**\*" />
       <_DownloadedTestAssetPackage Include="$(NuGetPackageRoot)microsoft.net.workload.mono.toolchain.manifest-6.0.200\$(MicrosoftNETWorkloadMonoToolChainManifest_60200Version)\*.nupkg" />
@@ -66,6 +66,18 @@
     <Copy
       SourceFiles="@(_DownloadedTestAssetPackage)"
       DestinationFiles="@(_DownloadedTestAssetPackage->'$(TargetDir)testassets\%(Filename)%(Extension)')"
+      SkipUnchangedFiles="true" />
+
+    <Copy
+      Condition="'$(PublishDir)' != ''"
+      SourceFiles="@(_DownloadedWixTools)"
+      DestinationFiles="@(_DownloadedWixTools->'$(PublishDir)testassets\wix\%(RecursiveDir)%(Filename)%(Extension)')"
+      SkipUnchangedFiles="true" />
+
+    <Copy
+      Condition="'$(PublishDir)' != ''"
+      SourceFiles="@(_DownloadedTestAssetPackage)"
+      DestinationFiles="@(_DownloadedTestAssetPackage->'$(PublishDir)testassets\%(Filename)%(Extension)')"
       SkipUnchangedFiles="true" />
   </Target>
 
