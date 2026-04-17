@@ -12,17 +12,29 @@ namespace Microsoft.SignCheck.Verification
 {
     public abstract class PgpVerifier : ArchiveVerifier
     {
-        private bool _signatureIsDetached;
-
-        protected PgpVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options, string fileExtension, bool signatureIsDetached = false)
+        protected PgpVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options, string fileExtension)
             : base(log, exclusions, options, fileExtension)
         {
-            _signatureIsDetached = signatureIsDetached;
         }
 
         public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
         {
-            if (!_signatureIsDetached || (_signatureIsDetached && File.Exists(path + ".sig")))
+            return VerifySupportedFileType(path, parent, virtualPath);
+        }
+
+        /// <summary>
+        /// Returns the paths to the signature document and the signable content.
+        /// Used to verify the signature of the package using gpg.
+        /// </summary>
+        protected abstract (string signatureDocument, string signableContent) GetSignatureDocumentAndSignableContent(string path, string tempDir);
+
+        /// <summary>
+        /// Verifies the signature of a file using a detached .sig file.
+        /// If the .sig file exists, verifies as a supported file type; otherwise, as unsupported.
+        /// </summary>
+        protected SignatureVerificationResult VerifyDetachedSignature(string path, string parent, string virtualPath)
+        {
+            if (File.Exists(path + ".sig"))
             {
                 return VerifySupportedFileType(path, parent, virtualPath);
             }
@@ -30,24 +42,16 @@ namespace Microsoft.SignCheck.Verification
         }
 
         /// <summary>
-        /// Returns the paths to the signature document and the signable content.
-        /// Used to verify the signature of the package using gpg.
+        /// Returns the paths to the detached signature document and the signable content.
+        /// For use by verifiers whose signatures are stored in a separate .sig file.
         /// </summary>
-        /// <param name="path"></param>
-        /// <param name="tempDir"></param>
-        /// <returns></returns>
-        protected virtual (string signatureDocument, string signableContent) GetSignatureDocumentAndSignableContent(string path, string tempDir)
+        protected static (string signatureDocument, string signableContent) GetDetachedSignatureDocumentAndSignableContent(string path, string tempDir)
         {
-            if (_signatureIsDetached)
-            {
-                string signature = $"{path}.sig";
-                string signatureDocument = Path.Combine(tempDir, Path.GetFileName(signature));
-                File.Copy(signature, signatureDocument, overwrite: true);
+            string signature = $"{path}.sig";
+            string signatureDocument = Path.Combine(tempDir, Path.GetFileName(signature));
+            File.Copy(signature, signatureDocument, overwrite: true);
 
-                return (signatureDocument, path);
-            }
-
-            throw new InvalidOperationException("GetSignatureDocumentAndSignableContent must be overridden for supported archive types that do not use detached signatures.");
+            return (signatureDocument, path);
         }
 
         protected override bool IsSigned(string path, SignatureVerificationResult svr)
