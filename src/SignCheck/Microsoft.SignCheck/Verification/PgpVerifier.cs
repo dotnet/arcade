@@ -15,7 +15,7 @@ namespace Microsoft.SignCheck.Verification
         private bool _signatureIsDetached;
 
         protected PgpVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options, string fileExtension, bool signatureIsDetached = false)
-        : base(log, exclusions, options, fileExtension)
+            : base(log, exclusions, options, fileExtension)
         {
             _signatureIsDetached = signatureIsDetached;
         }
