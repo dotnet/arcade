@@ -225,11 +225,11 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
                 {
                     RollForward = "Major",
                     CrashDumpCollectionType = CrashDumpCollectionType.Mini,
-                    CheckExitCode = false
+                    CheckExitCode = false,
+                    // Point the dump path to our temp directory so we can verify the file is created.
+                    // Use %p so the filename includes the PID and is unique.
+                    CrashDumpPath = Path.Combine(dumpDir, "crashdump.%p.dmp")
                 };
-                // Point the dump path to our temp directory so we can verify the file is created.
-                // Use %p so the filename includes the PID and is unique.
-                options.StartInfo.Environment["DOTNET_DbgMiniDumpName"] = Path.Combine(dumpDir, "crashdump.%p.dmp");
 
                 RemoteExecutor.Invoke(() =>
                 {

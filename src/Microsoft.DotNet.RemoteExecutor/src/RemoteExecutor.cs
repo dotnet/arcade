@@ -461,12 +461,17 @@ namespace Microsoft.DotNet.RemoteExecutor
             }
             else if (options.CrashDumpCollectionType.HasValue)
             {
-                string uploadPath = Environment.GetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT");
                 psi.Environment["DOTNET_DbgEnableMiniDump"] = "1";
                 psi.Environment["DOTNET_DbgMiniDumpType"] = ((int)options.CrashDumpCollectionType.Value).ToString();
-                if (!string.IsNullOrWhiteSpace(uploadPath))
+                if (!string.IsNullOrWhiteSpace(options.CrashDumpPath))
                 {
-                    psi.Environment["DOTNET_DbgMiniDumpName"] = IOPath.Combine(uploadPath, "%e.%p.%t.dmp");
+                    psi.Environment["DOTNET_DbgMiniDumpName"] = options.CrashDumpPath;
+                }
+                else
+                {
+                    string uploadPath = Environment.GetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT");
+                    string dumpDir = !string.IsNullOrWhiteSpace(uploadPath) ? uploadPath : IOPath.GetTempPath();
+                    psi.Environment["DOTNET_DbgMiniDumpName"] = IOPath.Combine(dumpDir, "%e.%p.%t.dmp");
                 }
             }
 

@@ -90,6 +90,15 @@ namespace Microsoft.DotNet.RemoteExecutor
         public CrashDumpCollectionType? CrashDumpCollectionType { get; set; }
 
         /// <summary>
+        /// Gets or sets the path template for crash dump files. When <see cref="CrashDumpCollectionType"/> is set,
+        /// this value is used for DOTNET_DbgMiniDumpName. Supports the same placeholders as createdump:
+        /// %p (PID), %e (process name), %t (timestamp), etc.
+        /// When null (default), defaults to HELIX_WORKITEM_UPLOAD_ROOT/%e.%p.%t.dmp if running in Helix,
+        /// or the system temp directory otherwise.
+        /// </summary>
+        public string CrashDumpPath { get; set; }
+
+        /// <summary>
         /// When true, explicitly removes the DOTNET_DbgEnableMiniDump, DOTNET_DbgMiniDumpType, and
         /// DOTNET_DbgMiniDumpName environment variables from the subprocess, disabling any inherited crash dump configuration.
         /// </summary>
