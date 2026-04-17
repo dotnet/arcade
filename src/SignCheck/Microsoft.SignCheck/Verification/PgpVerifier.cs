@@ -18,9 +18,7 @@ namespace Microsoft.SignCheck.Verification
         }
 
         public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
-        {
-            return VerifySupportedFileType(path, parent, virtualPath);
-        }
+            => VerifySupportedFileType(path, parent, virtualPath);
 
         /// <summary>
         /// Returns the paths to the signature document and the signable content.
