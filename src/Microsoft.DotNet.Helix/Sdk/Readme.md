@@ -44,6 +44,49 @@ env:
   SYSTEM_ACCESSTOKEN: $(System.AccessToken) # We need to set this env var to publish helix results to Azure DevOps
 ```
 
+### Helix Reporter Job for Azure DevOps
+
+If you want to decouple Helix test execution from the build agents that submit the work, use the Helix Reporter Job.
+
+The reporter job is a lightweight dedicated pipeline job that:
+
+- polls Azure DevOps for pipeline state,
+- polls Helix for jobs associated with the current build,
+- downloads test result artifacts from completed Helix jobs,
+- publishes results to Azure DevOps incrementally,
+- returns a final green or red status once all non-reporter jobs and Helix jobs have completed.
+
+This allows the original build jobs to stop waiting on Helix execution while still preserving test visibility and pass/fail behavior in the pipeline.
+
+The job is added with the template at [/eng/common/core-templates/job/helix-reporter-job.yml](/eng/common/core-templates/job/helix-reporter-job.yml).
+
+Example:
+
+```yaml
+jobs:
+- template: /eng/common/core-templates/job/helix-reporter-job.yml@self
+  parameters:
+    jobName: HelixReporter
+    displayName: Helix Reporter Job
+    pollingIntervalSeconds: 30
+    timeoutInMinutes: 360
+```
+
+Useful parameters:
+
+- `helixBaseUri`: base URI for the Helix service. Defaults to `https://helix.dot.net/`.
+- `helixAccessToken`: optional token for authenticated Helix access on internal builds.
+- `pollingIntervalSeconds`: how often the reporter checks for new completed jobs.
+- `timeoutInMinutes`: overall timeout for the reporter job.
+- `reporterJobName`: name used to identify and exclude the reporter job in the Azure DevOps timeline.
+
+Behavior notes:
+
+- The reporter uses its own `SYSTEM_ACCESSTOKEN`, so it does not depend on the shorter-lived token from the job that originally submitted the Helix work.
+- If parseable xUnit, JUnit, or TRX result files are available, those are uploaded.
+- If no result files are found, the reporter creates synthetic work-item pass/fail results so that failures are still visible in Azure DevOps.
+- The reporter is safe to rerun because it checks for already-completed test runs and only processes new results.
+
 Furthermore, when you need to make changes to Helix SDK, there's a way to run it locally with ease to test your changes in a tighter dev loop than having to have to wait for the full PR build.
 
 The repository contains E2E tests that utilize the Helix SDK to send test Helix jobs.

@@ -1,0 +1,94 @@
+parameters:
+  jobName: HelixReporter
+  displayName: Helix Reporter Job
+  pool: {}
+  dotnetVersion: 11.0.x
+  includePreviewVersions: true
+  toolPackageId: Microsoft.DotNet.Helix.Reporter
+  toolCommand: dotnet-helix-reporter
+  toolVersion: ''
+  toolSource: ''
+  helixBaseUri: https://helix.dot.net/
+  helixAccessToken: ''
+  pollingIntervalSeconds: 30
+  timeoutInMinutes: 360
+  stepTimeoutInMinutes: 360
+  reporterJobName: Helix Reporter
+
+jobs:
+- job: ${{ parameters.jobName }}
+  displayName: ${{ parameters.displayName }}
+  timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
+  pool:
+    ${{ if eq(variables['System.TeamProject'], 'public') }}:
+      name: $(DncEngPublicBuildPool)
+      image: build.azurelinux.3.amd64.open
+    ${{ if eq(variables['System.TeamProject'], 'internal') }}:
+      name: $(DncEngInternalBuildPool)
+      image: build.azurelinux.3.amd64.open
+  steps:
+  - checkout: none
+
+  - task: UseDotNet@2
+    displayName: Install .NET SDK
+    timeoutInMinutes: ${{ parameters.stepTimeoutInMinutes }}
+    inputs:
+      packageType: sdk
+      version: ${{ parameters.dotnetVersion }}
+      includePreviewVersions: ${{ parameters.includePreviewVersions }}
+
+  - pwsh: |
+      $toolPath = Join-Path $env:AGENT_TEMPDIRECTORY 'helix-reporter-tool'
+      New-Item -ItemType Directory -Force -Path $toolPath | Out-Null
+
+      Push-Location $env:AGENT_TEMPDIRECTORY
+      try {
+        $packageId = '${{ parameters.toolPackageId }}'
+        $toolVersion = '${{ parameters.toolVersion }}'
+        $toolSource = '${{ parameters.toolSource }}'
+
+        $updateArgs = @('tool', 'update', '--tool-path', $toolPath, $packageId)
+        if (-not [string]::IsNullOrWhiteSpace($toolVersion)) {
+          $updateArgs += @('--version', $toolVersion)
+        }
+        if (-not [string]::IsNullOrWhiteSpace($toolSource)) {
+          $updateArgs += @('--add-source', $toolSource)
+        }
+
+        & dotnet @updateArgs
+        if ($LASTEXITCODE -ne 0) {
+          $installArgs = @('tool', 'install', '--tool-path', $toolPath, $packageId)
+          if (-not [string]::IsNullOrWhiteSpace($toolVersion)) {
+            $installArgs += @('--version', $toolVersion)
+          }
+          if (-not [string]::IsNullOrWhiteSpace($toolSource)) {
+            $installArgs += @('--add-source', $toolSource)
+          }
+
+          & dotnet @installArgs
+        }
+
+        if ($LASTEXITCODE -ne 0) {
+          throw "Failed to install the Helix reporter tool package '$packageId'."
+        }
+
+        Write-Host "##vso[task.prependpath]$toolPath"
+        Write-Host "##vso[task.setvariable variable=HelixReporterToolPath]$toolPath"
+      }
+      finally {
+        Pop-Location
+      }
+    displayName: Install Helix reporter
+    timeoutInMinutes: ${{ parameters.stepTimeoutInMinutes }}
+
+  - pwsh: |
+      & '${{ parameters.toolCommand }}' --helix-base-uri '${{ parameters.helixBaseUri }}' --polling-interval-seconds '${{ parameters.pollingIntervalSeconds }}' --max-wait-minutes '${{ parameters.timeoutInMinutes }}' --reporter-job-name '${{ parameters.reporterJobName }}'
+
+      if ($LASTEXITCODE -ne 0) {
+        throw "The Helix reporter tool exited with code $LASTEXITCODE."
+      }
+    displayName: Run Helix reporter
+    timeoutInMinutes: ${{ parameters.stepTimeoutInMinutes }}
+    env:
+      SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+      HELIX_ACCESSTOKEN: ${{ parameters.helixAccessToken }}

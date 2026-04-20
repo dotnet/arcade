@@ -1,0 +1,132 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using System;
+using System.Globalization;
+using CommandLine;
+
+namespace Microsoft.DotNet.Helix.Reporter
+{
+    public sealed class ReporterOptions
+    {
+        public bool ShowHelp { get; private set; }
+
+        [Option("helix-base-uri", HelpText = "Base URI for the Helix service.")]
+        public string HelixBaseUri { get; set; } = "https://helix.dot.net/";
+
+        [Option("helix-access-token", HelpText = "Access token for authenticated Helix APIs.")]
+        public string HelixAccessToken { get; set; }
+
+        [Option("collection-uri", HelpText = "Azure DevOps collection URI.")]
+        public string CollectionUri { get; set; }
+
+        [Option("team-project", HelpText = "Azure DevOps team project name.")]
+        public string TeamProject { get; set; }
+
+        [Option("build-id", HelpText = "Azure DevOps build ID.")]
+        public string BuildId { get; set; }
+
+        [Option("access-token", HelpText = "Azure DevOps system access token.")]
+        public string AccessToken { get; set; }
+
+        [Option("repository", HelpText = "Repository identifier in owner/repo form.")]
+        public string Repository { get; set; }
+
+        [Option("polling-interval-seconds", HelpText = "Polling interval in seconds.", Default = 30)]
+        public int PollingIntervalSeconds { get; set; } = 30;
+
+        [Option("max-wait-minutes", HelpText = "Maximum run time in minutes.", Default = 360)]
+        public int MaximumWaitMinutes { get; set; } = 360;
+
+        [Option("reporter-job-name", HelpText = "Display name of the reporter job in Azure DevOps.")]
+        public string ReporterJobName { get; set; } = "Helix Reporter";
+
+        [Option("working-directory", HelpText = "Directory used to stage downloaded test results.")]
+        public string WorkingDirectory { get; set; }
+
+        [Option("pr-number", HelpText = "Pull request number for the build, if applicable.")]
+        public int? PrNumber { get; set; }
+
+        [Option("attempt", HelpText = "Azure DevOps attempt number for the current job.")]
+        public int? Attempt { get; set; }
+
+        public static ReporterOptions Parse(string[] args)
+        {
+            ReporterOptions parsed = null;
+            var parser = new Parser(settings =>
+            {
+                settings.CaseInsensitiveEnumValues = true;
+                settings.HelpWriter = Console.Out;
+            });
+
+            parser.ParseArguments<ReporterOptions>(args)
+                .WithParsed(options => parsed = options)
+                .WithNotParsed(errors =>
+                {
+                    parsed = new ReporterOptions { ShowHelp = true };
+                });
+
+            if (parsed == null || parsed.ShowHelp)
+            {
+                return parsed ?? new ReporterOptions { ShowHelp = true };
+            }
+
+            parsed.ApplyEnvironmentDefaults();
+            parsed.Validate();
+            return parsed;
+        }
+
+        private void ApplyEnvironmentDefaults()
+        {
+            HelixAccessToken ??= Environment.GetEnvironmentVariable("HELIX_ACCESSTOKEN");
+            CollectionUri ??= Environment.GetEnvironmentVariable("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI");
+            TeamProject ??= Environment.GetEnvironmentVariable("SYSTEM_TEAMPROJECT");
+            BuildId ??= Environment.GetEnvironmentVariable("BUILD_BUILDID");
+            AccessToken ??= Environment.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN");
+            Repository = HelixReporterJobUtilities.NormalizeRepository(
+                Repository
+                ?? Environment.GetEnvironmentVariable("BUILD_REPOSITORY_URI")
+                ?? Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME"));
+            WorkingDirectory ??= System.IO.Path.Combine(System.IO.Path.GetTempPath(), "helix-reporter", BuildId ?? "unknown");
+            PrNumber ??= GetEnvironmentInt("SYSTEM_PULLREQUEST_PULLREQUESTNUMBER");
+            Attempt ??= GetEnvironmentInt("SYSTEM_JOBATTEMPT");
+        }
+
+        private void Validate()
+        {
+            CollectionUri = EnsureTrailingSlash(RequireValue(CollectionUri, "collection-uri", "SYSTEM_TEAMFOUNDATIONCOLLECTIONURI"));
+            TeamProject = RequireValue(TeamProject, "team-project", "SYSTEM_TEAMPROJECT");
+            BuildId = RequireValue(BuildId, "build-id", "BUILD_BUILDID");
+            AccessToken = RequireValue(AccessToken, "access-token", "SYSTEM_ACCESSTOKEN");
+
+            if (string.IsNullOrWhiteSpace(Repository))
+            {
+                throw new InvalidOperationException("A repository identifier must be provided either by argument or pipeline environment.");
+            }
+        }
+
+        private static string RequireValue(string value, string argumentName, string environmentName)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                throw new InvalidOperationException($"Missing required option --{argumentName} or environment variable {environmentName}.");
+            }
+
+            return value;
+        }
+
+        private static int? GetEnvironmentInt(string environmentName)
+        {
+            string value = Environment.GetEnvironmentVariable(environmentName);
+            if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out int parsed))
+            {
+                return parsed;
+            }
+
+            return null;
+        }
+
+        private static string EnsureTrailingSlash(string uri)
+            => uri.EndsWith("/", StringComparison.Ordinal) ? uri : uri + "/";
+    }
+}
