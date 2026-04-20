@@ -15,27 +15,54 @@ using MsBuildUtils = Microsoft.Build.Utilities;
 namespace Microsoft.DotNet.Build.Tasks.Feed;
 
 /// <summary>
-/// MSBuild task that publishes symbols to a symbol server using the internal SymbolUploadHelper
-/// infrastructure. Supports both PAT-based auth (legacy) and Entra/managed identity auth.
+/// MSBuild task that publishes symbols to symbol servers using the internal SymbolUploadHelper
+/// infrastructure. Symbols are first staged in a temporary Azure DevOps org (default: "dnceng"),
+/// then promoted to the target symbol servers (internal/public) via the SymbolRequest service.
+/// Supports both PAT-based auth (legacy) and Entra/managed identity auth.
+///
+/// Note: Unlike the old PublishSymbols task (Microsoft.SymbolUploader.Build.Task), this task
+/// does not validate that individual files are indexable during dry runs. The 1ES symbol
+/// publishing tool now manages that validation. Dry runs will still decompose packages
+/// and exercise the request lifecycle but skip per-file indexability checks.
 /// </summary>
 public class PublishSymbolsUsingSymbolUploadHelper : MsBuildUtils.Task
 {
     /// <summary>
-    /// The Azure DevOps organization to publish symbols to (e.g., "microsoft" or "microsoftpublicsymbols").
+    /// The temporary/staging Azure DevOps organization where symbols are uploaded before promotion.
+    /// Default is "dnceng". Symbols cannot be published directly to the target orgs
+    /// (microsoftpublicsymbols/microsoft); they must be staged here first.
     /// </summary>
-    [Required]
-    public string AzdoOrg { get; set; }
+    public string StagingAzdoOrg { get; set; } = "dnceng";
 
     /// <summary>
-    /// Optional personal access token. If provided, PAT-based auth is used.
+    /// The project name used for the SymbolRequest promotion service registration.
+    /// Required for non-dry-run publishing.
+    /// </summary>
+    public string SymbolRequestProject { get; set; }
+
+    /// <summary>
+    /// Optional personal access token for staging org auth. If provided, PAT-based auth is used.
     /// If empty or not set, DefaultIdentityTokenCredential (Entra/MI) is used.
     /// </summary>
     public string PersonalAccessToken { get; set; }
 
     /// <summary>
     /// Optional managed identity client ID for DefaultIdentityTokenCredential.
+    /// Used for both staging upload and promotion service auth.
     /// </summary>
     public string ManagedIdentityClientId { get; set; }
+
+    /// <summary>
+    /// Whether to publish symbols to the internal symbol server (SymWeb/microsoft org).
+    /// Default is true.
+    /// </summary>
+    public bool PublishToInternalServer { get; set; } = true;
+
+    /// <summary>
+    /// Whether to publish symbols to the public symbol server (MSDL/microsoftpublicsymbols org).
+    /// Default is true.
+    /// </summary>
+    public bool PublishToPublicServer { get; set; } = true;
 
     /// <summary>
     /// Symbol packages (*.symbols.nupkg) to publish.
@@ -102,7 +129,14 @@ public class PublishSymbolsUsingSymbolUploadHelper : MsBuildUtils.Task
     {
         try
         {
-            TokenCredential credential = CreateCredential();
+            if (!PublishToInternalServer && !PublishToPublicServer)
+            {
+                Log.LogMessage(MessageImportance.High, "Neither internal nor public symbol server publishing is requested. Skipping.");
+                return true;
+            }
+
+            TokenCredential stagingCredential = CreateStagingCredential();
+            TokenCredential promotionCredential = CreatePromotionCredential();
             TaskTracer tracer = new(Log, verbose: VerboseLogging);
 
             IEnumerable<int> pdbWarnings = ParsePdbConversionWarnings();
@@ -110,8 +144,8 @@ public class PublishSymbolsUsingSymbolUploadHelper : MsBuildUtils.Task
                 ?? FrozenSet<string>.Empty;
 
             SymbolPublisherOptions options = new(
-                AzdoOrg,
-                credential,
+                StagingAzdoOrg,
+                stagingCredential,
                 packageFileExcludeList: exclusions,
                 convertPortablePdbs: ConvertPortablePdbsToWindowsPdbs,
                 treatPdbConversionIssuesAsInfo: TreatPdbConversionIssuesAsInfo,
@@ -124,8 +158,8 @@ public class PublishSymbolsUsingSymbolUploadHelper : MsBuildUtils.Task
                 ? SymbolUploadHelperFactory.GetSymbolHelperFromLocalTool(tracer, options, ".")
                 : await SymbolUploadHelperFactory.GetSymbolHelperWithDownloadAsync(tracer, options);
 
-            string requestName = $"arcade-sdk/{AzdoOrg}/{Guid.NewGuid()}";
-            Log.LogMessage(MessageImportance.High, "Creating symbol request '{0}' for org '{1}'", requestName, AzdoOrg);
+            string requestName = $"arcade-sdk/{StagingAzdoOrg}/{Guid.NewGuid()}";
+            Log.LogMessage(MessageImportance.High, "Creating symbol request '{0}' in staging org '{1}'", requestName, StagingAzdoOrg);
 
             int result = await helper.CreateRequest(requestName);
             if (result != 0)
@@ -134,7 +168,7 @@ public class PublishSymbolsUsingSymbolUploadHelper : MsBuildUtils.Task
                 return false;
             }
 
-            bool succeeded = false;
+            bool uploadSucceeded = false;
             try
             {
                 // Add loose files directory if specified
@@ -185,7 +219,7 @@ public class PublishSymbolsUsingSymbolUploadHelper : MsBuildUtils.Task
                     }
                 }
 
-                Log.LogMessage(MessageImportance.High, "Finalizing symbol request with expiration of {0} days", ExpirationInDays);
+                Log.LogMessage(MessageImportance.High, "Finalizing symbol request in staging org with expiration of {0} days", ExpirationInDays);
                 result = await helper.FinalizeRequest(requestName, (uint)ExpirationInDays);
                 if (result != 0)
                 {
@@ -193,18 +227,50 @@ public class PublishSymbolsUsingSymbolUploadHelper : MsBuildUtils.Task
                     return false;
                 }
 
-                succeeded = true;
+                uploadSucceeded = true;
             }
             finally
             {
-                if (!succeeded)
+                if (!uploadSucceeded)
                 {
-                    Log.LogMessage(MessageImportance.High, "Symbol publishing failed. Deleting request '{0}'.", requestName);
+                    Log.LogMessage(MessageImportance.High, "Symbol upload failed. Deleting request '{0}'.", requestName);
                     await helper.DeleteRequest(requestName);
                 }
             }
 
-            Log.LogMessage(MessageImportance.High, "Successfully published symbols to '{0}'", AzdoOrg);
+            // Promote the finalized request to the target symbol servers
+            SymbolPromotionHelper.Visibility visibility = PublishToPublicServer
+                ? SymbolPromotionHelper.Visibility.Public
+                : SymbolPromotionHelper.Visibility.Internal;
+
+            if (DryRun)
+            {
+                Log.LogMessage(MessageImportance.High,
+                    "Dry run: would register request '{0}' to project '{1}' with visibility '{2}' for {3} days.",
+                    requestName, SymbolRequestProject, visibility, ExpirationInDays);
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(SymbolRequestProject))
+                {
+                    Log.LogError("SymbolRequestProject is required for non-dry-run symbol publishing promotion.");
+                    return false;
+                }
+
+                Log.LogMessage(MessageImportance.High,
+                    "Promoting symbol request '{0}' to project '{1}' with visibility '{2}'",
+                    requestName, SymbolRequestProject, visibility);
+
+                if (!await SymbolPromotionHelper.RegisterAndPublishRequest(
+                    tracer, promotionCredential, SymbolPromotionHelper.Environment.Prod,
+                    SymbolRequestProject, requestName, (uint)ExpirationInDays, visibility))
+                {
+                    Log.LogError("Failed to register and promote symbol request to the target symbol servers.");
+                    return false;
+                }
+            }
+
+            Log.LogMessage(MessageImportance.High, "Successfully published and promoted symbols (visibility: {0})", visibility);
             return true;
         }
         catch (Exception ex)
@@ -214,15 +280,26 @@ public class PublishSymbolsUsingSymbolUploadHelper : MsBuildUtils.Task
         }
     }
 
-    private TokenCredential CreateCredential()
+    private TokenCredential CreateStagingCredential()
     {
         if (!string.IsNullOrEmpty(PersonalAccessToken))
         {
-            Log.LogMessage(MessageImportance.Normal, "Using PAT-based authentication for symbol publishing");
+            Log.LogMessage(MessageImportance.Normal, "Using PAT-based authentication for staging symbol upload");
             return new PATCredential(PersonalAccessToken);
         }
 
-        Log.LogMessage(MessageImportance.Normal, "Using Entra/managed identity authentication for symbol publishing");
+        Log.LogMessage(MessageImportance.Normal, "Using Entra/managed identity authentication for staging symbol upload");
+        return CreateDefaultCredential();
+    }
+
+    private TokenCredential CreatePromotionCredential()
+    {
+        Log.LogMessage(MessageImportance.Normal, "Using Entra/managed identity authentication for symbol promotion");
+        return CreateDefaultCredential();
+    }
+
+    private DefaultIdentityTokenCredential CreateDefaultCredential()
+    {
         var options = new DefaultIdentityTokenCredentialOptions();
         if (!string.IsNullOrEmpty(ManagedIdentityClientId))
         {
