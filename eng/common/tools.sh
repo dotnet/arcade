@@ -126,12 +126,6 @@ function InitializeDotNetCli {
     export DOTNET_CLI_TELEMETRY_OPTOUT=1
   fi
 
-  # Keep repo builds isolated from machine-installed SDK state and workload advertising.
-  # This avoids preview SDK builds picking up mismatched workloads on CI images.
-  export DOTNET_MULTILEVEL_LOOKUP=0
-  export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
-  export DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE=1
-
   # LTTNG is the logging infrastructure used by Core CLR. Need this variable set
   # so it doesn't output warnings to the console.
   export LTTNG_HOME="$HOME"
@@ -154,11 +148,7 @@ function InitializeDotNetCli {
   if [[ $global_json_has_runtimes == false && -n "${DOTNET_INSTALL_DIR:-}" && -d "$DOTNET_INSTALL_DIR/sdk/$dotnet_sdk_version" ]]; then
     dotnet_root="$DOTNET_INSTALL_DIR"
   else
-    if [[ -n "${DOTNET_GLOBAL_INSTALL_DIR:-}" ]]; then
-      dotnet_root="$DOTNET_GLOBAL_INSTALL_DIR"
-    else
-      dotnet_root="${repo_root}.dotnet"
-    fi
+    dotnet_root="${repo_root}.dotnet"
 
     export DOTNET_INSTALL_DIR="$dotnet_root"
 
@@ -177,9 +167,6 @@ function InitializeDotNetCli {
   Write-PipelinePrependPath -path "$dotnet_root"
 
   Write-PipelineSetVariable -name "DOTNET_NOLOGO" -value "1"
-  Write-PipelineSetVariable -name "DOTNET_MULTILEVEL_LOOKUP" -value "0"
-  Write-PipelineSetVariable -name "DOTNET_SKIP_FIRST_TIME_EXPERIENCE" -value "1"
-  Write-PipelineSetVariable -name "DOTNET_CLI_WORKLOAD_UPDATE_NOTIFY_DISABLE" -value "1"
 
   # return value
   _InitializeDotNetCli="$dotnet_root"
@@ -551,12 +538,7 @@ function MSBuild-Core {
     warnnotaserror_switch="/warnnotaserror:$warn_not_as_error /p:AdditionalWarningsNotAsErrors=$warn_not_as_error"
   fi
 
-  local workload_resolver_switch=""
-  if [[ "$ci" == true && -n "${_InitializeBuildToolCommand:-}" ]]; then
-    workload_resolver_switch="/p:MSBuildEnableWorkloadResolver=false"
-  fi
-
-  RunBuildTool "$_InitializeBuildToolCommand" /m /nologo /clp:Summary /v:$verbosity /nr:$node_reuse $warnaserror_switch $mt_switch $warnnotaserror_switch $workload_resolver_switch /p:TreatWarningsAsErrors=$warn_as_error /p:ContinuousIntegrationBuild=$ci "$@"
+  RunBuildTool "$_InitializeBuildToolCommand" /m /nologo /clp:Summary /v:$verbosity /nr:$node_reuse $warnaserror_switch $mt_switch $warnnotaserror_switch /p:TreatWarningsAsErrors=$warn_as_error /p:ContinuousIntegrationBuild=$ci "$@"
 }
 
 function GetDarc {
@@ -611,12 +593,6 @@ fi
 mkdir -p "$toolset_dir"
 mkdir -p "$temp_dir"
 mkdir -p "$log_dir"
-
-# Direct MSBuild crash diagnostics (MSB4166 failure.txt files) to a known location
-# under artifacts/log so they are captured as build artifacts in CI.
-if [[ -z "${MSBUILDDEBUGPATH:-}" ]]; then
-  export MSBUILDDEBUGPATH="$log_dir/MsbuildDebugLogs"
-fi
 
 Write-PipelineSetVariable -name "Artifacts" -value "$artifacts_dir"
 Write-PipelineSetVariable -name "Artifacts.Toolset" -value "$toolset_dir"
