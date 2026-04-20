@@ -72,7 +72,7 @@
     <SystemSecurityCryptographyXmlVersion>9.0.15</SystemSecurityCryptographyXmlVersion>
     <SystemTextEncodingsWebVersion>9.0.0-rc.2.24473.5</SystemTextEncodingsWebVersion>
     <SystemTextJsonVersion>9.0.0-rc.2.24473.5</SystemTextJsonVersion>
-    <SystemFormatsAsn1Version>9.0.0-rc.2.24473.5</SystemFormatsAsn1Version>
+    <SystemFormatsAsn1Version>9.0.15</SystemFormatsAsn1Version>
     <!-- sdk -->
     <MicrosoftNETSdkWorkloadManifestReaderVersion>9.0.100-preview.6.24328.19</MicrosoftNETSdkWorkloadManifestReaderVersion>
     <!-- source-build-externals -->
