@@ -1,13 +1,13 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.DotNet.Helix.Reporter;
+using Microsoft.DotNet.Helix.JobMonitor;
 using System;
 using Xunit;
 
 namespace Microsoft.DotNet.Helix.Sdk.Tests
 {
-    public class HelixReporterJobUtilitiesTests
+    public class HelixJobMonitorUtilitiesTests
     {
         [Theory]
         [InlineData("https://github.com/dotnet/arcade", "dotnet/arcade")]
@@ -15,39 +15,39 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         [InlineData("dotnet/arcade", "dotnet/arcade")]
         public void NormalizeRepository_ReturnsStableIdentifier(string input, string expected)
         {
-            Assert.Equal(expected, HelixReporterJobUtilities.NormalizeRepository(input));
+            Assert.Equal(expected, HelixJobMonitorUtilities.NormalizeRepository(input));
         }
 
         [Fact]
-        public void AreNonReporterJobsComplete_IgnoresReporterRecord()
+        public void AreNonMonitorJobsComplete_IgnoresMonitorRecord()
         {
             var records = new[]
             {
                 new AzureDevOpsTimelineRecord { Type = "Job", Name = "Build Linux", State = "completed", Result = "succeeded" },
-                new AzureDevOpsTimelineRecord { Type = "Job", Name = "Helix Reporter", State = "inProgress", Result = null },
+                new AzureDevOpsTimelineRecord { Type = "Job", Name = "Helix Job Monitor", State = "inProgress", Result = null },
             };
 
-            Assert.True(HelixReporterJobUtilities.AreNonReporterJobsComplete(records, "Helix Reporter"));
+            Assert.True(HelixJobMonitorUtilities.AreNonMonitorJobsComplete(records, "Helix Job Monitor"));
         }
 
         [Fact]
-        public void HasFailedNonReporterJobs_DetectsFailures()
+        public void HasFailedNonMonitorJobs_DetectsFailures()
         {
             var records = new[]
             {
                 new AzureDevOpsTimelineRecord { Type = "Job", Name = "Build Linux", State = "completed", Result = "failed" },
-                new AzureDevOpsTimelineRecord { Type = "Job", Name = "Helix Reporter", State = "inProgress", Result = null },
+                new AzureDevOpsTimelineRecord { Type = "Job", Name = "Helix Job Monitor", State = "inProgress", Result = null },
             };
 
-            Assert.True(HelixReporterJobUtilities.HasFailedNonReporterJobs(records, "Helix Reporter"));
+            Assert.True(HelixJobMonitorUtilities.HasFailedNonMonitorJobs(records, "Helix Job Monitor"));
         }
 
         [Fact]
         public void GetTestRunName_ProducesStableName()
         {
             Assert.Equal(
-                "Helix Reporter - coreclr-tests-linux-x64",
-                HelixReporterJobUtilities.GetTestRunName("coreclr-tests-linux-x64"));
+                "Helix Job Monitor - coreclr-tests-linux-x64",
+                HelixJobMonitorUtilities.GetTestRunName("coreclr-tests-linux-x64"));
         }
     }
 }

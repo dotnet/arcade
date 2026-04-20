@@ -5,8 +5,8 @@
     <OutputType>Exe</OutputType>
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
-    <ToolCommandName>dotnet-helix-reporter</ToolCommandName>
-    <Description>Standalone Helix reporter job tool for Azure DevOps pipelines</Description>
+    <ToolCommandName>dotnet-helix-job-monitor</ToolCommandName>
+    <Description>Standalone Helix Job Monitor tool for Azure DevOps pipelines</Description>
   </PropertyGroup>
 
   <ItemGroup>

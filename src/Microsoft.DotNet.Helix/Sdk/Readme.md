@@ -44,30 +44,30 @@ env:
   SYSTEM_ACCESSTOKEN: $(System.AccessToken) # We need to set this env var to publish helix results to Azure DevOps
 ```
 
-### Helix Reporter Job for Azure DevOps
+### Helix Job Monitor for Azure DevOps
 
-If you want to decouple Helix test execution from the build agents that submit the work, use the Helix Reporter Job.
+If you want to decouple Helix test execution from the build agents that submit the work, use the Helix Job Monitor.
 
-The reporter job is a lightweight dedicated pipeline job that:
+The job monitor is a lightweight dedicated pipeline job that:
 
 - polls Azure DevOps for pipeline state,
 - polls Helix for jobs associated with the current build,
 - downloads test result artifacts from completed Helix jobs,
 - publishes results to Azure DevOps incrementally,
-- returns a final green or red status once all non-reporter jobs and Helix jobs have completed.
+- returns a final green or red status once all non-monitor jobs and Helix jobs have completed.
 
 This allows the original build jobs to stop waiting on Helix execution while still preserving test visibility and pass/fail behavior in the pipeline.
 
-The job is added with the template at [/eng/common/core-templates/job/helix-reporter-job.yml](/eng/common/core-templates/job/helix-reporter-job.yml).
+The job is added with the template at [/eng/common/core-templates/job/helix-job-monitor.yml](/eng/common/core-templates/job/helix-job-monitor.yml).
 
 Example:
 
 ```yaml
 jobs:
-- template: /eng/common/core-templates/job/helix-reporter-job.yml@self
+- template: /eng/common/core-templates/job/helix-job-monitor.yml@self
   parameters:
-    jobName: HelixReporter
-    displayName: Helix Reporter Job
+    jobName: HelixJobMonitor
+    displayName: Helix Job Monitor
     pollingIntervalSeconds: 30
     timeoutInMinutes: 360
 ```
@@ -76,9 +76,9 @@ Useful parameters:
 
 - `helixBaseUri`: base URI for the Helix service. Defaults to `https://helix.dot.net/`.
 - `helixAccessToken`: optional token for authenticated Helix access on internal builds.
-- `pollingIntervalSeconds`: how often the reporter checks for new completed jobs.
-- `timeoutInMinutes`: overall timeout for the reporter job.
-- `reporterJobName`: name used to identify and exclude the reporter job in the Azure DevOps timeline.
+- `pollingIntervalSeconds`: how often the job monitor checks for new completed jobs.
+- `timeoutInMinutes`: overall timeout for the job monitor.
+- `jobMonitorName`: name used to identify and exclude the Helix Job Monitor job in the Azure DevOps timeline.
 
 Behavior notes:
 

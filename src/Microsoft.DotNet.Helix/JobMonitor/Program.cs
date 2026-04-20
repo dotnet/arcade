@@ -4,7 +4,7 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Helix.Reporter
+namespace Microsoft.DotNet.Helix.JobMonitor
 {
     internal static class Program
     {
@@ -12,13 +12,13 @@ namespace Microsoft.DotNet.Helix.Reporter
         {
             try
             {
-                ReporterOptions options = ReporterOptions.Parse(args);
+                JobMonitorOptions options = JobMonitorOptions.Parse(args);
                 if (options.ShowHelp)
                 {
                     return 0;
                 }
 
-                ReporterRunner runner = new ReporterRunner(options);
+                JobMonitorRunner runner = new JobMonitorRunner(options);
                 return await runner.RunAsync().ConfigureAwait(false);
             }
             catch (Exception ex)

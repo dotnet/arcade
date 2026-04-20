@@ -1,11 +1,11 @@
 parameters:
-  jobName: HelixReporter
-  displayName: Helix Reporter Job
+  jobName: HelixJobMonitor
+  displayName: Helix Job Monitor
   pool: {}
   dotnetVersion: 11.0.x
   includePreviewVersions: true
-  toolPackageId: Microsoft.DotNet.Helix.Reporter
-  toolCommand: dotnet-helix-reporter
+  toolPackageId: Microsoft.DotNet.Helix.JobMonitor
+  toolCommand: dotnet-helix-job-monitor
   toolVersion: ''
   toolSource: ''
   helixBaseUri: https://helix.dot.net/
@@ -13,7 +13,7 @@ parameters:
   pollingIntervalSeconds: 30
   timeoutInMinutes: 360
   stepTimeoutInMinutes: 360
-  reporterJobName: Helix Reporter
+  jobMonitorName: Helix Job Monitor
 
 jobs:
 - job: ${{ parameters.jobName }}
@@ -38,7 +38,7 @@ jobs:
       includePreviewVersions: ${{ parameters.includePreviewVersions }}
 
   - pwsh: |
-      $toolPath = Join-Path $env:AGENT_TEMPDIRECTORY 'helix-reporter-tool'
+      $toolPath = Join-Path $env:AGENT_TEMPDIRECTORY 'helix-job-monitor-tool'
       New-Item -ItemType Directory -Force -Path $toolPath | Out-Null
 
       Push-Location $env:AGENT_TEMPDIRECTORY
@@ -69,25 +69,25 @@ jobs:
         }
 
         if ($LASTEXITCODE -ne 0) {
-          throw "Failed to install the Helix reporter tool package '$packageId'."
+          throw "Failed to install the Helix job monitor tool package '$packageId'."
         }
 
         Write-Host "##vso[task.prependpath]$toolPath"
-        Write-Host "##vso[task.setvariable variable=HelixReporterToolPath]$toolPath"
+        Write-Host "##vso[task.setvariable variable=HelixJobMonitorToolPath]$toolPath"
       }
       finally {
         Pop-Location
       }
-    displayName: Install Helix reporter
+    displayName: Install Helix job monitor
     timeoutInMinutes: ${{ parameters.stepTimeoutInMinutes }}
 
   - pwsh: |
-      & '${{ parameters.toolCommand }}' --helix-base-uri '${{ parameters.helixBaseUri }}' --polling-interval-seconds '${{ parameters.pollingIntervalSeconds }}' --max-wait-minutes '${{ parameters.timeoutInMinutes }}' --reporter-job-name '${{ parameters.reporterJobName }}'
+      & '${{ parameters.toolCommand }}' --helix-base-uri '${{ parameters.helixBaseUri }}' --polling-interval-seconds '${{ parameters.pollingIntervalSeconds }}' --max-wait-minutes '${{ parameters.timeoutInMinutes }}' --job-monitor-name '${{ parameters.jobMonitorName }}'
 
       if ($LASTEXITCODE -ne 0) {
-        throw "The Helix reporter tool exited with code $LASTEXITCODE."
+        throw "The Helix job monitor tool exited with code $LASTEXITCODE."
       }
-    displayName: Run Helix reporter
+    displayName: Run Helix job monitor
     timeoutInMinutes: ${{ parameters.stepTimeoutInMinutes }}
     env:
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)

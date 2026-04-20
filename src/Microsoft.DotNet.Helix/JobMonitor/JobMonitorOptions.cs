@@ -5,9 +5,9 @@ using System;
 using System.Globalization;
 using CommandLine;
 
-namespace Microsoft.DotNet.Helix.Reporter
+namespace Microsoft.DotNet.Helix.JobMonitor
 {
-    public sealed class ReporterOptions
+    public sealed class JobMonitorOptions
     {
         public bool ShowHelp { get; private set; }
 
@@ -38,8 +38,8 @@ namespace Microsoft.DotNet.Helix.Reporter
         [Option("max-wait-minutes", HelpText = "Maximum run time in minutes.", Default = 360)]
         public int MaximumWaitMinutes { get; set; } = 360;
 
-        [Option("reporter-job-name", HelpText = "Display name of the reporter job in Azure DevOps.")]
-        public string ReporterJobName { get; set; } = "Helix Reporter";
+        [Option("job-monitor-name", HelpText = "Display name of the Helix Job Monitor job in Azure DevOps.")]
+        public string JobMonitorName { get; set; } = "Helix Job Monitor";
 
         [Option("working-directory", HelpText = "Directory used to stage downloaded test results.")]
         public string WorkingDirectory { get; set; }
@@ -50,25 +50,25 @@ namespace Microsoft.DotNet.Helix.Reporter
         [Option("attempt", HelpText = "Azure DevOps attempt number for the current job.")]
         public int? Attempt { get; set; }
 
-        public static ReporterOptions Parse(string[] args)
+        public static JobMonitorOptions Parse(string[] args)
         {
-            ReporterOptions parsed = null;
+            JobMonitorOptions parsed = null;
             var parser = new Parser(settings =>
             {
                 settings.CaseInsensitiveEnumValues = true;
                 settings.HelpWriter = Console.Out;
             });
 
-            parser.ParseArguments<ReporterOptions>(args)
+            parser.ParseArguments<JobMonitorOptions>(args)
                 .WithParsed(options => parsed = options)
                 .WithNotParsed(errors =>
                 {
-                    parsed = new ReporterOptions { ShowHelp = true };
+                    parsed = new JobMonitorOptions { ShowHelp = true };
                 });
 
             if (parsed == null || parsed.ShowHelp)
             {
-                return parsed ?? new ReporterOptions { ShowHelp = true };
+                return parsed ?? new JobMonitorOptions { ShowHelp = true };
             }
 
             parsed.ApplyEnvironmentDefaults();
@@ -83,11 +83,11 @@ namespace Microsoft.DotNet.Helix.Reporter
             TeamProject ??= Environment.GetEnvironmentVariable("SYSTEM_TEAMPROJECT");
             BuildId ??= Environment.GetEnvironmentVariable("BUILD_BUILDID");
             AccessToken ??= Environment.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN");
-            Repository = HelixReporterJobUtilities.NormalizeRepository(
+            Repository = HelixJobMonitorUtilities.NormalizeRepository(
                 Repository
                 ?? Environment.GetEnvironmentVariable("BUILD_REPOSITORY_URI")
                 ?? Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME"));
-            WorkingDirectory ??= System.IO.Path.Combine(System.IO.Path.GetTempPath(), "helix-reporter", BuildId ?? "unknown");
+            WorkingDirectory ??= System.IO.Path.Combine(System.IO.Path.GetTempPath(), "helix-job-monitor", BuildId ?? "unknown");
             PrNumber ??= GetEnvironmentInt("SYSTEM_PULLREQUEST_PULLREQUESTNUMBER");
             Attempt ??= GetEnvironmentInt("SYSTEM_JOBATTEMPT");
         }

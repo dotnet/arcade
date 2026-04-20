@@ -7,7 +7,7 @@ using System.Linq;
 using System.Net;
 using Newtonsoft.Json;
 
-namespace Microsoft.DotNet.Helix.Reporter
+namespace Microsoft.DotNet.Helix.JobMonitor
 {
     public sealed class AzureDevOpsTimelineRecord
     {
@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Helix.Reporter
         public string Result { get; set; }
     }
 
-    public static class HelixReporterJobUtilities
+    public static class HelixJobMonitorUtilities
     {
         public static string NormalizeRepository(string repository)
         {
@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Helix.Reporter
                 return repository.Trim('/');
             }
 
-            string[] segments = uri.AbsolutePath.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] segments = uri.AbsolutePath.Split(['/'], StringSplitOptions.RemoveEmptyEntries);
             if (uri.Host.Contains("github.com", StringComparison.OrdinalIgnoreCase) && segments.Length >= 2)
             {
                 return $"{segments[0]}/{segments[1]}";
@@ -70,16 +70,16 @@ namespace Microsoft.DotNet.Helix.Reporter
             return repository;
         }
 
-        public static bool AreNonReporterJobsComplete(IEnumerable<AzureDevOpsTimelineRecord> records, string reporterJobName)
-            => GetRelevantJobRecords(records, reporterJobName).All(IsTerminal);
+        public static bool AreNonMonitorJobsComplete(IEnumerable<AzureDevOpsTimelineRecord> records, string jobMonitorName)
+            => GetRelevantJobRecords(records, jobMonitorName).All(IsTerminal);
 
-        public static bool HasFailedNonReporterJobs(IEnumerable<AzureDevOpsTimelineRecord> records, string reporterJobName)
-            => GetRelevantJobRecords(records, reporterJobName).Any(r =>
+        public static bool HasFailedNonMonitorJobs(IEnumerable<AzureDevOpsTimelineRecord> records, string jobMonitorName)
+            => GetRelevantJobRecords(records, jobMonitorName).Any(r =>
                 string.Equals(r.Result, "failed", StringComparison.OrdinalIgnoreCase)
                 || string.Equals(r.Result, "canceled", StringComparison.OrdinalIgnoreCase));
 
         public static string GetTestRunName(string helixJobName)
-            => $"Helix Reporter - {helixJobName}";
+            => $"Helix Job Monitor - {helixJobName}";
 
         public static string CleanWorkItemName(string name)
         {
@@ -96,11 +96,11 @@ namespace Microsoft.DotNet.Helix.Reporter
             return name.Replace('/', '-').Replace('\\', '-');
         }
 
-        private static IEnumerable<AzureDevOpsTimelineRecord> GetRelevantJobRecords(IEnumerable<AzureDevOpsTimelineRecord> records, string reporterJobName)
+        private static IEnumerable<AzureDevOpsTimelineRecord> GetRelevantJobRecords(IEnumerable<AzureDevOpsTimelineRecord> records, string jobMonitorName)
         {
-            return (records ?? Enumerable.Empty<AzureDevOpsTimelineRecord>())
+            return (records ?? [])
                 .Where(r => string.Equals(r.Type, "Job", StringComparison.OrdinalIgnoreCase))
-                .Where(r => !string.Equals(r.Name, reporterJobName, StringComparison.OrdinalIgnoreCase));
+                .Where(r => !string.Equals(r.Name, jobMonitorName, StringComparison.OrdinalIgnoreCase));
         }
 
         private static bool IsTerminal(AzureDevOpsTimelineRecord record)
