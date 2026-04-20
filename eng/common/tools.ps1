@@ -191,7 +191,11 @@ function InitializeDotNetCli([bool]$install, [bool]$createSdkLocationFile) {
   if ((-not $globalJsonHasRuntimes) -and (-not [string]::IsNullOrEmpty($env:DOTNET_INSTALL_DIR)) -and (Test-Path(Join-Path $env:DOTNET_INSTALL_DIR "sdk\$dotnetSdkVersion"))) {
     $dotnetRoot = $env:DOTNET_INSTALL_DIR
   } else {
-    $dotnetRoot = Join-Path $RepoRoot '.dotnet'
+    if (-not [string]::IsNullOrEmpty($env:DOTNET_GLOBAL_INSTALL_DIR)) {
+      $dotnetRoot = $env:DOTNET_GLOBAL_INSTALL_DIR
+    } else {
+      $dotnetRoot = Join-Path $RepoRoot '.dotnet'
+    }
 
     if (-not (Test-Path(Join-Path $dotnetRoot "sdk\$dotnetSdkVersion"))) {
       if ($install) {
@@ -428,9 +432,9 @@ function InitializeVisualStudioMSBuild([object]$vsRequirements = $null) {
     }
   }
 
-  # Locate Visual Studio installation or download x-copy msbuild.
+  # Locate Visual Studio installation.
   $vsInfo = LocateVisualStudio $vsRequirements
-  if ($vsInfo -ne $null -and $env:ForceUseXCopyMSBuild -eq $null) {
+  if ($vsInfo -ne $null) {
     # Ensure vsInstallDir has a trailing slash
     $vsInstallDir = Join-Path $vsInfo.installationPath "\"
     $vsMajorVersion = $vsInfo.installationVersion.Split('.')[0]
