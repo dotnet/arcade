@@ -144,31 +144,31 @@
     <!-- NuGet dependencies required for source build to lift to the previously-source-built version.
          Arcade redistributes these in its MSBuild task packages and needs real executable assemblies,
          not SBRP reference stubs. -->
-    <Dependency Name="NuGet.Commands" Version="7.0.1">
+    <Dependency Name="NuGet.Commands" Version="7.0.3">
       <Uri>https://github.com/nuget/nuget.client</Uri>
       <Sha>779eff1e73420573dd39dbbe54896ff8f08955e1</Sha>
     </Dependency>
-    <Dependency Name="NuGet.Common" Version="7.0.1">
+    <Dependency Name="NuGet.Common" Version="7.0.3">
       <Uri>https://github.com/nuget/nuget.client</Uri>
       <Sha>779eff1e73420573dd39dbbe54896ff8f08955e1</Sha>
     </Dependency>
-    <Dependency Name="NuGet.Configuration" Version="7.0.1">
+    <Dependency Name="NuGet.Configuration" Version="7.0.3">
       <Uri>https://github.com/nuget/nuget.client</Uri>
       <Sha>779eff1e73420573dd39dbbe54896ff8f08955e1</Sha>
     </Dependency>
-    <Dependency Name="NuGet.Frameworks" Version="7.0.1">
+    <Dependency Name="NuGet.Frameworks" Version="7.0.3">
       <Uri>https://github.com/nuget/nuget.client</Uri>
       <Sha>779eff1e73420573dd39dbbe54896ff8f08955e1</Sha>
     </Dependency>
-    <Dependency Name="NuGet.Packaging" Version="7.0.1">
+    <Dependency Name="NuGet.Packaging" Version="7.0.3">
       <Uri>https://github.com/nuget/nuget.client</Uri>
       <Sha>779eff1e73420573dd39dbbe54896ff8f08955e1</Sha>
     </Dependency>
-    <Dependency Name="NuGet.ProjectModel" Version="7.0.1">
+    <Dependency Name="NuGet.ProjectModel" Version="7.0.3">
       <Uri>https://github.com/nuget/nuget.client</Uri>
       <Sha>779eff1e73420573dd39dbbe54896ff8f08955e1</Sha>
     </Dependency>
-    <Dependency Name="NuGet.Versioning" Version="7.0.1">
+    <Dependency Name="NuGet.Versioning" Version="7.0.3">
       <Uri>https://github.com/nuget/nuget.client</Uri>
       <Sha>779eff1e73420573dd39dbbe54896ff8f08955e1</Sha>
     </Dependency>
