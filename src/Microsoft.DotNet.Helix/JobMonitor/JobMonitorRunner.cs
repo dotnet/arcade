@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -14,6 +13,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Storage.Blobs;
+using Microsoft.DotNet.Helix.AzureDevOpsTestReporter;
+using Microsoft.DotNet.Helix.AzureDevOpsTestReporter.Model;
 using Microsoft.DotNet.Helix.Client;
 using Microsoft.DotNet.Helix.Client.Models;
 using Newtonsoft.Json;
@@ -37,14 +38,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 : ApiFactory.GetAuthenticated(_options.HelixBaseUri, _options.HelixAccessToken);
 
             _azdoClient = new HttpClient();
-            string encodedToken = Convert.ToBase64String(Encoding.UTF8.GetBytes("unused:" + _options.AccessToken));
+            string encodedToken = Convert.ToBase64String(Encoding.UTF8.GetBytes("unused:" + _options.SystemAccessToken));
             _azdoClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", encodedToken);
             _azdoClient.DefaultRequestHeaders.UserAgent.ParseAdd("dotnet-helix-job-monitor");
         }
 
         public async Task<int> RunAsync()
         {
-            HashSet<string> processedRuns = await GetProcessedRunNamesAsync().ConfigureAwait(false);
+            HashSet<string> processedRuns = await GetProcessedRunNamesAsync();
             DateTimeOffset deadline = DateTimeOffset.UtcNow.AddMinutes(Math.Max(1, _options.MaximumWaitMinutes));
             bool anyNonMonitorJobFailures = false;
             int failedHelixJobCount = 0;
@@ -52,11 +53,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             while (DateTimeOffset.UtcNow < deadline)
             {
-                AzureDevOpsTimelineRecord[] timelineRecords = await GetTimelineRecordsAsync().ConfigureAwait(false);
+                AzureDevOpsTimelineRecord[] timelineRecords = await GetTimelineRecordsAsync();
                 JobStatus[] jobs = await RetryAsync(
                     () => Task.FromResult(Array.Empty<JobStatus>())
-                        /*TODO _helixApi.PullRequests.ByBuildAsync(_options.Repository, _options.PrNumber, int.Parse(_options.BuildId, CultureInfo.InvariantCulture), _options.Attempt)*/)
-                    .ConfigureAwait(false);
+                        /*TODO _helixApi.PullRequests.ByBuildAsync(_options.Repository, _options.PrNumber, int.Parse(_options.BuildId, CultureInfo.InvariantCulture), _options.Attempt)*/);
 
                 int completedHelixJobs = jobs.Count(j => j.IsCompleted);
                 int currentFailedJobs = jobs.Count(j => j.Status.Equals("failed", StringComparison.OrdinalIgnoreCase));
@@ -69,8 +69,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         continue;
                     }
 
-                    JobPassFail passFail = await RetryAsync(() => _helixApi.Job.PassFailAsync(job.JobName)).ConfigureAwait(false);
-                    bool passed = await ProcessCompletedJobAsync(job, passFail).ConfigureAwait(false);
+                    JobPassFail passFail = await RetryAsync(() => _helixApi.Job.PassFailAsync(job.JobName));
+                    bool passed = await ProcessCompletedJobAsync(job, passFail);
                     processedRuns.Add(job.JobName);
                     processedHelixJobCount++;
                     if (!passed)
@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 anyNonMonitorJobFailures = HelixJobMonitorUtilities.HasFailedNonMonitorJobs(timelineRecords, _options.JobMonitorName);
                 bool allPipelineJobsComplete = HelixJobMonitorUtilities.AreNonMonitorJobsComplete(timelineRecords, _options.JobMonitorName);
-                bool allHelixJobsComplete = jobs.Any() && jobs.All(j => j.IsCompleted);
+                bool allHelixJobsComplete = jobs.Length != 0 && jobs.All(j => j.IsCompleted);
 
                 if (allPipelineJobsComplete && allHelixJobsComplete)
                 {
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     return 0;
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(Math.Max(5, _options.PollingIntervalSeconds))).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromSeconds(Math.Max(5, _options.PollingIntervalSeconds)));
             }
 
             Console.Error.WriteLine($"The Helix Job Monitor timed out after {_options.MaximumWaitMinutes} minute(s).");
@@ -119,18 +119,19 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private async Task<bool> ProcessCompletedJobAsync(JobStatus helixJob, JobPassFail passFail)
         {
             string testRunName = HelixJobMonitorUtilities.GetTestRunName(helixJob.JobName);
-            int testRunId = await StartTestRunAsync(testRunName).ConfigureAwait(false);
+            int testRunId = await StartTestRunAsync(testRunName);
             string resultsDirectory = Path.Combine(_options.WorkingDirectory, MakeSafeDirectoryName(helixJob.JobName));
             Directory.CreateDirectory(resultsDirectory);
 
-            int downloadedFiles = await DownloadTestResultsAsync(helixJob.JobName, passFail, resultsDirectory).ConfigureAwait(false);
-            bool reporterRan = downloadedFiles > 0 && await TryRunPythonReporterAsync(resultsDirectory, testRunId).ConfigureAwait(false);
+            int downloadedFiles = await DownloadTestResultsAsync(helixJob.JobName, passFail, resultsDirectory);
+            bool reporterRan = downloadedFiles > 0
+                && await TryUploadDownloadedResultsAsync(resultsDirectory, testRunId, helixJob.JobName);
             if (!reporterRan)
             {
-                await CreateFallbackResultsAsync(testRunId, helixJob.JobName, passFail).ConfigureAwait(false);
+                await CreateFallbackResultsAsync(testRunId, helixJob.JobName, passFail);
             }
 
-            await StopTestRunAsync(testRunId, testRunName).ConfigureAwait(false);
+            await StopTestRunAsync(testRunId, testRunName);
 
             int passedCount = passFail.Passed?.Count ?? 0;
             int failedCount = passFail.Failed?.Count ?? 0;
@@ -140,7 +141,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private async Task<HashSet<string>> GetProcessedRunNamesAsync()
         {
-            JObject data = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs?buildIds={_options.BuildId}&api-version=7.1-preview.1").ConfigureAwait(false);
+            JObject data = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs?buildIds={_options.BuildId}&api-version=7.1-preview.1");
             var processed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (JObject run in data?["value"] as JArray ?? [])
@@ -160,7 +161,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private async Task<AzureDevOpsTimelineRecord[]> GetTimelineRecordsAsync()
         {
-            JObject data = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/build/builds/{_options.BuildId}/timeline?api-version=7.1-preview.2").ConfigureAwait(false);
+            JObject data = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/build/builds/{_options.BuildId}/timeline?api-version=7.1-preview.2");
             return data?["records"]?.ToObject<AzureDevOpsTimelineRecord[]>() ?? [];
         }
 
@@ -175,7 +176,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     ["build"] = new JObject { ["id"] = _options.BuildId },
                     ["name"] = testRunName,
                     ["state"] = "InProgress",
-                }).ConfigureAwait(false);
+                });
 
             return result?["id"]?.ToObject<int>() ?? 0;
         }
@@ -185,7 +186,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             await SendAsync(
                 new HttpMethod("PATCH"),
                 $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs/{testRunId}?api-version=5.0",
-                new JObject { ["state"] = "Completed" }).ConfigureAwait(false);
+                new JObject { ["state"] = "Completed" });
 
             Console.WriteLine($"Stopped test run '{testRunName}'.");
         }
@@ -194,12 +195,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         {
             foreach (string workItemName in passFail.Passed ?? ImmutableList<string>.Empty)
             {
-                await CreateFallbackResultAsync(testRunId, jobName, workItemName, failed: false).ConfigureAwait(false);
+                await CreateFallbackResultAsync(testRunId, jobName, workItemName, failed: false);
             }
 
             foreach (string workItemName in passFail.Failed ?? ImmutableList<string>.Empty)
             {
-                await CreateFallbackResultAsync(testRunId, jobName, workItemName, failed: true).ConfigureAwait(false);
+                await CreateFallbackResultAsync(testRunId, jobName, workItemName, failed: true);
             }
         }
 
@@ -226,22 +227,22 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                             ["HelixWorkItemName"] = cleanName,
                         }.ToString(),
                     }
-                }).ConfigureAwait(false);
+                });
         }
 
         private async Task<int> DownloadTestResultsAsync(string jobName, JobPassFail passFail, string outputDirectory)
         {
             int count = 0;
-            JobResultsUri resultsUri = await RetryAsync(() => _helixApi.Job.ResultsAsync(jobName)).ConfigureAwait(false);
+            JobResultsUri resultsUri = await RetryAsync(() => _helixApi.Job.ResultsAsync(jobName));
             IEnumerable<string> workItemNames = (passFail.Passed ?? ImmutableList<string>.Empty).Concat(passFail.Failed ?? ImmutableList<string>.Empty);
 
             foreach (string workItemName in workItemNames.Distinct(StringComparer.OrdinalIgnoreCase))
             {
-                var availableFiles = await RetryAsync(() => _helixApi.WorkItem.ListFilesAsync(workItemName, jobName, false)).ConfigureAwait(false);
+                IImmutableList<UploadedFile> availableFiles = await RetryAsync(() => _helixApi.WorkItem.ListFilesAsync(workItemName, jobName, false));
                 string workItemDirectory = Path.Combine(outputDirectory, MakeSafeDirectoryName(workItemName));
                 Directory.CreateDirectory(workItemDirectory);
 
-                foreach (var file in availableFiles.Where(f => LooksLikeTestResultFile(f.Name)))
+                foreach (UploadedFile file in availableFiles.Where(f => LooksLikeTestResultFile(f.Name)))
                 {
                     string relativePath = file.Name.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
                     string destinationFile = Path.Combine(workItemDirectory, relativePath);
@@ -254,7 +255,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     try
                     {
                         BlobClient blobClient = CreateBlobClient(file.Link, resultsUri.ResultsUriRSAS);
-                        await blobClient.DownloadToAsync(destinationFile).ConfigureAwait(false);
+                        await blobClient.DownloadToAsync(destinationFile);
                         count++;
                     }
                     catch (Exception ex)
@@ -267,61 +268,23 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return count;
         }
 
-        private async Task<bool> TryRunPythonReporterAsync(string workingDirectory, int testRunId)
+        private async Task<bool> TryUploadDownloadedResultsAsync(string workingDirectory, int testRunId, string jobName)
         {
-            string scriptPath = Path.Combine(AppContext.BaseDirectory, "reporter", "run.py");
-            if (!File.Exists(scriptPath))
+            var publisher = new AzureDevOpsResultPublisher(
+                new AzureDevOpsReportingParameters(
+                    new Uri(_options.CollectionUri, UriKind.Absolute),
+                    _options.TeamProject,
+                    testRunId.ToString(CultureInfo.InvariantCulture),
+                    _options.SystemAccessToken),
+                jobName);
+
+            UploadResult uploadResult = await publisher.TryUploadDirectoryAsync(workingDirectory);
+            if (uploadResult != UploadResult.Success)
             {
-                Console.WriteLine($"Warning: reporter script was not found at '{scriptPath}'. Falling back to synthetic work-item results.");
-                return false;
+                Console.WriteLine($"Warning: test result upload for '{jobName}' returned '{uploadResult}'. Falling back to synthetic work-item results.");
             }
 
-            foreach ((string fileName, string prefixArguments) in GetPythonCandidates())
-            {
-                try
-                {
-                    var psi = new ProcessStartInfo
-                    {
-                        FileName = fileName,
-                        Arguments = $"{prefixArguments}\"{scriptPath}\" \"{_options.CollectionUri}\" \"{_options.TeamProject}\" \"{testRunId.ToString(CultureInfo.InvariantCulture)}\" \"{_options.AccessToken}\"",
-                        WorkingDirectory = workingDirectory,
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true,
-                    };
-
-                    using Process process = Process.Start(psi);
-                    if (process == null)
-                    {
-                        continue;
-                    }
-
-                    string stdout = await process.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
-                    string stderr = await process.StandardError.ReadToEndAsync().ConfigureAwait(false);
-                    await process.WaitForExitAsync().ConfigureAwait(false);
-
-                    if (!string.IsNullOrWhiteSpace(stdout))
-                    {
-                        Console.WriteLine(stdout);
-                    }
-
-                    if (!string.IsNullOrWhiteSpace(stderr))
-                    {
-                        Console.WriteLine(stderr);
-                    }
-
-                    if (process.ExitCode == 0)
-                    {
-                        return true;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Warning: failed to invoke Python reporter via '{fileName}': {ex.Message}");
-                }
-            }
-
-            return false;
+            return uploadResult == UploadResult.Success;
         }
 
         private async Task<JObject> SendAsync(HttpMethod method, string requestUri, JToken body = null)
@@ -334,8 +297,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     request.Content = new StringContent(body.ToString(Formatting.None), Encoding.UTF8, "application/json");
                 }
 
-                using HttpResponseMessage response = await _azdoClient.SendAsync(request).ConfigureAwait(false);
-                string content = response.Content != null ? await response.Content.ReadAsStringAsync().ConfigureAwait(false) : null;
+                using HttpResponseMessage response = await _azdoClient.SendAsync(request);
+                string content = response.Content != null ? await response.Content.ReadAsStringAsync() : null;
                 if (!response.IsSuccessStatusCode)
                 {
                     throw new HttpRequestException($"Request to {requestUri} failed with {(int)response.StatusCode} {response.ReasonPhrase}. {content}");
@@ -347,7 +310,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
 
                 return JObject.Parse(content);
-            }).ConfigureAwait(false);
+            });
         }
 
         private static BlobClient CreateBlobClient(string fileLink, string resultsSas)
@@ -365,12 +328,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         }
 
         private static bool LooksLikeTestResultFile(string path)
-        {
-            string fileName = Path.GetFileName(path);
-            return fileName.EndsWith(".xml", StringComparison.OrdinalIgnoreCase)
-                   && (fileName.Contains("testresults", StringComparison.OrdinalIgnoreCase)
-                       || fileName.Contains("test-results", StringComparison.OrdinalIgnoreCase));
-        }
+            => LocalTestResultsReader.LooksLikeTestResultFile(path);
 
         private static string MakeSafeDirectoryName(string value)
         {
@@ -382,17 +340,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return value;
         }
 
-        private static IEnumerable<(string fileName, string prefixArguments)> GetPythonCandidates()
-        {
-            if (OperatingSystem.IsWindows())
-            {
-                yield return ("py", "-3 ");
-            }
-
-            yield return ("python3", string.Empty);
-            yield return ("python", string.Empty);
-        }
-
         private static async Task<T> RetryAsync<T>(Func<Task<T>> action)
         {
             Exception last = null;
@@ -400,12 +347,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 try
                 {
-                    return await action().ConfigureAwait(false);
+                    return await action();
                 }
                 catch (Exception ex) when (attempt < 4)
                 {
                     last = ex;
-                    await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, attempt + 1))).ConfigureAwait(false);
+                    await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, attempt + 1)));
                 }
             }
 

@@ -7,6 +7,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.Helix.AzureDevOpsTestReporter;
 
+public interface ITestReporter
+{
+    Task ReportResultsAsync(IReadOnlyList<TestResult> results, CancellationToken cancellationToken = default);
+}
+
 public sealed class PackingTestReporter(AzureDevOpsReportingParameters azdoParameters, ILogger? logger = null)
     : ITestReporter
 {
@@ -23,7 +28,7 @@ public sealed class PackingTestReporter(AzureDevOpsReportingParameters azdoParam
             .ToList();
 
         var serialized = new PackedTestReport(_azdoParameters, filtered);
-        string path = GetFileName();
+        string path = Path.Combine(Environment.CurrentDirectory, ReportFileName);
         string? directory = Path.GetDirectoryName(path);
         if (!string.IsNullOrEmpty(directory))
         {
@@ -41,32 +46,34 @@ public sealed class PackingTestReporter(AzureDevOpsReportingParameters azdoParam
         _logger.LogInformation("Packed {Length} bytes", new FileInfo(path).Length);
     }
 
-    public static string GetFileName(HelixEnvironmentSettings? settings = null)
-    {
-        settings ??= HelixEnvironmentSettings.FromEnvironment();
-        string? root = settings.WorkitemWorkingDir;
-        if (string.IsNullOrWhiteSpace(root))
-        {
-            root = Environment.CurrentDirectory;
-        }
-
-        return Path.Combine(root, ReportFileName);
-    }
-
     public static async Task<(AzureDevOpsReportingParameters Parameters, IReadOnlyList<TestResult> Results)?> UnpackResultsAsync(
+        string? searchDirectory = null,
         ILogger? logger = null,
         CancellationToken cancellationToken = default)
     {
         ILogger effectiveLogger = logger.OrNull();
-        var settings = HelixEnvironmentSettings.FromEnvironment();
-        string path = GetFileName(settings);
+        string? path = null;
 
-        if (!File.Exists(path) && !string.IsNullOrWhiteSpace(settings.WorkitemPayloadDir))
+        if (!string.IsNullOrWhiteSpace(searchDirectory))
         {
-            path = Path.Combine(settings.WorkitemPayloadDir, ReportFileName);
+            path = Path.Combine(searchDirectory, ReportFileName);
+            if (!File.Exists(path) && Directory.Exists(searchDirectory))
+            {
+                path = Directory.EnumerateFiles(searchDirectory, ReportFileName, SearchOption.AllDirectories).FirstOrDefault();
+            }
         }
 
-        if (!File.Exists(path))
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+        {
+            path = Path.Combine(Environment.CurrentDirectory, ReportFileName);
+
+            if (!File.Exists(path) && !string.IsNullOrWhiteSpace(settings.WorkitemPayloadDir))
+            {
+                path = Path.Combine(settings.WorkitemPayloadDir, ReportFileName);
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
         {
             return null;
         }

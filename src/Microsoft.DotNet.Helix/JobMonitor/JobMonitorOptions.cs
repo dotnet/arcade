@@ -9,13 +9,18 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 {
     public sealed class JobMonitorOptions
     {
+        // Helix API access token
+        public string HelixAccessToken { get; set; }
+
+        /// <summary>
+        /// Azure DevOps build token
+        /// </summary>
+        public string SystemAccessToken { get; set; }
+
         public bool ShowHelp { get; private set; }
 
         [Option("helix-base-uri", HelpText = "Base URI for the Helix service.")]
         public string HelixBaseUri { get; set; } = "https://helix.dot.net/";
-
-        [Option("helix-access-token", HelpText = "Access token for authenticated Helix APIs.")]
-        public string HelixAccessToken { get; set; }
 
         [Option("collection-uri", HelpText = "Azure DevOps collection URI.")]
         public string CollectionUri { get; set; }
@@ -25,9 +30,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         [Option("build-id", HelpText = "Azure DevOps build ID.")]
         public string BuildId { get; set; }
-
-        [Option("access-token", HelpText = "Azure DevOps system access token.")]
-        public string AccessToken { get; set; }
 
         [Option("repository", HelpText = "Repository identifier in owner/repo form.")]
         public string Repository { get; set; }
@@ -82,7 +84,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             CollectionUri ??= Environment.GetEnvironmentVariable("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI");
             TeamProject ??= Environment.GetEnvironmentVariable("SYSTEM_TEAMPROJECT");
             BuildId ??= Environment.GetEnvironmentVariable("BUILD_BUILDID");
-            AccessToken ??= Environment.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN");
+            SystemAccessToken ??= Environment.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN");
             Repository = HelixJobMonitorUtilities.NormalizeRepository(
                 Repository
                 ?? Environment.GetEnvironmentVariable("BUILD_REPOSITORY_URI")
@@ -97,7 +99,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             CollectionUri = EnsureTrailingSlash(RequireValue(CollectionUri, "collection-uri", "SYSTEM_TEAMFOUNDATIONCOLLECTIONURI"));
             TeamProject = RequireValue(TeamProject, "team-project", "SYSTEM_TEAMPROJECT");
             BuildId = RequireValue(BuildId, "build-id", "BUILD_BUILDID");
-            AccessToken = RequireValue(AccessToken, "access-token", "SYSTEM_ACCESSTOKEN");
+            SystemAccessToken = RequireValue(SystemAccessToken, "access-token", "SYSTEM_ACCESSTOKEN");
 
             if (string.IsNullOrWhiteSpace(Repository))
             {
@@ -127,6 +129,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         }
 
         private static string EnsureTrailingSlash(string uri)
-            => uri.EndsWith("/", StringComparison.Ordinal) ? uri : uri + "/";
+            => uri.EndsWith('/') ? uri : uri + '/';
     }
 }

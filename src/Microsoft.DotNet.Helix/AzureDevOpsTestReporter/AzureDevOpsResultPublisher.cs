@@ -24,23 +24,17 @@ public sealed class AzureDevOpsResultPublisher
 
     private readonly AzureDevOpsReportingParameters _azdoParameters;
     private readonly string _workItemId;
-    private readonly IEventClient _eventClient;
-    private readonly IUploadClient _uploadClient;
     private readonly HttpClient _httpClient;
     private readonly ILogger _logger;
 
     public AzureDevOpsResultPublisher(
         AzureDevOpsReportingParameters azdoParameters,
         string workItemId,
-        IEventClient? eventClient = null,
-        IUploadClient? uploadClient = null,
         HttpClient? httpClient = null,
         ILogger? logger = null)
     {
         _azdoParameters = azdoParameters;
         _workItemId = workItemId;
-        _eventClient = eventClient ?? NullEventClient.Instance;
-        _uploadClient = uploadClient ?? NullUploadClient.Instance;
         _httpClient = httpClient ?? CreateHttpClient(azdoParameters.AccessToken);
         _logger = logger.OrNull();
     }
@@ -64,6 +58,25 @@ public sealed class AzureDevOpsResultPublisher
         }
     }
 
+    public async Task<UploadResult> TryUploadDirectoryAsync(string workingDirectory, CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<IReadOnlyList<TestResult>> parsedResults = new LocalTestResultsReader(_logger).ReadResults(workingDirectory);
+        if (parsedResults.Count == 0)
+        {
+            _logger.LogWarning("No test results were discovered under '{WorkingDirectory}'.", workingDirectory);
+            return UploadResult.UnknownError;
+        }
+
+        IReadOnlyList<AggregatedResult> aggregatedResults = new ResultAggregator().Aggregate(parsedResults);
+        if (aggregatedResults.Count == 0)
+        {
+            _logger.LogWarning("Test results were discovered under '{WorkingDirectory}', but none could be aggregated.", workingDirectory);
+            return UploadResult.UnknownError;
+        }
+
+        return await TryUploadAsync(aggregatedResults, cancellationToken).ConfigureAwait(false);
+    }
+
     private async Task ProcessAsync(IReadOnlyList<AggregatedResult> testList, CancellationToken cancellationToken)
     {
         var converted = ConvertResults(testList).ToList();
@@ -82,11 +95,13 @@ public sealed class AzureDevOpsResultPublisher
     private async Task LogErrorAsync(Exception exception, CancellationToken cancellationToken)
     {
         _logger.LogError(exception, "Failed to upload test results to Azure DevOps.");
-        await _eventClient.ErrorAsync(
+        /* TODO
+         await _eventClient.ErrorAsync(
             HelixEnvironmentSettings.FromEnvironment(),
             "DevOpsReportFailure",
             $"Failed to upload results: {exception.Message}",
             cancellationToken: cancellationToken);
+        */
     }
 
     private async Task SendMetadataAsync(
@@ -148,12 +163,13 @@ public sealed class AzureDevOpsResultPublisher
         }
 
         var uploadedUrls = new Dictionary<int, string>();
+        /* TODO
         foreach ((int key, List<TestListRow>? testNames) in partitionedResults)
         {
             byte[] csvBytes = CreateCompressedCsv(testNames);
             string fileName = $"{Guid.NewGuid():N}.csv.gz";
             uploadedUrls[key] = await _uploadClient.UploadAsync(csvBytes, fileName, "application/gzip", cancellationToken);
-        }
+        }*/
 
         var dataModel = new
         {
@@ -175,6 +191,7 @@ public sealed class AzureDevOpsResultPublisher
             new TestRunAttachmentRequest(fileNameBase, base64Data),
             cancellationToken);
 
+        /* TODO
         string metadataUrl = await _uploadClient.UploadAsync(compressedBytes, fileNameBase, "application/gzip", cancellationToken);
         await _eventClient.SendAsync(
             new
@@ -185,6 +202,7 @@ public sealed class AzureDevOpsResultPublisher
                 Url = metadataUrl,
             },
             cancellationToken);
+        */
     }
 
     private async Task<IReadOnlyList<PublishedTestCase>> PublishResultsAsync(
@@ -302,11 +320,10 @@ public sealed class AzureDevOpsResultPublisher
 
     private IEnumerable<ConvertedResult> ConvertResults(IEnumerable<AggregatedResult> results)
     {
-        var settings = HelixEnvironmentSettings.FromEnvironment();
         string? comment = JsonSerializer.Serialize(new
         {
-            HelixJobId = settings.CorrelationId,
-            HelixWorkItemName = settings.WorkItemFriendlyName,
+            HelixJobId = string.IsNullOrWhiteSpace(settings.CorrelationId) ? _workItemId : settings.CorrelationId,
+            HelixWorkItemName = string.IsNullOrWhiteSpace(settings.WorkItemFriendlyName) ? _workItemId : settings.WorkItemFriendlyName,
         });
 
         static string GetResultGroupType(AggregationType aggregationType)
@@ -460,7 +477,7 @@ public sealed class AzureDevOpsResultPublisher
         }
     }
 
-    private static HttpClient CreateHttpClient(string accessToken)
+    private static HttpClient CreateHttpClient(string? accessToken)
     {
         var client = new HttpClient();
         client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
@@ -489,7 +506,11 @@ public sealed class AzureDevOpsResultPublisher
 
         while (true)
         {
-            using var request = new HttpRequestMessage(method, new Uri(_azdoParameters.CollectionUri, relativePath));
+            Uri baseUri = _azdoParameters.CollectionUri.AbsoluteUri.EndsWith('/')
+                ? _azdoParameters.CollectionUri
+                : new Uri(_azdoParameters.CollectionUri.AbsoluteUri + '/', UriKind.Absolute);
+
+            using var request = new HttpRequestMessage(method, new Uri(baseUri, relativePath));
             if (body is not null)
             {
                 request.Content = new StringContent(body, Encoding.UTF8, "application/json");
@@ -525,11 +546,13 @@ public sealed class AzureDevOpsResultPublisher
             {
                 if (!string.IsNullOrWhiteSpace(s_lastSendContent))
                 {
+                    /* TODO
                     await _uploadClient.UploadAsync(
                         Encoding.UTF8.GetBytes(s_lastSendContent),
                         "__failed_azdo_request_content.json",
                         "text/plain; charset=UTF-8",
                         cancellationToken);
+                    */
                 }
             }
             catch (Exception uploadException)

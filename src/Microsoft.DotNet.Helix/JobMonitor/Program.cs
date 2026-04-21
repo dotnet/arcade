@@ -18,8 +18,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     return 0;
                 }
 
-                JobMonitorRunner runner = new JobMonitorRunner(options);
-                return await runner.RunAsync().ConfigureAwait(false);
+                JobMonitorRunner runner = new(options);
+                return await runner.RunAsync();
             }
             catch (Exception ex)
             {
