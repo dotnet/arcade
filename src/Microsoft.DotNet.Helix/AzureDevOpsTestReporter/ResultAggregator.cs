@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
+
+using Microsoft.DotNet.Helix.AzureDevOpsTestReporter.Model;
 
 namespace Microsoft.DotNet.Helix.AzureDevOpsTestReporter;
 
@@ -11,52 +12,38 @@ public enum AggregationType
     DataDriven = 2,
 }
 
-public sealed class AggregatedResult
+public sealed class AggregatedResult(
+    AggregationType aggregationType,
+    string name,
+    double durationSeconds,
+    string result,
+    IReadOnlyList<AggregatedResult>? subResults = null,
+    IReadOnlyList<TestResultAttachment>? attachments = null,
+    string? failureMessage = null,
+    string? stackTrace = null,
+    string? skipReason = null,
+    bool isFlaky = false,
+    int? attemptId = null)
 {
-    public AggregatedResult(
-        AggregationType aggregationType,
-        string name,
-        double durationSeconds,
-        string result,
-        IReadOnlyList<AggregatedResult>? subResults = null,
-        IReadOnlyList<TestResultAttachment>? attachments = null,
-        string? failureMessage = null,
-        string? stackTrace = null,
-        string? skipReason = null,
-        bool isFlaky = false,
-        int? attemptId = null)
-    {
-        AggregationType = aggregationType;
-        Name = name ?? string.Empty;
-        DurationSeconds = durationSeconds;
-        Result = result ?? string.Empty;
-        SubResults = subResults ?? Array.Empty<AggregatedResult>();
-        Attachments = attachments ?? Array.Empty<TestResultAttachment>();
-        FailureMessage = failureMessage ?? skipReason;
-        StackTrace = stackTrace;
-        IsFlaky = isFlaky;
-        AttemptId = attemptId;
-    }
+    public AggregationType AggregationType { get; } = aggregationType;
 
-    public AggregationType AggregationType { get; }
+    public string Name { get; } = name ?? string.Empty;
 
-    public string Name { get; }
+    public double DurationSeconds { get; } = durationSeconds;
 
-    public double DurationSeconds { get; }
+    public string Result { get; } = result ?? string.Empty;
 
-    public string Result { get; }
+    public IReadOnlyList<TestResultAttachment> Attachments { get; } = attachments ?? [];
 
-    public IReadOnlyList<TestResultAttachment> Attachments { get; }
+    public IReadOnlyList<AggregatedResult> SubResults { get; } = subResults ?? [];
 
-    public IReadOnlyList<AggregatedResult> SubResults { get; }
+    public string? FailureMessage { get; } = failureMessage ?? skipReason;
 
-    public string? FailureMessage { get; }
+    public string? StackTrace { get; } = stackTrace;
 
-    public string? StackTrace { get; }
+    public int? AttemptId { get; } = attemptId;
 
-    public int? AttemptId { get; }
-
-    public bool IsFlaky { get; }
+    public bool IsFlaky { get; } = isFlaky;
 }
 
 public sealed class ResultAggregator
@@ -65,7 +52,7 @@ public sealed class ResultAggregator
     {
         if (results is null)
         {
-            return Array.Empty<AggregatedResult>();
+            return [];
         }
 
         string GetResult(TestResult test)
@@ -86,7 +73,7 @@ public sealed class ResultAggregator
 
         static string ParseBasicName(string name)
         {
-            var separatorIndex = name.IndexOf('(');
+            int separatorIndex = name.IndexOf('(');
             return separatorIndex >= 0 ? name[..separatorIndex] : name;
         }
 
@@ -97,7 +84,7 @@ public sealed class ResultAggregator
                 attemptId is null ? result.Name : $"Attempt #{attemptId} - {result.Name}",
                 result.DurationSeconds,
                 GetResult(result),
-                Array.Empty<AggregatedResult>(),
+                [],
                 result.Attachments,
                 result.FailureMessage,
                 result.StackTrace,
@@ -132,9 +119,9 @@ public sealed class ResultAggregator
                 return (false, "None");
             }
 
-            var anyPass = groupedResults.Any(static r => r.Result == "Pass");
-            var anyFail = groupedResults.Any(static r => !r.Ignored && r.Result == "Fail");
-            var isFlaky = anyPass && anyFail;
+            bool anyPass = groupedResults.Any(static r => r.Result == "Pass");
+            bool anyFail = groupedResults.Any(static r => !r.Ignored && r.Result == "Fail");
+            bool isFlaky = anyPass && anyFail;
 
             if (anyPass)
             {
@@ -153,7 +140,7 @@ public sealed class ResultAggregator
         {
             if (byIterationThenName.Count == 1)
             {
-                var singleRun = byIterationThenName[0];
+                List<TestResult> singleRun = byIterationThenName[0];
                 if (singleRun.Count == 1)
                 {
                     return CreateResultFromTest(singleRun[0]);
@@ -164,21 +151,21 @@ public sealed class ResultAggregator
                     name,
                     singleRun.Sum(static r => r.DurationSeconds),
                     GetDataDrivenResult(singleRun),
-                    singleRun.Select(testResult => CreateResultFromTest(testResult)).ToList());
+                    [.. singleRun.Select(testResult => CreateResultFromTest(testResult))]);
             }
 
-            var hasDataDriven = byIterationThenName.Any(static x => x.Count > 1);
+            bool hasDataDriven = byIterationThenName.Any(static x => x.Count > 1);
 
             if (hasDataDriven)
             {
                 var dataDrivenByFullName = new Dictionary<string, List<TestResult>>(StringComparer.Ordinal);
-                foreach (var iteration in byIterationThenName)
+                foreach (List<TestResult> iteration in byIterationThenName)
                 {
-                    foreach (var test in iteration)
+                    foreach (TestResult test in iteration)
                     {
-                        if (!dataDrivenByFullName.TryGetValue(test.Name, out var list))
+                        if (!dataDrivenByFullName.TryGetValue(test.Name, out List<TestResult>? list))
                         {
-                            list = new List<TestResult>();
+                            list = [];
                             dataDrivenByFullName[test.Name] = list;
                         }
 
@@ -189,9 +176,9 @@ public sealed class ResultAggregator
                 var subResults = new List<AggregatedResult>();
                 double totalDuration = 0;
 
-                foreach (var pair in dataDrivenByFullName)
+                foreach (KeyValuePair<string, List<TestResult>> pair in dataDrivenByFullName)
                 {
-                    var dataDrivenTests = pair.Value;
+                    List<TestResult> dataDrivenTests = pair.Value;
                     if (dataDrivenTests.Count == 1)
                     {
                         subResults.Add(CreateResultFromTest(dataDrivenTests[0]));
@@ -199,19 +186,19 @@ public sealed class ResultAggregator
                         continue;
                     }
 
-                    var (isFlaky, aggregateResult) = GetRerunResult(dataDrivenTests);
-                    var partialDuration = dataDrivenTests.Sum(static r => r.DurationSeconds);
+                    (bool isFlaky, string? aggregateResult) = GetRerunResult(dataDrivenTests);
+                    double partialDuration = dataDrivenTests.Sum(static r => r.DurationSeconds);
                     totalDuration += partialDuration;
                     subResults.Add(new AggregatedResult(
                         AggregationType.Rerun,
                         pair.Key,
                         partialDuration,
                         aggregateResult,
-                        dataDrivenTests.Select((r, index) => CreateResultFromTest(r, index + 1)).ToList(),
+                        [.. dataDrivenTests.Select((r, index) => CreateResultFromTest(r, index + 1))],
                         isFlaky: isFlaky));
                 }
 
-                var aggregateOutcome = "Inconclusive";
+                string aggregateOutcome = "Inconclusive";
                 if (dataDrivenByFullName.Values.Any(rerunSet => rerunSet.Where(static r => !r.Ignored).All(static r => r.Result == "Fail")))
                 {
                     aggregateOutcome = "Failed";
@@ -234,13 +221,13 @@ public sealed class ResultAggregator
             }
 
             var reruns = byIterationThenName.Select(static run => run[0]).ToList();
-            var (rerunIsFlaky, rerunOutcome) = GetRerunResult(reruns);
+            (bool rerunIsFlaky, string? rerunOutcome) = GetRerunResult(reruns);
             return new AggregatedResult(
                 AggregationType.Rerun,
                 name,
                 reruns.Sum(static r => r.DurationSeconds),
                 rerunOutcome,
-                reruns.Select((r, index) => CreateResultFromTest(r, index + 1)).ToList(),
+                [.. reruns.Select((r, index) => CreateResultFromTest(r, index + 1))],
                 failureMessage: reruns[0].FailureMessage,
                 stackTrace: reruns[0].StackTrace,
                 isFlaky: rerunIsFlaky);
@@ -255,14 +242,14 @@ public sealed class ResultAggregator
 
             if (result.AggregationType == AggregationType.Rerun)
             {
-                var distinctOutcomes = result.SubResults
+                int distinctOutcomes = result.SubResults
                     .Select(static r => r.Result)
                     .Distinct(StringComparer.Ordinal)
                     .Count();
 
                 if (distinctOutcomes == 1)
                 {
-                    var single = result.SubResults[0];
+                    AggregatedResult single = result.SubResults[0];
                     return new AggregatedResult(
                         AggregationType.Single,
                         result.Name,
@@ -281,7 +268,7 @@ public sealed class ResultAggregator
                 result.Name,
                 result.DurationSeconds,
                 result.Result,
-                result.SubResults.Select(ReduceSimpleResult).ToList(),
+                [.. result.SubResults.Select(ReduceSimpleResult)],
                 result.Attachments,
                 result.FailureMessage,
                 result.StackTrace,
@@ -290,15 +277,15 @@ public sealed class ResultAggregator
         }
 
         var partials = new List<Dictionary<string, List<TestResult>>>();
-        foreach (var resultSet in results)
+        foreach (IEnumerable<TestResult> resultSet in results)
         {
             var perAttempt = new Dictionary<string, List<TestResult>>(StringComparer.Ordinal);
-            foreach (var result in resultSet)
+            foreach (TestResult result in resultSet)
             {
-                var basicName = ParseBasicName(result.Name);
-                if (!perAttempt.TryGetValue(basicName, out var list))
+                string basicName = ParseBasicName(result.Name);
+                if (!perAttempt.TryGetValue(basicName, out List<TestResult>? list))
                 {
-                    list = new List<TestResult>();
+                    list = [];
                     perAttempt[basicName] = list;
                 }
 
@@ -310,28 +297,28 @@ public sealed class ResultAggregator
 
         if (partials.Count == 0 || partials[0].Count == 0)
         {
-            return Array.Empty<AggregatedResult>();
+            return [];
         }
 
         var aggregate = new List<AggregatedResult>();
-        foreach (var run in partials)
+        foreach (Dictionary<string, List<TestResult>> run in partials)
         {
-            foreach (var pair in run.ToList())
+            foreach (KeyValuePair<string, List<TestResult>> pair in run.ToList())
             {
-                if (!run.Remove(pair.Key, out var currentSet))
+                if (!run.Remove(pair.Key, out List<TestResult>? currentSet))
                 {
                     continue;
                 }
 
                 var fullSet = new List<List<TestResult>> { currentSet };
-                foreach (var otherRun in partials)
+                foreach (Dictionary<string, List<TestResult>> otherRun in partials)
                 {
                     if (ReferenceEquals(otherRun, run))
                     {
                         continue;
                     }
 
-                    if (otherRun.Remove(pair.Key, out var otherSet))
+                    if (otherRun.Remove(pair.Key, out List<TestResult>? otherSet))
                     {
                         fullSet.Add(otherSet);
                     }
@@ -341,6 +328,6 @@ public sealed class ResultAggregator
             }
         }
 
-        return aggregate.Select(ReduceSimpleResult).ToList();
+        return [.. aggregate.Select(ReduceSimpleResult)];
     }
 }

@@ -1,6 +1,5 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.IO.Compression;
 using System.Net;
@@ -8,45 +7,15 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using Microsoft.DotNet.Helix.AzureDevOpsTestReporter.Model;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.Helix.AzureDevOpsTestReporter;
 
-public enum UploadResult
-{
-    Success = 1,
-    UnknownError = 2,
-    TerminalError = 3,
-}
-
-public static class UploadResultExtensions
-{
-    public static UploadResult Aggregate(this UploadResult value, UploadResult other)
-    {
-        return (UploadResult)Math.Max((int)value, (int)other);
-    }
-}
-
-public sealed class AzureDevOpsReportingError : Exception
-{
-    public AzureDevOpsReportingError(string message)
-        : base(message)
-    {
-    }
-}
-
-internal sealed class TerminalError : Exception
-{
-    public TerminalError(string message)
-        : base(message)
-    {
-    }
-}
-
 public sealed class AzureDevOpsResultPublisher
 {
     private const int TestListBuckets = 32;
-    private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web)
+    private static readonly JsonSerializerOptions s_serializerOptions = new(JsonSerializerDefaults.Web)
     {
         WriteIndented = false,
     };
@@ -80,7 +49,7 @@ public sealed class AzureDevOpsResultPublisher
     {
         try
         {
-            await ProcessAsync(results.ToList(), cancellationToken);
+            await ProcessAsync([.. results], cancellationToken);
             return UploadResult.Success;
         }
         catch (TerminalError ex)
@@ -100,9 +69,9 @@ public sealed class AzureDevOpsResultPublisher
         var converted = ConvertResults(testList).ToList();
         var hotPathTests = new List<PublishedTestCase>();
 
-        foreach (var batch in Batch(converted, 1000, static t => Size(t.Converted)))
+        foreach (List<ConvertedResult> batch in Batch(converted, 1000, static t => Size(t.Converted)))
         {
-            var publishedTests = await PublishResultsAsync(batch, cancellationToken);
+            IReadOnlyList<PublishedTestCase> publishedTests = await PublishResultsAsync(batch, cancellationToken);
             hotPathTests.AddRange(publishedTests);
             _logger.LogInformation("Uploaded {Count} results", publishedTests.Count);
         }
@@ -130,28 +99,28 @@ public sealed class AzureDevOpsResultPublisher
 
         void ProcessResultForMetadata(AggregatedResult result)
         {
-            resultCounts[result.Result] = resultCounts.TryGetValue(result.Result, out var count) ? count + 1 : 1;
+            resultCounts[result.Result] = resultCounts.TryGetValue(result.Result, out int count) ? count + 1 : 1;
             if (!string.Equals(result.Result, "Passed", StringComparison.Ordinal))
             {
                 return;
             }
 
-            var name = result.Name;
+            string name = result.Name;
             string? argumentHash = null;
-            var partitionKey = name;
-            var parenthesisIndex = name.IndexOf('(');
+            string partitionKey = name;
+            int parenthesisIndex = name.IndexOf('(');
             if (parenthesisIndex >= 0)
             {
-                var argumentList = name[(parenthesisIndex + 1)..].TrimEnd(')');
+                string argumentList = name[(parenthesisIndex + 1)..].TrimEnd(')');
                 name = name[..parenthesisIndex];
                 argumentHash = Convert.ToBase64String(SHA1.HashData(Encoding.UTF8.GetBytes(argumentList)));
                 partitionKey = name + argumentHash;
             }
 
-            var bucket = SHA1.HashData(Encoding.UTF8.GetBytes(partitionKey))[0] % TestListBuckets;
-            if (!partitionedResults.TryGetValue(bucket, out var testNames))
+            int bucket = SHA1.HashData(Encoding.UTF8.GetBytes(partitionKey))[0] % TestListBuckets;
+            if (!partitionedResults.TryGetValue(bucket, out List<TestListRow>? testNames))
             {
-                testNames = new List<TestListRow>();
+                testNames = [];
                 partitionedResults[bucket] = testNames;
             }
 
@@ -162,7 +131,7 @@ public sealed class AzureDevOpsResultPublisher
         {
             if (result.AggregationType == AggregationType.DataDriven && result.SubResults.Count > 0)
             {
-                foreach (var subResult in result.SubResults)
+                foreach (AggregatedResult subResult in result.SubResults)
                 {
                     ProcessTestForMetadata(subResult);
                 }
@@ -173,16 +142,16 @@ public sealed class AzureDevOpsResultPublisher
             }
         }
 
-        foreach (var result in allTestResults)
+        foreach (AggregatedResult result in allTestResults)
         {
             ProcessTestForMetadata(result);
         }
 
         var uploadedUrls = new Dictionary<int, string>();
-        foreach (var (key, testNames) in partitionedResults)
+        foreach ((int key, List<TestListRow>? testNames) in partitionedResults)
         {
-            var csvBytes = CreateCompressedCsv(testNames);
-            var fileName = $"{Guid.NewGuid():N}.csv.gz";
+            byte[] csvBytes = CreateCompressedCsv(testNames);
+            string fileName = $"{Guid.NewGuid():N}.csv.gz";
             uploadedUrls[key] = await _uploadClient.UploadAsync(csvBytes, fileName, "application/gzip", cancellationToken);
         }
 
@@ -195,10 +164,10 @@ public sealed class AzureDevOpsResultPublisher
             result_counts = resultCounts,
         };
 
-        var rawBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(dataModel, SerializerOptions));
-        var compressedBytes = Compress(rawBytes);
-        var base64Data = Convert.ToBase64String(compressedBytes);
-        var fileNameBase = $"__helix_metadata_{Guid.NewGuid():N}.json.gz";
+        byte[] rawBytes = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(dataModel, s_serializerOptions));
+        byte[] compressedBytes = Compress(rawBytes);
+        string base64Data = Convert.ToBase64String(compressedBytes);
+        string fileNameBase = $"__helix_metadata_{Guid.NewGuid():N}.json.gz";
 
         await SendWithRetryAsync(
             HttpMethod.Post,
@@ -206,7 +175,7 @@ public sealed class AzureDevOpsResultPublisher
             new TestRunAttachmentRequest(fileNameBase, base64Data),
             cancellationToken);
 
-        var metadataUrl = await _uploadClient.UploadAsync(compressedBytes, fileNameBase, "application/gzip", cancellationToken);
+        string metadataUrl = await _uploadClient.UploadAsync(compressedBytes, fileNameBase, "application/gzip", cancellationToken);
         await _eventClient.SendAsync(
             new
             {
@@ -225,25 +194,25 @@ public sealed class AzureDevOpsResultPublisher
         var testCaseResults = converted.Select(static c => c.Converted).ToList();
         var originalList = converted.Select(static c => c.Aggregated).ToList();
 
-        using var response = await SendWithRetryAsync(
+        using HttpResponseMessage response = await SendWithRetryAsync(
             HttpMethod.Post,
             $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/results?api-version=7.1-preview.6",
             testCaseResults,
             cancellationToken);
 
-        var publishedResults = await ReadPublishedResultsAsync(response, cancellationToken);
+        IReadOnlyList<PublishedTestCaseResultReference> publishedResults = await ReadPublishedResultsAsync(response, cancellationToken);
         if (publishedResults.Count == 0)
         {
             _logger.LogWarning("The test run appears to have been closed, aborting test result uploads.");
-            return Array.Empty<PublishedTestCase>();
+            return [];
         }
 
         var hotPathTests = new List<PublishedTestCase>();
-        foreach (var triplet in publishedResults.Zip(originalList, testCaseResults))
+        foreach ((PublishedTestCaseResultReference First, AggregatedResult Second, PublishedTestCase Third) triplet in publishedResults.Zip(originalList, testCaseResults))
         {
-            var published = triplet.First;
-            var original = triplet.Second;
-            var testCase = triplet.Third;
+            PublishedTestCaseResultReference published = triplet.First;
+            AggregatedResult original = triplet.Second;
+            PublishedTestCase testCase = triplet.Third;
 
             if (published.Id == -1)
             {
@@ -252,7 +221,7 @@ public sealed class AzureDevOpsResultPublisher
             }
 
             testCase = testCase with { Id = published.Id };
-            var addedTest = false;
+            bool addedTest = false;
 
             void AddToHotPath()
             {
@@ -291,9 +260,9 @@ public sealed class AzureDevOpsResultPublisher
                     return;
                 }
 
-                foreach (var subTriplet in publishedSubResults.Zip(originalSubResults, (publishedSubResult, originalSubResult) => (publishedSubResult, originalSubResult)))
+                foreach ((PublishedSubResultReference publishedSubResult, AggregatedResult originalSubResult) subTriplet in publishedSubResults.Zip(originalSubResults, (publishedSubResult, originalSubResult) => (publishedSubResult, originalSubResult)))
                 {
-                    foreach (var attachment in subTriplet.originalSubResult.Attachments)
+                    foreach (TestResultAttachment attachment in subTriplet.originalSubResult.Attachments)
                     {
                         await SendAttachmentAsync(attachment, testId, subTriplet.publishedSubResult.Id, cancellationToken);
                     }
@@ -302,7 +271,7 @@ public sealed class AzureDevOpsResultPublisher
                 }
             }
 
-            foreach (var attachment in original.Attachments)
+            foreach (TestResultAttachment attachment in original.Attachments)
             {
                 await SendAttachmentAsync(attachment, published.Id, null, cancellationToken);
             }
@@ -323,18 +292,18 @@ public sealed class AzureDevOpsResultPublisher
             attachment.Name,
             Convert.ToBase64String(Encoding.UTF8.GetBytes(attachment.Text)));
 
-        var path = subResultId is long subId
+        string path = subResultId is long subId
             ? $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/results/{testId}/subresults/{subId}/attachments?api-version=7.1-preview.1"
             : $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/results/{testId}/attachments?api-version=7.1-preview.1";
 
-        using var response = await SendWithRetryAsync(HttpMethod.Post, path, request, cancellationToken);
+        using HttpResponseMessage response = await SendWithRetryAsync(HttpMethod.Post, path, request, cancellationToken);
         _ = response;
     }
 
     private IEnumerable<ConvertedResult> ConvertResults(IEnumerable<AggregatedResult> results)
     {
         var settings = HelixEnvironmentSettings.FromEnvironment();
-        var comment = JsonSerializer.Serialize(new
+        string? comment = JsonSerializer.Serialize(new
         {
             HelixJobId = settings.CorrelationId,
             HelixWorkItemName = settings.WorkItemFriendlyName,
@@ -373,7 +342,7 @@ public sealed class AzureDevOpsResultPublisher
                 DurationInMs = result.DurationSeconds * 1000.0,
                 StackTrace = result.StackTrace,
                 ErrorMessage = result.FailureMessage,
-                SubResults = result.SubResults.Count == 0 ? null : result.SubResults.Select(ConvertToSubTest).ToList(),
+                SubResults = result.SubResults.Count == 0 ? null : [.. result.SubResults.Select(ConvertToSubTest)],
                 ResultGroupType = GetResultGroupType(result.AggregationType),
             };
         }
@@ -405,7 +374,7 @@ public sealed class AzureDevOpsResultPublisher
                     Comment = comment ?? string.Empty,
                     StackTrace = result.StackTrace,
                     ErrorMessage = result.FailureMessage,
-                    SubResults = result.SubResults.Count == 0 ? null : result.SubResults.Select(ConvertToSubTest).ToList(),
+                    SubResults = result.SubResults.Count == 0 ? null : [.. result.SubResults.Select(ConvertToSubTest)],
                     ResultGroupType = GetResultGroupType(result.AggregationType),
                     CustomFields = customFields,
                 },
@@ -413,9 +382,9 @@ public sealed class AzureDevOpsResultPublisher
         }
 
         var converted = results.Select(ConvertResult).ToList();
-        foreach (var result in converted)
+        foreach (ConvertedResult? result in converted)
         {
-            foreach (var chunk in Chunk(result, 950))
+            foreach (ConvertedResult chunk in Chunk(result, 950))
             {
                 yield return chunk;
             }
@@ -430,19 +399,19 @@ public sealed class AzureDevOpsResultPublisher
             yield break;
         }
 
-        var zippedSubTests = (test.Converted.SubResults ?? new List<PublishedSubResult>())
+        IEnumerable<ChunkPair> zippedSubTests = (test.Converted.SubResults ?? [])
             .Zip(test.Aggregated.SubResults, (converted, aggregated) => new ChunkPair(converted, aggregated));
 
-        foreach (var zippedBatch in Batch(zippedSubTests, limit, static pair => Size(pair.Converted)))
+        foreach (List<ChunkPair> zippedBatch in Batch(zippedSubTests, limit, static pair => Size(pair.Converted)))
         {
             yield return new ConvertedResult(
-                test.Converted with { SubResults = zippedBatch.Select(static x => x.Converted).ToList(), Id = null },
+                test.Converted with { SubResults = [.. zippedBatch.Select(static x => x.Converted)], Id = null },
                 new AggregatedResult(
                     test.Aggregated.AggregationType,
                     test.Aggregated.Name,
                     test.Aggregated.DurationSeconds,
                     test.Aggregated.Result,
-                    zippedBatch.Select(static x => x.Aggregated).ToList(),
+                    [.. zippedBatch.Select(static x => x.Aggregated)],
                     test.Aggregated.Attachments,
                     test.Aggregated.FailureMessage,
                     test.Aggregated.StackTrace,
@@ -464,11 +433,11 @@ public sealed class AzureDevOpsResultPublisher
     private static IEnumerable<List<T>> Batch<T>(IEnumerable<T> items, int limit, Func<T, int> getSize)
     {
         var currentBatch = new List<T>();
-        var currentSize = 0;
+        int currentSize = 0;
 
-        foreach (var item in items)
+        foreach (T? item in items)
         {
-            var size = getSize(item);
+            int size = getSize(item);
             if (size > limit)
             {
                 throw new InvalidOperationException("Cannot split a result larger than the batching limit.");
@@ -477,7 +446,7 @@ public sealed class AzureDevOpsResultPublisher
             if (currentSize + size > limit && currentBatch.Count > 0)
             {
                 yield return currentBatch;
-                currentBatch = new List<T>();
+                currentBatch = [];
                 currentSize = 0;
             }
 
@@ -498,7 +467,7 @@ public sealed class AzureDevOpsResultPublisher
 
         if (!string.IsNullOrWhiteSpace(accessToken))
         {
-            var basicToken = Convert.ToBase64String(Encoding.ASCII.GetBytes($":{accessToken}"));
+            string basicToken = Convert.ToBase64String(Encoding.ASCII.GetBytes($":{accessToken}"));
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", basicToken);
         }
 
@@ -511,8 +480,8 @@ public sealed class AzureDevOpsResultPublisher
         object? payload,
         CancellationToken cancellationToken)
     {
-        var triesLeft = 10;
-        var body = payload is null ? null : JsonSerializer.Serialize(payload, SerializerOptions);
+        int triesLeft = 10;
+        string? body = payload is null ? null : JsonSerializer.Serialize(payload, s_serializerOptions);
         if (!string.IsNullOrEmpty(body))
         {
             s_lastSendContent = body;
@@ -526,13 +495,13 @@ public sealed class AzureDevOpsResultPublisher
                 request.Content = new StringContent(body, Encoding.UTF8, "application/json");
             }
 
-            var response = await _httpClient.SendAsync(request, cancellationToken);
+            HttpResponseMessage response = await _httpClient.SendAsync(request, cancellationToken);
             if (response.IsSuccessStatusCode)
             {
                 return response;
             }
 
-            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            string responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
             if (response.StatusCode == HttpStatusCode.ServiceUnavailable && triesLeft > 0)
             {
                 response.Dispose();
@@ -577,57 +546,57 @@ public sealed class AzureDevOpsResultPublisher
         HttpResponseMessage response,
         CancellationToken cancellationToken)
     {
-        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+        string content = await response.Content.ReadAsStringAsync(cancellationToken);
         if (string.IsNullOrWhiteSpace(content))
         {
-            return Array.Empty<PublishedTestCaseResultReference>();
+            return [];
         }
 
         using var document = JsonDocument.Parse(content);
-        var root = document.RootElement;
+        JsonElement root = document.RootElement;
         if (root.ValueKind == JsonValueKind.Array)
         {
-            return root.EnumerateArray().Select(ParsePublishedResult).ToList();
+            return [.. root.EnumerateArray().Select(ParsePublishedResult)];
         }
 
-        if (root.TryGetProperty("value", out var value) && value.ValueKind == JsonValueKind.Array)
+        if (root.TryGetProperty("value", out JsonElement value) && value.ValueKind == JsonValueKind.Array)
         {
-            return value.EnumerateArray().Select(ParsePublishedResult).ToList();
+            return [.. value.EnumerateArray().Select(ParsePublishedResult)];
         }
 
-        return Array.Empty<PublishedTestCaseResultReference>();
+        return [];
     }
 
     private static PublishedTestCaseResultReference ParsePublishedResult(JsonElement element)
     {
         var subResults = new List<PublishedSubResultReference>();
-        if (element.TryGetProperty("subResults", out var subResultElement) && subResultElement.ValueKind == JsonValueKind.Array)
+        if (element.TryGetProperty("subResults", out JsonElement subResultElement) && subResultElement.ValueKind == JsonValueKind.Array)
         {
             subResults.AddRange(subResultElement.EnumerateArray().Select(ParsePublishedSubResult));
         }
 
         return new PublishedTestCaseResultReference(
-            element.TryGetProperty("id", out var idElement) ? idElement.GetInt64() : -1,
+            element.TryGetProperty("id", out JsonElement idElement) ? idElement.GetInt64() : -1,
             subResults);
     }
 
     private static PublishedSubResultReference ParsePublishedSubResult(JsonElement element)
     {
         var subResults = new List<PublishedSubResultReference>();
-        if (element.TryGetProperty("subResults", out var subResultElement) && subResultElement.ValueKind == JsonValueKind.Array)
+        if (element.TryGetProperty("subResults", out JsonElement subResultElement) && subResultElement.ValueKind == JsonValueKind.Array)
         {
             subResults.AddRange(subResultElement.EnumerateArray().Select(ParsePublishedSubResult));
         }
 
         return new PublishedSubResultReference(
-            element.TryGetProperty("id", out var idElement) ? idElement.GetInt64() : -1,
+            element.TryGetProperty("id", out JsonElement idElement) ? idElement.GetInt64() : -1,
             subResults);
     }
 
     private static byte[] CreateCompressedCsv(IEnumerable<TestListRow> rows)
     {
         var builder = new StringBuilder();
-        foreach (var row in rows)
+        foreach (TestListRow row in rows)
         {
             builder.Append(EscapeCsv(row.TestName));
             builder.Append(',');

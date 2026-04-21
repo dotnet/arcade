@@ -1,35 +1,30 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Text.Json;
+using Microsoft.DotNet.Helix.AzureDevOpsTestReporter.Model;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.Helix.AzureDevOpsTestReporter;
 
-public sealed class PackingTestReporter : ITestReporter
+public sealed class PackingTestReporter(AzureDevOpsReportingParameters azdoParameters, ILogger? logger = null)
+    : ITestReporter
 {
     private const string ReportFileName = "__test_report.json";
-    private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
+    private static readonly JsonSerializerOptions s_serializerOptions = new(JsonSerializerDefaults.Web);
 
-    private readonly AzureDevOpsReportingParameters _azdoParameters;
-    private readonly ILogger _logger;
-
-    public PackingTestReporter(AzureDevOpsReportingParameters azdoParameters, ILogger? logger = null)
-    {
-        _azdoParameters = azdoParameters;
-        _logger = logger.OrNull();
-    }
+    private readonly AzureDevOpsReportingParameters _azdoParameters = azdoParameters;
+    private readonly ILogger _logger = logger.OrNull();
 
     public async Task ReportResultsAsync(IReadOnlyList<TestResult> results, CancellationToken cancellationToken = default)
     {
-        var filtered = (results ?? Array.Empty<TestResult>())
+        var filtered = (results ?? [])
             .Where(static x => x is not null)
             .ToList();
 
         var serialized = new PackedTestReport(_azdoParameters, filtered);
-        var path = GetFileName();
-        var directory = Path.GetDirectoryName(path);
+        string path = GetFileName();
+        string? directory = Path.GetDirectoryName(path);
         if (!string.IsNullOrEmpty(directory))
         {
             Directory.CreateDirectory(directory);
@@ -37,9 +32,9 @@ public sealed class PackingTestReporter : ITestReporter
 
         _logger.LogInformation("Packing {Count} test reports to '{Path}'", filtered.Count, path);
 
-        await using (var saveFile = File.Create(path))
+        await using (FileStream saveFile = File.Create(path))
         {
-            await JsonSerializer.SerializeAsync(saveFile, serialized, SerializerOptions, cancellationToken);
+            await JsonSerializer.SerializeAsync(saveFile, serialized, s_serializerOptions, cancellationToken);
             await saveFile.FlushAsync(cancellationToken);
         }
 
@@ -49,7 +44,7 @@ public sealed class PackingTestReporter : ITestReporter
     public static string GetFileName(HelixEnvironmentSettings? settings = null)
     {
         settings ??= HelixEnvironmentSettings.FromEnvironment();
-        var root = settings.WorkitemWorkingDir;
+        string? root = settings.WorkitemWorkingDir;
         if (string.IsNullOrWhiteSpace(root))
         {
             root = Environment.CurrentDirectory;
@@ -62,9 +57,9 @@ public sealed class PackingTestReporter : ITestReporter
         ILogger? logger = null,
         CancellationToken cancellationToken = default)
     {
-        var effectiveLogger = logger.OrNull();
+        ILogger effectiveLogger = logger.OrNull();
         var settings = HelixEnvironmentSettings.FromEnvironment();
-        var path = GetFileName(settings);
+        string path = GetFileName(settings);
 
         if (!File.Exists(path) && !string.IsNullOrWhiteSpace(settings.WorkitemPayloadDir))
         {
@@ -78,8 +73,8 @@ public sealed class PackingTestReporter : ITestReporter
 
         effectiveLogger.LogInformation("Unpacking {Length} bytes from '{Path}'", new FileInfo(path).Length, path);
 
-        await using var saveFile = File.OpenRead(path);
-        var serialized = await JsonSerializer.DeserializeAsync<PackedTestReport>(saveFile, SerializerOptions, cancellationToken);
+        await using FileStream saveFile = File.OpenRead(path);
+        PackedTestReport? serialized = await JsonSerializer.DeserializeAsync<PackedTestReport>(saveFile, s_serializerOptions, cancellationToken);
         if (serialized is null)
         {
             effectiveLogger.LogError("Unpacked tests were null or invalid.");
