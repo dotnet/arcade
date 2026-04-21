@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AzureDevOpsTestReporter\Microsoft.DotNet.Helix.AzureDevOpsTestReporter.csproj" />
+    <ProjectReference Include="..\AzureDevOpsTestReporter\Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.csproj" />
     <ProjectReference Include="..\Client\CSharp\Microsoft.DotNet.Helix.Client.csproj" />
   </ItemGroup>
 

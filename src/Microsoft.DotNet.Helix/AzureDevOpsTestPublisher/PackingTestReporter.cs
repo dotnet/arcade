@@ -2,10 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Text.Json;
-using Microsoft.DotNet.Helix.AzureDevOpsTestReporter.Model;
+using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.Helix.AzureDevOpsTestReporter;
+namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
 public interface ITestReporter
 {

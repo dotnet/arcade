@@ -5,8 +5,8 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Helix.AzureDevOpsTestReporter;
-using Microsoft.DotNet.Helix.AzureDevOpsTestReporter.Model;
+using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
+using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
 using Xunit;
 
 namespace Microsoft.DotNet.Helix.Sdk.Tests

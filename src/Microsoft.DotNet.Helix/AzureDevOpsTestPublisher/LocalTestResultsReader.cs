@@ -3,40 +3,14 @@
 
 using System.Globalization;
 using System.Xml.Linq;
-using Microsoft.DotNet.Helix.AzureDevOpsTestReporter.Model;
+using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.Helix.AzureDevOpsTestReporter;
+namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
 public sealed class LocalTestResultsReader(ILogger? logger = null)
 {
     private readonly ILogger _logger = logger.OrNull();
-
-    public IReadOnlyList<IReadOnlyList<TestResult>> ReadResults(string searchDirectory)
-    {
-        if (string.IsNullOrWhiteSpace(searchDirectory) || !Directory.Exists(searchDirectory))
-        {
-            return [];
-        }
-
-        var allResults = new List<IReadOnlyList<TestResult>>();
-
-        foreach (string filePath in Directory.EnumerateFiles(searchDirectory, "*", SearchOption.AllDirectories))
-        {
-            if (!LooksLikeTestResultFile(filePath))
-            {
-                continue;
-            }
-
-            IReadOnlyList<TestResult> parsed = ReadResultFile(filePath);
-            if (parsed.Count > 0)
-            {
-                allResults.Add(parsed);
-            }
-        }
-
-        return allResults;
-    }
 
     public static bool LooksLikeTestResultFile(string path)
     {
@@ -49,7 +23,7 @@ public sealed class LocalTestResultsReader(ILogger? logger = null)
                || fileName.EndsWith("junitresults.xml", StringComparison.OrdinalIgnoreCase);
     }
 
-    private IReadOnlyList<TestResult> ReadResultFile(string filePath)
+    public IReadOnlyList<TestResult> ReadResultFile(string filePath)
     {
         try
         {

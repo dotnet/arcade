@@ -7,10 +7,10 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using Microsoft.DotNet.Helix.AzureDevOpsTestReporter.Model;
+using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.DotNet.Helix.AzureDevOpsTestReporter;
+namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
 public sealed class AzureDevOpsResultPublisher
 {
