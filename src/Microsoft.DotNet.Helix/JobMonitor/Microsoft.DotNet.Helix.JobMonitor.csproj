@@ -19,10 +19,4 @@
     <ProjectReference Include="..\Client\CSharp\Microsoft.DotNet.Helix.Client.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="..\Sdk\tools\azure-pipelines\reporter\**\*.py"
-          Link="reporter\%(RecursiveDir)%(Filename)%(Extension)"
-          CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
-
 </Project>
