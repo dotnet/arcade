@@ -17,7 +17,7 @@
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
     <IncludeXHarnessCli>true</IncludeXHarnessCli>
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
-    <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
+    <HelixBaseUri>https://helix.int-dot.net</HelixBaseUri>
   </PropertyGroup>
 
   <!-- For non-ci local runs -->

@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Helix.Client
     public partial class HelixApiOptions : ClientOptions
     {
         public HelixApiOptions()
-            : this(new Uri("https://helix.dot.net/"))
+            : this(new Uri("https://helix.int-dot.net/"))
         {
         }
 
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Helix.Client
         }
 
         public HelixApiOptions(TokenCredential credentials)
-            : this(new Uri("https://helix.dot.net/"), credentials)
+            : this(new Uri("https://helix.int-dot.net/"), credentials)
         {
         }
 

@@ -70,8 +70,8 @@
 
     <PropertyGroup>
       <_AccessTokenSuffix />
-      <_AccessTokenSuffix Condition=" '$(HelixAccessToken)' != '' ">&amp;access_token={Get this from helix.dot.net}</_AccessTokenSuffix>
-      <_HelixBaseUri Condition="'$(HelixBaseUri)' == ''">https://helix.dot.net</_HelixBaseUri>
+      <_AccessTokenSuffix Condition=" '$(HelixAccessToken)' != '' ">&amp;access_token={Get this from helix.int-dot.net}</_AccessTokenSuffix>
+      <_HelixBaseUri Condition="'$(HelixBaseUri)' == ''">https://helix.int-dot.net</_HelixBaseUri>
       <_HelixBaseUri Condition="'$(HelixBaseUri)' != ''">$(HelixBaseUri.TrimEnd('/'))</_HelixBaseUri>
       <_HelixJobName />
       <_HelixJobName Condition="'$(HelixJobName)' != ''"> '$(HelixJobName)'</_HelixJobName>

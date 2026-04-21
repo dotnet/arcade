@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// <summary>
         /// The Helix Api Base Uri
         /// </summary>
-        public string BaseUri { get; set; } = "https://helix.dot.net/";
+        public string BaseUri { get; set; } = "https://helix.int-dot.net/";
 
         /// <summary>
         /// The Helix Api Access Token

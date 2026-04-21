@@ -8,4 +8,4 @@ secrets:
   HelixApiAccessToken:
     type: helix-access-token
     parameters:
-      environment: helix.dot.net
+      environment: helix.int-dot.net

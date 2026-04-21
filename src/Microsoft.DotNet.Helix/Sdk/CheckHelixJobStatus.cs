@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             if (FailOnWorkItemFailure)
             {
-                string accessTokenSuffix = string.IsNullOrEmpty(AccessToken) ? "" : "?access_token={Get this from helix.dot.net}";
+                string accessTokenSuffix = string.IsNullOrEmpty(AccessToken) ? "" : "?access_token={Get this from helix.int-dot.net}";
                 foreach (ITaskItem workItem in WorkItems)
                 {
                     var failed = workItem.GetMetadata("Failed");
