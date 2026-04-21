@@ -10,11 +10,11 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Storage.Blobs;
 using Microsoft.DotNet.Helix.AzureDevOpsTestReporter;
-using Microsoft.DotNet.Helix.AzureDevOpsTestReporter.Model;
 using Microsoft.DotNet.Helix.Client;
 using Microsoft.DotNet.Helix.Client.Models;
 using Newtonsoft.Json;
@@ -46,17 +46,24 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         public async Task<int> RunAsync()
         {
             HashSet<string> processedRuns = await GetProcessedRunNamesAsync();
-            DateTimeOffset deadline = DateTimeOffset.UtcNow.AddMinutes(Math.Max(1, _options.MaximumWaitMinutes));
+
+            var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.CancelAfter(TimeSpan.FromMinutes(_options.MaximumWaitMinutes));
+            CancellationToken cancellationToken = cancellationTokenSource.Token;
+
             bool anyNonMonitorJobFailures = false;
             int failedHelixJobCount = 0;
             int processedHelixJobCount = 0;
 
-            while (DateTimeOffset.UtcNow < deadline)
+            while (true)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 AzureDevOpsTimelineRecord[] timelineRecords = await GetTimelineRecordsAsync();
                 JobStatus[] jobs = await RetryAsync(
-                    () => Task.FromResult(Array.Empty<JobStatus>())
-                        /*TODO _helixApi.PullRequests.ByBuildAsync(_options.Repository, _options.PrNumber, int.Parse(_options.BuildId, CultureInfo.InvariantCulture), _options.Attempt)*/);
+                    // TODO async () => await _helixApi.PullRequests.ByBuildAsync(_options.Repository, _options.PrNumber, int.Parse(_options.BuildId, CultureInfo.InvariantCulture), _options.Attempt),
+                    () => Task.FromResult(Array.Empty<JobStatus>()),
+                    cancellationToken);
 
                 int completedHelixJobs = jobs.Count(j => j.IsCompleted);
                 int currentFailedJobs = jobs.Count(j => j.Status.Equals("failed", StringComparison.OrdinalIgnoreCase));
@@ -69,8 +76,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         continue;
                     }
 
-                    JobPassFail passFail = await RetryAsync(() => _helixApi.Job.PassFailAsync(job.JobName));
-                    bool passed = await ProcessCompletedJobAsync(job, passFail);
+                    JobPassFail passFail = await RetryAsync(() => _helixApi.Job.PassFailAsync(job.JobName, cancellationToken), cancellationToken);
+                    bool passed = await ProcessCompletedJobAsync(job, passFail, cancellationToken);
                     processedRuns.Add(job.JobName);
                     processedHelixJobCount++;
                     if (!passed)
@@ -104,11 +111,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     return 0;
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(Math.Max(5, _options.PollingIntervalSeconds)));
+                await Task.Delay(TimeSpan.FromSeconds(Math.Max(5, _options.PollingIntervalSeconds)), cancellationToken);
             }
-
-            Console.Error.WriteLine($"The Helix Job Monitor timed out after {_options.MaximumWaitMinutes} minute(s).");
-            return 1;
         }
 
         public void Dispose()
@@ -116,19 +120,24 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _azdoClient.Dispose();
         }
 
-        private async Task<bool> ProcessCompletedJobAsync(JobStatus helixJob, JobPassFail passFail)
+        private async Task<bool> ProcessCompletedJobAsync(JobStatus helixJob, JobPassFail passFail, CancellationToken cancellationToken)
         {
             string testRunName = HelixJobMonitorUtilities.GetTestRunName(helixJob.JobName);
             int testRunId = await StartTestRunAsync(testRunName);
-            string resultsDirectory = Path.Combine(_options.WorkingDirectory, MakeSafeDirectoryName(helixJob.JobName));
+            string resultsDirectory = Path.Combine(_options.WorkingDirectory, SanitizeDirName(helixJob.JobName));
             Directory.CreateDirectory(resultsDirectory);
 
-            int downloadedFiles = await DownloadTestResultsAsync(helixJob.JobName, passFail, resultsDirectory);
-            bool reporterRan = downloadedFiles > 0
-                && await TryUploadDownloadedResultsAsync(resultsDirectory, testRunId, helixJob.JobName);
-            if (!reporterRan)
+            List<string> downloadedFiles = await DownloadTestResultsAsync(helixJob.JobName, passFail, resultsDirectory);
+
+            try
             {
-                await CreateFallbackResultsAsync(testRunId, helixJob.JobName, passFail);
+                await UploadDownloadedResultsAsync(downloadedFiles, testRunId, cancellationToken);
+            }
+            catch
+            {
+                // TODO: Handle here
+                Console.WriteLine($"🚨 Failed to upload test results for job {helixJob.JobName} to Azure DevOps. Test run ID was {testRunId}.");
+                return false;
             }
 
             await StopTestRunAsync(testRunId, testRunName);
@@ -144,7 +153,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             JObject data = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs?buildIds={_options.BuildId}&api-version=7.1-preview.1");
             var processed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (JObject run in data?["value"] as JArray ?? [])
+            foreach (JObject run in (data?["value"] as JArray ?? []).Cast<JObject>())
             {
                 string name = run.Value<string>("name");
                 string state = run.Value<string>("state");
@@ -191,62 +200,38 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             Console.WriteLine($"Stopped test run '{testRunName}'.");
         }
 
-        private async Task CreateFallbackResultsAsync(int testRunId, string jobName, JobPassFail passFail)
+        private async Task<List<WorkItemTestResults>> DownloadTestResultsAsync(
+            string jobName,
+            JobPassFail passFail,
+            string outputDirectory,
+            CancellationToken cancellationToken)
         {
-            foreach (string workItemName in passFail.Passed ?? ImmutableList<string>.Empty)
+            List<WorkItemTestResults> downloadedFiles = [];
+
+            JobResultsUri resultsUri = await RetryAsync(
+                () => _helixApi.Job.ResultsAsync(jobName),
+                cancellationToken);
+
+            IEnumerable<string> workItemNames = (passFail.Passed ?? [])
+                .Concat(passFail.Failed ?? [])
+                .Distinct(StringComparer.OrdinalIgnoreCase);
+
+            foreach (string workItemName in workItemNames)
             {
-                await CreateFallbackResultAsync(testRunId, jobName, workItemName, failed: false);
-            }
+                IImmutableList<UploadedFile> availableFiles = await RetryAsync(
+                    () => _helixApi.WorkItem.ListFilesAsync(workItemName, jobName, false),
+                    cancellationToken);
 
-            foreach (string workItemName in passFail.Failed ?? ImmutableList<string>.Empty)
-            {
-                await CreateFallbackResultAsync(testRunId, jobName, workItemName, failed: true);
-            }
-        }
-
-        private async Task CreateFallbackResultAsync(int testRunId, string jobName, string workItemName, bool failed)
-        {
-            string cleanName = HelixJobMonitorUtilities.CleanWorkItemName(workItemName);
-            await SendAsync(
-                HttpMethod.Post,
-                $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/Runs/{testRunId}/results?api-version=5.1-preview.6",
-                new JArray
-                {
-                    new JObject
-                    {
-                        ["automatedTestName"] = $"{cleanName}.WorkItemExecution",
-                        ["automatedTestStorage"] = cleanName,
-                        ["testCaseTitle"] = $"{cleanName} Work Item",
-                        ["outcome"] = failed ? "Failed" : "Passed",
-                        ["state"] = "Completed",
-                        ["errorMessage"] = failed ? "The Helix work item failed. See the Helix logs for more details." : null,
-                        ["durationInMs"] = 60 * 1000,
-                        ["comment"] = new JObject
-                        {
-                            ["HelixJobId"] = jobName,
-                            ["HelixWorkItemName"] = cleanName,
-                        }.ToString(),
-                    }
-                });
-        }
-
-        private async Task<int> DownloadTestResultsAsync(string jobName, JobPassFail passFail, string outputDirectory)
-        {
-            int count = 0;
-            JobResultsUri resultsUri = await RetryAsync(() => _helixApi.Job.ResultsAsync(jobName));
-            IEnumerable<string> workItemNames = (passFail.Passed ?? ImmutableList<string>.Empty).Concat(passFail.Failed ?? ImmutableList<string>.Empty);
-
-            foreach (string workItemName in workItemNames.Distinct(StringComparer.OrdinalIgnoreCase))
-            {
-                IImmutableList<UploadedFile> availableFiles = await RetryAsync(() => _helixApi.WorkItem.ListFilesAsync(workItemName, jobName, false));
-                string workItemDirectory = Path.Combine(outputDirectory, MakeSafeDirectoryName(workItemName));
+                string workItemDirectory = Path.Combine(outputDirectory, SanitizeDirName(workItemName));
                 Directory.CreateDirectory(workItemDirectory);
 
+                List<string> workItemFiles = [];
                 foreach (UploadedFile file in availableFiles.Where(f => LooksLikeTestResultFile(f.Name)))
                 {
                     string relativePath = file.Name.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
                     string destinationFile = Path.Combine(workItemDirectory, relativePath);
                     string directory = Path.GetDirectoryName(destinationFile);
+
                     if (!string.IsNullOrEmpty(directory))
                     {
                         Directory.CreateDirectory(directory);
@@ -254,37 +239,41 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                     try
                     {
+                        Console.WriteLine($"Downloading {file.Name} for work item {workItemName} in job {jobName}...");
+
                         BlobClient blobClient = CreateBlobClient(file.Link, resultsUri.ResultsUriRSAS);
-                        await blobClient.DownloadToAsync(destinationFile);
-                        count++;
+                        await blobClient.DownloadToAsync(destinationFile, cancellationToken);
+                        workItemFiles.Add(destinationFile);
                     }
                     catch (Exception ex)
                     {
                         Console.WriteLine($"Warning: failed to download '{file.Name}' for '{jobName}/{workItemName}': {ex.Message}");
                     }
                 }
+
+                downloadedFiles.Add(new WorkItemTestResults(jobName, workItemName, workItemFiles));
             }
 
-            return count;
+            return downloadedFiles;
         }
 
-        private async Task<bool> TryUploadDownloadedResultsAsync(string workingDirectory, int testRunId, string jobName)
+        private async Task UploadDownloadedResultsAsync(WorkItemTestResults testResults, int testRunId, CancellationToken cancellationToken)
         {
             var publisher = new AzureDevOpsResultPublisher(
                 new AzureDevOpsReportingParameters(
                     new Uri(_options.CollectionUri, UriKind.Absolute),
                     _options.TeamProject,
                     testRunId.ToString(CultureInfo.InvariantCulture),
-                    _options.SystemAccessToken),
-                jobName);
+                    _options.SystemAccessToken));
 
-            UploadResult uploadResult = await publisher.TryUploadDirectoryAsync(workingDirectory);
-            if (uploadResult != UploadResult.Success)
-            {
-                Console.WriteLine($"Warning: test result upload for '{jobName}' returned '{uploadResult}'. Falling back to synthetic work-item results.");
-            }
-
-            return uploadResult == UploadResult.Success;
+            await publisher.UploadTestResultsAsync(
+                testResults.TestResultFiles,
+                new
+                {
+                    HelixJobId = testResults.JobName,
+                    HelixWorkItemName = testResults.WorkItemName,
+                },
+                cancellationToken);
         }
 
         private async Task<JObject> SendAsync(HttpMethod method, string requestUri, JToken body = null)
@@ -306,7 +295,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 if (string.IsNullOrWhiteSpace(content))
                 {
-                    return new JObject();
+                    return [];
                 }
 
                 return JObject.Parse(content);
@@ -330,7 +319,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private static bool LooksLikeTestResultFile(string path)
             => LocalTestResultsReader.LooksLikeTestResultFile(path);
 
-        private static string MakeSafeDirectoryName(string value)
+        private static string SanitizeDirName(string value)
         {
             foreach (char invalidChar in Path.GetInvalidFileNameChars())
             {
@@ -340,11 +329,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return value;
         }
 
-        private static async Task<T> RetryAsync<T>(Func<Task<T>> action)
+        private static async Task<T> RetryAsync<T>(Func<Task<T>> action, CancellationToken cancellationToken)
         {
             Exception last = null;
             for (int attempt = 0; attempt < 5; attempt++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 try
                 {
                     return await action();
@@ -352,11 +343,13 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 catch (Exception ex) when (attempt < 4)
                 {
                     last = ex;
-                    await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, attempt + 1)));
+                    await Task.Delay(TimeSpan.FromSeconds(Math.Pow(2, attempt + 1)), cancellationToken);
                 }
             }
 
             throw last ?? new InvalidOperationException("Retry failed without capturing an exception.");
         }
     }
+
+    record WorkItemTestResults(string JobName, string WorkItemName, List<string> TestResultFiles);
 }

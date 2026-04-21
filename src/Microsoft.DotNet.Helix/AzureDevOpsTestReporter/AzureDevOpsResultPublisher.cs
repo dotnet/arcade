@@ -23,63 +23,54 @@ public sealed class AzureDevOpsResultPublisher
     private static string s_lastSendContent = string.Empty;
 
     private readonly AzureDevOpsReportingParameters _azdoParameters;
-    private readonly string _workItemId;
     private readonly HttpClient _httpClient;
     private readonly ILogger _logger;
 
     public AzureDevOpsResultPublisher(
         AzureDevOpsReportingParameters azdoParameters,
-        string workItemId,
         HttpClient? httpClient = null,
         ILogger? logger = null)
     {
         _azdoParameters = azdoParameters;
-        _workItemId = workItemId;
         _httpClient = httpClient ?? CreateHttpClient(azdoParameters.AccessToken);
         _logger = logger.OrNull();
     }
 
-    public async Task<UploadResult> TryUploadAsync(IEnumerable<AggregatedResult> results, CancellationToken cancellationToken = default)
-    {
-        try
-        {
-            await ProcessAsync([.. results], cancellationToken);
-            return UploadResult.Success;
-        }
-        catch (TerminalError ex)
-        {
-            await LogErrorAsync(ex, cancellationToken);
-            return UploadResult.TerminalError;
-        }
-        catch (Exception ex)
-        {
-            await LogErrorAsync(ex, cancellationToken);
-            return UploadResult.UnknownError;
-        }
-    }
-
-    public async Task<UploadResult> TryUploadDirectoryAsync(string workingDirectory, CancellationToken cancellationToken = default)
+    public async Task UploadDirectoryAsync(string workingDirectory, object resultMetadata, CancellationToken cancellationToken = default)
     {
         IReadOnlyList<IReadOnlyList<TestResult>> parsedResults = new LocalTestResultsReader(_logger).ReadResults(workingDirectory);
         if (parsedResults.Count == 0)
         {
             _logger.LogWarning("No test results were discovered under '{WorkingDirectory}'.", workingDirectory);
-            return UploadResult.UnknownError;
+            return;
         }
 
         IReadOnlyList<AggregatedResult> aggregatedResults = new ResultAggregator().Aggregate(parsedResults);
         if (aggregatedResults.Count == 0)
         {
             _logger.LogWarning("Test results were discovered under '{WorkingDirectory}', but none could be aggregated.", workingDirectory);
-            return UploadResult.UnknownError;
+            return;
         }
 
-        return await TryUploadAsync(aggregatedResults, cancellationToken).ConfigureAwait(false);
+        await UploadTestResultsAsync(aggregatedResults, resultMetadata, cancellationToken);
     }
 
-    private async Task ProcessAsync(IReadOnlyList<AggregatedResult> testList, CancellationToken cancellationToken)
+    public async Task UploadTestResultsAsync(IEnumerable<AggregatedResult> results, object resultMetadata, CancellationToken cancellationToken = default)
     {
-        var converted = ConvertResults(testList).ToList();
+        try
+        {
+            await ProcessAsync([.. results], resultMetadata, cancellationToken);
+        }
+        catch (TerminalError ex)
+        {
+            await LogErrorAsync(ex, cancellationToken);
+            throw;
+        }
+    }
+
+    private async Task ProcessAsync(IReadOnlyList<AggregatedResult> testList, object resultMetadata, CancellationToken cancellationToken)
+    {
+        var converted = ConvertResults(testList, resultMetadata).ToList();
         var hotPathTests = new List<PublishedTestCase>();
 
         foreach (List<ConvertedResult> batch in Batch(converted, 1000, static t => Size(t.Converted)))
@@ -318,14 +309,8 @@ public sealed class AzureDevOpsResultPublisher
         _ = response;
     }
 
-    private IEnumerable<ConvertedResult> ConvertResults(IEnumerable<AggregatedResult> results)
+    private IEnumerable<ConvertedResult> ConvertResults(IEnumerable<AggregatedResult> results, object resultMetadata)
     {
-        string? comment = JsonSerializer.Serialize(new
-        {
-            HelixJobId = string.IsNullOrWhiteSpace(settings.CorrelationId) ? _workItemId : settings.CorrelationId,
-            HelixWorkItemName = string.IsNullOrWhiteSpace(settings.WorkItemFriendlyName) ? _workItemId : settings.WorkItemFriendlyName,
-        });
-
         static string GetResultGroupType(AggregationType aggregationType)
         {
             return aggregationType switch
@@ -352,7 +337,7 @@ public sealed class AzureDevOpsResultPublisher
 
             return new PublishedSubResult
             {
-                Comment = comment ?? string.Empty,
+                Comment = JsonSerializer.Serialize(resultMetadata) ?? string.Empty,
                 CustomFields = customFields,
                 DisplayName = result.Name,
                 Outcome = result.Result,

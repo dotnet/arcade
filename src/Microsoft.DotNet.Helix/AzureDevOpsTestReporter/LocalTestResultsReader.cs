@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Globalization;
-using System.Text.Json;
 using System.Xml.Linq;
 using Microsoft.DotNet.Helix.AzureDevOpsTestReporter.Model;
 using Microsoft.Extensions.Logging;
@@ -11,7 +10,6 @@ namespace Microsoft.DotNet.Helix.AzureDevOpsTestReporter;
 
 public sealed class LocalTestResultsReader(ILogger? logger = null)
 {
-    private static readonly JsonSerializerOptions s_serializerOptions = new(JsonSerializerDefaults.Web);
     private readonly ILogger _logger = logger.OrNull();
 
     public IReadOnlyList<IReadOnlyList<TestResult>> ReadResults(string searchDirectory)
@@ -21,31 +19,11 @@ public sealed class LocalTestResultsReader(ILogger? logger = null)
             return [];
         }
 
-        List<string> packedReportFiles = Directory
-            .EnumerateFiles(searchDirectory, "__test_report.json", SearchOption.AllDirectories)
-            .ToList();
-
-        var packedDirectories = new HashSet<string>(
-            packedReportFiles
-                .Select(Path.GetDirectoryName)
-                .Where(static path => !string.IsNullOrWhiteSpace(path))!,
-            StringComparer.OrdinalIgnoreCase);
-
         var allResults = new List<IReadOnlyList<TestResult>>();
-        foreach (string packedReportFile in packedReportFiles)
-        {
-            IReadOnlyList<TestResult> packedResults = ReadPackedResults(packedReportFile);
-            if (packedResults.Count > 0)
-            {
-                allResults.Add(packedResults);
-            }
-        }
 
         foreach (string filePath in Directory.EnumerateFiles(searchDirectory, "*", SearchOption.AllDirectories))
         {
-            if (!LooksLikeTestResultFile(filePath)
-                || string.Equals(Path.GetFileName(filePath), "__test_report.json", StringComparison.OrdinalIgnoreCase)
-                || packedDirectories.Any(directory => IsPathUnderDirectory(filePath, directory)))
+            if (!LooksLikeTestResultFile(filePath))
             {
                 continue;
             }
@@ -63,32 +41,12 @@ public sealed class LocalTestResultsReader(ILogger? logger = null)
     public static bool LooksLikeTestResultFile(string path)
     {
         string fileName = Path.GetFileName(path);
-        if (string.Equals(fileName, "__test_report.json", StringComparison.OrdinalIgnoreCase))
-        {
-            return true;
-        }
-
         return fileName.EndsWith(".trx", StringComparison.OrdinalIgnoreCase)
                || fileName.EndsWith("testResults.xml", StringComparison.OrdinalIgnoreCase)
                || fileName.EndsWith("test-results.xml", StringComparison.OrdinalIgnoreCase)
                || fileName.EndsWith("test_results.xml", StringComparison.OrdinalIgnoreCase)
                || fileName.EndsWith("junit-results.xml", StringComparison.OrdinalIgnoreCase)
                || fileName.EndsWith("junitresults.xml", StringComparison.OrdinalIgnoreCase);
-    }
-
-    private IReadOnlyList<TestResult> ReadPackedResults(string filePath)
-    {
-        try
-        {
-            using FileStream stream = File.OpenRead(filePath);
-            PackedTestReport? report = JsonSerializer.Deserialize<PackedTestReport>(stream, s_serializerOptions);
-            return report?.Results ?? [];
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning(ex, "Failed to read packed test report '{Path}'.", filePath);
-            return [];
-        }
     }
 
     private IReadOnlyList<TestResult> ReadResultFile(string filePath)
@@ -258,16 +216,6 @@ public sealed class LocalTestResultsReader(ILogger? logger = null)
             "fail" or "failed" or "error" or "timeout" or "aborted" => "Fail",
             _ => "None",
         };
-    }
-
-    private static bool IsPathUnderDirectory(string filePath, string directory)
-    {
-        string normalizedDirectory = Path.TrimEndingDirectorySeparator(Path.GetFullPath(directory));
-        string normalizedPath = Path.GetFullPath(filePath);
-
-        return normalizedPath.Equals(normalizedDirectory, StringComparison.OrdinalIgnoreCase)
-            || normalizedPath.StartsWith(normalizedDirectory + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
-            || normalizedPath.StartsWith(normalizedDirectory + Path.AltDirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
     }
 
     private static void AddAttachmentIfNotEmpty(List<TestResultAttachment> attachments, string name, string? text)
