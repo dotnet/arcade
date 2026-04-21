@@ -54,6 +54,7 @@ namespace Microsoft.SignCheck.Verification
 
         protected override bool IsSigned(string path, SignatureVerificationResult svr)
         {
+#if NET
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
                 throw new PlatformNotSupportedException("Pgp verification is not supported on Windows.");
@@ -96,6 +97,9 @@ namespace Microsoft.SignCheck.Verification
             {
                 Directory.Delete(tempDir, true);
             }
+#else
+            throw new PlatformNotSupportedException("Pgp verification is not supported on this platform.");
+#endif
         }
 
         /// <summary>
