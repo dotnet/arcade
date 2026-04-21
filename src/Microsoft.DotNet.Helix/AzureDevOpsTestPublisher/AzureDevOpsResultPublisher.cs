@@ -36,19 +36,22 @@ public sealed class AzureDevOpsResultPublisher
         _logger = logger.OrNull();
     }
 
-    public async Task UploadDirectoryAsync(string workingDirectory, object resultMetadata, CancellationToken cancellationToken = default)
+    public async Task UploadTestResultsAsync(List<string> testResultFiles, object resultMetadata, CancellationToken cancellationToken = default)
     {
-        IReadOnlyList<IReadOnlyList<TestResult>> parsedResults = new LocalTestResultsReader(_logger).ReadResults(workingDirectory);
-        if (parsedResults.Count == 0)
+        var testResultReader = new LocalTestResultsReader(_logger);
+
+        Task<IReadOnlyList<TestResult>>[] parseTasks = [.. testResultFiles.Select(file => testResultReader.ReadResultFileAsync(file, cancellationToken))];
+        IReadOnlyList<TestResult>[] parsedResults = await Task.WhenAll(parseTasks);
+        if (parsedResults.Length == 0)
         {
-            _logger.LogWarning("No test results were discovered under '{WorkingDirectory}'.", workingDirectory);
+            _logger.LogWarning("No test results were discovered under.");
             return;
         }
 
         IReadOnlyList<AggregatedResult> aggregatedResults = new ResultAggregator().Aggregate(parsedResults);
         if (aggregatedResults.Count == 0)
         {
-            _logger.LogWarning("Test results were discovered under '{WorkingDirectory}', but none could be aggregated.", workingDirectory);
+            _logger.LogWarning("Test results were discovered but none could be aggregated.");
             return;
         }
 
@@ -322,6 +325,8 @@ public sealed class AzureDevOpsResultPublisher
             };
         }
 
+        string comment = JsonSerializer.Serialize(resultMetadata) ?? string.Empty;
+
         PublishedSubResult ConvertToSubTest(AggregatedResult result)
         {
             var customFields = new List<CustomField>();
@@ -337,7 +342,7 @@ public sealed class AzureDevOpsResultPublisher
 
             return new PublishedSubResult
             {
-                Comment = JsonSerializer.Serialize(resultMetadata) ?? string.Empty,
+                Comment = comment,
                 CustomFields = customFields,
                 DisplayName = result.Name,
                 Outcome = result.Result,
@@ -368,12 +373,12 @@ public sealed class AzureDevOpsResultPublisher
                     TestCaseTitle = result.Name,
                     AutomatedTestName = result.Name,
                     AutomatedTestType = "helix",
-                    AutomatedTestStorage = _workItemId,
+                    AutomatedTestStorage = comment, // TODO: This was workitem ID
                     Priority = 1,
                     DurationInMs = result.DurationSeconds * 1000.0,
                     Outcome = result.Result,
                     State = "Completed",
-                    Comment = comment ?? string.Empty,
+                    Comment = comment,
                     StackTrace = result.StackTrace,
                     ErrorMessage = result.FailureMessage,
                     SubResults = result.SubResults.Count == 0 ? null : [.. result.SubResults.Select(ConvertToSubTest)],

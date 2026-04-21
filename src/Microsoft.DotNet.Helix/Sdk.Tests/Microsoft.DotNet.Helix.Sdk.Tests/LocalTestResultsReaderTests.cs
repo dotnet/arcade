@@ -2,8 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
@@ -14,50 +14,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
     public class LocalTestResultsReaderTests
     {
         [Fact]
-        public async Task PackingTestReporter_CanUnpackFromSpecifiedDirectory()
-        {
-            string tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
-            Directory.CreateDirectory(tempDirectory);
-            string originalDirectory = Environment.CurrentDirectory;
-
-            try
-            {
-                Environment.CurrentDirectory = tempDirectory;
-
-                var reporter = new PackingTestReporter(
-                    new AzureDevOpsReportingParameters(new Uri("https://dev.azure.com/dnceng/"), "arcade", "42"));
-
-                await reporter.ReportResultsAsync(
-                [
-                    new TestResult(
-                        "Sample.Tests.Passes",
-                        "unit",
-                        "Sample.Tests",
-                        "Passes",
-                        1.25,
-                        "Pass",
-                        null,
-                        null,
-                        null,
-                        null)
-                ]);
-
-                var unpacked = await PackingTestReporter.UnpackResultsAsync(tempDirectory);
-
-                Assert.True(unpacked.HasValue);
-                Assert.Equal("42", unpacked.Value.Parameters.TestRunId);
-                Assert.Single(unpacked.Value.Results);
-                Assert.Equal("Sample.Tests.Passes", unpacked.Value.Results[0].Name);
-            }
-            finally
-            {
-                Environment.CurrentDirectory = originalDirectory;
-                Directory.Delete(tempDirectory, recursive: true);
-            }
-        }
-
-        [Fact]
-        public void LocalTestResultsReader_ReadsXunitFileFromDownloadedResults()
+        public async Task LocalTestResultsReader_ReadsXunitFileFromDownloadedResults()
         {
             string tempDirectory = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
             string workItemDirectory = Path.Combine(tempDirectory, "work-item");
@@ -78,8 +35,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     """);
 
                 var reader = new LocalTestResultsReader();
-                var resultSets = reader.ReadResults(tempDirectory);
-                var aggregate = new ResultAggregator().Aggregate(resultSets);
+                string filePath = Path.Combine(workItemDirectory, "testResults.xml");
+                IReadOnlyList<TestResult> resultSets = await reader.ReadResultFileAsync(filePath);
+                IReadOnlyList<AggregatedResult> aggregate = new ResultAggregator().Aggregate([resultSets]);
                 AggregatedResult result = Assert.Single(aggregate);
 
                 Assert.Equal("Sample.Tests.Passes", result.Name);
@@ -104,15 +62,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             try
             {
                 Environment.CurrentDirectory = packedDirectory;
-                var reporter = new PackingTestReporter(
-                    new AzureDevOpsReportingParameters(new Uri("https://dev.azure.com/dnceng/"), "arcade", "42"));
-                await reporter.ReportResultsAsync(
-                [
-                    new TestResult("Packed.Tests.Passes", "unit", "Packed.Tests", "Passes", 1, "Pass", null, null, null, null)
-                ]);
+                string filePath = Path.Combine(xmlDirectory, "testResults.xml");
 
                 File.WriteAllText(
-                    Path.Combine(xmlDirectory, "testResults.xml"),
+                    filePath,
                     """
                     <assemblies>
                       <assembly name="Xml.Tests.dll" total="1" passed="1" failed="0" skipped="0">
@@ -123,8 +76,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     </assemblies>
                     """);
 
-                var resultSets = new LocalTestResultsReader().ReadResults(tempDirectory);
-                var aggregate = new ResultAggregator().Aggregate(resultSets);
+                IReadOnlyList<TestResult> resultSets = await new LocalTestResultsReader().ReadResultFileAsync(filePath);
+                IReadOnlyList<AggregatedResult> aggregate = new ResultAggregator().Aggregate([resultSets]);
 
                 Assert.Equal(2, aggregate.Count);
                 Assert.Contains(aggregate, static x => x.Name == "Packed.Tests.Passes");

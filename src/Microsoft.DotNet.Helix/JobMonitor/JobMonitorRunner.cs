@@ -127,10 +127,9 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             string resultsDirectory = Path.Combine(_options.WorkingDirectory, SanitizeDirName(helixJob.JobName));
             Directory.CreateDirectory(resultsDirectory);
 
-            List<string> downloadedFiles = await DownloadTestResultsAsync(helixJob.JobName, passFail, resultsDirectory);
-
             try
             {
+                List<WorkItemTestResults> downloadedFiles = await DownloadTestResultsAsync(helixJob.JobName, passFail, resultsDirectory, cancellationToken);
                 await UploadDownloadedResultsAsync(downloadedFiles, testRunId, cancellationToken);
             }
             catch
@@ -257,7 +256,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             return downloadedFiles;
         }
 
-        private async Task UploadDownloadedResultsAsync(WorkItemTestResults testResults, int testRunId, CancellationToken cancellationToken)
+        private async Task UploadDownloadedResultsAsync(List<WorkItemTestResults> testResults, int testRunId, CancellationToken cancellationToken)
         {
             var publisher = new AzureDevOpsResultPublisher(
                 new AzureDevOpsReportingParameters(
@@ -266,17 +265,21 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     testRunId.ToString(CultureInfo.InvariantCulture),
                     _options.SystemAccessToken));
 
-            await publisher.UploadTestResultsAsync(
-                testResults.TestResultFiles,
-                new
-                {
-                    HelixJobId = testResults.JobName,
-                    HelixWorkItemName = testResults.WorkItemName,
-                },
+            foreach (WorkItemTestResults workItemTestResult in testResults)
+            {
+                await publisher.UploadTestResultsAsync(
+                    workItemTestResult.TestResultFiles,
+                    // Metadata that will be appended to each test case
+                    new
+                    {
+                        HelixJobId = workItemTestResult.JobName,
+                        HelixWorkItemName = workItemTestResult.WorkItemName,
+                    },
                 cancellationToken);
+            }
         }
 
-        private async Task<JObject> SendAsync(HttpMethod method, string requestUri, JToken body = null)
+        private async Task<JObject> SendAsync(HttpMethod method, string requestUri, JToken body = null, CancellationToken cancellationToken = default)
         {
             return await RetryAsync(async () =>
             {
@@ -286,8 +289,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     request.Content = new StringContent(body.ToString(Formatting.None), Encoding.UTF8, "application/json");
                 }
 
-                using HttpResponseMessage response = await _azdoClient.SendAsync(request);
-                string content = response.Content != null ? await response.Content.ReadAsStringAsync() : null;
+                using HttpResponseMessage response = await _azdoClient.SendAsync(request, cancellationToken);
+                string content = response.Content != null ? await response.Content.ReadAsStringAsync(cancellationToken) : null;
                 if (!response.IsSuccessStatusCode)
                 {
                     throw new HttpRequestException($"Request to {requestUri} failed with {(int)response.StatusCode} {response.ReasonPhrase}. {content}");
@@ -299,7 +302,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 }
 
                 return JObject.Parse(content);
-            });
+            }, cancellationToken);
         }
 
         private static BlobClient CreateBlobClient(string fileLink, string resultsSas)

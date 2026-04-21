@@ -23,11 +23,12 @@ public sealed class LocalTestResultsReader(ILogger? logger = null)
                || fileName.EndsWith("junitresults.xml", StringComparison.OrdinalIgnoreCase);
     }
 
-    public IReadOnlyList<TestResult> ReadResultFile(string filePath)
+    public async Task<IReadOnlyList<TestResult>> ReadResultFileAsync(string filePath, CancellationToken cancellationToken = default)
     {
         try
         {
-            XDocument document = XDocument.Load(filePath, LoadOptions.PreserveWhitespace);
+            using FileStream stream = File.OpenRead(filePath);
+            XDocument document = await XDocument.LoadAsync(stream, LoadOptions.PreserveWhitespace, cancellationToken);
             string rootName = document.Root?.Name.LocalName ?? string.Empty;
             string workItemName = new DirectoryInfo(Path.GetDirectoryName(filePath) ?? string.Empty).Name;
 
