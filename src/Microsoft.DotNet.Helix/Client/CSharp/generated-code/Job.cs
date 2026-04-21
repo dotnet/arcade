@@ -25,6 +25,7 @@ namespace Microsoft.DotNet.Helix.Client
         );
 
         Task<IImmutableList<Models.JobSummary>> ListAsync(
+            string branch = default,
             string build = default,
             int? count = default,
             string creator = default,
@@ -41,6 +42,14 @@ namespace Microsoft.DotNet.Helix.Client
 
         Task<Models.JobPassFail> PassFailAsync(
             string job,
+            CancellationToken cancellationToken = default
+        );
+
+        Task<IImmutableList<Models.PullRequestJobSummary>> PullRequestJobsAsync(
+            string organization,
+            int pullRequestId,
+            string repository,
+            int? count = default,
             CancellationToken cancellationToken = default
         );
 
@@ -184,6 +193,7 @@ namespace Microsoft.DotNet.Helix.Client
         partial void HandleFailedListRequest(RestApiException ex);
 
         public async Task<IImmutableList<Models.JobSummary>> ListAsync(
+            string branch = default,
             string build = default,
             int? count = default,
             string creator = default,
@@ -218,6 +228,10 @@ namespace Microsoft.DotNet.Helix.Client
             if (!string.IsNullOrEmpty(build))
             {
                 _url.AppendQuery("Build", Client.Serialize(build));
+            }
+            if (!string.IsNullOrEmpty(branch))
+            {
+                _url.AppendQuery("Branch", Client.Serialize(branch));
             }
             if (!string.IsNullOrEmpty(name))
             {
@@ -425,6 +439,105 @@ namespace Microsoft.DotNet.Helix.Client
                 Client.Deserialize<Models.ApiError>(content)
                 );
             HandleFailedPassFailRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
+        partial void HandleFailedPullRequestJobsRequest(RestApiException ex);
+
+        public async Task<IImmutableList<Models.PullRequestJobSummary>> PullRequestJobsAsync(
+            string organization,
+            int pullRequestId,
+            string repository,
+            int? count = default,
+            CancellationToken cancellationToken = default
+        )
+        {
+
+            if (string.IsNullOrEmpty(organization))
+            {
+                throw new ArgumentNullException(nameof(organization));
+            }
+
+            if (string.IsNullOrEmpty(repository))
+            {
+                throw new ArgumentNullException(nameof(repository));
+            }
+
+            const string apiVersion = "2019-06-17";
+
+            var _baseUri = Client.Options.BaseUri;
+            var _url = new RequestUriBuilder();
+            _url.Reset(_baseUri);
+            _url.AppendPath(
+                "/api/jobs/pullrequest-jobs",
+                false);
+
+            if (!string.IsNullOrEmpty(organization))
+            {
+                _url.AppendQuery("organization", Client.Serialize(organization));
+            }
+            if (!string.IsNullOrEmpty(repository))
+            {
+                _url.AppendQuery("repository", Client.Serialize(repository));
+            }
+            if (pullRequestId != default(int))
+            {
+                _url.AppendQuery("pullRequestId", Client.Serialize(pullRequestId));
+            }
+            if (count != default(int?))
+            {
+                _url.AppendQuery("count", Client.Serialize(count));
+            }
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
+
+
+            using (var _req = Client.Pipeline.CreateRequest())
+            {
+                _req.Uri = _url;
+                _req.Method = RequestMethod.Get;
+
+                using (var _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false))
+                {
+                    if (_res.Status < 200 || _res.Status >= 300)
+                    {
+                        await OnPullRequestJobsFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    if (_res.ContentStream == null)
+                    {
+                        await OnPullRequestJobsFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    using (var _reader = new StreamReader(_res.ContentStream))
+                    {
+                        var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
+                        var _body = Client.Deserialize<IImmutableList<Models.PullRequestJobSummary>>(_content);
+                        return _body;
+                    }
+                }
+            }
+        }
+
+        internal async Task OnPullRequestJobsFailed(Request req, Response res)
+        {
+            string content = null;
+            if (res.ContentStream != null)
+            {
+                using (var reader = new StreamReader(res.ContentStream))
+                {
+                    content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                }
+            }
+
+            var ex = new RestApiException<Models.ApiError>(
+                req,
+                res,
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
+            HandleFailedPullRequestJobsRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
             throw ex;
