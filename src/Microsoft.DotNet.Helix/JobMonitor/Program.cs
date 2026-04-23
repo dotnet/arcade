@@ -3,6 +3,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.Helix.JobMonitor
 {
@@ -10,6 +11,20 @@ namespace Microsoft.DotNet.Helix.JobMonitor
     {
         public static async Task<int> Main(string[] args)
         {
+            using ILoggerFactory loggerFactory = LoggerFactory.Create(builder =>
+            {
+                builder
+                    .SetMinimumLevel(LogLevel.Information)
+                    .AddSimpleConsole(options =>
+                    {
+                        options.SingleLine = true;
+                        options.TimestampFormat = "[HH:mm:ss] ";
+                        options.IncludeScopes = false;
+                    });
+            });
+
+            ILogger<JobMonitorRunner> logger = loggerFactory.CreateLogger<JobMonitorRunner>();
+
             try
             {
                 JobMonitorOptions options = JobMonitorOptions.Parse(args);
@@ -18,12 +33,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     return 0;
                 }
 
-                JobMonitorRunner runner = new(options);
+                using JobMonitorRunner runner = new(options, logger);
                 return await runner.RunAsync();
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine(ex.ToString());
+                logger.LogError(ex, "Helix Job Monitor terminated with an unhandled exception.");
                 return 1;
             }
         }

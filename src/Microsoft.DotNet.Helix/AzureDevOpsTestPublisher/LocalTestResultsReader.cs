@@ -8,9 +8,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
-public sealed class LocalTestResultsReader(ILogger? logger = null)
+public sealed class LocalTestResultsReader(ILogger logger)
 {
-    private readonly ILogger _logger = logger.OrNull();
+    private readonly ILogger _logger = logger;
 
     public static bool LooksLikeTestResultFile(string path)
     {

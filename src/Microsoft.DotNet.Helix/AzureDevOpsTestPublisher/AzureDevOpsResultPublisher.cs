@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 
@@ -28,12 +29,11 @@ public sealed class AzureDevOpsResultPublisher
 
     public AzureDevOpsResultPublisher(
         AzureDevOpsReportingParameters azdoParameters,
-        HttpClient? httpClient = null,
-        ILogger? logger = null)
+        ILogger logger)
     {
         _azdoParameters = azdoParameters;
-        _httpClient = httpClient ?? CreateHttpClient(azdoParameters.AccessToken);
-        _logger = logger.OrNull();
+        _httpClient = CreateHttpClient(azdoParameters.AccessToken);
+        _logger = logger;
     }
 
     public async Task UploadTestResultsAsync(List<string> testResultFiles, object resultMetadata, CancellationToken cancellationToken = default)

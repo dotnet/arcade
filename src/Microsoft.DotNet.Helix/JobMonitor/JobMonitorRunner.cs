@@ -15,8 +15,10 @@ using System.Threading.Tasks;
 using Azure;
 using Azure.Storage.Blobs;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
+using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
 using Microsoft.DotNet.Helix.Client;
 using Microsoft.DotNet.Helix.Client.Models;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -25,12 +27,14 @@ namespace Microsoft.DotNet.Helix.JobMonitor
     internal sealed class JobMonitorRunner : IDisposable
     {
         private readonly JobMonitorOptions _options;
+        private readonly ILogger _logger;
         private readonly HttpClient _azdoClient;
         private readonly IHelixApi _helixApi;
 
-        public JobMonitorRunner(JobMonitorOptions options)
+        public JobMonitorRunner(JobMonitorOptions options, ILogger logger)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             Directory.CreateDirectory(_options.WorkingDirectory);
 
             _helixApi = string.IsNullOrEmpty(_options.HelixAccessToken)
@@ -61,7 +65,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 AzureDevOpsTimelineRecord[] timelineRecords = await GetTimelineRecordsAsync();
                 IImmutableList<JobSummary> jobs = await RetryAsync(
-                    // TODO: Public is hardcoded
+                    // TODO: "pr/public" is hardcoded but could come from the build technically
                     async () => await _helixApi.Job.ListAsync(source: $"pr/public/{_options.Organization}/{_options.RepositoryName}/refs/pull/{_options.PrNumber}/merge"),
                     cancellationToken);
 
@@ -75,7 +79,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         .OrderBy(j => j.Name, StringComparer.OrdinalIgnoreCase)
                 ];
 
-                Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] {completedJobs.Count}/{jobs.Count} Helix jobs complete. Waiting...");
+                _logger.LogInformation("{CompletedCount}/{TotalCount} Helix jobs complete. Waiting...", completedJobs.Count, jobs.Count);
 
                 foreach (JobSummary completedJob in completedJobs)
                 {
@@ -100,17 +104,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 if (allPipelineJobsComplete && allHelixJobsComplete)
                 {
-                    Console.WriteLine($"Final summary: processed {processedHelixJobCount} Helix job(s); {failedHelixJobCount} failed.");
+                    _logger.LogInformation("Final summary: processed {ProcessedCount} Helix job(s); {FailedCount} failed.", processedHelixJobCount, failedHelixJobCount);
                     if (anyNonMonitorJobFailures || failedHelixJobCount > 0)
                     {
                         if (anyNonMonitorJobFailures)
                         {
-                            Console.Error.WriteLine("One or more non-monitor pipeline jobs failed.");
+                            _logger.LogError("One or more non-monitor pipeline jobs failed.");
                         }
 
                         if (failedHelixJobCount > 0)
                         {
-                            Console.Error.WriteLine($"The Helix Job Monitor detected failures in {failedHelixJobCount} Helix job(s).");
+                            _logger.LogError("The Helix Job Monitor detected failures in {FailedCount} Helix job(s).", failedHelixJobCount);
                         }
 
                         return 1;
@@ -140,10 +144,10 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 List<WorkItemTestResults> downloadedFiles = await DownloadTestResultsAsync(helixJob.Name, passFail, resultsDirectory, cancellationToken);
                 await UploadDownloadedResultsAsync(downloadedFiles, testRunId, cancellationToken);
             }
-            catch
+            catch (Exception ex)
             {
                 // TODO: Handle better here
-                Console.WriteLine($"🚨 Failed to upload test results for job {helixJob.Name} to Azure DevOps. Test run ID was {testRunId}.");
+                _logger.LogError(ex, "Failed to upload test results for job {JobName} to Azure DevOps. Test run ID was {TestRunId}.", helixJob.Name, testRunId);
                 return false;
             }
 
@@ -151,7 +155,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             int passedCount = passFail.Passed?.Count ?? 0;
             int failedCount = passFail.Failed?.Count ?? 0;
-            Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] Job '{helixJob.Name}' completed ({passedCount} passed, {failedCount} failed).");
+            _logger.LogInformation("Job '{JobName}' completed ({PassedCount} passed, {FailedCount} failed).", helixJob.Name, passedCount, failedCount);
             return failedCount == 0;
         }
 
@@ -208,7 +212,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs/{testRunId}?api-version=5.0",
                 new JObject { ["state"] = "Completed" });
 
-            Console.WriteLine($"Stopped test run '{testRunName}'.");
+            _logger.LogInformation("Stopped test run '{TestRunName}'.", testRunName);
         }
 
         private async Task<List<WorkItemTestResults>> DownloadTestResultsAsync(
@@ -250,7 +254,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                     try
                     {
-                        Console.WriteLine($"Downloading {file.Name} for work item {workItemName} in job {jobName}...");
+                        _logger.LogInformation("Downloading {FileName} for work item {WorkItemName} in job {JobName}...", file.Name, workItemName, jobName);
 
                         BlobClient blobClient = CreateBlobClient(file.Link, resultsUri.ResultsUriRSAS);
                         await blobClient.DownloadToAsync(destinationFile, cancellationToken);
@@ -258,7 +262,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Warning: failed to download '{file.Name}' for '{jobName}/{workItemName}': {ex.Message}");
+                        _logger.LogWarning(ex, "Failed to download '{FileName}' for '{JobName}/{WorkItemName}'.", file.Name, jobName, workItemName);
                     }
                 }
 
@@ -275,7 +279,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     new Uri(_options.CollectionUri, UriKind.Absolute),
                     _options.TeamProject,
                     testRunId.ToString(CultureInfo.InvariantCulture),
-                    _options.SystemAccessToken));
+                    _options.SystemAccessToken),
+                _logger);
 
             foreach (WorkItemTestResults workItemTestResult in testResults)
             {
