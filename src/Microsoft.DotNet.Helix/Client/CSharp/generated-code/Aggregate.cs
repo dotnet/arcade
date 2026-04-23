@@ -21,7 +21,6 @@ namespace Microsoft.DotNet.Helix.Client
             IImmutableList<string> groupBy,
             IImmutableList<string> otherProperties,
             string workitem,
-            string branch = default,
             string build = default,
             string creator = default,
             string name = default,
@@ -46,7 +45,6 @@ namespace Microsoft.DotNet.Helix.Client
         Task<IImmutableList<Models.AggregatedWorkItemCounts>> JobSummaryAsync(
             IImmutableList<string> groupBy,
             int maxResultSets,
-            string branch = default,
             string build = default,
             string creator = default,
             string name = default,
@@ -57,7 +55,6 @@ namespace Microsoft.DotNet.Helix.Client
 
         Task<IImmutableList<Models.AggregatedWorkItemCounts>> WorkItemSummaryAsync(
             IImmutableList<string> groupBy,
-            string branch = default,
             string build = default,
             string creator = default,
             string name = default,
@@ -78,7 +75,6 @@ namespace Microsoft.DotNet.Helix.Client
         );
 
         Task<IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken>> PropertiesAsync(
-            string branch = default,
             string build = default,
             string creator = default,
             string name = default,
@@ -96,7 +92,6 @@ namespace Microsoft.DotNet.Helix.Client
             IImmutableList<string> groupBy,
             int maxGroups,
             int maxResults,
-            string branch = default,
             string build = default,
             string creator = default,
             string name = default,
@@ -139,7 +134,6 @@ namespace Microsoft.DotNet.Helix.Client
             IImmutableList<string> groupBy,
             IImmutableList<string> otherProperties,
             string workitem,
-            string branch = default,
             string build = default,
             string creator = default,
             string name = default,
@@ -188,10 +182,6 @@ namespace Microsoft.DotNet.Helix.Client
             if (!string.IsNullOrEmpty(build))
             {
                 _url.AppendQuery("Build", Client.Serialize(build));
-            }
-            if (!string.IsNullOrEmpty(branch))
-            {
-                _url.AppendQuery("Branch", Client.Serialize(branch));
             }
             if (!string.IsNullOrEmpty(name))
             {
@@ -473,7 +463,6 @@ namespace Microsoft.DotNet.Helix.Client
         public async Task<IImmutableList<Models.AggregatedWorkItemCounts>> JobSummaryAsync(
             IImmutableList<string> groupBy,
             int maxResultSets,
-            string branch = default,
             string build = default,
             string creator = default,
             string name = default,
@@ -512,10 +501,6 @@ namespace Microsoft.DotNet.Helix.Client
             if (!string.IsNullOrEmpty(build))
             {
                 _url.AppendQuery("Build", Client.Serialize(build));
-            }
-            if (!string.IsNullOrEmpty(branch))
-            {
-                _url.AppendQuery("Branch", Client.Serialize(branch));
             }
             if (!string.IsNullOrEmpty(name))
             {
@@ -589,7 +574,6 @@ namespace Microsoft.DotNet.Helix.Client
 
         public async Task<IImmutableList<Models.AggregatedWorkItemCounts>> WorkItemSummaryAsync(
             IImmutableList<string> groupBy,
-            string branch = default,
             string build = default,
             string creator = default,
             string name = default,
@@ -628,10 +612,6 @@ namespace Microsoft.DotNet.Helix.Client
             if (!string.IsNullOrEmpty(build))
             {
                 _url.AppendQuery("Build", Client.Serialize(build));
-            }
-            if (!string.IsNullOrEmpty(branch))
-            {
-                _url.AppendQuery("Branch", Client.Serialize(branch));
             }
             if (!string.IsNullOrEmpty(name))
             {
@@ -842,7 +822,6 @@ namespace Microsoft.DotNet.Helix.Client
         partial void HandleFailedPropertiesRequest(RestApiException ex);
 
         public async Task<IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken>> PropertiesAsync(
-            string branch = default,
             string build = default,
             string creator = default,
             string name = default,
@@ -876,10 +855,6 @@ namespace Microsoft.DotNet.Helix.Client
             if (!string.IsNullOrEmpty(build))
             {
                 _url.AppendQuery("Build", Client.Serialize(build));
-            }
-            if (!string.IsNullOrEmpty(branch))
-            {
-                _url.AppendQuery("Branch", Client.Serialize(branch));
             }
             if (!string.IsNullOrEmpty(name))
             {
@@ -1019,7 +994,6 @@ namespace Microsoft.DotNet.Helix.Client
             IImmutableList<string> groupBy,
             int maxGroups,
             int maxResults,
-            string branch = default,
             string build = default,
             string creator = default,
             string name = default,
@@ -1058,10 +1032,6 @@ namespace Microsoft.DotNet.Helix.Client
             if (!string.IsNullOrEmpty(build))
             {
                 _url.AppendQuery("Build", Client.Serialize(build));
-            }
-            if (!string.IsNullOrEmpty(branch))
-            {
-                _url.AppendQuery("Branch", Client.Serialize(branch));
             }
             if (!string.IsNullOrEmpty(name))
             {
