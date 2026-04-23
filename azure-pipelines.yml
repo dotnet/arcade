@@ -41,7 +41,7 @@ extends:
     settings:
       networkIsolationPolicy: Permissive, CFSClean, CFSClean2
     pool:
-      name: $(DncEngInternalBuildPool)
+      name: NetCore1ESPool-Svc-Internal
       image: windows.vs2026.amd64
       os: windows
     sdl:

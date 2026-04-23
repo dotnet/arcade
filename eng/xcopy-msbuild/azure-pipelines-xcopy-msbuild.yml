@@ -21,7 +21,7 @@ jobs:
 - job: Build
   displayName: Build xcopy-msbuild package
   pool: 
-    name: NetCore1ESPool-Internal
+    name: NetCore1ESPool-Svc-Internal
     demands: ImageOverride -equals windows.vs2026.amd64
   steps:
     - task: PowerShell@2
