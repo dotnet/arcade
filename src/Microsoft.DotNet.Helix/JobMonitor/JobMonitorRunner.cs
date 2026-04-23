@@ -60,25 +60,33 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 cancellationToken.ThrowIfCancellationRequested();
 
                 AzureDevOpsTimelineRecord[] timelineRecords = await GetTimelineRecordsAsync();
-                JobStatus[] jobs = await RetryAsync(
-                    // TODO async () => await _helixApi.PullRequests.ByBuildAsync(_options.Repository, _options.PrNumber, int.Parse(_options.BuildId, CultureInfo.InvariantCulture), _options.Attempt),
-                    () => Task.FromResult(Array.Empty<JobStatus>()),
+                IImmutableList<JobSummary> jobs = await RetryAsync(
+                    // TODO: Public is hardcoded
+                    async () => await _helixApi.Job.ListAsync(source: $"pr/public/{_options.Organization}/{_options.RepositoryName}/refs/pull/{_options.PrNumber}/merge"),
                     cancellationToken);
 
-                int completedHelixJobs = jobs.Count(j => j.IsCompleted);
-                int currentFailedJobs = jobs.Count(j => j.Status.Equals("failed", StringComparison.OrdinalIgnoreCase));
-                Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] {completedHelixJobs}/{jobs.Length} Helix jobs complete ({currentFailedJobs} failed). Waiting...");
+                // Filter jobs belonging to this build only
+                jobs = [..jobs.Where(j => ((JObject)j.Properties).TryGetValue("BuildId", out JToken buildId) && buildId?.ToString() == _options.BuildId)];
 
-                foreach (JobStatus job in jobs.Where(j => j.IsCompleted).OrderBy(j => j.JobName, StringComparer.OrdinalIgnoreCase))
+                IReadOnlyCollection<JobSummary> completedJobs =
+                [
+                    ..jobs
+                        .Where(j => j.Finished != null)
+                        .OrderBy(j => j.Name, StringComparer.OrdinalIgnoreCase)
+                ];
+
+                Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] {completedJobs.Count}/{jobs.Count} Helix jobs complete. Waiting...");
+
+                foreach (JobSummary completedJob in completedJobs)
                 {
-                    if (processedRuns.Contains(job.JobName))
+                    if (processedRuns.Contains(completedJob.Name))
                     {
                         continue;
                     }
 
-                    JobPassFail passFail = await RetryAsync(() => _helixApi.Job.PassFailAsync(job.JobName, cancellationToken), cancellationToken);
-                    bool passed = await ProcessCompletedJobAsync(job, passFail, cancellationToken);
-                    processedRuns.Add(job.JobName);
+                    JobPassFail passFail = await RetryAsync(() => _helixApi.Job.PassFailAsync(completedJob.Name, cancellationToken), cancellationToken);
+                    bool passed = await ProcessCompletedJobAsync(completedJob, passFail, cancellationToken);
+                    processedRuns.Add(completedJob.Name);
                     processedHelixJobCount++;
                     if (!passed)
                     {
@@ -88,7 +96,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                 anyNonMonitorJobFailures = HelixJobMonitorUtilities.HasFailedNonMonitorJobs(timelineRecords, _options.JobMonitorName);
                 bool allPipelineJobsComplete = HelixJobMonitorUtilities.AreNonMonitorJobsComplete(timelineRecords, _options.JobMonitorName);
-                bool allHelixJobsComplete = jobs.Length != 0 && jobs.All(j => j.IsCompleted);
+                bool allHelixJobsComplete = jobs.Count != 0 && jobs.Count == completedJobs.Count;
 
                 if (allPipelineJobsComplete && allHelixJobsComplete)
                 {
@@ -120,22 +128,22 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _azdoClient.Dispose();
         }
 
-        private async Task<bool> ProcessCompletedJobAsync(JobStatus helixJob, JobPassFail passFail, CancellationToken cancellationToken)
+        private async Task<bool> ProcessCompletedJobAsync(JobSummary helixJob, JobPassFail passFail, CancellationToken cancellationToken)
         {
-            string testRunName = HelixJobMonitorUtilities.GetTestRunName(helixJob.JobName);
+            string testRunName = HelixJobMonitorUtilities.GetTestRunName(helixJob.Name);
             int testRunId = await StartTestRunAsync(testRunName);
-            string resultsDirectory = Path.Combine(_options.WorkingDirectory, SanitizeDirName(helixJob.JobName));
+            string resultsDirectory = Path.Combine(_options.WorkingDirectory, SanitizeDirName(helixJob.Name));
             Directory.CreateDirectory(resultsDirectory);
 
             try
             {
-                List<WorkItemTestResults> downloadedFiles = await DownloadTestResultsAsync(helixJob.JobName, passFail, resultsDirectory, cancellationToken);
+                List<WorkItemTestResults> downloadedFiles = await DownloadTestResultsAsync(helixJob.Name, passFail, resultsDirectory, cancellationToken);
                 await UploadDownloadedResultsAsync(downloadedFiles, testRunId, cancellationToken);
             }
             catch
             {
-                // TODO: Handle here
-                Console.WriteLine($"🚨 Failed to upload test results for job {helixJob.JobName} to Azure DevOps. Test run ID was {testRunId}.");
+                // TODO: Handle better here
+                Console.WriteLine($"🚨 Failed to upload test results for job {helixJob.Name} to Azure DevOps. Test run ID was {testRunId}.");
                 return false;
             }
 
@@ -143,8 +151,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             int passedCount = passFail.Passed?.Count ?? 0;
             int failedCount = passFail.Failed?.Count ?? 0;
-            Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] Job '{helixJob.JobName}' completed ({passedCount} passed, {failedCount} failed).");
-            return failedCount == 0 && !string.Equals(helixJob.Status, "failed", StringComparison.OrdinalIgnoreCase);
+            Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss}] Job '{helixJob.Name}' completed ({passedCount} passed, {failedCount} failed).");
+            return failedCount == 0;
         }
 
         private async Task<HashSet<string>> GetProcessedRunNamesAsync()
