@@ -157,7 +157,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private async Task<HashSet<string>> GetProcessedRunNamesAsync()
         {
-            JObject data = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs?buildIds={_options.BuildId}&api-version=7.1-preview.1");
+            // The Azure DevOps "Test Runs - List" API filters by build using the VSTFS
+            // artifact URI (buildUri), not a numeric buildIds parameter. Passing buildIds
+            // results in a 404 from the service.
+            string buildUri = Uri.EscapeDataString($"vstfs:///Build/Build/{_options.BuildId}");
+            JObject data = await SendAsync(HttpMethod.Get, $"{_options.CollectionUri}{_options.TeamProject}/_apis/test/runs?buildUri={buildUri}&api-version=7.1");
             var processed = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             foreach (JObject run in (data?["value"] as JArray ?? []).Cast<JObject>())
@@ -165,7 +169,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 string name = run.Value<string>("name");
                 string state = run.Value<string>("state");
                 if (!string.IsNullOrEmpty(name)
-                    && name.StartsWith("Helix Job Monitor - ", StringComparison.OrdinalIgnoreCase)
+                    && !name.StartsWith("Helix Job Monitor - ", StringComparison.OrdinalIgnoreCase)
                     && string.Equals(state, "Completed", StringComparison.OrdinalIgnoreCase))
                 {
                     processed.Add(name);
