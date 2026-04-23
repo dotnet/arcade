@@ -362,3 +362,8 @@ stages:
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             HelixAccessToken: ''
+
+- template: /eng/common/core-templates/stages/helix-job-monitor.yml
+  parameters:
+    dependsOn:
+    - build

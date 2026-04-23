@@ -1,0 +1,5 @@
+stages:
+- template: /eng/common/core-templates/stages/helix-job-monitor.yml
+  parameters:
+    ${{ each parameter in parameters }}:
+      ${{ parameter.key }}: ${{ parameter.value }}
