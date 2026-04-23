@@ -19,11 +19,12 @@
   <Import Condition="Exists('$(BuildManifestFile)')" Project="$(BuildManifestFile)" />
 
   <PropertyGroup>
+    <TargetFramework>$(BundledNETCoreAppTargetFramework)</TargetFramework>
     <NETCORE_ENGINEERING_TELEMETRY>Build</NETCORE_ENGINEERING_TELEMETRY>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.SignCheckTask" />
+    <PackageReference Include="Microsoft.DotNet.SignCheckTask" Version="$(MicrosoftDotNetSignCheckTaskVersion)" />
   </ItemGroup>
 
   <Target Name="Execute">

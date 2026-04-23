@@ -209,11 +209,11 @@ namespace Microsoft.DotNet.SignTool
                     Log.LogError($"PkgToolPath ('{PkgToolPath}') does not exist & is required for unpacking, repacking, and notarizing .pkg files and .app bundles on MacOS.");
                 }
             }
-            if(!string.IsNullOrEmpty(Wix3ToolsPath) && !Directory.Exists(Wix3ToolsPath))
+            if(Wix3ToolsPath != null && !Directory.Exists(Wix3ToolsPath))
             {
                 Log.LogError($"Wix3ToolsPath ('{Wix3ToolsPath}') does not exist.");
             }
-            if(!string.IsNullOrEmpty(WixToolsPath) && !Directory.Exists(WixToolsPath))
+            if(WixToolsPath != null && !Directory.Exists(WixToolsPath))
             {
                 Log.LogError($"WixToolsPath ('{WixToolsPath}') does not exist.");
             }

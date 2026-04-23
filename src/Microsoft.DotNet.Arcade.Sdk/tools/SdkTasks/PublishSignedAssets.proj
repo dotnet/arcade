@@ -1,5 +1,10 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Execute">
+
+  <PropertyGroup>
+    <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
+    <TargetFramework>$(BundledNETCoreAppTargetFramework)</TargetFramework>
+  </PropertyGroup>
   
   <!--
     Parameters:
@@ -10,14 +15,6 @@
                                                   be appended by '-shipping' and '-nonshipping' depending the case
       - AzdoTargetFeedPAT                       : Token to publish assets to feeds
   -->
-
-  <PropertyGroup>
-    <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" />
-  </ItemGroup>
 
   <Target Name="Execute">
     <Error
@@ -68,5 +65,9 @@
       NonShippingAssetsFolder="$(NonShippingFolder)">
     </PublishSignedAssets>
   </Target>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" />
+  </ItemGroup>
 
 </Project>
