@@ -87,6 +87,22 @@ Behavior notes:
 - If no result files are found, the reporter creates synthetic work-item pass/fail results so that failures are still visible in Azure DevOps.
 - The reporter is safe to rerun because it checks for already-completed test runs and only processes new results.
 
+#### Opting in from a Helix project
+
+Pair the monitor job with the `EnableHelixJobMonitor` MSBuild property in the Helix `.proj` that
+calls `SendHelixJob`:
+
+```xml
+<PropertyGroup>
+  <EnableHelixJobMonitor>true</EnableHelixJobMonitor>
+</PropertyGroup>
+```
+
+When set, the Helix SDK will submit Helix jobs and exit immediately without waiting for completion.
+The Helix Job Monitor will be responsible for tracking the jobs to completion and publishing results to Azure DevOps, so no other changes are needed to the Helix project file itself.
+You must however add the `helix-job-monitor.yml` template to your pipeline (see the example above) so the
+results are still published to Azure DevOps.
+
 Furthermore, when you need to make changes to Helix SDK, there's a way to run it locally with ease to test your changes in a tighter dev loop than having to have to wait for the full PR build.
 
 The repository contains E2E tests that utilize the Helix SDK to send test Helix jobs.
