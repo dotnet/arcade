@@ -75,17 +75,19 @@ parameters:
   default: Helix Job Monitor
 
 # Owner segment of the source repository (e.g. 'dotnet' for 'dotnet/runtime') passed via --organization.
+# Defaults to the owner segment of BUILD_REPOSITORY_NAME when empty.
 - name: organization
   type: string
   default: ''
 
 # Name of the source repository (e.g. 'runtime' for 'dotnet/runtime') passed via --repository.
+# Defaults to the repo segment of BUILD_REPOSITORY_NAME when empty.
 - name: repository
   type: string
   default: ''
 
-# Pull request number being built (--pr-number). Required for PR validation pipelines; defaults
-# to the value of SYSTEM_PULLREQUEST_PULLREQUESTNUMBER when running in Azure DevOps.
+# Pull request number being built (--pr-number). Defaults to SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
+# when empty.
 - name: prNumber
   type: string
   default: ''
@@ -245,6 +247,22 @@ jobs:
       $prNumber         = '${{ parameters.prNumber }}'
       $workingDirectory = '${{ parameters.workingDirectory }}'
       $attempt          = '${{ parameters.attempt }}'
+
+      # Fall back to Azure DevOps-provided environment variables when the caller did not
+      # supply organization / repository / pr-number explicitly. BUILD_REPOSITORY_NAME is
+      # typically 'owner/repo' for GitHub-backed builds.
+      if ([string]::IsNullOrWhiteSpace($organization) -or [string]::IsNullOrWhiteSpace($repository)) {
+        $buildRepoName = $env:BUILD_REPOSITORY_NAME
+        if (-not [string]::IsNullOrWhiteSpace($buildRepoName) -and $buildRepoName.Contains('/')) {
+          $repoParts = $buildRepoName.Split('/', 2)
+          if ([string]::IsNullOrWhiteSpace($organization)) { $organization = $repoParts[0] }
+          if ([string]::IsNullOrWhiteSpace($repository))   { $repository   = $repoParts[1] }
+        }
+      }
+
+      if ([string]::IsNullOrWhiteSpace($prNumber)) {
+        $prNumber = $env:SYSTEM_PULLREQUEST_PULLREQUESTNUMBER
+      }
 
       if (-not [string]::IsNullOrWhiteSpace($organization))     { $toolArgs += @('--organization',      $organization) }
       if (-not [string]::IsNullOrWhiteSpace($repository))       { $toolArgs += @('--repository',        $repository) }
