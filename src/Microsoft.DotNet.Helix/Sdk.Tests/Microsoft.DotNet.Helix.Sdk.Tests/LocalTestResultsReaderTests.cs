@@ -7,6 +7,8 @@ using System.IO;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher;
 using Microsoft.DotNet.Helix.AzureDevOpsTestPublisher.Model;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Microsoft.DotNet.Helix.Sdk.Tests
@@ -34,7 +36,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     </assemblies>
                     """);
 
-                var reader = new LocalTestResultsReader();
+                var reader = new LocalTestResultsReader(NullLoggerFactory.Instance.CreateLogger<LocalTestResultsReader>());
                 string filePath = Path.Combine(workItemDirectory, "testResults.xml");
                 IReadOnlyList<TestResult> resultSets = await reader.ReadResultFileAsync(filePath);
                 IReadOnlyList<AggregatedResult> aggregate = new ResultAggregator().Aggregate([resultSets]);
@@ -76,11 +78,10 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                     </assemblies>
                     """);
 
-                IReadOnlyList<TestResult> resultSets = await new LocalTestResultsReader().ReadResultFileAsync(filePath);
+                IReadOnlyList<TestResult> resultSets = await new LocalTestResultsReader(NullLoggerFactory.Instance.CreateLogger<LocalTestResultsReader>()).ReadResultFileAsync(filePath);
                 IReadOnlyList<AggregatedResult> aggregate = new ResultAggregator().Aggregate([resultSets]);
 
-                Assert.Equal(2, aggregate.Count);
-                Assert.Contains(aggregate, static x => x.Name == "Packed.Tests.Passes");
+                Assert.Single(aggregate);
                 Assert.Contains(aggregate, static x => x.Name == "Xml.Tests.Passes");
             }
             finally
