@@ -93,16 +93,16 @@
     <MSTestTestFrameworkVersion Condition="'$(MSTestTestFrameworkVersion)' == ''">$(MSTestVersion)</MSTestTestFrameworkVersion>
     <MicrosoftDotNetBuildTasksFeedVersion Condition="'$(MicrosoftDotNetBuildTasksFeedVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetBuildTasksFeedVersion>
     <MicrosoftDotNetBuildTasksInstallersVersion Condition="'$(MicrosoftDotNetBuildTasksInstallersVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetBuildTasksInstallersVersion>
+    <!-- keep this in sync with $vswhereVersion in eng/common/tools.ps1 -->
+    <VSWhereVersion Condition="'$(VSWhereVersion)' == ''">3.1.7</VSWhereVersion>
     <SNVersion Condition="'$(SNVersion)' == ''">1.0.0</SNVersion>
     <MicrosoftDotNetBuildTasksVisualStudioVersion Condition="'$(MicrosoftDotNetBuildTasksVisualStudioVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetBuildTasksVisualStudioVersion>
     <MicrosoftDotNetSourceBuildTasksVersion Condition="'$(MicrosoftDotNetSourceBuildTasksVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetSourceBuildTasksVersion>
     <MicrosoftVisualStudioEngMicroBuildCoreVersion Condition="'$(MicrosoftVisualStudioEngMicroBuildCoreVersion)' == ''">1.0.0</MicrosoftVisualStudioEngMicroBuildCoreVersion>
     <MicrosoftManifestToolCrossPlatformVersion Condition="'$(MicrosoftManifestToolCrossPlatformVersion)' == ''">2.1.3</MicrosoftManifestToolCrossPlatformVersion>
     <MicrosoftVisualStudioEngMicroBuildPluginsSwixBuildVersion Condition="'$(MicrosoftVisualStudioEngMicroBuildPluginsSwixBuildVersion)' == ''">1.1.286</MicrosoftVisualStudioEngMicroBuildPluginsSwixBuildVersion>
-    <MicrosoftSignedWixVersion Condition="'$(MicrosoftSignedWixVersion)' == ''">3.14.1-9323.2545153</MicrosoftSignedWixVersion>
-    <MicrosoftWixToolsetSdkVersion Condition="'$(MicrosoftWixToolsetSdkVersion)' == ''">6.0.3-dotnet.4</MicrosoftWixToolsetSdkVersion>
-    <MicrosoftDotNetBaselinesTasksVersion Condition="'$(MicrosoftDotNetBaselinesTasksVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetBaselinesTasksVersion>
-    <MicrosoftDotNetSignCheckTaskVersion Condition="'$(MicrosoftDotNetSignCheckTaskVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetSignCheckTaskVersion>
+    <MicrosoftSignedWixVersion Condition="'$(MicrosoftSignedWixVersion)' == ''">3.14.1-11027.2914512</MicrosoftSignedWixVersion>
+    <MicrosoftWixToolsetSdkVersion Condition="'$(MicrosoftWixToolsetSdkVersion)' == ''">5.0.2-dotnet.2811440</MicrosoftWixToolsetSdkVersion>
   </PropertyGroup>
 
   <!-- RestoreSources overrides - defines DotNetRestoreSources variable if available -->
