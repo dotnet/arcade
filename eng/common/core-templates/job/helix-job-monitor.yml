@@ -44,21 +44,6 @@ parameters:
   type: string
   default: ''
 
-# Optional pipeline artifact to download that contains the tool nupkg. When set, the artifact
-# is downloaded and the directory containing the nupkg is added as a NuGet source for the
-# 'dotnet tool install' command. Useful when the tool is built earlier in the same pipeline
-# (e.g. the Arcade repo's Build stage) and has not yet been published to a feed.
-- name: toolNupkgArtifactName
-  type: string
-  default: ''
-
-# Optional sub-path within the downloaded artifact where the tool nupkg is located. Defaults
-# to the standard Arcade non-shipping packages location for a Release build (relative to the
-# pipeline artifact root, which is itself the build's 'artifacts' directory).
-- name: toolNupkgArtifactSubPath
-  type: string
-  default: 'packages/Release/NonShipping'
-
 # Base URI for the Helix service (--helix-base-uri).
 - name: helixBaseUri
   type: string
@@ -124,6 +109,22 @@ parameters:
 - name: condition
   type: string
   default: ''
+
+# Advanced: optional pipeline artifact (produced earlier in this run) that contains the tool
+# nupkg. When set, the artifact is downloaded and the directory containing the nupkg is added
+# as a NuGet source for the 'dotnet tool install' command. Primarily intended for the Arcade
+# repository itself, where the Helix job monitor tool is built in the same pipeline that runs
+# this template; other repos should leave this empty and consume the published feed instead.
+- name: toolNupkgArtifactName
+  type: string
+  default: ''
+
+# Advanced: sub-path within the downloaded artifact where the tool nupkg is located. Defaults
+# to the standard Arcade non-shipping packages location for a Release build (relative to the
+# pipeline artifact root, which is itself the build's 'artifacts' directory).
+- name: toolNupkgArtifactSubPath
+  type: string
+  default: 'packages/Release/NonShipping'
 
 jobs:
 - job: ${{ parameters.jobName }}

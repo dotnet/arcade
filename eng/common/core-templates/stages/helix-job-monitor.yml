@@ -59,18 +59,6 @@ parameters:
   type: string
   default: ''
 
-# Optional pipeline artifact (produced earlier in this run) that contains the tool nupkg.
-# When set, the artifact is downloaded and the directory containing the nupkg is added
-# as a NuGet source for the 'dotnet tool install' command.
-- name: toolNupkgArtifactName
-  type: string
-  default: ''
-
-# Optional sub-path within the downloaded artifact where the tool nupkg is located.
-- name: toolNupkgArtifactSubPath
-  type: string
-  default: 'packages/Release/NonShipping'
-
 # JobMonitorOptions: --helix-base-uri.
 - name: helixBaseUri
   type: string
@@ -125,6 +113,19 @@ parameters:
 - name: attempt
   type: string
   default: ''
+
+# Advanced: optional pipeline artifact (produced earlier in this run) that contains the tool
+# nupkg. When set, the artifact is downloaded and the directory containing the nupkg is added
+# as a NuGet source for the 'dotnet tool install' command. Primarily intended for the Arcade
+# repository itself; other repos should leave this empty and consume the published feed instead.
+- name: toolNupkgArtifactName
+  type: string
+  default: ''
+
+# Advanced: sub-path within the downloaded artifact where the tool nupkg is located.
+- name: toolNupkgArtifactSubPath
+  type: string
+  default: 'packages/Release/NonShipping'
 
 stages:
 - stage: ${{ parameters.stageName }}
