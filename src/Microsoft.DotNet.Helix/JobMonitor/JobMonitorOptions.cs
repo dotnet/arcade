@@ -84,6 +84,11 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         private void ApplyEnvironmentDefaults()
         {
             HelixAccessToken ??= Environment.GetEnvironmentVariable("HELIX_ACCESSTOKEN");
+#if DEBUG
+            SystemAccessToken ??= new Azure.Identity.DefaultAzureCredential(includeInteractiveCredentials: true)
+                .GetToken(new Azure.Core.TokenRequestContext(["499b84ac-1321-427f-aa17-267ca6975798/.default"]))
+                .Token;
+#endif
             CollectionUri ??= Environment.GetEnvironmentVariable("SYSTEM_TEAMFOUNDATIONCOLLECTIONURI");
             TeamProject ??= Environment.GetEnvironmentVariable("SYSTEM_TEAMPROJECT");
             BuildId ??= Environment.GetEnvironmentVariable("BUILD_BUILDID");

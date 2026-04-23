@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Identity" Condition="'$(Configuration)' == 'Debug'" />
     <PackageReference Include="Azure.Storage.Blobs" />
     <PackageReference Include="CommandLineParser" />
     <PackageReference Include="Newtonsoft.Json" />
