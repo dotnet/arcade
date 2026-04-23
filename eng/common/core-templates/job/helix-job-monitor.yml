@@ -44,6 +44,21 @@ parameters:
   type: string
   default: ''
 
+# Optional pipeline artifact to download that contains the tool nupkg. When set, the artifact
+# is downloaded and the directory containing the nupkg is added as a NuGet source for the
+# 'dotnet tool install' command. Useful when the tool is built earlier in the same pipeline
+# (e.g. the Arcade repo's Build stage) and has not yet been published to a feed.
+- name: toolNupkgArtifactName
+  type: string
+  default: ''
+
+# Optional sub-path within the downloaded artifact where the tool nupkg is located. Defaults
+# to the standard Arcade non-shipping packages location for a Release build (relative to the
+# pipeline artifact root, which is itself the build's 'artifacts' directory).
+- name: toolNupkgArtifactSubPath
+  type: string
+  default: 'packages/Release/NonShipping'
+
 # Base URI for the Helix service (--helix-base-uri).
 - name: helixBaseUri
   type: string
@@ -136,6 +151,16 @@ jobs:
       version: ${{ parameters.dotnetVersion }}
       includePreviewVersions: ${{ parameters.includePreviewVersions }}
 
+  - ${{ if ne(parameters.toolNupkgArtifactName, '') }}:
+    - task: DownloadPipelineArtifact@2
+      displayName: Download Helix job monitor nupkg artifact
+      timeoutInMinutes: ${{ parameters.stepTimeoutInMinutes }}
+      inputs:
+        buildType: current
+        artifactName: ${{ parameters.toolNupkgArtifactName }}
+        itemPattern: '${{ parameters.toolNupkgArtifactSubPath }}/${{ parameters.toolPackageId }}.*.nupkg'
+        targetPath: $(Agent.TempDirectory)/helix-job-monitor-nupkg
+
   - pwsh: |
       $toolPath = Join-Path $env:AGENT_TEMPDIRECTORY 'helix-job-monitor-tool'
       New-Item -ItemType Directory -Force -Path $toolPath | Out-Null
@@ -146,12 +171,37 @@ jobs:
         $toolVersion = '${{ parameters.toolVersion }}'
         $toolSource = '${{ parameters.toolSource }}'
 
+        $nupkgArtifactName = '${{ parameters.toolNupkgArtifactName }}'
+        $nupkgArtifactSubPath = '${{ parameters.toolNupkgArtifactSubPath }}'
+        if (-not [string]::IsNullOrWhiteSpace($nupkgArtifactName)) {
+          $nupkgDir = Join-Path $env:AGENT_TEMPDIRECTORY (Join-Path 'helix-job-monitor-nupkg' $nupkgArtifactSubPath)
+          if (-not (Test-Path $nupkgDir)) {
+            throw "Expected nupkg directory '$nupkgDir' was not produced by the artifact download."
+          }
+
+          $nupkg = Get-ChildItem -Path $nupkgDir -Filter "$packageId.*.nupkg" -File | Select-Object -First 1
+          if ($null -eq $nupkg) {
+            throw "No '$packageId.*.nupkg' found in '$nupkgDir'."
+          }
+
+          # Derive the version from the nupkg filename so the local package is selected
+          # deterministically instead of resolving against any other configured feed.
+          $derivedVersion = $nupkg.BaseName.Substring($packageId.Length + 1)
+          if ([string]::IsNullOrWhiteSpace($toolVersion)) {
+            $toolVersion = $derivedVersion
+          }
+
+          Write-Host "Using locally built '$packageId' version '$toolVersion' from '$nupkgDir'."
+          $toolSource = $nupkgDir
+        }
+
         $updateArgs = @('tool', 'update', '--tool-path', $toolPath, $packageId)
         if (-not [string]::IsNullOrWhiteSpace($toolVersion)) {
           $updateArgs += @('--version', $toolVersion)
         }
         if (-not [string]::IsNullOrWhiteSpace($toolSource)) {
           $updateArgs += @('--add-source', $toolSource)
+          $updateArgs += @('--ignore-failed-sources')
         }
 
         & dotnet @updateArgs
@@ -162,6 +212,7 @@ jobs:
           }
           if (-not [string]::IsNullOrWhiteSpace($toolSource)) {
             $installArgs += @('--add-source', $toolSource)
+            $installArgs += @('--ignore-failed-sources')
           }
 
           & dotnet @installArgs
