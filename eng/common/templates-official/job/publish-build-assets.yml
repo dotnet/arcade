@@ -69,7 +69,7 @@ jobs:
       os: windows
     # If it's not devdiv, it's dnceng
     ${{ if ne(variables['System.TeamProject'], 'DevDiv') }}:
-      name: NetCore1ESPool-Publishing-Internal
+      name: $(DncEngInternalBuildPool)
       image: windows.vs2022.amd64
       os: windows
   steps:
