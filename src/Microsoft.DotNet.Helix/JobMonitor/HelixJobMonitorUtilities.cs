@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.JobMonitor
@@ -32,44 +31,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
     public static class HelixJobMonitorUtilities
     {
-        public static string NormalizeRepository(string repository)
-        {
-            if (string.IsNullOrWhiteSpace(repository))
-            {
-                return string.Empty;
-            }
-
-            repository = repository.Trim().TrimEnd('/');
-            if (!Uri.TryCreate(repository, UriKind.Absolute, out Uri uri))
-            {
-                return repository.Trim('/');
-            }
-
-            string[] segments = uri.AbsolutePath.Split(['/'], StringSplitOptions.RemoveEmptyEntries);
-            if (uri.Host.Contains("github.com", StringComparison.OrdinalIgnoreCase) && segments.Length >= 2)
-            {
-                return $"{segments[0]}/{segments[1]}";
-            }
-
-            int gitIndex = Array.FindIndex(segments, s => string.Equals(s, "_git", StringComparison.OrdinalIgnoreCase));
-            if (gitIndex > 0 && segments.Length > gitIndex + 1)
-            {
-                string project = segments[gitIndex - 1];
-                string repoName = segments[gitIndex + 1];
-                if ((string.Equals(project, "internal", StringComparison.OrdinalIgnoreCase)
-                        || string.Equals(project, "public", StringComparison.OrdinalIgnoreCase))
-                    && repoName.Contains('-', StringComparison.Ordinal))
-                {
-                    int separatorIndex = repoName.IndexOf('-', StringComparison.Ordinal);
-                    return $"{repoName.Substring(0, separatorIndex)}/{repoName.Substring(separatorIndex + 1)}";
-                }
-
-                return $"{project}/{repoName}";
-            }
-
-            return repository;
-        }
-
         public static bool AreNonMonitorJobsComplete(IEnumerable<AzureDevOpsTimelineRecord> records, string jobMonitorName)
             => GetRelevantJobRecords(records, jobMonitorName).All(IsTerminal);
 
@@ -80,21 +41,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         public static string GetTestRunName(string helixJobName)
             => $"Helix Job Monitor - {helixJobName}";
-
-        public static string CleanWorkItemName(string name)
-        {
-            if (string.IsNullOrEmpty(name))
-            {
-                return string.Empty;
-            }
-
-            if (!name.Contains('%'))
-            {
-                name = WebUtility.UrlDecode(name);
-            }
-
-            return name.Replace('/', '-').Replace('\\', '-');
-        }
 
         private static IEnumerable<AzureDevOpsTimelineRecord> GetRelevantJobRecords(IEnumerable<AzureDevOpsTimelineRecord> records, string jobMonitorName)
         {

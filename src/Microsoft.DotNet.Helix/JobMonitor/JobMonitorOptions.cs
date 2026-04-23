@@ -19,8 +19,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         public bool ShowHelp { get; private set; }
 
-        [Option("helix-base-uri", HelpText = "Base URI for the Helix service.")]
-        public string HelixBaseUri { get; set; } = "https://helix.dot.net/";
+        [Option("organization", HelpText = "Organization name (e.g. 'dotnet' for 'dotnet/runtime').")]
+        public string Organization { get; set; }
+
+        [Option("repository", HelpText = "Repository name (e.g. 'runtime' for 'dotnet/runtime').")]
+        public string RepositoryName { get; set; }
+
+        [Option("pr-number", HelpText = "Pull request number for the build, if applicable.")]
+        public int? PrNumber { get; set; }
+
+        [Option("build-id", HelpText = "Azure DevOps build ID.")]
+        public string BuildId { get; set; }
 
         [Option("collection-uri", HelpText = "Azure DevOps collection URI.")]
         public string CollectionUri { get; set; }
@@ -28,11 +37,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
         [Option("team-project", HelpText = "Azure DevOps team project name.")]
         public string TeamProject { get; set; }
 
-        [Option("build-id", HelpText = "Azure DevOps build ID.")]
-        public string BuildId { get; set; }
-
-        [Option("repository", HelpText = "Repository identifier in owner/repo form.")]
-        public string Repository { get; set; }
+        [Option("helix-base-uri", HelpText = "Base URI for the Helix service.")]
+        public string HelixBaseUri { get; set; } = "https://helix.dot.net/";
 
         [Option("polling-interval-seconds", HelpText = "Polling interval in seconds.", Default = 30)]
         public int PollingIntervalSeconds { get; set; } = 30;
@@ -45,9 +51,6 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         [Option("working-directory", HelpText = "Directory used to stage downloaded test results.")]
         public string WorkingDirectory { get; set; }
-
-        [Option("pr-number", HelpText = "Pull request number for the build, if applicable.")]
-        public int? PrNumber { get; set; }
 
         [Option("attempt", HelpText = "Azure DevOps attempt number for the current job.")]
         public int? Attempt { get; set; }
@@ -85,10 +88,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             TeamProject ??= Environment.GetEnvironmentVariable("SYSTEM_TEAMPROJECT");
             BuildId ??= Environment.GetEnvironmentVariable("BUILD_BUILDID");
             SystemAccessToken ??= Environment.GetEnvironmentVariable("SYSTEM_ACCESSTOKEN");
-            Repository = HelixJobMonitorUtilities.NormalizeRepository(
-                Repository
-                ?? Environment.GetEnvironmentVariable("BUILD_REPOSITORY_URI")
-                ?? Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME"));
+            RepositoryName ??= Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME");
             WorkingDirectory ??= System.IO.Path.Combine(System.IO.Path.GetTempPath(), "helix-job-monitor", BuildId ?? "unknown");
             PrNumber ??= GetEnvironmentInt("SYSTEM_PULLREQUEST_PULLREQUESTNUMBER");
             Attempt ??= GetEnvironmentInt("SYSTEM_JOBATTEMPT");
@@ -101,9 +101,19 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             BuildId = RequireValue(BuildId, "build-id", "BUILD_BUILDID");
             SystemAccessToken = RequireValue(SystemAccessToken, "access-token", "SYSTEM_ACCESSTOKEN");
 
-            if (string.IsNullOrWhiteSpace(Repository))
+            if (string.IsNullOrWhiteSpace(RepositoryName))
             {
                 throw new InvalidOperationException("A repository identifier must be provided either by argument or pipeline environment.");
+            }
+
+            if (string.IsNullOrWhiteSpace(Organization))
+            {
+                throw new InvalidOperationException("Organization must be provided either by argument or pipeline environment.");
+            }
+
+            if (!PrNumber.HasValue)
+            {
+                throw new InvalidOperationException("Pull request number must be provided either by argument or pipeline environment.");
             }
         }
 

@@ -2,22 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.DotNet.Helix.JobMonitor;
-using System;
 using Xunit;
 
 namespace Microsoft.DotNet.Helix.Sdk.Tests
 {
     public class HelixJobMonitorUtilitiesTests
     {
-        [Theory]
-        [InlineData("https://github.com/dotnet/arcade", "dotnet/arcade")]
-        [InlineData("https://dev.azure.com/dnceng/internal/_git/dotnet-arcade", "dotnet/arcade")]
-        [InlineData("dotnet/arcade", "dotnet/arcade")]
-        public void NormalizeRepository_ReturnsStableIdentifier(string input, string expected)
-        {
-            Assert.Equal(expected, HelixJobMonitorUtilities.NormalizeRepository(input));
-        }
-
         [Fact]
         public void AreNonMonitorJobsComplete_IgnoresMonitorRecord()
         {
