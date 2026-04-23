@@ -25,7 +25,7 @@ jobs:
     - _ValidateBlobFeedUrl: ${{ parameters.validateBlobFeedUrl }}
     - template: /eng/common/templates-official/variables/pool-providers.yml@self
     pool:
-      name: $(DncEngInternalBuildPool)
+      name: NetCore1ESPool-Svc-Internal
       demands: ImageOverride -equals windows.vs2022.amd64
     preSteps:
     - checkout: self
