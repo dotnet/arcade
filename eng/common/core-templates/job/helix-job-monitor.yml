@@ -174,7 +174,7 @@ jobs:
         echo "Using locally built '$packageId' version '$toolVersion' from '$nupkgDir'."
         toolSource="$nupkgDir"
 
-        ./eng/common/dotnet.sh tool install \
+        "$BUILD_SOURCESDIRECTORY/eng/common/dotnet.sh" tool install \
           --tool-path "$toolPath" "$packageId" \
           --version "$toolVersion" \
           --add-source "$toolSource" \
