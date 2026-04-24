@@ -224,6 +224,14 @@ stages:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             HelixAccessToken: ''
 
+  # Helix Job Monitor runs as a job within the Test stage so it can monitor
+  # Helix work items submitted by the other jobs in this stage.
+  - template: /eng/common/core-templates/job/helix-job-monitor.yml
+    parameters:
+      # Install from the nupkg produced by the Build stage's Windows_NT Release job.
+      toolNupkgArtifactName: Artifacts_Windows_NT_Release
+      toolNupkgArtifactSubPath: packages/Release/NonShipping
+
 - stage: Test_XHarness
   displayName: Test XHarness SDK
   dependsOn: build
@@ -361,12 +369,3 @@ stages:
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             HelixAccessToken: ''
-
-- template: /eng/common/core-templates/stages/helix-job-monitor.yml
-  parameters:
-    dependsOn:
-    - build
-    # Install the Helix job monitor from the nupkg produced by the Build stage's
-    # Windows_NT Release job, instead of pulling it from a published feed.
-    toolNupkgArtifactName: Artifacts_Windows_NT_Release
-    toolNupkgArtifactSubPath: packages/Release/NonShipping
