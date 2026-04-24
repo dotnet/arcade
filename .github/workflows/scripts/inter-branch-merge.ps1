@@ -126,10 +126,7 @@ function ResetFilesToTargetBranch($patterns, $targetBranch) {
         return
     }
 
-    # Configure git user for the commit
-    # Use GitHub Actions bot identity
-    Invoke-Block { & git config user.name "github-actions[bot]" }
-    Invoke-Block { & git config user.email "41898282+github-actions[bot]@users.noreply.github.com" }
+    # Note: git user.name/email must already be configured by the caller
 
     # Track which patterns had changes
     $processedPatterns = @()
@@ -242,47 +239,65 @@ try {
         $mergeOutput = & git merge --no-ff "origin/$MergeFromBranch" -m "Merge branch '$MergeFromBranch' into $MergeToBranch" 2>&1
         $mergeExitCode = $LASTEXITCODE
 
+        # Always log merge output for CI diagnostics
+        if ($mergeOutput) {
+            $mergeOutput | Write-Host
+        }
+
         if ($mergeExitCode -eq 0) {
             $createdMergeCommit = $true
         } else {
-            Write-Host "Merge produced conflicts. Checking if all conflicts are within ResetToTargetPaths..."
-
             # Get list of conflicting files
             [string[]] $conflictFiles = & git diff --name-only --diff-filter=U
 
-            # Check which conflicts fall outside ResetToTargetPaths patterns
-            $outsidePatternConflicts = @()
-            foreach ($file in $conflictFiles) {
-                $covered = $false
-                foreach ($pattern in $patterns) {
-                    if ($file -like $pattern) {
-                        $covered = $true
-                        break
+            # Abort the conflicted merge before proceeding.
+            # Use plain call (not Invoke-Block) because git merge --abort exits 128
+            # if there is no merge-in-progress (e.g. a non-conflict git failure).
+            & git merge --abort 2>&1 | Write-Host
+
+            if (-not $conflictFiles -or $conflictFiles.Count -eq 0) {
+                # Merge failed but produced no conflicts — unexpected git error.
+                # Fall back to source-only branch and let GitHub handle it.
+                Write-Host -f Yellow "Merge failed with exit code $mergeExitCode but no conflicts were detected."
+                Write-Host -f Yellow "Falling back to source-only branch."
+                Invoke-Block { & git checkout -B $mergeBranchName "origin/$MergeFromBranch" }
+            } else {
+                Write-Host "Merge produced conflicts. Checking if all conflicts are within ResetToTargetPaths..."
+
+                # Check which conflicts fall outside ResetToTargetPaths patterns
+                $outsidePatternConflicts = @()
+                foreach ($file in $conflictFiles) {
+                    $covered = $false
+                    foreach ($pattern in $patterns) {
+                        if ($file -like $pattern) {
+                            $covered = $true
+                            break
+                        }
+                    }
+                    if (-not $covered) {
+                        $outsidePatternConflicts += $file
                     }
                 }
-                if (-not $covered) {
-                    $outsidePatternConflicts += $file
+
+                if ($outsidePatternConflicts.Count -eq 0) {
+                    # All conflicts are in ResetToTargetPaths files which will be overwritten
+                    # by target branch content anyway, so it's safe to auto-resolve them.
+                    # Use -X ours (favor target) as a safety net: if ResetFilesToTargetBranch
+                    # misses a file due to pathspec differences, the merge commit already
+                    # has the target version rather than silently carrying source content.
+                    Write-Host "All conflicts are within ResetToTargetPaths patterns. Auto-resolving with -X ours (favor target)..."
+                    Invoke-Block { & git merge --no-ff "origin/$MergeFromBranch" -X ours -m "Merge branch '$MergeFromBranch' into $MergeToBranch" }
+                    $createdMergeCommit = $true
+                } else {
+                    # There are conflicts outside ResetToTargetPaths. We must NOT auto-resolve
+                    # these because it would hide real conflicts from the PR reviewer.
+                    # Fall back to the original behavior: create branch from source HEAD
+                    # so GitHub's merge button will surface the conflicts.
+                    Write-Host -f Yellow "Conflicts detected outside ResetToTargetPaths patterns:"
+                    $outsidePatternConflicts | % { Write-Host -f Yellow "  - $_" }
+                    Write-Host -f Yellow "Falling back to source-only branch so GitHub surfaces these conflicts in the PR."
+                    Invoke-Block { & git checkout -B $mergeBranchName "origin/$MergeFromBranch" }
                 }
-            }
-
-            # Abort the conflicted merge before proceeding
-            Invoke-Block { & git merge --abort }
-
-            if ($outsidePatternConflicts.Count -eq 0) {
-                # All conflicts are in ResetToTargetPaths files which will be overwritten
-                # by target branch content anyway, so it's safe to auto-resolve them.
-                Write-Host "All conflicts are within ResetToTargetPaths patterns. Auto-resolving with -X theirs..."
-                Invoke-Block { & git merge --no-ff "origin/$MergeFromBranch" -X theirs -m "Merge branch '$MergeFromBranch' into $MergeToBranch" }
-                $createdMergeCommit = $true
-            } else {
-                # There are conflicts outside ResetToTargetPaths. We must NOT auto-resolve
-                # these because it would hide real conflicts from the PR reviewer.
-                # Fall back to the original behavior: create branch from source HEAD
-                # so GitHub's merge button will surface the conflicts.
-                Write-Host -f Yellow "Conflicts detected outside ResetToTargetPaths patterns:"
-                $outsidePatternConflicts | % { Write-Host -f Yellow "  - $_" }
-                Write-Host -f Yellow "Falling back to source-only branch so GitHub surfaces these conflicts in the PR."
-                Invoke-Block { & git checkout -B $mergeBranchName "origin/$MergeFromBranch" }
             }
         }
 
@@ -345,10 +360,23 @@ try {
             if ($PSCmdlet.ShouldProcess("Update remote branch $mergeBranchName on $remoteName")) {
                 if ($createdMergeCommit) {
                     # Merge commits create non-fast-forwardable history on each run,
-                    # so we need --force to update the branch.
+                    # so we need --force to update the branch. But first check if the
+                    # remote has human-pushed commits that aren't in our local branch
+                    # to avoid silently overwriting manual conflict resolutions.
+                    [string[]] $extraCommits = & git rev-list "$mergeBranchName..origin/$mergeBranchName" 2>$null
+                    if ($extraCommits -and $extraCommits.Count -gt 0) {
+                        Write-Warning "Remote branch '$mergeBranchName' has $($extraCommits.Count) commit(s) not in the local branch. Skipping force push to avoid overwriting manual changes."
+                        throw "Remote branch has unmerged commits"
+                    }
                     Invoke-Block { & git push --force $remoteName "${mergeBranchName}:${mergeBranchName}" }
                 } else {
-                    Invoke-Block { & git push $remoteName "${mergeBranchName}:${mergeBranchName}" }
+                    # Try non-force push first. If it fails (e.g. remote diverged from
+                    # a previous merge-commit run), retry with --force.
+                    & git push $remoteName "${mergeBranchName}:${mergeBranchName}" 2>&1 | Write-Host
+                    if ($LASTEXITCODE -ne 0) {
+                        Write-Host "Non-force push failed (likely diverged history). Retrying with --force..."
+                        Invoke-Block { & git push --force $remoteName "${mergeBranchName}:${mergeBranchName}" }
+                    }
                 }
             }
             $prUpdatedSuccess = $true
