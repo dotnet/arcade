@@ -69,27 +69,21 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     async () => await _helixApi.Job.ListAsync(source: $"pr/public/{_options.Organization}/{_options.RepositoryName}/refs/pull/{_options.PrNumber}/merge"),
                     cancellationToken);
 
-                // Filter jobs belonging to this build only
-                jobs = [..jobs.Where(j => ((JObject)j.Properties).TryGetValue("BuildId", out JToken buildId) && buildId?.ToString() == _options.BuildId)];
-
+                // Filter jobs to completed ones belonging to this build
                 IReadOnlyCollection<JobSummary> completedJobs =
                 [
                     ..jobs
+                        .Where(j => ((JObject)j.Properties).TryGetValue("BuildId", out JToken buildId) && buildId?.ToString() == _options.BuildId)
                         .Where(j => j.Finished != null)
                         .OrderBy(j => j.Name, StringComparer.OrdinalIgnoreCase)
                 ];
 
-                _logger.LogInformation("{CompletedCount}/{TotalCount} Helix jobs complete", completedJobs.Count, jobs.Count);
+                _logger.LogInformation("{CompletedCount}/{TotalCount} Helix jobs finished", completedJobs.Count, jobs.Count);
 
-                foreach (JobSummary completedJob in completedJobs)
+                foreach (JobSummary job in completedJobs.Where(j => !processedRuns.Contains(j.Name)))
                 {
-                    if (processedRuns.Contains(completedJob.Name))
-                    {
-                        continue;
-                    }
-
-                    bool passed = await ProcessCompletedJobAsync(completedJob, cancellationToken);
-                    processedRuns.Add(completedJob.Name);
+                    bool passed = await ProcessCompletedJobAsync(job, cancellationToken);
+                    processedRuns.Add(job.Name);
                     processedHelixJobCount++;
                     if (!passed)
                     {
