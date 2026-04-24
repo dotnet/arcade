@@ -36,7 +36,7 @@ public sealed class AzureDevOpsResultPublisher
         _logger = logger;
     }
 
-    public async Task UploadTestResultsAsync(List<string> testResultFiles, object resultMetadata, CancellationToken cancellationToken = default)
+    public async Task<bool> UploadTestResultsAsync(List<string> testResultFiles, object resultMetadata, CancellationToken cancellationToken = default)
     {
         var testResultReader = new LocalTestResultsReader(_logger);
 
@@ -45,45 +45,41 @@ public sealed class AzureDevOpsResultPublisher
         if (parsedResults.Length == 0)
         {
             _logger.LogWarning("No test results were discovered under.");
-            return;
+            return true;
         }
 
         IReadOnlyList<AggregatedResult> aggregatedResults = new ResultAggregator().Aggregate(parsedResults);
         if (aggregatedResults.Count == 0)
         {
             _logger.LogWarning("Test results were discovered but none could be aggregated.");
-            return;
+            return true;
         }
 
         await UploadTestResultsAsync(aggregatedResults, resultMetadata, cancellationToken);
+        return aggregatedResults.All(result => result.Result != "Failed"); // TODO: maybe there's a better way to find out if a test failed? Is this extensive enough?
     }
 
     public async Task UploadTestResultsAsync(IEnumerable<AggregatedResult> results, object resultMetadata, CancellationToken cancellationToken = default)
     {
         try
         {
-            await ProcessAsync([.. results], resultMetadata, cancellationToken);
+            var converted = ConvertResults(results, resultMetadata).ToList();
+            var hotPathTests = new List<PublishedTestCase>();
+
+            foreach (List<ConvertedResult> batch in Batch(converted, 1000, static t => Size(t.Converted)))
+            {
+                IReadOnlyList<PublishedTestCase> publishedTests = await PublishResultsAsync(batch, cancellationToken);
+                hotPathTests.AddRange(publishedTests);
+                _logger.LogInformation("Uploaded {Count} results", publishedTests.Count);
+            }
+
+            await SendMetadataAsync(hotPathTests, results, cancellationToken);
         }
         catch (TerminalError ex)
         {
             await LogErrorAsync(ex, cancellationToken);
             throw;
         }
-    }
-
-    private async Task ProcessAsync(IReadOnlyList<AggregatedResult> testList, object resultMetadata, CancellationToken cancellationToken)
-    {
-        var converted = ConvertResults(testList, resultMetadata).ToList();
-        var hotPathTests = new List<PublishedTestCase>();
-
-        foreach (List<ConvertedResult> batch in Batch(converted, 1000, static t => Size(t.Converted)))
-        {
-            IReadOnlyList<PublishedTestCase> publishedTests = await PublishResultsAsync(batch, cancellationToken);
-            hotPathTests.AddRange(publishedTests);
-            _logger.LogInformation("Uploaded {Count} results", publishedTests.Count);
-        }
-
-        await SendMetadataAsync(hotPathTests, testList, cancellationToken);
     }
 
     private async Task LogErrorAsync(Exception exception, CancellationToken cancellationToken)
@@ -98,7 +94,7 @@ public sealed class AzureDevOpsResultPublisher
         */
     }
 
-    private async Task SendMetadataAsync(
+    private static async Task SendMetadataAsync(
         IReadOnlyList<PublishedTestCase> backChannelCases,
         IEnumerable<AggregatedResult> allTestResults,
         CancellationToken cancellationToken)
@@ -179,11 +175,11 @@ public sealed class AzureDevOpsResultPublisher
         string base64Data = Convert.ToBase64String(compressedBytes);
         string fileNameBase = $"__helix_metadata_{Guid.NewGuid():N}.json.gz";
 
-        await SendWithRetryAsync(
-            HttpMethod.Post,
-            $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/attachments?api-version=7.1-preview.1",
-            new TestRunAttachmentRequest(fileNameBase, base64Data),
-            cancellationToken);
+        //await SendWithRetryAsync(
+        //    HttpMethod.Post,
+        //    $"{_azdoParameters.TeamProject}/_apis/test/runs/{_azdoParameters.TestRunId}/attachments?api-version=7.1-preview.1",
+        //    new TestRunAttachmentRequest(fileNameBase, base64Data),
+        //    cancellationToken);
 
         /* TODO
         string metadataUrl = await _uploadClient.UploadAsync(compressedBytes, fileNameBase, "application/gzip", cancellationToken);

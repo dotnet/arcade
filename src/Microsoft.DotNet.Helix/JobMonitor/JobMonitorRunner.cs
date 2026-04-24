@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         .OrderBy(j => j.Name, StringComparer.OrdinalIgnoreCase)
                 ];
 
-                _logger.LogInformation("{CompletedCount}/{TotalCount} Helix jobs complete. Waiting...", completedJobs.Count, jobs.Count);
+                _logger.LogInformation("{CompletedCount}/{TotalCount} Helix jobs complete", completedJobs.Count, jobs.Count);
 
                 foreach (JobSummary completedJob in completedJobs)
                 {
@@ -88,8 +88,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                         continue;
                     }
 
-                    JobPassFail passFail = await RetryAsync(() => _helixApi.Job.PassFailAsync(completedJob.Name, cancellationToken), cancellationToken);
-                    bool passed = await ProcessCompletedJobAsync(completedJob, passFail, cancellationToken);
+                    bool passed = await ProcessCompletedJobAsync(completedJob, cancellationToken);
                     processedRuns.Add(completedJob.Name);
                     processedHelixJobCount++;
                     if (!passed)
@@ -132,17 +131,30 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             _azdoClient.Dispose();
         }
 
-        private async Task<bool> ProcessCompletedJobAsync(JobSummary helixJob, JobPassFail passFail, CancellationToken cancellationToken)
+        private async Task<bool> ProcessCompletedJobAsync(JobSummary helixJob, CancellationToken cancellationToken)
         {
+            _logger.LogInformation("Processing completed job {jobName}...", helixJob.Name);
+
             string testRunName = HelixJobMonitorUtilities.GetTestRunName(helixJob.Name);
             int testRunId = await StartTestRunAsync(testRunName);
             string resultsDirectory = Path.Combine(_options.WorkingDirectory, SanitizeDirName(helixJob.Name));
             Directory.CreateDirectory(resultsDirectory);
 
+            IImmutableList<WorkItemSummary> workItems = await RetryAsync(() => _helixApi.WorkItem.ListAsync(helixJob.Name), cancellationToken);
+
+            int failedWorkItemCount = workItems.Count(wi => wi.ExitCode != 0 || !wi.State.Equals("Finished", StringComparison.OrdinalIgnoreCase));
+            bool helixJobSuccessful = failedWorkItemCount == 0;
+            int sucessfulWorkItemCount = workItems.Count - failedWorkItemCount;
+
             try
             {
-                List<WorkItemTestResults> downloadedFiles = await DownloadTestResultsAsync(helixJob.Name, passFail, resultsDirectory, cancellationToken);
-                await UploadDownloadedResultsAsync(downloadedFiles, testRunId, cancellationToken);
+                List<WorkItemTestResults> downloadedFiles = await DownloadTestResultsAsync(helixJob.Name, workItems, resultsDirectory, cancellationToken);
+                if (!await UploadDownloadedResultsAsync(downloadedFiles, testRunId, cancellationToken))
+                {
+                    sucessfulWorkItemCount--;
+                    failedWorkItemCount++;
+                    helixJobSuccessful = false;
+                }
             }
             catch (Exception ex)
             {
@@ -153,10 +165,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
             await StopTestRunAsync(testRunId, testRunName);
 
-            int passedCount = passFail.Passed?.Count ?? 0;
-            int failedCount = passFail.Failed?.Count ?? 0;
-            _logger.LogInformation("Job '{JobName}' completed ({PassedCount} passed, {FailedCount} failed).", helixJob.Name, passedCount, failedCount);
-            return failedCount == 0;
+            _logger.LogInformation("Job '{JobName}' completed ({PassedCount} passed, {FailedCount} failed).", helixJob.Name, sucessfulWorkItemCount, failedWorkItemCount);
+            return failedWorkItemCount == 0;
         }
 
         private async Task<HashSet<string>> GetProcessedRunNamesAsync()
@@ -217,7 +227,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
         private async Task<List<WorkItemTestResults>> DownloadTestResultsAsync(
             string jobName,
-            JobPassFail passFail,
+            IImmutableList<WorkItemSummary> workItems,
             string outputDirectory,
             CancellationToken cancellationToken)
         {
@@ -227,21 +237,25 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                 () => _helixApi.Job.ResultsAsync(jobName),
                 cancellationToken);
 
-            IEnumerable<string> workItemNames = (passFail.Passed ?? [])
-                .Concat(passFail.Failed ?? [])
-                .Distinct(StringComparer.OrdinalIgnoreCase);
-
-            foreach (string workItemName in workItemNames)
+            foreach (WorkItemSummary workItem in workItems)
             {
                 IImmutableList<UploadedFile> availableFiles = await RetryAsync(
-                    () => _helixApi.WorkItem.ListFilesAsync(workItemName, jobName, false),
+                    () => _helixApi.WorkItem.ListFilesAsync(workItem.Name, jobName, false),
                     cancellationToken);
 
-                string workItemDirectory = Path.Combine(outputDirectory, SanitizeDirName(workItemName));
+                availableFiles = [.. availableFiles.Where(f => LooksLikeTestResultFile(f.Name))];
+
+                if (availableFiles.Count == 0)
+                {
+                    _logger.LogInformation("Work item '{WorkItemName}' in job '{JobName}' has no test result files to download.", workItem.Name, jobName);
+                    continue;
+                }
+
+                string workItemDirectory = Path.Combine(outputDirectory, SanitizeDirName(workItem.Name));
                 Directory.CreateDirectory(workItemDirectory);
 
                 List<string> workItemFiles = [];
-                foreach (UploadedFile file in availableFiles.Where(f => LooksLikeTestResultFile(f.Name)))
+                foreach (UploadedFile file in availableFiles)
                 {
                     string relativePath = file.Name.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
                     string destinationFile = Path.Combine(workItemDirectory, relativePath);
@@ -254,7 +268,7 @@ namespace Microsoft.DotNet.Helix.JobMonitor
 
                     try
                     {
-                        _logger.LogInformation("Downloading {FileName} for work item {WorkItemName} in job {JobName}...", file.Name, workItemName, jobName);
+                        _logger.LogInformation("Downloading {FileName} for work item {WorkItemName} in job {JobName}...", file.Name, workItem.Name, jobName);
 
                         BlobClient blobClient = CreateBlobClient(file.Link, resultsUri.ResultsUriRSAS);
                         await blobClient.DownloadToAsync(destinationFile, cancellationToken);
@@ -262,17 +276,17 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogWarning(ex, "Failed to download '{FileName}' for '{JobName}/{WorkItemName}'.", file.Name, jobName, workItemName);
+                        _logger.LogWarning(ex, "Failed to download '{FileName}' for '{JobName}/{WorkItemName}'.", file.Name, jobName, workItem.Name);
                     }
                 }
 
-                downloadedFiles.Add(new WorkItemTestResults(jobName, workItemName, workItemFiles));
+                downloadedFiles.Add(new WorkItemTestResults(jobName, workItem.Name, workItemFiles));
             }
 
             return downloadedFiles;
         }
 
-        private async Task UploadDownloadedResultsAsync(List<WorkItemTestResults> testResults, int testRunId, CancellationToken cancellationToken)
+        private async Task<bool> UploadDownloadedResultsAsync(List<WorkItemTestResults> testResults, int testRunId, CancellationToken cancellationToken)
         {
             var publisher = new AzureDevOpsResultPublisher(
                 new AzureDevOpsReportingParameters(
@@ -282,9 +296,12 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     _options.SystemAccessToken),
                 _logger);
 
+            bool allTestsPassed = true;
+
             foreach (WorkItemTestResults workItemTestResult in testResults)
             {
-                await publisher.UploadTestResultsAsync(
+                _logger.LogInformation("Publishing test results for work item '{WorkItemName}' in job '{JobName}'...", workItemTestResult.WorkItemName, workItemTestResult.JobName);
+                allTestsPassed &= await publisher.UploadTestResultsAsync(
                     workItemTestResult.TestResultFiles,
                     // Metadata that will be appended to each test case
                     new
@@ -294,6 +311,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
                     },
                 cancellationToken);
             }
+
+            return allTestsPassed;
         }
 
         private async Task<JObject> SendAsync(HttpMethod method, string requestUri, JToken body = null, CancellationToken cancellationToken = default)
