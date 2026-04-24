@@ -105,8 +105,7 @@ parameters:
 stages:
 - stage: ${{ parameters.stageName }}
   displayName: ${{ parameters.displayName }}
-  ${{ if ne(length(parameters.dependsOn), 0) }}:
-    dependsOn: ${{ parameters.dependsOn }}
+  dependsOn: ${{ parameters.dependsOn }}
   ${{ if ne(parameters.condition, '') }}:
     condition: ${{ parameters.condition }}
   jobs:
