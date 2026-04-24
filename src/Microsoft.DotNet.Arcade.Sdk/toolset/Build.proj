@@ -1,5 +1,5 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
-<Project DefaultTargets="Execute">
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Execute">
 
   <!--
 
@@ -36,8 +36,6 @@
 
   <PropertyGroup>
     <_OriginalProjectsValue>$(Projects)</_OriginalProjectsValue>
-    <!-- Disable target framework filtering for top level projects -->
-    <NoTargetFrameworkFiltering>true</NoTargetFrameworkFiltering>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
@@ -48,9 +46,6 @@
       <DotNetBuildPass>1</DotNetBuildPass>
     </ProjectToBuild>
   </ItemDefinitionGroup>
-
-  <Import Project="RepoDefaults.props"/>
-  <Import Project="RepoLayout.props"/>
 
   <!-- Allow for repo specific Build properties such as the list of Projects to build -->
   <Import Project="$(RepositoryEngineeringDir)Build.props" Condition="Exists('$(RepositoryEngineeringDir)Build.props')" />
@@ -153,12 +148,8 @@
 
     <ItemGroup Condition="'$(Restore)' == 'true'">
       <_RestoreToolsProps Include="@(_CommonProps)"/>
-      <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
       <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
-      <_RestoreToolsProps Include="_NuGetRestoreTargets=$(_NuGetRestoreTargets)"/>
-
-      <!-- Used in the SDK (Tools.proj) to control whether Build.Tasks.Feed will be restored or not. -->
-      <_RestoreToolsProps Include="Publish=$(Publish)"/>
+      <_RestoreToolsProps Condition="'@(_SolutionBuildTargets)' != ''" Include="_SolutionBuildTargets=true"/>
     </ItemGroup>
 
     <!--
@@ -277,7 +268,7 @@
     -->
     <MSBuild Projects="Sign.proj"
              Properties="@(_CommonProps)"
-             Targets="Sign"
+             Targets="Execute"
              Condition="'$(Sign)' == 'true'"/>
 
     <MSBuild Projects="AfterSigning.proj"
@@ -291,10 +282,9 @@
       <_PublishProps Include="Publish=$(Publish)"/>
     </ItemGroup>
 
-      <!-- Make sure we always publish in VMR build - working around runtime repo which sets Publish to false. -->
     <MSBuild Projects="Publish.proj"
              Properties="@(_PublishProps);_NETCORE_ENGINEERING_TELEMETRY=Publish"
-             Targets="Publish"
+             Targets="Execute"
              Condition="'$(Publish)' == 'true'"/>
   </Target>
 

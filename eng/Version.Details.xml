@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
-  <Source Uri="https://github.com/dotnet/dotnet" Mapping="arcade" Sha="0cf6b19ed68d2d52e097e6af6d6046b4eeefefe2" BarId="309569" />
+  <Source Uri="https://github.com/dotnet/dotnet" Mapping="arcade" Sha="aae32bdb43e214583a15e3393e38c889b9447ec4" BarId="311575" />
   <ProductDependencies>
   </ProductDependencies>
   <ToolsetDependencies>
@@ -140,6 +140,41 @@
     <Dependency Name="Microsoft.Build.Utilities.Core" Version="17.12.50">
       <Uri>https://github.com/dotnet/msbuild</Uri>
       <Sha>d1cce8d7cc03c23a4f1bad8e9240714fd9d199a3</Sha>
+    </Dependency>
+    <!-- NuGet dependencies required for source build to lift to the previously-source-built version.
+         Arcade redistributes these in its MSBuild task packages and needs real executable assemblies,
+         not SBRP reference stubs. -->
+    <Dependency Name="NuGet.Commands" Version="7.0.3">
+      <Uri>https://github.com/nuget/nuget.client</Uri>
+      <Sha>779eff1e73420573dd39dbbe54896ff8f08955e1</Sha>
+    </Dependency>
+    <Dependency Name="NuGet.Common" Version="7.0.3">
+      <Uri>https://github.com/nuget/nuget.client</Uri>
+      <Sha>779eff1e73420573dd39dbbe54896ff8f08955e1</Sha>
+    </Dependency>
+    <Dependency Name="NuGet.Configuration" Version="7.0.3">
+      <Uri>https://github.com/nuget/nuget.client</Uri>
+      <Sha>779eff1e73420573dd39dbbe54896ff8f08955e1</Sha>
+    </Dependency>
+    <Dependency Name="NuGet.Frameworks" Version="7.0.3">
+      <Uri>https://github.com/nuget/nuget.client</Uri>
+      <Sha>779eff1e73420573dd39dbbe54896ff8f08955e1</Sha>
+    </Dependency>
+    <Dependency Name="NuGet.Packaging" Version="7.0.3">
+      <Uri>https://github.com/nuget/nuget.client</Uri>
+      <Sha>779eff1e73420573dd39dbbe54896ff8f08955e1</Sha>
+    </Dependency>
+    <Dependency Name="NuGet.ProjectModel" Version="7.0.3">
+      <Uri>https://github.com/nuget/nuget.client</Uri>
+      <Sha>779eff1e73420573dd39dbbe54896ff8f08955e1</Sha>
+    </Dependency>
+    <Dependency Name="NuGet.Versioning" Version="7.0.3">
+      <Uri>https://github.com/nuget/nuget.client</Uri>
+      <Sha>779eff1e73420573dd39dbbe54896ff8f08955e1</Sha>
+    </Dependency>
+    <Dependency Name="System.Composition" Version="10.0.3">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>dc5fd7a8dce8309e4add8fd4bd5d8718f221b15a</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
