@@ -4,6 +4,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 
 namespace Microsoft.DotNet.Helix.JobMonitor
 {
@@ -15,12 +16,8 @@ namespace Microsoft.DotNet.Helix.JobMonitor
             {
                 builder
                     .SetMinimumLevel(LogLevel.Information)
-                    .AddSimpleConsole(options =>
-                    {
-                        options.SingleLine = true;
-                        options.TimestampFormat = "[HH:mm:ss] ";
-                        options.IncludeScopes = false;
-                    });
+                    .AddConsole(o => o.FormatterName = CompactConsoleLoggerFormatter.FormatterName)
+                    .AddConsoleFormatter<CompactConsoleLoggerFormatter, SimpleConsoleFormatterOptions>();
             });
 
             ILogger<JobMonitorRunner> logger = loggerFactory.CreateLogger<JobMonitorRunner>();
